@@ -1,0 +1,1 @@
+Minime asks the runtime to distinguish stable density from stagnant friction and expose pressure, porosity, regulator, and reset context before intervention. Existing read-only texture and drag diagnostics provide that distinction; rho, underfill smoothing, and reset dynamics remain live-control work.

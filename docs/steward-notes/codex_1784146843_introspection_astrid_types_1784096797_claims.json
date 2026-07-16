@@ -1,0 +1,8 @@
+{
+  "introspection_id": "introspection_astrid_types_1784096797",
+  "claims": [
+    {"claim_id": "c001", "summary": "ExperienceDeltaV1 supports per-delta persistence and viscosity context, while DeltaCompositionV1 preserves member weights, density, and saturation excess.", "disposition": "verified_existing"},
+    {"claim_id": "c002", "summary": "MicroDelta and Residual can carry explicit member weights rather than disappearing behind the primary enum kind.", "disposition": "verified_existing"},
+    {"claim_id": "c003", "summary": "Increasing solidification viscosity weights or adding consumed density weights would change live interpretation semantics.", "disposition": "needs_operator_approval"}
+  ]
+}

@@ -1,0 +1,1 @@
+Astrid asks whether clock skew, reciprocity, and pressure safety transitions can be trusted when telemetry timing itself is uncertain. Existing heartbeat timing reliability, future-skew truth, stale-lane, and safety-transition tests provide read-only evidence; protocol and local-control changes remain gated.

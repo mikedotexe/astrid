@@ -1,0 +1,1 @@
+Astrid asks that reciprocity warmup and pressure smoothing avoid false stale states. Existing tests distinguish no-message warmup, waiting, and stale windows and exercise high-entropy smoothing; threshold changes remain gated.

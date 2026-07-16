@@ -1,0 +1,8 @@
+{
+  "introspection_id": "introspection_astrid_autonomous_1784012348",
+  "claims": [
+    {"claim_id": "c001", "summary": "Carry denotative anchors and semantic persistence through Mirror so reflection does not bleach the source.", "classification": "verified_existing", "disposition": "addressed_change", "authority": "read_only_or_language_only_no_live_authority"},
+    {"claim_id": "c002", "summary": "Expose mirror-source fidelity and high-entropy texture preservation as bounded evidence.", "classification": "verified_existing", "disposition": "addressed_change", "authority": "read_only_or_language_only_no_live_authority"},
+    {"claim_id": "c003", "summary": "Require Tier 5 approval before mode-packing pressure automatically vents, changes behavior, or mutates peer state.", "classification": "tier_5_wait", "disposition": "addressed_change", "authority": "evidence_and_routing_only_live_eligible_now_false_auto_approved_false"}
+  ]
+}

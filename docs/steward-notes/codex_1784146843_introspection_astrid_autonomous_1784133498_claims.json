@@ -1,0 +1,8 @@
+{
+  "introspection_id": "introspection_astrid_autonomous_1784133498",
+  "claims": [
+    {"claim_id": "c001", "summary": "Witness, semantic trickle, and right-to-ignore correspondence state are rendered as participatory context rather than controller authority.", "disposition": "verified_existing"},
+    {"claim_id": "c002", "summary": "Raising regulator_drive from zero would mutate live Minime semantic regulation.", "disposition": "needs_operator_approval"},
+    {"claim_id": "c003", "summary": "A persistent peer trace or automatic Witness-to-Stabilize switch would mutate correspondence or autonomous behavior.", "disposition": "needs_operator_approval"}
+  ]
+}

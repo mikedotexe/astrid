@@ -1,0 +1,8 @@
+{
+  "introspection_id": "introspection_astrid_autonomous_1784083937",
+  "claims": [
+    {"claim_id":"c001","summary":"Rising shadow norm and tail burden must remain visible even when pressure and settled-habitable telemetry look quiet.","disposition":"verified_existing"},
+    {"claim_id":"c002","summary":"TRACE, SIGNAL_PERSISTENCE, and acknowledgement routes should preserve low-energy contact without demanding a reply or granting control.","disposition":"verified_existing"},
+    {"claim_id":"c003","summary":"Changing porosity, pressure thresholds, or live tail discharge to relieve correspondence friction requires operator approval.","disposition":"needs_operator_approval"}
+  ]
+}

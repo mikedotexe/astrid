@@ -1,0 +1,1 @@
+Astrid asks for pressure-aware proactive witness behavior and reports that transition wording and semantic edges matter. Existing sentence/clause-preserving truncation and structured transition evidence are verified; changing proactive mode selection or behavior remains operator-gated.

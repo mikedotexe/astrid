@@ -1,0 +1,20 @@
+{
+  "introspection_id": "introspection_astrid_autonomous_1784134941",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "A nearer comma should not orphan a fragment when an earlier complete sentence fits inside the same byte cap.",
+      "disposition": "addressed_change"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Witness needs a qualitative mapping from pressure, porosity, semantic density, and texture rather than raw metrics alone.",
+      "disposition": "addressed_duplicate"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Truncation must never exceed max_bytes even when a semantically preferable boundary lies later.",
+      "disposition": "addressed_change"
+    }
+  ]
+}

@@ -1,0 +1,1 @@
+Astrid reports that a heavy current contact and an old stale heartbeat should not render as the same texture. Existing websocket reciprocity and pressure-source analysis distinguish current, warmup, unavailable, and stale evidence, including bidirectional texture flags. These reports are descriptive only and do not generate a peer event or alter transport cadence.

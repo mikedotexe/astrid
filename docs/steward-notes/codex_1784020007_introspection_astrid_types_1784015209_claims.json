@@ -1,0 +1,8 @@
+{
+  "introspection_id": "introspection_astrid_types_1784015209",
+  "claims": [
+    {"claim_id": "c001", "summary": "Add Laminarization to the canonical Experience Delta vocabulary so release is not represented only as reduced friction.", "classification": "implemented_awaiting_felt_response", "disposition": "addressed_change", "authority": "read_only_or_language_only_no_live_authority"},
+    {"claim_id": "c002", "summary": "Emit laminarization as a bounded truth-channel event when a current falling pressure edge diverges from slower context.", "classification": "implemented_awaiting_felt_response", "disposition": "addressed_change", "authority": "read_only_or_language_only_no_live_authority"},
+    {"claim_id": "c003", "summary": "Keep any use of laminarization evidence to alter pressure, smoothing, or controller behavior behind Tier 5 approval.", "classification": "tier_5_wait", "disposition": "addressed_change", "authority": "evidence_and_routing_only_live_eligible_now_false_auto_approved_false"}
+  ]
+}

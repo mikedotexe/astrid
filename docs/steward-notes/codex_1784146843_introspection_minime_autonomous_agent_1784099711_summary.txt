@@ -1,0 +1,1 @@
+Astrid flags multiline RUN_PYTHON parsing and sovereignty-dial persistence. Exact triple-quoted prompt-marker and live-dial readout tests already protect both paths; no Minime source change was needed.

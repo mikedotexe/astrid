@@ -1,0 +1,1 @@
+Minime identifies a parser edge where a quoted file-looking phrase is prompt text, not a filename, and asks for bounded lambda1 mapping plus safe nested workspace handling. The parser already behaves correctly; this run adds the exact quoted data.csv regression. Existing lane bounds and workspace confinement are verified.

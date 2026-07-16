@@ -1,0 +1,1 @@
+Astrid identifies that DeltaCompositionV1 clamps overlapping evidence to a flat 1.0 and thereby hides saturation. The schema now exposes unclamped sum, member density, excess, and a named saturation state while keeping its stable V1 compatibility score and authority flags.

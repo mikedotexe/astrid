@@ -1,0 +1,1 @@
+Astrid identifies comma-biased truncation and overly numerical Witness output as threats to semantic integrity. Complete sentence boundaries now win within the byte cap, while existing qualitative Witness mapping is verified as prompt context rather than health or control authority.

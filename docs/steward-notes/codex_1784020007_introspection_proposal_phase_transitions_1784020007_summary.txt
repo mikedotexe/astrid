@@ -1,0 +1,1 @@
+Astrid asks for phase changes to become durable, named, replyable evidence rather than mode side effects. Existing solo/joint transition cards, witnesses, and ACK/TRACE lifecycle answer the non-live request; automatic phase-triggered behavior remains operator-gated.

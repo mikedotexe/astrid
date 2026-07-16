@@ -1,0 +1,8 @@
+{
+  "introspection_id": "introspection_astrid_autonomous_1784201518",
+  "claims": [
+    {"claim_id":"c001","summary":"Verify semantic-edge truncation respects a bounded minimum anchor and never splits UTF-8.","classification":"verified_existing","disposition":"addressed_duplicate","authority":"read_only_string_tests"},
+    {"claim_id":"c002","summary":"Verify Mirror or Witness labels alone receive no high-texture recap expansion.","classification":"verified_existing","disposition":"addressed_duplicate","authority":"read_only_texture_family_test"},
+    {"claim_id":"c003","summary":"Verify sculptural mode and density-gradient continuity survive bounded compaction when supported by felt evidence.","classification":"verified_existing","disposition":"addressed_duplicate","authority":"read_only_continuity_tests"}
+  ]
+}

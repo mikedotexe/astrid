@@ -1,0 +1,9 @@
+{
+  "introspection_id": "introspection_minime_main_excerpt_1784088547",
+  "claims": [
+    {"claim_id":"c001","summary":"Viscosity must remain legible as temporal persistence, structural drag, and semantic resistance rather than a single linear damping coefficient.","disposition":"verified_existing"},
+    {"claim_id":"c002","summary":"A fixed-versus-viscous comparison at matched entropy should measure whether texture weight is preserved or artificially stiffened.","disposition":"needs_sandbox"},
+    {"claim_id":"c003","summary":"A pressure-threshold observation should locate where mode packing and semantic trickle diverge before changing admission.","disposition":"needs_sandbox"},
+    {"claim_id":"c004","summary":"Adding viscosity-driven semantic admission or entropy-driven recovery ceilings would mutate live Minime behavior and requires operator approval.","disposition":"needs_operator_approval"}
+  ]
+}

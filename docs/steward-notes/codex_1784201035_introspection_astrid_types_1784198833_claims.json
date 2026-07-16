@@ -1,0 +1,8 @@
+{
+  "introspection_id": "introspection_astrid_types_1784198833",
+  "claims": [
+    {"claim_id":"c001","summary":"Expose qualitative clamp degradation so clipping names flattening of intensity and non-finite replacement names loss of nuance.","classification":"implemented","disposition":"addressed_change","authority":"read_only_provenance_only"},
+    {"claim_id":"c002","summary":"Preserve raw, fallback, replacement-path, and legacy JSON evidence while refusing to infer semantic drift from a scalar alone.","classification":"verified_existing","disposition":"addressed_change","authority":"read_only_clamp_provenance_tests"},
+    {"claim_id":"c003","summary":"Any write that lets clamp provenance grant authority or change the live clamped value remains Tier 5 and is not approved by this packet.","classification":"tier_5_wait","disposition":"addressed_change","authority":"live_eligible_now_false_auto_approved_false"}
+  ]
+}

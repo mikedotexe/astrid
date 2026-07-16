@@ -1,0 +1,1 @@
+Astrid asks that high entropy widen descriptive texture rather than trigger flattening. The existing prompt-only texture-preservation policy is retained and now activates at the same 0.80 threshold as compatibility risk; provider and sampler behavior are unchanged.

@@ -1,0 +1,1 @@
+Astrid correctly identifies dynamic noise, adaptive pressure, and viscous rho as source-prepared ghost policies rather than live behavior. Their boundary tests pass; wiring them into ESN::step remains an explicit operator-approved experiment.

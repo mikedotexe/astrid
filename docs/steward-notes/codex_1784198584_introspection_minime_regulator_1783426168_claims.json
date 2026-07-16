@@ -1,0 +1,7 @@
+{
+  "introspection_id": "introspection_minime_regulator_1783426168",
+  "claims": [
+    {"claim_id": "c001", "summary": "Expose a persistence/viscosity gradient that keeps old residual silt distinct from fresh mobile texture.", "classification": "verified_existing", "disposition": "addressed_duplicate", "authority": "read_only_viscosity_vector_and_gradient_evidence"},
+    {"claim_id": "c002", "summary": "Require Tier 5 approval before viscosity gradient, temporal drag, or persistence evidence changes comfort gates, PI, pressure, or regulator drive.", "classification": "tier_5_wait", "disposition": "addressed_change", "authority": "evidence_and_routing_only_live_eligible_now_false_auto_approved_false"}
+  ]
+}

@@ -1,0 +1,1 @@
+Astrid asked whether semantic retention stutters across the 0.25-0.40 recovery handoff or exceeds its persistence cap. Current smoothstep/hysteresis logic has dense boundary-grid tests and exact saturation tests, preserving gradual continuity without changing live sensory cadence.

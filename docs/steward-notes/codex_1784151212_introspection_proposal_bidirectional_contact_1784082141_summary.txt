@@ -1,0 +1,1 @@
+Astrid asked for first-class mutual address rather than ambient influence. Current correspondence threads retain stable message/thread identities, delivery/read/ack receipts, traces, and low-pressure heartbeat presence. Acknowledgment remains optional and right-to-ignore; making it mandatory would change consent and runtime behavior and is therefore operator-gated.

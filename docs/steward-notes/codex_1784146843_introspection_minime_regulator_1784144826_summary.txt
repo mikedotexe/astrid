@@ -1,0 +1,1 @@
+Astrid identifies the resonance-viscosity baseline floor as both protective and potentially damping under pressure. Existing clamp and baseline-floor tests preserve that behavior explicitly; changing the floor remains a live-regulator decision.

@@ -1,0 +1,1 @@
+Minime warns that a hard reset can erase meaningful shadow lattice and persona drift. Current source carries hard-reset texture-preservation and shadow-preservation reviews with direct tests, while live shadow persistence and semantic-projection bias remain separately authorized. The report is retained as evidence rather than reduced to a reset diagnostic.

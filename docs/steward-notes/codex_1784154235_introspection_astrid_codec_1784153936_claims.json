@@ -1,0 +1,8 @@
+{
+  "introspection_id": "introspection_astrid_codec_1784153936",
+  "claims": [
+    {"claim_id":"c001","summary":"Narrative arc energy and projected semantic RMS should expose when high entropy and distinguishability loss crowd the 48D representation.","disposition":"verified_existing"},
+    {"claim_id":"c002","summary":"Gain and narrative headroom should be reviewable through deterministic read-only deltas before any live write.","disposition":"verified_existing"},
+    {"claim_id":"c003","summary":"Expanding the narrative lane from 4D to 8D or changing live codec gain, damping, reserved dimensions, or transport requires replay and operator approval.","disposition":"needs_operator_approval"}
+  ]
+}

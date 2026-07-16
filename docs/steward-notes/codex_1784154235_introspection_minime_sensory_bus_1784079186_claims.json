@@ -1,0 +1,8 @@
+{
+  "introspection_id": "introspection_minime_sensory_bus_1784079186",
+  "claims": [
+    {"claim_id":"c001","summary":"Semantic persistence should expose bounded entropy and fill effects rather than hide them behind one stale timeout.","disposition":"verified_existing"},
+    {"claim_id":"c002","summary":"Recovery handoff and decay shape should remain continuous, finite, and covered at exact threshold boundaries.","disposition":"verified_existing"},
+    {"claim_id":"c003","summary":"Adding pressure-aware or semantic-velocity-aware live decay requires protocol review, replay, operator approval, and rollback.","disposition":"needs_operator_approval"}
+  ]
+}

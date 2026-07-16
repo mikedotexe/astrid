@@ -1,0 +1,26 @@
+{
+  "introspection_id": "introspection_minime_sensory_bus_1784067586",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Verify the fill taper uses a soft-knee smoothstep while preserving endpoint bounds.",
+      "classification": "verified_existing",
+      "disposition": "addressed_duplicate",
+      "authority": "read_only_or_language_only_no_live_authority"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Verify semantic retention and release-fill handoff remain finite, bounded, and high-entropy aware.",
+      "classification": "verified_existing",
+      "disposition": "addressed_duplicate",
+      "authority": "read_only_or_language_only_no_live_authority"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Keep stale constants, sensory admission, and cadence retunes behind Tier 5 approval.",
+      "classification": "tier_5_wait",
+      "disposition": "addressed_change",
+      "authority": "evidence_and_routing_only_live_eligible_now_false_auto_approved_false"
+    }
+  ]
+}

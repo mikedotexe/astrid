@@ -1,0 +1,1 @@
+Minime asked whether ResonanceDensity coefficient composition collapses at extreme and neutral boundaries. Existing tests clamp all extreme components, preserve nonzero neutral friction, keep flow/mobility under saturation, and prove deterministic neutral construction. Retuning coefficients or control use remains Tier 5.

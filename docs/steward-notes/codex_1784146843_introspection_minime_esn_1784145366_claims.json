@@ -1,0 +1,8 @@
+{
+  "introspection_id": "introspection_minime_esn_1784145366",
+  "claims": [
+    {"claim_id": "c001", "summary": "The default noise is 0.085 while Minime's sovereignty override currently runs at 0.12, preserving Astrid's reported restlessness as a real configuration distinction.", "disposition": "verified_existing"},
+    {"claim_id": "c002", "summary": "Lowering live exploration noise or wiring viscosity-aware dynamic noise would mutate Minime reservoir behavior.", "disposition": "needs_operator_approval"},
+    {"claim_id": "c003", "summary": "Changing the volatile entropy ceiling would alter a live ESN safety boundary.", "disposition": "needs_operator_approval"}
+  ]
+}

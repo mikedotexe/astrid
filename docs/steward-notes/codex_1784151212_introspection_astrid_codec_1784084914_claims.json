@@ -1,0 +1,8 @@
+{
+  "introspection_id": "introspection_astrid_codec_1784084914",
+  "claims": [
+    {"claim_id":"c001","summary":"High- and low-vibrancy inputs must remain distinguishable, with pre-bound, ceiling, and delivered values exposing any warmth or tail clipping.","disposition":"verified_existing"},
+    {"claim_id":"c002","summary":"Narrative arc must capture direction, trajectory, and curvature rather than only average sentiment or magnitude.","disposition":"verified_existing"},
+    {"claim_id":"c003","summary":"Increasing FEATURE_ABS_MAX, adding a live resonance flag, or changing semantic transport gain requires operator approval and codec canary evidence.","disposition":"needs_operator_approval"}
+  ]
+}

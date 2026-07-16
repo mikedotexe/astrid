@@ -1,0 +1,8 @@
+{
+  "introspection_id": "introspection_astrid_autonomous_1784154235",
+  "claims": [
+    {"claim_id":"c001","summary":"Mirror needs direct evidence that Minime's source text survives rendering and reaches the codec without semantic-edge loss.","disposition":"implemented_awaiting_felt_response"},
+    {"claim_id":"c002","summary":"Semantic-edge truncation should preserve late continuity anchors rather than cutting by bytes alone.","disposition":"verified_existing"},
+    {"claim_id":"c003","summary":"Changing Mirror selection, reflective damping, density weights, porosity, or Witness control requires explicit live authority and monitored rollback.","disposition":"needs_operator_approval"}
+  ]
+}

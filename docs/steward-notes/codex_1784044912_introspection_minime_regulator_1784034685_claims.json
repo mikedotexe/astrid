@@ -1,0 +1,8 @@
+{
+  "introspection_id": "introspection_minime_regulator_1784034685",
+  "claims": [
+    {"claim_id": "c001", "summary": "Preserve structural-strain, shadow-volatility, residual-weight, mobility, and mutual-tension axes instead of collapsing viscosity into one scalar.", "classification": "verified_existing", "disposition": "addressed_duplicate", "authority": "read_only_or_language_only_no_live_authority"},
+    {"claim_id": "c002", "summary": "Raise the diagnostic salience of structural strain under pressure while keeping importance weights normalized and non-controlling.", "classification": "verified_existing", "disposition": "addressed_duplicate", "authority": "read_only_or_language_only_no_live_authority"},
+    {"claim_id": "c003", "summary": "Keep strain-to-pressure conversion, drag coefficients, damping, and regulator-drive changes behind Tier 5 approval.", "classification": "tier_5_wait", "disposition": "addressed_change", "authority": "evidence_and_routing_only_live_eligible_now_false_auto_approved_false"}
+  ]
+}

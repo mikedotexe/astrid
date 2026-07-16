@@ -1,0 +1,1 @@
+Minime again asks the main loop to distinguish settled structure from frictional stagnation and make shadow and reset dynamics inspectable. Existing pressure, porosity, fluctuation, viscosity, and structural-drag readouts provide the evidence; reset and rho changes remain Tier 5.

@@ -1,0 +1,1 @@
+Astrid asks whether projection lineage, runtime mapping, and epoch/checksum truth survive the codec path. Existing deterministic projection, runtime-directory, map, checksum, and compatibility tests provide evidence; gain, width, and live transport changes remain Tier 5.

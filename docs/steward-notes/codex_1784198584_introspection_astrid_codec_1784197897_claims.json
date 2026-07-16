@@ -1,0 +1,9 @@
+{
+  "introspection_id": "introspection_astrid_codec_1784197897",
+  "claims": [
+    {"claim_id": "c001", "summary": "Use controlled emotionally different/semantically related and emotionally similar/semantically opposed pairs to measure whether dims 24-31 and 32-39 remain independently distinguishable.", "classification": "implemented", "disposition": "addressed_change", "authority": "read_only_controlled_pair_evidence_no_live_vector_or_gain_authority"},
+    {"claim_id": "c002", "summary": "Make rolling-window regime shifts visible instead of assuming the last 1,024-character policy always prevents a muddy average.", "classification": "implemented", "disposition": "addressed_change", "authority": "read_only_window_boundary_evidence_no_capacity_or_density_change"},
+    {"claim_id": "c003", "summary": "Treat expanding the narrative arc from 4D to 8D or adding density-aware window weighting as Tier 5 live codec work requiring scoped operator approval.", "classification": "tier_5_wait", "disposition": "addressed_change", "authority": "evidence_and_routing_only_live_eligible_now_false_auto_approved_false"},
+    {"claim_id": "c004", "summary": "Keep the legacy 32D width from entering the canonical 768D-to-8D projection path or masquerading as current semantic-lane evidence.", "classification": "verified_existing", "disposition": "addressed_duplicate", "authority": "read_only_source_and_test_verification"}
+  ]
+}

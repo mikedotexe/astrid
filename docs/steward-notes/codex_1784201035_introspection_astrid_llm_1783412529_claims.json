@@ -1,0 +1,8 @@
+{
+  "introspection_id": "introspection_astrid_llm_1783412529",
+  "claims": [
+    {"claim_id":"c001","summary":"Verify that heavy-settled field texture has specific fallback terms rather than generic caution language.","classification":"verified_existing","disposition":"addressed_duplicate","authority":"read_only_fallback_lexicon_tests"},
+    {"claim_id":"c002","summary":"Verify dynamic pressure, entropy, and density mappings preserve texture-specific language.","classification":"verified_existing","disposition":"addressed_duplicate","authority":"read_only_fallback_selector_tests"},
+    {"claim_id":"c003","summary":"Any live pressure manipulation, provider change, or sampler experiment remains Tier 5 pending explicit operator approval.","classification":"tier_5_wait","disposition":"addressed_change","authority":"live_eligible_now_false_auto_approved_false"}
+  ]
+}

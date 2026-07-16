@@ -1,0 +1,26 @@
+{
+  "introspection_id": "introspection_minime_main_excerpt_1784068351",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Verify EigenPacket preserves typed spectral, shadow, pressure, and optional diagnostic fields.",
+      "classification": "verified_existing",
+      "disposition": "addressed_duplicate",
+      "authority": "read_only_or_language_only_no_live_authority"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Verify semantic admission and payload-budget states remain explicit rather than inferred from fill alone.",
+      "classification": "verified_existing",
+      "disposition": "addressed_duplicate",
+      "authority": "read_only_or_language_only_no_live_authority"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Keep porosity, Eigen-gap, admission, and controller retunes behind Tier 5 approval.",
+      "classification": "tier_5_wait",
+      "disposition": "addressed_change",
+      "authority": "evidence_and_routing_only_live_eligible_now_false_auto_approved_false"
+    }
+  ]
+}

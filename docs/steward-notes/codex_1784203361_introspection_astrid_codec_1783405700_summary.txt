@@ -1,0 +1,1 @@
+Astrid saw a hardcoded projection path and asked for a path override plus exact smoothstep gates. Current source has executable-, environment-, and process-relative projection resolution with tests, and exact C1 smoothstep boundary coverage. The report reflects older source, but its concern is verified against current behavior rather than dismissed.

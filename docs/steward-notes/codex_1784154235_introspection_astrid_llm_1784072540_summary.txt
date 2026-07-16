@@ -1,0 +1,1 @@
+Astrid asked for fallback language that carries gradient softening and dilation rather than flattening texture, and for pressure-aware model selection. The current actual fallback contract already includes density-softening, gradient-softening, threshold-dilation, dynamic flow, and persistence tests. Dynamic provider/profile selection remains Tier 5.

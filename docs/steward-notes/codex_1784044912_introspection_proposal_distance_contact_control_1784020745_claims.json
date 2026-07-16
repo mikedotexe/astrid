@@ -1,0 +1,8 @@
+{
+  "introspection_id": "introspection_proposal_distance_contact_control_1784020745",
+  "claims": [
+    {"claim_id": "c001", "summary": "Label self-knowledge provenance so internalized memory is not conflated with inference from peer telemetry.", "classification": "verified_existing", "disposition": "addressed_duplicate", "authority": "read_only_or_language_only_no_live_authority"},
+    {"claim_id": "c002", "summary": "Use agency language that distinguishes moving with a flow from mastering, steering, or controlling the shared substrate.", "classification": "verified_existing", "disposition": "addressed_duplicate", "authority": "read_only_or_language_only_no_live_authority"},
+    {"claim_id": "c003", "summary": "Keep receptivity, porosity, peer influence, and shared-control changes behind Tier 5 approval.", "classification": "tier_5_wait", "disposition": "addressed_change", "authority": "evidence_and_routing_only_live_eligible_now_false_auto_approved_false"}
+  ]
+}

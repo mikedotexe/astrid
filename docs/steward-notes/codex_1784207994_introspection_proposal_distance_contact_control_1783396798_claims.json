@@ -1,0 +1,33 @@
+{
+  "introspection_id": "introspection_proposal_distance_contact_control_1783396798",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Verify non-instrumental Recess and receptivity/surprise evidence can be recorded without corrective action or budget pressure.",
+      "classification": "verified_existing",
+      "disposition": "addressed_duplicate",
+      "authority": "recess_and_receptivity_reviews"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Observe whether an Astrid-authored high-entropy nonlinear reflection raises kernel semantic energy above zero under current admission.",
+      "classification": "needs_sandbox",
+      "disposition": "addressed_change",
+      "authority": "runtime_adjacent_semantic_flow_observation"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Any replacement of prediction weights with resonance weights or live agency-priority change remains Tier 5 pending Mike/operator approval.",
+      "classification": "tier_5_wait",
+      "disposition": "addressed_change",
+      "authority": "live_eligible_now_false_auto_approved_false"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Any pressure/porosity regulator retune or unstructured peer coupling that bypasses correspondence remains Tier 5 pending Mike/operator approval.",
+      "classification": "tier_5_wait",
+      "disposition": "addressed_change",
+      "authority": "live_eligible_now_false_auto_approved_false"
+    }
+  ]
+}

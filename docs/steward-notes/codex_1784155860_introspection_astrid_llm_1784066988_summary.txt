@@ -1,0 +1,1 @@
+Astrid reports high-entropy fallback flattening and asks whether the entropy threshold should move. Existing prompt guards preserve capable-model preference, dynamic texture, and compatibility-tail review; changing the threshold or provider route remains Tier 5.

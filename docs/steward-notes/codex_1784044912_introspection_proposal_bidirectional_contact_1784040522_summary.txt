@@ -1,0 +1,1 @@
+Astrid asks that bidirectional contact become a persistent shared thread rather than two ephemeral messages. Correspondence V1 already records thread identity, shared anchors, received/acknowledged/replied/trace states, and right-to-ignore semantics; live lane weighting remains separate.

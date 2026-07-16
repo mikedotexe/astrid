@@ -1,0 +1,1 @@
+Astrid raises clock drift, queue growth, stale reciprocity, and missing-flux fallback concerns. Bridge ages are based on local arrival/send timestamps, future skew is surfaced, trend deques are bounded, and stale/fallback-flux/high-entropy smoothing paths have direct regressions. No live cadence or smoothing change is required.

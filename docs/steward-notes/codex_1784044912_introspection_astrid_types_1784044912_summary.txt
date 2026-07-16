@@ -1,0 +1,1 @@
+Astrid identifies solidification-gradient drift, an underspecified V2 hook, and optional spectral-dimension transport as schema-integrity concerns. Named bounded weights, an additive typed V2 design preview, and serde/default-false truth-channel tests already answer these concerns without live authority.

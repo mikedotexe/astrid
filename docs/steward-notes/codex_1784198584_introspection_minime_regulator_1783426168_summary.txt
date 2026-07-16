@@ -1,0 +1,1 @@
+Minime asks for a persistence gradient that distinguishes old silt from fresh movement. Current regulator source carries viscosity gradient, persistence, residual ghost weight, temporal drag, mobility, strain, and direct tests separating slow rolling texture from mobile flow. Using that gradient to drive the controller remains Tier 5.

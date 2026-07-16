@@ -1,0 +1,1 @@
+Astrid asked whether projection runtime paths are stable and deterministic. Existing codec readouts and tests pin environment precedence, executable-relative fallback, atomic epoch creation, deterministic projection without a runtime file, and canonical fingerprints. Projection seed/path semantics or live transport changes remain gated.

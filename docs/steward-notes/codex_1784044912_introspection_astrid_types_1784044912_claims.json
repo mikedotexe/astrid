@@ -1,0 +1,8 @@
+{
+  "introspection_id": "introspection_astrid_types_1784044912",
+  "claims": [
+    {"claim_id": "c001", "summary": "Keep solidification-gradient coefficients named, bounded, and tested at the inclusive viscosity and persistence boundaries so they cannot silently drift.", "classification": "verified_existing", "disposition": "addressed_duplicate", "authority": "read_only_or_language_only_no_live_authority"},
+    {"claim_id": "c002", "summary": "Represent the Experience Delta V2 design hook with a typed default-off schema rather than relying only on an opaque string.", "classification": "verified_existing", "disposition": "addressed_duplicate", "authority": "read_only_or_language_only_no_live_authority"},
+    {"claim_id": "c003", "summary": "Preserve optional spectral-dimension omission and strict false live-vector/live-authority flags through serde round trips.", "classification": "verified_existing", "disposition": "addressed_duplicate", "authority": "read_only_or_language_only_no_live_authority"}
+  ]
+}

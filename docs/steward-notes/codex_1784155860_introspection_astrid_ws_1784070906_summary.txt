@@ -1,0 +1,1 @@
+Astrid asks whether semantic integrity, timing, pressure, and reciprocity can be read together without ghost stability. Existing heartbeat, pressure-source, timing-skew, and reciprocity diagnostics answer the read-only portion; protocol and threshold changes remain live-authority work.

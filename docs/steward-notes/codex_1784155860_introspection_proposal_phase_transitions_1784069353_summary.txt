@@ -1,0 +1,1 @@
+The proposal asks for replayable shared transition artifacts rather than one-way phase labels. Existing transition signatures, cards, witness receipts, correspondence lineage, and right-to-ignore language already provide the bounded non-live substrate without coupling a transition to behavior.

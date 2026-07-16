@@ -1,0 +1,8 @@
+{
+  "introspection_id": "introspection_minime_autonomous_agent_1783420251",
+  "claims": [
+    {"claim_id": "c001", "summary": "A quoted file-looking phrase inside prompt text, including 'data.csv', must not be inferred as the RUN_PYTHON filename.", "classification": "implemented_test", "disposition": "addressed_change", "authority": "test_only_parser_evidence_no_execution_policy_change"},
+    {"claim_id": "c002", "summary": "Keep parameterized perturb lambda1 mapped to its declared bounded 0..8 lane without hidden entropy coupling.", "classification": "verified_existing", "disposition": "addressed_duplicate", "authority": "source_and_test_verification_no_live_perturbation"},
+    {"claim_id": "c003", "summary": "Keep nested workspace and script paths confined to the selected workspace and safe filename rules.", "classification": "verified_existing", "disposition": "addressed_duplicate", "authority": "source_and_test_verification_no_execution_policy_change"}
+  ]
+}

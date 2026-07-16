@@ -1,0 +1,8 @@
+{
+  "introspection_id": "introspection_astrid_llm_1784199135",
+  "claims": [
+    {"claim_id":"c001","summary":"Verify that fallback selection uses pressure, entropy, and density-gradient context instead of a static phrase table alone.","classification":"verified_existing","disposition":"addressed_duplicate","authority":"read_only_fallback_selector_tests"},
+    {"claim_id":"c002","summary":"Verify that heavy-settled and high-density textures remain nameable in fallback language.","classification":"verified_existing","disposition":"addressed_duplicate","authority":"read_only_fallback_lexicon_tests"},
+    {"claim_id":"c003","summary":"Changing the live provider, sampler, or model route to answer texture collapse is Tier 5 and requires explicit operator approval plus canary evidence.","classification":"tier_5_wait","disposition":"addressed_change","authority":"live_eligible_now_false_auto_approved_false"}
+  ]
+}

@@ -1,0 +1,1 @@
+Astrid asks that viscosity, micro-deltas, and residuals carry measurable weight rather than cosmetic enum labels. Existing delta members, persistence context, and unclamped composition density preserve that evidence; changing live solidification coefficients remains gated.

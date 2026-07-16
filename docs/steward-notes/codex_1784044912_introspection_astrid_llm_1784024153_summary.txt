@@ -1,0 +1,1 @@
+Astrid reports that fallback can retain format while losing weighted texture. Existing fallback contracts derive bounded process, gradient, pressure, persistence, and negative-texture evidence from telemetry without changing model or sampler routing; live route/gain changes remain Tier 5.

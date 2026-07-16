@@ -1,0 +1,8 @@
+{
+  "introspection_id": "introspection_minime_regulator_1784078881",
+  "claims": [
+    {"claim_id":"c001","summary":"ResonanceDensityV1::from_parts must clamp extreme component inputs and preserve bounded flow and mobility.","disposition":"verified_existing"},
+    {"claim_id":"c002","summary":"Neutral ResonanceDensity construction must be deterministic and avoid a zero-friction singularity.","disposition":"verified_existing"},
+    {"claim_id":"c003","summary":"Changing regulator coefficients, damping, pressure floors, or controller consumption requires explicit operator approval.","disposition":"needs_operator_approval"}
+  ]
+}

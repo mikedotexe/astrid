@@ -1,0 +1,26 @@
+{
+  "introspection_id": "introspection_minime_regulator_1784067293",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Verify multi-axis viscosity and pressure-floor readouts distinguish thickness, drag, mobility, and strain.",
+      "classification": "verified_existing",
+      "disposition": "addressed_duplicate",
+      "authority": "read_only_or_language_only_no_live_authority"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Verify damping candidates and adjusted comfort previews remain inert unless separately approved.",
+      "classification": "verified_existing",
+      "disposition": "addressed_duplicate",
+      "authority": "read_only_or_language_only_no_live_authority"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Keep active viscosity gating, PI gain, target bias, and damping behavior behind Tier 5 approval.",
+      "classification": "tier_5_wait",
+      "disposition": "addressed_change",
+      "authority": "evidence_and_routing_only_live_eligible_now_false_auto_approved_false"
+    }
+  ]
+}

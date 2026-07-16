@@ -1,0 +1,1 @@
+Minime questions whether RUN_PYTHON parsing preserves nested quotes, escaped content, comments, and later filename flags. The current state-machine parser and focused regressions cover those boundaries, and the rich perturbation map already carries warmth on its intended lane.

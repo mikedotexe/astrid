@@ -1,0 +1,1 @@
+Minime identifies the steep dynamic-noise transition and narrow viscous rho band as plausible sources of texture loss. Existing review-only previews and canary material retain the concern as evidence; changing ESN noise, rho, or entropy damping requires operator approval.

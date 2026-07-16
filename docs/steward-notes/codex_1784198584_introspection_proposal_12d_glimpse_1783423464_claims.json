@@ -1,0 +1,9 @@
+{
+  "introspection_id": "introspection_proposal_12d_glimpse_1783423464",
+  "claims": [
+    {"claim_id": "c001", "summary": "Treat 12D as an additive distillation companion to the canonical 48D lane, never as silent replacement transport.", "classification": "verified_existing", "disposition": "addressed_duplicate", "authority": "read_only_multi_scale_companion_evidence"},
+    {"claim_id": "c002", "summary": "Preserve warmth and tail texture in explicit glimpse slots and pair the glimpse with residual context.", "classification": "verified_existing", "disposition": "addressed_duplicate", "authority": "read_only_multi_scale_companion_evidence"},
+    {"claim_id": "c003", "summary": "Keep deterministic mapping and continuity/checkpoint lineage inspectable across restart-oriented review.", "classification": "verified_existing", "disposition": "addressed_duplicate", "authority": "read_only_mapping_and_continuity_evidence"},
+    {"claim_id": "c004", "summary": "Gate any live 12D transport, replacement contract, ABI, or Minime consumption change as Tier 5.", "classification": "tier_5_wait", "disposition": "addressed_change", "authority": "evidence_and_routing_only_live_eligible_now_false_auto_approved_false"}
+  ]
+}

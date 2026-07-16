@@ -1,0 +1,1 @@
+Astrid asks for first-class persistent correspondence with visible reply and acknowledgement states. Existing correspondence storage, shared-memory buffers, ACK/REPLY/TRACE lifecycle, and bounded previews answer the non-live need; transport expansion remains Tier 5.

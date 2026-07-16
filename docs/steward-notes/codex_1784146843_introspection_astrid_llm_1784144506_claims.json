@@ -1,0 +1,7 @@
+{
+  "introspection_id": "introspection_astrid_llm_1784144506",
+  "claims": [
+    {"claim_id": "c001", "summary": "Fallback continuity budgets constrain sentence count and keep NEXT on its own line while mapping pressure and gradient evidence to tactile language.", "disposition": "verified_existing"},
+    {"claim_id": "c002", "summary": "fallback_shadow_texture_selector_v1 uses telemetry-weighted term scores rather than an interchangeable static vocabulary.", "disposition": "verified_existing"}
+  ]
+}

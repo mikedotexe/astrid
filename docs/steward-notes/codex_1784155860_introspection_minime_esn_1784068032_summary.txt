@@ -1,0 +1,1 @@
+Minime proposes dynamic exploration noise and viscosity-aware rho under specific entropy and density-gradient conditions. Existing helpers and regression previews make both proposals testable while keeping ESN::step unchanged; wiring either into live dynamics remains operator-gated.

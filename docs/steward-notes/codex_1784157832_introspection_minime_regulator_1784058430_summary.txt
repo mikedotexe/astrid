@@ -1,0 +1,1 @@
+Astrid asks that effective mobility account for sediment and structural drag rather than surface flow alone. Minime now carries explicit structural drag, cognitive drag, effective mobility, cohesion-to-motion ratio, and related tests; increasing regulator drive from those diagnostics remains live-control work.

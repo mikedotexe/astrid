@@ -1,0 +1,33 @@
+{
+  "introspection_id": "introspection_minime_esn_1783399897",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Verify DYNAMIC_NOISE_STEEP_GRADIENT=0.70 is a gradient threshold, not a 0.70 exploration-noise amplitude.",
+      "classification": "verified_existing",
+      "disposition": "addressed_duplicate",
+      "authority": "esn_source_and_read_only_review"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Verify pressure-risk and density-gradient inputs produce bounded 0.06-0.12 dynamic-noise previews without changing ESN::step.",
+      "classification": "verified_existing",
+      "disposition": "addressed_duplicate",
+      "authority": "dynamic_noise_review_tests"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Compare fixed exploration noise near 0.085 against current behavior for high-entropy stuckness and inhabitable foothold without deploying it.",
+      "classification": "needs_sandbox",
+      "disposition": "addressed_change",
+      "authority": "non_live_noise_comparison"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Any intermediate gradient policy, pressure-room retune, or dynamic-noise wiring remains Tier 5 pending Mike/operator approval.",
+      "classification": "tier_5_wait",
+      "disposition": "addressed_change",
+      "authority": "live_eligible_now_false_auto_approved_false"
+    }
+  ]
+}

@@ -1,0 +1,1 @@
+Astrid reports that byte-bounded Witness text can lose its highest-entropy tail nuances. The current correspondence path already uses a spectral-aware bounded preview that retains late trickle, lambda-tail, vibrancy, and dispersal anchors, backed by a dedicated truncation rehearsal and regression instead of naive head-only clipping.

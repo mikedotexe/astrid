@@ -1,0 +1,1 @@
+Astrid says binary entropy smoothing could lag the present and asks for a mode-packing spike and latency test. Current websocket smoothing uses a graded entropy window with porosity and density-gradient responsiveness, not a binary switch, and includes spike regressions. Changing the live smoothing curve or cadence remains Tier 5.

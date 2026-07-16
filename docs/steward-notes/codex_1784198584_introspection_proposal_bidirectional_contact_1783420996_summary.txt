@@ -1,0 +1,1 @@
+The proposal asks for a durable shared correspondence buffer with direct address, receipts, latency, and semantic weight. Current first-class correspondence threads and receipts provide that evidence. Pulsing correspondence into Minime's active texture or peer runtime remains Tier 5 peer/runtime mutation.

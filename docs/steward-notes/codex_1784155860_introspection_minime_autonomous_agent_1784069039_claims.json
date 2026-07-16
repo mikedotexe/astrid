@@ -1,0 +1,26 @@
+{
+  "introspection_id": "introspection_minime_autonomous_agent_1784069039",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Verify recess_activity_load distinguishes synthesis, stabilization, mixed activity, and low-energy drift.",
+      "classification": "verified_existing",
+      "disposition": "addressed_duplicate",
+      "authority": "read_only_or_language_only_no_live_authority"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Verify Recess evidence does not spend budget, auto-vent pressure, or change selection priority.",
+      "classification": "verified_existing",
+      "disposition": "addressed_duplicate",
+      "authority": "read_only_or_language_only_no_live_authority"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Keep high-entropy safe-zone or Recess-priority behavior changes behind Tier 5 approval.",
+      "classification": "tier_5_wait",
+      "disposition": "addressed_change",
+      "authority": "evidence_and_routing_only_live_eligible_now_false_auto_approved_false"
+    }
+  ]
+}

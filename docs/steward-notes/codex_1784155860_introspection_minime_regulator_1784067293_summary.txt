@@ -1,0 +1,1 @@
+Minime asks whether viscosity can actively damp a rigid or overpacked state. Existing viscosity vectors, pressure floors, damping previews, and explicit inert-candidate fields make the proposal inspectable; consuming those readouts in PI or active damping remains live-authority work.

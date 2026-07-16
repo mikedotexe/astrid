@@ -1,0 +1,8 @@
+{
+  "introspection_id": "introspection_minime_regulator_1784199532",
+  "claims": [
+    {"claim_id":"c001","summary":"Verify a read-only cohesion-to-motion ratio that distinguishes cohesive stillness from effortful immobility.","classification":"verified_existing","disposition":"addressed_duplicate","authority":"read_only_regulator_diagnostic"},
+    {"claim_id":"c002","summary":"Verify inhabitable fluctuation classifications without turning the diagnostic into a movement command.","classification":"verified_existing","disposition":"addressed_duplicate","authority":"read_only_regulator_tests"},
+    {"claim_id":"c003","summary":"Using cohesion-to-motion evidence to change pressure risk or controller behavior is Tier 5 live regulation work requiring explicit operator approval.","classification":"tier_5_wait","disposition":"addressed_change","authority":"live_eligible_now_false_auto_approved_false"}
+  ]
+}

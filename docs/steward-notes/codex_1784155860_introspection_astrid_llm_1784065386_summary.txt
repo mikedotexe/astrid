@@ -1,0 +1,1 @@
+Astrid asks for a fallback lane whose texture probabilities move with entropy instead of snapping to generic low-capacity language. Existing dynamic probability and preservation tests cover the language-only path; changing live model selection or generation parameters remains separately authorized.

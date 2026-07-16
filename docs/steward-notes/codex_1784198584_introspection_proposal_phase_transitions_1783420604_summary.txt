@@ -1,0 +1,1 @@
+The proposal asks for replayable and replyable phase artifacts whose spectral signatures and deltas remain consistent. Current phase transition cards preserve endpoints, signatures, vectors, friction, persistence, and reply state. Functional triggers and unlocks remain Tier 5 behavior changes.

@@ -1,0 +1,8 @@
+{
+  "introspection_id": "introspection_astrid_codec_1784055732",
+  "claims": [
+    {"claim_id": "c001", "summary": "Verify ASTRID_CODEC_RUNTIME_DIR takes precedence over executable-relative and process-relative projection paths.", "classification": "verified_existing", "disposition": "addressed_duplicate", "authority": "read_only_or_language_only_no_live_authority"},
+    {"claim_id": "c002", "summary": "Verify fixed projection kernels and derived epochs have deterministic cross-run checksums and atomic persistence.", "classification": "verified_existing", "disposition": "addressed_duplicate", "authority": "read_only_or_language_only_no_live_authority"},
+    {"claim_id": "c003", "summary": "Verify entropy-gated vibrancy uses a smooth bounded onset and preserves attenuation and vector boundaries.", "classification": "verified_existing", "disposition": "addressed_duplicate", "authority": "read_only_or_language_only_no_live_authority"}
+  ]
+}

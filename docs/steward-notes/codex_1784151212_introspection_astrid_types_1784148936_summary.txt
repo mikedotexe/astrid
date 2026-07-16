@@ -1,0 +1,1 @@
+Astrid examined clamp-distribution intent and asked for proof that persistent drag survives the exact 0.6/0.6/four-tick case and that fallback intent serializes durably. Current types and tests preserve persistent drag beside broad swell or spike evidence, pin the bounded window, and keep the review non-authoritative.

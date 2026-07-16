@@ -1,0 +1,8 @@
+{
+  "introspection_id": "introspection_minime_autonomous_agent_1784017305",
+  "claims": [
+    {"claim_id": "c001", "summary": "Preserve nested and escaped quotes while consuming RUN_PYTHON text values without swallowing a later filename flag.", "classification": "verified_existing", "disposition": "addressed_change", "authority": "read_only_or_language_only_no_live_authority"},
+    {"claim_id": "c002", "summary": "Keep flag-looking tokens inside quoted strings and trailing comments as source text rather than parser boundaries.", "classification": "verified_existing", "disposition": "addressed_change", "authority": "read_only_or_language_only_no_live_authority"},
+    {"claim_id": "c003", "summary": "Retain the parameterized perturbation warmth mapping and stable-core safety cap already covered by the Minime test suite.", "classification": "verified_existing", "disposition": "addressed_change", "authority": "read_only_or_language_only_no_live_authority"}
+  ]
+}

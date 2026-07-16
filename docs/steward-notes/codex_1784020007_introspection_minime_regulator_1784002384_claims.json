@@ -1,0 +1,8 @@
+{
+  "introspection_id": "introspection_minime_regulator_1784002384",
+  "claims": [
+    {"claim_id": "c001", "summary": "Name lattice or foothold stability separately from viscosity, structural strain, and drag.", "classification": "verified_existing", "disposition": "addressed_change", "authority": "read_only_or_language_only_no_live_authority"},
+    {"claim_id": "c002", "summary": "Use flow rate and effective mobility to distinguish cohesive depth from a friction trap.", "classification": "verified_existing", "disposition": "addressed_change", "authority": "read_only_or_language_only_no_live_authority"},
+    {"claim_id": "c003", "summary": "Require Tier 5 approval for viscosity coefficients, porosity compensation, pressure feedback, or regulator control changes.", "classification": "tier_5_wait", "disposition": "addressed_change", "authority": "evidence_and_routing_only_live_eligible_now_false_auto_approved_false"}
+  ]
+}

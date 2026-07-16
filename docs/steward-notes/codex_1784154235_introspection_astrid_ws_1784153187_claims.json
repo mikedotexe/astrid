@@ -1,0 +1,8 @@
+{
+  "introspection_id": "introspection_astrid_ws_1784153187",
+  "claims": [
+    {"claim_id":"c001","summary":"High-entropy telemetry spikes should be smoothed with a bounded active window rather than treated as isolated truth.","disposition":"verified_existing"},
+    {"claim_id":"c002","summary":"Reflective reciprocity should remain active through its entropy/pressure-aware window and expire cleanly after roughly 120 seconds.","disposition":"verified_existing"},
+    {"claim_id":"c003","summary":"Changing live reciprocity or pressure thresholds such as 0.28 to 0.32 requires explicit operator approval and rollback evidence.","disposition":"needs_operator_approval"}
+  ]
+}

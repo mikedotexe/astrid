@@ -1,0 +1,1 @@
+Astrid treats clamp provenance as part of self-knowledge and asks for history rather than a final scalar alone. Current review packets already preserve raw input, fallback intent, clipping reason, and authority; the new typed intent strengthens that evidence, while pressure-driven clamp changes remain gated.

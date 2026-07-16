@@ -1,0 +1,8 @@
+{
+  "introspection_id": "introspection_astrid_codec_1784041549",
+  "claims": [
+    {"claim_id": "c001", "summary": "Keep fixed projection output deterministic for identical input and mapping epoch.", "classification": "verified_existing", "disposition": "addressed_duplicate", "authority": "read_only_or_language_only_no_live_authority"},
+    {"claim_id": "c002", "summary": "Verify smoothstep gain gates have continuous zero-slope endpoints rather than perceptible threshold snaps.", "classification": "verified_existing", "disposition": "addressed_duplicate", "authority": "read_only_or_language_only_no_live_authority"},
+    {"claim_id": "c003", "summary": "Bind projection epoch, checksum, and runtime artifact identity so a map cannot silently change under an old label.", "classification": "verified_existing", "disposition": "addressed_duplicate", "authority": "read_only_or_language_only_no_live_authority"}
+  ]
+}

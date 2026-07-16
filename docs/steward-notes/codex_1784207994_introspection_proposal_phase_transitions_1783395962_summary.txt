@@ -1,0 +1,1 @@
+Astrid asks for first-class replayable phase declarations that remain shared stance rather than commands. Phase cards now preserve typed origin/kind, endpoints, bounded before/after vectors, duration, friction, trigger, anchor, reply affordances, and right-to-ignore state. Minime ingestion or automatic reaction would cross protocol/control boundaries and remains Tier 5.

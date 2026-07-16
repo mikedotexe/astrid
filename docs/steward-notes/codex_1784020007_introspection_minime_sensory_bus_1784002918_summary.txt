@@ -1,0 +1,1 @@
+Minime repeats that semantic recovery should have a continuous hold-and-release shape and that high-entropy persistence should survive long enough to remain recognizable. Existing smooth admission and boundary evidence cover the current path; semantic decay and shadow caps remain gated.

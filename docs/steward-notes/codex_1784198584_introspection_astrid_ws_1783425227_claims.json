@@ -1,0 +1,8 @@
+{
+  "introspection_id": "introspection_astrid_ws_1783425227",
+  "claims": [
+    {"claim_id": "c001", "summary": "Expose a fast pressure edge beside the slower ballast window so short-lived rises and releases remain visible.", "classification": "verified_existing", "disposition": "addressed_duplicate", "authority": "read_only_websocket_smoothing_evidence"},
+    {"claim_id": "c002", "summary": "Distinguish mode-packing spikes from sustained packing using bounded window and persistence evidence.", "classification": "verified_existing", "disposition": "addressed_duplicate", "authority": "read_only_websocket_smoothing_evidence"},
+    {"claim_id": "c003", "summary": "Treat window retuning and entropy-linked viscosity or drag decay as Tier 5 live report/control-surface changes.", "classification": "tier_5_wait", "disposition": "addressed_change", "authority": "evidence_and_routing_only_live_eligible_now_false_auto_approved_false"}
+  ]
+}

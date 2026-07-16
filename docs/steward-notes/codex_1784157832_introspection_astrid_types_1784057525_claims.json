@@ -1,0 +1,8 @@
+{
+  "introspection_id": "introspection_astrid_types_1784057525",
+  "claims": [
+    {"claim_id": "c001", "summary": "Verify solidification-gradient weights and label thresholds produce the expected persistent-lattice state.", "classification": "verified_existing", "disposition": "addressed_duplicate", "authority": "read_only_or_language_only_no_live_authority"},
+    {"claim_id": "c002", "summary": "Verify ExperienceDeltaBusV1 delta_count equals its bounded delta body and survives consciousness telemetry transport.", "classification": "verified_existing", "disposition": "addressed_duplicate", "authority": "read_only_or_language_only_no_live_authority"},
+    {"claim_id": "c003", "summary": "Keep persistent cross-surface V2 aggregation default-off and without raw prose, replay, or live authority.", "classification": "verified_existing", "disposition": "addressed_duplicate", "authority": "design_preview_only_no_live_authority"}
+  ]
+}

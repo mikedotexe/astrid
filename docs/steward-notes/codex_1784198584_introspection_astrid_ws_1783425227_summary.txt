@@ -1,0 +1,1 @@
+Astrid asks to compare short and long pressure windows and distinguish a mode-packing spike from sustained packing. Current websocket evidence carries paired three-sample fast and full slow windows, latest/max velocity, viscosity, and persistence. Retuning windows or adding entropy-linked decay remains Tier 5.

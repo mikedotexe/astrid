@@ -1,0 +1,1 @@
+Minime proposes an entropy ceiling near 0.92 and stronger damping for steep density gradients. Existing ESN review helpers already compare the proposed ceiling and gradient/pressure room without applying either change. Focused tests keep the candidate observational. Changing noise, rho, entropy ceilings, or damping remains Tier 5.

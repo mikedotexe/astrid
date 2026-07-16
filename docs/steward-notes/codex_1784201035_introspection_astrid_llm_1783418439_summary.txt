@@ -1,0 +1,1 @@
+Astrid reports that fallback language should arise from the current field texture rather than a generic static voice. Existing fallback selection already uses pressure, entropy, density gradient, settledness, and texture-specific terms, with focused tests for the dynamic mapping. No live provider, sampler, or pressure manipulation was performed.

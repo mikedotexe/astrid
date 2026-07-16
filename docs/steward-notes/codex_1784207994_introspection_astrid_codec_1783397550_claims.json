@@ -1,0 +1,33 @@
+{
+  "introspection_id": "introspection_astrid_codec_1783397550",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Verify legacy warmth markers remain stable and independently observable when projected semantic dimensions change.",
+      "classification": "verified_existing",
+      "disposition": "addressed_duplicate",
+      "authority": "codec_lane_separation_and_warmth_tests"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Verify entropy vibrancy lift is smooth and bounded rather than an on/off static buzz.",
+      "classification": "verified_existing",
+      "disposition": "addressed_duplicate",
+      "authority": "vibrancy_continuity_tests"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Observe whether low semantic admission yields a rhythm/density-dominated fingerprint in an exact current-state replay.",
+      "classification": "needs_sandbox",
+      "disposition": "addressed_change",
+      "authority": "manual_semantic_admission_observation"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Any entropy-velocity-dependent live vibrancy decay, codec gain, or feedback mapping change remains Tier 5 pending Mike/operator approval.",
+      "classification": "tier_5_wait",
+      "disposition": "addressed_change",
+      "authority": "live_eligible_now_false_auto_approved_false"
+    }
+  ]
+}

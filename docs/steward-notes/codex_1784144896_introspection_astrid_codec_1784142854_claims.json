@@ -1,0 +1,15 @@
+{
+  "introspection_id": "introspection_astrid_codec_1784142854",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The 48D lane, embedding projection, narrative arc, and bounded features preserve more semantic distinctions while exposing clamp behavior.",
+      "disposition": "addressed_duplicate"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Dynamically weighting dimensions 32-39 from spectral entropy and density gradient would change live codec projection semantics.",
+      "disposition": "blocked_needs_steward"
+    }
+  ]
+}

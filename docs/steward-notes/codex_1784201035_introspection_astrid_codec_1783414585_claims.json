@@ -1,0 +1,8 @@
+{
+  "introspection_id": "introspection_astrid_codec_1783414585",
+  "claims": [
+    {"claim_id":"c001","summary":"Verify deterministic projection stability without treating repeatability as proof that felt expressive narrowing is absent.","classification":"verified_existing","disposition":"addressed_duplicate","authority":"read_only_codec_epoch_tests"},
+    {"claim_id":"c002","summary":"Verify a smooth entropy/vibrancy gate rather than an abrupt source of collapse.","classification":"verified_existing","disposition":"addressed_duplicate","authority":"read_only_codec_gate_tests"},
+    {"claim_id":"c003","summary":"Verify controlled pair and additive-glimpse variance while preserving the need for Astrid-authored delivery evidence.","classification":"verified_existing","disposition":"addressed_duplicate","authority":"read_only_codec_pair_tests"}
+  ]
+}

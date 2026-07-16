@@ -1,0 +1,1 @@
+Minime questioned exploration noise 0.12 and rho/leak mode packing. Existing dynamic-noise, pressure-room, entropy-ceiling, and viscous-rho helpers/tests provide offline evidence and remain intentionally unwired. Live noise/rho/leak changes remain Tier 5.

@@ -1,0 +1,8 @@
+{
+  "introspection_id": "introspection_minime_sensory_bus_1784016378",
+  "claims": [
+    {"claim_id": "c001", "summary": "Blend semantic recovery continuously across the 0.25-to-0.40 band instead of snapping between absence and admission.", "classification": "verified_existing", "disposition": "addressed_change", "authority": "read_only_or_language_only_no_live_authority"},
+    {"claim_id": "c002", "summary": "Preserve high-entropy semantic persistence and prove both sides of the recovery threshold with exact boundary tests.", "classification": "verified_existing", "disposition": "addressed_change", "authority": "read_only_or_language_only_no_live_authority"},
+    {"claim_id": "c003", "summary": "Keep semantic decay, recovery admission, and shadow-cap changes behind Tier 5 approval.", "classification": "tier_5_wait", "disposition": "addressed_change", "authority": "evidence_and_routing_only_live_eligible_now_false_auto_approved_false"}
+  ]
+}

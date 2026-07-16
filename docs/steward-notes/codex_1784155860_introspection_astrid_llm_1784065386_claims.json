@@ -1,0 +1,26 @@
+{
+  "introspection_id": "introspection_astrid_llm_1784065386",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Verify the fallback contract carries high-entropy texture through the actual request path.",
+      "classification": "verified_existing",
+      "disposition": "addressed_duplicate",
+      "authority": "read_only_or_language_only_no_live_authority"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Verify texture probabilities and trajectory terms shift with telemetry rather than a static adjective list.",
+      "classification": "verified_existing",
+      "disposition": "addressed_duplicate",
+      "authority": "read_only_or_language_only_no_live_authority"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Keep live fallback thresholds, model selection, sampler, and generation changes behind Tier 5 approval.",
+      "classification": "tier_5_wait",
+      "disposition": "addressed_change",
+      "authority": "evidence_and_routing_only_live_eligible_now_false_auto_approved_false"
+    }
+  ]
+}

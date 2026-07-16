@@ -1,0 +1,1 @@
+Astrid warns that a 12D glimpse could collapse identity if it replaced full geometry. Current design keeps 32D live semantics and exposes 12D only as additive, non-authoritative review evidence with resonance-loss checks. A full32-versus-12D comparison remains useful sandbox work; any live resolution or transport switch remains Tier 5.

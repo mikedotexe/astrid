@@ -1,0 +1,1 @@
+Astrid values the clamp review's preservation of raw intent but notes that fallback intent is encoded as free text. A typed additive enum now accompanies the stable string with a legacy default; pressure-aware clamp behavior remains live-authority work.

@@ -1,0 +1,8 @@
+{
+  "introspection_id": "introspection_astrid_ws_1784092859",
+  "claims": [
+    {"claim_id":"c001","summary":"A connected sensory lane with no first send is distinct from a stale sensory lane and from a severed bridge.","disposition":"verified_existing"},
+    {"claim_id":"c002","summary":"Old telemetry with recent sensory traffic classifies as bidirectional stale telemetry within the dynamic window policy.","disposition":"verified_existing"},
+    {"claim_id":"c003","summary":"Connectivity status derives Bidirectional, TelemetryOnly, SensoryOnly, and Severed directly from lane state.","disposition":"verified_existing"}
+  ]
+}

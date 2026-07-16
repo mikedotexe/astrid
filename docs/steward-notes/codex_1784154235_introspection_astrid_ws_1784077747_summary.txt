@@ -1,0 +1,1 @@
+Astrid asked that reciprocity distinguish telemetry activity from sensory silence and adapt under high entropy. The bridge already uses 60/90/120-second evidence-aware windows and has focused expiry and high-pressure/high-entropy tests. Altering live stale thresholds remains Tier 5.

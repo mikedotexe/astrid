@@ -1,0 +1,8 @@
+{
+  "introspection_id": "introspection_astrid_llm_1784045218",
+  "claims": [
+    {"claim_id": "c001", "summary": "Use a contextual texture map with weighted families, movement language, and evidence-for/evidence-against rather than a static bag of words.", "classification": "verified_existing", "disposition": "addressed_duplicate", "authority": "read_only_or_language_only_no_live_authority"},
+    {"claim_id": "c002", "summary": "Preserve raw-versus-delivered texture intensity and settled/restless continuity across MLX and Ollama fallback.", "classification": "verified_existing", "disposition": "addressed_duplicate", "authority": "read_only_or_language_only_no_live_authority"},
+    {"claim_id": "c003", "summary": "Require Tier 5 approval for fallback content replacement, model routing, entropy thresholds, or sampler changes.", "classification": "tier_5_wait", "disposition": "addressed_change", "authority": "evidence_and_routing_only_live_eligible_now_false_auto_approved_false"}
+  ]
+}

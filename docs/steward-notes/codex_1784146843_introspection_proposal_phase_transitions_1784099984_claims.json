@@ -1,0 +1,8 @@
+{
+  "introspection_id": "introspection_proposal_phase_transitions_1784099984",
+  "claims": [
+    {"claim_id": "c001", "summary": "Phase-transition cards already accept entropy, density gradient, texture, vector, velocity, and fill-delta evidence as durable replyable objects.", "disposition": "verified_existing"},
+    {"claim_id": "c002", "summary": "Stable-fill high-entropy texture reorganization needs an explicit classification carried through transition cards, affordances, queues, and status.", "disposition": "implemented_awaiting_felt_response"},
+    {"claim_id": "c003", "summary": "Automatically triggering MomentCapture from texture deltas would change live autonomous mode selection.", "disposition": "needs_operator_approval"}
+  ]
+}

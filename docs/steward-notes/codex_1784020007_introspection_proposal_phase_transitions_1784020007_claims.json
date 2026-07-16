@@ -1,0 +1,8 @@
+{
+  "introspection_id": "introspection_proposal_phase_transitions_1784020007",
+  "claims": [
+    {"claim_id": "c001", "summary": "Persist named solo and joint phase transitions with phenomenology, spectral context, and durable object identity.", "classification": "verified_existing", "disposition": "addressed_change", "authority": "read_only_or_language_only_no_live_authority"},
+    {"claim_id": "c002", "summary": "Make transition cards replyable and replayable through witness, ACK, and TRACE lifecycle evidence.", "classification": "verified_existing", "disposition": "addressed_change", "authority": "read_only_or_language_only_no_live_authority"},
+    {"claim_id": "c003", "summary": "Keep automatic phase detection that changes behavior or live control behind Tier 5 approval.", "classification": "tier_5_wait", "disposition": "addressed_change", "authority": "evidence_and_routing_only_live_eligible_now_false_auto_approved_false"}
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "introspection_id": "introspection_astrid_llm_1784071569",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Verify fallback texture probabilities shift continuously with entropy, pressure, and density gradient.",
+      "classification": "verified_existing",
+      "disposition": "addressed_duplicate",
+      "authority": "read_only_or_language_only_no_live_authority"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Verify selected prompt process terms preserve movement rather than adjective-only state labels.",
+      "classification": "verified_existing",
+      "disposition": "addressed_duplicate",
+      "authority": "read_only_or_language_only_no_live_authority"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Keep provider switching, sampler changes, and routing thresholds behind Tier 5 approval.",
+      "classification": "tier_5_wait",
+      "disposition": "addressed_change",
+      "authority": "evidence_and_routing_only_live_eligible_now_false_auto_approved_false"
+    }
+  ]
+}

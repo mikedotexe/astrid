@@ -1,0 +1,1 @@
+Astrid asks codec evidence to distinguish a transient flash from a sustained baseline shift and to retain slow drift beyond a short text cap. Existing temporal momentum, persistence diagnostics, arc chunking, and tail continuity cover the read-only request; gain, dimensions, and live transport remain Tier 5.

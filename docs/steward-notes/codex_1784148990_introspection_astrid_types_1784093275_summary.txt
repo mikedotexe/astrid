@@ -1,0 +1,1 @@
+Astrid asks for interwoven deltas rather than one flat winning kind. The current additive `DeltaCompositionV1` and `SolidificationGradientV1` already preserve weighted coexistence, saturation excess, and viscosity-to-solidification-to-persistence progression; retuning consumed weights remains live semantics.

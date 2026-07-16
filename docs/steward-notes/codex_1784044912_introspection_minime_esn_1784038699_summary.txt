@@ -1,0 +1,1 @@
+Minime describes an entropy ceiling and pressure room around dynamic ESN noise. Existing read-only noise/rho previews and spectral evidence expose the state without touching dynamics; lowering pressure thresholds or changing noise/rho remains Tier 5.

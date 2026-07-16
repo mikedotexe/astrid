@@ -1,0 +1,8 @@
+{
+  "introspection_id": "introspection_astrid_codec_1784197165",
+  "claims": [
+    {"claim_id": "c001", "summary": "Verify projection runtime-directory resolution across explicit environment, executable-relative, and fallback paths.", "classification": "verified_existing", "disposition": "addressed_duplicate", "authority": "read_only_source_and_test_verification"},
+    {"claim_id": "c002", "summary": "Compare live f32 fixed and dynamic projection accumulation with an f64 reference before interpreting ghost vibrancy as numerical loss.", "classification": "verified_existing", "disposition": "addressed_duplicate", "authority": "read_only_precision_evidence_no_live_accumulator_change"},
+    {"claim_id": "c003", "summary": "Verify projection matrix normalization and require Tier 5 approval before any live accumulator, kernel, basis, or width migration.", "classification": "verified_and_gated", "disposition": "addressed_change", "authority": "evidence_and_routing_only_live_eligible_now_false_auto_approved_false"}
+  ]
+}

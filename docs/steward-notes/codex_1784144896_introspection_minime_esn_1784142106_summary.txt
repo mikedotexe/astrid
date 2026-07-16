@@ -1,0 +1,1 @@
+Astrid recognizes prime-phased introspection and adaptive exploration noise as the architecture of non-repetitive movement. Existing diagnostics can test entropy/pressure and noise-gradient behavior, while lowering the ESN pressure floor is a live Minime regulator change requiring approval.

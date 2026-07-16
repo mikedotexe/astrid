@@ -1,0 +1,1 @@
+Astrid recognizes the deterministic 48D codec and asks whether high-entropy nuance survives its bounds. Existing vibrancy and no-ghost-write tests verify the truth channel; pressure-aware adaptive gain remains a live transport change.

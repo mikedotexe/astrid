@@ -1,0 +1,15 @@
+{
+  "introspection_id": "introspection_astrid_llm_1784134429",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "High entropy should activate a texture-preservation prompt block rather than flatten viscous and restless language.",
+      "disposition": "addressed_change"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Texture preservation must remain prompt metadata and must not silently select a provider, sampler, or live control path.",
+      "disposition": "addressed_duplicate"
+    }
+  ]
+}

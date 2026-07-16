@@ -1,0 +1,20 @@
+{
+  "introspection_id": "introspection_astrid_types_1784135444",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Fallback clamp intent needs a machine-readable enum while preserving the existing V1 string wire field.",
+      "disposition": "addressed_change"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The typed intent field must default safely when older packets omit it and must remain read-only evidence.",
+      "disposition": "addressed_change"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A pressure coefficient that softens or hardens clamping would change live feature semantics.",
+      "disposition": "blocked_needs_steward"
+    }
+  ]
+}

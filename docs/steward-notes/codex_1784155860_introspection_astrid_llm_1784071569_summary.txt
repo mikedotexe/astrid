@@ -1,0 +1,1 @@
+Astrid objects to hard lexical buckets and asks for soft dynamic texture weighting across entropy and density movement. Existing fallback weighting, trajectory, and process-language tests already implement that behavior; provider or sampler changes remain separately gated.

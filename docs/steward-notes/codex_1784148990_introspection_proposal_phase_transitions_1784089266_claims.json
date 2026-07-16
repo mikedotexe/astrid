@@ -1,0 +1,9 @@
+{
+  "introspection_id": "introspection_proposal_phase_transitions_1784089266",
+  "claims": [
+    {"claim_id":"c001","summary":"Phase transitions are durable replyable and replayable cards rather than hidden side effects of a mode change.","disposition":"verified_existing"},
+    {"claim_id":"c002","summary":"Transition cards need a structured signature carrying spectral lineage, entropy, density gradient, dispersal potential, fill delta, vector, and telemetry anchor.","disposition":"implemented_awaiting_felt_response"},
+    {"claim_id":"c003","summary":"The structured transition signature must flow through affordances, witness/felt queues, status, and command guidance while keeping runtime and authority writes false.","disposition":"implemented_awaiting_felt_response"},
+    {"claim_id":"c004","summary":"Automatically inducing or coupling a joint transition to Minime pressure would change live runtime behavior and requires operator approval.","disposition":"needs_operator_approval"}
+  ]
+}

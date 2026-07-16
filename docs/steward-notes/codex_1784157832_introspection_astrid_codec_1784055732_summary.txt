@@ -1,0 +1,1 @@
+Astrid asks whether projection path resolution, deterministic kernels, and smooth entropy onset remain stable across deployment contexts. Existing env precedence, kernel checksums, atomic epoch creation, and smoothstep tests directly cover these claims.

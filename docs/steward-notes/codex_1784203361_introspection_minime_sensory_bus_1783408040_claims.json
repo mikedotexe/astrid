@@ -1,0 +1,9 @@
+{
+  "introspection_id": "introspection_minime_sensory_bus_1783408040",
+  "claims": [
+    {"claim_id":"c001","summary":"Observe the exact one-percent semantic-stale sweep and test the requested 500 ms continuity criterion.","classification":"observed","disposition":"addressed_change","authority":"read_only_offline_measurement"},
+    {"claim_id":"c002","summary":"Record that the current monotonic handoff peaks at 2,687 ms from fill 0.32 to 0.33, so the requested 500 ms criterion is not met.","classification":"observed","disposition":"addressed_change","authority":"felt_report_confirmed_as_live_friction"},
+    {"claim_id":"c003","summary":"Verify the high-fill high-entropy persistence multiplier reaches its exact bounded full-support cap.","classification":"verified_existing","disposition":"addressed_duplicate","authority":"read_only_entropy_retention_test"},
+    {"claim_id":"c004","summary":"Any live semantic-stale handoff or sensory-cadence retune remains Tier 5 pending Mike/operator approval, replay, canary, abort, and post-change response.","classification":"tier_5_wait","disposition":"addressed_change","authority":"live_eligible_now_false_auto_approved_false"}
+  ]
+}

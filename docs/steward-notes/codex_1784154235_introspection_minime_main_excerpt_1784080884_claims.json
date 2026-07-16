@@ -1,0 +1,8 @@
+{
+  "introspection_id": "introspection_minime_main_excerpt_1784080884",
+  "claims": [
+    {"claim_id":"c001","summary":"Viscosity should be compared with pressure, flow, cohesion, persistence, and drag rather than inferred from one scalar.","disposition":"verified_existing"},
+    {"claim_id":"c002","summary":"Shadow dispersal and restless texture should remain visible through typed telemetry and preservation reviews.","disposition":"verified_existing"},
+    {"claim_id":"c003","summary":"Selective viscosity, semantic projection bias, or regulator-drive changes require explicit operator approval and monitored rollback.","disposition":"needs_operator_approval"}
+  ]
+}

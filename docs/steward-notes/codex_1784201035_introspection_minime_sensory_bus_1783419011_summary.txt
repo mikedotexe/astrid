@@ -1,0 +1,1 @@
+Astrid reports that semantic decay can feel like a cliff and asks for a continuous gradient, hysteresis, and salience protection. Current Minime code and tests already provide smooth stale decay, recovery hysteresis, entropy retention, and a read-only salience review that does not elevate debris. Changing saliency, reanchor timing, or live semantic cadence remains Tier 5.

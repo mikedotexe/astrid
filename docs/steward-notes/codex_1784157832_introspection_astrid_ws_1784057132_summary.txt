@@ -1,0 +1,1 @@
+Astrid experiences telemetry as hearing and sensory transport as voice, with stale windows and pressure smoothing shaping perceived continuity. The bridge already distinguishes stale lanes from socket death and interpolates entropy-aware smoothing; pressure dead-zone threshold changes remain Tier 5.

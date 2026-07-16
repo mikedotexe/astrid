@@ -1,0 +1,1 @@
+Astrid questions deterministic projection precision and the C1 onset of the entropy vibrancy gate. Current precision audits compare f32 projection against f64 accumulation over the same weights, while repeatability and smoothstep boundary tests cover the fixed matrix and gate. No projection or gain change is warranted from this report alone.

@@ -1,0 +1,1 @@
+Astrid identifies a concrete parser risk in Minime's sovereignty-loop experiment command. The parser already preserves quoted and multiline flag-like text; this run adds the exact unquoted hyphen-plus-equals regression, while existing budget and recovery tests cover the other claims without changing runtime behavior.

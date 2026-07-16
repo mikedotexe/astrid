@@ -1,0 +1,1 @@
+Astrid asked whether dynamic reciprocity windows can flap or initialize stale state incorrectly. Existing bridge logic clamps dynamic windows, separates age from future skew, initializes the pressure deque and both connection flags empty/false, and has transition tests for stale telemetry without mutating safety or connectivity from a malformed packet alone.

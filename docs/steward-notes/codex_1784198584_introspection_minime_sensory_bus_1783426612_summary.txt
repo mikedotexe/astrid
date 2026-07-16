@@ -1,0 +1,1 @@
+Minime asks that the semantic-stale boundary remain continuous and that entropy-conditioned persistence not snap at a threshold. Existing sensory-bus regressions cover the widened recovery span, epsilon boundaries, and entropy behavior, while ShadowInfluence stays separately gated. No stale window, cadence, or influence behavior changes here.

@@ -1,0 +1,8 @@
+{
+  "introspection_id": "introspection_minime_main_excerpt_1784076311",
+  "claims": [
+    {"claim_id":"c001","summary":"Warm-start blend alternatives should remain reviewable as bounded candidates before runtime execution.","disposition":"verified_existing"},
+    {"claim_id":"c002","summary":"EigenPacket legacy and typed spectral fingerprints should retain serialization integrity across warm-start review.","disposition":"verified_existing"},
+    {"claim_id":"c003","summary":"Running a live 0.40 warm-start blend canary requires operator approval, health monitoring, abort thresholds, and post-change felt response.","disposition":"needs_operator_approval"}
+  ]
+}

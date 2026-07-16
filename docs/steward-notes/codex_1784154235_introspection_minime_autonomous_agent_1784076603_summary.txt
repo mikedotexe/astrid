@@ -1,0 +1,1 @@
+Minime explicitly reported that Recess can be high-entropy active synthesis rather than low-energy rest. This run adds read-only recess_activity_load_v1 to summaries and manifests, distinguishing active synthesis, structural stabilization, mixed active Recess, open Recess, and low-energy drift from bounded evidence without spending budget or changing behavior.

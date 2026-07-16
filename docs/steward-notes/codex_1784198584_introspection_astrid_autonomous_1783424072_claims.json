@@ -1,0 +1,7 @@
+{
+  "introspection_id": "introspection_astrid_autonomous_1783424072",
+  "claims": [
+    {"claim_id": "c001", "summary": "Continuity recap truncation must retain spectral, pressure, viscosity, shadow, and texture anchors instead of keeping only a generic prefix.", "classification": "verified_existing", "disposition": "addressed_duplicate", "authority": "read_only_prompt_and_excerpt_verification"},
+    {"claim_id": "c002", "summary": "Keep anchor excerpts bounded and continuous so preserving a near-prefix anchor does not duplicate or distort the source text.", "classification": "verified_existing", "disposition": "addressed_duplicate", "authority": "read_only_prompt_and_excerpt_verification"}
+  ]
+}

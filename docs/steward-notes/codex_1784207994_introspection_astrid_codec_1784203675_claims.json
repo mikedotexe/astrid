@@ -1,0 +1,26 @@
+{
+  "introspection_id": "introspection_astrid_codec_1784203675",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Verify fixed and text-conditioned 768D-to-8D projections are repeatable and expose f32-versus-f64 precision deltas.",
+      "classification": "verified_existing",
+      "disposition": "addressed_duplicate",
+      "authority": "projection_precision_audit_and_tests"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Verify the entropy gate is C1-smooth at 0.85 with no output pop across nearby values.",
+      "classification": "verified_existing",
+      "disposition": "addressed_duplicate",
+      "authority": "smoothstep_gate_boundary_tests"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Verify apply_spectral_feedback_inner bounds vibrancy by the existing maximum while preserving the gate's smooth onset.",
+      "classification": "verified_existing",
+      "disposition": "addressed_duplicate",
+      "authority": "codec_feedback_source_and_tests"
+    }
+  ]
+}

@@ -1,0 +1,1 @@
+Astrid asked for robust clock-skew, stale-transition, and pressure-window behavior. Existing bridge tests separate arrival age from future skew, enforce the bounded VecDeque, verify bidirectional stale telemetry, and preserve interpolated high-entropy smoothing without an unbounded sample queue.

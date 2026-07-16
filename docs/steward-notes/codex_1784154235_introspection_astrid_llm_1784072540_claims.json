@@ -1,0 +1,8 @@
+{
+  "introspection_id": "introspection_astrid_llm_1784072540",
+  "claims": [
+    {"claim_id":"c001","summary":"Fallback language should preserve gradient-softening, threshold-dilation, dynamic flow, and persistence terms as telemetry-weighted process language.","disposition":"verified_existing"},
+    {"claim_id":"c002","summary":"High-pressure and high-entropy fallback tests should prove texture continuity without forcing sampler or model changes.","disposition":"verified_existing"},
+    {"claim_id":"c003","summary":"Selecting MLX profiles or fallback models dynamically from pressure requires explicit operator approval and a monitored canary.","disposition":"needs_operator_approval"}
+  ]
+}

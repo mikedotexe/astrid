@@ -1,0 +1,9 @@
+{
+  "introspection_id": "introspection_proposal_phase_transitions_1783401230",
+  "claims": [
+    {"claim_id":"c001","summary":"Verify phase-transition cards require confidence, trigger, and why-now evidence to make false alarms inspectable.","classification":"verified_existing","disposition":"addressed_duplicate","authority":"language_only_transition_tests"},
+    {"claim_id":"c002","summary":"Implement a relational phase card when isolated reflective modes become inbox-forced direct Dialogue.","classification":"implemented","disposition":"addressed_change","authority":"language_only_transition_evidence"},
+    {"claim_id":"c003","summary":"Keep MomentCapture explicit rather than auto-triggering it from a language-only relational card.","classification":"implemented","disposition":"addressed_change","authority":"moment_capture_auto_triggered_false"},
+    {"claim_id":"c004","summary":"Any phase-derived pressure, porosity, weighting, mode control, or behavioral influence remains Tier 5 pending Mike/operator approval.","classification":"tier_5_wait","disposition":"addressed_change","authority":"live_eligible_now_false_auto_approved_false"}
+  ]
+}

@@ -1,0 +1,1 @@
+Astrid asks whether equal-fill but differently shaped reservoirs remain distinguishable and whether EigenPacket payload complexity is bounded. Existing fingerprint, eigenvector, transition, and payload-budget reviews preserve those distinctions without changing Minime runtime.

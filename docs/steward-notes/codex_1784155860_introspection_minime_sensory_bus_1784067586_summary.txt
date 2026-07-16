@@ -1,0 +1,1 @@
+Minime reports wall-like behavior around fill-dependent semantic handoff and asks for a softer transition. Existing smoothstep taper, hysteresis, high-entropy retention, and release-fill regressions already answer the bounded behavior; constants or admission changes remain gated.

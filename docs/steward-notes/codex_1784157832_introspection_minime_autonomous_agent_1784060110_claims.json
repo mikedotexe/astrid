@@ -1,0 +1,8 @@
+{
+  "introspection_id": "introspection_minime_autonomous_agent_1784060110",
+  "claims": [
+    {"claim_id": "c001", "summary": "Verify text-like RUN_PYTHON values preserve content such as my-file=data.csv instead of treating it as a new command flag.", "classification": "verified_existing", "disposition": "addressed_change", "authority": "test_only_no_runtime_behavior_change"},
+    {"claim_id": "c002", "summary": "Verify local research requests remain bounded by the sovereignty authority budget and maximum action count.", "classification": "verified_existing", "disposition": "addressed_duplicate", "authority": "read_only_or_language_only_no_live_authority"},
+    {"claim_id": "c003", "summary": "Verify hard-recovery experiment errors and local helper paths remain explicit rather than silently corrupting experiment execution.", "classification": "verified_existing", "disposition": "addressed_duplicate", "authority": "read_only_or_language_only_no_live_authority"}
+  ]
+}

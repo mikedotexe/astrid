@@ -1,0 +1,8 @@
+{
+  "introspection_id": "introspection_minime_main_excerpt_1784145812",
+  "claims": [
+    {"claim_id": "c001", "summary": "Stable-core semantic trickle, pressure-source, and Shadow-v3 telemetry already distinguish controlled slow flow from a raw surge.", "disposition": "verified_existing"},
+    {"claim_id": "c002", "summary": "Increasing hard-reset gain or the rho floor would alter live Minime recovery and reservoir regulation.", "disposition": "needs_operator_approval"},
+    {"claim_id": "c003", "summary": "A high-entropy semantic burst or locked shadow lattice nodes would change live sensory admission or shadow dynamics.", "disposition": "needs_operator_approval"}
+  ]
+}

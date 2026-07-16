@@ -1,0 +1,8 @@
+{
+  "introspection_id": "introspection_astrid_autonomous_1784085302",
+  "claims": [
+    {"claim_id":"c001","summary":"Semantic truncation must preserve UTF-8 and prefer complete punctuation or word boundaries so a long reflection does not lose its identity mid-token.","disposition":"verified_existing"},
+    {"claim_id":"c002","summary":"High-entropy or dense continuity can receive bounded additional room without treating entropy as an unlimited prompt entitlement.","disposition":"verified_existing"},
+    {"claim_id":"c003","summary":"Anchored excerpts must preserve the structurally significant feeling or thread identity when full text cannot fit.","disposition":"verified_existing"}
+  ]
+}

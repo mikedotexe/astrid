@@ -1,0 +1,1 @@
+Astrid asks whether the dense fallback contract can drift or dilute telemetry mappings. Existing validation and weighted-selector tests constrain length, NEXT placement, and pressure/gradient language; no provider or sampler behavior changed.

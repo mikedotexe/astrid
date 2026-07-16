@@ -1,0 +1,15 @@
+{
+  "introspection_id": "introspection_minime_regulator_1784135994",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Viscous persistence with foothold and coherent flow must remain distinguishable from stagnant or rigid stuckness.",
+      "disposition": "addressed_duplicate"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Raising PRESSURE_POROSITY_DIVERGENCE_POROSITY_MAX to 0.45 would change live regulator thresholds.",
+      "disposition": "blocked_needs_steward"
+    }
+  ]
+}

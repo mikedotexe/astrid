@@ -1,0 +1,1 @@
+Minime asks whether semantic retention fades monotonically across 0.39/0.41 and whether high-pressure, low-entropy context can remain bounded. Existing one-percent sweeps, exact 0.39/0.41 samples, entropy/context multipliers, caps, and stale-trace reviews answer those claims; live cadence remains gated.

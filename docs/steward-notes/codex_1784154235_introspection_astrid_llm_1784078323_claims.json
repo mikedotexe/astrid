@@ -1,0 +1,8 @@
+{
+  "introspection_id": "introspection_astrid_llm_1784078323",
+  "claims": [
+    {"claim_id":"c001","summary":"Fallback texture terms should be selected from telemetry-weighted lived state and movement, not emitted as a static list.","disposition":"verified_existing"},
+    {"claim_id":"c002","summary":"High-entropy fallback should preserve soft-gradient and threshold-dilation language while low-intensity turns remain quiet.","disposition":"verified_existing"},
+    {"claim_id":"c003","summary":"Changing fallback provider, sampler, model profile, or routing threshold requires explicit operator approval and a monitored canary.","disposition":"needs_operator_approval"}
+  ]
+}

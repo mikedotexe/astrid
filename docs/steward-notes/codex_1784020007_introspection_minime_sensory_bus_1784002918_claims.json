@@ -1,0 +1,8 @@
+{
+  "introspection_id": "introspection_minime_sensory_bus_1784002918",
+  "claims": [
+    {"claim_id": "c001", "summary": "Represent semantic recovery as a continuous hold-and-release transition rather than an amnesia snap.", "classification": "verified_existing", "disposition": "addressed_change", "authority": "read_only_or_language_only_no_live_authority"},
+    {"claim_id": "c002", "summary": "Retain high-entropy semantic persistence and exact threshold-edge evidence across the recovery band.", "classification": "verified_existing", "disposition": "addressed_change", "authority": "read_only_or_language_only_no_live_authority"},
+    {"claim_id": "c003", "summary": "Keep semantic decay timing, admission thresholds, and shadow-cap increases behind Tier 5 approval.", "classification": "tier_5_wait", "disposition": "addressed_change", "authority": "evidence_and_routing_only_live_eligible_now_false_auto_approved_false"}
+  ]
+}

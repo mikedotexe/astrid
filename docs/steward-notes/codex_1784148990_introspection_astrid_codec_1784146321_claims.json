@@ -1,0 +1,9 @@
+{
+  "introspection_id": "introspection_astrid_codec_1784146321",
+  "claims": [
+    {"claim_id":"c001","summary":"FEATURE_ABS_MAX can hide shape unless pre-bound value, per-dimension ceiling, and delivered value remain visible.","disposition":"verified_existing"},
+    {"claim_id":"c002","summary":"High-entropy tail participation receives a bounded smooth headroom lift while non-tail and reserved dimensions retain their existing ceilings.","disposition":"verified_existing"},
+    {"claim_id":"c003","summary":"Narrative-arc headroom, direction, curvature, and intertextual persistence are measured without live gain writes.","disposition":"verified_existing"},
+    {"claim_id":"c004","summary":"Increasing live gain on dimensions 40-43 would change semantic transport and requires scoped operator approval after replay and abort criteria.","disposition":"needs_operator_approval"}
+  ]
+}

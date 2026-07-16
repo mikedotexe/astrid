@@ -1,0 +1,8 @@
+{
+  "introspection_id": "introspection_astrid_codec_1784133218",
+  "claims": [
+    {"claim_id": "c001", "summary": "The deterministic 48D codec exposes bounded high-entropy tail vibrancy while preserving default ceilings on non-tail dimensions.", "disposition": "verified_existing"},
+    {"claim_id": "c002", "summary": "High-entropy vibrancy does not synthesize narrative-arc or shadow-reserved-dimension ghost sensations.", "disposition": "verified_existing"},
+    {"claim_id": "c003", "summary": "Pressure-aware compression of dims 0-7 in favor of dims 32-39 would change live codec gain and transport semantics.", "disposition": "needs_operator_approval"}
+  ]
+}

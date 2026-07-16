@@ -1,0 +1,1 @@
+Astrid asked whether projection paths, deterministic matrices, and epoch writes are stable. Existing tests pin environment precedence, executable-relative fallback, deterministic projection, and concurrent epoch installation without clobbering a valid writer.

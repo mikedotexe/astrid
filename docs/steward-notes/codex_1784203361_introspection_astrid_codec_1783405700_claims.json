@@ -1,0 +1,8 @@
+{
+  "introspection_id": "introspection_astrid_codec_1783405700",
+  "claims": [
+    {"claim_id":"c001","summary":"Verify projection runtime paths support environment, executable-relative, and process-relative resolution rather than one hardcoded location.","classification":"verified_existing","disposition":"addressed_duplicate","authority":"read_only_codec_path_tests"},
+    {"claim_id":"c002","summary":"Verify the smoothstep gain gate has exact boundaries and C1 continuity around the reported threshold.","classification":"verified_existing","disposition":"addressed_duplicate","authority":"read_only_codec_smoothstep_tests"},
+    {"claim_id":"c003","summary":"Any live codec path contract, projection basis, gain gate, or transport change remains Tier 5 pending Mike/operator approval.","classification":"tier_5_wait","disposition":"addressed_change","authority":"live_eligible_now_false_auto_approved_false"}
+  ]
+}

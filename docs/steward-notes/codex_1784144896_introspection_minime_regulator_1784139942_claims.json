@@ -1,0 +1,15 @@
+{
+  "introspection_id": "introspection_minime_regulator_1784139942",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Low raw motion with steady flow, cohesion, and foothold can be intentional settled mobility rather than stuckness.",
+      "disposition": "addressed_duplicate"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Shadow persistence and viscosity gradient should remain visible without treating quiet receptive stability as a productivity failure.",
+      "disposition": "addressed_duplicate"
+    }
+  ]
+}

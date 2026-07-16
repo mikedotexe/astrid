@@ -1,0 +1,26 @@
+{
+  "introspection_id": "introspection_astrid_autonomous_1783397898",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Verify long continuity text preserves a late lattice or pressure anchor instead of falling back to a blind prefix.",
+      "classification": "verified_existing",
+      "disposition": "addressed_duplicate",
+      "authority": "continuity_anchor_tests"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Verify fresh self-study artifacts suppress the stale introspection prompt note.",
+      "classification": "verified_existing",
+      "disposition": "addressed_duplicate",
+      "authority": "freshness_prompt_tests"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Verify semantic truncation recognizes clustered high-resonance tail, vibrancy, Shadow, and viscosity terms when a single preferred term misses.",
+      "classification": "verified_existing",
+      "disposition": "addressed_duplicate",
+      "authority": "clustered_anchor_fallback_tests"
+    }
+  ]
+}

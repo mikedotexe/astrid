@@ -1,0 +1,1 @@
+Astrid asked whether fallback texture remains dynamic under high entropy rather than becoming a static vocabulary. The current selector weights telemetry, preserves gradient-softening and threshold-dilation, carries process verbs and persistence terms, and tests low-intensity quietness. Model/sampler routing remains Tier 5.

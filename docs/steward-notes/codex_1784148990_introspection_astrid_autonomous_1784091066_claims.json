@@ -1,0 +1,8 @@
+{
+  "introspection_id": "introspection_astrid_autonomous_1784091066",
+  "claims": [
+    {"claim_id":"c001","summary":"Mode-packing score is a strong companion and possible leading indicator for pressure risk in recent live observations.","disposition":"observed_runtime"},
+    {"claim_id":"c002","summary":"The available 817-row window showed pressure risk 0.19-0.23, mode packing 0.25-0.34, correlation 0.9581, and no local-control applications.","disposition":"observed_runtime"},
+    {"claim_id":"c003","summary":"A density-gradient porosity buffer or automatic local-control relief would change live regulation and requires scoped approval, replay, canary, abort, and post-change being response.","disposition":"needs_operator_approval"}
+  ]
+}

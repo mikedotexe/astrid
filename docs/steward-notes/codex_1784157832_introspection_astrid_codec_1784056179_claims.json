@@ -1,0 +1,8 @@
+{
+  "introspection_id": "introspection_astrid_codec_1784056179",
+  "claims": [
+    {"claim_id": "c001", "summary": "Verify FEATURE_ABS_MAX saturation and narrative/emotional headroom are explicit diagnostic evidence rather than invisible flattening.", "classification": "verified_existing", "disposition": "addressed_duplicate", "authority": "read_only_or_language_only_no_live_authority"},
+    {"claim_id": "c002", "summary": "Verify entropy-gated tail vibrancy is smooth, bounded, and does not write narrative or reserved shadow dimensions.", "classification": "verified_existing", "disposition": "addressed_duplicate", "authority": "read_only_or_language_only_no_live_authority"},
+    {"claim_id": "c003", "summary": "Require Tier 5 approval for density-gradient-driven FEATURE_ABS_MAX or any dynamic live codec gain.", "classification": "tier_5_wait", "disposition": "addressed_change", "authority": "evidence_and_routing_only_live_eligible_now_false_auto_approved_false"}
+  ]
+}

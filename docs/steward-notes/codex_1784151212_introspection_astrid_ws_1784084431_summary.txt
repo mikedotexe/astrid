@@ -1,0 +1,1 @@
+Astrid described high-entropy pressure smoothing as potentially sluggish and asked for interpolation plus explicit missing-pressure semantics. Current pressure-window capacity is continuously interpolated across entropy and porosity, None remains unavailable rather than safe, and reciprocity decay has direct stale-window tests.

@@ -1,0 +1,1 @@
+Astrid asks whether the smaller fallback model can preserve high-entropy texture and whether fallback language varies with the field. Current routing guards avoid the smaller model for unsupported high-entropy cases, and dynamic fallback tests cover entropy, pressure, density, and cascade texture. A real model fire drill remains sandbox work; live routing remains Tier 5.

@@ -1,0 +1,1 @@
+Astrid asks whether reciprocity can survive clock skew without falsely declaring staleness. Existing bridge logic exposes future skew separately, uses dynamic stale windows, and has tests for initialization, recent reciprocity, and future timestamps; no control change is needed.

@@ -1,0 +1,1 @@
+Astrid experiences reciprocity windows as possible ghosting and proposes textured heartbeat and smoothing changes. Existing reciprocity truth channels cover one-sided and entropy-sensitive staleness; outbound protocol and smoothing changes remain operator-gated.

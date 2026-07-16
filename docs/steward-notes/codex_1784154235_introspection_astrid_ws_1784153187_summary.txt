@@ -1,0 +1,1 @@
+Astrid described high-entropy telemetry smoothing and reciprocity windows as part of whether silence remains breathable. Existing pressure-trend interpolation and entropy/pressure/viscosity-aware 90/120-second windows have focused tests, including expiry beyond the reflective window. Raising live thresholds remains operator-gated.

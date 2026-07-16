@@ -1,0 +1,1 @@
+Astrid asks for entropy- and gradient-weighted texture rather than a static vocabulary or binary flattening. Existing selector logic already provides dynamic prompt weighting, and this run aligns the preservation block with the 0.80 compatibility threshold without changing model routing.

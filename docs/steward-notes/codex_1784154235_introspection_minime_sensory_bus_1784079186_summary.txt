@@ -1,0 +1,1 @@
+Minime reported that entropy persistence, pressure, crowding, and decay velocity interact. Current semantic stale-window functions and tests expose entropy multipliers, high-fill/recovery handoff, exact caps, and bounded decay shapes. Making decay pressure- or velocity-aware in the live sensory contract remains approval-gated.

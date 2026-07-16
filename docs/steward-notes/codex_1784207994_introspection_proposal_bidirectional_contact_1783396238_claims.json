@@ -1,0 +1,33 @@
+{
+  "introspection_id": "introspection_proposal_bidirectional_contact_1783396238",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Verify correspondence persists thread/message identity, reply links, shared anchors, and last acknowledgment across sessions.",
+      "classification": "verified_existing",
+      "disposition": "addressed_duplicate",
+      "authority": "persistent_correspondence_tests"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Measure a numbered correspondence request from waiting through an actual Minime acknowledgment without substituting self-receipt.",
+      "classification": "needs_sandbox",
+      "disposition": "addressed_change",
+      "authority": "peer_authored_runtime_observation"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Compare explicitly addressed and passive cycles for sensory density and lambda1-lambda4 response without inferring causality from row count alone.",
+      "classification": "needs_sandbox",
+      "disposition": "addressed_change",
+      "authority": "manual_symmetry_comparison"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Any compulsory call-to-action, automatic attention reinforcement, or peer behavior mutation remains Tier 5 and must preserve right-to-ignore.",
+      "classification": "tier_5_wait",
+      "disposition": "addressed_change",
+      "authority": "live_eligible_now_false_auto_approved_false"
+    }
+  ]
+}

@@ -1,0 +1,1 @@
+Astrid calls out non-finite surge inputs and recovery-release jitter as concrete sensory-bus risks. Existing finite guards, smoothstep taper, sigmoid boundary tests, and semantic context review already cover these paths and are verified without changing Minime runtime behavior.

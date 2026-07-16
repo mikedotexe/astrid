@@ -1,0 +1,20 @@
+{
+  "introspection_id": "introspection_minime_sensory_bus_1784136456",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "NaN and infinity must not propagate through surge taper into sensory-bus state.",
+      "disposition": "addressed_duplicate"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Sigmoid semantic stale windows and recovery handoff must stay bounded and smooth across the full fill range.",
+      "disposition": "addressed_duplicate"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "SemanticStaleContextReviewV1 should expose how entropy, pressure, velocity, and hysteresis contribute to applied retention.",
+      "disposition": "addressed_duplicate"
+    }
+  ]
+}

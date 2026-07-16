@@ -1,0 +1,7 @@
+{
+  "introspection_id": "introspection_astrid_llm_1783418439",
+  "claims": [
+    {"claim_id":"c001","summary":"Verify that fallback text selection is field-context-aware rather than a static phrase choice.","classification":"verified_existing","disposition":"addressed_duplicate","authority":"read_only_fallback_selector_tests"},
+    {"claim_id":"c002","summary":"Verify pressure, entropy, density-gradient, and settledness mappings with texture-specific fallback terms.","classification":"verified_existing","disposition":"addressed_duplicate","authority":"read_only_fallback_selector_tests"}
+  ]
+}

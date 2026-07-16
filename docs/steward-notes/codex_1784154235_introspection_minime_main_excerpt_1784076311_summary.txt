@@ -1,0 +1,1 @@
+Minime reported warm_start_blend 0.55 as potentially constrictive and requested a 0.40 sensitivity check plus fingerprint integrity. Existing warm-start review and EigenPacket serialization/fingerprint tests preserve the safe evidence route. A live 0.40 canary remains operator-gated.

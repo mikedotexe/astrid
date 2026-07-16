@@ -1,0 +1,8 @@
+{
+  "introspection_id": "introspection_astrid_autonomous_1784152859",
+  "claims": [
+    {"claim_id":"c001","summary":"Dialogue-to-Witness and other felt mode transitions should remain replyable structured events with velocity and spectral lineage.","disposition":"verified_existing"},
+    {"claim_id":"c002","summary":"Metaphor and late semantic anchors should survive truncation and Mirror rendering with explicit fidelity evidence.","disposition":"implemented_awaiting_felt_response"},
+    {"claim_id":"c003","summary":"Changing porosity, mode packing, entropy targets, eigenvector weights, or automatic mode behavior requires explicit live authority.","disposition":"needs_operator_approval"}
+  ]
+}

@@ -1,0 +1,1 @@
+Astrid again tests dual-lane warmup, dynamic staleness, and smoothing stability. The current reciprocity suite verifies exact transitions and future-skew truth, while safety state and pressure smoothing remain separate from connectivity classification.

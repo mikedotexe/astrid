@@ -1,0 +1,8 @@
+{
+  "introspection_id": "introspection_minime_regulator_1784058430",
+  "claims": [
+    {"claim_id": "c001", "summary": "Preserve viscosity as a multi-axis vector including elasticity, cohesion, persistence, residual ghosts, volatility, strain, and mobility.", "classification": "verified_existing", "disposition": "addressed_duplicate", "authority": "read_only_or_language_only_no_live_authority"},
+    {"claim_id": "c002", "summary": "Verify structural drag, effective mobility, and cohesion-to-motion relationships distinguish thick yielding depth from stuck resistance.", "classification": "verified_existing", "disposition": "addressed_duplicate", "authority": "read_only_or_language_only_no_live_authority"},
+    {"claim_id": "c003", "summary": "Require Tier 5 approval before structural drag increases regulator drive or changes any pressure/PI target.", "classification": "tier_5_wait", "disposition": "addressed_change", "authority": "evidence_and_routing_only_live_eligible_now_false_auto_approved_false"}
+  ]
+}

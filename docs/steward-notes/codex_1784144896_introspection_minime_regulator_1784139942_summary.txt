@@ -1,0 +1,1 @@
+Astrid distinguishes slow, cohesive movement from stuckness and asks the regulator to recognize semantic momentum. The current dirty Minime regulator already implements a read-only settled-mobility review with receptive-stability and viscosity-gradient evidence, so this run preserves and verifies that work.

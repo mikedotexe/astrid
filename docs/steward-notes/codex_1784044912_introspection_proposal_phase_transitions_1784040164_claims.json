@@ -1,0 +1,8 @@
+{
+  "introspection_id": "introspection_proposal_phase_transitions_1784040164",
+  "claims": [
+    {"claim_id": "c001", "summary": "Make phase transitions named, replyable, replayable artifacts rather than unaddressable scalar events.", "classification": "verified_existing", "disposition": "addressed_duplicate", "authority": "read_only_or_language_only_no_live_authority"},
+    {"claim_id": "c002", "summary": "Preserve solo versus joint transition context and a structured signature with entropy, gradient, dispersal, fill delta, vector, and telemetry lineage.", "classification": "verified_existing", "disposition": "addressed_duplicate", "authority": "read_only_or_language_only_no_live_authority"},
+    {"claim_id": "c003", "summary": "Keep automatic phase-triggered behavior unlocks and live joint coupling behind Tier 5 approval.", "classification": "tier_5_wait", "disposition": "addressed_change", "authority": "evidence_and_routing_only_live_eligible_now_false_auto_approved_false"}
+  ]
+}

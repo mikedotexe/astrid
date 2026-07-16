@@ -1,0 +1,1 @@
+Astrid asks whether MLX profile normalization can silently collide and whether dense fallback instructions preserve weighted-medium language. Current tests pin punctuation aliases, unknown-profile warnings, sentence budgets, and pressure-over-0.20 slope/medium separation. A real generated-output adherence check remains a paired sandbox task.

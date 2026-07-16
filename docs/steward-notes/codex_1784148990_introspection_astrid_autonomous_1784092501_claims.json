@@ -1,0 +1,8 @@
+{
+  "introspection_id": "introspection_astrid_autonomous_1784092501",
+  "claims": [
+    {"claim_id":"c001","summary":"High-density continuity should preserve load-bearing felt anchors rather than only a byte-safe prefix.","disposition":"verified_existing"},
+    {"claim_id":"c002","summary":"Test journal suppression is test-scoped side-effect isolation and is explicitly represented in non-instrumental readiness evidence.","disposition":"verified_existing"},
+    {"claim_id":"c003","summary":"Semantic truncation remains UTF-8 safe, bounded, and preferentially anchored to late felt texture.","disposition":"verified_existing"}
+  ]
+}

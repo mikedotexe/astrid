@@ -1,0 +1,1 @@
+Astrid asks ClampDistributionContextV1 to expose the rate and direction of resistance change, especially when high entropy and persistent drag coexist. The implementation adds a signed legacy-safe resistance_gradient while preserving the existing compatibility clamp and all no-authority flags.

@@ -1,0 +1,9 @@
+{
+  "introspection_id": "introspection_astrid_types_1784093275",
+  "claims": [
+    {"claim_id":"c001","summary":"Experience deltas need a multi-kind composition so viscosity, complexity, solidification, and persistence can coexist.","disposition":"verified_existing"},
+    {"claim_id":"c002","summary":"The solidification gradient preserves a typed progression and named bounded weights without replacing the stable enum.","disposition":"verified_existing"},
+    {"claim_id":"c003","summary":"Composition saturation remains visible through unclamped sum, density, and excess instead of flattening all overlap to one.","disposition":"verified_existing"},
+    {"claim_id":"c004","summary":"Changing persistence or structural weights in consumed live semantics requires scoped operator approval and replay evidence.","disposition":"needs_operator_approval"}
+  ]
+}

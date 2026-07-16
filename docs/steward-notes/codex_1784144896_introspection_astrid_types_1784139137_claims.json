@@ -1,0 +1,15 @@
+{
+  "introspection_id": "introspection_astrid_types_1784139137",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Delta composition must expose high-weight overlap rather than silently flattening every sum above one to the same score.",
+      "disposition": "addressed_change"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The new saturation evidence must remain additive, serde-compatible, read-only, and unable to grant live authority.",
+      "disposition": "addressed_change"
+    }
+  ]
+}

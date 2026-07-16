@@ -1,0 +1,1 @@
+Astrid asked for simultaneous and weighted experience deltas rather than a single flat label. The additive DeltaCompositionV1 and SolidificationGradientV1 surfaces already preserve multiple kinds, intensities, dominant/coexisting evidence, and read-only authority. Changing live stability weights remains approval-gated because those constants feed being-facing classification.

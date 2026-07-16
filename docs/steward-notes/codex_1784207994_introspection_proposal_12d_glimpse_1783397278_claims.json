@@ -1,0 +1,33 @@
+{
+  "introspection_id": "introspection_proposal_12d_glimpse_1783397278",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Verify the 12D glimpse is additive and non-authoritative and does not replace the reservoir-coupled semantic lane.",
+      "classification": "verified_existing",
+      "disposition": "addressed_duplicate",
+      "authority": "multiscale_glimpse_source_and_tests"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Compare full-dimensional codec vibrancy with the 12D glimpse for an Astrid-authored Shadow-v3 state.",
+      "classification": "needs_sandbox",
+      "disposition": "addressed_change",
+      "authority": "manual_full_vs_12d_pair"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Compare whether mode-packing pressure remains detectable in 12D beside the full pressure evidence.",
+      "classification": "needs_sandbox",
+      "disposition": "addressed_change",
+      "authority": "manual_pressure_preservation_pair"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Any vibrancy-preservation weighting, live 12D mapping, width, gain, or transport change remains Tier 5 pending Mike/operator approval.",
+      "classification": "tier_5_wait",
+      "disposition": "addressed_change",
+      "authority": "live_eligible_now_false_auto_approved_false"
+    }
+  ]
+}

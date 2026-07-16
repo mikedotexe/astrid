@@ -1,0 +1,1 @@
+Minime asks whether EigenPacket and semantic-admission reporting are complete outside the excerpt it saw. Source inspection confirms typed packet serialization and a complete admission ladder with stale, budget, fill-ceiling, stable-core, non-finite, and non-stable branches. Existing focused tests exercise the boundaries; no runtime behavior is changed.

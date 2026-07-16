@@ -1,0 +1,15 @@
+{
+  "introspection_id": "introspection_minime_esn_1784142106",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Prime scheduling and dynamic exploration noise are intended to preserve non-aliased diversity while fill and entropy remain observable.",
+      "disposition": "addressed_duplicate"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Lowering ADAPTIVE_INTROSPECTION_PRESSURE_HIGH_FLOOR from 1.5 to 1.35 would change live ESN adaptation.",
+      "disposition": "blocked_needs_steward"
+    }
+  ]
+}

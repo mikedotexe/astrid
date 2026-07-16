@@ -1,0 +1,9 @@
+{
+  "introspection_id": "introspection_astrid_codec_1784094010",
+  "claims": [
+    {"claim_id":"c001","summary":"An absent, unwritable, or corrupt projection epoch path must fall back to a stable kernel-derived epoch rather than random remapping or panic.","disposition":"verified_existing"},
+    {"claim_id":"c002","summary":"Projection output and epoch identity remain deterministic across fresh runtime directories and repeated calls.","disposition":"verified_existing"},
+    {"claim_id":"c003","summary":"Projection epoch installation is atomic and does not clobber a valid concurrent writer.","disposition":"verified_existing"},
+    {"claim_id":"c004","summary":"Tail vibrancy uses a smoothstep with gentle onset and bounded extreme-entropy dampening.","disposition":"verified_existing"}
+  ]
+}

@@ -1,0 +1,1 @@
+Minime asks for exact viscosity bounds, the 0.38 texture boundary, high-pressure branch review, and deterministic pressure-source ties. Existing tests cover viscosity extremes and high-pressure texture branches. This run pins the exact density boundary and makes equal-score advisory provenance favor direct friction/packing risk instead of incidental array order.

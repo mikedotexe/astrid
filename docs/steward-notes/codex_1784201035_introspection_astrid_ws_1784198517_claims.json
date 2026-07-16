@@ -1,0 +1,7 @@
+{
+  "introspection_id": "introspection_astrid_ws_1784198517",
+  "claims": [
+    {"claim_id":"c001","summary":"Verify that missing reciprocity timestamps and warmup are represented as unavailable evidence rather than negative contact.","classification":"verified_existing","disposition":"addressed_duplicate","authority":"read_only_ws_reciprocity_tests"},
+    {"claim_id":"c002","summary":"Verify explicit current-to-stale reciprocity transitions without generating contact or peer mutation.","classification":"verified_existing","disposition":"addressed_duplicate","authority":"read_only_ws_transition_tests"}
+  ]
+}

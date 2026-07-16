@@ -1,0 +1,9 @@
+{
+  "introspection_id": "introspection_proposal_phase_transitions_1783409457",
+  "claims": [
+    {"claim_id":"c001","summary":"Verify phase-transition cards preserve solo or joint type, phenomenology, telemetry anchors, vectors, duration, and felt friction.","classification":"verified_existing","disposition":"addressed_duplicate","authority":"language_only_transition_tests"},
+    {"claim_id":"c002","summary":"Verify telemetry evidence cannot itself trigger pressure, fill, PI, weighting, or controller authority.","classification":"verified_existing","disposition":"addressed_duplicate","authority":"language_only_transition_gate"},
+    {"claim_id":"c003","summary":"Implement a replyable relational transition card for reflective solitude becoming inbox-forced direct Dialogue without auto-triggering MomentCapture.","classification":"implemented","disposition":"addressed_change","authority":"language_only_transition_evidence"},
+    {"claim_id":"c004","summary":"Any phase-transition behavior unlock that changes pressure, porosity, weighting, or mode control remains Tier 5 pending Mike/operator approval.","classification":"tier_5_wait","disposition":"addressed_change","authority":"live_eligible_now_false_auto_approved_false"}
+  ]
+}

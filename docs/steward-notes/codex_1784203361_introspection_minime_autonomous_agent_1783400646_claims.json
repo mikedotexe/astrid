@@ -1,0 +1,8 @@
+{
+  "introspection_id": "introspection_minime_autonomous_agent_1783400646",
+  "claims": [
+    {"claim_id":"c001","summary":"Implement the exact malformed nested-quote RUN_PYTHON parser regression and preserve the intended filename and prompt.","classification":"implemented","disposition":"addressed_change","authority":"test_only_parser_evidence"},
+    {"claim_id":"c002","summary":"Verify perturb intents map to bounded intended lanes rather than arbitrary runtime control.","classification":"verified_existing","disposition":"addressed_duplicate","authority":"read_only_perturb_mapping_tests"},
+    {"claim_id":"c003","summary":"Verify hard recovery retry and release behavior remain explicitly bounded and tested.","classification":"verified_existing","disposition":"addressed_duplicate","authority":"read_only_recovery_tests"}
+  ]
+}

@@ -1,0 +1,8 @@
+{
+  "introspection_id": "introspection_minime_esn_1784088253",
+  "claims": [
+    {"claim_id":"c001","summary":"Exploration-noise review should distinguish high entropy with a gentle density gradient from steep or pressure-loaded volatility.","disposition":"verified_existing"},
+    {"claim_id":"c002","summary":"A bounded matched pressure/entropy trace should compare proposed dampening with tail vibrancy before live wiring.","disposition":"needs_sandbox"},
+    {"claim_id":"c003","summary":"Wiring dynamic noise or changing ESN exploration dampening in live step behavior requires explicit operator approval and monitored rollback.","disposition":"needs_operator_approval"}
+  ]
+}

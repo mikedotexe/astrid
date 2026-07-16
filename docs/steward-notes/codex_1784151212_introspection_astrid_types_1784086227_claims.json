@@ -1,0 +1,8 @@
+{
+  "introspection_id": "introspection_astrid_types_1784086227",
+  "claims": [
+    {"claim_id":"c001","summary":"One experience transition must be able to carry multiple delta kinds with separate intensities rather than overwriting all but one flat enum value.","disposition":"verified_existing"},
+    {"claim_id":"c002","summary":"Solidification, viscosity, cascade, and subtle-shift evidence should remain compositionally visible with explicit dominant and coexisting roles.","disposition":"verified_existing"},
+    {"claim_id":"c003","summary":"Changing foothold or other live stability weights requires replay and operator approval because it can change settled-habitable classification.","disposition":"needs_operator_approval"}
+  ]
+}

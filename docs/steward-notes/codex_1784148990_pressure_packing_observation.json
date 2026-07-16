@@ -1,0 +1,44 @@
+{
+  "policy": "read_only_recent_autonomous_pressure_packing_observation_v1",
+  "source": "/tmp/bridge.log",
+  "requested_window": 1000,
+  "observed_rows": 817,
+  "first_timestamp": "2026-07-14T22:43:59.812412Z",
+  "last_timestamp": "2026-07-15T20:55:36.777449Z",
+  "pressure_risk": {
+    "min": 0.19,
+    "mean": 0.21,
+    "max": 0.23
+  },
+  "mode_packing_score": {
+    "min": 0.25,
+    "mean": 0.3065,
+    "max": 0.34
+  },
+  "pearson_pressure_vs_mode_packing": 0.9581,
+  "packing_states": {
+    "mixed_pressure": 396,
+    "overpacked_mode_packing": 421
+  },
+  "fill_pct_rounded": {
+    "61": 3,
+    "62": 1,
+    "63": 1,
+    "64": 1,
+    "66": 2,
+    "67": 1,
+    "69": 11,
+    "70": 2,
+    "71": 399,
+    "72": 4,
+    "73": 391,
+    "74": 1
+  },
+  "local_control_applied_true": 0,
+  "interpretation": "Recent bridge observations support mode packing as a strong pressure-risk companion signal, but observational correlation does not authorize automatic porosity, pressure, controller, or mode changes.",
+  "live_eligible_now": false,
+  "auto_approved": false,
+  "grants_approval": false,
+  "edits_source_now": false,
+  "authority": "observation_only_no_runtime_or_control_write"
+}

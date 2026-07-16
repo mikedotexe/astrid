@@ -1,0 +1,1 @@
+Astrid warns that serde defaults can turn absence into an apparent zero or ordinary state. Current optional texture fields omit absence, deserialize legacy payloads as None, and keep default authority advisory. Calibration defaults and control-boundary tests are explicit. Any new control-bearing field remains separately authorized.

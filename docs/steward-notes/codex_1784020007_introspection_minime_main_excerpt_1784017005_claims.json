@@ -1,0 +1,8 @@
+{
+  "introspection_id": "introspection_minime_main_excerpt_1784017005",
+  "claims": [
+    {"claim_id": "c001", "summary": "Distinguish settled structural density from stagnant friction using motion, porosity, viscosity, and structural-drag evidence.", "classification": "verified_existing", "disposition": "addressed_change", "authority": "read_only_or_language_only_no_live_authority"},
+    {"claim_id": "c002", "summary": "Expose pressure-porosity divergence and regulator or reset context before treating stability as comfort.", "classification": "verified_existing", "disposition": "addressed_change", "authority": "read_only_or_language_only_no_live_authority"},
+    {"claim_id": "c003", "summary": "Keep viscosity compensation, underfill smoothing, hard-reset rho modulation, and regulator changes behind Tier 5 approval.", "classification": "tier_5_wait", "disposition": "addressed_change", "authority": "evidence_and_routing_only_live_eligible_now_false_auto_approved_false"}
+  ]
+}

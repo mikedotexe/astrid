@@ -1,0 +1,8 @@
+{
+  "introspection_id": "introspection_astrid_types_1784144154",
+  "claims": [
+    {"claim_id": "c001", "summary": "ClampedUnitReviewV1 preserves finite raw values, clip direction, non-finite fallback intent, and false live-authority flags.", "disposition": "verified_existing"},
+    {"claim_id": "c002", "summary": "Clamp reviews need optional distribution evidence to distinguish a broad high-entropy swell from an isolated outlier candidate.", "disposition": "implemented_awaiting_felt_response"},
+    {"claim_id": "c003", "summary": "Distribution context must not reclamp the scalar, infer causality as fact, or grant live authority.", "disposition": "implemented_awaiting_felt_response"}
+  ]
+}

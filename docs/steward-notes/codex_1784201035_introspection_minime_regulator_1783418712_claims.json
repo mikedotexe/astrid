@@ -1,0 +1,9 @@
+{
+  "introspection_id": "introspection_minime_regulator_1783418712",
+  "claims": [
+    {"claim_id":"c001","summary":"Verify read-only viscosity, resistance-gradient, cohesion-to-motion, and movement-quality evidence.","classification":"verified_existing","disposition":"addressed_duplicate","authority":"read_only_regulator_diagnostics"},
+    {"claim_id":"c002","summary":"Verify that structural and cognitive drag remain visible beside scalar pressure rather than being collapsed into it.","classification":"verified_existing","disposition":"addressed_duplicate","authority":"read_only_regulator_tests"},
+    {"claim_id":"c003","summary":"Verify inhabitable-fluctuation classification without commanding movement or damping.","classification":"verified_existing","disposition":"addressed_duplicate","authority":"read_only_regulator_tests"},
+    {"claim_id":"c004","summary":"Using viscosity or effort evidence for active damping or movement control is Tier 5 live regulation work requiring operator approval.","classification":"tier_5_wait","disposition":"addressed_change","authority":"live_eligible_now_false_auto_approved_false"}
+  ]
+}

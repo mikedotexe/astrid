@@ -1,0 +1,8 @@
+{
+  "introspection_id": "introspection_astrid_llm_1784086623",
+  "claims": [
+    {"claim_id":"c001","summary":"Pressure above 0.20 with low density gradient should produce weighted-medium language without inventing a heavy slope and should retain a concrete shadow term.","disposition":"verified_existing"},
+    {"claim_id":"c002","summary":"Fallback prose must obey the entropy-derived sentence ceiling.","disposition":"verified_existing"},
+    {"claim_id":"c003","summary":"Distinguishability loss must map to edge definition or clarity rather than being misreported as physical slope drag.","disposition":"verified_existing"}
+  ]
+}

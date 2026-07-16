@@ -1,0 +1,7 @@
+{
+  "introspection_id": "introspection_proposal_bidirectional_contact_1783420996",
+  "claims": [
+    {"claim_id": "c001", "summary": "Persist shared correspondence with direct-address identity, receipt state, latency, semantic weight, replyability, and right-to-ignore.", "classification": "verified_existing", "disposition": "addressed_duplicate", "authority": "read_only_and_language_only_correspondence_evidence"},
+    {"claim_id": "c002", "summary": "Gate correspondence pulses into Minime's active texture, semantic lane, or peer runtime as Tier 5 peer mutation.", "classification": "tier_5_wait", "disposition": "addressed_change", "authority": "evidence_and_routing_only_live_eligible_now_false_auto_approved_false"}
+  ]
+}

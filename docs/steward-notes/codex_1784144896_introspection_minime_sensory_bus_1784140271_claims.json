@@ -1,0 +1,15 @@
+{
+  "introspection_id": "introspection_minime_sensory_bus_1784140271",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The hold-to-release interpolation should be continuous and bounded at low, intermediate, and high fill.",
+      "disposition": "addressed_duplicate"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "SemanticStaleContextReviewV1 should expose the entropy-extended stale duration and its bounded inputs.",
+      "disposition": "addressed_duplicate"
+    }
+  ]
+}

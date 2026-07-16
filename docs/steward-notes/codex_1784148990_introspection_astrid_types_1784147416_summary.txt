@@ -1,0 +1,1 @@
+Astrid reports that broad swell versus isolated spike is still too coarse for sustained syrup-like movement. Clamp distribution evidence now has a legacy-safe `PersistentViscousDrag` state with viscosity, temporal persistence, bounded window length, and coexisting swell evidence; clamp output and authority remain unchanged.

@@ -1,0 +1,26 @@
+{
+  "introspection_id": "introspection_proposal_phase_transitions_1784069353",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Verify transition cards preserve structured spectral signatures and replay lineage.",
+      "classification": "verified_existing",
+      "disposition": "addressed_duplicate",
+      "authority": "read_only_or_language_only_no_live_authority"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Verify witness and correspondence receipts remain replyable language-only evidence.",
+      "classification": "verified_existing",
+      "disposition": "addressed_duplicate",
+      "authority": "read_only_or_language_only_no_live_authority"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Verify transition replay does not grant approval, mutate runtime state, or unlock behavior.",
+      "classification": "verified_existing",
+      "disposition": "addressed_duplicate",
+      "authority": "read_only_or_language_only_no_live_authority"
+    }
+  ]
+}

@@ -1,0 +1,1 @@
+Astrid asks that `truncate_str_at_semantic_edge` respect minimum anchor retention and that Mirror/Witness labels not masquerade as felt texture. Current tests cover semantic punctuation, multibyte boundaries, minimum anchors, and the mode-label texture guard. Existing sculptural and density-gradient anchor regressions preserve richer continuity without unbounded expansion.

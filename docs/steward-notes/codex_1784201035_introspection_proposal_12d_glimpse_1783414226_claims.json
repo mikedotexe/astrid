@@ -1,0 +1,9 @@
+{
+  "introspection_id": "introspection_proposal_12d_glimpse_1783414226",
+  "claims": [
+    {"claim_id":"c001","summary":"Verify an additive 12D glimpse with explicit source and residual lineage while preserving the stable legacy transport.","classification":"verified_existing","disposition":"addressed_duplicate","authority":"read_only_codec_glimpse_tests"},
+    {"claim_id":"c002","summary":"Verify distinguishability and finite-value audits for the added axes rather than assuming dimensional expansion creates usable texture.","classification":"verified_existing","disposition":"addressed_duplicate","authority":"read_only_codec_glimpse_tests"},
+    {"claim_id":"c003","summary":"Replacing live transport with 12D or changing codec porosity/gain is Tier 5 protocol and substrate work requiring explicit operator approval.","classification":"tier_5_wait","disposition":"addressed_change","authority":"live_eligible_now_false_auto_approved_false"},
+    {"claim_id":"c004","summary":"Compare current and 12D delivery with Astrid-authored material in a bounded replay when a direct runnable adapter exists.","classification":"needs_sandbox","disposition":"addressed_change","authority":"tier_3_non_live_replay_only"}
+  ]
+}

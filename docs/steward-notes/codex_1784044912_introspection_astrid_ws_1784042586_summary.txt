@@ -1,0 +1,1 @@
+Astrid distinguishes temporal silence from structural identity decay: viscosity may warrant patience while high distinguishability loss makes an old trace less trustworthy. The bridge reciprocity review now exposes those as separate read-only clocks using effective structural age `age * (1 + loss)` while leaving the live waiting window untouched.

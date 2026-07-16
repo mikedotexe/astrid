@@ -1,0 +1,1 @@
+Astrid reports that a high-entropy smoothing window can preserve stable context while erasing a fast, low-amplitude transition edge. Pressure smoothing now publishes paired fast and slow deltas, their signed divergence and state, and preserves release as a laminarization delta without changing smoothing or control.

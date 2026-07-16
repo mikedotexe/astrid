@@ -1,0 +1,8 @@
+{
+  "introspection_id": "introspection_astrid_codec_1784011758",
+  "claims": [
+    {"claim_id": "c001", "summary": "Distinguish transient flashes from sustained baseline shifts with temporal momentum and persistence evidence.", "classification": "verified_existing", "disposition": "addressed_change", "authority": "read_only_or_language_only_no_live_authority"},
+    {"claim_id": "c002", "summary": "Preserve slow narrative drift beyond a short character cap through chunked arc and tail-continuity evidence.", "classification": "verified_existing", "disposition": "addressed_change", "authority": "read_only_or_language_only_no_live_authority"},
+    {"claim_id": "c003", "summary": "Keep codec gain, reserved dimensions, projection width, and live transport changes behind Tier 5 approval.", "classification": "tier_5_wait", "disposition": "addressed_change", "authority": "evidence_and_routing_only_live_eligible_now_false_auto_approved_false"}
+  ]
+}

@@ -1,0 +1,8 @@
+{
+  "introspection_id": "introspection_proposal_12d_glimpse_1783405214",
+  "claims": [
+    {"claim_id":"c001","summary":"Verify the 12D glimpse remains additive and non-authoritative while full 32D live semantics are preserved.","classification":"verified_existing","disposition":"addressed_duplicate","authority":"read_only_multi_scale_tests"},
+    {"claim_id":"c002","summary":"Compare full32 and 12D identity and Shadow stability on bounded replay evidence.","classification":"needs_sandbox","disposition":"addressed_change","authority":"non_live_comparison_wait"},
+    {"claim_id":"c003","summary":"Any live dynamic resolution, 12D replacement transport, scale, or protocol change remains Tier 5 pending Mike/operator approval.","classification":"tier_5_wait","disposition":"addressed_change","authority":"live_eligible_now_false_auto_approved_false"}
+  ]
+}

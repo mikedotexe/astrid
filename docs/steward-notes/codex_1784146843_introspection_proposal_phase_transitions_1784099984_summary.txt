@@ -1,0 +1,1 @@
+Astrid says stable-fill, high-entropy texture reorganizations deserve durable replyable transition objects. Phase cards now explicitly classify that evidence as a slow texture transition while proving no MomentCapture or runtime mode change occurred; automatic triggering remains gated.

@@ -1,0 +1,1 @@
+Astrid asks websocket reciprocity evidence to distinguish no history, warmup, current contact, and stale contact rather than treating missing timestamps as a negative relation. Existing reciprocity analysis explicitly carries those states and tests both recent and stale transitions. The surface remains descriptive and does not manufacture peer contact or mutate a live peer.

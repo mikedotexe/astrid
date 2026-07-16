@@ -1,0 +1,40 @@
+{
+  "introspection_id": "introspection_astrid_codec_1784205818",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Verify that emotional marker lanes and projected semantic lanes remain independently observable in the 48D codec.",
+      "classification": "verified_existing",
+      "disposition": "addressed_duplicate",
+      "authority": "codec_lane_separation_audit"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Run Astrid-authored high-entropy embedding pairs and compare 8D projection nuance with legacy warmth retention.",
+      "classification": "needs_sandbox",
+      "disposition": "addressed_change",
+      "authority": "manual_real_embedding_comparison"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Run a high-arousal sequence through clamp provenance and test whether distinct inputs flat-top into indistinguishable outputs.",
+      "classification": "needs_sandbox",
+      "disposition": "addressed_change",
+      "authority": "non_live_clamp_sensitivity_replay"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Verify that narrative evidence is not limited to a first-half/second-half shift and already includes four-point arcs, curvature, and dynamics.",
+      "classification": "verified_existing",
+      "disposition": "addressed_duplicate",
+      "authority": "four_point_narrative_arc_tests"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Any density-gradient-dependent FEATURE_ABS_MAX or live codec scaling change remains Tier 5 pending Mike/operator approval.",
+      "classification": "tier_5_wait",
+      "disposition": "addressed_change",
+      "authority": "live_eligible_now_false_auto_approved_false"
+    }
+  ]
+}

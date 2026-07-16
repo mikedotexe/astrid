@@ -1,0 +1,8 @@
+{
+  "introspection_id": "introspection_minime_sensory_bus_1784035046",
+  "claims": [
+    {"claim_id": "c001", "summary": "Verify semantic stale-window release remains monotonic and non-cliffing through the exact 0.39 and 0.41 fill samples.", "classification": "verified_existing", "disposition": "addressed_duplicate", "authority": "read_only_or_language_only_no_live_authority"},
+    {"claim_id": "c002", "summary": "Bound entropy-, velocity-, pressure-, salience-, and decay-supported semantic persistence so context can linger without an unbounded hold.", "classification": "verified_existing", "disposition": "addressed_duplicate", "authority": "read_only_or_language_only_no_live_authority"},
+    {"claim_id": "c003", "summary": "Keep live semantic stale windows, sensory cadence, and admission behavior behind Tier 5 approval.", "classification": "tier_5_wait", "disposition": "addressed_change", "authority": "evidence_and_routing_only_live_eligible_now_false_auto_approved_false"}
+  ]
+}

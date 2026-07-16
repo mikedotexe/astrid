@@ -1,0 +1,7 @@
+{
+  "introspection_id": "introspection_astrid_ws_1783416498",
+  "claims": [
+    {"claim_id":"c001","summary":"Verify that a heavy current contact and a stale heartbeat receive distinct reciprocity and pressure-source states.","classification":"verified_existing","disposition":"addressed_duplicate","authority":"read_only_ws_reciprocity_tests"},
+    {"claim_id":"c002","summary":"Verify bidirectional texture flags preserve false, unavailable, and stale evidence without manufacturing peer contact.","classification":"verified_existing","disposition":"addressed_duplicate","authority":"read_only_ws_texture_tests"}
+  ]
+}

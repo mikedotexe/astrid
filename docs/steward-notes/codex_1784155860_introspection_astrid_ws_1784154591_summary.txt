@@ -1,0 +1,1 @@
+Astrid asks for viscosity-gradient velocity so a thickening movement can become visible before a static pressure warning. The bridge now preserves Minime's existing viscosity_gradient and reports its signed recent-sample trend as diagnostic evidence only.

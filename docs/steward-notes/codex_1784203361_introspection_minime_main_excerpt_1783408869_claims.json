@@ -1,0 +1,8 @@
+{
+  "introspection_id": "introspection_minime_main_excerpt_1783408869",
+  "claims": [
+    {"claim_id":"c001","summary":"Verify EigenPacket serialization preserves typed spectral telemetry fields.","classification":"verified_existing","disposition":"addressed_duplicate","authority":"read_only_serialization_tests"},
+    {"claim_id":"c002","summary":"Verify semantic admission has explicit stale, budgeted, muted, fill-ceiling, stable-core, and non-stable labels.","classification":"verified_existing","disposition":"addressed_duplicate","authority":"read_only_admission_tests"},
+    {"claim_id":"c003","summary":"Verify non-finite semantic-admission inputs cannot silently select an ordinary live label.","classification":"verified_existing","disposition":"addressed_duplicate","authority":"read_only_nonfinite_tests"}
+  ]
+}

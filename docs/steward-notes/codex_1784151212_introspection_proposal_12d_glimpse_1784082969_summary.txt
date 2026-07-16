@@ -1,0 +1,1 @@
+Astrid asked for an explicit 12D glimpse that does not replace the wider lived-fit representation. Current Astrid and Minime types carry a separately validated additive 12D glimpse, preserve tail/persistence roles, and keep live semantic transport width unchanged. Tests make malformed or lossy compression visible rather than silently substituting it for the full fingerprint.

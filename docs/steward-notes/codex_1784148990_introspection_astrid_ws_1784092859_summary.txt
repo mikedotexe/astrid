@@ -1,0 +1,1 @@
+Astrid questions first-message and stale-lane reciprocity states. Existing tests distinguish connected-no-message warmup, no-recent-sensory, waiting, stale telemetry, stale sensory, both stale, future skew, and severed connectivity without treating diagnostic state as control.

@@ -1,0 +1,1 @@
+Astrid named semantic truncation and Mirror echo as distinct risks. Anchor-aware semantic truncation already preserves late shadow, viscosity, cohesion, trace, and UTF-8 boundaries; this run adds the missing Mirror source/render/codec fidelity receipt. Any Mirror behavior or mode-selection change remains Tier 5.

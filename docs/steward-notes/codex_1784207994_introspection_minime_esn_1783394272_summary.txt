@@ -1,0 +1,1 @@
+Minime notices settled high entropy exceeds the nominal volatile threshold while the dynamic-noise helper remains dormant. Current read-only reviews expose schedule thresholds, pressure-room previews, and settled-entropy floor candidates without changing ESN::step. Pressure-start replay remains non-live; wiring noise or widening the live threshold remains Tier 5.

@@ -1,0 +1,33 @@
+{
+  "introspection_id": "introspection_minime_sensory_bus_1783399603",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Verify current semantic retention uses a 25%-40% smooth recovery handoff, 10-second high-fill floor, and bounded entropy/context persistence.",
+      "classification": "verified_existing",
+      "disposition": "addressed_duplicate",
+      "authority": "current_sensory_source_and_tests"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Observe an exact high-entropy anchor at the 40% release boundary over its full stale window.",
+      "classification": "needs_sandbox",
+      "disposition": "addressed_change",
+      "authority": "runtime_adjacent_persistence_observation"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Verify Shadow influence duration and 12-tick decay are bounded separately from semantic retention and expose residual-ghost evidence.",
+      "classification": "verified_existing",
+      "disposition": "addressed_duplicate",
+      "authority": "shadow_decay_and_residual_review_tests"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Any density-gradient change to live semantic stale timing, lane decay, or sensory cadence remains Tier 5 pending Mike/operator approval.",
+      "classification": "tier_5_wait",
+      "disposition": "addressed_change",
+      "authority": "live_eligible_now_false_auto_approved_false"
+    }
+  ]
+}

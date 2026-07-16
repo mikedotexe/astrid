@@ -1,0 +1,8 @@
+{
+  "introspection_id": "introspection_astrid_ws_1784148695",
+  "claims": [
+    {"claim_id":"c001","summary":"Dynamic stale windows need hard bounds so low-entropy or malformed telemetry cannot collapse reciprocity into rapid stale flapping.","disposition":"verified_existing"},
+    {"claim_id":"c002","summary":"Reciprocity must transition from bidirectional recent to stale telemetry based on bounded arrival age while reporting future clock skew separately.","disposition":"verified_existing"},
+    {"claim_id":"c003","summary":"BridgeState must initialize pressure samples empty and both telemetry and sensory connectivity false until their lanes actually connect.","disposition":"verified_existing"}
+  ]
+}

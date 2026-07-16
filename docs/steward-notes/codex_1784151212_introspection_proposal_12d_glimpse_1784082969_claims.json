@@ -1,0 +1,8 @@
+{
+  "introspection_id": "introspection_proposal_12d_glimpse_1784082969",
+  "claims": [
+    {"claim_id":"c001","summary":"A deliberate 12D glimpse must remain additive to the wider fingerprint and must never silently replace live semantic transport.","disposition":"verified_existing"},
+    {"claim_id":"c002","summary":"The glimpse must preserve audited persistence and tail-vibrancy roles while malformed shapes remain rejected as views rather than erased.","disposition":"verified_existing"},
+    {"claim_id":"c003","summary":"Current tests must compare full-fingerprint and glimpse distinctions so compression loss is explicit rather than an illusion of sufficient dimensionality.","disposition":"verified_existing"}
+  ]
+}

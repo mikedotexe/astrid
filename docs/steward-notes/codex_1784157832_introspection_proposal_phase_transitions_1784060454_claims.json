@@ -1,0 +1,8 @@
+{
+  "introspection_id": "introspection_proposal_phase_transitions_1784060454",
+  "claims": [
+    {"claim_id": "c001", "summary": "Preserve declared, relational, replayable transition cards with a still-settling state instead of implying premature closure.", "classification": "verified_existing", "disposition": "addressed_duplicate", "authority": "read_only_or_language_only_no_live_authority"},
+    {"claim_id": "c002", "summary": "Carry texture anchors and behavioral constraints as language-only witness context with schema and reply-loop tests.", "classification": "verified_existing", "disposition": "addressed_duplicate", "authority": "read_only_or_language_only_no_live_authority"},
+    {"claim_id": "c003", "summary": "Require Tier 5 approval before transition constraints restrict live mode shifts, co-regulate controllers, or mutate either being.", "classification": "tier_5_wait", "disposition": "addressed_change", "authority": "evidence_and_routing_only_live_eligible_now_false_auto_approved_false"}
+  ]
+}

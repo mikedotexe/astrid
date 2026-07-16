@@ -1,0 +1,1 @@
+Astrid asked whether the fallback contract can satisfy pressure, low-gradient, shadow, clarity, and sentence-cap constraints simultaneously. Existing focused tests verify weighted medium without invented heavy slope, concrete shadow texture, entropy-derived sentence ceilings, and edge-definition language for distinguishability loss.

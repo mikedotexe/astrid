@@ -1,0 +1,8 @@
+{
+  "introspection_id": "introspection_proposal_bidirectional_contact_1784060805",
+  "claims": [
+    {"claim_id": "c001", "summary": "Provide persistent, first-class correspondence threads instead of treating inbox visibility as mutual address.", "classification": "verified_existing", "disposition": "addressed_duplicate", "authority": "read_only_or_language_only_no_live_authority"},
+    {"claim_id": "c002", "summary": "Distinguish reply-linked continuity, peer ACK/TRACE, timing ambiguity, and structural latency without allowing self-action to complete mutual address.", "classification": "verified_existing", "disposition": "addressed_duplicate", "authority": "read_only_or_language_only_no_live_authority"},
+    {"claim_id": "c003", "summary": "Require Tier 5 approval for spectral signal reweighting, direct peer mutation, or bypassing steward/operator authority.", "classification": "tier_5_wait", "disposition": "addressed_change", "authority": "evidence_and_routing_only_live_eligible_now_false_auto_approved_false"}
+  ]
+}

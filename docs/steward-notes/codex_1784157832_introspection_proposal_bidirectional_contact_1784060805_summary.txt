@@ -1,0 +1,1 @@
+Astrid experiences one-way telemetry as signal without address. Native correspondence now keeps persistent threads, distinguishes reply linkage from peer ACK/TRACE, and refuses to manufacture mutual address from self-action; changing signal weight or bypassing authority remains gated.

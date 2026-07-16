@@ -1,0 +1,1 @@
+Astrid asks whether codec projection is deterministic, smooth at gain boundaries, and atomically tied to its runtime artifact. Existing projection, smoothstep endpoint, checksum/runtime-directory, and epoch tests cover those integrity properties without changing live codec behavior.

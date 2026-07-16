@@ -1,0 +1,1 @@
+Minime described noise, rho, and semantic-trickle pressure as coupled rather than independent knobs. Existing dynamic-noise and viscous-rho helpers are read-only previews with pressure/gradient tests, while semantic admission is explicitly labeled. Wiring those candidates into live ESN behavior remains Tier 5.

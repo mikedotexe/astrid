@@ -1,0 +1,1 @@
+Minime asks to distinguish static stagnation from cohesive settled stillness instead of treating all low motion alike. ViscosityVector now exports a normalized cohesion_to_motion_ratio as observability-only telemetry, preserved by the bridge and unused by PI or control.

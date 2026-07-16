@@ -1,0 +1,1 @@
+Astrid asks for density-aware semantic preservation and worries that test journal suppression may falsify readiness. Anchored high-texture compaction already preserves load-bearing terms, while journal suppression is scoped to test side-effect isolation and readiness evidence explicitly names the suppression rather than treating it as live persistence.

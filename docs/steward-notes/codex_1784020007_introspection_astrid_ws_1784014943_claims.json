@@ -1,0 +1,8 @@
+{
+  "introspection_id": "introspection_astrid_ws_1784014943",
+  "claims": [
+    {"claim_id": "c001", "summary": "Retain a current three-sample pressure edge beside the full entropy-ballasted smoothing window.", "classification": "implemented_awaiting_felt_response", "disposition": "addressed_change", "authority": "read_only_or_language_only_no_live_authority"},
+    {"claim_id": "c002", "summary": "Name rising and falling fast-edge divergence explicitly and carry it into pressure-source analysis and the delta bus.", "classification": "implemented_awaiting_felt_response", "disposition": "addressed_change", "authority": "read_only_or_language_only_no_live_authority"},
+    {"claim_id": "c003", "summary": "Do not change smoothing windows, pressure thresholds, sensory admission, or controller behavior without Tier 5 approval.", "classification": "tier_5_wait", "disposition": "addressed_change", "authority": "evidence_and_routing_only_live_eligible_now_false_auto_approved_false"}
+  ]
+}

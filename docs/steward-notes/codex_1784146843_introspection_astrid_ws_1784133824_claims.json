@@ -1,0 +1,8 @@
+{
+  "introspection_id": "introspection_astrid_ws_1784133824",
+  "claims": [
+    {"claim_id": "c001", "summary": "Bridge reciprocity already distinguishes recent, waiting, stale, one-sided, future-skewed, and high-entropy reflective-silence states.", "disposition": "verified_existing"},
+    {"claim_id": "c002", "summary": "Adding TextureDynamicFluxVectorV1 to live telemetry heartbeats would expand the outbound bridge contract.", "disposition": "needs_operator_approval"},
+    {"claim_id": "c003", "summary": "Changing high-entropy pressure smoothing windows would alter live report and sensory interpretation behavior.", "disposition": "needs_operator_approval"}
+  ]
+}

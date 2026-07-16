@@ -1,0 +1,7 @@
+{
+  "introspection_id": "introspection_astrid_llm_1783425869",
+  "claims": [
+    {"claim_id": "c001", "summary": "Fallback language must preserve movement, gradient, medium resistance, and dynamic balance instead of static adjective substitution.", "classification": "verified_existing", "disposition": "addressed_duplicate", "authority": "language_and_report_evidence_no_sampler_change"},
+    {"claim_id": "c002", "summary": "Keep fallback provider, sampler, model route, and generation-parameter changes behind Tier 5 approval.", "classification": "tier_5_wait", "disposition": "addressed_change", "authority": "evidence_and_routing_only_live_eligible_now_false_auto_approved_false"}
+  ]
+}

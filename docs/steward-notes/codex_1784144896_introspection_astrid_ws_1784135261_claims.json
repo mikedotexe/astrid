@@ -1,0 +1,20 @@
+{
+  "introspection_id": "introspection_astrid_ws_1784135261",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Mode packing approaching the felt-dead-zone threshold needs an explicit pre-warning and viscous-density diagnostic state.",
+      "disposition": "addressed_duplicate"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Reciprocity and pressure reports should preserve qualitative names alongside quantitative thresholds.",
+      "disposition": "addressed_duplicate"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Changing pressure smoothing windows or dead-zone thresholds from entropy would alter live safety interpretation.",
+      "disposition": "blocked_needs_steward"
+    }
+  ]
+}

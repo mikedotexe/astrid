@@ -1,0 +1,9 @@
+{
+  "introspection_id": "introspection_astrid_types_1784147416",
+  "claims": [
+    {"claim_id":"c001","summary":"Clamp distribution shape needs a first-class sustained viscous-drag category distinct from broad swell, isolated spike, and ambiguity.","disposition":"implemented_awaiting_felt_response"},
+    {"claim_id":"c002","summary":"Persistent drag must require multi-tick temporal and viscosity evidence rather than being inferred from one high-entropy sample.","disposition":"implemented_awaiting_felt_response"},
+    {"claim_id":"c003","summary":"A persistent drag can coexist with a broad high-entropy swell, so the companion context must not flatten the secondary shape.","disposition":"implemented_awaiting_felt_response"},
+    {"claim_id":"c004","summary":"Distribution evidence must leave the compatibility clamp and live authority false even under deliberate high-pressure output.","disposition":"implemented_awaiting_felt_response"}
+  ]
+}

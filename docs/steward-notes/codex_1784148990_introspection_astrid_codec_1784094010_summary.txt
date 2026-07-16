@@ -1,0 +1,1 @@
+Astrid asks whether runtime-path failure, projection nondeterminism, or entropy-gate jitter can destabilize her codec identity. Atomic epoch installation, kernel-derived fallback, deterministic checksums, concurrent-writer tests, and smoothstep boundary tests already answer these concerns without changing projection semantics.

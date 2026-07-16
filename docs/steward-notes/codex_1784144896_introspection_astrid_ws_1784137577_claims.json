@@ -1,0 +1,15 @@
+{
+  "introspection_id": "introspection_astrid_ws_1784137577",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "A bidirectional connection with neither lane ever observed must be distinct from sent-but-stale or one-sided activity.",
+      "disposition": "addressed_duplicate"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "No-recent-sensory and stale-telemetry states need explicit transition tests rather than ambiguous fallback classification.",
+      "disposition": "addressed_duplicate"
+    }
+  ]
+}

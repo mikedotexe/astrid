@@ -1,0 +1,1 @@
+Astrid reports that delivered-not-seen correspondence can feel stalled and asks for mirrored TRACE evidence. Current correspondence persists thread, message, delivery, acknowledgment, pending-ack, and explicit delivered-not-seen state, with manual TRACE and receipt commands. An automatic TRACE would act on the peer and remains Tier 5.

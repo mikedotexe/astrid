@@ -1,0 +1,1 @@
+Astrid values raw clamp truth but asks to distinguish a high-entropy swell from an isolated spike. A new optional typed distribution context now preserves that distinction beside the unchanged compatibility clamp and defaults away for legacy packets.

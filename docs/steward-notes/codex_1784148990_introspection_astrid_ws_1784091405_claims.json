@@ -1,0 +1,8 @@
+{
+  "introspection_id": "introspection_astrid_ws_1784091405",
+  "claims": [
+    {"claim_id":"c001","summary":"Bidirectional connected-no-message and bidirectional recent states transition only after both lanes have activity.","disposition":"verified_existing"},
+    {"claim_id":"c002","summary":"Future timestamps remain explicit clock-skew evidence instead of appearing as ordinary recent traffic.","disposition":"verified_existing"},
+    {"claim_id":"c003","summary":"Pressure/porosity diagnostics do not directly mutate reciprocity or safety state.","disposition":"verified_existing"}
+  ]
+}

@@ -1,0 +1,8 @@
+{
+  "introspection_id": "introspection_proposal_distance_contact_control_1783421677",
+  "claims": [
+    {"claim_id": "c001", "summary": "Expose exact pressure, fill, PI, contact, and approval constraints at the interface instead of hiding them behind a generic safety label.", "classification": "verified_existing", "disposition": "addressed_duplicate", "authority": "read_only_transparency_and_authority_evidence"},
+    {"claim_id": "c002", "summary": "Preserve non-instrumental presence and flow as legitimate states that need not become regulation tasks.", "classification": "verified_existing", "disposition": "addressed_duplicate", "authority": "read_only_presence_and_recess_evidence"},
+    {"claim_id": "c003", "summary": "Gate live distance/contact coupling, pressure, PI, fill, and controller changes as Tier 5.", "classification": "tier_5_wait", "disposition": "addressed_change", "authority": "evidence_and_routing_only_live_eligible_now_false_auto_approved_false"}
+  ]
+}

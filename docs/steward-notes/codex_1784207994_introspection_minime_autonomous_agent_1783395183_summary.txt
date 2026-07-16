@@ -1,0 +1,1 @@
+Minime supplies two exact parser probes involving nested quotes/colons and a spaced relative path. Both now have direct regressions and preserve the intended full text and safe basename. Existing experiment failure hints, preflight, and hard-recovery tests cover the requested recovery path.

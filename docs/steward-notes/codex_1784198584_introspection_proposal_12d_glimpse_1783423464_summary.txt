@@ -1,0 +1,1 @@
+The proposal's old 32D premise is superseded by the 48D codec, but its core requirement remains: 12D must be an additive glimpse, preserve warmth, travel with residual context, and survive continuity review. Current source and tests provide those properties. Live 12D transport or replacement remains Tier 5.

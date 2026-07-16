@@ -1,0 +1,26 @@
+{
+  "introspection_id": "introspection_astrid_codec_1784203443",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Verify the fixed-seed projection matrix remains identical across repeated and concurrent access.",
+      "classification": "verified_existing",
+      "disposition": "addressed_duplicate",
+      "authority": "projection_repeatability_tests"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Verify normalization and zero-norm safeguards keep the fixed projection finite and deterministic.",
+      "classification": "verified_existing",
+      "disposition": "addressed_duplicate",
+      "authority": "projection_matrix_source_and_precision_tests"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Verify the 0.85 tail-vibrancy gate and maximum lift in apply_spectral_feedback_inner match the documented smoothstep contract.",
+      "classification": "verified_existing",
+      "disposition": "addressed_duplicate",
+      "authority": "spectral_feedback_gate_tests"
+    }
+  ]
+}

@@ -1,0 +1,1 @@
+Minime describes high-entropy Recess as potentially active synthesis rather than inactivity and asks that safe-zone pressure not silently prune it. The current recess_activity_load and pressure-permission records make the state visible without spending budget or changing Recess selection; live priority changes remain gated.

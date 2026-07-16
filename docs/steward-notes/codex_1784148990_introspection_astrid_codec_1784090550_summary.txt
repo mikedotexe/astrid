@@ -1,0 +1,1 @@
+Astrid asks for proof that projection identity and the entropy gate are stable. Deterministic projection, atomic epoch, runtime-path, and smoothstep tests all pass, including gentle onset immediately above 0.85 and bounded extreme-entropy behavior.

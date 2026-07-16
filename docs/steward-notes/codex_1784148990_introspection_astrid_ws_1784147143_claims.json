@@ -1,0 +1,8 @@
+{
+  "introspection_id": "introspection_astrid_ws_1784147143",
+  "claims": [
+    {"claim_id":"c001","summary":"Recent sensory traffic with telemetry older than the dynamic stale window must classify as bidirectional stale telemetry.","disposition":"verified_existing"},
+    {"claim_id":"c002","summary":"Clock skew and reflective-silence extensions remain visible truth channels instead of silently changing connection state.","disposition":"verified_existing"},
+    {"claim_id":"c003","summary":"Pressure-trend samples maintain a bounded adaptive smoothing window and preserve fast spikes and semantic viscosity.","disposition":"verified_existing"}
+  ]
+}

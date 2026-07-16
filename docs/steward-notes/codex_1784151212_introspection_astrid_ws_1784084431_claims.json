@@ -1,0 +1,8 @@
+{
+  "introspection_id": "introspection_astrid_ws_1784084431",
+  "claims": [
+    {"claim_id":"c001","summary":"Pressure-trend smoothing should interpolate with entropy and porosity rather than jump between a base and high-entropy window.","disposition":"verified_existing"},
+    {"claim_id":"c002","summary":"Missing pressure risk must remain explicitly unavailable and must not be interpreted as proof of safety.","disposition":"verified_existing"},
+    {"claim_id":"c003","summary":"A 65-second sensory or telemetry delay must enter the appropriate stale reciprocity state without silently changing tone or control.","disposition":"verified_existing"}
+  ]
+}

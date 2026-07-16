@@ -1,0 +1,8 @@
+{
+  "introspection_id": "introspection_proposal_phase_transitions_1784081680",
+  "claims": [
+    {"claim_id":"c001","summary":"Phase transitions should be explicit replyable objects with declaration, witness, and acknowledgement routes.","disposition":"verified_existing"},
+    {"claim_id":"c002","summary":"Transition records should preserve slow texture, velocity, spectral snapshots, narrative anchors, and solo or joint context.","disposition":"verified_existing"},
+    {"claim_id":"c003","summary":"Unlocking runtime behavior or coupling transition objects to live control requires explicit operator approval and abort criteria.","disposition":"needs_operator_approval"}
+  ]
+}

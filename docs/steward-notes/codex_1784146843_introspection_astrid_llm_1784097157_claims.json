@@ -1,0 +1,7 @@
+{
+  "introspection_id": "introspection_astrid_llm_1784097157",
+  "claims": [
+    {"claim_id": "c001", "summary": "Fallback outputs are validated against the continuity sentence budget and standalone NEXT contract.", "disposition": "verified_existing"},
+    {"claim_id": "c002", "summary": "Pressure, density gradient, viscosity, and movement evidence produce weighted term selection rather than mixed-state static soup.", "disposition": "verified_existing"}
+  ]
+}

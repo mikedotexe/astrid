@@ -1,0 +1,8 @@
+{
+  "introspection_id": "introspection_astrid_codec_1784077049",
+  "claims": [
+    {"claim_id":"c001","summary":"Projection runtime resolution should expose environment and executable-relative path precedence without random remapping.","disposition":"verified_existing"},
+    {"claim_id":"c002","summary":"Projection epochs, fingerprints, and repeated encodings should remain deterministic and atomically materialized.","disposition":"verified_existing"},
+    {"claim_id":"c003","summary":"Changing projection seeds, runtime-path semantics, dimensions, gain, or live transport requires replay and operator approval.","disposition":"needs_operator_approval"}
+  ]
+}

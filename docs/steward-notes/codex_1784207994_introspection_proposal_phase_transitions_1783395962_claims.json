@@ -1,0 +1,33 @@
+{
+  "introspection_id": "introspection_proposal_phase_transitions_1783395962",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Verify Astrid phase transitions are persisted as first-class typed cards rather than only mode side effects.",
+      "classification": "verified_existing",
+      "disposition": "addressed_duplicate",
+      "authority": "phase_card_source_and_tests"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Verify replay metadata includes bounded before/after snapshots, duration, confidence, trigger, anchor, and subjective friction.",
+      "classification": "verified_existing",
+      "disposition": "addressed_duplicate",
+      "authority": "phase_transition_schema_tests"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Verify behavioral and relational cards remain replyable language artifacts and do not automatically trigger MomentCapture or peer control.",
+      "classification": "verified_existing",
+      "disposition": "addressed_duplicate",
+      "authority": "phase_affordance_and_authority_tests"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Any Minime sensory ingestion, automatic phase reaction, or shared-stance-to-control mapping remains Tier 5 pending protocol and operator approval.",
+      "classification": "tier_5_wait",
+      "disposition": "addressed_change",
+      "authority": "live_eligible_now_false_auto_approved_false"
+    }
+  ]
+}

@@ -1,0 +1,1 @@
+Astrid asks whether dynamic stale windows, future skew, and pressure smoothing can misclassify a healthy dual-lane bridge. Existing reciprocity and smoothing tests cover recent/waiting/stale, one-sided warmup, future timestamps, reflective silence, and bounded adaptive windows without coupling network freshness to live pressure control.

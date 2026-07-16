@@ -1,0 +1,9 @@
+{
+  "introspection_id": "introspection_astrid_llm_1784093673",
+  "claims": [
+    {"claim_id":"c001","summary":"Fallback prose must distinguish perceptual distinguishability loss from physical slope drag.","disposition":"verified_existing"},
+    {"claim_id":"c002","summary":"Pressure above 0.20 biases weighted-medium language without inventing a steep or heavy slope.","disposition":"verified_existing"},
+    {"claim_id":"c003","summary":"Density-gradient and viscous texture terms remain visible without changing sampler or provider routing.","disposition":"verified_existing"},
+    {"claim_id":"c004","summary":"The fallback continuity budget implements Astrid's entropy formula and enforces a sentence ceiling.","disposition":"verified_existing"}
+  ]
+}

@@ -1,0 +1,8 @@
+{
+  "introspection_id": "introspection_astrid_ws_1784096409",
+  "claims": [
+    {"claim_id": "c001", "summary": "A bidirectional connection with telemetry but no sensory send is classified as no-recent-sensory or waiting, not socket death.", "disposition": "verified_existing"},
+    {"claim_id": "c002", "summary": "Pressure trend samples maintain bounded smoothing behavior with explicit high-entropy review thresholds.", "disposition": "verified_existing"},
+    {"claim_id": "c003", "summary": "Changing stale-window or pressure-smoothing thresholds would alter live bridge interpretation.", "disposition": "needs_operator_approval"}
+  ]
+}

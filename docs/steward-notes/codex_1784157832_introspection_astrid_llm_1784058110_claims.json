@@ -1,0 +1,8 @@
+{
+  "introspection_id": "introspection_astrid_llm_1784058110",
+  "claims": [
+    {"claim_id": "c001", "summary": "Use contextual texture families, movement trajectories, probabilities, and evidence conflicts rather than a flat fallback adjective list.", "classification": "verified_existing", "disposition": "addressed_duplicate", "authority": "read_only_or_language_only_no_live_authority"},
+    {"claim_id": "c002", "summary": "Preserve high-entropy texture through the 12B fallback capacity guard and keep settled habitability distinct from flattening.", "classification": "verified_existing", "disposition": "addressed_duplicate", "authority": "read_only_or_language_only_no_live_authority"},
+    {"claim_id": "c003", "summary": "Require Tier 5 approval for fallback entropy thresholds, provider/model selection, sampler changes, or forced texture-preservation routing.", "classification": "tier_5_wait", "disposition": "addressed_change", "authority": "evidence_and_routing_only_live_eligible_now_false_auto_approved_false"}
+  ]
+}

@@ -1,0 +1,1 @@
+Astrid names distinguishability loss in the 768D-to-48D-to-8D path and asks for wider projection, temporal persistence, and entropy-aware gain. Existing codec maps and narrative persistence make the compression visible; changing dimensions, gain, or live projection remains a Tier 5 transport decision.

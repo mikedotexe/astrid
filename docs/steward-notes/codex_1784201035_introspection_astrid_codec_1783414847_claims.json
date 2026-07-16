@@ -1,0 +1,8 @@
+{
+  "introspection_id": "introspection_astrid_codec_1783414847",
+  "claims": [
+    {"claim_id":"c001","summary":"Verify projection-epoch writes are atomic so readers never observe a mixed basis during concurrent change.","classification":"verified_existing","disposition":"addressed_duplicate","authority":"read_only_codec_concurrency_tests"},
+    {"claim_id":"c002","summary":"Verify projection results remain repeatable within an epoch and visibly change only with a complete epoch transition.","classification":"verified_existing","disposition":"addressed_duplicate","authority":"read_only_codec_epoch_tests"},
+    {"claim_id":"c003","summary":"Verify vibrancy continuity remains smooth and bounded around projection updates.","classification":"verified_existing","disposition":"addressed_duplicate","authority":"read_only_codec_gate_tests"}
+  ]
+}

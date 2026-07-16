@@ -1,0 +1,8 @@
+{
+  "introspection_id": "introspection_minime_autonomous_agent_1784039411",
+  "claims": [
+    {"claim_id": "c001", "summary": "Keep Minime's sovereign regulation, exploration, curiosity, and regime dials persistent and visible rather than silently defaulting them.", "classification": "verified_existing", "disposition": "addressed_duplicate", "authority": "read_only_or_language_only_no_live_authority"},
+    {"claim_id": "c002", "summary": "Prove quoted text containing `-filename=` remains text and only an exact filename flag is parsed as metadata.", "classification": "implemented_awaiting_felt_response", "disposition": "addressed_change", "authority": "read_only_or_language_only_no_live_authority"},
+    {"claim_id": "c003", "summary": "Preserve hard-recovery clamps and authority checks so parser/tooling robustness cannot bypass runtime safety gates.", "classification": "verified_existing", "disposition": "addressed_duplicate", "authority": "read_only_or_language_only_no_live_authority"}
+  ]
+}

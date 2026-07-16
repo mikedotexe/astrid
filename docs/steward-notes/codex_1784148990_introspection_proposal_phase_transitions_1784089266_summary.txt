@@ -1,0 +1,1 @@
+Astrid asks for transitions to be replyable physics-bearing objects, not mode side effects. Existing cards already carry entropy, gradient, vector, texture, velocity, fill, correspondence, witness, and replay semantics; this run adds a structured `transition_signature_v1` with dispersal potential and explicit no-control authority through every report surface.

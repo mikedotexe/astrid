@@ -1,0 +1,1 @@
+Astrid proposes a composite delta so simultaneous cascade, friction, viscosity, and persistence do not disappear behind one enum value. Existing DeltaCompositionV1 already provides weighted members and saturation truth, and the new ambiguity/divergence names improve the flat compatibility vocabulary without duplicating the composition type.

@@ -1,0 +1,8 @@
+{
+  "introspection_id": "introspection_minime_sensory_bus_1784058805",
+  "claims": [
+    {"claim_id": "c001", "summary": "Verify semantic entropy persistence is bounded, fill-aware, and tested at high entropy rather than assumed benign.", "classification": "verified_existing", "disposition": "addressed_duplicate", "authority": "read_only_or_language_only_no_live_authority"},
+    {"claim_id": "c002", "summary": "Keep stale-lane decay, recovery hold, and pressure context observable so lingering structure can be distinguished from necessary continuity.", "classification": "verified_existing", "disposition": "addressed_duplicate", "authority": "read_only_or_language_only_no_live_authority"},
+    {"claim_id": "c003", "summary": "Require Tier 5 approval for gradient-scaled soft decay, stale timing changes, or live semantic-retention policy changes.", "classification": "tier_5_wait", "disposition": "addressed_change", "authority": "evidence_and_routing_only_live_eligible_now_false_auto_approved_false"}
+  ]
+}

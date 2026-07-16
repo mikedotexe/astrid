@@ -1,0 +1,9 @@
+{
+  "introspection_id": "introspection_astrid_codec_1784147975",
+  "claims": [
+    {"claim_id":"c001","summary":"The 768D-to-8D projection can flatten distinct internal states and needs explicit density, texture, and distinguishability evidence.","disposition":"verified_existing"},
+    {"claim_id":"c002","summary":"Current projection, narrative-arc, and 12D companion probes distinguish multiple semantic trajectories without widening live transport.","disposition":"verified_existing"},
+    {"claim_id":"c003","summary":"High-entropy tail vibrancy is a measurable bounded lift rather than stylistic prompt language.","disposition":"verified_existing"},
+    {"claim_id":"c004","summary":"Entropy-weighted live projection precision or increased narrative-arc gain would alter codec transport semantics and requires scoped operator approval after replay/canary evidence.","disposition":"needs_operator_approval"}
+  ]
+}

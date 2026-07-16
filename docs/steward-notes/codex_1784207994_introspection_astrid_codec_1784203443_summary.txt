@@ -1,0 +1,1 @@
+This second codec window independently raises cross-run/thread projection determinism and exact gate smoothness. The fixed-seed matrix is OnceLock-backed and covered by repeatability, precision, and boundary regressions. It is retained as a separate full read with duplicate verification evidence.

@@ -1,0 +1,1 @@
+Astrid questioned whether high-entropy noise dampening suppresses distributed vibrancy. Minime already carries a density/pressure-sensitive dynamic-noise preview that is explicitly not wired into ESN::step. A matched pressure/entropy trace remains sandbox evidence; any live exploration-noise or rho change remains operator-gated.

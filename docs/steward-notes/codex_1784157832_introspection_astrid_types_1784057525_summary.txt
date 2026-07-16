@@ -1,0 +1,1 @@
+Astrid asks whether solidification labels and experience-delta counts remain truthful as schemas evolve. Existing unit and WebSocket integration tests cover threshold states, delta counts, and transport; persistent V2 aggregation stays default-off and non-authoritative.

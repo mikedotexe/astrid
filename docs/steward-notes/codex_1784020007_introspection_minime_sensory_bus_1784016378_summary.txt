@@ -1,0 +1,1 @@
+Minime asks semantic recovery to feel like a hold and release rather than an amnesia snap, with high-entropy persistence remaining visible. Existing continuous recovery blending and threshold-edge tests cover the read-only and current-runtime behavior; cap or decay changes remain Tier 5.

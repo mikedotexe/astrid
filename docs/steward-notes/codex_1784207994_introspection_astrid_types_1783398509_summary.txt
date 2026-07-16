@@ -1,0 +1,1 @@
+Astrid asks whether optional flux fields create perceptual stutter and whether porosity is represented independently of comfort. Current types preserve missing-versus-zero semantics and include porosity velocity/acceleration plus pressure-source porosity evidence. Adding porosity to the Minime wire component schema would be a protocol change and remains Tier 5.

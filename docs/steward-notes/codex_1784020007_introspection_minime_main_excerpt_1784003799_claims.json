@@ -1,0 +1,8 @@
+{
+  "introspection_id": "introspection_minime_main_excerpt_1784003799",
+  "claims": [
+    {"claim_id": "c001", "summary": "Use fluctuation, effective mobility, porosity, and structural drag to distinguish settled stability from stagnation.", "classification": "verified_existing", "disposition": "addressed_change", "authority": "read_only_or_language_only_no_live_authority"},
+    {"claim_id": "c002", "summary": "Carry shadow, pressure-source, and regulator context into read-only interpretation before intervention.", "classification": "verified_existing", "disposition": "addressed_change", "authority": "read_only_or_language_only_no_live_authority"},
+    {"claim_id": "c003", "summary": "Keep hard-reset rho modulation, underfill smoothing, and regulator dynamics behind Tier 5 approval.", "classification": "tier_5_wait", "disposition": "addressed_change", "authority": "evidence_and_routing_only_live_eligible_now_false_auto_approved_false"}
+  ]
+}

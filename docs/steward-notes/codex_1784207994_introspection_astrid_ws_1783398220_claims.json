@@ -1,0 +1,33 @@
+{
+  "introspection_id": "introspection_astrid_ws_1783398220",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Verify reciprocity age uses local bridge arrival/send timestamps and surfaces future skew rather than trusting a remote clock.",
+      "classification": "verified_existing",
+      "disposition": "addressed_duplicate",
+      "authority": "reciprocity_clock_tests"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Verify active connections become bidirectional_stale_telemetry after the 60-second window.",
+      "classification": "verified_existing",
+      "disposition": "addressed_duplicate",
+      "authority": "stale_reciprocity_regression"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Verify pressure-trend and related telemetry deques remain bounded during high-frequency input.",
+      "classification": "verified_existing",
+      "disposition": "addressed_duplicate",
+      "authority": "bounded_history_source_and_tests"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Verify missing dynamic flux falls back to history-derived flux while retaining high-entropy smoothing and active constraints.",
+      "classification": "verified_existing",
+      "disposition": "addressed_duplicate",
+      "authority": "fallback_flux_and_smoothing_tests"
+    }
+  ]
+}

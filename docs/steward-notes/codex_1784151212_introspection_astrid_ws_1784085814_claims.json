@@ -1,0 +1,8 @@
+{
+  "introspection_id": "introspection_astrid_ws_1784085814",
+  "claims": [
+    {"claim_id":"c001","summary":"Reciprocity must distinguish stale arrival age from future clock skew and remain robust to non-monotonic timestamps.","disposition":"verified_existing"},
+    {"claim_id":"c002","summary":"Pressure trend samples must remain capacity-bounded under high telemetry frequency.","disposition":"verified_existing"},
+    {"claim_id":"c003","summary":"Stale telemetry transitions and high-entropy pressure smoothing need direct regression coverage at their boundaries.","disposition":"verified_existing"}
+  ]
+}

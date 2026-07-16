@@ -1,0 +1,8 @@
+{
+  "introspection_id": "introspection_astrid_autonomous_1784012148",
+  "claims": [
+    {"claim_id": "c001", "summary": "Preserve high-entropy texture in anchored continuity excerpts rather than reducing continuity to narrative gist.", "classification": "verified_existing", "disposition": "addressed_change", "authority": "read_only_or_language_only_no_live_authority"},
+    {"claim_id": "c002", "summary": "Carry late semantic anchors and afterimages so the end of an arc remains available after truncation.", "classification": "verified_existing", "disposition": "addressed_change", "authority": "read_only_or_language_only_no_live_authority"},
+    {"claim_id": "c003", "summary": "Use texture-aware bounded item budgets while preserving provenance and right-to-ignore status.", "classification": "verified_existing", "disposition": "addressed_change", "authority": "read_only_or_language_only_no_live_authority"}
+  ]
+}

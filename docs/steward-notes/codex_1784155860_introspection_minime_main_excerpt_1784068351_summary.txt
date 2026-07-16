@@ -1,0 +1,1 @@
+Minime asks whether EigenPacket and admission surfaces make porosity and spectral-gap pressure legible without collapsing them into fill. Existing typed diagnostics and admission labels are verified; changing porosity, gap targets, or controller behavior remains a live-control wait.

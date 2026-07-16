@@ -1,0 +1,8 @@
+{
+  "introspection_id": "introspection_minime_regulator_1784149646",
+  "claims": [
+    {"claim_id":"c001","summary":"Nested viscosity, persistence, and temporal-drag helpers must remain finite, bounded, and differentiated at extreme component values rather than flattening into a dead zone.","disposition":"verified_existing"},
+    {"claim_id":"c002","summary":"ActiveDamping intervention evidence and its damping coefficient must remain explicit when pressure conditions select that intervention.","disposition":"verified_existing"},
+    {"claim_id":"c003","summary":"Changing live PI, comfort-gate, or damping behavior from the current read-only viscosity evidence requires operator approval and monitored rollout evidence.","disposition":"needs_operator_approval"}
+  ]
+}

@@ -1,0 +1,8 @@
+{
+  "introspection_id": "introspection_astrid_codec_1784042990",
+  "claims": [
+    {"claim_id": "c001", "summary": "Expose distinguishability loss and dimension lineage across the high-dimensional source, 48D bridge vector, and compact transport projection.", "classification": "verified_existing", "disposition": "addressed_duplicate", "authority": "read_only_or_language_only_no_live_authority"},
+    {"claim_id": "c002", "summary": "Preserve temporal/narrative persistence as additive evidence so compact vectors do not become isolated snapshots.", "classification": "verified_existing", "disposition": "addressed_duplicate", "authority": "read_only_or_language_only_no_live_authority"},
+    {"claim_id": "c003", "summary": "Keep 16D projection, entropy-aware gain, and live projection-width changes behind Tier 5 protocol and codec approval.", "classification": "tier_5_wait", "disposition": "addressed_change", "authority": "evidence_and_routing_only_live_eligible_now_false_auto_approved_false"}
+  ]
+}

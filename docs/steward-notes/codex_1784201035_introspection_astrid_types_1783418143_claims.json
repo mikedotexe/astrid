@@ -1,0 +1,8 @@
+{
+  "introspection_id": "introspection_astrid_types_1783418143",
+  "claims": [
+    {"claim_id":"c001","summary":"Expose legacy-safe comfort-gate velocity and acceleration in read-only texture flux.","classification":"implemented","disposition":"addressed_change","authority":"read_only_report_only"},
+    {"claim_id":"c002","summary":"Verify comfort-gate motion uses the existing bounded history and does not change pressure, fill, PI, or controller behavior.","classification":"verified_existing","disposition":"addressed_change","authority":"read_only_flux_tests"},
+    {"claim_id":"c003","summary":"Using comfort-gate motion to change a stability buffer, semantic trickle, damping, or any live gate is Tier 5 operator work.","classification":"tier_5_wait","disposition":"addressed_change","authority":"live_eligible_now_false_auto_approved_false"}
+  ]
+}

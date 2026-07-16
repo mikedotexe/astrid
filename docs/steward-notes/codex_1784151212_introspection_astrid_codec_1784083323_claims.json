@@ -1,0 +1,7 @@
+{
+  "introspection_id": "introspection_astrid_codec_1784083323",
+  "claims": [
+    {"claim_id":"c001","summary":"ASTRID_CODEC_RUNTIME_DIR must take precedence over executable-relative projection paths while empty or missing overrides fall back safely.","disposition":"verified_existing"},
+    {"claim_id":"c002","summary":"Projection output and epoch identity must remain deterministic, and a temporary install must not clobber a valid concurrent epoch.","disposition":"verified_existing"}
+  ]
+}

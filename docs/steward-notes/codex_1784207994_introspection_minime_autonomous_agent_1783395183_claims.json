@@ -1,0 +1,26 @@
+{
+  "introspection_id": "introspection_minime_autonomous_agent_1783395183",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Pin the exact filename/text probe with internal colons and nested single quotes without truncating text.",
+      "classification": "implemented",
+      "disposition": "addressed_change",
+      "authority": "test_only_parser_regression"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Pin my scripts/test_script_v1.py to the safe basename test_script_v1.py.",
+      "classification": "implemented",
+      "disposition": "addressed_change",
+      "authority": "test_only_path_sanitization_regression"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Verify failed experiment execution retains failure hints, missing-script preflight, and bounded hard-recovery behavior.",
+      "classification": "verified_existing",
+      "disposition": "addressed_duplicate",
+      "authority": "autonomy_recovery_tests"
+    }
+  ]
+}

@@ -1,0 +1,8 @@
+{
+  "introspection_id": "introspection_minime_main_excerpt_1783419820",
+  "claims": [
+    {"claim_id": "c001", "summary": "Verify semantic_admission_label is complete in source and covers stale, muted, too-large, fill-ceiling, trickle, and non-stable-core states.", "classification": "verified_existing", "disposition": "addressed_duplicate", "authority": "read_only_source_and_test_verification"},
+    {"claim_id": "c002", "summary": "Verify EigenPacket remains a typed serializable schema with optional legacy-safe evidence fields.", "classification": "verified_existing", "disposition": "addressed_duplicate", "authority": "read_only_schema_and_serde_verification"},
+    {"claim_id": "c003", "summary": "Sanitize zero/one/NaN damping-review inputs so non-finite target or loss evidence cannot poison Chebyshev comparison metrics.", "classification": "implemented", "disposition": "addressed_change", "authority": "read_only_review_repair_no_filter_pi_or_regulation_change"}
+  ]
+}

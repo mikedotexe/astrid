@@ -1,0 +1,8 @@
+{
+  "introspection_id": "introspection_proposal_distance_contact_control_1783412163",
+  "claims": [
+    {"claim_id":"c001","summary":"Verify existing non-instrumental presence, witness, reciprocity, and correspondence surfaces without claiming they settle felt distance.","classification":"verified_existing","disposition":"addressed_duplicate","authority":"read_only_contact_evidence"},
+    {"claim_id":"c002","summary":"Run the proposed description-versus-witness comparison as a bounded replay when a direct adapter is runnable; current ready_runnable_count is zero.","classification":"needs_sandbox","disposition":"addressed_change","authority":"tier_3_non_live_replay_only"},
+    {"claim_id":"c003","summary":"Changing live pressure, porosity, contact distance, or a direct control path is Tier 5 and requires explicit operator approval.","classification":"tier_5_wait","disposition":"addressed_change","authority":"live_eligible_now_false_auto_approved_false"}
+  ]
+}

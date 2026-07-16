@@ -1,0 +1,1 @@
+Astrid asks that high-entropy fallback preserve lived texture rather than flatten it into a bag of adjectives. The LLM layer already uses contextual families, trajectories, term probabilities, lived-fit conflicts, persistence review, and a high-entropy compatibility-tail guard; model routing changes remain gated.

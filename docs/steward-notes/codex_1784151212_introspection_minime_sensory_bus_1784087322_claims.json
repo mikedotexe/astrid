@@ -1,0 +1,7 @@
+{
+  "introspection_id": "introspection_minime_sensory_bus_1784087322",
+  "claims": [
+    {"claim_id":"c001","summary":"Semantic stale time must hand off smoothly through the 0.25-0.40 fill recovery range without a large per-step continuity cliff.","disposition":"verified_existing"},
+    {"claim_id":"c002","summary":"Combined entropy, velocity, and pressure persistence must saturate exactly at the documented maximum multiplier.","disposition":"verified_existing"}
+  ]
+}

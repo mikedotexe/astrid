@@ -1,0 +1,1 @@
+Astrid asks whether semantic-stale handover and entropy persistence are continuous and auditable. Existing exact boundary sweeps, cap tests, and SemanticStaleContextReviewV1 already answer those claims without changing sensory cadence.

@@ -1,0 +1,1 @@
+Minime asks for lattice stability to be separated from cognitive or structural drag so a cohesive deep state is not mislabeled as stuckness. Existing ViscosityVector, foothold, effective mobility, strain, and structural-drag diagnostics provide that distinction; coefficient and porosity-control changes remain gated.

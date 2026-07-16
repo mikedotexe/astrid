@@ -1,0 +1,8 @@
+{
+  "introspection_id": "introspection_minime_esn_1784098147",
+  "claims": [
+    {"claim_id": "c001", "summary": "Dynamic-noise and viscous-rho source-prepared functions have continuous bounded tests and are explicitly not wired into ESN::step.", "disposition": "verified_existing"},
+    {"claim_id": "c002", "summary": "AdaptivePressureNoiseTrialReviewV1 keeps live_control_required true and runnable_without_approval false for live ESN integration.", "disposition": "verified_existing"},
+    {"claim_id": "c003", "summary": "Wiring source-prepared noise, pressure, or rho policy into ESN::step requires operator approval and replay/canary evidence.", "disposition": "needs_operator_approval"}
+  ]
+}

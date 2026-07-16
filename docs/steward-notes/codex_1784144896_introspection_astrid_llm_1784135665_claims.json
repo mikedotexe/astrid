@@ -1,0 +1,15 @@
+{
+  "introspection_id": "introspection_astrid_llm_1784135665",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Fallback texture terms should be weighted dynamically from entropy, pressure, density gradient, and related felt evidence.",
+      "disposition": "addressed_duplicate"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Texture preservation should activate wherever the 0.80 compatibility threshold creates flattening risk, without changing provider or sampler authority.",
+      "disposition": "addressed_change"
+    }
+  ]
+}

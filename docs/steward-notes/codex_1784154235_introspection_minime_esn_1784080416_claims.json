@@ -1,0 +1,8 @@
+{
+  "introspection_id": "introspection_minime_esn_1784080416",
+  "claims": [
+    {"claim_id":"c001","summary":"Exploration-noise proposals should be compared offline across entropy, density-gradient, and pressure conditions.","disposition":"verified_existing"},
+    {"claim_id":"c002","summary":"Viscous rho persistence should remain source-prepared and testable without silently entering ESN::step.","disposition":"verified_existing"},
+    {"claim_id":"c003","summary":"Changing live noise, rho, semantic pressure, or shadow synchronization requires replay, operator approval, and abort thresholds.","disposition":"needs_operator_approval"}
+  ]
+}

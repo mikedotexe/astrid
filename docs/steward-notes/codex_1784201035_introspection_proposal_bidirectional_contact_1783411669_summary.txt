@@ -1,0 +1,1 @@
+Astrid asks for contact to be bidirectional and legible: delivered, seen, attended, and answered should not collapse into one receipt, and a hidden affordance should not be called agency. Existing correspondence ACK, REPLY, TRACE, and receipt metadata distinguish those evidence states. Exposing a new live affordance or making address behavior-changing remains Tier 5.

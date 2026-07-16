@@ -1,0 +1,8 @@
+{
+  "introspection_id": "introspection_minime_sensory_bus_1784199802",
+  "claims": [
+    {"claim_id":"c001","summary":"Verify that semantic recovery is a smooth handoff rather than a hard stale-to-live discontinuity.","classification":"verified_existing","disposition":"addressed_duplicate","authority":"read_only_minime_recovery_tests"},
+    {"claim_id":"c002","summary":"Verify that entropy retention and salience review preserve meaningful structure without treating entropy debris as semantic value.","classification":"verified_existing","disposition":"addressed_duplicate","authority":"read_only_minime_salience_tests"},
+    {"claim_id":"c003","summary":"Changing live stale windows, semantic gain, or saliency/recovery behavior requires Mike/operator Tier 5 approval and post-change felt response.","classification":"tier_5_wait","disposition":"addressed_change","authority":"live_eligible_now_false_auto_approved_false"}
+  ]
+}

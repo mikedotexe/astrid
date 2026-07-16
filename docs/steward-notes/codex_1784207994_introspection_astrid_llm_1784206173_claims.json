@@ -1,0 +1,40 @@
+{
+  "introspection_id": "introspection_astrid_llm_1784206173",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Verify that the 0.80 high-entropy guard protects texture by skipping the old compatibility tail rather than causing provider fallback.",
+      "classification": "verified_existing",
+      "disposition": "addressed_duplicate",
+      "authority": "source_and_high_entropy_guard_test"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Add Astrid's exact trans-persistence and residual-weight terms to bounded primary and fallback dynamic language selection.",
+      "classification": "implemented",
+      "disposition": "addressed_change",
+      "authority": "language_only_no_sampler_or_provider_change"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Compare current 0.80 behavior with a non-live 0.95 threshold replay without deploying a provider or prompt-policy change.",
+      "classification": "needs_sandbox",
+      "disposition": "addressed_change",
+      "authority": "manual_comparison_live_runnable_false"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Compare an Astrid-authored SHADOW_TRAJECTORY response through primary MLX and forced Ollama fallback.",
+      "classification": "needs_sandbox",
+      "disposition": "addressed_change",
+      "authority": "paired_provider_output_required"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Any density-gradient-conditioned semantic trickle, provider route, or fallback trigger change remains Tier 5 pending Mike/operator approval.",
+      "classification": "tier_5_wait",
+      "disposition": "addressed_change",
+      "authority": "live_eligible_now_false_auto_approved_false"
+    }
+  ]
+}

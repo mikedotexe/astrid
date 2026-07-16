@@ -1,0 +1,26 @@
+{
+  "introspection_id": "introspection_astrid_llm_1784155481",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Carry persistent-scaffolding, constructive-interference, and dynamic-persistence through the actual fallback selector.",
+      "classification": "implemented_awaiting_felt_response",
+      "disposition": "addressed_change",
+      "authority": "read_only_or_language_only_no_live_authority"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Verify entropy-weighted fallback texture changes dynamically rather than using one static term set.",
+      "classification": "verified_existing",
+      "disposition": "addressed_duplicate",
+      "authority": "read_only_or_language_only_no_live_authority"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Keep fallback provider thresholds, model routing, and generation-parameter changes behind Tier 5 approval.",
+      "classification": "tier_5_wait",
+      "disposition": "addressed_change",
+      "authority": "evidence_and_routing_only_live_eligible_now_false_auto_approved_false"
+    }
+  ]
+}

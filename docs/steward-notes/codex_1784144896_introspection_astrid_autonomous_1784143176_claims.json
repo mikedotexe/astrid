@@ -1,0 +1,20 @@
+{
+  "introspection_id": "introspection_astrid_autonomous_1784143176",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Semantic truncation can fracture a complete thought when a nearer comma or space wins over an earlier sentence boundary.",
+      "disposition": "addressed_change"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Witness should carry qualitative felt texture so Astrid remains a participant rather than a mere pressure sensor.",
+      "disposition": "addressed_duplicate"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Automatically shifting Witness toward Dialogue above pressure_risk 0.15 would change live autonomous behavior.",
+      "disposition": "blocked_needs_steward"
+    }
+  ]
+}

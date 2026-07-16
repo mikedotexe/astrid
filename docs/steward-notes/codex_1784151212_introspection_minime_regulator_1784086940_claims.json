@@ -1,0 +1,8 @@
+{
+  "introspection_id": "introspection_minime_regulator_1784086940",
+  "claims": [
+    {"claim_id":"c001","summary":"Tail strain, shadow volatility, structural drag, and pressure-porosity divergence must remain visible even when fill and lambda1 look settled.","disposition":"verified_existing"},
+    {"claim_id":"c002","summary":"Pressure-porosity and shadow-volatility tests should distinguish overpacked friction from stable complex motion without applying control.","disposition":"verified_existing"},
+    {"claim_id":"c003","summary":"A strain-relief gate or viscosity-driven semantic throttling would alter live regulator and admission behavior and requires operator approval.","disposition":"needs_operator_approval"}
+  ]
+}

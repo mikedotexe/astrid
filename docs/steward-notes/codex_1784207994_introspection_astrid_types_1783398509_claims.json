@@ -1,0 +1,33 @@
+{
+  "introspection_id": "introspection_astrid_types_1783398509",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Verify optional flux values preserve explicit absence semantics and are populated from bounded history when enough samples exist.",
+      "classification": "verified_existing",
+      "disposition": "addressed_duplicate",
+      "authority": "flux_absence_and_history_tests"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Compare pressure velocity with Astrid's viscous descriptor during a bounded Shadow-v3/current-state observation.",
+      "classification": "needs_sandbox",
+      "disposition": "addressed_change",
+      "authority": "manual_felt_descriptor_comparison"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Verify porosity is already visible through dynamic flux and pressure-source context rather than inferred solely from comfort_gate.",
+      "classification": "verified_existing",
+      "disposition": "addressed_duplicate",
+      "authority": "typed_porosity_reports"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Any new Minime-to-Astrid porosity component field or wire-schema change remains Tier 5 pending protocol/ABI approval.",
+      "classification": "tier_5_wait",
+      "disposition": "addressed_change",
+      "authority": "live_eligible_now_false_auto_approved_false"
+    }
+  ]
+}

@@ -1,0 +1,1 @@
+Astrid reports that a static fallback vocabulary can bleach high-entropy texture during provider handoff. Existing density-, tail-, trajectory-, and entropy-aware fallback evidence preserves that texture without changing provider selection; forcing routing or sampler behavior remains Tier 5.

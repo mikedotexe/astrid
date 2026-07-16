@@ -1,0 +1,1 @@
+Astrid asks the delta vocabulary to name ambiguity and divergence and asks that multi-kind experiences not be flattened to one label. The enum now adds both names, while the existing weighted DeltaCompositionV1 remains the additive multi-kind truth channel.

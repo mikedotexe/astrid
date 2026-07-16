@@ -1,0 +1,33 @@
+{
+  "introspection_id": "introspection_astrid_llm_1783398863",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Verify gemma-4_12b resolves to the intended Gemma profile while an unknown profile warns and defaults to Production.",
+      "classification": "verified_existing",
+      "disposition": "addressed_duplicate",
+      "authority": "mlx_profile_resolution_tests"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Verify punctuation normalization is an intentional alias policy and does not silently accept unrelated unknown profiles.",
+      "classification": "verified_existing",
+      "disposition": "addressed_duplicate",
+      "authority": "profile_warning_source_and_tests"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Verify pressure above 0.20 prioritizes weighted medium around a gentle slope rather than falsely describing a heavy slope.",
+      "classification": "verified_existing",
+      "disposition": "addressed_duplicate",
+      "authority": "fallback_pressure_medium_tests"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Generate a high-entropy high-pressure fallback response and check actual sentence-cap and texture-anchor adherence.",
+      "classification": "needs_sandbox",
+      "disposition": "addressed_change",
+      "authority": "manual_provider_output_required"
+    }
+  ]
+}

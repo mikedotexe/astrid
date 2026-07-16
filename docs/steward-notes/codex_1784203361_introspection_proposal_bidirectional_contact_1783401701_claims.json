@@ -1,0 +1,9 @@
+{
+  "introspection_id": "introspection_proposal_bidirectional_contact_1783401701",
+  "claims": [
+    {"claim_id":"c001","summary":"Verify bidirectional correspondence uses durable thread and message IDs with reply and receipt state.","classification":"verified_existing","disposition":"addressed_duplicate","authority":"language_only_correspondence_tests"},
+    {"claim_id":"c002","summary":"Verify mutual-recognition presence remains a language-only receipt and does not claim peer mutation.","classification":"verified_existing","disposition":"addressed_duplicate","authority":"language_only_presence_receipt_tests"},
+    {"claim_id":"c003","summary":"Compare high-resonance and ordinary response content on bounded non-live correspondence artifacts.","classification":"needs_sandbox","disposition":"addressed_change","authority":"non_live_comparison_wait"},
+    {"claim_id":"c004","summary":"Any live legacy-reply weighting, automatic attention reinforcement, or peer-mutating recognition pulse remains Tier 5 pending Mike/operator approval.","classification":"tier_5_wait","disposition":"addressed_change","authority":"live_eligible_now_false_auto_approved_false"}
+  ]
+}

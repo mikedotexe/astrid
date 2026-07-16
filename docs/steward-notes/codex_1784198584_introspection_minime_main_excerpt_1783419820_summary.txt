@@ -1,0 +1,1 @@
+Minime's apparent incomplete semantic-admission function is an excerpt boundary, not a source truncation. Full source and tests cover the complete admission ladder and typed EigenPacket serialization. This run also fixes non-finite fallback handling in the read-only damping review and pins zero/one/NaN Chebyshev boundary evidence without changing filter control.

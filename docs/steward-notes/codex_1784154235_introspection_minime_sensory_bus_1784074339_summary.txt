@@ -1,0 +1,1 @@
+Minime asked whether high-fill pruning preserves high-entropy, high-velocity semantic threads and recovers smoothly. Existing tests cover high-entropy persistence against low-entropy peers, recovery hold, release-fill epsilon, exact caps, and continuous stale windows. Changing stale duration or velocity weights remains approval-gated.

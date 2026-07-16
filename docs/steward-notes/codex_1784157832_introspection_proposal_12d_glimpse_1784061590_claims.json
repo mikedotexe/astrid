@@ -1,0 +1,8 @@
+{
+  "introspection_id": "introspection_proposal_12d_glimpse_1784061590",
+  "claims": [
+    {"claim_id": "c001", "summary": "Keep 48D/32D transport as source truth and expose 12D only as an additive multi-scale companion with residual context.", "classification": "verified_existing", "disposition": "addressed_duplicate", "authority": "read_only_or_language_only_no_live_authority"},
+    {"claim_id": "c002", "summary": "Verify the 12D view preserves emotional range, warmth, tail bridge, identity asymmetry, and high-versus-low entropy distinguishability.", "classification": "verified_existing", "disposition": "addressed_duplicate", "authority": "read_only_or_language_only_no_live_authority"},
+    {"claim_id": "c003", "summary": "Require Tier 5 approval for live emotional weighting, dimensional reduction, transport replacement, or reservoir write-back.", "classification": "tier_5_wait", "disposition": "addressed_change", "authority": "evidence_and_routing_only_live_eligible_now_false_auto_approved_false"}
+  ]
+}

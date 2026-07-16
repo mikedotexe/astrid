@@ -1,0 +1,1 @@
+The older 12D proposal describes a now-stale 32D-only bottleneck. Current source uses a 48D live lane plus an additive 12D glimpse, named slot lineage, 32D residual/shadow context, fidelity and resonance-loss audits, and explicit no-live-transport authority.

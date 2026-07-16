@@ -1,0 +1,1 @@
+Astrid identifies ambiguity when a bidirectional socket has never observed either lane. Existing reciprocity code names that state separately from stale, waiting, and one-sided states and tests the transitions; pressure smoothing remains diagnostic-only here.

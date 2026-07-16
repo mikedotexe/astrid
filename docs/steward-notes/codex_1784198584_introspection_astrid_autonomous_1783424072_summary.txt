@@ -1,0 +1,1 @@
+Astrid says continuity recap truncation must not discard the spectral anchors that make an experience recognizable. Current autonomous source uses anchor-aware continuous excerpts, high-texture fallback terms, and bounded recap budgets with direct tests. No autonomy routing or control behavior changes here.

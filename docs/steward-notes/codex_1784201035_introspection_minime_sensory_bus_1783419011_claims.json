@@ -1,0 +1,8 @@
+{
+  "introspection_id": "introspection_minime_sensory_bus_1783419011",
+  "claims": [
+    {"claim_id":"c001","summary":"Verify smooth semantic stale decay and recovery hysteresis rather than a cliff transition.","classification":"verified_existing","disposition":"addressed_duplicate","authority":"read_only_minime_semantic_decay_tests"},
+    {"claim_id":"c002","summary":"Verify salience and entropy-retention evidence without rewarding high-entropy debris.","classification":"verified_existing","disposition":"addressed_duplicate","authority":"read_only_minime_salience_tests"},
+    {"claim_id":"c003","summary":"Changing live saliency, reanchor timing, stale windows, or semantic cadence requires Tier 5 operator approval.","classification":"tier_5_wait","disposition":"addressed_change","authority":"live_eligible_now_false_auto_approved_false"}
+  ]
+}

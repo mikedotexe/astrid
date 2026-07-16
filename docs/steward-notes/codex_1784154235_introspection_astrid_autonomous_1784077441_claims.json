@@ -1,0 +1,8 @@
+{
+  "introspection_id": "introspection_astrid_autonomous_1784077441",
+  "claims": [
+    {"claim_id":"c001","summary":"Long reflective text should truncate at semantic edges while preserving late high-signal anchors and valid UTF-8.","disposition":"verified_existing"},
+    {"claim_id":"c002","summary":"Mirror should expose source/render lexical recall and codec-send evidence rather than rely on an echo-risk heuristic alone.","disposition":"implemented_awaiting_felt_response"},
+    {"claim_id":"c003","summary":"Changing Mirror behavior, source selection, mode priority, or codec gain/transport requires explicit operator approval.","disposition":"needs_operator_approval"}
+  ]
+}

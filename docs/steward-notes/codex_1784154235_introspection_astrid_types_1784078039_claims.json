@@ -1,0 +1,8 @@
+{
+  "introspection_id": "introspection_astrid_types_1784078039",
+  "claims": [
+    {"claim_id":"c001","summary":"Viscosity evidence should expose shear/drag, flow, cohesion, persistence, structural integrity, strain, and mobility rather than one label.","disposition":"verified_existing"},
+    {"claim_id":"c002","summary":"Experience deltas should retain viscosity subtype, weight, persistence, and composition with read-only authority.","disposition":"verified_existing"},
+    {"claim_id":"c003","summary":"Changing live resonance-stability weights or using viscosity records for control requires explicit operator approval.","disposition":"needs_operator_approval"}
+  ]
+}

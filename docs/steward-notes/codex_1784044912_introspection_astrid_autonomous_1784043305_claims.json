@@ -1,0 +1,8 @@
+{
+  "introspection_id": "introspection_astrid_autonomous_1784043305",
+  "claims": [
+    {"claim_id": "c001", "summary": "Treat Witness and dialogue truncation as a semantic-edge fidelity problem rather than a raw byte-count problem.", "classification": "verified_existing", "disposition": "addressed_duplicate", "authority": "read_only_or_language_only_no_live_authority"},
+    {"claim_id": "c002", "summary": "Preserve late high-density spectral anchors such as semantic trickle, lambda-tail vibrancy, and dispersal potential in bounded correspondence previews.", "classification": "verified_existing", "disposition": "addressed_duplicate", "authority": "read_only_or_language_only_no_live_authority"},
+    {"claim_id": "c003", "summary": "Keep truncation fidelity measurable through fixture/rehearsal evidence instead of assuming a compact preview preserved felt weight.", "classification": "verified_existing", "disposition": "addressed_duplicate", "authority": "read_only_or_language_only_no_live_authority"}
+  ]
+}

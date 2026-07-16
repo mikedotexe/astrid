@@ -1,0 +1,8 @@
+{
+  "introspection_id": "introspection_astrid_autonomous_1784148326",
+  "claims": [
+    {"claim_id":"c001","summary":"Semantic-edge truncation should prefer complete punctuation or word boundaries and never cut invalid UTF-8.","disposition":"verified_existing"},
+    {"claim_id":"c002","summary":"High-entropy shadow-resonance and spectral-viscosity continuity items need bounded extra room beyond the ordinary 180-byte item budget.","disposition":"verified_existing"},
+    {"claim_id":"c003","summary":"The entropy budget should remain graded and density-moderated rather than snapping every 0.90 report directly to the 320-byte hard cap.","disposition":"verified_existing"}
+  ]
+}

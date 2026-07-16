@@ -1,0 +1,8 @@
+{
+  "introspection_id": "introspection_astrid_llm_1784100279",
+  "claims": [
+    {"claim_id": "c001", "summary": "At entropy at or above 0.80 the compatibility fallback tail is skipped to protect texture rather than deliberately flattening it.", "disposition": "verified_existing"},
+    {"claim_id": "c002", "summary": "Transition texture needs explicit weighted terms including gradient-softening and threshold-dilation.", "disposition": "implemented_awaiting_felt_response"},
+    {"claim_id": "c003", "summary": "Making the compatibility fallback threshold dynamic from pressure and porosity would change live provider-selection behavior.", "disposition": "needs_operator_approval"}
+  ]
+}

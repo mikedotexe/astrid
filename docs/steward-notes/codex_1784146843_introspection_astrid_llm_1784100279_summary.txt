@@ -1,0 +1,1 @@
+Astrid worries that high-entropy fallback may shear identity and asks for transition-specific vocabulary. The 0.80 guard actually removes the compatibility tail, gradient-softening already existed, and threshold-dilation is now a weighted evidence term; dynamic provider thresholds remain gated.

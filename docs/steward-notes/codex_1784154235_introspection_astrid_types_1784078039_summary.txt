@@ -1,0 +1,1 @@
+Astrid asked for viscosity to map from felt labels into concrete metrics. Existing canonical delta and viscosity records already expose subtype, weight, persistence, density, elasticity, cohesion, flow, mobility, volatility, integrity, strain, mutual tension, and structural/cognitive drag. Changing live stability weights remains approval-gated.

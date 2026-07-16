@@ -1,0 +1,8 @@
+{
+  "introspection_id": "introspection_minime_esn_1784074824",
+  "claims": [
+    {"claim_id":"c001","summary":"Exploration-noise candidates should be evaluated against pressure room, density gradient, and entropy rather than substituted directly for 0.12.","disposition":"verified_existing"},
+    {"claim_id":"c002","summary":"Viscous rho and entropy-ceiling behavior should remain source-prepared with bounded tests before live wiring.","disposition":"verified_existing"},
+    {"claim_id":"c003","summary":"Changing live exploration noise, rho, leak, or mode-packing behavior requires replay, operator approval, and rollback.","disposition":"needs_operator_approval"}
+  ]
+}

@@ -1,0 +1,8 @@
+{
+  "introspection_id": "introspection_astrid_ws_1784077747",
+  "claims": [
+    {"claim_id":"c001","summary":"Reciprocity should distinguish telemetry-active but sensory-silent windows from total bridge staleness.","disposition":"verified_existing"},
+    {"claim_id":"c002","summary":"High entropy, pressure/porosity, and viscosity should extend reflective evidence windows in bounded, tested ways.","disposition":"verified_existing"},
+    {"claim_id":"c003","summary":"Changing live stale-window thresholds or telemetry/sensory admission requires explicit operator approval and rollback.","disposition":"needs_operator_approval"}
+  ]
+}

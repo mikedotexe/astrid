@@ -1,0 +1,1 @@
+Astrid reports that repeated projection changes must not tear a codec epoch or produce mixed-basis reads. Existing projection-epoch writes are atomic and concurrency-tested, and controlled tests verify repeatability and smooth vibrancy continuity. No basis, width, transport, or gain was changed.

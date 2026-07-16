@@ -1,0 +1,9 @@
+{
+  "introspection_id": "introspection_proposal_12d_glimpse_1784090189",
+  "claims": [
+    {"claim_id":"c001","summary":"A 12D glimpse must remain an additive map over the live semantic lane rather than replace identity or continuity transport.","disposition":"verified_existing"},
+    {"claim_id":"c002","summary":"The glimpse carries named warmth, emotional, tail, residual, and shadow lineage with explicit fidelity and resonance-loss checks.","disposition":"verified_existing"},
+    {"claim_id":"c003","summary":"High- and low-entropy source states remain distinguishable in the 12D companion tests.","disposition":"verified_existing"},
+    {"claim_id":"c004","summary":"Sending 12D as live transport or changing protocol/ABI remains operator-gated despite the safe companion observer.","disposition":"needs_operator_approval"}
+  ]
+}

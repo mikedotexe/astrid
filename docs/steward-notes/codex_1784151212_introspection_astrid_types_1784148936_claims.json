@@ -1,0 +1,8 @@
+{
+  "introspection_id": "introspection_astrid_types_1784148936",
+  "claims": [
+    {"claim_id":"c001","summary":"Viscosity 0.6, temporal persistence 0.6, and a four-tick window must classify PersistentViscousDrag.","disposition":"verified_existing"},
+    {"claim_id":"c002","summary":"Clamp fallback intent must serialize in snake_case while preserving a stable fallback_intent_state.","disposition":"verified_existing"},
+    {"claim_id":"c003","summary":"Persistent drag may coexist with broad swell or an isolated spike while thresholds remain bounded, explicit, and read-only.","disposition":"verified_existing"}
+  ]
+}

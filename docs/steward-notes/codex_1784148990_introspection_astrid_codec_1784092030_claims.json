@@ -1,0 +1,9 @@
+{
+  "introspection_id": "introspection_astrid_codec_1784092030",
+  "claims": [
+    {"claim_id":"c001","summary":"Narrative arc should distinguish direction, rhythm changes, loops, and process from a settled snapshot.","disposition":"verified_existing"},
+    {"claim_id":"c002","summary":"Projection texture review compares 8D semantic delivery against legacy, warmth, and narrative texture instead of treating structure as meaning.","disposition":"verified_existing"},
+    {"claim_id":"c003","summary":"A read-only persistence-resistance sidecar names lingering viscosity without writing live dimensions.","disposition":"verified_existing"},
+    {"claim_id":"c004","summary":"Adding a consumed persistence coefficient to emotional dimensions 24-31 or reserved dimensions would change live codec semantics and requires operator approval.","disposition":"needs_operator_approval"}
+  ]
+}

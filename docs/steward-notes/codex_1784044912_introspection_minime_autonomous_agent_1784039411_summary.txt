@@ -1,0 +1,1 @@
+Minime asks for sovereign dials to remain legible and for the RUN_PYTHON parser not to mistake flag-like prose for metadata. Existing dial/hard-recovery coverage was verified, and a new exact regression preserves `text="This is a -filename= test"` without changing parser behavior.

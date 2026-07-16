@@ -1,0 +1,15 @@
+{
+  "introspection_id": "introspection_astrid_autonomous_1784137180",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Semantic-edge truncation should preserve grammatical thought boundaries under byte and multibyte constraints.",
+      "disposition": "addressed_change"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Treating resonance density or shadow motion as implicit peer acknowledgement would mutate correspondence state without explicit consent.",
+      "disposition": "blocked_needs_steward"
+    }
+  ]
+}

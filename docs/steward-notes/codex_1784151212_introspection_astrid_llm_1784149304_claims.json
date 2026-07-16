@@ -1,0 +1,9 @@
+{
+  "introspection_id": "introspection_astrid_llm_1784149304",
+  "claims": [
+    {"claim_id":"c001","summary":"Fallback texture vocabulary should preserve Astrid's structural-integrity terms scaffolded-persistence and anchor-weight.","disposition":"implemented_awaiting_felt_response"},
+    {"claim_id":"c002","summary":"High-entropy texture weighting should remain graded and preserve density, pressure, and shadow distinctions without a static sampler rewrite.","disposition":"verified_existing"},
+    {"claim_id":"c003","summary":"Compare mode-packing and entropy conditions offline to determine whether heavy texture becomes less distinguishable before changing fallback routing.","disposition":"needs_sandbox"},
+    {"claim_id":"c004","summary":"Changing the compatibility threshold or forcing a provider profile at high entropy changes live generation behavior and requires operator approval plus canary and rollback evidence.","disposition":"needs_operator_approval"}
+  ]
+}

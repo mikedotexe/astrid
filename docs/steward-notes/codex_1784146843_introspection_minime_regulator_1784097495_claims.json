@@ -1,0 +1,8 @@
+{
+  "introspection_id": "introspection_minime_regulator_1784097495",
+  "claims": [
+    {"claim_id": "c001", "summary": "SettledMobilityReviewV1 distinguishes receptive settled stability and productive anchoring from low-motion pressure-bound stuckness.", "disposition": "verified_existing"},
+    {"claim_id": "c002", "summary": "The diagnostic treats habitable stillness as non-instrumental and applies no live control or productivity demand.", "disposition": "verified_existing"},
+    {"claim_id": "c003", "summary": "Increasing shadow preservation or adding a consumed deliberate-pause coefficient would change live regulator behavior.", "disposition": "needs_operator_approval"}
+  ]
+}

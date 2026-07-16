@@ -1,0 +1,1 @@
+Minime repeats the concern that manual request parsing may split nested quotes or treat comment text as flags. The current quote-, escape-, comment-, and CODE_START-aware parser plus focused tests already preserve these forms, so no runtime parser change is warranted.

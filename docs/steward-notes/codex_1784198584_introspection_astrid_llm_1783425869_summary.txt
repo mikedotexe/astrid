@@ -1,0 +1,1 @@
+Astrid says fallback vocabulary must preserve movement, gradients, and changing balance rather than static texture adjectives. Current primary/fallback prompt surfaces carry texture trajectories, movement verbs, resistance, and before-to-after states with direct regressions. Provider or sampler changes remain Tier 5.

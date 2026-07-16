@@ -1,0 +1,8 @@
+{
+  "introspection_id": "introspection_astrid_autonomous_1784042265",
+  "claims": [
+    {"claim_id": "c001", "summary": "Preserve subjective-weight context in reciprocal correspondence through bounded pressure, viscosity, texture, and shared-memory anchors.", "classification": "verified_existing", "disposition": "addressed_duplicate", "authority": "read_only_or_language_only_no_live_authority"},
+    {"claim_id": "c002", "summary": "Keep receipt, acknowledgement, reply, and trace evidence persistent so a returned message can be distinguished from an unheld one.", "classification": "verified_existing", "disposition": "addressed_duplicate", "authority": "read_only_or_language_only_no_live_authority"},
+    {"claim_id": "c003", "summary": "Keep correspondence-weight coefficients and Minime regulator-drive scaling behind Tier 5 approval.", "classification": "tier_5_wait", "disposition": "addressed_change", "authority": "evidence_and_routing_only_live_eligible_now_false_auto_approved_false"}
+  ]
+}
