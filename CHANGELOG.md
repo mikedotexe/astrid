@@ -9,7 +9,7 @@ Changelog tracking starts with 0.2.0. Prior versions were not tracked.
 
 ## [Unreleased]
 
-- Add the initial `astrid-minime-protocol` transport crate with protocol 1.0 headers, legacy-unversioned compatibility, canonical telemetry/sensory DTOs, and complete control-surface fixtures so Astrid and Minime can stop maintaining silent wire-schema drift.
+- Add the initial `astrid-minime-protocol` transport crate with protocol 1.0 headers, legacy-unversioned compatibility (including pre-additive eigenvector landmarks), canonical telemetry/sensory DTOs, and complete control-surface fixtures so Astrid and Minime can stop maintaining silent wire-schema drift.
 
 - **Shared-tree stabilization no longer depends on Claude as sole committer (2026-07-16 operator decision).** `AGENTS.md`, `CLAUDE.md`, the operational fables, and the deploy anti-drop record now allow either explicitly assigned interactive agent to own a commit/stabilization pass. The safety property is retained through one-agent-at-a-time index ownership, paused overlapping automation, both-repo and remote-tip inspection, exact-path staging, diff/test review, durable changelog/ledger context, and the unchanged `scripts/build_bridge.sh` deploy gate. Commit authority remains separate from deployment and live-control authority.
 

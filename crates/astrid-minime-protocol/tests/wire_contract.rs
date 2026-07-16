@@ -80,3 +80,22 @@ fn unsupported_major_is_visible_and_incompatible() {
     );
     assert!(!packet.compatibility().is_compatible());
 }
+
+#[test]
+fn legacy_eigenvector_landmarks_accept_additive_field_absence() {
+    let mut value: serde_json::Value =
+        serde_json::from_str(include_str!("fixtures/legacy_eigenpacket.json")).unwrap();
+    value["eigenvector_field"] = serde_json::json!({
+        "policy": "eigenvector_field_v1",
+        "direct_eigenvectors_available": true,
+        "raw_vectors_exported": false,
+        "mode_count": 1,
+        "modes": [{"mode": 0, "top_components": [{"index": 1, "value": -0.7}]}]
+    });
+
+    let packet: EigenPacketV1 = serde_json::from_value(value).unwrap();
+    let field = packet.eigenvector_field.unwrap();
+    assert_eq!(field.modes[0].index, 0);
+    assert!((field.modes[0].top_components[0].value + 0.7).abs() < f32::EPSILON);
+    assert!(field.modes[0].top_components[0].abs.abs() < f32::EPSILON);
+}

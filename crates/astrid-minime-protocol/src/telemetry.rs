@@ -126,6 +126,7 @@ pub struct SemanticEnergyV1 {
 }
 
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+#[serde(default)]
 pub struct EigenvectorComponentV1 {
     pub index: usize,
     pub value: f32,
@@ -133,7 +134,9 @@ pub struct EigenvectorComponentV1 {
 }
 
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+#[serde(default)]
 pub struct EigenvectorModeV1 {
+    #[serde(alias = "mode")]
     pub index: usize,
     pub eigenvalue: f32,
     pub energy_share: f32,
@@ -146,6 +149,7 @@ pub struct EigenvectorModeV1 {
 }
 
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+#[serde(default)]
 pub struct EigenvectorPairwiseOverlapV1 {
     pub left: usize,
     pub right: usize,
@@ -154,6 +158,7 @@ pub struct EigenvectorPairwiseOverlapV1 {
 }
 
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+#[serde(default)]
 pub struct EigenvectorFieldSummaryV1 {
     pub mean_orientation_delta: f32,
     pub max_pairwise_overlap: f32,
@@ -161,6 +166,7 @@ pub struct EigenvectorFieldSummaryV1 {
 }
 
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+#[serde(default)]
 pub struct EigenvectorFieldV1 {
     pub policy: String,
     pub direct_eigenvectors_available: bool,
