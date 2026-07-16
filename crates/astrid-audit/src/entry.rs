@@ -665,6 +665,9 @@ pub enum AuditAction {
 impl AuditAction {
     /// Get a human-readable description of the action.
     #[must_use]
+    // Keep this exhaustive registry together so new audit variants cannot miss
+    // their reviewer-facing description during a split-table refactor.
+    #[allow(clippy::too_many_lines)]
     pub fn description(&self) -> String {
         match self {
             Self::McpToolCall { server, tool, .. } => {

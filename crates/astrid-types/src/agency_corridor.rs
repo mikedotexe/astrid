@@ -4,6 +4,10 @@
 //! safe-lab results, and canary criteria while authority boundaries remain
 //! intact. They do not grant approval or live execution authority.
 
+// These compatibility DTOs intentionally project the legacy authority booleans
+// alongside their canonical state while schema V1/V2 readers remain supported.
+#![allow(clippy::struct_excessive_bools)]
+
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
@@ -43,10 +47,11 @@ pub enum AgencyCorridorActionV1 {
 }
 
 /// Corridor lifecycle state.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum AgencyCorridorStateV1 {
     /// Packet is available as evidence only.
+    #[default]
     EvidenceOnly,
     /// A safe lab can run under the corridor budget.
     SafeLabReady,
@@ -62,12 +67,6 @@ pub enum AgencyCorridorStateV1 {
     CanaryCriteriaProposed,
     /// Corridor item is closed without live execution.
     Closed,
-}
-
-impl Default for AgencyCorridorStateV1 {
-    fn default() -> Self {
-        Self::EvidenceOnly
-    }
 }
 
 /// Bounded safe-lab candidate.
@@ -314,7 +313,7 @@ impl AgencyCorridorPacketV1 {
 }
 
 /// State for a read-only autonomy lease.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum AutonomyLeaseStateV1 {
     /// Lease can be used for non-live evidence work.
@@ -324,13 +323,8 @@ pub enum AutonomyLeaseStateV1 {
     /// Lease has expired.
     Expired,
     /// Lease is imported evidence and does not authorize new actions.
+    #[default]
     EvidenceOnly,
-}
-
-impl Default for AutonomyLeaseStateV1 {
-    fn default() -> Self {
-        Self::EvidenceOnly
-    }
 }
 
 /// Read-only autonomy lease for non-live agency-corridor work.
@@ -674,10 +668,11 @@ impl AgencyCorridorPacketV2 {
 }
 
 /// Status of a non-live agency work program.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum AgencyWorkProgramStatusV1 {
     /// Program has been proposed from corridor evidence.
+    #[default]
     Proposed,
     /// Program is actively collecting non-live evidence.
     Active,
@@ -687,12 +682,6 @@ pub enum AgencyWorkProgramStatusV1 {
     Blocked,
     /// Program is closed without live execution.
     Closed,
-}
-
-impl Default for AgencyWorkProgramStatusV1 {
-    fn default() -> Self {
-        Self::Proposed
-    }
 }
 
 /// Deterministic priority signal for a non-live autonomy work program.

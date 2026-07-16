@@ -48,10 +48,11 @@ impl AuthorityClass {
 }
 
 /// Current gate state for an authority-boundary packet.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum AuthorityGateStateV1 {
     /// Packet is evidence only.
+    #[default]
     EvidenceOnly,
     /// A proposal card or approval packet still needs to be emitted.
     ProposalNeeded,
@@ -63,12 +64,6 @@ pub enum AuthorityGateStateV1 {
     Denied,
     /// A later packet or decision superseded this one.
     Superseded,
-}
-
-impl Default for AuthorityGateStateV1 {
-    fn default() -> Self {
-        Self::EvidenceOnly
-    }
 }
 
 /// Replay or sandbox evidence route associated with an authority packet.
@@ -198,10 +193,11 @@ impl AuthorityBoundaryPacketV1 {
 }
 
 /// Lifecycle state for a V2 authority packet.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum AuthorityLifecycleStateV2 {
     /// Packet is evidence only.
+    #[default]
     EvidenceOnly,
     /// A proposal card or operator packet still needs to be produced.
     ProposalNeeded,
@@ -221,12 +217,6 @@ pub enum AuthorityLifecycleStateV2 {
     Denied,
     /// A newer lifecycle superseded this one.
     Superseded,
-}
-
-impl Default for AuthorityLifecycleStateV2 {
-    fn default() -> Self {
-        Self::EvidenceOnly
-    }
 }
 
 /// Kind of typed lifecycle receipt.

@@ -138,6 +138,10 @@ impl CapabilityValidator {
 
 /// Computes the exact pattern matching definition and intent for a generic `SensitiveAction`.
 #[must_use]
+// The explicit live-control arm documents that capability tokens cannot bypass
+// the separate authority lifecycle, even though other unknown actions also map
+// to no capability resource.
+#[allow(clippy::match_same_arms)]
 pub fn action_to_resource_permission(action: &SensitiveAction) -> Option<(String, Permission)> {
     match action {
         SensitiveAction::McpToolCall { server, tool } => {

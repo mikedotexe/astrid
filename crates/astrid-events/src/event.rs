@@ -997,6 +997,9 @@ impl AstridEvent {
 
     /// Get the event type as a string.
     #[must_use]
+    // This exhaustive protocol registry is intentionally centralized so every
+    // event variant has one auditable wire-name mapping.
+    #[allow(clippy::too_many_lines)]
     pub fn event_type(&self) -> &'static str {
         match self {
             // Agent Lifecycle

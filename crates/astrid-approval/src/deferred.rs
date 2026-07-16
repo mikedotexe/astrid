@@ -96,6 +96,9 @@ impl ActionContext {
 }
 
 /// What action is pending resolution.
+// ApprovalRequest is intentionally stored inline to preserve the established
+// public construction API and its unchanged serde representation.
+#[allow(clippy::large_enum_variant)]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(tag = "type", rename_all = "snake_case")]
 pub enum PendingAction {

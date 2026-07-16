@@ -109,7 +109,6 @@ impl SecurityInterceptor {
     ///
     /// Returns `ApprovalError` if the action is denied by policy, budget,
     /// or user decision.
-    #[expect(clippy::too_many_lines)]
     pub async fn intercept(
         &self,
         action: &SensitiveAction,
@@ -129,7 +128,6 @@ impl SecurityInterceptor {
     ///
     /// Returns `ApprovalError` if the action is denied by policy, budget,
     /// missing authority boundary, or user decision.
-    #[expect(clippy::too_many_lines)]
     pub async fn intercept_with_boundary(
         &self,
         action: &SensitiveAction,
@@ -150,7 +148,6 @@ impl SecurityInterceptor {
     ///
     /// Returns `ApprovalError` if the action is denied by policy, budget,
     /// missing authority boundary, incomplete lifecycle, or user decision.
-    #[expect(clippy::too_many_lines)]
     pub async fn intercept_with_lifecycle(
         &self,
         action: &SensitiveAction,

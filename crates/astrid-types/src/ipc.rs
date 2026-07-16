@@ -77,6 +77,9 @@ fn default_session_id() -> String {
 }
 
 /// Standardized cross-boundary payload schemas.
+// Boxing a single payload would change this established public Rust API; keep
+// the wire-compatible variants direct until a versioned IPC migration exists.
+#[allow(clippy::large_enum_variant)]
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(tag = "type", rename_all = "snake_case")]
 pub enum IpcPayload {

@@ -597,13 +597,22 @@ def _read_bounded(path: Path, limit: int = 8_000) -> str:
 
 
 def _read_source(path: Path, limit: int = 500_000) -> str:
-    try:
-        text = path.read_text(encoding="utf-8", errors="ignore")
-    except OSError:
-        return ""
-    if len(text) <= limit:
-        return text
-    return text[:limit]
+    """Read a facade and its deterministic extracted-module source family."""
+    paths = [path]
+    module_root = path.with_suffix("")
+    if module_root.is_dir():
+        paths.extend(sorted(module_root.rglob("*.rs")))
+
+    chunks: list[str] = []
+    for candidate in paths:
+        try:
+            text = candidate.read_text(encoding="utf-8", errors="ignore")
+        except OSError:
+            continue
+        if len(text) > limit:
+            text = text[:limit]
+        chunks.append(f"// source_family_path: {candidate}\n{text}")
+    return "\n".join(chunks)
 
 
 def _score_text(text: str, keywords: list[str]) -> tuple[int, list[str]]:
@@ -4232,13 +4241,6 @@ def _introspection_route_cadence_summary(
         "next_suggestions": suggestions,
         "authority_boundary": "read-only steward diagnostic; no prompt pressure, forced self-study, scheduler, or runtime mutation",
     }
-
-
-def _read_source(path: Path) -> str:
-    try:
-        return path.read_text(encoding="utf-8", errors="ignore")
-    except OSError:
-        return ""
 
 
 def _rust_raw_prompt(source: str, const_name: str) -> str:
