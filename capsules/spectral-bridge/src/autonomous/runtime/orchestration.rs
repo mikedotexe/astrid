@@ -3874,7 +3874,17 @@ pub fn spawn_autonomous_loop(
                     // elaboration is Astrid's private space to think longer.
                     if matches!(mode_name, "dialogue_live" | "daydream" | "aspiration") {
                         let signal_for_journal = response_text.clone();
-                        let summary_for_journal = spectral_interpretation.clone();
+                        // Stage B is a second Dialogue surface, not a provenance-free
+                        // afterthought. Keep the same read-only self/other boundary in
+                        // the long-form continuation that framed the compact signal.
+                        let summary_for_journal = {
+                            let guard = state.read().await;
+                            journal_elaboration_witness_context_v1(
+                                &spectral_interpretation,
+                                guard.witness_frame_v1(),
+                                mode,
+                            )
+                        };
                         let mode_for_journal = mode_name.to_string();
                         let fill_for_journal = fill_pct;
                         let exchange_for_journal = conv.exchange_count;

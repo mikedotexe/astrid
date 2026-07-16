@@ -34,6 +34,18 @@ fn prepend_dialogue_witness_distinction_v1(
     format!("{distinction}\n{mode_role}\n{spectral_summary}")
 }
 
+fn journal_elaboration_witness_context_v1(
+    spectral_interpretation: &str,
+    witness_frame: Option<&crate::witness::WitnessFrameV1>,
+    mode: Mode,
+) -> String {
+    prepend_dialogue_witness_distinction_v1(
+        spectral_interpretation.to_string(),
+        witness_frame,
+        mode,
+    )
+}
+
 fn normalized_eigen_entropy(eigenvalues: &[f32]) -> Option<f32> {
     if eigenvalues.len() < 2 {
         return None;

@@ -54,6 +54,27 @@ mod tests {
     }
 
     #[test]
+    fn journal_elaboration_keeps_the_dialogue_provenance_boundary() {
+        let rendered = journal_elaboration_witness_context_v1(
+            "legacy long-form spectral interpretation",
+            None,
+            Mode::Dialogue,
+        );
+
+        assert!(rendered.starts_with(UNKNOWN_WITNESS_SELF_OTHER_DISTINCTION_V1));
+        assert!(rendered.contains("selected_mode=dialogue"));
+        assert!(rendered.contains("mixed_composition_allowed_without_source_collapse"));
+        assert!(rendered.contains("no_routing_ranking_dispatch_gain_or_control"));
+        assert!(rendered.ends_with("\nlegacy long-form spectral interpretation"));
+        assert_eq!(
+            rendered
+                .matches("legacy long-form spectral interpretation")
+                .count(),
+            1
+        );
+    }
+
+    #[test]
     fn ordinary_journal_rendering_remains_byte_compatible_without_provenance() {
         let rendered = render_astrid_journal_document(
             "ordinary reflection",
