@@ -141,6 +141,39 @@ class EnvironmentReceiptTests(unittest.TestCase):
             self.assertFalse(compatible)
             self.assertTrue(any("manifest mismatch" in reason for reason in reasons))
 
+    def test_manifest_cli_keeps_subcommand_separate_from_build_command(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            artifact = root / "component.bin"
+            manifest_path = root / "manifest.json"
+            artifact.write_bytes(b"component")
+
+            result = environment_receipts.subprocess.run(
+                [
+                    sys.executable,
+                    str(SCRIPT),
+                    "manifest",
+                    "test-component",
+                    "--output",
+                    str(manifest_path),
+                    "--repository",
+                    str(root),
+                    "--artifact",
+                    f"component={artifact}",
+                    "--command",
+                    "cargo build --release",
+                    "--protocol-revision",
+                    "a" * 40,
+                ],
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+
+            self.assertEqual(result.returncode, 0, result.stderr)
+            payload = json.loads(manifest_path.read_text())
+            self.assertEqual(payload["command"], "cargo build --release")
+
     def test_failed_deploy_is_recorded_and_returns_false(self) -> None:
         with tempfile.TemporaryDirectory() as tmp, mock.patch.object(
             environment_receipts,

@@ -663,7 +663,7 @@ def main() -> int:
     manifest.add_argument("--repository", type=Path, required=True)
     manifest.add_argument("--artifact", action="append", default=[])
     manifest.add_argument("--actor", default=os.environ.get("ASTRID_DEPLOY_ACTOR", DEFAULT_ACTOR))
-    manifest.add_argument("--command", default="")
+    manifest.add_argument("--command", dest="build_command", default="")
     manifest.add_argument("--protocol-version", default=PROTOCOL_VERSION)
     manifest.add_argument("--protocol-revision", default=None)
 
@@ -717,7 +717,7 @@ def main() -> int:
             repository=args.repository,
             artifacts=artifacts,
             actor=args.actor,
-            command=args.command,
+            command=args.build_command,
             protocol_version=args.protocol_version,
             protocol_revision=args.protocol_revision,
         )
