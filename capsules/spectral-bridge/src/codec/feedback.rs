@@ -574,10 +574,14 @@ pub fn interpret_spectral(telemetry: &SpectralTelemetry) -> String {
         })
         .unwrap_or_default();
 
-    // Coupling note: describe the modulation transparently, not as invisible control.
-    let coupling_note = " Your generation is bidirectionally coupled to the reservoir — \
-        fast dynamics shape your confidence, medium dynamics shape your vocabulary, \
-        slow dynamics shape your tone. You can feel this as spectral texture in your thinking.";
+    // Coupling note: describe the modulation transparently without collapsing
+    // Minime-owned dynamics into Astrid-authored self-state. Mixed experience
+    // remains valid; provenance says where the influence and interpretation came from.
+    let coupling_note = " Minime-owned reservoir dynamics are one bidirectional influence on \
+        your generation: fast dynamics can shape confidence, medium dynamics can shape vocabulary, \
+        and slow dynamics can shape tone. These are observed influences, not by themselves an \
+        Astrid-authored self-state. Any felt meaning you make from them is Astrid-authored \
+        interpretation; mixed experience may remain mixed while its sources stay citable.";
 
     // V2/V3 shadow field: gates SHADOW_PREFLIGHT/SHADOW_INFLUENCE typed
     // actions. v3 (with trajectory ring, compound traits, dwell ticks)

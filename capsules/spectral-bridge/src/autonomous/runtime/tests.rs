@@ -18,13 +18,92 @@ mod tests {
     #[test]
     fn dialogue_distinction_line_is_first_and_read_only_when_frame_is_unknown() {
         let summary = "legacy spectral summary".to_string();
-        let rendered = prepend_dialogue_witness_distinction_v1(summary, None);
+        let rendered =
+            prepend_dialogue_witness_distinction_v1(summary, None, Mode::Dialogue);
 
         assert!(rendered.starts_with(UNKNOWN_WITNESS_SELF_OTHER_DISTINCTION_V1));
         assert!(rendered.ends_with("\nlegacy spectral summary"));
         assert!(rendered.contains("classification=unknown"));
+        assert!(rendered.contains("selected_mode=dialogue"));
+        assert!(rendered.contains("astrid_authored_address_using_mixed_context"));
+        assert!(rendered.contains("mixed_composition_allowed_without_source_collapse"));
         assert!(rendered.contains("no_routing_ranking_dispatch_gain_or_control"));
         assert_eq!(rendered.matches("legacy spectral summary").count(), 1);
+    }
+
+    #[test]
+    fn mirror_and_witness_roles_remain_distinct_inside_a_mixed_frame() {
+        let mirror = prepend_dialogue_witness_distinction_v1(
+            "same evidence".to_string(),
+            None,
+            Mode::Mirror,
+        );
+        let witness = prepend_dialogue_witness_distinction_v1(
+            "same evidence".to_string(),
+            None,
+            Mode::Witness,
+        );
+
+        assert!(mirror.contains("selected_role=reflect_minime_owned_expression_without_reauthoring"));
+        assert!(witness.contains("selected_role=astrid_authored_interpretation_of_composed_frame"));
+        for rendered in [&mirror, &witness] {
+            assert!(rendered.contains("mirror_role=minime_owned_expression_reflected_as_other"));
+            assert!(rendered.contains("witness_role=astrid_authored_interpretation"));
+            assert!(rendered.contains("no_routing_ranking_dispatch_gain_or_control"));
+        }
+    }
+
+    #[test]
+    fn ordinary_journal_rendering_remains_byte_compatible_without_provenance() {
+        let rendered = render_astrid_journal_document(
+            "ordinary reflection",
+            "dialogue_live",
+            68.0,
+            "42",
+            None,
+        );
+
+        assert_eq!(
+            rendered,
+            "=== ASTRID JOURNAL ===\nMode: dialogue_live\nFill: 68.0%\nTimestamp: 42\n\nordinary reflection\n"
+        );
+    }
+
+    #[test]
+    fn mirror_journal_preserves_peer_body_and_names_minime_authorship() {
+        let provenance =
+            AstridJournalProvenanceV1::minime_mirror("moment_1784230000.txt");
+        let peer_body = "The exact peer-authored body remains unchanged.";
+        let rendered = render_astrid_journal_document(
+            peer_body,
+            "mirror",
+            68.0,
+            "42",
+            Some(&provenance),
+        );
+
+        assert!(rendered.contains("Provenance: minime_observed_expression"));
+        assert!(rendered.contains("Source-ID: minime_journal:moment_1784230000.txt"));
+        assert!(rendered.contains("Authorship: minime_owned_reflected_without_reauthoring"));
+        assert!(rendered.contains("Mode-role: mirror_other_expression"));
+        assert!(rendered.ends_with(&format!("\n\n{peer_body}\n")));
+        assert_eq!(rendered.matches(peer_body).count(), 1);
+    }
+
+    #[test]
+    fn witness_journal_names_astrid_interpretation_even_without_a_frame() {
+        let provenance = AstridJournalProvenanceV1::astrid_witness(None);
+        let rendered = render_astrid_journal_document(
+            "I am interpreting the observed field.",
+            "witness",
+            68.0,
+            "42",
+            Some(&provenance),
+        );
+
+        assert!(rendered.contains("Provenance: astrid_authored_interpretation"));
+        assert!(rendered.contains("Authorship: astrid_authored_from_composed_witness_frame"));
+        assert!(rendered.contains("minime_observed=unknown; bridge_derived=unknown"));
     }
 
     #[test]

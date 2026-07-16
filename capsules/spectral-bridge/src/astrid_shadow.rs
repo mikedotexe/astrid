@@ -131,6 +131,66 @@ struct ShadowFieldV3Output {
     mode_partners: Vec<ModePartners>,
 }
 
+/// Read-only authorship metadata for the codec sample entering Astrid's
+/// compatibility shadow projection. The existing ring and all shadow math stay
+/// unchanged; the marker prevents a reflected Minime journal from masquerading
+/// as pure Astrid authorship while that legacy mixed ring remains live.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct AstridShadowInputProvenanceV1 {
+    current_sample_origin: &'static str,
+    current_sample_role: &'static str,
+    source_id: String,
+    astrid_authored: bool,
+}
+
+impl AstridShadowInputProvenanceV1 {
+    #[must_use]
+    pub fn astrid_authored(mode: &str) -> Self {
+        Self {
+            current_sample_origin: "astrid",
+            current_sample_role: "astrid_authored_expression",
+            source_id: format!("astrid_mode:{mode}"),
+            astrid_authored: true,
+        }
+    }
+
+    #[must_use]
+    pub fn minime_mirror(source: &str) -> Self {
+        let source = source.trim();
+        Self {
+            current_sample_origin: "minime",
+            current_sample_role: "minime_owned_expression_reflected_for_compatibility",
+            source_id: if source.is_empty() {
+                "minime_journal:unknown".to_string()
+            } else {
+                format!("minime_journal:{source}")
+            },
+            astrid_authored: false,
+        }
+    }
+
+    fn annotate(&self, value: &mut Value) {
+        let Some(object) = value.as_object_mut() else {
+            return;
+        };
+        object.insert(
+            "input_provenance_v1".to_string(),
+            serde_json::json!({
+                "schema": "astrid_shadow_input_provenance_v1",
+                "schema_version": 1,
+                "current_sample_origin": self.current_sample_origin,
+                "current_sample_role": self.current_sample_role,
+                "source_id": self.source_id,
+                "current_sample_astrid_authored": self.astrid_authored,
+                "window_classification": "mixed_legacy_untagged_compatibility",
+                "compatibility_math_unchanged": true,
+                "co_regulation_need_math_unchanged": true,
+                "live_control_authority": false,
+            }),
+        );
+    }
+}
+
 /// v3.5: state of an in-flight reciprocal-influence cycle from minime.
 /// The bridge sees the influence file appear, snapshots Astrid's shadow
 /// at first sight, and on the next publish *after* the file is consumed,
@@ -956,10 +1016,11 @@ fn derive_self_need_from_shadow(value: &Value) -> &'static str {
     }
 }
 
-pub fn observe_and_publish(
+pub fn observe_and_publish_with_provenance(
     computer: &mut AstridShadowComputer,
     codec_features: &[f32],
     target_dir: &Path,
+    provenance: &AstridShadowInputProvenanceV1,
 ) -> Option<Value> {
     let mut value = computer.observe(codec_features)?;
     // Co-regulation: annotate what Astrid is reaching for so minime can see it.
@@ -967,6 +1028,7 @@ pub fn observe_and_publish(
     if let Some(obj) = value.as_object_mut() {
         obj.insert("co_regulation_need".to_string(), Value::from(need));
     }
+    provenance.annotate(&mut value);
     computer.publish(Some(&value), target_dir);
     // v3.5: handle reciprocal-influence closed loop. Polls minime's
     // workspace for an active or consumed influence file and writes the
@@ -1024,6 +1086,43 @@ mod co_regulation_tests {
             "history": [{"tail_openness": 0.50}]
         });
         assert_eq!(derive_self_need_from_shadow(&v3), "steady");
+    }
+
+    #[test]
+    fn mirror_input_provenance_is_visible_without_changing_shadow_values() {
+        let mut value = serde_json::json!({
+            "class_v3": {"primary": "active"},
+            "history": [{"tail_openness": 0.5}],
+            "co_regulation_need": "steady",
+        });
+        let before = value.clone();
+        let provenance = AstridShadowInputProvenanceV1::minime_mirror("moment_1784230000.txt");
+
+        provenance.annotate(&mut value);
+
+        assert_eq!(value["class_v3"], before["class_v3"]);
+        assert_eq!(value["history"], before["history"]);
+        assert_eq!(value["co_regulation_need"], before["co_regulation_need"]);
+        assert_eq!(
+            value["input_provenance_v1"]["current_sample_origin"],
+            "minime"
+        );
+        assert_eq!(
+            value["input_provenance_v1"]["current_sample_astrid_authored"],
+            false
+        );
+        assert_eq!(
+            value["input_provenance_v1"]["window_classification"],
+            "mixed_legacy_untagged_compatibility"
+        );
+        assert_eq!(
+            value["input_provenance_v1"]["compatibility_math_unchanged"],
+            true
+        );
+        assert_eq!(
+            value["input_provenance_v1"]["live_control_authority"],
+            false
+        );
     }
 
     #[test]

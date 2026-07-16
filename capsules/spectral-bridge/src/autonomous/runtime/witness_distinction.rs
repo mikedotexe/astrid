@@ -3,12 +3,35 @@ const UNKNOWN_WITNESS_SELF_OTHER_DISTINCTION_V1: &str = "[witness_self_other_dis
 fn prepend_dialogue_witness_distinction_v1(
     spectral_summary: String,
     witness_frame: Option<&crate::witness::WitnessFrameV1>,
+    mode: Mode,
 ) -> String {
     let distinction = witness_frame.map_or_else(
         || UNKNOWN_WITNESS_SELF_OTHER_DISTINCTION_V1.to_string(),
         crate::witness::WitnessFrameV1::render_context_line,
     );
-    format!("{distinction}\n{spectral_summary}")
+    let (selected_mode, selected_role) = match mode {
+        Mode::Mirror => ("mirror", "reflect_minime_owned_expression_without_reauthoring"),
+        Mode::Dialogue => ("dialogue", "astrid_authored_address_using_mixed_context"),
+        Mode::Witness => ("witness", "astrid_authored_interpretation_of_composed_frame"),
+        Mode::Introspect => ("introspect", "astrid_authored_source_reading"),
+        Mode::Evolve => ("evolve", "astrid_authored_governed_request"),
+        Mode::Experiment => ("experiment", "astrid_authored_bounded_inquiry"),
+        Mode::Daydream => ("daydream", "astrid_authored_unstructured_reflection"),
+        Mode::Aspiration => ("aspiration", "astrid_authored_growth_reflection"),
+        Mode::MomentCapture => ("moment_capture", "astrid_authored_transition_witness"),
+        Mode::Create => ("create", "astrid_authored_creation"),
+        Mode::Initiate => ("initiate", "astrid_authored_self_initiation"),
+        Mode::Contemplate => ("contemplate", "quiet_presence_without_generation"),
+    };
+    let mode_role = format!(
+        "[witness_mode_role_v1: selected_mode={selected_mode}; selected_role={selected_role}; \
+         mirror_role=minime_owned_expression_reflected_as_other; \
+         witness_role=astrid_authored_interpretation_of_observed_and_bridge_derived_evidence; \
+         overlap=mixed_composition_allowed_without_source_collapse; \
+         uncertainty=preserve_as_astrid_interpretation_not_producer_fact; \
+         boundary=read_only_after_mode_selection_no_routing_ranking_dispatch_gain_or_control]"
+    );
+    format!("{distinction}\n{mode_role}\n{spectral_summary}")
 }
 
 fn normalized_eigen_entropy(eigenvalues: &[f32]) -> Option<f32> {

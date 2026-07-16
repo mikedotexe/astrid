@@ -528,6 +528,17 @@ mod tests {
     }
 
     #[test]
+    fn interpret_spectral_keeps_minime_influence_distinct_from_astrid_authorship() {
+        let output = interpret_spectral(&telemetry(vec![7.0, 3.0, 2.0], 0.68));
+
+        assert!(output.contains("Minime-owned reservoir dynamics"));
+        assert!(output.contains("not by themselves an Astrid-authored self-state"));
+        assert!(output.contains("felt meaning you make from them is Astrid-authored"));
+        assert!(output.contains("mixed experience may remain mixed"));
+        assert!(!output.contains("You can feel this as spectral texture in your thinking"));
+    }
+
+    #[test]
     fn encode_different_texts_differ() {
         let a = encode_text("I am happy and confident about this plan.");
         let b = encode_text("I'm worried and uncertain, maybe we should reconsider...");

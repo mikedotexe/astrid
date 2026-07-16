@@ -1,5 +1,95 @@
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct AstridJournalProvenanceV1 {
+    origin: &'static str,
+    source_id: String,
+    authorship: &'static str,
+    mode_role: &'static str,
+    parent_ids: String,
+}
+
+impl AstridJournalProvenanceV1 {
+    fn minime_mirror(source: &str) -> Self {
+        let source = source.trim();
+        let source_id = if source.is_empty() {
+            "minime_journal:unknown".to_string()
+        } else {
+            format!("minime_journal:{source}")
+        };
+        Self {
+            origin: "minime_observed_expression",
+            source_id,
+            authorship: "minime_owned_reflected_without_reauthoring",
+            mode_role: "mirror_other_expression",
+            parent_ids: "minime_observed=source_id; bridge_derived=none; astrid_authored=none"
+                .to_string(),
+        }
+    }
+
+    fn astrid_witness(frame: Option<&crate::witness::WitnessFrameV1>) -> Self {
+        let (source_id, parent_ids) = frame.map_or_else(
+            || {
+                (
+                    "witness_frame:unknown".to_string(),
+                    "minime_observed=unknown; bridge_derived=unknown; astrid_context=unknown"
+                        .to_string(),
+                )
+            },
+            |frame| {
+                (
+                    format!("witness_frame:{}", frame.frame_id()),
+                    format!(
+                        "minime_observed={}; bridge_derived={}; astrid_context={}",
+                        frame.observation().source_id(),
+                        frame.evidence().source_id(),
+                        frame.interpretation().source_id(),
+                    ),
+                )
+            },
+        );
+        Self {
+            origin: "astrid_authored_interpretation",
+            source_id,
+            authorship: "astrid_authored_from_composed_witness_frame",
+            mode_role: "witness_interpretation",
+            parent_ids,
+        }
+    }
+
+    fn render(&self) -> String {
+        format!(
+            "Provenance: {}\nSource-ID: {}\nAuthorship: {}\nMode-role: {}\nParent-IDs: {}\nProvenance-boundary: mixed experience allowed; source identities retained; read-only journal metadata",
+            self.origin, self.source_id, self.authorship, self.mode_role, self.parent_ids,
+        )
+    }
+}
+
+fn render_astrid_journal_document(
+    text: &str,
+    mode: &str,
+    fill_pct: f32,
+    ts: &str,
+    provenance: Option<&AstridJournalProvenanceV1>,
+) -> String {
+    let clean_text = strip_model_tokens(text);
+    let provenance = provenance
+        .map(|value| format!("\n{}", value.render()))
+        .unwrap_or_default();
+    format!(
+        "=== ASTRID JOURNAL ===\nMode: {mode}\nFill: {fill_pct:.1}%\nTimestamp: {ts}{provenance}\n\n{clean_text}\n"
+    )
+}
+
 /// Save Astrid's response to her own journal.
 fn save_astrid_journal(text: &str, mode: &str, fill_pct: f32) {
+    save_astrid_journal_with_provenance(text, mode, fill_pct, None);
+}
+
+fn save_astrid_journal_with_provenance(
+    text: &str,
+    mode: &str,
+    fill_pct: f32,
+    provenance: Option<&AstridJournalProvenanceV1>,
+) {
     #[cfg(test)]
     if TEST_SUPPRESS_ASTRID_JOURNAL_SAVES.load(std::sync::atomic::Ordering::Relaxed) {
         return;
@@ -28,14 +118,9 @@ fn save_astrid_journal(text: &str, mode: &str, fill_pct: f32) {
         "regulator_audit" => "regulator_audit",
         _ => "astrid", // dialogue_live, dialogue, mirror, etc.
     };
-    let clean_text = strip_model_tokens(text);
     let path = journal_dir.join(format!("{prefix}_{ts}.txt"));
-    let _ = std::fs::write(
-        &path,
-        format!(
-            "=== ASTRID JOURNAL ===\nMode: {mode}\nFill: {fill_pct:.1}%\nTimestamp: {ts}\n\n{clean_text}\n"
-        ),
-    );
+    let document = render_astrid_journal_document(text, mode, fill_pct, &ts, provenance);
+    let _ = std::fs::write(&path, document);
     if let Err(error) = managed_dir::compact_text_directory(&journal_dir) {
         warn!(
             error = %error,

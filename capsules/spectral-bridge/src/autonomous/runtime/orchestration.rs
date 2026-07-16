@@ -1078,6 +1078,7 @@ pub fn spawn_autonomous_loop(
                                 prepend_dialogue_witness_distinction_v1(
                                     spectral_summary,
                                     guard.witness_frame_v1(),
+                                    mode,
                                 )
                             };
 
@@ -3075,6 +3076,15 @@ pub fn spawn_autonomous_loop(
                     };
                     let mirror_source_text =
                         (mode_name == "mirror").then(|| response_text.clone());
+                    let shadow_input_provenance = if matches!(mode, Mode::Mirror) {
+                        crate::astrid_shadow::AstridShadowInputProvenanceV1::minime_mirror(
+                            &journal_source,
+                        )
+                    } else {
+                        crate::astrid_shadow::AstridShadowInputProvenanceV1::astrid_authored(
+                            mode_name,
+                        )
+                    };
 
                     response_text = canonicalize_response_next_line(&response_text);
 
@@ -3662,14 +3672,15 @@ pub fn spawn_autonomous_loop(
                             exchange_codec_signature_count =
                                 exchange_codec_signature_count.saturating_add(1);
                             conv.last_codec_features = Some(sent_features.clone());
-                            // Update Astrid's own ShadowFieldV3 from the
-                            // freshly-emitted codec features and publish to
-                            // minime's workspace for mutual-witness reads.
+                            // Update the legacy Astrid ShadowFieldV3 projection from
+                            // freshly-emitted codec features. Mirror samples keep
+                            // Minime authorship metadata; the math remains unchanged.
                             let publish_dir = crate::astrid_shadow::default_publish_dir();
-                            let _ = crate::astrid_shadow::observe_and_publish(
+                            let _ = crate::astrid_shadow::observe_and_publish_with_provenance(
                                 &mut conv.astrid_shadow,
                                 &sent_features,
                                 &publish_dir,
+                                &shadow_input_provenance,
                             );
                             sent_semantic_chunk = true;
 
@@ -3768,7 +3779,24 @@ pub fn spawn_autonomous_loop(
 
                     // Save Astrid's signal journal entry with lineage tracing.
                     info!(lineage = %lineage_id, mode = mode_name, "exchange complete");
-                    save_astrid_journal(&response_text, mode_name, fill_pct);
+                    let journal_provenance = match mode {
+                        Mode::Mirror => Some(AstridJournalProvenanceV1::minime_mirror(
+                            &journal_source,
+                        )),
+                        Mode::Witness => {
+                            let guard = state.read().await;
+                            Some(AstridJournalProvenanceV1::astrid_witness(
+                                guard.witness_frame_v1(),
+                            ))
+                        },
+                        _ => None,
+                    };
+                    save_astrid_journal_with_provenance(
+                        &response_text,
+                        mode_name,
+                        fill_pct,
+                        journal_provenance.as_ref(),
+                    );
 
                     // v5.1 Phase D — Hook A: auto-promote synchronously for
                     // modes that DON'T spawn elaboration. moment_capture +
@@ -3793,11 +3821,10 @@ pub fn spawn_autonomous_loop(
                         );
                     }
 
-                    // Update Astrid's own ShadowFieldV3 on every exchange,
-                    // including modes that don't send features to minime
-                    // (moment_capture, daydream, aspiration). Encodes the
-                    // response text locally so the shadow keeps a heartbeat
-                    // even during long stretches of self-only journaling.
+                    // Update the legacy Astrid ShadowFieldV3 projection on every
+                    // exchange, including modes that do not send features to Minime.
+                    // Provenance marks reflected Mirror text as Minime-owned while
+                    // preserving the existing mixed-ring math and heartbeat.
                     {
                         let local_features = crate::codec::encode_text_sovereign_windowed(
                             &response_text,
@@ -3810,10 +3837,11 @@ pub fn spawn_autonomous_loop(
                             Some(fill_pct / 100.0),
                         );
                         let publish_dir = crate::astrid_shadow::default_publish_dir();
-                        let observed = crate::astrid_shadow::observe_and_publish(
+                        let observed = crate::astrid_shadow::observe_and_publish_with_provenance(
                             &mut conv.astrid_shadow,
                             &local_features,
                             &publish_dir,
+                            &shadow_input_provenance,
                         );
                         info!(
                             mode = mode_name,
