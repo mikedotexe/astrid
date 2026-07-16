@@ -114,9 +114,9 @@ pub struct SemanticEnergyV1 {
     pub schema_version: u8,
     pub input_energy: f32,
     pub input_active: bool,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(default)]
     pub input_fresh_ms: Option<u64>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(default)]
     pub input_stale_ms: Option<u64>,
     pub kernel_energy: f32,
     pub kernel_delta: f32,
@@ -143,7 +143,7 @@ pub struct EigenvectorModeV1 {
     pub norm: f32,
     pub concentration_top4: f32,
     pub top_components: Vec<EigenvectorComponentV1>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(default)]
     pub overlap_with_previous: Option<f32>,
     pub orientation_delta: f32,
 }
@@ -680,7 +680,7 @@ pub struct EigenPacketV1 {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub lambda1_rel: Option<f32>,
     pub modalities: ModalityStatus,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(default)]
     pub neural: Option<NeuralOutputs>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub alert: Option<String>,

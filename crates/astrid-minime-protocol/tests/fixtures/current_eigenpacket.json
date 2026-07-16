@@ -19,6 +19,7 @@
     "audio_freshness_class": "fresh",
     "video_freshness_class": "fresh"
   },
+  "neural": null,
   "pressure_source_v1": {
     "policy": "pressure_source_v1",
     "schema_version": 1,

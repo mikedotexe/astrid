@@ -30,11 +30,14 @@ fn current_telemetry_is_typed_and_preserves_additive_fields() {
         packet.pressure_source_v1.as_ref().unwrap().pressure_profile[0].source,
         "mode_packing"
     );
+    assert!(packet.neural.is_none());
     assert_eq!(
         packet.extensions["future_additive_packet"]["preserved"],
         true
     );
     let encoded = serde_json::to_value(packet).unwrap();
+    assert!(encoded.get("neural").is_some());
+    assert!(encoded["neural"].is_null());
     assert_eq!(encoded["future_additive_packet"]["preserved"], true);
 }
 
