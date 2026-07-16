@@ -1,6 +1,7 @@
 [workspace]
 resolver = "2"
 members = [
+    "crates/astrid-minime-protocol",
     "crates/astrid-approval",
     "crates/astrid-audit",
     "crates/astrid-capabilities",
@@ -50,6 +51,7 @@ astrid-guest = { path = "crates/astrid-guest", version = "0.5.1" }
 astrid-hooks = { path = "crates/astrid-hooks", version = "0.5.1" }
 astrid-kernel = { path = "crates/astrid-kernel", version = "0.5.1" }
 astrid-mcp = { path = "crates/astrid-mcp", version = "0.5.1" }
+astrid-minime-protocol = { path = "crates/astrid-minime-protocol", version = "0.1.0" }
 astrid-openclaw = { path = "crates/astrid-openclaw", version = "0.5.1" }
 astrid-prelude = { path = "crates/astrid-prelude", version = "0.5.1" }
 astrid-storage = { path = "crates/astrid-storage", version = "0.5.1" }
