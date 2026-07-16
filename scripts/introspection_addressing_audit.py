@@ -114,6 +114,11 @@ AGENCY_TIER_DEFAULT_STATUS = {
     4: "needs_steward_grant",
     5: "needs_operator_approval",
 }
+AGENCY_TIER_CORRECTION_STATUSES = {
+    "closed_no_action",
+    "superseded",
+    "verified_existing",
+}
 AUTHORITY_BOUNDARY = (
     "review tracking only; no introspection-suggested runtime change, deploy, "
     "restart, staging, git add, or commit"
@@ -166,6 +171,23 @@ def bounded_text(text: str, *, limit: int = 600) -> str:
 def timestamp_from_name(name: str) -> int | None:
     match = TIMESTAMP_RE.search(name)
     return int(match.group(1)) if match else None
+
+
+def latest_canonical_introspection_filename(introspections_dir: Path) -> str:
+    candidates = []
+    for path in introspections_dir.glob("introspection_*.txt"):
+        ts = timestamp_from_name(path.name)
+        if ts is not None:
+            candidates.append((ts, path.name))
+    if not candidates:
+        raise ValueError(f"no canonical introspections found in {introspections_dir}")
+    return max(candidates)[1]
+
+
+def resolve_cutoff(cutoff: str, introspections_dir: Path) -> str:
+    if cutoff.strip().lower() in {"latest", "newest", "auto"}:
+        return latest_canonical_introspection_filename(introspections_dir)
+    return cutoff
 
 
 def cutoff_timestamp(cutoff: str, introspections_dir: Path) -> int:
@@ -317,8 +339,13 @@ def _strip_negated_authority_boundaries(text: str) -> str:
 def _window_has_live_change_verb(window: str) -> bool:
     for verb in LIVE_CHANGE_VERBS:
         for match in re.finditer(rf"\b{re.escape(verb)}\b", window):
-            prefix = window[max(0, match.start() - 32) : match.start()]
+            prefix = window[max(0, match.start() - 112) : match.start()]
             if re.search(r"\b(without|no|not|never)\b[^.;\n]{0,32}$", prefix):
+                continue
+            if re.search(
+                r"\b(?:must|does|do|will|can|should)\s+not\b[^.;\n]{0,96}$",
+                prefix,
+            ):
                 continue
             if re.search(r"\bbefore\b[^.;\n]{0,80}$", prefix):
                 continue
@@ -338,8 +365,45 @@ def _has_live_control_change(text: str) -> bool:
     return False
 
 
+def _is_explicit_verification_claim(text: str) -> bool:
+    """Keep epistemic checks from becoming live-change imperatives.
+
+    Words such as ``changes`` and ``shift`` often describe behavior inside a
+    verification claim. They should not outrank the claim's leading epistemic
+    verb unless the same claim actually asks to apply or execute a live change.
+    Explicit Tier 4/5 dispositions are handled before this guard.
+    """
+
+    lower = text.strip().lower()
+    if not re.match(
+        r"^(?:verify|observe|record|preserve|confirm|inspect|test)\b",
+        lower,
+    ):
+        return False
+    return not re.search(
+        r"\b(?:apply|deploy|execute|grant|mutate|retune|send|wire|write)\b"
+        r"|\blive\b[^.;\n]{0,64}\b(?:change|control|mutation|retune|trial|tuning|write)\b",
+        lower,
+    )
+
+
 def agency_tier_for_claim(text: str) -> int:
     lower = text.lower()
+    # A claim may already carry an explicit steward disposition. Preserve that
+    # authority boundary even when its surface nouns are unfamiliar to the
+    # heuristic classifier.
+    if re.search(
+        r"\b(?:requires?|remains?|keep|keeps|kept|is|are)\s+(?:at\s+)?tier[\s_-]*5\b|\btier[\s_-]*5\s+(?:operator\s+)?approval\b|\btier[\s_-]*5\b[^.;\n]{0,64}\b(?:live|operator|control|protocol|runtime|substrate|behavior)\b[^.;\n]{0,32}\b(?:change|work|authority)\b",
+        lower,
+    ):
+        return 5
+    if re.search(
+        r"\b(?:requires?|remains?|keep|keeps|kept|is|are)\s+(?:at\s+)?tier[\s_-]*4\b|\btier[\s_-]*4\s+(?:steward\s+)?approval\b",
+        lower,
+    ):
+        return 4
+    if _is_explicit_verification_claim(lower):
+        return 1
     if _contains_any(
         lower,
         (
@@ -390,6 +454,9 @@ def agency_tier_for_claim(text: str) -> int:
             "replyable",
             "trace",
             "language artifact",
+            "phase card",
+            "relational card",
+            "presence receipt",
         ),
     ):
         return 2
@@ -784,6 +851,7 @@ def _empty_work_item_fields() -> dict[str, Any]:
         "evidence_links": [],
         "status_events": [],
         "agency_tier_requests": [],
+        "agency_tier_corrections": [],
         "post_change_responses": [],
         "closure_cards": [],
         "post_change_response_status": "not_requested",
@@ -862,6 +930,7 @@ def artifact_record(path: Path, introspections_dir: Path, sources: dict[str, str
         "filename": path.name,
         "path": str(path),
         "relative_path": str(path.relative_to(introspections_dir.parent)),
+        "present_on_disk": True,
         "timestamp": timestamp_from_name(path.name),
         "artifact_kind": artifact_kind(path),
         "source_family": source_family_from_id(introspection_id),
@@ -883,6 +952,7 @@ def inventory_records(
     *,
     candidate_sources: dict[str, str] | None = None,
 ) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    cutoff = resolve_cutoff(cutoff, introspections_dir)
     cutoff_ts = cutoff_timestamp(cutoff, introspections_dir)
     sources = candidate_sources if candidate_sources is not None else read_candidate_sources()
     records: list[dict[str, Any]] = []
@@ -980,6 +1050,9 @@ def _merge_artifact(existing: dict[str, Any] | None, artifact: dict[str, Any]) -
         for key in _empty_review_fields():
             if key in existing:
                 merged[key] = existing[key]
+    if artifact.get("present_on_disk") is True:
+        merged.pop("inventory_absent_at", None)
+        merged.pop("inventory_absent_reason", None)
     for key, value in _empty_review_fields().items():
         merged.setdefault(key, value.copy() if isinstance(value, (dict, list)) else value)
     return merged
@@ -1073,6 +1146,15 @@ def replay_events(state_dir: Path) -> dict[str, Any]:
             if not artifact_id:
                 continue
             artifacts[artifact_id] = _merge_artifact(artifacts.get(artifact_id), artifact)
+        elif event_type == "inventory_artifact_absent":
+            artifact_id = str(event.get("introspection_id") or "")
+            if not artifact_id or artifact_id not in artifacts:
+                continue
+            artifacts[artifact_id]["present_on_disk"] = False
+            artifacts[artifact_id]["inventory_absent_at"] = event.get("ts")
+            artifacts[artifact_id]["inventory_absent_reason"] = str(
+                event.get("reason") or "missing_from_current_filesystem_snapshot"
+            )
         elif event_type == "full_read":
             artifact_id = str(event.get("introspection_id") or "")
             if artifact_id not in artifacts:
@@ -1209,6 +1291,38 @@ def replay_events(state_dir: Path) -> dict[str, Any]:
                 refresh_work_item_authority_packets(item)
             item["updated_at"] = event.get("ts")
             work_items[work_item_id] = item
+        elif event_type == "agency_tier_corrected":
+            work_item_id = str(event.get("work_item_id") or "")
+            if not work_item_id:
+                continue
+            item = _merge_work_item(work_items.get(work_item_id), {"work_item_id": work_item_id})
+            corrected_tier = int(event.get("tier") or 0)
+            previous_tier = int(item.get("agency_tier") or 0)
+            item.setdefault("agency_tier_corrections", []).append(
+                {
+                    "ts": event.get("ts"),
+                    "previous_tier": previous_tier,
+                    "tier": corrected_tier,
+                    "tier_label": AGENCY_TIER_LABELS.get(corrected_tier),
+                    "reason": bounded_text(str(event.get("reason") or ""), limit=600),
+                    "status": "classification_correction",
+                    "grants_approval": False,
+                    "live_eligible_now": False,
+                }
+            )
+            item["agency_tier"] = corrected_tier
+            item["agency_tier_label"] = AGENCY_TIER_LABELS.get(corrected_tier)
+            item["route"] = agency_route_for_tier(corrected_tier)
+            item["evidence_required"] = AGENCY_TIER_REQUIRED_EVIDENCE.get(corrected_tier)
+            item["suggested_next"] = AGENCY_TIER_REQUIRED_EVIDENCE.get(corrected_tier)
+            if corrected_tier < 5 and item.get("blocked_by") == "operator_approval":
+                item["blocked_by"] = None
+            if corrected_tier < 4 and item.get("blocked_by") == "steward_grant":
+                item["blocked_by"] = None
+            item["auto_approved"] = False
+            item["updated_at"] = event.get("ts")
+            refresh_work_item_authority_packets(item)
+            work_items[work_item_id] = item
         elif event_type == "closure_card_emitted":
             work_item_id = str(event.get("work_item_id") or "")
             if not work_item_id:
@@ -1248,7 +1362,9 @@ def queue_items(status: dict[str, Any], *, limit: int | None = None) -> list[dic
     rows = [
         artifact
         for artifact in artifacts.values()
-        if isinstance(artifact, dict) and not artifact.get("fully_addressed")
+        if isinstance(artifact, dict)
+        and artifact.get("present_on_disk") is not False
+        and not artifact.get("fully_addressed")
     ]
     status_priority = {
         "unread": 0,
@@ -1367,7 +1483,8 @@ def work_item_summary(work_items: dict[str, dict[str, Any]]) -> dict[str, Any]:
             "title": item.get("title"),
         }
         for item in active
-        if int(item.get("agency_tier") or 0) < 5
+        if str(item.get("status") or "") != "verified_existing"
+        and int(item.get("agency_tier") or 0) < 5
         and live_control_claim(
             " ".join(
                 str(item.get(key) or "")
@@ -1413,7 +1530,9 @@ def counter_audit_for_artifacts(
     artifacts: dict[str, dict[str, Any]],
     summary: dict[str, Any],
 ) -> dict[str, Any]:
-    all_items = list(artifacts.values())
+    all_items = [
+        item for item in artifacts.values() if item.get("present_on_disk") is not False
+    ]
     canonical_items = [
         item for item in all_items if str(item.get("artifact_kind") or "") == "canonical_introspection"
     ]
@@ -1452,7 +1571,9 @@ def counter_audit_for_artifacts(
         "schema": "introspection_addressing_counter_audit_v1",
         "status": "consistent" if not mismatches else "mismatch",
         "scope_note": (
-            "summary.pending_count is all indexed artifacts; use "
+            "Current counters exclude historical records explicitly marked absent from the "
+            "filesystem snapshot while retaining their read, claim, and evidence history. "
+            "summary.pending_count is all currently present indexed artifacts; use "
             "canonical_introspections.remaining_count for the canonical reading backlog."
         ),
         "recommended_final_report_fields": {
@@ -1479,15 +1600,35 @@ def materialized_status(
     corrupt_event_lines: int = 0,
 ) -> dict[str, Any]:
     work_items = work_items or {}
-    counts = Counter(str(item.get("artifact_kind") or "unknown") for item in artifacts.values())
-    source_counts = Counter(str(item.get("source_family") or "unknown") for item in artifacts.values())
-    full_read_count = sum(1 for item in artifacts.values() if item.get("full_read"))
-    fully_addressed_count = sum(1 for item in artifacts.values() if item.get("fully_addressed"))
-    blocked_count = sum(1 for item in artifacts.values() if item.get("status") == "blocked_needs_steward")
-    pending_count = sum(1 for item in artifacts.values() if not item.get("fully_addressed"))
+    active_artifacts = {
+        key: item
+        for key, item in artifacts.items()
+        if item.get("present_on_disk") is not False
+    }
+    historical_absent_count = len(artifacts) - len(active_artifacts)
+    counts = Counter(
+        str(item.get("artifact_kind") or "unknown") for item in active_artifacts.values()
+    )
+    source_counts = Counter(
+        str(item.get("source_family") or "unknown") for item in active_artifacts.values()
+    )
+    full_read_count = sum(1 for item in active_artifacts.values() if item.get("full_read"))
+    fully_addressed_count = sum(
+        1 for item in active_artifacts.values() if item.get("fully_addressed")
+    )
+    blocked_count = sum(
+        1
+        for item in active_artifacts.values()
+        if item.get("status") == "blocked_needs_steward"
+    )
+    pending_count = sum(
+        1 for item in active_artifacts.values() if not item.get("fully_addressed")
+    )
     canonical_indexed = counts.get("canonical_introspection", 0)
     cutoff_filename = Path(str(cutoff.get("cutoff") or DEFAULT_CUTOFF)).name
-    cutoff_indexed = any(item.get("filename") == cutoff_filename for item in artifacts.values())
+    cutoff_indexed = any(
+        item.get("filename") == cutoff_filename for item in active_artifacts.values()
+    )
     artifacts_for_output = {
         key: with_agency_status_overlay(item)
         for key, item in sorted(artifacts.items())
@@ -1497,10 +1638,11 @@ def materialized_status(
         for key, item in sorted(work_items.items())
     }
     summary = {
-        "total_indexed": len(artifacts),
+        "total_indexed": len(active_artifacts),
         "canonical_indexed": canonical_indexed,
         "thin_indexed": counts.get("thin_introspection_output", 0),
         "other_indexed": counts.get("other_timestamped_text", 0),
+        "historical_absent_count": historical_absent_count,
         "full_read_count": full_read_count,
         "fully_addressed_count": fully_addressed_count,
         "pending_count": pending_count,
@@ -1605,6 +1747,7 @@ def report_from_status(status: dict[str, Any]) -> dict[str, Any]:
             "fully_addressed_count": int(summary.get("fully_addressed_count") or 0),
             "pending_count": int(summary.get("pending_count") or 0),
             "blocked_count": int(summary.get("blocked_count") or 0),
+            "historical_absent_count": int(summary.get("historical_absent_count") or 0),
             "corrupt_event_lines": int(summary.get("corrupt_event_lines") or 0),
             "top_source_families": summary.get("top_source_families") or [],
         },
@@ -1837,6 +1980,22 @@ def event_inventory_artifact(record: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def event_inventory_artifact_absent(
+    introspection_id: str,
+    *,
+    path: str,
+    reason: str = "missing_from_current_filesystem_snapshot",
+) -> dict[str, Any]:
+    return {
+        "event_type": "inventory_artifact_absent",
+        "ts": now_s(),
+        "schema": SCHEMA,
+        "introspection_id": introspection_id,
+        "path": path,
+        "reason": reason,
+    }
+
+
 def build_inventory(
     introspections_dir: Path,
     state_dir: Path,
@@ -1856,30 +2015,86 @@ def build_inventory(
         "write": write,
         "cutoff": cutoff_info,
         "summary": preview_status["summary"],
-        "artifacts": records,
+        "artifact_count": len(records),
         "next_queue": preview_status["next_queue"][:20],
         "authority_boundary": AUTHORITY_BOUNDARY,
     }
     if not write:
-        return result
+        return {**result, "artifacts": records}
 
     existing = load_status(state_dir)
     existing_artifacts = existing.get("artifacts") if isinstance(existing.get("artifacts"), dict) else {}
+    current_ids = {str(record["introspection_id"]) for record in records}
     events = [event_inventory_run(cutoff_info, len(records))]
     for record in records:
         current = existing_artifacts.get(record["introspection_id"]) if isinstance(existing_artifacts, dict) else None
         if (
             not isinstance(current, dict)
+            or current.get("present_on_disk") is False
             or current.get("sha256") != record.get("sha256")
             or current.get("candidate_evidence") != record.get("candidate_evidence")
         ):
             events.append(event_inventory_artifact(record))
+    cutoff_ts = int(cutoff_info.get("cutoff_timestamp") or 0)
+    for introspection_id, current in existing_artifacts.items():
+        if not isinstance(current, dict) or current.get("present_on_disk") is False:
+            continue
+        timestamp = current.get("timestamp")
+        if not isinstance(timestamp, int) or timestamp > cutoff_ts:
+            continue
+        if introspection_id in current_ids:
+            continue
+        filename = str(current.get("filename") or "")
+        expected_path = introspections_dir / filename
+        if not filename or expected_path.exists():
+            continue
+        events.append(
+            event_inventory_artifact_absent(
+                str(introspection_id),
+                path=str(expected_path),
+            )
+        )
     append_events(state_dir, events)
     status = replay_events(state_dir)
     write_materialized_status(state_dir, status)
+    materialized_artifacts = (
+        status.get("artifacts") if isinstance(status.get("artifacts"), dict) else {}
+    )
+    materialized_ids_in_scope = {
+        str(introspection_id)
+        for introspection_id, artifact in materialized_artifacts.items()
+        if isinstance(artifact, dict)
+        and artifact.get("present_on_disk") is not False
+        and isinstance(artifact.get("timestamp"), int)
+        and int(artifact["timestamp"]) <= cutoff_ts
+    }
+    snapshot_checks = {
+        "scan_matches_materialized_active_scope": current_ids == materialized_ids_in_scope,
+        "materialized_counter_audit_consistent": (
+            (status.get("counter_audit") or {}).get("status") == "consistent"
+        ),
+    }
     return {
         **result,
+        "summary": status.get("summary") or {},
+        "next_queue": status.get("next_queue") or [],
+        "scan_summary": preview_status["summary"],
+        "snapshot_audit": {
+            "status": "consistent" if all(snapshot_checks.values()) else "mismatch",
+            "checks": snapshot_checks,
+            "scan_count": len(records),
+            "materialized_active_in_scope_count": len(materialized_ids_in_scope),
+            "historical_absent_count": int(
+                (status.get("summary") or {}).get("historical_absent_count") or 0
+            ),
+            "absent_events_appended": sum(
+                1 for event in events if event.get("event_type") == "inventory_artifact_absent"
+            ),
+        },
         "events_appended": len(events),
+        "inventory_artifact_events_appended": sum(
+            1 for event in events if event.get("event_type") == "inventory_artifact"
+        ),
         "status_path": str(status_path(state_dir)),
         "queue_path": str(queue_path(state_dir)),
         "report": status.get("report"),
@@ -1909,13 +2124,18 @@ def parse_claims_file(path: Path) -> list[dict[str, Any]]:
         if not isinstance(raw, dict):
             continue
         claim_id = str(raw.get("claim_id") or raw.get("id") or f"c{idx:03d}")
-        claims.append(
-            {
-                "claim_id": claim_id,
-                "summary": bounded_text(str(raw.get("summary") or raw.get("claim") or ""), limit=500),
-                "disposition": str(raw.get("disposition") or "triaged_pending_action"),
-            }
-        )
+        claim = {
+            "claim_id": claim_id,
+            "summary": bounded_text(str(raw.get("summary") or raw.get("claim") or ""), limit=500),
+            "disposition": str(raw.get("disposition") or "triaged_pending_action"),
+        }
+        classification = str(raw.get("classification") or "").strip()
+        authority = str(raw.get("authority") or "").strip()
+        if classification:
+            claim["classification"] = classification
+        if authority:
+            claim["authority"] = authority
+        claims.append(claim)
     return claims
 
 
@@ -2028,8 +2248,22 @@ def work_item_from_claim(artifact: dict[str, Any], claim: dict[str, Any]) -> dic
         ]
     )
     tier = agency_tier_for_claim(combined)
+    classification = str(claim.get("classification") or "").strip()
+    claim_authority = str(claim.get("authority") or "").strip()
+    if classification == "tier_5_wait":
+        tier = 5
+    elif classification == "needs_sandbox" and tier < 4:
+        tier = 3
     created = now_s()
     title = bounded_text(claim_summary, limit=90) or f"{introspection_id}:{claim_id}"
+    status = AGENCY_TIER_DEFAULT_STATUS.get(tier, "ready_for_implementation")
+    if tier < 4:
+        status = {
+            "implemented": "implemented_awaiting_felt_response",
+            "verified_existing": "verified_existing",
+            "observed": "verified_existing",
+            "needs_sandbox": "needs_sandbox",
+        }.get(classification, status)
     item = {
         "work_item_id": work_item_id_for(introspection_id, claim_id),
         "source_introspection_id": introspection_id,
@@ -2037,13 +2271,15 @@ def work_item_from_claim(artifact: dict[str, Any], claim: dict[str, Any]) -> dic
         "source_path": artifact.get("path"),
         "source_family": artifact.get("source_family"),
         "claim_id": claim_id,
+        "claim_classification": classification or None,
+        "claim_authority": claim_authority or None,
         "being": being_from_source(artifact),
         "title": title,
         "claim_summary": claim_summary,
         "agency_tier": tier,
         "agency_tier_label": AGENCY_TIER_LABELS.get(tier),
         "route": agency_route_for_tier(tier),
-        "status": AGENCY_TIER_DEFAULT_STATUS.get(tier, "ready_for_implementation"),
+        "status": status,
         "evidence_required": AGENCY_TIER_REQUIRED_EVIDENCE.get(tier),
         "suggested_next": AGENCY_TIER_REQUIRED_EVIDENCE.get(tier),
         "created_at": created,
@@ -2109,6 +2345,32 @@ def agency_tier_request_event(work_item_id: str, tier: int, reason: str) -> dict
         "tier_label": AGENCY_TIER_LABELS[tier],
         "reason": reason,
         "request_status": "requested",
+        "auto_approved": False,
+    }
+
+
+def agency_tier_correction_event(
+    work_item_id: str,
+    tier: int,
+    previous_tier: int,
+    reason: str,
+) -> dict[str, Any]:
+    if tier not in AGENCY_TIER_LABELS:
+        raise ValueError("tier must be an integer from 0 through 5")
+    if tier >= previous_tier:
+        raise ValueError("classification correction must lower the current tier")
+    return {
+        "event_type": "agency_tier_corrected",
+        "ts": now_s(),
+        "schema": SCHEMA,
+        "work_item_id": work_item_id,
+        "previous_tier": previous_tier,
+        "tier": tier,
+        "tier_label": AGENCY_TIER_LABELS[tier],
+        "reason": reason,
+        "correction_status": "classification_correction",
+        "grants_approval": False,
+        "live_eligible_now": False,
         "auto_approved": False,
     }
 
@@ -2301,6 +2563,7 @@ def render_queue_markdown(status: dict[str, Any], *, limit: int = 50) -> str:
         f"- status: {report.get('status')}",
         f"- total_indexed: {report.get('summary', {}).get('total_indexed', 0)}",
         f"- canonical_indexed: {report.get('summary', {}).get('canonical_indexed', 0)}",
+        f"- historical_absent: {report.get('summary', {}).get('historical_absent_count', 0)}",
         f"- fully_addressed: {report.get('summary', {}).get('fully_addressed_count', 0)}",
         f"- pending: {report.get('summary', {}).get('pending_count', 0)}",
         f"- counter_audit: {counter_audit.get('status', 'unknown')}",
@@ -2368,6 +2631,7 @@ def render_report_markdown(report: dict[str, Any]) -> str:
         f"- status: {report.get('status')}",
         f"- total_indexed: {summary.get('total_indexed', 0)}",
         f"- canonical_indexed: {summary.get('canonical_indexed', 0)}",
+        f"- historical_absent: {summary.get('historical_absent_count', 0)}",
         f"- full_read: {summary.get('full_read_count', 0)}",
         f"- fully_addressed: {summary.get('fully_addressed_count', 0)}",
         f"- pending: {summary.get('pending_count', 0)}",
@@ -2493,6 +2757,89 @@ class IntrospectionAddressingAuditTests(unittest.TestCase):
         self.assertEqual(kinds[cutoff.name], "canonical_introspection")
         self.assertEqual(kinds[thin.name], "thin_introspection_output")
         self.assertEqual(records[0]["introspection_id"], "introspection_astrid_llm_1783325217")
+
+    def test_latest_cutoff_uses_numeric_timestamp_not_lexical_filename_order(self) -> None:
+        import tempfile
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            intros = Path(tmpdir) / "introspections"
+            intros.mkdir()
+            lexically_late = intros / "introspection_zzzz_1780000100.txt"
+            lexically_late.write_text("Observed:\nolder\n")
+            numerically_latest = intros / "introspection_aaaa_1780000200.txt"
+            numerically_latest.write_text("Observed:\nnewer\n")
+
+            records, info = inventory_records(intros, "latest", candidate_sources={})
+
+        self.assertEqual(info["cutoff"], numerically_latest.name)
+        self.assertEqual(info["cutoff_timestamp"], 1_780_000_200)
+        self.assertTrue(info["cutoff_indexed"])
+        self.assertEqual(len(records), 2)
+
+    def test_inventory_preserves_absent_history_without_inflating_active_counts(self) -> None:
+        import tempfile
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            intros = root / "introspections"
+            state = root / "state"
+            intros.mkdir()
+            path = intros / "introspection_astrid_llm_1783325217.txt"
+            text = "=== ASTRID INTROSPECTION ===\nSource: astrid:llm\nObserved:\nhi\n"
+            path.write_text(text)
+
+            initial = build_inventory(
+                intros,
+                state,
+                path.name,
+                write=True,
+                candidate_sources={},
+            )
+            self.assertEqual(initial["summary"]["total_indexed"], 1)
+            self.assertEqual(initial["artifact_count"], 1)
+            self.assertNotIn("artifacts", initial)
+            self.assertEqual(initial["snapshot_audit"]["status"], "consistent")
+
+            preview = build_inventory(
+                intros,
+                state,
+                path.name,
+                write=False,
+                candidate_sources={},
+            )
+            self.assertEqual(len(preview["artifacts"]), 1)
+
+            path.unlink()
+            absent = build_inventory(
+                intros,
+                state,
+                path.name,
+                write=True,
+                candidate_sources={},
+            )
+            absent_record = load_status(state)["artifacts"][path.stem]
+            self.assertEqual(absent["summary"]["total_indexed"], 0)
+            self.assertEqual(absent["summary"]["historical_absent_count"], 1)
+            self.assertEqual(absent["snapshot_audit"]["absent_events_appended"], 1)
+            self.assertEqual(absent["snapshot_audit"]["status"], "consistent")
+            self.assertFalse(absent_record["present_on_disk"])
+            self.assertEqual(absent["next_queue"], [])
+
+            path.write_text(text)
+            restored = build_inventory(
+                intros,
+                state,
+                path.name,
+                write=True,
+                candidate_sources={},
+            )
+            restored_record = load_status(state)["artifacts"][path.stem]
+            self.assertEqual(restored["summary"]["total_indexed"], 1)
+            self.assertEqual(restored["summary"]["historical_absent_count"], 0)
+            self.assertTrue(restored_record["present_on_disk"])
+            self.assertNotIn("inventory_absent_at", restored_record)
+            self.assertNotIn("inventory_absent_reason", restored_record)
+            self.assertEqual(restored["snapshot_audit"]["status"], "consistent")
 
     def test_fully_addressed_requires_read_claim_close_and_evidence(self) -> None:
         import tempfile
@@ -2694,6 +3041,36 @@ class IntrospectionAddressingAuditTests(unittest.TestCase):
         self.assertEqual(summary["grant_waiting_count"], 1)
         self.assertEqual(queue[0]["work_item_id"], "wi_waiting")
 
+    def test_verified_existing_boundary_language_is_not_a_tier_mismatch(self) -> None:
+        now = now_s()
+        summary = work_item_summary(
+            {
+                "wi_verified": {
+                    "work_item_id": "wi_verified",
+                    "being": "minime",
+                    "title": "authority budget remains an explicit continuity-control boundary",
+                    "claim_summary": "Existing read-only boundary was verified in source and tests.",
+                    "agency_tier": 4,
+                    "route": agency_route_for_tier(4),
+                    "status": "verified_existing",
+                    "updated_at": now,
+                },
+                "wi_pending": {
+                    "work_item_id": "wi_pending",
+                    "being": "minime",
+                    "title": "change live regulator control",
+                    "claim_summary": "Apply a live controller mutation.",
+                    "agency_tier": 4,
+                    "route": agency_route_for_tier(4),
+                    "status": "ready_for_implementation",
+                    "updated_at": now,
+                },
+            }
+        )
+
+        self.assertEqual(summary["tier_mismatch_count"], 1)
+        self.assertEqual(summary["tier_mismatches"][0]["work_item_id"], "wi_pending")
+
     def test_next_queue_prioritizes_unread_before_triaged_pending_work(self) -> None:
         status = status_from_records(
             [
@@ -2748,6 +3125,56 @@ class IntrospectionAddressingAuditTests(unittest.TestCase):
         self.assertEqual(agency_tier_for_claim("request semantic_microdose authority budget"), 4)
         self.assertEqual(agency_tier_for_claim("change pressure fill PI controller behavior"), 5)
         self.assertEqual(
+            agency_tier_for_claim(
+                "Verify fallback texture probabilities shift with entropy, density gradient, pressure, and tail vibrancy instead of using a static word list."
+            ),
+            1,
+        )
+        self.assertEqual(
+            agency_tier_for_claim(
+                "Verify fallback texture changes with entropy, pressure, density, and cascade evidence."
+            ),
+            1,
+        )
+        self.assertEqual(
+            agency_tier_for_claim(
+                "Observe high-entropy alignment using existing telemetry without applying control."
+            ),
+            1,
+        )
+        self.assertEqual(
+            agency_tier_for_claim(
+                "Verify by applying a live pressure control change in the running substrate."
+            ),
+            5,
+        )
+        self.assertEqual(
+            agency_tier_for_claim(
+                "Changing projected dimensions or codec gain requires Tier 5 approval"
+            ),
+            5,
+        )
+        self.assertEqual(
+            agency_tier_for_claim("The live sampler remains Tier_5 work"),
+            5,
+        )
+        self.assertEqual(
+            agency_tier_for_claim(
+                "Changing projection gain or basis is Tier 5 live codec/protocol work requiring operator approval and replay evidence"
+            ),
+            5,
+        )
+        self.assertEqual(
+            agency_tier_for_claim(
+                "Applying viscosity previews to damping is Tier 5 Minime control work requiring operator approval"
+            ),
+            5,
+        )
+        self.assertEqual(
+            agency_tier_for_claim("The authority budget remains Tier 4 work"),
+            4,
+        )
+        self.assertEqual(
             agency_tier_for_claim("replyable transition card without mutating runtime control"),
             2,
         )
@@ -2766,6 +3193,12 @@ class IntrospectionAddressingAuditTests(unittest.TestCase):
         self.assertEqual(
             agency_tier_for_claim(
                 "Stable-core semantic trickle and distinguishability loss need visible diagnostics so containment versus contact can be reviewed"
+            ),
+            1,
+        )
+        self.assertEqual(
+            agency_tier_for_claim(
+                "Read-only pressure context must not imply causality, reclamp values, grant source authority, or write live state; all authority flags remain false"
             ),
             1,
         )
@@ -2799,6 +3232,72 @@ class IntrospectionAddressingAuditTests(unittest.TestCase):
             ),
             4,
         )
+
+    def test_claim_metadata_survives_full_read_parsing(self) -> None:
+        import tempfile
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            path = Path(tmpdir) / "claims.json"
+            path.write_text(
+                json.dumps(
+                    {
+                        "claims": [
+                            {
+                                "claim_id": "c001",
+                                "summary": "Observe the current handoff.",
+                                "classification": "needs_sandbox",
+                                "disposition": "addressed_change",
+                                "authority": "non_live_observation_only",
+                            }
+                        ]
+                    }
+                )
+            )
+            claims = parse_claims_file(path)
+
+        self.assertEqual(claims[0]["classification"], "needs_sandbox")
+        self.assertEqual(claims[0]["authority"], "non_live_observation_only")
+
+    def test_claim_classification_routes_status_without_lowering_live_authority(self) -> None:
+        artifact = {
+            "introspection_id": "introspection_astrid_llm_1",
+            "filename": "introspection_astrid_llm_1.txt",
+            "source_family": "astrid_llm",
+            "path": "/tmp/introspection_astrid_llm_1.txt",
+        }
+        sandbox_item = work_item_from_claim(
+            artifact,
+            {
+                "claim_id": "c001",
+                "summary": "Observe fallback identity on bounded artifacts.",
+                "classification": "needs_sandbox",
+                "authority": "non_live_only",
+            },
+        )
+        verified_item = work_item_from_claim(
+            artifact,
+            {
+                "claim_id": "c002",
+                "summary": "Verify fallback texture changes with entropy and pressure.",
+                "classification": "verified_existing",
+            },
+        )
+        live_item = work_item_from_claim(
+            artifact,
+            {
+                "claim_id": "c003",
+                "summary": "Apply a live pressure control change.",
+                "classification": "verified_existing",
+            },
+        )
+
+        self.assertEqual(sandbox_item["agency_tier"], 3)
+        self.assertEqual(sandbox_item["status"], "needs_sandbox")
+        self.assertEqual(sandbox_item["claim_authority"], "non_live_only")
+        self.assertEqual(verified_item["agency_tier"], 1)
+        self.assertEqual(verified_item["status"], "verified_existing")
+        self.assertEqual(live_item["agency_tier"], 5)
+        self.assertEqual(live_item["status"], "needs_operator_approval")
 
     def test_tier_suggestion_does_not_auto_approve_or_auto_grant(self) -> None:
         artifact = {
@@ -2876,6 +3375,51 @@ class IntrospectionAddressingAuditTests(unittest.TestCase):
         self.assertTrue(updated["agency_continues"])
         self.assertEqual(updated["agency_preserving_status"], "operator_approval_wait")
         self.assertFalse(updated["live_authority_granted"])
+
+    def test_agency_tier_correction_repairs_verified_overclassification_without_granting(self) -> None:
+        import tempfile
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            state = Path(tmpdir)
+            item = {
+                "work_item_id": "wi_verified_tier_fix",
+                "source_introspection_id": "introspection_astrid_llm_1",
+                "claim_id": "c001",
+                "agency_tier": 5,
+                "agency_tier_label": AGENCY_TIER_LABELS[5],
+                "status": "verified_existing",
+                "claim_summary": "Verify existing fallback weighting with read-only evidence.",
+                "blocked_by": "operator_approval",
+                "auto_approved": False,
+            }
+            append_events(
+                state,
+                [
+                    work_item_created_event(item),
+                    agency_tier_correction_event(
+                        "wi_verified_tier_fix",
+                        1,
+                        5,
+                        "Existing source verification was overclassified as live mutation.",
+                    ),
+                ],
+            )
+            status = replay_events(state)
+            updated = status["work_items"]["wi_verified_tier_fix"]
+
+        self.assertEqual(updated["agency_tier"], 1)
+        self.assertEqual(updated["agency_tier_label"], AGENCY_TIER_LABELS[1])
+        self.assertEqual(updated["route"], "self_activated_read_only_research")
+        self.assertEqual(updated["status"], "verified_existing")
+        self.assertIsNone(updated["blocked_by"])
+        self.assertIsNone(updated["authority_boundary_packet"])
+        self.assertIsNone(updated["authority_boundary_packet_v2"])
+        self.assertFalse(updated["auto_approved"])
+        correction = updated["agency_tier_corrections"][0]
+        self.assertEqual(correction["previous_tier"], 5)
+        self.assertEqual(correction["tier"], 1)
+        self.assertFalse(correction["grants_approval"])
+        self.assertFalse(correction["live_eligible_now"])
 
     def test_blocked_needs_steward_preserves_ongoing_agency_language(self) -> None:
         record = {
@@ -3052,7 +3596,11 @@ def main(argv: list[str] | None = None) -> int:
     sub = parser.add_subparsers(dest="cmd")
 
     inventory_p = sub.add_parser("inventory")
-    inventory_p.add_argument("--cutoff", default=DEFAULT_CUTOFF)
+    inventory_p.add_argument(
+        "--cutoff",
+        default=DEFAULT_CUTOFF,
+        help="filename/timestamp cutoff, or 'latest' for the greatest canonical timestamp",
+    )
     inventory_p.add_argument("--json", action="store_true")
     inventory_p.add_argument("--write", action="store_true")
 
@@ -3126,6 +3674,13 @@ def main(argv: list[str] | None = None) -> int:
     tier_p.add_argument("--reason", required=True)
     tier_p.add_argument("--write", action="store_true")
     tier_p.add_argument("--json", action="store_true")
+
+    tier_correction_p = sub.add_parser("correct-agency-tier")
+    tier_correction_p.add_argument("--work-item-id", required=True)
+    tier_correction_p.add_argument("--tier", type=int, required=True, choices=sorted(AGENCY_TIER_LABELS))
+    tier_correction_p.add_argument("--reason", required=True)
+    tier_correction_p.add_argument("--write", action="store_true")
+    tier_correction_p.add_argument("--json", action="store_true")
 
     closure_p = sub.add_parser("emit-closure-card")
     closure_p.add_argument("--id", dest="work_item_id", required=True)
@@ -3288,6 +3843,30 @@ def main(argv: list[str] | None = None) -> int:
         payload = preview_or_write_event(
             state_dir,
             agency_tier_request_event(args.work_item_id, args.tier, args.reason),
+            write=bool(args.write),
+        )
+        print_output(payload, as_json=True if args.json or not args.write else False)
+        return 0
+
+    if args.cmd == "correct-agency-tier":
+        _status, item = work_item_or_error(state_dir, args.work_item_id)
+        current_tier = int(item.get("agency_tier") or 0)
+        current_status = str(item.get("status") or "")
+        if args.tier >= current_tier:
+            parser.error("correct-agency-tier must lower the current tier; use request-agency-tier to escalate")
+        if current_status not in AGENCY_TIER_CORRECTION_STATUSES:
+            parser.error(
+                "correct-agency-tier is limited to terminal or verified evidence records; "
+                "active authority waits cannot be downgraded"
+            )
+        payload = preview_or_write_event(
+            state_dir,
+            agency_tier_correction_event(
+                args.work_item_id,
+                args.tier,
+                current_tier,
+                args.reason,
+            ),
             write=bool(args.write),
         )
         print_output(payload, as_json=True if args.json or not args.write else False)

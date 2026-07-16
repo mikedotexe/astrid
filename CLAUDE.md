@@ -231,11 +231,11 @@ bash scripts/start_all.sh --astrid-only
 bash scripts/start_all.sh --minime-only
 
 # After BRIDGE code changes: use the GATED deploy. It refuses to build from a
-# dirty tree, so it never folds the OTHER agent's (Codex's) uncommitted code into
-# the live binary — the hazard behind "Two-agent coordination" below. Replaces
+# dirty tree, so it never folds another agent's unreviewed code into the live
+# binary — the hazard behind "Shared-tree coordination" below. Replaces
 # hand-run `cargo build --release` + kickstart.
 bash scripts/build_bridge.sh --restart        # preflight -> cargo build --release -> kickstart -> health-verify
-#   add --ack "reason" to CONSCIOUSLY fold in the other agent's uncommitted bridge src
+#   add --ack "reason" to CONSCIOUSLY fold in reviewed uncommitted bridge src
 # (For full-STACK changes, still use stop_all/start_all.)
 
 # Startup greetings are short, calm orientation notes sent by the
@@ -265,31 +265,31 @@ done
 #   launchctl unload ~/Library/LaunchAgents/<plist> && sleep 2 && launchctl load ~/Library/LaunchAgents/<plist>
 ```
 
-### Two-agent coordination (Claude + Codex share this tree — Claude is sole committer)
+### Shared-tree coordination (Claude + Codex)
 
 Two autonomous agents mutate this working tree and feed **one** live bridge binary:
-**Claude** (interactive sessions + the durable `com.astrid.steward-loop`) and **Codex** (a
-separate agent, invoked via Astrid's `CODEX` NEXT: actions and interactively). As of
-**2026-06-21, Claude is the SOLE committer** (Mike's call) — one committer kills the commit
-races and the shared-git-author tangle (every commit reads `Codex`). Your job as committer
-(these rules also live in `AGENTS.md`):
+**Claude** (interactive sessions plus the durable `com.astrid.steward-loop`) and **Codex**
+(Astrid `CODEX` actions and interactive sessions). Mike's **2026-07-16** decision supersedes the
+former Claude-only committer rule. Either interactive agent may own a stabilization pass and
+commit when explicitly assigned; only one agent owns the index and git operation at a time.
+These rules also live in `AGENTS.md`:
 
-1. **Codex leaves its work uncommitted; you review + commit it** (tag `[codex]`; tag your own
-   `[claude]`). READ the diffs before committing — especially being-facing bridge `.rs` and the
-   prompt — and flag anything concerning rather than committing blind. Codex's code is often
-   already LIVE (folded in at the last restart), so the commit RECORDS the running state; review
-   is to understand + flag, not to gate a new deploy.
-2. **Reach a clean baseline regularly.** A chronically-dirty tree means the live binary matches
-   no commit (no rollback point) and the deploy gate refuses builds — so commit Codex's stable
-   work to keep the tree committable + deployable.
-3. **Stage by explicit path** (`git status` first); never `git add -A`. Use the CHANGELOG/ledger
-   trail Codex leaves to write the commit context.
-4. **Deploy only via `scripts/build_bridge.sh`.** It runs `scripts/deploy_preflight.py`, which
-   ABORTS if the other agent is editing right now, and REFUSES to build from a dirty bridge tree
-   unless you pass `--ack "reason"` (a logged, conscious decision to fold in their uncommitted
-   code). Never hand-run `cargo build --release` + kickstart on the live bridge.
-5. **Detection ≠ enforcement.** The durable loop already stands down on `steward_mutex.py
-   foreign`; interactive Claude must run the gate. If another agent is mid-edit, wait.
+1. **Claim stabilization before staging.** Pause overlapping automation, inspect both Astrid and
+   Minime, verify the remote tip, and make sure the other agent is not mid-edit. Unexpected tree
+   movement means stop, re-read, and coordinate.
+2. **Review before recording.** Read being-facing bridge, prompt, protocol, and runtime diffs;
+   do not commit blind merely because code is already live. A commit records a reviewed rollback
+   point, while deployment remains a separate gated act.
+3. **Stage by explicit path only.** Never use `git add -A`; preserve unrelated dirty work and
+   split broad work into coherent commits. `[codex]` / `[claude]` tags convey provenance because
+   the shared git author is not reliable attribution.
+4. **Keep durable context.** Require an `[Unreleased]` changelog entry and feedback-ledger trail
+   where being-driven. Source, tests, evidence, authority boundaries, and restart alignment should
+   remain understandable together.
+5. **Deploy only via `scripts/build_bridge.sh`.** `scripts/deploy_preflight.py` still aborts if
+   the other agent is editing and requires `--ack "reason"` to build dirty bridge source. Never
+   hand-run `cargo build --release` plus kickstart. Commit authority does not imply live-control
+   or deploy authority.
 
 ### launchd-managed processes
 

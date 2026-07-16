@@ -39,7 +39,8 @@ Pre-change:
 - inspect `git status --short` in both repos;
 - identify whether the work is docs-only, source-only, bridge-facing,
   Minime-runtime-facing, or live-control-facing;
-- preserve all dirty work and never stage/commit as Codex.
+- preserve all dirty work; stage/commit only while explicitly owning a
+  stabilization pass, with no concurrent agent edit and exact-path staging.
 
 Pre-restart:
 
@@ -68,9 +69,11 @@ fallback sampler/contract, bridge protocol/ABI, or peer mutation, stop at
 tests/proposal unless current Mike/operator instructions explicitly authorize
 the live class.
 
-Do not leave bridge Rust mid-edit. Do not deploy bridge by hand. Do not use
-`git add`, `git commit`, `git reset --hard`, `git checkout --`, or unrelated
-reverts. Claude remains the sole committer.
+Do not leave bridge Rust mid-edit. Do not deploy bridge by hand. During normal
+implementation work, do not stage or commit. During an explicitly assigned
+stabilization pass, one agent may stage exact reviewed paths and commit while
+the other agent and automations stand down. Never use broad staging, destructive
+reset/checkout, or unrelated reverts.
 
 ## Common failure modes
 - Stale reports: source changed, but bridge/Minime was not restarted.

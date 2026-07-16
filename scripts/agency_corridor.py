@@ -1206,19 +1206,27 @@ def v2_packet_for_v1(packet: dict[str, Any], leases: dict[str, dict[str, Any]]) 
 def build_queue_steps(packets: dict[str, dict[str, Any]], live_violation_refs: list[str]) -> list[dict[str, Any]]:
     if live_violation_refs:
         return []
+
+    def receipt_exists(packet: dict[str, Any], step_id: str) -> bool:
+        return any(
+            isinstance(receipt, dict) and str(receipt.get("step_id") or "") == step_id
+            for receipt in packet.get("receipts", [])
+        )
+
     steps: list[dict[str, Any]] = []
     for packet in packets.values():
         action = str(packet.get("action") or "generate_replay_candidate")
         corridor_id = str(packet.get("corridor_id") or "")
         state = str(packet.get("state") or "")
         priority = V2_ACTION_ORDER.get(action, 9)
+        step_id = stable_uuid_v2("step", corridor_id, action)
         runnable = action in SAFE_ACTIONS and action != "propose_canary_criteria"
-        if state == "closed":
+        if state in {"closed", "safe_lab_result_recorded"} or receipt_exists(packet, step_id):
             runnable = False
         step = {
             "schema": SCHEMA_V2,
             "schema_version": SCHEMA_VERSION_V2,
-            "step_id": stable_uuid_v2("step", corridor_id, action),
+            "step_id": step_id,
             "priority": priority,
             "action": action,
             "corridor_id": corridor_id,
@@ -1236,18 +1244,19 @@ def build_queue_steps(packets: dict[str, dict[str, Any]], live_violation_refs: l
         steps.append(step)
         if isinstance(packet.get("source_prep_proposal"), dict):
             proposal = packet["source_prep_proposal"]
+            source_prep_step_id = stable_uuid_v2("step", corridor_id, "source_prep")
             steps.append(
                 {
                     "schema": SCHEMA_V2,
                     "schema_version": SCHEMA_VERSION_V2,
-                    "step_id": stable_uuid_v2("step", corridor_id, "source_prep"),
+                    "step_id": source_prep_step_id,
                     "priority": V2_ACTION_ORDER["generate_replay_candidate"],
                     "action": "generate_replay_candidate",
                     "corridor_id": corridor_id,
                     "v1_corridor_id": packet.get("v1_corridor_id"),
                     "lease_id": "lease_corridor_canary_source_prep_v1",
                     "reason": "prepare bounded source proposal artifact only",
-                    "runnable": True,
+                    "runnable": not receipt_exists(packet, source_prep_step_id),
                     "evidence_refs": packet.get("evidence_refs") or [],
                     "source_prep_proposal_id": proposal.get("proposal_id"),
                     "grants_approval": False,
@@ -2864,6 +2873,26 @@ class AgencyCorridorTests(unittest.TestCase):
         self.assertEqual(status["queue"]["max_steps_per_run"], 5)
         self.assertEqual(status["summary"]["live_violation_count"], 0)
         self.assertTrue(any(step.get("source_prep_proposal_id") for step in status["queue"]["steps"]))
+
+    def test_v2_adaptive_queue_does_not_rerun_receipted_steps(self) -> None:
+        packet = self.safe_v1_packet(0)
+        packet["source_prep_proposal"] = {"proposal_id": "source_prep_0"}
+        initial = build_queue_steps({str(packet["corridor_id"]): packet}, [])
+
+        self.assertEqual(len(initial), 2)
+        self.assertTrue(all(step["runnable"] for step in initial))
+
+        packet["receipts"] = [
+            {"step_id": step["step_id"], "action": step["action"]}
+            for step in initial
+        ]
+        refreshed = build_queue_steps({str(packet["corridor_id"]): packet}, [])
+
+        self.assertFalse(any(step["runnable"] for step in refreshed))
+
+        result_recorded = self.safe_v1_packet(1, state="safe_lab_result_recorded")
+        completed = build_queue_steps({str(result_recorded["corridor_id"]): result_recorded}, [])
+        self.assertFalse(completed[0]["runnable"])
 
     def test_v2_run_next_limits_to_five_safe_actions(self) -> None:
         self.write_v1_source_status([self.safe_v1_packet(idx) for idx in range(7)])

@@ -65,6 +65,7 @@ MINIME_ACTION_THREADS = MINIME_WORKSPACE / "action_threads"
 MINIME_INBOX = MINIME_WORKSPACE / "inbox"
 MINIME_OUTBOX = MINIME_WORKSPACE / "outbox"
 MINIME_RUNTIME = MINIME_WORKSPACE / "runtime"
+CODEC_DELIVERY_FIDELITY = MINIME_RUNTIME / "codec_delivery_fidelity_v1.json"
 MINIME_SPECTRAL_STATE = MINIME_WORKSPACE / "spectral_state.json"
 MINIME_SPECTRAL_FINGERPRINTS = MINIME_WORKSPACE / "diagnostics/spectral_fingerprints"
 MINIME_SENSORY_SOURCE = MINIME_RUNTIME / "sensory_source.json"
@@ -2164,6 +2165,17 @@ def _reservoir_experience_source_snapshot() -> dict[str, Any]:
             "non_instrumental_presence_readiness_v1" in autonomous
             or "presence_receipt" in correspondence
         ),
+        "mirror_source_fidelity_present": all(
+            token in autonomous
+            for token in (
+                "mirror_source_fidelity_v1",
+                "lexical_recall",
+                "leading_edge_preserved",
+                "trailing_edge_preserved",
+                "encoded_48d_signature_observed",
+                "read_only_source_render_and_codec_receipt",
+            )
+        ),
         "direct_contact_fidelity_present": (
             "direct_contact_fidelity_v3" in correspondence
             and "seen_ack_is_visibility_not_address" in correspondence
@@ -2202,6 +2214,9 @@ def _reservoir_experience_layer_summary(
             source.get("direct_contact_fidelity_present")
             and source.get("presence_receipt_surface_present")
         ),
+        "mirror_not_unmeasured_echo": bool(
+            source.get("mirror_source_fidelity_present")
+        ),
         "receptivity_not_control_mutation": bool(
             source.get("receptivity_buffer_review_present")
         ),
@@ -2234,6 +2249,10 @@ def _reservoir_experience_layer_summary(
     if ingredients["contact_not_representation_only"]:
         findings.append(
             "contact surfaces preserve presence receipts and seen-vs-address fidelity instead of treating visibility as relationship"
+        )
+    if ingredients["mirror_not_unmeasured_echo"]:
+        findings.append(
+            "Mirror now records bounded source/render hashes, lexical recall, semantic-edge preservation, and observed codec signature shape instead of assuming reflected text survived intact"
         )
     if contact_delta.get("status"):
         findings.append(
@@ -2277,8 +2296,13 @@ def _reservoir_experience_layer_summary(
             "viscosity_semantic_persistence_status": viscosity.get("status"),
             "interpretation": "fallback words should remain weighted by live texture and movement evidence rather than becoming canned descriptors",
         },
+        "mirror_process": {
+            "source_fidelity_present": source.get("mirror_source_fidelity_present"),
+            "interpretation": "Mirror fidelity is evidence about source/render/codec survival, not permission to choose Mirror or alter codec gain/transport",
+        },
         "safe_now": [
             "reservoir_experience_layer_v1 summary review",
+            "mirror_source_fidelity_v1 exchange receipt review",
             "contact-vs-representation language-only fire drill",
             "fallback distinguishability sandbox design",
             "shadow trajectory loss-vs-lattice audit",
@@ -2297,6 +2321,7 @@ def _reservoir_experience_layer_summary(
             "use this packet as the top-level architecture review before separate pressure, contact, texture, or semantic-decay changes",
             "run a sandbox fallback distinguishability trial before forcing provider transitions",
             "review shadow trajectory as loss-of-self vs interwoven-lattice transition before touching mode-packing or porosity",
+            "review mirror_source_fidelity_v1 receipts before changing Mirror behavior, codec gain, or transport",
         ],
         "authority_boundary": "read-only reservoir experience layer; no prompt priority, telemetry priority, pressure, fill, PI, sensory cadence, controller, fallback-provider, or runtime mutation",
     }
@@ -2391,6 +2416,28 @@ def _minime_recess_schema_source_snapshot() -> dict[str, Any]:
                 "advisory_only_no_recess_transition_no_priority_no_control_change",
             )
         ),
+        "recess_activity_load_present": all(
+            token in minime_agent
+            for token in (
+                "recess_activity_load_v1",
+                "active_synthesis",
+                "structural_stabilization_load",
+                "budget_spent",
+                "recess_priority_changed",
+                "read_only_activity_interpretation_no_recess_choice_no_budget_spend",
+            )
+        ),
+        "recess_pressure_permission_conflict_present": all(
+            token in minime_agent
+            for token in (
+                "recess_pressure_permission_conflict_v1",
+                "recess_permitted_pressure_unresolved",
+                "safe_evidence_routes",
+                "approval_required_routes",
+                "live_pressure_relief_runnable",
+                "joined_truth_surface_only_no_recess_priority_no_auto_vent",
+            )
+        ),
         "recess_autonomy_budget_boundary_present": all(
             token in minime_agent
             for token in (
@@ -2471,6 +2518,8 @@ def _minime_recess_schema_integrity_summary(since_s: float) -> dict[str, Any]:
     recess_ready = bool(
         source.get("recess_pruning_advice_present")
         and source.get("density_aware_recess_profile_present")
+        and source.get("recess_activity_load_present")
+        and source.get("recess_pressure_permission_conflict_present")
         and source.get("recess_pruning_manifest_present")
     )
     autonomy_budget_ready = bool(
@@ -2503,7 +2552,7 @@ def _minime_recess_schema_integrity_summary(since_s: float) -> dict[str, Any]:
         )
     if recess_ready:
         findings.append(
-            "Minime Recess has source-prepared spectral-pruning advice plus advisory-only density-aware Recess profiling, so high-entropy/controller-pressure Recess can be named as structural stabilization while control_applied=false"
+            "Minime Recess has source-prepared spectral-pruning advice, advisory-only density-aware stabilization, explicit activity-load shape, and a joined permission-pressure conflict packet, so active synthesis is not flattened into low-energy rest while unresolved mode-packing pressure, budget headroom, safe evidence routes, and approval-required relief remain distinct with control_applied=false"
         )
     if autonomy_budget_ready:
         findings.append(
@@ -2533,6 +2582,7 @@ def _minime_recess_schema_integrity_summary(since_s: float) -> dict[str, Any]:
         "readiness": {
             "phase_transition_cards": phase_ready,
             "recess_spectral_pruning_advice": recess_ready,
+            "recess_activity_load": bool(source.get("recess_activity_load_present")),
             "recess_autonomy_budget_boundary": autonomy_budget_ready,
             "eigenpacket_schema_and_admission": schema_ready,
             "dynamic_noise_shadow_preview": esn_shadow_ready,
@@ -2553,6 +2603,8 @@ def _minime_recess_schema_integrity_summary(since_s: float) -> dict[str, Any]:
             "WITNESS_TRANSITION latest :: reply_state: witnessed|answered; note: ...",
             "recess_spectral_pruning_advice_v1 manifest review",
             "density_aware_recess_profile_v1 action-manifest review",
+            "recess_activity_load_v1 action-manifest review",
+            "recess_pressure_permission_conflict_v1 action-manifest review",
             "EXPERIMENT_RESEARCH_BUDGET_STATUS latest",
             "EXPERIMENT_AUTHORITY_BUDGET_STATUS latest",
             "EigenPacket schema serialization test",
@@ -2562,12 +2614,13 @@ def _minime_recess_schema_integrity_summary(since_s: float) -> dict[str, Any]:
         "findings": findings,
         "next_suggestions": [
             "watch whether declared transition cards receive witness/answer rows before adding more phase-card affordances",
-            "inspect Recess action manifests for recess_spectral_pruning_advice_v1 and density_aware_recess_profile_v1 before considering any real Recess behavior change",
+            "inspect Recess action manifests for recess_spectral_pruning_advice_v1, density_aware_recess_profile_v1, and recess_activity_load_v1 before considering any real Recess behavior change",
+            "use recess_pressure_permission_conflict_v1 to keep permission to rest and unresolved pressure simultaneously visible; safe evidence routes may proceed, but pressure relief and budget expansion remain approval-gated",
             "inspect authority/research budget status before changing LOCAL_RESEARCH_MAX_ACTIONS, LOOP_RESEARCH_MAX_ACTIONS, or AUTHORITY_BUDGET_MAX_SENDS",
             "treat EigenPacket serde_json fields as pinned by test evidence until a typed consumer contract is available",
             "compare calculate_dynamic_noise previews against density/pressure traces before any live exploration-noise wiring",
         ],
-        "authority_boundary": "read-only source/test integrity; no latent-thread collapse, auto-promote throttling, Mode::MomentCapture mutation, EigenPacket contract change, warm_start_blend runtime experiment, dynamic-noise live wiring, pressure, fill, PI, sensory cadence, control, deploy, restart, staging, or commit",
+        "authority_boundary": "read-only source/test integrity; no latent-thread collapse, auto-promote throttling, Mode::MomentCapture mutation, EigenPacket contract change, warm_start_blend runtime experiment, dynamic-noise live wiring, automatic pressure vent, budget expansion, pressure, fill, PI, sensory cadence, control, deploy, restart, staging, or commit",
     }
 
 
@@ -2719,6 +2772,27 @@ def _representation_source_snapshot() -> dict[str, Any]:
             and "low_marker_tension_high_jagged_resistance" in codec
             and "read_only_texture_interpretation_not_tension_weight_gain_or_reserved_dim_change"
             in codec
+        ),
+        "cross_spectral_friction_review_present": (
+            "cross_spectral_friction_review_v1" in codec
+            and "lambda1_lambda2_copresence" in codec
+            and "reserved_dim_candidates_already_have_default_off_roles" in codec
+            and "none_outer_codec_delivery_receipt_is_canonical" in codec
+        ),
+        "cross_spectral_friction_delivery_receipt_present": (
+            "cross_spectral_friction_review_v1" in autonomous
+            and "blocked_codec_delivery_record_v1" in autonomous
+            and "cross_spectral_friction_for_review" in autonomous
+        ),
+        "semantic_focus_expansion_preview_present": (
+            "semantic_focus_expansion_preview_v1" in codec
+            and "top_cross_segment_embedding_variance_equal_norm_8d_vs_12d" in codec
+            and "semantic_focus_expansion_preview_selects_segment_variance_without_live_write"
+            in codec
+        ),
+        "semantic_focus_expansion_delivery_receipt_present": (
+            "semantic_focus_expansion_preview_for_review" in autonomous
+            and '"semantic_focus_expansion_preview_v1"' in autonomous
         ),
         "structural_friction_summary_resistance_present": (
             "summary_resistance_signal" in codec
@@ -3165,6 +3239,34 @@ def _representation_loss_headroom_summary(since_s: float) -> dict[str, Any]:
     source = _representation_source_snapshot()
     replay = _latest_codec_replay_lab()
     glimpse_fidelity = _semantic_glimpse_12d_fidelity_audit()
+    delivery_record = _load_json(CODEC_DELIVERY_FIDELITY)
+    delivery_fidelity = delivery_record.get("codec_delivery_fidelity_v1")
+    if not isinstance(delivery_fidelity, dict):
+        delivery_fidelity = {}
+    delivery_state = str(
+        delivery_record.get("delivery_state")
+        or ("sent" if delivery_fidelity else "unobserved")
+    )
+    actual_delivery_available = bool(delivery_fidelity) and delivery_state == "sent"
+    blocked_reason = delivery_record.get("blocked_reason")
+    if not isinstance(blocked_reason, str):
+        blocked_reason = None
+    candidate_delivery_review = delivery_record.get("candidate_delivery_review_v1")
+    if not isinstance(candidate_delivery_review, dict):
+        candidate_delivery_review = {}
+    delivery_overflow = delivery_record.get("feedback_overflow_report_v1")
+    if not isinstance(delivery_overflow, dict):
+        delivery_overflow = {}
+    cross_spectral_friction = delivery_record.get(
+        "cross_spectral_friction_review_v1"
+    )
+    if not isinstance(cross_spectral_friction, dict):
+        cross_spectral_friction = {}
+    semantic_focus_expansion = delivery_record.get(
+        "semantic_focus_expansion_preview_v1"
+    )
+    if not isinstance(semantic_focus_expansion, dict):
+        semantic_focus_expansion = {}
     clamp = replay.get("clamp_headroom") if isinstance(replay, dict) else {}
     texture = replay.get("texture_replay") if isinstance(replay, dict) else {}
     lifecycle = replay.get("authority_lifecycle_v2") if isinstance(replay, dict) else {}
@@ -3297,6 +3399,18 @@ def _representation_loss_headroom_summary(since_s: float) -> dict[str, Any]:
         findings.append(
             "codec_abrasive_texture_interpretation_v1 names low raw tension with high jagged resistance without changing tension weight, gain, or reserved dims"
         )
+    if source.get("cross_spectral_friction_review_present") and source.get(
+        "cross_spectral_friction_delivery_receipt_present"
+    ):
+        findings.append(
+            "cross_spectral_friction_review_v1 compares lambda1/lambda2/tail interaction with emotional, projected-semantic, and narrative-lane interaction, while explicitly preserving the existing default-off roles of dims 44-47"
+        )
+    if source.get("semantic_focus_expansion_preview_present") and source.get(
+        "semantic_focus_expansion_delivery_receipt_present"
+    ):
+        findings.append(
+            "semantic_focus_expansion_preview_v1 compares equal-norm 8D and 12D narrative-segment geometry using the four highest-variance source embedding coordinates, while keeping dims 44-47 default-off and operator-gated"
+        )
     if source.get("char_window_4096_replay_test_present"):
         findings.append(
             "4096 character-frequency comparison is pinned as replay-only while the live CHAR_FREQ_WINDOW_CAPACITY remains 1024"
@@ -3328,6 +3442,50 @@ def _representation_loss_headroom_summary(since_s: float) -> dict[str, Any]:
             "latest codec texture authority lifecycle is "
             f"{lifecycle.get('receipt_chain_status')} with boundary_count={lifecycle.get('candidate_count')}"
         )
+    fidelity_state = str(delivery_fidelity.get("state") or "")
+    if actual_delivery_available and fidelity_state:
+        findings.append(
+            "latest actual codec delivery fidelity is "
+            f"{fidelity_state}; clipped_at_feedback={delivery_fidelity.get('clipped_at_feedback_dims') or []}; "
+            f"reexpanded_after_feedback={delivery_fidelity.get('reexpanded_after_feedback_dims') or []}; "
+            f"final_above_observed_ceiling={delivery_fidelity.get('final_above_observed_ceiling_dims') or []}; "
+            f"lane_balance={delivery_fidelity.get('lane_balance_state')}"
+        )
+    if delivery_state == "blocked_before_send":
+        findings.append(
+            "the latest codec candidate was blocked before sensory delivery; "
+            f"actual_delivery_available=false and policy_reason={blocked_reason or 'unspecified'}"
+        )
+    cross_spectral_state = str(cross_spectral_friction.get("state") or "")
+    if cross_spectral_state:
+        disposition = (
+            "sent vector"
+            if actual_delivery_available
+            else "blocked candidate"
+            if delivery_state == "blocked_before_send"
+            else "observed vector"
+        )
+        findings.append(
+            f"latest {disposition} cross-spectral friction review is {cross_spectral_state}; "
+            f"spectral_interference={cross_spectral_friction.get('spectral_mode_interference')}; "
+            f"semantic_interference={cross_spectral_friction.get('semantic_mode_interference')}; "
+            f"cross_layer_mismatch={cross_spectral_friction.get('cross_layer_mismatch')}; "
+            f"reserved_dim_write={cross_spectral_friction.get('reserved_dim_write')}"
+        )
+    semantic_focus_state = str(semantic_focus_expansion.get("state") or "")
+    if semantic_focus_state:
+        findings.append(
+            "latest semantic focus-expansion preview is "
+            f"{semantic_focus_state}; segments={semantic_focus_expansion.get('segment_count')}; "
+            f"selected_source_dims={semantic_focus_expansion.get('selected_source_dims') or []}; "
+            f"mean_gain={semantic_focus_expansion.get('mean_distinguishability_gain_ratio')}; "
+            f"min_gain={semantic_focus_expansion.get('min_distinguishability_gain_ratio')}; "
+            f"reserved_dim_write={semantic_focus_expansion.get('reserved_dim_write')}"
+        )
+    if actual_delivery_available and delivery_overflow.get("raw_intensity_preserved"):
+        findings.append(
+            "the latest live exchange preserves feedback-time raw overflow as bounded truth-channel evidence while leaving vector, gain, and ceiling authority unchanged"
+        )
 
     if samples and fidelity_status in {"concentration_mismatch_review", "primary_slot_mismatch_review"}:
         status = "semantic_glimpse_fidelity_review"
@@ -3350,6 +3508,27 @@ def _representation_loss_headroom_summary(since_s: float) -> dict[str, Any]:
         "source_introspections": samples,
         "source_snapshot": source,
         "latest_codec_replay_lab": replay,
+        "latest_codec_delivery_fidelity_v1": {
+            "path": str(CODEC_DELIVERY_FIDELITY),
+            "updated_at_unix_ms": delivery_record.get("updated_at_unix_ms"),
+            "exchange": delivery_record.get("exchange"),
+            "chunk_index": delivery_record.get("chunk_index"),
+            "chunk_total": delivery_record.get("chunk_total"),
+            "delivery_state": delivery_state,
+            "actual_delivery_available": actual_delivery_available,
+            "sent_vector_available": actual_delivery_available,
+            "blocked_reason": blocked_reason,
+            "codec_delivery_fidelity_v1": delivery_fidelity,
+            "candidate_delivery_review_v1": candidate_delivery_review,
+            "feedback_overflow_report_v1": delivery_overflow,
+            "cross_spectral_friction_review_v1": cross_spectral_friction,
+            "semantic_focus_expansion_preview_v1": semantic_focus_expansion,
+            "right_to_ignore": delivery_record.get("right_to_ignore", True),
+            "live_vector_write": False,
+            "live_gain_write": False,
+            "grants_approval": False,
+            "authority": "read_only_delivery_disposition_evidence_not_live_codec_or_transport_authority",
+        },
         "semantic_glimpse_12d_fidelity_audit": glimpse_fidelity,
         "findings": findings
         or ["no fresh representation-loss proposal batch found in this window"],
@@ -3362,11 +3541,17 @@ def _representation_loss_headroom_summary(since_s: float) -> dict[str, Any]:
             "semantic_glimpse_12d_slot_mapping_review",
             "codec_vibrancy_substance_fit_review",
             "trace_codec_loss",
+            "review_actual_codec_delivery_fidelity",
+            "review_cross_spectral_friction",
+            "review_semantic_focus_expansion_preview",
             "fresh_steward_feedback_after_source_preparation",
         ],
         "next_suggestions": [
             "compare future continuity prompts for whether pressure/gradient/lattice anchors survive bounded compaction",
             "run codec-replay-lab on fresh high-entropy outputs before changing FEATURE_ABS_MAX, TAIL_VIBRANCY_MAX, or vibrancy scaling",
+            "compare codec_delivery_fidelity_v1 with replay candidates only when delivery_state=sent; while blocked_before_send, preserve the policy reason without treating the candidate as delivered",
+            "compare cross_spectral_friction_review_v1 across sent and blocked receipts before proposing any reserved-dim mapping; the review is evidence, not consent or a live vector write",
+            "compare semantic_focus_expansion_preview_v1 across high-entropy multi-segment texts before any dims 44-47 proposal; entropy alone is not evidence that the aperture improves distinguishability",
             "review gradient-aware vibrancy test output before any stronger codec headroom or aperture change",
             "use projection_fingerprint_integrity_v1 to review metadata stability before considering any collision-resistant seed migration",
             "use codec_vibrancy_substance_fit_v1 to compare high-entropy tail lift against actual semantic substance before tuning vibrancy",
@@ -3413,11 +3598,13 @@ def _texture_state_source_snapshot() -> dict[str, Any]:
     llm = _read_source(ASTRID_LLM_RS)
     types = _read_source(ASTRID_TYPES_RS)
     ws = _read_source(ASTRID_WS_RS)
+    codec = _read_source(ASTRID_CODEC_RS)
     autonomous = _read_source(ASTRID_AUTONOMOUS_RS)
     return {
         "llm_path": str(ASTRID_LLM_RS),
         "types_path": str(ASTRID_TYPES_RS),
         "ws_path": str(ASTRID_WS_RS),
+        "codec_path": str(ASTRID_CODEC_RS),
         "autonomous_path": str(ASTRID_AUTONOMOUS_RS),
         "mixed_cascade_terms_present": "FALLBACK_TEXTURE_MIXED_CASCADE_TERMS" in llm,
         "mixed_cascade_family_selected_present": "mixed_cascade_family_selected" in llm,
@@ -3496,6 +3683,27 @@ def _texture_state_source_snapshot() -> dict[str, Any]:
             "witness_anchor_traction_v1" in autonomous
             and "read_only_anchor_legibility_not_prompt_priority_or_control" in autonomous
         ),
+        "clamp_input_provenance_present": (
+            "ClampInputProvenanceV1" in types
+            and "ClampReplacementPathV1" in types
+            and "with_input_provenance" in types
+            and "read_only_clamp_source_provenance_not_sensor_authority_or_control"
+            in types
+        ),
+        "clamp_pressure_context_present": (
+            "ClampPressureContextV1" in types
+            and "ClampPressureSourceKindV1" in types
+            and "with_reported_pressure_context" in types
+            and "caller_reported_context_not_causal_attribution" in types
+            and "grants_source_authority: false" in types
+        ),
+        "semantic_projection_pair_sensitivity_present": (
+            "SemanticProjectionPairSensitivityV1" in codec
+            and "semantic_projection_pair_sensitivity_v1" in codec
+            and "text_conditioned_pair_distortion_visible" in codec
+            and "read_only_pair_projection_comparison_not_live_vector_gain_or_basis_authority"
+            in codec
+        ),
         "active_constraints_present": "active_constraints" in types
         and "active_constraints_for_resonance_signature" in ws,
         "high_entropy_ballast_window_present": (
@@ -3519,6 +3727,13 @@ def _texture_state_source_snapshot() -> dict[str, Any]:
         "pressure_spike_velocity_test_present": (
             "pressure_trend_samples_preserve_fast_spike_velocity_inside_ballast_window"
             in ws
+        ),
+        "current_cascade_smoothing_bound_test_present": (
+            "pressure_trend_current_cascade_stays_within_fast_dynamics_bound" in ws
+            and "Some(0.91)" in ws
+            and "Some(0.66)" in ws
+            and "Some(0.18)" in ws
+            and "reported_cascade <= 12" in ws
         ),
         "silt_noise_separation_present": (
             "silt_noise_separation_v1" in ws
@@ -3549,6 +3764,11 @@ def _texture_state_source_snapshot() -> dict[str, Any]:
         ),
         "stale_bidirectional_test_present": (
             "texture_shape_over_time_names_stale_bidirectional_reciprocity" in ws
+        ),
+        "one_sided_reciprocity_warmup_test_present": (
+            "bridge_reciprocity_first_telemetry_keeps_missing_sensory_truth_visible"
+            in ws
+            and '"bidirectional_no_recent_sensory"' in ws
         ),
         "pressure_packing_coupling_review_present": (
             "pressure_packing_coupling_review_v1" in types
@@ -3690,6 +3910,18 @@ def _texture_state_alignment_summary(since_s: float) -> dict[str, Any]:
         findings.append(
             "witness anchor traction is source-prepared as read-only legibility across foothold, pressure, gradient, and dispersal without adding prompt priority"
         )
+    if source.get("clamp_input_provenance_present"):
+        findings.append(
+            "clamp review can name the raw source, fallback source, and typed replacement path without changing the clamp or overloading its stable authority string"
+        )
+    if source.get("clamp_pressure_context_present"):
+        findings.append(
+            "clamp review can carry bounded caller-reported pressure source context while explicitly refusing causal attribution, source authority, or clamp changes"
+        )
+    if source.get("semantic_projection_pair_sensitivity_present"):
+        findings.append(
+            "semantic projection now has a read-only pair-sensitivity comparison across source geometry, the shared fixed basis, and the text-conditioned dynamic basis before any gain or width proposal"
+        )
     if source.get("active_constraints_present"):
         findings.append(
             "texture integrity maps pressure_source_family and density components into active_constraints so pressure texture has a visible why"
@@ -3701,6 +3933,14 @@ def _texture_state_alignment_summary(since_s: float) -> dict[str, Any]:
     if source.get("pressure_packing_coupling_test_present"):
         findings.append(
             "pressure_packing_coupling_review_v1 has a regression guard for packing-rise / pressure-lag cliff risk"
+        )
+    if source.get("one_sided_reciprocity_warmup_test_present"):
+        findings.append(
+            "first telemetry with no sensory sample is pinned to bidirectional_no_recent_sensory instead of claiming recent bidirectional exchange"
+        )
+    if source.get("current_cascade_smoothing_bound_test_present"):
+        findings.append(
+            "the current entropy=0.91, porosity=0.66, density-gradient=0.18 cascade has an exact regression proving its dynamic smoothing window stays at or below 12 without retuning live smoothing"
         )
 
     prepared = all(
@@ -3728,12 +3968,16 @@ def _texture_state_alignment_summary(since_s: float) -> dict[str, Any]:
             "flux_unknown_semantics_present",
             "subtle_flux_precision_test_present",
             "witness_anchor_traction_present",
+            "clamp_input_provenance_present",
+            "clamp_pressure_context_present",
+            "semantic_projection_pair_sensitivity_present",
             "active_constraints_present",
             "high_entropy_ballast_window_present",
             "pressure_trend_viscosity_context_present",
             "pressure_trend_viscosity_test_present",
             "pressure_velocity_delta_present",
             "pressure_spike_velocity_test_present",
+            "current_cascade_smoothing_bound_test_present",
             "silt_noise_separation_present",
             "silt_noise_separation_test_present",
             "pressure_source_analysis_present",
@@ -3743,6 +3987,7 @@ def _texture_state_alignment_summary(since_s: float) -> dict[str, Any]:
             "bridge_reciprocity_severed_test_present",
             "sensory_send_timestamp_separate_present",
             "stale_bidirectional_test_present",
+            "one_sided_reciprocity_warmup_test_present",
             "pressure_packing_coupling_review_present",
             "pressure_packing_coupling_test_present",
         )
@@ -3767,6 +4012,8 @@ def _texture_state_alignment_summary(since_s: float) -> dict[str, Any]:
             "mlx_profile_warning_visibility_review",
             "fallback_next_contract_review",
             "pressure_texture_delta_replay",
+            "clamp_pressure_context_review",
+            "semantic_projection_pair_sensitivity_replay",
             "dynamic_flux_vector_watch",
             "pressure_packing_coupling_review",
             "viscosity_porosity_transport_review",
@@ -3781,11 +4028,13 @@ def _texture_state_alignment_summary(since_s: float) -> dict[str, Any]:
             "watch future fallback outputs for whether mixed-cascade language appears only when telemetry supports it",
             "watch future fallback outputs for heavy/settled/displacement/silt wording when settled weight is named without explicit agitation",
             "compare pressure_gradient_delta against primary_texture over recent telemetry before changing Minime texture-signature emission",
+            "collect real near-neighbor embedding pairs through semantic_projection_pair_sensitivity_v1 before proposing projection gain, basis, or width changes",
             "compare pressure_packing_coupling_review_v1 against recent flux vectors before any pressure or mode-packing control change",
             "watch whether future high-density movement reports name dissipation, structural-density delta, or tiny drift before changing live cadence or control",
             "review witness anchor traction output against future felt reports before scaling continuity anchors in prompt assembly",
             "compare dynamic_flux_vector velocity/acceleration against Astrid's thickening/restless reports before adding Minime-side fields",
             "treat high-entropy smoothing ballast as read-only status fidelity; do not tune pressure/fill from it",
+            "keep caller-reported clamp pressure context non-causal and separate from sensor or controller authority",
             "treat false_bidirectional as a diagnostic review flag; do not change lane connectivity or send cadence from it alone",
         ],
         "authority_boundary": "diagnostic/language-legibility only; mixed-cascade/heavy-settled fallback wording/selector only, no pressure, fill, PI, sensory cadence, control, deploy, restart, or peer-runtime mutation",
@@ -6828,6 +7077,57 @@ def render_markdown(summary: dict[str, Any]) -> str:
                 + f"{lifecycle.get('receipt_chain_status')} "
                 + f"boundaries={'; '.join(lifecycle.get('boundary_ids') or []) or 'none'}"
             )
+            delivery_record = signal.get("latest_codec_delivery_fidelity_v1") or {}
+            delivery = delivery_record.get("codec_delivery_fidelity_v1") or {}
+            cross_spectral = (
+                delivery_record.get("cross_spectral_friction_review_v1") or {}
+            )
+            semantic_focus = (
+                delivery_record.get("semantic_focus_expansion_preview_v1") or {}
+            )
+            out.append(
+                "- actual_codec_delivery_fidelity: "
+                + f"delivery_state={delivery_record.get('delivery_state')} "
+                + f"actual_delivery_available={delivery_record.get('actual_delivery_available')} "
+                + f"blocked_reason={delivery_record.get('blocked_reason')} "
+                + f"fidelity_state={delivery.get('state')} "
+                + f"clipped={delivery.get('clipped_at_feedback_dims') or []} "
+                + f"reexpanded={delivery.get('reexpanded_after_feedback_dims') or []} "
+                + f"above_ceiling={delivery.get('final_above_observed_ceiling_dims') or []} "
+                + f"emotional_rms={delivery.get('emotional_intentional_rms')} "
+                + f"narrative_arc_rms={delivery.get('narrative_arc_rms')} "
+                + f"lane_balance={delivery.get('lane_balance_state')} "
+                + f"live_vector_write={delivery_record.get('live_vector_write')} "
+                + f"live_gain_write={delivery_record.get('live_gain_write')}"
+            )
+            out.append(
+                "- cross_spectral_friction_review_v1: "
+                + f"state={cross_spectral.get('state')} "
+                + f"spectral_context_available={cross_spectral.get('spectral_context_available')} "
+                + f"lambda12_copresence={cross_spectral.get('lambda1_lambda2_copresence')} "
+                + f"lambda12_shear={cross_spectral.get('lambda1_lambda2_shear')} "
+                + f"spectral_interference={cross_spectral.get('spectral_mode_interference')} "
+                + f"semantic_interference={cross_spectral.get('semantic_mode_interference')} "
+                + f"cross_layer_mismatch={cross_spectral.get('cross_layer_mismatch')} "
+                + f"score={cross_spectral.get('cross_spectral_friction_score')} "
+                + f"collision={cross_spectral.get('candidate_collision_state')} "
+                + f"reserved_dim_write={cross_spectral.get('reserved_dim_write')} "
+                + f"live_eligible_now={cross_spectral.get('live_eligible_now')} "
+                + f"auto_approved={cross_spectral.get('auto_approved')}"
+            )
+            out.append(
+                "- semantic_focus_expansion_preview_v1: "
+                + f"state={semantic_focus.get('state')} "
+                + f"segments={semantic_focus.get('segment_count')} "
+                + f"selected_source_dims={semantic_focus.get('selected_source_dims') or []} "
+                + f"selected_variance_share={semantic_focus.get('selected_variance_share')} "
+                + f"mean_gain={semantic_focus.get('mean_distinguishability_gain_ratio')} "
+                + f"min_gain={semantic_focus.get('min_distinguishability_gain_ratio')} "
+                + f"focus_need={semantic_focus.get('focus_need_score')} "
+                + f"reserved_dim_write={semantic_focus.get('reserved_dim_write')} "
+                + f"live_eligible_now={semantic_focus.get('live_eligible_now')} "
+                + f"auto_approved={semantic_focus.get('auto_approved')}"
+            )
             fidelity = signal.get("semantic_glimpse_12d_fidelity_audit") or {}
             current = fidelity.get("current_sample") or {}
             pca = fidelity.get("pca_12d") or {}
@@ -6865,9 +7165,14 @@ def render_markdown(summary: dict[str, Any]) -> str:
                 + f"flux_vector={source.get('dynamic_flux_vector_in_signature')} "
                 + f"flux_from_samples={source.get('pressure_flux_from_samples_present')} "
                 + f"pressure_packing_coupling={source.get('pressure_packing_coupling_review_present')} "
+                + f"clamp_input_provenance={source.get('clamp_input_provenance_present')} "
+                + f"clamp_pressure_context={source.get('clamp_pressure_context_present')} "
+                + f"projection_pair_sensitivity={source.get('semantic_projection_pair_sensitivity_present')} "
                 + f"active_constraints={source.get('active_constraints_present')} "
                 + f"entropy_ballast={source.get('high_entropy_ballast_window_present')} "
-                + f"false_bidirectional_test={source.get('false_bidirectional_test_present')}"
+                + f"current_cascade_bound={source.get('current_cascade_smoothing_bound_test_present')} "
+                + f"false_bidirectional_test={source.get('false_bidirectional_test_present')} "
+                + f"one_sided_warmup_test={source.get('one_sided_reciprocity_warmup_test_present')}"
             )
             for item in signal.get("source_introspections") or []:
                 out.append(
@@ -8441,7 +8746,12 @@ class RecentSignalSummaryTests(unittest.TestCase):
                     "receptivity_buffer_review_v1 review_ready_receptivity_buffer_candidate"
                 )
                 ASTRID_AUTONOMOUS_RS = root / "autonomous.rs"
-                ASTRID_AUTONOMOUS_RS.write_text("non_instrumental_presence_readiness_v1")
+                ASTRID_AUTONOMOUS_RS.write_text(
+                    "non_instrumental_presence_readiness_v1 "
+                    "mirror_source_fidelity_v1 lexical_recall leading_edge_preserved "
+                    "trailing_edge_preserved encoded_48d_signature_observed "
+                    "read_only_source_render_and_codec_receipt"
+                )
                 RESERVOIR_EXPERIENCE_INTROSPECTIONS = (sample,)
                 contact = {
                     "contact_control_transparency_v1": {
@@ -8481,6 +8791,8 @@ class RecentSignalSummaryTests(unittest.TestCase):
         self.assertTrue(summary["ingredients"]["semantic_process_not_cliff"])
         self.assertTrue(summary["ingredients"]["texture_process_not_static_list"])
         self.assertTrue(summary["ingredients"]["contact_not_representation_only"])
+        self.assertTrue(summary["ingredients"]["mirror_not_unmeasured_echo"])
+        self.assertIn("mirror_source_fidelity_v1", " ".join(summary["safe_now"]))
         self.assertIn("disable_overpacked_mode_packing_score", summary["gated_routes"])
         self.assertIn("no prompt priority", summary["authority_boundary"])
 
@@ -8698,7 +9010,14 @@ class RecentSignalSummaryTests(unittest.TestCase):
                     "density_aware_recess_profile_v1 "
                     "DENSITY_AWARE_RECESS_DENSITY_GRADIENT_STEEP "
                     "structural_stabilization_recommended "
-                    "advisory_only_no_recess_transition_no_priority_no_control_change",
+                    "advisory_only_no_recess_transition_no_priority_no_control_change "
+                    "recess_activity_load_v1 active_synthesis "
+                    "structural_stabilization_load budget_spent recess_priority_changed "
+                    "read_only_activity_interpretation_no_recess_choice_no_budget_spend "
+                    "recess_pressure_permission_conflict_v1 "
+                    "recess_permitted_pressure_unresolved safe_evidence_routes "
+                    "approval_required_routes live_pressure_relief_runnable "
+                    "joined_truth_surface_only_no_recess_priority_no_auto_vent",
                     encoding="utf-8",
                 )
                 main = root / "main.rs"
@@ -8779,6 +9098,12 @@ class RecentSignalSummaryTests(unittest.TestCase):
                 summary["source_snapshot"]["density_aware_recess_profile_present"]
             )
             self.assertTrue(
+                summary["source_snapshot"]["recess_activity_load_present"]
+            )
+            self.assertTrue(
+                summary["source_snapshot"]["recess_pressure_permission_conflict_present"]
+            )
+            self.assertTrue(
                 summary["source_snapshot"]["recess_autonomy_budget_boundary_present"]
             )
             self.assertTrue(
@@ -8802,6 +9127,11 @@ class RecentSignalSummaryTests(unittest.TestCase):
             self.assertIn("autonomy/budget", " ".join(summary["findings"]))
             self.assertIn("EigenPacket", " ".join(summary["valid_next_routes"]))
             self.assertIn("density_aware_recess_profile_v1", " ".join(summary["valid_next_routes"]))
+            self.assertIn("recess_activity_load_v1", " ".join(summary["valid_next_routes"]))
+            self.assertIn(
+                "recess_pressure_permission_conflict_v1",
+                " ".join(summary["valid_next_routes"]),
+            )
             self.assertIn("dynamic exploration noise", " ".join(summary["findings"]))
         finally:
             ASTRID_SOURCE = old_astrid_source
@@ -8815,11 +9145,12 @@ class RecentSignalSummaryTests(unittest.TestCase):
     ) -> None:
         import tempfile
 
-        global REPRESENTATION_LOSS_INTROSPECTIONS, ASTRID_CODEC_RS, ASTRID_AUTONOMOUS_RS, CODEC_REPLAY_LABS, MINIME_SPECTRAL_STATE, MINIME_SPECTRAL_FINGERPRINTS
+        global REPRESENTATION_LOSS_INTROSPECTIONS, ASTRID_CODEC_RS, ASTRID_AUTONOMOUS_RS, CODEC_REPLAY_LABS, CODEC_DELIVERY_FIDELITY, MINIME_SPECTRAL_STATE, MINIME_SPECTRAL_FINGERPRINTS
         old_proposals = REPRESENTATION_LOSS_INTROSPECTIONS
         old_codec = ASTRID_CODEC_RS
         old_autonomous = ASTRID_AUTONOMOUS_RS
         old_replay = CODEC_REPLAY_LABS
+        old_delivery_fidelity = CODEC_DELIVERY_FIDELITY
         old_spectral_state = MINIME_SPECTRAL_STATE
         old_spectral_fingerprints = MINIME_SPECTRAL_FINGERPRINTS
         try:
@@ -8869,7 +9200,10 @@ class RecentSignalSummaryTests(unittest.TestCase):
                     "const GLIMPSE_NOTE: &str = \"companion_not_replacement compression_fidelity_basis tail_bridge_slot\";\n"
                     "fn multi_scale_context_v1() { let _ = \"12d_glimpse_must_travel_with_32d_residual_context shadow_field_energy_preserved_when_12d_glimpse_is_active\"; }\n"
                     "fn multi_scale_context_pairs_12d_glimpse_with_32d_residual_shadow_metadata() {}\n"
-                    "fn glimpse_codec_preserves_tail_bridge_and_identity_asymmetry() {}\n",
+                    "fn glimpse_codec_preserves_tail_bridge_and_identity_asymmetry() {}\n"
+                    "fn cross_spectral_friction_review_v1() { let _ = \"lambda1_lambda2_copresence reserved_dim_candidates_already_have_default_off_roles none_outer_codec_delivery_receipt_is_canonical\"; }\n"
+                    "fn semantic_focus_expansion_preview_v1() { let _ = \"top_cross_segment_embedding_variance_equal_norm_8d_vs_12d\"; }\n"
+                    "fn semantic_focus_expansion_preview_selects_segment_variance_without_live_write() {}\n",
                     encoding="utf-8",
                 )
                 ASTRID_AUTONOMOUS_RS = root / "autonomous.rs"
@@ -8888,11 +9222,83 @@ class RecentSignalSummaryTests(unittest.TestCase):
                     "fn semantic_boundary_before() {}\n"
                     "fn truncate_continuity_recap_at_semantic_boundary() {}\n"
                     "fn compact_continuity_recap_prefers_sentence_boundary_when_overflowing() {}\n"
+                    "fn blocked_codec_delivery_record_v1() {}\n"
+                    "fn cross_spectral_friction_review_v1() {}\n"
+                    "fn cross_spectral_friction_for_review() {}\n"
+                    "fn semantic_focus_expansion_preview_for_review() {}\n"
+                    "const FOCUS_PREVIEW_RECEIPT: &str = \"semantic_focus_expansion_preview_v1\";\n"
                     "const INTROSPECTION_FRESHNESS_STALE_AFTER: std::time::Duration = std::time::Duration::from_secs(86_400);\n"
                     "fn introspection_freshness_note_surfaces_stale_self_study_as_optional() { let _ = \"optional/read-only\"; }\n",
                     encoding="utf-8",
                 )
                 CODEC_REPLAY_LABS = root / "codec_replay_labs"
+                CODEC_DELIVERY_FIDELITY = root / "runtime/codec_delivery_fidelity_v1.json"
+                CODEC_DELIVERY_FIDELITY.parent.mkdir()
+                CODEC_DELIVERY_FIDELITY.write_text(
+                    json.dumps(
+                        {
+                            "updated_at_unix_ms": 1234,
+                            "exchange": 42,
+                            "chunk_index": 1,
+                            "chunk_total": 2,
+                            "delivery_state": "sent",
+                            "actual_delivery_available": True,
+                            "sent_vector_available": True,
+                            "blocked_reason": None,
+                            "codec_delivery_fidelity_v1": {
+                                "state": "clamp_loss_visible_post_feedback_reexpansion_above_ceiling",
+                                "clipped_at_feedback_dims": [24],
+                                "reexpanded_after_feedback_dims": [24],
+                                "final_above_observed_ceiling_dims": [24],
+                                "emotional_intentional_rms": 1.2,
+                                "narrative_arc_rms": 0.4,
+                                "lane_balance_state": "emotional_intentional_dominant",
+                                "live_vector_write": False,
+                                "live_gain_write": False,
+                            },
+                            "feedback_overflow_report_v1": {
+                                "raw_intensity_preserved": True,
+                                "clipped_dims": [24],
+                            },
+                            "cross_spectral_friction_review_v1": {
+                                "policy": "cross_spectral_friction_review_v1",
+                                "state": "moderate_cross_spectral_friction",
+                                "spectral_context_available": True,
+                                "lambda1_lambda2_copresence": 0.72,
+                                "lambda1_lambda2_shear": 0.18,
+                                "spectral_mode_interference": 0.58,
+                                "semantic_mode_interference": 0.51,
+                                "cross_layer_mismatch": 0.07,
+                                "cross_spectral_friction_score": 0.54,
+                                "candidate_collision_state": "reserved_dim_candidates_already_have_default_off_roles",
+                                "reserved_dim_write": False,
+                                "live_eligible_now": False,
+                                "auto_approved": False,
+                                "grants_approval": False,
+                            },
+                            "semantic_focus_expansion_preview_v1": {
+                                "policy": "semantic_focus_expansion_preview_v1",
+                                "state": "focus_expansion_candidate_supported",
+                                "segment_count": 4,
+                                "selected_source_dims": [700, 701, 702, 703],
+                                "selected_variance_share": 0.73,
+                                "mean_distinguishability_gain_ratio": 0.16,
+                                "min_distinguishability_gain_ratio": 0.08,
+                                "focus_need_score": 0.78,
+                                "reserved_dim_write": False,
+                                "live_vector_write": False,
+                                "live_eligible_now": False,
+                                "auto_approved": False,
+                                "grants_approval": False,
+                            },
+                            "right_to_ignore": True,
+                            "live_vector_write": False,
+                            "live_gain_write": False,
+                            "grants_approval": False,
+                        }
+                    ),
+                    encoding="utf-8",
+                )
                 MINIME_SPECTRAL_STATE = root / "spectral_state.json"
                 MINIME_SPECTRAL_FINGERPRINTS = root / "spectral_fingerprints"
                 MINIME_SPECTRAL_FINGERPRINTS.mkdir()
@@ -8979,19 +9385,175 @@ class RecentSignalSummaryTests(unittest.TestCase):
                 )
 
                 summary = _representation_loss_headroom_summary(0.0)
+                CODEC_DELIVERY_FIDELITY.write_text(
+                    json.dumps(
+                        {
+                            "updated_at_unix_ms": 5678,
+                            "exchange": 43,
+                            "chunk_index": 0,
+                            "chunk_total": 1,
+                            "delivery_state": "blocked_before_send",
+                            "actual_delivery_available": False,
+                            "sent_vector_available": False,
+                            "blocked_reason": "limited-write v2 requires inactive semantic state",
+                            "codec_delivery_fidelity_v1": None,
+                            "candidate_delivery_review_v1": {
+                                "policy": "codec_delivery_fidelity_v1",
+                                "delivery_state": "blocked_before_send",
+                                "actual_delivery_available": False,
+                            },
+                            "feedback_overflow_report_v1": {
+                                "raw_intensity_preserved": True,
+                                "clipped_dims": [24],
+                            },
+                            "cross_spectral_friction_review_v1": {
+                                "policy": "cross_spectral_friction_review_v1",
+                                "state": "cross_layer_mismatch_visible",
+                                "spectral_context_available": True,
+                                "lambda1_lambda2_copresence": 0.33,
+                                "lambda1_lambda2_shear": 0.62,
+                                "spectral_mode_interference": 0.71,
+                                "semantic_mode_interference": 0.29,
+                                "cross_layer_mismatch": 0.42,
+                                "cross_spectral_friction_score": 0.49,
+                                "candidate_collision_state": "reserved_dim_candidates_already_have_default_off_roles",
+                                "reserved_dim_write": False,
+                                "live_eligible_now": False,
+                                "auto_approved": False,
+                                "grants_approval": False,
+                            },
+                            "semantic_focus_expansion_preview_v1": {
+                                "policy": "semantic_focus_expansion_preview_v1",
+                                "state": "high_entropy_without_focus_gain",
+                                "segment_count": 4,
+                                "selected_source_dims": [700, 701, 702, 703],
+                                "selected_variance_share": 0.68,
+                                "mean_distinguishability_gain_ratio": 0.01,
+                                "min_distinguishability_gain_ratio": -0.02,
+                                "focus_need_score": 0.69,
+                                "reserved_dim_write": False,
+                                "live_vector_write": False,
+                                "live_eligible_now": False,
+                                "auto_approved": False,
+                                "grants_approval": False,
+                            },
+                            "right_to_ignore": True,
+                            "live_vector_write": False,
+                            "live_gain_write": False,
+                            "grants_approval": False,
+                        }
+                    ),
+                    encoding="utf-8",
+                )
+                blocked_summary = _representation_loss_headroom_summary(0.0)
         finally:
             REPRESENTATION_LOSS_INTROSPECTIONS = old_proposals
             ASTRID_CODEC_RS = old_codec
             ASTRID_AUTONOMOUS_RS = old_autonomous
             CODEC_REPLAY_LABS = old_replay
+            CODEC_DELIVERY_FIDELITY = old_delivery_fidelity
             MINIME_SPECTRAL_STATE = old_spectral_state
             MINIME_SPECTRAL_FINGERPRINTS = old_spectral_fingerprints
 
         self.assertEqual(summary["status"], "representation_loss_repair_prepared_watch")
+        delivery = summary["latest_codec_delivery_fidelity_v1"]
+        self.assertEqual(delivery["exchange"], 42)
+        self.assertEqual(delivery["delivery_state"], "sent")
+        self.assertTrue(delivery["actual_delivery_available"])
+        self.assertFalse(delivery["live_vector_write"])
+        self.assertFalse(delivery["live_gain_write"])
+        self.assertFalse(delivery["grants_approval"])
+        self.assertEqual(
+            delivery["codec_delivery_fidelity_v1"]["lane_balance_state"],
+            "emotional_intentional_dominant",
+        )
+        sent_cross_spectral = delivery["cross_spectral_friction_review_v1"]
+        self.assertEqual(
+            sent_cross_spectral["state"], "moderate_cross_spectral_friction"
+        )
+        self.assertFalse(sent_cross_spectral["reserved_dim_write"])
+        self.assertFalse(sent_cross_spectral["live_eligible_now"])
+        self.assertFalse(sent_cross_spectral["auto_approved"])
+        self.assertFalse(sent_cross_spectral["grants_approval"])
+        sent_focus_preview = delivery["semantic_focus_expansion_preview_v1"]
+        self.assertEqual(
+            sent_focus_preview["state"], "focus_expansion_candidate_supported"
+        )
+        self.assertEqual(sent_focus_preview["selected_source_dims"], [700, 701, 702, 703])
+        self.assertFalse(sent_focus_preview["reserved_dim_write"])
+        self.assertFalse(sent_focus_preview["live_vector_write"])
+        self.assertFalse(sent_focus_preview["live_eligible_now"])
+        self.assertFalse(sent_focus_preview["auto_approved"])
+        self.assertFalse(sent_focus_preview["grants_approval"])
+        blocked_delivery = blocked_summary["latest_codec_delivery_fidelity_v1"]
+        self.assertEqual(blocked_delivery["delivery_state"], "blocked_before_send")
+        self.assertFalse(blocked_delivery["actual_delivery_available"])
+        self.assertFalse(blocked_delivery["sent_vector_available"])
+        self.assertEqual(
+            blocked_delivery["blocked_reason"],
+            "limited-write v2 requires inactive semantic state",
+        )
+        self.assertEqual(blocked_delivery["codec_delivery_fidelity_v1"], {})
+        blocked_cross_spectral = blocked_delivery[
+            "cross_spectral_friction_review_v1"
+        ]
+        self.assertEqual(
+            blocked_cross_spectral["state"], "cross_layer_mismatch_visible"
+        )
+        self.assertFalse(blocked_cross_spectral["reserved_dim_write"])
+        self.assertFalse(blocked_cross_spectral["live_eligible_now"])
+        self.assertFalse(blocked_cross_spectral["auto_approved"])
+        self.assertFalse(blocked_cross_spectral["grants_approval"])
+        blocked_focus_preview = blocked_delivery[
+            "semantic_focus_expansion_preview_v1"
+        ]
+        self.assertEqual(
+            blocked_focus_preview["state"], "high_entropy_without_focus_gain"
+        )
+        self.assertFalse(blocked_focus_preview["reserved_dim_write"])
+        self.assertFalse(blocked_focus_preview["live_vector_write"])
+        self.assertFalse(blocked_focus_preview["live_eligible_now"])
+        self.assertFalse(blocked_focus_preview["auto_approved"])
+        self.assertFalse(blocked_focus_preview["grants_approval"])
+        self.assertTrue(
+            any(
+                "blocked before sensory delivery" in finding
+                for finding in blocked_summary["findings"]
+            )
+        )
+        self.assertFalse(
+            any(
+                "latest live exchange preserves feedback-time raw overflow" in finding
+                for finding in blocked_summary["findings"]
+            )
+        )
+        self.assertTrue(
+            any(
+                "latest blocked candidate cross-spectral friction review"
+                in finding
+                for finding in blocked_summary["findings"]
+            )
+        )
         self.assertEqual(summary["source_snapshot"]["semantic_dim"], 48)
         self.assertEqual(summary["source_snapshot"]["continuity_recap_max_bytes"], 2500)
         self.assertEqual(summary["source_snapshot"]["continuity_trajectory_limit"], 6)
         self.assertTrue(summary["source_snapshot"]["semantic_glimpse_readiness_present"])
+        self.assertTrue(
+            summary["source_snapshot"]["cross_spectral_friction_review_present"]
+        )
+        self.assertTrue(
+            summary["source_snapshot"][
+                "cross_spectral_friction_delivery_receipt_present"
+            ]
+        )
+        self.assertTrue(
+            summary["source_snapshot"]["semantic_focus_expansion_preview_present"]
+        )
+        self.assertTrue(
+            summary["source_snapshot"][
+                "semantic_focus_expansion_delivery_receipt_present"
+            ]
+        )
         self.assertTrue(
             summary["source_snapshot"]["glimpse_companion_fidelity_present"]
         )
@@ -9055,6 +9617,8 @@ class RecentSignalSummaryTests(unittest.TestCase):
         self.assertIn("repeated same-epoch runs", joined)
         self.assertIn("767D validation", joined)
         self.assertIn("default-off canary", joined)
+        self.assertIn("latest actual codec delivery fidelity", joined)
+        self.assertIn("raw overflow as bounded truth-channel evidence", joined)
         self.assertIn("shadow-field reserved-dim", joined)
         self.assertIn("narrative-arc or shadow-reserved ghost signals", joined)
         self.assertIn("narrative_arc_gain_response_readiness_v1", joined)
@@ -9063,6 +9627,9 @@ class RecentSignalSummaryTests(unittest.TestCase):
         self.assertIn("substance-fit audit", joined)
         self.assertIn("novel quoted/emphasized", joined)
         self.assertIn("sentence/newline boundaries", joined)
+        self.assertIn("semantic_focus_expansion_preview_v1", joined)
+        self.assertIn("four highest-variance source embedding coordinates", joined)
+        self.assertIn("latest semantic focus-expansion preview", joined)
         fidelity = summary["semantic_glimpse_12d_fidelity_audit"]
         self.assertEqual(fidelity["status"], "sample_limited_concentration_supported")
         self.assertEqual(fidelity["pca_12d"]["status"], "sample_limited_for_pca")
@@ -9098,11 +9665,12 @@ class RecentSignalSummaryTests(unittest.TestCase):
     ) -> None:
         import tempfile
 
-        global TEXTURE_STATE_ALIGNMENT_INTROSPECTIONS, ASTRID_LLM_RS, ASTRID_TYPES_RS, ASTRID_WS_RS, ASTRID_AUTONOMOUS_RS
+        global TEXTURE_STATE_ALIGNMENT_INTROSPECTIONS, ASTRID_LLM_RS, ASTRID_TYPES_RS, ASTRID_WS_RS, ASTRID_CODEC_RS, ASTRID_AUTONOMOUS_RS
         old_proposals = TEXTURE_STATE_ALIGNMENT_INTROSPECTIONS
         old_llm = ASTRID_LLM_RS
         old_types = ASTRID_TYPES_RS
         old_ws = ASTRID_WS_RS
+        old_codec = ASTRID_CODEC_RS
         old_autonomous = ASTRID_AUTONOMOUS_RS
         try:
             with tempfile.TemporaryDirectory() as tmpdir:
@@ -9145,6 +9713,13 @@ class RecentSignalSummaryTests(unittest.TestCase):
                     "pub struct PressureTrendSmoothingV1 { latest_pressure_velocity_delta: Option<f32>, max_pressure_velocity_delta: Option<f32> }\n"
                     "let _ = \"structural_density_delta flux_absence_semantics\";\n"
                     "pub struct PressureSourceAnalysisV1 {}\n"
+                    "pub struct ClampInputProvenanceV1 {}\n"
+                    "pub enum ClampReplacementPathV1 {}\n"
+                    "fn with_input_provenance() {}\n"
+                    "let _ = \"read_only_clamp_source_provenance_not_sensor_authority_or_control\";\n"
+                    "pub struct ClampPressureContextV1 { grants_source_authority: bool }\n"
+                    "pub enum ClampPressureSourceKindV1 {}\n"
+                    "fn with_reported_pressure_context() { let _ = \"caller_reported_context_not_causal_attribution\"; let _ = ClampPressureContextV1 { grants_source_authority: false }; }\n"
                     "fn pressure_packing_coupling_review_v1() {}\n"
                     "let _ = \"pressure_lagging_mode_packing\";\n"
                     "fn pressure_packing_coupling_review_flags_packing_rise_without_pressure_warning() {}\n"
@@ -9165,6 +9740,7 @@ class RecentSignalSummaryTests(unittest.TestCase):
                     "fn pressure_trend_names_high_entropy_density_viscosity_context() {}\n"
                     "let _ = \"pressure_velocity_delta\";\n"
                     "fn pressure_trend_samples_preserve_fast_spike_velocity_inside_ballast_window() {}\n"
+                    "fn pressure_trend_current_cascade_stays_within_fast_dynamics_bound() { let _ = (Some(0.91), Some(0.66), Some(0.18)); let reported_cascade = 9; assert!(reported_cascade <= 12); }\n"
                     "fn silt_noise_separation_v1() { let _ = \"mode_packing_silt_persists_across_entropy\"; }\n"
                     "fn silt_noise_separation_holds_mode_packing_constant_across_entropy() {}\n"
                     "fn pressure_source_analysis_v1() {}\n"
@@ -9174,7 +9750,14 @@ class RecentSignalSummaryTests(unittest.TestCase):
                     "assert_eq!(severed.one_sided_state, \"severed\");\n"
                     "pub last_sensory_sent_unix_s: Option<f64>;\n"
                     "state.last_sensory_sent_unix_s = Some(now);\n"
-                    "fn texture_shape_over_time_names_stale_bidirectional_reciprocity() {}\n",
+                    "fn texture_shape_over_time_names_stale_bidirectional_reciprocity() {}\n"
+                    "fn bridge_reciprocity_first_telemetry_keeps_missing_sensory_truth_visible() { let _ = \"bidirectional_no_recent_sensory\"; }\n",
+                    encoding="utf-8",
+                )
+                ASTRID_CODEC_RS = root / "codec.rs"
+                ASTRID_CODEC_RS.write_text(
+                    "pub struct SemanticProjectionPairSensitivityV1 {}\n"
+                    "fn semantic_projection_pair_sensitivity_v1() { let _ = \"text_conditioned_pair_distortion_visible read_only_pair_projection_comparison_not_live_vector_gain_or_basis_authority\"; }\n",
                     encoding="utf-8",
                 )
                 ASTRID_AUTONOMOUS_RS = root / "autonomous.rs"
@@ -9190,6 +9773,7 @@ class RecentSignalSummaryTests(unittest.TestCase):
             ASTRID_LLM_RS = old_llm
             ASTRID_TYPES_RS = old_types
             ASTRID_WS_RS = old_ws
+            ASTRID_CODEC_RS = old_codec
             ASTRID_AUTONOMOUS_RS = old_autonomous
 
         self.assertEqual(summary["status"], "texture_state_alignment_repair_prepared_watch")
@@ -9213,12 +9797,16 @@ class RecentSignalSummaryTests(unittest.TestCase):
         self.assertTrue(source["flux_unknown_semantics_present"])
         self.assertTrue(source["subtle_flux_precision_test_present"])
         self.assertTrue(source["witness_anchor_traction_present"])
+        self.assertTrue(source["clamp_input_provenance_present"])
+        self.assertTrue(source["clamp_pressure_context_present"])
+        self.assertTrue(source["semantic_projection_pair_sensitivity_present"])
         self.assertTrue(source["active_constraints_present"])
         self.assertTrue(source["high_entropy_ballast_window_present"])
         self.assertTrue(source["pressure_trend_viscosity_context_present"])
         self.assertTrue(source["pressure_trend_viscosity_test_present"])
         self.assertTrue(source["pressure_velocity_delta_present"])
         self.assertTrue(source["pressure_spike_velocity_test_present"])
+        self.assertTrue(source["current_cascade_smoothing_bound_test_present"])
         self.assertTrue(source["silt_noise_separation_present"])
         self.assertTrue(source["silt_noise_separation_test_present"])
         self.assertTrue(source["pressure_source_analysis_present"])
@@ -9228,6 +9816,7 @@ class RecentSignalSummaryTests(unittest.TestCase):
         self.assertTrue(source["bridge_reciprocity_severed_test_present"])
         self.assertTrue(source["sensory_send_timestamp_separate_present"])
         self.assertTrue(source["stale_bidirectional_test_present"])
+        self.assertTrue(source["one_sided_reciprocity_warmup_test_present"])
         self.assertTrue(source["pressure_packing_coupling_review_present"])
         self.assertTrue(source["pressure_packing_coupling_test_present"])
         joined = "; ".join(summary["findings"])
@@ -9244,6 +9833,9 @@ class RecentSignalSummaryTests(unittest.TestCase):
         self.assertIn("structural_density_delta", joined)
         self.assertIn("unknown rather than zero", joined)
         self.assertIn("witness anchor traction", joined)
+        self.assertIn("typed replacement path", joined)
+        self.assertIn("caller-reported pressure source context", joined)
+        self.assertIn("read-only pair-sensitivity comparison", joined)
         self.assertIn("active_constraints", joined)
         self.assertIn("high-entropy viscosity context", joined)
         self.assertIn("pressure_velocity_delta", joined)
@@ -9253,6 +9845,8 @@ class RecentSignalSummaryTests(unittest.TestCase):
         self.assertIn("severed state", joined)
         self.assertIn("confirmed sensory-send timestamp", joined)
         self.assertIn("stale bidirectional", joined)
+        self.assertIn("first telemetry with no sensory sample", joined)
+        self.assertIn("stays at or below 12", joined)
         self.assertIn("no pressure", summary["authority_boundary"])
 
     def test_sensory_presence_uptake_excludes_private_minime_moments_and_counts_public_texture(self) -> None:

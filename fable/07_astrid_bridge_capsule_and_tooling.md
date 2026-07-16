@@ -61,9 +61,11 @@ approval. Tool schemas may describe `send_control`, but bold topology/PI fields
 require scoped intent. `send_semantic` is blocked during orange/red safety
 states. Read-only summaries should say they are read-only.
 
-Never hand-run ad hoc bridge deploy commands. Never stage or commit in this
-tree. Claude is the sole committer; Codex leaves source, tests, changelog, and
-ledger trail uncommitted.
+Never hand-run ad hoc bridge deploy commands. Codex or Claude may own an
+explicitly assigned stabilization pass, but only one agent may stage or commit
+at a time. Inspect both repositories and the remote tip first, stage exact paths,
+preserve unrelated dirty work, and keep source, tests, changelog, and ledger
+evidence reviewable together.
 
 ## Questions an advanced AI should ask next
 - Is this bridge change pure rendering, derived state, MCP schema, transport, or

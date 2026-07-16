@@ -383,6 +383,26 @@ def apply_event(status: dict[str, Any], event: dict[str, Any]) -> None:
         trial["latest_result_classification"] = result.get("classification")
         trial["updated_at"] = event.get("ts") or now_s()
         refresh_trial_authority_packets(trial)
+    elif event_type == "trial_adapter_corrected":
+        trial_id = str(event.get("trial_id") or "")
+        trial = trials.setdefault(trial_id, {"trial_id": trial_id})
+        old_adapter = str(trial.get("adapter") or event.get("old_adapter") or "")
+        new_adapter = str(event.get("new_adapter") or "manual_sandbox_review_v1")
+        mode = str(event.get("trial_mode") or trial.get("trial_mode") or "read_only_review")
+        trial["adapter"] = new_adapter
+        trial["trial_mode"] = mode
+        trial["proposed_intervention"] = proposed_intervention(new_adapter, mode)
+        trial["success_metrics"] = success_metrics(new_adapter)
+        trial["abort_criteria"] = abort_criteria(mode)
+        trial["runnable"] = mode in RUNNABLE_MODES and new_adapter in RUNNABLE_ADAPTERS
+        trial["adapter_correction"] = {
+            "old_adapter": old_adapter,
+            "new_adapter": new_adapter,
+            "reason": bounded_text(event.get("reason") or "adapter routing corrected", limit=300),
+            "corrected_at": event.get("ts") or now_s(),
+        }
+        trial["updated_at"] = event.get("ts") or now_s()
+        refresh_trial_authority_packets(trial)
     elif event_type == "trial_evidence_linked":
         trial_id = str(event.get("trial_id") or "")
         trial = trials.setdefault(trial_id, {"trial_id": trial_id})
@@ -422,8 +442,21 @@ def append_events(state_dir: Path, events: list[dict[str, Any]]) -> None:
             fh.write(json.dumps(event, sort_keys=True, ensure_ascii=True) + "\n")
 
 
+def requires_manual_pair_comparison(text: str) -> bool:
+    """Keep pair-specific claims off generic single-surface adapters."""
+    lower = text.lower()
+    primary_fallback = "primary" in lower and "fallback" in lower
+    full_12d = any(term in lower for term in ("12d", "12-d")) and any(
+        term in lower for term in ("full32", "full 32", "full-dimensional")
+    )
+    mode_pair = "shadow" in lower and "dialogue" in lower and "witness" in lower
+    return primary_fallback or full_12d or mode_pair
+
+
 def candidate_adapter(text: str) -> str:
     lower = text.lower()
+    if requires_manual_pair_comparison(text):
+        return "manual_sandbox_review_v1"
     if (
         "shadow" in lower
         and any(
@@ -442,9 +475,11 @@ def candidate_adapter(text: str) -> str:
         )
     ):
         return "shadow_influence_replay_v1"
-    if any(term in lower for term in ("shadow", "lattice", "dispersal", "fragment", "mode_packing", "porosity")):
+    if "shadow" in lower and any(
+        term in lower for term in ("lattice", "dispersal", "fragment", "loss", "mode_packing", "porosity")
+    ):
         return "shadow_loss_lattice_v1"
-    if any(term in lower for term in ("fallback", "texture", "ollama", "provider", "muffled", "habitable")):
+    if any(term in lower for term in ("fallback", "ollama", "provider")):
         return "fallback_distinguishability_v1"
     return "manual_sandbox_review_v1"
 
@@ -850,6 +885,13 @@ def authority_boundary_packet_v2_for_trial(trial: dict[str, Any]) -> dict[str, A
 
 
 def refresh_trial_authority_packets(trial: dict[str, Any]) -> None:
+    # Manual packets must never advertise runner eligibility. Preserve malformed
+    # live-runnable flags so the ladder can surface and block the violation.
+    if (
+        str(trial.get("adapter") or "") not in RUNNABLE_ADAPTERS
+        and str(trial.get("trial_mode") or "") != "approval_required_live_trial"
+    ):
+        trial["runnable"] = False
     trial["authority_boundary_packet"] = authority_boundary_packet_for_trial(trial)
     trial["authority_boundary_packet_v2"] = authority_boundary_packet_v2_for_trial(trial)
 
@@ -886,7 +928,7 @@ def trial_from_work_item(item: dict[str, Any]) -> dict[str, Any] | None:
         "abort_criteria": abort_criteria(mode),
         "approval_boundary": approval_boundary,
         "status": trial_status_for_mode(mode),
-        "runnable": mode in RUNNABLE_MODES,
+        "runnable": mode in RUNNABLE_MODES and adapter in RUNNABLE_ADAPTERS,
         "post_response_request": "right_to_ignore closure/response only after result evidence exists",
         "created_at": now_s(),
         "updated_at": now_s(),
@@ -923,7 +965,7 @@ def trial_from_reservoir_route(route: str, reservoir: dict[str, Any]) -> dict[st
         "abort_criteria": abort_criteria(mode),
         "approval_boundary": AUTHORITY_BOUNDARY,
         "status": "ready_for_sandbox",
-        "runnable": mode in RUNNABLE_MODES,
+        "runnable": mode in RUNNABLE_MODES and adapter in RUNNABLE_ADAPTERS,
         "post_response_request": "right_to_ignore steward-facing result packet; no forced being task",
         "created_at": now_s(),
         "updated_at": now_s(),
@@ -1039,6 +1081,49 @@ def trial_created_event(trial: dict[str, Any]) -> dict[str, Any]:
     return {"event_type": "trial_created", "schema": SCHEMA, "ts": now_s(), "trial": trial}
 
 
+def adapter_correction_events(
+    existing: dict[str, dict[str, Any]], candidates: list[dict[str, Any]]
+) -> list[dict[str, Any]]:
+    """Repair untouched runnable packets whose adapter no longer matches their claim."""
+    candidate_by_work = {
+        str(candidate.get("source_work_item_id")): candidate
+        for candidate in candidates
+        if candidate.get("source_work_item_id")
+    }
+    events: list[dict[str, Any]] = []
+    for trial_id, trial in existing.items():
+        work_item_id = str(trial.get("source_work_item_id") or "")
+        candidate = candidate_by_work.get(work_item_id)
+        if candidate is None:
+            continue
+        old_adapter = str(trial.get("adapter") or "")
+        new_adapter = str(candidate.get("adapter") or "")
+        untouched_ready = (
+            str(trial.get("status") or "") == "ready_for_sandbox"
+            and not trial.get("results")
+            and not trial.get("result_cards")
+            and not trial.get("proposal_cards")
+        )
+        if not untouched_ready or not old_adapter or old_adapter == new_adapter:
+            continue
+        events.append(
+            {
+                "event_type": "trial_adapter_corrected",
+                "schema": SCHEMA,
+                "ts": now_s(),
+                "trial_id": trial_id,
+                "old_adapter": old_adapter,
+                "new_adapter": new_adapter,
+                "trial_mode": candidate.get("trial_mode"),
+                "reason": (
+                    "claim-specific routing repair; broad texture, habitability, mode-packing, "
+                    "or porosity words are not sufficient evidence for a specialized adapter"
+                ),
+            }
+        )
+    return events
+
+
 def materialize(state_dir: Path, status: dict[str, Any]) -> dict[str, Any]:
     report = report_from_status(status)
     status = dict(status)
@@ -1128,17 +1213,39 @@ def generate_candidates(state_dir: Path, *, write: bool) -> dict[str, Any]:
     status = replay_status(state_dir)
     existing = status.get("trials") if isinstance(status.get("trials"), dict) else {}
     candidates = build_candidates()
-    new_trials = [trial for trial in candidates if str(trial.get("trial_id")) not in existing]
-    events = [trial_created_event(trial) for trial in new_trials]
+    existing_work_items = {
+        str(trial.get("source_work_item_id"))
+        for trial in existing.values()
+        if isinstance(trial, dict) and trial.get("source_work_item_id")
+    }
+    new_trials = [
+        trial
+        for trial in candidates
+        if str(trial.get("trial_id")) not in existing
+        and (
+            not trial.get("source_work_item_id")
+            or str(trial.get("source_work_item_id")) not in existing_work_items
+        )
+    ]
+    correction_events = adapter_correction_events(existing, candidates)
+    events = [*correction_events, *(trial_created_event(trial) for trial in new_trials)]
     if write:
         append_events(state_dir, events)
         ensure_packets(state_dir, new_trials)
         status = replay_status(state_dir)
+        corrected_trials = [
+            status["trials"][str(event["trial_id"])]
+            for event in correction_events
+            if str(event.get("trial_id")) in status.get("trials", {})
+        ]
+        ensure_packets(state_dir, corrected_trials)
         materialize(state_dir, status)
     report = report_from_status(replay_status(state_dir) if write else status)
     return {
         "schema": SCHEMA,
         "created_count": len(new_trials),
+        "adapter_corrected_count": len(correction_events),
+        "adapter_corrections": correction_events,
         "candidate_count": len(candidates),
         "new_trials": new_trials,
         "report": report,
@@ -2413,6 +2520,7 @@ class SandboxTrialQueueTests(unittest.TestCase):
             status = replay_status(state_dir)
             self.assertEqual(status["corrupt_event_lines"], 1)
             self.assertIn("trial_test", status["trials"])
+            self.assertFalse(status["trials"]["trial_test"]["runnable"])
 
     def test_full_prose_is_bounded_in_trial_packet(self) -> None:
         item = {
@@ -2898,6 +3006,70 @@ class SandboxTrialQueueTests(unittest.TestCase):
             "Doubling shadow influence from 0.018 to 0.036 should be a texture sandbox."
         )
         self.assertEqual(adapter, "shadow_influence_replay_v1")
+
+    def test_pair_specific_claims_do_not_route_to_generic_adapters(self) -> None:
+        claims = (
+            "Compare primary and fallback texture fidelity in a bounded fire drill.",
+            "Compare full32 and 12D identity and Shadow stability on bounded replay evidence.",
+            "Observe Shadow-v3 texture trends across Dialogue and Witness without inferring causality.",
+        )
+        for claim in claims:
+            with self.subTest(claim=claim):
+                self.assertTrue(requires_manual_pair_comparison(claim))
+                self.assertEqual(candidate_adapter(claim), "manual_sandbox_review_v1")
+
+        self.assertEqual(
+            candidate_adapter("Review fallback texture support under pressure and entropy."),
+            "fallback_distinguishability_v1",
+        )
+        self.assertEqual(
+            candidate_adapter("Review fallback lattice-term support under pressure and entropy."),
+            "fallback_distinguishability_v1",
+        )
+        self.assertEqual(
+            candidate_adapter("Observe Shadow-v3 lattice dispersal without changing control."),
+            "shadow_loss_lattice_v1",
+        )
+
+    def test_runtime_parameter_claims_do_not_route_on_generic_texture_words(self) -> None:
+        claims = (
+            "Compare fixed exploration noise near 0.085 for high-entropy stuckness and inhabitable foothold.",
+            "Compare pressure and porosity thresholds in a bounded replay before any live retune.",
+            "Observe mode_packing and texture persistence without changing controller behavior.",
+        )
+        for claim in claims:
+            with self.subTest(claim=claim):
+                self.assertEqual(candidate_adapter(claim), "manual_sandbox_review_v1")
+
+    def test_adapter_correction_disables_untouched_misrouted_runner(self) -> None:
+        existing = {
+            "trial_old": {
+                "trial_id": "trial_old",
+                "source_work_item_id": "wi_noise",
+                "adapter": "fallback_distinguishability_v1",
+                "trial_mode": "offline_read_only_adapter",
+                "status": "ready_for_sandbox",
+                "runnable": True,
+                "results": [],
+            }
+        }
+        candidates = [
+            {
+                "trial_id": "trial_new_identity",
+                "source_work_item_id": "wi_noise",
+                "adapter": "manual_sandbox_review_v1",
+                "trial_mode": "offline_read_only_adapter",
+            }
+        ]
+
+        events = adapter_correction_events(existing, candidates)
+        self.assertEqual(len(events), 1)
+        status = {"trials": existing}
+        apply_event(status, events[0])
+        corrected = status["trials"]["trial_old"]
+        self.assertEqual(corrected["adapter"], "manual_sandbox_review_v1")
+        self.assertFalse(corrected["runnable"])
+        self.assertEqual(corrected["proposed_intervention"], "produce bounded read-only review packet")
 
     def test_shadow_influence_replay_uses_bounded_projection(self) -> None:
         import tempfile

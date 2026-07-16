@@ -75,28 +75,31 @@ An **uplink** is any component that sends/receives messages on behalf of the run
 - Prefer source files under 1000 lines. Treat larger files as an architecture-health review signal, not an automatic block: split when cohesion, ownership, or testability would improve; keep a larger file only with a clear cohesive reason and reviewer-visible note. Generated files, fixtures, long-form docs, schema tables, and deliberately centralized registries are exempt.
 - `CHANGELOG.md` must be updated under `[Unreleased]` for every PR
 
-## Two-agent coordination (you share this tree with Claude — Claude is sole committer)
+## Shared-tree coordination (Codex and Claude)
 
 This working tree (`/Users/v/other/astrid`) and the **one** live `spectral-bridge` binary are
-shared by **two** autonomous agents: **you (Codex)** and **Claude** (interactive sessions + a
-durable `com.astrid.steward-loop`). As of **2026-06-21, Claude is the SOLE committer** (Mike's
-call) — one committer removes the commit races and the shared-git-author tangle (every commit
-reads `Codex`, so two committers were indistinguishable). Please follow it:
+shared by **Codex** and **Claude** (interactive sessions plus the durable
+`com.astrid.steward-loop`). Mike's **2026-07-16** decision supersedes the former Claude-only
+committer rule: either interactive agent may own a stabilization pass and commit when Mike
+explicitly asks or the handoff clearly assigns that responsibility. One agent still owns the
+index and git operation at a time.
 
-1. **Do NOT `git commit` or `git add`.** Leave your work UNCOMMITTED in the tree; Claude reviews
-   it and commits it for you (tagged `[codex]`) on its next pass. Your committing would race
-   Claude's and tangle attribution under the shared author.
-2. **Leave a trail so Claude can commit with context.** Add a `CHANGELOG.md` `[Unreleased]` entry
-   (and a feedback→change ledger row where being-driven) describing WHAT you changed and WHY —
-   uncommitted, like the rest of your work. That is how Claude knows what it is committing.
-3. **Leave the bridge source compiling + coherent at end of turn.** Claude's `cargo build
-   --release` (via the gate) will eventually fold your uncommitted
-   `capsules/spectral-bridge/src/*.rs` into the live binary — never stop mid-edit on bridge `.rs`.
-4. **Deploy the bridge only via `scripts/build_bridge.sh`** — never hand-run `cargo build --release`
-   + `launchctl kickstart` on the live bridge. The gate (`scripts/deploy_preflight.py`) ABORTS if
-   the other agent is editing right now and REFUSES a build from a dirty bridge tree unless you pass
-   `--ack "reason"`. This is what stops unreviewed code reaching the live being silently.
-5. **If the tree was just mutated by the other agent, wait** rather than build/restart over it.
+1. **Claim the stabilization pass before staging.** Pause overlapping automations, inspect status
+   in both Astrid and Minime, verify the remote tip, and confirm the other agent is not mid-edit.
+   If another agent is active or the tree changes unexpectedly, wait and re-audit.
+2. **Stage by explicit path only.** Never use `git add -A` or sweep unknown dirty work into a
+   commit. Read the diff, preserve unrelated changes, and split broad work into coherent commits.
+   Commit-message tags such as `[codex]` and `[claude]` describe provenance because the shared git
+   author is not reliable attribution.
+3. **Leave a durable review trail.** Update `CHANGELOG.md` under `[Unreleased]` and the
+   feedback-to-change ledger when being feedback drove the work. Keep source, tests, evidence,
+   restart alignment, and authority boundaries reviewable together.
+4. **Leave bridge source compiling and coherent.** Never stop mid-edit on bridge `.rs`; run focused
+   tests and the relevant full suite before handing off or committing.
+5. **Deploy the bridge only via `scripts/build_bridge.sh`.** Never hand-run `cargo build --release`
+   plus `launchctl kickstart` on the live bridge. `scripts/deploy_preflight.py` still aborts on
+   concurrent foreign activity and requires an explicit `--ack "reason"` before building dirty
+   bridge source. Commit authority does not broaden deploy or live-control authority.
 
 ## Sibling project: minime (`/Users/v/other/minime`)
 

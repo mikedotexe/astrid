@@ -3400,6 +3400,7 @@ def probe_minime_recess_schema_integrity(_prior: dict[str, Any]) -> dict[str, An
             f"moment_markers={source.get('minime_moment_marker_alignment_present')} "
             f"recess_pruning={source.get('recess_pruning_advice_present')} "
             f"density_aware_recess={source.get('density_aware_recess_profile_present')} "
+            f"recess_activity_load={source.get('recess_activity_load_present')} "
             f"autonomy_budget={source.get('recess_autonomy_budget_boundary_present')} "
             f"self_journal={source.get('self_journal_low_cost_boundary_present')} "
             f"recess_manifest={source.get('recess_pruning_manifest_present')} "
@@ -6704,6 +6705,7 @@ class MinimeRecessSchemaIntegrityTests(unittest.TestCase):
                 "correspondence_transition_artifact_present": True,
                 "recess_pruning_advice_present": True,
                 "density_aware_recess_profile_present": True,
+                "recess_activity_load_present": True,
                 "recess_pruning_manifest_present": True,
                 "eigenpacket_schema_test_present": True,
                 "semantic_admission_lockout_test_present": True,
@@ -6741,6 +6743,7 @@ class MinimeRecessSchemaIntegrityTests(unittest.TestCase):
         self.assertIn("steward review", finding["summary"])
         self.assertIn("recess_pruning=True", "\n".join(finding["details"]))
         self.assertIn("density_aware_recess=True", "\n".join(finding["details"]))
+        self.assertIn("recess_activity_load=True", "\n".join(finding["details"]))
         self.assertIn("dynamic_noise_shadow=True", "\n".join(finding["details"]))
         self.assertIn("latent_thread_collapse", "\n".join(finding["details"]))
 
@@ -6754,6 +6757,7 @@ class MinimeRecessSchemaIntegrityTests(unittest.TestCase):
                 "correspondence_transition_artifact_present": True,
                 "recess_pruning_advice_present": True,
                 "density_aware_recess_profile_present": True,
+                "recess_activity_load_present": True,
                 "recess_pruning_manifest_present": True,
                 "eigenpacket_schema_test_present": True,
                 "semantic_admission_lockout_test_present": True,
