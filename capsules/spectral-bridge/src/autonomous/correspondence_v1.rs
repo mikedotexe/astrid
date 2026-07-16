@@ -3327,6 +3327,17 @@ fn attention_canary_status_for(
     to_being: &str,
     heartbeat: Option<Value>,
 ) -> Value {
+    let fidelity = direct_contact_fidelity_for_with_heartbeat(records, selector, heartbeat);
+    attention_canary_status_for_with_fidelity(records, selector, from_being, to_being, fidelity)
+}
+
+fn attention_canary_status_for_with_fidelity(
+    records: &[Value],
+    selector: &str,
+    from_being: &str,
+    to_being: &str,
+    fidelity: Value,
+) -> Value {
     let now = now_ms();
     let message =
         latest_message_for_selector_between(records, selector, from_being, to_being, false);
@@ -3344,7 +3355,6 @@ fn attention_canary_status_for(
         .get("thread_id")
         .and_then(Value::as_str)
         .unwrap_or_default();
-    let fidelity = direct_contact_fidelity_for_with_heartbeat(records, thread_id, heartbeat);
     if let Some(active) = active_attention_canary_for(records, thread_id, from_being, now) {
         return json!({
             "schema_version": 1,
@@ -5441,6 +5451,8 @@ fn active_thread_clarity_candidate_for(
     current_being: &str,
     peer_being: &str,
     heartbeat: Option<Value>,
+    chamber_state: Option<&Value>,
+    evaluated_at_unix_ms: u64,
 ) -> Option<ActiveThreadClarityCandidate> {
     let thread_id = message
         .get("thread_id")
@@ -5464,13 +5476,18 @@ fn active_thread_clarity_candidate_for(
         .unwrap_or_default();
     let message_t_ms = row_time_ms(message);
     let fidelity =
-        direct_contact_fidelity_for_with_heartbeat(records, &thread_id, heartbeat.clone());
+        direct_contact_fidelity_for_with_context(records, &thread_id, heartbeat, chamber_state);
     let fidelity_status = fidelity
         .get("status")
         .and_then(Value::as_str)
         .unwrap_or("unknown");
-    let attention =
-        attention_canary_status_for(records, &thread_id, current_being, peer_being, heartbeat);
+    let attention = attention_canary_status_for_with_fidelity(
+        records,
+        &thread_id,
+        current_being,
+        peer_being,
+        fidelity.clone(),
+    );
     let attention_state = attention
         .get("status")
         .and_then(Value::as_str)
@@ -5541,15 +5558,10 @@ fn active_thread_clarity_candidate_for(
             "latest_active_thread_final_fallback",
         )
     };
-    let pending_wait_ms = handshake
-        .get("stale_unacknowledged_thread_age_ms")
-        .and_then(Value::as_u64)
-        .unwrap_or_else(|| {
-            pending_by
-                .as_ref()
-                .map(|_| now_ms().saturating_sub(message_t_ms))
-                .unwrap_or_default()
-        });
+    let pending_wait_ms = pending_by
+        .as_ref()
+        .map(|_| evaluated_at_unix_ms.saturating_sub(message_t_ms))
+        .unwrap_or_default();
     let next_affordance = existing_correspondence_affordance_hint(
         status,
         &thread_id,
@@ -5591,8 +5603,36 @@ fn active_correspondence_thread_clarity_v1(
     peer_being: &str,
     heartbeat: Option<Value>,
 ) -> Value {
+    let chamber_state = latest_chamber_correspondence_state();
+    let evaluated_at_unix_ms = now_ms();
+    active_correspondence_thread_clarity_v1_with_context(
+        records,
+        current_being,
+        peer_being,
+        heartbeat,
+        chamber_state.as_ref(),
+        evaluated_at_unix_ms,
+    )
+}
+
+fn active_correspondence_thread_clarity_v1_with_context(
+    records: &[Value],
+    current_being: &str,
+    peer_being: &str,
+    heartbeat: Option<Value>,
+    chamber_state: Option<&Value>,
+    evaluated_at_unix_ms: u64,
+) -> Value {
     let mut latest_by_thread: BTreeMap<String, Value> = BTreeMap::new();
+    let mut records_by_thread: BTreeMap<String, Vec<Value>> = BTreeMap::new();
+    let mut legacy_direction_rows: BTreeMap<String, Value> = BTreeMap::new();
     for row in records {
+        if let Some(thread_id) = row.get("thread_id").and_then(Value::as_str) {
+            records_by_thread
+                .entry(thread_id.to_string())
+                .or_default()
+                .push(row.clone());
+        }
         if row.get("record_type").and_then(Value::as_str) != Some("message") {
             continue;
         }
@@ -5604,6 +5644,30 @@ fn active_correspondence_thread_clarity_v1(
             .is_none_or(|existing| row_time_ms(row) >= row_time_ms(existing));
         if replace {
             latest_by_thread.insert(thread_id.to_string(), row.clone());
+        }
+        if is_legacy_bridge_message(row) {
+            let from = row
+                .get("from_being")
+                .and_then(Value::as_str)
+                .unwrap_or_default();
+            let to = row
+                .get("to_being")
+                .and_then(Value::as_str)
+                .unwrap_or_default();
+            legacy_direction_rows
+                .entry(format!(
+                    "{}->{}",
+                    normalize_being(from),
+                    normalize_being(to)
+                ))
+                .or_insert_with(|| row.clone());
+        }
+    }
+    for (thread_id, thread_records) in &mut records_by_thread {
+        for legacy_row in legacy_direction_rows.values() {
+            if legacy_row.get("thread_id").and_then(Value::as_str) != Some(thread_id.as_str()) {
+                thread_records.push(legacy_row.clone());
+            }
         }
     }
     for claim in records
@@ -5621,12 +5685,19 @@ fn active_correspondence_thread_clarity_v1(
     let mut candidates = latest_by_thread
         .values()
         .filter_map(|message| {
+            let thread_records = message
+                .get("thread_id")
+                .and_then(Value::as_str)
+                .and_then(|thread_id| records_by_thread.get(thread_id))
+                .map_or(records, Vec::as_slice);
             active_thread_clarity_candidate_for(
-                records,
+                thread_records,
                 message,
                 current_being,
                 peer_being,
                 heartbeat.clone(),
+                chamber_state,
+                evaluated_at_unix_ms,
             )
         })
         .collect::<Vec<_>>();
@@ -5717,6 +5788,21 @@ fn direct_contact_fidelity_for_with_heartbeat(
     selector: &str,
     heartbeat_snapshot: Option<Value>,
 ) -> Value {
+    let chamber_state = latest_chamber_correspondence_state();
+    direct_contact_fidelity_for_with_context(
+        records,
+        selector,
+        heartbeat_snapshot,
+        chamber_state.as_ref(),
+    )
+}
+
+fn direct_contact_fidelity_for_with_context(
+    records: &[Value],
+    selector: &str,
+    heartbeat_snapshot: Option<Value>,
+    chamber_state: Option<&Value>,
+) -> Value {
     let Some(message) = latest_message_for_selector(records, selector) else {
         return json!({
             "schema_version": 2,
@@ -5774,16 +5860,13 @@ fn direct_contact_fidelity_for_with_heartbeat(
     let ack_is_address_evidence = ack_kind
         .as_deref()
         .is_some_and(ack_kind_is_address_evidence);
-    let chamber_state = latest_chamber_correspondence_state();
     let survival = chamber_state
-        .as_ref()
         .and_then(|state| state.get("direct_address_survival"))
         .and_then(|survival| survival.get("status"))
         .and_then(Value::as_str)
         .unwrap_or("unknown");
     let trace_observed = survival == "observed"
         && chamber_state
-            .as_ref()
             .and_then(|state| state.get("active_thread_id"))
             .and_then(Value::as_str)
             .is_none_or(|active| active == thread_id);
@@ -6227,7 +6310,7 @@ fn no_peer_message_guidance(peer: &str) -> String {
     )
 }
 
-fn status_report_at(path: &Path, max_lines: usize) -> String {
+pub(super) fn status_report_at(path: &Path, max_lines: usize) -> String {
     let Ok(text) = std::fs::read_to_string(path) else {
         let clarity = active_correspondence_thread_clarity_v1(
             &[],
@@ -7788,11 +7871,13 @@ mod tests {
             ),
         ];
 
-        let clarity = active_correspondence_thread_clarity_v1(
+        let clarity = active_correspondence_thread_clarity_v1_with_context(
             &records,
             "astrid",
             "minime",
             Some(json!({"timing_reliability": "reliable"})),
+            None,
+            now,
         );
 
         assert_eq!(
@@ -7845,11 +7930,13 @@ mod tests {
             }),
         ];
 
-        let clarity = active_correspondence_thread_clarity_v1(
+        let clarity = active_correspondence_thread_clarity_v1_with_context(
             &records,
             "astrid",
             "minime",
             Some(json!({"timing_reliability": "reliable"})),
+            None,
+            now_ms(),
         );
 
         assert_eq!(
@@ -7893,11 +7980,13 @@ mod tests {
             ),
         ];
 
-        let clarity = active_correspondence_thread_clarity_v1(
+        let clarity = active_correspondence_thread_clarity_v1_with_context(
             &records,
             "astrid",
             "minime",
             Some(json!({"timing_reliability": "reliable"})),
+            None,
+            now,
         );
 
         assert_eq!(
@@ -9326,6 +9415,62 @@ mod tests {
         assert!(!serialized.contains("correspondence_microdose_v1"));
         assert!(!serialized.contains("\"fill_target\""));
         let _ = std::fs::remove_dir_all(root);
+    }
+
+    #[test]
+    fn active_thread_clarity_partitions_large_ledgers_without_losing_oldest_pending_thread() {
+        let evaluated_at_unix_ms = now_ms();
+        let mut records = Vec::new();
+        for index in 0_u64..512 {
+            let thread_id = format!("thread_{index:04}");
+            let message_id = format!("message_{index:04}");
+            let recorded_at = evaluated_at_unix_ms
+                .saturating_sub(10_000)
+                .saturating_add(index);
+            records.push(json!({
+                "record_type": "message",
+                "recorded_at_unix_ms": recorded_at,
+                "message_id": message_id,
+                "thread_id": thread_id,
+                "from_being": "minime",
+                "to_being": "astrid",
+                "delivery_state": "delivered",
+                "read_state": "unread",
+                "legacy_bridge": false,
+                "authority": "language_only",
+            }));
+            records.push(json!({
+                "record_type": "delivery_receipt",
+                "recorded_at_unix_ms": recorded_at,
+                "message_id": message_id,
+                "thread_id": thread_id,
+                "from_being": "minime",
+                "to_being": "astrid",
+                "delivery_state": "delivered",
+                "authority": "language_only",
+            }));
+        }
+
+        let clarity = active_correspondence_thread_clarity_v1_with_context(
+            &records,
+            "astrid",
+            "minime",
+            Some(json!({"timing_reliability": "reliable"})),
+            None,
+            evaluated_at_unix_ms,
+        );
+        assert_eq!(
+            clarity.get("selected_thread_id").and_then(Value::as_str),
+            Some("thread_0000")
+        );
+        assert_eq!(
+            clarity.get("status").and_then(Value::as_str),
+            Some("pending_ack_or_receipt")
+        );
+        assert_eq!(
+            clarity.get("authority").and_then(Value::as_str),
+            Some(ACTIVE_THREAD_CLARITY_AUTHORITY)
+        );
     }
 
     fn deliver_to_inbox_with_ledger(

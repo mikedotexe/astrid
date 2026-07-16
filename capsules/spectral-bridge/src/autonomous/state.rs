@@ -963,6 +963,30 @@ pub(super) enum Mode {
     Contemplate,
 }
 
+/// Read-only granularity selected for Witness context.
+///
+/// This changes how much already-observed spectral context is carried into a
+/// Witness exchange. It does not change pressure, fill, admission, transport,
+/// controller behavior, or any peer state.
+#[derive(Debug, Clone, Copy, Default, Deserialize, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub(super) enum WitnessDepthV1 {
+    #[default]
+    Summary,
+    TextureField,
+    DeepEigenfield,
+}
+
+impl WitnessDepthV1 {
+    pub(super) const fn as_str(self) -> &'static str {
+        match self {
+            Self::Summary => "summary",
+            Self::TextureField => "texture_field",
+            Self::DeepEigenfield => "deep_eigenfield",
+        }
+    }
+}
+
 /// A timestamped spectral snapshot for tracking rates of change.
 #[derive(Clone)]
 pub(super) struct SpectralSample {
@@ -984,6 +1008,8 @@ pub(super) struct ConversationState {
     pub spectral_history: VecDeque<SpectralSample>,
     pub exchange_count: u64,
     pub last_mode: Mode,
+    /// Most recently selected read-only Witness granularity.
+    pub witness_depth: WitnessDepthV1,
     /// Cached remote minime journal entries (newest first, periodically rescanned).
     /// This is intentionally distinct from Astrid's own journal directory.
     pub remote_journal_entries: Vec<RemoteJournalEntry>,
@@ -1227,6 +1253,7 @@ impl ConversationState {
             spectral_history: VecDeque::with_capacity(30),
             exchange_count: 0,
             last_mode: Mode::Witness,
+            witness_depth: WitnessDepthV1::Summary,
             remote_journal_entries,
             remote_journal_count_at_scan: count,
             dialogue_cursor: 0,

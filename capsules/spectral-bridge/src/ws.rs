@@ -60,8 +60,11 @@ struct PressureTrendSampleV1 {
     structural_density: Option<f32>,
     resonance_depth: Option<f32>,
     semantic_viscosity: Option<f32>,
+    viscosity_gradient: Option<f32>,
+    viscosity_gradient_trend: Option<f32>,
     complexity_density: Option<f32>,
     weight_density_index: Option<f32>,
+    comfort_gate: Option<f32>,
     porosity_gradient: Option<f32>,
     semantic_friction: Option<f32>,
     semantic_trickle: Option<f32>,
@@ -315,12 +318,13 @@ impl BridgeState {
         }
     }
 
-    /// Read-only review of Astrid's high-entropy reciprocity concern.
+    /// Read-only review of Astrid's reciprocity-aging concern.
     ///
     /// This does not change `bridge_reciprocity_v1` or any stale-window
-    /// threshold. It makes the counterfactual contraction visible when high
-    /// entropy and low cohesion suggest that the shared hold may decay before
-    /// the current reflective-silence window expires.
+    /// threshold. It keeps transport patience separate from the structural
+    /// identity clock: viscosity can justify more time for a reply while high
+    /// entropy, low cohesion, or distinguishability loss can still erode
+    /// confidence in what is being held.
     #[must_use]
     pub fn bridge_entropy_reciprocity_review_v1(&self) -> Option<BridgeEntropyReciprocityReviewV1> {
         let telemetry = self.latest_telemetry.as_ref()?;
@@ -335,15 +339,35 @@ impl BridgeState {
             .resonance_density_v1
             .as_ref()
             .map(|resonance| resonance_cohesion_score_v1(&resonance.components).clamp(0.0, 1.0));
+        let distinguishability_loss = telemetry
+            .distinguishability_loss
+            .or_else(|| {
+                telemetry
+                    .denominator_metrics()
+                    .map(|metrics| metrics.distinguishability_loss)
+            })
+            .map(|value| value.clamp(0.0, 1.0));
         let (current_stale_window_ms, current_stale_window_basis) =
             bridge_dynamic_stale_window_ms(Some(telemetry));
         let entropy_contract_preview_window_ms =
             bridge_entropy_contract_preview_window_ms(spectral_entropy, resonance_cohesion_score);
-        let would_stale_under_preview = telemetry_age_ms
-            .zip(entropy_contract_preview_window_ms)
-            .is_some_and(|(age_ms, preview_ms)| {
-                age_ms > preview_ms && age_ms <= current_stale_window_ms
-            });
+        let structural_identity_window_ms =
+            Some(entropy_contract_preview_window_ms.unwrap_or(BRIDGE_RECIPROCITY_STALE_WINDOW_MS));
+        let structural_age_multiplier = distinguishability_loss.map(|loss| 1.0 + f64::from(loss));
+        let structural_effective_age_ms = telemetry_age_ms
+            .zip(structural_age_multiplier)
+            .map(|(age_ms, multiplier)| age_ms * multiplier);
+        let transport_wait_stale = bridge_age_is_stale(telemetry_age_ms, current_stale_window_ms);
+        let structural_identity_stale = structural_effective_age_ms
+            .zip(structural_identity_window_ms)
+            .is_some_and(|(age_ms, window_ms)| age_ms > window_ms);
+        let would_stale_under_preview = structural_identity_stale && !transport_wait_stale;
+        let clock_relation = match (transport_wait_stale, structural_identity_stale) {
+            (false, false) => "transport_and_structural_clocks_holding",
+            (false, true) => "transport_waiting_structural_identity_stale",
+            (true, false) => "transport_stale_structural_identity_holding",
+            (true, true) => "transport_and_structural_clocks_stale",
+        };
 
         let current_window_state = if would_stale_under_preview {
             "current_window_still_waiting_preview_would_stale"
@@ -369,11 +393,18 @@ impl BridgeState {
             schema_version: 1,
             spectral_entropy,
             resonance_cohesion_score,
+            distinguishability_loss,
             telemetry_age_ms,
             current_stale_window_ms,
             current_stale_window_basis: Some(current_stale_window_basis.to_string()),
             entropy_contract_preview_window_ms,
+            structural_identity_window_ms,
+            structural_age_multiplier,
+            structural_effective_age_ms,
+            transport_wait_stale,
+            structural_identity_stale,
             would_stale_under_preview,
+            clock_relation: clock_relation.to_string(),
             current_window_state: current_window_state.to_string(),
             recommendation: recommendation.to_string(),
             live_stale_window_write: false,
@@ -497,6 +528,9 @@ impl BridgeState {
         let mode_packing_delta = trend.and_then(|value| value.mode_packing_delta);
         let trend_classification = trend.map(|value| value.classification.clone());
         let smoothing_classification = smoothing.as_ref().map(|value| value.classification.clone());
+        let pressure_edge_state = smoothing.as_ref().and_then(|value| {
+            (!value.fast_slow_edge_state.is_empty()).then(|| value.fast_slow_edge_state.clone())
+        });
         let semantic_stagnation_index = smoothing
             .as_ref()
             .and_then(|value| value.semantic_stagnation_index);
@@ -514,9 +548,18 @@ impl BridgeState {
             .as_deref()
             .unwrap_or_default()
             .to_ascii_lowercase();
-        let mode_packing_visible = source_text.contains("mode_packing")
-            || family_text.contains("mode_packing")
-            || mode_packing.is_some_and(|value| value >= 0.50);
+        let mode_packing_visibility_basis = if source_text.contains("mode_packing") {
+            Some("dominant_source_label")
+        } else if family_text.contains("mode_packing") {
+            Some("pressure_source_family_label")
+        } else if mode_packing.is_some_and(|value| {
+            value.is_finite() && value >= PRESSURE_POROSITY_EXPANSION_FELT_DEAD_ZONE_MODE_PACKING_AT
+        }) {
+            Some("numeric_mode_packing_at_or_above_felt_dead_zone")
+        } else {
+            None
+        };
+        let mode_packing_visible = mode_packing_visibility_basis.is_some();
         let structural_pressure_state = if mode_packing_visible
             && (pressure_score.is_some_and(|value| value >= 0.28)
                 || mode_packing.is_some_and(|value| value >= 0.55))
@@ -599,6 +642,12 @@ impl BridgeState {
                         "low_amplitude_stable" | "twitchy_low_amplitude_oscillation"
                     )
                 });
+        let slow_context_masks_fast_edge = pressure_edge_state.as_deref().is_some_and(|state| {
+            matches!(
+                state,
+                "fast_rising_edge_over_slow_context" | "fast_falling_release_over_slow_context"
+            )
+        });
         let semantic_stagnation_watch = semantic_stagnation_state.as_deref().is_some_and(|state| {
             matches!(
                 state,
@@ -607,6 +656,8 @@ impl BridgeState {
         });
         let ghost_stability_risk = if heartbeat_unreliable {
             "heartbeat_cadence_unreliable_for_pressure_stability"
+        } else if slow_context_masks_fast_edge {
+            "slow_pressure_context_masks_current_fast_edge"
         } else if semantic_stagnation_watch {
             "connected_lanes_functional_semantic_clog"
         } else if felt_mode_packing_dead_zone {
@@ -666,9 +717,11 @@ impl BridgeState {
             .or(pressure_source_family.as_deref())
             .unwrap_or("unknown");
         let analysis = format!(
-            "source={source_label}; structural_state={structural_pressure_state}; trend={}; smoothing={}; semantic_stagnation={}; heartbeat={}; ghost_stability_risk={ghost_stability_risk}",
+            "source={source_label}; mode_packing_visibility={}; structural_state={structural_pressure_state}; trend={}; smoothing={}; pressure_edge={}; semantic_stagnation={}; heartbeat={}; ghost_stability_risk={ghost_stability_risk}",
+            mode_packing_visibility_basis.unwrap_or("not_visible"),
             trend_classification.as_deref().unwrap_or("unknown"),
             smoothing_classification.as_deref().unwrap_or("unknown"),
+            pressure_edge_state.as_deref().unwrap_or("unknown"),
             semantic_stagnation_state.as_deref().unwrap_or("unknown"),
             heartbeat_jitter_class.as_deref().unwrap_or("unknown"),
         );
@@ -722,6 +775,42 @@ impl BridgeState {
                 authority: "read_only_heartbeat_delay_truth_not_cadence_or_reconnect_change".to_string(),
             });
         }
+        if pressure_edge_state.as_deref() == Some("fast_falling_release_over_slow_context") {
+            let fast_delta = smoothing
+                .as_ref()
+                .and_then(|value| value.fast_window_pressure_delta);
+            let slow_delta = smoothing
+                .as_ref()
+                .and_then(|value| value.slow_window_pressure_delta);
+            experience_deltas.push(ExperienceDeltaV1 {
+                kind: ExperienceDeltaKindV1::Laminarization,
+                surface: "pressure_source_analysis_v1".to_string(),
+                lane: "fast_pressure_edge_over_slow_context".to_string(),
+                dimension: None,
+                spectral_dimension: None,
+                persistence: None,
+                viscosity_subtype: None,
+                viscosity_weight: None,
+                pre: slow_delta,
+                post: fast_delta,
+                loss: None,
+                loss_ratio: None,
+                metadata: std::collections::BTreeMap::from([
+                    (
+                        "fast_window_pressure_delta".to_string(),
+                        fast_delta.map_or_else(|| "unavailable".to_string(), |value| value.to_string()),
+                    ),
+                    (
+                        "slow_window_pressure_delta".to_string(),
+                        slow_delta.map_or_else(|| "unavailable".to_string(), |value| value.to_string()),
+                    ),
+                ]),
+                why: "a current falling pressure edge is releasing faster than the slower context; preserve the laminarization instead of flattening it into stable smoothing".to_string(),
+                who_can_change_it: "schema/tooling maintainers may improve this read-only truth channel; Mike/operator approval remains required for pressure or controller changes".to_string(),
+                how_to_test_it: "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib ws::tests::pressure_source_analysis_names_fast_release_as_laminarization -- --exact --nocapture".to_string(),
+                authority: "read_only_laminarization_truth_not_pressure_smoothing_or_control_change".to_string(),
+            });
+        }
         let experience_delta_bus_v1 = (!experience_deltas.is_empty())
             .then(|| ExperienceDeltaBusV1::from_deltas(experience_deltas));
 
@@ -735,6 +824,7 @@ impl BridgeState {
             porosity_score,
             semantic_trickle,
             mode_packing,
+            mode_packing_visibility_basis: mode_packing_visibility_basis.map(str::to_string),
             porosity_expansion_threshold_state,
             felt_mode_packing_dead_zone,
             live_mode_packing_threshold: Some(PRESSURE_POROSITY_EXPANSION_MODE_PACKING_AT),
@@ -754,6 +844,7 @@ impl BridgeState {
             mode_packing_delta,
             pressure_trend_classification: trend_classification,
             smoothing_classification,
+            pressure_edge_state,
             semantic_stagnation_index,
             semantic_stagnation_state,
             heartbeat_jitter_class,
@@ -931,6 +1022,18 @@ impl BridgeState {
             "absent_backward_compatible"
         };
         let alignment = &resonance.texture_component_alignment;
+        let component_viscosity_index = resonance.components.viscosity_index.clamp(0.0, 1.0);
+        let signature_viscosity_index = signature
+            .viscosity_index
+            .filter(|value| value.is_finite())
+            .map(|value| value.clamp(0.0, 1.0));
+        let viscosity_delta = signature_viscosity_index
+            .map(|value| round_flux_delta(value - component_viscosity_index));
+        let viscosity_alignment_state = match viscosity_delta {
+            None => "signature_viscosity_absent_legacy",
+            Some(delta) if delta.abs() <= 0.001 => "signature_viscosity_aligned",
+            Some(_) => "signature_viscosity_component_mismatch",
+        };
         let dynamic_flux_vector = signature
             .dynamic_flux_vector
             .clone()
@@ -973,6 +1076,10 @@ impl BridgeState {
             policy: "texture_signature_integrity_v1".to_string(),
             schema_version: 1,
             movement_quality: signature.movement_quality.clone(),
+            signature_viscosity_index,
+            component_viscosity_index,
+            viscosity_delta,
+            viscosity_alignment_state: viscosity_alignment_state.to_string(),
             temporal_variance,
             pressure_gradient_delta,
             pressure_gradient_delta_source,
@@ -1992,6 +2099,12 @@ fn build_texture_dynamic_flux_vector_v1(
             latest.porosity_gradient,
             previous.porosity_gradient,
         ),
+        comfort_gate_velocity: optional_flux_delta(latest.comfort_gate, previous.comfort_gate),
+        comfort_gate_acceleration: optional_flux_acceleration(
+            latest.comfort_gate,
+            previous.comfort_gate,
+            before_previous.and_then(|sample| sample.comfort_gate),
+        ),
         spectral_entropy: latest.spectral_entropy,
         flux_confidence: Some(flux_confidence_for_pairs(&[
             (latest.pressure_risk, previous.pressure_risk),
@@ -2391,6 +2504,20 @@ fn record_pressure_trend_sample_v1(
         spectral_entropy,
         fill_pct,
     );
+    let viscosity_gradient = telemetry
+        .resonance_density_v1
+        .as_ref()
+        .and_then(|resonance| resonance.components.viscosity_vector.viscosity_gradient)
+        .filter(|value| value.is_finite())
+        .map(|value| value.clamp(0.0, 1.0));
+    let viscosity_gradient_trend = viscosity_gradient
+        .zip(
+            state
+                .pressure_trend_samples_v1
+                .back()
+                .and_then(|sample| sample.viscosity_gradient),
+        )
+        .map(|(latest, previous)| round_flux_delta(latest - previous));
     let complexity_density = complexity_density_v1(
         structural_density,
         resonance_depth,
@@ -2405,6 +2532,10 @@ fn record_pressure_trend_sample_v1(
         semantic_viscosity,
         porosity_gradient,
     );
+    let comfort_gate = telemetry
+        .resonance_density_v1
+        .as_ref()
+        .map(|resonance| resonance.components.comfort_gate.clamp(0.0, 1.0));
     let pressure_velocity_delta = pressure_risk
         .zip(
             state
@@ -2428,8 +2559,11 @@ fn record_pressure_trend_sample_v1(
         structural_density,
         resonance_depth,
         semantic_viscosity,
+        viscosity_gradient,
+        viscosity_gradient_trend,
         complexity_density,
         weight_density_index,
+        comfort_gate,
         porosity_gradient,
         semantic_friction,
         semantic_trickle,
@@ -2464,6 +2598,18 @@ fn build_pressure_trend_smoothing_v1(
         .and_then(|sample| sample.spectral_drift_velocity);
     let latest_resonance_depth = samples.back().and_then(|sample| sample.resonance_depth);
     let latest_semantic_viscosity = samples.back().and_then(|sample| sample.semantic_viscosity);
+    let latest_viscosity_gradient = samples.back().and_then(|sample| sample.viscosity_gradient);
+    let viscosity_gradient_trend = samples
+        .back()
+        .and_then(|sample| sample.viscosity_gradient_trend);
+    let viscosity_gradient_trend_state = match viscosity_gradient_trend {
+        Some(delta) if delta >= 0.08 => "rapid_viscosity_thickening_velocity_watch",
+        Some(delta) if delta >= 0.025 => "viscosity_thickening_velocity_watch",
+        Some(delta) if delta <= -0.08 => "rapid_viscosity_thinning_visible",
+        Some(delta) if delta <= -0.025 => "viscosity_thinning_visible",
+        Some(_) => "viscosity_gradient_velocity_quiet",
+        None => "viscosity_gradient_velocity_unavailable",
+    };
     let latest_complexity_density = samples.back().and_then(|sample| sample.complexity_density);
     let latest_weight_density_index = samples
         .back()
@@ -2496,6 +2642,19 @@ fn build_pressure_trend_smoothing_v1(
         .fold(None, |current: Option<f32>, value| {
             Some(current.map_or(value, |max_value| max_value.max(value)))
         });
+    let valid_pressures = samples
+        .iter()
+        .filter_map(|sample| sample.pressure_risk)
+        .collect::<Vec<_>>();
+    let (
+        fast_window_sample_count,
+        slow_window_sample_count,
+        fast_window_pressure_delta,
+        slow_window_pressure_delta,
+        fast_slow_edge_divergence,
+        fast_slow_edge_state,
+        fast_edge_preserved,
+    ) = pressure_fast_slow_edge_v1(&valid_pressures);
     let semantic_viscosity_deltas = samples
         .iter()
         .filter_map(|sample| sample.semantic_viscosity)
@@ -2538,10 +2697,6 @@ fn build_pressure_trend_smoothing_v1(
             Some(current.map_or(value, |max_value| max_value.max(value)))
         });
     let weight_density_state = weight_density_state_v1(latest_weight_density_index);
-    let valid_pressures = samples
-        .iter()
-        .filter_map(|sample| sample.pressure_risk)
-        .collect::<Vec<_>>();
     let latest_spectral_entropy = samples.back().and_then(|sample| sample.spectral_entropy);
     let entropy_window_blend_ratio = entropy_window_blend_ratio_v1(latest_spectral_entropy);
     let entropy_threshold_state =
@@ -2610,10 +2765,20 @@ fn build_pressure_trend_smoothing_v1(
             latest_pressure_risk: latest_pressure,
             latest_pressure_velocity_delta,
             max_pressure_velocity_delta,
+            fast_window_sample_count,
+            slow_window_sample_count,
+            fast_window_pressure_delta,
+            slow_window_pressure_delta,
+            fast_slow_edge_divergence,
+            fast_slow_edge_state: fast_slow_edge_state.to_string(),
+            fast_edge_preserved,
             latest_spectral_drift_velocity,
             max_spectral_drift_velocity,
             latest_resonance_depth,
             latest_semantic_viscosity,
+            latest_viscosity_gradient,
+            viscosity_gradient_trend,
+            viscosity_gradient_trend_state: viscosity_gradient_trend_state.to_string(),
             latest_complexity_density,
             max_complexity_density,
             latest_weight_density_index,
@@ -2655,10 +2820,20 @@ fn build_pressure_trend_smoothing_v1(
             latest_pressure_risk: latest_pressure,
             latest_pressure_velocity_delta,
             max_pressure_velocity_delta,
+            fast_window_sample_count,
+            slow_window_sample_count,
+            fast_window_pressure_delta,
+            slow_window_pressure_delta,
+            fast_slow_edge_divergence,
+            fast_slow_edge_state: "telemetry_gap".to_string(),
+            fast_edge_preserved,
             latest_spectral_drift_velocity,
             max_spectral_drift_velocity,
             latest_resonance_depth,
             latest_semantic_viscosity,
+            latest_viscosity_gradient,
+            viscosity_gradient_trend,
+            viscosity_gradient_trend_state: viscosity_gradient_trend_state.to_string(),
             latest_complexity_density,
             max_complexity_density,
             latest_weight_density_index,
@@ -2746,10 +2921,20 @@ fn build_pressure_trend_smoothing_v1(
         latest_pressure_risk: latest_pressure,
         latest_pressure_velocity_delta,
         max_pressure_velocity_delta,
+        fast_window_sample_count,
+        slow_window_sample_count,
+        fast_window_pressure_delta,
+        slow_window_pressure_delta,
+        fast_slow_edge_divergence,
+        fast_slow_edge_state: fast_slow_edge_state.to_string(),
+        fast_edge_preserved,
         latest_spectral_drift_velocity,
         max_spectral_drift_velocity,
         latest_resonance_depth,
         latest_semantic_viscosity,
+        latest_viscosity_gradient,
+        viscosity_gradient_trend,
+        viscosity_gradient_trend_state: viscosity_gradient_trend_state.to_string(),
         latest_complexity_density,
         max_complexity_density,
         latest_weight_density_index,
@@ -2778,6 +2963,66 @@ fn build_pressure_trend_smoothing_v1(
         window_policy,
         authority: "diagnostic_smoothing_not_pressure_control".to_string(),
     })
+}
+
+fn pressure_fast_slow_edge_v1(
+    valid_pressures: &[f32],
+) -> (
+    usize,
+    usize,
+    Option<f32>,
+    Option<f32>,
+    Option<f32>,
+    &'static str,
+    bool,
+) {
+    let slow_window_sample_count = valid_pressures.len();
+    if slow_window_sample_count < 2 {
+        return (
+            slow_window_sample_count,
+            slow_window_sample_count,
+            None,
+            None,
+            None,
+            "insufficient_history",
+            false,
+        );
+    }
+
+    let fast_window_sample_count = slow_window_sample_count.min(3);
+    let fast_start = slow_window_sample_count.saturating_sub(fast_window_sample_count);
+    let latest = valid_pressures.last().copied().unwrap_or_default();
+    let fast_first = valid_pressures.get(fast_start).copied().unwrap_or(latest);
+    let slow_first = valid_pressures.first().copied().unwrap_or(latest);
+    let fast_delta = round_flux_delta((latest - fast_first).clamp(-1.0, 1.0));
+    let slow_delta = round_flux_delta((latest - slow_first).clamp(-1.0, 1.0));
+    let divergence = round_flux_delta((fast_delta - slow_delta).clamp(-1.0, 1.0));
+    let fast_edge_preserved = fast_delta.abs() >= 0.04;
+    let state = if fast_delta >= 0.04 && divergence >= 0.03 {
+        "fast_rising_edge_over_slow_context"
+    } else if fast_delta <= -0.04 && divergence <= -0.03 {
+        "fast_falling_release_over_slow_context"
+    } else if fast_delta >= 0.04 && slow_delta >= 0.04 {
+        "rising_edge_carried_by_slow_context"
+    } else if fast_delta <= -0.04 && slow_delta <= -0.04 {
+        "falling_release_carried_by_slow_context"
+    } else if fast_delta.abs() < 0.04 && slow_delta.abs() >= 0.06 {
+        "slow_context_without_current_fast_edge"
+    } else if fast_edge_preserved {
+        "current_fast_edge_visible"
+    } else {
+        "fast_and_slow_edges_quiet"
+    };
+
+    (
+        fast_window_sample_count,
+        slow_window_sample_count,
+        Some(fast_delta),
+        Some(slow_delta),
+        Some(divergence),
+        state,
+        fast_edge_preserved,
+    )
 }
 
 fn build_telemetry_heartbeat_delta_v1(
@@ -4847,6 +5092,8 @@ mod tests {
             semantic_viscosity_velocity: None,
             semantic_viscosity_acceleration: None,
             porosity_velocity: None,
+            comfort_gate_velocity: None,
+            comfort_gate_acceleration: None,
             spectral_entropy: Some(0.90),
             flux_confidence: Some(0.72),
             flux_absence_semantics: None,
@@ -5081,6 +5328,45 @@ mod tests {
     }
 
     #[test]
+    fn pressure_trend_smoothing_preserves_fast_release_over_slow_context() {
+        let mut state = BridgeState::new();
+        for (idx, pressure) in [0.20_f32, 0.25, 0.40, 0.34, 0.28].into_iter().enumerate() {
+            let telemetry = make_pressure_telemetry(0.70, pressure, 0.40);
+            record_pressure_trend_sample_v1(&mut state, &telemetry, 70.0, 100.0 + idx as f64);
+        }
+
+        let smoothing = state.pressure_trend_smoothing_v1().expect("smoothing");
+        assert_eq!(smoothing.fast_window_sample_count, 3);
+        assert_eq!(smoothing.slow_window_sample_count, 5);
+        assert_eq!(smoothing.fast_window_pressure_delta, Some(-0.12));
+        assert_eq!(smoothing.slow_window_pressure_delta, Some(0.08));
+        assert_eq!(smoothing.fast_slow_edge_divergence, Some(-0.20));
+        assert_eq!(
+            smoothing.fast_slow_edge_state,
+            "fast_falling_release_over_slow_context"
+        );
+        assert!(smoothing.fast_edge_preserved);
+        assert_eq!(
+            smoothing.authority,
+            "diagnostic_smoothing_not_pressure_control"
+        );
+    }
+
+    #[test]
+    fn pressure_fast_slow_edge_names_rising_edge_over_falling_context() {
+        let (fast_count, slow_count, fast, slow, divergence, state, preserved) =
+            pressure_fast_slow_edge_v1(&[0.40, 0.36, 0.20, 0.26, 0.34]);
+
+        assert_eq!(fast_count, 3);
+        assert_eq!(slow_count, 5);
+        assert_eq!(fast, Some(0.14));
+        assert_eq!(slow, Some(-0.06));
+        assert_eq!(divergence, Some(0.20));
+        assert_eq!(state, "fast_rising_edge_over_slow_context");
+        assert!(preserved);
+    }
+
+    #[test]
     fn pressure_trend_smoothing_uses_graded_high_entropy_ballast_window() {
         let mut state = BridgeState::new();
         let expected_window = pressure_trend_dynamic_window_capacity_v1(
@@ -5175,6 +5461,33 @@ mod tests {
         assert_eq!(
             full_entropy_low_porosity_window,
             PRESSURE_TREND_SMOOTHING_HIGH_ENTROPY_WINDOW
+        );
+    }
+
+    #[test]
+    fn pressure_trend_current_cascade_stays_within_fast_dynamics_bound() {
+        let reported_cascade =
+            pressure_trend_dynamic_window_capacity_v1(Some(0.91), Some(0.66), Some(0.18));
+        let low_porosity =
+            pressure_trend_dynamic_window_capacity_v1(Some(0.91), Some(0.18), Some(0.18));
+        let steep_density_gradient =
+            pressure_trend_dynamic_window_capacity_v1(Some(0.91), Some(0.66), Some(0.72));
+
+        assert!(
+            reported_cascade > PRESSURE_TREND_SMOOTHING_BASE_WINDOW,
+            "the reported high-entropy cascade still receives bounded ballast: {reported_cascade}"
+        );
+        assert!(
+            reported_cascade <= 12,
+            "entropy=0.91 porosity=0.66 density_gradient=0.18 must stay inside Astrid's requested fast-dynamics review bound: {reported_cascade}"
+        );
+        assert!(
+            reported_cascade < low_porosity,
+            "porosity must keep the current cascade more responsive: current={reported_cascade}, low_porosity={low_porosity}"
+        );
+        assert!(
+            reported_cascade < steep_density_gradient,
+            "a shallow density gradient must keep the current cascade more responsive: current={reported_cascade}, steep={steep_density_gradient}"
         );
     }
 
@@ -5282,8 +5595,11 @@ mod tests {
                 structural_density: Some(0.62),
                 resonance_depth: Some(0.66),
                 semantic_viscosity: Some(semantic_viscosity),
+                viscosity_gradient: None,
+                viscosity_gradient_trend: None,
                 complexity_density: None,
                 weight_density_index: None,
+                comfort_gate: None,
                 porosity_gradient: Some(0.44),
                 semantic_friction: Some(0.42),
                 semantic_trickle: Some(0.09),
@@ -5503,8 +5819,11 @@ mod tests {
                 structural_density: Some(0.58),
                 resonance_depth: Some(0.54),
                 semantic_viscosity: Some(0.78),
+                viscosity_gradient: None,
+                viscosity_gradient_trend: None,
                 complexity_density: Some(0.64),
                 weight_density_index: None,
+                comfort_gate: None,
                 porosity_gradient: Some(0.58),
                 semantic_friction: Some(0.90),
                 semantic_trickle: Some(0.0),
@@ -5540,8 +5859,11 @@ mod tests {
                 structural_density: Some(0.60),
                 resonance_depth: Some(0.58),
                 semantic_viscosity: Some(0.58),
+                viscosity_gradient: None,
+                viscosity_gradient_trend: None,
                 complexity_density: None,
                 weight_density_index: None,
+                comfort_gate: None,
                 porosity_gradient: Some(0.66),
                 semantic_friction: Some(0.48),
                 semantic_trickle: Some(0.02),
@@ -5594,8 +5916,11 @@ mod tests {
                 structural_density: Some(0.60),
                 resonance_depth: Some(0.58),
                 semantic_viscosity: Some(viscosity),
+                viscosity_gradient: None,
+                viscosity_gradient_trend: None,
                 complexity_density: None,
                 weight_density_index: None,
+                comfort_gate: None,
                 porosity_gradient: Some(0.66),
                 semantic_friction: Some(0.30),
                 semantic_trickle: Some(0.12),
@@ -5616,6 +5941,36 @@ mod tests {
         assert_eq!(
             smoothing.semantic_viscosity_shift_state,
             "rapid_semantic_thinning_visible"
+        );
+        assert_eq!(
+            smoothing.authority,
+            "diagnostic_smoothing_not_pressure_control"
+        );
+    }
+
+    #[test]
+    fn pressure_trend_smoothing_exposes_viscosity_velocity_before_static_pressure_warning() {
+        let mut state = BridgeState::new();
+        for (idx, gradient) in [0.28_f32, 0.34, 0.46].into_iter().enumerate() {
+            let mut telemetry =
+                with_spectral_entropy(make_pressure_telemetry(0.70, 0.18, 0.34), 0.91);
+            telemetry
+                .resonance_density_v1
+                .as_mut()
+                .expect("resonance density fixture")
+                .components
+                .viscosity_vector
+                .viscosity_gradient = Some(gradient);
+            record_pressure_trend_sample_v1(&mut state, &telemetry, 70.0, 100.0 + idx as f64);
+        }
+
+        let smoothing = state.pressure_trend_smoothing_v1().expect("smoothing");
+        assert_eq!(smoothing.latest_pressure_risk, Some(0.18));
+        assert_eq!(smoothing.latest_viscosity_gradient, Some(0.46));
+        assert_eq!(smoothing.viscosity_gradient_trend, Some(0.12));
+        assert_eq!(
+            smoothing.viscosity_gradient_trend_state,
+            "rapid_viscosity_thickening_velocity_watch"
         );
         assert_eq!(
             smoothing.authority,
@@ -5677,8 +6032,11 @@ mod tests {
             structural_density: Some(0.72),
             resonance_depth: Some(0.69),
             semantic_viscosity: Some(0.69),
+            viscosity_gradient: None,
+            viscosity_gradient_trend: None,
             complexity_density: None,
             weight_density_index: None,
+            comfort_gate: None,
             porosity_gradient: Some(0.24),
             semantic_friction: Some(0.42),
             semantic_trickle: Some(0.04),
@@ -5696,8 +6054,11 @@ mod tests {
             structural_density: Some(0.72),
             resonance_depth: Some(0.68),
             semantic_viscosity: Some(0.66),
+            viscosity_gradient: None,
+            viscosity_gradient_trend: None,
             complexity_density: None,
             weight_density_index: None,
+            comfort_gate: None,
             porosity_gradient: Some(0.24),
             semantic_friction: Some(0.42),
             semantic_trickle: Some(0.04),
@@ -5745,8 +6106,11 @@ mod tests {
             structural_density: Some(0.38),
             resonance_depth: Some(0.41),
             semantic_viscosity: Some(0.48),
+            viscosity_gradient: None,
+            viscosity_gradient_trend: None,
             complexity_density: None,
             weight_density_index: None,
+            comfort_gate: None,
             porosity_gradient: Some(0.50),
             semantic_friction: Some(0.08),
             semantic_trickle: Some(0.0),
@@ -5764,8 +6128,11 @@ mod tests {
             structural_density: Some(0.38),
             resonance_depth: Some(0.40),
             semantic_viscosity: Some(0.40),
+            viscosity_gradient: None,
+            viscosity_gradient_trend: None,
             complexity_density: None,
             weight_density_index: None,
+            comfort_gate: None,
             porosity_gradient: Some(0.50),
             semantic_friction: Some(0.08),
             semantic_trickle: Some(0.0),
@@ -6140,6 +6507,93 @@ mod tests {
     }
 
     #[test]
+    fn pressure_source_analysis_uses_numeric_mode_packing_when_labels_are_absent() {
+        let mut state = BridgeState::new();
+        let mut telemetry = make_pressure_telemetry(0.70, 0.22, 0.32);
+        telemetry.pressure_source_v1 = None;
+        telemetry
+            .resonance_density_v1
+            .as_mut()
+            .expect("resonance density fixture")
+            .texture_signature
+            .pressure_source_family
+            .clear();
+        state.latest_telemetry = Some(telemetry);
+
+        let analysis = state
+            .pressure_source_analysis_v1()
+            .expect("pressure source analysis");
+
+        assert_eq!(analysis.dominant_source, None);
+        assert_eq!(analysis.pressure_source_family.as_deref(), Some(""));
+        assert_eq!(analysis.mode_packing, Some(0.32));
+        assert_eq!(
+            analysis.mode_packing_visibility_basis.as_deref(),
+            Some("numeric_mode_packing_at_or_above_felt_dead_zone")
+        );
+        assert_eq!(
+            analysis.structural_pressure_state,
+            "mode_packing_visible_low_or_moderate_pressure"
+        );
+        assert!(
+            analysis.analysis.contains(
+                "mode_packing_visibility=numeric_mode_packing_at_or_above_felt_dead_zone"
+            )
+        );
+        assert!(!analysis.live_threshold_write);
+        assert!(!analysis.sensory_lane_write);
+        assert_eq!(
+            analysis.authority,
+            "diagnostic_context_not_pressure_or_control"
+        );
+    }
+
+    #[test]
+    fn pressure_source_analysis_names_fast_release_as_laminarization() {
+        let mut state = BridgeState::new();
+        for (idx, pressure) in [0.20_f32, 0.25, 0.40, 0.34, 0.28].into_iter().enumerate() {
+            let telemetry = with_pressure_source(
+                make_pressure_telemetry(0.70, pressure, 0.40),
+                "mode_packing",
+                pressure,
+                0.48,
+                0.40,
+            );
+            record_pressure_trend_sample_v1(&mut state, &telemetry, 70.0, 100.0 + idx as f64);
+            state.latest_telemetry = Some(telemetry);
+        }
+
+        let analysis = state
+            .pressure_source_analysis_v1()
+            .expect("pressure source analysis");
+
+        assert_eq!(
+            analysis.pressure_edge_state.as_deref(),
+            Some("fast_falling_release_over_slow_context")
+        );
+        assert_eq!(
+            analysis.ghost_stability_risk,
+            "slow_pressure_context_masks_current_fast_edge"
+        );
+        let delta = analysis
+            .experience_delta_bus_v1
+            .as_ref()
+            .expect("laminarization delta bus")
+            .deltas
+            .iter()
+            .find(|delta| delta.kind == ExperienceDeltaKindV1::Laminarization)
+            .expect("laminarization delta");
+        assert_eq!(delta.pre, Some(0.08));
+        assert_eq!(delta.post, Some(-0.12));
+        assert_eq!(
+            delta.authority,
+            "read_only_laminarization_truth_not_pressure_smoothing_or_control_change"
+        );
+        assert!(!analysis.live_threshold_write);
+        assert!(!analysis.sensory_lane_write);
+    }
+
+    #[test]
     fn persistent_deformation_review_names_stable_bruise_without_live_writes() {
         let mut state = BridgeState::new();
         for (idx, pressure) in [0.22_f32, 0.23, 0.22, 0.23, 0.22].into_iter().enumerate() {
@@ -6455,7 +6909,11 @@ mod tests {
         );
         assert_eq!(
             analysis.structural_pressure_state,
-            "non_mode_packing_pressure_source_visible"
+            "mode_packing_visible_low_or_moderate_pressure"
+        );
+        assert_eq!(
+            analysis.mode_packing_visibility_basis.as_deref(),
+            Some("numeric_mode_packing_at_or_above_felt_dead_zone")
         );
         assert_eq!(analysis.heartbeat_jitter_class.as_deref(), Some("stale"));
         let delta_bus = analysis
@@ -6784,6 +7242,7 @@ mod tests {
             .expect("resonance density fixture");
         resonance.components.porosity_gradient = Some(0.58);
         resonance.components.cohesion_score = Some(0.40);
+        telemetry.distinguishability_loss = Some(0.20);
         state.latest_telemetry = Some(telemetry);
 
         let reciprocity = state.bridge_reciprocity_v1();
@@ -6808,6 +7267,18 @@ mod tests {
             Some(BRIDGE_RECIPROCITY_ENTROPY_CONTRACT_PREVIEW_WINDOW_MS)
         );
         assert!(review.would_stale_under_preview);
+        assert!(!review.transport_wait_stale);
+        assert!(review.structural_identity_stale);
+        assert_eq!(review.distinguishability_loss, Some(0.20));
+        assert!(
+            review
+                .structural_age_multiplier
+                .is_some_and(|multiplier| (multiplier - 1.2).abs() < 1.0e-6)
+        );
+        assert_eq!(
+            review.clock_relation,
+            "transport_waiting_structural_identity_stale"
+        );
         assert!(!review.live_stale_window_write);
         assert!(!review.local_control_write);
         assert!(
@@ -6820,6 +7291,59 @@ mod tests {
             review.authority,
             "read_only_reciprocity_review_not_stale_window_or_controller_change"
         );
+    }
+
+    #[test]
+    fn bridge_reciprocity_separates_viscous_wait_from_structural_identity_decay() {
+        let now = unix_now_s();
+        let mut state = BridgeState::new();
+        state.telemetry_connected = true;
+        state.sensory_connected = true;
+        state.latest_telemetry_arrival_unix_s = Some(now - 50.0);
+        state.last_sensory_sent_unix_s = Some(now);
+        let mut telemetry = with_spectral_entropy(make_pressure_telemetry(0.70, 0.23, 0.42), 0.50);
+        let resonance = telemetry
+            .resonance_density_v1
+            .as_mut()
+            .expect("resonance density fixture");
+        resonance.components.porosity_gradient = Some(0.58);
+        resonance.components.viscosity_index = 0.70;
+        telemetry.distinguishability_loss = Some(0.40);
+        state.latest_telemetry = Some(telemetry);
+
+        let reciprocity = state.bridge_reciprocity_v1();
+        let review = state
+            .bridge_entropy_reciprocity_review_v1()
+            .expect("latest telemetry should produce reciprocity aging review");
+
+        assert_eq!(
+            reciprocity.stale_window_ms,
+            BRIDGE_RECIPROCITY_VISCOSITY_REFLECTIVE_STALE_WINDOW_MS
+        );
+        assert_eq!(
+            reciprocity.one_sided_state,
+            "bidirectional_waiting_messages"
+        );
+        assert_eq!(review.structural_identity_window_ms, Some(60_000.0));
+        assert!(
+            review
+                .structural_age_multiplier
+                .is_some_and(|multiplier| (multiplier - 1.4).abs() < 1.0e-6)
+        );
+        assert!(
+            review
+                .structural_effective_age_ms
+                .is_some_and(|age_ms| age_ms > 69_000.0)
+        );
+        assert!(!review.transport_wait_stale);
+        assert!(review.structural_identity_stale);
+        assert!(review.would_stale_under_preview);
+        assert_eq!(
+            review.clock_relation,
+            "transport_waiting_structural_identity_stale"
+        );
+        assert!(!review.live_stale_window_write);
+        assert!(!review.local_control_write);
     }
 
     #[test]
@@ -6921,6 +7445,33 @@ mod tests {
     }
 
     #[test]
+    fn bridge_reciprocity_first_telemetry_keeps_missing_sensory_truth_visible() {
+        let now = unix_now_s();
+        let mut state = BridgeState::new();
+        state.telemetry_connected = true;
+        state.sensory_connected = true;
+        state.latest_telemetry_arrival_unix_s = Some(now);
+
+        let reciprocity = state.bridge_reciprocity_v1();
+
+        assert_eq!(reciprocity.connectivity, ConnectivityStatus::Bidirectional);
+        assert_eq!(
+            reciprocity.one_sided_state,
+            "bidirectional_no_recent_sensory"
+        );
+        assert!(
+            reciprocity
+                .telemetry_age_ms
+                .is_some_and(|age| age <= BRIDGE_RECIPROCITY_RECENT_WINDOW_MS)
+        );
+        assert_eq!(reciprocity.sensory_send_age_ms, None);
+        assert_eq!(
+            reciprocity.authority,
+            "diagnostic_status_context_not_control"
+        );
+    }
+
+    #[test]
     fn texture_signature_integrity_reports_variance_and_observability_boundary() {
         let mut state = BridgeState::new();
         let telemetry: SpectralTelemetry =
@@ -6931,6 +7482,11 @@ mod tests {
             .expect("texture integrity");
         assert_eq!(integrity.policy, "texture_signature_integrity_v1");
         assert_eq!(integrity.temporal_variance, None);
+        assert_eq!(integrity.signature_viscosity_index, None);
+        assert_eq!(
+            integrity.viscosity_alignment_state,
+            "signature_viscosity_absent_legacy"
+        );
         assert_eq!(
             integrity.damping_candidate_status,
             "missing_candidate_observability_only"
@@ -6945,6 +7501,49 @@ mod tests {
             integrity.authority,
             "diagnostic_observability_not_damping_or_control"
         );
+    }
+
+    #[test]
+    fn texture_signature_integrity_compares_explicit_viscosity_without_control() {
+        let mut state = BridgeState::new();
+        let mut telemetry = make_pressure_telemetry(0.71, 0.22, 0.40);
+        let resonance = telemetry
+            .resonance_density_v1
+            .as_mut()
+            .expect("resonance density");
+        resonance.components.viscosity_index = 0.72;
+        resonance.texture_signature.viscosity_index = Some(0.72);
+        state.latest_telemetry = Some(telemetry.clone());
+
+        let aligned = state
+            .texture_signature_integrity_v1()
+            .expect("texture integrity");
+        assert_eq!(aligned.signature_viscosity_index, Some(0.72));
+        assert_eq!(aligned.component_viscosity_index, 0.72);
+        assert_eq!(aligned.viscosity_delta, Some(0.0));
+        assert_eq!(
+            aligned.viscosity_alignment_state,
+            "signature_viscosity_aligned"
+        );
+        assert_eq!(
+            aligned.authority,
+            "diagnostic_observability_not_damping_or_control"
+        );
+
+        let resonance = telemetry
+            .resonance_density_v1
+            .as_mut()
+            .expect("resonance density");
+        resonance.texture_signature.viscosity_index = Some(0.31);
+        state.latest_telemetry = Some(telemetry);
+        let mismatched = state
+            .texture_signature_integrity_v1()
+            .expect("texture integrity");
+        assert_eq!(
+            mismatched.viscosity_alignment_state,
+            "signature_viscosity_component_mismatch"
+        );
+        assert_eq!(mismatched.viscosity_delta, Some(-0.41));
     }
 
     #[test]
@@ -7136,8 +7735,11 @@ mod tests {
             structural_density: Some(0.7100),
             resonance_depth: Some(0.62),
             semantic_viscosity: None,
+            viscosity_gradient: None,
+            viscosity_gradient_trend: None,
             complexity_density: None,
             weight_density_index: None,
+            comfort_gate: None,
             porosity_gradient: None,
             semantic_friction: None,
             semantic_trickle: None,
@@ -7155,8 +7757,11 @@ mod tests {
             structural_density: Some(0.7101),
             resonance_depth: Some(0.6201),
             semantic_viscosity: None,
+            viscosity_gradient: None,
+            viscosity_gradient_trend: None,
             complexity_density: None,
             weight_density_index: None,
+            comfort_gate: None,
             porosity_gradient: None,
             semantic_friction: None,
             semantic_trickle: None,
@@ -7186,12 +7791,12 @@ mod tests {
     }
 
     #[test]
-    fn texture_dynamic_flux_tracks_semantic_viscosity_and_porosity_velocity() {
+    fn texture_dynamic_flux_tracks_viscosity_porosity_and_comfort_gate_motion() {
         let mut samples = VecDeque::new();
-        for (idx, semantic_viscosity, porosity_gradient) in [
-            (0.0_f32, 0.52_f32, 0.62_f32),
-            (1.0_f32, 0.61_f32, 0.55_f32),
-            (2.0_f32, 0.73_f32, 0.46_f32),
+        for (idx, semantic_viscosity, porosity_gradient, comfort_gate) in [
+            (0.0_f32, 0.52_f32, 0.62_f32, 0.78_f32),
+            (1.0_f32, 0.61_f32, 0.55_f32, 0.72_f32),
+            (2.0_f32, 0.73_f32, 0.46_f32, 0.55_f32),
         ] {
             samples.push_back(PressureTrendSampleV1 {
                 pressure_risk: Some(0.22 + idx * 0.01),
@@ -7201,8 +7806,11 @@ mod tests {
                 structural_density: Some(0.58 + idx * 0.03),
                 resonance_depth: Some(0.64),
                 semantic_viscosity: Some(semantic_viscosity),
+                viscosity_gradient: None,
+                viscosity_gradient_trend: None,
                 complexity_density: None,
                 weight_density_index: None,
+                comfort_gate: Some(comfort_gate),
                 porosity_gradient: Some(porosity_gradient),
                 semantic_friction: Some(0.34 + idx * 0.01),
                 semantic_trickle: Some(0.20),
@@ -7219,6 +7827,8 @@ mod tests {
         assert_eq!(flux.semantic_viscosity_velocity, Some(0.12));
         assert_eq!(flux.semantic_viscosity_acceleration, Some(0.03));
         assert_eq!(flux.porosity_velocity, Some(-0.09));
+        assert_eq!(flux.comfort_gate_velocity, Some(-0.17));
+        assert_eq!(flux.comfort_gate_acceleration, Some(-0.11));
         assert_eq!(flux.flux_confidence, Some(1.0));
         assert_eq!(flux.flux_absence_semantics, None);
         assert_eq!(

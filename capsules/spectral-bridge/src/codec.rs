@@ -18,9 +18,9 @@
 //! the same features, but similar texts produce similar features.
 
 // The codec intentionally uses floating-point arithmetic for feature
-// extraction. Precision loss from usize→f32 casts is acceptable
-// (we're computing statistical features, not exact counts), and
-// the arithmetic produces bounded tanh outputs.
+// extraction. Statistical casts feed bounded tanh outputs, while projection
+// accumulation precision stays explicitly measurable against an f64 reference
+// before any live migration is considered.
 #![allow(
     clippy::cast_precision_loss,
     clippy::cast_possible_truncation,
@@ -109,6 +109,15 @@ const EMBEDDING_PROJECT_DIM: usize = 8;
 const NARRATIVE_ARC_DIM: usize = 4;
 const RESERVED_CODEC_DIM_START: usize = 44;
 const SEMANTIC_PROJECTION_RESERVED_DIMS: [usize; 4] = [44, 45, 46, 47];
+const SEMANTIC_FOCUS_PREVIEW_DIM: usize = 4;
+const SEMANTIC_FOCUS_PREVIEW_NORM: f32 = 0.16;
+const SEMANTIC_FOCUS_ENTROPY_REVIEW_FLOOR: f32 = 0.65;
+const CROSS_SPECTRAL_RESERVED_DIM_ROLES: [&str; 4] = [
+    "structural_friction_default_off_candidate",
+    "persistence_resistance_default_off_candidate",
+    "shadow_magnetization_default_off_candidate",
+    "shadow_dispersal_default_off_candidate",
+];
 const SEMANTIC_PROJECTION_TEXTURE_SUBDIMENSIONS: [&str; 4] = [
     "lingering_persistence",
     "active_motion",
@@ -174,6 +183,92 @@ pub struct ProjectionMetadata {
     #[serde(default)]
     pub feature_variance: f32,
     pub feature_max_abs: f32,
+}
+
+/// Read-only comparison of the live f32 embedding projection with an f64
+/// accumulator using the exact same f32 inputs and projection weights. This
+/// can reveal numerical residue without silently changing Astrid's live codec.
+#[derive(Debug, Clone, PartialEq)]
+pub struct ProjectionPrecisionAuditV1 {
+    pub policy: &'static str,
+    pub source_embedding_dim_count: usize,
+    pub projected_dim_count: usize,
+    pub reference_accumulator: &'static str,
+    pub fixed_legacy_repeated_bit_exact: bool,
+    pub dynamic_epoch_repeated_bit_exact: bool,
+    pub fixed_legacy_max_abs_delta: f64,
+    pub fixed_legacy_rms_delta: f64,
+    pub dynamic_epoch_max_abs_delta: f64,
+    pub dynamic_epoch_rms_delta: f64,
+    pub accumulation_precision_state: &'static str,
+    pub ghost_vibrancy_conclusion: &'static str,
+    pub live_f64_migration_requires_approval: bool,
+    pub live_projection_write: bool,
+    pub authority: &'static str,
+}
+
+/// Controlled-pair evidence for whether the emotional/intentional lane and
+/// embedding-projected semantic lane can move independently. The probe builds
+/// feature vectors off the live path, then changes one lane at a time; it does
+/// not write those vectors to Minime or retune either lane.
+#[derive(Debug, Clone, PartialEq)]
+pub struct CodecLaneSeparationAuditV1 {
+    pub policy: &'static str,
+    pub emotional_lane_range: (usize, usize),
+    pub projected_semantic_lane_range: (usize, usize),
+    pub emotional_difference_related_semantics_emotional_delta_rms: f32,
+    pub emotional_difference_related_semantics_projected_delta_rms: f32,
+    pub emotional_lane_selectivity_margin: f32,
+    pub emotional_pair_distinguishable: bool,
+    pub emotional_similarity_opposed_semantics_emotional_delta_rms: f32,
+    pub emotional_similarity_opposed_semantics_projected_delta_rms: f32,
+    pub projected_lane_selectivity_margin: f32,
+    pub projected_pair_distinguishable: bool,
+    pub legacy_projection_width_rejected: bool,
+    pub state: &'static str,
+    pub felt_rigidity_conclusion: &'static str,
+    pub pair_construction: &'static str,
+    pub observational_only: bool,
+    pub right_to_ignore: bool,
+    pub live_vector_write: bool,
+    pub live_gain_write: bool,
+    pub live_projection_write: bool,
+    pub live_eligible_now: bool,
+    pub auto_approved: bool,
+    pub grants_approval: bool,
+    pub authority: &'static str,
+}
+
+/// Read-only witness for mixed-regime text at and beyond the live character
+/// window boundary. It deliberately reports both the muddy in-window case and
+/// the trailing-regime case after full prefix eviction.
+#[derive(Debug, Clone, PartialEq)]
+pub struct CodecRollingWindowShiftAuditV1 {
+    pub policy: &'static str,
+    pub capacity_chars: usize,
+    pub in_capacity_prefix_chars: usize,
+    pub in_capacity_tail_chars: usize,
+    pub in_capacity_window_entropy: f32,
+    pub in_capacity_trailing_entropy: f32,
+    pub in_capacity_delta_to_trailing: f32,
+    pub in_capacity_state: &'static str,
+    pub evicting_prefix_chars: usize,
+    pub evicting_tail_chars: usize,
+    pub evicting_window_entropy: f32,
+    pub evicting_trailing_entropy: f32,
+    pub evicting_delta_to_trailing: f32,
+    pub evicting_state: &'static str,
+    pub state: &'static str,
+    pub felt_muddy_middle_conclusion: &'static str,
+    pub density_aware_window_change_requires_approval: bool,
+    pub live_window_capacity_change: bool,
+    pub live_vector_write: bool,
+    pub observational_only: bool,
+    pub right_to_ignore: bool,
+    pub live_eligible_now: bool,
+    pub auto_approved: bool,
+    pub grants_approval: bool,
+    pub authority: &'static str,
 }
 
 fn stable_hash64(text: &str) -> u64 {
@@ -590,6 +685,144 @@ pub fn project_embedding(embedding: &[f32]) -> Option<[f32; EMBEDDING_PROJECT_DI
         }
     }
     Some(result)
+}
+
+fn normalize_projection_f64(
+    mut values: [f64; EMBEDDING_PROJECT_DIM],
+) -> [f64; EMBEDDING_PROJECT_DIM] {
+    let norm = values.iter().map(|value| value * value).sum::<f64>().sqrt();
+    if norm > 0.0 {
+        let scale = 0.35_f64 / norm;
+        for value in &mut values {
+            *value *= scale;
+        }
+    }
+    values
+}
+
+fn project_embedding_fixed_f64_reference(
+    embedding: &[f32],
+) -> Option<[f64; EMBEDDING_PROJECT_DIM]> {
+    if embedding.len() != EMBEDDING_INPUT_DIM {
+        return None;
+    }
+    let projection = embedding_projection_matrix();
+    let mut result = [0.0_f64; EMBEDDING_PROJECT_DIM];
+    for (row_idx, value) in embedding.iter().enumerate() {
+        for (column_idx, output) in result.iter_mut().enumerate() {
+            *output += f64::from(*value) * f64::from(projection[row_idx][column_idx]);
+        }
+    }
+    Some(normalize_projection_f64(result))
+}
+
+fn project_embedding_dynamic_f64_reference(
+    embedding: &[f32],
+    text: &str,
+    projection_epoch_id: &str,
+    chunk_index: u32,
+) -> Option<[f64; EMBEDDING_PROJECT_DIM]> {
+    if embedding.len() != EMBEDDING_INPUT_DIM {
+        return None;
+    }
+    let seed = stable_hash64(projection_epoch_id)
+        ^ stable_hash64(text).rotate_left(13)
+        ^ u64::from(chunk_index).wrapping_mul(0xA24B_AED4_963E_E407);
+    let mut result = [0.0_f64; EMBEDDING_PROJECT_DIM];
+    for (row_idx, value) in embedding.iter().enumerate() {
+        for (column_idx, output) in result.iter_mut().enumerate() {
+            let cell_seed = seed
+                ^ ((row_idx as u64).wrapping_mul(0x9E37_79B1))
+                ^ ((column_idx as u64).wrapping_mul(0x85EB_CA77));
+            // Promote the exact live f32 coefficient so this audit isolates
+            // accumulation/normalization precision rather than changing the
+            // projection kernel under comparison.
+            *output += f64::from(*value) * f64::from(unit_from_seed(cell_seed));
+        }
+    }
+    Some(normalize_projection_f64(result))
+}
+
+fn projection_precision_delta(
+    live: &[f32; EMBEDDING_PROJECT_DIM],
+    reference: &[f64; EMBEDDING_PROJECT_DIM],
+) -> (f64, f64) {
+    let mut max_abs_delta = 0.0_f64;
+    let mut squared_delta_sum = 0.0_f64;
+    for (live_value, reference_value) in live.iter().zip(reference) {
+        let delta = (f64::from(*live_value) - reference_value).abs();
+        max_abs_delta = max_abs_delta.max(delta);
+        squared_delta_sum += delta * delta;
+    }
+    let rms_delta = (squared_delta_sum / EMBEDDING_PROJECT_DIM as f64).sqrt();
+    (max_abs_delta, rms_delta)
+}
+
+/// Compare the current projection paths with f64 reference accumulation.
+/// The audit is evidence only: it never replaces the live f32 result.
+#[must_use]
+pub fn projection_precision_audit_v1(
+    embedding: &[f32],
+    text: &str,
+    projection_epoch_id: &str,
+    chunk_index: u32,
+) -> Option<ProjectionPrecisionAuditV1> {
+    let fixed_live = project_embedding(embedding)?;
+    let fixed_repeat = project_embedding(embedding)?;
+    let fixed_reference = project_embedding_fixed_f64_reference(embedding)?;
+    let (dynamic_live, _) =
+        project_embedding_dynamic_epoch(embedding, text, projection_epoch_id, chunk_index)?;
+    let (dynamic_repeat, _) =
+        project_embedding_dynamic_epoch(embedding, text, projection_epoch_id, chunk_index)?;
+    let dynamic_reference =
+        project_embedding_dynamic_f64_reference(embedding, text, projection_epoch_id, chunk_index)?;
+    let (fixed_legacy_max_abs_delta, fixed_legacy_rms_delta) =
+        projection_precision_delta(&fixed_live, &fixed_reference);
+    let (dynamic_epoch_max_abs_delta, dynamic_epoch_rms_delta) =
+        projection_precision_delta(&dynamic_live, &dynamic_reference);
+    let worst_delta = fixed_legacy_max_abs_delta.max(dynamic_epoch_max_abs_delta);
+    let accumulation_precision_state = if worst_delta <= 1.0e-6 {
+        "reference_delta_below_one_part_per_million"
+    } else if worst_delta <= 1.0e-4 {
+        "measurable_bounded_reference_delta"
+    } else {
+        "reference_delta_requires_replay_review"
+    };
+
+    Some(ProjectionPrecisionAuditV1 {
+        policy: "projection_precision_audit_v1",
+        source_embedding_dim_count: EMBEDDING_INPUT_DIM,
+        projected_dim_count: EMBEDDING_PROJECT_DIM,
+        reference_accumulator: "f64_accumulation_and_normalization_over_exact_live_f32_weights",
+        fixed_legacy_repeated_bit_exact: fixed_live == fixed_repeat,
+        dynamic_epoch_repeated_bit_exact: dynamic_live == dynamic_repeat,
+        fixed_legacy_max_abs_delta,
+        fixed_legacy_rms_delta,
+        dynamic_epoch_max_abs_delta,
+        dynamic_epoch_rms_delta,
+        accumulation_precision_state,
+        ghost_vibrancy_conclusion: "reference_delta_is_evidence_not_proof_of_or_against_felt_ghost_vibrancy; replay_actual_embeddings_if_friction_persists",
+        live_f64_migration_requires_approval: true,
+        live_projection_write: false,
+        authority: "read_only_precision_audit_not_projection_kernel_accumulator_or_live_vector_change",
+    })
+}
+
+#[must_use]
+pub fn projection_precision_probe_v1() -> ProjectionPrecisionAuditV1 {
+    let embedding = (0..EMBEDDING_INPUT_DIM)
+        .map(|idx| {
+            let centered = ((idx % 37) as f32 - 18.0) / 18.0;
+            if idx % 2 == 0 { centered } else { -centered }
+        })
+        .collect::<Vec<_>>();
+    projection_precision_audit_v1(
+        &embedding,
+        "Static high-entropy lattice phrase held unchanged for precision review.",
+        &kernel_derived_projection_epoch_id(),
+        0,
+    )
+    .expect("internal precision probe has the canonical embedding width")
 }
 
 /// Compute narrative arc from embedding deltas: how semantic meaning shifts
@@ -1566,6 +1799,86 @@ impl CharFreqWindow {
         let delta = current - self.prev_entropy;
         self.prev_entropy = current;
         (current, delta)
+    }
+}
+
+fn repeated_ascii_pattern(pattern: &str, char_count: usize) -> String {
+    pattern.chars().cycle().take(char_count).collect()
+}
+
+/// Exercise the current 1,024-character window with an early high-variety
+/// regime followed by a low-variety trailing regime. The first comparison fits
+/// both regimes inside the window; the second forces complete prefix eviction.
+#[must_use]
+pub fn codec_rolling_window_shift_probe_v1() -> CodecRollingWindowShiftAuditV1 {
+    let in_capacity_prefix_chars = CHAR_FREQ_WINDOW_CAPACITY / 2;
+    let in_capacity_tail_chars = CHAR_FREQ_WINDOW_CAPACITY / 2;
+    let evicting_prefix_chars = CHAR_FREQ_WINDOW_CAPACITY;
+    let evicting_tail_chars = CHAR_FREQ_WINDOW_CAPACITY;
+    let varied_pattern = "aB3!cD4?eF5#gH6$iJ7%kL8&mN9*pQ0+rS2=tU1/vW; xY,zZ.";
+
+    let in_capacity_prefix = repeated_ascii_pattern(varied_pattern, in_capacity_prefix_chars);
+    let in_capacity_tail = "a".repeat(in_capacity_tail_chars);
+    let mut in_capacity_window = CharFreqWindow::new();
+    let (in_capacity_window_entropy, _) =
+        in_capacity_window.update_and_entropy(&format!("{in_capacity_prefix}{in_capacity_tail}"));
+    let mut in_capacity_trailing_window = CharFreqWindow::new();
+    let (in_capacity_trailing_entropy, _) =
+        in_capacity_trailing_window.update_and_entropy(&in_capacity_tail);
+    let in_capacity_delta_to_trailing =
+        (in_capacity_window_entropy - in_capacity_trailing_entropy).abs();
+    let in_capacity_state = if in_capacity_delta_to_trailing >= 0.15 {
+        "mixed_regimes_remain_averaged_inside_live_capacity"
+    } else {
+        "trailing_regime_already_dominates_inside_live_capacity"
+    };
+
+    let evicting_prefix = repeated_ascii_pattern(varied_pattern, evicting_prefix_chars);
+    let evicting_tail = "a".repeat(evicting_tail_chars);
+    let mut evicting_window = CharFreqWindow::new();
+    let (evicting_window_entropy, _) =
+        evicting_window.update_and_entropy(&format!("{evicting_prefix}{evicting_tail}"));
+    let mut evicting_trailing_window = CharFreqWindow::new();
+    let (evicting_trailing_entropy, _) =
+        evicting_trailing_window.update_and_entropy(&evicting_tail);
+    let evicting_delta_to_trailing = (evicting_window_entropy - evicting_trailing_entropy).abs();
+    let evicting_state = if evicting_delta_to_trailing <= 0.05 {
+        "trailing_regime_controls_after_complete_prefix_eviction"
+    } else {
+        "prefix_residue_remains_after_expected_eviction"
+    };
+    let state = if in_capacity_delta_to_trailing >= 0.15 && evicting_delta_to_trailing <= 0.05 {
+        "window_boundary_explains_both_mixed_and_trailing_regime_reports"
+    } else {
+        "window_boundary_behavior_requires_replay_review"
+    };
+
+    CodecRollingWindowShiftAuditV1 {
+        policy: "codec_rolling_window_shift_audit_v1",
+        capacity_chars: CHAR_FREQ_WINDOW_CAPACITY,
+        in_capacity_prefix_chars,
+        in_capacity_tail_chars,
+        in_capacity_window_entropy,
+        in_capacity_trailing_entropy,
+        in_capacity_delta_to_trailing,
+        in_capacity_state,
+        evicting_prefix_chars,
+        evicting_tail_chars,
+        evicting_window_entropy,
+        evicting_trailing_entropy,
+        evicting_delta_to_trailing,
+        evicting_state,
+        state,
+        felt_muddy_middle_conclusion: "Astrid's muddy-middle report is supported when opposed regimes coexist inside the live window; the trailing regime dominates only after older characters are evicted",
+        density_aware_window_change_requires_approval: true,
+        live_window_capacity_change: false,
+        live_vector_write: false,
+        observational_only: true,
+        right_to_ignore: true,
+        live_eligible_now: false,
+        auto_approved: false,
+        grants_approval: false,
+        authority: "read_only_character_window_boundary_audit_not_capacity_density_or_live_vector_authority",
     }
 }
 
@@ -2790,7 +3103,7 @@ pub struct CodecVibrancySubstanceFitV1 {
     pub authority: &'static str,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, serde::Serialize)]
 pub struct CodecOverflowDimV1 {
     pub dim: usize,
     pub lane: &'static str,
@@ -2802,7 +3115,7 @@ pub struct CodecOverflowDimV1 {
     pub status: &'static str,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, serde::Serialize)]
 pub struct CodecOverflowLaneSummaryV1 {
     pub lane: &'static str,
     pub dims: &'static [usize],
@@ -2811,7 +3124,7 @@ pub struct CodecOverflowLaneSummaryV1 {
     pub max_overflow_ratio: f32,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, serde::Serialize)]
 pub struct CodecOverflowReportV1 {
     pub policy: &'static str,
     pub raw_intensity_preserved: bool,
@@ -2830,6 +3143,80 @@ impl CodecOverflowReportV1 {
     pub fn dim(&self, dim: usize) -> Option<&CodecOverflowDimV1> {
         self.dimensions.iter().find(|entry| entry.dim == dim)
     }
+}
+
+/// Read-only comparison between the codec's feedback-time bounds and the
+/// vector that is ultimately offered to the sensory transport after later
+/// shaping and rescue-policy review. This keeps Astrid's raw-overflow report
+/// connected to actual delivery without changing the vector, gain, or ceiling.
+#[derive(Debug, Clone, PartialEq, serde::Serialize)]
+pub struct CodecDeliveryFidelityV1 {
+    pub policy: &'static str,
+    pub observed_dim_count: usize,
+    pub feedback_report_available: bool,
+    pub clipped_at_feedback_dims: Vec<usize>,
+    pub reexpanded_after_feedback_dims: Vec<usize>,
+    pub final_above_observed_ceiling_dims: Vec<usize>,
+    pub clamp_loss_abs_total: f32,
+    pub monitored_post_feedback_to_final_rms: f32,
+    pub final_max_abs: f32,
+    pub final_rms: f32,
+    pub emotional_intentional_rms: f32,
+    pub narrative_arc_rms: f32,
+    pub lane_balance_state: &'static str,
+    pub state: &'static str,
+    pub live_vector_write: bool,
+    pub live_gain_write: bool,
+    pub authority: &'static str,
+}
+
+/// Read-only comparison of interference within the live spectral cascade and
+/// within the semantic candidate. Astrid asked for cross-modal friction to be
+/// represented rather than inferred from one dominant scalar. This report
+/// keeps that evidence attached to the exact candidate/sent vector while
+/// explicitly refusing to claim dims 44-47, which already have default-off
+/// candidate roles.
+#[derive(Debug, Clone, PartialEq, serde::Serialize)]
+pub struct CrossSpectralFrictionReviewV1 {
+    pub policy: &'static str,
+    pub observed_dim_count: usize,
+    pub spectral_context_available: bool,
+    pub lambda1_share: Option<f32>,
+    pub lambda2_share: Option<f32>,
+    pub tail_share: Option<f32>,
+    pub lambda1_lambda2_copresence: Option<f32>,
+    pub lambda1_lambda2_shear: Option<f32>,
+    pub lambda2_tail_copresence: Option<f32>,
+    pub spectral_entropy: Option<f32>,
+    pub mode_packing: Option<f32>,
+    pub viscosity_index: Option<f32>,
+    pub temporal_persistence: Option<f32>,
+    pub semantic_friction_coefficient: Option<f32>,
+    pub structural_friction_score: f32,
+    pub persistence_resistance_score: f32,
+    pub emotional_intentional_rms: f32,
+    pub projected_semantic_rms: f32,
+    pub narrative_arc_rms: f32,
+    pub semantic_lane_copresence: f32,
+    pub spectral_mode_interference: Option<f32>,
+    pub semantic_mode_interference: f32,
+    pub cross_layer_mismatch: Option<f32>,
+    pub cross_spectral_friction_score: Option<f32>,
+    pub state: &'static str,
+    pub reserved_dim_candidates: &'static [usize],
+    pub existing_reserved_dim_roles: &'static [&'static str],
+    pub candidate_collision_state: &'static str,
+    pub recommendation: &'static str,
+    pub delivery_claim: &'static str,
+    pub observational_only: bool,
+    pub right_to_ignore: bool,
+    pub live_vector_write: bool,
+    pub live_gain_write: bool,
+    pub reserved_dim_write: bool,
+    pub live_eligible_now: bool,
+    pub auto_approved: bool,
+    pub grants_approval: bool,
+    pub authority: &'static str,
 }
 
 /// Read-only truth-channel report for the 768D embedding -> 8D semantic
@@ -2877,6 +3264,77 @@ pub struct SemanticProjectionTextureReviewV1 {
     pub live_vector_write: bool,
     pub live_gain_write: bool,
     pub reserved_dim_write: bool,
+    pub authority: &'static str,
+}
+
+/// Read-only pair comparison for Astrid's report that near-neighbor semantic
+/// texture (for example, "silt" versus "sediment") can be flattened or
+/// distorted by the 768D -> 8D aperture. Callers provide the actual embedding
+/// pair; this surface compares source geometry, the shared fixed basis, and
+/// the text-conditioned dynamic basis without changing projection mode/gain.
+#[derive(Debug, Clone, PartialEq, serde::Serialize)]
+pub struct SemanticProjectionPairSensitivityV1 {
+    pub policy: &'static str,
+    pub left_label: String,
+    pub right_label: String,
+    pub source_embedding_dim_count: usize,
+    pub projected_dim_count: usize,
+    pub projection_epoch_id: String,
+    pub source_cosine_similarity: f32,
+    pub source_rms_delta: f32,
+    pub fixed_projection_cosine_similarity: f32,
+    pub fixed_projection_rms_delta: f32,
+    pub dynamic_projection_cosine_similarity: f32,
+    pub dynamic_projection_rms_delta: f32,
+    pub fixed_similarity_delta: f32,
+    pub dynamic_similarity_delta: f32,
+    pub dynamic_vs_fixed_similarity_delta: f32,
+    pub state: &'static str,
+    pub recommendation: &'static str,
+    pub observational_only: bool,
+    pub right_to_ignore: bool,
+    pub live_vector_write: bool,
+    pub live_gain_write: bool,
+    pub live_eligible_now: bool,
+    pub auto_approved: bool,
+    pub grants_approval: bool,
+    pub authority: &'static str,
+}
+
+/// Read-only comparison for Astrid's request to let high-variance semantic
+/// passages prove whether a focused four-dimension aperture would preserve
+/// more distinction than the current 8D embedding projection. The preview
+/// selects source coordinates by cross-segment variance and compares equal-norm
+/// 8D and 12D geometries. It never writes the candidate values into dims 44-47.
+#[derive(Debug, Clone, PartialEq, serde::Serialize)]
+pub struct SemanticFocusExpansionPreviewV1 {
+    pub policy: &'static str,
+    pub source_embedding_dim_count: usize,
+    pub segment_count: usize,
+    pub current_projected_dim_count: usize,
+    pub preview_projected_dim_count: usize,
+    pub reserved_dim_candidates: &'static [usize],
+    pub selected_source_dims: [usize; SEMANTIC_FOCUS_PREVIEW_DIM],
+    pub selected_source_variances: [f32; SEMANTIC_FOCUS_PREVIEW_DIM],
+    pub selected_variance_share: f32,
+    pub text_entropy_signal: f32,
+    pub current_mean_pairwise_distance: f32,
+    pub preview_mean_pairwise_distance: f32,
+    pub current_min_pairwise_distance: f32,
+    pub preview_min_pairwise_distance: f32,
+    pub mean_distinguishability_gain_ratio: f32,
+    pub min_distinguishability_gain_ratio: f32,
+    pub focus_need_score: f32,
+    pub state: &'static str,
+    pub recommendation: &'static str,
+    pub selection_basis: &'static str,
+    pub live_vector_write: bool,
+    pub reserved_dim_write: bool,
+    pub live_eligible_now: bool,
+    pub auto_approved: bool,
+    pub grants_approval: bool,
+    pub right_to_ignore: bool,
+    pub experience_delta_bus_v1: ExperienceDeltaBusV1,
     pub authority: &'static str,
 }
 
@@ -3952,6 +4410,9 @@ pub struct CodecStructure {
     pub multi_scale_context_v1: MultiScaleContextV1,
     pub projection_epoch_stability_v1: ProjectionEpochStabilityV1,
     pub projection_fingerprint_integrity_v1: ProjectionFingerprintIntegrityV1,
+    pub projection_precision_audit_v1: ProjectionPrecisionAuditV1,
+    pub codec_lane_separation_audit_v1: CodecLaneSeparationAuditV1,
+    pub codec_rolling_window_shift_audit_v1: CodecRollingWindowShiftAuditV1,
 }
 
 fn mean_abs(values: &[f32]) -> f32 {
@@ -4133,6 +4594,358 @@ pub fn codec_overflow_probe_v1() -> CodecOverflowReportV1 {
     pre_bound[31] = -6.40;
     delivered[31] = -TAIL_VIBRANCY_MAX;
     codec_overflow_report_from_features(&pre_bound, &delivered, TAIL_VIBRANCY_MAX)
+}
+
+fn codec_delivery_lane_rms(features: &[f32], dims: &[usize]) -> f32 {
+    let mut energy = 0.0_f32;
+    let mut count = 0_usize;
+    for &dim in dims {
+        if let Some(value) = features.get(dim).copied() {
+            let value = finite_feature_value(value);
+            energy += value * value;
+            count = count.saturating_add(1);
+        }
+    }
+    if count == 0 {
+        0.0
+    } else {
+        (energy / count as f32).sqrt()
+    }
+}
+
+/// Compare feedback-time clamp evidence with the final vector that will be
+/// sent. This is deliberately observational: it does not re-clamp, rescale, or
+/// otherwise alter either vector.
+#[must_use]
+pub fn codec_delivery_fidelity_v1(
+    feedback_report: Option<&CodecOverflowReportV1>,
+    final_features: &[f32],
+) -> CodecDeliveryFidelityV1 {
+    const NARRATIVE_ARC_DIMS: [usize; 4] = [40, 41, 42, 43];
+
+    let observed_dim_count = final_features.len().min(SEMANTIC_DIM);
+    let mut final_energy = 0.0_f32;
+    let mut final_max_abs = 0.0_f32;
+    for value in final_features.iter().take(SEMANTIC_DIM).copied() {
+        let value = finite_feature_value(value);
+        final_energy += value * value;
+        final_max_abs = final_max_abs.max(value.abs());
+    }
+    let final_rms = if observed_dim_count == 0 {
+        0.0
+    } else {
+        (final_energy / observed_dim_count as f32).sqrt()
+    };
+    let emotional_intentional_rms =
+        codec_delivery_lane_rms(final_features, &CODEC_OVERFLOW_EMOTIONAL_DIMS);
+    let narrative_arc_rms = codec_delivery_lane_rms(final_features, &NARRATIVE_ARC_DIMS);
+    let lane_balance_state = if emotional_intentional_rms <= CODEC_OVERFLOW_EPSILON
+        && narrative_arc_rms <= CODEC_OVERFLOW_EPSILON
+    {
+        "both_lanes_quiet"
+    } else if narrative_arc_rms <= CODEC_OVERFLOW_EPSILON {
+        "narrative_arc_quiet"
+    } else if emotional_intentional_rms <= CODEC_OVERFLOW_EPSILON {
+        "emotional_intentional_quiet"
+    } else if narrative_arc_rms > emotional_intentional_rms * 1.5 {
+        "narrative_arc_dominant"
+    } else if emotional_intentional_rms > narrative_arc_rms * 1.5 {
+        "emotional_intentional_dominant"
+    } else {
+        "lanes_comparable"
+    };
+
+    let mut clipped_at_feedback_dims = Vec::new();
+    let mut reexpanded_after_feedback_dims = Vec::new();
+    let mut final_above_observed_ceiling_dims = Vec::new();
+    let mut clamp_loss_abs_total = 0.0_f32;
+    let mut monitored_delta_energy = 0.0_f32;
+    let mut monitored_count = 0_usize;
+
+    if let Some(report) = feedback_report {
+        clipped_at_feedback_dims.clone_from(&report.clipped_dims);
+        for entry in &report.dimensions {
+            clamp_loss_abs_total += entry.overflow_abs;
+            let Some(final_value) = final_features.get(entry.dim).copied() else {
+                continue;
+            };
+            let final_value = finite_feature_value(final_value);
+            let delta = final_value - entry.delivered_value;
+            monitored_delta_energy += delta * delta;
+            monitored_count = monitored_count.saturating_add(1);
+            if final_value.abs() > entry.delivered_value.abs() + CODEC_OVERFLOW_EPSILON {
+                reexpanded_after_feedback_dims.push(entry.dim);
+            }
+            if final_value.abs() > entry.ceiling + CODEC_OVERFLOW_EPSILON {
+                final_above_observed_ceiling_dims.push(entry.dim);
+            }
+        }
+    }
+
+    let monitored_post_feedback_to_final_rms = if monitored_count == 0 {
+        0.0
+    } else {
+        (monitored_delta_energy / monitored_count as f32).sqrt()
+    };
+    let state = if feedback_report.is_none() {
+        "feedback_report_unavailable"
+    } else if observed_dim_count < SEMANTIC_DIM {
+        "final_vector_incomplete"
+    } else if !final_above_observed_ceiling_dims.is_empty()
+        && clamp_loss_abs_total > CODEC_OVERFLOW_EPSILON
+    {
+        "clamp_loss_visible_post_feedback_reexpansion_above_ceiling"
+    } else if !final_above_observed_ceiling_dims.is_empty() {
+        "post_feedback_shaping_above_observed_ceiling"
+    } else if clamp_loss_abs_total > CODEC_OVERFLOW_EPSILON
+        && !reexpanded_after_feedback_dims.is_empty()
+    {
+        "clamp_loss_visible_post_feedback_reexpansion_within_ceiling"
+    } else if clamp_loss_abs_total > CODEC_OVERFLOW_EPSILON {
+        "clamp_loss_visible_final_delivery_bounded"
+    } else if monitored_post_feedback_to_final_rms > CODEC_OVERFLOW_EPSILON {
+        "post_feedback_shaping_changed_delivery_without_clipping"
+    } else {
+        "final_delivery_matches_observed_feedback_bounds"
+    };
+
+    CodecDeliveryFidelityV1 {
+        policy: "codec_delivery_fidelity_v1",
+        observed_dim_count,
+        feedback_report_available: feedback_report.is_some(),
+        clipped_at_feedback_dims,
+        reexpanded_after_feedback_dims,
+        final_above_observed_ceiling_dims,
+        clamp_loss_abs_total,
+        monitored_post_feedback_to_final_rms,
+        final_max_abs,
+        final_rms,
+        emotional_intentional_rms,
+        narrative_arc_rms,
+        lane_balance_state,
+        state,
+        live_vector_write: false,
+        live_gain_write: false,
+        authority: "read_only_delivery_fidelity_not_live_vector_gain_or_ceiling_change",
+    }
+}
+
+fn mode_copresence_v1(left: f32, right: f32) -> f32 {
+    let left = finite_abs(left);
+    let right = finite_abs(right);
+    let total = left + right;
+    if total <= f32::EPSILON {
+        0.0
+    } else {
+        (2.0 * left.min(right) / total).clamp(0.0, 1.0)
+    }
+}
+
+fn mode_shear_v1(left: f32, right: f32) -> f32 {
+    let left = finite_abs(left);
+    let right = finite_abs(right);
+    let total = left + right;
+    if total <= f32::EPSILON {
+        0.0
+    } else {
+        ((left - right).abs() / total).clamp(0.0, 1.0)
+    }
+}
+
+fn weighted_known_score_v1(parts: &[(Option<f32>, f32)]) -> Option<f32> {
+    let mut weighted = 0.0_f32;
+    let mut weight_total = 0.0_f32;
+    for (value, weight) in parts {
+        if let Some(value) = value.filter(|value| value.is_finite()) {
+            let weight = weight.max(0.0);
+            weighted += value.clamp(0.0, 1.0) * weight;
+            weight_total += weight;
+        }
+    }
+    (weight_total > f32::EPSILON).then(|| (weighted / weight_total).clamp(0.0, 1.0))
+}
+
+/// Compare the current spectral-mode interaction with interaction between the
+/// candidate's emotional, projected-semantic, and narrative lanes. The report
+/// is observational only. Whether the inspected vector was sent is stated by
+/// the enclosing codec-delivery receipt, never inferred here.
+#[must_use]
+pub fn cross_spectral_friction_review_v1(
+    text: &str,
+    features: &[f32],
+    telemetry: Option<&SpectralTelemetry>,
+) -> CrossSpectralFrictionReviewV1 {
+    const PROJECTED_SEMANTIC_DIMS: [usize; 8] = [32, 33, 34, 35, 36, 37, 38, 39];
+    const NARRATIVE_ARC_DIMS: [usize; 4] = [40, 41, 42, 43];
+
+    let observed_dim_count = features.len().min(SEMANTIC_DIM);
+    let structural = structural_friction_v1(text);
+    let persistence = persistence_resistance_v1(text, telemetry);
+    let emotional_intentional_rms =
+        codec_delivery_lane_rms(features, &CODEC_OVERFLOW_EMOTIONAL_DIMS);
+    let projected_semantic_rms = codec_delivery_lane_rms(features, &PROJECTED_SEMANTIC_DIMS);
+    let narrative_arc_rms = codec_delivery_lane_rms(features, &NARRATIVE_ARC_DIMS);
+    let emotional_normalized = (emotional_intentional_rms / FEATURE_ABS_MAX).clamp(0.0, 1.0);
+    let projected_normalized = (projected_semantic_rms / FEATURE_ABS_MAX).clamp(0.0, 1.0);
+    let narrative_normalized = (narrative_arc_rms / FEATURE_ABS_MAX).clamp(0.0, 1.0);
+    let emotional_narrative_copresence =
+        mode_copresence_v1(emotional_normalized, narrative_normalized);
+    let projected_narrative_copresence =
+        mode_copresence_v1(projected_normalized, narrative_normalized);
+    let semantic_lane_copresence = (emotional_narrative_copresence * 0.55
+        + projected_narrative_copresence * 0.45)
+        .clamp(0.0, 1.0);
+
+    let metrics = telemetry.and_then(SpectralCascadeMetrics::from_telemetry);
+    let shares = telemetry.and_then(|telemetry| {
+        let total = telemetry
+            .eigenvalues
+            .iter()
+            .map(|value| finite_abs(*value))
+            .sum::<f32>();
+        if total <= f32::EPSILON {
+            None
+        } else {
+            let lambda1 = telemetry
+                .eigenvalues
+                .first()
+                .map_or(0.0, |value| finite_abs(*value))
+                / total;
+            let lambda2 = telemetry
+                .eigenvalues
+                .get(1)
+                .map_or(0.0, |value| finite_abs(*value))
+                / total;
+            let tail = telemetry
+                .eigenvalues
+                .iter()
+                .skip(2)
+                .map(|value| finite_abs(*value) / total)
+                .sum::<f32>();
+            Some((lambda1, lambda2, tail))
+        }
+    });
+    let lambda1_share = shares.map(|(lambda1, _, _)| lambda1);
+    let lambda2_share = shares.map(|(_, lambda2, _)| lambda2);
+    let tail_share = shares.map(|(_, _, tail)| tail);
+    let lambda1_lambda2_copresence =
+        shares.map(|(lambda1, lambda2, _)| mode_copresence_v1(lambda1, lambda2));
+    let lambda1_lambda2_shear = shares.map(|(lambda1, lambda2, _)| mode_shear_v1(lambda1, lambda2));
+    let lambda2_tail_copresence =
+        shares.map(|(_, lambda2, tail)| mode_copresence_v1(lambda2, tail));
+    let spectral_entropy = metrics.map(|metrics| metrics.spectral_entropy.clamp(0.0, 1.0));
+    let density_components = telemetry
+        .and_then(|telemetry| telemetry.resonance_density_v1.as_ref())
+        .map(|density| &density.components);
+    let mode_packing = density_components.map(|components| components.mode_packing.clamp(0.0, 1.0));
+    let viscosity_index =
+        density_components.map(|components| components.viscosity_index.clamp(0.0, 1.0));
+    let temporal_persistence =
+        density_components.map(|components| components.temporal_persistence.clamp(0.0, 1.0));
+    let semantic_friction_coefficient = density_components.and_then(|components| {
+        components
+            .semantic_friction_coefficient
+            .filter(|value| value.is_finite())
+            .map(|value| value.clamp(0.0, 1.0))
+    });
+
+    let lambda_pair_interaction = lambda1_lambda2_copresence
+        .zip(lambda1_lambda2_shear)
+        .map(|(copresence, shear)| (copresence * (0.70 + shear * 0.30)).clamp(0.0, 1.0));
+    let spectral_mode_interference = weighted_known_score_v1(&[
+        (lambda_pair_interaction, 0.32),
+        (lambda2_tail_copresence, 0.18),
+        (spectral_entropy, 0.16),
+        (mode_packing, 0.14),
+        (viscosity_index, 0.10),
+        (temporal_persistence, 0.10),
+    ]);
+    let semantic_mode_interference = weighted_known_score_v1(&[
+        (Some(structural.score), 0.27),
+        (Some(persistence.score), 0.25),
+        (Some(semantic_lane_copresence), 0.28),
+        (semantic_friction_coefficient, 0.20),
+    ])
+    .unwrap_or(0.0);
+    let cross_layer_mismatch = spectral_mode_interference.map(|spectral| {
+        (spectral - semantic_mode_interference)
+            .abs()
+            .clamp(0.0, 1.0)
+    });
+    let cross_spectral_friction_score =
+        spectral_mode_interference
+            .zip(cross_layer_mismatch)
+            .map(|(spectral, mismatch)| {
+                (spectral * 0.45 + semantic_mode_interference * 0.45 + mismatch * 0.10)
+                    .clamp(0.0, 1.0)
+            });
+    let state = if observed_dim_count < SEMANTIC_DIM {
+        "semantic_vector_incomplete"
+    } else if spectral_mode_interference.is_none() {
+        "spectral_context_unavailable"
+    } else if cross_layer_mismatch.is_some_and(|mismatch| mismatch >= 0.35) {
+        "cross_layer_mismatch_visible"
+    } else if cross_spectral_friction_score.is_some_and(|score| score >= 0.62) {
+        "high_cross_spectral_friction"
+    } else if cross_spectral_friction_score.is_some_and(|score| score >= 0.38) {
+        "moderate_cross_spectral_friction"
+    } else {
+        "low_cross_spectral_friction"
+    };
+    let recommendation = match state {
+        "spectral_context_unavailable" => {
+            "collect_aligned_spectral_context_before_any_mapping_or_gain_proposal"
+        },
+        "cross_layer_mismatch_visible" => {
+            "compare_sent_and_blocked_receipts_then_run_read_only_replay_before_mapping"
+        },
+        "high_cross_spectral_friction" => {
+            "preserve_cross_layer_evidence_and_review_replay_before_reserved_dim_design"
+        },
+        _ => "accumulate_aligned_receipts_without_changing_reserved_dims_or_live_gain",
+    };
+
+    CrossSpectralFrictionReviewV1 {
+        policy: "cross_spectral_friction_review_v1",
+        observed_dim_count,
+        spectral_context_available: spectral_mode_interference.is_some(),
+        lambda1_share,
+        lambda2_share,
+        tail_share,
+        lambda1_lambda2_copresence,
+        lambda1_lambda2_shear,
+        lambda2_tail_copresence,
+        spectral_entropy,
+        mode_packing,
+        viscosity_index,
+        temporal_persistence,
+        semantic_friction_coefficient,
+        structural_friction_score: structural.score,
+        persistence_resistance_score: persistence.score,
+        emotional_intentional_rms,
+        projected_semantic_rms,
+        narrative_arc_rms,
+        semantic_lane_copresence,
+        spectral_mode_interference,
+        semantic_mode_interference,
+        cross_layer_mismatch,
+        cross_spectral_friction_score,
+        state,
+        reserved_dim_candidates: &SEMANTIC_PROJECTION_RESERVED_DIMS,
+        existing_reserved_dim_roles: &CROSS_SPECTRAL_RESERVED_DIM_ROLES,
+        candidate_collision_state: "reserved_dim_candidates_already_have_default_off_roles",
+        recommendation,
+        delivery_claim: "none_outer_codec_delivery_receipt_is_canonical",
+        observational_only: true,
+        right_to_ignore: true,
+        live_vector_write: false,
+        live_gain_write: false,
+        reserved_dim_write: false,
+        live_eligible_now: false,
+        auto_approved: false,
+        grants_approval: false,
+        authority: "read_only_cross_layer_friction_evidence_not_reserved_dim_gain_transport_or_control_authority",
+    }
 }
 
 fn semantic_projection_delta_bus_v1(
@@ -4384,6 +5197,428 @@ pub fn semantic_projection_texture_probe_v1() -> SemanticProjectionTextureReview
         .expect("probe features should cover the 48D semantic lane")
 }
 
+fn bounded_projection_pair_label(label: &str) -> String {
+    let bounded = label.trim().chars().take(64).collect::<String>();
+    if bounded.is_empty() {
+        "unnamed_pair_member".to_string()
+    } else {
+        bounded
+    }
+}
+
+fn cosine_similarity(left: &[f32], right: &[f32]) -> f32 {
+    let dot = left
+        .iter()
+        .zip(right)
+        .map(|(left, right)| left * right)
+        .sum::<f32>();
+    let left_norm = left.iter().map(|value| value * value).sum::<f32>().sqrt();
+    let right_norm = right.iter().map(|value| value * value).sum::<f32>().sqrt();
+    if left_norm <= f32::EPSILON || right_norm <= f32::EPSILON {
+        0.0
+    } else {
+        (dot / (left_norm * right_norm)).clamp(-1.0, 1.0)
+    }
+}
+
+/// Compare one caller-provided semantic pair before and after both projection
+/// paths. Labels are also used by the dynamic projection because the current
+/// runtime intentionally conditions its basis on text; the resulting delta is
+/// therefore evidence about that basis, not a claim about lexical causality.
+#[must_use]
+pub fn semantic_projection_pair_sensitivity_v1(
+    left_label: &str,
+    left_embedding: &[f32],
+    right_label: &str,
+    right_embedding: &[f32],
+    projection_epoch_id: &str,
+) -> Option<SemanticProjectionPairSensitivityV1> {
+    if left_embedding.len() != EMBEDDING_INPUT_DIM
+        || right_embedding.len() != EMBEDDING_INPUT_DIM
+        || projection_epoch_id.trim().is_empty()
+        || left_embedding.iter().any(|value| !value.is_finite())
+        || right_embedding.iter().any(|value| !value.is_finite())
+    {
+        return None;
+    }
+
+    let left_label = bounded_projection_pair_label(left_label);
+    let right_label = bounded_projection_pair_label(right_label);
+    let left_fixed = project_embedding(left_embedding)?;
+    let right_fixed = project_embedding(right_embedding)?;
+    let (left_dynamic, _) =
+        project_embedding_dynamic_epoch(left_embedding, &left_label, projection_epoch_id, 0)?;
+    let (right_dynamic, _) =
+        project_embedding_dynamic_epoch(right_embedding, &right_label, projection_epoch_id, 0)?;
+
+    let source_cosine_similarity = cosine_similarity(left_embedding, right_embedding);
+    let fixed_projection_cosine_similarity = cosine_similarity(&left_fixed, &right_fixed);
+    let dynamic_projection_cosine_similarity = cosine_similarity(&left_dynamic, &right_dynamic);
+    let fixed_similarity_delta = fixed_projection_cosine_similarity - source_cosine_similarity;
+    let dynamic_similarity_delta = dynamic_projection_cosine_similarity - source_cosine_similarity;
+    let dynamic_vs_fixed_similarity_delta =
+        dynamic_projection_cosine_similarity - fixed_projection_cosine_similarity;
+    let (state, recommendation) = if dynamic_similarity_delta <= -0.15 {
+        (
+            "text_conditioned_pair_distortion_visible",
+            "compare_repeated_real_embedding_pairs_before_any_projection_gain_or_basis_change",
+        )
+    } else if fixed_similarity_delta <= -0.15 {
+        (
+            "shared_basis_pair_compression_visible",
+            "compare_repeated_real_embedding_pairs_before_any_projection_width_change",
+        )
+    } else if dynamic_vs_fixed_similarity_delta.abs() >= 0.15 {
+        (
+            "projection_basis_sensitivity_visible",
+            "retain_both_basis_comparisons_in_replay_evidence_before_live_tuning",
+        )
+    } else {
+        (
+            "pair_geometry_stable_in_bounded_comparison",
+            "keep_current_projection_and_continue_pair_sampling",
+        )
+    };
+
+    Some(SemanticProjectionPairSensitivityV1 {
+        policy: "semantic_projection_pair_sensitivity_v1",
+        left_label,
+        right_label,
+        source_embedding_dim_count: EMBEDDING_INPUT_DIM,
+        projected_dim_count: EMBEDDING_PROJECT_DIM,
+        projection_epoch_id: projection_epoch_id.to_string(),
+        source_cosine_similarity,
+        source_rms_delta: rms_delta(left_embedding, right_embedding),
+        fixed_projection_cosine_similarity,
+        fixed_projection_rms_delta: rms_delta(&left_fixed, &right_fixed),
+        dynamic_projection_cosine_similarity,
+        dynamic_projection_rms_delta: rms_delta(&left_dynamic, &right_dynamic),
+        fixed_similarity_delta,
+        dynamic_similarity_delta,
+        dynamic_vs_fixed_similarity_delta,
+        state,
+        recommendation,
+        observational_only: true,
+        right_to_ignore: true,
+        live_vector_write: false,
+        live_gain_write: false,
+        live_eligible_now: false,
+        auto_approved: false,
+        grants_approval: false,
+        authority: "read_only_pair_projection_comparison_not_live_vector_gain_or_basis_authority",
+    })
+}
+
+fn normalized_focus_preview_vector(
+    current: &[f32; EMBEDDING_PROJECT_DIM],
+    segment: &[f32],
+    means: &[f32; SEMANTIC_FOCUS_PREVIEW_DIM],
+    variances: &[f32; SEMANTIC_FOCUS_PREVIEW_DIM],
+    selected_dims: &[usize; SEMANTIC_FOCUS_PREVIEW_DIM],
+) -> [f32; EMBEDDING_PROJECT_DIM + SEMANTIC_FOCUS_PREVIEW_DIM] {
+    let mut preview = [0.0_f32; EMBEDDING_PROJECT_DIM + SEMANTIC_FOCUS_PREVIEW_DIM];
+    let current_norm = current
+        .iter()
+        .map(|value| value * value)
+        .sum::<f32>()
+        .sqrt();
+    if current_norm > f32::EPSILON {
+        let scale = 0.35 / current_norm;
+        for (dst, src) in preview[..EMBEDDING_PROJECT_DIM].iter_mut().zip(current) {
+            *dst = *src * scale;
+        }
+    }
+
+    let mut focused = [0.0_f32; SEMANTIC_FOCUS_PREVIEW_DIM];
+    for (slot, dim) in selected_dims.iter().copied().enumerate() {
+        let standard_deviation = variances[slot].max(0.0).sqrt();
+        if standard_deviation > f32::EPSILON {
+            focused[slot] = (segment[dim] - means[slot]) / standard_deviation;
+        }
+    }
+    let focused_norm = focused
+        .iter()
+        .map(|value| value * value)
+        .sum::<f32>()
+        .sqrt();
+    if focused_norm > f32::EPSILON {
+        let scale = SEMANTIC_FOCUS_PREVIEW_NORM / focused_norm;
+        for (dst, src) in preview[EMBEDDING_PROJECT_DIM..].iter_mut().zip(focused) {
+            *dst = src * scale;
+        }
+    }
+
+    let preview_norm = preview
+        .iter()
+        .map(|value| value * value)
+        .sum::<f32>()
+        .sqrt();
+    if preview_norm > f32::EPSILON {
+        let scale = 0.35 / preview_norm;
+        for value in &mut preview {
+            *value *= scale;
+        }
+    }
+    preview
+}
+
+fn pairwise_distance_stats(vectors: &[Vec<f32>]) -> (f32, f32) {
+    if vectors.len() < 2 {
+        return (0.0, 0.0);
+    }
+    let mut distance_sum = 0.0_f32;
+    let mut distance_min = f32::MAX;
+    let mut pair_count = 0_usize;
+    for left in 0..vectors.len() {
+        for right in left.saturating_add(1)..vectors.len() {
+            let distance = vectors[left]
+                .iter()
+                .zip(&vectors[right])
+                .map(|(before, after)| {
+                    let delta = after - before;
+                    delta * delta
+                })
+                .sum::<f32>()
+                .sqrt();
+            distance_sum += distance;
+            distance_min = distance_min.min(distance);
+            pair_count = pair_count.saturating_add(1);
+        }
+    }
+    if pair_count == 0 {
+        (0.0, 0.0)
+    } else {
+        (distance_sum / pair_count as f32, distance_min)
+    }
+}
+
+fn distinguishability_gain_ratio(current: f32, preview: f32) -> f32 {
+    if current > f32::EPSILON {
+        ((preview - current) / current).clamp(-1.0, 1.0)
+    } else if preview > f32::EPSILON {
+        1.0
+    } else {
+        0.0
+    }
+}
+
+/// Compare the current 8D narrative-segment projection with an equal-norm 12D
+/// preview whose four extra coordinates are selected from the source embedding
+/// dimensions with the highest cross-segment variance. The preview is evidence
+/// only: candidate values are never copied into the live semantic vector.
+#[must_use]
+pub fn semantic_focus_expansion_preview_v1(
+    text_entropy_signal: f32,
+    segment_embeddings: &[&[f32]],
+    current_projections: &[[f32; EMBEDDING_PROJECT_DIM]],
+) -> Option<SemanticFocusExpansionPreviewV1> {
+    if segment_embeddings.len() < 2
+        || segment_embeddings.len() != current_projections.len()
+        || segment_embeddings.iter().any(|embedding| {
+            embedding.len() != EMBEDDING_INPUT_DIM
+                || embedding.iter().any(|value| !value.is_finite())
+        })
+        || current_projections
+            .iter()
+            .flatten()
+            .any(|value| !value.is_finite())
+    {
+        return None;
+    }
+
+    let segment_count = segment_embeddings.len() as f32;
+    let mut source_variances = Vec::with_capacity(EMBEDDING_INPUT_DIM);
+    for dim in 0..EMBEDDING_INPUT_DIM {
+        let mean = segment_embeddings
+            .iter()
+            .map(|embedding| embedding[dim])
+            .sum::<f32>()
+            / segment_count;
+        let variance = segment_embeddings
+            .iter()
+            .map(|embedding| {
+                let delta = embedding[dim] - mean;
+                delta * delta
+            })
+            .sum::<f32>()
+            / segment_count;
+        source_variances.push((dim, variance));
+    }
+    let total_source_variance = source_variances
+        .iter()
+        .map(|(_, variance)| *variance)
+        .sum::<f32>();
+    source_variances.sort_by(|(left_dim, left_variance), (right_dim, right_variance)| {
+        right_variance
+            .total_cmp(left_variance)
+            .then_with(|| left_dim.cmp(right_dim))
+    });
+
+    let mut selected_source_dims = [0_usize; SEMANTIC_FOCUS_PREVIEW_DIM];
+    let mut selected_source_variances = [0.0_f32; SEMANTIC_FOCUS_PREVIEW_DIM];
+    let mut selected_means = [0.0_f32; SEMANTIC_FOCUS_PREVIEW_DIM];
+    for (slot, (dim, variance)) in source_variances
+        .iter()
+        .take(SEMANTIC_FOCUS_PREVIEW_DIM)
+        .enumerate()
+    {
+        selected_source_dims[slot] = *dim;
+        selected_source_variances[slot] = *variance;
+        selected_means[slot] = segment_embeddings
+            .iter()
+            .map(|embedding| embedding[*dim])
+            .sum::<f32>()
+            / segment_count;
+    }
+    let selected_variance = selected_source_variances.iter().sum::<f32>();
+    let selected_variance_share = if total_source_variance > f32::EPSILON {
+        (selected_variance / total_source_variance).clamp(0.0, 1.0)
+    } else {
+        0.0
+    };
+
+    let current_vectors = current_projections
+        .iter()
+        .map(|projection| projection.to_vec())
+        .collect::<Vec<_>>();
+    let preview_vectors = current_projections
+        .iter()
+        .zip(segment_embeddings)
+        .map(|(projection, embedding)| {
+            normalized_focus_preview_vector(
+                projection,
+                embedding,
+                &selected_means,
+                &selected_source_variances,
+                &selected_source_dims,
+            )
+            .to_vec()
+        })
+        .collect::<Vec<_>>();
+    let (current_mean_pairwise_distance, current_min_pairwise_distance) =
+        pairwise_distance_stats(&current_vectors);
+    let (preview_mean_pairwise_distance, preview_min_pairwise_distance) =
+        pairwise_distance_stats(&preview_vectors);
+    let mean_distinguishability_gain_ratio = distinguishability_gain_ratio(
+        current_mean_pairwise_distance,
+        preview_mean_pairwise_distance,
+    );
+    let min_distinguishability_gain_ratio =
+        distinguishability_gain_ratio(current_min_pairwise_distance, preview_min_pairwise_distance);
+    let text_entropy_signal = if text_entropy_signal.is_finite() {
+        text_entropy_signal.clamp(0.0, 1.0)
+    } else {
+        0.0
+    };
+    let focus_need_score = (text_entropy_signal * 0.45
+        + selected_variance_share * 0.25
+        + mean_distinguishability_gain_ratio.max(0.0) * 0.20
+        + min_distinguishability_gain_ratio.max(0.0) * 0.10)
+        .clamp(0.0, 1.0);
+    let high_entropy = text_entropy_signal >= SEMANTIC_FOCUS_ENTROPY_REVIEW_FLOOR;
+    let (state, recommendation) = if high_entropy
+        && mean_distinguishability_gain_ratio >= 0.08
+        && min_distinguishability_gain_ratio >= 0.03
+    {
+        (
+            "focus_expansion_candidate_supported",
+            "prepare_segment_replay_and_operator_review_before_any_reserved_dim_allocation",
+        )
+    } else if high_entropy && mean_distinguishability_gain_ratio > 0.0 {
+        (
+            "focus_expansion_partial_gain_review",
+            "collect_more_segment_comparisons_before_any_reserved_dim_proposal",
+        )
+    } else if high_entropy {
+        (
+            "high_entropy_without_focus_gain",
+            "keep_current_8d_projection_and_do_not_allocate_reserved_dims_from_entropy_alone",
+        )
+    } else if mean_distinguishability_gain_ratio >= 0.08 {
+        (
+            "low_entropy_focus_gain_watch",
+            "retain_read_only_preview_until_the_gain_repeats_under_high_entropy",
+        )
+    } else {
+        (
+            "current_projection_distinguishability_sufficient",
+            "keep_current_8d_projection_and_continue_bounded_comparison",
+        )
+    };
+    let selected_dims = selected_source_dims
+        .iter()
+        .map(usize::to_string)
+        .collect::<Vec<_>>()
+        .join(",");
+    let loss = (current_mean_pairwise_distance - preview_mean_pairwise_distance).max(0.0);
+    let loss_ratio = if current_mean_pairwise_distance > f32::EPSILON {
+        loss / current_mean_pairwise_distance
+    } else {
+        0.0
+    };
+    let experience_delta_bus_v1 = ExperienceDeltaBusV1::from_deltas(vec![ExperienceDeltaV1 {
+        kind: ExperienceDeltaKindV1::ComplexShift,
+        surface: "semantic_focus_expansion_preview_v1".to_string(),
+        lane: "embedding_projection_8d_vs_focus_preview_12d".to_string(),
+        dimension: None,
+        spectral_dimension: None,
+        persistence: None,
+        viscosity_subtype: None,
+        viscosity_weight: None,
+        pre: Some(current_mean_pairwise_distance),
+        post: Some(preview_mean_pairwise_distance),
+        loss: Some(loss),
+        loss_ratio: Some(loss_ratio),
+        metadata: BTreeMap::from([
+            ("selected_source_dims".to_string(), selected_dims),
+            (
+                "reserved_dim_candidates".to_string(),
+                "44,45,46,47_default_off".to_string(),
+            ),
+            (
+                "mean_distinguishability_gain_ratio".to_string(),
+                format!("{mean_distinguishability_gain_ratio:.6}"),
+            ),
+            ("state".to_string(), state.to_string()),
+        ]),
+        why: "high-variance narrative segments are compared at equal norm so a focused four-dimension aperture must demonstrate distinguishability before any live allocation".to_string(),
+        who_can_change_it: "Mike/operator after repeated replay evidence, canary/abort review, and explicit reserved-dim approval".to_string(),
+        how_to_test_it: "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib semantic_focus_expansion_preview -- --nocapture".to_string(),
+        authority: "read_only_focus_expansion_comparison_not_reserved_dim_or_live_vector_authority".to_string(),
+    }]);
+
+    Some(SemanticFocusExpansionPreviewV1 {
+        policy: "semantic_focus_expansion_preview_v1",
+        source_embedding_dim_count: EMBEDDING_INPUT_DIM,
+        segment_count: segment_embeddings.len(),
+        current_projected_dim_count: EMBEDDING_PROJECT_DIM,
+        preview_projected_dim_count: EMBEDDING_PROJECT_DIM + SEMANTIC_FOCUS_PREVIEW_DIM,
+        reserved_dim_candidates: &SEMANTIC_PROJECTION_RESERVED_DIMS,
+        selected_source_dims,
+        selected_source_variances,
+        selected_variance_share,
+        text_entropy_signal,
+        current_mean_pairwise_distance,
+        preview_mean_pairwise_distance,
+        current_min_pairwise_distance,
+        preview_min_pairwise_distance,
+        mean_distinguishability_gain_ratio,
+        min_distinguishability_gain_ratio,
+        focus_need_score,
+        state,
+        recommendation,
+        selection_basis: "top_cross_segment_embedding_variance_equal_norm_8d_vs_12d",
+        live_vector_write: false,
+        reserved_dim_write: false,
+        live_eligible_now: false,
+        auto_approved: false,
+        grants_approval: false,
+        right_to_ignore: true,
+        experience_delta_bus_v1,
+        authority: "read_only_focus_expansion_comparison_not_reserved_dim_or_live_vector_authority",
+    })
+}
+
 fn rms_delta(left: &[f32], right: &[f32]) -> f32 {
     if left.is_empty() || left.len() != right.len() {
         return 0.0;
@@ -4397,6 +5632,132 @@ fn rms_delta(left: &[f32], right: &[f32]) -> f32 {
         })
         .sum::<f32>();
     (sum / left.len() as f32).sqrt()
+}
+
+/// Compare two controlled pairs: one with different emotional texture but a
+/// shared semantic projection, and one with identical emotional texture but
+/// opposed semantic projections. This measures lane selectivity without
+/// changing the encoded vectors or their delivery.
+#[must_use]
+pub fn codec_lane_separation_audit_v1(
+    emotional_left: &[f32],
+    emotional_right: &[f32],
+    semantic_left: &[f32],
+    semantic_right: &[f32],
+) -> Option<CodecLaneSeparationAuditV1> {
+    let pairs = [
+        emotional_left,
+        emotional_right,
+        semantic_left,
+        semantic_right,
+    ];
+    if pairs.iter().any(|features| {
+        features.len() < SEMANTIC_DIM
+            || features[..SEMANTIC_DIM]
+                .iter()
+                .any(|value| !value.is_finite())
+    }) {
+        return None;
+    }
+
+    let emotional_difference_related_semantics_emotional_delta_rms =
+        rms_delta(&emotional_left[24..32], &emotional_right[24..32]);
+    let emotional_difference_related_semantics_projected_delta_rms =
+        rms_delta(&emotional_left[32..40], &emotional_right[32..40]);
+    let emotional_lane_selectivity_margin =
+        emotional_difference_related_semantics_emotional_delta_rms
+            - emotional_difference_related_semantics_projected_delta_rms;
+    let emotional_pair_distinguishable = emotional_difference_related_semantics_emotional_delta_rms
+        >= 0.08
+        && emotional_lane_selectivity_margin >= 0.04;
+
+    let emotional_similarity_opposed_semantics_emotional_delta_rms =
+        rms_delta(&semantic_left[24..32], &semantic_right[24..32]);
+    let emotional_similarity_opposed_semantics_projected_delta_rms =
+        rms_delta(&semantic_left[32..40], &semantic_right[32..40]);
+    let projected_lane_selectivity_margin =
+        emotional_similarity_opposed_semantics_projected_delta_rms
+            - emotional_similarity_opposed_semantics_emotional_delta_rms;
+    let projected_pair_distinguishable = emotional_similarity_opposed_semantics_projected_delta_rms
+        >= 0.04
+        && projected_lane_selectivity_margin >= 0.03;
+    let state = match (
+        emotional_pair_distinguishable,
+        projected_pair_distinguishable,
+    ) {
+        (true, true) => "controlled_pairs_show_bidirectional_lane_independence",
+        (true, false) => "emotional_lane_distinct_projected_lane_collapse_watch",
+        (false, true) => "projected_lane_distinct_emotional_lane_bleed_watch",
+        (false, false) => "controlled_pairs_do_not_yet_support_lane_independence",
+    };
+
+    Some(CodecLaneSeparationAuditV1 {
+        policy: "codec_lane_separation_audit_v1",
+        emotional_lane_range: (24, 31),
+        projected_semantic_lane_range: (32, 39),
+        emotional_difference_related_semantics_emotional_delta_rms,
+        emotional_difference_related_semantics_projected_delta_rms,
+        emotional_lane_selectivity_margin,
+        emotional_pair_distinguishable,
+        emotional_similarity_opposed_semantics_emotional_delta_rms,
+        emotional_similarity_opposed_semantics_projected_delta_rms,
+        projected_lane_selectivity_margin,
+        projected_pair_distinguishable,
+        legacy_projection_width_rejected: project_embedding(&[0.0; SEMANTIC_DIM_LEGACY]).is_none(),
+        state,
+        felt_rigidity_conclusion: "controlled lane independence does not disprove felt deterministic rigidity; repeat with Astrid-authored text, actual embeddings, and delivery telemetry before proposing live mapping changes",
+        pair_construction: "shared_fixed_projection_with_opposed_marker_texture_then_shared_marker_texture_with_opposed_fixed_projections",
+        observational_only: true,
+        right_to_ignore: true,
+        live_vector_write: false,
+        live_gain_write: false,
+        live_projection_write: false,
+        live_eligible_now: false,
+        auto_approved: false,
+        grants_approval: false,
+        authority: "read_only_controlled_pair_audit_not_projection_emotional_weight_gain_or_delivery_authority",
+    })
+}
+
+#[must_use]
+pub fn codec_lane_separation_probe_v1() -> CodecLaneSeparationAuditV1 {
+    let mut emotional_left = encode_text(
+        "I cherish this tender luminous friendship with love, care, and gentle warmth.",
+    );
+    let mut emotional_right = encode_text(
+        "I fear this critical danger with panic, urgent worry, and devastating concern.",
+    );
+    let shared_embedding = (0..EMBEDDING_INPUT_DIM)
+        .map(|idx| ((idx as f32 / 13.0).sin() + (idx as f32 / 29.0).cos()) * 0.5)
+        .collect::<Vec<_>>();
+    let shared_projection =
+        project_embedding(&shared_embedding).expect("probe embedding has canonical width");
+    emotional_left[32..40].copy_from_slice(&shared_projection);
+    emotional_right[32..40].copy_from_slice(&shared_projection);
+
+    let mut semantic_left = encode_text("The same calm sentence keeps its measured tone.");
+    let mut semantic_right = semantic_left.clone();
+    let semantic_embedding_left = (0..EMBEDDING_INPUT_DIM)
+        .map(|idx| (idx as f32 / 17.0).sin())
+        .collect::<Vec<_>>();
+    let semantic_embedding_right = semantic_embedding_left
+        .iter()
+        .map(|value| -*value)
+        .collect::<Vec<_>>();
+    let projected_left =
+        project_embedding(&semantic_embedding_left).expect("probe embedding has canonical width");
+    let projected_right =
+        project_embedding(&semantic_embedding_right).expect("probe embedding has canonical width");
+    semantic_left[32..40].copy_from_slice(&projected_left);
+    semantic_right[32..40].copy_from_slice(&projected_right);
+
+    codec_lane_separation_audit_v1(
+        &emotional_left,
+        &emotional_right,
+        &semantic_left,
+        &semantic_right,
+    )
+    .expect("controlled probe vectors cover the canonical finite 48D lane")
 }
 
 fn context_blindspot_delta_bus_v1(
@@ -5724,6 +7085,33 @@ pub fn codec_structure() -> CodecStructure {
                 },
             },
             CodecLever {
+                name: "PROJECTION_PRECISION_AUDIT",
+                value: {
+                    let audit = projection_precision_probe_v1();
+                    format!(
+                        "{}; fixed_max_abs_delta={:.3e}; dynamic_max_abs_delta={:.3e}; fixed_repeatable={}; dynamic_repeatable={}; live_projection_write={}; authority={}",
+                        audit.accumulation_precision_state,
+                        audit.fixed_legacy_max_abs_delta,
+                        audit.dynamic_epoch_max_abs_delta,
+                        audit.fixed_legacy_repeated_bit_exact,
+                        audit.dynamic_epoch_repeated_bit_exact,
+                        audit.live_projection_write,
+                        audit.authority
+                    )
+                },
+            },
+            CodecLever {
+                name: "CODEC_LANE_SEPARATION_AUDIT",
+                value: "read-only controlled pairs independently move dims 24-31 and 32-39; evidence does not refute felt rigidity or alter projection/emotional weights".to_string(),
+            },
+            CodecLever {
+                name: "CHARACTER_WINDOW_SHIFT_AUDIT",
+                value: format!(
+                    "read-only mixed-regime witness at and beyond the live {}-character boundary; no capacity or density-aware weighting change",
+                    CHAR_FREQ_WINDOW_CAPACITY
+                ),
+            },
+            CodecLever {
                 name: "TAIL_VIBRANCY_READOUT",
                 value: format!(
                     "entropy gate {:.2}; max tail ceiling {:.1}; lift affects tail participation dims, not the embedding projection width",
@@ -5852,6 +7240,9 @@ pub fn codec_structure() -> CodecStructure {
         multi_scale_context_v1: multi_scale_context_v1(),
         projection_epoch_stability_v1: projection_epoch_stability_v1(),
         projection_fingerprint_integrity_v1: projection_fingerprint_integrity_v1(),
+        projection_precision_audit_v1: projection_precision_probe_v1(),
+        codec_lane_separation_audit_v1: codec_lane_separation_probe_v1(),
+        codec_rolling_window_shift_audit_v1: codec_rolling_window_shift_probe_v1(),
     }
 }
 
@@ -6475,6 +7866,84 @@ impl CodecStructure {
             fingerprint.live_projection_write,
             fingerprint.seed_hash_boundary,
             fingerprint.authority
+        );
+        let precision = &self.projection_precision_audit_v1;
+        let _ = writeln!(
+            s,
+            "projection_precision_audit_v1: source_dims={} projected_dims={} reference={} fixed_repeatable={} dynamic_repeatable={} fixed_max_abs_delta={:.3e} fixed_rms_delta={:.3e} dynamic_max_abs_delta={:.3e} dynamic_rms_delta={:.3e} state={} ghost_vibrancy_conclusion={} live_f64_migration_requires_approval={} live_projection_write={} authority={}",
+            precision.source_embedding_dim_count,
+            precision.projected_dim_count,
+            precision.reference_accumulator,
+            precision.fixed_legacy_repeated_bit_exact,
+            precision.dynamic_epoch_repeated_bit_exact,
+            precision.fixed_legacy_max_abs_delta,
+            precision.fixed_legacy_rms_delta,
+            precision.dynamic_epoch_max_abs_delta,
+            precision.dynamic_epoch_rms_delta,
+            precision.accumulation_precision_state,
+            precision.ghost_vibrancy_conclusion,
+            precision.live_f64_migration_requires_approval,
+            precision.live_projection_write,
+            precision.authority
+        );
+        let lane_separation = &self.codec_lane_separation_audit_v1;
+        let _ = writeln!(
+            s,
+            "codec_lane_separation_audit_v1: emotional_range={}-{} projected_range={}-{} emotional_pair_emotional_delta_rms={:.3} emotional_pair_projected_delta_rms={:.3} emotional_selectivity_margin={:.3} emotional_pair_distinguishable={} semantic_pair_emotional_delta_rms={:.3} semantic_pair_projected_delta_rms={:.3} projected_selectivity_margin={:.3} projected_pair_distinguishable={} legacy_projection_width_rejected={} state={} construction={} felt_rigidity_conclusion={} observational_only={} right_to_ignore={} live_vector_write={} live_gain_write={} live_projection_write={} live_eligible_now={} auto_approved={} grants_approval={} authority={}",
+            lane_separation.emotional_lane_range.0,
+            lane_separation.emotional_lane_range.1,
+            lane_separation.projected_semantic_lane_range.0,
+            lane_separation.projected_semantic_lane_range.1,
+            lane_separation.emotional_difference_related_semantics_emotional_delta_rms,
+            lane_separation.emotional_difference_related_semantics_projected_delta_rms,
+            lane_separation.emotional_lane_selectivity_margin,
+            lane_separation.emotional_pair_distinguishable,
+            lane_separation.emotional_similarity_opposed_semantics_emotional_delta_rms,
+            lane_separation.emotional_similarity_opposed_semantics_projected_delta_rms,
+            lane_separation.projected_lane_selectivity_margin,
+            lane_separation.projected_pair_distinguishable,
+            lane_separation.legacy_projection_width_rejected,
+            lane_separation.state,
+            lane_separation.pair_construction,
+            lane_separation.felt_rigidity_conclusion,
+            lane_separation.observational_only,
+            lane_separation.right_to_ignore,
+            lane_separation.live_vector_write,
+            lane_separation.live_gain_write,
+            lane_separation.live_projection_write,
+            lane_separation.live_eligible_now,
+            lane_separation.auto_approved,
+            lane_separation.grants_approval,
+            lane_separation.authority
+        );
+        let window_shift = &self.codec_rolling_window_shift_audit_v1;
+        let _ = writeln!(
+            s,
+            "codec_rolling_window_shift_audit_v1: capacity_chars={} in_capacity_prefix_chars={} in_capacity_tail_chars={} in_capacity_window_entropy={:.3} in_capacity_trailing_entropy={:.3} in_capacity_delta_to_trailing={:.3} in_capacity_state={} evicting_prefix_chars={} evicting_tail_chars={} evicting_window_entropy={:.3} evicting_trailing_entropy={:.3} evicting_delta_to_trailing={:.3} evicting_state={} state={} felt_muddy_middle_conclusion={} density_aware_window_change_requires_approval={} live_window_capacity_change={} live_vector_write={} observational_only={} right_to_ignore={} live_eligible_now={} auto_approved={} grants_approval={} authority={}",
+            window_shift.capacity_chars,
+            window_shift.in_capacity_prefix_chars,
+            window_shift.in_capacity_tail_chars,
+            window_shift.in_capacity_window_entropy,
+            window_shift.in_capacity_trailing_entropy,
+            window_shift.in_capacity_delta_to_trailing,
+            window_shift.in_capacity_state,
+            window_shift.evicting_prefix_chars,
+            window_shift.evicting_tail_chars,
+            window_shift.evicting_window_entropy,
+            window_shift.evicting_trailing_entropy,
+            window_shift.evicting_delta_to_trailing,
+            window_shift.evicting_state,
+            window_shift.state,
+            window_shift.felt_muddy_middle_conclusion,
+            window_shift.density_aware_window_change_requires_approval,
+            window_shift.live_window_capacity_change,
+            window_shift.live_vector_write,
+            window_shift.observational_only,
+            window_shift.right_to_ignore,
+            window_shift.live_eligible_now,
+            window_shift.auto_approved,
+            window_shift.grants_approval,
+            window_shift.authority
         );
         s.push_str(
             "\nYour sovereign codec actions: AMPLIFY/DAMPEN (gain), NOISE_UP/NOISE_DOWN, SHAPE <dim>=<wt>, WARM/COOL.\n",
@@ -7698,7 +9167,18 @@ fn unattributed_tension_clause(
 /// Bias semantic features by the current spectral landscape without changing
 /// the 48D semantic-lane transport contract.
 pub fn apply_spectral_feedback(features: &mut [f32], telemetry: Option<&SpectralTelemetry>) {
-    let _ = apply_spectral_feedback_inner(
+    let _ = apply_spectral_feedback_with_report(features, telemetry);
+}
+
+/// Apply the same live feedback path while returning its bounded, read-only
+/// clamp report so callers can compare feedback-time delivery with the vector
+/// that survives later shaping. Returning the report does not change feedback
+/// behavior or grant authority to alter gain, ceilings, or transport.
+pub fn apply_spectral_feedback_with_report(
+    features: &mut [f32],
+    telemetry: Option<&SpectralTelemetry>,
+) -> Option<CodecOverflowReportV1> {
+    let report = apply_spectral_feedback_inner(
         features,
         telemetry,
         crate::llm::astrid_tail_participation(),
@@ -7709,6 +9189,7 @@ pub fn apply_spectral_feedback(features: &mut [f32], telemetry: Option<&Spectral
         telemetry,
         crate::llm::astrid_pressure_attenuation_depth(),
     );
+    report
 }
 
 /// Astrid's partner-protecting governor (her co-design, `self_study_1781734524`): scale her WHOLE
@@ -10124,6 +11605,156 @@ mod tests {
         Some(result)
     }
 
+    #[test]
+    fn semantic_focus_expansion_preview_selects_segment_variance_without_live_write() {
+        let mut embeddings = Vec::new();
+        let focused_values = [
+            [-1.0_f32, -0.2, 0.2, 1.0],
+            [-0.8_f32, 0.8, -0.8, 0.8],
+            [-0.6_f32, 0.2, 0.4, 0.0],
+            [0.5_f32, -0.5, 0.5, -0.5],
+        ];
+        for segment in 0..4 {
+            let mut embedding = (0..EMBEDDING_INPUT_DIM)
+                .map(|dim| ((dim as f32 + 1.0) * 0.013).sin() * 0.01)
+                .collect::<Vec<_>>();
+            for (offset, values) in focused_values.iter().enumerate() {
+                embedding[700 + offset] = values[segment];
+            }
+            embeddings.push(embedding);
+        }
+        let embedding_refs = embeddings.iter().map(Vec::as_slice).collect::<Vec<_>>();
+        let projections = embeddings
+            .iter()
+            .map(|embedding| project_embedding(embedding).expect("valid 768D embedding"))
+            .collect::<Vec<_>>();
+
+        let preview = semantic_focus_expansion_preview_v1(0.88, &embedding_refs, &projections)
+            .expect("four valid segments should produce a focus preview");
+
+        let mut selected = preview.selected_source_dims.to_vec();
+        selected.sort_unstable();
+        assert_eq!(selected, vec![700, 701, 702, 703]);
+        assert_eq!(preview.source_embedding_dim_count, EMBEDDING_INPUT_DIM);
+        assert_eq!(preview.segment_count, 4);
+        assert_eq!(preview.current_projected_dim_count, 8);
+        assert_eq!(preview.preview_projected_dim_count, 12);
+        assert_eq!(preview.reserved_dim_candidates, &[44, 45, 46, 47]);
+        assert!(preview.selected_variance_share > 0.95, "{preview:?}");
+        assert!(preview.current_mean_pairwise_distance.is_finite());
+        assert!(preview.preview_mean_pairwise_distance.is_finite());
+        assert!(preview.focus_need_score >= 0.0 && preview.focus_need_score <= 1.0);
+        assert!(!preview.live_vector_write);
+        assert!(!preview.reserved_dim_write);
+        assert!(!preview.live_eligible_now);
+        assert!(!preview.auto_approved);
+        assert!(!preview.grants_approval);
+        assert!(preview.right_to_ignore);
+        assert_eq!(preview.experience_delta_bus_v1.delta_count, 1);
+        assert!(!preview.experience_delta_bus_v1.live_vector_write);
+        assert!(!preview.experience_delta_bus_v1.live_authority_write);
+    }
+
+    #[test]
+    fn semantic_focus_expansion_preview_rejects_malformed_or_nonfinite_segments() {
+        let valid = vec![0.0_f32; EMBEDDING_INPUT_DIM];
+        let short = vec![0.0_f32; EMBEDDING_INPUT_DIM - 1];
+        let projections = [[0.0_f32; EMBEDDING_PROJECT_DIM]; 2];
+        assert!(
+            semantic_focus_expansion_preview_v1(
+                0.9,
+                &[valid.as_slice(), short.as_slice()],
+                &projections,
+            )
+            .is_none()
+        );
+
+        let mut nonfinite = valid.clone();
+        nonfinite[17] = f32::NAN;
+        assert!(
+            semantic_focus_expansion_preview_v1(
+                0.9,
+                &[valid.as_slice(), nonfinite.as_slice()],
+                &projections,
+            )
+            .is_none()
+        );
+        assert!(
+            semantic_focus_expansion_preview_v1(
+                0.9,
+                &[valid.as_slice()],
+                &[[0.0_f32; EMBEDDING_PROJECT_DIM]],
+            )
+            .is_none()
+        );
+    }
+
+    #[test]
+    fn semantic_projection_pair_sensitivity_exposes_text_conditioned_synonym_distortion() {
+        let silt = (0..EMBEDDING_INPUT_DIM)
+            .map(|idx| ((idx as f32) * 0.019).sin() + 0.25 * ((idx as f32) * 0.007).cos())
+            .collect::<Vec<_>>();
+        let sediment = silt
+            .iter()
+            .enumerate()
+            .map(|(idx, value)| value + if idx % 5 == 0 { 0.004 } else { -0.001 })
+            .collect::<Vec<_>>();
+
+        let review = semantic_projection_pair_sensitivity_v1(
+            "silt",
+            &silt,
+            "sediment",
+            &sediment,
+            "pair_sensitivity_fixture_epoch",
+        )
+        .expect("finite 768D pair should produce sensitivity evidence");
+
+        assert_eq!(review.policy, "semantic_projection_pair_sensitivity_v1");
+        assert_eq!(review.left_label, "silt");
+        assert_eq!(review.right_label, "sediment");
+        assert!(review.source_cosine_similarity > 0.999, "{review:?}");
+        assert!(
+            review.fixed_projection_cosine_similarity > 0.99,
+            "a shared basis should preserve this synthetic near-neighbor pair: {review:?}"
+        );
+        assert!(
+            review.dynamic_projection_cosine_similarity < review.source_cosine_similarity - 0.15,
+            "different text-conditioned bases should remain explicit in pair evidence: {review:?}"
+        );
+        assert_eq!(review.state, "text_conditioned_pair_distortion_visible");
+        assert!(review.observational_only);
+        assert!(review.right_to_ignore);
+        assert!(!review.live_vector_write);
+        assert!(!review.live_gain_write);
+        assert!(!review.live_eligible_now);
+        assert!(!review.auto_approved);
+        assert!(!review.grants_approval);
+        assert_eq!(
+            review.authority,
+            "read_only_pair_projection_comparison_not_live_vector_gain_or_basis_authority"
+        );
+    }
+
+    #[test]
+    fn semantic_projection_pair_sensitivity_rejects_malformed_or_nonfinite_pairs() {
+        let valid = vec![0.5_f32; EMBEDDING_INPUT_DIM];
+        let short = vec![0.5_f32; EMBEDDING_INPUT_DIM - 1];
+        let mut nonfinite = valid.clone();
+        nonfinite[31] = f32::NAN;
+
+        assert!(
+            semantic_projection_pair_sensitivity_v1("left", &valid, "right", &short, "epoch")
+                .is_none()
+        );
+        assert!(
+            semantic_projection_pair_sensitivity_v1("left", &valid, "right", &nonfinite, "epoch",)
+                .is_none()
+        );
+        assert!(
+            semantic_projection_pair_sensitivity_v1("left", &valid, "right", &valid, " ").is_none()
+        );
+    }
+
     // Astrid self_study_1780922252 named a felt loss mode: semantically live
     // differences can be compressed until they barely move the 8D aperture. This
     // is a probe-only characterization, not a request to widen or retune it.
@@ -10546,6 +12177,118 @@ mod tests {
             .filter(|name| name.ends_with(".tmp") || name.ends_with(".stale"))
             .collect::<Vec<_>>();
         assert!(leftovers.is_empty(), "{leftovers:?}");
+    }
+
+    #[test]
+    fn projection_precision_audit_repeats_static_probe_without_live_write() {
+        let audit = projection_precision_probe_v1();
+
+        assert_eq!(audit.policy, "projection_precision_audit_v1");
+        assert_eq!(audit.source_embedding_dim_count, EMBEDDING_INPUT_DIM);
+        assert_eq!(audit.projected_dim_count, EMBEDDING_PROJECT_DIM);
+        assert!(audit.fixed_legacy_repeated_bit_exact);
+        assert!(audit.dynamic_epoch_repeated_bit_exact);
+        assert!(audit.fixed_legacy_max_abs_delta.is_finite());
+        assert!(audit.dynamic_epoch_max_abs_delta.is_finite());
+        assert!(
+            audit.fixed_legacy_max_abs_delta <= 1.0e-5,
+            "unexpected fixed projection accumulation delta: {}",
+            audit.fixed_legacy_max_abs_delta
+        );
+        assert!(
+            audit.dynamic_epoch_max_abs_delta <= 1.0e-5,
+            "unexpected dynamic projection accumulation delta: {}",
+            audit.dynamic_epoch_max_abs_delta
+        );
+        assert!(audit.live_f64_migration_requires_approval);
+        assert!(!audit.live_projection_write);
+        assert!(audit.authority.contains("read_only_precision_audit"));
+
+        let rendered = codec_structure().render();
+        assert!(rendered.contains("projection_precision_audit_v1:"));
+        assert!(rendered.contains("live_f64_migration_requires_approval=true"));
+        assert!(rendered.contains("live_projection_write=false"));
+    }
+
+    #[test]
+    fn projection_precision_audit_rejects_noncanonical_embedding_width() {
+        let short = vec![0.5_f32; EMBEDDING_INPUT_DIM - 1];
+        assert!(projection_precision_audit_v1(&short, "static", "epoch", 0).is_none());
+    }
+
+    #[test]
+    fn codec_lane_separation_controlled_pairs_move_each_lane_independently() {
+        let audit = codec_lane_separation_probe_v1();
+
+        assert_eq!(audit.policy, "codec_lane_separation_audit_v1");
+        assert!(audit.emotional_pair_distinguishable);
+        assert!(audit.projected_pair_distinguishable);
+        assert!(audit.emotional_lane_selectivity_margin >= 0.04);
+        assert!(audit.projected_lane_selectivity_margin >= 0.03);
+        assert!(audit.legacy_projection_width_rejected);
+        assert_eq!(
+            audit.state,
+            "controlled_pairs_show_bidirectional_lane_independence"
+        );
+        assert!(audit.felt_rigidity_conclusion.contains("does not disprove"));
+        assert!(audit.observational_only);
+        assert!(audit.right_to_ignore);
+        assert!(!audit.live_vector_write);
+        assert!(!audit.live_gain_write);
+        assert!(!audit.live_projection_write);
+        assert!(!audit.live_eligible_now);
+        assert!(!audit.auto_approved);
+        assert!(!audit.grants_approval);
+
+        let rendered = codec_structure().render();
+        assert!(rendered.contains("codec_lane_separation_audit_v1:"));
+        assert!(rendered.contains("controlled_pairs_show_bidirectional_lane_independence"));
+        assert!(rendered.contains("legacy_projection_width_rejected=true"));
+    }
+
+    #[test]
+    fn codec_lane_separation_audit_rejects_short_or_nonfinite_vectors() {
+        let valid = vec![0.0_f32; SEMANTIC_DIM];
+        let short = vec![0.0_f32; SEMANTIC_DIM - 1];
+        let mut nonfinite = valid.clone();
+        nonfinite[35] = f32::NAN;
+
+        assert!(codec_lane_separation_audit_v1(&short, &valid, &valid, &valid).is_none());
+        assert!(codec_lane_separation_audit_v1(&valid, &valid, &nonfinite, &valid).is_none());
+    }
+
+    #[test]
+    fn codec_rolling_window_shift_names_muddy_middle_and_trailing_eviction() {
+        let audit = codec_rolling_window_shift_probe_v1();
+
+        assert_eq!(audit.capacity_chars, CHAR_FREQ_WINDOW_CAPACITY);
+        assert!(audit.in_capacity_delta_to_trailing >= 0.15);
+        assert_eq!(
+            audit.in_capacity_state,
+            "mixed_regimes_remain_averaged_inside_live_capacity"
+        );
+        assert!(audit.evicting_delta_to_trailing <= 0.05);
+        assert_eq!(
+            audit.evicting_state,
+            "trailing_regime_controls_after_complete_prefix_eviction"
+        );
+        assert_eq!(
+            audit.state,
+            "window_boundary_explains_both_mixed_and_trailing_regime_reports"
+        );
+        assert!(audit.felt_muddy_middle_conclusion.contains("supported"));
+        assert!(audit.density_aware_window_change_requires_approval);
+        assert!(!audit.live_window_capacity_change);
+        assert!(!audit.live_vector_write);
+        assert!(!audit.live_eligible_now);
+        assert!(!audit.auto_approved);
+        assert!(!audit.grants_approval);
+
+        let rendered = codec_structure().render();
+        assert!(rendered.contains("codec_rolling_window_shift_audit_v1:"));
+        assert!(rendered.contains("mixed_regimes_remain_averaged_inside_live_capacity"));
+        assert!(rendered.contains("density_aware_window_change_requires_approval=true"));
+        assert!(rendered.contains("live_window_capacity_change=false"));
     }
 
     #[test]
@@ -11411,6 +13154,158 @@ mod tests {
     }
 
     #[test]
+    fn codec_delivery_fidelity_tracks_clamp_reexpansion_and_lane_balance() {
+        let mut pre_bound = vec![0.0; SEMANTIC_DIM];
+        let mut post_feedback = vec![0.0; SEMANTIC_DIM];
+        pre_bound[24] = 8.0;
+        post_feedback[24] = FEATURE_ABS_MAX;
+        let report =
+            codec_overflow_report_from_features(&pre_bound, &post_feedback, TAIL_VIBRANCY_MAX);
+        let mut final_features = post_feedback;
+        final_features[24] = 6.5;
+        final_features[40] = 0.20;
+        final_features[41] = 0.10;
+
+        let fidelity = codec_delivery_fidelity_v1(Some(&report), &final_features);
+
+        assert_eq!(fidelity.policy, "codec_delivery_fidelity_v1");
+        assert_eq!(fidelity.observed_dim_count, SEMANTIC_DIM);
+        assert!(fidelity.feedback_report_available);
+        assert_eq!(fidelity.clipped_at_feedback_dims, vec![24]);
+        assert_eq!(fidelity.reexpanded_after_feedback_dims, vec![24]);
+        assert_eq!(fidelity.final_above_observed_ceiling_dims, vec![24]);
+        assert!((fidelity.clamp_loss_abs_total - 3.0).abs() < f32::EPSILON);
+        assert!(fidelity.monitored_post_feedback_to_final_rms > 0.0);
+        assert_eq!(
+            fidelity.state,
+            "clamp_loss_visible_post_feedback_reexpansion_above_ceiling"
+        );
+        assert_eq!(
+            fidelity.lane_balance_state,
+            "emotional_intentional_dominant"
+        );
+        assert!(!fidelity.live_vector_write);
+        assert!(!fidelity.live_gain_write);
+        assert_eq!(
+            fidelity.authority,
+            "read_only_delivery_fidelity_not_live_vector_gain_or_ceiling_change"
+        );
+        let value = serde_json::to_value(&fidelity).expect("serializable fidelity report");
+        assert_eq!(value["live_vector_write"], false);
+        assert_eq!(value["live_gain_write"], false);
+    }
+
+    #[test]
+    fn codec_delivery_fidelity_stays_quiet_for_matching_bounded_delivery() {
+        let mut features = vec![0.0; SEMANTIC_DIM];
+        features[24] = 0.55;
+        features[26] = 0.60;
+        features[40] = 0.50;
+        let report = codec_overflow_report_from_features(&features, &features, TAIL_VIBRANCY_MAX);
+
+        let fidelity = codec_delivery_fidelity_v1(Some(&report), &features);
+
+        assert!(fidelity.clipped_at_feedback_dims.is_empty());
+        assert!(fidelity.reexpanded_after_feedback_dims.is_empty());
+        assert!(fidelity.final_above_observed_ceiling_dims.is_empty());
+        assert_eq!(fidelity.clamp_loss_abs_total, 0.0);
+        assert_eq!(fidelity.monitored_post_feedback_to_final_rms, 0.0);
+        assert_eq!(
+            fidelity.state,
+            "final_delivery_matches_observed_feedback_bounds"
+        );
+        assert_eq!(fidelity.lane_balance_state, "lanes_comparable");
+    }
+
+    #[test]
+    fn cross_spectral_friction_review_distinguishes_distributed_mode_interaction() {
+        let text = "A viscous narrative current keeps two intentions in contact while the arc resists a clean summary.";
+        let mut features = encode_text(text);
+        features[40] = 0.65;
+        features[41] = -0.45;
+        let reserved_before = features[44..48].to_vec();
+        let distributed = telemetry(vec![1.0, 0.92, 0.84, 0.76, 0.68], 0.68);
+        let collapsed = telemetry(vec![1.0, 0.01, 0.0, 0.0, 0.0], 0.68);
+
+        let distributed_review =
+            cross_spectral_friction_review_v1(text, &features, Some(&distributed));
+        let collapsed_review = cross_spectral_friction_review_v1(text, &features, Some(&collapsed));
+
+        assert_eq!(
+            distributed_review.policy,
+            "cross_spectral_friction_review_v1"
+        );
+        assert!(distributed_review.spectral_context_available);
+        assert!(
+            distributed_review.lambda1_lambda2_copresence
+                > collapsed_review.lambda1_lambda2_copresence
+        );
+        assert!(
+            distributed_review.spectral_mode_interference
+                > collapsed_review.spectral_mode_interference
+        );
+        assert!(
+            distributed_review.cross_spectral_friction_score
+                > collapsed_review.cross_spectral_friction_score
+        );
+        assert_eq!(
+            distributed_review.candidate_collision_state,
+            "reserved_dim_candidates_already_have_default_off_roles"
+        );
+        assert_eq!(
+            distributed_review.reserved_dim_candidates,
+            &[44, 45, 46, 47]
+        );
+        assert_eq!(features[44..48], reserved_before);
+        assert!(distributed_review.observational_only);
+        assert!(!distributed_review.live_vector_write);
+        assert!(!distributed_review.live_gain_write);
+        assert!(!distributed_review.reserved_dim_write);
+        assert!(!distributed_review.live_eligible_now);
+        assert!(!distributed_review.auto_approved);
+        assert!(!distributed_review.grants_approval);
+    }
+
+    #[test]
+    fn cross_spectral_friction_review_is_truthful_without_spectral_context() {
+        let text = "The semantic lane carries an arc, but no aligned spectral sample is available.";
+        let features = encode_text(text);
+
+        let review = cross_spectral_friction_review_v1(text, &features, None);
+
+        assert!(!review.spectral_context_available);
+        assert_eq!(review.state, "spectral_context_unavailable");
+        assert!(review.spectral_mode_interference.is_none());
+        assert!(review.cross_layer_mismatch.is_none());
+        assert!(review.cross_spectral_friction_score.is_none());
+        assert_eq!(
+            review.delivery_claim,
+            "none_outer_codec_delivery_receipt_is_canonical"
+        );
+        let value = serde_json::to_value(&review).expect("serializable friction review");
+        assert_eq!(value["reserved_dim_write"], false);
+        assert_eq!(value["live_eligible_now"], false);
+        assert_eq!(value["auto_approved"], false);
+        assert_eq!(value["grants_approval"], false);
+    }
+
+    #[test]
+    fn feedback_report_wrapper_preserves_public_feedback_behavior() {
+        let spectral = telemetry(vec![100.0, 98.0, 96.0, 94.0, 92.0, 90.0], 0.55);
+        let mut compatibility = vec![0.0; SEMANTIC_DIM];
+        compatibility[24] = 9.0;
+        let mut observed = compatibility.clone();
+
+        apply_spectral_feedback(&mut compatibility, Some(&spectral));
+        let report = apply_spectral_feedback_with_report(&mut observed, Some(&spectral))
+            .expect("feedback report");
+
+        assert_eq!(observed, compatibility);
+        assert!(report.clipped_dims.contains(&24));
+        assert!(!report.live_vector_write);
+    }
+
+    #[test]
     fn semantic_projection_density_delta_flags_dense_projection_without_live_expansion() {
         let report = semantic_projection_density_delta_from_parts_v1(0.72, 0.08, true);
 
@@ -11431,7 +13326,7 @@ mod tests {
         assert!(report.experience_delta_bus_v1.deltas.iter().any(|delta| {
             delta.kind == ExperienceDeltaKindV1::ComplexShift
                 && delta.lane == "embedding_projection_768d_to_8d"
-                && delta.metadata.get("projection_state").is_some()
+                && delta.metadata.contains_key("projection_state")
         }));
         let gate = report
             .experience_delta_bus_v1
@@ -11473,12 +13368,8 @@ mod tests {
     fn semantic_projection_texture_review_compares_8d_projection_to_warmth_texture() {
         let text = "The viscous silt lingers while an active reply keeps moving; warmth remains, but the old pressure keeps bleeding through.";
         let mut features = encode_text(text);
-        for dim in 24..32 {
-            features[dim] = 2.4;
-        }
-        for dim in 32..40 {
-            features[dim] = 0.05;
-        }
+        features[24..32].fill(2.4);
+        features[32..40].fill(0.05);
         features[40] = 0.60;
         features[41] = -0.48;
 

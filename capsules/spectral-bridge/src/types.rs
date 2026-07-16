@@ -34,6 +34,182 @@ fn clamp_unit_finite_or(value: f32, fallback: f32) -> f32 {
 
 /// Read-only companion for unit clamps that would otherwise silently erase the
 /// difference between "reported above range" and "naturally at the ceiling."
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum ClampFallbackIntentV1 {
+    #[default]
+    NotReportedLegacy,
+    UncomputableFallbackDefaultedToZero,
+    FallbackClippedHigh,
+    FallbackClippedLow,
+    FiniteFallbackPreserved,
+}
+
+/// Typed account of how a raw scalar reached its compatibility-clamped value.
+///
+/// This is provenance only. It does not replace the stable authority string,
+/// change the clamp, or make the originating signal authoritative.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum ClampReplacementPathV1 {
+    #[default]
+    NotReportedLegacy,
+    RawFinitePreserved,
+    RawFiniteClippedHigh,
+    RawFiniteClippedLow,
+    RawNonFiniteReplacedByFallback,
+    RawAndFallbackNonFiniteDefaultedToZero,
+}
+
+/// Qualitative loss that can accompany a compatibility clamp.
+///
+/// Scalar provenance can establish intensity flattening or loss of the raw
+/// numeric signal. `SemanticDrift` is intentionally never inferred from the
+/// scalar alone; callers need separate semantic evidence before naming it.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum DegradationTypeV1 {
+    LossOfNuance,
+    FlatteningOfIntensity,
+    SemanticDrift,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct ClampInputProvenanceV1 {
+    pub policy: String,
+    pub schema_version: u8,
+    pub raw_value_source: String,
+    pub fallback_source: String,
+    pub replacement_path: ClampReplacementPathV1,
+    pub fallback_applied: bool,
+    #[serde(default)]
+    pub changes_clamped_value: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub degradation_type: Option<DegradationTypeV1>,
+    #[serde(default)]
+    pub degradation_inferred_from_scalar: bool,
+    #[serde(default)]
+    pub live_authority_write: bool,
+    pub authority: String,
+}
+
+/// Caller-reported family of pressure evidence surrounding a clamped scalar.
+///
+/// The clamp cannot infer causality from a scalar alone. Keeping this enum on
+/// an optional companion packet lets callers name the pressure they observed
+/// without turning that report into sensor, controller, or attribution
+/// authority.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum ClampPressureSourceKindV1 {
+    #[default]
+    NotReportedLegacy,
+    ModePacking,
+    SpectralEntropy,
+    SemanticTrickle,
+    Viscosity,
+    ShadowCoupling,
+    Mixed,
+    OtherReported,
+}
+
+/// Optional non-causal pressure context attached by a caller that can observe
+/// more than the scalar being clamped. This packet never changes the clamp,
+/// grants source authority, or writes live pressure/control state.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct ClampPressureContextV1 {
+    pub policy: String,
+    pub schema_version: u8,
+    pub source_kind: ClampPressureSourceKindV1,
+    pub source_label: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub source_score: Option<f32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pressure_risk: Option<f32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub evidence_window_ticks: Option<u64>,
+    pub attribution_state: String,
+    #[serde(default)]
+    pub changes_clamped_value: bool,
+    #[serde(default)]
+    pub grants_source_authority: bool,
+    #[serde(default)]
+    pub live_authority_write: bool,
+    pub authority: String,
+}
+
+/// Optional evidence about the distribution that produced a clamped scalar.
+///
+/// This is deliberately descriptive. It keeps a broad high-entropy swell from
+/// looking identical to an isolated outlier without changing the clamped value
+/// or granting the context any live control authority.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum ClampDistributionShapeV1 {
+    #[default]
+    NotReportedLegacy,
+    BroadHighEntropySwell,
+    IsolatedSpikeCandidate,
+    PersistentViscousDrag,
+    MixedOrAmbiguous,
+    ContextUnavailable,
+}
+
+/// Read-only relation between crowding, viscosity, and shadow coupling around
+/// a clamped scalar. This names texture evidence without claiming a causal
+/// pressure source or changing the compatibility clamp.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum ClampCrowdingViscosityRelationV1 {
+    #[default]
+    NotReportedLegacy,
+    CrowdingDominant,
+    ViscosityDominant,
+    ShadowCoupledCrowding,
+    InterwovenCrowdingAndViscosity,
+    LowOrAmbiguous,
+    ContextUnavailable,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct ClampDistributionContextV1 {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub spectral_entropy: Option<f32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub structural_plurality: Option<f32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub viscosity_index: Option<f32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub temporal_persistence: Option<f32>,
+    /// Bounded mode-packing evidence kept separate from viscosity so a
+    /// crowded reservoir does not look identical to viscous drag.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub mode_packing_density: Option<f32>,
+    /// Bounded shadow/scaffold coupling evidence. This is descriptive context,
+    /// not a shadow gain, vector write, or control input.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub shadow_coupling_index: Option<f32>,
+    #[serde(default)]
+    pub crowding_viscosity_relation: ClampCrowdingViscosityRelationV1,
+    /// Signed bounded change in resistance/viscosity texture. Positive values
+    /// mean thickening, negative values mean thinning, and legacy payloads
+    /// decode as unavailable. This is evidence only and never changes clamping.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub resistance_gradient: Option<f32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub evidence_window_ticks: Option<u64>,
+    pub distribution_shape: ClampDistributionShapeV1,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub coexisting_shapes: Vec<ClampDistributionShapeV1>,
+    pub context_state: String,
+    pub raw_out_of_range: bool,
+    #[serde(default)]
+    pub changes_clamped_value: bool,
+    #[serde(default)]
+    pub live_authority_write: bool,
+    pub authority: String,
+}
+
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct ClampedUnitReviewV1 {
     pub policy: String,
@@ -45,6 +221,23 @@ pub struct ClampedUnitReviewV1 {
     pub fallback_value: f32,
     pub fallback_finite: bool,
     pub fallback_intent_state: String,
+    /// Typed companion to `fallback_intent_state`; the string remains stable
+    /// for existing V1 consumers while new readers can branch without parsing.
+    #[serde(default)]
+    pub fallback_intent_kind: ClampFallbackIntentV1,
+    /// Optional typed context for distinguishing an isolated spike from a
+    /// broad, high-entropy swell. Legacy packets decode with `None`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub distribution_context: Option<ClampDistributionContextV1>,
+    /// Optional caller-supplied source labels and typed replacement path. The
+    /// core clamp cannot infer sensor or logic-gate identity by itself, so
+    /// callers attach this evidence explicitly when that provenance matters.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub input_provenance: Option<ClampInputProvenanceV1>,
+    /// Optional caller-reported pressure context. Legacy packets decode with
+    /// `None`; the context is explicitly descriptive and non-causal.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pressure_context: Option<ClampPressureContextV1>,
     pub fallback_non_finite_defaulted: bool,
     pub clamped_value: f32,
     pub clip_state: String,
@@ -63,14 +256,23 @@ pub fn clamped_unit_review_v1(value: f32, fallback: f32) -> ClampedUnitReviewV1 
     let fallback_value = clamp_unit_finite_or(fallback, 0.0);
     let fallback_finite = fallback.is_finite();
     let fallback_non_finite_defaulted = !fallback_finite;
-    let fallback_intent_state = if fallback_non_finite_defaulted {
-        "uncomputable_fallback_defaulted_to_zero"
+    let fallback_intent_kind = if fallback_non_finite_defaulted {
+        ClampFallbackIntentV1::UncomputableFallbackDefaultedToZero
     } else if fallback > 1.0 {
-        "fallback_clipped_high"
+        ClampFallbackIntentV1::FallbackClippedHigh
     } else if fallback < 0.0 {
-        "fallback_clipped_low"
+        ClampFallbackIntentV1::FallbackClippedLow
     } else {
-        "finite_fallback_preserved"
+        ClampFallbackIntentV1::FiniteFallbackPreserved
+    };
+    let fallback_intent_state = match fallback_intent_kind {
+        ClampFallbackIntentV1::NotReportedLegacy => "not_reported_legacy",
+        ClampFallbackIntentV1::UncomputableFallbackDefaultedToZero => {
+            "uncomputable_fallback_defaulted_to_zero"
+        },
+        ClampFallbackIntentV1::FallbackClippedHigh => "fallback_clipped_high",
+        ClampFallbackIntentV1::FallbackClippedLow => "fallback_clipped_low",
+        ClampFallbackIntentV1::FiniteFallbackPreserved => "finite_fallback_preserved",
     };
     let non_finite_rejected = !value.is_finite();
     let clipped_low = value.is_finite() && value < 0.0;
@@ -98,6 +300,10 @@ pub fn clamped_unit_review_v1(value: f32, fallback: f32) -> ClampedUnitReviewV1 
         fallback_value,
         fallback_finite,
         fallback_intent_state: fallback_intent_state.to_string(),
+        fallback_intent_kind,
+        distribution_context: None,
+        input_provenance: None,
+        pressure_context: None,
         fallback_non_finite_defaulted,
         clamped_value,
         clip_state: clip_state.to_string(),
@@ -108,6 +314,284 @@ pub fn clamped_unit_review_v1(value: f32, fallback: f32) -> ClampedUnitReviewV1 
         live_authority_write: false,
         authority: "read_only_clamp_visibility_not_live_vector_or_authority_change".to_string(),
     }
+}
+
+fn bounded_clamp_source_label(label: &str) -> String {
+    let bounded = label.trim().chars().take(96).collect::<String>();
+    if bounded.is_empty() {
+        "unspecified_source".to_string()
+    } else {
+        bounded
+    }
+}
+
+impl ClampedUnitReviewV1 {
+    /// Attach caller-known source provenance without changing clamp output.
+    #[must_use]
+    pub fn with_input_provenance(mut self, raw_value_source: &str, fallback_source: &str) -> Self {
+        let replacement_path = if self.non_finite_rejected && self.fallback_non_finite_defaulted {
+            ClampReplacementPathV1::RawAndFallbackNonFiniteDefaultedToZero
+        } else if self.non_finite_rejected {
+            ClampReplacementPathV1::RawNonFiniteReplacedByFallback
+        } else if self.clipped_high {
+            ClampReplacementPathV1::RawFiniteClippedHigh
+        } else if self.clipped_low {
+            ClampReplacementPathV1::RawFiniteClippedLow
+        } else {
+            ClampReplacementPathV1::RawFinitePreserved
+        };
+        let degradation_type = match replacement_path {
+            ClampReplacementPathV1::RawFiniteClippedHigh
+            | ClampReplacementPathV1::RawFiniteClippedLow => {
+                Some(DegradationTypeV1::FlatteningOfIntensity)
+            },
+            ClampReplacementPathV1::RawNonFiniteReplacedByFallback
+            | ClampReplacementPathV1::RawAndFallbackNonFiniteDefaultedToZero => {
+                Some(DegradationTypeV1::LossOfNuance)
+            },
+            ClampReplacementPathV1::NotReportedLegacy
+            | ClampReplacementPathV1::RawFinitePreserved => None,
+        };
+        self.input_provenance = Some(ClampInputProvenanceV1 {
+            policy: "clamp_input_provenance_v1".to_string(),
+            schema_version: 1,
+            raw_value_source: bounded_clamp_source_label(raw_value_source),
+            fallback_source: bounded_clamp_source_label(fallback_source),
+            replacement_path,
+            fallback_applied: self.non_finite_rejected,
+            changes_clamped_value: false,
+            degradation_type,
+            degradation_inferred_from_scalar: degradation_type.is_some(),
+            live_authority_write: false,
+            authority: "read_only_clamp_source_provenance_not_sensor_authority_or_control"
+                .to_string(),
+        });
+        self
+    }
+
+    /// Attach bounded caller-reported pressure evidence without inferring a
+    /// causal source or changing clamp output.
+    #[must_use]
+    pub fn with_reported_pressure_context(
+        mut self,
+        source_kind: ClampPressureSourceKindV1,
+        source_label: &str,
+        source_score: f32,
+        pressure_risk: f32,
+        evidence_window_ticks: u64,
+    ) -> Self {
+        self.pressure_context = Some(ClampPressureContextV1 {
+            policy: "clamp_pressure_context_v1".to_string(),
+            schema_version: 1,
+            source_kind,
+            source_label: bounded_clamp_source_label(source_label),
+            source_score: clamp_unit_finite(source_score),
+            pressure_risk: clamp_unit_finite(pressure_risk),
+            evidence_window_ticks: (evidence_window_ticks > 0).then_some(evidence_window_ticks),
+            attribution_state: "caller_reported_context_not_causal_attribution".to_string(),
+            changes_clamped_value: false,
+            grants_source_authority: false,
+            live_authority_write: false,
+            authority: "read_only_reported_pressure_context_not_causal_sensor_or_control_authority"
+                .to_string(),
+        });
+        self
+    }
+}
+
+/// Build the compatibility clamp review and attach non-causal distribution
+/// evidence when entropy/plurality context is available.
+#[must_use]
+pub fn clamped_unit_review_with_distribution_context_v1(
+    value: f32,
+    fallback: f32,
+    spectral_entropy: f32,
+    structural_plurality: f32,
+) -> ClampedUnitReviewV1 {
+    clamped_unit_review_with_distribution_dynamics_v1(
+        value,
+        fallback,
+        spectral_entropy,
+        structural_plurality,
+        f32::NAN,
+        f32::NAN,
+        0,
+    )
+}
+
+/// Attach distribution and bounded temporal texture evidence without changing
+/// the compatibility clamp. Sustained drag is kept distinct from both a broad
+/// swell and a one-tick spike, and coexisting swell evidence remains visible.
+#[must_use]
+pub fn clamped_unit_review_with_distribution_dynamics_v1(
+    value: f32,
+    fallback: f32,
+    spectral_entropy: f32,
+    structural_plurality: f32,
+    viscosity_index: f32,
+    temporal_persistence: f32,
+    evidence_window_ticks: u64,
+) -> ClampedUnitReviewV1 {
+    clamped_unit_review_with_resistance_gradient_v1(
+        value,
+        fallback,
+        spectral_entropy,
+        structural_plurality,
+        viscosity_index,
+        temporal_persistence,
+        evidence_window_ticks,
+        f32::NAN,
+    )
+}
+
+/// Attach signed resistance motion to the bounded distribution evidence while
+/// preserving the compatibility clamp and all live authority boundaries.
+#[must_use]
+#[allow(clippy::too_many_arguments)]
+pub fn clamped_unit_review_with_resistance_gradient_v1(
+    value: f32,
+    fallback: f32,
+    spectral_entropy: f32,
+    structural_plurality: f32,
+    viscosity_index: f32,
+    temporal_persistence: f32,
+    evidence_window_ticks: u64,
+    resistance_gradient: f32,
+) -> ClampedUnitReviewV1 {
+    clamped_unit_review_with_crowding_context_v1(
+        value,
+        fallback,
+        spectral_entropy,
+        structural_plurality,
+        viscosity_index,
+        temporal_persistence,
+        evidence_window_ticks,
+        resistance_gradient,
+        f32::NAN,
+        f32::NAN,
+    )
+}
+
+/// Attach crowding and shadow-coupling context beside the existing
+/// distribution dynamics. The relation is evidence only: it does not alter
+/// the clamped value, semantic vector, pressure, or live authority.
+#[must_use]
+#[allow(clippy::too_many_arguments)]
+pub fn clamped_unit_review_with_crowding_context_v1(
+    value: f32,
+    fallback: f32,
+    spectral_entropy: f32,
+    structural_plurality: f32,
+    viscosity_index: f32,
+    temporal_persistence: f32,
+    evidence_window_ticks: u64,
+    resistance_gradient: f32,
+    mode_packing_density: f32,
+    shadow_coupling_index: f32,
+) -> ClampedUnitReviewV1 {
+    let mut review = clamped_unit_review_v1(value, fallback);
+    let entropy = spectral_entropy
+        .is_finite()
+        .then_some(spectral_entropy.clamp(0.0, 1.0));
+    let plurality = structural_plurality
+        .is_finite()
+        .then_some(structural_plurality.clamp(0.0, 1.0));
+    let viscosity = viscosity_index
+        .is_finite()
+        .then_some(viscosity_index.clamp(0.0, 1.0));
+    let persistence = temporal_persistence
+        .is_finite()
+        .then_some(temporal_persistence.clamp(0.0, 1.0));
+    let mode_packing = mode_packing_density
+        .is_finite()
+        .then_some(mode_packing_density.clamp(0.0, 1.0));
+    let shadow_coupling = shadow_coupling_index
+        .is_finite()
+        .then_some(shadow_coupling_index.clamp(0.0, 1.0));
+    let resistance_gradient = resistance_gradient
+        .is_finite()
+        .then_some(resistance_gradient.clamp(-1.0, 1.0));
+    let evidence_window = (evidence_window_ticks > 0).then_some(evidence_window_ticks);
+    let raw_out_of_range = review.clipped_high || review.clipped_low;
+    let broad_swell =
+        entropy.is_some_and(|value| value >= 0.80) && plurality.is_some_and(|value| value >= 0.55);
+    let isolated_spike = raw_out_of_range
+        && entropy.is_some_and(|value| value <= 0.45)
+        && plurality.is_some_and(|value| value <= 0.45);
+    let persistent_drag = viscosity.is_some_and(|value| value >= 0.55)
+        && persistence.is_some_and(|value| value >= 0.55)
+        && evidence_window.is_some_and(|ticks| ticks >= 3);
+    let distribution_shape = if persistent_drag {
+        ClampDistributionShapeV1::PersistentViscousDrag
+    } else if broad_swell {
+        ClampDistributionShapeV1::BroadHighEntropySwell
+    } else if isolated_spike {
+        ClampDistributionShapeV1::IsolatedSpikeCandidate
+    } else if entropy.is_some() && plurality.is_some() {
+        ClampDistributionShapeV1::MixedOrAmbiguous
+    } else {
+        ClampDistributionShapeV1::ContextUnavailable
+    };
+    let mut coexisting_shapes = Vec::new();
+    if persistent_drag && broad_swell {
+        coexisting_shapes.push(ClampDistributionShapeV1::BroadHighEntropySwell);
+    }
+    if persistent_drag && isolated_spike {
+        coexisting_shapes.push(ClampDistributionShapeV1::IsolatedSpikeCandidate);
+    }
+    let crowding_visible = mode_packing.is_some_and(|value| value >= 0.25);
+    let viscosity_visible = viscosity.is_some_and(|value| value >= 0.55);
+    let shadow_coupled = shadow_coupling.is_some_and(|value| value >= 0.55);
+    let crowding_viscosity_relation = if crowding_visible && viscosity_visible {
+        ClampCrowdingViscosityRelationV1::InterwovenCrowdingAndViscosity
+    } else if crowding_visible && shadow_coupled {
+        ClampCrowdingViscosityRelationV1::ShadowCoupledCrowding
+    } else if crowding_visible {
+        ClampCrowdingViscosityRelationV1::CrowdingDominant
+    } else if viscosity_visible {
+        ClampCrowdingViscosityRelationV1::ViscosityDominant
+    } else if mode_packing.is_some() || viscosity.is_some() || shadow_coupling.is_some() {
+        ClampCrowdingViscosityRelationV1::LowOrAmbiguous
+    } else {
+        ClampCrowdingViscosityRelationV1::ContextUnavailable
+    };
+    let context_state = match distribution_shape {
+        ClampDistributionShapeV1::NotReportedLegacy => "not_reported_legacy",
+        ClampDistributionShapeV1::BroadHighEntropySwell => {
+            "broad_high_entropy_swell_visible_beside_scalar_clamp"
+        },
+        ClampDistributionShapeV1::IsolatedSpikeCandidate => {
+            "isolated_outlier_spike_candidate_not_proven"
+        },
+        ClampDistributionShapeV1::PersistentViscousDrag => {
+            "persistent_viscous_drag_visible_across_bounded_evidence_window"
+        },
+        ClampDistributionShapeV1::MixedOrAmbiguous => {
+            "mixed_distribution_context_requires_more_evidence"
+        },
+        ClampDistributionShapeV1::ContextUnavailable => {
+            "distribution_context_non_finite_or_unavailable"
+        },
+    };
+    review.distribution_context = Some(ClampDistributionContextV1 {
+        spectral_entropy: entropy,
+        structural_plurality: plurality,
+        viscosity_index: viscosity,
+        temporal_persistence: persistence,
+        mode_packing_density: mode_packing,
+        shadow_coupling_index: shadow_coupling,
+        crowding_viscosity_relation,
+        resistance_gradient,
+        evidence_window_ticks: evidence_window,
+        distribution_shape,
+        coexisting_shapes,
+        context_state: context_state.to_string(),
+        raw_out_of_range,
+        changes_clamped_value: false,
+        live_authority_write: false,
+        authority: "read_only_distribution_context_not_clamp_or_live_vector_change".to_string(),
+    });
+    review
 }
 
 pub const RESONANCE_STABILITY_COMFORT_GATE_WEIGHT: f32 = 0.35;
@@ -142,6 +626,9 @@ pub enum ExperienceDeltaKindV1 {
     Delay,
     Friction,
     Resistance,
+    /// A release transition where previously viscous or resistant flow becomes
+    /// more orderly without implying that pressure or control was changed.
+    Laminarization,
     ViscosityShift,
     PermeabilityShift,
     StructuralSolidification,
@@ -153,6 +640,8 @@ pub enum ExperienceDeltaKindV1 {
     MicroDelta,
     Residual,
     Persistence,
+    Ambiguity,
+    Divergence,
 }
 
 /// Optional subtype for viscosity shifts whose felt texture matters. This is
@@ -258,6 +747,20 @@ pub struct DeltaCompositionV1 {
     pub schema_version: u8,
     pub primary_kind: ExperienceDeltaKindV1,
     pub composite_score: f32,
+    /// Sum before the compatibility score is clamped to one. This keeps
+    /// simultaneous high-weight kinds visible instead of flattening overlap.
+    #[serde(default)]
+    pub unclamped_weight_sum: f32,
+    /// Mean member weight in `[0, 1]`, independent of the number of kinds.
+    #[serde(default)]
+    pub weight_density: f32,
+    /// Amount by which the member sum exceeds the compatibility ceiling.
+    #[serde(default)]
+    pub saturation_excess: f32,
+    #[serde(default)]
+    pub composite_score_saturated: bool,
+    #[serde(default = "default_delta_composition_saturation_state")]
+    pub saturation_state: String,
     pub state: String,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub members: Vec<DeltaCompositionMemberV1>,
@@ -271,6 +774,10 @@ pub struct DeltaCompositionV1 {
     pub who_can_change_it: String,
     pub how_to_test_it: String,
     pub authority: String,
+}
+
+fn default_delta_composition_saturation_state() -> String {
+    "not_reported_legacy".to_string()
 }
 
 #[must_use]
@@ -305,11 +812,23 @@ pub fn delta_composition_v1(
         );
     }
 
-    let composite_score = members
-        .iter()
-        .map(|member| member.weight)
-        .sum::<f32>()
-        .clamp(0.0, 1.0);
+    let unclamped_weight_sum = members.iter().map(|member| member.weight).sum::<f32>();
+    let composite_score = unclamped_weight_sum.clamp(0.0, 1.0);
+    let member_capacity = members.iter().map(|_| 1.0_f32).sum::<f32>();
+    let weight_density = if member_capacity > f32::EPSILON {
+        clamp_unit_finite_or(unclamped_weight_sum / member_capacity, 0.0)
+    } else {
+        0.0
+    };
+    let saturation_excess = (unclamped_weight_sum - 1.0).max(0.0);
+    let composite_score_saturated = saturation_excess > f32::EPSILON;
+    let saturation_state = if composite_score_saturated {
+        "saturated_overlap_visible"
+    } else if composite_score >= 1.0 {
+        "at_ceiling_without_excess"
+    } else {
+        "unsaturated"
+    };
     let strong_member_count = members
         .iter()
         .filter(|member| member.weight >= 0.20)
@@ -327,18 +846,27 @@ pub fn delta_composition_v1(
         schema_version: 1,
         primary_kind,
         composite_score,
+        unclamped_weight_sum,
+        weight_density,
+        saturation_excess,
+        composite_score_saturated,
+        saturation_state: saturation_state.to_string(),
         state: state.to_string(),
         members,
         evidence_window: "bounded_current_packet_delta_composition".to_string(),
         basis: BTreeMap::from([
             (
                 "source_introspection".to_string(),
-                "introspection_astrid_types_1784122683;introspection_astrid_types_1784114716"
-                    .to_string(),
+                "introspection_astrid_types_1784139137;introspection_astrid_types_1784122683;introspection_astrid_types_1784114716".to_string(),
             ),
             (
                 "composition_rule".to_string(),
                 "coexisting_delta_weights_are_truth_channel_evidence_not_enum_replacement"
+                    .to_string(),
+            ),
+            (
+                "saturation_rule".to_string(),
+                "compatibility_score_remains_clamped_while_unclamped_sum_density_and_excess_preserve_overlap"
                     .to_string(),
             ),
         ]),
@@ -566,6 +1094,7 @@ pub fn experience_delta_bus_v2_design_preview() -> ExperienceDeltaBusV2DesignPre
             "delay".to_string(),
             "friction".to_string(),
             "resistance".to_string(),
+            "laminarization".to_string(),
             "viscosity_shift".to_string(),
             "structural_solidification".to_string(),
             "synthesize".to_string(),
@@ -670,6 +1199,10 @@ pub struct ResonanceViscosityVectorV1 {
     pub structural_drag_coefficient: f32,
     #[serde(default, skip_serializing_if = "is_zero_f32")]
     pub cognitive_drag_coefficient: f32,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub viscosity_gradient: Option<f32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub cohesion_to_motion_ratio: Option<f32>,
 }
 
 /// Read-only range companion for `comfort_gate`.
@@ -1099,6 +1632,10 @@ pub struct TextureDynamicFluxVectorV1 {
     pub semantic_viscosity_acceleration: Option<f32>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub porosity_velocity: Option<f32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub comfort_gate_velocity: Option<f32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub comfort_gate_acceleration: Option<f32>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub spectral_entropy: Option<f32>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -1831,6 +2368,10 @@ pub struct ResonanceTextureSignatureV1 {
     pub pressure_source_family: String,
     pub edge_definition: String,
     pub movement_quality: String,
+    /// Direct Minime-reported viscosity beside the verbal movement label.
+    /// `None` preserves the distinction between legacy absence and zero.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub viscosity_index: Option<f32>,
     pub confidence: f32,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub temporal_variance: Option<f32>,
@@ -1855,6 +2396,7 @@ impl Default for ResonanceTextureSignatureV1 {
             pressure_source_family: "unknown".to_string(),
             edge_definition: "unknown".to_string(),
             movement_quality: "unknown".to_string(),
+            viscosity_index: None,
             confidence: 0.0,
             temporal_variance: None,
             pressure_gradient_delta: None,
@@ -1905,6 +2447,12 @@ pub struct TextureSignatureIntegrityV1 {
     pub policy: String,
     pub schema_version: u8,
     pub movement_quality: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub signature_viscosity_index: Option<f32>,
+    pub component_viscosity_index: f32,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub viscosity_delta: Option<f32>,
+    pub viscosity_alignment_state: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub temporal_variance: Option<f32>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -2045,6 +2593,10 @@ pub struct PressureSourceAnalysisV1 {
     pub semantic_trickle: Option<f32>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub mode_packing: Option<f32>,
+    /// Evidence that made mode packing visible even when upstream labels are
+    /// absent or renamed. This is diagnostic provenance, not a threshold write.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub mode_packing_visibility_basis: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub porosity_expansion_threshold_state: Option<String>,
     #[serde(default)]
@@ -2069,6 +2621,9 @@ pub struct PressureSourceAnalysisV1 {
     pub pressure_trend_classification: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub smoothing_classification: Option<String>,
+    /// Current fast-window pressure edge beside the longer smoothing context.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pressure_edge_state: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub semantic_stagnation_index: Option<f32>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -3135,8 +3690,10 @@ pub struct BridgeReciprocityV1 {
     pub authority: String,
 }
 
-/// Read-only status packet for Astrid's report that high spectral entropy can
-/// erode reciprocity sooner than the fixed reflective-silence window shows.
+/// Read-only status packet for Astrid's report that transport patience and
+/// structural identity can age at different rates. The live reciprocity window
+/// remains unchanged; this packet only exposes the counterfactual identity
+/// clock produced by entropy, cohesion, and distinguishability loss.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BridgeEntropyReciprocityReviewV1 {
     pub policy: String,
@@ -3146,6 +3703,8 @@ pub struct BridgeEntropyReciprocityReviewV1 {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub resonance_cohesion_score: Option<f32>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub distinguishability_loss: Option<f32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub telemetry_age_ms: Option<f64>,
     #[serde(default)]
     pub current_stale_window_ms: f64,
@@ -3153,8 +3712,20 @@ pub struct BridgeEntropyReciprocityReviewV1 {
     pub current_stale_window_basis: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub entropy_contract_preview_window_ms: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub structural_identity_window_ms: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub structural_age_multiplier: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub structural_effective_age_ms: Option<f64>,
+    #[serde(default)]
+    pub transport_wait_stale: bool,
+    #[serde(default)]
+    pub structural_identity_stale: bool,
     #[serde(default)]
     pub would_stale_under_preview: bool,
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub clock_relation: String,
     #[serde(default, skip_serializing_if = "String::is_empty")]
     pub current_window_state: String,
     #[serde(default, skip_serializing_if = "String::is_empty")]
@@ -3185,6 +3756,29 @@ pub struct PressureTrendSmoothingV1 {
     pub latest_pressure_velocity_delta: Option<f32>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub max_pressure_velocity_delta: Option<f32>,
+    /// Number of newest samples used to retain the current fast edge.
+    #[serde(default)]
+    pub fast_window_sample_count: usize,
+    /// Number of samples used for the slower contextual delta.
+    #[serde(default)]
+    pub slow_window_sample_count: usize,
+    /// Newest bounded fast-window pressure delta (up to three samples).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub fast_window_pressure_delta: Option<f32>,
+    /// Full active-window pressure delta retained as slower context.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub slow_window_pressure_delta: Option<f32>,
+    /// Signed fast-minus-slow delta. Positive means a faster rising edge;
+    /// negative means a faster falling/release edge.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub fast_slow_edge_divergence: Option<f32>,
+    /// Names whether the fast edge agrees with, diverges from, or has already
+    /// passed out of the slower context.
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub fast_slow_edge_state: String,
+    /// True when the current fast window carries a material pressure edge.
+    #[serde(default)]
+    pub fast_edge_preserved: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub latest_spectral_drift_velocity: Option<f32>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -3193,6 +3787,12 @@ pub struct PressureTrendSmoothingV1 {
     pub latest_resonance_depth: Option<f32>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub latest_semantic_viscosity: Option<f32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub latest_viscosity_gradient: Option<f32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub viscosity_gradient_trend: Option<f32>,
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub viscosity_gradient_trend_state: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub latest_complexity_density: Option<f32>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -4275,6 +4875,10 @@ mod tests {
             "\"resistance\""
         );
         assert_eq!(
+            serde_json::to_string(&ExperienceDeltaKindV1::Laminarization).unwrap(),
+            "\"laminarization\""
+        );
+        assert_eq!(
             serde_json::to_string(&ExperienceDeltaKindV1::ViscosityShift).unwrap(),
             "\"viscosity_shift\""
         );
@@ -4317,6 +4921,14 @@ mod tests {
         assert_eq!(
             serde_json::to_string(&ExperienceDeltaKindV1::Persistence).unwrap(),
             "\"persistence\""
+        );
+        assert_eq!(
+            serde_json::to_string(&ExperienceDeltaKindV1::Ambiguity).unwrap(),
+            "\"ambiguity\""
+        );
+        assert_eq!(
+            serde_json::to_string(&ExperienceDeltaKindV1::Divergence).unwrap(),
+            "\"divergence\""
         );
     }
 
@@ -4682,6 +5294,11 @@ mod tests {
         );
         assert_eq!(composition.state, "multi_kind_composite_delta");
         assert_eq!(composition.composite_score, 1.0);
+        assert!((composition.unclamped_weight_sum - 1.58).abs() < 0.001);
+        assert!((composition.weight_density - 0.395).abs() < 0.001);
+        assert!((composition.saturation_excess - 0.58).abs() < 0.001);
+        assert!(composition.composite_score_saturated);
+        assert_eq!(composition.saturation_state, "saturated_overlap_visible");
         assert!(
             composition
                 .members
@@ -4713,6 +5330,20 @@ mod tests {
         assert!(encoded.contains("\"live_authority_write\":false"));
         let decoded: DeltaCompositionV1 = serde_json::from_str(&encoded).unwrap();
         assert_eq!(decoded, composition);
+
+        let mut legacy_value = serde_json::to_value(&composition).unwrap();
+        let legacy_object = legacy_value.as_object_mut().unwrap();
+        legacy_object.remove("unclamped_weight_sum");
+        legacy_object.remove("weight_density");
+        legacy_object.remove("saturation_excess");
+        legacy_object.remove("composite_score_saturated");
+        legacy_object.remove("saturation_state");
+        let legacy_decoded: DeltaCompositionV1 = serde_json::from_value(legacy_value).unwrap();
+        assert_eq!(legacy_decoded.unclamped_weight_sum, 0.0);
+        assert_eq!(legacy_decoded.weight_density, 0.0);
+        assert_eq!(legacy_decoded.saturation_excess, 0.0);
+        assert!(!legacy_decoded.composite_score_saturated);
+        assert_eq!(legacy_decoded.saturation_state, "not_reported_legacy");
     }
 
     #[test]
@@ -5070,6 +5701,7 @@ mod tests {
         assert_eq!(signature.policy, "resonance_texture_signature_v1");
         assert_eq!(signature.authority, "advisory_context_not_control");
         assert_eq!(signature.primary_texture, "unknown");
+        assert_eq!(signature.viscosity_index, None);
         assert!(signature.dynamic_flux_vector.is_none());
         assert!(signature.active_constraints.is_empty());
     }
@@ -5110,6 +5742,7 @@ mod tests {
                 pressure_source_family: "viscosity_index".to_string(),
                 edge_definition: "soft".to_string(),
                 movement_quality: "slow_viscous".to_string(),
+                viscosity_index: Some(0.72),
                 confidence: 0.72,
                 temporal_variance: None,
                 pressure_gradient_delta: None,
@@ -5131,6 +5764,8 @@ mod tests {
         };
         let json = serde_json::to_value(&density).unwrap();
         let signature = &json["texture_signature"];
+
+        assert!((signature["viscosity_index"].as_f64().unwrap_or_default() - 0.72).abs() <= 0.001);
 
         assert!(signature.get("temporal_variance").is_none());
         assert!(
@@ -5310,6 +5945,8 @@ mod tests {
             semantic_viscosity_velocity: None,
             semantic_viscosity_acceleration: None,
             porosity_velocity: None,
+            comfort_gate_velocity: None,
+            comfort_gate_acceleration: None,
             spectral_entropy: Some(0.90),
             flux_confidence: Some(0.72),
             flux_absence_semantics: Some(
@@ -5452,6 +6089,8 @@ mod tests {
             semantic_viscosity_velocity: None,
             semantic_viscosity_acceleration: None,
             porosity_velocity: None,
+            comfort_gate_velocity: None,
+            comfort_gate_acceleration: None,
             spectral_entropy: Some(0.90),
             flux_confidence: Some(0.72),
             flux_absence_semantics: Some(
@@ -6058,7 +6697,9 @@ mod tests {
                     "structural_strain_gap": 0.48,
                     "mutual_resonance_tension": 0.41,
                     "structural_drag_coefficient": 0.73,
-                    "cognitive_drag_coefficient": 0.61
+                    "cognitive_drag_coefficient": 0.61,
+                    "viscosity_gradient": 0.47,
+                    "cohesion_to_motion_ratio": 0.75
                 },
                 "structural_plurality": 0.58,
                 "comfort_gate": 0.49
@@ -6077,6 +6718,16 @@ mod tests {
         assert!((vector.cognitive_drag_coefficient - 0.61).abs() <= 0.0001);
         assert!((vector.residual_ghost_weight - 0.69).abs() <= 0.0001);
         assert!((vector.flow_rate - 0.18).abs() <= 0.0001);
+        assert!(
+            vector
+                .viscosity_gradient
+                .is_some_and(|value| (value - 0.47).abs() <= 0.0001)
+        );
+        assert!(
+            vector
+                .cohesion_to_motion_ratio
+                .is_some_and(|value| (value - 0.75).abs() <= 0.0001)
+        );
         assert!(!density.control.applied_locally);
 
         let json = serde_json::to_value(&density).unwrap();
@@ -6679,6 +7330,10 @@ mod tests {
         assert_eq!(high.raw_value, Some(1.25));
         assert_eq!(high.clamped_value, 1.0);
         assert_eq!(high.clip_state, "clipped_high");
+        assert_eq!(
+            high.fallback_intent_kind,
+            ClampFallbackIntentV1::FiniteFallbackPreserved
+        );
         assert!(high.clipped_high);
         assert!(!high.clipped_low);
         assert!(!high.non_finite_rejected);
@@ -6713,6 +7368,10 @@ mod tests {
             review.fallback_intent_state,
             "uncomputable_fallback_defaulted_to_zero"
         );
+        assert_eq!(
+            review.fallback_intent_kind,
+            ClampFallbackIntentV1::UncomputableFallbackDefaultedToZero
+        );
         assert_eq!(review.clamped_value, 0.0);
         assert_eq!(review.clip_state, "non_finite_rejected_to_fallback");
         assert!(!review.live_vector_write);
@@ -6721,6 +7380,337 @@ mod tests {
         let encoded = serde_json::to_string(&review).unwrap();
         assert!(encoded.contains("\"fallback_non_finite_defaulted\":true"));
         assert!(encoded.contains("uncomputable_fallback_defaulted_to_zero"));
+
+        let mut legacy_value = serde_json::to_value(&review).unwrap();
+        legacy_value
+            .as_object_mut()
+            .unwrap()
+            .remove("fallback_intent_kind");
+        let legacy_review: ClampedUnitReviewV1 = serde_json::from_value(legacy_value).unwrap();
+        assert_eq!(
+            legacy_review.fallback_intent_kind,
+            ClampFallbackIntentV1::NotReportedLegacy
+        );
+        assert!(legacy_review.distribution_context.is_none());
+        assert!(legacy_review.input_provenance.is_none());
+        assert!(legacy_review.pressure_context.is_none());
+    }
+
+    #[test]
+    fn clamped_unit_review_names_input_sources_and_replacement_path_without_reclamping() {
+        let finite = clamped_unit_review_v1(1.25, 0.50)
+            .with_input_provenance("telemetry.spectral_entropy", "compatibility_default");
+        let preserved = clamped_unit_review_v1(0.75, 0.50)
+            .with_input_provenance("telemetry.comfort_gate", "compatibility_default");
+        let replaced = clamped_unit_review_v1(f32::NAN, 0.50)
+            .with_input_provenance("telemetry.pressure_risk", "last_finite_pressure");
+        let defaulted = clamped_unit_review_v1(f32::NAN, f32::INFINITY)
+            .with_input_provenance("telemetry.mode_packing", "unavailable_legacy_default");
+
+        assert_eq!(finite.clamped_value, 1.0);
+        let finite_provenance = finite.input_provenance.expect("finite provenance");
+        assert_eq!(
+            finite_provenance.replacement_path,
+            ClampReplacementPathV1::RawFiniteClippedHigh
+        );
+        assert_eq!(
+            finite_provenance.raw_value_source,
+            "telemetry.spectral_entropy"
+        );
+        assert!(!finite_provenance.fallback_applied);
+        assert!(!finite_provenance.changes_clamped_value);
+        assert_eq!(
+            finite_provenance.degradation_type,
+            Some(DegradationTypeV1::FlatteningOfIntensity)
+        );
+        assert!(finite_provenance.degradation_inferred_from_scalar);
+        assert!(!finite_provenance.live_authority_write);
+
+        let preserved_provenance = preserved.input_provenance.expect("preserved provenance");
+        assert_eq!(
+            preserved_provenance.replacement_path,
+            ClampReplacementPathV1::RawFinitePreserved
+        );
+        assert_eq!(preserved_provenance.degradation_type, None);
+        assert!(!preserved_provenance.degradation_inferred_from_scalar);
+
+        assert_eq!(replaced.clamped_value, 0.50);
+        let replaced_provenance = replaced.input_provenance.expect("fallback provenance");
+        assert_eq!(
+            replaced_provenance.replacement_path,
+            ClampReplacementPathV1::RawNonFiniteReplacedByFallback
+        );
+        assert_eq!(replaced_provenance.fallback_source, "last_finite_pressure");
+        assert!(replaced_provenance.fallback_applied);
+        assert_eq!(
+            replaced_provenance.degradation_type,
+            Some(DegradationTypeV1::LossOfNuance)
+        );
+        assert!(replaced_provenance.degradation_inferred_from_scalar);
+
+        assert_eq!(defaulted.clamped_value, 0.0);
+        let defaulted_provenance = defaulted.input_provenance.expect("default provenance");
+        assert_eq!(
+            defaulted_provenance.replacement_path,
+            ClampReplacementPathV1::RawAndFallbackNonFiniteDefaultedToZero
+        );
+        assert!(defaulted_provenance.fallback_applied);
+        assert_eq!(
+            defaulted_provenance.degradation_type,
+            Some(DegradationTypeV1::LossOfNuance)
+        );
+        assert_eq!(
+            defaulted_provenance.authority,
+            "read_only_clamp_source_provenance_not_sensor_authority_or_control"
+        );
+
+        let encoded = serde_json::to_string(&defaulted_provenance).unwrap();
+        assert!(encoded.contains("raw_and_fallback_non_finite_defaulted_to_zero"));
+        assert!(encoded.contains("\"degradation_type\":\"loss_of_nuance\""));
+        assert!(encoded.contains("telemetry.mode_packing"));
+
+        let mut legacy_value = serde_json::to_value(&finite_provenance).unwrap();
+        legacy_value
+            .as_object_mut()
+            .expect("provenance object")
+            .remove("degradation_type");
+        legacy_value
+            .as_object_mut()
+            .expect("provenance object")
+            .remove("degradation_inferred_from_scalar");
+        let legacy: ClampInputProvenanceV1 = serde_json::from_value(legacy_value).unwrap();
+        assert_eq!(legacy.degradation_type, None);
+        assert!(!legacy.degradation_inferred_from_scalar);
+    }
+
+    #[test]
+    fn clamped_unit_review_names_reported_pressure_context_without_causal_authority() {
+        let review = clamped_unit_review_v1(1.25, 0.50).with_reported_pressure_context(
+            ClampPressureSourceKindV1::Mixed,
+            &format!("{} trailing", "mode_packing+viscosity ".repeat(8)),
+            1.20,
+            -0.25,
+            8,
+        );
+
+        assert_eq!(review.clamped_value, 1.0);
+        let context = review.pressure_context.expect("reported pressure context");
+        assert_eq!(context.policy, "clamp_pressure_context_v1");
+        assert_eq!(context.source_kind, ClampPressureSourceKindV1::Mixed);
+        assert_eq!(context.source_label.chars().count(), 96);
+        assert_eq!(context.source_score, Some(1.0));
+        assert_eq!(context.pressure_risk, Some(0.0));
+        assert_eq!(context.evidence_window_ticks, Some(8));
+        assert_eq!(
+            context.attribution_state,
+            "caller_reported_context_not_causal_attribution"
+        );
+        assert!(!context.changes_clamped_value);
+        assert!(!context.grants_source_authority);
+        assert!(!context.live_authority_write);
+        assert_eq!(
+            context.authority,
+            "read_only_reported_pressure_context_not_causal_sensor_or_control_authority"
+        );
+
+        let encoded = serde_json::to_string(&context).unwrap();
+        assert!(encoded.contains("\"source_kind\":\"mixed\""));
+        assert!(encoded.contains("\"grants_source_authority\":false"));
+        assert!(encoded.contains("\"live_authority_write\":false"));
+    }
+
+    #[test]
+    fn clamped_unit_review_pressure_context_keeps_unknown_metrics_absent() {
+        let review = clamped_unit_review_v1(0.42, 0.50).with_reported_pressure_context(
+            ClampPressureSourceKindV1::OtherReported,
+            " ",
+            f32::NAN,
+            f32::INFINITY,
+            0,
+        );
+        let context = review.pressure_context.expect("reported pressure context");
+
+        assert_eq!(review.clamped_value, 0.42);
+        assert_eq!(context.source_label, "unspecified_source");
+        assert_eq!(context.source_score, None);
+        assert_eq!(context.pressure_risk, None);
+        assert_eq!(context.evidence_window_ticks, None);
+        assert!(!context.changes_clamped_value);
+        assert!(!context.grants_source_authority);
+        assert!(!context.live_authority_write);
+    }
+
+    #[test]
+    fn clamped_unit_distribution_context_distinguishes_swell_from_spike_without_reclamping() {
+        let swell = clamped_unit_review_with_distribution_context_v1(1.50, 0.50, 0.90, 0.72);
+        let spike = clamped_unit_review_with_distribution_context_v1(1.50, 0.50, 0.20, 0.18);
+
+        assert_eq!(swell.clamped_value, 1.0);
+        assert_eq!(spike.clamped_value, 1.0);
+        let swell_context = swell.distribution_context.expect("swell context");
+        assert_eq!(
+            swell_context.distribution_shape,
+            ClampDistributionShapeV1::BroadHighEntropySwell
+        );
+        assert_eq!(swell_context.spectral_entropy, Some(0.90));
+        assert_eq!(swell_context.structural_plurality, Some(0.72));
+        assert!(swell_context.raw_out_of_range);
+        assert!(!swell_context.changes_clamped_value);
+        assert!(!swell_context.live_authority_write);
+
+        let spike_context = spike.distribution_context.expect("spike context");
+        assert_eq!(
+            spike_context.distribution_shape,
+            ClampDistributionShapeV1::IsolatedSpikeCandidate
+        );
+        assert_eq!(
+            spike_context.context_state,
+            "isolated_outlier_spike_candidate_not_proven"
+        );
+
+        let encoded = serde_json::to_string(&swell_context).unwrap();
+        assert!(encoded.contains("broad_high_entropy_swell"));
+        assert!(encoded.contains("\"changes_clamped_value\":false"));
+        assert!(encoded.contains("\"live_authority_write\":false"));
+    }
+
+    #[test]
+    fn clamped_unit_distribution_context_preserves_persistent_drag_beside_broad_swell() {
+        let review = clamped_unit_review_with_distribution_dynamics_v1(
+            1.50, 0.50, 0.90, 0.72, 0.74, 0.81, 8,
+        );
+
+        assert_eq!(review.clamped_value, 1.0);
+        let context = review
+            .distribution_context
+            .expect("persistent drag context");
+        assert_eq!(
+            context.distribution_shape,
+            ClampDistributionShapeV1::PersistentViscousDrag
+        );
+        assert_eq!(context.viscosity_index, Some(0.74));
+        assert_eq!(context.temporal_persistence, Some(0.81));
+        assert_eq!(context.evidence_window_ticks, Some(8));
+        assert_eq!(
+            context.coexisting_shapes,
+            vec![ClampDistributionShapeV1::BroadHighEntropySwell]
+        );
+        assert_eq!(
+            context.context_state,
+            "persistent_viscous_drag_visible_across_bounded_evidence_window"
+        );
+        assert!(context.raw_out_of_range);
+        assert!(!context.changes_clamped_value);
+        assert!(!context.live_authority_write);
+
+        let encoded = serde_json::to_string(&context).unwrap();
+        assert!(encoded.contains("persistent_viscous_drag"));
+        assert!(encoded.contains("broad_high_entropy_swell"));
+        assert!(encoded.contains("\"changes_clamped_value\":false"));
+        assert!(encoded.contains("\"live_authority_write\":false"));
+    }
+
+    #[test]
+    fn clamped_unit_distribution_context_requires_a_bounded_window_for_persistent_drag() {
+        let one_tick = clamped_unit_review_with_distribution_dynamics_v1(
+            1.50, 0.50, 0.90, 0.72, 0.74, 0.81, 1,
+        );
+        let context = one_tick.distribution_context.expect("one-tick context");
+
+        assert_eq!(
+            context.distribution_shape,
+            ClampDistributionShapeV1::BroadHighEntropySwell
+        );
+        assert!(context.coexisting_shapes.is_empty());
+        assert!(!context.changes_clamped_value);
+        assert!(!context.live_authority_write);
+    }
+
+    #[test]
+    fn clamped_unit_distribution_context_preserves_signed_resistance_motion() {
+        let thickening = clamped_unit_review_with_resistance_gradient_v1(
+            1.50, 0.50, 0.90, 0.72, 0.74, 0.81, 8, 0.22,
+        );
+        let thinning = clamped_unit_review_with_resistance_gradient_v1(
+            1.50, 0.50, 0.90, 0.72, 0.74, 0.81, 8, -0.18,
+        );
+
+        let thickening_context = thickening.distribution_context.expect("thickening context");
+        let thinning_context = thinning.distribution_context.expect("thinning context");
+        assert_eq!(thickening_context.resistance_gradient, Some(0.22));
+        assert_eq!(thinning_context.resistance_gradient, Some(-0.18));
+        assert_eq!(thickening.clamped_value, thinning.clamped_value);
+        assert!(!thickening_context.changes_clamped_value);
+        assert!(!thickening_context.live_authority_write);
+
+        let mut legacy = serde_json::to_value(&thickening_context).unwrap();
+        legacy
+            .as_object_mut()
+            .expect("context object")
+            .remove("resistance_gradient");
+        let decoded: ClampDistributionContextV1 = serde_json::from_value(legacy).unwrap();
+        assert_eq!(decoded.resistance_gradient, None);
+    }
+
+    #[test]
+    fn clamped_unit_distribution_context_distinguishes_crowding_from_viscosity() {
+        let shadow_crowding = clamped_unit_review_with_crowding_context_v1(
+            1.50, 0.50, 0.90, 0.72, 0.38, 0.42, 8, 0.04, 0.31, 0.68,
+        );
+        let interwoven = clamped_unit_review_with_crowding_context_v1(
+            1.50, 0.50, 0.90, 0.72, 0.74, 0.81, 8, 0.22, 0.31, 0.68,
+        );
+
+        let shadow_context = shadow_crowding
+            .distribution_context
+            .expect("shadow-coupled crowding context");
+        assert_eq!(shadow_context.mode_packing_density, Some(0.31));
+        assert_eq!(shadow_context.shadow_coupling_index, Some(0.68));
+        assert_eq!(
+            shadow_context.crowding_viscosity_relation,
+            ClampCrowdingViscosityRelationV1::ShadowCoupledCrowding
+        );
+        assert_eq!(shadow_crowding.clamped_value, 1.0);
+        assert!(!shadow_context.changes_clamped_value);
+        assert!(!shadow_context.live_authority_write);
+
+        let interwoven_context = interwoven
+            .distribution_context
+            .expect("interwoven crowding and viscosity context");
+        assert_eq!(
+            interwoven_context.crowding_viscosity_relation,
+            ClampCrowdingViscosityRelationV1::InterwovenCrowdingAndViscosity
+        );
+        assert_eq!(interwoven.clamped_value, shadow_crowding.clamped_value);
+        assert!(!interwoven_context.changes_clamped_value);
+        assert!(!interwoven_context.live_authority_write);
+
+        let encoded = serde_json::to_string(&shadow_context).unwrap();
+        assert!(encoded.contains("shadow_coupled_crowding"));
+        assert!(encoded.contains("\"mode_packing_density\":0.31"));
+        assert!(encoded.contains("\"shadow_coupling_index\":0.68"));
+    }
+
+    #[test]
+    fn clamped_unit_distribution_context_legacy_payload_defaults_crowding_evidence() {
+        let context = clamped_unit_review_with_crowding_context_v1(
+            1.50, 0.50, 0.90, 0.72, 0.38, 0.42, 8, 0.04, 0.31, 0.68,
+        )
+        .distribution_context
+        .expect("crowding context");
+        let mut legacy = serde_json::to_value(context).unwrap();
+        let object = legacy.as_object_mut().expect("context object");
+        object.remove("mode_packing_density");
+        object.remove("shadow_coupling_index");
+        object.remove("crowding_viscosity_relation");
+
+        let decoded: ClampDistributionContextV1 = serde_json::from_value(legacy).unwrap();
+        assert_eq!(decoded.mode_packing_density, None);
+        assert_eq!(decoded.shadow_coupling_index, None);
+        assert_eq!(
+            decoded.crowding_viscosity_relation,
+            ClampCrowdingViscosityRelationV1::NotReportedLegacy
+        );
     }
 
     #[test]
@@ -6917,8 +7907,18 @@ mod tests {
         .unwrap();
         assert!(smoothing.semantic_stagnation_index.is_none());
         assert!(smoothing.semantic_stagnation_state.is_empty());
+        assert!(smoothing.latest_viscosity_gradient.is_none());
+        assert!(smoothing.viscosity_gradient_trend.is_none());
+        assert!(smoothing.viscosity_gradient_trend_state.is_empty());
         assert!(smoothing.latest_complexity_density.is_none());
         assert!(smoothing.max_complexity_density.is_none());
+        assert_eq!(smoothing.fast_window_sample_count, 0);
+        assert_eq!(smoothing.slow_window_sample_count, 0);
+        assert!(smoothing.fast_window_pressure_delta.is_none());
+        assert!(smoothing.slow_window_pressure_delta.is_none());
+        assert!(smoothing.fast_slow_edge_divergence.is_none());
+        assert!(smoothing.fast_slow_edge_state.is_empty());
+        assert!(!smoothing.fast_edge_preserved);
 
         let analysis: PressureSourceAnalysisV1 = serde_json::from_value(serde_json::json!({
             "policy": "pressure_source_analysis_v1",
@@ -6932,6 +7932,8 @@ mod tests {
         .unwrap();
         assert!(analysis.semantic_stagnation_index.is_none());
         assert!(analysis.semantic_stagnation_state.is_none());
+        assert!(analysis.pressure_edge_state.is_none());
+        assert!(analysis.mode_packing_visibility_basis.is_none());
     }
 
     #[test]

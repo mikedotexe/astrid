@@ -703,7 +703,8 @@ fn narrative_segments_from_text(text: &str) -> Vec<f32> {
         })
         .collect::<Vec<_>>();
     if segments.len() > 8 {
-        segments = segments[segments.len() - 8..].to_vec();
+        let start = segments.len().saturating_sub(8);
+        segments = segments[start..].to_vec();
     }
     segments
 }
@@ -1059,11 +1060,14 @@ fn narrative_candidate(fixture: &Fixture) -> NarrativeArcCandidate {
     let recent_weighted = weighted_average(
         segments,
         &(0..segments.len())
-            .map(|idx| 0.35_f32.powi((segments.len() - idx - 1) as i32))
+            .map(|idx| {
+                let exponent = segments.len().saturating_sub(idx.saturating_add(1));
+                0.35_f32.powi(exponent as i32)
+            })
             .collect::<Vec<_>>(),
     );
     let previous_avg = if segments.len() >= 2 {
-        average(&segments[..segments.len() - 1])
+        average(&segments[..segments.len().saturating_sub(1)])
     } else {
         first_avg
     };
@@ -1083,7 +1087,11 @@ fn narrative_candidate(fixture: &Fixture) -> NarrativeArcCandidate {
     let current_rms = rms4(&current_arc);
     let temporal_rms = rms4(&temporal_decay_arc);
     let pivot_rms = rms4(&pivot_detector_arc);
-    let late_pivot = segments.len() >= 4 && segments[segments.len() - 2] >= 0.0 && last < -0.5;
+    let late_pivot = segments.len() >= 4
+        && segments
+            .get(segments.len().saturating_sub(2))
+            .is_some_and(|value| *value >= 0.0)
+        && last < -0.5;
     let classification = if late_pivot && temporal_rms > current_rms + 0.01 {
         "temporal_decay_candidate"
     } else if late_pivot && pivot_rms > current_rms + 0.05 {

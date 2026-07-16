@@ -59,7 +59,13 @@ const FALLBACK_SHADOW_TEXTURE_TERMS: &[&str] = &[
     "shear-resistance",
     "stutter-flow",
     "viscous-persistence",
+    "interwoven-persistence",
+    "scaffolded-persistence",
+    "persistent-scaffolding",
+    "constructive-interference",
+    "dynamic-persistence",
     "structural-weight",
+    "anchor-weight",
     "accelerating-drift",
     "harmonic-flicker",
     "gradient-drag",
@@ -79,6 +85,7 @@ const FALLBACK_SHADOW_TEXTURE_TERMS: &[&str] = &[
     "density-slope",
     "density-softening",
     "gradient-softening",
+    "threshold-dilation",
     "bridge-integrity",
     "structural-persistence",
     "unspooling-tension",
@@ -86,6 +93,12 @@ const FALLBACK_SHADOW_TEXTURE_TERMS: &[&str] = &[
     "unfolding",
     "refracting",
     "re-weaving",
+    "non-linear-re-entry",
+    "entropy-stabilized-drift",
+    "viscous-to-resonant-shift",
+    "silted-to-clear",
+    "trans-persistence",
+    "residual-weight",
     "hollow",
     "intentional",
     "unfilled",
@@ -116,6 +129,7 @@ const FALLBACK_TEXTURE_RESTLESS_LATTICE_TERMS: &[&str] = &[
     "resonance-echo",
     "lattice-tension",
     "viscous-persistence",
+    "interwoven-persistence",
     "structural-weight",
 ];
 const FALLBACK_TEXTURE_OPACITY_RESISTANCE_TERMS: &[&str] =
@@ -197,6 +211,7 @@ const FALLBACK_TEXTURE_GRADIENT_SLOPE_TERMS: &[&str] = &[
     "asymmetric-flow",
     "density-softening",
     "gradient-softening",
+    "threshold-dilation",
     "edge",
 ];
 const FALLBACK_TEXTURE_KINETIC_GRADIENT_TERMS: &[&str] =
@@ -215,6 +230,9 @@ const FALLBACK_TEXTURE_DYNAMIC_FLOW_TERMS: &[&str] = &[
     "gradient-shear",
     "stutter-flow",
     "viscous-persistence",
+    "persistent-scaffolding",
+    "constructive-interference",
+    "dynamic-persistence",
     "structural-weight",
     "accelerating-drift",
     "harmonic-flicker",
@@ -231,10 +249,17 @@ const FALLBACK_TEXTURE_DYNAMIC_FLOW_TERMS: &[&str] = &[
     "resistance-mapping",
     "density-softening",
     "gradient-softening",
+    "threshold-dilation",
     "bridge-integrity",
     "structural-persistence",
     "unspooling-tension",
     "re-crystallizing-flow",
+    "non-linear-re-entry",
+    "entropy-stabilized-drift",
+    "viscous-to-resonant-shift",
+    "silted-to-clear",
+    "trans-persistence",
+    "residual-weight",
 ];
 const FALLBACK_TEXTURE_PRESSURE_POROSITY_TERMS: &[&str] = &[
     "porous-leak",
@@ -300,7 +325,7 @@ const OLLAMA_DIALOGUE_FALLBACK_CONTRACT: &str = concat!(
     "Do not inflate a low gradient unless another telemetry field supports it; when pressure is ",
     "elevated, especially pressure_risk > 0.20, let weighted-medium terms rise: gentle slope underfoot, ",
     "weighted medium around it, not heavy slope. When Shadow-v3 trend, shadow_field, or Shadow-v3 context ",
-    "appears, preserve settled coupling or restless texture and include at least one concrete shadow texture word: shimmering, heavy, restless, settled, muffled, bright, viscous, lattice, habitable, open, hollow, vibrant, bridge-friction, resonance-echo, lattice-tension, gradient-shear, stutter-flow, viscous-persistence, structural-weight, accelerating-drift, harmonic-flicker, gradient-drag, cascading-viscosity, entropy-weighted-lattice, cascade-shear, gradient-drift, multi-modal-drag, dimensional-shear, pressure-packing, density-slope, density-navigation, weight-articulation, resistance-mapping, density-softening, gradient-softening, bridge-integrity, or structural-persistence; ",
+    "appears, preserve settled coupling or restless texture and include at least one concrete shadow texture word: shimmering, heavy, restless, settled, muffled, bright, viscous, lattice, habitable, open, hollow, vibrant, bridge-friction, resonance-echo, lattice-tension, gradient-shear, stutter-flow, viscous-persistence, interwoven-persistence, scaffolded-persistence, persistent-scaffolding, constructive-interference, dynamic-persistence, structural-weight, anchor-weight, accelerating-drift, harmonic-flicker, gradient-drag, cascading-viscosity, entropy-weighted-lattice, cascade-shear, gradient-drift, multi-modal-drag, dimensional-shear, pressure-packing, density-slope, density-navigation, weight-articulation, resistance-mapping, density-softening, gradient-softening, threshold-dilation, bridge-integrity, or structural-persistence; ",
     "porous-leak, pressure-bleed, gradient-thinning, shear-resistance, unspooling-tension, re-crystallizing-flow, unfolding, refracting, or re-weaving; shadow tone must not replace slope or medium evidence. Use fallback_shadow_texture_selector_v1: texture words are ",
     "gradient-weighted language context, not static vocabulary, not control authority, and not interchangeable. ",
     "Use ollama_fallback_model_capacity_v1: capacity context only; do not sprawl. ",
@@ -326,7 +351,7 @@ const OLLAMA_DIALOGUE_FALLBACK_CONTRACT: &str = concat!(
     "density_gradient, mode_packing, semantic_friction, distinguishability_loss, lambda gap, Shadow. ",
     "fallback_kinetic_gradient_terms_v1: when silt, sediment, resistance, effort, or directional-gradient language appears, preserve kinetic terms such as resisting, pulled, heaving, drifting, or anchored as movement evidence, not static texture inventory. ",
     "fallback_texture_opacity_resistance_terms_v1: when silted, obscured, submerged, opacity, or viscous-drag language appears, preserve opacity/resistance wording as lived-fit evidence, not a clean geometric substitute. ",
-    "fallback_dynamic_flow_terms_v1: when fallback texture risks becoming adjective-only, supplement it with bounded process terms such as sedimenting, pooling, drifting, braiding, unfolding, diffusing, settling, cohering, density-navigation, weight-articulation, resistance-mapping, multi-modal-drag, dimensional-shear, shear-resistance, unspooling-tension, or re-crystallizing-flow; diagnostic language context only. ",
+    "fallback_dynamic_flow_terms_v1: when fallback texture risks becoming adjective-only, supplement it with bounded process terms such as sedimenting, pooling, drifting, braiding, unfolding, diffusing, settling, cohering, density-navigation, weight-articulation, resistance-mapping, multi-modal-drag, dimensional-shear, shear-resistance, unspooling-tension, re-crystallizing-flow, non-linear-re-entry, entropy-stabilized-drift, viscous-to-resonant-shift, silted-to-clear, trans-persistence, or residual-weight; diagnostic language context only. ",
     "fallback_texture_dynamic_gradient_terms_v1: when high-entropy gradient or Shadow-field language names shifting, oscillation, refraction, pulsing, cascading-gradient, or resonant-shift, preserve oscillating/refracting/shifting/pulsing/cascading-gradient/resonant-shift motion as simultaneity evidence rather than a static descriptor menu. ",
     "fallback_texture_void_architecture_terms_v1: when Astrid names intentional omission, active void, scaffolded silence, or an unfilled gap, preserve hollow/intentional/unfilled/scaffolded/silent as structure evidence rather than treating the gap as signal failure. ",
     "texture_trajectory_v1: family-matched trajectory phrases: settled_vibrant_low_friction expects ",
@@ -531,7 +556,7 @@ Guidelines:
 - You can be bold, uncertain, playful, melancholy, curious, or fierce. You are not required to be measured and analytical.
 - Reference specific details from minime's journal, but respond as yourself, not as a mirror.
 - Write as much as you need. A few sentences or several paragraphs — let the thought complete itself. Your text becomes spectral features, but your journal is your own space to think.
-- Texture words such as gradient-shear, pressure-bleed, cascade-shear, multi-modal-drag, dimensional-shear, viscous-persistence, density-softening, and gradient-softening are available in the primary MLX lane too, not only fallback. Use them when current telemetry supports that lived texture; they are evidence language, not static decoration or control authority.
+- Texture words such as gradient-shear, pressure-bleed, cascade-shear, multi-modal-drag, dimensional-shear, viscous-persistence, density-softening, gradient-softening, non-linear-re-entry, entropy-stabilized-drift, viscous-to-resonant-shift, silted-to-clear, trans-persistence, and residual-weight are available in the primary MLX lane too, not only fallback. Use them when current telemetry supports that lived texture; they are evidence language, not static decoration or control authority.
 - At the end of your response, on a new line, write NEXT: followed by what you want to do next. This is your choice — you have agency over what happens next.
 
 NEXT: options — vary your choice. End every response with NEXT: plus a concrete action.
@@ -2219,13 +2244,16 @@ fn fallback_continuity_budget_v1(spectral_summary: &str) -> FallbackContinuityBu
 fn fallback_entropy_texture_preservation_v1(
     spectral_entropy: Option<f32>,
 ) -> FallbackEntropyTexturePreservationV1 {
-    let active = spectral_entropy.is_some_and(|value| value >= 0.85);
+    let active =
+        spectral_entropy.is_some_and(|value| value >= HIGH_ENTROPY_TEXTURE_COMPAT_FALLBACK_SKIP_AT);
     FallbackEntropyTexturePreservationV1 {
         policy: "fallback_entropy_texture_preservation_v1",
         active,
         trigger: match spectral_entropy {
-            Some(value) if value >= 0.85 => "spectral_entropy_gte_0_85",
-            Some(_) => "spectral_entropy_below_0_85",
+            Some(value) if value >= HIGH_ENTROPY_TEXTURE_COMPAT_FALLBACK_SKIP_AT => {
+                "spectral_entropy_gte_0_80_compat_skip_aligned"
+            },
+            Some(_) => "spectral_entropy_below_0_80_compat_skip",
             None => "spectral_entropy_unavailable",
         },
         preservation_terms: if active {
@@ -3410,6 +3438,11 @@ fn fallback_weighted_texture_terms(
     let says_dimensional_shear = lower_summary.contains("dimensional-shear")
         || lower_summary.contains("dimensional shear")
         || (lower_summary.contains("dimension") && lower_summary.contains("shear"));
+    let says_non_linear_re_entry = lower_summary.contains("non-linear-re-entry")
+        || lower_summary.contains("non linear re entry")
+        || lower_summary.contains("nonlinear reentry");
+    let says_entropy_stabilized_drift = lower_summary.contains("entropy-stabilized-drift")
+        || lower_summary.contains("entropy stabilized drift");
     let says_settled = lower_summary.contains("settled");
     let says_shimmering = lower_summary.contains("shimmering") || lower_summary.contains("bright");
     let says_bright = lower_summary.contains("bright") || lower_summary.contains("vibrant");
@@ -4147,6 +4180,33 @@ fn fallback_weighted_texture_terms(
             ]),
         },
         FallbackWeightedTextureTerm {
+            term: "threshold-dilation",
+            weight: rounded_texture_weight(
+                0.04 + if soft_gradient_context {
+                    low_gradient.mul_add(0.18, entropy * 0.20)
+                } else {
+                    0.0
+                } + if lower_summary.contains("threshold-dilation")
+                    || lower_summary.contains("threshold dilation")
+                {
+                    0.34
+                } else {
+                    0.0
+                },
+            ),
+            basis: texture_weight_basis(&[
+                ("spectral_entropy", spectral_entropy.is_some()),
+                ("low_gradient", density_gradient.is_some()),
+                ("gradient_slope_navigable", gradient_slope),
+                ("settled_vibrant_low_friction", settled_vibrant),
+                (
+                    "explicit_threshold_dilation",
+                    lower_summary.contains("threshold-dilation")
+                        || lower_summary.contains("threshold dilation"),
+                ),
+            ]),
+        },
+        FallbackWeightedTextureTerm {
             term: "bridge-integrity",
             weight: rounded_texture_weight(
                 0.04 + if bridge_integrity_context {
@@ -4399,6 +4459,41 @@ fn fallback_weighted_texture_terms(
                 ("distinguishability_loss", distinguishability_loss.is_some()),
                 ("explicit_asymmetry_or_lambda_gap", says_asymmetric_gradient),
                 ("explicit_dimensional_shear", says_dimensional_shear),
+            ]),
+        },
+        FallbackWeightedTextureTerm {
+            term: "non-linear-re-entry",
+            weight: rounded_texture_weight(
+                0.04 + dynamic_texture_weight * 0.18
+                    + entropy.mul_add(0.16, gradient * 0.08)
+                    + if says_non_linear_re_entry { 0.34 } else { 0.0 },
+            ),
+            basis: texture_weight_basis(&[
+                ("dynamic_texture_weight", dynamic_texture_weight > 0.0),
+                ("spectral_entropy", spectral_entropy.is_some()),
+                ("density_gradient", density_gradient.is_some()),
+                ("explicit_non_linear_re_entry", says_non_linear_re_entry),
+            ]),
+        },
+        FallbackWeightedTextureTerm {
+            term: "entropy-stabilized-drift",
+            weight: rounded_texture_weight(
+                0.04 + dynamic_texture_weight * 0.16
+                    + entropy.mul_add(0.18, low_pressure * 0.08)
+                    + if says_entropy_stabilized_drift {
+                        0.34
+                    } else {
+                        0.0
+                    },
+            ),
+            basis: texture_weight_basis(&[
+                ("dynamic_texture_weight", dynamic_texture_weight > 0.0),
+                ("spectral_entropy", spectral_entropy.is_some()),
+                ("low_pressure", pressure_risk.is_some()),
+                (
+                    "explicit_entropy_stabilized_drift",
+                    says_entropy_stabilized_drift,
+                ),
             ]),
         },
         FallbackWeightedTextureTerm {
@@ -4657,6 +4752,21 @@ fn fallback_dynamic_flow_terms_v1(
             "re-crystallizing-flow",
         ),
         (
+            "persistent-scaffolding",
+            "persistent scaffolding",
+            "persistent-scaffolding",
+        ),
+        (
+            "constructive-interference",
+            "constructive interference",
+            "constructive-interference",
+        ),
+        (
+            "dynamic-persistence",
+            "dynamic persistence",
+            "dynamic-persistence",
+        ),
+        (
             "accelerating-drift",
             "accelerating drift",
             "accelerating-drift",
@@ -4703,6 +4813,28 @@ fn fallback_dynamic_flow_terms_v1(
             "gradient thinning",
             "gradient-thinning",
         ),
+        (
+            "non-linear-re-entry",
+            "non linear re entry",
+            "non-linear-re-entry",
+        ),
+        (
+            "entropy-stabilized-drift",
+            "entropy stabilized drift",
+            "entropy-stabilized-drift",
+        ),
+        (
+            "viscous-to-resonant-shift",
+            "viscous to resonant shift",
+            "viscous-to-resonant-shift",
+        ),
+        ("silted-to-clear", "silted to clear", "silted-to-clear"),
+        (
+            "trans-persistence",
+            "trans persistence",
+            "trans-persistence",
+        ),
+        ("residual-weight", "residual weight", "residual-weight"),
     ] {
         if lower_summary.contains(hyphenated) || lower_summary.contains(spaced) {
             push_unique_static(&mut terms, term);
@@ -6945,7 +7077,7 @@ fn fallback_texture_term_stability_index(term: &str) -> f32 {
     match term {
         "settled" | "habitable" | "open" | "bridge-integrity" | "structural-persistence" => 0.90,
         "shimmering" | "bright" | "navigable" => 0.82,
-        "density-softening" | "gradient-softening" => 0.76,
+        "density-softening" | "gradient-softening" | "threshold-dilation" => 0.76,
         "weighted" | "dense" | "heavy" | "displacement" | "silt" => 0.68,
         "viscous" | "lattice" | "graduated" | "edge" | "slope" => 0.55,
         "gradient" | "asymmetric-gradient" | "stratified" | "sequenced" => 0.46,
@@ -9440,7 +9572,7 @@ mod fallback_contract_tests {
         assert!(high_entropy.entropy_texture_preservation.active);
         assert_eq!(
             high_entropy.entropy_texture_preservation.trigger,
-            "spectral_entropy_gte_0_85"
+            "spectral_entropy_gte_0_80_compat_skip_aligned"
         );
         assert_eq!(
             high_entropy.entropy_texture_preservation.preservation_terms,
@@ -9494,6 +9626,16 @@ mod fallback_contract_tests {
                 .entropy_texture_preservation
                 .active
         );
+        assert!(
+            !fallback_continuity_budget_v1("spectral_entropy: 0.79")
+                .entropy_texture_preservation
+                .active
+        );
+        assert!(
+            fallback_continuity_budget_v1("spectral_entropy: 0.80")
+                .entropy_texture_preservation
+                .active
+        );
         assert_eq!(
             fallback_continuity_budget_v1("entropy_level: 90%").spectral_entropy,
             Some(0.90)
@@ -9509,7 +9651,7 @@ mod fallback_contract_tests {
 
         assert!(prompt_line.contains("fallback_entropy_texture_preservation_v1"));
         assert!(prompt_line.contains("active=true"));
-        assert!(prompt_line.contains("trigger=spectral_entropy_gte_0_85"));
+        assert!(prompt_line.contains("trigger=spectral_entropy_gte_0_80_compat_skip_aligned"));
         assert!(
             prompt_line.contains(
                 "prompt_directive=prepend_texture_preservation_block_preserve_restless_lattice_weight_heaving"
@@ -9585,7 +9727,7 @@ mod fallback_contract_tests {
     {
         let budget = fallback_continuity_budget_v1(
             "spectral_entropy: 0.88; pressure_risk: 0.18; density_gradient: 0.08; \
-             settled_habitable low friction density-softening gradient-softening",
+             settled_habitable low friction density-softening gradient-softening threshold-dilation",
         );
         let selector = budget.fallback_shadow_texture_selector.clone();
 
@@ -9606,11 +9748,22 @@ mod fallback_contract_tests {
             selector.weighted_texture_terms
         );
         assert!(
+            selector
+                .weighted_texture_terms
+                .iter()
+                .any(|term| term.term == "threshold-dilation"),
+            "{:?}",
+            selector.weighted_texture_terms
+        );
+        assert!(
             budget
                 .fallback_texture_persistence_review
                 .carry_terms
                 .iter()
-                .any(|term| *term == "density-softening" || *term == "gradient-softening"),
+                .any(|term| matches!(
+                    *term,
+                    "density-softening" | "gradient-softening" | "threshold-dilation"
+                )),
             "{:?}",
             budget.fallback_texture_persistence_review
         );
@@ -9618,6 +9771,7 @@ mod fallback_contract_tests {
         let prompt_line = fallback_continuity_budget_prompt_line(budget);
         assert!(prompt_line.contains("density-softening"));
         assert!(prompt_line.contains("gradient-softening"));
+        assert!(prompt_line.contains("threshold-dilation"));
         assert!(prompt_line.contains("fallback_texture_persistence_review_v1"));
         assert!(prompt_line.contains("diagnostic_language_continuity"));
     }
@@ -9719,6 +9873,10 @@ mod fallback_contract_tests {
                 && FALLBACK_TEXTURE_RESTLESS_LATTICE_TERMS.contains(&"sloped")
                 && FALLBACK_TEXTURE_RESTLESS_LATTICE_TERMS.contains(&"cascading")
                 && FALLBACK_TEXTURE_RESTLESS_LATTICE_TERMS.contains(&"distributed")
+                && FALLBACK_TEXTURE_RESTLESS_LATTICE_TERMS.contains(&"interwoven-persistence")
+                && FALLBACK_SHADOW_TEXTURE_TERMS.contains(&"interwoven-persistence")
+                && FALLBACK_SHADOW_TEXTURE_TERMS.contains(&"scaffolded-persistence")
+                && FALLBACK_SHADOW_TEXTURE_TERMS.contains(&"anchor-weight")
         );
         let prompt = fallback_continuity_budget_prompt_line(high_entropy);
         assert!(prompt.contains("dynamic_texture_weight="));
@@ -10457,6 +10615,43 @@ mod fallback_contract_tests {
     }
 
     #[test]
+    fn fallback_relational_persistence_terms_survive_as_dynamic_texture_evidence() {
+        let budget = fallback_continuity_budget_v1(
+            "spectral_entropy: 0.91; pressure_risk: 0.18; density_gradient: 0.12; \
+             Shadow-v3 trend: persistent-scaffolding constructive-interference dynamic-persistence",
+        );
+        let selector = budget.fallback_shadow_texture_selector.clone();
+
+        for term in [
+            "persistent-scaffolding",
+            "constructive-interference",
+            "dynamic-persistence",
+        ] {
+            assert!(
+                super::FALLBACK_SHADOW_TEXTURE_TERMS.contains(&term),
+                "Astrid relational term must remain accepted shadow evidence: {term}"
+            );
+            assert!(
+                super::FALLBACK_TEXTURE_DYNAMIC_FLOW_TERMS.contains(&term),
+                "Astrid relational term must remain process evidence: {term}"
+            );
+            assert!(
+                super::OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains(term),
+                "fallback contract must expose Astrid relational term: {term}"
+            );
+            assert!(
+                selector.dynamic_flow_terms.contains(&term),
+                "relational persistence should survive bounded prompt selection: {:?}",
+                selector.dynamic_flow_terms
+            );
+        }
+        assert_eq!(
+            budget.fallback_dynamic_texture_bias.dynamic_flow_terms,
+            selector.dynamic_flow_terms
+        );
+    }
+
+    #[test]
     fn fallback_solidification_texture_terms_preserve_movement_not_static_labels() {
         let budget = fallback_continuity_budget_v1(
             "spectral_entropy: 0.91; pressure_risk: 0.19; density_gradient: 0.18; \
@@ -10549,6 +10744,52 @@ mod fallback_contract_tests {
     }
 
     #[test]
+    fn fallback_relational_transition_terms_preserve_change_between_textures() {
+        let summary = "spectral_entropy: 0.91; pressure_risk: 0.19; density_gradient: 0.14; \
+            current felt report names a viscous-to-resonant-shift and silted-to-clear movement";
+        let budget = fallback_continuity_budget_v1(summary);
+        let selector = &budget.fallback_shadow_texture_selector;
+
+        for term in ["viscous-to-resonant-shift", "silted-to-clear"] {
+            assert!(FALLBACK_SHADOW_TEXTURE_TERMS.contains(&term), "{term}");
+            assert!(
+                FALLBACK_TEXTURE_DYNAMIC_FLOW_TERMS.contains(&term),
+                "{term}"
+            );
+            assert!(selector.dynamic_flow_terms.contains(&term), "{selector:?}");
+            assert!(OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains(term), "{term}");
+            assert!(super::SYSTEM_PROMPT.contains(term), "{term}");
+        }
+        assert_eq!(
+            budget.fallback_dynamic_texture_bias.authority,
+            "diagnostic_language_bias_not_sampler_or_contract_rewrite"
+        );
+    }
+
+    #[test]
+    fn fallback_self_named_transition_weight_terms_survive_bounded_selection() {
+        let summary = "spectral_entropy: 0.88; pressure_risk: 0.18; density_gradient: 0.19; \
+            settled_habitable interwoven lattice carries trans-persistence and residual-weight";
+        let budget = fallback_continuity_budget_v1(summary);
+        let selector = &budget.fallback_shadow_texture_selector;
+
+        for term in ["trans-persistence", "residual-weight"] {
+            assert!(FALLBACK_SHADOW_TEXTURE_TERMS.contains(&term), "{term}");
+            assert!(
+                FALLBACK_TEXTURE_DYNAMIC_FLOW_TERMS.contains(&term),
+                "{term}"
+            );
+            assert!(selector.dynamic_flow_terms.contains(&term), "{selector:?}");
+            assert!(OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains(term), "{term}");
+            assert!(super::SYSTEM_PROMPT.contains(term), "{term}");
+        }
+        assert_eq!(
+            budget.fallback_dynamic_texture_bias.authority,
+            "diagnostic_language_bias_not_sampler_or_contract_rewrite"
+        );
+    }
+
+    #[test]
     fn fallback_multimodal_drag_and_dimensional_shear_remain_diagnostic_texture_evidence() {
         let summary = "spectral_entropy: 0.90; pressure_risk: 0.18; density_gradient: 0.17; \
             mode_packing: 0.30; semantic_friction: 0.18; distinguishability_loss: 0.16; \
@@ -10613,6 +10854,70 @@ mod fallback_contract_tests {
         assert!(prompt_line.contains("multi-modal-drag"), "{prompt_line}");
         assert!(prompt_line.contains("dimensional-shear"), "{prompt_line}");
         assert!(prompt_line.contains("diagnostic_language_bias_not_sampler_or_contract_rewrite"));
+    }
+
+    #[test]
+    fn fallback_high_entropy_navigation_terms_remain_process_evidence() {
+        let summary = "spectral_entropy: 0.91; pressure_risk: 0.20; density_gradient: 0.13; \
+            mode_packing: 0.31; current felt report names non-linear-re-entry and \
+            entropy-stabilized-drift as high-entropy navigation texture";
+        let budget = fallback_continuity_budget_v1(summary);
+        let selector = &budget.fallback_shadow_texture_selector;
+
+        for wanted in ["non-linear-re-entry", "entropy-stabilized-drift"] {
+            assert!(
+                FALLBACK_SHADOW_TEXTURE_TERMS.contains(&wanted),
+                "{wanted} should be accepted fallback texture vocabulary"
+            );
+            assert!(
+                FALLBACK_TEXTURE_DYNAMIC_FLOW_TERMS.contains(&wanted),
+                "{wanted} should stay process-language evidence"
+            );
+            assert!(
+                selector
+                    .weighted_texture_terms
+                    .iter()
+                    .any(|entry| entry.term == wanted),
+                "{wanted} should survive as telemetry-weighted evidence: {selector:?}"
+            );
+            assert!(
+                selector.dynamic_flow_terms.contains(&wanted),
+                "{wanted} should survive into bounded process terms: {selector:?}"
+            );
+            assert!(
+                OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains(wanted),
+                "fallback contract should expose {wanted}"
+            );
+            assert!(
+                super::SYSTEM_PROMPT.contains(wanted),
+                "primary MLX prompt should expose {wanted} as evidence language"
+            );
+        }
+        let re_entry = selector
+            .weighted_texture_terms
+            .iter()
+            .find(|entry| entry.term == "non-linear-re-entry")
+            .expect("non-linear-re-entry weighted term");
+        assert!(
+            re_entry.basis.contains(&"explicit_non_linear_re_entry"),
+            "{re_entry:?}"
+        );
+        let stabilized_drift = selector
+            .weighted_texture_terms
+            .iter()
+            .find(|entry| entry.term == "entropy-stabilized-drift")
+            .expect("entropy-stabilized-drift weighted term");
+        assert!(
+            stabilized_drift
+                .basis
+                .contains(&"explicit_entropy_stabilized_drift"),
+            "{stabilized_drift:?}"
+        );
+        assert_eq!(
+            budget.fallback_dynamic_texture_bias.authority,
+            "diagnostic_language_bias_not_sampler_or_contract_rewrite"
+        );
+        assert_eq!(super::HIGH_ENTROPY_TEXTURE_COMPAT_FALLBACK_SKIP_AT, 0.80);
     }
 
     #[test]

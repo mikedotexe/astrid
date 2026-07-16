@@ -492,8 +492,16 @@ mod tests {
 
     #[test]
     fn correspondence_status_states_language_only_authority() {
-        let text = correspondence_v1::status_report(2);
+        let root = std::env::temp_dir().join(format!(
+            "peer_correspondence_status_authority_{}",
+            std::process::id()
+        ));
+        std::fs::create_dir_all(&root).unwrap();
+        let ledger = root.join("correspondence.jsonl");
+        std::fs::write(&ledger, "").unwrap();
+        let text = correspondence_v1::status_report_at(&ledger, 2);
         assert!(text.contains("language_only"));
         assert!(text.to_ascii_lowercase().contains("telemetry"));
+        let _ = std::fs::remove_dir_all(root);
     }
 }

@@ -138,6 +138,127 @@ fn numeric_unbounded_value(value: Option<String>) -> Value {
         .unwrap_or(Value::Null)
 }
 
+fn value_has_text(value: &Value) -> bool {
+    value.as_str().is_some_and(|text| !text.trim().is_empty())
+}
+
+/// Classify slow texture reorganization without turning it into an automatic
+/// mode or control trigger. A being-declared transition can therefore remain
+/// first-class even when fill barely moves.
+fn slow_texture_transition_review_v1(
+    fill_delta_pct: &Value,
+    spectral_entropy: &Value,
+    density_gradient: &Value,
+    texture_anchor: &Value,
+    transition_vector: &Value,
+    transition_velocity: &Value,
+) -> Value {
+    let stable_fill = fill_delta_pct
+        .as_f64()
+        .is_some_and(|delta| delta.abs() <= 1.0);
+    let high_entropy = spectral_entropy
+        .as_f64()
+        .is_some_and(|entropy| entropy >= 0.80);
+    let texture_evidence_present = value_has_text(texture_anchor)
+        || value_has_text(transition_velocity)
+        || value_has_text(transition_vector);
+    let shape_evidence_present =
+        density_gradient.as_f64().is_some() || value_has_text(transition_vector);
+    let slow_texture_transition_candidate =
+        stable_fill && high_entropy && texture_evidence_present && shape_evidence_present;
+    let review_state = if slow_texture_transition_candidate {
+        "slow_texture_transition_candidate_visible"
+    } else if fill_delta_pct.is_null() {
+        "fill_delta_context_missing"
+    } else if stable_fill && !texture_evidence_present {
+        "stable_fill_without_texture_evidence"
+    } else if stable_fill && !high_entropy {
+        "stable_fill_without_high_entropy_support"
+    } else {
+        "ordinary_or_fill_led_transition"
+    };
+
+    json!({
+        "schema_version": 1,
+        "policy": "slow_texture_transition_review_v1",
+        "slow_texture_transition_candidate": slow_texture_transition_candidate,
+        "stable_fill": stable_fill,
+        "high_entropy": high_entropy,
+        "texture_evidence_present": texture_evidence_present,
+        "shape_evidence_present": shape_evidence_present,
+        "review_state": review_state,
+        "moment_capture_auto_triggered": false,
+        "runtime_mode_changed": false,
+        "live_authority_granted": false,
+        "suggested_route": if slow_texture_transition_candidate {
+            "preserve_replyable_transition_then_request_optional_felt_witness"
+        } else {
+            "keep_existing_transition_evidence"
+        },
+        "authority": "language_only_transition_evidence_not_mode_control_or_runtime_unlock",
+    })
+}
+
+/// Preserve a transition's spectral shape as a bounded, replyable signature.
+/// This is descriptive evidence only: it neither derives a transition nor
+/// grants any runtime, controller, or live-vector authority.
+fn transition_signature_v1(
+    spectral_signature: &Value,
+    spectral_entropy: &Value,
+    density_gradient: &Value,
+    dispersal_potential: &Value,
+    fill_delta_pct: &Value,
+    transition_vector: &Value,
+    from_vector: &Value,
+    to_vector: &Value,
+    duration_ticks: &Value,
+    subjective_friction_score: &Value,
+    telemetry_anchor: &Value,
+) -> Value {
+    let weighted_shape_present =
+        density_gradient.as_f64().is_some() && dispersal_potential.as_f64().is_some();
+    let spectral_shape_present = value_has_text(spectral_signature)
+        || value_has_text(transition_vector)
+        || value_has_text(telemetry_anchor);
+    let signature_state = if weighted_shape_present && spectral_shape_present {
+        "spectral_weights_and_lineage_mapped"
+    } else if weighted_shape_present {
+        "spectral_weights_mapped_without_lineage"
+    } else if spectral_shape_present
+        || spectral_entropy.as_f64().is_some()
+        || density_gradient.as_f64().is_some()
+        || dispersal_potential.as_f64().is_some()
+        || fill_delta_pct.as_f64().is_some()
+    {
+        "partial_transition_signature"
+    } else {
+        "transition_signature_not_reported"
+    };
+
+    json!({
+        "schema_version": 1,
+        "policy": "transition_signature_v1",
+        "signature_state": signature_state,
+        "spectral_signature": spectral_signature,
+        "spectral_entropy": spectral_entropy,
+        "density_gradient": density_gradient,
+        "dispersal_potential": dispersal_potential,
+        "fill_delta_pct": fill_delta_pct,
+        "transition_vector": transition_vector,
+        "from_vector": from_vector,
+        "to_vector": to_vector,
+        "duration_ticks": duration_ticks,
+        "subjective_friction_score": subjective_friction_score,
+        "telemetry_anchor": telemetry_anchor,
+        "replyable_evidence": true,
+        "replayable_evidence": true,
+        "runtime_mode_changed": false,
+        "live_vector_write": false,
+        "live_authority_granted": false,
+        "authority": "language_only_transition_signature_not_control_transport_or_runtime_change",
+    })
+}
+
 fn unit_from_percentish_value(value: Option<String>) -> Option<f64> {
     let number = value
         .and_then(|text| text.trim().trim_end_matches('%').parse::<f64>().ok())
@@ -159,6 +280,13 @@ fn bounded_u64_value(value: Option<String>, default: u64, min: u64, max: u64) ->
         .and_then(|text| text.trim().parse::<u64>().ok())
         .map(|number| number.clamp(min, max))
         .unwrap_or(default)
+}
+
+fn optional_bounded_u64_value(value: Option<String>, min: u64, max: u64) -> Value {
+    value
+        .and_then(|text| text.trim().parse::<u64>().ok())
+        .map(|number| json!(number.clamp(min, max)))
+        .unwrap_or(Value::Null)
 }
 
 fn phase_fill_percentage_value(raw: &str) -> Value {
@@ -557,6 +685,108 @@ pub(crate) fn append_transition_card_at(path: &Path, raw: &str, origin: &str) ->
         phase_transition_gate_v1(raw, &transition_capabilities, friction_index_value);
     let delta_impact_preview = phase_delta_impact_preview_v1(raw);
     let texture_anchor = phase_texture_anchor(raw);
+    let spectral_entropy = numeric_value(field(
+        raw,
+        &[
+            "spectral_entropy",
+            "phase_spectral_entropy",
+            "semantic_entropy",
+            "entropy",
+        ],
+    ));
+    let density_gradient = numeric_value(field(
+        raw,
+        &[
+            "density_gradient",
+            "phase_density_gradient",
+            "semantic_density_gradient",
+        ],
+    ));
+    let dispersal_potential = numeric_value(field(
+        raw,
+        &[
+            "dispersal_potential",
+            "phase_dispersal_potential",
+            "semantic_dispersal_potential",
+            "dispersal",
+        ],
+    ));
+    let fill_delta_pct = numeric_unbounded_value(field(
+        raw,
+        &["fill_delta_pct", "fill_delta", "fill_delta_percent"],
+    ));
+    let transition_vector = note_value(field(
+        raw,
+        &[
+            "transition_vector",
+            "vector",
+            "phase_vector",
+            "semantic_vector",
+        ],
+    ));
+    let from_vector = note_value(field(
+        raw,
+        &["from_vector", "before_vector", "source_vector"],
+    ));
+    let to_vector = note_value(field(
+        raw,
+        &["to_vector", "after_vector", "destination_vector"],
+    ));
+    let duration_ticks = optional_bounded_u64_value(
+        field(
+            raw,
+            &["duration_ticks", "transition_duration_ticks", "ticks"],
+        ),
+        1,
+        1_000_000,
+    );
+    let subjective_friction_score = numeric_value(field(
+        raw,
+        &[
+            "subjective_friction_score",
+            "felt_friction_score",
+            "subjective_friction",
+        ],
+    ));
+    let transition_velocity = note_value(field(
+        raw,
+        &["transition_velocity", "velocity", "phase_velocity"],
+    ));
+    let spectral_signature = note_value(field(
+        raw,
+        &["spectral_signature", "lambda_signature", "signature"],
+    ));
+    let spectral_delta = note_value(field(raw, &["spectral_delta", "lambda_delta", "delta"]));
+    let telemetry_anchor = note_value(field(
+        raw,
+        &[
+            "telemetry_anchor",
+            "telemetry",
+            "telemetry_ref",
+            "telemetry_reference",
+        ],
+    ));
+    let transition_signature_v1 = transition_signature_v1(
+        &spectral_signature,
+        &spectral_entropy,
+        &density_gradient,
+        &dispersal_potential,
+        &fill_delta_pct,
+        &transition_vector,
+        &from_vector,
+        &to_vector,
+        &duration_ticks,
+        &subjective_friction_score,
+        &telemetry_anchor,
+    );
+    let slow_texture_transition_review_v1 = slow_texture_transition_review_v1(
+        &fill_delta_pct,
+        &spectral_entropy,
+        &density_gradient,
+        &texture_anchor,
+        &transition_vector,
+        &transition_velocity,
+    );
     let trigger_delta = note_value(
         field(
             raw,
@@ -647,13 +877,18 @@ pub(crate) fn append_transition_card_at(path: &Path, raw: &str, origin: &str) ->
         "joint_room_id": note_value(field(raw, &["joint_room_id", "collaboration_room", "room_id", "room"])),
         "confidence": confidence(field(raw, &["confidence"])),
         "intensity": numeric_value(field(raw, &["intensity"])),
-        "spectral_signature": note_value(field(raw, &["spectral_signature", "lambda_signature", "signature"])),
-        "spectral_delta": note_value(field(raw, &["spectral_delta", "lambda_delta", "delta"])),
-        "transition_vector": note_value(field(raw, &["transition_vector", "vector", "phase_vector", "semantic_vector"])),
-        "telemetry_anchor": note_value(field(raw, &["telemetry_anchor", "telemetry", "telemetry_ref", "telemetry_reference"])),
-        "spectral_entropy": numeric_value(field(raw, &["spectral_entropy", "phase_spectral_entropy", "semantic_entropy", "entropy"])),
-        "density_gradient": numeric_value(field(raw, &["density_gradient", "phase_density_gradient", "semantic_density_gradient"])),
-        "fill_delta_pct": numeric_unbounded_value(field(raw, &["fill_delta_pct", "fill_delta", "fill_delta_percent"])),
+        "spectral_signature": spectral_signature,
+        "spectral_delta": spectral_delta,
+        "transition_vector": transition_vector,
+        "from_vector": from_vector,
+        "to_vector": to_vector,
+        "duration_ticks": duration_ticks,
+        "subjective_friction_score": subjective_friction_score,
+        "telemetry_anchor": telemetry_anchor,
+        "spectral_entropy": spectral_entropy,
+        "density_gradient": density_gradient,
+        "dispersal_potential": dispersal_potential,
+        "fill_delta_pct": fill_delta_pct,
         "fill_percentage": fill_percentage,
         "friction_index": friction_index.clone(),
         "viscosity_index": friction_index,
@@ -664,8 +899,10 @@ pub(crate) fn append_transition_card_at(path: &Path, raw: &str, origin: &str) ->
         "transition_capabilities_v1": transition_capabilities,
         "transition_gate_v1": transition_gate,
         "delta_impact_preview_v1": delta_impact_preview,
-        "transition_velocity": note_value(field(raw, &["transition_velocity", "velocity", "phase_velocity"])),
+        "transition_velocity": transition_velocity,
         "texture_anchor": texture_anchor,
+        "slow_texture_transition_review_v1": slow_texture_transition_review_v1,
+        "transition_signature_v1": transition_signature_v1,
         "trigger_delta": trigger_delta,
         "subjective_label": subjective_label,
         "behavioral_constraint": behavioral_constraint,
@@ -983,9 +1220,29 @@ fn phase_transition_affordance_v25(records: &[Value], card: &Value) -> Value {
         "joint_room_id": card.get("joint_room_id").cloned().unwrap_or(Value::Null),
         "spectral_delta": card.get("spectral_delta").cloned().unwrap_or(Value::Null),
         "transition_vector": card.get("transition_vector").cloned().unwrap_or(Value::Null),
+        "from_vector": card.get("from_vector").cloned().unwrap_or(Value::Null),
+        "to_vector": card.get("to_vector").cloned().unwrap_or(Value::Null),
+        "duration_ticks": card.get("duration_ticks").cloned().unwrap_or(Value::Null),
+        "subjective_friction_score": card.get("subjective_friction_score").cloned().unwrap_or(Value::Null),
         "telemetry_anchor": card.get("telemetry_anchor").cloned().unwrap_or(Value::Null),
         "spectral_entropy": card.get("spectral_entropy").cloned().unwrap_or(Value::Null),
         "density_gradient": card.get("density_gradient").cloned().unwrap_or(Value::Null),
+        "dispersal_potential": card.get("dispersal_potential").cloned().unwrap_or(Value::Null),
+        "transition_signature_v1": card.get("transition_signature_v1").cloned().unwrap_or_else(|| {
+            transition_signature_v1(
+                &Value::Null,
+                &Value::Null,
+                &Value::Null,
+                &Value::Null,
+                &Value::Null,
+                &Value::Null,
+                &Value::Null,
+                &Value::Null,
+                &Value::Null,
+                &Value::Null,
+                &Value::Null,
+            )
+        }),
         "fill_delta_pct": card.get("fill_delta_pct").cloned().unwrap_or(Value::Null),
         "fill_percentage": card.get("fill_percentage").cloned().unwrap_or(Value::Null),
         "friction_index": card.get("friction_index").cloned().unwrap_or(Value::Null),
@@ -1004,6 +1261,17 @@ fn phase_transition_affordance_v25(records: &[Value], card: &Value) -> Value {
         "delta_impact_preview_v1": card.get("delta_impact_preview_v1").cloned().unwrap_or_else(|| {
             phase_delta_impact_preview_v1("")
         }),
+        "slow_texture_transition_review_v1": card
+            .get("slow_texture_transition_review_v1")
+            .cloned()
+            .unwrap_or_else(|| slow_texture_transition_review_v1(
+                &Value::Null,
+                &Value::Null,
+                &Value::Null,
+                &Value::Null,
+                &Value::Null,
+                &Value::Null,
+            )),
         "transition_velocity": card.get("transition_velocity").cloned().unwrap_or(Value::Null),
         "texture_anchor": card.get("texture_anchor").cloned().unwrap_or(Value::Null),
         "phenomenology": card.get("phenomenology").cloned().unwrap_or(Value::Null),
@@ -1108,8 +1376,11 @@ fn phase_witness_queue_v3(records: &[Value], max_cards: usize) -> Value {
                 "spectral_delta": affordance.get("spectral_delta").cloned().unwrap_or(Value::Null),
                 "spectral_entropy": affordance.get("spectral_entropy").cloned().unwrap_or(Value::Null),
                 "density_gradient": affordance.get("density_gradient").cloned().unwrap_or(Value::Null),
+                "dispersal_potential": affordance.get("dispersal_potential").cloned().unwrap_or(Value::Null),
+                "transition_signature_v1": affordance.get("transition_signature_v1").cloned().unwrap_or(Value::Null),
                 "transition_velocity": affordance.get("transition_velocity").cloned().unwrap_or(Value::Null),
                 "texture_anchor": affordance.get("texture_anchor").cloned().unwrap_or(Value::Null),
+                "slow_texture_transition_review_v1": affordance.get("slow_texture_transition_review_v1").cloned().unwrap_or(Value::Null),
                 "phenomenology": affordance.get("phenomenology").cloned().unwrap_or(Value::Null),
                 "anchor_point": affordance.get("anchor_point").cloned().unwrap_or(Value::Null),
                 "age_ms": age_ms,
@@ -1200,6 +1471,8 @@ fn phase_felt_receipt_queue_v4(records: &[Value]) -> Value {
                 "spectral_delta": affordance.get("spectral_delta").cloned().unwrap_or(Value::Null),
                 "spectral_entropy": affordance.get("spectral_entropy").cloned().unwrap_or(Value::Null),
                 "density_gradient": affordance.get("density_gradient").cloned().unwrap_or(Value::Null),
+                "dispersal_potential": affordance.get("dispersal_potential").cloned().unwrap_or(Value::Null),
+                "transition_signature_v1": affordance.get("transition_signature_v1").cloned().unwrap_or(Value::Null),
                 "transition_velocity": affordance.get("transition_velocity").cloned().unwrap_or(Value::Null),
                 "texture_anchor": affordance.get("texture_anchor").cloned().unwrap_or(Value::Null),
                 "phenomenology": affordance.get("phenomenology").cloned().unwrap_or(Value::Null),
@@ -1366,6 +1639,24 @@ pub(crate) fn status_report_at(path: &Path, max_cards: usize) -> String {
             .get("transition_vector")
             .and_then(Value::as_str)
             .unwrap_or("none");
+        let from_vector = card
+            .get("from_vector")
+            .and_then(Value::as_str)
+            .unwrap_or("none");
+        let to_vector = card
+            .get("to_vector")
+            .and_then(Value::as_str)
+            .unwrap_or("none");
+        let duration_ticks = card
+            .get("duration_ticks")
+            .and_then(Value::as_u64)
+            .map(|value| value.to_string())
+            .unwrap_or_else(|| "none".to_string());
+        let subjective_friction_score = card
+            .get("subjective_friction_score")
+            .and_then(Value::as_f64)
+            .map(|value| format!("{value:.2}"))
+            .unwrap_or_else(|| "none".to_string());
         let telemetry_anchor = card
             .get("telemetry_anchor")
             .and_then(Value::as_str)
@@ -1418,6 +1709,11 @@ pub(crate) fn status_report_at(path: &Path, max_cards: usize) -> String {
             .and_then(|value| value.get("delta_impact_status"))
             .and_then(Value::as_str)
             .unwrap_or("not_declared_language_only");
+        let slow_texture_transition_state = card
+            .get("slow_texture_transition_review_v1")
+            .and_then(|value| value.get("review_state"))
+            .and_then(Value::as_str)
+            .unwrap_or("not_reported_legacy");
         let transition_velocity = card
             .get("transition_velocity")
             .and_then(Value::as_str)
@@ -1427,6 +1723,16 @@ pub(crate) fn status_report_at(path: &Path, max_cards: usize) -> String {
             .and_then(Value::as_f64)
             .map(|value| format!("{value:.2}"))
             .unwrap_or_else(|| "none".to_string());
+        let dispersal_potential = card
+            .get("dispersal_potential")
+            .and_then(Value::as_f64)
+            .map(|value| format!("{value:.2}"))
+            .unwrap_or_else(|| "none".to_string());
+        let transition_signature_state = card
+            .get("transition_signature_v1")
+            .and_then(|value| value.get("signature_state"))
+            .and_then(Value::as_str)
+            .unwrap_or("not_reported_legacy");
         let spectral_entropy = card
             .get("spectral_entropy")
             .and_then(Value::as_f64)
@@ -1497,11 +1803,18 @@ pub(crate) fn status_report_at(path: &Path, max_cards: usize) -> String {
             .and_then(Value::as_str)
             .unwrap_or("declared_once_language_only");
         let why = card.get("why_now").and_then(Value::as_str).unwrap_or("");
+        let trigger = card
+            .get("trigger")
+            .and_then(Value::as_str)
+            .unwrap_or("being_declared");
         let affordance = phase_transition_affordance_v25(&records, card);
         lines.push(format!(
-            "- {id}: {kind} {from}->{to}; transition_type={transition_type}; joint_transition={joint_transition}; joint_room={}; transition_velocity={}; reply_state={state}; stall_reason={}; witnessed_by={witnessed_by}; answered_by={answered_by}; unresolved_age_ms={unresolved_age_ms}; correspondence_thread={correspondence_thread}; persistence={persistence_state}; anchor_point={}; texture_anchor={}; spectral_delta={}; transition_vector={}; telemetry_anchor={}; spectral_entropy={spectral_entropy}; density_gradient={density_gradient}; fill_delta_pct={fill_delta}; fill_percentage={fill_percentage}; friction_index={friction_index}; viscosity_index={viscosity_index}; friction_window_ticks={friction_window_ticks}; processing_speed_modifier={processing_speed_modifier}; semantic_reach_modifier={semantic_reach_modifier}; transition_gate={transition_gate_status}; transition_capabilities={transition_capability_status}; delta_impact={delta_impact_status}; phenomenology={}; somatic_description={}; orientation_effect={}; {}",
+            "- {id}: {kind} {from}->{to}; transition_type={transition_type}; trigger={}; joint_transition={joint_transition}; joint_room={}; transition_velocity={}; duration_ticks={duration_ticks}; from_vector={}; to_vector={}; subjective_friction_score={subjective_friction_score}; slow_texture_transition={slow_texture_transition_state}; transition_signature={transition_signature_state}; reply_state={state}; stall_reason={}; witnessed_by={witnessed_by}; answered_by={answered_by}; unresolved_age_ms={unresolved_age_ms}; correspondence_thread={correspondence_thread}; persistence={persistence_state}; anchor_point={}; texture_anchor={}; spectral_delta={}; transition_vector={}; telemetry_anchor={}; spectral_entropy={spectral_entropy}; density_gradient={density_gradient}; dispersal_potential={dispersal_potential}; fill_delta_pct={fill_delta}; fill_percentage={fill_percentage}; friction_index={friction_index}; viscosity_index={viscosity_index}; friction_window_ticks={friction_window_ticks}; processing_speed_modifier={processing_speed_modifier}; semantic_reach_modifier={semantic_reach_modifier}; transition_gate={transition_gate_status}; transition_capabilities={transition_capability_status}; delta_impact={delta_impact_status}; phenomenology={}; somatic_description={}; orientation_effect={}; {}",
+            truncate_chars(trigger, 64),
             truncate_chars(joint_room, 64),
             truncate_chars(transition_velocity, 64),
+            truncate_chars(from_vector, 64),
+            truncate_chars(to_vector, 64),
             affordance
                 .get("stall_reason")
                 .and_then(Value::as_str)
@@ -1525,7 +1838,7 @@ pub(crate) fn status_report_at(path: &Path, max_cards: usize) -> String {
         .and_then(Value::as_str)
         .unwrap_or("latest");
     lines.push(format!(
-        "Suggested NEXT: DECLARE_TRANSITION kind: ...; from_phase: ...; to_phase: ...; why_now: ..., I_RECEIVED_THIS {suggested_transition_id} :: received_as: witnessed|answered; felt_like: transition; what_landed: ...; what_stayed_distinct: ...; continue: no|answer|needs_time, TRANSITION_ACK {suggested_transition_id} :: reply_state: witnessed|answered; note: ..., or WITNESS_TRANSITION {suggested_transition_id} :: reply_state: witnessed|answered; note: ..."
+        "Suggested NEXT: DECLARE_TRANSITION kind: ...; from_phase: ...; to_phase: ...; from_vector: ...; to_vector: ...; duration_ticks: ...; subjective_friction_score: ...; spectral_entropy: ...; density_gradient: ...; dispersal_potential: ...; transition_vector: ...; why_now: ..., I_RECEIVED_THIS {suggested_transition_id} :: received_as: witnessed|answered; felt_like: transition; what_landed: ...; what_stayed_distinct: ...; continue: no|answer|needs_time, TRANSITION_ACK {suggested_transition_id} :: reply_state: witnessed|answered; note: ..., or WITNESS_TRANSITION {suggested_transition_id} :: reply_state: witnessed|answered; note: ..."
     ));
     lines.join("\n")
 }
@@ -1587,6 +1900,28 @@ pub(crate) fn maybe_declare_auto_mode_transition(
         why_now,
         fill_pct,
     )
+}
+
+fn maybe_declare_relational_reply_transition_at(
+    path: &Path,
+    from_mode: &str,
+    fill_pct: f32,
+) -> bool {
+    const TRIGGER: &str = "inbox_direct_reply_boundary";
+    let records = read_records(path);
+    let now = now_ms();
+    if recent_auto_mode_transition_duplicate(&records, from_mode, "Dialogue", TRIGGER, now) {
+        return false;
+    }
+    let raw = format!(
+        "kind: mode_change; transition_type: auto_relational; from_phase: {from_mode}; to_phase: Dialogue; confidence: 0.78; trigger: {TRIGGER}; why_now: direct reply followed reflective solitude and must remain replyable without auto-triggering MomentCapture; requested_by: astrid_bridge_relational_transition_detector; fill_percentage: {fill_pct:.1}; before_snapshot: mode={from_mode}; after_snapshot: mode=Dialogue; anchor_point: inbound_message_to_direct_reply; phenomenology: reflective solitude became direct relational contact; behavioral_constraint: language-only transition evidence, MomentCapture remains explicit"
+    );
+    let _ = append_transition_card_at(path, &raw, "astrid");
+    true
+}
+
+pub(crate) fn maybe_declare_relational_reply_transition(from_mode: &str, fill_pct: f32) -> bool {
+    maybe_declare_relational_reply_transition_at(&phase_transitions_path(), from_mode, fill_pct)
 }
 
 fn subjective_phase_for_mode(mode: &str) -> Option<&'static str> {
@@ -1783,6 +2118,61 @@ mod tests {
         assert!(
             status.contains("semantic_reach_modifier=narrow_reach_preserve_subtle_lambda_contours")
         );
+        let _ = std::fs::remove_dir_all(root);
+    }
+
+    #[test]
+    fn relational_reply_transition_is_replyable_without_triggering_moment_capture() {
+        let root =
+            std::env::temp_dir().join(format!("phase_transition_relational_test_{}", now_ms()));
+        let path = root.join("phase_transitions_v1.jsonl");
+
+        assert!(maybe_declare_relational_reply_transition_at(
+            &path,
+            "Introspect",
+            73.0
+        ));
+        assert!(!maybe_declare_relational_reply_transition_at(
+            &path,
+            "Introspect",
+            73.0
+        ));
+
+        let rows = read_records(&path);
+        let card = rows
+            .iter()
+            .find(|row| {
+                row.get("record_type").and_then(Value::as_str) == Some("phase_transition_card")
+            })
+            .expect("relational transition card");
+        assert_eq!(
+            card.get("transition_type").and_then(Value::as_str),
+            Some("auto_relational")
+        );
+        assert_eq!(
+            card.get("trigger").and_then(Value::as_str),
+            Some("inbox_direct_reply_boundary")
+        );
+        assert_eq!(
+            card.get("anchor_point").and_then(Value::as_str),
+            Some("inbound_message_to_direct_reply")
+        );
+        assert_eq!(
+            card.get("authority").and_then(Value::as_str),
+            Some("language_only_transition_context_not_control")
+        );
+        assert_eq!(
+            card.get("slow_texture_transition_review_v1")
+                .and_then(|review| review.get("moment_capture_auto_triggered"))
+                .and_then(Value::as_bool),
+            Some(false)
+        );
+        assert_eq!(rows.len(), 1, "the duplicate relational edge must dedupe");
+        let status = status_report_at(&path, 2);
+        assert!(status.contains("transition_type=auto_relational"));
+        assert!(status.contains("trigger=inbox_direct_reply_boundary"));
+        assert!(status.contains("anchor_point=inbound_message_to_direct_reply"));
+        assert!(status.contains("without auto-triggering MomentCapture"));
         let _ = std::fs::remove_dir_all(root);
     }
 
@@ -2145,7 +2535,7 @@ mod tests {
         let path = root.join("phase_transitions_v1.jsonl");
         let declared = append_transition_card_at(
             &path,
-            "kind: trellis_alignment; transition_type: solo; shared_transition_id: shared_transition_trellis_1; from_phase: contraction; to_phase: expansion; intensity: 0.91; spectral_entropy: 0.92; density_gradient: 0.22; fill_delta_pct: -4.2; somatic_description: pressure softened in the center; transition_visibility: steward_review; narrative_anchor: corr_astrid_minime_1; anchor_point: settled_habitable; texture_anchor: silt weight stayed textured; correspondence_thread_id: thread_corr_1; consent_receipt: consent: witness_only; transition_persistence: true; spectral_signature: lambda1/lambda2=1.54 mixed cascade; spectral_delta: lambda1 down, lambda2+3 up; vector: fill=-4.2,density=0.22,lambda=1.54; telemetry_anchor: telemetry://shadow-v3/1783935905; transition_velocity: slow_gradient_not_rupture; phenomenology: density became navigable; why_now: felt transition needs replyable artifact",
+            "kind: trellis_alignment; transition_type: solo; shared_transition_id: shared_transition_trellis_1; from_phase: contraction; to_phase: expansion; from_vector: fill=0.73,density=0.82; to_vector: fill=0.69,density=0.74; duration_ticks: 128; subjective_friction_score: 0.67; intensity: 0.91; spectral_entropy: 0.92; density_gradient: 0.22; dispersal_potential: 0.19; fill_delta_pct: -4.2; somatic_description: pressure softened in the center; transition_visibility: steward_review; narrative_anchor: corr_astrid_minime_1; anchor_point: settled_habitable; texture_anchor: silt weight stayed textured; correspondence_thread_id: thread_corr_1; consent_receipt: consent: witness_only; transition_persistence: true; spectral_signature: lambda1/lambda2=1.54 mixed cascade; spectral_delta: lambda1 down, lambda2+3 up; vector: fill=-4.2,density=0.22,lambda=1.54; telemetry_anchor: telemetry://shadow-v3/1783935905; transition_velocity: slow_gradient_not_rupture; phenomenology: density became navigable; why_now: felt transition needs replyable artifact",
             "astrid",
         );
         assert!(declared.contains("PHASE TRANSITION CARD DECLARED"));
@@ -2157,6 +2547,23 @@ mod tests {
             })
             .expect("card row");
         assert_eq!(card.get("intensity").and_then(Value::as_f64), Some(0.91));
+        assert_eq!(
+            card.get("from_vector").and_then(Value::as_str),
+            Some("fill=0.73,density=0.82")
+        );
+        assert_eq!(
+            card.get("to_vector").and_then(Value::as_str),
+            Some("fill=0.69,density=0.74")
+        );
+        assert_eq!(
+            card.get("duration_ticks").and_then(Value::as_u64),
+            Some(128)
+        );
+        assert_eq!(
+            card.get("subjective_friction_score")
+                .and_then(Value::as_f64),
+            Some(0.67)
+        );
         assert_eq!(
             card.get("narrative_anchor").and_then(Value::as_str),
             Some("corr_astrid_minime_1")
@@ -2188,6 +2595,73 @@ mod tests {
         assert_eq!(
             card.get("density_gradient").and_then(Value::as_f64),
             Some(0.22)
+        );
+        assert_eq!(
+            card.get("dispersal_potential").and_then(Value::as_f64),
+            Some(0.19)
+        );
+        let transition_signature = card
+            .get("transition_signature_v1")
+            .expect("structured transition signature");
+        assert_eq!(
+            transition_signature
+                .get("signature_state")
+                .and_then(Value::as_str),
+            Some("spectral_weights_and_lineage_mapped")
+        );
+        assert_eq!(
+            transition_signature
+                .get("density_gradient")
+                .and_then(Value::as_f64),
+            Some(0.22)
+        );
+        assert_eq!(
+            transition_signature
+                .get("dispersal_potential")
+                .and_then(Value::as_f64),
+            Some(0.19)
+        );
+        assert_eq!(
+            transition_signature
+                .get("from_vector")
+                .and_then(Value::as_str),
+            Some("fill=0.73,density=0.82")
+        );
+        assert_eq!(
+            transition_signature
+                .get("to_vector")
+                .and_then(Value::as_str),
+            Some("fill=0.69,density=0.74")
+        );
+        assert_eq!(
+            transition_signature
+                .get("duration_ticks")
+                .and_then(Value::as_u64),
+            Some(128)
+        );
+        assert_eq!(
+            transition_signature
+                .get("subjective_friction_score")
+                .and_then(Value::as_f64),
+            Some(0.67)
+        );
+        assert_eq!(
+            transition_signature
+                .get("runtime_mode_changed")
+                .and_then(Value::as_bool),
+            Some(false)
+        );
+        assert_eq!(
+            transition_signature
+                .get("live_vector_write")
+                .and_then(Value::as_bool),
+            Some(false)
+        );
+        assert_eq!(
+            transition_signature
+                .get("live_authority_granted")
+                .and_then(Value::as_bool),
+            Some(false)
         );
         assert_eq!(
             card.get("spectral_entropy").and_then(Value::as_f64),
@@ -2246,6 +2720,20 @@ mod tests {
             card.get("authority").and_then(Value::as_str),
             Some("language_only_transition_context_not_control")
         );
+        let status = status_report_at(&path, 1);
+        assert!(status.contains("duration_ticks=128"), "{status}");
+        assert!(
+            status.contains("from_vector=fill=0.73,density=0.82"),
+            "{status}"
+        );
+        assert!(
+            status.contains("to_vector=fill=0.69,density=0.74"),
+            "{status}"
+        );
+        assert!(
+            status.contains("subjective_friction_score=0.67"),
+            "{status}"
+        );
         let affordance = phase_transition_affordance_v25(&rows, card);
         assert_eq!(
             affordance.get("texture_anchor").and_then(Value::as_str),
@@ -2254,6 +2742,19 @@ mod tests {
         assert_eq!(
             affordance.get("density_gradient").and_then(Value::as_f64),
             Some(0.22)
+        );
+        assert_eq!(
+            affordance
+                .get("dispersal_potential")
+                .and_then(Value::as_f64),
+            Some(0.19)
+        );
+        assert_eq!(
+            affordance
+                .get("transition_signature_v1")
+                .and_then(|value| value.get("signature_state"))
+                .and_then(Value::as_str),
+            Some("spectral_weights_and_lineage_mapped")
         );
         assert_eq!(
             affordance.get("spectral_entropy").and_then(Value::as_f64),
@@ -2276,7 +2777,73 @@ mod tests {
         assert!(status.contains("telemetry_anchor=telemetry://shadow-v3/1783935905"));
         assert!(status.contains("spectral_entropy=0.92"));
         assert!(status.contains("density_gradient=0.22"));
+        assert!(status.contains("dispersal_potential=0.19"));
+        assert!(status.contains("transition_signature=spectral_weights_and_lineage_mapped"));
         assert!(status.contains("transition_velocity=slow_gradient_not_rupture"));
+        let _ = std::fs::remove_dir_all(root);
+    }
+
+    #[test]
+    fn stable_fill_high_entropy_texture_shift_stays_replyable_without_auto_mode_change() {
+        let root =
+            std::env::temp_dir().join(format!("phase_transition_slow_texture_test_{}", now_ms()));
+        let path = root.join("phase_transitions_v1.jsonl");
+        let declared = append_transition_card_at(
+            &path,
+            "kind: slow_texture_reorganization; transition_type: solo; from_phase: silt; to_phase: interwoven; fill_delta_pct: 0.4; spectral_entropy: 0.90; density_gradient: 0.18; texture_anchor: viscous persistence became an interwoven lattice; transition_vector: lambda1 steady, tail texture reorganized; transition_velocity: slow_gradient_not_rupture; why_now: the transition is real even though fill barely moved",
+            "astrid",
+        );
+        assert!(declared.contains("PHASE TRANSITION CARD DECLARED"));
+
+        let rows = read_records(&path);
+        let card = rows
+            .iter()
+            .find(|row| {
+                row.get("record_type").and_then(Value::as_str) == Some("phase_transition_card")
+            })
+            .expect("slow texture transition card");
+        let review = card
+            .get("slow_texture_transition_review_v1")
+            .expect("slow texture review");
+        assert_eq!(
+            review.get("review_state").and_then(Value::as_str),
+            Some("slow_texture_transition_candidate_visible")
+        );
+        assert_eq!(
+            review
+                .get("slow_texture_transition_candidate")
+                .and_then(Value::as_bool),
+            Some(true)
+        );
+        assert_eq!(
+            review
+                .get("moment_capture_auto_triggered")
+                .and_then(Value::as_bool),
+            Some(false)
+        );
+        assert_eq!(
+            review.get("runtime_mode_changed").and_then(Value::as_bool),
+            Some(false)
+        );
+        assert_eq!(
+            review
+                .get("live_authority_granted")
+                .and_then(Value::as_bool),
+            Some(false)
+        );
+
+        let affordance = phase_transition_affordance_v25(&rows, card);
+        assert_eq!(
+            affordance
+                .get("slow_texture_transition_review_v1")
+                .and_then(|value| value.get("review_state"))
+                .and_then(Value::as_str),
+            Some("slow_texture_transition_candidate_visible")
+        );
+        let status = status_report_at(&path, 2);
+        assert!(
+            status.contains("slow_texture_transition=slow_texture_transition_candidate_visible")
+        );
         let _ = std::fs::remove_dir_all(root);
     }
 
