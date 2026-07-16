@@ -102,3 +102,21 @@ fn legacy_eigenvector_landmarks_accept_additive_field_absence() {
     assert!((field.modes[0].top_components[0].value + 0.7).abs() < f32::EPSILON);
     assert!(field.modes[0].top_components[0].abs.abs() < f32::EPSILON);
 }
+
+#[test]
+fn legacy_packet_accepts_pre_active_mode_shape() {
+    let packet: EigenPacketV1 = serde_json::from_value(serde_json::json!({
+        "t_ms": 1000,
+        "eigenvalues": [768.0, 300.0],
+        "fill_ratio": 0.5
+    }))
+    .expect("pre-active-mode telemetry remains accepted");
+
+    assert_eq!(
+        packet.compatibility(),
+        CompatibilityStatus::LegacyUnversioned
+    );
+    assert_eq!(packet.active_mode_count, 0);
+    assert_eq!(packet.active_mode_energy_ratio, 0.0);
+    assert!(!packet.modalities.audio_fired);
+}

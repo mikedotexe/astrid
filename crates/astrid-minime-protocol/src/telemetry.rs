@@ -675,10 +675,13 @@ pub struct EigenPacketV1 {
     pub t_ms: u64,
     pub eigenvalues: Vec<f32>,
     pub fill_ratio: f32,
+    #[serde(default)]
     pub active_mode_count: usize,
+    #[serde(default)]
     pub active_mode_energy_ratio: f32,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub lambda1_rel: Option<f32>,
+    #[serde(default)]
     pub modalities: ModalityStatus,
     #[serde(default)]
     pub neural: Option<NeuralOutputs>,
