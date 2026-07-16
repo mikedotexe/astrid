@@ -19,6 +19,11 @@ from collections import Counter
 from pathlib import Path
 from typing import Any
 
+try:
+    from authority_state import normalize_artifact_authority_tree
+except ModuleNotFoundError:  # unittest/importlib execution from the repository root
+    from scripts.authority_state import normalize_artifact_authority_tree
+
 ASTRID_REPO = Path(__file__).resolve().parents[1]
 ASTRID_WORKSPACE = ASTRID_REPO / "capsules/spectral-bridge/workspace"
 DEFAULT_INTROSPECTIONS_DIR = ASTRID_WORKSPACE / "introspections"
@@ -994,6 +999,7 @@ def append_events(state_dir: Path, events: list[dict[str, Any]]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("a", encoding="utf-8") as fh:
         for event in events:
+            normalize_artifact_authority_tree(event)
             fh.write(json.dumps(event, sort_keys=True, ensure_ascii=False) + "\n")
 
 
@@ -1039,6 +1045,7 @@ def refresh_work_item_authority_packets(item: dict[str, Any]) -> None:
     else:
         item["authority_boundary_packet"] = None
         item["authority_boundary_packet_v2"] = None
+    normalize_artifact_authority_tree(item)
 
 
 def _merge_artifact(existing: dict[str, Any] | None, artifact: dict[str, Any]) -> dict[str, Any]:
@@ -1781,6 +1788,7 @@ def load_status(state_dir: Path) -> dict[str, Any]:
 
 
 def write_materialized_status(state_dir: Path, status: dict[str, Any]) -> None:
+    normalize_artifact_authority_tree(status)
     atomic_write_text(
         status_path(state_dir),
         json.dumps(status, indent=2, sort_keys=True, ensure_ascii=False) + "\n",
@@ -3581,6 +3589,7 @@ def run_self_tests() -> int:
 
 
 def print_output(payload: dict[str, Any], *, as_json: bool) -> None:
+    normalize_artifact_authority_tree(payload)
     if as_json:
         print(json.dumps(payload, indent=2, sort_keys=True, ensure_ascii=False))
     else:

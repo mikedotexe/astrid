@@ -1147,6 +1147,7 @@ async fn tool_get_bridge_status(state: &Arc<RwLock<BridgeState>>) -> Result<Valu
         sensory_sent: s.sensory_sent,
         messages_dropped_safety: s.messages_dropped_safety,
         incidents_total: s.incidents_total,
+        telemetry_protocol_v1: s.telemetry_protocol_v1.clone(),
         telemetry_ws: s.telemetry_ws.clone(),
         sensory_ws: s.sensory_ws.clone(),
         lambda_profile: s.lambda_profile.clone(),
@@ -1182,6 +1183,7 @@ async fn tool_get_bridge_status(state: &Arc<RwLock<BridgeState>>) -> Result<Valu
         bridge_reciprocity_v1: Some(s.bridge_reciprocity_v1()),
         bridge_entropy_reciprocity_review_v1: s.bridge_entropy_reciprocity_review_v1(),
         texture_shape_over_time_v2: s.texture_shape_over_time_v2(),
+        bridge_texture_evidence_v1: s.bridge_texture_evidence_v1(),
     };
     Ok(json!({
         "content": [{
@@ -3152,6 +3154,7 @@ async fn handle_resource_read(
                 sensory_sent: s.sensory_sent,
                 messages_dropped_safety: s.messages_dropped_safety,
                 incidents_total: s.incidents_total,
+                telemetry_protocol_v1: s.telemetry_protocol_v1.clone(),
                 telemetry_ws: s.telemetry_ws.clone(),
                 sensory_ws: s.sensory_ws.clone(),
                 lambda_profile: s.lambda_profile.clone(),
@@ -3188,6 +3191,7 @@ async fn handle_resource_read(
                 bridge_reciprocity_v1: Some(s.bridge_reciprocity_v1()),
                 bridge_entropy_reciprocity_review_v1: s.bridge_entropy_reciprocity_review_v1(),
                 texture_shape_over_time_v2: s.texture_shape_over_time_v2(),
+                bridge_texture_evidence_v1: s.bridge_texture_evidence_v1(),
             };
             Ok(json!({
                 "contents": [{

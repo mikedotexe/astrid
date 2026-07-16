@@ -2479,6 +2479,30 @@ pub struct TextureSignatureIntegrityV1 {
     pub expected_primary_texture: String,
     pub emitted_primary_texture: String,
     pub advisory_observability: bool,
+    /// Bridge-owned temporal and derivative evidence, separated from Minime's
+    /// canonical producer DTO while the legacy combined projection remains.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub bridge_texture_evidence_v1: Option<BridgeTextureEvidenceV1>,
+    pub authority: String,
+}
+
+/// Bridge-derived texture evidence that is not part of Minime's wire DTO.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct BridgeTextureEvidenceV1 {
+    pub policy: String,
+    pub schema_version: u8,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub temporal_variance: Option<f32>,
+    pub temporal_variance_source: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pressure_gradient_delta: Option<f32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pressure_gradient_delta_source: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub dynamic_flux_vector: Option<TextureDynamicFluxVectorV1>,
+    pub dynamic_flux_vector_source: String,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub active_constraints: Vec<String>,
     pub authority: String,
 }
 
@@ -3561,6 +3585,9 @@ pub struct BridgeStatus {
     pub messages_dropped_safety: u64,
     /// Total safety incidents.
     pub incidents_total: u64,
+    /// Canonical Astrid-Minime wire compatibility for the latest observation.
+    #[serde(default)]
+    pub telemetry_protocol_v1: TelemetryProtocolStatusV1,
     /// Telemetry WebSocket lifecycle metrics.
     #[serde(default)]
     pub telemetry_ws: WebSocketLaneTrace,
@@ -3645,6 +3672,51 @@ pub struct BridgeStatus {
     /// Compact V2 readout for movement/variance/asymmetry over time.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub texture_shape_over_time_v2: Option<TextureShapeOverTimeV2>,
+    /// Bridge-only temporal/gradient/flux evidence kept outside producer DTOs.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub bridge_texture_evidence_v1: Option<BridgeTextureEvidenceV1>,
+}
+
+/// Read-only protocol compatibility status for Minime telemetry.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TelemetryProtocolStatusV1 {
+    pub policy: String,
+    pub schema_version: u8,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub protocol_name: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub protocol_major: Option<u16>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub protocol_minor: Option<u16>,
+    pub compatibility: String,
+    pub accepted: bool,
+    pub mismatch_count: u64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub last_valid_t_ms: Option<u64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub last_observed_unix_s: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub last_mismatch_unix_s: Option<f64>,
+    pub authority: String,
+}
+
+impl Default for TelemetryProtocolStatusV1 {
+    fn default() -> Self {
+        Self {
+            policy: "astrid_minime_protocol_status_v1".to_string(),
+            schema_version: 1,
+            protocol_name: None,
+            protocol_major: None,
+            protocol_minor: None,
+            compatibility: "not_observed".to_string(),
+            accepted: false,
+            mismatch_count: 0,
+            last_valid_t_ms: None,
+            last_observed_unix_s: None,
+            last_mismatch_unix_s: None,
+            authority: "wire_compatibility_observation_not_control".to_string(),
+        }
+    }
 }
 
 /// Directional bridge reciprocity: what arrived, what was sent, and whether the

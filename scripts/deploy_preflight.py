@@ -1,31 +1,29 @@
 #!/usr/bin/env python3
-"""deploy_preflight.py — refuse to build/deploy the live bridge from a tree that
-carries ANOTHER agent's work (the "two agents, one tree, one deploy target" hazard).
+"""Refuse to build/deploy a live stack component from a changing tree.
 
-Two autonomous agents mutate /Users/v/other/astrid and feed one live binary:
-Claude (this session + the durable steward loop) and Codex (a separate agent that
-CANNOT hold the steward mutex — no pre-tool hook). This session, repeated
-`cargo build --release` + restart folded Codex's UNCOMMITTED code (incl.
-being-facing llm.rs) into the LIVE bridge, so the running binary matched no clean
-commit. The capture point is the BUILD from a dirty tree, not the kickstart
-(`kickstart -k` only restarts the existing target/release binary; it doesn't rebuild).
+Multiple interactive agents and the durable steward loop can share this checkout
+and feed one live binary. The capture point is the build from a dirty tree, not
+the kickstart (`kickstart -k` only restarts an existing binary). This gate does
+not assign a privileged committer or deploy actor; it checks source stability and
+requires explicit acknowledgement whenever uncommitted binary inputs are folded
+into a build.
 
 This is the guard `build_bridge.sh` runs before that build. Two checks:
   1. FOREIGN MID-EDIT (abort) — reuses steward_mutex.foreign_activity: if the tree
-     was mutated <window_s ago, a non-mutex agent (Codex) is editing RIGHT NOW;
+     was mutated <window_s ago, another writer may be editing RIGHT NOW;
      building would fold a half-written tree. Exit 3.
-  2. DIRTY BRIDGE SOURCE (refuse unless --ack) — uncommitted files under
-     capsules/spectral-bridge/{src,Cargo.toml,Cargo.lock}, plus local Cargo path
-     dependency roots used by that crate, would be folded into the binary. Refuse
-     (exit 2) and LIST them, unless --ack "<reason>" makes folding them in an
-     explicit, logged decision (exit 0).
+  2. DIRTY COMPONENT SOURCE (refuse unless --ack) — uncommitted component build
+     inputs and local path dependencies would be folded into the binary or
+     service. Refuse (exit 2) and list them unless --ack "<reason>" makes folding
+     them in an explicit, logged decision (exit 0).
 
 Clean tree → exit 0. The gate is deliberately scoped to what affects the BINARY
 (docs/scripts/workspace dirt doesn't), and foreign-active is checked first (a fresh
-dirty file is Codex editing now → abort, not merely refuse).
+dirty file may still be mid-edit, so abort rather than merely refuse).
 
 Usage:
-  deploy_preflight.py [--repo PATH] [--ack "reason"] [--window-s S] [--json]
+  deploy_preflight.py [--component bridge|minime|model] [--repo PATH]
+                      [--ack "reason"] [--window-s S] [--json]
   deploy_preflight.py --self-test
 Exit: 0 = ok to build; 2 = dirty bridge source, no --ack; 3 = foreign agent active.
 """
@@ -59,11 +57,37 @@ BRIDGE_BUILD_PATHS = (
     "capsules/spectral-bridge/src",
     "capsules/spectral-bridge/Cargo.toml",
     "capsules/spectral-bridge/Cargo.lock",
+    "crates/astrid-minime-protocol",
 )
 BRIDGE_LOCAL_PATH_DEPS = (
     Path("/Users/v/other/RASCII"),
     Path("/Users/v/other/prime_esn_wasm"),
 )
+COMPONENTS = {
+    "bridge": {
+        "repo": ASTRID_ROOT,
+        "build_paths": BRIDGE_BUILD_PATHS,
+        "external_roots": BRIDGE_LOCAL_PATH_DEPS,
+    },
+    "minime": {
+        "repo": Path("/Users/v/other/minime"),
+        "build_paths": (
+            "minime/src",
+            "minime/Cargo.toml",
+            "minime/Cargo.lock",
+        ),
+        "external_roots": (),
+    },
+    "model": {
+        "repo": Path("/Users/v/other/neural-triple-reservoir"),
+        "build_paths": (
+            "coupled_astrid_server.py",
+            "coupled_http_gateway.py",
+            "launchd/com.reservoir.coupled-astrid.plist",
+        ),
+        "external_roots": (),
+    },
+}
 
 
 def _porcelain_paths(repo: Path, paths: list[str]) -> list[str]:
@@ -119,17 +143,23 @@ def _dirty_external_build_files(external_roots: tuple[Path, ...]) -> list[str]:
     return files
 
 
+def dirty_build_files(
+    repo: Path,
+    build_paths: tuple[str, ...],
+    external_roots: tuple[Path, ...],
+) -> list[str]:
+    """Return uncommitted files that a component build or reload would consume."""
+    files = _porcelain_paths(repo, list(build_paths))
+    files.extend(_dirty_external_build_files(external_roots))
+    return sorted(set(files))
+
+
 def dirty_bridge_files(
     repo: Path,
     external_roots: tuple[Path, ...] = BRIDGE_LOCAL_PATH_DEPS,
 ) -> list[str]:
-    """Uncommitted (modified/added/untracked/renamed) files under the bridge build
-    paths — the ones a release build would fold into the live binary. Empty = the
-    binary-affecting source is clean. Renames resolve to the destination path
-    (mirrors steward_mutex.tree_activity_age parsing)."""
-    files = _porcelain_paths(repo, list(BRIDGE_BUILD_PATHS))
-    files.extend(_dirty_external_build_files(external_roots))
-    return sorted(set(files))
+    """Compatibility wrapper for bridge-specific callers and tests."""
+    return dirty_build_files(repo, BRIDGE_BUILD_PATHS, external_roots)
 
 
 def preflight(
@@ -139,13 +169,14 @@ def preflight(
     now: float | None = None,
     window_s: float = FOREIGN_ACTIVITY_WINDOW_S,
     codex_state_dir: Path = CODEX_STATE_DIR_DEFAULT,
+    build_paths: tuple[str, ...] = BRIDGE_BUILD_PATHS,
     external_roots: tuple[Path, ...] = BRIDGE_LOCAL_PATH_DEPS,
 ) -> dict:
     """Decide whether it's safe to build+deploy the bridge from `repo`.
     Returns {ok, exit_code, reason, dirty_files, foreign, ack}. Pure (caller acts)."""
     now = time.time() if now is None else now
     foreign = foreign_activity(repo, codex_state_dir, window_s, now)
-    dirty = dirty_bridge_files(repo, external_roots)
+    dirty = dirty_build_files(repo, build_paths, external_roots)
     # Foreign mid-edit takes precedence: a freshly-mutated tree means a non-mutex
     # agent is editing NOW — building would capture a half-written state.
     if foreign["active"]:
@@ -165,28 +196,29 @@ def _render(result: dict) -> str:
     reason = result["reason"]
     if reason == "foreign_active":
         fa = result["foreign"]
-        return (f"✗ ABORT — a non-mutex agent (guess: {fa.get('agent_guess')}) is editing the tree "
+        return (f"✗ ABORT — another writer may be editing the tree "
                 f"now (last change {fa.get('tree_activity_age_s')}s ago). Do NOT build mid-edit; "
                 f"wait for it to settle, then re-run.")
     if reason == "dirty_no_ack":
         lines = [f"    {f}" for f in result["dirty_files"]]
-        return ("✗ REFUSE — the bridge source/dependencies have uncommitted or unversioned "
+        return ("✗ REFUSE — binary source/dependencies have uncommitted or unversioned "
                 "changes a release build would fold into "
                 "the LIVE binary:\n" + "\n".join(lines) +
                 "\n  Commit your own work first, or pass --ack \"<reason>\" to consciously fold these in.")
     if reason == "dirty_acked":
         lines = ", ".join(result["dirty_files"])
-        return (f"✓ OK (ACKED) — folding in uncommitted bridge source: {lines}\n"
+        return (f"✓ OK (ACKED) — folding in uncommitted component source: {lines}\n"
                 f"  reason: {result['ack']}")
-    return "✓ OK — bridge source is clean and no foreign agent is editing; safe to build."
+    return "✓ OK — component source is clean and no concurrent edit is visible; safe to build."
 
 
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--repo", default=str(ASTRID_ROOT))
+    ap.add_argument("--component", choices=sorted(COMPONENTS), default="bridge")
+    ap.add_argument("--repo", default=None)
     ap.add_argument("--ack", default=None,
-                    help="explicit reason to fold in uncommitted bridge source")
+                    help="explicit reason to fold in uncommitted component source")
     ap.add_argument("--window-s", type=float, default=FOREIGN_ACTIVITY_WINDOW_S)
     ap.add_argument("--json", action="store_true")
     ap.add_argument("--self-test", action="store_true")
@@ -195,7 +227,16 @@ def main(argv: list[str] | None = None) -> int:
     if args.self_test:
         return _run_self_test()
 
-    result = preflight(Path(args.repo), ack=args.ack, window_s=args.window_s)
+    component = COMPONENTS[args.component]
+    repo = Path(args.repo) if args.repo else component["repo"]
+    result = preflight(
+        repo,
+        ack=args.ack,
+        window_s=args.window_s,
+        build_paths=component["build_paths"],
+        external_roots=component["external_roots"],
+    )
+    result["component"] = args.component
     if args.json:
         print(json.dumps(result, indent=2))
     else:
@@ -340,6 +381,30 @@ class DeployPreflightTests(unittest.TestCase):
             )
 
             self.assertEqual((r["ok"], r["exit_code"], r["reason"]), (True, 0, "dirty_acked"))
+
+    def test_component_build_paths_are_scoped_independently(self):
+        import os
+        import tempfile
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = self._repo(tmp)
+            component = repo / "minime" / "src"
+            component.mkdir(parents=True)
+            source = component / "main.rs"
+            source.write_text("fn main() {}\n")
+            self._git(repo, "add", "minime/src/main.rs")
+            self._git(repo, "commit", "-qm", "add minime")
+            source.write_text('fn main() { println!("changed"); }\n')
+            os.utime(source, (time.time() - 9999, time.time() - 9999))
+
+            result = preflight(
+                repo,
+                build_paths=("minime/src",),
+                external_roots=(),
+                codex_state_dir=Path(tmp) / "no_codex",
+            )
+
+            self.assertEqual(result["reason"], "dirty_no_ack")
+            self.assertEqual(result["dirty_files"], ["minime/src/main.rs"])
 
 
 def _run_self_test() -> int:

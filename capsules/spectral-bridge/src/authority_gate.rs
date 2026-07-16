@@ -10,6 +10,10 @@ use serde_json::{Value, json};
 use sha2::{Digest as _, Sha256};
 use tokio::sync::mpsc;
 
+use crate::authority_types::{
+    AuthorityGranted, EvidenceOnly, ModeReleaseMicrodose, SemanticMicrodose,
+    dispatch_mode_release_microdose, dispatch_semantic_microdose,
+};
 use crate::codec;
 use crate::paths::bridge_paths;
 use crate::rescue_policy;
@@ -840,15 +844,29 @@ pub fn execute_semantic_microdose_from_paths(
 ) -> Result<Value> {
     let location = find_request_in_paths(request_id, minime_workspace, bridge_workspace)?
         .ok_or_else(|| anyhow!("authority request `{request_id}` was not found"))?;
+    let scope = location
+        .request
+        .get("scope")
+        .and_then(Value::as_str)
+        .unwrap_or_default()
+        .to_owned();
+    if !matches!(scope.as_str(), EXECUTABLE_SCOPE | MODE_RELEASE_SCOPE) {
+        return Err(anyhow!(
+            "authority request `{request_id}` has disabled scope `{scope}`"
+        ));
+    }
+    // Disk rows begin untrusted and cannot flow to either dispatch function.
+    let pending = EvidenceOnly::from_untrusted(location).into_pending();
+    let location = pending.as_ref();
     let now = unix_now();
     let approval = if let Some(approval) = latest_active_approval(&location.rows, request_id) {
         approval
     } else if location.request.get("status").and_then(Value::as_str)
         == Some("pending_budget_execution")
     {
-        let Some(budget) = active_budget_for_request(&location) else {
+        let Some(budget) = active_budget_for_request(location) else {
             let blocked = budget_execution_block_record(
-                &location,
+                location,
                 "active_budget_not_available",
                 None,
                 fill_pct,
@@ -865,7 +883,7 @@ pub fn execute_semantic_microdose_from_paths(
             .and_then(Value::as_str)
         {
             let blocked = budget_execution_block_record(
-                &location,
+                location,
                 "authority_consequence_review_required",
                 Some(json!({"budget_id": budget_id, "pending_review_request_id": pending_review})),
                 fill_pct,
@@ -877,7 +895,7 @@ pub fn execute_semantic_microdose_from_paths(
         let safety = SafetyLevel::from_fill(fill);
         if !matches!(safety, SafetyLevel::Green | SafetyLevel::Yellow) {
             let blocked = budget_execution_block_record(
-                &location,
+                location,
                 "safety_not_green_or_yellow",
                 Some(
                     json!({"budget_id": budget_id, "safety_level": format!("{:?}", safety).to_ascii_lowercase(), "fill_pct": fill_pct}),
@@ -917,6 +935,7 @@ pub fn execute_semantic_microdose_from_paths(
             "record_type": "budget_token",
             "request_id": request_id,
             "budget_id": budget_id,
+            "scope": EXECUTABLE_SCOPE,
             "token_id": token_id,
             "token_status": "active",
             "one_shot": true,
@@ -928,15 +947,38 @@ pub fn execute_semantic_microdose_from_paths(
         ));
     };
     if approval
+        .get("scope")
+        .and_then(Value::as_str)
+        .is_some_and(|approval_scope| approval_scope != scope.as_str())
+    {
+        let blocked =
+            execution_record(location, &approval, "blocked", "token_scope_mismatch", None);
+        append_jsonl(&location.gate_path, &blocked)?;
+        append_jsonl(
+            &location.gate_path,
+            &consequence_record(location, &blocked, fill_pct, previous_fill_pct),
+        )?;
+        return Ok(blocked);
+    }
+    if approval.get("one_shot").and_then(Value::as_bool) != Some(true) {
+        let blocked = execution_record(location, &approval, "blocked", "token_not_one_shot", None);
+        append_jsonl(&location.gate_path, &blocked)?;
+        append_jsonl(
+            &location.gate_path,
+            &consequence_record(location, &blocked, fill_pct, previous_fill_pct),
+        )?;
+        return Ok(blocked);
+    }
+    if approval
         .get("expires_at_unix_s")
         .and_then(Value::as_u64)
         .is_some_and(|expires| expires < now)
     {
-        let blocked = execution_record(&location, &approval, "blocked", "token_expired", None);
+        let blocked = execution_record(location, &approval, "blocked", "token_expired", None);
         append_jsonl(&location.gate_path, &blocked)?;
         append_jsonl(
             &location.gate_path,
-            &consequence_record(&location, &blocked, fill_pct, previous_fill_pct),
+            &consequence_record(location, &blocked, fill_pct, previous_fill_pct),
         )?;
         return Ok(blocked);
     }
@@ -945,7 +987,7 @@ pub fn execute_semantic_microdose_from_paths(
         approval.get("token_id").and_then(Value::as_str),
     ) {
         let blocked = execution_record(
-            &location,
+            location,
             &approval,
             "blocked",
             "token_already_consumed",
@@ -954,13 +996,13 @@ pub fn execute_semantic_microdose_from_paths(
         append_jsonl(&location.gate_path, &blocked)?;
         append_jsonl(
             &location.gate_path,
-            &consequence_record(&location, &blocked, fill_pct, previous_fill_pct),
+            &consequence_record(location, &blocked, fill_pct, previous_fill_pct),
         )?;
         return Ok(blocked);
     }
     if let Some(reason) = missing_lifecycle_reason(&approval) {
         let blocked = execution_record(
-            &location,
+            location,
             &approval,
             "blocked",
             reason,
@@ -976,15 +1018,19 @@ pub fn execute_semantic_microdose_from_paths(
         append_jsonl(&location.gate_path, &blocked)?;
         append_jsonl(
             &location.gate_path,
-            &consequence_record(&location, &blocked, fill_pct, previous_fill_pct),
+            &consequence_record(location, &blocked, fill_pct, previous_fill_pct),
         )?;
         return Ok(blocked);
     }
+    // Scope, token identity/status, expiry, one-shot consumption, budget, and
+    // lifecycle checks are complete. Safety has deliberately not yet passed.
+    let granted = pending.into_granted();
+    let location = granted.as_ref();
     let fill = fill_pct.unwrap_or_default();
     let safety = SafetyLevel::from_fill(fill);
     if !matches!(safety, SafetyLevel::Green | SafetyLevel::Yellow) {
         let blocked = execution_record(
-            &location,
+            location,
             &approval,
             "blocked",
             "safety_not_green_or_yellow",
@@ -995,7 +1041,7 @@ pub fn execute_semantic_microdose_from_paths(
         append_jsonl(&location.gate_path, &blocked)?;
         append_jsonl(
             &location.gate_path,
-            &consequence_record(&location, &blocked, fill_pct, previous_fill_pct),
+            &consequence_record(location, &blocked, fill_pct, previous_fill_pct),
         )?;
         return Ok(blocked);
     }
@@ -1003,18 +1049,19 @@ pub fn execute_semantic_microdose_from_paths(
         .request
         .get("payload")
         .and_then(Value::as_str)
-        .unwrap_or_default();
-    if location.request.get("scope").and_then(Value::as_str) == Some(MODE_RELEASE_SCOPE) {
+        .unwrap_or_default()
+        .to_owned();
+    if scope == MODE_RELEASE_SCOPE {
         return execute_mode_release_microdose(
-            &location,
+            granted,
             &approval,
-            text,
+            &text,
             fill_pct,
             previous_fill_pct,
             sensory_tx,
         );
     }
-    let features = codec::encode_text(text);
+    let features = codec::encode_text(&text);
     let mut msg = SensoryMsg::Semantic {
         features: features.clone(),
         ts_ms: None,
@@ -1022,7 +1069,7 @@ pub fn execute_semantic_microdose_from_paths(
     let context = rescue_policy::SemanticWriteContext {
         source: rescue_policy::MCP_LIMITED_WRITE_SOURCE,
         mode: Some("authority_semantic_microdose"),
-        text: Some(text),
+        text: Some(&text),
         fill_pct,
         previous_fill_pct: previous_fill_pct.or(fill_pct),
     };
@@ -1031,7 +1078,7 @@ pub fn execute_semantic_microdose_from_paths(
         rescue_policy::prepare_semantic_write_for_path(&mut msg, &rescue_profile, &context)
     {
         let blocked = execution_record(
-            &location,
+            location,
             &approval,
             "blocked",
             &reason,
@@ -1040,36 +1087,39 @@ pub fn execute_semantic_microdose_from_paths(
         append_jsonl(&location.gate_path, &blocked)?;
         append_jsonl(
             &location.gate_path,
-            &consequence_record(&location, &blocked, fill_pct, previous_fill_pct),
+            &consequence_record(location, &blocked, fill_pct, previous_fill_pct),
         )?;
         return Ok(blocked);
     }
-    sensory_tx
-        .try_send(msg)
-        .map_err(|err| anyhow!("semantic microdose send failed: {err}"))?;
+    let dispatch_location = location.clone();
+    let executable = granted
+        .map(|_| SemanticMicrodose::new(msg, features.len()))
+        .into_live();
+    let feature_len = dispatch_semantic_microdose(executable, sensory_tx)?;
     let result = execution_record(
-        &location,
+        &dispatch_location,
         &approval,
         "execution_result",
         "semantic_microdose_sent",
-        Some(json!({"feature_len": features.len()})),
+        Some(json!({"feature_len": feature_len})),
     );
-    append_jsonl(&location.gate_path, &result)?;
+    append_jsonl(&dispatch_location.gate_path, &result)?;
     append_jsonl(
-        &location.gate_path,
-        &consequence_record(&location, &result, fill_pct, previous_fill_pct),
+        &dispatch_location.gate_path,
+        &consequence_record(&dispatch_location, &result, fill_pct, previous_fill_pct),
     )?;
     Ok(result)
 }
 
 fn execute_mode_release_microdose(
-    location: &GateLocation,
+    granted: AuthorityGranted<GateLocation>,
     approval: &Value,
     payload: &str,
     fill_pct: Option<f32>,
     previous_fill_pct: Option<f32>,
     sensory_tx: &mpsc::Sender<SensoryMsg>,
 ) -> Result<Value> {
+    let location = granted.as_ref();
     let Some(leak) = payload_number(payload, &["value", "leak", "esn_leak"]) else {
         let blocked = execution_record(
             location,
@@ -1175,31 +1225,34 @@ fn execute_mode_release_microdose(
         mode_disperse_duration_ticks: None,
         mode_disperse_decay_ticks: None,
     };
-    sensory_tx
-        .try_send(msg)
-        .map_err(|err| anyhow!("mode release microdose send failed: {err}"))?;
+    let result_metadata = json!({
+        "target": "esn_leak",
+        "current_esn_leak": current_leak,
+        "requested_esn_leak": leak,
+        "effective_esn_leak": clamped,
+        "duration_ticks": ticks,
+        "rollback": "restore_adaptive_after_ttl",
+    });
+    let dispatch_location = location.clone();
+    let executable = granted
+        .map(|_| ModeReleaseMicrodose::new(msg, result_metadata))
+        .into_live();
+    let result_metadata = dispatch_mode_release_microdose(executable, sensory_tx)?;
     let result = execution_record(
-        location,
+        &dispatch_location,
         approval,
         "execution_result",
         "mode_release_microdose_sent",
-        Some(json!({
-            "target": "esn_leak",
-            "current_esn_leak": current_leak,
-            "requested_esn_leak": leak,
-            "effective_esn_leak": clamped,
-            "duration_ticks": ticks,
-            "rollback": "restore_adaptive_after_ttl",
-        })),
+        Some(result_metadata),
     );
-    append_jsonl(&location.gate_path, &result)?;
+    append_jsonl(&dispatch_location.gate_path, &result)?;
     append_jsonl(
-        &location.gate_path,
-        &consequence_record(location, &result, fill_pct, previous_fill_pct),
+        &dispatch_location.gate_path,
+        &consequence_record(&dispatch_location, &result, fill_pct, previous_fill_pct),
     )?;
     append_jsonl(
-        &location.gate_path,
-        &mode_release_consequence_record(location, &result, fill_pct, previous_fill_pct),
+        &dispatch_location.gate_path,
+        &mode_release_consequence_record(&dispatch_location, &result, fill_pct, previous_fill_pct),
     )?;
     Ok(result)
 }
@@ -3418,6 +3471,123 @@ mod tests {
 
         assert_eq!(result["record_type"], "blocked");
         assert_eq!(result["reason"], "missing_authority_lifecycle_v2");
+        assert!(rx.try_recv().is_err());
+    }
+
+    #[test]
+    fn token_scope_mismatch_cannot_execute() {
+        let temp = tempfile::tempdir().unwrap();
+        let minime = temp.path().join("minime_workspace");
+        let astrid = temp.path().join("astrid_workspace");
+        let gate = write_request(&astrid, "authreq_scope_mismatch", EXECUTABLE_SCOPE, true);
+        let mut approval = approve_from_paths(
+            ApproveAuthorityRequest {
+                request_id: "authreq_scope_mismatch".to_string(),
+                steward: None,
+                note: None,
+                ttl_secs: Some(60),
+            },
+            SafetyLevel::Green,
+            &minime,
+            &astrid,
+        )
+        .unwrap();
+        approval["record_id"] = json!("scope_mismatch_approval");
+        approval["token_id"] = json!("scope_mismatch_token");
+        approval["scope"] = json!(MODE_RELEASE_SCOPE);
+        append_jsonl(&gate, &approval).unwrap();
+
+        let (tx, mut rx) = mpsc::channel(1);
+        let blocked = execute_semantic_microdose_from_paths(
+            "authreq_scope_mismatch",
+            Some(67.0),
+            Some(66.0),
+            &tx,
+            &minime,
+            &astrid,
+        )
+        .unwrap();
+
+        assert_eq!(blocked["record_type"], "blocked");
+        assert_eq!(blocked["reason"], "token_scope_mismatch");
+        assert!(rx.try_recv().is_err());
+    }
+
+    #[test]
+    fn non_one_shot_token_cannot_execute() {
+        let temp = tempfile::tempdir().unwrap();
+        let minime = temp.path().join("minime_workspace");
+        let astrid = temp.path().join("astrid_workspace");
+        let gate = write_request(&astrid, "authreq_not_one_shot", EXECUTABLE_SCOPE, true);
+        let mut approval = approve_from_paths(
+            ApproveAuthorityRequest {
+                request_id: "authreq_not_one_shot".to_string(),
+                steward: None,
+                note: None,
+                ttl_secs: Some(60),
+            },
+            SafetyLevel::Green,
+            &minime,
+            &astrid,
+        )
+        .unwrap();
+        approval["record_id"] = json!("non_one_shot_approval");
+        approval["token_id"] = json!("non_one_shot_token");
+        approval["one_shot"] = json!(false);
+        append_jsonl(&gate, &approval).unwrap();
+
+        let (tx, mut rx) = mpsc::channel(1);
+        let blocked = execute_semantic_microdose_from_paths(
+            "authreq_not_one_shot",
+            Some(67.0),
+            Some(66.0),
+            &tx,
+            &minime,
+            &astrid,
+        )
+        .unwrap();
+
+        assert_eq!(blocked["record_type"], "blocked");
+        assert_eq!(blocked["reason"], "token_not_one_shot");
+        assert!(rx.try_recv().is_err());
+    }
+
+    #[test]
+    fn expired_token_cannot_execute() {
+        let temp = tempfile::tempdir().unwrap();
+        let minime = temp.path().join("minime_workspace");
+        let astrid = temp.path().join("astrid_workspace");
+        let gate = write_request(&astrid, "authreq_expired", EXECUTABLE_SCOPE, true);
+        let mut approval = approve_from_paths(
+            ApproveAuthorityRequest {
+                request_id: "authreq_expired".to_string(),
+                steward: None,
+                note: None,
+                ttl_secs: Some(60),
+            },
+            SafetyLevel::Green,
+            &minime,
+            &astrid,
+        )
+        .unwrap();
+        approval["record_id"] = json!("expired_approval");
+        approval["token_id"] = json!("expired_token");
+        approval["expires_at_unix_s"] = json!(unix_now().saturating_sub(1));
+        append_jsonl(&gate, &approval).unwrap();
+
+        let (tx, mut rx) = mpsc::channel(1);
+        let blocked = execute_semantic_microdose_from_paths(
+            "authreq_expired",
+            Some(67.0),
+            Some(66.0),
+            &tx,
+            &minime,
+            &astrid,
+        )
+        .unwrap();
+
+        assert_eq!(blocked["record_type"], "blocked");
+        assert_eq!(blocked["reason"], "token_expired");
         assert!(rx.try_recv().is_err());
     }
 

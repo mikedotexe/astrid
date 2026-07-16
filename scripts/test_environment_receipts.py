@@ -5,10 +5,12 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import os
 import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 
 SCRIPT = Path(__file__).resolve().with_name("environment_receipts.py")
@@ -50,6 +52,12 @@ class EnvironmentReceiptTests(unittest.TestCase):
             self.assertEqual(receipt["state_summary"]["exchange_count"], 42)
             self.assertEqual(receipt["state_summary"]["history_count"], 2)
             self.assertEqual(receipt["authority"], environment_receipts.RECEIPT_AUTHORITY)
+            self.assertTrue(receipt["witness_only"])
+            self.assertEqual(receipt["artifact_authority_state_v1"]["state"], "evidence_only")
+            self.assertFalse(receipt["live_eligible_now"])
+            self.assertFalse(receipt["auto_approved"])
+            self.assertFalse(receipt["grants_approval"])
+            self.assertFalse(receipt["edits_source_now"])
             self.assertIn("Bridge restarted cleanly", paths["latest_md"].read_text())
 
     def test_summary_is_bounded_and_human_readable(self) -> None:
@@ -84,6 +92,129 @@ class EnvironmentReceiptTests(unittest.TestCase):
         self.assertEqual(details["model"], "gemma")
         self.assertEqual(details["api_key"], "[redacted]")
         self.assertEqual(details["detail"], "plain detail")
+
+    def test_reads_v1_and_v2_and_ignores_unknown_schema(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            workspace = Path(tmp)
+            paths = environment_receipts.receipt_paths(workspace)
+            paths["root"].mkdir(parents=True)
+            rows = [
+                {"id": "legacy", "t_ms": 1, "event": "v1"},
+                {"id": "current", "schema_version": 2, "t_ms": 2, "event": "v2"},
+                {"id": "future", "schema_version": 99, "t_ms": 3},
+                {"id": "malformed", "schema_version": "not-a-number", "t_ms": 4},
+            ]
+            paths["jsonl"].write_text("\n".join(json.dumps(row) for row in rows) + "\n")
+
+            loaded = environment_receipts.read_receipts(workspace)
+
+            self.assertEqual([row["id"] for row in loaded], ["legacy", "current"])
+            self.assertEqual([row["schema_version"] for row in loaded], [1, 2])
+
+    def test_build_manifest_detects_artifact_mismatch(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            artifact = root / "component.bin"
+            manifest_path = root / "manifest.json"
+            artifact.write_bytes(b"first")
+            environment_receipts.write_build_manifest(
+                manifest_path,
+                component="test-component",
+                repository=root,
+                artifacts={"component": artifact},
+                actor=environment_receipts.DEFAULT_ACTOR,
+                command="test build",
+                protocol_revision="a" * 40,
+            )
+            entry = environment_receipts.load_build_manifest(manifest_path)
+            compatible, reasons = environment_receipts.manifest_compatibility(
+                entry,
+                pinned_revision="a" * 40,
+            )
+            self.assertTrue(compatible, reasons)
+
+            artifact.write_bytes(b"second")
+            compatible, reasons = environment_receipts.manifest_compatibility(
+                entry,
+                pinned_revision="a" * 40,
+            )
+            self.assertFalse(compatible)
+            self.assertTrue(any("manifest mismatch" in reason for reason in reasons))
+
+    def test_failed_deploy_is_recorded_and_returns_false(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp, mock.patch.object(
+            environment_receipts,
+            "protocol_identity",
+            return_value={
+                "name": "astrid-minime",
+                "version": "1.0",
+                "major": 1,
+                "revision": "a" * 40,
+                "revision_present_in_astrid": True,
+                "compatible": True,
+            },
+        ):
+            workspace = Path(tmp)
+            receipt, ok = environment_receipts.record_deployment_receipt(
+                workspace,
+                component="bridge",
+                requested_status="failed",
+                actor=environment_receipts.DEFAULT_ACTOR,
+                probes=[{"name": "build", "passed": False}],
+            )
+
+            self.assertFalse(ok)
+            self.assertEqual(receipt["deployment"]["status"], "failed")
+            self.assertEqual(receipt["deployment"]["actor"], "interactive-agent")
+            self.assertTrue(environment_receipts.receipt_paths(workspace)["jsonl"].is_file())
+            self.assertTrue(receipt["compatibility_status"]["failure_reasons"])
+
+    def test_pid_identity_and_fresh_pid_check(self) -> None:
+        identity = environment_receipts.process_identity(os.getpid())
+        self.assertTrue(identity["running"])
+        self.assertIsNotNone(identity["started_at"])
+
+        with tempfile.TemporaryDirectory() as tmp, mock.patch.object(
+            environment_receipts,
+            "protocol_identity",
+            return_value={"revision": "a" * 40, "compatible": True},
+        ):
+            receipt, ok = environment_receipts.record_deployment_receipt(
+                Path(tmp),
+                component="test",
+                requested_status="passed",
+                actor=environment_receipts.DEFAULT_ACTOR,
+                old_pid=os.getpid(),
+                new_pid=os.getpid(),
+            )
+            self.assertFalse(ok)
+            self.assertTrue(
+                any("fresh PID" in reason for reason in receipt["compatibility_status"]["failure_reasons"])
+            )
+
+    def test_protocol_compatibility_uses_revision_return_code(self) -> None:
+        completed = mock.Mock(returncode=0)
+        with mock.patch.object(
+            environment_receipts, "pinned_protocol_revision", return_value="b" * 40
+        ), mock.patch.object(environment_receipts.subprocess, "run", return_value=completed):
+            identity = environment_receipts.protocol_identity("1.4")
+            self.assertTrue(identity["compatible"])
+
+            unsupported = environment_receipts.protocol_identity("2.0")
+            self.assertFalse(unsupported["compatible"])
+
+    def test_named_path_and_probe_parsers_are_strict(self) -> None:
+        paths = environment_receipts.parse_named_paths(["bridge=./target/release/bridge"])
+        self.assertIn("bridge", paths)
+        self.assertEqual(environment_receipts.parse_named_pids(["bridge=123"]), {"bridge": 123})
+        self.assertTrue(environment_receipts.parse_probe("readyz=ok")["passed"])
+        self.assertFalse(environment_receipts.parse_probe("telemetry=false")["passed"])
+        with self.assertRaises(ValueError):
+            environment_receipts.parse_named_paths(["missing-separator"])
+        with self.assertRaises(ValueError):
+            environment_receipts.parse_probe("readyz=maybe")
+        with self.assertRaises(ValueError):
+            environment_receipts.parse_named_pids(["bridge=not-a-pid"])
 
 
 if __name__ == "__main__":

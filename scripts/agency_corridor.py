@@ -22,6 +22,11 @@ from collections import Counter
 from pathlib import Path
 from typing import Any
 
+try:
+    from authority_state import normalize_artifact_authority_tree
+except ModuleNotFoundError:  # unittest/importlib execution from the repository root
+    from scripts.authority_state import normalize_artifact_authority_tree
+
 ASTRID_REPO = Path("/Users/v/other/astrid")
 ASTRID_WORKSPACE = ASTRID_REPO / "capsules/spectral-bridge/workspace"
 DEFAULT_STATE_DIR = ASTRID_WORKSPACE / "diagnostics/agency_corridor_v1"
@@ -161,6 +166,7 @@ def append_events(state_dir: Path, events: list[dict[str, Any]]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("a", encoding="utf-8") as handle:
         for event in events:
+            normalize_artifact_authority_tree(event)
             handle.write(json.dumps(event, sort_keys=True, ensure_ascii=False) + "\n")
 
 
@@ -256,7 +262,7 @@ def packet_for_work_item(item: dict[str, Any]) -> dict[str, Any] | None:
             "authority": "read_only_review_not_live_control",
         }
 
-    return {
+    packet = {
         "schema": SCHEMA,
         "schema_version": SCHEMA_VERSION,
         "corridor_id": stable_uuid("work_item", work_item_id, action),
@@ -290,6 +296,8 @@ def packet_for_work_item(item: dict[str, Any]) -> dict[str, Any] | None:
         "auto_approved": False,
         "boundary": NON_LIVE_BOUNDARY,
     }
+    normalize_artifact_authority_tree(packet)
+    return packet
 
 
 def packet_for_trial(trial: dict[str, Any]) -> dict[str, Any] | None:
@@ -331,7 +339,7 @@ def packet_for_trial(trial: dict[str, Any]) -> dict[str, Any] | None:
             "rollback_path": "no automatic execution from corridor",
             "post_change_response_required": True,
         }
-    return {
+    packet = {
         "schema": SCHEMA,
         "schema_version": SCHEMA_VERSION,
         "corridor_id": stable_uuid("sandbox_trial", trial_id, action),
@@ -361,6 +369,8 @@ def packet_for_trial(trial: dict[str, Any]) -> dict[str, Any] | None:
         "auto_approved": False,
         "boundary": NON_LIVE_BOUNDARY,
     }
+    normalize_artifact_authority_tree(packet)
+    return packet
 
 
 def derived_packets(limit_per_source: int = 60) -> dict[str, dict[str, Any]]:
@@ -466,6 +476,7 @@ def summarize(status: dict[str, Any]) -> dict[str, Any]:
 
 
 def materialize(state_dir: Path, status: dict[str, Any]) -> None:
+    normalize_artifact_authority_tree(status)
     atomic_write_text(state_dir / STATUS_FILE, json.dumps(status, indent=2, sort_keys=True, ensure_ascii=False) + "\n")
     atomic_write_text(state_dir / QUEUE_FILE, render_queue_markdown(status))
     atomic_write_text(state_dir / REPORT_FILE, render_report_markdown(status))
@@ -1200,6 +1211,7 @@ def v2_packet_for_v1(packet: dict[str, Any], leases: dict[str, dict[str, Any]]) 
     proposal = source_prep_proposal_for_packet(v2)
     if proposal:
         v2["source_prep_proposal"] = proposal
+    normalize_artifact_authority_tree(v2)
     return v2
 
 
@@ -1847,6 +1859,7 @@ def render_v2_report_markdown(status: dict[str, Any]) -> str:
 
 
 def materialize_v2(state_dir: Path, status: dict[str, Any]) -> None:
+    normalize_artifact_authority_tree(status)
     atomic_write_text(state_dir / STATUS_FILE, json.dumps(status, indent=2, sort_keys=True, ensure_ascii=False) + "\n")
     atomic_write_text(
         state_dir / LEASES_FILE,
@@ -2689,6 +2702,7 @@ def record_lease_revocation(state_dir: Path, *, lease_id: str, reason: str, writ
 
 
 def print_payload(payload: dict[str, Any], *, as_json: bool) -> None:
+    normalize_artifact_authority_tree(payload)
     if as_json:
         print(json.dumps(payload, indent=2, sort_keys=True, ensure_ascii=False))
     else:
@@ -2930,24 +2944,26 @@ class AgencyCorridorTests(unittest.TestCase):
         self.assertEqual(leases["lease_corridor_safe_labs_v1"]["state"], "revoked")
         self.assertIn("operator paused", leases["lease_corridor_safe_labs_v1"]["revocation_reason"])
 
-    def test_v2_live_violation_blocks_runner(self) -> None:
+    def test_v2_live_violation_is_rejected_and_historical_corruption_blocks_runner(self) -> None:
         bad_packet = self.safe_v1_packet(99)
         bad_v2 = v2_packet_for_v1(bad_packet, standing_corridor_leases())
         bad_v2["live_eligible_now"] = True
-        append_events(
-            self.tmp,
-            [
-                {
-                    "event_type": "corridor_packet_declared_v2",
-                    "schema": SCHEMA_V2,
-                    "ts": now_s(),
-                    "corridor_id": bad_v2["corridor_id"],
-                    "packet": bad_v2,
-                }
-            ],
-        )
+        bad_event = {
+            "event_type": "corridor_packet_declared_v2",
+            "schema": SCHEMA_V2,
+            "ts": now_s(),
+            "corridor_id": bad_v2["corridor_id"],
+            "packet": bad_v2,
+        }
+        with self.assertRaisesRegex(ValueError, "live_eligible_now=true"):
+            append_events(self.tmp, [bad_event])
 
-        payload = run_next_v2(self.tmp, limit=5, write=True, emit_cards=False)
+        # A historical/corrupt row that bypassed the writer must still fail closed.
+        events_path = self.tmp / EVENTS_FILE
+        events_path.parent.mkdir(parents=True, exist_ok=True)
+        events_path.write_text(json.dumps(bad_event) + "\n", encoding="utf-8")
+
+        payload = run_next_v2(self.tmp, limit=5, write=False, emit_cards=False)
 
         self.assertTrue(payload["blocked"])
         self.assertEqual(payload["ran"], 0)

@@ -183,8 +183,8 @@ def _safe_mtime(p: Path) -> float | None:
 def tree_activity_age(repo: Path, now: float) -> float | None:
     """Age (s) of the most recently modified UNCOMMITTED file in `repo`, or None
     if the tree is clean or not a git repo. The operative cross-agent signal:
-    once the loop holds the mutex, a freshly-mutated dirty tree is a non-mutex
-    agent (Codex) editing — not interactive Claude, which would hold the lock."""
+    once one writer holds the mutex, a freshly-mutated dirty tree may be another
+    interactive agent editing outside that lock."""
     try:
         out = subprocess.run(
             ["git", "-C", str(repo), "status", "--porcelain", "-z"],
@@ -220,7 +220,8 @@ def codex_liveness_age(state_dir: Path, now: float) -> float | None:
 def foreign_activity(repo: Path, codex_state_dir: Path, window_s: float, now: float) -> dict:
     """Is a non-mutex agent actively editing the tree right now? `active` gates on
     recent working-tree mutation (the thing that races); Codex liveness is
-    surfaced alongside it for attribution/awareness."""
+    surfaced alongside it as compatibility diagnostics, not as authority or
+    reliable attribution."""
     tree_age = tree_activity_age(repo, now)
     codex_age = codex_liveness_age(codex_state_dir, now)
     active = tree_age is not None and tree_age <= window_s
@@ -231,7 +232,7 @@ def foreign_activity(repo: Path, codex_state_dir: Path, window_s: float, now: fl
         "codex_live": codex_live,
         "codex_age_s": None if codex_age is None else round(codex_age, 1),
         "window_s": window_s,
-        "agent_guess": "codex" if (active and codex_live) else ("external" if active else None),
+        "agent_guess": "concurrent-editor" if active else None,
     }
 
 

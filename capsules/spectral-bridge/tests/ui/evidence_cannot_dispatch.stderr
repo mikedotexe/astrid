@@ -1,0 +1,15 @@
+error[E0308]: mismatched types
+  --> tests/ui/evidence_cannot_dispatch.rs:11:41
+   |
+11 |     let _ = dispatch_semantic_microdose(evidence, tx);
+   |             --------------------------- ^^^^^^^^ expected `LiveExecutable<SemanticMicrodose>`, found `EvidenceOnly<SemanticMicrodose>`
+   |             |
+   |             arguments to this function are incorrect
+   |
+   = note: expected struct `LiveExecutable<SemanticMicrodose>`
+              found struct `EvidenceOnly<SemanticMicrodose>`
+note: function defined here
+  --> src/authority_types.rs
+   |
+   | pub fn dispatch_semantic_microdose(
+   |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^

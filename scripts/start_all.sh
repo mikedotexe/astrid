@@ -218,6 +218,30 @@ wait_port() {
     return 1
 }
 
+wait_http_ready() {
+    local url="$1"
+    local name="$2"
+    local timeout="${3:-120}"
+    local body_file
+    body_file="$(mktemp -t astrid-ready.XXXXXX)"
+    for _ in $(seq 1 "$timeout"); do
+        local status
+        status="$(curl --silent --show-error --max-time 2 --output "$body_file" --write-out '%{http_code}' "$url" 2>/dev/null || true)"
+        if [ "$status" = "200" ]; then
+            rm -f "$body_file"
+            ok "$name ready at $url"
+            return 0
+        fi
+        sleep 1
+    done
+    fail "$name did not report ready at $url after ${timeout}s"
+    if [ -s "$body_file" ]; then
+        sed 's/^/     /' "$body_file" >&2
+    fi
+    rm -f "$body_file"
+    return 1
+}
+
 wait_socket() {
     local socket_path="$1"
     local name="$2"
@@ -358,7 +382,7 @@ if [ "$MINIME_ONLY" = false ]; then
     EXPECTED_LABELS+=("com.reservoir.service")
 
     ensure_launchd_label "$RESERVOIR_DIR/launchd/com.reservoir.coupled-astrid.plist" "coupled Astrid server"
-    wait_port 8090 "coupled Astrid server" 120
+    wait_http_ready "http://127.0.0.1:8090/readyz" "coupled Astrid server" 1200
     EXPECTED_LABELS+=("com.reservoir.coupled-astrid")
 
     ensure_launchd_label "$RESERVOIR_DIR/launchd/com.reservoir.astrid-feeder.plist" "Astrid feeder"

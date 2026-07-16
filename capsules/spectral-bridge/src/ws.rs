@@ -11,6 +11,9 @@ use std::collections::{BTreeMap, VecDeque};
 use std::sync::Arc;
 use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
+use astrid_minime_protocol::{
+    CompatibilityStatus, EigenPacketV1, SensoryMsg as WireSensoryMsg, SensoryPacketV1,
+};
 use futures_util::{SinkExt, StreamExt};
 use tokio::sync::{RwLock, mpsc};
 use tokio_tungstenite::tungstenite::protocol::{CloseFrame, Message};
@@ -23,15 +26,16 @@ use crate::paths::bridge_paths;
 use crate::sticky_mode::{self, StickyModeAuditV1};
 use crate::trace_lab;
 use crate::types::{
-    BridgeEntropyReciprocityReviewV1, BridgeReciprocityV1, ConnectivityStatus, DeltaPersistenceV1,
-    ExperienceDeltaBusV1, ExperienceDeltaKindV1, ExperienceDeltaV1, LambdaContribution,
-    LambdaProfile, MessageDirection, PersistentDeformationSmoothingReviewV1,
-    PressureSourceAnalysisV1, PressureTrendSmoothingV1, PressureTrendV1, PullModeRate,
-    PullTopologyProfile, ResidualDeformationTraceV1, ResonanceDensityComponents,
-    SafetyDecisionTrace, SafetyLevel, SensoryMsg, SpectralTelemetry, TelemetryHeartbeatDeltaV1,
-    TextureDynamicFluxVectorV1, TextureShapeOverTimeV2, TextureSignatureIntegrityV1,
-    ViscosityPorosityTransportReviewV1, WebSocketLaneTrace, resonance_cohesion_score_v1,
-    resonance_stability_context_v1, resonance_structural_integrity_index_v1,
+    BridgeEntropyReciprocityReviewV1, BridgeReciprocityV1, BridgeTextureEvidenceV1,
+    ConnectivityStatus, DeltaPersistenceV1, ExperienceDeltaBusV1, ExperienceDeltaKindV1,
+    ExperienceDeltaV1, LambdaContribution, LambdaProfile, MessageDirection,
+    PersistentDeformationSmoothingReviewV1, PressureSourceAnalysisV1, PressureTrendSmoothingV1,
+    PressureTrendV1, PullModeRate, PullTopologyProfile, ResidualDeformationTraceV1,
+    ResonanceDensityComponents, SafetyDecisionTrace, SafetyLevel, SensoryMsg, SpectralTelemetry,
+    TelemetryHeartbeatDeltaV1, TelemetryProtocolStatusV1, TextureDynamicFluxVectorV1,
+    TextureShapeOverTimeV2, TextureSignatureIntegrityV1, ViscosityPorosityTransportReviewV1,
+    WebSocketLaneTrace, resonance_cohesion_score_v1, resonance_stability_context_v1,
+    resonance_structural_integrity_index_v1,
     viscosity_porosity_transport_review_with_fingerprint_v1,
 };
 
@@ -50,6 +54,46 @@ const PRESSURE_POROSITY_EXPANSION_LIMINAL_MODE_PACKING_AT: f32 = 0.30;
 const PRESSURE_POROSITY_EXPANSION_VISCOUS_DENSITY_WARNING_AT: f32 = 0.28;
 const PRESSURE_POROSITY_EXPANSION_FELT_DEAD_ZONE_MODE_PACKING_AT: f32 = 0.25;
 const PRESSURE_POROSITY_EXPANSION_LOW_POROSITY_AT: f32 = 0.35;
+
+const fn protocol_compatibility_label(status: CompatibilityStatus) -> &'static str {
+    match status {
+        CompatibilityStatus::Current => "current",
+        CompatibilityStatus::CompatibleMinor => "compatible_minor",
+        CompatibilityStatus::LegacyUnversioned => "legacy_unversioned",
+        CompatibilityStatus::UnsupportedName => "unsupported_name",
+        CompatibilityStatus::UnsupportedMajor => "unsupported_major",
+    }
+}
+
+fn record_telemetry_protocol_status(
+    state: &mut BridgeState,
+    packet: &EigenPacketV1,
+    compatibility: CompatibilityStatus,
+    observed_at_unix_s: f64,
+    accepted: bool,
+) {
+    let protocol = packet.protocol.as_ref();
+    state.telemetry_protocol_v1.protocol_name = protocol.map(|header| header.name.clone());
+    state.telemetry_protocol_v1.protocol_major = protocol.map(|header| header.major);
+    state.telemetry_protocol_v1.protocol_minor = protocol.map(|header| header.minor);
+    state.telemetry_protocol_v1.compatibility =
+        protocol_compatibility_label(compatibility).to_string();
+    state.telemetry_protocol_v1.accepted = accepted;
+    state.telemetry_protocol_v1.last_observed_unix_s = Some(observed_at_unix_s);
+    if accepted {
+        state.telemetry_protocol_v1.last_valid_t_ms = Some(packet.t_ms);
+    } else {
+        state.telemetry_protocol_v1.mismatch_count =
+            state.telemetry_protocol_v1.mismatch_count.saturating_add(1);
+        state.telemetry_protocol_v1.last_mismatch_unix_s = Some(observed_at_unix_s);
+    }
+}
+
+fn encode_sensory_packet(message: &SensoryMsg) -> Result<String, serde_json::Error> {
+    let domain_value = serde_json::to_value(message)?;
+    let wire_message: WireSensoryMsg = serde_json::from_value(domain_value)?;
+    serde_json::to_string(&SensoryPacketV1::versioned(wire_message))
+}
 
 #[derive(Debug, Clone)]
 struct PressureTrendSampleV1 {
@@ -189,6 +233,8 @@ pub struct BridgeState {
     pub sensory_ws: WebSocketLaneTrace,
     /// Total safety incidents logged.
     pub incidents_total: u64,
+    /// Latest canonical telemetry protocol compatibility observation.
+    pub telemetry_protocol_v1: TelemetryProtocolStatusV1,
 }
 
 impl Default for BridgeState {
@@ -235,6 +281,7 @@ impl BridgeState {
             telemetry_ws: WebSocketLaneTrace::default(),
             sensory_ws: WebSocketLaneTrace::default(),
             incidents_total: 0,
+            telemetry_protocol_v1: TelemetryProtocolStatusV1::default(),
         }
     }
 
@@ -987,9 +1034,9 @@ impl BridgeState {
         })
     }
 
-    /// Read-only integrity comparison for Minime's typed texture signature.
+    /// Bridge-owned temporal and derivative evidence kept outside Minime's DTO.
     #[must_use]
-    pub fn texture_signature_integrity_v1(&self) -> Option<TextureSignatureIntegrityV1> {
+    pub fn bridge_texture_evidence_v1(&self) -> Option<BridgeTextureEvidenceV1> {
         let resonance = self
             .latest_telemetry
             .as_ref()
@@ -1008,40 +1055,14 @@ impl BridgeState {
             } else {
                 (None, None)
             };
-        let damping_candidate = signature.dynamic_damping_threshold_candidate;
-        let damping_candidate_status = if damping_candidate.is_some() {
-            "candidate_present"
-        } else if resonance.pressure_risk > 0.20 {
-            "missing_candidate_observability_only"
-        } else {
-            "candidate_not_needed_low_pressure"
-        };
-        let variance_status = if temporal_variance.is_some() {
-            "carried"
-        } else {
-            "absent_backward_compatible"
-        };
-        let alignment = &resonance.texture_component_alignment;
-        let component_viscosity_index = resonance.components.viscosity_index.clamp(0.0, 1.0);
-        let signature_viscosity_index = signature
-            .viscosity_index
-            .filter(|value| value.is_finite())
-            .map(|value| value.clamp(0.0, 1.0));
-        let viscosity_delta = signature_viscosity_index
-            .map(|value| round_flux_delta(value - component_viscosity_index));
-        let viscosity_alignment_state = match viscosity_delta {
-            None => "signature_viscosity_absent_legacy",
-            Some(delta) if delta.abs() <= 0.001 => "signature_viscosity_aligned",
-            Some(_) => "signature_viscosity_component_mismatch",
-        };
         let dynamic_flux_vector = signature
             .dynamic_flux_vector
             .clone()
             .or_else(|| build_texture_dynamic_flux_vector_v1(&self.pressure_trend_samples_v1));
-        let flux_status = if signature.dynamic_flux_vector.is_some() {
-            "carried_from_texture_signature"
+        let dynamic_flux_vector_source = if signature.dynamic_flux_vector.is_some() {
+            "legacy_texture_signature"
         } else if dynamic_flux_vector.is_some() {
-            "derived_from_bridge_pressure_samples"
+            "bridge_pressure_samples"
         } else {
             "insufficient_history"
         };
@@ -1072,6 +1093,82 @@ impl BridgeState {
             active_constraints.push(format!("comfort_gate_context:{}", context.gate_context));
         }
 
+        Some(BridgeTextureEvidenceV1 {
+            policy: "bridge_texture_evidence_v1".to_string(),
+            schema_version: 1,
+            temporal_variance,
+            temporal_variance_source: if temporal_variance.is_some() {
+                "legacy_texture_signature"
+            } else {
+                "absent"
+            }
+            .to_string(),
+            pressure_gradient_delta,
+            pressure_gradient_delta_source,
+            dynamic_flux_vector,
+            dynamic_flux_vector_source: dynamic_flux_vector_source.to_string(),
+            active_constraints,
+            authority: "bridge_evidence_not_minime_wire_or_live_control".to_string(),
+        })
+    }
+
+    /// Read-only integrity comparison for Minime's typed texture signature.
+    ///
+    /// The top-level temporal fields remain for status-schema compatibility;
+    /// their canonical owner is now `bridge_texture_evidence_v1`.
+    #[must_use]
+    pub fn texture_signature_integrity_v1(&self) -> Option<TextureSignatureIntegrityV1> {
+        let resonance = self
+            .latest_telemetry
+            .as_ref()
+            .and_then(|telemetry| telemetry.resonance_density_v1.as_ref())?;
+        let signature = &resonance.texture_signature;
+        let bridge_evidence = self.bridge_texture_evidence_v1()?;
+        let temporal_variance = bridge_evidence.temporal_variance;
+        let pressure_gradient_delta = bridge_evidence.pressure_gradient_delta;
+        let pressure_gradient_delta_source = bridge_evidence.pressure_gradient_delta_source.clone();
+        let damping_candidate = signature.dynamic_damping_threshold_candidate;
+        let damping_candidate_status = if damping_candidate.is_some() {
+            "candidate_present"
+        } else if resonance.pressure_risk > 0.20 {
+            "missing_candidate_observability_only"
+        } else {
+            "candidate_not_needed_low_pressure"
+        };
+        let variance_status = if temporal_variance.is_some() {
+            "carried"
+        } else {
+            "absent_backward_compatible"
+        };
+        let alignment = &resonance.texture_component_alignment;
+        let component_viscosity_index = resonance.components.viscosity_index.clamp(0.0, 1.0);
+        let signature_viscosity_index = signature
+            .viscosity_index
+            .filter(|value| value.is_finite())
+            .map(|value| value.clamp(0.0, 1.0));
+        let viscosity_delta = signature_viscosity_index
+            .map(|value| round_flux_delta(value - component_viscosity_index));
+        let viscosity_alignment_state = match viscosity_delta {
+            None => "signature_viscosity_absent_legacy",
+            Some(delta) if delta.abs() <= 0.001 => "signature_viscosity_aligned",
+            Some(_) => "signature_viscosity_component_mismatch",
+        };
+        let dynamic_flux_vector = bridge_evidence.dynamic_flux_vector.clone();
+        let flux_status = match bridge_evidence.dynamic_flux_vector_source.as_str() {
+            "legacy_texture_signature" => "carried_from_texture_signature",
+            "bridge_pressure_samples" => "derived_from_bridge_pressure_samples",
+            _ => "insufficient_history",
+        };
+        let stability_context = resonance.components.stability_context.clone().or_else(|| {
+            Some(resonance_stability_context_v1(
+                &resonance.components,
+                self.latest_telemetry
+                    .as_ref()
+                    .and_then(|telemetry| telemetry.inhabitable_fluctuation_v1.as_ref()),
+            ))
+        });
+        let active_constraints = bridge_evidence.active_constraints.clone();
+
         Some(TextureSignatureIntegrityV1 {
             policy: "texture_signature_integrity_v1".to_string(),
             schema_version: 1,
@@ -1097,6 +1194,7 @@ impl BridgeState {
             expected_primary_texture: alignment.expected_primary_texture.clone(),
             emitted_primary_texture: alignment.emitted_primary_texture.clone(),
             advisory_observability: damping_candidate.is_none() && resonance.pressure_risk > 0.20,
+            bridge_texture_evidence_v1: Some(bridge_evidence),
             authority: "diagnostic_observability_not_damping_or_control".to_string(),
         })
     }
@@ -3494,8 +3592,8 @@ async fn handle_telemetry_message_at(
     const ARTIFACT_SCAN_WINDOW_SECS: f64 = 1_200.0;
     const ARTIFACT_SCAN_MIN_INTERVAL_SECS: f64 = 30.0;
 
-    let mut telemetry: SpectralTelemetry = match serde_json::from_slice(data) {
-        Ok(t) => t,
+    let wire_packet: EigenPacketV1 = match serde_json::from_slice(data) {
+        Ok(packet) => packet,
         Err(e) => {
             {
                 let mut s = state.write().await;
@@ -3506,6 +3604,45 @@ async fn handle_telemetry_message_at(
                 );
             }
             warn!(error = %e, "failed to parse telemetry message");
+            return false;
+        },
+    };
+    let compatibility = wire_packet.compatibility();
+    if !compatibility.is_compatible() {
+        let reason = format!(
+            "telemetry_protocol_mismatch:{}",
+            protocol_compatibility_label(compatibility)
+        );
+        {
+            let mut s = state.write().await;
+            record_telemetry_protocol_status(
+                &mut s,
+                &wire_packet,
+                compatibility,
+                observed_at_unix_s,
+                false,
+            );
+            record_ws_parse_error(&mut s, WsLane::Telemetry, reason.clone());
+        }
+        warn!(
+            compatibility = protocol_compatibility_label(compatibility),
+            protocol = ?wire_packet.protocol,
+            "rejecting incompatible minime telemetry; retaining last valid sample"
+        );
+        return false;
+    }
+    // The canonical DTO validates the port boundary. Parse the original bytes
+    // into the bridge domain model so legacy field absence remains observable.
+    let mut telemetry: SpectralTelemetry = match serde_json::from_slice(data) {
+        Ok(telemetry) => telemetry,
+        Err(e) => {
+            let mut s = state.write().await;
+            record_ws_parse_error(
+                &mut s,
+                WsLane::Telemetry,
+                format!("telemetry_domain_conversion_error:{e}"),
+            );
+            warn!(error = %e, "failed to convert canonical telemetry into bridge domain model");
             return false;
         },
     };
@@ -3627,6 +3764,13 @@ async fn handle_telemetry_message_at(
         write_telemetry_heartbeat_snapshot(&heartbeat);
         s.previous_fill_pct = previous_fill_pct;
         s.latest_telemetry = Some(telemetry.clone());
+        record_telemetry_protocol_status(
+            &mut s,
+            &wire_packet,
+            compatibility,
+            observed_at_unix_s,
+            true,
+        );
         s.fill_pct = fill_pct;
         s.spectral_fingerprint
             .clone_from(&telemetry.spectral_fingerprint);
@@ -4248,7 +4392,7 @@ pub fn spawn_sensory_sender(
                                     // Re-running the plain rescue block here discards already
                                     // budgeted limited-write packets after status records them.
 
-                                    let json = match serde_json::to_string(&sensory_msg) {
+                                    let json = match encode_sensory_packet(&sensory_msg) {
                                         Ok(j) => j,
                                         Err(e) => {
                                             error!(error = %e, "failed to serialize sensory msg");
@@ -7973,6 +8117,82 @@ mod tests {
                 .is_some_and(|error| error.starts_with("telemetry_parse_error:"))
         );
         assert_eq!(s.messages_relayed, 0);
+    }
+
+    #[tokio::test]
+    async fn versioned_telemetry_records_current_protocol() {
+        let state = Arc::new(RwLock::new(BridgeState::new()));
+        let db = Arc::new(BridgeDb::open(":memory:").unwrap());
+        let mut packet: serde_json::Value =
+            serde_json::from_slice(&make_eigenpacket(0.50, 768.0)).unwrap();
+        packet["protocol"] = serde_json::json!({
+            "name": "astrid_minime",
+            "major": 1,
+            "minor": 0
+        });
+
+        assert!(handle_telemetry_message(&serde_json::to_vec(&packet).unwrap(), &state, &db).await);
+
+        let s = state.read().await;
+        assert_eq!(s.telemetry_protocol_v1.compatibility, "current");
+        assert!(s.telemetry_protocol_v1.accepted);
+        assert_eq!(s.telemetry_protocol_v1.protocol_major, Some(1));
+        assert_eq!(s.telemetry_protocol_v1.last_valid_t_ms, Some(1000));
+        assert_eq!(s.telemetry_protocol_v1.mismatch_count, 0);
+    }
+
+    #[tokio::test]
+    async fn unsupported_telemetry_major_retains_last_valid_sample() {
+        let state = Arc::new(RwLock::new(BridgeState::new()));
+        let db = Arc::new(BridgeDb::open(":memory:").unwrap());
+        assert!(
+            handle_telemetry_message_at(&make_eigenpacket(0.50, 768.0), &state, &db, 100.0,).await
+        );
+        let mut incompatible: serde_json::Value =
+            serde_json::from_slice(&make_eigenpacket(0.95, 900.0)).unwrap();
+        incompatible["t_ms"] = 2000.into();
+        incompatible["protocol"] = serde_json::json!({
+            "name": "astrid_minime",
+            "major": 2,
+            "minor": 0
+        });
+
+        assert!(
+            !handle_telemetry_message_at(
+                &serde_json::to_vec(&incompatible).unwrap(),
+                &state,
+                &db,
+                101.0,
+            )
+            .await
+        );
+
+        let s = state.read().await;
+        assert_eq!(s.latest_telemetry.as_ref().unwrap().t_ms, 1000);
+        assert!((s.fill_pct - 50.0).abs() < 0.1);
+        assert_eq!(s.latest_telemetry_arrival_unix_s, Some(100.0));
+        assert_eq!(s.telemetry_protocol_v1.compatibility, "unsupported_major");
+        assert!(!s.telemetry_protocol_v1.accepted);
+        assert_eq!(s.telemetry_protocol_v1.last_valid_t_ms, Some(1000));
+        assert_eq!(s.telemetry_protocol_v1.mismatch_count, 1);
+        assert_eq!(s.messages_relayed, 1);
+    }
+
+    #[test]
+    fn sensory_port_adds_only_protocol_header_to_legacy_shape() {
+        let message = SensoryMsg::Semantic {
+            features: vec![0.1, -0.2],
+            ts_ms: None,
+        };
+        let encoded = encode_sensory_packet(&message).unwrap();
+        let value: serde_json::Value = serde_json::from_str(&encoded).unwrap();
+        let packet: SensoryPacketV1 = serde_json::from_str(&encoded).unwrap();
+
+        assert_eq!(packet.compatibility(), CompatibilityStatus::Current);
+        assert_eq!(value["protocol"]["major"], 1);
+        assert_eq!(value["kind"], "semantic");
+        assert_eq!(value["features"], serde_json::json!([0.1, -0.2]));
+        assert!(value.get("ts_ms").is_none());
     }
 
     #[tokio::test]

@@ -21,6 +21,7 @@ pub mod astrid_shadow;
 pub mod attractor_atlas;
 pub mod audio;
 pub mod authority_gate;
+pub mod authority_types;
 pub mod autonomous;
 pub mod autoresearch;
 pub mod being_memory;

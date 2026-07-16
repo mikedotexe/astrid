@@ -1,0 +1,15 @@
+error[E0308]: mismatched types
+  --> tests/ui/pending_cannot_dispatch.rs:11:45
+   |
+11 |     let _ = dispatch_mode_release_microdose(pending, tx);
+   |             ------------------------------- ^^^^^^^ expected `LiveExecutable<ModeReleaseMicrodose>`, found `ApprovalPending<ModeReleaseMicrodose>`
+   |             |
+   |             arguments to this function are incorrect
+   |
+   = note: expected struct `LiveExecutable<ModeReleaseMicrodose>`
+              found struct `ApprovalPending<ModeReleaseMicrodose>`
+note: function defined here
+  --> src/authority_types.rs
+   |
+   | pub fn dispatch_mode_release_microdose(
+   |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
