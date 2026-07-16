@@ -79,6 +79,46 @@ fn render_astrid_journal_document(
     )
 }
 
+fn write_collision_safe_journal_document(
+    journal_dir: &Path,
+    prefix: &str,
+    ts: &str,
+    document: &str,
+) -> std::io::Result<PathBuf> {
+    let base = journal_dir.join(format!("{prefix}_{ts}.txt"));
+    let candidates = std::iter::once(base).chain(
+        (1_u16..=1024).map(|collision| {
+            journal_dir.join(format!("{prefix}_collision_{collision}_{ts}.txt"))
+        }),
+    );
+
+    for path in candidates {
+        match std::fs::OpenOptions::new()
+            .write(true)
+            .create_new(true)
+            .open(&path)
+        {
+            Ok(mut file) => {
+                if let Err(error) = std::io::Write::write_all(&mut file, document.as_bytes())
+                    .and_then(|()| file.sync_all())
+                {
+                    drop(file);
+                    let _ = std::fs::remove_file(&path);
+                    return Err(error);
+                }
+                return Ok(path);
+            },
+            Err(error) if error.kind() == std::io::ErrorKind::AlreadyExists => {},
+            Err(error) => return Err(error),
+        }
+    }
+
+    Err(std::io::Error::new(
+        std::io::ErrorKind::AlreadyExists,
+        format!("journal collision budget exhausted for {prefix}_{ts}.txt"),
+    ))
+}
+
 /// Save Astrid's response to her own journal.
 fn save_astrid_journal(text: &str, mode: &str, fill_pct: f32) {
     save_astrid_journal_with_provenance(text, mode, fill_pct, None);
@@ -118,9 +158,19 @@ fn save_astrid_journal_with_provenance(
         "regulator_audit" => "regulator_audit",
         _ => "astrid", // dialogue_live, dialogue, mirror, etc.
     };
-    let path = journal_dir.join(format!("{prefix}_{ts}.txt"));
     let document = render_astrid_journal_document(text, mode, fill_pct, &ts, provenance);
-    let _ = std::fs::write(&path, document);
+    let path = match write_collision_safe_journal_document(&journal_dir, prefix, &ts, &document) {
+        Ok(path) => Some(path),
+        Err(error) => {
+            warn!(
+                error = %error,
+                prefix,
+                timestamp = ts,
+                "failed to persist collision-safe Astrid journal"
+            );
+            None
+        },
+    };
     if let Err(error) = managed_dir::compact_text_directory(&journal_dir) {
         warn!(
             error = %error,
@@ -128,7 +178,7 @@ fn save_astrid_journal_with_provenance(
             "failed to compact Astrid journal directory"
         );
     }
-    record_voice_health_v1(mode, fill_pct, Some(&path));
+    record_voice_health_v1(mode, fill_pct, path.as_deref());
 }
 
 fn record_voice_health_v1(mode: &str, fill_pct: f32, latest_journal_path: Option<&Path>) {

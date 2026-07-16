@@ -91,6 +91,33 @@ mod tests {
     }
 
     #[test]
+    fn same_second_journals_are_preserved_with_timestamp_compatible_names() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        let first = write_collision_safe_journal_document(
+            dir.path(),
+            "astrid",
+            "1784235174",
+            "first response\n",
+        )
+        .expect("first journal");
+        let second = write_collision_safe_journal_document(
+            dir.path(),
+            "astrid",
+            "1784235174",
+            "action receipt\n",
+        )
+        .expect("collision journal");
+
+        assert_eq!(first.file_name().and_then(|name| name.to_str()), Some("astrid_1784235174.txt"));
+        assert_eq!(
+            second.file_name().and_then(|name| name.to_str()),
+            Some("astrid_collision_1_1784235174.txt")
+        );
+        assert_eq!(std::fs::read_to_string(first).expect("first body"), "first response\n");
+        assert_eq!(std::fs::read_to_string(second).expect("second body"), "action receipt\n");
+    }
+
+    #[test]
     fn mirror_journal_preserves_peer_body_and_names_minime_authorship() {
         let provenance =
             AstridJournalProvenanceV1::minime_mirror("moment_1784230000.txt");
