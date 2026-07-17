@@ -24,6 +24,10 @@ mod tests {
         assert!(rendered.starts_with(UNKNOWN_WITNESS_SELF_OTHER_DISTINCTION_V1));
         assert!(rendered.ends_with("\nlegacy spectral summary"));
         assert!(rendered.contains("classification=unknown"));
+        assert!(rendered.contains("composition=unknown"));
+        assert!(rendered.contains("weighting=unmeasured"));
+        assert!(rendered.contains("context_anchors=unknown"));
+        assert!(rendered.contains("lineage_edges=0"));
         assert!(rendered.contains("selected_mode=dialogue"));
         assert!(rendered.contains("astrid_authored_address_using_mixed_context"));
         assert!(rendered.contains("mixed_composition_allowed_without_source_collapse"));
@@ -63,6 +67,8 @@ mod tests {
 
         assert!(rendered.starts_with(UNKNOWN_WITNESS_SELF_OTHER_DISTINCTION_V1));
         assert!(rendered.contains("selected_mode=dialogue"));
+        assert!(rendered.contains("weighting=unmeasured"));
+        assert!(rendered.contains("lineage_edges=0"));
         assert!(rendered.contains("mixed_composition_allowed_without_source_collapse"));
         assert!(rendered.contains("no_routing_ranking_dispatch_gain_or_control"));
         assert!(rendered.ends_with("\nlegacy long-form spectral interpretation"));

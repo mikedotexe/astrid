@@ -1,4 +1,4 @@
-const UNKNOWN_WITNESS_SELF_OTHER_DISTINCTION_V1: &str = "[witness_self_other_distinction_v1: classification=unknown; minime_observed=unknown; bridge_derived=unknown; astrid_authored=unknown; boundary=provenance_only_no_routing_ranking_dispatch_gain_or_control; authority=read_only_context]";
+const UNKNOWN_WITNESS_SELF_OTHER_DISTINCTION_V1: &str = "[witness_self_other_distinction_v1: classification=unknown; minime_observed=unknown; bridge_derived=unknown; astrid_authored=unknown; composition=unknown; weighting=unmeasured; context_anchors=unknown; lineage_edges=0; boundary=provenance_only_no_routing_ranking_dispatch_gain_or_control; authority=read_only_context]";
 
 fn prepend_dialogue_witness_distinction_v1(
     spectral_summary: String,

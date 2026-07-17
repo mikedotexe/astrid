@@ -4,7 +4,10 @@ use astrid_minime_protocol::{CompatibilityStatus, EigenPacketV1};
 use serde_json::Value;
 use sha2::{Digest, Sha256};
 
-use super::{MinimeObservationV1, ProvenanceOriginV1, ProvenanceRefV1, WireReceiptV1};
+use super::{
+    MinimeObservationV1, ProvenanceInfluenceTypeV1, ProvenanceOriginV1, ProvenanceRefV1,
+    WireReceiptV1,
+};
 use crate::types::SpectralTelemetry;
 
 pub(crate) struct DecodedTelemetryV1 {
@@ -69,6 +72,7 @@ pub(crate) fn decode_telemetry_v1(data: &[u8]) -> Result<DecodedTelemetryV1, ser
         vec![],
         packet.t_ms,
         field_paths.into_iter().collect(),
+        vec![ProvenanceInfluenceTypeV1::RegulatoryStateObserved],
     );
     let wire_receipt = WireReceiptV1::new(
         data.len(),

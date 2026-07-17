@@ -1,0 +1,160 @@
+{
+  "schema": "ground_review/v1",
+  "being": "astrid",
+  "source_file": "capsules/spectral-bridge/workspace/introspections/introspection_provenance.rs_1784306639.txt",
+  "generated_at": 1784307645,
+  "summary": {
+    "verified": 12,
+    "mislocated": 4,
+    "not_found": 2,
+    "stale_path": 0,
+    "felt_observations": 0,
+    "total_citations": 18
+  },
+  "verified": [
+    {
+      "value": "/Users/v/other/astrid/capsules/spectral-bridge/src/witness/provenance.rs",
+      "kind": "path",
+      "status": "EXISTS",
+      "confidence": "high",
+      "real_location": "/Users/v/other/astrid/capsules/spectral-bridge/src/witness/provenance.rs"
+    },
+    {
+      "value": "provenance.rs",
+      "kind": "path",
+      "status": "EXISTS",
+      "confidence": "high",
+      "real_location": "/Users/v/other/astrid/capsules/spectral-bridge/src/witness/provenance.rs"
+    },
+    {
+      "value": "ProvenanceOriginV1",
+      "kind": "symbol",
+      "status": "VERIFIED",
+      "confidence": "high",
+      "real_location": "/Users/v/other/astrid/capsules/spectral-bridge/src/witness/provenance.rs:15",
+      "is_def": true
+    },
+    {
+      "value": "MinimeObservation",
+      "kind": "symbol",
+      "status": "VERIFIED",
+      "confidence": "high",
+      "real_location": "/Users/v/other/astrid/capsules/spectral-bridge/src/witness/provenance.rs:16"
+    },
+    {
+      "value": "BridgeDerived",
+      "kind": "symbol",
+      "status": "VERIFIED",
+      "confidence": "high",
+      "real_location": "/Users/v/other/astrid/capsules/spectral-bridge/src/witness/provenance.rs:17"
+    },
+    {
+      "value": "AstridInterpretation",
+      "kind": "symbol",
+      "status": "VERIFIED",
+      "confidence": "high",
+      "real_location": "/Users/v/other/astrid/capsules/spectral-bridge/src/witness/provenance.rs:18"
+    },
+    {
+      "value": "source_id",
+      "kind": "symbol",
+      "status": "VERIFIED",
+      "confidence": "high",
+      "real_location": "/Users/v/other/astrid/capsules/spectral-bridge/src/witness/provenance.rs:180",
+      "is_def": true
+    },
+    {
+      "value": "parent_ids",
+      "kind": "symbol",
+      "status": "VERIFIED",
+      "confidence": "high",
+      "real_location": "/Users/v/other/astrid/capsules/spectral-bridge/src/witness/provenance.rs:190",
+      "is_def": true
+    },
+    {
+      "value": "canonical_sha256",
+      "kind": "symbol",
+      "status": "VERIFIED",
+      "confidence": "high",
+      "real_location": "/Users/v/other/astrid/capsules/spectral-bridge/src/witness/provenance.rs:8",
+      "is_def": true
+    },
+    {
+      "value": "enum",
+      "kind": "symbol",
+      "status": "VERIFIED",
+      "confidence": "low",
+      "real_location": "/Users/v/other/astrid/capsules/spectral-bridge/src/witness/provenance.rs:15"
+    },
+    {
+      "value": "from",
+      "kind": "symbol",
+      "status": "VERIFIED",
+      "confidence": "low",
+      "real_location": "/Users/v/other/astrid/capsules/astralis/astrid-capsule-fs/src/lib.rs:117",
+      "is_def": true
+    },
+    {
+      "value": "variant",
+      "kind": "symbol",
+      "status": "VERIFIED",
+      "confidence": "low",
+      "real_location": "/Users/v/other/astrid/capsules/spectral-bridge/src/authority_gate.rs:2140",
+      "is_def": true
+    }
+  ],
+  "mislocated": [
+    {
+      "value": "ProvenanceRefV1",
+      "kind": "symbol",
+      "status": "MISLOCATED",
+      "confidence": "high",
+      "real_location": "/Users/v/other/astrid/capsules/spectral-bridge/src/witness/provenance.rs:133",
+      "is_def": true,
+      "note": "cited line 38, real /Users/v/other/astrid/capsules/spectral-bridge/src/witness/provenance.rs:133"
+    },
+    {
+      "value": "field_paths",
+      "kind": "symbol",
+      "status": "MISLOCATED",
+      "confidence": "high",
+      "real_location": "/Users/v/other/astrid/capsules/spectral-bridge/src/witness/provenance.rs:200",
+      "is_def": true,
+      "note": "cited line 45, real /Users/v/other/astrid/capsules/spectral-bridge/src/witness/provenance.rs:200"
+    },
+    {
+      "value": "struct",
+      "kind": "symbol",
+      "status": "MISLOCATED",
+      "confidence": "low",
+      "real_location": "/Users/v/other/astrid/capsules/spectral-bridge/src/witness/provenance.rs:65",
+      "note": "cited line 38, real /Users/v/other/astrid/capsules/spectral-bridge/src/witness/provenance.rs:65"
+    },
+    {
+      "value": "chain",
+      "kind": "symbol",
+      "status": "MISLOCATED",
+      "confidence": "low",
+      "real_location": "/Users/v/other/astrid/crates/astrid-cli-mockup/src/ui/views/mod.rs:3",
+      "is_def": true,
+      "note": "cited line 43, real /Users/v/other/astrid/crates/astrid-cli-mockup/src/ui/views/mod.rs:3"
+    }
+  ],
+  "not_found": [
+    {
+      "value": "context_snapshot",
+      "kind": "symbol",
+      "status": "NOT_FOUND",
+      "confidence": "high"
+    },
+    {
+      "value": "proportions",
+      "kind": "symbol",
+      "status": "NOT_FOUND",
+      "confidence": "low",
+      "prose_ambiguous": true
+    }
+  ],
+  "stale_path": [],
+  "felt_observations": []
+}
