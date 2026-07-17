@@ -3218,6 +3218,44 @@ pub fn spawn_autonomous_loop(
                         continue;
                     }
 
+                    let mut signal_shadow = begin_signal_shadow_v1(
+                        conv.exchange_count,
+                        telemetry.t_ms,
+                        &response_text,
+                    );
+                    if !should_send {
+                        let root = signal_root_v1(&signal_shadow);
+                        let safety = record_signal_json_v1(
+                            &mut signal_shadow,
+                            root.into_iter().collect(),
+                            SignalStageKindV1::SafetyReview,
+                            SignalRelationV1::SafetyDecision,
+                            SignalEffectV1::Blocked,
+                            SignalOwnershipDomainV1::BridgeSafety,
+                            &json!({
+                                "decision": "outbound_suspended",
+                                "source": "bridge_safety_level",
+                            }),
+                            std::collections::BTreeMap::from([
+                                ("dispatch_allowed".to_string(), json!(false)),
+                                ("sensory_payload_mutated".to_string(), json!(false)),
+                            ]),
+                        );
+                        let _ = record_signal_json_v1(
+                            &mut signal_shadow,
+                            safety.into_iter().collect(),
+                            SignalStageKindV1::Blocked,
+                            SignalRelationV1::DispatchOutcome,
+                            SignalEffectV1::Blocked,
+                            SignalOwnershipDomainV1::BridgeDispatch,
+                            &json!({"outcome": "blocked_before_chunking"}),
+                            std::collections::BTreeMap::from([(
+                                "dispatch_attempted".to_string(),
+                                json!(false),
+                            )]),
+                        );
+                    }
+
                     let mut semantic_chunk_sent_for_review = false;
                     let mut codec_signature_dims_for_review = None;
                     let mut codec_signature_rms_for_review = None;
@@ -3399,11 +3437,47 @@ pub fn spawn_autonomous_loop(
                         let mut exchange_codec_signature_count: u32 = 0;
                         let mut sent_semantic_chunk = false;
                         let mut sent_pressure_control = false;
+                        let mut last_signal_terminal: Option<SignalStageHandleV1> = None;
                         for (chunk_idx, chunk_text) in chunks.iter().enumerate() {
                             // Check safety between chunks — drop remaining if escalated.
                             if chunk_idx > 0 {
                                 let safety = { state.read().await.safety_level };
                                 if matches!(safety, crate::types::SafetyLevel::Orange | crate::types::SafetyLevel::Red) {
+                                    let parent = last_signal_terminal
+                                        .clone()
+                                        .or_else(|| signal_root_v1(&signal_shadow));
+                                    let safety_stage = record_signal_json_v1(
+                                        &mut signal_shadow,
+                                        parent.into_iter().collect(),
+                                        SignalStageKindV1::SafetyReview,
+                                        SignalRelationV1::SafetyDecision,
+                                        SignalEffectV1::Blocked,
+                                        SignalOwnershipDomainV1::BridgeSafety,
+                                        &json!({
+                                            "decision": "drop_remaining_chunks",
+                                            "safety_level": format!("{safety:?}").to_lowercase(),
+                                        }),
+                                        std::collections::BTreeMap::from([
+                                            ("dispatch_allowed".to_string(), json!(false)),
+                                            (
+                                                "remaining_chunk_count".to_string(),
+                                                json!(chunk_total.saturating_sub(chunk_idx as u32)),
+                                            ),
+                                        ]),
+                                    );
+                                    let _ = record_signal_json_v1(
+                                        &mut signal_shadow,
+                                        safety_stage.into_iter().collect(),
+                                        SignalStageKindV1::Blocked,
+                                        SignalRelationV1::DispatchOutcome,
+                                        SignalEffectV1::Blocked,
+                                        SignalOwnershipDomainV1::BridgeDispatch,
+                                        &json!({"outcome": "remaining_chunks_dropped"}),
+                                        std::collections::BTreeMap::from([(
+                                            "sensory_send_attempted".to_string(),
+                                            json!(false),
+                                        )]),
+                                    );
                                     warn!(
                                         "safety escalated to {safety:?} — dropping {}/{chunk_total} remaining chunks",
                                         chunk_total - chunk_idx as u32
@@ -3412,6 +3486,23 @@ pub fn spawn_autonomous_loop(
                                 }
                                 tokio::time::sleep(chunk_interval).await;
                             }
+
+                            let root_stage = signal_root_v1(&signal_shadow);
+                            let mut signal_stage = record_signal_text_v1(
+                                &mut signal_shadow,
+                                root_stage,
+                                SignalStageKindV1::Chunked,
+                                SignalRelationV1::ExactTransformation,
+                                SignalEffectV1::Produced,
+                                SignalOwnershipDomainV1::BridgeCodec,
+                                chunk_text,
+                                std::collections::BTreeMap::from([
+                                    ("chunk_index".to_string(), json!(chunk_idx)),
+                                    ("chunk_total".to_string(), json!(chunk_total)),
+                                    ("chunk_bytes".to_string(), json!(chunk_text.len())),
+                                    ("raw_response_prose_persisted".to_string(), json!(false)),
+                                ]),
+                            );
 
                             // Per-chunk encoding (fresh character/word/sentence/emotional
                             // stats, but shared embedding and no freq_window/history update).
@@ -3425,14 +3516,58 @@ pub fn spawn_autonomous_loop(
                                 full_embed.as_deref(), // shared embedding
                                 Some(fill),
                             );
+                            signal_stage = record_signal_vector_v1(
+                                &mut signal_shadow,
+                                signal_stage,
+                                SignalStageKindV1::Encoded,
+                                SignalEffectV1::Produced,
+                                SignalOwnershipDomainV1::BridgeCodec,
+                                &features,
+                                std::collections::BTreeMap::from([(
+                                    "embedding_available".to_string(),
+                                    json!(full_embed.is_some()),
+                                )]),
+                            );
 
                             // Apply shared narrative arc.
                             for (i, &val) in narrative_arc.iter().enumerate() {
                                 features[40 + i] = val;
                             }
+                            signal_stage = record_signal_vector_v1(
+                                &mut signal_shadow,
+                                signal_stage,
+                                SignalStageKindV1::Narrative,
+                                if narrative_arc.iter().any(|value| value.abs() > f32::EPSILON) {
+                                    SignalEffectV1::Applied
+                                } else {
+                                    SignalEffectV1::NotApplied
+                                },
+                                SignalOwnershipDomainV1::BridgeCodec,
+                                &features,
+                                std::collections::BTreeMap::from([(
+                                    "narrative_arc_available".to_string(),
+                                    json!(
+                                        narrative_arc
+                                            .iter()
+                                            .any(|value| value.abs() > f32::EPSILON)
+                                    ),
+                                )]),
+                            );
 
                             let feedback_overflow_report =
                                 apply_spectral_feedback_with_report(&mut features, Some(&telemetry));
+                            signal_stage = record_signal_vector_v1(
+                                &mut signal_shadow,
+                                signal_stage,
+                                SignalStageKindV1::Feedback,
+                                SignalEffectV1::Applied,
+                                SignalOwnershipDomainV1::BridgeCodec,
+                                &features,
+                                std::collections::BTreeMap::from([(
+                                    "overflow_report_available".to_string(),
+                                    json!(feedback_overflow_report.is_some()),
+                                )]),
+                            );
 
                             // Breathing: phase advances per chunk for natural progression.
                             {
@@ -3474,6 +3609,18 @@ pub fn spawn_autonomous_loop(
                                     features[27] += fp.v1_rotation_delta * 0.3;
                                 }
                             }
+                            signal_stage = record_signal_vector_v1(
+                                &mut signal_shadow,
+                                signal_stage,
+                                SignalStageKindV1::Breathing,
+                                SignalEffectV1::Applied,
+                                SignalOwnershipDomainV1::BridgeCodec,
+                                &features,
+                                std::collections::BTreeMap::from([(
+                                    "breathing_coupled".to_string(),
+                                    json!(conv.breathing_coupled),
+                                )]),
+                            );
 
                             // Introspective resonance (shared across chunks).
                             if let Some(ref resonance) = introspective_resonance {
@@ -3481,11 +3628,43 @@ pub fn spawn_autonomous_loop(
                                     *dst = *dst * 0.7 + *src * 0.3;
                                 }
                             }
+                            signal_stage = record_signal_vector_v1(
+                                &mut signal_shadow,
+                                signal_stage,
+                                SignalStageKindV1::Resonance,
+                                if introspective_resonance.is_some() {
+                                    SignalEffectV1::Applied
+                                } else {
+                                    SignalEffectV1::NotApplied
+                                },
+                                SignalOwnershipDomainV1::BridgeCodec,
+                                &features,
+                                std::collections::BTreeMap::from([(
+                                    "resonance_available".to_string(),
+                                    json!(introspective_resonance.is_some()),
+                                )]),
+                            );
 
                             // Visual blend (shared across chunks).
                             if let Some(ref vf) = visual_feats {
                                 crate::codec::blend_visual_into_semantic(&mut features, vf, 0.30);
                             }
+                            signal_stage = record_signal_vector_v1(
+                                &mut signal_shadow,
+                                signal_stage,
+                                SignalStageKindV1::Visual,
+                                if visual_feats.is_some() {
+                                    SignalEffectV1::Applied
+                                } else {
+                                    SignalEffectV1::NotApplied
+                                },
+                                SignalOwnershipDomainV1::BridgeCodec,
+                                &features,
+                                std::collections::BTreeMap::from([(
+                                    "visual_features_available".to_string(),
+                                    json!(visual_feats.is_some()),
+                                )]),
+                            );
 
                             // Delta encoding: first chunk uses previous exchange's features,
                             // subsequent chunks use the preceding chunk. This captures
@@ -3497,14 +3676,56 @@ pub fn spawn_autonomous_loop(
                                         *feat += 0.3 * delta;
                                     }
                                 }
+                            let delta_applied = conv
+                                .last_codec_features
+                                .as_ref()
+                                .is_some_and(|previous| previous.len() == features.len());
+                            signal_stage = record_signal_vector_v1(
+                                &mut signal_shadow,
+                                signal_stage,
+                                SignalStageKindV1::Delta,
+                                if delta_applied {
+                                    SignalEffectV1::Applied
+                                } else {
+                                    SignalEffectV1::NotApplied
+                                },
+                                SignalOwnershipDomainV1::BridgeCodec,
+                                &features,
+                                std::collections::BTreeMap::from([(
+                                    "previous_vector_available".to_string(),
+                                    json!(delta_applied),
+                                )]),
+                            );
                             let _hebbian_weights =
                                 conv.hebbian_codec.apply_to_features(&mut features, &conv.codec_weights);
+                            signal_stage = record_signal_vector_v1(
+                                &mut signal_shadow,
+                                signal_stage,
+                                SignalStageKindV1::Hebbian,
+                                SignalEffectV1::Applied,
+                                SignalOwnershipDomainV1::BridgeCodec,
+                                &features,
+                                std::collections::BTreeMap::new(),
+                            );
                             let candidate_cross_spectral_friction =
                                 cross_spectral_friction_review_v1(
                                     chunk_text,
                                     &features,
                                     Some(&telemetry),
                                 );
+                            let friction_stage = record_signal_json_v1(
+                                &mut signal_shadow,
+                                signal_stage.clone().into_iter().collect(),
+                                SignalStageKindV1::FrictionReview,
+                                SignalRelationV1::ExactReview,
+                                SignalEffectV1::Reviewed,
+                                SignalOwnershipDomainV1::BridgeEvidence,
+                                &candidate_cross_spectral_friction,
+                                std::collections::BTreeMap::from([(
+                                    "observational_only".to_string(),
+                                    json!(true),
+                                )]),
+                            );
 
                             // Dimension utilization report (first and last chunk only).
                             if chunk_idx == 0 || chunk_idx == chunks.len() - 1 {
@@ -3545,6 +3766,41 @@ pub fn spawn_autonomous_loop(
                             if let Err(reason) =
                                 rescue_policy::prepare_semantic_write(&mut msg, &write_context)
                             {
+                                let safety_stage = record_signal_json_v1(
+                                    &mut signal_shadow,
+                                    signal_stage.clone().into_iter().collect(),
+                                    SignalStageKindV1::SafetyReview,
+                                    SignalRelationV1::SafetyDecision,
+                                    SignalEffectV1::Blocked,
+                                    SignalOwnershipDomainV1::BridgeSafety,
+                                    &json!({
+                                        "decision": "blocked",
+                                        "reason_sha256": format!(
+                                            "{:x}",
+                                            sha2::Sha256::digest(reason.as_bytes())
+                                        ),
+                                    }),
+                                    std::collections::BTreeMap::from([
+                                        ("dispatch_allowed".to_string(), json!(false)),
+                                        (
+                                            "friction_review_linked".to_string(),
+                                            json!(friction_stage.is_some()),
+                                        ),
+                                    ]),
+                                );
+                                last_signal_terminal = record_signal_json_v1(
+                                    &mut signal_shadow,
+                                    safety_stage.into_iter().collect(),
+                                    SignalStageKindV1::Blocked,
+                                    SignalRelationV1::DispatchOutcome,
+                                    SignalEffectV1::Blocked,
+                                    SignalOwnershipDomainV1::BridgeDispatch,
+                                    &json!({"outcome": "blocked_before_send"}),
+                                    std::collections::BTreeMap::from([(
+                                        "sensory_send_attempted".to_string(),
+                                        json!(false),
+                                    )]),
+                                );
                                 let mut blocked_record = blocked_codec_delivery_record_v1(
                                     conv.exchange_count,
                                     chunk_idx,
@@ -3579,14 +3835,68 @@ pub fn spawn_autonomous_loop(
                                 );
                                 continue;
                             }
+                            let sensory_json_before_spine = serde_json::to_vec(&msg).ok();
+                            let safety_stage = record_signal_json_v1(
+                                &mut signal_shadow,
+                                signal_stage.clone().into_iter().collect(),
+                                SignalStageKindV1::SafetyReview,
+                                SignalRelationV1::SafetyDecision,
+                                SignalEffectV1::Allowed,
+                                SignalOwnershipDomainV1::BridgeSafety,
+                                &msg,
+                                std::collections::BTreeMap::from([
+                                    ("dispatch_allowed".to_string(), json!(true)),
+                                    (
+                                        "friction_review_linked".to_string(),
+                                        json!(friction_stage.is_some()),
+                                    ),
+                                ]),
+                            );
+                            if sensory_json_before_spine != serde_json::to_vec(&msg).ok() {
+                                note_signal_parity_mismatch_v1(&mut signal_shadow);
+                            }
                             let sent_features = match &msg {
                                 SensoryMsg::Semantic { features, .. } => features.clone(),
                                 _ => Vec::new(),
                             };
                             if let Err(e) = sensory_tx.send(msg).await {
+                                let _ = record_signal_json_v1(
+                                    &mut signal_shadow,
+                                    safety_stage.into_iter().collect(),
+                                    SignalStageKindV1::Dispatched,
+                                    SignalRelationV1::DispatchOutcome,
+                                    SignalEffectV1::DispatchFailed,
+                                    SignalOwnershipDomainV1::BridgeDispatch,
+                                    &json!({"outcome": "send_failed"}),
+                                    std::collections::BTreeMap::from([(
+                                        "sensory_payload_changed_by_spine".to_string(),
+                                        json!(false),
+                                    )]),
+                                );
                                 warn!(error = %e, "autonomous loop: failed to send chunk {chunk_idx}");
                                 break;
                             }
+                            let dispatched_stage = record_signal_json_v1(
+                                &mut signal_shadow,
+                                safety_stage.into_iter().collect(),
+                                SignalStageKindV1::Dispatched,
+                                SignalRelationV1::DispatchOutcome,
+                                SignalEffectV1::Dispatched,
+                                SignalOwnershipDomainV1::BridgeDispatch,
+                                &sent_features,
+                                std::collections::BTreeMap::from([
+                                    ("port".to_string(), json!(7879)),
+                                    (
+                                        "sensory_payload_changed_by_spine".to_string(),
+                                        json!(false),
+                                    ),
+                                    ("journey_id_on_wire".to_string(), json!(false)),
+                                ]),
+                            );
+                            register_signal_temporal_window_v1(
+                                &signal_shadow,
+                                dispatched_stage.as_ref(),
+                            );
                             let delivery_fidelity = codec_delivery_fidelity_v1(
                                 feedback_overflow_report.as_ref(),
                                 &sent_features,
@@ -3623,6 +3933,22 @@ pub fn spawn_autonomous_loop(
                                     }));
                             cross_spectral_friction_for_review =
                                 Some(cross_spectral_friction_value.clone());
+                            last_signal_terminal = record_signal_json_v1(
+                                &mut signal_shadow,
+                                dispatched_stage.into_iter().collect(),
+                                SignalStageKindV1::DeliveryEvidence,
+                                SignalRelationV1::DeliveryEvidence,
+                                SignalEffectV1::EvidenceRecorded,
+                                SignalOwnershipDomainV1::BridgeEvidence,
+                                &delivery_fidelity_value,
+                                std::collections::BTreeMap::from([
+                                    (
+                                        "compatibility_projection".to_string(),
+                                        json!("codec_delivery_fidelity_v1"),
+                                    ),
+                                    ("compatibility_projection_changed".to_string(), json!(false)),
+                                ]),
+                            );
                             let safety_now = { state.read().await.safety_level };
                             let pressure = crate::codec::spectral_pressure_controller_v1(
                                 chunk_text,
@@ -3800,6 +4126,7 @@ pub fn spawn_autonomous_loop(
                             }
                         }
                     }
+                    persist_signal_shadow_v1(signal_shadow);
 
                     let mirror_source_fidelity = mirror_source_text.as_deref().map(|source| {
                         mirror_source_fidelity_v1(

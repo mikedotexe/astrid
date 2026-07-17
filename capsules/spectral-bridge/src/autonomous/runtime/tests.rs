@@ -196,6 +196,68 @@ mod tests {
     }
 
     #[test]
+    fn signal_spine_shadow_keeps_sensory_json_byte_identical() {
+        let message = SensoryMsg::Semantic {
+            features: vec![0.125, -0.25, 0.5],
+            ts_ms: Some(42),
+        };
+        let before = serde_json::to_vec(&message).unwrap();
+        assert_eq!(
+            std::str::from_utf8(&before).unwrap(),
+            r#"{"kind":"semantic","features":[0.125,-0.25,0.5],"ts_ms":42}"#
+        );
+
+        let mut shadow = begin_signal_shadow_v1(7, 42, "authored but never persisted");
+        let root = signal_root_v1(&shadow);
+        let stage = record_signal_json_v1(
+            &mut shadow,
+            root.into_iter().collect(),
+            SignalStageKindV1::SafetyReview,
+            SignalRelationV1::SafetyDecision,
+            SignalEffectV1::Allowed,
+            SignalOwnershipDomainV1::BridgeSafety,
+            &message,
+            std::collections::BTreeMap::new(),
+        );
+
+        assert!(stage.is_some());
+        assert_eq!(serde_json::to_vec(&message).unwrap(), before);
+    }
+
+    #[test]
+    fn signal_spine_shadow_keeps_vector_and_delivery_projection_byte_identical() {
+        let features = vec![0.125_f32; 48];
+        let vector_before = features.clone();
+        let delivery = codec_delivery_fidelity_v1(None, &features);
+        let delivery_before = serde_json::to_vec(&delivery).unwrap();
+        let mut shadow = begin_signal_shadow_v1(8, 43, "bounded delivery evidence");
+        let root = signal_root_v1(&shadow);
+        let encoded = record_signal_vector_v1(
+            &mut shadow,
+            root,
+            SignalStageKindV1::Encoded,
+            SignalEffectV1::Produced,
+            SignalOwnershipDomainV1::BridgeCodec,
+            &features,
+            std::collections::BTreeMap::new(),
+        );
+        let recorded = record_signal_json_v1(
+            &mut shadow,
+            encoded.into_iter().collect(),
+            SignalStageKindV1::DeliveryEvidence,
+            SignalRelationV1::DeliveryEvidence,
+            SignalEffectV1::EvidenceRecorded,
+            SignalOwnershipDomainV1::BridgeEvidence,
+            &delivery,
+            std::collections::BTreeMap::new(),
+        );
+
+        assert!(recorded.is_some());
+        assert_eq!(features, vector_before);
+        assert_eq!(serde_json::to_vec(&delivery).unwrap(), delivery_before);
+    }
+
+    #[test]
     fn blocked_codec_delivery_receipt_never_claims_an_actual_sent_vector() {
         let features =
             encode_text("A blocked candidate still carries read-only friction evidence.");

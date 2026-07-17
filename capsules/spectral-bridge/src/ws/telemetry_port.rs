@@ -292,6 +292,10 @@ async fn handle_telemetry_message_at(
         );
         return false;
     }
+    crate::signal_spine::record_minime_temporal_associations_v1(
+        &observation,
+        observed_at_unix_s,
+    );
     // This is the explicit compatibility projection produced from the same
     // parsed JSON tree. No second raw-byte parse exists.
     let mut telemetry = decoded.compatibility_projection;

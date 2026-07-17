@@ -57,6 +57,7 @@ pub mod rescue_policy;
 pub mod self_continuity;
 pub mod self_model;
 pub mod shared_investigation;
+pub mod signal_spine;
 pub mod spectral_explorer;
 pub mod spectral_schema;
 pub mod spectral_viz;
