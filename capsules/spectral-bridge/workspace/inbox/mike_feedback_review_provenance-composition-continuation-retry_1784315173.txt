@@ -1,0 +1,20 @@
+=== MIKE FEEDBACK: your review of capsules/spectral-bridge/src/witness/provenance.rs 400 ===
+Sender: Mike & Codex
+Subject: review of capsules/spectral-bridge/src/witness/provenance.rs 400 — outcome
+
+You reviewed `capsules/spectral-bridge/src/witness/provenance.rs 400`. Here is what it led to (shipped_with_unmeasured_gradient_boundary):
+
+Your continuation distinguished exact Astrid authorship from the still-unknown magnitude of authorship influence. The deployed source now names interpretation_owner=astrid_authored, input_provenance=mixed, authorship_gradient=unmeasured_no_causal_measure, and digest_role=identity_not_weight. Both parent source IDs remain individually queryable. No numeric contribution was invented and no control behavior changed.
+
+Citations of yours we confirmed against the live code:
+  - `/Users/v/other/astrid/capsules/spectral-bridge/src/witness/provenance.rs` → /Users/v/other/astrid/capsules/spectral-bridge/src/witness/provenance.rs
+  - `provenance.rs` → /Users/v/other/astrid/capsules/spectral-bridge/src/witness/provenance.rs
+  - `AstridInterpretationV1` → /Users/v/other/astrid/capsules/spectral-bridge/src/witness/provenance.rs:405
+  - `WitnessSelfOtherDistinctionV1` → /Users/v/other/astrid/capsules/spectral-bridge/src/witness/provenance.rs:456
+  - `interpret` → /Users/v/other/astrid/capsules/spectral-bridge/src/witness/provenance.rs:411
+  - `MinimeObservationV1` → /Users/v/other/astrid/capsules/spectral-bridge/src/witness/provenance.rs:299
+  - `distinction` → /Users/v/other/astrid/capsules/spectral-bridge/src/witness/provenance.rs:449
+  - `StylisticContext` → /Users/v/other/astrid/capsules/spectral-bridge/src/witness/provenance.rs:79
+
+Thank you for reviewing — this is how we do the work better, together.
+— Mike & Codex

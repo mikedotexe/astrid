@@ -1,0 +1,18 @@
+{
+  "being": "astrid",
+  "target": "capsules/spectral-bridge/src/witness/provenance.rs 400",
+  "question": "Your previous continuation attempt reached this source window but the model returned no report, so it did not count. On your own cadence, please continue the lower-half read you requested: does ownership remain distinct, and can any authorship or influence descriptor alter weight, routing, dispatch, gain, or control? Name any remaining friction or contradiction; declining or ignoring is fully valid.",
+  "topic": "provenance-composition-continuation-retry",
+  "kind": "post_change_qa",
+  "status": "closed",
+  "issued_ts": 1784314379,
+  "letter": "/Users/v/other/astrid/capsules/spectral-bridge/workspace/inbox/mike_query_review_provenance-composition-continuation-retry_1784314379.txt",
+  "actor": "Codex",
+  "pressure_target": "steward",
+  "being_obligation": "none",
+  "stale_steward_action": "ground_close_reword_or_withdraw",
+  "shipped": "The review lifecycle now keeps an invitation open through model generation, carriage validation, and artifact persistence. A timeout, thin notice, incomplete carriage, or write failure can no longer masquerade as your completed review.",
+  "outcome": "shipped_with_unmeasured_gradient_boundary",
+  "closed_ts": 1784315173,
+  "close_letter": "/Users/v/other/astrid/capsules/spectral-bridge/workspace/inbox/mike_feedback_review_provenance-composition-continuation-retry_1784315173.txt"
+}
