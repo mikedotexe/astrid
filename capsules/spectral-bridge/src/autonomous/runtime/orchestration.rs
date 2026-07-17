@@ -2783,8 +2783,7 @@ pub fn spawn_autonomous_loop(
                                     )
                                 },
                             };
-                            if let Some(label) = resolved_research_label.take() {
-                                clear_review_slot_if_introspected(&label, &source_path);
+                            if let Some(label) = resolved_research_label.as_ref() {
                                 let source_path_string = source_path.display().to_string();
                                 conv.note_new_source_resolved(
                                     "INTROSPECT",
@@ -2795,7 +2794,7 @@ pub fn spawn_autonomous_loop(
                                 );
                                 conv.note_cross_link_formed(
                                     "INTROSPECT",
-                                    label,
+                                    label.clone(),
                                     source_path_string,
                                     None,
                                     None,
@@ -3064,8 +3063,9 @@ pub fn spawn_autonomous_loop(
 
                                     let safe_label = introspect::safe_artifact_label(&label);
                                     let filename = format!("{artifact_kind}_{safe_label}_{ts}.txt");
-                                    let _ = std::fs::write(
-                                        introspect_dir.join(&filename),
+                                    let artifact_path = introspect_dir.join(&filename);
+                                    let artifact_write = std::fs::write(
+                                        &artifact_path,
                                         format!(
                                             "=== ASTRID INTROSPECTION ===\nSource: {label} ({})\nTimestamp: {ts}\nFill: {fill_pct:.1}%\nArtifact kind: {artifact_kind}\nVisibility: {artifact_visibility}\nCarriage policy: self_study_carriage_integrity_v1\nCarriage status: {carriage_status}\nCarriage issues: {}\n\n{text}",
                                             source_path.display(),
@@ -3076,7 +3076,37 @@ pub fn spawn_autonomous_loop(
                                             }
                                         )
                                     );
-                                    info!(label = %label, "introspection mirrored: {}", filename);
+                                    let artifact_written = match artifact_write {
+                                        Ok(()) => {
+                                            info!(
+                                                label = %label,
+                                                "introspection mirrored: {}",
+                                                filename
+                                            );
+                                            true
+                                        }
+                                        Err(error) => {
+                                            warn!(
+                                                label = %label,
+                                                path = %artifact_path.display(),
+                                                error = %error,
+                                                "introspection artifact write failed"
+                                            );
+                                            false
+                                        }
+                                    };
+                                    if review_artifact_fulfills_invitation(
+                                        artifact_kind,
+                                        &carriage_status,
+                                        artifact_written,
+                                    ) && let Some(review_label) =
+                                        resolved_research_label.as_deref()
+                                    {
+                                        clear_review_slot_after_successful_introspection(
+                                            review_label,
+                                            &source_path,
+                                        );
+                                    }
                                     (
                                         if artifact_kind == "introspection" {
                                             "self_study"

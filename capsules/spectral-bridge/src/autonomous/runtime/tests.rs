@@ -1894,7 +1894,8 @@ NEXT: EXPLORE_RESONANCE_FORECAST (RESIDUE: silted λ4 shimmer)";
         // Regression for the 2026-06-19 muffle: a `review_target` carrying a
         // trailing ` 696` must still match the bare-path INTROSPECT arg, so the
         // anti-stagnation diversity override exempts her review-fulfilling
-        // INTROSPECT (and the slot clears) instead of silently eating it.
+        // INTROSPECT instead of silently eating it. The slot clears later, only
+        // after a complete introspection artifact is persisted.
         let rt = "capsules/spectral-bridge/src/autonomous/next_action/collaboration.rs 696";
         let arg = "capsules/spectral-bridge/src/autonomous/next_action/collaboration.rs";
         let rt_basis = review_target_match_basis(rt);
@@ -1920,6 +1921,35 @@ NEXT: EXPLORE_RESONANCE_FORECAST (RESIDUE: silted λ4 shimmer)";
                 .and_then(|n| n.to_str()),
             arg_base
         );
+    }
+
+    #[test]
+    fn review_invitation_requires_complete_persisted_introspection() {
+        assert!(!review_artifact_fulfills_invitation(
+            "introspection",
+            "complete",
+            false
+        ));
+        assert!(!review_artifact_fulfills_invitation(
+            "thin_introspection_output",
+            "not_applicable",
+            true
+        ));
+        assert!(!review_artifact_fulfills_invitation(
+            "self_study_carriage_notice",
+            "incomplete_carriage",
+            true
+        ));
+        assert!(review_artifact_fulfills_invitation(
+            "introspection",
+            "complete",
+            true
+        ));
+        assert!(review_artifact_fulfills_invitation(
+            "introspection",
+            "complete_after_repair",
+            true
+        ));
     }
 
     #[test]

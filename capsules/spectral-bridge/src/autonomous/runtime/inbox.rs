@@ -312,10 +312,27 @@ fn review_target_match_basis(rt: &str) -> &str {
     trimmed
 }
 
-/// Clear a pending REVIEW invitation when she INTROSPECTs its target (the review
-/// "act"). Tolerant match — canonical introspect-label equality OR the resolved
-/// file's basename matching the invitation's target basename.
-fn clear_review_slot_if_introspected(label: &str, source_path: &std::path::Path) {
+/// A review is fulfilled only by a complete introspection artifact that was
+/// successfully persisted. Source resolution, thin notices, timeouts, and
+/// incomplete carriage are attempts, not completed reviews.
+fn review_artifact_fulfills_invitation(
+    artifact_kind: &str,
+    carriage_status: &str,
+    artifact_written: bool,
+) -> bool {
+    artifact_written
+        && artifact_kind == "introspection"
+        && matches!(carriage_status, "complete" | "complete_after_repair")
+}
+
+/// Clear a pending REVIEW invitation after its target produced a complete,
+/// persisted introspection artifact. Tolerant match — canonical
+/// introspect-label equality OR the resolved file's basename matching the
+/// invitation's target basename.
+fn clear_review_slot_after_successful_introspection(
+    label: &str,
+    source_path: &std::path::Path,
+) {
     let path = bridge_paths().open_steward_query_path();
     let Ok(content) = std::fs::read_to_string(&path) else {
         return;
@@ -338,8 +355,17 @@ fn clear_review_slot_if_introspected(label: &str, source_path: &std::path::Path)
         .and_then(|n| n.to_str());
     let src_base = source_path.file_name().and_then(|n| n.to_str());
     if label_canon == rt_canon || (rt_base.is_some() && rt_base == src_base) {
-        let _ = std::fs::remove_file(&path);
-        info!("⟢ Review invitation fulfilled (INTROSPECT {label}); slot cleared");
+        match std::fs::remove_file(&path) {
+            Ok(()) => info!(
+                "⟢ Review invitation fulfilled by complete persisted INTROSPECT {label}; slot cleared"
+            ),
+            Err(error) => warn!(
+                label,
+                path = %path.display(),
+                error = %error,
+                "complete review artifact persisted, but invitation slot could not be cleared"
+            ),
+        }
     }
 }
 
