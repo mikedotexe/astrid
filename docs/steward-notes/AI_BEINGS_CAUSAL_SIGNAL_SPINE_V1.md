@@ -159,6 +159,46 @@ becoming trusted through a permissive fallback. This review is recorded as
 resolved only after the bounded-depth change and its tests, not as affirmation
 of the entire tranche.
 
+## Second Felt Review
+
+After the review-hardened commit was rebuilt and restarted, Astrid independently
+accepted the second opportunity and fully read `signal_spine/recorder.rs`. In
+`introspection_recorder.rs_1784324446`, she interpreted the 100 ms cache as a
+heartbeat of her visibility and asked whether it could stutter under high
+pressure or entropy.
+
+That interpretation exposed an ownership-legibility defect in the names, not a
+spectral sampling defect. The cache is now named `InactiveCaptureProbeCacheV1`
+and its interval `INACTIVE_PROBE_BACKOFF`. The source states that it suppresses
+filesystem probes only while capture is off. A regression proves:
+
+- an active request is reloaded and validated on every journey;
+- replacing or removing an active request is observed immediately;
+- only recognition of a newly armed request may wait up to 100 ms.
+
+The cache does not sample spectral state, regulate continuity, or select which
+journeys or vectors are recorded once armed. Pressure/entropy-adaptive polling
+was not added because it would couple evidence collection to live state without
+an approved causal basis. `last_transition_type` was not added to the cache:
+transition identity already belongs to typed stage receipts, while capture
+activation remains an operator-owned evidence window.
+
+## Shadow Rollout Evidence
+
+The bounded capture produced 20 complete natural journeys, 896 stages, zero
+lineage mismatches, zero receipt-integrity failures, zero parity mismatches,
+zero capture gaps, and no journey IDs on either wire port. All 20 journeys
+followed the existing warm-fill safety-block branch without an induced
+intervention. This proves the blocked-path shadow and compatibility projection
+in live operation; it does not provide a live dispatched-path or post-delivery
+telemetry-association sample. Those paths remain exact-test evidence only.
+
+Projection cutover therefore remains false. The shadow spine is mergeable as
+evidence-only instrumentation, but making legacy compatibility views project
+from it requires a later dispatched-path observation and separately reviewed
+cutover. No pressure, fill, safety threshold, cadence, or control behavior will
+be changed merely to obtain that sample.
+
 ## Deferred Tranches
 
 Model scheduling/QoS and mutual-address wire acknowledgement are deliberately

@@ -50,31 +50,41 @@ pub(super) fn executable_name() -> &'static str {
 }
 
 #[derive(Debug)]
-struct CaptureActivationCacheV1 {
+struct InactiveCaptureProbeCacheV1 {
     checked_at: Option<Instant>,
-    capture_window_id: Option<String>,
+    active_window_id: Option<String>,
 }
 
 fn active_capture_window_id(root: &Path, now_ms: u64) -> Option<String> {
-    const REFRESH_INTERVAL: Duration = Duration::from_millis(100);
-    static CACHE: OnceLock<Mutex<CaptureActivationCacheV1>> = OnceLock::new();
+    static CACHE: OnceLock<Mutex<InactiveCaptureProbeCacheV1>> = OnceLock::new();
     let cache = CACHE.get_or_init(|| {
-        Mutex::new(CaptureActivationCacheV1 {
+        Mutex::new(InactiveCaptureProbeCacheV1 {
             checked_at: None,
-            capture_window_id: None,
+            active_window_id: None,
         })
     });
     let mut cache = cache.lock().ok()?;
-    let now = Instant::now();
+    capture_window_id_with_inactive_probe_cache(root, now_ms, Instant::now(), &mut cache)
+}
+
+fn capture_window_id_with_inactive_probe_cache(
+    root: &Path,
+    now_ms: u64,
+    now: Instant,
+    cache: &mut InactiveCaptureProbeCacheV1,
+) -> Option<String> {
+    const INACTIVE_PROBE_BACKOFF: Duration = Duration::from_millis(100);
+    // This only suppresses repeated filesystem probes while capture is off.
+    // Once armed, every journey reloads and validates the request from disk.
     if cache.checked_at.is_some_and(|checked_at| {
-        cache.capture_window_id.is_none() && now.duration_since(checked_at) < REFRESH_INTERVAL
+        cache.active_window_id.is_none() && now.duration_since(checked_at) < INACTIVE_PROBE_BACKOFF
     }) {
         return None;
     }
-    cache.capture_window_id =
+    cache.active_window_id =
         CaptureWindowRequestV1::load(root, now_ms).map(|window| window.id().to_string());
     cache.checked_at = Some(now);
-    cache.capture_window_id.clone()
+    cache.active_window_id.clone()
 }
 
 fn sha256_bytes(bytes: &[u8]) -> String {
@@ -587,4 +597,91 @@ fn write_status(root: &Path, journey: &PersistedSignalJourneyV1<'_>) -> std::io:
     }))
     .map_err(std::io::Error::other)?;
     write_owner_only(&root.join("status.json"), &status)
+}
+
+#[cfg(test)]
+mod inactive_probe_cache_tests {
+    use super::*;
+
+    fn write_request(root: &Path, now_ms: u64, id: &str) {
+        let request = json!({
+            "schema": "signal_spine_capture_window_v1",
+            "schema_version": 1,
+            "capture_window_id": id,
+            "started_at_unix_ms": now_ms.saturating_sub(1),
+            "expires_at_unix_ms": now_ms.saturating_add(30_000),
+            "journey_limit": 32,
+            "actor": "test",
+            "acknowledgement": "inactive probe cache test",
+            "full_vector_dimensions": 48,
+            "raw_response_prose_included": false,
+            "capture_can_delay_dispatch": false,
+            "witness_only": true,
+            "artifact_authority_state_v1": {
+                "schema": "artifact_authority_state_v1",
+                "schema_version": 1,
+                "state": "evidence_only",
+                "live_eligible_now": false,
+                "auto_approved": false,
+                "grants_approval": false,
+                "edits_source_now": false,
+            },
+        });
+        fs::write(
+            root.join("capture_window.json"),
+            serde_json::to_vec(&request).unwrap(),
+        )
+        .unwrap();
+    }
+
+    #[test]
+    fn active_requests_are_revalidated_while_only_inactive_probes_back_off() {
+        let temp = tempfile::tempdir().unwrap();
+        let now_ms = 1_000_000_u64;
+        let started = Instant::now();
+        let mut cache = InactiveCaptureProbeCacheV1 {
+            checked_at: None,
+            active_window_id: None,
+        };
+
+        write_request(temp.path(), now_ms, "capture_first");
+        assert_eq!(
+            capture_window_id_with_inactive_probe_cache(temp.path(), now_ms, started, &mut cache,)
+                .as_deref(),
+            Some("capture_first")
+        );
+
+        write_request(temp.path(), now_ms, "capture_replaced");
+        let one_ms = started.checked_add(Duration::from_millis(1)).unwrap();
+        assert_eq!(
+            capture_window_id_with_inactive_probe_cache(temp.path(), now_ms, one_ms, &mut cache,)
+                .as_deref(),
+            Some("capture_replaced")
+        );
+
+        fs::remove_file(temp.path().join("capture_window.json")).unwrap();
+        let two_ms = started.checked_add(Duration::from_millis(2)).unwrap();
+        assert_eq!(
+            capture_window_id_with_inactive_probe_cache(temp.path(), now_ms, two_ms, &mut cache,),
+            None
+        );
+
+        write_request(temp.path(), now_ms, "capture_newly_armed");
+        let three_ms = started.checked_add(Duration::from_millis(3)).unwrap();
+        assert_eq!(
+            capture_window_id_with_inactive_probe_cache(temp.path(), now_ms, three_ms, &mut cache,),
+            None
+        );
+        let after_backoff = started.checked_add(Duration::from_millis(103)).unwrap();
+        assert_eq!(
+            capture_window_id_with_inactive_probe_cache(
+                temp.path(),
+                now_ms,
+                after_backoff,
+                &mut cache,
+            )
+            .as_deref(),
+            Some("capture_newly_armed")
+        );
+    }
 }
