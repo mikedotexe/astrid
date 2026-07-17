@@ -358,7 +358,7 @@ impl ShadowSignalJourneyV1 {
             ),
             measurements,
             None,
-        );
+        )?;
         let trusted_stage = CausalSignalStageV1::new(receipt, ());
         let handle = SignalStageHandleV1::from_receipt(trusted_stage.receipt());
         self.trusted.push(trusted_stage.receipt().clone())?;

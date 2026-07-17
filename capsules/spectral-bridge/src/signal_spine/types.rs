@@ -6,6 +6,8 @@ use sha2::{Digest, Sha256};
 
 use crate::witness::ProvenanceRefV1;
 
+const MAX_MEASUREMENT_NESTING_DEPTH_V1: usize = 32;
+
 fn write_canonical_json(value: &Value, output: &mut String) {
     match value {
         Value::Null => output.push_str("null"),
@@ -43,6 +45,30 @@ fn canonical_sha256(value: &Value) -> String {
     let mut encoded = String::new();
     write_canonical_json(value, &mut encoded);
     format!("{:x}", Sha256::digest(encoded.as_bytes()))
+}
+
+fn validate_measurement_depth(value: &Value) -> Result<(), String> {
+    let mut pending = vec![(value, 0_usize)];
+    while let Some((current, depth)) = pending.pop() {
+        if depth > MAX_MEASUREMENT_NESTING_DEPTH_V1 {
+            return Err(format!(
+                "signal measurement exceeds maximum nesting depth \
+                 {MAX_MEASUREMENT_NESTING_DEPTH_V1}"
+            ));
+        }
+        match current {
+            Value::Array(values) => {
+                let child_depth = depth.saturating_add(1);
+                pending.extend(values.iter().map(|value| (value, child_depth)));
+            },
+            Value::Object(values) => {
+                let child_depth = depth.saturating_add(1);
+                pending.extend(values.values().map(|value| (value, child_depth)));
+            },
+            _ => {},
+        }
+    }
+    Ok(())
 }
 
 fn normalize_measurement_numbers(value: &mut Value) {
@@ -357,11 +383,12 @@ impl SignalStageReceiptV1 {
         temporal_envelope_v1: SignalTemporalEnvelopeV1,
         mut measurements: BTreeMap<String, Value>,
         capture_fixture_ref_v1: Option<SignalCaptureFixtureRefV1>,
-    ) -> Self {
+    ) -> Result<Self, String> {
         // JSON floating-point canonicalization differs subtly across runtimes.
         // Measurements are evidence metadata, so retain exact decimal text
         // while keeping the signed receipt language-independent.
         for value in measurements.values_mut() {
+            validate_measurement_depth(value)?;
             normalize_measurement_numbers(value);
         }
         let mut receipt = Self {
@@ -387,7 +414,7 @@ impl SignalStageReceiptV1 {
             receipt_integrity_sha256: String::new(),
         };
         receipt.receipt_integrity_sha256 = receipt.calculated_integrity_sha256();
-        receipt
+        Ok(receipt)
     }
 
     #[must_use]
@@ -443,7 +470,7 @@ impl SignalStageReceiptV1 {
 mod canonical_tests {
     use serde_json::json;
 
-    use super::canonical_sha256;
+    use super::{MAX_MEASUREMENT_NESTING_DEPTH_V1, canonical_sha256, validate_measurement_depth};
 
     #[test]
     fn canonical_hash_matches_python_projector_fixture() {
@@ -454,6 +481,21 @@ mod canonical_tests {
         assert_eq!(
             canonical_sha256(&fixture),
             "118fe7607c342d93dbffa5bcd0d0410cec4c6e7e39088935c075919d96aae129"
+        );
+    }
+
+    #[test]
+    fn measurement_depth_bound_is_checked_before_recursive_normalization() {
+        let mut at_limit = serde_json::Value::Null;
+        for _ in 0..MAX_MEASUREMENT_NESTING_DEPTH_V1 {
+            at_limit = json!([at_limit]);
+        }
+        assert!(validate_measurement_depth(&at_limit).is_ok());
+
+        let over_limit = json!([at_limit]);
+        assert_eq!(
+            validate_measurement_depth(&over_limit).unwrap_err(),
+            "signal measurement exceeds maximum nesting depth 32"
         );
     }
 }

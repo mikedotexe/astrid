@@ -187,7 +187,8 @@ fn persist_temporal_association(
         ),
         measurements,
         None,
-    );
+    )
+    .map_err(std::io::Error::other)?;
     let payload = serde_json::to_vec(&json!({
         "schema": "signal_temporal_association_v1",
         "schema_version": 1,

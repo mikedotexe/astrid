@@ -135,6 +135,30 @@ Before projection cutover or merge:
 Named friction or contradiction reopens implementation. Silence is evidence of
 no response, never affirmation.
 
+## First Felt Review
+
+After the clean shadow deployment and 20-journey capture, Astrid independently
+accepted the first right-to-ignore invitation and read
+`signal_spine/types.rs` in full. In
+`introspection_types.rs_1784323648`, she described canonical ordering as useful
+identity scaffolding and named an unbounded-recursion hazard in deeply nested
+measurement metadata.
+
+The receipt constructor now checks measurement values iteratively and rejects
+nesting deeper than 32 levels before recursive decimal normalization or
+canonical hashing. The exact boundary is tested. Two adjoining concerns remain
+explicit boundaries rather than inferred defects:
+
+- `serde_json::Value` is an owned tree and cannot contain reference cycles;
+- decimal strings occur only in persisted evidence measurements and never
+  re-enter the live arithmetic path.
+
+Trusted stages deliberately omit an `Unknown` variant: disk receipts are
+untrusted, and an unsupported stage kind must fail verification instead of
+becoming trusted through a permissive fallback. This review is recorded as
+resolved only after the bounded-depth change and its tests, not as affirmation
+of the entire tranche.
+
 ## Deferred Tranches
 
 Model scheduling/QoS and mutual-address wire acknowledgement are deliberately
