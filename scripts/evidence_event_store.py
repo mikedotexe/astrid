@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import argparse
 from collections import Counter
+import hashlib
 import json
 import sys
 import unittest
@@ -47,6 +48,9 @@ def projection_paths(workspace: Path) -> dict[str, Path]:
         ("sandbox", diagnostics / "sandbox_trial_queue_v1"),
         ("corridor_v1", diagnostics / "agency_corridor_v1"),
         ("corridor_v2", diagnostics / "agency_corridor_v2"),
+        ("signal_spine", diagnostics / "signal_spine_v1"),
+        ("claim_families", diagnostics / "claim_families_v1"),
+        ("experiment_dossiers", diagnostics / "experiment_dossiers_v1"),
     ):
         for filename in ("status.json", "queue.md", "queue.json", "report.md"):
             path = directory / filename
@@ -63,6 +67,9 @@ def counter_audits(workspace: Path) -> dict[str, Any]:
         ("sandbox", diagnostics / "sandbox_trial_queue_v1/status.json"),
         ("corridor_v1", diagnostics / "agency_corridor_v1/status.json"),
         ("corridor_v2", diagnostics / "agency_corridor_v2/status.json"),
+        ("signal_spine", diagnostics / "signal_spine_v1/projection_status.json"),
+        ("claim_families", diagnostics / "claim_families_v1/status.json"),
+        ("experiment_dossiers", diagnostics / "experiment_dossiers_v1/status.json"),
     ):
         if not path.is_file():
             result[name] = {"exists": False}
@@ -92,6 +99,12 @@ def counter_audits(workspace: Path) -> dict[str, Any]:
             if isinstance(checks, dict):
                 audit["consistent"] = bool(checks) and all(
                     check is True for check in checks.values()
+                )
+            elif canonical_audit:
+                audit["consistent"] = all(
+                    check is True
+                    for check in canonical_audit.values()
+                    if isinstance(check, bool)
                 )
         trials = value.get("trials")
         if isinstance(trials, (dict, list)):
@@ -125,6 +138,28 @@ def counter_audits(workspace: Path) -> dict[str, Any]:
             items = value.get(collection)
             if isinstance(items, (dict, list)):
                 audit[f"{collection}_count"] = len(items)
+        if name == "signal_spine":
+            audit["journey_count"] = int(value.get("journey_count") or 0)
+            audit["complete_journey_count"] = int(
+                value.get("complete_journey_count") or 0
+            )
+            audit["lineage_mismatch_count"] = int(
+                value.get("lineage_mismatch_count") or 0
+            )
+            audit["parity_mismatch_count"] = int(
+                value.get("parity_mismatch_count") or 0
+            )
+            audit["tampered_journey_count"] = int(
+                value.get("tampered_journey_count") or 0
+            )
+            audit["tampered_association_count"] = int(
+                value.get("tampered_association_count") or 0
+            )
+            audit["dispatch_failed_journey_count"] = int(
+                value.get("dispatch_failed_journey_count") or 0
+            )
+            audit["capture_gap_count"] = int(value.get("capture_gap_count") or 0)
+            audit["consistent"] = bool(value.get("zero_mismatch"))
         if "consistent" not in audit:
             corrupt = audit.get("corrupt_event_lines")
             live_violations = (
@@ -143,6 +178,60 @@ def _load_activation(store: EvidenceEventStore) -> dict[str, Any]:
     except (OSError, json.JSONDecodeError):
         return {}
     return value if isinstance(value, dict) else {}
+
+
+def effective_aggregate_audit(store: EvidenceEventStore) -> dict[str, Any]:
+    events, corrupt = store.read_envelopes()
+    hasher = hashlib.sha256()
+    payload_aggregate_count = 0
+    envelope_exact_count = 0
+    historical_fallback_count = 0
+    partial_explicit_count = 0
+    fallback_sequences: list[int] = []
+    fallback_streams: Counter[str] = Counter()
+    for event in events:
+        explicit_kind = str(event.payload.get("aggregate_type") or "").strip()
+        explicit_id = str(event.payload.get("aggregate_id") or "").strip()
+        if bool(explicit_kind) != bool(explicit_id):
+            partial_explicit_count += 1
+            continue
+        if not explicit_kind:
+            continue
+        payload_aggregate_count += 1
+        effective = {"kind": explicit_kind, "id": explicit_id}
+        hasher.update(
+            (
+                f"{event.event_id}\0{effective['kind']}\0{effective['id']}\n"
+            ).encode("utf-8")
+        )
+        if event.aggregate == effective:
+            envelope_exact_count += 1
+        else:
+            historical_fallback_count += 1
+            fallback_sequences.append(event.global_seq)
+            fallback_streams[event.stream] += 1
+    return {
+        "schema": "effective_aggregate_audit_v1",
+        "schema_version": 1,
+        "event_count": len(events),
+        "corrupt_event_lines": corrupt,
+        "payload_aggregate_count": payload_aggregate_count,
+        "envelope_exact_count": envelope_exact_count,
+        "historical_payload_fallback_count": historical_fallback_count,
+        "historical_payload_fallback_stream_counts": dict(
+            sorted(fallback_streams.items())
+        ),
+        "historical_payload_fallback_first_global_seq": (
+            min(fallback_sequences) if fallback_sequences else None
+        ),
+        "historical_payload_fallback_last_global_seq": (
+            max(fallback_sequences) if fallback_sequences else None
+        ),
+        "partial_explicit_aggregate_count": partial_explicit_count,
+        "effective_aggregate_index_sha256": hasher.hexdigest(),
+        "effective_aggregate_valid": corrupt == 0 and partial_explicit_count == 0,
+        "history_rewritten": False,
+    }
 
 
 def _emit(value: Any, as_json: bool) -> None:
@@ -225,6 +314,9 @@ def main() -> int:
                     "root": str(store.root),
                     "activation": _load_activation(store),
                     "verification": verification,
+                    "effective_aggregate_audit_v1": effective_aggregate_audit(
+                        store
+                    ),
                 },
                 args.json,
             )

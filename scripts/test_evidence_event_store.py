@@ -12,9 +12,12 @@ from pathlib import Path
 from unittest.mock import patch
 
 try:
-    from evidence_event_store import counter_audits
+    from evidence_event_store import counter_audits, effective_aggregate_audit
 except ModuleNotFoundError:
-    from scripts.evidence_event_store import counter_audits
+    from scripts.evidence_event_store import (
+        counter_audits,
+        effective_aggregate_audit,
+    )
 
 try:
     from evidence_store.adapter import append_domain_events, read_domain_events, v2_active_for_state
@@ -48,7 +51,10 @@ class EvidenceEventStoreTests(unittest.TestCase):
             addressing = diagnostics / "introspection_addressing_v1"
             sandbox = diagnostics / "sandbox_trial_queue_v1"
             corridor = diagnostics / "agency_corridor_v2"
-            for directory in (addressing, sandbox, corridor):
+            signal = diagnostics / "signal_spine_v1"
+            families = diagnostics / "claim_families_v1"
+            dossiers = diagnostics / "experiment_dossiers_v1"
+            for directory in (addressing, sandbox, corridor, signal, families, dossiers):
                 directory.mkdir(parents=True)
             (addressing / "status.json").write_text(
                 json.dumps(
@@ -82,6 +88,45 @@ class EvidenceEventStoreTests(unittest.TestCase):
                 ),
                 encoding="utf-8",
             )
+            (signal / "projection_status.json").write_text(
+                json.dumps(
+                    {
+                        "journey_count": 20,
+                        "complete_journey_count": 20,
+                        "lineage_mismatch_count": 0,
+                        "parity_mismatch_count": 0,
+                        "tampered_journey_count": 0,
+                        "tampered_association_count": 0,
+                        "dispatch_failed_journey_count": 0,
+                        "capture_gap_count": 0,
+                        "zero_mismatch": True,
+                    }
+                ),
+                encoding="utf-8",
+            )
+            (families / "status.json").write_text(
+                json.dumps(
+                    {
+                        "counter_audit": {
+                            "every_claim_assigned_once": True,
+                            "membership_count_equals_claim_count": True,
+                            "unassigned_claim_count": 0,
+                        }
+                    }
+                ),
+                encoding="utf-8",
+            )
+            (dossiers / "status.json").write_text(
+                json.dumps(
+                    {
+                        "counter_audit": {
+                            "all_dossiers_have_one_state": True,
+                            "candidate_or_later_has_baseline": True,
+                        }
+                    }
+                ),
+                encoding="utf-8",
+            )
             audits = counter_audits(workspace)
             self.assertTrue(audits["addressing"]["consistent"])
             self.assertEqual(
@@ -91,6 +136,10 @@ class EvidenceEventStoreTests(unittest.TestCase):
             self.assertEqual(audits["sandbox"]["trial_state_counts"]["ready"], 1)
             self.assertTrue(audits["corridor_v2"]["consistent"])
             self.assertEqual(audits["corridor_v2"]["packets_count"], 1)
+            self.assertTrue(audits["signal_spine"]["consistent"])
+            self.assertEqual(audits["signal_spine"]["complete_journey_count"], 20)
+            self.assertTrue(audits["claim_families"]["consistent"])
+            self.assertTrue(audits["experiment_dossiers"]["consistent"])
 
     def test_append_idempotency_and_authority_rejection(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -102,6 +151,27 @@ class EvidenceEventStoreTests(unittest.TestCase):
             )
             self.assertEqual(result[0].event_id, result[1].event_id)
             self.assertEqual(store.verify().event_count, 1)
+            aggregate_event = store.append_payloads(
+                "signal_spine",
+                [
+                    {
+                        "event_type": "signal_journey_recorded",
+                        "aggregate_type": "causal_signal_journey",
+                        "aggregate_id": "journey_one",
+                        "journey_id": "journey_one",
+                    }
+                ],
+            )[0]
+            self.assertEqual(
+                aggregate_event.aggregate,
+                {"kind": "causal_signal_journey", "id": "journey_one"},
+            )
+            aggregate_audit = effective_aggregate_audit(store)
+            self.assertTrue(aggregate_audit["effective_aggregate_valid"])
+            self.assertEqual(aggregate_audit["envelope_exact_count"], 1)
+            self.assertEqual(
+                aggregate_audit["historical_payload_fallback_count"], 0
+            )
             with self.assertRaises(ValueError):
                 store.append_payloads(
                     "addressing",
@@ -199,9 +269,37 @@ class EvidenceEventStoreTests(unittest.TestCase):
                     [{"event_type": "v2_only"}],
                     actor="test",
                 )
+                append_domain_events(
+                    diagnostics / "signal_spine_v1",
+                    "signal_spine",
+                    [{"event_type": "signal_journey_recorded"}],
+                    actor="test",
+                )
+                append_domain_events(
+                    diagnostics / "claim_families_v1",
+                    "claim_families",
+                    [{"event_type": "claim_family_created"}],
+                    actor="test",
+                )
                 payloads, corrupt = read_domain_events(state_dir, "addressing")
+                signal_payloads, signal_corrupt = read_domain_events(
+                    diagnostics / "signal_spine_v1", "signal_spine"
+                )
+                family_payloads, family_corrupt = read_domain_events(
+                    diagnostics / "claim_families_v1", "claim_families"
+                )
             self.assertEqual(corrupt, 0)
             self.assertEqual([item["event_type"] for item in payloads], ["legacy", "v2_only"])
+            self.assertEqual(signal_corrupt, 0)
+            self.assertEqual(
+                [item["event_type"] for item in signal_payloads],
+                ["signal_journey_recorded"],
+            )
+            self.assertEqual(family_corrupt, 0)
+            self.assertEqual(
+                [item["event_type"] for item in family_payloads],
+                ["claim_family_created"],
+            )
             self.assertFalse(store.checkpoint_current("addressing", 1))
             with self.assertRaises(EvidenceStoreError):
                 store.rollback_to_v1(actor="test", acknowledgement="no export")

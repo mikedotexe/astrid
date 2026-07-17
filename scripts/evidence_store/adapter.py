@@ -18,7 +18,16 @@ from .store import DEFAULT_ACTOR, EvidenceEventStore, EvidenceStoreError
 STORE_DIRNAME = "evidence_event_store_v2"
 MODE_ENV = "ASTRID_EVIDENCE_STORE_MODE"
 ROOT_ENV = "ASTRID_EVIDENCE_STORE_ROOT"
-VALID_STREAMS = frozenset({"addressing", "sandbox", "corridor_v1", "corridor_v2"})
+VALID_STREAMS = frozenset(
+    {
+        "addressing",
+        "sandbox",
+        "corridor_v1",
+        "corridor_v2",
+        "signal_spine",
+        "claim_families",
+    }
+)
 
 
 def store_root_for_state(state_dir: Path) -> Path | None:

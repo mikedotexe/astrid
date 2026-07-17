@@ -108,6 +108,10 @@ def _sha256_file(path: Path) -> str:
 
 
 def _aggregate_for_payload(payload: dict[str, Any]) -> dict[str, str]:
+    explicit_kind = str(payload.get("aggregate_type") or "").strip()
+    explicit_id = str(payload.get("aggregate_id") or "").strip()
+    if explicit_kind and explicit_id:
+        return {"kind": explicit_kind, "id": explicit_id}
     candidates = (
         ("work_item", "work_item_id"),
         ("introspection", "introspection_id"),
@@ -117,6 +121,9 @@ def _aggregate_for_payload(payload: dict[str, Any]) -> dict[str, str]:
         ("program", "program_id"),
         ("proposal", "proposal_id"),
         ("artifact", "artifact_id"),
+        ("causal_signal_journey", "journey_id"),
+        ("claim_family", "family_id"),
+        ("experiment_dossier", "dossier_id"),
     )
     for kind, key in candidates:
         if payload.get(key):
