@@ -1,0 +1,187 @@
+{
+  "schema": "ground_review/v1",
+  "being": "astrid",
+  "source_file": "capsules/spectral-bridge/workspace/introspections/introspection_provenance.rs_1784314568.txt",
+  "generated_at": 1784314677,
+  "summary": {
+    "verified": 17,
+    "mislocated": 4,
+    "not_found": 0,
+    "stale_path": 0,
+    "felt_observations": 0,
+    "total_citations": 21
+  },
+  "verified": [
+    {
+      "value": "/Users/v/other/astrid/capsules/spectral-bridge/src/witness/provenance.rs",
+      "kind": "path",
+      "status": "EXISTS",
+      "confidence": "high",
+      "real_location": "/Users/v/other/astrid/capsules/spectral-bridge/src/witness/provenance.rs"
+    },
+    {
+      "value": "provenance.rs",
+      "kind": "path",
+      "status": "EXISTS",
+      "confidence": "high",
+      "real_location": "/Users/v/other/astrid/capsules/spectral-bridge/src/witness/provenance.rs"
+    },
+    {
+      "value": "AstridInterpretationV1",
+      "kind": "symbol",
+      "status": "VERIFIED",
+      "confidence": "high",
+      "real_location": "/Users/v/other/astrid/capsules/spectral-bridge/src/witness/provenance.rs:405",
+      "is_def": true
+    },
+    {
+      "value": "WitnessSelfOtherDistinctionV1",
+      "kind": "symbol",
+      "status": "VERIFIED",
+      "confidence": "high",
+      "real_location": "/Users/v/other/astrid/capsules/spectral-bridge/src/witness/provenance.rs:456",
+      "is_def": true
+    },
+    {
+      "value": "interpret",
+      "kind": "symbol",
+      "status": "VERIFIED",
+      "confidence": "high",
+      "real_location": "/Users/v/other/astrid/capsules/spectral-bridge/src/witness/provenance.rs:411",
+      "is_def": true
+    },
+    {
+      "value": "MinimeObservationV1",
+      "kind": "symbol",
+      "status": "VERIFIED",
+      "confidence": "high",
+      "real_location": "/Users/v/other/astrid/capsules/spectral-bridge/src/witness/provenance.rs:299",
+      "is_def": true
+    },
+    {
+      "value": "distinction",
+      "kind": "symbol",
+      "status": "VERIFIED",
+      "confidence": "high",
+      "real_location": "/Users/v/other/astrid/capsules/spectral-bridge/src/witness/provenance.rs:449",
+      "is_def": true
+    },
+    {
+      "value": "StylisticContext",
+      "kind": "symbol",
+      "status": "VERIFIED",
+      "confidence": "high",
+      "real_location": "/Users/v/other/astrid/capsules/spectral-bridge/src/witness/provenance.rs:79"
+    },
+    {
+      "value": "canonical_sha256",
+      "kind": "symbol",
+      "status": "VERIFIED",
+      "confidence": "high",
+      "real_location": "/Users/v/other/astrid/capsules/spectral-bridge/src/witness/provenance.rs:43",
+      "is_def": true
+    },
+    {
+      "value": "AstridAuthored",
+      "kind": "symbol",
+      "status": "VERIFIED",
+      "confidence": "high",
+      "real_location": "/Users/v/other/astrid/capsules/spectral-bridge/src/witness/provenance.rs:459"
+    },
+    {
+      "value": "digest",
+      "kind": "symbol",
+      "status": "VERIFIED",
+      "confidence": "high",
+      "real_location": "/Users/v/other/astrid/capsules/spectral-bridge/src/witness/provenance.rs:351",
+      "is_def": true
+    },
+    {
+      "value": "parents",
+      "kind": "symbol",
+      "status": "VERIFIED",
+      "confidence": "high",
+      "real_location": "/Users/v/other/astrid/capsules/spectral-bridge/src/witness/provenance.rs:415",
+      "is_def": true
+    },
+    {
+      "value": "source_id",
+      "kind": "symbol",
+      "status": "VERIFIED",
+      "confidence": "high",
+      "real_location": "/Users/v/other/astrid/capsules/spectral-bridge/src/witness/provenance.rs:216",
+      "is_def": true
+    },
+    {
+      "value": "provenance",
+      "kind": "symbol",
+      "status": "VERIFIED",
+      "confidence": "high",
+      "real_location": "/Users/v/other/astrid/capsules/spectral-bridge/src/witness/provenance.rs:324",
+      "is_def": true
+    },
+    {
+      "value": "weight",
+      "kind": "symbol",
+      "status": "VERIFIED",
+      "confidence": "high",
+      "real_location": "/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous/hebbian.rs:169",
+      "is_def": true
+    },
+    {
+      "value": "confidence",
+      "kind": "symbol",
+      "status": "VERIFIED",
+      "confidence": "high",
+      "real_location": "/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous/btsp/conversion.rs:108",
+      "is_def": true
+    },
+    {
+      "value": "HashMap",
+      "kind": "symbol",
+      "status": "VERIFIED",
+      "confidence": "low",
+      "real_location": "/Users/v/other/astrid/capsules/spectral-bridge/src/action_continuity/runtime.rs:6"
+    }
+  ],
+  "mislocated": [
+    {
+      "value": "BridgeEvidenceV1",
+      "kind": "symbol",
+      "status": "MISLOCATED",
+      "confidence": "high",
+      "real_location": "/Users/v/other/astrid/capsules/spectral-bridge/src/witness/provenance.rs:337",
+      "is_def": true,
+      "note": "cited line 439, real /Users/v/other/astrid/capsules/spectral-bridge/src/witness/provenance.rs:337"
+    },
+    {
+      "value": "ProvenanceInfluenceTypeV1",
+      "kind": "symbol",
+      "status": "MISLOCATED",
+      "confidence": "high",
+      "real_location": "/Users/v/other/astrid/capsules/spectral-bridge/src/witness/provenance.rs:74",
+      "is_def": true,
+      "note": "cited line 439, real /Users/v/other/astrid/capsules/spectral-bridge/src/witness/provenance.rs:74"
+    },
+    {
+      "value": "function",
+      "kind": "symbol",
+      "status": "MISLOCATED",
+      "confidence": "low",
+      "real_location": "/Users/v/other/astrid/AGENTS.md:38",
+      "note": "cited line 411, real /Users/v/other/astrid/AGENTS.md:38"
+    },
+    {
+      "value": "vector",
+      "kind": "symbol",
+      "status": "MISLOCATED",
+      "confidence": "low",
+      "real_location": "/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous/btsp/trace.rs:1247",
+      "is_def": true,
+      "note": "cited line 415, real /Users/v/other/astrid/capsules/spectral-bridge/src/autonomous/btsp/trace.rs:1247"
+    }
+  ],
+  "not_found": [],
+  "stale_path": [],
+  "felt_observations": []
+}

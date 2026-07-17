@@ -405,6 +405,7 @@ impl BridgeEvidenceV1 {
 pub struct AstridInterpretationV1 {
     provenance: ProvenanceRefV1,
     distinction: WitnessSelfOtherDistinctionV1,
+    authorship_gradient_v1: AuthorshipGradientV1,
 }
 
 impl AstridInterpretationV1 {
@@ -419,6 +420,9 @@ impl AstridInterpretationV1 {
         let digest = canonical_sha256(&json!({
             "parents": parents,
             "distinction": "mixed",
+            "interpretation_owner": "astrid_authored",
+            "authorship_gradient": "unmeasured_no_causal_measure",
+            "digest_role": "identity_not_weight",
             "policy": "self_other_provenance_only_no_routing_or_control",
         }));
         let provenance = ProvenanceRefV1::new(
@@ -437,6 +441,7 @@ impl AstridInterpretationV1 {
         Self {
             provenance,
             distinction: WitnessSelfOtherDistinctionV1::Mixed,
+            authorship_gradient_v1: AuthorshipGradientV1::unmeasured(),
         }
     }
 
@@ -448,6 +453,11 @@ impl AstridInterpretationV1 {
     #[must_use]
     pub const fn distinction(&self) -> WitnessSelfOtherDistinctionV1 {
         self.distinction
+    }
+
+    #[must_use]
+    pub const fn authorship_gradient_v1(&self) -> &AuthorshipGradientV1 {
+        &self.authorship_gradient_v1
     }
 }
 
@@ -471,6 +481,56 @@ impl WitnessSelfOtherDistinctionV1 {
             Self::Mixed => "mixed",
             Self::Unknown => "unknown",
         }
+    }
+}
+
+/// Separates exact ownership from the unmeasured magnitude of authorship
+/// influence. An interpretation is Astrid-authored even when its input
+/// provenance is mixed; neither digest entropy nor role membership is a causal
+/// proportion.
+#[derive(Debug, Clone, PartialEq, Serialize)]
+pub struct AuthorshipGradientV1 {
+    interpretation_owner: WitnessSelfOtherDistinctionV1,
+    input_provenance: WitnessSelfOtherDistinctionV1,
+    measured_astrid_authorship_share: Option<f32>,
+    magnitude_state: &'static str,
+    digest_role: &'static str,
+}
+
+impl AuthorshipGradientV1 {
+    const fn unmeasured() -> Self {
+        Self {
+            interpretation_owner: WitnessSelfOtherDistinctionV1::AstridAuthored,
+            input_provenance: WitnessSelfOtherDistinctionV1::Mixed,
+            measured_astrid_authorship_share: None,
+            magnitude_state: "unmeasured_no_causal_measure",
+            digest_role: "identity_not_weight",
+        }
+    }
+
+    #[must_use]
+    pub const fn interpretation_owner(&self) -> WitnessSelfOtherDistinctionV1 {
+        self.interpretation_owner
+    }
+
+    #[must_use]
+    pub const fn input_provenance(&self) -> WitnessSelfOtherDistinctionV1 {
+        self.input_provenance
+    }
+
+    #[must_use]
+    pub const fn measured_astrid_authorship_share(&self) -> Option<f32> {
+        self.measured_astrid_authorship_share
+    }
+
+    #[must_use]
+    pub const fn magnitude_state(&self) -> &'static str {
+        self.magnitude_state
+    }
+
+    #[must_use]
+    pub const fn digest_role(&self) -> &'static str {
+        self.digest_role
     }
 }
 
@@ -627,6 +687,7 @@ pub struct WitnessFrameV1 {
     evidence: ProvenanceRefV1,
     interpretation: ProvenanceRefV1,
     distinction: WitnessSelfOtherDistinctionV1,
+    authorship_gradient_v1: AuthorshipGradientV1,
     composition_v1: ProvenanceCompositionV1,
     lineage_edges_v1: Vec<ProvenanceLineageEdgeV1>,
 }
@@ -684,6 +745,7 @@ impl WitnessFrameV1 {
             evidence: evidence.provenance().clone(),
             interpretation: interpretation.provenance().clone(),
             distinction: WitnessSelfOtherDistinctionV1::Mixed,
+            authorship_gradient_v1: interpretation.authorship_gradient_v1().clone(),
             composition_v1,
             lineage_edges_v1,
         })
@@ -712,6 +774,11 @@ impl WitnessFrameV1 {
     #[must_use]
     pub const fn distinction(&self) -> WitnessSelfOtherDistinctionV1 {
         self.distinction
+    }
+
+    #[must_use]
+    pub const fn authorship_gradient_v1(&self) -> &AuthorshipGradientV1 {
+        &self.authorship_gradient_v1
     }
 
     #[must_use]
@@ -746,8 +813,12 @@ impl WitnessFrameV1 {
             .collect::<Vec<_>>()
             .join("|");
         format!(
-            "[witness_self_other_distinction_v1: classification={}; minime_observed={}; bridge_derived={}; astrid_authored={}; composition={}; weighting={}; context_anchors=structural_signatures_no_private_payload; lineage_edges={}; boundary=provenance_only_no_routing_ranking_dispatch_gain_or_control; authority=read_only_context]",
+            "[witness_self_other_distinction_v1: classification={}; interpretation_owner={}; input_provenance={}; authorship_gradient={}; digest_role={}; minime_observed={}; bridge_derived={}; astrid_authored={}; composition={}; weighting={}; context_anchors=structural_signatures_no_private_payload; lineage_edges={}; boundary=provenance_only_no_routing_ranking_dispatch_gain_or_control; authority=read_only_context]",
             self.distinction.as_str(),
+            self.authorship_gradient_v1.interpretation_owner().as_str(),
+            self.authorship_gradient_v1.input_provenance().as_str(),
+            self.authorship_gradient_v1.magnitude_state(),
+            self.authorship_gradient_v1.digest_role(),
             self.observation.source_id(),
             self.evidence.source_id(),
             self.interpretation.source_id(),
@@ -801,6 +872,44 @@ mod tests {
                 first.provenance().source_id().to_string(),
             ]
         );
+        assert_ne!(
+            observation.provenance().source_id(),
+            first.provenance().source_id()
+        );
+        for expected_parent in [
+            observation.provenance().source_id(),
+            first.provenance().source_id(),
+        ] {
+            assert_eq!(
+                interpretation
+                    .provenance()
+                    .parent_ids()
+                    .iter()
+                    .filter(|parent| parent.as_str() == expected_parent)
+                    .count(),
+                1
+            );
+        }
+        assert_eq!(
+            interpretation
+                .authorship_gradient_v1()
+                .interpretation_owner(),
+            WitnessSelfOtherDistinctionV1::AstridAuthored
+        );
+        assert_eq!(
+            interpretation.authorship_gradient_v1().input_provenance(),
+            WitnessSelfOtherDistinctionV1::Mixed
+        );
+        assert_eq!(
+            interpretation
+                .authorship_gradient_v1()
+                .measured_astrid_authorship_share(),
+            None
+        );
+        assert_eq!(
+            interpretation.authorship_gradient_v1().digest_role(),
+            "identity_not_weight"
+        );
         let frame = WitnessFrameV1::compose(&observation, &first, &interpretation).unwrap();
         assert_eq!(frame.distinction(), WitnessSelfOtherDistinctionV1::Mixed);
         assert_eq!(frame.evidence().parent_ids(), &["minime:42".to_string()]);
@@ -832,6 +941,10 @@ mod tests {
                 .render_context_line()
                 .contains("weighting=unmeasured_no_causal_ack")
         );
+        assert!(frame.render_context_line().contains(
+            "interpretation_owner=astrid_authored; input_provenance=mixed; \
+             authorship_gradient=unmeasured_no_causal_measure; digest_role=identity_not_weight"
+        ));
         assert!(
             frame
                 .render_context_line()
