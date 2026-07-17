@@ -80,7 +80,7 @@ fn eigen_density_gradient(eigenvalues: &[f32]) -> Option<f32> {
 }
 
 fn latest_native_correspondence_stall_for_witness() -> bool {
-    let path = Path::new(DEFAULT_SHARED_COLLAB_DIR).join("correspondence_v1.jsonl");
+    let path = shared_collab_dir_for_witness().join("correspondence_v1.jsonl");
     let Ok(text) = fs::read_to_string(path) else {
         return false;
     };

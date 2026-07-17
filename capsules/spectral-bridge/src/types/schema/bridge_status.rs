@@ -28,6 +28,9 @@ pub struct BridgeStatus {
     /// Canonical Astrid-Minime wire compatibility for the latest observation.
     #[serde(default)]
     pub telemetry_protocol_v1: TelemetryProtocolStatusV1,
+    /// Read-only timing evidence for the telemetry integration boundary.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub telemetry_integration_health_v1: Option<TelemetryIntegrationHealthV1>,
     /// Telemetry WebSocket lifecycle metrics.
     #[serde(default)]
     pub telemetry_ws: WebSocketLaneTrace,
@@ -77,6 +80,9 @@ pub struct BridgeStatus {
     /// Arrival-cadence truth for pressure/fill trend interpretation.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub telemetry_heartbeat_delta_v1: Option<TelemetryHeartbeatDeltaV1>,
+    /// Read-only distinction between transport cadence and semantic residue.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub cadence_content_distinction_v1: Option<CadenceContentDistinctionV1>,
     /// Latest pressure-source metric, if Minime exports it.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub pressure_source_v1: Option<PressureSourceV1>,
@@ -115,6 +121,66 @@ pub struct BridgeStatus {
     /// Bridge-only temporal/gradient/flux evidence kept outside producer DTOs.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub bridge_texture_evidence_v1: Option<BridgeTextureEvidenceV1>,
+}
+
+/// Measured timing at the telemetry integration boundary.
+///
+/// This packet distinguishes work completed before the shared-state write
+/// lock from time waiting for and holding that lock. It is diagnostic
+/// evidence only: it does not buffer packets, change cadence, or attribute
+/// stutter to a cause by itself.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TelemetryIntegrationHealthV1 {
+    pub policy: String,
+    pub schema_version: u8,
+    pub sample_count: u64,
+    pub classification: String,
+    pub latest_prewrite_pipeline_ms: f64,
+    pub ewma_prewrite_pipeline_ms: f64,
+    pub max_prewrite_pipeline_ms: f64,
+    pub latest_write_lock_wait_ms: f64,
+    pub ewma_write_lock_wait_ms: f64,
+    pub max_write_lock_wait_ms: f64,
+    pub latest_write_lock_hold_ms: f64,
+    pub ewma_write_lock_hold_ms: f64,
+    pub max_write_lock_hold_ms: f64,
+    pub causal_attribution: String,
+    pub buffered_integration: bool,
+    pub cadence_write: bool,
+    pub authority: String,
+}
+
+/// Read-only comparison of telemetry cadence against semantic persistence.
+///
+/// A clear packet cadence does not prove that semantic content is light or
+/// mobile. This packet keeps transport evidence and bridge-derived content
+/// evidence separate while naming their current relationship.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CadenceContentDistinctionV1 {
+    pub policy: String,
+    pub schema_version: u8,
+    pub cadence_state: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub cadence_clarity_score: Option<f32>,
+    pub cadence_evidence_basis: String,
+    pub content_state: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub latest_semantic_viscosity: Option<f32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub semantic_viscosity_persistence_index: Option<f32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub semantic_stagnation_index: Option<f32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub semantic_residue_score: Option<f32>,
+    pub semantic_residue_score_basis: String,
+    pub semantic_residue_watch_threshold: f32,
+    pub evidence_window_samples: usize,
+    pub cadence_content_relation: String,
+    #[serde(default)]
+    pub live_cadence_write: bool,
+    #[serde(default)]
+    pub live_semantic_write: bool,
+    pub authority: String,
 }
 
 /// Read-only protocol compatibility status for Minime telemetry.

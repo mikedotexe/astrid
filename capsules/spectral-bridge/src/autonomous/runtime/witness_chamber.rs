@@ -1,4 +1,21 @@
 const DEFAULT_SHARED_COLLAB_DIR: &str = "/Users/v/other/shared/collaborations";
+const SHARED_COLLAB_DIR_ENV: &str = "ASTRID_SHARED_COLLAB_DIR";
+
+fn shared_collab_dir_for_witness_from_env(
+    env_dir: Option<&std::ffi::OsStr>,
+) -> std::path::PathBuf {
+    env_dir
+        .filter(|value| !value.is_empty())
+        .map_or_else(
+            || std::path::PathBuf::from(DEFAULT_SHARED_COLLAB_DIR),
+            std::path::PathBuf::from,
+        )
+}
+
+fn shared_collab_dir_for_witness() -> std::path::PathBuf {
+    let env_dir = std::env::var_os(SHARED_COLLAB_DIR_ENV);
+    shared_collab_dir_for_witness_from_env(env_dir.as_deref())
+}
 
 fn latest_chamber_state_with_resilience_from_dir(
     shared_collab_dir: &Path,
@@ -72,7 +89,7 @@ fn latest_chamber_state_for_witness_from_dir(shared_collab_dir: &Path) -> Option
 
 fn latest_chamber_state_with_resilience_for_witness()
 -> (Option<Value>, LatestChamberStateResilienceV1) {
-    latest_chamber_state_with_resilience_from_dir(Path::new(DEFAULT_SHARED_COLLAB_DIR))
+    latest_chamber_state_with_resilience_from_dir(&shared_collab_dir_for_witness())
 }
 
 fn witness_value_kind(value: &Value) -> &'static str {

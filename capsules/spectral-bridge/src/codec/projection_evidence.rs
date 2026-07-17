@@ -1,4 +1,3 @@
-
 /// Read-only proof that fresh dynamic projection epochs are stable across
 /// runtime dirs unless explicitly overridden by env or an existing epoch file.
 #[derive(Debug, Clone, PartialEq)]
@@ -56,7 +55,9 @@ pub struct CodecStructure {
     pub multi_scale_context_v1: MultiScaleContextV1,
     pub projection_epoch_stability_v1: ProjectionEpochStabilityV1,
     pub projection_fingerprint_integrity_v1: ProjectionFingerprintIntegrityV1,
+    pub projection_basis_health_v1: ProjectionBasisHealthV1,
     pub projection_precision_audit_v1: ProjectionPrecisionAuditV1,
+    pub projection_compression_audit_v1: ProjectionCompressionAuditV1,
     pub codec_lane_separation_audit_v1: CodecLaneSeparationAuditV1,
     pub codec_rolling_window_shift_audit_v1: CodecRollingWindowShiftAuditV1,
 }

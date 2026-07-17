@@ -249,6 +249,7 @@ async fn handle_telemetry_message_at(
 ) -> bool {
     const ARTIFACT_SCAN_WINDOW_SECS: f64 = 1_200.0;
     const ARTIFACT_SCAN_MIN_INTERVAL_SECS: f64 = 30.0;
+    let pipeline_started = Instant::now();
 
     let decoded = match decode_telemetry_v1(data) {
         Ok(decoded) => decoded,
@@ -386,9 +387,16 @@ async fn handle_telemetry_message_at(
         observed_at_unix_s,
     );
 
-    // Update shared state.
+    // Update shared state. These timings are read-only evidence for Astrid's
+    // report of possible micro-stutter at this integration boundary.
+    let prewrite_pipeline_ms = telemetry_duration_ms(pipeline_started.elapsed());
+    let write_lock_wait_started = Instant::now();
+    let cadence_content_snapshot;
     {
         let mut s = state.write().await;
+        let write_lock_wait_ms = telemetry_duration_ms(write_lock_wait_started.elapsed());
+        let write_lock_hold_started = Instant::now();
+        record_valid_payload(&mut s, WsLane::Telemetry, observed_at_unix_s);
         let previous_fill_pct = s.latest_telemetry.as_ref().map(|_| s.fill_pct);
         let previous_arrival = s.latest_telemetry_arrival_unix_s;
         let heartbeat = build_telemetry_heartbeat_delta_v1(
@@ -469,6 +477,18 @@ async fn handle_telemetry_message_at(
                 db,
             );
         }
+        let write_lock_hold_ms = telemetry_duration_ms(write_lock_hold_started.elapsed());
+        let integration_health = build_telemetry_integration_health_v1(
+            s.telemetry_integration_health_v1.as_ref(),
+            prewrite_pipeline_ms,
+            write_lock_wait_ms,
+            write_lock_hold_ms,
+        );
+        s.telemetry_integration_health_v1 = Some(integration_health);
+        cadence_content_snapshot = s.cadence_content_distinction_v1();
+    }
+    if let Some(distinction) = cadence_content_snapshot.as_ref() {
+        write_cadence_content_distinction_snapshot(distinction);
     }
 
     // Log to SQLite.

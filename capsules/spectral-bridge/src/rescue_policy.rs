@@ -4,7 +4,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 use serde_json::{Value, json};
 
 use crate::paths::bridge_paths;
-use crate::types::SensoryMsg;
+use crate::types::{SensoryMsg, SpectralTelemetry};
 
 #[path = "rescue_policy_text.rs"]
 mod text;
@@ -34,7 +34,340 @@ const V2_ROLLBACK_SEMANTIC_ENERGY: f32 = 0.05;
 const V2_ADVERSE_WINDOW_SECS: f64 = 3600.0;
 const SEMANTIC_HEARTBEAT_FEATURE_SCALE: f32 = 0.025;
 const SEMANTIC_HEARTBEAT_MAX_ABS: f32 = 0.018;
+const SEMANTIC_HEARTBEAT_OBSERVATION_WINDOW_SECS: f64 = 600.0;
+const SEMANTIC_HEARTBEAT_PHASE_ENTROPY_WINDOW_SECS: f64 = 60.0;
+const SEMANTIC_HEARTBEAT_OBSERVATION_MAX_SAMPLES: usize = 512;
+const SEMANTIC_HEARTBEAT_ACTIVE_DIM_EPSILON: f32 = 1.0e-6;
+const SEMANTIC_HEARTBEAT_NEAR_REPEAT_DELTA_RMS: f32 = 1.0e-6;
+const SEMANTIC_HEARTBEAT_NEAR_REPEAT_COSINE: f32 = 0.999_999;
+const SEMANTIC_HEARTBEAT_TAIL_START_DIM: usize = 24;
+const SEMANTIC_HEARTBEAT_DENSE_FIELD_AT: f64 = 0.75;
+const SEMANTIC_HEARTBEAT_HIGH_ENTROPY_AT: f64 = 0.75;
+const SEMANTIC_HEARTBEAT_VISCOUS_FIELD_AT: f64 = 0.60;
 pub const STABLE_CORE_TARGET_FILL_PCT: f64 = 68.0;
+
+#[derive(Debug, Clone, Copy, PartialEq)]
+struct SemanticHeartbeatSignalMetricsV1 {
+    feature_count: u64,
+    finite_feature_count: u64,
+    active_dimension_count: u64,
+    rms: f32,
+    component_stddev: f32,
+    max_abs: f32,
+    tail_rms: Option<f32>,
+    clipped_dimension_count: u64,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq)]
+struct SemanticHeartbeatSignalEvidenceV1 {
+    content_basis: &'static str,
+    gesture_seed_applied: bool,
+    generated: SemanticHeartbeatSignalMetricsV1,
+    compared_dimension_count: u64,
+    delta_rms_from_previous: Option<f32>,
+    cosine_similarity_to_previous: Option<f32>,
+    continuity_classification: &'static str,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+struct SemanticHeartbeatTextureContextV1 {
+    telemetry_t_ms: u64,
+    spectral_entropy: Option<f32>,
+    resonance_density: Option<f32>,
+    pressure_risk: Option<f32>,
+    resonance_mode_packing: Option<f32>,
+    pressure_source_mode_packing: Option<f32>,
+    viscosity_index: Option<f32>,
+    viscosity_gradient: Option<f32>,
+    primary_texture: Option<String>,
+    movement_quality: Option<String>,
+    eigenvalue_count: u64,
+    lambda1_abs_share: Option<f32>,
+    lambda1_lambda2_abs_ratio: Option<f32>,
+    lambda_tail_abs_share: Option<f32>,
+}
+
+impl SemanticHeartbeatTextureContextV1 {
+    fn from_telemetry(telemetry: &SpectralTelemetry) -> Self {
+        let fingerprint = telemetry.typed_fingerprint();
+        let resonance = telemetry.resonance_density_v1.as_ref();
+        let pressure = telemetry.pressure_source_v1.as_ref();
+        let finite_abs: Vec<f32> = telemetry
+            .eigenvalues
+            .iter()
+            .copied()
+            .filter(|value| value.is_finite())
+            .map(f32::abs)
+            .collect();
+        let total_abs = finite_abs.iter().copied().sum::<f32>();
+        let lambda1_abs_share = (total_abs > f32::EPSILON)
+            .then(|| finite_abs.first().copied().unwrap_or(0.0) / total_abs);
+        let lambda1_lambda2_abs_ratio = finite_abs
+            .first()
+            .copied()
+            .zip(finite_abs.get(1).copied())
+            .and_then(|(lambda1, lambda2)| (lambda2 > f32::EPSILON).then_some(lambda1 / lambda2));
+        let lambda_tail_abs_share = (total_abs > f32::EPSILON
+            && finite_abs.get(2..).is_some_and(|tail| !tail.is_empty()))
+        .then(|| {
+            finite_abs
+                .get(2..)
+                .unwrap_or_default()
+                .iter()
+                .copied()
+                .sum::<f32>()
+                / total_abs
+        });
+
+        Self {
+            telemetry_t_ms: telemetry.t_ms,
+            spectral_entropy: fingerprint
+                .map(|value| value.spectral_entropy)
+                .filter(|value| value.is_finite())
+                .map(|value| value.clamp(0.0, 1.0)),
+            resonance_density: resonance
+                .map(|value| value.density)
+                .filter(|value| value.is_finite())
+                .map(|value| value.clamp(0.0, 1.0)),
+            pressure_risk: resonance
+                .map(|value| value.pressure_risk)
+                .filter(|value| value.is_finite())
+                .map(|value| value.clamp(0.0, 1.0)),
+            resonance_mode_packing: resonance
+                .map(|value| value.components.mode_packing)
+                .filter(|value| value.is_finite())
+                .map(|value| value.clamp(0.0, 1.0)),
+            pressure_source_mode_packing: pressure
+                .map(|value| value.components.mode_packing)
+                .filter(|value| value.is_finite())
+                .map(|value| value.clamp(0.0, 1.0)),
+            viscosity_index: resonance
+                .map(|value| value.components.viscosity_index)
+                .filter(|value| value.is_finite())
+                .map(|value| value.clamp(0.0, 1.0)),
+            viscosity_gradient: resonance
+                .and_then(|value| value.components.viscosity_vector.viscosity_gradient)
+                .filter(|value| value.is_finite()),
+            primary_texture: resonance
+                .map(|value| value.texture_signature.primary_texture.trim())
+                .filter(|value| !value.is_empty())
+                .map(ToString::to_string),
+            movement_quality: resonance
+                .map(|value| value.texture_signature.movement_quality.trim())
+                .filter(|value| !value.is_empty())
+                .map(ToString::to_string),
+            eigenvalue_count: u64::try_from(finite_abs.len()).unwrap_or(u64::MAX),
+            lambda1_abs_share,
+            lambda1_lambda2_abs_ratio,
+            lambda_tail_abs_share,
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct SemanticHeartbeatObservationV1 {
+    source: &'static str,
+    phase_step: u64,
+    phase: f32,
+    interval_secs: u64,
+    configured_intensity: f32,
+    signal_evidence: Option<SemanticHeartbeatSignalEvidenceV1>,
+    texture_context: Option<SemanticHeartbeatTextureContextV1>,
+}
+
+impl SemanticHeartbeatObservationV1 {
+    #[must_use]
+    pub(crate) const fn new(
+        source: &'static str,
+        phase_step: u64,
+        phase: f32,
+        interval_secs: u64,
+        configured_intensity: f32,
+    ) -> Self {
+        Self {
+            source,
+            phase_step,
+            phase,
+            interval_secs,
+            configured_intensity,
+            signal_evidence: None,
+            texture_context: None,
+        }
+    }
+
+    #[must_use]
+    pub(crate) fn with_signal_evidence(
+        mut self,
+        content_basis: &'static str,
+        gesture_seed_applied: bool,
+        features: &[f32],
+        previous_features: Option<&[f32]>,
+    ) -> Self {
+        let generated = semantic_heartbeat_signal_metrics(features);
+        let (compared_dimension_count, delta_rms_from_previous, cosine_similarity_to_previous) =
+            previous_features.map_or((0, None, None), |previous| {
+                semantic_heartbeat_signal_comparison(features, previous)
+            });
+        let continuity_classification = semantic_heartbeat_continuity_classification(
+            generated,
+            delta_rms_from_previous,
+            cosine_similarity_to_previous,
+        );
+        self.signal_evidence = Some(SemanticHeartbeatSignalEvidenceV1 {
+            content_basis,
+            gesture_seed_applied,
+            generated,
+            compared_dimension_count,
+            delta_rms_from_previous,
+            cosine_similarity_to_previous,
+            continuity_classification,
+        });
+        self
+    }
+
+    #[must_use]
+    pub(crate) fn with_minime_texture_context(
+        mut self,
+        telemetry: Option<&SpectralTelemetry>,
+    ) -> Self {
+        self.texture_context = telemetry.map(SemanticHeartbeatTextureContextV1::from_telemetry);
+        self
+    }
+}
+
+fn finite_or_zero(value: f32) -> f32 {
+    if value.is_finite() { value } else { 0.0 }
+}
+
+fn semantic_heartbeat_signal_metrics(features: &[f32]) -> SemanticHeartbeatSignalMetricsV1 {
+    let feature_count = u64::try_from(features.len()).unwrap_or(u64::MAX);
+    let finite_feature_count = u64::try_from(
+        features
+            .iter()
+            .filter(|feature| feature.is_finite())
+            .count(),
+    )
+    .unwrap_or(u64::MAX);
+    let active_dimension_count = u64::try_from(
+        features
+            .iter()
+            .map(|feature| finite_or_zero(*feature))
+            .filter(|feature| feature.abs() > SEMANTIC_HEARTBEAT_ACTIVE_DIM_EPSILON)
+            .count(),
+    )
+    .unwrap_or(u64::MAX);
+    let clipped_dimension_count = u64::try_from(
+        features
+            .iter()
+            .map(|feature| finite_or_zero(*feature))
+            .filter(|feature| feature.abs() >= SEMANTIC_HEARTBEAT_MAX_ABS)
+            .count(),
+    )
+    .unwrap_or(u64::MAX);
+    let count = features.len() as f64;
+    let (sum, sum_squares, max_abs) = features.iter().fold(
+        (0.0_f64, 0.0_f64, 0.0_f32),
+        |(sum, sum_squares, max_abs), feature| {
+            let value = finite_or_zero(*feature);
+            (
+                sum + f64::from(value),
+                sum_squares + f64::from(value) * f64::from(value),
+                max_abs.max(value.abs()),
+            )
+        },
+    );
+    let (rms, component_stddev) = if count > 0.0 {
+        let mean = sum / count;
+        let mean_square = sum_squares / count;
+        (
+            mean_square.max(0.0).sqrt() as f32,
+            (mean_square - mean * mean).max(0.0).sqrt() as f32,
+        )
+    } else {
+        (0.0, 0.0)
+    };
+    let tail = features.get(SEMANTIC_HEARTBEAT_TAIL_START_DIM..);
+    let tail_rms = tail.and_then(|tail| {
+        if tail.is_empty() {
+            None
+        } else {
+            let mean_square = tail
+                .iter()
+                .map(|feature| {
+                    let value = f64::from(finite_or_zero(*feature));
+                    value * value
+                })
+                .sum::<f64>()
+                / tail.len() as f64;
+            Some(mean_square.max(0.0).sqrt() as f32)
+        }
+    });
+    SemanticHeartbeatSignalMetricsV1 {
+        feature_count,
+        finite_feature_count,
+        active_dimension_count,
+        rms,
+        component_stddev,
+        max_abs,
+        tail_rms,
+        clipped_dimension_count,
+    }
+}
+
+fn semantic_heartbeat_signal_comparison(
+    features: &[f32],
+    previous_features: &[f32],
+) -> (u64, Option<f32>, Option<f32>) {
+    let compared_count = features.len().min(previous_features.len());
+    if compared_count == 0 {
+        return (0, None, None);
+    }
+    let (delta_squares, dot, current_squares, previous_squares) = features
+        .iter()
+        .zip(previous_features)
+        .fold((0.0_f64, 0.0_f64, 0.0_f64, 0.0_f64), |acc, pair| {
+            let current = f64::from(finite_or_zero(*pair.0));
+            let previous = f64::from(finite_or_zero(*pair.1));
+            let delta = current - previous;
+            (
+                acc.0 + delta * delta,
+                acc.1 + current * previous,
+                acc.2 + current * current,
+                acc.3 + previous * previous,
+            )
+        });
+    let delta_rms = (delta_squares / compared_count as f64).max(0.0).sqrt() as f32;
+    let norm_product = (current_squares * previous_squares).max(0.0).sqrt();
+    let cosine =
+        (norm_product > f64::EPSILON).then(|| (dot / norm_product).clamp(-1.0, 1.0) as f32);
+    (
+        u64::try_from(compared_count).unwrap_or(u64::MAX),
+        Some(delta_rms),
+        cosine,
+    )
+}
+
+fn semantic_heartbeat_continuity_classification(
+    metrics: SemanticHeartbeatSignalMetricsV1,
+    delta_rms: Option<f32>,
+    cosine: Option<f32>,
+) -> &'static str {
+    if metrics.feature_count == 0 {
+        "no_features_observed"
+    } else if metrics.active_dimension_count <= 1
+        || metrics.component_stddev <= SEMANTIC_HEARTBEAT_ACTIVE_DIM_EPSILON
+    {
+        "low_component_variance_observed"
+    } else if delta_rms.is_some_and(|delta| delta <= SEMANTIC_HEARTBEAT_NEAR_REPEAT_DELTA_RMS)
+        && cosine.is_some_and(|similarity| similarity >= SEMANTIC_HEARTBEAT_NEAR_REPEAT_COSINE)
+    {
+        "near_repeat_observed"
+    } else if delta_rms.is_some() {
+        "variation_observed_across_consecutive_pulses"
+    } else {
+        "first_sample_variation_baseline"
+    }
+}
 
 #[derive(Debug, Clone, PartialEq)]
 struct RescueBridgePolicy {
@@ -815,6 +1148,9 @@ struct LimitedWriteHealth {
     semantic_mute_active: bool,
     watchdog_state: Option<String>,
     age_secs: f64,
+    pressure_risk: Option<f32>,
+    spectral_entropy: Option<f32>,
+    shadow_dispersal_potential: Option<f32>,
 }
 
 fn load_policy(path: &Path) -> Option<RescueBridgePolicy> {
@@ -901,6 +1237,13 @@ fn load_limited_write_health(
         .unwrap_or(false),
         watchdog_state,
         age_secs,
+        pressure_risk: finite_f32_optional(&value, &["resonance_density_v1", "pressure_risk"])
+            .or_else(|| finite_f32_optional(&value, &["pressure_source_status", "pressure_score"])),
+        spectral_entropy: finite_f32_optional(&value, &["transition_event_v1", "spectral_entropy"]),
+        shadow_dispersal_potential: finite_f32_optional(
+            &value,
+            &["shadow_preservation_mode_v1", "dispersal_potential"],
+        ),
     })
 }
 
@@ -927,6 +1270,10 @@ fn f32_optional(value: &Value, path: &[&str]) -> Option<f32> {
     value_at_path(value, path)
         .and_then(Value::as_f64)
         .map(|value| value as f32)
+}
+
+fn finite_f32_optional(value: &Value, path: &[&str]) -> Option<f32> {
+    f32_optional(value, path).filter(|value| value.is_finite())
 }
 
 fn bool_optional(value: &Value, path: &[&str]) -> Option<bool> {
@@ -1126,14 +1473,604 @@ fn record_limited_write_block(path: &Path, policy: &RescueBridgePolicy, reason: 
     write_status(path, &status);
 }
 
-fn record_semantic_heartbeat_block(path: &Path, policy: &RescueBridgePolicy, reason: &str) {
+fn record_semantic_heartbeat_observation(
+    status: &mut Value,
+    observation: SemanticHeartbeatObservationV1,
+    outcome: &str,
+    health: Option<&LimitedWriteHealth>,
+    delivered_signal: Option<SemanticHeartbeatSignalMetricsV1>,
+) -> f64 {
+    let now = now_unix_s();
+    let prior_send_count = status
+        .get("send_count")
+        .and_then(Value::as_u64)
+        .unwrap_or(0);
+    let prior_block_count = status
+        .get("block_count")
+        .and_then(Value::as_u64)
+        .unwrap_or(0);
+    let prior_attempt_count = status
+        .get("attempt_count")
+        .and_then(Value::as_u64)
+        .unwrap_or_else(|| prior_send_count.saturating_add(prior_block_count));
+    let send_count = if outcome == "sent" {
+        prior_send_count.saturating_add(1)
+    } else {
+        prior_send_count
+    };
+    let block_count = if outcome == "blocked" {
+        prior_block_count.saturating_add(1)
+    } else {
+        prior_block_count
+    };
+    let attempt_count = prior_attempt_count.saturating_add(1);
+
+    let mut window_samples: Vec<Value> = status
+        .get("window_samples_v1")
+        .and_then(Value::as_array)
+        .into_iter()
+        .flatten()
+        .filter(|sample| {
+            sample
+                .get("at_unix_s")
+                .and_then(Value::as_f64)
+                .is_some_and(|at| {
+                    at.is_finite()
+                        && now >= at
+                        && now - at <= SEMANTIC_HEARTBEAT_OBSERVATION_WINDOW_SECS
+                })
+        })
+        .cloned()
+        .collect();
+    let mut sample = json!({
+        "at_unix_s": now,
+        "outcome": outcome,
+        "source": observation.source,
+        "phase_step": observation.phase_step,
+        "phase": if observation.phase.is_finite() {
+            observation.phase.clamp(0.0, 1.0)
+        } else {
+            0.0
+        },
+        "configured_interval_secs": observation.interval_secs,
+        "configured_intensity": if observation.configured_intensity.is_finite() {
+            observation.configured_intensity.max(0.0)
+        } else {
+            0.0
+        }
+    });
+    if let Some(health) = health {
+        sample["fill_pct"] = json!(health.fill_pct);
+        sample["rescue_stage"] = json!(health.stage);
+        sample["pressure_risk"] = json!(health.pressure_risk);
+        sample["spectral_entropy"] = json!(health.spectral_entropy);
+        sample["shadow_dispersal_potential"] = json!(health.shadow_dispersal_potential);
+    }
+    if let Some(signal) = observation.signal_evidence {
+        sample["signal_evidence_v1"] =
+            semantic_heartbeat_signal_evidence_json(signal, delivered_signal);
+    }
+    if let Some(context) = observation.texture_context.as_ref() {
+        sample["texture_context_v1"] = semantic_heartbeat_texture_context_json(context);
+    }
+    window_samples.push(sample);
+    let window_samples_truncated =
+        window_samples.len() > SEMANTIC_HEARTBEAT_OBSERVATION_MAX_SAMPLES;
+    if window_samples_truncated {
+        let keep_from = window_samples
+            .len()
+            .saturating_sub(SEMANTIC_HEARTBEAT_OBSERVATION_MAX_SAMPLES);
+        window_samples.drain(..keep_from);
+    }
+    let window_attempt_count = u64::try_from(window_samples.len()).unwrap_or(u64::MAX);
+    let window_send_count = u64::try_from(
+        window_samples
+            .iter()
+            .filter(|sample| sample.get("outcome").and_then(Value::as_str) == Some("sent"))
+            .count(),
+    )
+    .unwrap_or(u64::MAX);
+    let window_block_count = u64::try_from(
+        window_samples
+            .iter()
+            .filter(|sample| sample.get("outcome").and_then(Value::as_str) == Some("blocked"))
+            .count(),
+    )
+    .unwrap_or(u64::MAX);
+    let window_started = window_samples
+        .first()
+        .and_then(|sample| sample.get("at_unix_s"))
+        .and_then(Value::as_f64)
+        .unwrap_or(now);
+    let window_skip_rate = if window_attempt_count == 0 {
+        0.0
+    } else {
+        window_block_count as f64 / window_attempt_count as f64
+    };
+    let mean_pressure_when_blocked =
+        semantic_heartbeat_window_mean(&window_samples, "blocked", "pressure_risk");
+    let mean_pressure_when_sent =
+        semantic_heartbeat_window_mean(&window_samples, "sent", "pressure_risk");
+    let blocked_minus_sent_mean_pressure = mean_pressure_when_blocked
+        .zip(mean_pressure_when_sent)
+        .map(|(blocked, sent)| blocked - sent);
+    let pressure_context_sample_count = window_samples
+        .iter()
+        .filter(|sample| {
+            sample
+                .get("pressure_risk")
+                .and_then(Value::as_f64)
+                .is_some()
+        })
+        .count();
+    let comparison_state =
+        if mean_pressure_when_blocked.is_some() && mean_pressure_when_sent.is_some() {
+            "comparison_available_causation_not_inferred"
+        } else {
+            "insufficient_cross_outcome_pressure_context"
+        };
+    let signal_samples: Vec<&Value> = window_samples
+        .iter()
+        .filter_map(|sample| sample.get("signal_evidence_v1"))
+        .collect();
+    let signal_sample_count = u64::try_from(signal_samples.len()).unwrap_or(u64::MAX);
+    let signal_variation_count = semantic_heartbeat_signal_class_count(
+        &signal_samples,
+        "variation_observed_across_consecutive_pulses",
+    );
+    let signal_near_repeat_count =
+        semantic_heartbeat_signal_class_count(&signal_samples, "near_repeat_observed");
+    let signal_low_variance_count =
+        semantic_heartbeat_signal_class_count(&signal_samples, "low_component_variance_observed");
+    let signal_mean_delta_rms = semantic_heartbeat_nested_mean(
+        &signal_samples,
+        &["consecutive_comparison", "delta_rms_from_previous"],
+    );
+    let signal_mean_generated_component_stddev =
+        semantic_heartbeat_nested_mean(&signal_samples, &["generated", "component_stddev"]);
+    let signal_mean_delivered_component_stddev =
+        semantic_heartbeat_nested_mean(&signal_samples, &["delivered", "component_stddev"]);
+    let latest_signal_classification = signal_samples.last().and_then(|signal| {
+        signal
+            .get("continuity_classification")
+            .and_then(Value::as_str)
+    });
+    let phase_entropy_review = semantic_heartbeat_phase_entropy_review_v1(&window_samples, now);
+    let signal_texture_review = semantic_heartbeat_signal_texture_review_v1(
+        &window_samples,
+        window_attempt_count,
+        window_block_count,
+        window_skip_rate,
+    );
+
+    status["attempt_count"] = json!(attempt_count);
+    status["send_count"] = json!(send_count);
+    status["block_count"] = json!(block_count);
+    status["last_attempt_at_unix_s"] = json!(now);
+    status["last_outcome"] = json!(outcome);
+    status["last_source"] = json!(observation.source);
+    status["last_phase_step"] = json!(observation.phase_step);
+    status["last_phase"] = json!(if observation.phase.is_finite() {
+        observation.phase.clamp(0.0, 1.0)
+    } else {
+        0.0
+    });
+    status["configured_interval_secs"] = json!(observation.interval_secs);
+    status["configured_intensity"] = json!(if observation.configured_intensity.is_finite() {
+        observation.configured_intensity.max(0.0)
+    } else {
+        0.0
+    });
+    status["window_started_at_unix_s"] = json!(window_started);
+    status["window_duration_secs"] = json!(SEMANTIC_HEARTBEAT_OBSERVATION_WINDOW_SECS);
+    status["window_sample_capacity"] = json!(SEMANTIC_HEARTBEAT_OBSERVATION_MAX_SAMPLES);
+    status["window_samples_truncated"] = json!(window_samples_truncated);
+    status["window_samples_v1"] = json!(window_samples);
+    status["window_attempt_count"] = json!(window_attempt_count);
+    status["window_send_count"] = json!(window_send_count);
+    status["window_block_count"] = json!(window_block_count);
+    status["window_skip_rate"] = json!(window_skip_rate);
+    status["last_pressure_risk"] = json!(health.and_then(|value| value.pressure_risk));
+    status["last_spectral_entropy"] = json!(health.and_then(|value| value.spectral_entropy));
+    status["last_shadow_dispersal_potential"] =
+        json!(health.and_then(|value| value.shadow_dispersal_potential));
+    status["pressure_texture_review_v1"] = json!({
+        "schema": "semantic_heartbeat_pressure_texture_review_v1",
+        "schema_version": 1,
+        "window_pressure_context_sample_count": pressure_context_sample_count,
+        "mean_pressure_risk_when_blocked": mean_pressure_when_blocked,
+        "mean_pressure_risk_when_sent": mean_pressure_when_sent,
+        "blocked_minus_sent_mean_pressure_risk": blocked_minus_sent_mean_pressure,
+        "comparison_state": comparison_state,
+        "phase_mapping": "linear_64_step_cycle_observed_not_retuned",
+        "pressure_source": "minime.health.resonance_density_v1.pressure_risk",
+        "entropy_source": "minime.health.transition_event_v1.spectral_entropy",
+        "shadow_dispersal_source": "minime.health.shadow_preservation_mode_v1.dispersal_potential",
+        "interpretation": "rolling_context_comparison_only_causal_pressure_skip_link_and_texture_mismatch_not_inferred",
+        "runtime_effect_applied": false,
+        "authority": "read_only_heartbeat_pressure_texture_evidence_not_cadence_phase_intensity_rescue_or_dispatch_control"
+    });
+    status["phase_entropy_review_v1"] = phase_entropy_review;
+    status["signal_texture_comparison_v1"] = signal_texture_review;
+    status["signal_continuity_review_v1"] = json!({
+        "schema": "semantic_heartbeat_signal_continuity_review_v1",
+        "schema_version": 1,
+        "window_signal_sample_count": signal_sample_count,
+        "variation_observed_count": signal_variation_count,
+        "near_repeat_observed_count": signal_near_repeat_count,
+        "low_component_variance_observed_count": signal_low_variance_count,
+        "mean_delta_rms_from_previous": signal_mean_delta_rms,
+        "mean_generated_component_stddev": signal_mean_generated_component_stddev,
+        "mean_delivered_component_stddev": signal_mean_delivered_component_stddev,
+        "latest_continuity_classification": latest_signal_classification,
+        "tail_start_dimension": SEMANTIC_HEARTBEAT_TAIL_START_DIM,
+        "private_source_content_copied": false,
+        "interpretation": "bounded_signal_aggregates_only_flatness_or_lived_quality_not_inferred",
+        "runtime_effect_applied": false,
+        "authority": "read_only_heartbeat_signal_evidence_not_vector_cadence_intensity_shaping_rescue_or_dispatch_control"
+    });
+    status["observability_authority"] =
+        json!("read_only_heartbeat_continuity_evidence_not_cadence_intensity_or_dispatch_control");
+    now
+}
+
+fn semantic_heartbeat_signal_evidence_json(
+    signal: SemanticHeartbeatSignalEvidenceV1,
+    delivered: Option<SemanticHeartbeatSignalMetricsV1>,
+) -> Value {
+    json!({
+        "schema": "semantic_heartbeat_signal_evidence_v1",
+        "schema_version": 1,
+        "content_basis": signal.content_basis,
+        "gesture_seed_applied": signal.gesture_seed_applied,
+        "generated": semantic_heartbeat_signal_metrics_json(signal.generated),
+        "consecutive_comparison": {
+            "compared_dimension_count": signal.compared_dimension_count,
+            "delta_rms_from_previous": signal.delta_rms_from_previous,
+            "cosine_similarity_to_previous": signal.cosine_similarity_to_previous
+        },
+        "delivered": delivered.map(semantic_heartbeat_signal_metrics_json),
+        "continuity_classification": signal.continuity_classification,
+        "private_source_content_copied": false,
+        "runtime_effect_applied": false
+    })
+}
+
+fn semantic_heartbeat_signal_metrics_json(metrics: SemanticHeartbeatSignalMetricsV1) -> Value {
+    json!({
+        "feature_count": metrics.feature_count,
+        "finite_feature_count": metrics.finite_feature_count,
+        "active_dimension_count": metrics.active_dimension_count,
+        "rms": metrics.rms,
+        "component_stddev": metrics.component_stddev,
+        "max_abs": metrics.max_abs,
+        "tail_rms": metrics.tail_rms,
+        "clipped_dimension_count": metrics.clipped_dimension_count
+    })
+}
+
+fn semantic_heartbeat_texture_context_json(context: &SemanticHeartbeatTextureContextV1) -> Value {
+    json!({
+        "schema": "semantic_heartbeat_texture_context_v1",
+        "schema_version": 1,
+        "minime_observation_v1": {
+            "origin": "minime",
+            "source_id": format!("eigenpacket_t_ms:{}", context.telemetry_t_ms),
+            "telemetry_t_ms": context.telemetry_t_ms,
+            "spectral_entropy": context.spectral_entropy,
+            "resonance_density": context.resonance_density,
+            "pressure_risk": context.pressure_risk,
+            "resonance_mode_packing": context.resonance_mode_packing,
+            "pressure_source_mode_packing": context.pressure_source_mode_packing,
+            "viscosity_index": context.viscosity_index,
+            "viscosity_gradient": context.viscosity_gradient,
+            "primary_texture": context.primary_texture.as_deref(),
+            "movement_quality": context.movement_quality.as_deref(),
+            "field_paths": [
+                "spectral_fingerprint_v1.spectral_entropy",
+                "resonance_density_v1.density",
+                "resonance_density_v1.pressure_risk",
+                "resonance_density_v1.components.mode_packing",
+                "resonance_density_v1.components.viscosity_index",
+                "resonance_density_v1.components.viscosity_vector.viscosity_gradient",
+                "resonance_density_v1.texture_signature.primary_texture",
+                "resonance_density_v1.texture_signature.movement_quality",
+                "pressure_source_v1.components.mode_packing"
+            ]
+        },
+        "bridge_derivation_v1": {
+            "origin": "astrid_spectral_bridge",
+            "parent_source_id": format!("eigenpacket_t_ms:{}", context.telemetry_t_ms),
+            "eigenvalue_count": context.eigenvalue_count,
+            "lambda1_abs_share": context.lambda1_abs_share,
+            "lambda1_lambda2_abs_ratio": context.lambda1_lambda2_abs_ratio,
+            "lambda_tail_abs_share": context.lambda_tail_abs_share,
+            "derivation": "finite absolute eigenvalue magnitudes; lambda tail begins at index 2",
+            "producer_truth_mutated": false
+        },
+        "private_source_content_copied": false,
+        "runtime_effect_applied": false,
+        "authority": "read_only_minime_observation_and_bridge_derivation_not_heartbeat_vector_cadence_intensity_rescue_dispatch_or_control"
+    })
+}
+
+fn semantic_heartbeat_signal_texture_sample_comparison_v1(sample: &Value) -> Value {
+    let signal = sample.get("signal_evidence_v1");
+    let context = sample.get("texture_context_v1");
+    let observed = context.and_then(|value| value.get("minime_observation_v1"));
+    let derived = context.and_then(|value| value.get("bridge_derivation_v1"));
+    let density = observed
+        .and_then(|value| value.get("resonance_density"))
+        .and_then(Value::as_f64);
+    let entropy = observed
+        .and_then(|value| value.get("spectral_entropy"))
+        .and_then(Value::as_f64);
+    let viscosity = observed
+        .and_then(|value| value.get("viscosity_index"))
+        .and_then(Value::as_f64);
+    let primary_texture = observed
+        .and_then(|value| value.get("primary_texture"))
+        .and_then(Value::as_str);
+    let dense_field = density.is_some_and(|value| value >= SEMANTIC_HEARTBEAT_DENSE_FIELD_AT);
+    let high_entropy_field =
+        entropy.is_some_and(|value| value >= SEMANTIC_HEARTBEAT_HIGH_ENTROPY_AT);
+    let viscous_field = viscosity.is_some_and(|value| value >= SEMANTIC_HEARTBEAT_VISCOUS_FIELD_AT)
+        || primary_texture.is_some_and(|value| value.to_ascii_lowercase().contains("viscous"));
+    let delivered_max_abs = signal
+        .and_then(|value| value.get("delivered"))
+        .and_then(|value| value.get("max_abs"))
+        .and_then(Value::as_f64);
+    let bounded_delivery = delivered_max_abs
+        .is_some_and(|value| value <= f64::from(SEMANTIC_HEARTBEAT_MAX_ABS) + f64::EPSILON);
+    let comparison_state = if dense_field && high_entropy_field && viscous_field {
+        "dense_viscous_high_entropy_field_with_bounded_heartbeat_signal_observed"
+    } else {
+        "signal_and_field_context_available_without_dense_viscous_high_entropy_convergence"
+    };
+
+    json!({
+        "at_unix_s": sample.get("at_unix_s"),
+        "source": sample.get("source"),
+        "outcome": sample.get("outcome"),
+        "phase_step": sample.get("phase_step"),
+        "phase": sample.get("phase"),
+        "configured_interval_secs": sample.get("configured_interval_secs"),
+        "configured_intensity": sample.get("configured_intensity"),
+        "signal_v1": {
+            "content_basis": signal.and_then(|value| value.get("content_basis")),
+            "generated_rms": signal
+                .and_then(|value| value.pointer("/generated/rms")),
+            "generated_component_stddev": signal
+                .and_then(|value| value.pointer("/generated/component_stddev")),
+            "generated_max_abs": signal
+                .and_then(|value| value.pointer("/generated/max_abs")),
+            "generated_tail_rms": signal
+                .and_then(|value| value.pointer("/generated/tail_rms")),
+            "delivered_rms": signal
+                .and_then(|value| value.pointer("/delivered/rms")),
+            "delivered_component_stddev": signal
+                .and_then(|value| value.pointer("/delivered/component_stddev")),
+            "delivered_max_abs": delivered_max_abs,
+            "delivered_tail_rms": signal
+                .and_then(|value| value.pointer("/delivered/tail_rms")),
+            "bounded_by_existing_rescue_shape": bounded_delivery
+        },
+        "minime_observation_v1": observed,
+        "bridge_derivation_v1": derived,
+        "dense_field_threshold": SEMANTIC_HEARTBEAT_DENSE_FIELD_AT,
+        "high_entropy_threshold": SEMANTIC_HEARTBEAT_HIGH_ENTROPY_AT,
+        "viscous_field_threshold": SEMANTIC_HEARTBEAT_VISCOUS_FIELD_AT,
+        "dense_field_observed": dense_field,
+        "high_entropy_field_observed": high_entropy_field,
+        "viscous_field_observed": viscous_field,
+        "comparison_state": comparison_state,
+        "spectral_code_mismatch_state": "not_established_cross_domain_texture_decoder_absent",
+        "texture_marker_test_state": "raw_heartbeat_features_have_no_authoritative_viscosity_marker_decoder",
+        "scalar_equivalence_inferred": false,
+        "runtime_effect_applied": false
+    })
+}
+
+fn semantic_heartbeat_signal_texture_review_v1(
+    samples: &[Value],
+    window_attempt_count: u64,
+    window_block_count: u64,
+    window_skip_rate: f64,
+) -> Value {
+    let has_signal_and_context = |sample: &&Value| {
+        sample.get("signal_evidence_v1").is_some() && sample.get("texture_context_v1").is_some()
+    };
+    let context_sample_count = u64::try_from(
+        samples
+            .iter()
+            .filter(|sample| sample.get("texture_context_v1").is_some())
+            .count(),
+    )
+    .unwrap_or(u64::MAX);
+    let latest_comparison = samples
+        .iter()
+        .rev()
+        .find(has_signal_and_context)
+        .map(semantic_heartbeat_signal_texture_sample_comparison_v1);
+    let latest_phase_zero_comparison = samples
+        .iter()
+        .rev()
+        .filter(|sample| {
+            sample.get("source").and_then(Value::as_str) == Some("steady_semantic_heartbeat")
+                && sample.get("phase_step").and_then(Value::as_u64) == Some(0)
+        })
+        .find(has_signal_and_context)
+        .map(semantic_heartbeat_signal_texture_sample_comparison_v1);
+    let persistence_check_state = if window_attempt_count == 0 {
+        "no_heartbeat_attempts_observed"
+    } else if window_block_count == 0 {
+        "no_rescue_skips_observed_in_window"
+    } else if window_block_count == window_attempt_count {
+        "all_observed_heartbeats_blocked_by_existing_rescue_policy"
+    } else {
+        "intermittent_rescue_skips_observed_in_window"
+    };
+    let comparison_state = if latest_comparison.is_some() {
+        "signal_and_field_comparison_available"
+    } else if context_sample_count > 0 {
+        "field_context_available_signal_evidence_missing"
+    } else {
+        "minime_field_context_unavailable"
+    };
+    let phase_zero_comparison_state = if latest_phase_zero_comparison.is_some() {
+        "available"
+    } else {
+        "awaiting_steady_heartbeat_phase_zero_sample"
+    };
+
+    json!({
+        "schema": "semantic_heartbeat_signal_texture_comparison_v1",
+        "schema_version": 1,
+        "window_texture_context_sample_count": context_sample_count,
+        "comparison_state": comparison_state,
+        "latest_comparison_v1": latest_comparison,
+        "latest_phase_zero_comparison_v1": latest_phase_zero_comparison,
+        "phase_zero_comparison_state": phase_zero_comparison_state,
+        "persistence_check_v1": {
+            "window_attempt_count": window_attempt_count,
+            "window_block_count": window_block_count,
+            "window_skip_rate": window_skip_rate,
+            "state": persistence_check_state,
+            "causal_pressure_skip_link_inferred": false
+        },
+        "interpretation": "pulse_shape_and_minime_field_texture_are_shown_side_by_side; lived_texture_match_and_causation_require_felt_review",
+        "intensity_or_cadence_change_authority": "requires_separate_mike_operator_approval",
+        "runtime_effect_applied": false,
+        "authority": "read_only_signal_to_field_comparison_not_vector_cadence_intensity_shaping_rescue_dispatch_or_control"
+    })
+}
+
+fn semantic_heartbeat_signal_class_count(samples: &[&Value], classification: &str) -> u64 {
+    u64::try_from(
+        samples
+            .iter()
+            .filter(|signal| {
+                signal
+                    .get("continuity_classification")
+                    .and_then(Value::as_str)
+                    == Some(classification)
+            })
+            .count(),
+    )
+    .unwrap_or(u64::MAX)
+}
+
+fn semantic_heartbeat_nested_mean(samples: &[&Value], path: &[&str]) -> Option<f64> {
+    let values: Vec<f64> = samples
+        .iter()
+        .filter_map(|sample| value_at_path(sample, path).and_then(Value::as_f64))
+        .filter(|value| value.is_finite())
+        .collect();
+    (!values.is_empty()).then(|| values.iter().sum::<f64>() / values.len() as f64)
+}
+
+fn semantic_heartbeat_window_mean(samples: &[Value], outcome: &str, field: &str) -> Option<f64> {
+    let values: Vec<f64> = samples
+        .iter()
+        .filter(|sample| sample.get("outcome").and_then(Value::as_str) == Some(outcome))
+        .filter_map(|sample| sample.get(field).and_then(Value::as_f64))
+        .filter(|value| value.is_finite())
+        .collect();
+    (!values.is_empty()).then(|| values.iter().sum::<f64>() / values.len() as f64)
+}
+
+fn semantic_heartbeat_phase_entropy_review_v1(samples: &[Value], now: f64) -> Value {
+    let pairs: Vec<(f64, f64)> = samples
+        .iter()
+        .filter(|sample| {
+            sample
+                .get("at_unix_s")
+                .and_then(Value::as_f64)
+                .is_some_and(|at| {
+                    at.is_finite()
+                        && now >= at
+                        && now - at <= SEMANTIC_HEARTBEAT_PHASE_ENTROPY_WINDOW_SECS
+                })
+        })
+        .filter_map(|sample| {
+            let phase = sample.get("phase").and_then(Value::as_f64)?;
+            let entropy = sample.get("spectral_entropy").and_then(Value::as_f64)?;
+            (phase.is_finite() && entropy.is_finite()).then_some((phase, entropy))
+        })
+        .collect();
+    let pair_count = u64::try_from(pairs.len()).unwrap_or(u64::MAX);
+    let phase_wrap_observed = pairs.windows(2).any(|pair| pair[1].0 + 0.5 < pair[0].0);
+    let phase_min = pairs.iter().map(|(phase, _)| *phase).reduce(f64::min);
+    let phase_max = pairs.iter().map(|(phase, _)| *phase).reduce(f64::max);
+    let entropy_min = pairs.iter().map(|(_, entropy)| *entropy).reduce(f64::min);
+    let entropy_max = pairs.iter().map(|(_, entropy)| *entropy).reduce(f64::max);
+    let correlation = if pairs.len() >= 3 && !phase_wrap_observed {
+        let count = pairs.len() as f64;
+        let phase_mean = pairs.iter().map(|(phase, _)| phase).sum::<f64>() / count;
+        let entropy_mean = pairs.iter().map(|(_, entropy)| entropy).sum::<f64>() / count;
+        let (covariance, phase_variance, entropy_variance) = pairs.iter().fold(
+            (0.0_f64, 0.0_f64, 0.0_f64),
+            |(covariance, phase_variance, entropy_variance), (phase, entropy)| {
+                let phase_delta = phase - phase_mean;
+                let entropy_delta = entropy - entropy_mean;
+                (
+                    phase_delta.mul_add(entropy_delta, covariance),
+                    phase_delta.mul_add(phase_delta, phase_variance),
+                    entropy_delta.mul_add(entropy_delta, entropy_variance),
+                )
+            },
+        );
+        let denominator = (phase_variance * entropy_variance).sqrt();
+        (denominator > f64::EPSILON).then(|| (covariance / denominator).clamp(-1.0, 1.0))
+    } else {
+        None
+    };
+    let state = if pairs.is_empty() {
+        "no_paired_phase_entropy_samples"
+    } else if pairs.len() < 3 {
+        "insufficient_paired_samples"
+    } else if phase_wrap_observed {
+        "phase_wrap_observed_correlation_withheld"
+    } else if correlation.is_some() {
+        "paired_correlation_available_causation_not_inferred"
+    } else {
+        "insufficient_phase_or_entropy_variation"
+    };
+
+    json!({
+        "schema": "semantic_heartbeat_phase_entropy_review_v1",
+        "schema_version": 1,
+        "window_duration_secs": SEMANTIC_HEARTBEAT_PHASE_ENTROPY_WINDOW_SECS,
+        "paired_sample_count": pair_count,
+        "phase_min": phase_min,
+        "phase_max": phase_max,
+        "spectral_entropy_min": entropy_min,
+        "spectral_entropy_max": entropy_max,
+        "phase_wrap_observed": phase_wrap_observed,
+        "phase_entropy_pearson_correlation": correlation,
+        "state": state,
+        "interpretation": "paired_60_second_observation_only_tick_restlessness_or_entropy_causation_not_inferred",
+        "runtime_effect_applied": false,
+        "authority": "read_only_phase_entropy_evidence_not_phase_cadence_intensity_rescue_or_dispatch_control"
+    })
+}
+
+fn record_semantic_heartbeat_block(
+    path: &Path,
+    policy: &RescueBridgePolicy,
+    reason: &str,
+    observation: SemanticHeartbeatObservationV1,
+    health: Option<&LimitedWriteHealth>,
+) {
     let mut status = read_status(path);
     if !status.is_object() {
         status = json!({});
     }
+    let now =
+        record_semantic_heartbeat_observation(&mut status, observation, "blocked", health, None);
     status["profile"] = json!(policy.profile_name);
     status["policy_version"] = json!(policy.limited_write_policy_version);
-    status["last_block_at_unix_s"] = json!(now_unix_s());
+    status["last_block_at_unix_s"] = json!(now);
     status["last_block_reason"] = json!(reason);
     write_status(path, &status);
 }
@@ -1142,20 +2079,23 @@ fn record_semantic_heartbeat_sent(
     path: &Path,
     policy: &RescueBridgePolicy,
     health: Option<&LimitedWriteHealth>,
+    observation: SemanticHeartbeatObservationV1,
+    delivered_signal: SemanticHeartbeatSignalMetricsV1,
 ) {
     let mut status = read_status(path);
     if !status.is_object() {
         status = json!({});
     }
-    let send_count = status
-        .get("send_count")
-        .and_then(Value::as_u64)
-        .unwrap_or(0)
-        .saturating_add(1);
+    let now = record_semantic_heartbeat_observation(
+        &mut status,
+        observation,
+        "sent",
+        health,
+        Some(delivered_signal),
+    );
     status["profile"] = json!(policy.profile_name);
     status["policy_version"] = json!(policy.limited_write_policy_version);
-    status["send_count"] = json!(send_count);
-    status["last_sent_at_unix_s"] = json!(now_unix_s());
+    status["last_sent_at_unix_s"] = json!(now);
     status["feature_scale"] = json!(SEMANTIC_HEARTBEAT_FEATURE_SCALE);
     status["max_abs"] = json!(SEMANTIC_HEARTBEAT_MAX_ABS);
     if let Some(health) = health {
@@ -1314,9 +2254,10 @@ pub(crate) fn prepare_semantic_write_for_path(
     Ok(())
 }
 
-pub(crate) fn prepare_semantic_heartbeat_for_path(
+pub(crate) fn prepare_semantic_heartbeat_for_path_with_observation(
     msg: &mut SensoryMsg,
     path: &Path,
+    observation: SemanticHeartbeatObservationV1,
 ) -> Result<(), String> {
     if !matches!(msg, SensoryMsg::Semantic { .. }) {
         return Ok(());
@@ -1325,19 +2266,34 @@ pub(crate) fn prepare_semantic_heartbeat_for_path(
         return Ok(());
     };
     let status_path = semantic_heartbeat_status_path_for_profile(path);
-    if let Some(reason) = policy.heartbeat_block_reason(path) {
-        record_semantic_heartbeat_block(&status_path, &policy, &reason);
-        return Err(reason);
-    }
     let health = if policy.limited_write_v2_active() {
         load_limited_write_health(path, policy.limited_write_health_max_age_secs).ok()
     } else {
         None
     };
-    if let SensoryMsg::Semantic { features, .. } = msg {
-        RescueBridgePolicy::apply_semantic_heartbeat_shape(features);
+    if let Some(reason) = policy.heartbeat_block_reason(path) {
+        record_semantic_heartbeat_block(
+            &status_path,
+            &policy,
+            &reason,
+            observation,
+            health.as_ref(),
+        );
+        return Err(reason);
     }
-    record_semantic_heartbeat_sent(&status_path, &policy, health.as_ref());
+    let delivered_signal = if let SensoryMsg::Semantic { features, .. } = msg {
+        RescueBridgePolicy::apply_semantic_heartbeat_shape(features);
+        semantic_heartbeat_signal_metrics(features)
+    } else {
+        unreachable!("semantic heartbeat was checked as a semantic message")
+    };
+    record_semantic_heartbeat_sent(
+        &status_path,
+        &policy,
+        health.as_ref(),
+        observation,
+        delivered_signal,
+    );
     Ok(())
 }
 
@@ -1351,11 +2307,14 @@ pub(crate) fn prepare_semantic_write(
     prepare_semantic_write_for_path(msg, &path, context)
 }
 
-pub(crate) fn prepare_semantic_heartbeat(msg: &mut SensoryMsg) -> Result<(), String> {
+pub(crate) fn prepare_semantic_heartbeat_with_observation(
+    msg: &mut SensoryMsg,
+    observation: SemanticHeartbeatObservationV1,
+) -> Result<(), String> {
     let path = bridge_paths()
         .minime_workspace()
         .join("rescue_profile.json");
-    prepare_semantic_heartbeat_for_path(msg, &path)
+    prepare_semantic_heartbeat_for_path_with_observation(msg, &path, observation)
 }
 
 #[cfg(test)]

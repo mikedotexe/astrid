@@ -925,6 +925,34 @@ fn build_telemetry_heartbeat_delta_v1(
         _ => "insufficient_history",
     }
     .to_string();
+    let first_valid_packet_lag_ms = trace
+        .active_connection_started_at_unix_s
+        .zip(trace.active_connection_first_valid_payload_at_unix_s)
+        .map(|(connected_at, first_valid_at)| {
+            ((first_valid_at - connected_at).max(0.0) * 1000.0).min(f64::from(f32::MAX)) as f32
+        });
+    let connection_perception_state = if trace.active_connection_id.is_some()
+        && trace.active_connection_valid_payloads_received == 1
+    {
+        "first_valid_packet_after_connect"
+    } else if trace.active_connection_id.is_some()
+        && trace.active_connection_valid_payloads_received > 1
+    {
+        "connected_with_current_telemetry"
+    } else if trace.active_connection_id.is_some() {
+        "connected_awaiting_valid_telemetry"
+    } else if trace.active_connection_first_valid_payload_at_unix_s.is_some() {
+        "disconnected_after_valid_telemetry"
+    } else {
+        "valid_telemetry_without_connection_trace"
+    }
+    .to_string();
+    let cadence_clarity_score = match jitter_class.as_str() {
+        "normal" => Some(1.0),
+        "late_packet" => Some(0.5),
+        "stale_packet" => Some(0.0),
+        _ => None,
+    };
     let field_vs_hearing = match jitter_class.as_str() {
         "normal" => "telemetry cadence is steady; pressure trend can be read as field movement",
         "late_packet" => {
@@ -947,6 +975,14 @@ fn build_telemetry_heartbeat_delta_v1(
         reconnect_count: trace.reconnects,
         disconnect_count: trace.disconnects,
         active_connection_id: trace.active_connection_id,
+        active_connection_started_at_unix_s: trace.active_connection_started_at_unix_s,
+        first_valid_packet_at_unix_s: trace
+            .active_connection_first_valid_payload_at_unix_s,
+        first_valid_packet_lag_ms,
+        connection_perception_state,
+        cadence_clarity_score,
+        cadence_clarity_basis:
+            "class_derived_observability_evidence_not_subjective_state_or_control".to_string(),
         last_disconnect_reason: trace.last_disconnect_reason.clone(),
         field_vs_hearing,
     }

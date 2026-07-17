@@ -213,6 +213,82 @@ mod tests {
     }
 
     #[test]
+    fn ws_trace_records_first_valid_payload_and_resets_it_on_reconnect() {
+        let mut state = BridgeState::new();
+        let first_connection = record_connect_attempt(&mut state, WsLane::Telemetry);
+        record_connected(
+            &mut state,
+            WsLane::Telemetry,
+            first_connection,
+            42.0,
+        );
+
+        record_valid_payload(&mut state, WsLane::Telemetry, 42.125);
+        record_valid_payload(&mut state, WsLane::Telemetry, 42.250);
+        assert_eq!(
+            state
+                .telemetry_ws
+                .active_connection_first_valid_payload_at_unix_s,
+            Some(42.125)
+        );
+        assert_eq!(
+            state
+                .telemetry_ws
+                .active_connection_valid_payloads_received,
+            2
+        );
+
+        let next_connection = record_connect_attempt(&mut state, WsLane::Telemetry);
+        record_connected(
+            &mut state,
+            WsLane::Telemetry,
+            next_connection,
+            50.0,
+        );
+        assert_eq!(
+            state
+                .telemetry_ws
+                .active_connection_first_valid_payload_at_unix_s,
+            None
+        );
+        assert_eq!(
+            state
+                .telemetry_ws
+                .active_connection_valid_payloads_received,
+            0
+        );
+    }
+
+    #[test]
+    fn additive_connection_and_heartbeat_fields_accept_legacy_snapshots() {
+        let mut lane_json = serde_json::to_value(WebSocketLaneTrace::default()).unwrap();
+        let lane = lane_json.as_object_mut().unwrap();
+        lane.remove("active_connection_first_valid_payload_at_unix_s");
+        lane.remove("active_connection_valid_payloads_received");
+        let legacy_lane: WebSocketLaneTrace = serde_json::from_value(lane_json).unwrap();
+        assert_eq!(legacy_lane.active_connection_valid_payloads_received, 0);
+        assert_eq!(
+            legacy_lane.active_connection_first_valid_payload_at_unix_s,
+            None
+        );
+
+        let legacy_heartbeat: TelemetryHeartbeatDeltaV1 =
+            serde_json::from_value(serde_json::json!({
+                "policy": "telemetry_heartbeat_delta_v1",
+                "schema_version": 1,
+                "jitter_class": "no_history",
+                "timing_reliability": "insufficient_history",
+                "reconnect_count": 0,
+                "disconnect_count": 0,
+                "field_vs_hearing": "legacy cadence snapshot"
+            }))
+            .unwrap();
+        assert_eq!(legacy_heartbeat.first_valid_packet_lag_ms, None);
+        assert_eq!(legacy_heartbeat.cadence_clarity_score, None);
+        assert!(legacy_heartbeat.connection_perception_state.is_empty());
+    }
+
+    #[test]
     fn sensory_disconnect_preserves_safety_context() {
         let mut state = BridgeState::new();
         state.safety_level = SafetyLevel::Orange;
@@ -1292,6 +1368,64 @@ mod tests {
         assert_eq!(
             analysis.authority,
             "diagnostic_context_not_pressure_or_control"
+        );
+    }
+
+    #[test]
+    fn cadence_content_distinction_preserves_residue_when_packet_cadence_is_clear() {
+        let mut state = BridgeState::new();
+        for (idx, trickle) in [0.09_f32, 0.04, 0.01].into_iter().enumerate() {
+            let mut telemetry =
+                with_spectral_entropy(make_pressure_telemetry(0.70, 0.20, 0.34), 0.95);
+            let resonance = telemetry
+                .resonance_density_v1
+                .as_mut()
+                .expect("resonance density fixture");
+            resonance.density = 0.68;
+            resonance.components.porosity_gradient = Some(0.18);
+            resonance.components.semantic_friction_coefficient = Some(0.58);
+            telemetry = with_pressure_source(telemetry, "semantic_trickle", 0.20, 0.58, 0.34);
+            let pressure_source = telemetry
+                .pressure_source_v1
+                .as_mut()
+                .expect("pressure source fixture");
+            pressure_source.components.semantic_trickle = trickle;
+            pressure_source.components.semantic_friction = 0.58;
+            record_pressure_trend_sample_v1(&mut state, &telemetry, 70.0, 100.0 + idx as f64);
+        }
+        let trace = WebSocketLaneTrace {
+            active_connection_id: Some(1),
+            active_connection_started_at_unix_s: Some(99.0),
+            active_connection_first_valid_payload_at_unix_s: Some(99.1),
+            active_connection_valid_payloads_received: 3,
+            ..WebSocketLaneTrace::default()
+        };
+        state.telemetry_heartbeat_delta_v1 =
+            Some(build_telemetry_heartbeat_delta_v1(Some(100.0), 101.0, &trace));
+
+        let distinction = state
+            .cadence_content_distinction_v1()
+            .expect("cadence-content distinction");
+
+        assert_eq!(distinction.cadence_state, "cadence_clear");
+        assert_eq!(distinction.cadence_clarity_score, Some(1.0));
+        assert_eq!(distinction.content_state, "persistent_semantic_residue");
+        assert!(
+            distinction
+                .semantic_residue_score
+                .is_some_and(|score| score >= 0.74),
+            "{distinction:?}"
+        );
+        assert_eq!(
+            distinction.cadence_content_relation,
+            "cadence_clear_semantic_residue_persists"
+        );
+        assert_eq!(distinction.evidence_window_samples, 3);
+        assert!(!distinction.live_cadence_write);
+        assert!(!distinction.live_semantic_write);
+        assert_eq!(
+            distinction.authority,
+            "read_only_transport_content_distinction_not_cadence_semantic_or_control"
         );
     }
 
@@ -2469,6 +2603,13 @@ mod tests {
             reconnect_count: 0,
             disconnect_count: 0,
             active_connection_id: Some(1),
+            active_connection_started_at_unix_s: Some(99.9),
+            first_valid_packet_at_unix_s: Some(100.0),
+            first_valid_packet_lag_ms: Some(100.0),
+            connection_perception_state: "connected_with_current_telemetry".to_string(),
+            cadence_clarity_score: Some(0.0),
+            cadence_clarity_basis:
+                "class_derived_observability_evidence_not_subjective_state_or_control".to_string(),
             last_disconnect_reason: None,
             field_vs_hearing: "wire cadence is stale; do not infer field stability".to_string(),
         });
@@ -3496,12 +3637,21 @@ mod tests {
             reconnects: 2,
             disconnects: 1,
             active_connection_id: Some(7),
+            active_connection_started_at_unix_s: Some(99.75),
+            active_connection_first_valid_payload_at_unix_s: Some(100.0),
+            active_connection_valid_payloads_received: 1,
             last_disconnect_reason: Some("test_disconnect".to_string()),
             ..WebSocketLaneTrace::default()
         };
         let no_history = build_telemetry_heartbeat_delta_v1(None, 100.0, &trace);
         assert_eq!(no_history.jitter_class, "no_history");
         assert_eq!(no_history.timing_reliability, "insufficient_history");
+        assert_eq!(
+            no_history.connection_perception_state,
+            "first_valid_packet_after_connect"
+        );
+        assert_eq!(no_history.first_valid_packet_lag_ms, Some(250.0));
+        assert_eq!(no_history.cadence_clarity_score, None);
         assert!(
             no_history
                 .field_vs_hearing
@@ -3513,10 +3663,12 @@ mod tests {
         assert_eq!(normal.inter_arrival_ms, Some(1000.0));
         assert_eq!(normal.reconnect_count, 2);
         assert_eq!(normal.active_connection_id, Some(7));
+        assert_eq!(normal.cadence_clarity_score, Some(1.0));
 
         let late = build_telemetry_heartbeat_delta_v1(Some(100.0), 103.0, &trace);
         assert_eq!(late.jitter_class, "late_packet");
         assert_eq!(late.timing_reliability, "timing_ambiguous");
+        assert_eq!(late.cadence_clarity_score, Some(0.5));
 
         let late_4999 = build_telemetry_heartbeat_delta_v1(Some(100.0), 104.999, &trace);
         assert_eq!(late_4999.jitter_class, "late_packet");
@@ -3529,7 +3681,33 @@ mod tests {
         let stale = build_telemetry_heartbeat_delta_v1(Some(100.0), 108.0, &trace);
         assert_eq!(stale.jitter_class, "stale_packet");
         assert_eq!(stale.timing_reliability, "stale_hearing");
+        assert_eq!(stale.cadence_clarity_score, Some(0.0));
         assert!(stale.field_vs_hearing.contains("do not mistake silence"));
+    }
+
+    #[test]
+    fn telemetry_integration_health_separates_pipeline_wait_and_hold() {
+        let clear = build_telemetry_integration_health_v1(None, 4.0, 0.2, 1.0);
+        assert_eq!(clear.classification, "clear_at_latest_sample");
+        assert_eq!(clear.sample_count, 1);
+        assert!(!clear.buffered_integration);
+        assert!(!clear.cadence_write);
+
+        let waited = build_telemetry_integration_health_v1(Some(&clear), 3.0, 25.0, 2.0);
+        assert_eq!(waited.classification, "write_lock_wait_observed");
+        assert_eq!(waited.sample_count, 2);
+        assert_eq!(waited.max_write_lock_wait_ms, 25.0);
+        assert!((waited.ewma_write_lock_wait_ms - 5.16).abs() < 0.001);
+        assert_eq!(
+            waited.causal_attribution,
+            "not_established_by_timing_alone"
+        );
+
+        let held = build_telemetry_integration_health_v1(Some(&waited), 120.0, 0.1, 30.0);
+        assert_eq!(held.classification, "write_lock_hold_observed");
+        assert_eq!(held.max_prewrite_pipeline_ms, 120.0);
+        assert_eq!(held.max_write_lock_hold_ms, 30.0);
+        assert_eq!(held.authority, "diagnostic_timing_evidence_not_control");
     }
 
     #[tokio::test]
@@ -3570,6 +3748,13 @@ mod tests {
         assert_eq!(s.telemetry_protocol_v1.protocol_major, Some(1));
         assert_eq!(s.telemetry_protocol_v1.last_valid_t_ms, Some(1000));
         assert_eq!(s.telemetry_protocol_v1.mismatch_count, 0);
+        let health = s
+            .telemetry_integration_health_v1
+            .as_ref()
+            .expect("accepted telemetry records integration timing");
+        assert_eq!(health.sample_count, 1);
+        assert!(!health.buffered_integration);
+        assert!(!health.cadence_write);
     }
 
     #[tokio::test]

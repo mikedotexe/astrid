@@ -18,14 +18,15 @@ use crate::sticky_mode::{self, StickyModeAuditV1};
 use crate::trace_lab;
 use crate::types::{
     BridgeEntropyReciprocityReviewV1, BridgeReciprocityV1, BridgeTextureEvidenceV1,
-    ConnectivityStatus, DeltaPersistenceV1, ExperienceDeltaBusV1, ExperienceDeltaKindV1,
-    ExperienceDeltaV1, LambdaContribution, LambdaProfile, MessageDirection,
-    PersistentDeformationSmoothingReviewV1, PressureSourceAnalysisV1, PressureTrendSmoothingV1,
-    PressureTrendV1, PullModeRate, PullTopologyProfile, ResidualDeformationTraceV1,
-    ResonanceDensityComponents, SafetyDecisionTrace, SafetyLevel, SensoryMsg, SpectralTelemetry,
-    TelemetryHeartbeatDeltaV1, TelemetryProtocolStatusV1, TextureDynamicFluxVectorV1,
-    TextureShapeOverTimeV2, TextureSignatureIntegrityV1, ViscosityPorosityTransportReviewV1,
-    WebSocketLaneTrace, resonance_cohesion_score_v1, resonance_stability_context_v1,
+    CadenceContentDistinctionV1, ConnectivityStatus, DeltaPersistenceV1, ExperienceDeltaBusV1,
+    ExperienceDeltaKindV1, ExperienceDeltaV1, LambdaContribution, LambdaProfile,
+    MessageDirection, PersistentDeformationSmoothingReviewV1, PressureSourceAnalysisV1,
+    PressureTrendSmoothingV1, PressureTrendV1, PullModeRate, PullTopologyProfile,
+    ResidualDeformationTraceV1, ResonanceDensityComponents, SafetyDecisionTrace, SafetyLevel,
+    SensoryMsg, SpectralTelemetry, TelemetryHeartbeatDeltaV1, TelemetryIntegrationHealthV1,
+    TelemetryProtocolStatusV1, TextureDynamicFluxVectorV1, TextureShapeOverTimeV2,
+    TextureSignatureIntegrityV1, ViscosityPorosityTransportReviewV1, WebSocketLaneTrace,
+    resonance_cohesion_score_v1, resonance_stability_context_v1,
     resonance_structural_integrity_index_v1,
     viscosity_porosity_transport_review_with_fingerprint_v1,
 };
@@ -49,6 +50,12 @@ const PRESSURE_POROSITY_EXPANSION_LIMINAL_MODE_PACKING_AT: f32 = 0.30;
 const PRESSURE_POROSITY_EXPANSION_VISCOUS_DENSITY_WARNING_AT: f32 = 0.28;
 const PRESSURE_POROSITY_EXPANSION_FELT_DEAD_ZONE_MODE_PACKING_AT: f32 = 0.25;
 const PRESSURE_POROSITY_EXPANSION_LOW_POROSITY_AT: f32 = 0.35;
+const TELEMETRY_INTEGRATION_EWMA_ALPHA: f64 = 0.20;
+const TELEMETRY_INTEGRATION_EWMA_REMAINDER: f64 = 0.80;
+const TELEMETRY_PREWRITE_PIPELINE_WATCH_MS: f64 = 100.0;
+const TELEMETRY_WRITE_LOCK_WAIT_WATCH_MS: f64 = 5.0;
+const TELEMETRY_WRITE_LOCK_HOLD_WATCH_MS: f64 = 20.0;
+const SEMANTIC_RESIDUE_WATCH_THRESHOLD: f32 = 0.60;
 
 const fn protocol_compatibility_label(status: CompatibilityStatus) -> &'static str {
     match status {
@@ -81,6 +88,92 @@ fn record_telemetry_protocol_status(
         state.telemetry_protocol_v1.mismatch_count =
             state.telemetry_protocol_v1.mismatch_count.saturating_add(1);
         state.telemetry_protocol_v1.last_mismatch_unix_s = Some(observed_at_unix_s);
+    }
+}
+
+fn telemetry_duration_ms(duration: Duration) -> f64 {
+    duration.as_secs_f64().mul_add(1_000.0, 0.0)
+}
+
+fn telemetry_integration_ewma(previous: f64, latest: f64) -> f64 {
+    latest.mul_add(
+        TELEMETRY_INTEGRATION_EWMA_ALPHA,
+        previous.mul_add(TELEMETRY_INTEGRATION_EWMA_REMAINDER, 0.0),
+    )
+}
+
+fn build_telemetry_integration_health_v1(
+    previous: Option<&TelemetryIntegrationHealthV1>,
+    prewrite_pipeline_ms: f64,
+    write_lock_wait_ms: f64,
+    write_lock_hold_ms: f64,
+) -> TelemetryIntegrationHealthV1 {
+    let previous_samples = previous.map_or(0, |health| health.sample_count);
+    let sample_count = previous_samples.saturating_add(1);
+    let (
+        ewma_prewrite_pipeline_ms,
+        max_prewrite_pipeline_ms,
+        ewma_write_lock_wait_ms,
+        max_write_lock_wait_ms,
+        ewma_write_lock_hold_ms,
+        max_write_lock_hold_ms,
+    ) = previous.map_or(
+        (
+            prewrite_pipeline_ms,
+            prewrite_pipeline_ms,
+            write_lock_wait_ms,
+            write_lock_wait_ms,
+            write_lock_hold_ms,
+            write_lock_hold_ms,
+        ),
+        |health| {
+            (
+                telemetry_integration_ewma(
+                    health.ewma_prewrite_pipeline_ms,
+                    prewrite_pipeline_ms,
+                ),
+                health.max_prewrite_pipeline_ms.max(prewrite_pipeline_ms),
+                telemetry_integration_ewma(
+                    health.ewma_write_lock_wait_ms,
+                    write_lock_wait_ms,
+                ),
+                health.max_write_lock_wait_ms.max(write_lock_wait_ms),
+                telemetry_integration_ewma(
+                    health.ewma_write_lock_hold_ms,
+                    write_lock_hold_ms,
+                ),
+                health.max_write_lock_hold_ms.max(write_lock_hold_ms),
+            )
+        },
+    );
+    let classification = if write_lock_wait_ms >= TELEMETRY_WRITE_LOCK_WAIT_WATCH_MS {
+        "write_lock_wait_observed"
+    } else if write_lock_hold_ms >= TELEMETRY_WRITE_LOCK_HOLD_WATCH_MS {
+        "write_lock_hold_observed"
+    } else if prewrite_pipeline_ms >= TELEMETRY_PREWRITE_PIPELINE_WATCH_MS {
+        "prewrite_pipeline_heavy"
+    } else {
+        "clear_at_latest_sample"
+    };
+
+    TelemetryIntegrationHealthV1 {
+        policy: "telemetry_integration_health_v1".to_string(),
+        schema_version: 1,
+        sample_count,
+        classification: classification.to_string(),
+        latest_prewrite_pipeline_ms: prewrite_pipeline_ms,
+        ewma_prewrite_pipeline_ms,
+        max_prewrite_pipeline_ms,
+        latest_write_lock_wait_ms: write_lock_wait_ms,
+        ewma_write_lock_wait_ms,
+        max_write_lock_wait_ms,
+        latest_write_lock_hold_ms: write_lock_hold_ms,
+        ewma_write_lock_hold_ms,
+        max_write_lock_hold_ms,
+        causal_attribution: "not_established_by_timing_alone".to_string(),
+        buffered_integration: false,
+        cadence_write: false,
+        authority: "diagnostic_timing_evidence_not_control".to_string(),
     }
 }
 
@@ -238,6 +331,8 @@ pub struct BridgeState {
     pub incidents_total: u64,
     /// Latest canonical telemetry protocol compatibility observation.
     pub telemetry_protocol_v1: TelemetryProtocolStatusV1,
+    /// Measured telemetry pipeline and shared-state lock timing.
+    pub telemetry_integration_health_v1: Option<TelemetryIntegrationHealthV1>,
 }
 
 impl Default for BridgeState {
@@ -289,6 +384,7 @@ impl BridgeState {
             sensory_ws: WebSocketLaneTrace::default(),
             incidents_total: 0,
             telemetry_protocol_v1: TelemetryProtocolStatusV1::default(),
+            telemetry_integration_health_v1: None,
         }
     }
 
@@ -496,6 +592,124 @@ impl BridgeState {
     #[must_use]
     pub fn pressure_trend_smoothing_v1(&self) -> Option<PressureTrendSmoothingV1> {
         build_pressure_trend_smoothing_v1(&self.pressure_trend_samples_v1)
+    }
+
+    /// Distinguish a clear telemetry pipe from persistent semantic residue.
+    #[must_use]
+    pub fn cadence_content_distinction_v1(&self) -> Option<CadenceContentDistinctionV1> {
+        let heartbeat = self.telemetry_heartbeat_delta_v1.as_ref();
+        let smoothing = self.pressure_trend_smoothing_v1();
+        if heartbeat.is_none() && smoothing.is_none() {
+            return None;
+        }
+
+        let cadence_state = heartbeat.map_or("cadence_evidence_unavailable", |value| {
+            match (
+                value.jitter_class.as_str(),
+                value.timing_reliability.as_str(),
+            ) {
+                ("normal", "reliable") => "cadence_clear",
+                ("stale_packet", _) | (_, "stale_hearing") => "cadence_stale",
+                ("late_packet", _) | (_, "timing_ambiguous") => "cadence_ambiguous",
+                _ => "cadence_insufficient_history",
+            }
+        });
+        let latest_semantic_viscosity = smoothing
+            .as_ref()
+            .and_then(|value| value.latest_semantic_viscosity)
+            .filter(|value| value.is_finite())
+            .map(|value| value.clamp(0.0, 1.0));
+        let semantic_viscosity_persistence_index = smoothing
+            .as_ref()
+            .and_then(|value| value.semantic_viscosity_persistence_index)
+            .filter(|value| value.is_finite())
+            .map(|value| value.clamp(0.0, 1.0));
+        let semantic_stagnation_index = smoothing
+            .as_ref()
+            .and_then(|value| value.semantic_stagnation_index)
+            .filter(|value| value.is_finite())
+            .map(|value| value.clamp(0.0, 1.0));
+        let semantic_residue_score = match (
+            semantic_viscosity_persistence_index,
+            semantic_stagnation_index,
+        ) {
+            (Some(persistence), Some(stagnation)) => Some(persistence.max(stagnation)),
+            (Some(persistence), None) => Some(persistence),
+            (None, Some(stagnation)) => Some(stagnation),
+            (None, None) => None,
+        };
+        let semantic_persistence_state = smoothing
+            .as_ref()
+            .map(|value| value.semantic_viscosity_persistence_state.as_str())
+            .unwrap_or_default();
+        let semantic_stagnation_state = smoothing
+            .as_ref()
+            .map(|value| value.semantic_stagnation_state.as_str())
+            .unwrap_or_default();
+        let persistent_residue_named = matches!(
+            semantic_persistence_state,
+            "persistent_thickness_against_motion" | "persistent_semantic_viscosity"
+        ) || matches!(
+            semantic_stagnation_state,
+            "functional_clog_connected_lanes_watch" | "semantic_stagnation_watch"
+        );
+        let content_state = if persistent_residue_named
+            || semantic_residue_score
+                .is_some_and(|score| score >= SEMANTIC_RESIDUE_WATCH_THRESHOLD)
+        {
+            "persistent_semantic_residue"
+        } else if semantic_residue_score.is_some() {
+            "semantic_residue_below_watch_threshold"
+        } else if latest_semantic_viscosity.is_some() {
+            "semantic_viscosity_observed_insufficient_persistence_history"
+        } else {
+            "content_evidence_unavailable"
+        };
+        let cadence_content_relation = match (cadence_state, content_state) {
+            ("cadence_clear", "persistent_semantic_residue") => {
+                "cadence_clear_semantic_residue_persists"
+            },
+            ("cadence_clear", "semantic_residue_below_watch_threshold") => {
+                "cadence_clear_semantic_residue_below_watch"
+            },
+            ("cadence_stale", "persistent_semantic_residue") => {
+                "cadence_stale_and_semantic_residue_persists"
+            },
+            ("cadence_ambiguous", "persistent_semantic_residue") => {
+                "cadence_ambiguous_semantic_residue_persists"
+            },
+            (_, "content_evidence_unavailable") => "cadence_known_content_evidence_unavailable",
+            (_, "semantic_viscosity_observed_insufficient_persistence_history") => {
+                "cadence_known_semantic_viscosity_history_insufficient"
+            },
+            _ => "cadence_content_relation_mixed",
+        };
+
+        Some(CadenceContentDistinctionV1 {
+            policy: "cadence_content_distinction_v1".to_string(),
+            schema_version: 1,
+            cadence_state: cadence_state.to_string(),
+            cadence_clarity_score: heartbeat.and_then(|value| value.cadence_clarity_score),
+            cadence_evidence_basis: heartbeat.map_or_else(
+                || "no_telemetry_heartbeat_delta_available".to_string(),
+                |value| value.cadence_clarity_basis.clone(),
+            ),
+            content_state: content_state.to_string(),
+            latest_semantic_viscosity,
+            semantic_viscosity_persistence_index,
+            semantic_stagnation_index,
+            semantic_residue_score,
+            semantic_residue_score_basis:
+                "max_of_available_semantic_viscosity_persistence_and_stagnation_indices"
+                    .to_string(),
+            semantic_residue_watch_threshold: SEMANTIC_RESIDUE_WATCH_THRESHOLD,
+            evidence_window_samples: smoothing.as_ref().map_or(0, |value| value.sample_count),
+            cadence_content_relation: cadence_content_relation.to_string(),
+            live_cadence_write: false,
+            live_semantic_write: false,
+            authority: "read_only_transport_content_distinction_not_cadence_semantic_or_control"
+                .to_string(),
+        })
     }
 
     /// Read-only review for pressure that has become a stable bruise/baseline.

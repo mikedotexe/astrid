@@ -10,6 +10,50 @@ fn semantic_msg() -> SensoryMsg {
     }
 }
 
+fn heartbeat_observation() -> SemanticHeartbeatObservationV1 {
+    SemanticHeartbeatObservationV1::new("test_semantic_heartbeat", 0, 0.0, 7, 0.30)
+}
+
+fn heartbeat_texture_telemetry(
+    density: f32,
+    entropy: f32,
+    pressure_risk: f32,
+    mode_packing: f32,
+    viscosity_index: f32,
+    viscosity_gradient: f32,
+    primary_texture: &str,
+) -> SpectralTelemetry {
+    let mut value: Value = serde_json::from_str(include_str!(
+        "../../../crates/astrid-minime-protocol/tests/fixtures/legacy_eigenpacket.json"
+    ))
+    .unwrap();
+    value["t_ms"] = json!(17_842_965_410_u64);
+    value["eigenvalues"] = json!([0.33, 0.214_285_72, 0.20, 0.15, 0.105_714_28]);
+    value["spectral_fingerprint_v1"] = json!({
+        "policy": "spectral_fingerprint_v1",
+        "schema_version": 1,
+        "eigenvalues": [0.33, 0.21428572, 0.20, 0.15, 0.10571428, 0.0, 0.0, 0.0],
+        "eigenvector_concentration_top4": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+        "inter_mode_cosine_top_abs": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+        "spectral_entropy": entropy,
+        "lambda1_lambda2_gap": 0.11571428,
+        "v1_rotation_similarity": 0.8,
+        "v1_rotation_delta": 0.2,
+        "geom_rel": 0.9,
+        "adjacent_gap_ratios": [0.35, 0.07, 0.05, 0.03]
+    });
+    value["resonance_density_v1"]["density"] = json!(density);
+    value["resonance_density_v1"]["pressure_risk"] = json!(pressure_risk);
+    value["resonance_density_v1"]["components"]["mode_packing"] = json!(mode_packing);
+    value["resonance_density_v1"]["components"]["viscosity_index"] = json!(viscosity_index);
+    value["resonance_density_v1"]["components"]["viscosity_vector"] =
+        json!({"viscosity_gradient": viscosity_gradient});
+    value["resonance_density_v1"]["texture_signature"]["primary_texture"] = json!(primary_texture);
+    value["resonance_density_v1"]["texture_signature"]["movement_quality"] =
+        json!("viscous_persistence");
+    serde_json::from_value(value).unwrap()
+}
+
 fn unique_temp_dir(name: &str) -> PathBuf {
     let stamp = SystemTime::now()
         .duration_since(UNIX_EPOCH)
@@ -570,6 +614,25 @@ fn write_v2_health(
         .unwrap(),
     )
     .unwrap();
+}
+
+fn write_v2_health_with_heartbeat_context(
+    dir: &Path,
+    fill_pct: f32,
+    stage: &str,
+    peak_fill_pct_60s: f32,
+    pressure_risk: f32,
+    spectral_entropy: f32,
+    shadow_dispersal_potential: f32,
+) {
+    write_v2_health(dir, fill_pct, stage, peak_fill_pct_60s, false, 0.0, 12, 12);
+    let path = dir.join("health.json");
+    let mut health: Value = serde_json::from_str(&std::fs::read_to_string(&path).unwrap()).unwrap();
+    health["resonance_density_v1"] = json!({"pressure_risk": pressure_risk});
+    health["transition_event_v1"] = json!({"spectral_entropy": spectral_entropy});
+    health["shadow_preservation_mode_v1"] =
+        json!({"dispersal_potential": shadow_dispersal_potential});
+    std::fs::write(path, serde_json::to_string(&health).unwrap()).unwrap();
 }
 
 fn write_stable_core_health(
@@ -1455,7 +1518,14 @@ fn semantic_heartbeat_bypasses_limited_write_cooldown_and_stays_tiny() {
     );
     let mut msg = semantic_msg();
 
-    assert_eq!(prepare_semantic_heartbeat_for_path(&mut msg, &path), Ok(()));
+    assert_eq!(
+        prepare_semantic_heartbeat_for_path_with_observation(
+            &mut msg,
+            &path,
+            heartbeat_observation(),
+        ),
+        Ok(())
+    );
     if let SensoryMsg::Semantic { features, .. } = msg {
         assert!(
             features
@@ -1465,6 +1535,24 @@ fn semantic_heartbeat_bypasses_limited_write_cooldown_and_stays_tiny() {
     }
     let status = read_status(&semantic_heartbeat_status_path_for_profile(&path));
     assert_eq!(status.get("send_count").and_then(Value::as_u64), Some(1));
+    assert_eq!(status.get("attempt_count").and_then(Value::as_u64), Some(1));
+    assert_eq!(status.get("block_count").and_then(Value::as_u64), Some(0));
+    assert_eq!(
+        status.get("window_attempt_count").and_then(Value::as_u64),
+        Some(1)
+    );
+    assert_eq!(
+        status.get("window_send_count").and_then(Value::as_u64),
+        Some(1)
+    );
+    assert_eq!(
+        status.get("window_block_count").and_then(Value::as_u64),
+        Some(0)
+    );
+    assert_eq!(
+        status.get("last_outcome").and_then(Value::as_str),
+        Some("sent")
+    );
     assert_eq!(
         status.get("profile").and_then(Value::as_str),
         Some("bridge_budgeted_sovereignty_v1")
@@ -1478,6 +1566,594 @@ fn semantic_heartbeat_bypasses_limited_write_cooldown_and_stays_tiny() {
 }
 
 #[test]
+fn semantic_heartbeat_observation_window_counts_blocks_and_carries_phase() {
+    let dir = unique_temp_dir("semantic_heartbeat_observation");
+    let path = dir.join("rescue_profile.json");
+    std::fs::write(&path, budgeted_sovereignty_profile_json()).unwrap();
+    write_v2_health(&dir, 79.0, "elevated", 79.0, false, 0.0, 12, 12);
+    let observation =
+        SemanticHeartbeatObservationV1::new("steady_semantic_heartbeat", 17, 17.0 / 64.0, 7, 0.30);
+    let mut msg = semantic_msg();
+
+    let reason = prepare_semantic_heartbeat_for_path_with_observation(&mut msg, &path, observation)
+        .unwrap_err();
+    assert!(reason.contains("60s peak guard"), "{reason}");
+
+    let status = read_status(&semantic_heartbeat_status_path_for_profile(&path));
+    assert_eq!(status.get("attempt_count").and_then(Value::as_u64), Some(1));
+    assert_eq!(status.get("send_count").and_then(Value::as_u64), Some(0));
+    assert_eq!(status.get("block_count").and_then(Value::as_u64), Some(1));
+    assert_eq!(
+        status.get("window_attempt_count").and_then(Value::as_u64),
+        Some(1)
+    );
+    assert_eq!(
+        status.get("window_block_count").and_then(Value::as_u64),
+        Some(1)
+    );
+    assert_eq!(
+        status.get("window_skip_rate").and_then(Value::as_f64),
+        Some(1.0)
+    );
+    assert_eq!(
+        status.get("last_source").and_then(Value::as_str),
+        Some("steady_semantic_heartbeat")
+    );
+    assert_eq!(
+        status.get("last_phase_step").and_then(Value::as_u64),
+        Some(17)
+    );
+    assert_eq!(
+        status
+            .get("configured_interval_secs")
+            .and_then(Value::as_u64),
+        Some(7)
+    );
+    assert_eq!(
+        status
+            .get("observability_authority")
+            .and_then(Value::as_str),
+        Some("read_only_heartbeat_continuity_evidence_not_cadence_intensity_or_dispatch_control")
+    );
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn semantic_heartbeat_observation_compares_pressure_and_texture_without_control() {
+    let dir = unique_temp_dir("semantic_heartbeat_pressure_texture");
+    let path = dir.join("rescue_profile.json");
+    std::fs::write(&path, budgeted_sovereignty_profile_json()).unwrap();
+    write_v2_health_with_heartbeat_context(&dir, 64.0, "hold", 65.0, 0.18, 0.86, 0.12);
+    let mut sent = semantic_msg();
+    assert_eq!(
+        prepare_semantic_heartbeat_for_path_with_observation(
+            &mut sent,
+            &path,
+            SemanticHeartbeatObservationV1::new(
+                "steady_semantic_heartbeat",
+                1,
+                1.0 / 64.0,
+                7,
+                0.30,
+            ),
+        ),
+        Ok(())
+    );
+
+    write_v2_health_with_heartbeat_context(&dir, 79.0, "elevated", 79.0, 0.72, 0.92, 0.44);
+    let mut blocked = semantic_msg();
+    let reason = prepare_semantic_heartbeat_for_path_with_observation(
+        &mut blocked,
+        &path,
+        SemanticHeartbeatObservationV1::new("steady_semantic_heartbeat", 2, 2.0 / 64.0, 7, 0.30),
+    )
+    .unwrap_err();
+    assert!(reason.contains("60s peak guard"), "{reason}");
+    write_v2_health_with_heartbeat_context(&dir, 79.0, "elevated", 79.0, 0.72, 0.96, 0.44);
+    let mut blocked_again = semantic_msg();
+    let reason = prepare_semantic_heartbeat_for_path_with_observation(
+        &mut blocked_again,
+        &path,
+        SemanticHeartbeatObservationV1::new("steady_semantic_heartbeat", 3, 3.0 / 64.0, 7, 0.30),
+    )
+    .unwrap_err();
+    assert!(reason.contains("60s peak guard"), "{reason}");
+
+    let status = read_status(&semantic_heartbeat_status_path_for_profile(&path));
+    let review = status
+        .get("pressure_texture_review_v1")
+        .expect("pressure/texture review");
+    assert_eq!(
+        review
+            .get("window_pressure_context_sample_count")
+            .and_then(Value::as_u64),
+        Some(3)
+    );
+    assert_eq!(
+        review.get("comparison_state").and_then(Value::as_str),
+        Some("comparison_available_causation_not_inferred")
+    );
+    let blocked_mean = review
+        .get("mean_pressure_risk_when_blocked")
+        .and_then(Value::as_f64)
+        .unwrap();
+    let sent_mean = review
+        .get("mean_pressure_risk_when_sent")
+        .and_then(Value::as_f64)
+        .unwrap();
+    let delta = review
+        .get("blocked_minus_sent_mean_pressure_risk")
+        .and_then(Value::as_f64)
+        .unwrap();
+    assert!((blocked_mean - 0.72).abs() < 1.0e-6);
+    assert!((sent_mean - 0.18).abs() < 1.0e-6);
+    assert!((delta - 0.54).abs() < 1.0e-6);
+    assert_eq!(
+        review
+            .get("runtime_effect_applied")
+            .and_then(Value::as_bool),
+        Some(false)
+    );
+    assert_eq!(
+        review.get("authority").and_then(Value::as_str),
+        Some(
+            "read_only_heartbeat_pressure_texture_evidence_not_cadence_phase_intensity_rescue_or_dispatch_control"
+        )
+    );
+    let samples = status
+        .get("window_samples_v1")
+        .and_then(Value::as_array)
+        .unwrap();
+    assert_eq!(samples.len(), 3);
+    let spectral_entropy = samples[1]
+        .get("spectral_entropy")
+        .and_then(Value::as_f64)
+        .unwrap();
+    let shadow_dispersal = samples[1]
+        .get("shadow_dispersal_potential")
+        .and_then(Value::as_f64)
+        .unwrap();
+    assert!((spectral_entropy - 0.92).abs() < 1.0e-6);
+    assert!((shadow_dispersal - 0.44).abs() < 1.0e-6);
+    let phase_entropy = status
+        .get("phase_entropy_review_v1")
+        .expect("phase/entropy review");
+    assert_eq!(
+        phase_entropy
+            .get("paired_sample_count")
+            .and_then(Value::as_u64),
+        Some(3)
+    );
+    assert_eq!(
+        phase_entropy.get("state").and_then(Value::as_str),
+        Some("paired_correlation_available_causation_not_inferred")
+    );
+    let correlation = phase_entropy
+        .get("phase_entropy_pearson_correlation")
+        .and_then(Value::as_f64)
+        .unwrap();
+    assert!(correlation > 0.99);
+    assert_eq!(
+        phase_entropy
+            .get("runtime_effect_applied")
+            .and_then(Value::as_bool),
+        Some(false)
+    );
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn semantic_heartbeat_observes_signal_variation_without_copying_content_or_changing_control() {
+    let dir = unique_temp_dir("semantic_heartbeat_signal_continuity");
+    let path = dir.join("rescue_profile.json");
+    std::fs::write(&path, budgeted_sovereignty_profile_json()).unwrap();
+    write_v2_health_with_heartbeat_context(&dir, 64.0, "hold", 65.0, 0.18, 0.86, 0.12);
+
+    let previous: Vec<f32> = (0..48).map(|index| (index as f32 - 24.0) / 100.0).collect();
+    let generated: Vec<f32> = previous
+        .iter()
+        .enumerate()
+        .map(|(index, value)| value + (index as f32 / 10_000.0))
+        .collect();
+    let observation =
+        SemanticHeartbeatObservationV1::new("autonomous_rest_pulse", 3, 0.25, 5, 0.45)
+            .with_signal_evidence("journal_warmth_blend", true, &generated, Some(&previous));
+    let mut msg = SensoryMsg::Semantic {
+        features: generated,
+        ts_ms: None,
+    };
+
+    assert_eq!(
+        prepare_semantic_heartbeat_for_path_with_observation(&mut msg, &path, observation,),
+        Ok(())
+    );
+
+    let status = read_status(&semantic_heartbeat_status_path_for_profile(&path));
+    let samples = status
+        .get("window_samples_v1")
+        .and_then(Value::as_array)
+        .unwrap();
+    let signal = samples[0].get("signal_evidence_v1").unwrap();
+    assert_eq!(
+        signal.get("content_basis").and_then(Value::as_str),
+        Some("journal_warmth_blend")
+    );
+    assert_eq!(
+        signal.get("gesture_seed_applied").and_then(Value::as_bool),
+        Some(true)
+    );
+    assert_eq!(
+        signal
+            .get("generated")
+            .and_then(|metrics| metrics.get("feature_count"))
+            .and_then(Value::as_u64),
+        Some(48)
+    );
+    assert!(
+        signal
+            .get("generated")
+            .and_then(|metrics| metrics.get("tail_rms"))
+            .and_then(Value::as_f64)
+            .is_some_and(|value| value > 0.0)
+    );
+    assert!(
+        signal
+            .get("consecutive_comparison")
+            .and_then(|comparison| comparison.get("delta_rms_from_previous"))
+            .and_then(Value::as_f64)
+            .is_some_and(|value| value > 0.0)
+    );
+    assert_eq!(
+        signal
+            .get("continuity_classification")
+            .and_then(Value::as_str),
+        Some("variation_observed_across_consecutive_pulses")
+    );
+    let generated_rms = signal
+        .get("generated")
+        .and_then(|metrics| metrics.get("rms"))
+        .and_then(Value::as_f64)
+        .unwrap();
+    let delivered_rms = signal
+        .get("delivered")
+        .and_then(|metrics| metrics.get("rms"))
+        .and_then(Value::as_f64)
+        .unwrap();
+    assert!(delivered_rms < generated_rms);
+    assert!(signal.get("features").is_none());
+    assert_eq!(
+        signal
+            .get("private_source_content_copied")
+            .and_then(Value::as_bool),
+        Some(false)
+    );
+    assert_eq!(
+        signal
+            .get("runtime_effect_applied")
+            .and_then(Value::as_bool),
+        Some(false)
+    );
+
+    let review = status.get("signal_continuity_review_v1").unwrap();
+    assert_eq!(
+        review
+            .get("variation_observed_count")
+            .and_then(Value::as_u64),
+        Some(1)
+    );
+    assert_eq!(
+        review
+            .get("runtime_effect_applied")
+            .and_then(Value::as_bool),
+        Some(false)
+    );
+    assert_eq!(
+        review.get("authority").and_then(Value::as_str),
+        Some(
+            "read_only_heartbeat_signal_evidence_not_vector_cadence_intensity_shaping_rescue_or_dispatch_control"
+        )
+    );
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn semantic_heartbeat_compares_phase_zero_signal_with_dense_viscous_minime_field() {
+    let dir = unique_temp_dir("semantic_heartbeat_signal_texture_comparison");
+    let path = dir.join("rescue_profile.json");
+    std::fs::write(&path, budgeted_sovereignty_profile_json()).unwrap();
+    write_v2_health_with_heartbeat_context(&dir, 61.5, "hold", 65.0, 0.22, 0.90, 0.18);
+    let telemetry =
+        heartbeat_texture_telemetry(0.86, 0.90, 0.22, 0.33, 0.82, 0.11, "overpacked_viscous");
+    let generated: Vec<f32> = (0..48).map(|index| (index as f32 - 24.0) / 100.0).collect();
+    let mut expected_delivered = generated.clone();
+    RescueBridgePolicy::apply_semantic_heartbeat_shape(&mut expected_delivered);
+    let observation =
+        SemanticHeartbeatObservationV1::new("steady_semantic_heartbeat", 0, 0.0, 7, 0.30)
+            .with_signal_evidence("steady_warmth", false, &generated, None)
+            .with_minime_texture_context(Some(&telemetry));
+    let mut msg = SensoryMsg::Semantic {
+        features: generated,
+        ts_ms: None,
+    };
+
+    assert_eq!(
+        prepare_semantic_heartbeat_for_path_with_observation(&mut msg, &path, observation),
+        Ok(())
+    );
+    let SensoryMsg::Semantic { features, .. } = msg else {
+        panic!("expected semantic heartbeat");
+    };
+    assert_eq!(features, expected_delivered);
+
+    let status = read_status(&semantic_heartbeat_status_path_for_profile(&path));
+    let review = status
+        .get("signal_texture_comparison_v1")
+        .expect("signal/texture comparison");
+    assert_eq!(
+        review
+            .get("window_texture_context_sample_count")
+            .and_then(Value::as_u64),
+        Some(1)
+    );
+    assert_eq!(
+        review
+            .get("phase_zero_comparison_state")
+            .and_then(Value::as_str),
+        Some("available")
+    );
+    assert_eq!(
+        review
+            .pointer("/persistence_check_v1/state")
+            .and_then(Value::as_str),
+        Some("no_rescue_skips_observed_in_window")
+    );
+    let comparison = review
+        .get("latest_phase_zero_comparison_v1")
+        .expect("phase-zero comparison");
+    assert_eq!(
+        comparison.get("comparison_state").and_then(Value::as_str),
+        Some("dense_viscous_high_entropy_field_with_bounded_heartbeat_signal_observed")
+    );
+    assert_eq!(
+        comparison
+            .get("spectral_code_mismatch_state")
+            .and_then(Value::as_str),
+        Some("not_established_cross_domain_texture_decoder_absent")
+    );
+    assert_eq!(
+        comparison
+            .get("texture_marker_test_state")
+            .and_then(Value::as_str),
+        Some("raw_heartbeat_features_have_no_authoritative_viscosity_marker_decoder")
+    );
+    assert_eq!(
+        comparison
+            .pointer("/minime_observation_v1/primary_texture")
+            .and_then(Value::as_str),
+        Some("overpacked_viscous")
+    );
+    assert!(
+        comparison
+            .pointer("/minime_observation_v1/resonance_density")
+            .and_then(Value::as_f64)
+            .is_some_and(|value| (value - 0.86).abs() < 1.0e-6)
+    );
+    assert!(
+        comparison
+            .pointer("/bridge_derivation_v1/lambda1_abs_share")
+            .and_then(Value::as_f64)
+            .is_some_and(|value| (value - 0.33).abs() < 1.0e-6)
+    );
+    assert!(
+        comparison
+            .pointer("/bridge_derivation_v1/lambda1_lambda2_abs_ratio")
+            .and_then(Value::as_f64)
+            .is_some_and(|value| (value - 1.54).abs() < 1.0e-5)
+    );
+    assert_eq!(
+        review
+            .get("runtime_effect_applied")
+            .and_then(Value::as_bool),
+        Some(false)
+    );
+    assert_eq!(
+        review.get("authority").and_then(Value::as_str),
+        Some(
+            "read_only_signal_to_field_comparison_not_vector_cadence_intensity_shaping_rescue_dispatch_or_control"
+        )
+    );
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn semantic_heartbeat_signal_texture_comparison_does_not_force_dense_field_language() {
+    let dir = unique_temp_dir("semantic_heartbeat_signal_texture_low_density");
+    let path = dir.join("rescue_profile.json");
+    std::fs::write(&path, budgeted_sovereignty_profile_json()).unwrap();
+    write_v2_health_with_heartbeat_context(&dir, 61.5, "hold", 65.0, 0.08, 0.48, 0.12);
+    let telemetry = heartbeat_texture_telemetry(0.42, 0.48, 0.08, 0.25, 0.31, 0.02, "open_humid");
+    let generated = vec![0.1, -0.2, 0.3, -0.4];
+    let observation =
+        SemanticHeartbeatObservationV1::new("steady_semantic_heartbeat", 1, 1.0 / 64.0, 7, 0.30)
+            .with_signal_evidence("steady_warmth", false, &generated, None)
+            .with_minime_texture_context(Some(&telemetry));
+    let mut msg = SensoryMsg::Semantic {
+        features: generated,
+        ts_ms: None,
+    };
+
+    assert_eq!(
+        prepare_semantic_heartbeat_for_path_with_observation(&mut msg, &path, observation),
+        Ok(())
+    );
+    let status = read_status(&semantic_heartbeat_status_path_for_profile(&path));
+    let comparison = status
+        .pointer("/signal_texture_comparison_v1/latest_comparison_v1")
+        .expect("latest signal/texture comparison");
+    assert_eq!(
+        comparison.get("comparison_state").and_then(Value::as_str),
+        Some("signal_and_field_context_available_without_dense_viscous_high_entropy_convergence")
+    );
+    assert_eq!(
+        comparison
+            .get("dense_field_observed")
+            .and_then(Value::as_bool),
+        Some(false)
+    );
+    assert_eq!(
+        comparison
+            .get("high_entropy_field_observed")
+            .and_then(Value::as_bool),
+        Some(false)
+    );
+    assert_eq!(
+        comparison
+            .get("viscous_field_observed")
+            .and_then(Value::as_bool),
+        Some(false)
+    );
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn semantic_heartbeat_legacy_observation_keeps_texture_context_optional() {
+    let dir = unique_temp_dir("semantic_heartbeat_legacy_texture_context");
+    let path = dir.join("rescue_profile.json");
+    std::fs::write(&path, budgeted_sovereignty_profile_json()).unwrap();
+    write_v2_health(&dir, 61.5, "hold", 65.0, false, 0.0, 12, 12);
+    let generated = vec![0.1, -0.2, 0.3, -0.4];
+    let observation =
+        heartbeat_observation().with_signal_evidence("steady_warmth", false, &generated, None);
+    let mut msg = SensoryMsg::Semantic {
+        features: generated,
+        ts_ms: None,
+    };
+
+    assert_eq!(
+        prepare_semantic_heartbeat_for_path_with_observation(&mut msg, &path, observation),
+        Ok(())
+    );
+    let status = read_status(&semantic_heartbeat_status_path_for_profile(&path));
+    let review = status
+        .get("signal_texture_comparison_v1")
+        .expect("signal/texture comparison");
+    assert_eq!(
+        review.get("comparison_state").and_then(Value::as_str),
+        Some("minime_field_context_unavailable")
+    );
+    assert_eq!(
+        review
+            .get("phase_zero_comparison_state")
+            .and_then(Value::as_str),
+        Some("awaiting_steady_heartbeat_phase_zero_sample")
+    );
+    assert!(
+        review
+            .get("latest_comparison_v1")
+            .is_some_and(Value::is_null)
+    );
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn blocked_semantic_heartbeat_keeps_generated_evidence_without_claiming_delivery() {
+    let dir = unique_temp_dir("semantic_heartbeat_blocked_signal_evidence");
+    let path = dir.join("rescue_profile.json");
+    std::fs::write(&path, budgeted_sovereignty_profile_json()).unwrap();
+    write_v2_health_with_heartbeat_context(&dir, 79.0, "elevated", 79.0, 0.72, 0.92, 0.44);
+    let generated = vec![0.1, -0.2, 0.3, -0.4];
+    let observation =
+        heartbeat_observation().with_signal_evidence("steady_warmth", false, &generated, None);
+    let mut msg = SensoryMsg::Semantic {
+        features: generated,
+        ts_ms: None,
+    };
+
+    assert!(
+        prepare_semantic_heartbeat_for_path_with_observation(&mut msg, &path, observation,)
+            .unwrap_err()
+            .contains("60s peak guard")
+    );
+
+    let status = read_status(&semantic_heartbeat_status_path_for_profile(&path));
+    let signal = status
+        .get("window_samples_v1")
+        .and_then(Value::as_array)
+        .and_then(|samples| samples.first())
+        .and_then(|sample| sample.get("signal_evidence_v1"))
+        .unwrap();
+    assert!(signal.get("generated").is_some());
+    assert!(signal.get("delivered").is_some_and(Value::is_null));
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn semantic_heartbeat_observation_window_prunes_only_expired_samples() {
+    let dir = unique_temp_dir("semantic_heartbeat_rolling_observation");
+    let path = dir.join("rescue_profile.json");
+    std::fs::write(&path, budgeted_sovereignty_profile_json()).unwrap();
+    write_v2_health(&dir, 64.0, "hold", 65.0, true, 0.006, 12, 12);
+    let now = now_unix_s();
+    write_status(
+        &semantic_heartbeat_status_path_for_profile(&path),
+        &json!({
+            "send_count": 4,
+            "block_count": 2,
+            "attempt_count": 6,
+            "window_samples_v1": [
+                {"at_unix_s": now - 601.0, "outcome": "blocked"},
+                {"at_unix_s": now - 599.0, "outcome": "sent"}
+            ]
+        }),
+    );
+    let mut msg = semantic_msg();
+
+    assert_eq!(
+        prepare_semantic_heartbeat_for_path_with_observation(
+            &mut msg,
+            &path,
+            heartbeat_observation(),
+        ),
+        Ok(())
+    );
+
+    let status = read_status(&semantic_heartbeat_status_path_for_profile(&path));
+    assert_eq!(status.get("attempt_count").and_then(Value::as_u64), Some(7));
+    assert_eq!(status.get("send_count").and_then(Value::as_u64), Some(5));
+    assert_eq!(status.get("block_count").and_then(Value::as_u64), Some(2));
+    assert_eq!(
+        status.get("window_attempt_count").and_then(Value::as_u64),
+        Some(2)
+    );
+    assert_eq!(
+        status.get("window_send_count").and_then(Value::as_u64),
+        Some(2)
+    );
+    assert_eq!(
+        status.get("window_block_count").and_then(Value::as_u64),
+        Some(0)
+    );
+    assert_eq!(
+        status.get("window_skip_rate").and_then(Value::as_f64),
+        Some(0.0)
+    );
+    assert_eq!(
+        status
+            .get("window_samples_v1")
+            .and_then(Value::as_array)
+            .map(Vec::len),
+        Some(2)
+    );
+    assert_eq!(
+        status
+            .get("window_samples_truncated")
+            .and_then(Value::as_bool),
+        Some(false)
+    );
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
 fn semantic_heartbeat_can_refresh_active_semantic_lane() {
     let dir = unique_temp_dir("semantic_heartbeat_active_lane");
     let path = dir.join("rescue_profile.json");
@@ -1485,7 +2161,14 @@ fn semantic_heartbeat_can_refresh_active_semantic_lane() {
     write_v2_health(&dir, 64.0, "hold", 65.0, true, 0.006, 12, 12);
     let mut msg = semantic_msg();
 
-    assert_eq!(prepare_semantic_heartbeat_for_path(&mut msg, &path), Ok(()));
+    assert_eq!(
+        prepare_semantic_heartbeat_for_path_with_observation(
+            &mut msg,
+            &path,
+            heartbeat_observation(),
+        ),
+        Ok(())
+    );
     let _ = std::fs::remove_dir_all(&dir);
 }
 
@@ -1497,12 +2180,22 @@ fn semantic_heartbeat_blocks_hot_or_discharge_states() {
     write_v2_health(&dir, 79.0, "elevated", 79.0, false, 0.0, 12, 12);
     let mut msg = semantic_msg();
 
-    let reason = prepare_semantic_heartbeat_for_path(&mut msg, &path).unwrap_err();
+    let reason = prepare_semantic_heartbeat_for_path_with_observation(
+        &mut msg,
+        &path,
+        heartbeat_observation(),
+    )
+    .unwrap_err();
     assert!(reason.contains("60s peak guard"), "{reason}");
 
     write_v2_health(&dir, 65.0, "discharge", 65.0, false, 0.0, 12, 12);
     let mut msg = semantic_msg();
-    let reason = prepare_semantic_heartbeat_for_path(&mut msg, &path).unwrap_err();
+    let reason = prepare_semantic_heartbeat_for_path_with_observation(
+        &mut msg,
+        &path,
+        heartbeat_observation(),
+    )
+    .unwrap_err();
     assert!(reason.contains("during discharge"), "{reason}");
     let _ = std::fs::remove_dir_all(&dir);
 }

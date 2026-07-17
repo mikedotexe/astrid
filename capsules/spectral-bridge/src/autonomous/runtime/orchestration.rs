@@ -2,10 +2,12 @@ const SEMANTIC_HEARTBEAT_INTERVAL: Duration = Duration::from_secs(7);
 const SEMANTIC_HEARTBEAT_INTENSITY: f32 = 0.30;
 
 async fn run_semantic_heartbeat_loop(
+    state: Arc<RwLock<BridgeState>>,
     sensory_tx: mpsc::Sender<SensoryMsg>,
     mut shutdown: tokio::sync::watch::Receiver<bool>,
 ) {
     let mut phase_step: u32 = 0;
+    let mut previous_features: Option<Vec<f32>> = None;
     loop {
         tokio::select! {
             _ = shutdown.changed() => {
@@ -15,13 +17,35 @@ async fn run_semantic_heartbeat_loop(
             () = tokio::time::sleep(SEMANTIC_HEARTBEAT_INTERVAL) => {}
         }
 
-        let phase = (phase_step % 64) as f32 / 64.0;
+        let current_phase_step = phase_step % 64;
+        let phase = current_phase_step as f32 / 64.0;
         phase_step = phase_step.wrapping_add(1);
+        let features = craft_warmth_vector(phase, SEMANTIC_HEARTBEAT_INTENSITY);
+        let observation = rescue_policy::SemanticHeartbeatObservationV1::new(
+            "steady_semantic_heartbeat",
+            u64::from(current_phase_step),
+            phase,
+            SEMANTIC_HEARTBEAT_INTERVAL.as_secs(),
+            SEMANTIC_HEARTBEAT_INTENSITY,
+        )
+        .with_signal_evidence(
+            "steady_warmth",
+            false,
+            &features,
+            previous_features.as_deref(),
+        );
+        let observation = {
+            let state = state.read().await;
+            observation.with_minime_texture_context(state.latest_telemetry.as_ref())
+        };
+        previous_features = Some(features.clone());
         let mut msg = SensoryMsg::Semantic {
-            features: craft_warmth_vector(phase, SEMANTIC_HEARTBEAT_INTENSITY),
+            features,
             ts_ms: None,
         };
-        if let Err(reason) = rescue_policy::prepare_semantic_heartbeat(&mut msg) {
+        if let Err(reason) =
+            rescue_policy::prepare_semantic_heartbeat_with_observation(&mut msg, observation)
+        {
             debug!(
                 reason = %reason,
                 "semantic heartbeat skipped by rescue write policy"
@@ -77,6 +101,7 @@ pub fn spawn_autonomous_loop(
         let mut source_reload_notice_written = false;
         let _ = readiness::write_source_status(source_started_at, "start");
         let _semantic_heartbeat = tokio::spawn(run_semantic_heartbeat_loop(
+            Arc::clone(&state),
             sensory_tx.clone(),
             shutdown.clone(),
         ));
@@ -238,6 +263,7 @@ pub fn spawn_autonomous_loop(
                 // the next pulse. At 5s, signal stays above 46% between pulses,
                 // keeping ~48 semantic dims alive during rest.
                 let pulses = rest_secs / 5;
+                let mut previous_rest_features: Option<Vec<f32>> = None;
                 for i in 0..pulses {
                     // Phase advances across the rest period: 0.0 at start → 1.0 at end.
                     // This gives the warmth vector a full breathing cycle per rest.
@@ -289,11 +315,35 @@ pub fn spawn_autonomous_loop(
                         }
                     }
 
+                    let content_basis = if rest_texts.is_empty() {
+                        "pure_warmth"
+                    } else {
+                        "journal_warmth_blend"
+                    };
+                    let gesture_seed_applied = conv.last_gesture_seed.is_some();
+                    let observation = rescue_policy::SemanticHeartbeatObservationV1::new(
+                        "autonomous_rest_pulse",
+                        i,
+                        warmth_phase,
+                        5,
+                        warmth_intensity,
+                    )
+                    .with_signal_evidence(
+                        content_basis,
+                        gesture_seed_applied,
+                        &features,
+                        previous_rest_features.as_deref(),
+                    )
+                    .with_minime_texture_context(rest_telemetry.as_ref());
+                    previous_rest_features = Some(features.clone());
                     let mut msg = SensoryMsg::Semantic {
                         features,
                         ts_ms: None,
                     };
-                    if let Err(reason) = rescue_policy::prepare_semantic_heartbeat(&mut msg) {
+                    if let Err(reason) = rescue_policy::prepare_semantic_heartbeat_with_observation(
+                        &mut msg,
+                        observation,
+                    ) {
                         debug!(
                             reason = %reason,
                             "autonomous semantic heartbeat skipped by rescue write policy"

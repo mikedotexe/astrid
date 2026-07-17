@@ -10,6 +10,18 @@ fn write_telemetry_heartbeat_snapshot(heartbeat: &TelemetryHeartbeatDeltaV1) {
     }
 }
 
+fn write_cadence_content_distinction_snapshot(distinction: &CadenceContentDistinctionV1) {
+    let path = bridge_paths()
+        .bridge_workspace()
+        .join("cadence_content_distinction_v1.json");
+    if let Some(parent) = path.parent() {
+        let _ = std::fs::create_dir_all(parent);
+    }
+    if let Ok(text) = serde_json::to_string_pretty(distinction) {
+        let _ = std::fs::write(path, format!("{text}\n"));
+    }
+}
+
 fn lane_trace_mut(state: &mut BridgeState, lane: WsLane) -> &mut WebSocketLaneTrace {
     match lane {
         WsLane::Telemetry => &mut state.telemetry_ws,
@@ -31,8 +43,23 @@ fn record_connected(state: &mut BridgeState, lane: WsLane, connection_id: u64, a
     let trace = lane_trace_mut(state, lane);
     trace.active_connection_id = Some(connection_id);
     trace.active_connection_started_at_unix_s = Some(at_unix_s);
+    trace.active_connection_first_valid_payload_at_unix_s = None;
+    trace.active_connection_valid_payloads_received = 0;
     trace.last_connect_at_unix_s = Some(at_unix_s);
     trace.last_error = None;
+}
+
+fn record_valid_payload(state: &mut BridgeState, lane: WsLane, at_unix_s: f64) {
+    let trace = lane_trace_mut(state, lane);
+    trace.active_connection_valid_payloads_received = trace
+        .active_connection_valid_payloads_received
+        .saturating_add(1);
+    if trace
+        .active_connection_first_valid_payload_at_unix_s
+        .is_none()
+    {
+        trace.active_connection_first_valid_payload_at_unix_s = Some(at_unix_s);
+    }
 }
 
 fn record_connect_error(state: &mut BridgeState, lane: WsLane, reason: String) {

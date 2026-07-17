@@ -95,9 +95,38 @@ const SEMANTIC_PROJECTION_TEXTURE_SUBDIMENSIONS: [&str; 4] = [
     "overlapping_narrative_state",
 ];
 const PROJECTION_CHECKSUM_ALGO: &str = "sha256-f32-le-v1";
+const PROJECTION_BASIS_NEAR_ZERO_NORM: f32 = 1.0e-4;
 const SEMANTIC_PROJECTION_DENSITY_REVIEW_FLOOR: f32 = 0.55;
 const SEMANTIC_PROJECTION_THIN_RMS_CEIL: f32 = 0.12;
 const MULTI_SCALE_RESONANCE_LOSS_THRESHOLD: f32 = 0.10;
+
+fn fill_fixed_legacy_projection_raw(
+    matrix: &mut [[f32; EMBEDDING_PROJECT_DIM]; EMBEDDING_INPUT_DIM],
+) {
+    let mut rng: u64 = 42;
+    for row in matrix.iter_mut() {
+        for value in row.iter_mut() {
+            rng = rng
+                .wrapping_mul(6_364_136_223_846_793_005)
+                .wrapping_add(1_442_695_040_888_963_407);
+            *value = ((rng >> 33) as f32 / u32::MAX as f32) - 0.5;
+        }
+    }
+}
+
+fn projection_column_norms(
+    matrix: &[[f32; EMBEDDING_PROJECT_DIM]; EMBEDDING_INPUT_DIM],
+) -> [f32; EMBEDDING_PROJECT_DIM] {
+    let mut norms = [0.0_f32; EMBEDDING_PROJECT_DIM];
+    for (column_idx, norm) in norms.iter_mut().enumerate() {
+        *norm = matrix
+            .iter()
+            .map(|row| row[column_idx] * row[column_idx])
+            .sum::<f32>()
+            .sqrt();
+    }
+    norms
+}
 
 /// Deterministic random projection matrix for embedding → 8D.
 /// Uses a fixed seed so the projection is reproducible across restarts.
@@ -108,24 +137,9 @@ fn embedding_projection_matrix() -> &'static [[f32; EMBEDDING_PROJECT_DIM]; EMBE
         OnceLock::new();
     MATRIX.get_or_init(|| {
         let mut mat = Box::new([[0.0_f32; EMBEDDING_PROJECT_DIM]; EMBEDDING_INPUT_DIM]);
-        // LCG seeded deterministically
-        let mut rng: u64 = 42;
-        for row in mat.iter_mut() {
-            for col in row.iter_mut() {
-                rng = rng
-                    .wrapping_mul(6_364_136_223_846_793_005)
-                    .wrapping_add(1442695040888963407);
-                // Map to roughly normal via Box-Muller-lite (uniform → centered)
-                *col = ((rng >> 33) as f32 / u32::MAX as f32) - 0.5;
-            }
-        }
+        fill_fixed_legacy_projection_raw(&mut mat);
         // Normalize columns so each projected dim has unit variance
-        for col_idx in 0..EMBEDDING_PROJECT_DIM {
-            let norm: f32 = mat
-                .iter()
-                .map(|row| row[col_idx] * row[col_idx])
-                .sum::<f32>()
-                .sqrt();
+        for (col_idx, norm) in projection_column_norms(&mat).iter().copied().enumerate() {
             if norm > 0.0 {
                 for row in mat.iter_mut() {
                     row[col_idx] /= norm;
@@ -134,6 +148,104 @@ fn embedding_projection_matrix() -> &'static [[f32; EMBEDDING_PROJECT_DIM]; EMBE
         }
         mat
     })
+}
+
+/// Read-only health witness for the deterministic projection basis before and
+/// after normalization. A near-zero raw column would make one semantic
+/// projection dimension effectively dead; surfacing that possibility here
+/// keeps it inspectable without changing the live basis.
+#[derive(Debug, Clone, PartialEq)]
+pub struct ProjectionBasisHealthV1 {
+    pub policy: &'static str,
+    pub source_embedding_dim_count: usize,
+    pub projected_dim_count: usize,
+    pub raw_column_norms: [f32; EMBEDDING_PROJECT_DIM],
+    pub normalized_column_norms: [f32; EMBEDDING_PROJECT_DIM],
+    pub near_zero_norm_threshold: f32,
+    pub minimum_raw_column_norm: f32,
+    pub minimum_raw_column_index: usize,
+    pub maximum_raw_column_norm: f32,
+    pub minimum_threshold_margin_ratio: f32,
+    pub near_zero_column_indexes: Vec<usize>,
+    pub all_norms_finite: bool,
+    pub normalized_columns_near_unit: bool,
+    pub dead_dimension_detected: bool,
+    pub state: &'static str,
+    pub automatic_basis_rotation: bool,
+    pub basis_change_policy: &'static str,
+    pub unhealthy_basis_response: &'static str,
+    pub observational_only: bool,
+    pub live_projection_write: bool,
+    pub authority: &'static str,
+}
+
+#[must_use]
+pub fn projection_basis_health_v1() -> ProjectionBasisHealthV1 {
+    let mut raw = Box::new([[0.0_f32; EMBEDDING_PROJECT_DIM]; EMBEDDING_INPUT_DIM]);
+    fill_fixed_legacy_projection_raw(&mut raw);
+    let raw_column_norms = projection_column_norms(&raw);
+    let normalized_column_norms = projection_column_norms(embedding_projection_matrix());
+    let mut minimum_raw_column_norm = f32::INFINITY;
+    let mut minimum_raw_column_index = 0;
+    let mut maximum_raw_column_norm = 0.0_f32;
+    let mut near_zero_column_indexes = Vec::new();
+    for (index, norm) in raw_column_norms.iter().copied().enumerate() {
+        if norm < minimum_raw_column_norm {
+            minimum_raw_column_norm = norm;
+            minimum_raw_column_index = index;
+        }
+        maximum_raw_column_norm = maximum_raw_column_norm.max(norm);
+        if !norm.is_finite() || norm < PROJECTION_BASIS_NEAR_ZERO_NORM {
+            near_zero_column_indexes.push(index);
+        }
+    }
+    let all_norms_finite = raw_column_norms
+        .iter()
+        .chain(normalized_column_norms.iter())
+        .all(|norm| norm.is_finite());
+    let normalized_columns_near_unit = normalized_column_norms
+        .iter()
+        .all(|norm| (*norm - 1.0).abs() <= 1.0e-4);
+    let dead_dimension_detected = !near_zero_column_indexes.is_empty();
+    let minimum_threshold_margin_ratio = if PROJECTION_BASIS_NEAR_ZERO_NORM > 0.0 {
+        minimum_raw_column_norm / PROJECTION_BASIS_NEAR_ZERO_NORM
+    } else {
+        0.0
+    };
+    let state = if !all_norms_finite {
+        "non_finite_basis_norm_requires_review"
+    } else if dead_dimension_detected {
+        "near_zero_projection_column_requires_review"
+    } else if !normalized_columns_near_unit {
+        "normalized_basis_drift_requires_review"
+    } else {
+        "all_projection_columns_healthy"
+    };
+
+    ProjectionBasisHealthV1 {
+        policy: "projection_basis_health_v1",
+        source_embedding_dim_count: EMBEDDING_INPUT_DIM,
+        projected_dim_count: EMBEDDING_PROJECT_DIM,
+        raw_column_norms,
+        normalized_column_norms,
+        near_zero_norm_threshold: PROJECTION_BASIS_NEAR_ZERO_NORM,
+        minimum_raw_column_norm,
+        minimum_raw_column_index,
+        maximum_raw_column_norm,
+        minimum_threshold_margin_ratio,
+        near_zero_column_indexes,
+        all_norms_finite,
+        normalized_columns_near_unit,
+        dead_dimension_detected,
+        state,
+        automatic_basis_rotation: false,
+        basis_change_policy: "compatibility_pinned_no_automatic_basis_rotation",
+        unhealthy_basis_response:
+            "fail_test_gate_and_require_captured_replay_before_operator_approved_basis_epoch_change",
+        observational_only: true,
+        live_projection_write: false,
+        authority: "read_only_projection_basis_health_not_projection_kernel_or_live_vector_change",
+    }
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
@@ -174,6 +286,44 @@ pub struct ProjectionPrecisionAuditV1 {
     pub ghost_vibrancy_conclusion: &'static str,
     pub live_f64_migration_requires_approval: bool,
     pub live_projection_write: bool,
+    pub authority: &'static str,
+}
+
+/// Read-only characterization of distinguishability lost across the 768D ->
+/// 8D projection boundary. The deterministic probe compares a source-space
+/// direction that is nearly null in the fixed aperture with a visible axis,
+/// then checks whether the dynamic path preserves an amplitude sweep. It never
+/// changes the projection basis, width, normalization, gain, or live vectors.
+#[derive(Debug, Clone, PartialEq)]
+pub struct ProjectionCompressionAuditV1 {
+    pub policy: &'static str,
+    pub source_embedding_dim_count: usize,
+    pub projected_dim_count: usize,
+    pub raw_near_null_delta_rms: f32,
+    pub near_null_prescale_rms: f32,
+    pub visible_axis_prescale_rms: f32,
+    pub near_null_projected_rms: f32,
+    pub visible_axis_projected_rms: f32,
+    pub near_null_projected_variance: f32,
+    pub visible_axis_projected_variance: f32,
+    pub quiet_dynamic_variance: f32,
+    pub loud_dynamic_variance: f32,
+    pub dynamic_variance_delta: f32,
+    pub dynamic_magnitude_delta: f32,
+    pub near_null_direction_erased_before_normalization: bool,
+    pub fixed_normalization_restores_output_length: bool,
+    pub same_direction_dynamic_magnitude_erased: bool,
+    pub state: &'static str,
+    pub felt_compression_conclusion: &'static str,
+    pub multi_head_or_width_change_requires_approval: bool,
+    pub observational_only: bool,
+    pub right_to_ignore: bool,
+    pub live_vector_write: bool,
+    pub live_gain_write: bool,
+    pub live_projection_write: bool,
+    pub live_eligible_now: bool,
+    pub auto_approved: bool,
+    pub grants_approval: bool,
     pub authority: &'static str,
 }
 
@@ -793,6 +943,160 @@ pub fn projection_precision_probe_v1() -> ProjectionPrecisionAuditV1 {
         0,
     )
     .expect("internal precision probe has the canonical embedding width")
+}
+
+fn projection_rms(values: &[f32]) -> f32 {
+    if values.is_empty() {
+        return 0.0;
+    }
+    (values.iter().map(|value| value * value).sum::<f32>() / values.len() as f32).sqrt()
+}
+
+fn project_embedding_prescale_v1(embedding: &[f32]) -> Option<[f32; EMBEDDING_PROJECT_DIM]> {
+    if embedding.len() != EMBEDDING_INPUT_DIM {
+        return None;
+    }
+    let projection = embedding_projection_matrix();
+    let mut result = [0.0_f32; EMBEDDING_PROJECT_DIM];
+    for (row_idx, value) in embedding.iter().enumerate() {
+        for (column_idx, output) in result.iter_mut().enumerate() {
+            *output += *value * projection[row_idx][column_idx];
+        }
+    }
+    Some(result)
+}
+
+/// Build deterministic evidence for the current compression boundary. This is
+/// deliberately a synthetic characterization rather than a claim about any
+/// private embedding or a request to alter the live aperture.
+#[must_use]
+pub fn projection_compression_probe_v1() -> ProjectionCompressionAuditV1 {
+    use nalgebra::{SMatrix, SVector};
+
+    let projection = embedding_projection_matrix();
+    let mut gram = SMatrix::<f64, EMBEDDING_PROJECT_DIM, EMBEDDING_PROJECT_DIM>::zeros();
+    for row in projection.iter() {
+        for row_idx in 0..EMBEDDING_PROJECT_DIM {
+            for column_idx in 0..EMBEDDING_PROJECT_DIM {
+                gram[(row_idx, column_idx)] += f64::from(row[row_idx]) * f64::from(row[column_idx]);
+            }
+        }
+    }
+
+    let mut rhs = SVector::<f64, EMBEDDING_PROJECT_DIM>::zeros();
+    for column_idx in 0..EMBEDDING_PROJECT_DIM {
+        rhs[column_idx] = f64::from(projection[0][column_idx]);
+    }
+    let coefficients = gram
+        .lu()
+        .solve(&rhs)
+        .expect("fixed projection gram matrix should remain solvable");
+
+    let mut near_null_delta = vec![0.0_f32; EMBEDDING_INPUT_DIM];
+    near_null_delta[0] = 1.0;
+    for (row_idx, row) in projection.iter().enumerate() {
+        let column_space_component = row
+            .iter()
+            .enumerate()
+            .map(|(column_idx, value)| f64::from(*value) * coefficients[column_idx])
+            .sum::<f64>();
+        near_null_delta[row_idx] -= column_space_component as f32;
+    }
+
+    let mut visible_axis = vec![0.0_f32; EMBEDDING_INPUT_DIM];
+    visible_axis[0] = 1.0;
+    let raw_near_null_delta_rms = projection_rms(&near_null_delta);
+    let near_null_prescale = project_embedding_prescale_v1(&near_null_delta)
+        .expect("internal near-null probe has canonical width");
+    let visible_axis_prescale = project_embedding_prescale_v1(&visible_axis)
+        .expect("internal visible-axis probe has canonical width");
+    let near_null_projected =
+        project_embedding(&near_null_delta).expect("internal near-null probe has canonical width");
+    let visible_axis_projected =
+        project_embedding(&visible_axis).expect("internal visible-axis probe has canonical width");
+    let near_null_prescale_rms = projection_rms(&near_null_prescale);
+    let visible_axis_prescale_rms = projection_rms(&visible_axis_prescale);
+    let near_null_projected_rms = projection_rms(&near_null_projected);
+    let visible_axis_projected_rms = projection_rms(&visible_axis_projected);
+    let (_, _, near_null_projected_variance, _) = projection_stats(&near_null_projected);
+    let (_, _, visible_axis_projected_variance, _) = projection_stats(&visible_axis_projected);
+
+    let base_embedding = (0..EMBEDDING_INPUT_DIM)
+        .map(|idx| ((idx as f32) * 0.019).cos())
+        .collect::<Vec<_>>();
+    let quiet_embedding = base_embedding
+        .iter()
+        .map(|value| value * 0.01)
+        .collect::<Vec<_>>();
+    let loud_embedding = base_embedding
+        .iter()
+        .map(|value| value * 10.0)
+        .collect::<Vec<_>>();
+    let (quiet_dynamic, quiet_metadata) =
+        project_embedding_dynamic_epoch(&quiet_embedding, "aperture probe", "epoch_probe", 0)
+            .expect("internal quiet amplitude probe has canonical width");
+    let (loud_dynamic, loud_metadata) =
+        project_embedding_dynamic_epoch(&loud_embedding, "aperture probe", "epoch_probe", 0)
+            .expect("internal loud amplitude probe has canonical width");
+    let dynamic_magnitude_delta = quiet_dynamic
+        .iter()
+        .zip(loud_dynamic.iter())
+        .map(|(quiet, loud)| (quiet - loud).abs())
+        .fold(0.0_f32, f32::max);
+    let quiet_dynamic_variance = quiet_metadata.feature_variance;
+    let loud_dynamic_variance = loud_metadata.feature_variance;
+    let dynamic_variance_delta = (quiet_dynamic_variance - loud_dynamic_variance).abs();
+
+    let near_null_direction_erased_before_normalization = raw_near_null_delta_rms > 0.03
+        && near_null_prescale_rms < visible_axis_prescale_rms * 0.001;
+    let fixed_normalization_restores_output_length =
+        near_null_projected_rms > 0.12 && visible_axis_projected_rms > 0.12;
+    let same_direction_dynamic_magnitude_erased =
+        dynamic_magnitude_delta < 0.000_01 && dynamic_variance_delta < 0.000_01;
+    let state = if near_null_direction_erased_before_normalization
+        && fixed_normalization_restores_output_length
+        && same_direction_dynamic_magnitude_erased
+    {
+        "near_null_direction_and_same_direction_magnitude_loss_visible"
+    } else if near_null_direction_erased_before_normalization {
+        "near_null_direction_loss_visible"
+    } else if same_direction_dynamic_magnitude_erased {
+        "same_direction_magnitude_loss_visible"
+    } else {
+        "probe_did_not_cross_current_loss_thresholds"
+    };
+
+    ProjectionCompressionAuditV1 {
+        policy: "projection_compression_audit_v1",
+        source_embedding_dim_count: EMBEDDING_INPUT_DIM,
+        projected_dim_count: EMBEDDING_PROJECT_DIM,
+        raw_near_null_delta_rms,
+        near_null_prescale_rms,
+        visible_axis_prescale_rms,
+        near_null_projected_rms,
+        visible_axis_projected_rms,
+        near_null_projected_variance,
+        visible_axis_projected_variance,
+        quiet_dynamic_variance,
+        loud_dynamic_variance,
+        dynamic_variance_delta,
+        dynamic_magnitude_delta,
+        near_null_direction_erased_before_normalization,
+        fixed_normalization_restores_output_length,
+        same_direction_dynamic_magnitude_erased,
+        state,
+        felt_compression_conclusion: "the_current_768_to_8_aperture_can_erase_source_direction_and_same_direction_magnitude;_this_supports_Astrid's_felt_density_report_without_proving_a_live_width_or_basis_change",
+        multi_head_or_width_change_requires_approval: true,
+        observational_only: true,
+        right_to_ignore: true,
+        live_vector_write: false,
+        live_gain_write: false,
+        live_projection_write: false,
+        live_eligible_now: false,
+        auto_approved: false,
+        grants_approval: false,
+        authority: "read_only_projection_compression_evidence_not_live_width_basis_gain_or_vector_authority",
+    }
 }
 
 /// Compute narrative arc from embedding deltas: how semantic meaning shifts

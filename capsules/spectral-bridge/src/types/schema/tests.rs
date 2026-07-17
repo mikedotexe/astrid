@@ -3220,6 +3220,100 @@ mod tests {
         assert_eq!(integrity.status, "typed_canonical");
         assert!(integrity.typed_precedence_over_legacy);
         assert!(integrity.summary.contains("typed payload takes precedence"));
+        assert_eq!(integrity.mode_collision_state, "not_reported");
+        assert_eq!(integrity.hybrid_coherence_index, Some(0.0));
+        assert_eq!(integrity.hybrid_coherence_state, "divergent");
+        assert!(
+            integrity
+                .issues
+                .contains(&"typed_legacy_hybrid_divergence".to_string())
+        );
+        assert_eq!(
+            integrity.hybrid_coherence_basis,
+            "normalized_rms_agreement_across_canonical_32_slots"
+        );
+    }
+
+    #[test]
+    fn typed_and_legacy_fingerprint_slots_report_aligned_hybrid_coherence() {
+        let mut telemetry: SpectralTelemetry = serde_json::from_value(serde_json::json!({
+            "t_ms": 1000,
+            "eigenvalues": [1.0, 0.5],
+            "fill_ratio": 0.5,
+            "spectral_fingerprint_v1": {
+                "policy": "spectral_fingerprint_v1",
+                "schema_version": 1,
+                "eigenvalues": [1.0, 0.5, 0.25, 0.125, 0.0, 0.0, 0.0, 0.0],
+                "eigenvector_concentration_top4": [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8],
+                "inter_mode_cosine_top_abs": [0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1],
+                "spectral_entropy": 0.42,
+                "lambda1_lambda2_gap": 2.0,
+                "v1_rotation_similarity": 0.9,
+                "v1_rotation_delta": 0.1,
+                "geom_rel": 1.23,
+                "adjacent_gap_ratios": [2.0, 1.0, 0.5, 0.25]
+            }
+        }))
+        .unwrap();
+        telemetry.spectral_fingerprint = telemetry
+            .spectral_fingerprint_v1
+            .as_ref()
+            .map(SpectralFingerprintV1::to_legacy_slots);
+
+        let integrity = telemetry.spectral_fingerprint_integrity_v1();
+
+        assert_eq!(integrity.hybrid_coherence_index, Some(1.0));
+        assert_eq!(integrity.hybrid_max_abs_delta, Some(0.0));
+        assert_eq!(integrity.hybrid_coherence_state, "aligned");
+        assert!(
+            !integrity
+                .issues
+                .contains(&"typed_legacy_hybrid_mismatch".to_string())
+        );
+    }
+
+    #[test]
+    fn eigenvector_overlap_surfaces_mode_collision_review_without_control_authority() {
+        let json = serde_json::json!({
+            "t_ms": 1000,
+            "eigenvalues": [1.0, 0.5],
+            "fill_ratio": 0.5,
+            "spectral_fingerprint_v1": {
+                "policy": "spectral_fingerprint_v1",
+                "schema_version": 1,
+                "eigenvalues": [1.0, 0.5, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                "eigenvector_concentration_top4": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                "inter_mode_cosine_top_abs": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                "spectral_entropy": 0.42,
+                "lambda1_lambda2_gap": 2.0,
+                "v1_rotation_similarity": 0.9,
+                "v1_rotation_delta": 0.1,
+                "geom_rel": 1.23,
+                "adjacent_gap_ratios": [2.0, 1.0, 1.0, 1.0]
+            },
+            "eigenvector_field": {
+                "policy": "eigenvector_field_v1",
+                "summary": {
+                    "max_pairwise_overlap": 0.93
+                }
+            }
+        });
+
+        let telemetry: SpectralTelemetry = serde_json::from_value(json).unwrap();
+        let integrity = telemetry.spectral_fingerprint_integrity_v1();
+
+        assert_eq!(integrity.max_pairwise_overlap, Some(0.93));
+        assert_eq!(integrity.mode_collision_review_threshold, 0.90);
+        assert_eq!(
+            integrity.mode_collision_state,
+            "review_required_high_overlap"
+        );
+        assert!(
+            integrity
+                .issues
+                .contains(&"eigenvector_mode_collision_review_required".to_string())
+        );
+        assert_eq!(integrity.authority, "diagnostic_context_not_control");
     }
 
     #[test]

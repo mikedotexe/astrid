@@ -379,6 +379,7 @@ fn save_minime_correspondence_feedback_inbox(
     if !voice_diagnostic && let Some(target) = reply_target {
         let fields = correspondence_v1::CorrespondenceFields {
             reply_to: Some(target.message_id.clone()),
+            reply_requested: None,
             thread_id: Some(target.thread_id.clone()),
             persistence_id: None,
             turn_kind: Some("reply".to_string()),

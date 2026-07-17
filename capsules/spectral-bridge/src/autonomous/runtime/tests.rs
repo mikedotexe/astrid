@@ -734,6 +734,25 @@ NEXT: EXPLORE_RESONANCE_FORECAST (RESIDUE: silted λ4 shimmer)";
     }
 
     #[test]
+    fn witness_shared_collaboration_dir_preserves_default_and_accepts_override() {
+        let custom = std::ffi::OsStr::new("/tmp/astrid-witness-collaborations");
+
+        assert_eq!(
+            shared_collab_dir_for_witness_from_env(None),
+            PathBuf::from(DEFAULT_SHARED_COLLAB_DIR)
+        );
+        assert_eq!(
+            shared_collab_dir_for_witness_from_env(Some(std::ffi::OsStr::new(""))),
+            PathBuf::from(DEFAULT_SHARED_COLLAB_DIR)
+        );
+        assert_eq!(
+            shared_collab_dir_for_witness_from_env(Some(custom)),
+            PathBuf::from(custom)
+        );
+        assert_eq!(SHARED_COLLAB_DIR_ENV, "ASTRID_SHARED_COLLAB_DIR");
+    }
+
+    #[test]
     fn latest_chamber_state_for_witness_skips_malformed_newest_state() {
         let dir = std::env::temp_dir().join("bridge_test_chamber_state_resilience");
         let _ = std::fs::remove_dir_all(&dir);

@@ -190,6 +190,12 @@ pub struct WebSocketLaneTrace {
     /// Active connection start time.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub active_connection_started_at_unix_s: Option<f64>,
+    /// First schema-valid payload observed on the active connection.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub active_connection_first_valid_payload_at_unix_s: Option<f64>,
+    /// Number of schema-valid payloads observed on the active connection.
+    #[serde(default)]
+    pub active_connection_valid_payloads_received: u64,
     /// Most recent connect time.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub last_connect_at_unix_s: Option<f64>,

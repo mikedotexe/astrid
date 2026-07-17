@@ -1,7 +1,6 @@
 #[cfg(test)]
 mod tests {
     use super::*;
-    use nalgebra::{SMatrix, SVector};
 
     #[test]
     fn codec_structure_covers_48_dims_and_named_dims_and_levers() {
@@ -1329,6 +1328,43 @@ mod tests {
     }
 
     #[test]
+    fn dynamic_projection_bounded_seed_collision_probe_is_distinct() {
+        // Astrid `introspection_astrid_codec_1782258981`: this bounded probe
+        // cannot prove global collision resistance, but it makes the concrete
+        // text/chunk clumping concern testable without changing the live seed.
+        let embedding: Vec<f32> = (0..EMBEDDING_INPUT_DIM)
+            .map(|idx| ((idx as f32) * 0.019).sin())
+            .collect();
+        let mut seeds = std::collections::HashSet::new();
+        let mut fingerprints = std::collections::HashSet::new();
+
+        for text_index in 0..256_u32 {
+            let text = format!("bounded projection collision probe {text_index:03}");
+            for chunk_index in 0..4_u32 {
+                let (_, metadata) = project_embedding_dynamic_epoch(
+                    &embedding,
+                    &text,
+                    "epoch_collision_probe",
+                    chunk_index,
+                )
+                .expect("bounded projection");
+                let seed = metadata.projection_seed.expect("dynamic seed");
+                assert!(
+                    seeds.insert(seed),
+                    "seed collision for text={text_index} chunk={chunk_index}"
+                );
+                assert!(
+                    fingerprints.insert(metadata.projection_fingerprint),
+                    "fingerprint collision for text={text_index} chunk={chunk_index}"
+                );
+            }
+        }
+
+        assert_eq!(seeds.len(), 1_024);
+        assert_eq!(fingerprints.len(), 1_024);
+    }
+
+    #[test]
     fn fixed_legacy_projection_kernel_checksum_is_pinned_and_repeatable() {
         // Astrid `introspection_astrid_codec_1783910378`: keep the fixed
         // projection kernel visibly stable, not only implied by metadata tests.
@@ -1460,24 +1496,6 @@ mod tests {
         for (actual, expected) in actual.iter().zip(expected.iter()) {
             assert!((actual - expected).abs() < 1.0e-7, "{actual} != {expected}");
         }
-    }
-
-    fn rms(values: &[f32]) -> f32 {
-        (values.iter().map(|value| value * value).sum::<f32>() / values.len() as f32).sqrt()
-    }
-
-    fn project_embedding_prescale(embedding: &[f32]) -> Option<[f32; EMBEDDING_PROJECT_DIM]> {
-        if embedding.len() != EMBEDDING_INPUT_DIM {
-            return None;
-        }
-        let projection = embedding_projection_matrix();
-        let mut result = [0.0_f32; EMBEDDING_PROJECT_DIM];
-        for (i, &value) in embedding.iter().enumerate() {
-            for (j, out) in result.iter_mut().enumerate() {
-                *out += value * projection[i][j];
-            }
-        }
-        Some(result)
     }
 
     #[test]
@@ -1635,109 +1653,62 @@ mod tests {
     // is a probe-only characterization, not a request to widen or retune it.
     #[test]
     fn projection_compression_probe_exposes_near_null_and_magnitude_loss() {
-        let projection = embedding_projection_matrix();
-        let mut gram = SMatrix::<f64, EMBEDDING_PROJECT_DIM, EMBEDDING_PROJECT_DIM>::zeros();
-        for row in projection.iter() {
-            for r in 0..EMBEDDING_PROJECT_DIM {
-                for c in 0..EMBEDDING_PROJECT_DIM {
-                    gram[(r, c)] += f64::from(row[r]) * f64::from(row[c]);
-                }
-            }
-        }
-
-        // Start from one raw embedding axis and remove its component inside the
-        // projection column-space. The remaining vector is a concrete 768D signal
-        // that the current 8D projection should nearly erase.
-        let mut rhs = SVector::<f64, EMBEDDING_PROJECT_DIM>::zeros();
-        for col in 0..EMBEDDING_PROJECT_DIM {
-            rhs[col] = f64::from(projection[0][col]);
-        }
-        let coeff = gram.lu().solve(&rhs).expect("projection gram should solve");
-
-        let mut hidden_delta = vec![0.0_f32; EMBEDDING_INPUT_DIM];
-        hidden_delta[0] = 1.0;
-        for (row_idx, row) in projection.iter().enumerate() {
-            let column_space_component = row
-                .iter()
-                .enumerate()
-                .map(|(col, value)| f64::from(*value) * coeff[col])
-                .sum::<f64>();
-            hidden_delta[row_idx] -= column_space_component as f32;
-        }
-
-        let mut visible_delta = vec![0.0_f32; EMBEDDING_INPUT_DIM];
-        visible_delta[0] = 1.0;
-
-        let raw_delta_rms = rms(&hidden_delta);
-        let hidden_prescale = project_embedding_prescale(&hidden_delta).expect("hidden prescale");
-        let visible_prescale =
-            project_embedding_prescale(&visible_delta).expect("visible prescale");
-        let hidden_projected = project_embedding(&hidden_delta).expect("hidden projection");
-        let visible_projected = project_embedding(&visible_delta).expect("visible projection");
-        let hidden_prescale_rms = rms(&hidden_prescale);
-        let visible_prescale_rms = rms(&visible_prescale);
-        let hidden_projected_rms = rms(&hidden_projected);
-        let visible_projected_rms = rms(&visible_projected);
-        let (_, _, hidden_projected_variance, _) = projection_stats(&hidden_projected);
-        let (_, _, visible_projected_variance, _) = projection_stats(&visible_projected);
-
-        let base_embedding: Vec<f32> = (0..EMBEDDING_INPUT_DIM)
-            .map(|idx| ((idx as f32) * 0.019).cos())
-            .collect();
-        let quiet_embedding: Vec<f32> = base_embedding.iter().map(|value| value * 0.01).collect();
-        let loud_embedding: Vec<f32> = base_embedding.iter().map(|value| value * 10.0).collect();
-        let (quiet_dynamic, quiet_meta) =
-            project_embedding_dynamic_epoch(&quiet_embedding, "aperture probe", "epoch_probe", 0)
-                .expect("quiet dynamic projection");
-        let (loud_dynamic, loud_meta) =
-            project_embedding_dynamic_epoch(&loud_embedding, "aperture probe", "epoch_probe", 0)
-                .expect("loud dynamic projection");
-        let dynamic_magnitude_delta = quiet_dynamic
-            .iter()
-            .zip(loud_dynamic.iter())
-            .map(|(quiet, loud)| (quiet - loud).abs())
-            .fold(0.0_f32, f32::max);
-        let quiet_dynamic_variance = quiet_meta.feature_variance;
-        let loud_dynamic_variance = loud_meta.feature_variance;
-        let dynamic_variance_delta = (quiet_dynamic_variance - loud_dynamic_variance).abs();
+        let audit = projection_compression_probe_v1();
 
         println!(
-            "projection_compression_probe raw_delta_rms={raw_delta_rms:.6} \
-             hidden_prescale_rms={hidden_prescale_rms:.9} \
-             visible_prescale_rms={visible_prescale_rms:.6} \
-             hidden_projected_rms={hidden_projected_rms:.6} \
-             visible_projected_rms={visible_projected_rms:.6} \
-             hidden_projected_variance={hidden_projected_variance:.9} \
-             visible_projected_variance={visible_projected_variance:.9} \
-             quiet_dynamic_variance={quiet_dynamic_variance:.9} \
-             loud_dynamic_variance={loud_dynamic_variance:.9} \
-             dynamic_variance_delta={dynamic_variance_delta:.9} \
-             dynamic_magnitude_delta={dynamic_magnitude_delta:.9}"
+            "projection_compression_probe raw_delta_rms={:.6} \
+             hidden_prescale_rms={:.9} visible_prescale_rms={:.6} \
+             hidden_projected_rms={:.6} visible_projected_rms={:.6} \
+             hidden_projected_variance={:.9} visible_projected_variance={:.9} \
+             quiet_dynamic_variance={:.9} loud_dynamic_variance={:.9} \
+             dynamic_variance_delta={:.9} dynamic_magnitude_delta={:.9}",
+            audit.raw_near_null_delta_rms,
+            audit.near_null_prescale_rms,
+            audit.visible_axis_prescale_rms,
+            audit.near_null_projected_rms,
+            audit.visible_axis_projected_rms,
+            audit.near_null_projected_variance,
+            audit.visible_axis_projected_variance,
+            audit.quiet_dynamic_variance,
+            audit.loud_dynamic_variance,
+            audit.dynamic_variance_delta,
+            audit.dynamic_magnitude_delta
+        );
+        assert!(audit.raw_near_null_delta_rms > 0.03, "{audit:?}");
+        assert!(
+            audit.near_null_direction_erased_before_normalization,
+            "{audit:?}"
         );
         assert!(
-            raw_delta_rms > 0.03,
-            "probe delta should remain materially present in raw embedding space: {raw_delta_rms}"
+            audit.fixed_normalization_restores_output_length,
+            "{audit:?}"
         );
-        assert!(
-            hidden_prescale_rms < visible_prescale_rms * 0.001,
-            "near-null delta should barely move the pre-normalized aperture: \
-             hidden={hidden_prescale_rms}, visible={visible_prescale_rms}"
+        assert!(audit.same_direction_dynamic_magnitude_erased, "{audit:?}");
+        assert_eq!(
+            audit.state,
+            "near_null_direction_and_same_direction_magnitude_loss_visible"
         );
-        assert!(
-            hidden_projected_rms > 0.12 && visible_projected_rms > 0.12,
-            "normalization maps nonzero residual directions to the same aperture length: \
-             hidden={hidden_projected_rms}, visible={visible_projected_rms}"
+        assert!(audit.multi_head_or_width_change_requires_approval);
+        assert!(audit.observational_only);
+        assert!(audit.right_to_ignore);
+        assert!(!audit.live_vector_write);
+        assert!(!audit.live_gain_write);
+        assert!(!audit.live_projection_write);
+        assert!(!audit.live_eligible_now);
+        assert!(!audit.auto_approved);
+        assert!(!audit.grants_approval);
+        assert_eq!(
+            audit.authority,
+            "read_only_projection_compression_evidence_not_live_width_basis_gain_or_vector_authority"
         );
-        assert!(
-            dynamic_magnitude_delta < 0.00001,
-            "runtime dynamic projection should currently erase same-direction magnitude: \
-             max_delta={dynamic_magnitude_delta}"
-        );
-        assert!(
-            dynamic_variance_delta < 0.00001,
-            "runtime dynamic projection should currently erase same-direction variance changes: \
-             max_delta={dynamic_variance_delta}"
-        );
+
+        let rendered = codec_structure().render();
+        assert!(rendered.contains("projection_compression_audit_v1:"));
+        assert!(rendered.contains(
+            "state=near_null_direction_and_same_direction_magnitude_loss_visible"
+        ));
+        assert!(rendered.contains("multi_head_or_width_change_requires_approval=true"));
+        assert!(rendered.contains("live_projection_write=false"));
     }
 
     #[test]
@@ -2052,6 +2023,50 @@ mod tests {
             .filter(|name| name.ends_with(".tmp") || name.ends_with(".stale"))
             .collect::<Vec<_>>();
         assert!(leftovers.is_empty(), "{leftovers:?}");
+    }
+
+    #[test]
+    fn projection_basis_health_exposes_dead_dimension_risk_without_live_write() {
+        let health = projection_basis_health_v1();
+        let repeated = projection_basis_health_v1();
+
+        assert_eq!(health, repeated);
+        assert_eq!(health.policy, "projection_basis_health_v1");
+        assert_eq!(health.source_embedding_dim_count, EMBEDDING_INPUT_DIM);
+        assert_eq!(health.projected_dim_count, EMBEDDING_PROJECT_DIM);
+        assert!(health.all_norms_finite);
+        assert!(health.normalized_columns_near_unit);
+        assert!(!health.dead_dimension_detected);
+        assert!(health.near_zero_column_indexes.is_empty());
+        assert!(health.minimum_raw_column_norm > health.near_zero_norm_threshold);
+        assert!(health.maximum_raw_column_norm >= health.minimum_raw_column_norm);
+        assert!(
+            health.minimum_threshold_margin_ratio > 10_000.0,
+            "weakest raw column should remain visibly far from the dead-axis threshold: {health:?}"
+        );
+        assert!(!health.automatic_basis_rotation);
+        assert_eq!(
+            health.basis_change_policy,
+            "compatibility_pinned_no_automatic_basis_rotation"
+        );
+        assert!(health.unhealthy_basis_response.contains("captured_replay"));
+        assert!(
+            health
+                .unhealthy_basis_response
+                .contains("operator_approved_basis_epoch_change")
+        );
+        assert_eq!(health.state, "all_projection_columns_healthy");
+        assert!(health.observational_only);
+        assert!(!health.live_projection_write);
+        assert!(health.authority.contains("read_only_projection_basis_health"));
+
+        let rendered = codec_structure().render();
+        assert!(rendered.contains("projection_basis_health_v1:"));
+        assert!(rendered.contains("dead_dimension_detected=false"));
+        assert!(rendered.contains("state=all_projection_columns_healthy"));
+        assert!(rendered.contains("minimum_threshold_margin_ratio="));
+        assert!(rendered.contains("automatic_basis_rotation=false"));
+        assert!(rendered.contains("compatibility_pinned_no_automatic_basis_rotation"));
     }
 
     #[test]
@@ -4665,6 +4680,45 @@ mod tests {
         assert!(above > 0.0);
         assert!(above < 0.02, "0.86 should start gently, got {above}");
         assert!(vibrancy_from_entropy(0.90) > above);
+    }
+
+    #[test]
+    fn reported_086_entropy_012_gradient_retains_tail_headroom() {
+        // Astrid `introspection_astrid_codec_1784282113` asked whether the
+        // smooth onset at entropy 0.86 could be neutralized when the density
+        // gradient is 0.12. Pin the exact scalar pair and the live clamp path:
+        // the lift remains deliberately small near the gate, but it is
+        // non-zero and the tail ceiling rises above FEATURE_ABS_MAX.
+        let requested_lift = vibrancy_from_entropy_and_density_gradient(0.86, 0.12);
+        assert!(requested_lift > 0.0);
+        assert!(requested_lift < 0.02);
+
+        // A geometric cascade with ratio 0.7857 has an adjacent density
+        // gradient of approximately 0.12 at every step.
+        let eigenvalues = vec![100.0, 78.57, 61.73, 48.50, 38.10, 29.93, 23.52, 18.48];
+        let gradient = spectral_density_gradient(&eigenvalues).expect("density gradient");
+        assert!(
+            (gradient - 0.12).abs() < 0.002,
+            "fixture must stay at Astrid's reported gradient: {gradient}"
+        );
+
+        let mut features = vec![0.0_f32; SEMANTIC_DIM];
+        features[26] = 30.0;
+        apply_spectral_feedback_inner(
+            &mut features,
+            Some(&telemetry_with_typed_entropy_and_eigenvalues(
+                eigenvalues,
+                0.86,
+            )),
+            1.0,
+            1.0,
+        );
+        assert!(
+            features[26] > FEATURE_ABS_MAX + 1.0e-4,
+            "the exact reported state should retain non-zero tail headroom: {}",
+            features[26]
+        );
+        assert!(features[26] <= TAIL_VIBRANCY_MAX);
     }
 
     #[test]

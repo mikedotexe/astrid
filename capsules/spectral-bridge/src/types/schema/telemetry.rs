@@ -16,6 +16,18 @@ pub struct TelemetryHeartbeatDeltaV1 {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub active_connection_id: Option<u64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub active_connection_started_at_unix_s: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub first_valid_packet_at_unix_s: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub first_valid_packet_lag_ms: Option<f32>,
+    #[serde(default)]
+    pub connection_perception_state: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub cadence_clarity_score: Option<f32>,
+    #[serde(default)]
+    pub cadence_clarity_basis: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub last_disconnect_reason: Option<String>,
     pub field_vs_hearing: String,
 }
@@ -30,10 +42,67 @@ pub struct SpectralFingerprintIntegrityV1 {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub legacy_vector_len: Option<usize>,
     pub typed_precedence_over_legacy: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub hybrid_coherence_index: Option<f32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub hybrid_max_abs_delta: Option<f32>,
+    #[serde(default)]
+    pub hybrid_coherence_state: String,
+    #[serde(default)]
+    pub hybrid_coherence_basis: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub max_pairwise_overlap: Option<f32>,
+    #[serde(default)]
+    pub mode_collision_review_threshold: f32,
+    #[serde(default)]
+    pub mode_collision_state: String,
     #[serde(default)]
     pub issues: Vec<String>,
     pub summary: String,
     pub authority: String,
+}
+
+fn spectral_fingerprint_hybrid_coherence_v1(
+    typed: &SpectralFingerprintV1,
+    legacy: &[f32],
+) -> Option<(f32, f32)> {
+    if legacy.len() != 32 || legacy.iter().any(|value| !value.is_finite()) {
+        return None;
+    }
+    let typed_slots = typed.to_legacy_slots();
+    if typed_slots.len() != legacy.len() || typed_slots.iter().any(|value| !value.is_finite()) {
+        return None;
+    }
+
+    let mut delta_squared = 0.0_f64;
+    let mut typed_squared = 0.0_f64;
+    let mut legacy_squared = 0.0_f64;
+    let mut max_abs_delta = 0.0_f64;
+    for (typed_value, legacy_value) in typed_slots.iter().zip(legacy) {
+        let typed_value = f64::from(*typed_value);
+        let legacy_value = f64::from(*legacy_value);
+        let delta = typed_value - legacy_value;
+        delta_squared = delta.mul_add(delta, delta_squared);
+        typed_squared = typed_value.mul_add(typed_value, typed_squared);
+        legacy_squared = legacy_value.mul_add(legacy_value, legacy_squared);
+        max_abs_delta = max_abs_delta.max(delta.abs());
+    }
+
+    let count = 32.0_f64;
+    let delta_rms = (delta_squared / count).sqrt();
+    let typed_rms = (typed_squared / count).sqrt();
+    let legacy_rms = (legacy_squared / count).sqrt();
+    let reference_rms = typed_rms.max(legacy_rms);
+    let coherence = if reference_rms <= f64::EPSILON {
+        if delta_rms <= f64::EPSILON {
+            1.0
+        } else {
+            0.0
+        }
+    } else {
+        (1.0 - delta_rms / reference_rms).clamp(0.0, 1.0)
+    };
+    Some((coherence as f32, max_abs_delta as f32))
 }
 
 /// Raw telemetry broadcast by minime's ESN engine on port 7878.
@@ -191,9 +260,58 @@ impl SpectralTelemetry {
     /// Diagnostic readout for whether legacy/typed fingerprint payloads are coherent.
     #[must_use]
     pub fn spectral_fingerprint_integrity_v1(&self) -> SpectralFingerprintIntegrityV1 {
+        const HYBRID_COHERENCE_ALIGNED_AT: f32 = 0.995;
+        const HYBRID_COHERENCE_NEAR_AT: f32 = 0.90;
+        const HYBRID_COHERENCE_MIXED_AT: f32 = 0.50;
+        const MODE_COLLISION_REVIEW_OVERLAP: f32 = 0.90;
+
         let typed_present = self.spectral_fingerprint_v1.is_some();
         let legacy_vector_len = self.spectral_fingerprint.as_ref().map(Vec::len);
         let typed_precedence_over_legacy = typed_present && legacy_vector_len.is_some();
+        let hybrid_coherence = self
+            .spectral_fingerprint_v1
+            .as_ref()
+            .zip(
+                self.spectral_fingerprint
+                    .as_deref()
+                    .filter(|legacy| legacy.len() == 32),
+            )
+            .and_then(|(typed, legacy)| {
+                spectral_fingerprint_hybrid_coherence_v1(typed, legacy)
+            });
+        let hybrid_coherence_index = hybrid_coherence.map(|(coherence, _)| coherence);
+        let hybrid_max_abs_delta = hybrid_coherence.map(|(_, max_delta)| max_delta);
+        let hybrid_coherence_state = if let Some(coherence) = hybrid_coherence_index {
+            if coherence >= HYBRID_COHERENCE_ALIGNED_AT {
+                "aligned"
+            } else if coherence >= HYBRID_COHERENCE_NEAR_AT {
+                "near_aligned"
+            } else if coherence >= HYBRID_COHERENCE_MIXED_AT {
+                "mixed_transition"
+            } else {
+                "divergent"
+            }
+        } else if typed_present && legacy_vector_len == Some(32) {
+            "unavailable_non_finite"
+        } else if typed_present && legacy_vector_len.is_some() {
+            "unavailable_malformed_legacy"
+        } else if typed_present {
+            "typed_only"
+        } else if legacy_vector_len == Some(32) {
+            "legacy_only"
+        } else if legacy_vector_len.is_some() {
+            "unavailable_malformed_legacy"
+        } else {
+            "unavailable"
+        }
+        .to_string();
+        let max_pairwise_overlap = self
+            .eigenvector_field
+            .as_ref()
+            .and_then(|field| field.pointer("/summary/max_pairwise_overlap"))
+            .and_then(serde_json::Value::as_f64)
+            .filter(|overlap| overlap.is_finite())
+            .map(|overlap| overlap as f32);
         let mut issues = Vec::new();
         if let Some(len) = legacy_vector_len
             && len != 32
@@ -203,6 +321,27 @@ impl SpectralTelemetry {
         if !typed_present && legacy_vector_len.is_none() {
             issues.push("fingerprint_absent".to_string());
         }
+        if hybrid_coherence_index
+            .is_some_and(|coherence| coherence < HYBRID_COHERENCE_ALIGNED_AT)
+        {
+            issues.push("typed_legacy_hybrid_mismatch".to_string());
+        }
+        if hybrid_coherence_index
+            .is_some_and(|coherence| coherence < HYBRID_COHERENCE_MIXED_AT)
+        {
+            issues.push("typed_legacy_hybrid_divergence".to_string());
+        }
+        let mode_collision_state =
+            if max_pairwise_overlap.is_some_and(|overlap| overlap >= MODE_COLLISION_REVIEW_OVERLAP)
+            {
+                issues.push("eigenvector_mode_collision_review_required".to_string());
+                "review_required_high_overlap"
+            } else if max_pairwise_overlap.is_some() {
+                "below_review_threshold"
+            } else {
+                "not_reported"
+            }
+            .to_string();
         let status = if typed_present {
             "typed_canonical"
         } else if legacy_vector_len == Some(32) {
@@ -229,6 +368,14 @@ impl SpectralTelemetry {
                 typed_present,
                 legacy_vector_len,
                 typed_precedence_over_legacy,
+                hybrid_coherence_index,
+                hybrid_max_abs_delta,
+                hybrid_coherence_state,
+                hybrid_coherence_basis:
+                    "normalized_rms_agreement_across_canonical_32_slots".to_string(),
+                max_pairwise_overlap,
+                mode_collision_review_threshold: MODE_COLLISION_REVIEW_OVERLAP,
+                mode_collision_state,
                 issues,
                 summary: format!(
                     "legacy spectral_fingerprint has {len} values; expected 32, so typed reconstruction is blocked"
@@ -239,6 +386,11 @@ impl SpectralTelemetry {
             "no spectral fingerprint payload present"
         }
         .to_string();
+        let summary = hybrid_coherence_index.map_or(summary.clone(), |coherence| {
+            format!(
+                "{summary}; typed/legacy hybrid coherence={coherence:.3} state={hybrid_coherence_state}"
+            )
+        });
 
         SpectralFingerprintIntegrityV1 {
             policy: "spectral_fingerprint_integrity_v1".to_string(),
@@ -247,6 +399,14 @@ impl SpectralTelemetry {
             typed_present,
             legacy_vector_len,
             typed_precedence_over_legacy,
+            hybrid_coherence_index,
+            hybrid_max_abs_delta,
+            hybrid_coherence_state,
+            hybrid_coherence_basis:
+                "normalized_rms_agreement_across_canonical_32_slots".to_string(),
+            max_pairwise_overlap,
+            mode_collision_review_threshold: MODE_COLLISION_REVIEW_OVERLAP,
+            mode_collision_state,
             issues,
             summary,
             authority: "diagnostic_context_not_control".to_string(),

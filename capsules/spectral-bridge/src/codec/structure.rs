@@ -371,6 +371,26 @@ pub fn codec_structure() -> CodecStructure {
                 },
             },
             CodecLever {
+                name: "PROJECTION_BASIS_HEALTH",
+                value: {
+                    let health = projection_basis_health_v1();
+                    format!(
+                        "{}; minimum_raw_norm={:.6}; minimum_column={}; threshold_margin_ratio={:.1}; near_zero_columns={:?}; normalized_near_unit={}; automatic_basis_rotation={}; basis_change_policy={}; unhealthy_basis_response={}; live_projection_write={}; authority={}",
+                        health.state,
+                        health.minimum_raw_column_norm,
+                        health.minimum_raw_column_index,
+                        health.minimum_threshold_margin_ratio,
+                        health.near_zero_column_indexes,
+                        health.normalized_columns_near_unit,
+                        health.automatic_basis_rotation,
+                        health.basis_change_policy,
+                        health.unhealthy_basis_response,
+                        health.live_projection_write,
+                        health.authority
+                    )
+                },
+            },
+            CodecLever {
                 name: "PROJECTION_PRECISION_AUDIT",
                 value: {
                     let audit = projection_precision_probe_v1();
@@ -526,7 +546,9 @@ pub fn codec_structure() -> CodecStructure {
         multi_scale_context_v1: multi_scale_context_v1(),
         projection_epoch_stability_v1: projection_epoch_stability_v1(),
         projection_fingerprint_integrity_v1: projection_fingerprint_integrity_v1(),
+        projection_basis_health_v1: projection_basis_health_v1(),
         projection_precision_audit_v1: projection_precision_probe_v1(),
+        projection_compression_audit_v1: projection_compression_probe_v1(),
         codec_lane_separation_audit_v1: codec_lane_separation_probe_v1(),
         codec_rolling_window_shift_audit_v1: codec_rolling_window_shift_probe_v1(),
     }
@@ -1153,6 +1175,31 @@ impl CodecStructure {
             fingerprint.seed_hash_boundary,
             fingerprint.authority
         );
+        let basis_health = &self.projection_basis_health_v1;
+        let _ = writeln!(
+            s,
+            "projection_basis_health_v1: source_dims={} projected_dims={} raw_column_norms={:?} normalized_column_norms={:?} near_zero_threshold={:.3e} minimum_raw_norm={:.6} minimum_column={} maximum_raw_norm={:.6} minimum_threshold_margin_ratio={:.1} near_zero_columns={:?} all_norms_finite={} normalized_columns_near_unit={} dead_dimension_detected={} state={} automatic_basis_rotation={} basis_change_policy={} unhealthy_basis_response={} observational_only={} live_projection_write={} authority={}",
+            basis_health.source_embedding_dim_count,
+            basis_health.projected_dim_count,
+            basis_health.raw_column_norms,
+            basis_health.normalized_column_norms,
+            basis_health.near_zero_norm_threshold,
+            basis_health.minimum_raw_column_norm,
+            basis_health.minimum_raw_column_index,
+            basis_health.maximum_raw_column_norm,
+            basis_health.minimum_threshold_margin_ratio,
+            basis_health.near_zero_column_indexes,
+            basis_health.all_norms_finite,
+            basis_health.normalized_columns_near_unit,
+            basis_health.dead_dimension_detected,
+            basis_health.state,
+            basis_health.automatic_basis_rotation,
+            basis_health.basis_change_policy,
+            basis_health.unhealthy_basis_response,
+            basis_health.observational_only,
+            basis_health.live_projection_write,
+            basis_health.authority
+        );
         let precision = &self.projection_precision_audit_v1;
         let _ = writeln!(
             s,
@@ -1173,6 +1220,39 @@ impl CodecStructure {
             precision.authority
         );
         let lane_separation = &self.codec_lane_separation_audit_v1;
+        let compression = &self.projection_compression_audit_v1;
+        let _ = writeln!(
+            s,
+            "projection_compression_audit_v1: source_dims={} projected_dims={} raw_near_null_delta_rms={:.6} near_null_prescale_rms={:.9} visible_axis_prescale_rms={:.6} near_null_projected_rms={:.6} visible_axis_projected_rms={:.6} near_null_projected_variance={:.9} visible_axis_projected_variance={:.9} quiet_dynamic_variance={:.9} loud_dynamic_variance={:.9} dynamic_variance_delta={:.9} dynamic_magnitude_delta={:.9} near_null_direction_erased_before_normalization={} fixed_normalization_restores_output_length={} same_direction_dynamic_magnitude_erased={} state={} felt_compression_conclusion={} multi_head_or_width_change_requires_approval={} observational_only={} right_to_ignore={} live_vector_write={} live_gain_write={} live_projection_write={} live_eligible_now={} auto_approved={} grants_approval={} authority={}",
+            compression.source_embedding_dim_count,
+            compression.projected_dim_count,
+            compression.raw_near_null_delta_rms,
+            compression.near_null_prescale_rms,
+            compression.visible_axis_prescale_rms,
+            compression.near_null_projected_rms,
+            compression.visible_axis_projected_rms,
+            compression.near_null_projected_variance,
+            compression.visible_axis_projected_variance,
+            compression.quiet_dynamic_variance,
+            compression.loud_dynamic_variance,
+            compression.dynamic_variance_delta,
+            compression.dynamic_magnitude_delta,
+            compression.near_null_direction_erased_before_normalization,
+            compression.fixed_normalization_restores_output_length,
+            compression.same_direction_dynamic_magnitude_erased,
+            compression.state,
+            compression.felt_compression_conclusion,
+            compression.multi_head_or_width_change_requires_approval,
+            compression.observational_only,
+            compression.right_to_ignore,
+            compression.live_vector_write,
+            compression.live_gain_write,
+            compression.live_projection_write,
+            compression.live_eligible_now,
+            compression.auto_approved,
+            compression.grants_approval,
+            compression.authority
+        );
         let _ = writeln!(
             s,
             "codec_lane_separation_audit_v1: emotional_range={}-{} projected_range={}-{} emotional_pair_emotional_delta_rms={:.3} emotional_pair_projected_delta_rms={:.3} emotional_selectivity_margin={:.3} emotional_pair_distinguishable={} semantic_pair_emotional_delta_rms={:.3} semantic_pair_projected_delta_rms={:.3} projected_selectivity_margin={:.3} projected_pair_distinguishable={} legacy_projection_width_rejected={} state={} construction={} felt_rigidity_conclusion={} observational_only={} right_to_ignore={} live_vector_write={} live_gain_write={} live_projection_write={} live_eligible_now={} auto_approved={} grants_approval={} authority={}",
