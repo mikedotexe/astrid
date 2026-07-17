@@ -3,8 +3,8 @@ use std::fs::{self, OpenOptions};
 use std::io::Write;
 use std::os::unix::fs::{OpenOptionsExt, PermissionsExt};
 use std::path::{Path, PathBuf};
-use std::sync::OnceLock;
-use std::time::Instant;
+use std::sync::{Mutex, OnceLock};
+use std::time::{Duration, Instant};
 
 use serde::Serialize;
 use serde_json::{Value, json};
@@ -32,6 +32,49 @@ fn unix_ms() -> u64 {
 
 fn monotonic_ns() -> u64 {
     u64::try_from(process_started().elapsed().as_nanos()).unwrap_or(u64::MAX)
+}
+
+pub(super) fn executable_name() -> &'static str {
+    static EXECUTABLE: OnceLock<String> = OnceLock::new();
+    EXECUTABLE
+        .get_or_init(|| {
+            std::env::current_exe()
+                .ok()
+                .and_then(|path| {
+                    path.file_name()
+                        .map(|name| name.to_string_lossy().into_owned())
+                })
+                .unwrap_or_else(|| "spectral-bridge-server".to_string())
+        })
+        .as_str()
+}
+
+#[derive(Debug)]
+struct CaptureActivationCacheV1 {
+    checked_at: Option<Instant>,
+    capture_window_id: Option<String>,
+}
+
+fn active_capture_window_id(root: &Path, now_ms: u64) -> Option<String> {
+    const REFRESH_INTERVAL: Duration = Duration::from_millis(100);
+    static CACHE: OnceLock<Mutex<CaptureActivationCacheV1>> = OnceLock::new();
+    let cache = CACHE.get_or_init(|| {
+        Mutex::new(CaptureActivationCacheV1 {
+            checked_at: None,
+            capture_window_id: None,
+        })
+    });
+    let mut cache = cache.lock().ok()?;
+    let now = Instant::now();
+    if cache.checked_at.is_some_and(|checked_at| {
+        cache.capture_window_id.is_none() && now.duration_since(checked_at) < REFRESH_INTERVAL
+    }) {
+        return None;
+    }
+    cache.capture_window_id =
+        CaptureWindowRequestV1::load(root, now_ms).map(|window| window.id().to_string());
+    cache.checked_at = Some(now);
+    cache.capture_window_id.clone()
 }
 
 fn sha256_bytes(bytes: &[u8]) -> String {
@@ -113,8 +156,7 @@ impl ShadowSignalJourneyV1 {
         let journey_digest = sha256_json(&journey_seed);
         let journey_id = format!("journey_{}", &journey_digest[..24]);
         let capture_root = default_signal_spine_root();
-        let capture_window_id = CaptureWindowRequestV1::load(&capture_root, arrival)
-            .map(|window| window.id().to_string());
+        let capture_window_id = active_capture_window_id(&capture_root, arrival);
         let mut shadow = Self {
             trusted: CausalSignalJourneyV1::new(journey_id),
             context,

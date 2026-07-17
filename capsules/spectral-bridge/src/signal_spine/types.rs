@@ -279,16 +279,9 @@ pub struct SignalProcessIdentityV1 {
 
 impl SignalProcessIdentityV1 {
     pub(super) fn current(deployment_identity: String) -> Self {
-        let executable = std::env::current_exe()
-            .ok()
-            .and_then(|path| {
-                path.file_name()
-                    .map(|name| name.to_string_lossy().into_owned())
-            })
-            .unwrap_or_else(|| "spectral-bridge-server".to_string());
         Self {
             pid: std::process::id(),
-            executable,
+            executable: super::recorder::executable_name().to_string(),
             deployment_identity,
         }
     }
