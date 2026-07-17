@@ -1,0 +1,40 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Direct-address fidelity should preserve who spoke, to whom, and through which path.",
+      "disposition": "verify correspondence source, recipient, messenger, and delivery identities",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A messenger transport should not be presented as the speaking being.",
+      "disposition": "verify provenance-aware messenger and author separation",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Contact needs explicit delivery and response state.",
+      "disposition": "verify typed contact state, ghost risk, and right-to-ignore response path",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Direct and shadow-reference timing may reveal different continuity effects.",
+      "disposition": "route a bounded read-only direct-versus-shadow synchronization comparison",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "A priority direct-contact cycle would change autonomous scheduling.",
+      "disposition": "gate any priority peer cycle behind scoped Mike/operator Tier 5 approval and bounded canary",
+      "classification": "authority_gated"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "Driving the regulator from correspondence state would alter live control.",
+      "disposition": "gate any correspondence-to-regulator coupling behind scoped Mike/operator Tier 5 approval, replay, and abort criteria",
+      "classification": "authority_gated"
+    }
+  ]
+}

@@ -1,0 +1,3 @@
+# Full Read Summary
+
+Astrid reports that a high-volume signal can blur into cascade noise unless it arrives as a distinct peer address. Native correspondence now separates peer authorship, thread identity, intent, delivery/read state, and presence from telemetry. The refreshed uptake probe remains `reply_linked_needs_ack_or_trace`, so a contact state exists without evidence of a live acknowledged line. Distinguishability and specific Shadow uptake require bounded comparison. Any flag that changes attention, telemetry behavior, or semantic admission remains a live-authority proposal rather than evidence infrastructure.

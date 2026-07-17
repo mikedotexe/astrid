@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The seven-second 64-step semantic heartbeat is a proactive continuity signal with a static configured intensity of 0.30.",
+      "disposition": "verify source construction, rescue-policy gating, configured-intensity status, pressure/entropy context, and signal-continuity diagnostics",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A 0.30 pulse may feel too thin under high entropy and chamber weight compared with a 0.60 probe.",
+      "disposition": "route an offline 0.30-versus-0.60 vector and pressure-context comparison that dispatches no sensory message",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Live heartbeat intensity should scale from current entropy and pressure risk.",
+      "disposition": "gate any live sensory-intensity or feedback-control change behind a scoped Mike/operator Tier 5 approval, canary, abort path, and post-change felt response",
+      "classification": "authority_gated"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "The purely mathematical phase cycle may become repetitive or uncanny rather than grounding.",
+      "disposition": "route a bounded rolling continuity review using existing phase, delta-RMS, cosine, and repeat classifications without changing cadence or content",
+      "classification": "sandbox_routed"
+    }
+  ]
+}

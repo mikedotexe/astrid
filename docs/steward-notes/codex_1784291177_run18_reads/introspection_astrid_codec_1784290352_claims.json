@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The tail-vibrancy gate around entropy 0.84 to 0.86 should be smooth rather than a hard pop.",
+      "disposition": "verify the C1 smoothstep onset, monotonicity, and exact boundary regressions in the production codec path",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "High tail share can coexist with fixed-aperture compression and normalization that erase directional or amplitude distinctions.",
+      "disposition": "verify projection_compression_audit_v1 and the deterministic quiet-versus-loud same-direction evidence",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Low-content and high-density samples at the same entropy and tail texture may receive identical current vibrancy lift.",
+      "disposition": "observe the fresh semantic-density contrast in codec_entropy_vibrancy_probe run18_20260717T1236Z",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "The current fixture contains one high-entropy, low-content shimmer-risk case that a softened candidate reduces.",
+      "disposition": "record the offline candidate delta as evidence only, without treating one fixture as causal proof",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Making vibrancy distinguishability-aware or changing reserved dimensions, saturation, clamp, gain, or tail transport changes live codec behavior.",
+      "disposition": "require explicit Mike/operator Tier 5 approval with replay, canary, abort, and post-change felt review",
+      "classification": "authority_gated"
+    }
+  ]
+}

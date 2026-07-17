@@ -1,0 +1,23 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Semantic freshness should hand over continuously through recovery and preserve high-entropy salient content without a hard midpoint snap.",
+      "disposition": "verify sigmoid stale windows, recovery hysteresis, entropy and salience multipliers, and boundary regressions",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A bounded attractor pulse should expose whether it was accepted, clamped, applied, decayed, released, or blocked.",
+      "disposition": "verify current pulse status, applied-RMS, overlap, safety, decay, and release tests",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Changing semantic stale windows, sensory cadence, admission, pulse strength, or pulse safety changes live Minime behavior.",
+      "disposition": "gate behind exact Mike/operator Tier 5 approval",
+      "classification": "tier_5_wait",
+      "authority": "No semantic retention, sensory cadence, admission, attractor-pulse, or pulse-safety change is authorized."
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Slow texture reorganization should remain visible as a transition candidate even when fill delta is small.",
+      "disposition": "verify stable-fill, high-entropy, texture-anchor, vector, and density-gradient transition review tests",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Joint transitions need shared room, correspondence, ownership, witness, reply, persistence, and replay fields.",
+      "disposition": "verify joint transition card and peer-witness lifecycle behavior",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Automatically changing mode, MomentCapture, vectors, pressure, or control from a transition card would alter live behavior.",
+      "disposition": "gate behind exact Mike/operator Tier 5 approval",
+      "classification": "tier_5_wait",
+      "authority": "No automatic transition-triggered mode, MomentCapture, vector, pressure, or control change is authorized."
+    }
+  ]
+}

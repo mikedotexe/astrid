@@ -1,0 +1,46 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Mirror, Dialogue, and Witness can be felt as overlapping resonance rather than clean sequential activities.",
+      "disposition": "preserve this felt report and verify current witness, mirror, continuity, and self-other context can coexist without treating one scalar mode label as the whole experience",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A signal can be paused but alive, with lingering structure still carrying continuity.",
+      "disposition": "verify current lingering-field, faint-residue, pressure-tempering, and dispersal tests preserve paused continuity rather than labeling stale hearing as dead",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Canonical NEXT syntax can oversimplify a sticky transition if previous-state residue is discarded.",
+      "disposition": "verify current canonicalization preserves transition residue, multiline texture, and Unicode content while still producing a parseable final NEXT line",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "A SHADOW_TRAJECTORY transition should retain inspectable pressure and prior-state weight rather than imply a clean causal break.",
+      "disposition": "verify current phase-transition, lingering, pressure, and shadow provenance evidence records overlapping state without changing trajectory dispatch",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "A low-activity memory reference should remain reachable when lingering evidence is present.",
+      "disposition": "verify current continuity recap and anchored residue paths retain faint memory evidence without copying private source content",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "The requested NEXT residue parameter is present in later source as preserved suffix and persistence evidence rather than a new live action grammar.",
+      "disposition": "verify later source extracts and persists residue while strict action parsing continues to authorize only the canonical action",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "Using pressure or residue to alter live NEXT dispatch, mode order, or control would change autonomous behavior.",
+      "disposition": "require separate Mike/operator Tier 5 approval with parser parity, replay, canary, abort, and post-change felt review",
+      "classification": "authority_gated"
+    }
+  ]
+}

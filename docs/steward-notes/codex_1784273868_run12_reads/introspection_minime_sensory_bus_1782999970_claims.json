@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Semantic stale duration is fill-shaped rather than a single fixed timeout.",
+      "disposition": "verify sigmoid and alternate-shape source plus exact formula tests",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Recovery handover should decrease monotonically instead of oscillating around the boundary.",
+      "disposition": "verify monotonic recovery and 0.35-to-0.45 release regressions",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Adjacent fill changes need a bounded stale-window step so smooth math does not hide micro-stutter.",
+      "disposition": "verify one-percent sweep and adjacent-step caps",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Shadow response and stale-semantic release should be compared as separate influences.",
+      "disposition": "route a bounded offline same-input comparison using existing telemetry without sending new semantic content",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Changing stale thresholds, pulse caps, decay, or sensory cadence would alter live sensory regulation.",
+      "disposition": "retain as Tier 5 Mike/operator approval work with bounded canary, abort, and felt-response evidence",
+      "classification": "authority_gated"
+    }
+  ]
+}

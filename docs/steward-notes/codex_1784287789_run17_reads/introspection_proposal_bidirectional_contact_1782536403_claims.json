@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Peer correspondence must not be mislabeled as a Mike or steward message.",
+      "disposition": "verify native peer actors, routes, and correspondence types",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A direct buffer should preserve Astrid's intent as language rather than flatten it into telemetry.",
+      "disposition": "verify relational_intent, shared_memory_anchor, body, and reply continuity",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Current directionality during active self-study needs measurement on the correspondence ledger.",
+      "disposition": "route a bounded current-ledger symmetry audit rather than reuse historical telemetry ratios",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "The live public record still lacks acknowledgement of direct intent.",
+      "disposition": "observe reply-linked continuity with zero ACK and zero live presence",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Mirroring intent into Control, mapping it directly to Shadow, or increasing path weight changes live peer state.",
+      "disposition": "require explicit Mike/operator Tier 5 approval",
+      "classification": "authority_gated"
+    }
+  ]
+}

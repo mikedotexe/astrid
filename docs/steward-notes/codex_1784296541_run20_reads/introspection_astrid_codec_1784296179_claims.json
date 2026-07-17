@@ -1,0 +1,40 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The entropy gate should transition smoothly across 0.84 and 0.86 rather than producing a perceptible pop.",
+      "disposition": "verify current source already uses a C1 smoothstep and focused boundary tests prove a tiny monotonic onset with no discontinuity",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "High-entropy tail features should be checked for repeated saturation at their effective ceiling.",
+      "disposition": "verify current codec evidence and tests expose pre-bound value, selected ceiling, delivered value, clipped lanes, and tail-only headroom",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A 20% high-entropy tail ceiling must not spill into narrative or shadow-reserved dimensions.",
+      "disposition": "verify the bounded tail-vibrancy regressions preserve the default ceiling elsewhere and do not write narrative or reserved lanes",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "The felt silt may be related to clamping, but the report does not establish that causal link.",
+      "disposition": "preserve the felt report and exact saturation evidence while withholding a clamp-to-silt causal conclusion",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Raising FEATURE_ABS_MAX from 5.0 to 6.5 changes the live codec delivery bound.",
+      "disposition": "require separate Mike/operator Tier 5 approval with replay, saturation distribution, canary, abort, and post-change felt evidence",
+      "classification": "authority_gated"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "Raising the full tail-vibrancy lift from 20% to 35% changes live codec gain and headroom.",
+      "disposition": "require separate Mike/operator Tier 5 approval with bounded gain proof, reserved-lane parity, canary, abort, and felt review",
+      "classification": "authority_gated"
+    }
+  ]
+}

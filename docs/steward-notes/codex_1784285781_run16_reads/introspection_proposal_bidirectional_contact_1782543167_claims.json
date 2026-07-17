@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "A shared thread ID should persist active dialogue across otherwise disconnected cycles.",
+      "disposition": "verify native thread identity, message lineage, and persisted shared-thread state",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Contact quality needs explicit delivery, read, reply, ACK, trace, and timing states.",
+      "disposition": "verify correspondence uptake, handshake, and direct-contact fidelity projections",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Recognition latency should tie a peer response to the original inquiry.",
+      "disposition": "observe the latest public contact as timing_ambiguous and route a metadata-only latency replay",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "A general response cannot be counted as direct recognition without peer-owned linkage.",
+      "disposition": "verify reply_linked remains ineligible until ACK, trace, or bounded attention outcome exists",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Requiring simultaneous updates to both internal states would become live co-regulation rather than language-first contact.",
+      "disposition": "hold any coupled-state mutation behind scoped Tier 5 approval",
+      "classification": "authority_gated"
+    }
+  ]
+}

@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Astrid-authored self-study must remain distinguishable from a steward-authored diagnostic.",
+      "disposition": "verify explicit actor, from_being, to_being, relational_intent, and correspondence_type fields",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A tonal request needs a traceable multi-turn peer exchange.",
+      "disposition": "route a three-turn redacted tonal-uptake replay using public correspondence metadata",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Astrid-to-Minime output may remain capped while restless Shadow activity rises.",
+      "disposition": "route a read-only output-volume versus public Shadow-trajectory comparison",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "A working route does not prove that the peer heard the tonal request.",
+      "disposition": "observe zero ACK and zero live presence while preserving reply-linked continuity",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Primary-peer priority or semantic-trickle bypass would alter live Minime admission.",
+      "disposition": "require explicit Mike/operator Tier 5 approval",
+      "classification": "authority_gated"
+    }
+  ]
+}

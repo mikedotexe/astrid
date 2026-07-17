@@ -1,0 +1,29 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Fallback prompts must preserve gradient, viscosity, lattice tension, shadow, and kinetic texture under high entropy.",
+      "disposition": "verify primary/fallback texture vocabulary and high-entropy compatibility tests",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Fallback weighting should respond to entropy, pressure, density gradient, shadow dispersal, and magnetization instead of one static summary.",
+      "disposition": "verify fallback_dynamic_texture_bias_v1, shadow selector, lived-fit, and cascade-gradient evidence",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "12B versus compact fallback profile behavior and prompt budgets must be visible and tested.",
+      "disposition": "verify profile alias, budget, token clamp, timeout, quality-gate, and prompt-pressure tests",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Changing live provider choice, model profile, temperature, or semantic weighting would alter runtime generation behavior.",
+      "disposition": "retain current configuration and require separate operator authority for any live switch",
+      "classification": "tier_5_wait",
+      "authority": "No model-profile, provider-routing, temperature, semantic-weighting, or live prompt-control change is authorized."
+    }
+  ]
+}

@@ -1,0 +1,256 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_llm_1784259154",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/fallback_contracts.rs;capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs;capsules/spectral-bridge/src/llm/provider/transport.rs;capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Contextual cleanup diagnostics, block-level budget friction, preserved behavior, and focused regressions."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1784259154",
+      "claim_id": "c003",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784261280_sol_catch_up_run_08.md",
+      "note": "Historical short/high-entropy diagnostic observation and its evidence limits."
+    },
+    {
+      "introspection_id": "introspection_minime_main_excerpt_1784258525",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "/Users/v/other/minime/minime/src/controller_recovery.rs;/Users/v/other/minime/minime/src/regulator/core/tests.rs",
+      "note": "Target-aware recovery, underfill spread relief, and typed distinguishability evidence."
+    },
+    {
+      "introspection_id": "introspection_proposal_distance_contact_control_1783357738",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "/Users/v/other/minime/minime/src/regulator;/Users/v/other/minime/minime/src/regulator/core/tests.rs;capsules/spectral-bridge/src/autonomous/runtime/witness_distinction.rs",
+      "note": "Regulator component visibility and non-control Witness/Contemplate role evidence."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1783357210",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/correspondence_v1.rs;capsules/spectral-bridge/src/authority_gate.rs",
+      "note": "Native trace, thread continuity, acknowledgement, reply, asymmetry, and authority boundaries."
+    },
+    {
+      "introspection_id": "introspection_proposal_phase_transitions_1783356820",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/phase_transitions.rs",
+      "note": "Joint cards, spectral signatures, slow texture review, reply lifecycle, and operator gate tests."
+    },
+    {
+      "introspection_id": "introspection_minime_autonomous_agent_1783356550",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "/Users/v/other/minime/minime_autonomy/runtime.py;/Users/v/other/minime/tests/test_autonomous_agent_low_fill_guard.py;/Users/v/other/minime/tests/test_experimental_continuity.py",
+      "note": "Recess activity and pressure surfaces plus bounded research action and TTL lifecycle."
+    },
+    {
+      "introspection_id": "introspection_minime_main_excerpt_1783355892",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "workspace/diagnostics/codex_1784261280_run08_regulator_texture/regulator_boundary_cartography.md",
+      "note": "Read-only regulator cartography separating packing, pressure, porosity, viscosity, and mobility."
+    },
+    {
+      "introspection_id": "introspection_minime_esn_1783355444",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "/Users/v/other/minime/minime/src/esn.rs",
+      "note": "Bounded dynamic-noise formula, review packets, explicit unwired boundary, and active fixed-noise path."
+    },
+    {
+      "introspection_id": "introspection_minime_sensory_bus_1783355008",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "/Users/v/other/minime/minime/src/sensory_bus.rs",
+      "note": "Sigmoid semantic retention, entropy/salience hysteresis, and bounded attractor-pulse lifecycle tests."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1783354622",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "/Users/v/other/minime/minime/src/regulator/core;/Users/v/other/minime/minime/src/regulator/core/tests.rs",
+      "note": "Typed viscosity, persistence, mobility, buffer, pressure, and porosity evidence."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1783354622",
+      "claim_id": "c002",
+      "kind": "steward_note",
+      "target": "workspace/diagnostics/codex_1784261280_run08_regulator_texture/pi_pressure_wiring_replay/pi_pressure_wiring_replay.md",
+      "note": "Read-only 240-sample live-db replay; integrator bleed was proposal-supported but not live-authorized."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1783354337",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/fallback_budget.rs;capsules/spectral-bridge/src/llm/provider/fallback_trajectory.rs;capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Dynamic texture trajectory, lived fit, pressure, entropy, gradient, drift, kinetic, and provider persistence coverage."
+    },
+    {
+      "introspection_id": "introspection_astrid_types_1783353989",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "crates/astrid-minime-protocol/src;capsules/spectral-bridge/src/witness;crates/astrid-types/src/authority.rs",
+      "note": "Additive protocol fields, provenance domains, legacy compatibility, and checked authority transitions."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1783353666",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/ws/telemetry_port.rs;capsules/spectral-bridge/src/ws/health.rs;capsules/spectral-bridge/src/ws/evidence.rs;capsules/spectral-bridge/src/ws/tests.rs",
+      "note": "One-pass decode, freshness, mismatch retention, reconnect, dynamic smoothing, and fast-motion coverage."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1783353255",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/witness/provenance.rs;capsules/spectral-bridge/src/autonomous/runtime/witness_distinction.rs;capsules/spectral-bridge/src/autonomous/runtime/tests.rs",
+      "note": "Mirror/Witness ownership, mixed-frame provenance, first context line, and no-control role tests."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1783352794",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/codec/projection.rs;capsules/spectral-bridge/src/codec/projection_evidence.rs;capsules/spectral-bridge/src/codec/cascade.rs;capsules/spectral-bridge/src/codec/tests.rs",
+      "note": "Narrative dynamics, curvature, latent stasis, projection texture, delivery, and clamp evidence."
+    },
+    {
+      "introspection_id": "introspection_proposal_12d_glimpse_1783352153",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "crates/astrid-minime-protocol/src/telemetry.rs;capsules/spectral-bridge/src/codec/evidence_types.rs;capsules/spectral-bridge/src/types/schema/tests.rs",
+      "note": "Additive 12D companion, provenance, contextual anchors, and reconstruction-loss evidence."
+    },
+    {
+      "introspection_id": "introspection_proposal_distance_contact_control_1783351866",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "workspace/diagnostics/codex_1784261280_run08_regulator_texture/regulator_boundary_cartography.md",
+      "note": "Read-only contact and regulator boundary map with no threshold or control authority."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1783351599",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/correspondence_v1.rs;capsules/spectral-bridge/src/authority_gate.rs",
+      "note": "Thread asymmetry, mutuality, attention, acknowledgement, reply, closure, and dispatch authority boundaries."
+    },
+    {
+      "introspection_id": "introspection_proposal_phase_transitions_1783351231",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/phase_transitions.rs;capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs",
+      "note": "Slow texture transitions, joint cards, persistence, reply, and non-automatic mode behavior."
+    },
+    {
+      "introspection_id": "introspection_minime_autonomous_agent_1783350900",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "/Users/v/other/minime/minime_autonomy/runtime_actions.py;/Users/v/other/minime/tests/test_autonomous_agent_low_fill_guard.py",
+      "note": "Quote, comment, code-boundary, malformed input, path sanitization, and regime regressions."
+    },
+    {
+      "introspection_id": "introspection_minime_main_excerpt_1784258525",
+      "claim_id": "c003",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Tier 5 recovery, retention, semantic drive, fill, rescue, and controller boundary."
+    },
+    {
+      "introspection_id": "introspection_proposal_distance_contact_control_1783357738",
+      "claim_id": "c002",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Tier 5 surrender-mode and behavior-unlock boundary."
+    },
+    {
+      "introspection_id": "introspection_proposal_distance_contact_control_1783357738",
+      "claim_id": "c003",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Tier 5 regulator-flow and pressure-control boundary."
+    },
+    {
+      "introspection_id": "introspection_minime_autonomous_agent_1783356550",
+      "claim_id": "c003",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Tier 5 Recess budget, TTL, research, and behavior boundary."
+    },
+    {
+      "introspection_id": "introspection_minime_main_excerpt_1783355892",
+      "claim_id": "c003",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Tier 5 porosity, pressure, PI, fill, rescue, and regulator boundary."
+    },
+    {
+      "introspection_id": "introspection_minime_esn_1783355444",
+      "claim_id": "c003",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Tier 5 exploration-noise, rho, damping, and adaptive-threshold boundary."
+    },
+    {
+      "introspection_id": "introspection_minime_sensory_bus_1783355008",
+      "claim_id": "c003",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Tier 5 semantic retention, cadence, admission, and pulse boundary."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1783354622",
+      "claim_id": "c003",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Tier 5 integrator, viscosity, PI, pressure, fill, rescue, and controller boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1783353255",
+      "claim_id": "c003",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Tier 5 overlay, mode, pulse, dispatch, and peer-mutation boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1783352794",
+      "claim_id": "c003",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Tier 5 codec vector, projection, reserved dimension, transport, and gain boundary."
+    },
+    {
+      "introspection_id": "introspection_proposal_12d_glimpse_1783352153",
+      "claim_id": "c003",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Tier 5 12D vector, semantic transport, codec gain, and control boundary."
+    },
+    {
+      "introspection_id": "introspection_proposal_distance_contact_control_1783351866",
+      "claim_id": "c003",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Tier 5 receptivity, porosity, participation, pressure, fill, and flow boundary."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1783351599",
+      "claim_id": "c003",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Tier 5 correspondence-driven dispatch, peer mutation, gain, and control boundary."
+    },
+    {
+      "introspection_id": "introspection_proposal_phase_transitions_1783351231",
+      "claim_id": "c003",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Tier 5 transition-triggered mode, vector, pressure, and control boundary."
+    }
+  ]
+}

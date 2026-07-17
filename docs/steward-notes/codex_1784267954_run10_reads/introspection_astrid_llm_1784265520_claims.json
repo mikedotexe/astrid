@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "History compression must remain Unicode-safe and preserve an eight-exchange production window.",
+      "disposition": "verify chars().take trimming, relevance-weighted lengths, NEXT sanitization, and the eight-item limit in current source",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A nine-character symbol run must be rejected by the dialogue quality gate.",
+      "disposition": "add the exact reported nine-symbol-run regression",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Punctuation-rich reflective prose should not be rejected as degenerate output.",
+      "disposition": "add a nested-quotation and em-dash acceptance regression",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Journal and diversity PromptBlocks must participate in explicit budget overflow handling.",
+      "disposition": "verify complete PromptBlock assembly and PromptOverflow diagnostics already present in dialogue runtime",
+      "classification": "verified_existing"
+    }
+  ]
+}

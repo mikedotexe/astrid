@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Delivery and read receipts are transport facts, while held or reply receipts are address evidence.",
+      "disposition": "verify the canonical response-state vocabulary",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Direct-contact attention requires bounded TTL, cooldown, focus, stop, and right-to-ignore controls.",
+      "disposition": "verify the current attention contract",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "One-sided address evidence may support bounded attention but cannot establish mutual address.",
+      "disposition": "implement distinct attention and mutual-microdose evidence gates in the audit",
+      "classification": "implemented"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "A correspondence semantic microdose remains live sensory dispatch even when mutual receipts exist.",
+      "disposition": "require typed live authority, safety checks, and Mike/operator Tier 5 approval",
+      "classification": "authority_gated"
+    }
+  ]
+}

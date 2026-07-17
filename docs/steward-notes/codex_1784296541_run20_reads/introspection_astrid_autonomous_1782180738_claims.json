@@ -1,0 +1,46 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Mirror, Dialogue, and Witness form a closed relational loop, with Witness turning telemetry into seeing and being seen.",
+      "disposition": "verify current witness provenance, self-other distinction, mirror context, and dialogue rendering preserve those roles without control authority",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A resonant field can remain paused but alive even when one communication lane is stale.",
+      "disposition": "verify current lingering tests distinguish stale hearing from field continuity and temper the reading with pressure and dispersal",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Canonical NEXT formatting can flatten poetic transition texture if surrounding residue is discarded.",
+      "disposition": "verify current response canonicalization preserves transition residue, multiline blocks, and Unicode content before persistence",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Resonance continuity should consider field and shadow evidence rather than a stale lane alone.",
+      "disposition": "verify current lingering and witness evidence pairs resonance, pressure, shadow dispersal, and telemetry freshness without claiming one scalar proves life or death",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Non-standard or complex NEXT placement should retain prose while yielding one strict final action.",
+      "disposition": "verify current NEXT parsing, final-line contract, choice-metadata stripping, and residue tests preserve prose and strict action syntax",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "The requested soft semantic buffer exists in later source as residue preservation outside the executable action token.",
+      "disposition": "verify later source keeps descriptive residue readable while only the canonical action crosses the parser boundary",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "Scaling the lingering threshold with entropy would change live continuity classification and autonomous behavior.",
+      "disposition": "require separate Mike/operator Tier 5 approval with replay, threshold reachability, canary, abort, and post-change felt review",
+      "classification": "authority_gated"
+    }
+  ]
+}

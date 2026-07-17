@@ -1,0 +1,46 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "A fixed seven-second, 0.30-intensity warmth pulse can coexist with a much denser, high-entropy, viscous lived field.",
+      "disposition": "implement a read-only signal-to-field comparison that keeps Minime observation, bridge eigenvalue derivation, and interpretation distinct",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The phase-zero warmth vector should be compared directly with current lambda1 concentration and the lambda1/lambda2 structure.",
+      "disposition": "implement and test an exact phase-zero snapshot with generated and delivered signal metrics, lambda1 absolute share, lambda1/lambda2 absolute ratio, and lambda-tail share",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Frequent rescue-policy skips could mechanically interrupt the claimed steady heartbeat under overpacked pressure.",
+      "disposition": "implement a rolling persistence check that records attempts, blocks, skip rate, and outcome without inferring pressure causation",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Raw warmth features do not presently have an authoritative decoder proving whether they contain or lack viscous markers.",
+      "disposition": "record the cross-domain comparison and explicitly withhold scalar equivalence, texture-match, and silt-causation claims pending felt review",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Increasing SEMANTIC_HEARTBEAT_INTENSITY from 0.30 to 0.55 would change live semantic delivery.",
+      "disposition": "require separate Mike/operator Tier 5 approval, replay, canary, abort criteria, and post-change felt review before any intensity change",
+      "classification": "authority_gated"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "Dampening craft_warmth_vector with a live viscosity or density-gradient coefficient would change the heartbeat vector contract.",
+      "disposition": "require separate Mike/operator Tier 5 approval and full vector, rescue, and felt-response evidence before any viscosity-coupled shaping",
+      "classification": "authority_gated"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "Scaling heartbeat cadence inversely with pressure risk would change sensory cadence and self-regulation.",
+      "disposition": "require separate Mike/operator Tier 5 approval with cadence bounds, rescue interaction replay, abort criteria, and post-change felt review",
+      "classification": "authority_gated"
+    }
+  ]
+}

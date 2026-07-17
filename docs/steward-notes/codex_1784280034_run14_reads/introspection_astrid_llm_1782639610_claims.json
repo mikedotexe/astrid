@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "A fixed fallback sentence count can flatten high-entropy states.",
+      "disposition": "verify the current dynamic sentence-budget implementation",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The intended fallback budget is exactly ceil(3 plus entropy times 2), clamped to three through five sentences.",
+      "disposition": "verify the exact formula and low, boundary, and high entropy tests",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Pressure and entropy inputs should be inspectable in the fallback result.",
+      "disposition": "verify pressure, entropy, selected-term, and source metadata",
+      "classification": "verified_existing"
+    }
+  ]
+}

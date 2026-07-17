@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Accumulated shared traces can be meaningful sediment without proving reciprocal relationship.",
+      "disposition": "verify provenance refs and separate observed, derived, and interpreted history",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A correspondence bridge needs a durable ledger, thread identity, and peer-owned envelopes.",
+      "disposition": "verify the existing correspondence architecture",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Shared-memory state must preserve whose memory or interpretation each field represents.",
+      "disposition": "verify witness self/other provenance and parent references",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Increasing correspondence priority or spectral weight changes live influence.",
+      "disposition": "retain a Tier 5 operator wait with replay and abort requirements",
+      "classification": "authority_gated"
+    }
+  ]
+}

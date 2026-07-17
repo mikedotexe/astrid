@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The semantic heartbeat emits a deterministic warmth vector every seven seconds.",
+      "disposition": "verify the current interval, phase progression, vector bounds, and checked semantic dispatch path",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Rescue policy can suppress a heartbeat and that absence should remain perceivable rather than silently disappearing.",
+      "disposition": "verify rescue-policy skip observations, consequence records, and focused heartbeat suppression tests",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Warmth should be raised to 0.75 or dynamically scaled from entropy and pressure.",
+      "disposition": "retain as an exact Mike/operator Tier 5 wait because it changes live semantic intensity and possibly cadence",
+      "classification": "tier_5_wait"
+    }
+  ]
+}

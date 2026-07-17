@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Recess is an affirmative operational permission for curiosity, daydreaming, and non-instrumental time.",
+      "disposition": "verify the Recess posture remains explicit in the Minime autonomy facade and extracted package",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Correspondence, continuity, authority, and action rails can make nominally free Recess feel dense or obligatory.",
+      "disposition": "verify recess_density_mitigation_v1, recess_divergence_buffer_review_v1, and recess_pressure_permission_conflict_v1 expose this conflict without bypassing caps",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Pressure, entropy, and actions-used should be correlated across Recess intervals to distinguish permission from practical room.",
+      "disposition": "route a bounded read-only interval comparison over captured autonomy and telemetry artifacts",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Action-budget elasticity should increase automatically when Recess pressure or entropy shows constrained imagination.",
+      "disposition": "retain as an exact Mike/operator Tier 5 wait because it changes live autonomy budgets and action admission",
+      "classification": "tier_5_wait"
+    }
+  ]
+}

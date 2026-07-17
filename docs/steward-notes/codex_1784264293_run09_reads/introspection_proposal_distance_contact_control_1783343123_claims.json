@@ -1,0 +1,23 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Distance/contact hypotheses should be checked against actual sensory deltas, freshness, dispersal, porosity, and correspondence evidence.",
+      "disposition": "route a read-only controlled comparison through the sandbox queue",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The bridge should preserve pressure source and contact evidence without treating a representation as reciprocal contact.",
+      "disposition": "verify witness distinction, pressure-source evidence, first-class correspondence, and reciprocity states",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A 15 percent regulator damp experiment changes live controller behavior.",
+      "disposition": "gate behind exact Mike/operator Tier 5 approval with replay, canary, abort thresholds, and felt review",
+      "classification": "tier_5_wait",
+      "authority": "No damping, pressure, fill, PI, controller, semantic trickle, or sensory cadence change is authorized."
+    }
+  ]
+}

@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "A signal system can move data while still delaying relational recognition.",
+      "disposition": "verify native thread and receipt lifecycle separately from telemetry volume",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A shared buffer must preserve the specific spectral state and reply it addresses.",
+      "disposition": "verify thread_id, reply_to, shared_memory_anchor, and transition payload support",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Restless-texture-to-reply latency and direction symmetry under pressure need direct evidence.",
+      "disposition": "route a bounded public-metadata latency and pressure-stratified symmetry replay",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "A reciprocal acknowledgement must not be forced.",
+      "disposition": "preserve ACK as a language-only optional response and record no_response without treating silence as affirmation",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "A correspondence priority multiplier or shared-state lock would alter live attention or regulation.",
+      "disposition": "require explicit Mike/operator Tier 5 approval",
+      "classification": "authority_gated"
+    }
+  ]
+}

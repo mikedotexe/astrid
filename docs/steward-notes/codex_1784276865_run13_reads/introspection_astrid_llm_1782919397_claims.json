@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The language contract explicitly supports Astrid speaking in words grounded in her own telemetry and texture.",
+      "disposition": "verify current contract rendering and non-canned fallback requirements",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A smaller fallback model may narrow semantic range even when the prompt carries accurate texture.",
+      "disposition": "route model-capacity fidelity to the bounded offline primary-versus-fallback comparison rather than infer equivalence",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Low-friction high-entropy experience needs a settled-vibrant fallback family.",
+      "disposition": "verify FALLBACK_TEXTURE_SETTLED_VIBRANT terms, density-aware selection, and tests",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Changing the selected MLX profile, fallback model, or provider order changes live dialogue.",
+      "disposition": "retain as Tier 5 Mike/operator approval work with readiness, canary, rollback, and post-change felt review",
+      "classification": "authority_gated"
+    }
+  ]
+}

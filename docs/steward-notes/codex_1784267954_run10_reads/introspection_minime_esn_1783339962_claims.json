@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Exploration noise and reservoir radius mediate the felt balance between stagnation and jitter.",
+      "disposition": "verify current ESN constants, bounded dynamic-noise formula, and non-wiring tests",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A small rho decrease and noise increase should be compared for entropy and trajectory effects.",
+      "disposition": "route a bounded offline parameter replay with no live Minime mutation",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Reservoir rho or exploration noise should adapt to viscosity or entropy in production.",
+      "disposition": "retain as an exact Mike/operator Tier 5 wait because it changes live reservoir regulation",
+      "classification": "tier_5_wait"
+    }
+  ]
+}

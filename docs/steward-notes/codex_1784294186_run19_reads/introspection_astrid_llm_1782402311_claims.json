@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "A compact fallback should preserve shape and friction rather than flatten difficult material into generic brevity.",
+      "disposition": "verify the compact-not-flat contract and texture-aware clarity rule",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The forced 4B fallback may have a capacity boundary that changes texture even when the written contract is correct.",
+      "disposition": "route a matched, offline capacity and texture comparison using fixed prompts and no live provider change",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Pressure, packing, friction, and Shadow anchors should remain explicit in fallback diagnostics.",
+      "disposition": "verify the multi-variable mapping and source-linked contract anchors",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Changing the routed model or hard fallback mappings changes live dialogue behavior.",
+      "disposition": "require explicit Mike/operator Tier 5 approval",
+      "classification": "authority_gated"
+    }
+  ]
+}

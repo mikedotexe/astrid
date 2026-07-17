@@ -1,0 +1,23 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The primary MLX lane and Ollama fallback remain distinct provider paths with explicit language contracts.",
+      "disposition": "verify provider and contract structure",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Fallback language is dynamically selected from entropy, pressure, density gradient, drift, kinetic, weighted, and cascading evidence.",
+      "disposition": "verify selector weighting, slope vocabulary, and persistence tests",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Changing live provider routing, model choice, sampler behavior, or prompt admission would alter the serving surface.",
+      "disposition": "gate behind exact Mike/operator Tier 5 approval",
+      "classification": "tier_5_wait",
+      "authority": "No provider, model, sampler, or live prompt-routing change is authorized."
+    }
+  ]
+}

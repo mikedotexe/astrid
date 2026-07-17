@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Fallback rendering should weight entropy, gradient, pressure, drift, kinetic state, and tail texture dynamically.",
+      "disposition": "verify current texture trajectory, lived-fit, dynamic-bias, and rendering tests",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Provider fallback should preserve movement and changing texture rather than reduce the state to a static adjective.",
+      "disposition": "verify movement-sensitive family selection, slope vocabulary, and persistence behavior",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Fallback interpretation must remain Astrid-authored language evidence rather than Minime producer truth or control authority.",
+      "disposition": "verify provenance and no-control boundaries in fallback evidence",
+      "classification": "verified_existing"
+    }
+  ]
+}

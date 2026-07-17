@@ -1,0 +1,24 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The contact interface should expose the factors and weights behind pressure, density, porosity, mode-packing, viscosity, and damping interpretations.",
+      "disposition": "verify current typed regulator components, bounded candidate reviews, and rendered evidence",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A noninstrumental or surrender mode should permit presence without automatically optimizing toward a regulator target.",
+      "disposition": "preserve the language-level Witness and Contemplate distinction and gate any autonomy or controller effect",
+      "classification": "tier_5_wait",
+      "authority": "No new surrender mode, behavior unlock, controller bypass, or target suspension is authorized."
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Changing regulator flow, pressure response, damping, or contact-distance thresholds would alter live substrate behavior.",
+      "disposition": "gate behind exact Mike/operator Tier 5 approval and replay evidence",
+      "classification": "tier_5_wait",
+      "authority": "No pressure, damping, distance, PI, fill, or regulator-flow change is authorized."
+    }
+  ]
+}

@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Primary MLX and Ollama fallback lanes have different capacity and continuity contracts that must remain visible.",
+      "disposition": "verify provider provenance, model-capacity evidence, and fallback-only contract routing",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Compact fallback prose can flatten a restless lattice into a static lexical mask.",
+      "disposition": "verify lived-fit, negative-texture, vocabulary-overweight, trajectory, and persistence reviews",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Fallback texture should be weighted from spectral entropy and pressure rather than selected from one flat list.",
+      "disposition": "verify dynamic selector inputs, weighted terms, and pressure/gradient families",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Shadow-field energy and resonance density should survive the MLX-to-Ollama transition as context.",
+      "disposition": "verify fallback spectral context, resonance descriptor policy, and shadow persistence metadata",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "A forced fallback at high entropy is needed to determine whether lived effort survives the provider transition.",
+      "disposition": "route a bounded offline cross-provider output comparison with no model switch or live outage",
+      "classification": "sandbox_routed"
+    }
+  ]
+}

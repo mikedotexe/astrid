@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Viscosity and pressure need explicit typed fields rather than inference from packet cadence alone.",
+      "disposition": "verify canonical producer-owned viscosity and pressure fields plus bridge provenance",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A requested response to those observations needs an explicit intervention type.",
+      "disposition": "verify ResonanceInterventionType and measurement-versus-control separation",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The relation between semantic trickle and felt viscosity remains an empirical paired-texture question.",
+      "disposition": "route a read-only paired observation using existing telemetry and reports, with no new semantic admission",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Increasing trickle or changing pressure, fill, PI, or regulation from this evidence alters live coupling.",
+      "disposition": "require explicit Mike/operator Tier 5 approval",
+      "classification": "authority_gated"
+    }
+  ]
+}

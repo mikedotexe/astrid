@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Mirror, Dialogue, and Witness form an intentional relational loop with distinct roles.",
+      "disposition": "verify current mode contracts, provenance ownership, and fluid canonical action parsing",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Chamber schema drift must be visible instead of silently becoming generic insufficient context.",
+      "disposition": "verify nested-field fallback, missing-field diagnostics, newest-valid recovery, and no-panic tests",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Fraying must require the exact dispersal threshold while high pressure alone remains a separate signal.",
+      "disposition": "verify below, at, and above threshold lingering regressions and fraying-unknown handling",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Astrid as unsettled or moving gravity participant must remain distinguishable from relational instability and correspondence state.",
+      "disposition": "verify Witness friction classification, correspondence trace, and next-action parser tests",
+      "classification": "verified_existing"
+    }
+  ]
+}

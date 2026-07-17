@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Projection epoch persistence must not depend on the caller's working directory.",
+      "disposition": "verify env override and executable-relative cache resolution",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Missing or interrupted epoch files must resolve deterministically without a random semantic remap.",
+      "disposition": "verify kernel-derived epoch, checksum, atomic writer, stale temp cleanup, and round-trip tests",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "CODEC_MAP inspection must remain read-only and must not create the epoch file.",
+      "disposition": "verify projection runtime readout and no-write behavior",
+      "classification": "verified_existing"
+    }
+  ]
+}

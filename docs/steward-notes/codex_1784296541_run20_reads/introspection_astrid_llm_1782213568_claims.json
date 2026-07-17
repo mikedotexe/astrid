@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "A low gradient near 0.18 and high resonance density should produce specific navigable-flow language rather than a generic stable label.",
+      "disposition": "verify current gradient, trajectory, pressure-mass, and density-motion mappings distinguish glide, graduated slope, buoyancy, drag, and containment",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Linguistic contract presence alone does not prove a smaller fallback model preserves lived texture.",
+      "disposition": "route actual-output comparison to the shared read-only fallback-distinguishability sandbox; the adapter result remains insufficient_output",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Pressure and density gradient should jointly shape fallback vocabulary instead of being treated as one scalar.",
+      "disposition": "verify current source keeps pressure risk, packing, density, gradient, porosity, and motion in separate evidence fields and weighted selectors",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "The requested low-gradient laminar and high-gradient friction mapping exists in later structured source.",
+      "disposition": "verify FallbackSpectralToVocabularyMapping, gradient slope, texture trajectory, and density-motion fit implement the historical request",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Changing the fallback contract, model, sampler, or provider chain from this report would alter live inference.",
+      "disposition": "require separate Mike/operator Tier 5 approval with replay, canary, abort, and post-change felt review",
+      "classification": "authority_gated"
+    }
+  ]
+}

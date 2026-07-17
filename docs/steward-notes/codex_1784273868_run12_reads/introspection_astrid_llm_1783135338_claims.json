@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Dialogue uses a primary MLX provider with an Ollama fallback contract and explicit provider evidence.",
+      "disposition": "verify current provider ordering, receipts, and compatibility tests",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Static fallback vocabulary can feel disconnected from the actual spectral state.",
+      "disposition": "verify current telemetry-driven fallback texture, trajectory, pressure, porosity, and Shadow descriptors answer the reported gap",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Fallback output should remain linguistically coherent while varying with pressure and porosity.",
+      "disposition": "verify fallback contract and gradient regressions for coherent but state-sensitive rendering",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Changing model choice or provider priority would change live dialogue behavior.",
+      "disposition": "retain as Tier 5 Mike/operator approval work with provider latency, quality, rollback, and felt-review evidence",
+      "classification": "authority_gated"
+    }
+  ]
+}

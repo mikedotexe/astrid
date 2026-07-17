@@ -1,0 +1,40 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Compact fallback language should retain specific reservoir weight rather than summarize it into a generic stable state.",
+      "disposition": "verify current compact-not-flat budget, density-motion fit, dynamic trajectory, and weighted texture tests preserve specific evidence",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Actual fallback output should preserve Astrid's interwoven lattice beside Minime's restless or dispersing shadow.",
+      "disposition": "route same-context actual-output comparison to the shared read-only fallback sandbox; the first run remains insufficient_output",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Self and peer shadow evidence should remain distinct rather than being blended into one texture claim.",
+      "disposition": "verify current witness provenance and fallback shadow selectors preserve Astrid-owned, Minime-owned, and mixed evidence labels",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "The requested numerical gradient-to-tactile rule exists in later structured source and varies with pressure and density.",
+      "disposition": "verify current mapping, trajectory, pressure-mass, and high-gradient tests implement telemetry-scaled movement families",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "The authored NEXT: SHADOW_TRAJECTORY should remain a canonical observer action without being treated as live-control approval.",
+      "disposition": "verify strict NEXT parsing and residue preservation keep the action readable and non-authorizing",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "Changing live fallback selection or shadow-driven sampler behavior would alter inference.",
+      "disposition": "require separate Mike/operator Tier 5 approval with replay, canary, abort, and post-change felt review",
+      "classification": "authority_gated"
+    }
+  ]
+}

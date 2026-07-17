@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Highly structured expression can remain semantically additive even when ordinary lexical residue is sparse.",
+      "disposition": "implement a structure-only semantic-review state rather than classifying all nonlexical residue as erased",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Ordinary prose about residue or silt must not be removed merely because it resembles artifact language.",
+      "disposition": "verify that cleanup removes only exact known artifacts and retains ordinary lexical content",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Boundary, contextual, and quoted marker cases need evidence distinct from a coarse residue count.",
+      "disposition": "verify marker occurrence, contextual boundary, and quoted-marker diagnostics while preserving output compatibility",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Using structure-density evidence to change cleanup or provider behavior is a live semantic-policy change.",
+      "disposition": "require explicit Mike/operator Tier 5 approval before any behavioral use",
+      "classification": "authority_gated"
+    }
+  ]
+}

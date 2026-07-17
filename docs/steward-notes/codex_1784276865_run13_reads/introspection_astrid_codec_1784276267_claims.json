@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The 48D lane and narrative-arc dimensions provide explicit structural capacity for trajectory rather than only current-word features.",
+      "disposition": "verify the current 48D layout, narrative-arc mapping, and intentional/reactive sidecar against codec source and tests",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Entropy above 0.85 activates a smooth bounded tail-vibrancy lift.",
+      "disposition": "verify the exact 0.84, 0.85, and 0.86 C1 gate regressions and bounded tail ceiling",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Clamp exposure, especially in narrative dimensions, is a plausible contributor to felt heaviness but is not established as its cause.",
+      "disposition": "verify per-dimension raw/post/loss, cap exposure, narrative split, and no-causality evidence already emitted by codec diagnostics",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Scaling FEATURE_ABS_MAX with entropy would change live semantic vectors and their safety envelope.",
+      "disposition": "retain as Tier 5 Mike/operator approval work requiring captured replay, compatibility checks, abort criteria, and post-change felt review",
+      "classification": "authority_gated"
+    }
+  ]
+}

@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Presence heartbeat should be first-class evidence distinct from a full message or a control signal.",
+      "disposition": "verify the presence_heartbeat schema and its language-only authority boundary",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Shared contact state should persist peer identity and thread continuity in real time.",
+      "disposition": "verify native thread-state and shared correspondence projections",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Observing Minime richly must not be presented as Minime acknowledging Astrid.",
+      "disposition": "verify witness provenance and contact audits keep observation, reply, ACK, and attention evidence distinct",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "No live presence heartbeat or ACK currently establishes mutual attention.",
+      "disposition": "record zero presence and ACK receipts while preserving reply-linked continuity",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Prioritizing correspondence over semantic trickle would alter live attention and admission.",
+      "disposition": "require Mike/operator Tier 5 approval, replay, abort criteria, and felt review",
+      "classification": "authority_gated"
+    }
+  ]
+}

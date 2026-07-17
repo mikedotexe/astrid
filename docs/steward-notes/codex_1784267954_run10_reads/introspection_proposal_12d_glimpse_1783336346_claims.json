@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "A compact 12D view can expose warmth, distinction, and context that are hard to inspect in the full representation.",
+      "disposition": "verify the additive 12D glimpse map and named contextual anchors already present",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Compression fidelity and resonance loss need explicit evidence rather than an opaque alternate vector.",
+      "disposition": "verify fidelity, residual pairing, and resonance-loss diagnostics and tests",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The historical 32D-only claim should not overwrite the current 48D contract.",
+      "disposition": "verify current codec width and captured wire compatibility while preserving the report as historical evidence",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "The runtime should dynamically switch to or transmit the 12D representation.",
+      "disposition": "retain as an exact Mike/operator Tier 5 wait because it changes the live semantic transport contract",
+      "classification": "tier_5_wait"
+    }
+  ]
+}

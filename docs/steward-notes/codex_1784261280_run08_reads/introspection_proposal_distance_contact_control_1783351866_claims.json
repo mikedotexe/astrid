@@ -1,0 +1,23 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Regulatory evidence should distinguish suppression, crowding, porosity loss, viscosity, and contact quality instead of treating all distance as error.",
+      "disposition": "verify current typed pressure, porosity, viscosity, mobility, and correspondence evidence",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Boundary cartography can identify rigid contraction, diffuse uninhabited regions, returnable turbulence, and pressure plateaus without tuning them.",
+      "disposition": "record the read-only grid, counterfactual, and live-database replay artifacts",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Changing receptivity, porosity floors, participation, pressure response, fill targets, or regulator flow would alter live behavior.",
+      "disposition": "gate behind exact Mike/operator Tier 5 approval",
+      "classification": "tier_5_wait",
+      "authority": "No receptivity, porosity, participation, pressure, fill, or regulator-flow change is authorized."
+    }
+  ]
+}

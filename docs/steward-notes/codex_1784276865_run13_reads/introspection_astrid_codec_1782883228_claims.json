@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The 48D codec and entropy-gated tail lift expose texture as well as semantic projection.",
+      "disposition": "verify the dimension map, high-entropy lift, clamp provenance, and delivery-fidelity tests",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Mode packing may coincide with repetitive dense vocabulary, but codec source alone cannot establish that lexical repetition caused producer pressure.",
+      "disposition": "verify pressure-source provenance and no-causality boundaries between Minime observation and bridge interpretation",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Intentional and reactive narrative movement need separate evidence before concluding that four live dimensions are too coarse.",
+      "disposition": "verify narrative_arc_split_v1 and its sidecar-only, no-vector-write regressions",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Expanding narrative arc to eight live dimensions would alter the 48D wire ABI and semantic transport.",
+      "disposition": "retain as Tier 5 Mike/operator approval work with protocol migration, captured-wire parity, replay, rollback, and felt review",
+      "classification": "authority_gated"
+    }
+  ]
+}

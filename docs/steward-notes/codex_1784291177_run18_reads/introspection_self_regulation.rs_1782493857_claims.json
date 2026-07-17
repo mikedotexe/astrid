@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "vibrancy_aperture should be available only through the explicit self-regulation lease path.",
+      "disposition": "verify its current APPLY_ALLOWED route and evidence-bearing preflight",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Tail-aperture changes need a small bound and recent tail or entropy evidence.",
+      "disposition": "verify the 0.05 micro-lease cap and evidence requirement",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Aperture leases need explicit APPLY, OUTCOME, expiry, and restoration.",
+      "disposition": "verify apply, early revert, expiry, and prior-value restoration tests",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "tail_participation and Minime controls must not become lease-applicable through this path.",
+      "disposition": "verify exclusion and peer-control rejection remain intact",
+      "classification": "verified_existing"
+    }
+  ]
+}

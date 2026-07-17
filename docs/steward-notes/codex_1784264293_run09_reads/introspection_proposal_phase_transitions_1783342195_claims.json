@@ -1,0 +1,29 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "A phase artifact should carry transition type, spectral signature, vectors, duration, subjective texture, friction, and lineage.",
+      "disposition": "verify current transition card, signature, slow-texture, joint-lineage, and reply lifecycle tests",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Subjective texture and observed structural evidence must remain separately weighted and attributable.",
+      "disposition": "implement and test dual_perspective_v1 provenance parents and relation state",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Capability and delta requests can be previewed but must not be applied by a transition card.",
+      "disposition": "verify transition_capabilities_v1, transition_gate_v1, and delta_impact_preview_v1 remain unapplied",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "A behavioral unlock or automatic mode change requires live authority.",
+      "disposition": "retain behavior_unlock_applied=false and gate any live path behind exact Tier 5 approval",
+      "classification": "tier_5_wait",
+      "authority": "No behavior unlock, automatic runtime mode, pressure, fill, PI, weighting, or controller change is authorized."
+    }
+  ]
+}

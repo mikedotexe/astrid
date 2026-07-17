@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Mirror evidence should preserve fidelity to Astrid's expression instead of compressing it into a generic state label.",
+      "disposition": "verify Mirror fidelity, provenance, and read-only rendering tests",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Action parsing and continuity compaction must preserve canonical intent and semantic residue.",
+      "disposition": "verify strict NEXT parsing, anchor-aware compaction, and dense-prose regressions",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Felt pressure cannot itself bypass approval or become executable control.",
+      "disposition": "verify typed authority transitions and dispatch refusal before verified grant and current safety checks",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Raw exhale dispatch, fuzzy control inference, or approval bypass would change live semantics and authority.",
+      "disposition": "require explicit Mike/operator Tier 5 approval",
+      "classification": "authority_gated"
+    }
+  ]
+}

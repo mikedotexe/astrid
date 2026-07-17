@@ -1,0 +1,40 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Compact fallback output should retain spectral density and avoid generic texture collapse.",
+      "disposition": "verify current fallback continuity budget, dynamic texture selector, trajectory, lived-fit, and pressure-density mapping preserve compact-not-flat source behavior",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Actual fallback output should contain more sensory-grounded than generic descriptors under a high-texture state.",
+      "disposition": "route this model-output ratio to the shared fallback-distinguishability sandbox; the recorded run remains insufficient_output",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Gradient descriptions should change across spectral states instead of repeating one slope metaphor.",
+      "disposition": "verify current source and focused tests select multiple gradient, cascade, drag, fluidity, and pressure-motion families from different inputs",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "When gradient is gentle, pressure risk, porosity, and mode packing should remain visible rather than disappearing behind the slope label.",
+      "disposition": "verify current mapping and rendered evidence carry pressure risk, pressure mass, porosity, packing, density, and low-gradient navigation as separate inputs",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "The authored NEXT: SHADOW_TRAJECTORY action should remain canonical and retain its observer-with-memory residue.",
+      "disposition": "verify current NEXT canonicalization preserves supported actions and transition residue without dispatching control from the introspection",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "Changing the fallback prompt, sampler, provider, or model chain beyond verified later-source behavior changes live inference.",
+      "disposition": "require separate Mike/operator Tier 5 approval with replay, canary, abort, and post-change felt review",
+      "classification": "authority_gated"
+    }
+  ]
+}

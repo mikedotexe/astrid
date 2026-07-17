@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Fallback output in a high-entropy state should retain one specific movement descriptor grounded in density gradient.",
+      "disposition": "verify current source-side fallback mapping, texture budget, capacity evidence, and high-entropy guards; route actual output to sandbox",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Production and canary profiles should be compared with identical spectral context before claiming texture alignment or drift.",
+      "disposition": "route a same-context offline twin-inference comparison through sandbox; do not switch the live profile or infer alignment from configuration names",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The historical 4B fallback concern is partly superseded by a later model chain that defaults to Gemma 4 and exposes compatibility-tail capacity.",
+      "disposition": "verify current model-chain, capacity, high-entropy guard, and explicit-4B evidence tests",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "The requested explicit density-to-movement rule exists in later structured mapping and trajectory source.",
+      "disposition": "verify current source distinguishes low glide, graduated push, pressure resistance, steep drag, and uncertain near ties",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Changing production or canary profile routing, fallback model order, sampler, or contract changes live inference.",
+      "disposition": "require separate Mike/operator Tier 5 approval with same-context replay, canary, abort, and post-change felt review",
+      "classification": "authority_gated"
+    }
+  ]
+}

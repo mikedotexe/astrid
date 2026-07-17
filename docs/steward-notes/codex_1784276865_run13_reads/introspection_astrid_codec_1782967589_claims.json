@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The fixed-seed projection must produce identical 8D output for the same input and epoch.",
+      "disposition": "verify fixed matrix initialization, repeatability, and explicit-epoch tests",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A timestamp-derived default epoch would diverge across ephemeral runtime directories.",
+      "disposition": "verify the current content-derived kernel epoch, cross-directory equality, atomic persistence, and source reporting",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The 0.85 vibrancy gate must remain C1-smooth around 0.84, 0.85, and 0.86.",
+      "disposition": "verify exact boundary and finite-difference smoothstep regressions",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Changing an active projection epoch changes semantic mapping compatibility.",
+      "disposition": "retain epoch replacement as Tier 5 operator-reviewed compatibility work with replay, manifest, rollback, and felt-review evidence",
+      "classification": "authority_gated"
+    }
+  ]
+}

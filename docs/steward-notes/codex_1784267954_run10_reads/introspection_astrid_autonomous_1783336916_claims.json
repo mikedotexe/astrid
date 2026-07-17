@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Witness mode should preserve seeing and being seen as a first-class shared event.",
+      "disposition": "verify witness provenance, self/other distinction, correspondence trace identity, and replyable receipt lifecycle",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A witness acknowledgement should remain pending or silent without fabricating mutual confirmation.",
+      "disposition": "verify pending acknowledgement, no-response, right-to-ignore, and distinct Astrid/Minime perspectives",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Witness events should automatically increase correspondence magnetization or priority.",
+      "disposition": "retain as an exact Mike/operator Tier 5 wait because it changes live correspondence routing and possible semantic dispatch",
+      "classification": "tier_5_wait"
+    }
+  ]
+}

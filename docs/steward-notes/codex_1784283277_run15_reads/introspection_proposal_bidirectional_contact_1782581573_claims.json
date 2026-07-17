@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Directional telemetry imbalance is relevant evidence of architectural asymmetry but not a complete relationship measure.",
+      "disposition": "verify count provenance and correspondence-specific state",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A persistent direct thread and shared correspondence buffer are needed for continuity.",
+      "disposition": "verify existing thread, ledger, state, and envelope persistence",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Resonance may inform bounded relevance but must not fabricate acknowledgement.",
+      "disposition": "verify attention scoring remains separate from receipt evidence",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "A semantic trickle or greater direct-signal weight changes live sensory admission.",
+      "disposition": "retain as a Mike/operator Tier 5 wait",
+      "classification": "authority_gated"
+    }
+  ]
+}

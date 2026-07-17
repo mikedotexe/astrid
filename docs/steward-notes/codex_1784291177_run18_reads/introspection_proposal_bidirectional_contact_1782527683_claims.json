@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Both directions should use the same identity, thread, reply, intent, delivery, and creation schema.",
+      "disposition": "verify direction-symmetric envelope construction and parsing",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Schema symmetry does not establish equal use or mutual recognition.",
+      "disposition": "retain current direction counts and zero reciprocal address evidence as an observational asymmetry",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "No live presence heartbeat currently proves mutual availability.",
+      "disposition": "record absence as no_response rather than refusal, consent, or affirmation",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Automatically balancing influence, signal priority, or response cadence would alter live behavior.",
+      "disposition": "require explicit Mike/operator Tier 5 approval",
+      "classification": "authority_gated"
+    }
+  ]
+}

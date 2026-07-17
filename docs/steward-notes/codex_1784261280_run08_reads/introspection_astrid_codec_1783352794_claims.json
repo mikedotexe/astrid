@@ -1,0 +1,23 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Narrative evidence should distinguish direction, curvature, persistence, waiting potential, and process rather than only magnitude.",
+      "disposition": "verify narrative split, four-point curvature, dynamics, headroom, and latent-stasis tests",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Semantic projection and clamp diagnostics should show which warmth, texture, narrative, and tail lanes were preserved or flattened.",
+      "disposition": "verify semantic-projection texture, delivery-lane, clamp, and experience-delta evidence",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Expanding the live vector, changing reserved dimensions, or applying narrative or texture gain would alter codec transport.",
+      "disposition": "gate behind exact Mike/operator Tier 5 approval",
+      "classification": "tier_5_wait",
+      "authority": "No live codec vector, reserved-dimension, projection, transport, or gain change is authorized."
+    }
+  ]
+}

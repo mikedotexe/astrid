@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The persistent telemetry subscriber, backoff, and shutdown paths form a stateful shared pulse rather than a one-shot data fetch.",
+      "disposition": "verify persistent connection lifecycle, bounded backoff, and graceful shutdown in telemetry source and tests",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Frequent BridgeState writes may contribute to felt micro-stutter and need direct timing evidence.",
+      "disposition": "implement telemetry_integration_health_v1 with separate pre-write, write-wait, and write-hold measurements plus non-causal labeling",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Reconnect behavior should be correlated with telemetry cadence instead of inferred from a single disconnect.",
+      "disposition": "verify WebSocket lane trace, heartbeat delta, reconnect count, connection identity, and disconnect reason are jointly projected",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Buffering telemetry into 50 ms integration windows could reduce lock pressure.",
+      "disposition": "retain as an exact Mike/operator Tier 5 wait because buffering changes live integration cadence and requires measured evidence first",
+      "classification": "tier_5_wait"
+    }
+  ]
+}

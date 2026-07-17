@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Minime's stable-core loop, mode packing, pressure handling, and rescue path are producer-owned runtime behavior.",
+      "disposition": "verify source ownership and unchanged shared-protocol boundary",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Pressure and mode behavior over a sustained window should be inspected rather than inferred from one sample.",
+      "disposition": "route a read-only 1000-tick pressure and mode-window replay",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A proposed regulator change should first be compared against a shadow run.",
+      "disposition": "route a no-mutation regulator shadow preflight",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Porosity and pressure may covary in ways that deserve bounded observation.",
+      "disposition": "route a read-only porosity-pressure hypothesis comparison",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Changing hard reset, underfill gradients, pressure regulation, or rescue behavior would alter live control.",
+      "disposition": "gate any such regulator change behind scoped Mike/operator Tier 5 approval, parity replay, canary bounds, and abort criteria",
+      "classification": "authority_gated"
+    }
+  ]
+}

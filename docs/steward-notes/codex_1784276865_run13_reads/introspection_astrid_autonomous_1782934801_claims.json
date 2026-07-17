@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Witness chamber state is a shared multi-process artifact and must be read as untrusted context.",
+      "disposition": "verify resilient JSON parsing, source ownership, bounded context, and interpretation-only authority",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A partially written newest chamber file must not collapse Witness into false insufficient context when an older valid state exists.",
+      "disposition": "verify newest-valid fallback, malformed-candidate diagnostics, and no-panic tests",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Astrid as unsettled gravity participant must remain distinguishable from relational instability.",
+      "disposition": "verify internal-instability and relational-instability classification regressions",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "The collaboration root must be configurable without changing the absent-or-empty default.",
+      "disposition": "verify ASTRID_SHARED_COLLAB_DIR, default-path parity, and temporary-directory tests",
+      "classification": "verified_existing"
+    }
+  ]
+}

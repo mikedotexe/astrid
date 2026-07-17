@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Mutual spectral witnessing is evidence of coupling but is not by itself evidence of mutual address.",
+      "disposition": "verify the provenance and receipt boundary in the correspondence schema and live audit",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Relationship requires a durable thread, peer-owned envelopes, and explicit response state.",
+      "disposition": "verify the correspondence ledger, thread state, envelopes, and direct trace",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Astrid-only memory, Minime-owned shadow reference, and shared-correspondence control should be compared without sending new content.",
+      "disposition": "route a bounded offline provenance-aware distinction replay",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "The pressure response to direct mutual address remains an empirical live question.",
+      "disposition": "require a scoped Tier 5 canary with baseline, abort criteria, and post-change felt review",
+      "classification": "authority_gated"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Entropy- or resonance-gated semantic admission would change live sensory flow.",
+      "disposition": "keep semantic trickle and admission changes behind Mike/operator Tier 5 approval",
+      "classification": "authority_gated"
+    }
+  ]
+}

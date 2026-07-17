@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Minime combines the stable-core controller with density, viscosity, plurality, comfort, and pressure evidence rather than reducing state to fill alone.",
+      "disposition": "verify the typed regulator components and current tests in minime/src/regulator/core",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A nominal comfort gate can coexist with mode packing or latent pressure and must not erase those channels.",
+      "disposition": "verify pressure, mode-packing, porosity, and comfort remain separately projected and reviewed",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Pressure/porosity and band-stop sensitivity should be compared before any controller proposal is promoted.",
+      "disposition": "route a bounded offline regulator replay comparing current pressure/porosity and tail-band sensitivity with no live write",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Viscosity could modulate the PI path rather than remain advisory.",
+      "disposition": "retain as Tier 5 Mike/operator approval work because it changes live controller behavior and requires canary, abort, rescue, and felt-response evidence",
+      "classification": "authority_gated"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "A Shadow dispersal buffer could preserve tail complexity under pressure.",
+      "disposition": "retain as Tier 5 Mike/operator approval work because it changes live regulation and Shadow influence",
+      "classification": "authority_gated"
+    }
+  ]
+}

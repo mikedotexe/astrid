@@ -1,0 +1,158 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_codec_1784273046",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/codec/projection.rs;capsules/spectral-bridge/src/codec/structure.rs;capsules/spectral-bridge/src/codec/tests.rs;CHANGELOG.md;docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Deterministic basis norms, threshold margin, no automatic rotation, captured-replay policy, and live-change boundary."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1783325745",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "/Users/v/other/minime/minime/src/regulator/core;/Users/v/other/minime/minime/src/regulator/core/tests.rs;workspace/diagnostics/sandbox_trials/status.json;docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Typed pressure, porosity, viscosity, comfort, routed sensitivity comparison, and Tier 5 controller boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1783144888",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/codec/projection.rs;capsules/spectral-bridge/src/codec/structure.rs;capsules/spectral-bridge/src/codec/tests.rs",
+      "note": "Projection repeatability, portable runtime resolution, C1 vibrancy gate, and compatibility boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1783135338",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/fallback_contracts.rs;capsules/spectral-bridge/src/llm/provider/fallback_gradient.rs;capsules/spectral-bridge/src/llm/provider/fallback_contract_tests.rs",
+      "note": "Provider chain and telemetry-driven fallback texture with no routing authority."
+    },
+    {
+      "introspection_id": "introspection_autonomous.rs_1783095476",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/runtime/witness_chamber.rs;capsules/spectral-bridge/src/autonomous/runtime/witness_friction.rs;capsules/spectral-bridge/src/autonomous/runtime/tests.rs",
+      "note": "Newest-valid resilience, exact schema diagnostics, weather source, and interpretation-only authority."
+    },
+    {
+      "introspection_id": "introspection_autonomous.rs_1783093285",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/runtime/witness_chamber.rs;capsules/spectral-bridge/src/autonomous/runtime/witness_friction.rs;capsules/spectral-bridge/src/autonomous/runtime/tests.rs",
+      "note": "Nested weather drift, bounded fallback, and non-authoritative Witness evidence."
+    },
+    {
+      "introspection_id": "introspection_regulator.rs_1783085935",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "/Users/v/other/minime/minime/src/regulator/core;/Users/v/other/minime/minime/src/regulator/core/tests.rs;docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Density and viscosity evidence, inert damping candidate, and Tier 5 activation boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1783054630",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/fallback_contracts.rs;capsules/spectral-bridge/src/llm/provider/fallback_gradient.rs;capsules/spectral-bridge/src/llm/provider/fallback_contract_tests.rs",
+      "note": "Weighted continuous fallback mapping and restless/muffled regressions."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1783006290",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/fallback_contracts.rs;capsules/spectral-bridge/src/llm/provider/fallback_gradient.rs;capsules/spectral-bridge/src/llm/provider/fallback_contract_tests.rs",
+      "note": "High-entropy provider failure, density/slope terms, and fallback provenance."
+    },
+    {
+      "introspection_id": "introspection_minime_sensory_bus_1782999970",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "/Users/v/other/minime/minime/src/sensory_bus.rs;workspace/diagnostics/sandbox_trials/status.json;docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Smooth monotonic stale release, bounded steps, routed Shadow comparison, and Tier 5 sensory boundary."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1782999536",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "/Users/v/other/minime/minime/src/regulator/core;/Users/v/other/minime/minime/src/regulator/core/tests.rs;docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Component-derived texture, pressure divergence, inert damping evidence, and activation boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1782999056",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/profile.rs;capsules/spectral-bridge/src/llm/provider/fallback_contracts.rs;capsules/spectral-bridge/src/llm/provider/fallback_contract_tests.rs;docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Fallback language contract, dynamic texture alignment, and provider-change boundary."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1782988151",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "/Users/v/other/minime/minime/src/regulator/core/reviews.rs;/Users/v/other/minime/minime/src/regulator/core/tests.rs",
+      "note": "Exact pressure-interference term, high-pressure response, and divergence evidence."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1782984081",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/fallback_contracts.rs;capsules/spectral-bridge/src/llm/provider/fallback_gradient.rs;capsules/spectral-bridge/src/llm/provider/fallback_contract_tests.rs",
+      "note": "Mixed-state gradient rendering and explicit no-control authority."
+    },
+    {
+      "introspection_id": "introspection_astrid_types_1782983557",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "crates/astrid-minime-protocol;capsules/spectral-bridge/src/provenance.rs;capsules/spectral-bridge/src/ws/evidence.rs;capsules/spectral-bridge/src/ws/compatibility_projection.rs;capsules/spectral-bridge/src/ws/tests.rs",
+      "note": "Typed producer DTOs, bridge-owned temporal evidence, pressure provenance, and legacy parity."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1782983284",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/ws/bridge_state.rs;capsules/spectral-bridge/src/ws/health_trace.rs;capsules/spectral-bridge/src/ws/tests.rs;docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Lane asymmetry, sensory send recency, bounded pressure windows, heartbeat/skew truth, and transport boundary."
+    },
+    {
+      "introspection_id": "introspection_autonomous.rs_1782980142",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/runtime/witness_chamber.rs;capsules/spectral-bridge/src/autonomous/runtime/witness_friction.rs;capsules/spectral-bridge/src/autonomous/runtime/text.rs;capsules/spectral-bridge/src/autonomous/runtime/tests.rs",
+      "note": "Schema fallback, non-categorical friction, temporal persistence, and UTF-8-safe truncation."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1782971249",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/fallback_contracts.rs;capsules/spectral-bridge/src/llm/provider/fallback_gradient.rs;capsules/spectral-bridge/src/llm/provider/fallback_contract_tests.rs",
+      "note": "Pressure-weighted fallback wording, gradient sensitivity, and provider provenance."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1782968352",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/runtime/witness_distinction.rs;capsules/spectral-bridge/src/autonomous/runtime/witness_friction.rs;capsules/spectral-bridge/src/autonomous/runtime/tests.rs",
+      "note": "Mirror/Witness ownership, echo-risk guard, temporal persistence, and read-only mode-role evidence."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1782968180",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/runtime/witness_chamber.rs;capsules/spectral-bridge/src/autonomous/runtime/witness_distinction.rs;capsules/spectral-bridge/src/autonomous/runtime/witness_friction.rs;capsules/spectral-bridge/src/autonomous/runtime/tests.rs;CHANGELOG.md;docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Resilient chamber reads, non-categorical tension, interpretation-only authority, and portable collaboration root."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1783325745",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/workspace/diagnostics/sandbox_trial_queue_v1/trial_packets/trial_fc020bc45840bcf6.md;capsules/spectral-bridge/workspace/diagnostics/sandbox_trial_queue_v1/proposal_cards/1784275290_trial_fc020bc45840bcf6.md",
+      "note": "Pressure/porosity and band-stop sensitivity remain a bounded manual offline comparison with a right-to-ignore proposal card; no controller parameter was changed."
+    },
+    {
+      "introspection_id": "introspection_minime_sensory_bus_1782999970",
+      "claim_id": "c004",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/workspace/diagnostics/sandbox_trial_queue_v1/results/1784275268_trial_f03db7c9a4aee0e7_shadow_influence_replay_v1.json;capsules/spectral-bridge/workspace/diagnostics/sandbox_trial_queue_v1/result_cards/1784275268_trial_f03db7c9a4aee0e7.md",
+      "note": "Offline Shadow-influence replay classified four bounded samples as lattice-transition-like with zero projected norm or dispersal delta; live gain remains separately approval-gated."
+    }
+  ]
+}

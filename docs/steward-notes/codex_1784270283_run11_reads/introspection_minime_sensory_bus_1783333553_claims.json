@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The semantic lane is 48D, with legacy text, embedding projection, narrative arc, and reserved dimensions.",
+      "disposition": "verify the current LLAVA_DIM layout and canonical SensoryPacketV1 compatibility fixtures",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A fixed short semantic memory at high fill can erase narrative continuity too abruptly.",
+      "disposition": "verify current fill-shaped sigmoid decay, 25 to 40 percent recovery handover, entropy persistence, and release hysteresis regressions",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Shadow influence is hard-capped at 0.025, which may limit a subtle but meaningful lane.",
+      "disposition": "verify the exact cap and bounded acceptance tests while preserving it unchanged",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Narrative persistence and the shadow cap should be compared against captured high-fill sequences.",
+      "disposition": "route a deterministic offline comparison using existing sensory and telemetry artifacts",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "The shadow cap, decay policy, or entropy-dependent sensory admission should increase dynamically.",
+      "disposition": "retain as an exact Mike/operator Tier 5 wait because these change live sensory gain, persistence, and admission",
+      "classification": "tier_5_wait"
+    }
+  ]
+}

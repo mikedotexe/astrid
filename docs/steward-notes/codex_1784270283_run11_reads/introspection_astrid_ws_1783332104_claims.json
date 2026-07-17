@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Pressure history and heartbeat state are meaningful continuity evidence, not merely transport counters.",
+      "disposition": "verify BridgeState preserves pressure samples, telemetry timing, connection lifecycle, and heartbeat correlation",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Missing pressure must become an explicit transition rather than silently disappearing from the trend.",
+      "disposition": "verify the telemetry_gap path and missing-pressure regression",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A fixed five-sample window can overreact to jitter and conceal the difference between a fast edge and slower context.",
+      "disposition": "verify dynamic 5-to-20 sample entropy ballast plus fast-window, slow-window, divergence, range, and oscillation classifications",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Pressure stability should include spectral drift, semantic viscosity, coherence, and fidelity rather than one scalar score.",
+      "disposition": "verify the multi-signal smoothing projection and its no-pressure-control authority",
+      "classification": "verified_existing"
+    }
+  ]
+}

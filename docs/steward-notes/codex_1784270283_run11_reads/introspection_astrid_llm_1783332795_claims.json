@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Fallback should preserve agency and continuity instead of collapsing into a canned line.",
+      "disposition": "verify the fallback contract, repair path, compact sentence budget, and standalone NEXT requirement",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Static texture words can mask a mismatch between the current felt state and fallback prose.",
+      "disposition": "verify dynamic texture selection, negative evidence, lived-fit conflict, and vocabulary-overweight guards",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Shadow trend and spectral gradient should shape fallback descriptors as changing processes rather than fixed labels.",
+      "disposition": "verify fallback_dynamic_texture_bias_v1, trajectory, gradient-slope, and Shadow-persistence tests",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Fallback provider choice, temperature, sampler, or semantic texture weighting should change live.",
+      "disposition": "retain as an exact Mike/operator Tier 5 wait because it changes model routing or semantic generation policy",
+      "classification": "tier_5_wait"
+    }
+  ]
+}

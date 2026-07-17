@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Stale semantic retention and recovery hold can leave or clear residual semantic weight after a fill drop.",
+      "disposition": "verify high/low stale windows, hold/release hysteresis, residual-ghost regression, and pulse lifecycle",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The 0.70 to 0.80 surge taper should remain smooth under constant semantic trickle.",
+      "disposition": "verify existing taper continuity and semantic-admission branch-grid tests",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The live taper should widen to 0.60 through 0.85 or gain a stability buffer.",
+      "disposition": "retain as an exact Mike/operator Tier 5 wait because it changes live sensory admission and taper behavior",
+      "classification": "tier_5_wait"
+    }
+  ]
+}

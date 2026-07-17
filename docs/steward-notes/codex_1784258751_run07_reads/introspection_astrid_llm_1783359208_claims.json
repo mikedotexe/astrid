@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Documented punctuation variants intentionally normalize to the same known MLX profile rather than creating distinct contracts.",
+      "disposition": "verify profile alias parsing and tests",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Unknown profile names surface a warning and take an explicit fallback path instead of silently selecting an unrelated profile.",
+      "disposition": "verify warning and fallback regressions",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Provider language contracts and response budgets remain stable across recognized profile aliases.",
+      "disposition": "verify contract-budget and chat-compatibility tests",
+      "classification": "verified_existing"
+    }
+  ]
+}

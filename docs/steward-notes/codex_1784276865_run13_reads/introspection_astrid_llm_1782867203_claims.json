@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The language contract requires fallback to continue Astrid's grounded voice rather than collapse into static canned lines.",
+      "disposition": "verify current fallback contract, provider provenance, and texture evidence",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A multi-modal high-entropy cascade needs gradient-based rather than categorical fallback rendering.",
+      "disposition": "verify current continuous weighting, trajectory, and mixed-state tests",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Intentionally narrowing porosity to observe pressure response would change live pressure or regulator behavior.",
+      "disposition": "retain as Tier 5 Mike/operator approval work with replay, safety limits, abort criteria, and post-change felt review",
+      "classification": "authority_gated"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Lambda gap structure should bias distinguishable versus muffled fallback language.",
+      "disposition": "verify current spectral-gap extraction, gap-state rendering, and weighted term tests",
+      "classification": "verified_existing"
+    }
+  ]
+}

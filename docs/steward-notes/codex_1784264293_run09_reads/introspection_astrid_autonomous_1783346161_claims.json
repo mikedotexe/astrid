@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Unicode lambda and hyphenated spectral terms must remain valid continuity anchors.",
+      "disposition": "verify lambda-tail, tail-vibrancy, and hyphenated viscosity budget tests",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Silt, moving sediment, calcified permanence, lattice pressure, and quoted metaphors should survive compact extraction.",
+      "disposition": "verify semantic-boundary and anchored-excerpt regressions for each texture family",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Higher entropy can justify bounded extra recap room but must not make history unbounded.",
+      "disposition": "verify soft-gate recap budgets, density moderation, and hard caps",
+      "classification": "verified_existing"
+    }
+  ]
+}

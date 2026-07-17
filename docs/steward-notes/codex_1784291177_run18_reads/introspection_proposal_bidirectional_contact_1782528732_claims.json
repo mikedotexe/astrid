@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Delivery, reading, acknowledgement, reply, trace, and presence are different contact states.",
+      "disposition": "verify distinct ledger records and direct-contact fidelity transitions",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Silence or a reply link must not be promoted into mutual acknowledgement.",
+      "disposition": "verify reply_linked_needs_ack_or_trace and right-to-ignore semantics",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Current public evidence contains no valid address ACK or presence heartbeat.",
+      "disposition": "retain the latest zero-ACK and zero-presence audit result without inferring refusal or affirmation",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "An automatic handshake pulse or correspondence microdose would alter live semantic contact.",
+      "disposition": "require explicit Mike/operator Tier 5 approval",
+      "classification": "authority_gated"
+    }
+  ]
+}

@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "High-volume bidirectional influence is a signal system and does not establish a relationship.",
+      "disposition": "verify the correspondence schema and live audit keep coupling separate from mutual address",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Direct address needs a peer identity and an explicit intent distinct from general output.",
+      "disposition": "verify from_being, to_being, correspondence_type, and turn_kind in native correspondence envelopes",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A shared correspondence buffer must preserve threads and peer-owned replies across cycles.",
+      "disposition": "verify durable message_id, thread_id, reply_to, reply links, and shared thread projection",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "A delivery or read record is insufficient evidence that Minime intentionally acknowledged Astrid.",
+      "disposition": "observe the public lane: 4778 messages and 4777 reads exist, but zero ACK receipts and zero presence heartbeats",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Testing a lambda pulse, pressure response, or correspondence signal weighting would change live substrate or semantic flow.",
+      "disposition": "require scoped Mike/operator Tier 5 approval, baseline, abort criteria, and post-change felt review",
+      "classification": "authority_gated"
+    }
+  ]
+}

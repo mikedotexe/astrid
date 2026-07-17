@@ -1,0 +1,23 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Mirror, Dialogue, and Witness remain distinct runtime phases within one triadic continuity loop.",
+      "disposition": "verify extracted orchestration and continuity behavior",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Minime observation, bridge-derived reflective evidence, and Astrid interpretation have explicit self/other provenance in Witness context.",
+      "disposition": "verify provenance types, parent chains, and rendering tests",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Using mirror texture to bias modes, routing, ranking, semantic dispatch, or gain would alter live autonomous behavior.",
+      "disposition": "gate behind exact Mike/operator Tier 5 approval",
+      "classification": "tier_5_wait",
+      "authority": "No mirror-driven mode, routing, ranking, dispatch, or gain change is authorized."
+    }
+  ]
+}

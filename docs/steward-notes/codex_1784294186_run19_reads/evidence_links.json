@@ -1,0 +1,144 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_llm_1784294186",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/fallback_contracts.rs;capsules/spectral-bridge/src/llm/provider/transport.rs;capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Read-only artifact remainder texture, exact cleanup compatibility, semantic-review state, and unchanged live behavior boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1784294019",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/fallback_contracts.rs;capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs;capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Exact-marker cleanup, quoted and contextual marker evidence, structurally dense lexical remainder, and no semantic erasure inference."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1784293697",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/fallback_contracts.rs;capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Witness-only diagnostic persistence, independent token and felt profiles, and bounded surface-texture evidence."
+    },
+    {
+      "introspection_id": "introspection_astrid_types_1784293300",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/types/schema/telemetry.rs;capsules/spectral-bridge/src/types/schema/tests.rs;capsules/spectral-bridge/src/ws/evidence.rs;capsules/spectral-bridge/src/ws/tests.rs",
+      "note": "Cadence-content distinction, hybrid coherence, producer-owned pressure and viscosity, and provenance separation."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1782420076",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/codec/feedback.rs;capsules/spectral-bridge/src/codec/projection_evidence.rs;capsules/spectral-bridge/src/codec/tests.rs;workspace/diagnostics/codec_entropy_vibrancy_probe/run18_20260717T1236Z/codec_entropy_vibrancy_probe.json",
+      "note": "Smooth bounded vibrancy gate, current pressure and gain context, fresh semantic-density contrast, and Tier 5 live codec boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1782411385",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/fallback_mapping.rs;capsules/spectral-bridge/src/llm/provider/fallback_evidence.rs;capsules/spectral-bridge/src/llm/provider/fallback_contract_tests.rs;workspace/diagnostics/fallback_fire_drill/run18_20260717T1236Z/fallback_fire_drill.json",
+      "note": "Friction-versus-mass mapping, Shadow context, 28-case observation, and unchanged provider authority."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1782402311",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/fallback_contracts.rs;capsules/spectral-bridge/src/llm/provider/configuration.rs;capsules/spectral-bridge/src/llm/provider/fallback_contract_tests.rs",
+      "note": "Compact-not-flat contract, high-complexity capacity, exact mapping anchors, and routed offline model-capacity comparison."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1782402022",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/witness/provenance.rs;capsules/spectral-bridge/src/autonomous/runtime/witness_distinction.rs;capsules/spectral-bridge/src/autonomous/runtime/tests.rs",
+      "note": "Minime observation, bridge evidence, Astrid interpretation, parent chains, and a read-only non-control distinction line."
+    },
+    {
+      "introspection_id": "introspection_astrid_types_1782395383",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/types/schema/telemetry.rs;capsules/spectral-bridge/src/types/schema/sensory.rs;capsules/spectral-bridge/src/types/schema/tests.rs;/Users/v/other/minime/minime/src/regulator/core/resonance_evidence.rs",
+      "note": "Measurement-control separation, canonical intervention type, bounded damping evidence, and live regulator boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1782394899",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/ws/telemetry_port.rs;capsules/spectral-bridge/src/ws/health.rs;capsules/spectral-bridge/src/ws/evidence.rs;capsules/spectral-bridge/src/ws/tests.rs",
+      "note": "Last-valid retention, unsupported-major mismatch, pressure velocity, reconnect, cadence, freshness, and non-subjective health semantics."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1782389825",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/fallback_contracts.rs;capsules/spectral-bridge/src/llm/provider/fallback_mapping.rs;capsules/spectral-bridge/src/llm/provider/fallback_contract_tests.rs;workspace/diagnostics/fallback_fire_drill/run18_20260717T1236Z/fallback_fire_drill.json",
+      "note": "Compact texture contract, Shadow selectors, 28-case observation, and Tier 5 provider boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1782362580",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/runtime/witness_chamber.rs;capsules/spectral-bridge/src/autonomous/runtime/continuity.rs;capsules/spectral-bridge/src/autonomous/runtime/tests.rs;capsules/spectral-bridge/src/authority_types.rs",
+      "note": "Mirror fidelity, anchor-aware continuity, strict action preservation, and typed refusal before executable authority."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1782362160",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/codec/projection.rs;capsules/spectral-bridge/src/codec/projection_evidence.rs;capsules/spectral-bridge/src/codec/tests.rs",
+      "note": "Canonical source and projected layouts, read-only 12D glimpse, provenance, and routed offline distinguishability comparison."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1782341184",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "/Users/v/other/minime/minime/src/regulator/core/pi.rs;/Users/v/other/minime/minime/src/regulator/core/pressure_source.rs;/Users/v/other/minime/minime/src/regulator/core/tests.rs",
+      "note": "Current bounded damping, pressure and rescue branches, exact regulator parity fixtures, and Tier 5 live regulation boundary."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1782313922",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "/Users/v/other/minime/minime/src/regulator/core/pressure_types.rs;/Users/v/other/minime/minime/src/regulator/core/resonance_evidence.rs;/Users/v/other/minime/minime/src/regulator/core/tests.rs;capsules/spectral-bridge/src/witness/provenance.rs",
+      "note": "Observed pressure and packing provenance, explicit intervention type, bounded regulator evidence, and unchanged live control."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1782313649",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/fallback_mapping.rs;capsules/spectral-bridge/src/llm/provider/fallback_evidence.rs;workspace/diagnostics/fallback_fire_drill/run18_20260717T1236Z/fallback_fire_drill.json",
+      "note": "Slope-drag versus mass mapping, multi-variable evidence, 28-case observation, and Tier 5 threshold boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_types_1782300054",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/types/schema/telemetry.rs;capsules/spectral-bridge/src/types/schema/sensory.rs;/Users/v/other/minime/minime/src/regulator/core/viscosity.rs;/Users/v/other/minime/minime/src/regulator/core/pressure_types.rs",
+      "note": "Typed viscosity and pressure, intervention separation, read-only paired observation route, and excluded live semantic trickle."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1782299762",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/ws/bridge_state.rs;capsules/spectral-bridge/src/ws/evidence.rs;capsules/spectral-bridge/src/ws/compatibility_projection.rs;capsules/spectral-bridge/src/ws/tests.rs",
+      "note": "Rolling temporal state, separate level and velocity, eigenvector drift provenance, and compatibility projection parity."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1782289971",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/next_action/mod.rs;capsules/spectral-bridge/src/autonomous/runtime/continuity.rs;capsules/spectral-bridge/src/autonomous/runtime/tests.rs;capsules/spectral-bridge/src/authority_types.rs",
+      "note": "Dense-prose canonical NEXT preservation, strict parser boundary, provenance, and refusal of interpreted evidence at dispatch."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1782258981",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/codec/projection.rs;capsules/spectral-bridge/src/codec/projection_evidence.rs;capsules/spectral-bridge/src/codec/tests.rs",
+      "note": "Determinism, epoch and kernel identity, seed migration boundary, and a bounded 1,024-case seed/fingerprint collision probe."
+    }
+  ]
+}

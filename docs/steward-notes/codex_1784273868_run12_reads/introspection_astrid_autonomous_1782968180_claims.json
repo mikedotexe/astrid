@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Witness should select the newest valid chamber state even when a newer file is partial or malformed.",
+      "disposition": "verify resilient selection and malformed-count tests",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Relational data outside weather and gravity needs a non-categorical tension path.",
+      "disposition": "verify relational_metrics_present and lambda-tension evidence remains unclassified",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Witness relational evidence should inform interpretation without mutating the ESN or controller.",
+      "disposition": "verify it enters read-only prompt context and has no sensory or control dispatch path",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "The shared collaboration root should be deploy-configurable instead of fixed to one absolute machine path.",
+      "disposition": "implement ASTRID_SHARED_COLLAB_DIR for chamber and correspondence Witness reads while preserving the existing default",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "A missing or empty path override must preserve current behavior.",
+      "disposition": "verify the pure resolver returns the established default for absent and empty values and the custom path for an explicit value",
+      "classification": "verified_existing"
+    }
+  ]
+}

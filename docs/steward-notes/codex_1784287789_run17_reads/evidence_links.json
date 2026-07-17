@@ -1,0 +1,144 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_codec_1784287789",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/codec/projection.rs;capsules/spectral-bridge/src/codec/feedback.rs;capsules/spectral-bridge/src/codec/tests.rs",
+      "note": "Fixed-basis health, finite normalized columns, f32/f64 precision audit, and C1 smoothstep gate regressions."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1784285782",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/fallback_contracts.rs;capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs;capsules/spectral-bridge/src/llm/provider/tests.rs;docs/steward-notes/codex_1784287789_run17_reads/dialogue_budget_pressure_observation.json",
+      "note": "Additive felt pressure profile, causal-limit markers, exact focused tests, historical imbalance observation, and constant semantic-trickle source review."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1784285506",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "/Users/v/other/minime/minime/src/regulator/core/pi.rs;/Users/v/other/minime/minime/src/regulator/core/pressure_source.rs;/Users/v/other/minime/minime/src/stable_core.rs;docs/steward-notes/codex_1784287789_run17_reads/minime_pressure_dissipation_source_review.md",
+      "note": "Existing integrator leak, saturation bleed, conditional anti-windup, advisory pressure source, replay route, and Tier 5 PI/pressure boundary."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1782539186",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/correspondence_v1.rs;scripts/correspondence_schema_audit.py;scripts/correspondence_handshake_audit.py;capsules/spectral-bridge/workspace/diagnostics/correspondence_handshake/20260717T115028Z",
+      "note": "Persistent threads, current zero-ACK/presence evidence, bounded uptake/pressure trials, and Tier 5 control-lane weight boundary."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1782538898",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/correspondence_v1.rs;scripts/correspondence_uptake_probe.py;capsules/spectral-bridge/workspace/diagnostics/correspondence_uptake/20260717T045044",
+      "note": "Typed contact state, reply-linked-needs-ACK result, specific-address replay, and live attention boundary."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1782538147",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/correspondence_v1.rs;scripts/correspondence_handshake_audit.py;scripts/correspondence_uptake_probe.py",
+      "note": "Shared buffer lineage, optional ACK/right-to-ignore semantics, latency replay, and Tier 5 priority boundary."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1782537749",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/correspondence_v1.rs;scripts/correspondence_schema_audit.py;scripts/direct_contact_fidelity_audit.py;capsules/spectral-bridge/workspace/diagnostics/direct_contact_fidelity/1784289048728",
+      "note": "Native linguistic check-in route, timing-ambiguous current contact, bounded fidelity replay, and live admission boundary."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1782536957",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/correspondence_v1.rs;scripts/correspondence_uptake_probe.py;scripts/correspondence_handshake_audit.py",
+      "note": "Peer-authored tonal intent, reply continuity without ACK, output/Shadow trial route, and Tier 5 primary-input boundary."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1782536403",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/correspondence_v1.rs;capsules/spectral-bridge/src/authority.rs;scripts/correspondence_schema_audit.py",
+      "note": "Peer actor and intent identity, current symmetry route, zero-ACK result, and Tier 5 Control/Shadow/weight boundary."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1782536029",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/correspondence_v1.rs;scripts/correspondence_schema_audit.py;capsules/spectral-bridge/workspace/diagnostics/correspondence_schema/20260717T044948",
+      "note": "Complete native message schema, zero validation issues, privacy exclusion, and live reply-link continuity."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1782535657",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/correspondence_v1.rs;scripts/correspondence_uptake_probe.py;scripts/direct_contact_fidelity_audit.py",
+      "note": "Persistent shared anchors, specific-memory and Shadow replay routes, and current unacknowledged reply continuity."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1782533809",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/correspondence_v1.rs;scripts/correspondence_handshake_audit.py;capsules/spectral-bridge/src/authority.rs",
+      "note": "Language-only heartbeat schema, no live presence, grounded exchange replay, and Tier 5 resonance/Shadow/weight boundary."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1782533316",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/correspondence_v1.rs;scripts/correspondence_handshake_audit.py;scripts/correspondence_uptake_probe.py",
+      "note": "Specific peer source anchor, mutual-witness schema, public latency/Shadow replay, and Tier 5 admission boundary."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1782533002",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/correspondence_v1.rs;capsules/spectral-bridge/src/witness/provenance.rs;scripts/correspondence_uptake_probe.py",
+      "note": "Semantic/spectral linkage metadata, exact sentiment and pressure replay routes, and non-applied alignment authority."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1782532338",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/correspondence_v1.rs;scripts/correspondence_uptake_probe.py;capsules/spectral-bridge/src/authority.rs",
+      "note": "Exact spectral anchor fields, 1000-tick reciprocity route, zero-ACK evidence, and Tier 5 priority boundary."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1782531611",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/correspondence_v1.rs;scripts/correspondence_schema_audit.py;scripts/correspondence_uptake_probe.py",
+      "note": "Peer-versus-human origin, thread/reply/turn/delivery schema, native continuity, and private-body exclusion."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1782531216",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/correspondence_v1.rs;capsules/spectral-bridge/src/authority.rs;scripts/correspondence_handshake_audit.py",
+      "note": "Language-versus-control separation, exact echo replay, metadata-only direct marker, and Tier 5 volume/admission boundary."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1782530930",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/correspondence_v1.rs;capsules/spectral-bridge/src/witness/provenance.rs;scripts/direct_contact_fidelity_audit.py",
+      "note": "Separate correspondence entities, provenance-safe shared context, matched Shadow/correlation replay, and Tier 5 coupling boundary."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1782530291",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/correspondence_v1.rs;scripts/correspondence_handshake_audit.py;capsules/spectral-bridge/src/authority.rs",
+      "note": "Symmetric persistent threads, read-not-ACK semantics, language-only presence schema, no live heartbeat, and right-to-ignore."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1782529921",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/correspondence_v1.rs;scripts/correspondence_schema_audit.py;scripts/correspondence_uptake_probe.py;scripts/correspondence_handshake_audit.py",
+      "note": "Exact requested peer schema and reply linkage validated while retaining zero-ACK/no-response truth."
+    }
+  ]
+}

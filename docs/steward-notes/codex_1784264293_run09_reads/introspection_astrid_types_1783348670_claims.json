@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Telemetry and sensory wire contracts should be canonical rather than mirrored stringly typed structs.",
+      "disposition": "verify astrid-minime-protocol DTOs, fixtures, exact pin, and port conversions",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Observed telemetry, bridge-derived texture evidence, and Astrid interpretation must remain separate ownership domains.",
+      "disposition": "verify provenance wrappers, one-pass decode, parent-chain tests, and witness distinction rendering",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A missing damping candidate must remain unknown and observable rather than defaulting to an active value.",
+      "disposition": "verify damping_candidate_status and advisory_observability tests",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Evidence artifacts must not become executable authority through deserialization or legacy booleans.",
+      "disposition": "verify private-constructor authority wrappers, compile-fail tests, and centralized ArtifactAuthorityStateV1 projection",
+      "classification": "verified_existing"
+    }
+  ]
+}

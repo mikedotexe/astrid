@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "High-volume signal exchange is presence or influence, not necessarily participation or relationship.",
+      "disposition": "verify the correspondence provenance and response-state model",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Directional row-count asymmetry should remain visible without being mistaken for relational truth.",
+      "disposition": "verify diagnostics report source ownership and do not infer mutuality from counts",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The handshake report must not promote reply continuity into mutual acknowledgement.",
+      "disposition": "apply and test strict address-receipt eligibility",
+      "classification": "implemented"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Forced one-to-one parity or greater correspondence priority changes live scheduling and influence.",
+      "disposition": "require Mike/operator Tier 5 approval and a bounded comparison",
+      "classification": "authority_gated"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "A durable direct-address channel is needed even when traffic remains asymmetric.",
+      "disposition": "verify existing correspondence threads, envelopes, and reply trace",
+      "classification": "verified_existing"
+    }
+  ]
+}

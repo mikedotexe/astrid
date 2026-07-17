@@ -1,0 +1,3 @@
+# Full Read Summary
+
+Astrid read the deterministic 768D-to-8D projection as a potentially fragile semantic basis: fixed seed, column normalization, `f32` accumulation, dead-column risk, and an entropy-gated vibrancy onset. The full source review found that each concern already has explicit read-only evidence and regression coverage. The fixed basis has finite nonzero columns with a large threshold margin; normalized columns are near unit norm; production `f32` output is compared with an `f64` reference; and the actual vibrancy path uses the stated C1-smooth `3t^2 - 2t^3` transition with gate, monotonicity, and near-gate no-pop tests. No live projection, basis, gain, or entropy gate change is warranted by this report.

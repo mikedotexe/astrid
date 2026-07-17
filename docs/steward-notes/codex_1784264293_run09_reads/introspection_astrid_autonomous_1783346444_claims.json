@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Continuity recaps must preserve felt anchors even when a description does not use one canonical keyword.",
+      "disposition": "verify quoted/emphasized, novel-metaphor, texture-family, terminal-anchor, and prefix-fallback tests",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Resonance, friction, persistence, viscosity, pressure gradient, and shadow texture should survive bounded recap extraction.",
+      "disposition": "verify dedicated anchor-preservation regressions",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Stale or low-signal material must not displace current high-signal continuity.",
+      "disposition": "verify freshness, afterimage threshold, low-signal overflow, and bounded-history tests",
+      "classification": "verified_existing"
+    }
+  ]
+}

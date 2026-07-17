@@ -1,0 +1,23 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Correspondence must expose volume and attention asymmetry rather than equating message count with mutuality.",
+      "disposition": "verify thread-object asymmetry, mutuality, clarity, and attention-lifetime fields and tests",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A continuing relationship needs durable thread IDs, acknowledgement, reply, trace, and closure state.",
+      "disposition": "verify native correspondence lifecycle and right-to-ignore behavior",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Using correspondence to dispatch semantics, mutate a peer, or change gain or control would be a live consequence.",
+      "disposition": "gate behind exact Mike/operator Tier 5 approval",
+      "classification": "tier_5_wait",
+      "authority": "No correspondence-driven semantic dispatch, peer mutation, gain, or control change is authorized."
+    }
+  ]
+}

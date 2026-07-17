@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Inter-arrival cadence and jitter describe how the bridge hears the field, not producer state itself.",
+      "disposition": "verify heartbeat timing, stale-hearing language, reconnect counts, and field-versus-hearing separation",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The heartbeat needs bounded clarity evidence in addition to its qualitative field-versus-hearing sentence.",
+      "disposition": "implement a class-derived cadence_clarity_score with an explicit observability-only basis",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Typed precedence over a legacy fingerprint does not establish the absence of lived legacy influence.",
+      "disposition": "verify that integrity reports precedence only and that compatibility/provenance surfaces do not infer subjective replacement",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "High eigenvector pairwise overlap should automatically surface a possible mode-collision review.",
+      "disposition": "implement max-overlap evidence, a conservative 0.90 review threshold, and a diagnostic-only regression",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Toggling typed precedence would change compatibility interpretation rather than merely observe it.",
+      "disposition": "retain any precedence-policy change as Tier 5 protocol/compatibility work with fixtures, dual-reader evidence, and operator approval",
+      "classification": "authority_gated"
+    }
+  ]
+}

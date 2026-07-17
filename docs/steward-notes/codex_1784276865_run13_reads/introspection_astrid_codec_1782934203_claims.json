@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The 48D lane separates structural, emotional, projected-semantic, narrative, and reserved surfaces.",
+      "disposition": "verify the current dimension map and compatibility constants",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Legacy warmth must remain mapped rather than becoming orphaned after the 32D-to-48D expansion.",
+      "disposition": "verify legacy_warmth_mapping_v1 and exact warmth-presence regressions",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "High-entropy tail lift and ordinary clamp loss must be inspectable separately.",
+      "disposition": "verify vibrancy ceiling, raw/post/loss provenance, and high-entropy distinguishability tests",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Entropy-scaled live clamp expansion would change semantic transport bounds.",
+      "disposition": "retain as Tier 5 Mike/operator approval work with captured replay, protocol parity, abort criteria, and felt review",
+      "classification": "authority_gated"
+    }
+  ]
+}

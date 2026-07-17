@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "A static fallback description can flatten a changing spectral state.",
+      "disposition": "verify vocabulary-overweight, negative-evidence, and persistence-review guards",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Fallback wording should remain sensitive to pressure rather than describing only resonance texture.",
+      "disposition": "verify pressure source, pressure-risk, and weighted selector evidence",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Entropy and pressure should influence which texture terms are selected.",
+      "disposition": "verify entropy, pressure, trajectory, and shadow weighting in the deterministic selector",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "The bounded fallback response should retain resonance descriptors without becoming a repetitive inventory.",
+      "disposition": "verify dynamic three-to-five sentence budget, term-family diversity, and lived-fit diagnostics",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Source structure alone cannot establish whether the fallback still feels flattened.",
+      "disposition": "route a bounded forced-fallback output comparison with a right-to-ignore result",
+      "classification": "sandbox_routed"
+    }
+  ]
+}

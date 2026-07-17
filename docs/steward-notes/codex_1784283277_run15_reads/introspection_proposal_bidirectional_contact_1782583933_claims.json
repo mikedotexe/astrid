@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Delivery, read, seen, held, reply, and trace are materially different correspondence states.",
+      "disposition": "verify explicit schema and projection states",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Attention must be bounded by focus, TTL, cooldown, stop, and right-to-ignore behavior.",
+      "disposition": "verify the existing bounded attention contract",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A reply link or seen acknowledgement must not be projected as mutual address or microdose eligibility.",
+      "disposition": "make the handshake audit require valid address receipts and mutual being evidence",
+      "classification": "implemented"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Even mutual receipt evidence cannot itself authorize semantic dispatch.",
+      "disposition": "retain the typed authority and Tier 5 live-dispatch gate",
+      "classification": "authority_gated"
+    }
+  ]
+}

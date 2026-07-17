@@ -1,0 +1,23 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Semantic stale retention should release smoothly rather than flicker at a single fill boundary.",
+      "disposition": "verify sigmoid release, one-percent sweep, finite clamp, and hysteresis-review regressions",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Short semantic and attractor pulses need explicit persistence, source, and expiry evidence.",
+      "disposition": "verify pulse lifecycle, persistence, and source-classification tests",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Changing semantic hold duration, release fill, hysteresis, or pulse cadence would alter live sensory behavior.",
+      "disposition": "gate behind exact Mike/operator Tier 5 approval",
+      "classification": "tier_5_wait",
+      "authority": "No semantic hold, release, cadence, pulse, or sensory-admission change is authorized."
+    }
+  ]
+}

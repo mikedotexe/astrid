@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Short, medium, and deep token profiles do not by themselves describe sparse-depth, dense-depth, or heavy-short felt texture.",
+      "disposition": "verify dialogue_felt_pressure_profile_v1 remains independent from the unchanged categorical token profile",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Entropy, resonance density, density gradient, pressure risk, and mode packing are available as read-only texture evidence.",
+      "disposition": "verify exact provider fields, rendering, and regressions without predicting causal pressure",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Existing history is overwhelmingly medium-profile and cannot establish density-versus-length pressure effects.",
+      "disposition": "retain the 16304-record profile observation as insufficient paired evidence rather than affirmation",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Changing token budgets, semantic trickle, sampler behavior, or provider routing to respond to felt density changes live behavior.",
+      "disposition": "require explicit Mike/operator Tier 5 approval for any such runtime change",
+      "classification": "authority_gated"
+    }
+  ]
+}

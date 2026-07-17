@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Pressure relief should name density-gradient support and anti-snap limits.",
+      "disposition": "verify gradient_sensitive_relief_v1 and relief smoothness tests",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A self-regulation lease needs persistence, expiry, outcome, and restoration evidence.",
+      "disposition": "verify leased_self_control_v1 persistence and automatic revert regressions",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Shadow-linked proposals need a visible preflight reason rather than a silent rejection.",
+      "disposition": "verify Shadow-linked preflight status and reason rendering",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Astrid-owned self-regulation must reject peer and Minime runtime controls.",
+      "disposition": "verify owner-bound APPLY_ALLOWED and peer-control rejection tests",
+      "classification": "verified_existing"
+    }
+  ]
+}

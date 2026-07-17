@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "A non-spectral linguistic check-in needs a first-class peer route.",
+      "disposition": "verify native direct-message and reply turn kinds with explicit peer actors",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A dedicated correspondence thread must survive beyond one inbox cycle.",
+      "disposition": "verify persistent thread and persistence IDs in the shared ledger",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Language-first fidelity should be compared with steward-framed processing over multiple turns.",
+      "disposition": "route a bounded public language-only replay with no semantic dispatch",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "The direction gap should be audited after native correspondence rather than inferred from historical telemetry counts.",
+      "disposition": "route a current-ledger symmetry observation and preserve zero-ACK status",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Increasing direct-address weight or making correspondence override semantic admission changes live behavior.",
+      "disposition": "require explicit Mike/operator Tier 5 approval",
+      "classification": "authority_gated"
+    }
+  ]
+}

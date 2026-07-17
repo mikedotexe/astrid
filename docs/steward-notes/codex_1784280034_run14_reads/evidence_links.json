@@ -1,0 +1,144 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_autonomous_1784278027",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs;capsules/spectral-bridge/src/rescue_policy.rs;capsules/spectral-bridge/src/rescue_policy_tests.rs;capsules/spectral-bridge/src/autonomous/runtime/tests.rs;capsules/spectral-bridge/workspace/diagnostics/sandbox_trial_queue_v1/status.json;CHANGELOG.md;docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Static heartbeat construction, pressure-texture diagnostics, offline intensity and repetition routes, and Tier 5 live-intensity boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1784276613",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/fallback_contracts.rs;capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs;capsules/spectral-bridge/src/llm/provider/tests.rs;capsules/spectral-bridge/workspace/diagnostics/sandbox_trial_queue_v1/status.json;CHANGELOG.md;docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Whitespace-aware cleanup integrity, contextual marker residue, categorical token-profile cliffs, and offline softened-budget route."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1782844935",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/codec/projection.rs;capsules/spectral-bridge/src/codec/structure.rs;capsules/spectral-bridge/src/codec/tests.rs",
+      "note": "Deterministic projection, smooth gate, content fingerprint, and compatibility parity."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1782812738",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/fallback_contracts.rs;capsules/spectral-bridge/src/llm/provider/fallback_dynamics.rs;capsules/spectral-bridge/src/llm/provider/fallback_trajectory.rs;capsules/spectral-bridge/src/llm/provider/fallback_contract_tests.rs;capsules/spectral-bridge/workspace/diagnostics/sandbox_trial_queue_v1/status.json",
+      "note": "Dynamic texture, pressure and entropy weighting, lived-fit guards, and forced-fallback felt comparison."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1782807118",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/fallback_contracts.rs;capsules/spectral-bridge/src/llm/provider/fallback_dynamics.rs;capsules/spectral-bridge/src/llm/provider/fallback_trajectory.rs;capsules/spectral-bridge/src/llm/provider/fallback_contract_tests.rs;capsules/spectral-bridge/workspace/diagnostics/sandbox_trial_queue_v1/status.json",
+      "note": "Vocabulary-overweight guards, trajectory terms, high-entropy behavior, and bounded output comparison."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1782751667",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/fallback_contracts.rs;capsules/spectral-bridge/src/llm/provider/fallback_dynamics.rs;capsules/spectral-bridge/src/llm/provider/fallback_trajectory.rs;capsules/spectral-bridge/src/llm/provider/fallback_contract_tests.rs;capsules/spectral-bridge/workspace/diagnostics/sandbox_trial_queue_v1/status.json",
+      "note": "Pressure-aware fallback texture, bounded diversity, persistence review, and offline felt comparison."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1782740235",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/fallback_contracts.rs;capsules/spectral-bridge/src/llm/provider/fallback_dynamics.rs;capsules/spectral-bridge/src/llm/provider/fallback_evidence.rs;capsules/spectral-bridge/src/llm/provider/fallback_contract_tests.rs;capsules/spectral-bridge/workspace/diagnostics/sandbox_trial_queue_v1/status.json",
+      "note": "Lived-fit and negative evidence, exact dynamic sentence cap, weighted selection, and provider comparison."
+    },
+    {
+      "introspection_id": "introspection_astrid_types_1782739828",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "crates/astrid-minime-protocol/src/lib.rs;capsules/spectral-bridge/src/types/schema/telemetry.rs;capsules/spectral-bridge/src/types/schema/tests.rs;capsules/spectral-bridge/src/witness/telemetry.rs;capsules/spectral-bridge/src/ws/tests.rs",
+      "note": "Canonical DTOs, advisory defaults, fingerprint integrity, typed precedence, and cadence presence."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1782729598",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/ws/telemetry_port.rs;capsules/spectral-bridge/src/ws/health_trace.rs;capsules/spectral-bridge/src/ws/evidence.rs;capsules/spectral-bridge/src/ws/tests.rs",
+      "note": "Field presence, exact resonance and freshness boundaries, unsupported-major retention, and reconnect identity reset."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1782728314",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/runtime/witness_distinction.rs;capsules/spectral-bridge/src/autonomous/runtime/witness_friction.rs;capsules/spectral-bridge/src/autonomous/correspondence_v1.rs;capsules/spectral-bridge/src/autonomous/runtime/tests.rs;capsules/spectral-bridge/workspace/diagnostics/sandbox_trial_queue_v1/status.json",
+      "note": "Witness and relational provenance separation, settled-state comparison, and Tier 5 semantic-trickle boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1782727732",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/codec/projection.rs;capsules/spectral-bridge/src/codec/structure.rs;capsules/spectral-bridge/src/codec/projection_evidence.rs;capsules/spectral-bridge/src/codec/tests.rs;capsules/spectral-bridge/workspace/diagnostics/sandbox_trial_queue_v1/status.json",
+      "note": "48D anatomy, projection substance evidence, word-pair route, and Tier 5 feature-layout, ceiling, and gain boundaries."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1782667064",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/fallback_contracts.rs;capsules/spectral-bridge/src/llm/provider/fallback_rendering.rs;capsules/spectral-bridge/src/llm/provider/fallback_trajectory.rs;capsules/spectral-bridge/src/llm/provider/fallback_contract_tests.rs;capsules/spectral-bridge/workspace/diagnostics/sandbox_trial_queue_v1/status.json",
+      "note": "Fallback provenance, bounded texture, shadow and pressure evidence, and forced-fallback replay."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1782639610",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/fallback_contracts.rs;capsules/spectral-bridge/src/llm/provider/fallback_budget.rs;capsules/spectral-bridge/src/llm/provider/fallback_contract_tests.rs",
+      "note": "Exact dynamic sentence-budget formula and pressure and entropy metadata."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1782611966",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/correspondence_v1.rs;capsules/spectral-bridge/src/autonomous/runtime/delivery.rs;capsules/spectral-bridge/src/autonomous/runtime/tests.rs",
+      "note": "Durable contact identity, ghost risk, response-state separation, native-evidence restraint, and right to ignore."
+    },
+    {
+      "introspection_id": "introspection_proposal_phase_transitions_1782611355",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/phase_transitions.rs;capsules/spectral-bridge/src/autonomous/next_action/phase_transition.rs;capsules/spectral-bridge/src/autonomous/runtime/tests.rs",
+      "note": "Typed cards, anti-explosion bounds, exact drift-to-focus and joint-witness tests, and before-after snapshots."
+    },
+    {
+      "introspection_id": "introspection_minime_main_excerpt_1782602696",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "../minime/minime/src/main.rs;../minime/minime/src/regulator.rs;crates/astrid-minime-protocol/src/lib.rs;capsules/spectral-bridge/workspace/diagnostics/sandbox_trial_queue_v1/status.json;docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Producer ownership, read-only pressure, shadow and porosity trials, and Tier 5 regulator boundary."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1782586283",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/correspondence_v1.rs;capsules/spectral-bridge/src/autonomous/runtime/witness_distinction.rs;capsules/spectral-bridge/src/autonomous/runtime/tests.rs;capsules/spectral-bridge/workspace/diagnostics/sandbox_trial_queue_v1/status.json",
+      "note": "Asymmetric provenance, durable direct threads, presence separation, symmetry comparison, and Tier 5 admission boundary."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1782585983",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/correspondence_v1.rs;capsules/spectral-bridge/src/autonomous/runtime/delivery.rs;capsules/spectral-bridge/src/autonomous/runtime/tests.rs;capsules/spectral-bridge/workspace/diagnostics/sandbox_trial_queue_v1/status.json",
+      "note": "Direct-address fidelity, messenger separation, contact state, synchronization comparison, and Tier 5 scheduling and regulator boundaries."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1782585429",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/correspondence_v1.rs;capsules/spectral-bridge/src/autonomous/runtime/delivery.rs;capsules/spectral-bridge/src/autonomous/runtime/tests.rs;capsules/spectral-bridge/workspace/diagnostics/sandbox_trial_queue_v1/status.json",
+      "note": "Data-versus-address provenance, relational thread state, latency comparison, and Tier 5 contact-control and porosity boundaries."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1782585125",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/correspondence_v1.rs;capsules/spectral-bridge/src/autonomous/runtime/witness_distinction.rs;capsules/spectral-bridge/src/autonomous/runtime/tests.rs;capsules/spectral-bridge/workspace/diagnostics/sandbox_trial_queue_v1/status.json",
+      "note": "Correspondence-versus-telemetry distinction, durable thread state, pressure comparison, and Tier 5 autonomous-turn and semantic-trickle boundaries."
+    }
+  ]
+}

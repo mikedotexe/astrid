@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "A compact interpreter-facing glimpse and a full semantic transport vector serve different roles.",
+      "disposition": "verify current schema labels 12D as an additive distillation companion rather than a live replacement",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The 12D view must preserve warmth, dynamic anchors, and enough residual context to expose flattening.",
+      "disposition": "verify glimpse derivation, warmth slot, contextual anchoring, 32D residual shadow metadata, and fidelity tests",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A 12D glimpse should remain inspectable alongside the 48D source and report resolution loss.",
+      "disposition": "verify multi_scale_observer_v1 and compression-fidelity evidence keep the source available",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "The runtime should switch to, transmit, or persist 12D as continuity authority.",
+      "disposition": "retain as an exact Mike/operator Tier 5 wait because it changes live transport and checkpoint semantics",
+      "classification": "tier_5_wait"
+    }
+  ]
+}

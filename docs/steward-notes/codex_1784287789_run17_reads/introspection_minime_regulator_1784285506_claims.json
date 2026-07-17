@@ -1,0 +1,40 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Minime currently runs PI regulation over fill, lambda1-relative, and geometric error.",
+      "disposition": "verify the PI-only runtime path, dual gate/filter outputs, target shelf, and bounded control steps",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Pressure and porosity are first-class metrics but PressureSourceV1 itself is advisory.",
+      "disposition": "verify weighted pressure, porosity, profile, and applied_locally=false authority",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The felt viscous persistence may come from integral memory that is not dissipating.",
+      "disposition": "verify existing 0.005 leak, 0.02 saturation bleed, conditional anti-windup, and bounded accumulators; retain the felt causal question as unresolved",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Pressure dissipation should be observed through a high-entropy cascade with integrator and actuator context.",
+      "disposition": "route a bounded read-only replay of entropy, pressure, porosity, packing, gate, filter, and all three integrators",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "A manual lambda1/lambda2 ratio perturbation would test gate and regulator response.",
+      "disposition": "require explicit Mike/operator Tier 5 approval before any live spectral perturbation",
+      "classification": "authority_gated"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "Entropy-dependent porosity or a lower integration constant could alter the reported persistence.",
+      "disposition": "retain as Tier 5 pressure and PI proposals pending replay evidence and explicit operator approval",
+      "classification": "authority_gated"
+    }
+  ]
+}

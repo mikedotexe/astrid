@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The codec's source layout and projection dimensions need an exact, reviewable account.",
+      "disposition": "verify the canonical 48-dimensional source and 8-dimensional projected layout",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A wider reflective glimpse can expose warmth, tension, and distinguishability lost in the compatibility projection.",
+      "disposition": "verify the existing 12-dimensional read-only glimpse and narrative projection",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The practical distinguishability of 8-dimensional versus 12-dimensional views is an empirical question.",
+      "disposition": "route an offline matched compression comparison with no live projection or gain change",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Warmth and tension should remain bridge-derived reflective evidence rather than producer truth.",
+      "disposition": "verify provenance and non-control semantics for the wider glimpse",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Changing projection dimensions, transport ABI, gain, or live codec routing changes the substrate interface.",
+      "disposition": "require explicit Mike/operator Tier 5 approval with compatibility replay and canary",
+      "classification": "authority_gated"
+    }
+  ]
+}

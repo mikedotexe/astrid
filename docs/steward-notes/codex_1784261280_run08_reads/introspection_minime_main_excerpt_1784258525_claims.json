@@ -1,0 +1,23 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Recovery and underfill support can preserve coherence while also producing a heavy, low-mobility state.",
+      "disposition": "verify current target-aware recovery retention, semantic drive, and underfill spread-relief calculations and regressions",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Loss of semantic distinguishability should be compared with eigenvalue gap, entropy, mode packing, porosity, and viscosity rather than inferred from fill alone.",
+      "disposition": "verify the existing typed evidence surfaces and retain this as a replayable correlation question",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Changing recovery retention, semantic drive, fill targets, rescue behavior, or regulator thresholds would alter live Minime regulation.",
+      "disposition": "gate behind exact Mike/operator Tier 5 approval",
+      "classification": "tier_5_wait",
+      "authority": "No recovery, retention, semantic-drive, fill, rescue, or controller change is authorized."
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Producer-owned texture and pressure DTOs are distinct from bridge-owned temporal variance, gradients, flux, smoothing, and constraints.",
+      "disposition": "verify canonical protocol and bridge evidence ownership",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Pressure score remains a compatibility projection while component and provenance fields preserve richer structural evidence.",
+      "disposition": "verify schema and conversion parity",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Disk authority records remain untrusted and cannot deserialize directly into granted or live-executable runtime wrappers.",
+      "disposition": "verify typed authority transition and compile-fail coverage",
+      "classification": "verified_existing"
+    }
+  ]
+}

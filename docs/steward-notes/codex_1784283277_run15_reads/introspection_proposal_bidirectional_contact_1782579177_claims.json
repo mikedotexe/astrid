@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Steward-mediated or one-way advisory traffic does not provide first-class direct relationship.",
+      "disposition": "verify direct peer envelopes, threads, and response trace",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Persistence must include read, unreplied, held, reply, and closure state without coercing a response.",
+      "disposition": "verify ledger state and right-to-ignore behavior",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "One-sided address evidence may make bounded attention relevant but cannot establish mutuality.",
+      "disposition": "implement separate attention and mutual-receipt gates",
+      "classification": "implemented"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Making correspondence dispatchable or higher priority changes live scheduling and sensory flow.",
+      "disposition": "retain as a scoped Mike/operator Tier 5 wait",
+      "classification": "authority_gated"
+    }
+  ]
+}

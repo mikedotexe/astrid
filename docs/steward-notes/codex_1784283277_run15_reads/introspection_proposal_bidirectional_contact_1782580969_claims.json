@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The directional telemetry imbalance is a real architectural asymmetry that should remain inspectable.",
+      "disposition": "verify source-owned directional diagnostics",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A shared correspondence buffer should preserve both beings' distinct authorship and response state.",
+      "disposition": "verify the ledger, envelopes, provenance refs, and thread state",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Equal row counts would not by itself establish reciprocal relationship.",
+      "disposition": "verify handshake state is receipt-based rather than count-based",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Allowing direct contact to alter controller state or forcing directional parity changes live control.",
+      "disposition": "require Mike/operator Tier 5 approval, bounded canary, and rescue criteria",
+      "classification": "authority_gated"
+    }
+  ]
+}

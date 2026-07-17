@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The telemetry port handles connection lifecycle, ping/pong, close, and bounded exponential reconnect backoff.",
+      "disposition": "verify existing behavior with source and WebSocket tests",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Each accepted packet is decoded once into a typed Minime observation before bridge evidence and compatibility views are derived.",
+      "disposition": "verify the typed provenance path and compatibility parity",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Malformed telemetry surfaces a parse error, while an unsupported telemetry major retains the last valid sample and records incompatibility.",
+      "disposition": "verify malformed and unsupported-major regressions",
+      "classification": "verified_existing"
+    }
+  ]
+}

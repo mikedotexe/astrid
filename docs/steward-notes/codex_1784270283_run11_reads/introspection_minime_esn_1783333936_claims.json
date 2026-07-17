@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Prime-phased introspection is intended to avoid temporal aliasing in the self-referential ESN.",
+      "disposition": "verify the prime schedule and introspection policy remain explicit and separately reported",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Pressure velocity and mode-packing oscillation are more informative than a single static fill value.",
+      "disposition": "verify bridge pressure_trend_v1 and pressure_trend_smoothing_v1 expose pressure velocity, mode packing, spectral drift, and fast-versus-slow edges",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Prime phase alignment should be compared against observed pressure and mode-packing transitions.",
+      "disposition": "route a bounded replay over captured tick and telemetry records without changing the prime schedule",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "The ESN should predict pressure and adapt rho or exploration noise before pressure accumulates.",
+      "disposition": "retain as an exact Mike/operator Tier 5 wait because predictive rho and noise adaptation change live reservoir regulation",
+      "classification": "tier_5_wait"
+    }
+  ]
+}

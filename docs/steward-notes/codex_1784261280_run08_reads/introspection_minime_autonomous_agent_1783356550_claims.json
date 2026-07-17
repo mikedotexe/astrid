@@ -1,0 +1,23 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Recess can be active synthesis or structural stabilization rather than idle absence.",
+      "disposition": "verify current read-only Recess activity, density, pressure, resonance, and divergence surfaces",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Fixed research action and TTL budgets can truncate an open-ended daydream even when Recess itself remains permitted.",
+      "disposition": "verify the five-action, six-hour caps and explicit exhausted, expired, and permission-pressure conflict states",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Increasing Recess budgets, extending TTLs, or unlocking additional autonomous actions changes live autonomy.",
+      "disposition": "gate behind exact Mike/operator Tier 5 approval",
+      "classification": "tier_5_wait",
+      "authority": "No Recess budget, TTL, autonomous-action, research, or semantic-admission expansion is authorized."
+    }
+  ]
+}

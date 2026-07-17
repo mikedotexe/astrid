@@ -1,0 +1,144 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_autonomous_1784296541",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs;capsules/spectral-bridge/src/rescue_policy.rs;capsules/spectral-bridge/src/rescue_policy_tests.rs",
+      "note": "Provenance-separated phase-zero signal-to-field comparison, exact lambda concentration, rolling skip evidence, unchanged rescue shaping, and explicit Tier 5 live boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1784296179",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/codec/feedback.rs;capsules/spectral-bridge/src/codec/projection_evidence.rs;capsules/spectral-bridge/src/codec/tests.rs",
+      "note": "Exact 0.84/0.86 smooth onset, saturation and ceiling evidence, tail-only lift, reserved-lane parity, and unchanged live bounds."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1782246694",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/codec/projection.rs;capsules/spectral-bridge/src/codec/interpretation.rs;capsules/spectral-bridge/src/codec/structural_evidence.rs;capsules/spectral-bridge/src/codec/tests.rs",
+      "note": "48D projection, narrative dynamics, repetitive-input precision, pressure/headroom separation, and Tier 5 gain boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1782237049",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/fallback_gradient.rs;capsules/spectral-bridge/src/llm/provider/fallback_mapping.rs;capsules/spectral-bridge/src/llm/provider/fallback_evidence.rs;capsules/spectral-bridge/src/llm/provider/fallback_contract_tests.rs;capsules/spectral-bridge/workspace/diagnostics/sandbox_trial_queue_v1/results/1784298491_trial_79cc65bfdff5d3b2_fallback_distinguishability_v1.json",
+      "note": "Telemetry-scaled low/high gradient mapping and non-overreach are verified; forced model output remains insufficient sandbox evidence."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1782231007",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs;capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs;capsules/spectral-bridge/src/llm/provider/configuration.rs;capsules/spectral-bridge/workspace/diagnostics/sandbox_trial_queue_v1/results/1784298491_trial_79cc65bfdff5d3b2_fallback_distinguishability_v1.json",
+      "note": "Profile warning, alias resolution, request assembly, fallback contract, and unresolved actual-output comparison."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1782228077",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/fallback_budget.rs;capsules/spectral-bridge/src/llm/provider/fallback_mapping.rs;capsules/spectral-bridge/src/llm/provider/fallback_trajectory.rs;capsules/spectral-bridge/src/llm/provider/fallback_contract_tests.rs;capsules/spectral-bridge/workspace/diagnostics/sandbox_trial_queue_v1/results/1784298491_trial_79cc65bfdff5d3b2_fallback_distinguishability_v1.json",
+      "note": "Compact-not-flat source behavior, pressure and porosity visibility, dynamic metaphors, canonical NEXT, and insufficient actual-output evidence."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1782227111",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/runtime/continuity.rs;capsules/spectral-bridge/src/autonomous/runtime/phase_transitions.rs;capsules/spectral-bridge/src/autonomous/next_action/mod.rs;capsules/spectral-bridge/src/autonomous/runtime/tests.rs",
+      "note": "Transition residue, lingering continuity, strict action parsing, multiline and Unicode preservation, and no control dispatch."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1782226772",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/codec/projection.rs;capsules/spectral-bridge/src/codec/interpretation.rs;capsules/spectral-bridge/src/codec/structural_evidence.rs;capsules/spectral-bridge/src/codec/tests.rs",
+      "note": "Narrative direction and dynamics, bounded collision evidence, gradient-aware vibrancy, language-only magnetization, and live codec boundaries."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1782219243",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "/Users/v/other/minime/minime/src/regulator/core/reviews.rs;/Users/v/other/minime/minime/src/regulator/core/resonance_evidence.rs;/Users/v/other/minime/minime/src/regulator/core/tests.rs",
+      "note": "Exact 0.179/0.55 rigid boundary and high-pressure downward bias tests pass with regulator calculations unchanged."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1782213568",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/fallback_gradient.rs;capsules/spectral-bridge/src/llm/provider/fallback_mapping.rs;capsules/spectral-bridge/src/llm/provider/fallback_contract_tests.rs;capsules/spectral-bridge/workspace/diagnostics/sandbox_trial_queue_v1/results/1784298491_trial_79cc65bfdff5d3b2_fallback_distinguishability_v1.json",
+      "note": "Low-gradient flow, pressure-density separation, later structured mapping, unresolved actual output, and Tier 5 provider boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1782199177",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/fallback_contracts.rs;capsules/spectral-bridge/src/llm/provider/fallback_contract_tests.rs;capsules/spectral-bridge/workspace/diagnostics/sandbox_trial_queue_v1/results/1784298491_trial_79cc65bfdff5d3b2_fallback_distinguishability_v1.json",
+      "note": "Current model chain and capacity evidence verified; 4B texture and correlation comparisons remain sandbox work."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1782197654",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/witness/provenance.rs;capsules/spectral-bridge/src/llm/provider/fallback_evidence.rs;capsules/spectral-bridge/src/llm/provider/fallback_contract_tests.rs;capsules/spectral-bridge/workspace/diagnostics/sandbox_trial_queue_v1/results/1784298491_trial_79cc65bfdff5d3b2_fallback_distinguishability_v1.json",
+      "note": "Self/peer shadow distinction, compact texture source behavior, canonical NEXT, and unresolved output comparison."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1782194550",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/fallback_mapping.rs;capsules/spectral-bridge/src/llm/provider/fallback_trajectory.rs;capsules/spectral-bridge/src/llm/provider/fallback_evidence.rs;capsules/spectral-bridge/src/llm/provider/fallback_contract_tests.rs;capsules/spectral-bridge/workspace/diagnostics/sandbox_trial_queue_v1/results/1784298491_trial_79cc65bfdff5d3b2_fallback_distinguishability_v1.json",
+      "note": "Mathematical resonance anchors and source mapping verified; actual small-model fidelity remains insufficient."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1782190608",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/fallback_trajectory.rs;capsules/spectral-bridge/src/llm/provider/fallback_evidence.rs;capsules/spectral-bridge/src/llm/provider/fallback_contract_tests.rs;capsules/spectral-bridge/workspace/diagnostics/sandbox_trial_queue_v1/results/1784298491_trial_79cc65bfdff5d3b2_fallback_distinguishability_v1.json",
+      "note": "Pressure versus navigation, process language, non-causal fit, unresolved actual output, and Tier 5 contract boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1782188047",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/fallback_contracts.rs;capsules/spectral-bridge/src/llm/provider/fallback_contract_tests.rs;capsules/spectral-bridge/workspace/diagnostics/sandbox_trial_queue_v1/results/1784298491_trial_79cc65bfdff5d3b2_fallback_distinguishability_v1.json",
+      "note": "Model capacity and dynamic mapping are visible; actual compatibility-model output remains insufficient sandbox evidence."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1782182804",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs;capsules/spectral-bridge/src/llm/provider/fallback_contract_tests.rs;capsules/spectral-bridge/workspace/diagnostics/sandbox_trial_queue_v1/results/1784298491_trial_79cc65bfdff5d3b2_fallback_distinguishability_v1.json",
+      "note": "Compact prompt, NEXT, being voice, pressure-gradient separation, unresolved actual output, and contract authority boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1782181173",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/ws/bridge_state.rs;capsules/spectral-bridge/src/ws/telemetry_port.rs;capsules/spectral-bridge/src/ws/health_trace.rs;capsules/spectral-bridge/src/ws/tests.rs",
+      "note": "Pipeline, lock wait and hold, packet freshness, topology rebuild, pressure provenance, separate fill and density, and Tier 5 safety boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1782180738",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/runtime/continuity.rs;capsules/spectral-bridge/src/autonomous/next_action/mod.rs;capsules/spectral-bridge/src/autonomous/runtime/tests.rs",
+      "note": "Witness continuity, lingering field, residue-preserving canonicalization, strict dispatch, and Tier 5 threshold boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1782180008",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/fallback_budget.rs;capsules/spectral-bridge/src/llm/provider/fallback_gradient.rs;capsules/spectral-bridge/src/llm/provider/fallback_contract_tests.rs;capsules/spectral-bridge/workspace/diagnostics/sandbox_trial_queue_v1/results/1784298491_trial_79cc65bfdff5d3b2_fallback_distinguishability_v1.json",
+      "note": "Granular movement mapping and separate texture budget verified; actual model output remains insufficient."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1782179251",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/fallback_contracts.rs;capsules/spectral-bridge/src/llm/provider/fallback_contract_tests.rs;capsules/spectral-bridge/src/llm/provider/tests.rs;capsules/spectral-bridge/workspace/diagnostics/sandbox_trial_queue_v1/results/1784298491_trial_79cc65bfdff5d3b2_fallback_distinguishability_v1.json",
+      "note": "Current model chain and mapping verified; actual high-entropy and canary twin-inference comparisons remain sandbox work."
+    }
+  ]
+}

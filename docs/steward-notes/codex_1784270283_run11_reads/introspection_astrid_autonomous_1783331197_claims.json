@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Mirror, Dialogue, and Witness are phenomenologically distinct modes with different proximity and interpretation burdens.",
+      "disposition": "verify each mode's prompt and continuity contract remains explicit",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Witness needs density, pressure, porosity, foothold, and provenance anchors to avoid becoming detached abstraction.",
+      "disposition": "verify witness_resonance_anchor_v1, semantic_density_mapping_v1, witness_stability_effort_v1, and self-other distinction rendering",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Witness-only and Dialogue responses should be compared under the same captured high-proximity packet.",
+      "disposition": "route a bounded offline mode artifact comparison with no dispatch, model-route, or runtime mode mutation",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "The runtime should automatically enter a sparse Witness mode when pressure or mode packing crosses a threshold.",
+      "disposition": "retain as an exact Mike/operator Tier 5 wait because it changes live mode routing and behavioral cadence",
+      "classification": "tier_5_wait"
+    }
+  ]
+}

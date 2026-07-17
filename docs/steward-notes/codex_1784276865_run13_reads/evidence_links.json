@@ -1,0 +1,144 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_codec_1784276267",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/codec/projection.rs;capsules/spectral-bridge/src/codec/structure.rs;capsules/spectral-bridge/src/codec/tests.rs;CHANGELOG.md;docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "48D layout, exact entropy gate, clamp provenance, narrative split, and Tier 5 dynamic-clamp boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1784274291",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/fallback_contracts.rs;capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs;capsules/spectral-bridge/src/llm/provider/tests.rs;capsules/spectral-bridge/src/llm/provider/fallback_trajectory.rs;CHANGELOG.md;docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Resonance-aware depth evidence, token-profile compatibility, artifact semantic integrity, and prompt-behavior boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_types_1784273848",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/types/schema/telemetry.rs;capsules/spectral-bridge/src/types/schema/tests.rs;capsules/spectral-bridge/src/ws/evidence.rs;capsules/spectral-bridge/src/ws/tests.rs;CHANGELOG.md",
+      "note": "Cadence clarity evidence, typed-precedence restraint, overlap collision review, and protocol-policy boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1784273493",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/types/schema/sensory.rs;capsules/spectral-bridge/src/types/schema/telemetry.rs;capsules/spectral-bridge/src/ws/health_trace.rs;capsules/spectral-bridge/src/ws/evidence.rs;capsules/spectral-bridge/src/ws/telemetry_port.rs;capsules/spectral-bridge/src/ws/tests.rs",
+      "note": "Connection-to-first-valid boundary, legacy snapshot acceptance, integration timing, reconnect, and stale-hearing truth."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1782967589",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/codec/projection.rs;capsules/spectral-bridge/src/codec/structure.rs;capsules/spectral-bridge/src/codec/tests.rs",
+      "note": "Determinism, content-derived epoch portability, atomic persistence, smooth gate, and epoch-change boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1782955960",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/fallback_contracts.rs;capsules/spectral-bridge/src/llm/provider/fallback_gradient.rs;capsules/spectral-bridge/src/llm/provider/fallback_contract_tests.rs;capsules/spectral-bridge/workspace/diagnostics/sandbox_trial_queue_v1/status.json",
+      "note": "Dynamic fallback texture evidence, offline cross-provider fidelity route, and provider-change boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1782941902",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/runtime/witness_friction.rs;capsules/spectral-bridge/src/autonomous/runtime/witness_distinction.rs;capsules/spectral-bridge/src/autonomous/runtime/tests.rs;capsules/spectral-bridge/workspace/diagnostics/sandbox_trial_queue_v1/status.json",
+      "note": "Non-categorical Witness friction, provenance ownership, offline mode-context route, and porosity authority boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1782935054",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/runtime/perception.rs;capsules/spectral-bridge/src/autonomous/runtime/tests.rs",
+      "note": "Lingering, fraying unknown, stale modality, and rare-modality fallback evidence."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1782934801",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/runtime/witness_chamber.rs;capsules/spectral-bridge/src/autonomous/runtime/witness_friction.rs;capsules/spectral-bridge/src/autonomous/runtime/tests.rs",
+      "note": "Newest-valid chamber recovery, path configuration, internal instability, and untrusted-context boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1782934203",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/codec/projection.rs;capsules/spectral-bridge/src/codec/structure.rs;capsules/spectral-bridge/src/codec/tests.rs",
+      "note": "48D map, warmth continuity, clamp/lift separation, and Tier 5 dynamic-clamp boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1782928513",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/fallback_contracts.rs;capsules/spectral-bridge/src/llm/provider/fallback_gradient.rs;capsules/spectral-bridge/src/llm/provider/fallback_contract_tests.rs;capsules/spectral-bridge/workspace/diagnostics/sandbox_trial_queue_v1/status.json",
+      "note": "Cascade-gradient and settled-vibrant evidence plus bounded cross-provider output comparison."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1782919397",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/configuration.rs;capsules/spectral-bridge/src/llm/provider/fallback_contract_tests.rs;capsules/spectral-bridge/workspace/diagnostics/sandbox_trial_queue_v1/status.json",
+      "note": "Language contract, settled-vibrant fallback, model-capacity trial route, and provider authority boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1782897474",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/fallback_gradient.rs;capsules/spectral-bridge/src/llm/provider/fallback_trajectory.rs;capsules/spectral-bridge/src/llm/provider/fallback_contract_tests.rs;capsules/spectral-bridge/workspace/diagnostics/sandbox_trial_queue_v1/status.json",
+      "note": "Trajectory-aware dynamic weighting, low-pressure restraint, and offline fallback fidelity route."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1782890345",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/configuration.rs;capsules/spectral-bridge/src/llm/provider/fallback_contracts.rs;capsules/spectral-bridge/src/llm/provider/fallback_contract_tests.rs;capsules/spectral-bridge/workspace/diagnostics/sandbox_trial_queue_v1/status.json",
+      "note": "Provider provenance, weighted movement texture, offline output comparison, and provider authority boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1782883502",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/runtime/witness_distinction.rs;capsules/spectral-bridge/src/autonomous/runtime/witness_friction.rs;capsules/spectral-bridge/src/autonomous/correspondence_v1.rs;capsules/spectral-bridge/src/autonomous/runtime/tests.rs",
+      "note": "Mode ownership, semantic-density interpretation, correspondence presence, and peer-content authority boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1782883228",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/codec/projection.rs;capsules/spectral-bridge/src/codec/structure.rs;capsules/spectral-bridge/src/codec/tests.rs;capsules/spectral-bridge/src/witness/provenance.rs",
+      "note": "Narrative split, pressure provenance, clamp evidence, and 48D ABI boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1782867203",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/fallback_gradient.rs;capsules/spectral-bridge/src/llm/provider/fallback_trajectory.rs;capsules/spectral-bridge/src/llm/provider/fallback_contract_tests.rs;docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Gradient and gap-aware fallback evidence plus Tier 5 porosity-mutation boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1782848118",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/codec/interpretation.rs;capsules/spectral-bridge/src/codec/structure.rs;capsules/spectral-bridge/src/codec/tests.rs",
+      "note": "Viscosity/persistence sidecars, narrative pivot, reserved candidates, and live reserved-slot boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1782845737",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/runtime/witness_chamber.rs;capsules/spectral-bridge/src/autonomous/runtime/text.rs;capsules/spectral-bridge/src/autonomous/runtime/tests.rs;capsules/spectral-bridge/workspace/diagnostics/sandbox_trial_queue_v1/status.json",
+      "note": "Portable path, combined lingering, Unicode residue, and bounded grapheme-fixture route."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1782845474",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/runtime/witness_chamber.rs;capsules/spectral-bridge/src/autonomous/runtime/witness_friction.rs;capsules/spectral-bridge/src/autonomous/next_action/mod.rs;capsules/spectral-bridge/src/autonomous/runtime/tests.rs",
+      "note": "Schema drift diagnostics, friction thresholds, internal-instability distinction, correspondence, and action parsing."
+    }
+  ]
+}

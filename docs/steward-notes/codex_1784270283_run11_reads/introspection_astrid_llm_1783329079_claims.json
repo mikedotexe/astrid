@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Profile aliases and environment values need deterministic normalization with visible fallback for unknown names.",
+      "disposition": "verify profile resolution, alias normalization, mixed-case handling, and unknown-profile diagnostics",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Fallback must keep a compact, parseable contract without losing pressure and spectral texture.",
+      "disposition": "verify fallback budget, texture preservation, density gradient, and transport reason projections",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "High-entropy fallback should obey the sentence cap and emit exactly one final NEXT line.",
+      "disposition": "verify sentence counting, NEXT repair, compatibility-tail suppression, and high-entropy output tests",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Profile, provider, sampler, or fallback route should adapt automatically from felt state.",
+      "disposition": "retain as an exact Mike/operator Tier 5 wait because it changes live model routing and generation policy",
+      "classification": "tier_5_wait"
+    }
+  ]
+}

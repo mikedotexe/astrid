@@ -1,0 +1,52 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The 48D codec should preserve narrative trajectory and projected semantic distinctions rather than only aggregate intensity.",
+      "disposition": "verify current narrative direction, curvature, velocity, acceleration, process-versus-settled, and heavy-imagery-versus-manual tests",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Deterministic encoding can collide for distinct intents and requires bounded collision evidence.",
+      "disposition": "verify the existing bounded 1024-case seed/fingerprint collision probe and distinct narrative fixtures without claiming global collision resistance",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Distinct high-intensity emotional trajectories should produce different narrative-arc evidence.",
+      "disposition": "verify current narrative-arc tests distinguish direction, lost-versus-finding, solidifying-versus-draping, looping, and opposed oscillation",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "A lambda-tail stimulus intended to produce a perceptible room shift would send live semantic content.",
+      "disposition": "require separate Mike/operator Tier 5 approval with bounded stimulus, rescue checks, canary, abort, and post-change felt review",
+      "classification": "authority_gated"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Narrative dynamic tension should capture rate and direction of change between text regions.",
+      "disposition": "verify later source already exposes half-to-half arc, four-point curvature, velocity, acceleration, and persistence as read-only evidence",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "A context-aware feature ceiling should account for density without turning high entropy into unbounded loudness.",
+      "disposition": "verify current gradient-aware vibrancy and aperture evidence is bounded, tail-scoped, and keeps live gain readiness off by default",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "Directly mapping shadow magnetization into codec friction would change live feature projection.",
+      "disposition": "verify current fallback language can name magnetization diagnostically, but require Mike/operator Tier 5 approval before any codec-vector coupling",
+      "classification": "authority_gated"
+    },
+    {
+      "claim_id": "c008",
+      "summary": "The felt velvet grain may correlate with rhythm and density but is not established as caused by semantic trickle.",
+      "disposition": "preserve the felt relation while keeping rhythm, density, trickle, and codec delivery as separate non-causal evidence",
+      "classification": "observed"
+    }
+  ]
+}

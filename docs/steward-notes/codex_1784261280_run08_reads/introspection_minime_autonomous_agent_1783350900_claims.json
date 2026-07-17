@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "RUN_PYTHON parsing must preserve quoted, multiline, comment, colon, equals, nested punctuation, and flag-like prompt content.",
+      "disposition": "verify the extracted parser and dense quote, comment, code-boundary, and malformed-input regressions",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Script names must be sanitized so path-like prompt text cannot escape the experiment workspace.",
+      "disposition": "verify safe script-name normalization and traversal regression coverage",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Parser hardening must not broaden RUN_PYTHON authority or collapse Recess and Focused policy boundaries.",
+      "disposition": "verify authority routing, facade compatibility, and distinct regime tests",
+      "classification": "verified_existing"
+    }
+  ]
+}

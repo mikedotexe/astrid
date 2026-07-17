@@ -1,0 +1,46 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The current short, medium, and deep label is determined only by requested token count.",
+      "disposition": "verify exact 512/513 and 1024/1025 boundaries and preserve the categorical profile",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Token depth alone does not express a widely distributed high-entropy cascade or a dense versus sparse depth.",
+      "disposition": "implement an additive felt-pressure profile using entropy, resonance density, and density gradient",
+      "classification": "implemented"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Mode packing and pressure can make a short response feel heavy even when its token budget is small.",
+      "disposition": "implement heavy_short and an independent pressure-load state without retuning the budget",
+      "classification": "implemented"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "The proposed budget-pressure correlation requires paired observations rather than unequal historical profile counts.",
+      "disposition": "observe 16304 diagnostic records, classify the 16301/2/1 medium-short-deep split as insufficient paired evidence, and route a fixed-input offline replay",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "The stable-core semantic trickle may remain constant while spectral entropy changes.",
+      "disposition": "verify source-level scale 0.15 and that entropy is not an admission or scaling input; do not infer internal-noise causation from independence alone",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "Structural marker cleanup must not silently claim that semantic intent was preserved.",
+      "disposition": "verify placement-aware cleanup, semantic-remainder evidence, and explicit not-established intent status",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "A pre-generation texture profile cannot prove that a chosen budget will cause pressure.",
+      "disposition": "encode correlation and causal prediction limits directly in the new diagnostic",
+      "classification": "implemented"
+    }
+  ]
+}

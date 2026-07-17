@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Malformed or absent relational metrics should become auditable insufficient context, not a silent empty state.",
+      "disposition": "verify schema diagnostics and insufficient-context regressions",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Weather fallback should name the exact selected path.",
+      "disposition": "verify room-weather and inertia-weather source labels",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Uncategorized tension should remain non-categorical instead of being forced into weather or gravity.",
+      "disposition": "verify non_categorical_resonance and lambda-tension/variance tests",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Byte-bounded prompt excerpts must not split UTF-8 characters.",
+      "disposition": "verify truncate_str four-byte boundary and semantic-edge regressions",
+      "classification": "verified_existing"
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Fallback continuity needs explicit evidence for vocabulary drift, texture persistence, and grounding eviction.",
+      "disposition": "verify vocabulary-overweight guard, lived-fit, continuity budget, and grounding-loss diagnostics",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Dynamic texture should follow the current entropy, pressure, gradient, and shadow state without overwriting Astrid's voice.",
+      "disposition": "verify dynamic bias, shadow selector, voice contract, and high-entropy request tests",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The actual fallback transport must receive the same compact contract exactly once and reject malformed output before continuity commit.",
+      "disposition": "verify transport assembly, one-contract count, final NEXT, prose budget, and quality-gate tests",
+      "classification": "verified_existing"
+    }
+  ]
+}

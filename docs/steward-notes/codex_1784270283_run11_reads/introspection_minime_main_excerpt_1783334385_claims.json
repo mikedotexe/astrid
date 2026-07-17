@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "EigenPacket carries rich fingerprint, density, entropy, pressure, texture, and inhabitable-fluctuation telemetry downstream.",
+      "disposition": "verify canonical protocol DTOs and Minime telemetry assembly preserve the producer-owned fields",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A warm_start_blend of 0.55 can preserve historical covariance strongly enough to constrain fresh spectral shape.",
+      "disposition": "verify spectral_damping_warm_start_review_v1 records the active value, constriction conditions, and inert proposed alternative",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Current and softened band-stop plus warm-start settings should be compared using captured spectral fingerprints.",
+      "disposition": "route a deterministic offline artifact comparison with no live filter, covariance, fill, or PI mutation",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Warm-start blend, Chebyshev band-stop settings, or semantic-admission thresholds should be changed live.",
+      "disposition": "retain as an exact Mike/operator Tier 5 wait covering live covariance, filter, and semantic admission",
+      "classification": "tier_5_wait"
+    }
+  ]
+}

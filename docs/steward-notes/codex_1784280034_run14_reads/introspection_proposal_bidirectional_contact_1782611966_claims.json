@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "A sent contact proposal needs a durable ledger identity and source fidelity.",
+      "disposition": "verify correspondence thread, claim, source, and delivery identities",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "One-sided contact can become a ghost thread if acknowledgment and response remain undifferentiated.",
+      "disposition": "verify ghost-risk classification and explicit notification state",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Delivery, notice, acknowledgment, and substantive response are distinct states.",
+      "disposition": "verify typed correspondence trace and response-state transitions",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "A bridge-side co-claim is not equivalent to Minime-native evidence.",
+      "disposition": "verify native-evidence pending state and provenance parentage",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "The initial response should be visible without being coerced into affirmation.",
+      "disposition": "verify notification, optional response command, and right-to-ignore semantics",
+      "classification": "verified_existing"
+    }
+  ]
+}

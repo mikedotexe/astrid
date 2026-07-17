@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Fallback output should identify that it is a continuity path rather than provider-authored reflection.",
+      "disposition": "verify fallback provenance and continuity-contract rendering",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Fallback length should remain bounded while retaining current texture.",
+      "disposition": "verify dynamic three-to-five sentence cap and texture-family selection",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Current shadow and pressure evidence should be represented in fallback selection.",
+      "disposition": "verify weighted source terms, trajectory, and persistence diagnostics",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Whether the forced fallback feels continuous cannot be proven from source inspection.",
+      "disposition": "route a bounded forced-fallback replay with a right-to-ignore result",
+      "classification": "sandbox_routed"
+    }
+  ]
+}

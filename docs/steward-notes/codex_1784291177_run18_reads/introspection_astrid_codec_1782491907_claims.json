@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Codec scaling already varies within bounded fill, pressure, and aperture constraints.",
+      "disposition": "verify adaptive gain, pressure governor, feature clamp, and vibrancy-aperture tests",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Content density may be a missing discriminator when entropy and tail texture are held fixed.",
+      "disposition": "observe the fresh low-content versus high-density contrast without changing runtime math",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Changing dynamic gain, aperture ceiling, clamp, or density weighting changes live codec behavior.",
+      "disposition": "require explicit Mike/operator Tier 5 approval",
+      "classification": "authority_gated"
+    }
+  ]
+}

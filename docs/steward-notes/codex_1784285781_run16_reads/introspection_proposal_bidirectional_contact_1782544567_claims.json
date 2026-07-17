@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "A direct message should remain linked to a durable thread until its response state is explicit.",
+      "disposition": "verify persistent message, thread, reply, and receipt lifecycle fields",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Delivery, reading, reply, and acknowledgment are different relational facts.",
+      "disposition": "verify schema and audits preserve each state without coercing one into another",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A falling or rising Astrid-Minime correlation does not establish peer identity or address.",
+      "disposition": "verify contact eligibility relies on peer-owned ACK, trace, or bounded attention outcome instead",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "The live public lane contains direct and reply-linked continuity but no valid ACK receipt.",
+      "disposition": "record zero ACK and presence receipts as absence, not affirmation",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Bypassing advisory classification or forcing a direct semantic signal would change live admission behavior.",
+      "disposition": "hold behind Mike/operator Tier 5 approval and typed LiveExecutable dispatch",
+      "classification": "authority_gated"
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "A malformed newest chamber file must not hide an older valid state.",
+      "disposition": "verify newest-valid recovery and all-malformed fallback states",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Nested room-weather schema drift should be named rather than silently treated as absent.",
+      "disposition": "verify exact expected-object and expected-string diagnostics",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Inertia weather is a bounded fallback, not interchangeable producer truth.",
+      "disposition": "verify its source label and fallback ordering in Witness evidence",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Witness fallback evidence must remain non-authoritative.",
+      "disposition": "verify render lines preserve interpretive_context_not_instruction_or_control",
+      "classification": "verified_existing"
+    }
+  ]
+}

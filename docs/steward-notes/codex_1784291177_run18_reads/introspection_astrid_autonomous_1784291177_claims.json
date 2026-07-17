@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The fixed seven-second, 64-step heartbeat can feel mechanically ticked even when it also carries warmth.",
+      "disposition": "implement a paired 60-second phase/entropy review while preserving the existing heartbeat vector, phase, cadence, and intensity",
+      "classification": "implemented"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Phase and spectral entropy need to be directly comparable before restlessness is attributed to either.",
+      "disposition": "implement paired sample count, ranges, wrap detection, and correlation with explicit non-causal authority",
+      "classification": "implemented"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Heartbeat repetition, signal variation, pressure context, and blocked-versus-sent outcomes should remain inspectable.",
+      "disposition": "verify semantic_heartbeat_signal_continuity_review_v1, pressure_texture_review_v1, and their focused regressions",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Trying intensity 0.45 or making intensity entropy-reactive would alter live semantic input.",
+      "disposition": "require explicit Mike/operator Tier 5 approval for any heartbeat intensity, cadence, phase, or vector-shaping trial",
+      "classification": "authority_gated"
+    }
+  ]
+}

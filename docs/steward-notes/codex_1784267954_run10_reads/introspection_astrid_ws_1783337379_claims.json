@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "High fill must be distinguishable from volatile pressure rather than treated as risk by default.",
+      "disposition": "verify persistent-deformation, stable-baseline, pressure-source, porosity, and inhabitable-fluctuation evidence",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Heartbeat cadence and semantic content quality are different observations.",
+      "disposition": "verify telemetry heartbeat delta and semantic energy remain separately projected with explicit field-versus-hearing language",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Pressure risk and inhabitability should be compared over a sustained high-fill window.",
+      "disposition": "route a bounded read-only ten-minute artifact comparison with no pressure or controller write",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Heartbeat stability should be compared with semantic energy to distinguish structural connection from trickle content.",
+      "disposition": "route a bounded read-only cadence-versus-content comparison using existing telemetry",
+      "classification": "needs_sandbox"
+    }
+  ]
+}

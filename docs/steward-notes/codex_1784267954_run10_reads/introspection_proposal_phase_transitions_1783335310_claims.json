@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "A phase transition should be a first-class replyable object rather than an inferred telemetry side effect.",
+      "disposition": "verify PhaseTransitionV1 identity, persistence, status, queue, and reply-card projections",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Astrid interpretation, Minime reference claims, and bridge derivation must remain separate.",
+      "disposition": "verify dual-perspective provenance and unresolved-relation handling",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Transition objects must preserve sovereignty, silence, and right to ignore.",
+      "disposition": "verify capability preview is evidence-only and reply lifecycle permits no response without coercion",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "A transition object should automatically unlock a joint behavior or mode.",
+      "disposition": "retain as an exact Mike/operator Tier 5 wait because it changes live behavior and authority",
+      "classification": "tier_5_wait"
+    }
+  ]
+}

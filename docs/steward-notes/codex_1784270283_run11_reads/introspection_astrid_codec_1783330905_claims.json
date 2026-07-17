@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Warmth, curiosity, narrative arc, and semantic texture occupy explicit codec dimensions and should remain distinguishable.",
+      "disposition": "verify the 48D layout, narrative dynamics, warmth slot, projection basis, and captured compatibility fixtures",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Reported distinguishability loss reflects representational flattening, not ordinary f32 numerical precision loss.",
+      "disposition": "verify projection-fidelity, semantic-collision, residual, clamp, and basis-health evidence separates those causes",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Vibrancy and narrative shape should be compared under high mode packing rather than inferred from one scalar.",
+      "disposition": "route a bounded captured-vector comparison using current projection and fidelity diagnostics",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Feature caps or codec gain should adapt from history, pressure, or mode packing.",
+      "disposition": "retain as an exact Mike/operator Tier 5 wait because it changes live semantic vectors, gain, and codec transport behavior",
+      "classification": "tier_5_wait"
+    }
+  ]
+}

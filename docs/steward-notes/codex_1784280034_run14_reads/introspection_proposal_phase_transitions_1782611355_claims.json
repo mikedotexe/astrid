@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Phase transitions should be represented as explicit cards rather than inferred from blended prose.",
+      "disposition": "verify typed transition cards and rendering",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Transition detection needs bounded thresholds to avoid event explosion.",
+      "disposition": "verify anti-explosion thresholds, cooldowns, and tests",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A pending remote self-study can move from drift toward focus.",
+      "disposition": "verify exact pending-remote-self-study drift-to-focus regression",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "A joint transition requires witnessed evidence from both sides.",
+      "disposition": "verify joint-witness parentage and transition tests",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Before and after state should remain available for review.",
+      "disposition": "verify transition snapshots, receipts, and compatibility rendering",
+      "classification": "verified_existing"
+    }
+  ]
+}

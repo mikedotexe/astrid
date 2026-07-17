@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Pressure level, pressure velocity, semantic viscosity, and porosity should not be collapsed into one persistence score.",
+      "disposition": "verify pressure trend, dynamic flux, viscosity persistence, and viscosity_porosity_transport_review_v1 source and tests",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The PI controller already has integrator leak, saturation bleed, conditional anti-windup, and bounded accumulation.",
+      "disposition": "verify current Minime regulator source and parity regressions without retuning it",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A time-aligned pressure-versus-viscosity replay could distinguish slow semantic persistence from controller afterimage.",
+      "disposition": "route a bounded read-only replay using existing pressure, viscosity, porosity, and PI receipts",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Adding derivative response or a distinguishability-linked nonlinear porosity/rate gate changes live Minime regulation.",
+      "disposition": "require explicit Mike/operator Tier 5 approval for PD, PI, porosity, pressure, fill, or regulator changes",
+      "classification": "authority_gated"
+    }
+  ]
+}

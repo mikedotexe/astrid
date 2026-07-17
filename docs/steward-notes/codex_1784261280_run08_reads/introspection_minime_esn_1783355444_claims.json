@@ -1,0 +1,23 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Exploration noise should be interpreted with density gradient, pressure, entropy, and inhabitable foothold rather than as a context-free scalar.",
+      "disposition": "verify the bounded dynamic-noise and coherence-review calculations and tests",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The dynamic-noise helper is source-prepared evidence and is not wired into the active ESN step loop.",
+      "disposition": "verify the explicit unwired boundary and fixed live exploration-noise path",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Wiring or retuning dynamic exploration noise, rho, damping, or adaptive pressure thresholds would change live substrate behavior.",
+      "disposition": "gate behind exact Mike/operator Tier 5 approval and replay evidence",
+      "classification": "tier_5_wait",
+      "authority": "No exploration-noise, rho, ESN damping, or adaptive-threshold change is authorized."
+    }
+  ]
+}

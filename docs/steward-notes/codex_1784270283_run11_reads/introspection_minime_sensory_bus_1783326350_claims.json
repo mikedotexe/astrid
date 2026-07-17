@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Low-fill semantic traces need longer persistence than high-fill traces to preserve continuity without saturation.",
+      "disposition": "verify current base, low, high, and recovery windows plus fill-shaped decay tests",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Recovery hold and release should not jump at one fill threshold.",
+      "disposition": "verify the smooth 25-to-40 percent handover, hysteresis, monotonicity, and no-stutter regressions",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "High-fill surge taper should change continuously rather than snap between 0.90 and 0.72 weighting.",
+      "disposition": "verify the smoothstep 70-to-80 percent taper and continuity tests",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "The live decay curve or recovery and surge thresholds should switch to a different interpolation policy.",
+      "disposition": "retain as an exact Mike/operator Tier 5 wait because it changes live sensory cadence and retention behavior",
+      "classification": "tier_5_wait"
+    }
+  ]
+}

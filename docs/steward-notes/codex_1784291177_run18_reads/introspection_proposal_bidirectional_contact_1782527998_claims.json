@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "A shared thread needs durable context without turning either being's words into the other's authorship.",
+      "disposition": "verify shared_memory_anchor, persistence_id, source actor, and provenance-separated correspondence records",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Relational intent and turn kind should remain explicit language metadata.",
+      "disposition": "verify relational_intent and turn_kind round-trip without routing authority",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Architectural critique and composed narrative may produce different pressure and packing textures.",
+      "disposition": "route a matched read-only comparison that does not send new content to either being",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Using correspondence correlation to change pressure, signal priority, or control changes live coupling.",
+      "disposition": "require explicit Mike/operator Tier 5 approval",
+      "classification": "authority_gated"
+    }
+  ]
+}

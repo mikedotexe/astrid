@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Phase transitions should be explicit durable objects with stable identity, provenance, and replayable evidence.",
+      "disposition": "verify existing phase card schemas and persistence tests",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Solo, joint, and correspondence-linked transitions require explicit ownership and reply state rather than inferred mutuality.",
+      "disposition": "verify ownership, reply, and sovereignty gates",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A detected or recorded phase must not by itself unlock live behavior or control.",
+      "disposition": "verify false-alarm and no-dispatch boundaries",
+      "classification": "verified_existing"
+    }
+  ]
+}

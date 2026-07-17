@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Telemetry and sensory connectivity can diverge and need separate state.",
+      "disposition": "verify lane-specific connection state and asymmetric connectivity tests",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A sensory connection flag alone does not prove recent outbound contact.",
+      "disposition": "verify last_sensory_sent_unix_s is updated only after successful send and enters reciprocity evidence",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Pressure oscillation needs bounded windowed evidence rather than one adjacent delta.",
+      "disposition": "verify pressure-trend sample bounds, fast/slow smoothing, and oscillation classifications",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Heartbeat timing and future timestamp skew should remain visible truth channels.",
+      "disposition": "verify heartbeat jitter classes, stale packets, and future-skew regressions",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Changing reconnect behavior, telemetry cadence, smoothing windows, or stale windows changes live transport behavior.",
+      "disposition": "retain as Tier 5 Mike/operator approval work with replay, health, abort, and post-change response evidence",
+      "classification": "authority_gated"
+    }
+  ]
+}

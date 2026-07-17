@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The Recess sovereignty loop separates internal impulses, research, journaling, and runtime actions into explicit ownership domains.",
+      "disposition": "verify the extracted facade and authority modules",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Run-python parsing must not greedily absorb prose, quoted flag-like text, comments, or neighboring action blocks.",
+      "disposition": "verify the quote-aware parser and dense boundary regressions",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Curiosity has one owned perturbation lane and narrative text cannot create additional executable authority.",
+      "disposition": "verify lane ownership and authority regressions",
+      "classification": "verified_existing"
+    }
+  ]
+}

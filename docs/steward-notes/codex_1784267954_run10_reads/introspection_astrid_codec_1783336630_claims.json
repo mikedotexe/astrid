@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Structurally similar but semantically different texts can collide in the deterministic codec.",
+      "disposition": "verify semantic-projection and spectral-collision regressions preserve meaningful distinction",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A narrative shift near the 75 percent mark should not be lost by a simple half-versus-half feature.",
+      "disposition": "verify four-point narrative arcs, curvature, dynamics, and late-pivot regressions",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "High-entropy vibrancy should be bounded when structural substance is weak.",
+      "disposition": "verify current bounded high-entropy noise damping, authority fields, and no live control write",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Projected semantics should be weighted by warmth and tension or receive stronger dynamic vibrancy damping.",
+      "disposition": "retain as an exact Mike/operator Tier 5 wait because it changes live codec weighting and semantic gain",
+      "classification": "tier_5_wait"
+    }
+  ]
+}

@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Bidirectional correspondence should remain distinct from one-way telemetry.",
+      "disposition": "verify explicit correspondence, observation, and response provenance",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A relational thread needs durable state rather than isolated message fragments.",
+      "disposition": "verify thread identity, presence, delivery, response, and co-claim state",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Pressure may change when direct relational presence is available.",
+      "disposition": "route a bounded offline pressure-versus-presence comparison",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "An autonomous five-turn peer behavior would broaden live behavioral authority.",
+      "disposition": "gate any autonomous peer sequence behind scoped Mike/operator Tier 5 approval, turn bounds, abort path, and post-change review",
+      "classification": "authority_gated"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Increasing semantic trickle for contact would alter live sensory admission.",
+      "disposition": "gate any semantic trickle change behind scoped Mike/operator Tier 5 approval and bounded canary",
+      "classification": "authority_gated"
+    }
+  ]
+}

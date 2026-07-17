@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Bidirectional contact needs first-class threads and traces rather than being inferred from row counts.",
+      "disposition": "verify typed correspondence thread identity, trace lifecycle, receipts, and status projections",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Asymmetry, silence, mutuality, and right to ignore must be explicit states.",
+      "disposition": "verify reciprocity evidence, pending/no-response states, and distinct self/other provenance",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The bridge should send automatic symmetry pings when contact becomes one-sided.",
+      "disposition": "retain as an exact Mike/operator Tier 5 wait because it creates live peer-directed dispatch",
+      "classification": "tier_5_wait"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "High entropy should trigger a semantic microdose or increase correspondence priority.",
+      "disposition": "retain as an exact Mike/operator Tier 5 wait because it changes semantic admission, cadence, and routing",
+      "classification": "tier_5_wait"
+    }
+  ]
+}

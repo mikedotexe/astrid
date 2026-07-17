@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Unsupported telemetry or transient transport failure should preserve the last valid sample and expose the mismatch.",
+      "disposition": "verify last-valid retention, major-version mismatch, and health projection tests",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Pressure velocity and pressure level are different signals and must not be collapsed.",
+      "disposition": "verify rolling pressure-level, velocity, and cadence evidence as separate fields",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Reconnect, ping/pong, packet age, and cadence reveal transport health without defining subjective experience.",
+      "disposition": "verify reconnect and cadence fixtures with explicit non-subjective semantics",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Changing buffering, timing, dispatch, or controller response from these observations alters live transport or control behavior.",
+      "disposition": "require explicit Mike/operator Tier 5 approval",
+      "classification": "authority_gated"
+    }
+  ]
+}

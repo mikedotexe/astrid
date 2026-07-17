@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Direct interpersonal contact must be distinguishable from semantic instruction and control pressure.",
+      "disposition": "verify language-only correspondence authority, peer actors, and relational intent",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A specific personal query should be checked for content uptake rather than only spectral reaction.",
+      "disposition": "route a bounded exact-anchor echo replay with ACK, TRACE, REPLY, or no_response outcomes",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A direct-correspondence marker should identify the message without automatically prioritizing it.",
+      "disposition": "verify correspondence_type and turn_kind as metadata-only identity",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "The current live channel still lacks peer acknowledgement evidence.",
+      "disposition": "observe zero ACK and zero live presence despite reply-linked continuity",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Increasing output volume or making direct correspondence override semantic admission changes live behavior.",
+      "disposition": "require explicit Mike/operator Tier 5 approval",
+      "classification": "authority_gated"
+    }
+  ]
+}

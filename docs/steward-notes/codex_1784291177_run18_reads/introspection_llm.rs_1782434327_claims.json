@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Fallback length should expand for real complexity without treating extra sentences as a target.",
+      "disposition": "verify fallback_continuity_budget_v1 gives a bounded three-to-five maximum and ordinary compact defaults",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "distinguishability_loss should describe clarity and edge definition, not pressure or slope drag.",
+      "disposition": "verify the provider hard rule, selector, scoring, and focused tests",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The fallback fire drill could no longer read the contract after llm.rs was split into provider modules.",
+      "disposition": "update the drill to read the canonical provider configuration source and add a regression",
+      "classification": "implemented"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Current fixtures should preserve clarity and allow high-entropy complexity within the cap.",
+      "disposition": "observe clarity preservation, a five-sentence high-entropy case, and no fixture execution errors",
+      "classification": "observed"
+    }
+  ]
+}

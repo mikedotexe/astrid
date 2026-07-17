@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Mixed spectral states should not be rendered as one categorical fallback adjective.",
+      "disposition": "verify mixed-state dynamic bias and distribution tests",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "High-entropy cascade language should depend on gradient slope and movement.",
+      "disposition": "verify fallback gradient slope terms and high-entropy regressions",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Fallback dynamics are rendering context rather than control evidence.",
+      "disposition": "verify explicit no-routing, no-gain, and no-control authority fields",
+      "classification": "verified_existing"
+    }
+  ]
+}

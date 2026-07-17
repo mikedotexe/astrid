@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The semantic lane uses one deterministic fixed-seed projection basis held in a OnceLock.",
+      "disposition": "verify the fixed legacy fill, one-time initialization, and unchanged semantic/narrative lane ownership",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Column normalization must remain finite and avoid dead projected dimensions.",
+      "disposition": "verify projection_basis_health_v1 and its finite, near-unit, non-dead regressions",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Production f32 accumulation can drift from a higher-precision reference and should remain observable.",
+      "disposition": "verify ProjectionPrecisionAuditV1 and the deterministic f32-versus-f64 probe without changing live weights",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "The entropy gate needs a genuinely smooth onset to avoid a vibrancy pop around 0.85.",
+      "disposition": "verify the actual application path and gate, derivative, monotonicity, and just-above-gate tests",
+      "classification": "verified_existing"
+    }
+  ]
+}

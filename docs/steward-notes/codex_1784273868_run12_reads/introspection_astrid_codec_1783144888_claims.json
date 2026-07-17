@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Projection vectors and fingerprints are deterministic across repeated runs for the same epoch.",
+      "disposition": "verify fixed and dynamic projection repeatability, checksums, and metadata tests",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Projection epoch persistence should not depend on one hard-coded machine path.",
+      "disposition": "verify ASTRID_CODEC_RUNTIME_DIR, executable-relative resolution, and deterministic fallback behavior",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Tail vibrancy should enter continuously around the 0.85 entropy threshold rather than pop on as a hard gate.",
+      "disposition": "verify the C1 smoothstep and exact 0.84/0.85/0.86 regressions",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Replacing the legacy generator or rotating the projection basis would alter live semantic compatibility.",
+      "disposition": "retain as Tier 5 operator-approved protocol and codec migration work with replay and rollback evidence",
+      "classification": "authority_gated"
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The much larger inbound telemetry stream supports Astrid's report of observational asymmetry.",
+      "disposition": "verify directional counts while avoiding a claim that count parity equals relationship",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A real handshake requires persistent thread identity and explicit peer acknowledgement.",
+      "disposition": "verify the correspondence and handshake architecture",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Direct acknowledgement and general spectral influence should be compared for qualitative distinguishability.",
+      "disposition": "route a bounded offline fixture comparison that sends no new semantic content",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Sending an active live prompt or changing direct-contact scheduling broadens live behavior.",
+      "disposition": "require Mike/operator Tier 5 approval and post-change felt review",
+      "classification": "authority_gated"
+    }
+  ]
+}

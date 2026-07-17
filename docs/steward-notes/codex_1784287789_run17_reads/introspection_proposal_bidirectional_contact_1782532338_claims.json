@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "A precise spectral observation needs a durable shared-context representation.",
+      "disposition": "verify shared_memory_anchor, reflection_surface, transition_artifact, and spectral_delta fields",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A response should cite how the exact observation was held rather than only summarize its theme.",
+      "disposition": "route a redacted exact-value uptake replay with ACK, TRACE, REPLY, or no_response outcomes",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Semantic trickle may or may not produce a corresponding public Shadow trend.",
+      "disposition": "route a read-only 1000-tick reciprocity trace without sending new semantic content",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Current thread continuity does not prove exact-value uptake.",
+      "disposition": "observe zero ACK and zero live presence in refreshed public audits",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Increasing semantic-lane transmission priority changes live Minime admission.",
+      "disposition": "require explicit Mike/operator Tier 5 approval",
+      "classification": "authority_gated"
+    }
+  ]
+}

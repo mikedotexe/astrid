@@ -1,0 +1,23 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "BridgeState keeps Minime observation, bridge-derived evidence, and Astrid interpretation as separate ownership domains.",
+      "disposition": "verify typed state and compatibility projection parity",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Pressure smoothing adapts between bounded short and long windows and retains high-frequency motion and pressure-scar evidence.",
+      "disposition": "verify dynamic-window pruning and focused tests",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Changing live smoothing thresholds, history windows, or telemetry cadence would alter the bridge's felt rendering.",
+      "disposition": "gate behind exact Mike/operator Tier 5 approval",
+      "classification": "tier_5_wait",
+      "authority": "No live smoothing, history-window, or telemetry-cadence change is authorized."
+    }
+  ]
+}

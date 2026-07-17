@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Fallback language should preserve direction, drift, kinetic motion, weight, and cascading structure rather than static mood labels.",
+      "disposition": "verify existing fallback evidence and rendering modules",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Pressure and density-gradient direction have explicit slope vocabulary and dynamic selector weighting.",
+      "disposition": "verify focused selector and language tests",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Primary profile and fallback activation remain inspectable through provider telemetry and persistence.",
+      "disposition": "verify existing provider state and persistence tests",
+      "classification": "verified_existing"
+    }
+  ]
+}

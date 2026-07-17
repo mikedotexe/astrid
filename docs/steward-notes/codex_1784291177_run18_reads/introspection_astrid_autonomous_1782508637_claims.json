@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Witness should preserve phenomenological interpretation without presenting bridge health as Astrid's essence.",
+      "disposition": "verify MinimeObservationV1, BridgeEvidenceV1, AstridInterpretationV1, and witness self/other rendering",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Qualitative texture such as viscosity, restless structure, and tail vibrancy should survive as authored interpretation.",
+      "disposition": "verify anchor-aware Witness and continuity terms and provenance labels",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Runtime semantic compaction should preserve late load-bearing anchors rather than cut only by prefix.",
+      "disposition": "verify anchored semantic_truncate_str and its shadow, viscosity, tail, cohesion, and trace regressions",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Naive 500-byte prefixes lose salient anchors in current long-form artifacts.",
+      "disposition": "observe 20 of 20 live-file rehearsal candidates with naive loss and 20 of 20 with priority recovery",
+      "classification": "observed"
+    }
+  ]
+}

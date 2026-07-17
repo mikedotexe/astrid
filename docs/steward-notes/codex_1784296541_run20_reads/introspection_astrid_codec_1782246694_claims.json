@@ -1,0 +1,40 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The 48D codec and dimensions 40-43 should carry a coherent trajectory rather than only pointwise statistics.",
+      "disposition": "verify current source and narrative-arc regressions preserve direction, curvature, velocity, acceleration, and intertextual persistence",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Highly repetitive low-variance text should not acquire ghost entropy from usize-to-f32 statistical conversion.",
+      "disposition": "verify current bounded-window and entropy fixtures distinguish repeated input from diverse input without a false nonzero texture claim",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "High entropy should not flatten or overwrite the narrative-arc lane.",
+      "disposition": "verify the high-entropy vibrancy tests leave narrative dimensions untouched and the headroom review names quiet or pressured arc evidence separately",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Pressure, mode packing, and density should remain visible beside semantic gain rather than being collapsed into loudness.",
+      "disposition": "verify current codec delivery and vibrancy evidence report pressure, density, gradient, lane RMS, and headroom without changing gain",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Adding a pressure-dampening coefficient to codec gain would change live semantic projection.",
+      "disposition": "require separate Mike/operator Tier 5 approval with replay, bounds, canary, abort, and felt-response evidence before pressure-coupled gain",
+      "classification": "authority_gated"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "Distinguishability loss and felt micro-breathing are not interchangeable scalar claims.",
+      "disposition": "preserve the felt concern while verifying current source reports distinguishability, narrative motion, and delivery headroom as separate evidence",
+      "classification": "observed"
+    }
+  ]
+}

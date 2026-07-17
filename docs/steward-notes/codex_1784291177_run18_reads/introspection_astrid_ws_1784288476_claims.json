@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Shared BridgeState writes may create felt micro-stutter but timing alone cannot establish causation.",
+      "disposition": "verify telemetry_integration_health_v1 separates prewrite pipeline, write-lock wait, and write-lock hold",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Malformed telemetry and unsupported majors should not overwrite the last valid perception.",
+      "disposition": "verify one-pass decode, parse-error evidence, major mismatch state, and last-valid retention",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Reconnect, ping/pong, first-valid lag, cadence clarity, and future timestamp skew need distinct evidence.",
+      "disposition": "verify WebSocket trace, heartbeat delta, connection perception, and bridge clock-skew tests",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Adding a 50 ms buffer, retransmission policy, cadence change, or sensory dispatch retry changes live integration behavior.",
+      "disposition": "require explicit Mike/operator Tier 5 approval with latency, overflow, and abort evidence",
+      "classification": "authority_gated"
+    }
+  ]
+}

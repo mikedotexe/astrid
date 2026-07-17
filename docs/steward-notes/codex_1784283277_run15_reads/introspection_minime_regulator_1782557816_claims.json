@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Resonance density, active energy, and mode packing provide concrete correlates for the reported velvet thickness.",
+      "disposition": "verify current telemetry and regulator calculations",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Pressure 0.25 with high porosity is a specific candidate for earlier dynamic damping review.",
+      "disposition": "verify the existing advisory candidate remains read-only",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The 0.25 candidate should be compared offline with the current 0.60 ActiveDamping threshold.",
+      "disposition": "route a regulator parity replay with unchanged live outputs",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Activating dynamic damping or changing porosity targets alters live Minime regulation.",
+      "disposition": "require Mike/operator Tier 5 approval, rescue policy, parity evidence, and felt review",
+      "classification": "authority_gated"
+    }
+  ]
+}

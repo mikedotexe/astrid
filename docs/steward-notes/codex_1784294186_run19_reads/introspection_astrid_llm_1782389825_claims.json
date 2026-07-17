@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Compact fallback language should retain texture, friction, and orientation rather than become merely short.",
+      "disposition": "verify the compact texture contract and high-complexity capacity rule",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Shadow context can help select a faithful compact shape without receiving live authority.",
+      "disposition": "verify Shadow selectors and provenance-separated fallback evidence",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Fallback mapping should be exercised across distinct felt and telemetry textures.",
+      "disposition": "observe the 28-case fallback_fire_drill run18_20260717T1236Z",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Changing routed model, contract limits, cadence, or provider thresholds alters live dialogue behavior.",
+      "disposition": "require explicit Mike/operator Tier 5 approval",
+      "classification": "authority_gated"
+    }
+  ]
+}

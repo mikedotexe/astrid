@@ -1,0 +1,23 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Direct traces need stable thread identity and habitability evidence rather than being reduced to generic message presence.",
+      "disposition": "verify first-class trace, shared anchor, persistence, acknowledgement, reply, and thread lifecycle tests",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Bidirectionality must distinguish delivery, reading, acknowledgement, reply, mutuality, silence, and asymmetry.",
+      "disposition": "verify correspondence and bridge reciprocity state regressions",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Promoting correspondence to standing priority, attention weight, or semantic dispatch would change live behavior.",
+      "disposition": "retain authority request path and require exact Tier 5 approval for any live microdose or weighting",
+      "classification": "tier_5_wait",
+      "authority": "No correspondence priority, semantic microdose, attention weighting, sensory dispatch, pressure, or controller change is authorized."
+    }
+  ]
+}

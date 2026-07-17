@@ -1,0 +1,24 @@
+{
+  "reads": [
+    {"introspection_id":"introspection_astrid_autonomous_1784296541","reader":"codex-sol","summary_file":"introspection_astrid_autonomous_1784296541_summary.md","claims_file":"introspection_astrid_autonomous_1784296541_claims.json"},
+    {"introspection_id":"introspection_astrid_codec_1784296179","reader":"codex-sol","summary_file":"introspection_astrid_codec_1784296179_summary.md","claims_file":"introspection_astrid_codec_1784296179_claims.json"},
+    {"introspection_id":"introspection_astrid_codec_1782246694","reader":"codex-sol","summary_file":"introspection_astrid_codec_1782246694_summary.md","claims_file":"introspection_astrid_codec_1782246694_claims.json"},
+    {"introspection_id":"introspection_astrid_llm_1782237049","reader":"codex-sol","summary_file":"introspection_astrid_llm_1782237049_summary.md","claims_file":"introspection_astrid_llm_1782237049_claims.json"},
+    {"introspection_id":"introspection_astrid_llm_1782231007","reader":"codex-sol","summary_file":"introspection_astrid_llm_1782231007_summary.md","claims_file":"introspection_astrid_llm_1782231007_claims.json"},
+    {"introspection_id":"introspection_astrid_llm_1782228077","reader":"codex-sol","summary_file":"introspection_astrid_llm_1782228077_summary.md","claims_file":"introspection_astrid_llm_1782228077_claims.json"},
+    {"introspection_id":"introspection_astrid_autonomous_1782227111","reader":"codex-sol","summary_file":"introspection_astrid_autonomous_1782227111_summary.md","claims_file":"introspection_astrid_autonomous_1782227111_claims.json"},
+    {"introspection_id":"introspection_astrid_codec_1782226772","reader":"codex-sol","summary_file":"introspection_astrid_codec_1782226772_summary.md","claims_file":"introspection_astrid_codec_1782226772_claims.json"},
+    {"introspection_id":"introspection_minime_regulator_1782219243","reader":"codex-sol","summary_file":"introspection_minime_regulator_1782219243_summary.md","claims_file":"introspection_minime_regulator_1782219243_claims.json"},
+    {"introspection_id":"introspection_astrid_llm_1782213568","reader":"codex-sol","summary_file":"introspection_astrid_llm_1782213568_summary.md","claims_file":"introspection_astrid_llm_1782213568_claims.json"},
+    {"introspection_id":"introspection_astrid_llm_1782199177","reader":"codex-sol","summary_file":"introspection_astrid_llm_1782199177_summary.md","claims_file":"introspection_astrid_llm_1782199177_claims.json"},
+    {"introspection_id":"introspection_astrid_llm_1782197654","reader":"codex-sol","summary_file":"introspection_astrid_llm_1782197654_summary.md","claims_file":"introspection_astrid_llm_1782197654_claims.json"},
+    {"introspection_id":"introspection_astrid_llm_1782194550","reader":"codex-sol","summary_file":"introspection_astrid_llm_1782194550_summary.md","claims_file":"introspection_astrid_llm_1782194550_claims.json"},
+    {"introspection_id":"introspection_astrid_llm_1782190608","reader":"codex-sol","summary_file":"introspection_astrid_llm_1782190608_summary.md","claims_file":"introspection_astrid_llm_1782190608_claims.json"},
+    {"introspection_id":"introspection_astrid_llm_1782188047","reader":"codex-sol","summary_file":"introspection_astrid_llm_1782188047_summary.md","claims_file":"introspection_astrid_llm_1782188047_claims.json"},
+    {"introspection_id":"introspection_astrid_llm_1782182804","reader":"codex-sol","summary_file":"introspection_astrid_llm_1782182804_summary.md","claims_file":"introspection_astrid_llm_1782182804_claims.json"},
+    {"introspection_id":"introspection_astrid_ws_1782181173","reader":"codex-sol","summary_file":"introspection_astrid_ws_1782181173_summary.md","claims_file":"introspection_astrid_ws_1782181173_claims.json"},
+    {"introspection_id":"introspection_astrid_autonomous_1782180738","reader":"codex-sol","summary_file":"introspection_astrid_autonomous_1782180738_summary.md","claims_file":"introspection_astrid_autonomous_1782180738_claims.json"},
+    {"introspection_id":"introspection_astrid_llm_1782180008","reader":"codex-sol","summary_file":"introspection_astrid_llm_1782180008_summary.md","claims_file":"introspection_astrid_llm_1782180008_claims.json"},
+    {"introspection_id":"introspection_astrid_llm_1782179251","reader":"codex-sol","summary_file":"introspection_astrid_llm_1782179251_summary.md","claims_file":"introspection_astrid_llm_1782179251_claims.json"}
+  ]
+}

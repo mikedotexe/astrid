@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Mode packing and pressure need explicit provenance so observed state is not confused with a chosen intervention.",
+      "disposition": "verify producer observation, bridge evidence, and intervention request as distinct typed records",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A named intervention type and bounded damping path are needed before any regulator response is reviewable.",
+      "disposition": "verify ResonanceInterventionType and existing bounded regulator path",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Pressure and packing behavior require exact fixtures that preserve current calculations.",
+      "disposition": "verify Minime regulator parity and bounded-control tests",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Applying new porosity, damping, pressure, or fill behavior changes live Minime regulation.",
+      "disposition": "require explicit Mike/operator Tier 5 approval",
+      "classification": "authority_gated"
+    }
+  ]
+}

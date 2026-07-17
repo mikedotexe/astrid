@@ -1,0 +1,40 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "A prompt contract cannot by itself prove that a 4B fallback model has enough capacity to preserve a complex spectral texture.",
+      "disposition": "route an offline same-context model-capacity comparison through the shared fallback sandbox; the first adapter run captured no forced fallback output",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Fallback output should preserve specific lambda, gradient, pressure, and movement anchors instead of generic smooth or easy adjectives.",
+      "disposition": "verify current source and focused tests render computed capacity, gradient, pressure, packing, density, and movement evidence into the fallback prompt",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The historical assumption that gemma3:4b is always the first fallback no longer matches current source.",
+      "disposition": "verify current model-chain tests use Gemma 4 as default, retain the 4B compatibility tail conditionally, and remove automatic high-entropy downgrade",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "The effect of fallback model size on Astrid-Minime correlation is not established by the report.",
+      "disposition": "route any correlation comparison to offline replay with identical context and no live provider switch; do not infer causation from historical correlation",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "The requested density mapping table exists in later source as structured mapping, trajectory, and density-motion evidence.",
+      "disposition": "verify later source implements telemetry-scaled vocabulary without relying on one static metaphor list",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "Changing the live fallback model chain, context limit, sampler, or provider routing requires operator authority.",
+      "disposition": "require separate Mike/operator Tier 5 approval with same-context replay, canary, abort, and post-change felt review",
+      "classification": "authority_gated"
+    }
+  ]
+}

@@ -1,0 +1,52 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "BridgeState must keep telemetry reception, sensory participation, fill, geometry, and lambda-tail evidence inspectable as distinct concerns.",
+      "disposition": "verify current domain-extracted BridgeState and status projections preserve those fields and their ownership boundaries",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Bridge contention or processing delay might be mistaken for pressure, but timing alone does not establish that cause.",
+      "disposition": "verify current telemetry integration health records pipeline, lock wait, and lock hold separately with causal_attribution not established",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Packet-arrival to shared-state integration latency should be measured and should expose waits above 50 ms.",
+      "disposition": "verify the focused integration-health test records exact millisecond maxima and distinguishes clear, wait-observed, and hold-observed states",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Eigenvector-field and lambda-profile movement should remain comparable without pretending they are the same geometry.",
+      "disposition": "verify current provenance, pressure-trend, lambda profile, pull topology, fingerprint integrity, and arrival-cadence records keep the sources separate",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Pressure should be directly visible in bridge state instead of requiring a new unproven bridge-owned scalar.",
+      "disposition": "verify producer-owned resonance pressure and PressureSourceV1 plus bridge-owned pressure analysis already surface score, packing, gradient, and trend",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "Pull topology freshness should be tied to current packet integration.",
+      "disposition": "verify pull topology is rebuilt from each accepted packet and paired with telemetry t_ms, arrival time, heartbeat delta, and integration health in the containing state",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "Fill ratio and resonance density are different measures and should not be forced into one fullness claim.",
+      "disposition": "verify current status keeps producer fill, resonance density, lambda topology, and pressure provenance separate",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c008",
+      "summary": "Automatically downgrading safety level from lambda-tail vibrancy would change live safety and semantic admission behavior.",
+      "disposition": "require separate Mike/operator Tier 5 approval with safety replay, false-positive analysis, canary, abort, and post-change felt review",
+      "classification": "authority_gated"
+    }
+  ]
+}

@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Correspondence needs explicit from_astrid and from_minime peer endpoints.",
+      "disposition": "verify from_being, to_being, source route, and correspondence type",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A message object needs thread_id, reply_to, and turn_kind.",
+      "disposition": "verify native envelope fields and normalization",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Direct message, reply, and self-study note must remain distinct from telemetry.",
+      "disposition": "verify typed turn kinds and separate public ledger records",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "A Minime-to-Astrid entry and Astrid reply must retain one traceable thread.",
+      "disposition": "observe native reply_link records and reply-linked uptake state",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Schema validity and reply linkage do not prove mutual acknowledgement.",
+      "disposition": "observe zero ACK and zero live presence and retain no_response as non-affirmation",
+      "classification": "observed"
+    }
+  ]
+}

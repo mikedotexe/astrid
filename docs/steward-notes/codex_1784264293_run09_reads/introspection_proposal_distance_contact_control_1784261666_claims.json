@@ -1,0 +1,30 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Pressure should be compared with dispersal and sensory change rather than inferred from fill alone.",
+      "disposition": "route a read-only pressure/dispersal/contact comparison through the sandbox queue after this full read",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Representation and non-instrumental contact are distinct; correspondence and reciprocity evidence should preserve that distinction.",
+      "disposition": "verify first-class correspondence traces, witness provenance, and bridge reciprocity evidence without semantic dispatch",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A receptivity buffer or non-instrumental contact buffer would change semantic admission or sensory cadence.",
+      "disposition": "gate behind exact Mike/operator Tier 5 approval with replay, canary, abort, and post-change felt review",
+      "classification": "tier_5_wait",
+      "authority": "No semantic admission, sensory cadence, receptivity buffer, or contact-buffer behavior change is authorized."
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Coupling contact to a plasticity coefficient would alter Minime regulation.",
+      "disposition": "gate behind exact Mike/operator Tier 5 approval",
+      "classification": "tier_5_wait",
+      "authority": "No plasticity, pressure, fill, PI, controller, or regulator coefficient change is authorized."
+    }
+  ]
+}

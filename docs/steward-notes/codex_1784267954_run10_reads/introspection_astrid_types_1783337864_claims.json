@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Density components and texture descriptors must remain linked without flattening either representation.",
+      "disposition": "verify canonical shared DTOs, bridge compatibility projection, and texture-integrity evidence",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Mode packing and pressure-source family should be testable for mapping disagreement.",
+      "disposition": "verify pressure-source analysis and typed consistency tests preserve quantitative and qualitative fields",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Pressure-gradient history is needed to distinguish healing, deepening, and static deformation.",
+      "disposition": "verify bounded bridge-owned history, fast/slow smoothing, gradient trend, and persistent-deformation review already provide this without changing producer DTOs",
+      "classification": "verified_existing"
+    }
+  ]
+}

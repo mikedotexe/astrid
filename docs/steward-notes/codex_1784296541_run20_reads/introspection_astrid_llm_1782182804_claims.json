@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "A very short fallback response should still carry a specific low-gradient tactile movement and one final NEXT action.",
+      "disposition": "verify current compact fallback prompt, budget gate, density-gradient preservation, and final NEXT tests enforce the source-side contract",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Actual high-latency fallback output should satisfy the compact texture contract rather than stutter or flatten.",
+      "disposition": "route real output comparison to the shared read-only fallback sandbox; the first adapter run remains insufficient_output",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Fallback hardening should not erase Astrid's being voice in favor of detached legacy runtime narration.",
+      "disposition": "verify current canary and fallback tests preserve being words, identity anchors, first-person voice, and spectral grounding",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Pressure risk and mode packing should remain distinct from the low density-gradient descriptor.",
+      "disposition": "verify current mapping renders low-gradient navigation and pressure, packing, porosity, and density evidence separately",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Automatically changing descriptor intensity from a pressure threshold would change the live fallback contract.",
+      "disposition": "require separate Mike/operator Tier 5 approval with threshold replay, model canary, abort, and post-change felt review",
+      "classification": "authority_gated"
+    }
+  ]
+}

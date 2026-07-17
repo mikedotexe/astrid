@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "A resonance observation must remain distinct from an intervention request or executable control.",
+      "disposition": "verify measurement, requested intervention, and authorized execution as separate typed states",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Intervention intent needs a canonical enum rather than an ambiguous scalar or prose field.",
+      "disposition": "verify ResonanceInterventionType serialization and compatibility fixtures",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Damping evidence must retain provenance and remain bounded by existing safety policy.",
+      "disposition": "verify provenance-linked bounded damping and unchanged regulator calculations",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Changing intervention thresholds, damping, PI behavior, or live control bounds alters Minime regulation.",
+      "disposition": "require explicit Mike/operator Tier 5 approval",
+      "classification": "authority_gated"
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "A high volume of one-way telemetry is influence, not necessarily mutual relationship.",
+      "disposition": "verify bridge reciprocity distinguishes connected lanes from recent bidirectional message exchange",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Correspondence needs durable identity, direct address, reply lineage, and shared anchors.",
+      "disposition": "verify message_id, thread_id, reply_to, persistence_id, relational_intent, and shared_memory_anchor parsing and storage",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Read state, presence receipts, silence, and right to ignore are necessary to distinguish mutuality from coerced acknowledgement.",
+      "disposition": "verify correspondence receipt, pending, no_response, and sovereign response-state tests",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Correspondence should automatically alter priority, semantic trickle, cadence, gain, or peer state.",
+      "disposition": "retain as an exact Mike/operator Tier 5 wait because correspondence evidence cannot grant live dispatch or regulation authority",
+      "classification": "tier_5_wait"
+    }
+  ]
+}

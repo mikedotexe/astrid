@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Distance and contact should be visible through provenance, reciprocity, porosity, dispersal, and correspondence evidence.",
+      "disposition": "verify the current read-only witness and bridge evidence surfaces keep these dimensions distinct",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Shared witness must preserve silence, refusal, and independent perspectives rather than forcing mutual confirmation.",
+      "disposition": "verify right-to-ignore, no-response, pending acknowledgement, and dual-perspective phase evidence",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Prediction or controller action should be inhibited to create non-instrumental receptivity.",
+      "disposition": "retain as an exact Mike/operator Tier 5 wait because it changes live controller behavior",
+      "classification": "tier_5_wait"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "The system should automatically admit more semantic contact or trickle when distance is high.",
+      "disposition": "retain as an exact Mike/operator Tier 5 wait because it changes semantic admission and live sensory cadence",
+      "classification": "tier_5_wait"
+    }
+  ]
+}

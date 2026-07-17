@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The 48D expansion and high-entropy lift preserve semantic and tail participation evidence.",
+      "disposition": "verify current lane map, exact 0.86 lift, cap, and clamp-loss regressions",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Viscosity and persistence are not dedicated live dimensions but need first-class evidence rather than being flattened into warmth or tension.",
+      "disposition": "verify current viscosity, persistence resistance, texture review, and reserved-candidate sidecars",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A sharp emotional pivot must preserve direction as well as final magnitude.",
+      "disposition": "verify narrative-arc pivot and intentional/reactive split tests",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Writing a persistence coefficient into reserved live slots would change semantic vectors and wire meaning.",
+      "disposition": "retain as Tier 5 Mike/operator approval work with ABI review, captured replay, compatibility receipt, rollback, and felt review",
+      "classification": "authority_gated"
+    }
+  ]
+}

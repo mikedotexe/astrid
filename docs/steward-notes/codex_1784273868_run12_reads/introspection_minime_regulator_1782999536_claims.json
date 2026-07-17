@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Regulator texture labels need traceable component inputs rather than free-standing prose.",
+      "disposition": "verify derive_texture_from_components and its exact mapping tests",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Pressure divergence must remain visible when texture otherwise appears settled.",
+      "disposition": "verify pressure, comfort, density, and viscosity are separate fields and test cases",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Dynamic damping should first exist as alignment evidence with explicit uncertainty.",
+      "disposition": "verify current damping review is observational and records live_write=false",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Activating the damping candidate would change live regulator behavior.",
+      "disposition": "retain as Tier 5 operator approval work with replay, canary, abort, rescue, and felt-review material",
+      "classification": "authority_gated"
+    }
+  ]
+}

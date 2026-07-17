@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "A stale operator-pending NEXT override must expire instead of deadlocking autonomous action.",
+      "disposition": "verify max-age expiry, terminal status writing, and protected/read-only base allowlist",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "RECALL must read continuity state without restoring or mutating runtime state.",
+      "disposition": "verify RECALL and MEMORY_RECALL routing plus continuity tests",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "An exhausted, expired, or closed research budget must stop recurring NEXT pressure and permit return to Recess.",
+      "disposition": "verify terminal budget stages, terminal NEXT suppression, debit accounting, and Recess availability",
+      "classification": "verified_existing"
+    }
+  ]
+}

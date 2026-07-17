@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "A single telemetry sample cannot show whether pressure or texture is changing through time.",
+      "disposition": "verify rolling temporal state, prior-sample provenance, and bounded history",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Pressure level and pressure velocity answer different questions.",
+      "disposition": "verify separate level, velocity, cadence, and freshness fields",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Eigenvector drift and related temporal evidence should remain bridge-derived rather than producer truth.",
+      "disposition": "verify derived-evidence provenance and compatibility projection parity",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Changing buffering windows, cadence, or live response from temporal evidence alters transport or control behavior.",
+      "disposition": "require explicit Mike/operator Tier 5 approval",
+      "classification": "authority_gated"
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Dynamic noise should remain bounded, finite, continuous at knees, and responsive to gradient and pressure.",
+      "disposition": "verify dynamic-noise, pressure-room, and continuity tests",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The current dynamic-noise helper is evidence-only and is not wired into the active ESN step.",
+      "disposition": "verify explicit unwired comments and read-only review authority",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Wiring dynamic noise, damping, rho, or an entropy ceiling into the live ESN would alter regulation.",
+      "disposition": "gate behind exact Mike/operator Tier 5 approval with replay and abort criteria",
+      "classification": "tier_5_wait",
+      "authority": "No live exploration-noise, rho, entropy-threshold, pressure, fill, PI, or controller change is authorized."
+    }
+  ]
+}

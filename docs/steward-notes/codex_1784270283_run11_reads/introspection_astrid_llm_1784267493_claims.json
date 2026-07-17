@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Removing leaked structural model markers is useful dialogue hygiene, but the removal receipt must remain inspectable.",
+      "disposition": "verify cleanup still occurs before quality gating and journal persistence while retaining per-token counts",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A marker used contextually or as a quoted phrase can carry semantic intent and should not be reported like an ordinary boundary delimiter.",
+      "disposition": "implement boundary, contextual, and quoted occurrence counts without changing the existing stripped text",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Large, contextual, or output-erasing cleanup should surface a semantic-integrity flag and recommend a shadow check rather than claiming intent preservation.",
+      "disposition": "implement model_artifact_semantic_integrity_check_v1 as diagnostic-only evidence with explicit no-runtime-effect and intent-not-established fields",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "The deep, medium, and short dialogue budget profile needs an exact boundary test and an unambiguous basis.",
+      "disposition": "label the profile basis as requested num_predict rather than generated output length and test 512/513 plus 1024/1025",
+      "classification": "implemented_now"
+    }
+  ]
+}

@@ -1,0 +1,57 @@
+{
+  "schema": "dialogue_budget_pressure_observation_v1",
+  "observed_at": "2026-07-17T11:52:02Z",
+  "source": "capsules/spectral-bridge/workspace/diagnostics/dialogue_prompt_budget.jsonl",
+  "records_at_observation": 16304,
+  "profiles": [
+    {
+      "profile": "deep",
+      "records": 1,
+      "high_entropy_records": 1,
+      "pressure_records": 1,
+      "mean_pressure_risk": 0.19,
+      "mean_density_gradient": 0.18,
+      "mean_mode_packing": 0.28
+    },
+    {
+      "profile": "medium",
+      "records": 16301,
+      "high_entropy_records": 5969,
+      "pressure_records": 5535,
+      "mean_pressure_risk": 0.2156187895212498,
+      "mean_density_gradient": 0.13581147991931414,
+      "mean_mode_packing": 0.30310824036012673
+    },
+    {
+      "profile": "short",
+      "records": 2,
+      "high_entropy_records": 1,
+      "pressure_records": 2,
+      "mean_pressure_risk": 0.36,
+      "mean_density_gradient": 0.19,
+      "mean_mode_packing": 0.28
+    }
+  ],
+  "classification": "insufficient_paired_evidence",
+  "reason": "The historical profile allocation is overwhelmingly medium (16301/16304). One deep and two short observations cannot establish a budget-to-pressure correlation, and the records are not matched on the same spectral state.",
+  "semantic_trickle_source_verification": {
+    "scale": 0.15,
+    "max_input_energy": 0.3,
+    "max_fill_pct": 82.0,
+    "entropy_input_to_admission_or_scale": false,
+    "source_refs": [
+      "/Users/v/other/minime/minime/src/stable_core.rs",
+      "/Users/v/other/minime/minime/src/runtime/semantic_modality.rs",
+      "/Users/v/other/minime/minime/src/runtime/orchestration.rs"
+    ],
+    "interpretation": "The stable-core semantic trickle scale is constant with respect to entropy in current source. This verifies the requested independence check but does not establish that high-entropy noise originates internally."
+  },
+  "next_trial": {
+    "route": "sandbox_paired_budget_observation",
+    "design": "Replay one fixed, redacted spectral summary and fixed prompt assembly under short, medium, and deep diagnostic token profiles; compare only read-only prompt pressure and texture classifications. Any live generation or pressure response comparison remains separately authorized.",
+    "live_control_changed": false,
+    "semantic_trickle_changed": false
+  },
+  "authority_state": "evidence_only",
+  "authority": "read_only_historical_observation_not_budget_sampler_semantic_trickle_pressure_or_control"
+}

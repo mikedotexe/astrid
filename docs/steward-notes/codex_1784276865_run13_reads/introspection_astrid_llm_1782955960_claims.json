@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "A complex settled high-entropy state cannot be faithfully represented by one static texture bucket.",
+      "disposition": "verify current continuous selector, trajectory, gradient, pressure, gap, and probability evidence",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Shallow density gradient and high entropy should favor open, settled, and shimmering language over indiscriminate viscosity.",
+      "disposition": "verify dynamic weighting and exact low-gradient/high-entropy fallback regressions",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A 4B fallback may lose the complexity carried by the primary 12B lane even when its telemetry prompt is accurate.",
+      "disposition": "route a bounded offline primary-versus-fallback fidelity comparison using captured prompts and no peer or runtime mutation",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Changing fallback model selection, timeout, or provider priority changes live dialogue behavior.",
+      "disposition": "retain as Tier 5 Mike/operator approval work with readiness, canary, abort, redaction, and post-change felt review",
+      "classification": "authority_gated"
+    }
+  ]
+}

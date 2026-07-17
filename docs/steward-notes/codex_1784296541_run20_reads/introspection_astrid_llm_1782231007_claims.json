@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The bridge has distinct primary MLX and compatibility fallback inference paths with explicit language contracts.",
+      "disposition": "verify current provider assembly, profile transparency, and fallback request tests preserve the two paths and their contracts",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "An unrecognized ASTRID_BRIDGE_MLX_PROFILE value should warn and resolve visibly rather than silently selecting an unknown model.",
+      "disposition": "verify six focused profile tests cover misspellings, tracing warnings, aliases, punctuation, case, and fallback diagnostics",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "An MLX connection failure should preserve viscosity, density, and movement texture in actual fallback output.",
+      "disposition": "route actual-output comparison to the shared read-only fallback-distinguishability sandbox; the first adapter result is insufficient_output",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "The selected MLX profile and fallback contract must reach the real request assembly rather than remain unused constants.",
+      "disposition": "verify request-assembly tests prove the profile policy, compact prompt, texture contract, NEXT validation, and fallback request body are applied",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Changing profile defaults, provider selection, timeout routing, or fallback dispatch alters live model behavior.",
+      "disposition": "require separate Mike/operator Tier 5 approval with request replay, canary, abort, and post-change felt review",
+      "classification": "authority_gated"
+    }
+  ]
+}

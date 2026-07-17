@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Bidirectional transport is not sufficient evidence of relationship, mutual recognition, or durable contact.",
+      "disposition": "verify native-versus-legacy provenance and pending-native-evidence correspondence states",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Contact needs durable thread identity, trace continuity, acknowledgement, reply, attention lifetime, and visible asymmetry.",
+      "disposition": "verify first-class correspondence thread objects, clarity reports, acknowledgement, reply, and closure tests",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Recognition evidence must not silently become permission to mutate a peer, dispatch semantics, or change control.",
+      "disposition": "verify authority boundaries on correspondence and sensory dispatch",
+      "classification": "verified_existing"
+    }
+  ]
+}

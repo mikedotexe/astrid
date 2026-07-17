@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The current high-entropy lift can be content-insensitive and therefore may brighten low-content shimmer and dense expression alike.",
+      "disposition": "observe the fresh semantic-density contrast in codec_entropy_vibrancy_probe run18_20260717T1236Z",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The vibrancy onset should remain smooth and bounded rather than introducing a discontinuous pop.",
+      "disposition": "verify C1 smoothstep onset, monotonicity, exact boundaries, and bounded output",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Pressure and gain context govern the current lift and should remain visible in evidence.",
+      "disposition": "verify production feedback math and projection evidence without changing live values",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Changing vibrancy lift, gain, tail transport, or projection saturation alters the live codec path.",
+      "disposition": "require explicit Mike/operator Tier 5 approval with replay, canary, abort, and post-change felt review",
+      "classification": "authority_gated"
+    }
+  ]
+}

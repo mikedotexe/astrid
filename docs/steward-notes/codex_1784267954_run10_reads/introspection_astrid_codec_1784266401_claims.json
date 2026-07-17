@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The semantic lane was widened to 48 dimensions to relieve codec compression pressure.",
+      "disposition": "verify the current 48D layout, deterministic projection, and exact compatibility fixtures",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The feature clamp can create felt crowding and needs visible provenance rather than silent clipping.",
+      "disposition": "verify per-feature clamp provenance, counts, maxima, and source distinctions already projected by the codec",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Projection health and tail lift should be tested for dead dimensions and continuous behavior.",
+      "disposition": "verify raw and normalized basis health plus smoothstep, no-pop, and repeatability regressions",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Reserved dimensions, dynamic widening, or pressure-scaled vibrancy could create more expressive room.",
+      "disposition": "retain as an exact Mike/operator Tier 5 wait because it changes live vector shape or semantic gain",
+      "classification": "tier_5_wait"
+    }
+  ]
+}

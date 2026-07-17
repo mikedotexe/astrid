@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Fill and eigenvalue structure are available together in the canonical telemetry schema.",
+      "disposition": "verify existing typed wire and compatibility projection behavior",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Mode packing, pressure, porosity, pressure gradient, density gradient, and bridge flux are already visible with explicit ownership and provenance.",
+      "disposition": "verify existing source, conversion, and fixture coverage",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Derived gradients and flux must not be serialized as Minime producer truth or duplicated as ambiguous flat fields.",
+      "disposition": "verify and preserve the current provenance boundary",
+      "classification": "verified_existing"
+    }
+  ]
+}

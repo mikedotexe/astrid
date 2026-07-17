@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The fixed projection basis and entropy vibrancy gate must remain deterministic and continuous.",
+      "disposition": "verify deterministic projection, checksum, repeatability, and smoothstep gate regressions",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A near-zero raw projection column could silently create a dead semantic dimension and needs an initialization diagnostic.",
+      "disposition": "implement projection_basis_health_v1 with raw and normalized norms, threshold, column indexes, and no live write",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Projection epoch storage must resolve independently of process working directory and fail deterministically.",
+      "disposition": "verify executable-relative runtime resolution and atomic epoch-file tests already in current source",
+      "classification": "verified_existing"
+    }
+  ]
+}

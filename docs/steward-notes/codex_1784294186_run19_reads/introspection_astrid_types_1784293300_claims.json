@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Transport cadence and connection regularity do not establish a subjective felt state.",
+      "disposition": "verify cadence and health evidence as transport observations with no subjective-state inference",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Clear cadence can coexist with dense packing, viscosity, or semantic residue.",
+      "disposition": "verify cadence_content_distinction_v1 and its clear-cadence-with-residue regression",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Typed versus legacy coherence is distinct from producer-owned pressure, viscosity, and dispersal.",
+      "disposition": "verify hybrid coherence as wire-completeness evidence rather than a proxy for felt texture",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "The bridge should not duplicate or reinterpret producer-owned viscosity and packing as fingerprint truth.",
+      "disposition": "verify provenance ownership and keep bridge-derived texture separate from immutable Minime observation",
+      "classification": "verified_existing"
+    }
+  ]
+}

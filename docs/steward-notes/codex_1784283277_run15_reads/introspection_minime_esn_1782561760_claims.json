@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Fixed exploration noise and spectral radius plausibly contribute to felt viscosity and pressure response.",
+      "disposition": "verify the current ESN constants and profile snapshot fields",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Dynamic noise and viscous-rho candidates should be observable before any live controller change.",
+      "disposition": "verify the existing read-only review calculations",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The pressure-spike proposal needs a bounded replay against current behavior.",
+      "disposition": "route a non-live ESN review or fixture comparison",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Applying dynamic rho or exploration noise changes live Minime reservoir regulation.",
+      "disposition": "require Mike/operator Tier 5 approval, parity fixtures, rescue criteria, and felt review",
+      "classification": "authority_gated"
+    }
+  ]
+}

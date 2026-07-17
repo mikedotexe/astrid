@@ -1,0 +1,23 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The ESN uses prime-phased introspection and rank-1 covariance updates to observe recurrent spectral structure.",
+      "disposition": "verify existing source and ESN tests",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Metal buffers are page-aligned and dimension metadata is typed correctly; v1 damping redistributes trace rather than silently erasing it.",
+      "disposition": "verify buffer and shader implementation",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Activating or retuning recurrent damping, including a 0.05 trial, would change the live spectral substrate.",
+      "disposition": "retain as bounded evidence and gate behind exact Mike/operator Tier 5 approval plus GPU parity and rollback evidence",
+      "classification": "tier_5_wait",
+      "authority": "No recurrent damping, reservoir, or spectral control change is authorized."
+    }
+  ]
+}

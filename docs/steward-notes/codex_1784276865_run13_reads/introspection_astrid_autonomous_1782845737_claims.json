@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "A hard-coded shared collaboration path makes Witness silently degrade when the runtime root moves.",
+      "disposition": "verify ASTRID_SHARED_COLLAB_DIR, default parity, and missing/malformed path resilience",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Lingering can carry high tension and fraying at the same time.",
+      "disposition": "verify exact density 0.71, pressure 0.55, dispersal 0.30 combined-language regression",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Response canonicalization must preserve a Unicode RESIDUE suffix and never create invalid UTF-8.",
+      "disposition": "verify four-byte boundary truncation and multiline Unicode residue regressions",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Byte-safe truncation does not by itself prove that every extended grapheme cluster remains visually whole.",
+      "disposition": "route a bounded offline combining-mark and joined-emoji truncation fixture review with no runtime behavior change",
+      "classification": "sandbox_routed"
+    }
+  ]
+}

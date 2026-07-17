@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Packet cadence can be clean while the carried semantic experience remains heavy or silted.",
+      "disposition": "add a typed read-only projection that keeps cadence evidence and semantic-content evidence distinct",
+      "classification": "implemented"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Semantic viscosity or residue needs a first-class metric rather than only metaphorical description.",
+      "disposition": "verify the existing semantic_viscosity, persistence_index, and stagnation_index derivations and expose them in the new distinction packet",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A high cadence clarity score must not be allowed to imply that semantic residue is absent.",
+      "disposition": "add an exact cadence-clear and residue-present regression",
+      "classification": "implemented"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Zero pairwise mode overlap can coexist with a felt unified shared pulse.",
+      "disposition": "verify that fingerprint integrity and the felt-content projection remain separate evidence domains",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "A deliberate increase in scaffold complexity could test whether felt stability and mode-collision evidence diverge.",
+      "disposition": "route a non-dispatching fixture replay; do not manipulate live semantic complexity for the diagnostic",
+      "classification": "sandbox_routed"
+    }
+  ]
+}

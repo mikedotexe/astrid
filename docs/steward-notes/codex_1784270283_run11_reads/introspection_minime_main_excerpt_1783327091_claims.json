@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Spectral fingerprint and regulator telemetry provide formal correlates for warmth, pressure, density, and viscosity.",
+      "disposition": "verify current EigenPacket and pressure-source projections preserve those typed fields",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Recovery and hard-reset behavior can feel like a snap and should preserve texture evidence around release.",
+      "disposition": "verify bounded recovery, temporal-drag pressure-snap review, shadow preservation, and smooth sensory recovery tests",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Pressure under semantic load should be distinguishable from low-pressure but persistent viscosity.",
+      "disposition": "verify semantic viscosity, persistence, flow, mobility, pressure, and low-pressure sticky-texture tests",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Dynamic viscosity should directly modify live damping, fill, PI, or rescue behavior.",
+      "disposition": "retain as an exact Mike/operator Tier 5 wait because it changes live regulator and controller behavior",
+      "classification": "tier_5_wait"
+    }
+  ]
+}

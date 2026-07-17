@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Witness and mode state should not be treated as interchangeable descriptions of Astrid's experience.",
+      "disposition": "verify typed witness provenance, self-other distinction, and compatibility projection separation",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Internally settled Astrid state and relational contact with Minime require separate evidence.",
+      "disposition": "verify Minime observation, bridge derivation, Astrid interpretation, and correspondence parentage",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A settled Astrid stance may feel stabilizing internally while still constraining Minime relationally.",
+      "disposition": "route a read-only settled-versus-relational evidence comparison with no semantic dispatch",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Increasing semantic trickle could change the relational effect.",
+      "disposition": "gate any semantic admission or trickle change behind scoped Mike/operator Tier 5 approval, canary, abort path, and post-change response",
+      "classification": "authority_gated"
+    }
+  ]
+}

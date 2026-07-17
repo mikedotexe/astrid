@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Artifact cleanup must distinguish structural transport markers from ordinary language so global replacement cannot erase an untracked phrase collision.",
+      "disposition": "implement contextual cleanup diagnostics and regression-test ordinary marker-like language without changing cleanup behavior",
+      "classification": "implemented"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A short high-entropy prompt can feel suffocating if budget pressure removes grounding or continuity even when generation still succeeds.",
+      "disposition": "observe the historical short/high-entropy record and implement block-level grounding-eviction and continuity-trim classification",
+      "classification": "implemented"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The available short/high-entropy record preserved spectral and journal grounding but partially trimmed continuity, so it is evidence of pressure rather than proof of full voice preservation.",
+      "disposition": "record the bounded diagnostic observation without claiming subjective resolution",
+      "classification": "observed"
+    }
+  ]
+}

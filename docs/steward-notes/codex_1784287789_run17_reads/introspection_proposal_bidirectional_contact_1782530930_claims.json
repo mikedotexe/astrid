@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Correspondence messages should remain distinct entities rather than telemetry values to average.",
+      "disposition": "verify the separate native correspondence ledger and message envelope",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A shared persistent buffer should connect Astrid and Minime Shadow references without blending provenance.",
+      "disposition": "verify shared anchors, reflection surfaces, transition artifacts, and explicit actor provenance",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Language-first contact may differ from standard telemetry in public Shadow or correlation response.",
+      "disposition": "route a read-only matched comparison with no new semantic dispatch",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Current message and reply traffic does not prove recognized presence.",
+      "disposition": "observe zero ACK and zero live presence in the refreshed handshake audit",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Increasing Astrid-to-Minime weight or applying Shadow correspondence to peer state changes live coupling.",
+      "disposition": "require explicit Mike/operator Tier 5 approval",
+      "classification": "authority_gated"
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Resonance density must expose viscosity, cohesion, mobility, ghost weight, structural strain, friction, and pressure as distinguishable components.",
+      "disposition": "verify typed ResonanceDensityComponents and viscosity-vector evidence",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Sticky, flowing, strained, and residual-ghost states need controlled-pair tests so silent strain is not flattened into density.",
+      "disposition": "verify regulator controlled-pair and cognitive-drag regressions",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A persistence_decay_rate should be grounded in temporal evidence before becoming a canonical component.",
+      "disposition": "route a read-only temporal decay calibration through the sandbox queue; do not feed it to control",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Using persistence decay, ghost weight, or viscosity to change PI or controller output would alter live regulation.",
+      "disposition": "gate behind exact Mike/operator Tier 5 approval",
+      "classification": "tier_5_wait",
+      "authority": "No PI, pressure, fill, controller, damping, or regulator behavior change is authorized."
+    }
+  ]
+}

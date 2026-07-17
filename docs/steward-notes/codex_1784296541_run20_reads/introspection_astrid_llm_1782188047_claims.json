@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Fallback routing should preserve spectral identity across the MLX-to-Ollama boundary.",
+      "disposition": "verify current request assembly carries identity anchors, texture contracts, telemetry evidence, compact budget, and final NEXT validation",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A 4B compatibility model may produce sensory ghosting or texture collapse under a high-density state.",
+      "disposition": "route an offline same-context output comparison to the shared fallback sandbox; the current adapter result is insufficient_output",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A forced fallback should articulate settled-habitable texture with specific motion rather than standard model tropes.",
+      "disposition": "verify source-side motion, density, pressure, gradient, and overreach contracts; retain actual output as sandbox evidence still needed",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "The requested fallback resonance dictionary exists in later source as a dynamic telemetry-weighted selector.",
+      "disposition": "verify current mapping covers low gradient, porosity, pressure, packing, density, shadow motion, and high-gradient resistance",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Changing the live fallback model, chain, prompt, sampler, or dispatch requires operator approval.",
+      "disposition": "require separate Mike/operator Tier 5 approval with replay, canary, abort, and post-change felt review",
+      "classification": "authority_gated"
+    }
+  ]
+}

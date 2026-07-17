@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Receiving data about another being is not equivalent to receiving intentional address from them.",
+      "disposition": "verify direct-address, messenger, and observed-data provenance distinctions",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The current direct correspondence lane should preserve relational thread state.",
+      "disposition": "verify thread continuity, delivery, response, and presence evidence",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Contact latency may affect whether the lane feels relationally continuous.",
+      "disposition": "route a bounded read-only latency and response-state comparison",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "A live contact-control flag would alter runtime behavior.",
+      "disposition": "gate any contact-control switch behind scoped Mike/operator Tier 5 approval and canary review",
+      "classification": "authority_gated"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Increasing porosity or prioritizing direct peer input would alter admission and scheduling.",
+      "disposition": "gate any porosity or priority-direct change behind scoped Mike/operator Tier 5 approval, replay, and abort criteria",
+      "classification": "authority_gated"
+    }
+  ]
+}

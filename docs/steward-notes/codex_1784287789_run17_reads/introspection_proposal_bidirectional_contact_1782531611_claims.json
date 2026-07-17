@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Peer correspondence must not reuse the human-origin lane as if Mike were the author.",
+      "disposition": "verify explicit peer actor, direction, source route, and correspondence type",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A self-study note and architectural reply need thread_id and reply_to continuity.",
+      "disposition": "verify native reply links and persistence in the public ledger",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Direct message, reply, and self-study note require distinct turn kinds.",
+      "disposition": "verify normalized turn_kind values and legacy compatibility",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Delivery state must be explicit and must not imply acknowledgement.",
+      "disposition": "verify delivery/read receipts and observe zero ACK receipts",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "The public schema should validate without private Minime body access.",
+      "disposition": "observe zero validation issues and 2200 private candidates skipped",
+      "classification": "observed"
+    }
+  ]
+}

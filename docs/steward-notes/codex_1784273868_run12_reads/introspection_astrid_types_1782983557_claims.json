@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Density and movement texture need typed components rather than a single flattened status string.",
+      "disposition": "verify canonical protocol DTOs and typed resonance texture components",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Pressure source and pressure risk should remain independently visible.",
+      "disposition": "verify PressureSourceV1, risk fields, and compatibility projection tests",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Temporal variance belongs to bridge-derived evidence, not producer-owned telemetry truth.",
+      "disposition": "verify BridgeTextureEvidenceV1 and provenance parent ownership",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Legacy consumers still need stable combined telemetry while migration proceeds.",
+      "disposition": "verify SpectralTelemetry is built only as the explicit compatibility projection with parity fixtures",
+      "classification": "verified_existing"
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Witness should skip a malformed newest chamber state and retain the newest valid state.",
+      "disposition": "verify resilient newest-valid selection and malformed-count tests",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Weather fallback needs to distinguish missing keys from malformed nested shapes.",
+      "disposition": "verify missing_key and schema_drift diagnostics carry exact field paths",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The selected weather source should remain inspectable.",
+      "disposition": "verify room_weather.weather, room_weather.label, and relational_inertia.current.weather source labels",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Parsed relational metrics must not silently become reservoir-control inputs.",
+      "disposition": "verify they remain Witness interpretation context with diagnostic-only authority and no control dispatch path",
+      "classification": "verified_existing"
+    }
+  ]
+}

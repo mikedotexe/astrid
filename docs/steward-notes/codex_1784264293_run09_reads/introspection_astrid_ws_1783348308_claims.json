@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Port 7878 telemetry should be decoded once and producer observation must remain immutable.",
+      "disposition": "verify telemetry-port one-pass decode, wire receipt, field presence, provenance, and compatibility projection tests",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Temporal pressure history must be bounded and smoothing must remain visible.",
+      "disposition": "verify dynamic window capacity and pop-front bound in bridge evidence tests",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Reciprocity should distinguish one-sided, waiting, stale, bidirectional, and clock-skewed states.",
+      "disposition": "verify bridge_reciprocity_v1 and entropy reciprocity review boundary tests",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Absent dynamic damping evidence must be reported as unknown rather than inferred.",
+      "disposition": "verify texture-integrity damping candidate status and advisory observability",
+      "classification": "verified_existing"
+    }
+  ]
+}

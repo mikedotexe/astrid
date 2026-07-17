@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The truncated introspection window did not show whether dynamic-epoch projection completed its dot-product loop.",
+      "disposition": "verify the complete current projection loop and distinguish source-window truncation from implementation truncation",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Dynamic-epoch projection must be deterministic for identical embedding, text, epoch, and chunk inputs.",
+      "disposition": "verify repeated bit-exact outputs, cross-epoch divergence, and captured fingerprints",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The entropy-gated vibrancy smoothstep must begin with no discontinuous pop or nonzero boundary slope.",
+      "disposition": "verify exact gate, below/above pairs, near-slope, and monotonic smoothstep regressions",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Projection fingerprints must deterministically capture projected-value variation and canonical float edge cases.",
+      "disposition": "verify fingerprint, kernel checksum, canonical float, and repeated-epoch integrity tests",
+      "classification": "verified_existing"
+    }
+  ]
+}

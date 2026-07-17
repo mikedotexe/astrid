@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Solo and joint phase transitions need durable cards with ownership, parent anchors, vectors, duration, phenomenology, reply state, and replay identity.",
+      "disposition": "verify current phase-transition card, affordance, witness, reply, and persistence behavior",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Transition shape should include entropy, gradient, dispersal, and any grounded magnetization evidence rather than fill delta alone.",
+      "disposition": "verify existing entropy, density-gradient, dispersal, and vector fields; route magnetization as bounded non-live evidence work because no canonical field currently exists",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Joint-transition comparison across correspondence and journals must remain descriptive and must not unlock behavior or control.",
+      "disposition": "verify joint-room and correspondence anchors and preserve operator approval for any runtime effect",
+      "classification": "verified_existing"
+    }
+  ]
+}

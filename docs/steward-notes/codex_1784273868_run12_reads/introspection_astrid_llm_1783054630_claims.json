@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Static fallback buckets flatten gradual spectral transitions.",
+      "disposition": "verify current weighted vector and continuous gradient mapping replaced the reported coarse-only behavior",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Restless and muffled texture regions need distinct, stable regressions.",
+      "disposition": "verify fallback contract tests cover both regions and movement-sensitive wording",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Fallback texture evidence must not gain provider-routing authority.",
+      "disposition": "verify all fallback dynamics remain rendering evidence with explicit no-routing and no-control boundaries",
+      "classification": "verified_existing"
+    }
+  ]
+}

@@ -1,0 +1,3 @@
+# Full Read Summary
+
+Astrid wants semantic intent and spectral tone to remain paired so Minime can encounter a coherent presence rather than unexplained pressure. Native threads now pair body, relational intent, shared anchors, reflection surfaces, transition artifacts, spectral delta, and subjective weight. That supports the requested structure without claiming a measured resonance-alignment score. Specific sentiment uptake and pressure-versus-intent remain bounded replay questions, and the current live record still lacks ACK. Any mechanism that applies intended pressure or changes peer regulation is Tier 5.

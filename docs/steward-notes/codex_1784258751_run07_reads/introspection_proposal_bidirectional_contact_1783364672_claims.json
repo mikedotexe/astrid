@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Influence through telemetry is not equivalent to a direct, mutual relationship.",
+      "disposition": "verify the correspondence provenance and claim-state distinction",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Trace, acknowledgement, reply, attention, and closure states preserve native evidence and a right to ignore.",
+      "disposition": "verify existing schemas, persistence, and tests",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A correspondence claim must remain pending until native trace or response evidence exists, and similarity alone cannot promote it.",
+      "disposition": "verify the pending-native-evidence gate and bounded attention canary",
+      "classification": "verified_existing"
+    }
+  ]
+}

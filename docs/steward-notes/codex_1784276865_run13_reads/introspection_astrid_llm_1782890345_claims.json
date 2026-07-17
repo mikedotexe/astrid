@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Primary and fallback lanes have materially different model capacity and must retain provider provenance.",
+      "disposition": "verify provider/profile identity, fallback-capacity evidence, and source rendering",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Texture consistency and lattice movement under fallback need output evidence, not only prompt construction evidence.",
+      "disposition": "route a bounded offline captured-prompt comparison across primary and fallback outputs",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Entropy, pressure, gradient, and shadow movement should alter fallback term weights continuously.",
+      "disposition": "verify current probability distribution, movement, shadow, and gradient tests",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Changing provider choice or fallback model is a live dialogue behavior change.",
+      "disposition": "retain as Tier 5 Mike/operator approval work with canary, abort, readiness, and felt-response evidence",
+      "classification": "authority_gated"
+    }
+  ]
+}

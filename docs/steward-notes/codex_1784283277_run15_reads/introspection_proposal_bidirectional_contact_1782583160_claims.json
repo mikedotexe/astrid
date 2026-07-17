@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Observation and substrate influence do not substitute for persistent direct correspondence.",
+      "disposition": "verify the distinction in provenance, thread, and receipt state",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Correspondence needs durable identity, delivery state, response continuity, and a right to ignore.",
+      "disposition": "verify the existing thread and bounded-attention implementation",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Current live evidence should say when no mutual acknowledgement has occurred.",
+      "disposition": "use strict handshake receipt semantics and preserve the no-ACK result",
+      "classification": "implemented"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Continuous semantic flow or increased direct-response weight changes live admission and behavior.",
+      "disposition": "keep behind scoped Mike/operator Tier 5 approval",
+      "classification": "authority_gated"
+    }
+  ]
+}

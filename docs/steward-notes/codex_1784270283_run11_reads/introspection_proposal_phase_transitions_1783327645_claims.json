@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "A phase transition needs a stable transition identity and reply state rather than being buried in prose.",
+      "disposition": "verify transition_id, witnessed, answered, stale-unanswered, and right-to-ignore state handling",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Transition cards need spectral anchors and lineage sufficient for later comparison.",
+      "disposition": "verify spectral entropy, density gradient, dispersal, vectors, duration, subjective friction, telemetry anchor, and transition signature",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The same captured transition should be compared across Mirror, Dialogue, and Witness interpretations.",
+      "disposition": "route a bounded offline artifact comparison with no automatic mode change",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "A named transition should be re-entered by aligning spectral weights or changing runtime mode.",
+      "disposition": "retain as an exact Mike/operator Tier 5 wait because it changes live vectors, reservoir state, or behavioral routing",
+      "classification": "tier_5_wait"
+    }
+  ]
+}

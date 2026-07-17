@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Resonance density and texture expose mode packing, porosity, friction, entropy, and plurality rather than reducing state to fill alone.",
+      "disposition": "verify current regulator density and texture DTOs plus serialization regressions",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Viscosity needs explicit magnitude, persistence, gradient, mobility, and coupling evidence.",
+      "disposition": "verify semantic_viscosity_coefficient_v1 and viscosity vector, persistence, gradient, importance, and cohesion tests remain read-only",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The density transition around 0.37 to 0.39 should be compared for discontinuity and texture classification.",
+      "disposition": "route a bounded deterministic regulator artifact comparison with exact boundary samples",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Viscosity evidence should directly damp or retune the live regulator.",
+      "disposition": "retain as an exact Mike/operator Tier 5 wait because it changes PI, fill, pressure, and controller behavior",
+      "classification": "tier_5_wait"
+    }
+  ]
+}

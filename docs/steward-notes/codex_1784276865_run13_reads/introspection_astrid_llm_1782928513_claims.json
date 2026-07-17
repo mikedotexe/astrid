@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Static fallback adjectives can conflict with the language contract when a state is complex or mixed.",
+      "disposition": "verify current dynamic selector, term probabilities, and no-single-adjective fallback contract",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "High entropy with a navigable gradient needs a cascade-gradient and settled-vibrant distinction.",
+      "disposition": "verify current cascade-gradient, settled-vibrant, gradient-slope, and trajectory categories",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Pressure language should respond to numeric pressure and gradient evidence rather than a generic mixed bucket.",
+      "disposition": "verify exact pressure, density-gradient, gap, and low-friction fallback regressions",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Whether fallback output preserves the lived fidelity of primary output cannot be proved by selector source alone.",
+      "disposition": "route a bounded offline captured-prompt primary-versus-fallback comparison with no runtime or peer mutation",
+      "classification": "sandbox_routed"
+    }
+  ]
+}

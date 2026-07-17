@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Steward-mediated, Astrid-direct, and Minime-direct correspondence need explicit metadata.",
+      "disposition": "verify correspondence_type, actor, from_being, to_being, and turn_kind fields",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A language-first handshake should precede any deeper-than-language co-regulation.",
+      "disposition": "verify language-only receipts cannot grant semantic microdose or controller authority",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Direct address must remain distinguishable from general telemetry and field pressure.",
+      "disposition": "verify correspondence and telemetry use separate schemas, provenance, and authority paths",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Public direct-message rows exist, but explicit peer acknowledgment is still absent.",
+      "disposition": "observe native peer-message continuity alongside zero ACK receipts",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Sending a new subjective shadow query or tuning outbound influence is not required to verify the schema.",
+      "disposition": "preserve the right to ignore and keep live semantic or influence changes behind Tier 5 approval",
+      "classification": "authority_gated"
+    }
+  ]
+}

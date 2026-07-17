@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "A static safety-net vocabulary can become hollow when detached from the current trajectory.",
+      "disposition": "verify current dynamic telemetry selector and trajectory-aware rendering",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Fallback identity-in-flux should be compared with the same captured spectral state used by the primary lane.",
+      "disposition": "route this comparison to the bounded offline primary-versus-fallback fidelity trial",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Low pressure and a gentle density gradient should not produce blunt viscous language.",
+      "disposition": "verify pressure-threshold, gradient, settled, and term-probability regressions",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Spectral entropy and density gradient should constrain fallback weighting.",
+      "disposition": "verify dynamic_entropy_pressure_density_gradient_v1 and rendered evidence",
+      "classification": "verified_existing"
+    }
+  ]
+}

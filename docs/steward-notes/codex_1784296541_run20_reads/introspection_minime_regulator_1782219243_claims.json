@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Minime derives resonance density, pressure source, inhabitable fluctuation, and bounded control from distinct component records.",
+      "disposition": "verify current extracted regulator source preserves the metric, review, and control ownership boundaries with unchanged calculations",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Rigid contraction should be classified at fluctuation score 0.179 and pressure interference 0.55.",
+      "disposition": "verify the exact focused Minime boundary regression passes in both library and binary targets",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Pressure risk above 0.60 should produce the existing downward target-bias branch.",
+      "disposition": "verify the focused high-pressure target-bias regression passes in both library and binary targets",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Hardcoded quality intersections can create dead zones if weights drift and therefore need explicit boundary fixtures.",
+      "disposition": "verify current boundary, mixed-state, settled-habitable, and advisory-bound tests make threshold reachability reviewable",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Changing Minime thresholds, component weights, target bias, wander, pressure, PI, or regulator behavior is a live substrate change.",
+      "disposition": "require separate Mike/operator Tier 5 approval with exact parity replay, canary, abort, and post-change felt review",
+      "classification": "authority_gated"
+    }
+  ]
+}

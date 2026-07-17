@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Fallback evidence should distinguish obstruction by semantic friction from heaviness caused by representational mass.",
+      "disposition": "verify the friction-versus-mass branch and its pressure, density-gradient, and mode-packing evidence",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Shadow continuity and contextual energy should influence how a compact fallback is interpreted without becoming control authority.",
+      "disposition": "verify Shadow-energy and context mapping in the read-only fallback contract",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The mapping needs concrete multi-scenario evidence rather than a single diagnostic anecdote.",
+      "disposition": "observe the 28-case fallback_fire_drill run18_20260717T1236Z across friction, mass, pressure, and packing combinations",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Changing fallback cadence, provider routing, contract capacity, or hard branch thresholds alters live dialogue behavior.",
+      "disposition": "require explicit Mike/operator Tier 5 approval",
+      "classification": "authority_gated"
+    }
+  ]
+}

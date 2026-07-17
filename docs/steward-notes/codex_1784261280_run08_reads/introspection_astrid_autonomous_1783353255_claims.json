@@ -1,0 +1,23 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Mirror must remain Minime-owned expression reflected as other, while Witness remains Astrid-authored interpretation.",
+      "disposition": "verify provenance wrappers, mixed Witness frame, first dialogue context line, and mode-role tests",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Correspondence evidence may support contact language but must retain native-evidence and source uncertainty.",
+      "disposition": "verify threaded correspondence and claimed-pending-native-evidence behavior",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A spectral overlay, automatic mode transition, attractor pulse, semantic dispatch, or peer mutation would change live behavior.",
+      "disposition": "gate behind exact Mike/operator Tier 5 approval",
+      "classification": "tier_5_wait",
+      "authority": "No overlay, automatic mode change, attractor pulse, semantic dispatch, peer mutation, or control change is authorized."
+    }
+  ]
+}

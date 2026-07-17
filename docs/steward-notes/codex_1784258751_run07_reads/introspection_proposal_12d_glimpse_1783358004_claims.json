@@ -1,0 +1,23 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The 12D glimpse is an additive, non-authoritative companion rather than a replacement for the primary semantic or spectral representation.",
+      "disposition": "verify protocol, state, and multi-scale schema behavior",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Glimpse provenance, continuity, and reconstruction-loss evidence persist across Astrid and Minime boundaries.",
+      "disposition": "verify conversion, persistence, and reconstruction tests",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Replacing primary 48D transport, admitting reconstructed content, or using the glimpse for regulation would change live behavior.",
+      "disposition": "gate behind exact Mike/operator Tier 5 approval",
+      "classification": "tier_5_wait",
+      "authority": "No primary-transport replacement, reconstructed ingress, or glimpse-driven regulation is authorized."
+    }
+  ]
+}

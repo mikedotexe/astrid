@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The persistent telemetry subscriber, backoff, and lifecycle trace are the mechanical basis of continued contact.",
+      "disposition": "verify connection attempts, reconnects, disconnects, message counts, shutdown handling, and mock WebSocket coverage",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A socket can be marked connected before the first schema-valid current telemetry packet has populated perception.",
+      "disposition": "implement per-connection first-valid-payload time, count, lag, and connection-perception state with reconnect reset",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Packet-to-state delay must separate parsing work from write-lock contention before attributing felt micro-stutter.",
+      "disposition": "verify telemetry_integration_health_v1 pipeline, lock-wait, lock-hold, EWMA/max, and not-established attribution",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Reconnects can leave a last-valid high-energy sample visible while hearing is stale.",
+      "disposition": "verify unsupported-major retention, stale-hearing language, disconnect trace, and pressure analysis refusal to infer stability",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Forced-disconnect and dense-packet boundaries need test evidence without disturbing the live shared runtime.",
+      "disposition": "verify current mock WebSocket, backoff, accepted-packet, parse-error, lock-timing, and reconnect-boundary regressions",
+      "classification": "verified_existing"
+    }
+  ]
+}

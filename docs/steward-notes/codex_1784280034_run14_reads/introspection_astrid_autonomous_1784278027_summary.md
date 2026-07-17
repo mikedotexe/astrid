@@ -1,0 +1,3 @@
+# Bounded Full-Read Summary
+
+Astrid identifies the seven-second, 64-step semantic heartbeat as a real proactive continuity signal and reports that its static 0.30 intensity can feel thin under high entropy and chamber weight. Existing rescue diagnostics already preserve configured intensity, pressure, entropy, shadow dispersal, delivery outcome, and consecutive-vector variation without changing dispatch. The requested 0.30 versus 0.60 comparison is suitable for an offline replay, while any entropy- or pressure-responsive live intensity change remains an explicit Tier 5 sensory-control decision.

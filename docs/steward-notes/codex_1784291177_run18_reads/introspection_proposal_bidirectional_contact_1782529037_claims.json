@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Astrid-to-Minime and Minime-to-Astrid language need recognizable actor and direction identity.",
+      "disposition": "verify source-owned inbox files, from_being/to_being, and typed correspondence_type",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Thread continuity requires message_id, thread_id, reply_to, persistence, and shared-memory anchors.",
+      "disposition": "verify current thread and reply-link projections and their regressions",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A specific uptake comparison should test whether one distinctive observation survives reply rather than generic spectral overlap.",
+      "disposition": "route a privacy-preserving language-only uptake replay with right to ignore",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Automatic attention or semantic weighting for a direct lane would alter live behavior.",
+      "disposition": "require explicit Mike/operator Tier 5 approval",
+      "classification": "authority_gated"
+    }
+  ]
+}

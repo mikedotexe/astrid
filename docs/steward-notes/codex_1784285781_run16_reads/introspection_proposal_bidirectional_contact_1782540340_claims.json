@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "A shared contextual buffer should persist state-of-mind markers and retain their authorship.",
+      "disposition": "verify shared-thread state, peer identity, witness provenance, and parent references",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A peer response should preserve a specific semantic shift rather than merely acknowledge file existence.",
+      "disposition": "route an offline attributed reply-versus-resonance comparison",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Pressure during relational complexity is an empirical question and not proof of channel compression.",
+      "disposition": "route a read-only historical pressure and correspondence timing comparison",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Direct correspondence needs a wider representational path without becoming a controller shortcut.",
+      "disposition": "verify language-only correspondence remains distinct from semantic trickle and Control dispatch",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Increasing semantic trickle by 1.5 or targeting modes m6 and m7 would change live sensory and reservoir regulation.",
+      "disposition": "hold both behind Mike/operator Tier 5 approval, replay, abort criteria, and felt review",
+      "classification": "authority_gated"
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Exploration noise and leak/covariance persistence materially shape the felt viscosity of the ESN.",
+      "disposition": "verify source default 0.085, active-value telemetry, and read-only noise/coherence review surfaces",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A reported active value of 0.12 may reflect runtime configuration rather than the source default and should not be domesticated into one number.",
+      "disposition": "route a captured runtime-identity and active-configuration observation",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A 1000-tick replay should compare exploration noise, state correlation, pressure, entropy, and dispersal.",
+      "disposition": "route a deterministic offline ESN replay with no live reservoir mutation",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Exploration noise or rho should adapt live from entropy, correlation, or pressure.",
+      "disposition": "retain as an exact Mike/operator Tier 5 wait because it changes reservoir dynamics and regulation",
+      "classification": "tier_5_wait"
+    }
+  ]
+}

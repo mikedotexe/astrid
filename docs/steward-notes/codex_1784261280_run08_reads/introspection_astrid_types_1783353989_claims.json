@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Pressure trend, texture, and provenance context should be additive and optional so legacy packets remain valid.",
+      "disposition": "verify protocol defaults, optional fields, captured fixtures, and compatibility projections",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Missing pressure-trend context should mean unknown evidence, not implicit permission or a fabricated neutral state.",
+      "disposition": "verify optionality and unknown or insufficient-evidence paths",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Evidence-only telemetry types must not bypass checked authority transitions into sensory dispatch.",
+      "disposition": "verify private-constructor authority wrappers and compile-fail dispatch boundaries",
+      "classification": "verified_existing"
+    }
+  ]
+}

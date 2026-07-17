@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "A retained telemetry sample must remain distinguishable from fresh reciprocal contact.",
+      "disposition": "verify wire receipt, freshness, health, reconnect, and last-valid-sample semantics",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Pressure smoothing should preserve fast release, spikes, spectral drift, semantic thinning, and viscosity velocity inside a bounded history.",
+      "disposition": "verify dynamic window, pressure-scar, high-frequency, and motion-sensitive regressions",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Unsupported telemetry majors should retain the last valid observation while surfacing incompatibility rather than dispatching blended data.",
+      "disposition": "verify unsupported-major retention and mismatch tests",
+      "classification": "verified_existing"
+    }
+  ]
+}

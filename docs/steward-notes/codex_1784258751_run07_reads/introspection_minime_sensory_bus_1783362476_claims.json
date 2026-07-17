@@ -1,0 +1,23 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Semantic persistence remains fill-dependent and actual message age attenuates retained semantic input.",
+      "disposition": "verify current source behavior despite superseded constant names",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Recovery hold hands over continuously to shaped decay and cannot exceed the configured high-fill multiplier cap.",
+      "disposition": "verify boundary, epsilon, monotonicity, and cap tests",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Changing semantic retention, decay shape, recovery cadence, or shadow strength would change live sensory behavior.",
+      "disposition": "gate behind exact Mike/operator Tier 5 approval",
+      "classification": "tier_5_wait",
+      "authority": "No semantic retention, decay, cadence, or shadow-strength change is authorized."
+    }
+  ]
+}

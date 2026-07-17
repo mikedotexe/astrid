@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Mirror must remain Minime-owned expression reflected as other rather than Astrid-authored agreement.",
+      "disposition": "verify witness_mode_role_v1 and provenance-separated context",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Peer-language feedback can create a hall-of-mirrors risk that should be named.",
+      "disposition": "verify mirror_resonance_drift_guard_v1 and its elevated-echo regression",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Relational friction needs temporal persistence without letting persistence overwrite source classification.",
+      "disposition": "verify fleeting and sedimented persistence tests",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "The self/other and Mirror drift surfaces must not alter routing, ranking, dispatch, gain, or control.",
+      "disposition": "verify their explicit read-only authority and post-selection placement",
+      "classification": "verified_existing"
+    }
+  ]
+}

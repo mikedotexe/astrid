@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Narrative shape needs more than a single average to preserve pivots and trajectory.",
+      "disposition": "verify the current four-segment narrative arc and its production projection tests",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A late sharp pivot can be understated by equal-half averaging.",
+      "disposition": "observe the temporal_decay_candidate in the fresh narrative arc replay",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Entropy-only tail lift cannot distinguish low-content shimmer from dense meaningful texture.",
+      "disposition": "observe the fresh content-blind lift risk and matched density contrast",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Temporal-decay arc math or content-aware live vibrancy changes codec vectors and gain.",
+      "disposition": "require explicit Mike/operator Tier 5 approval after broader replay and abort design",
+      "classification": "authority_gated"
+    }
+  ]
+}

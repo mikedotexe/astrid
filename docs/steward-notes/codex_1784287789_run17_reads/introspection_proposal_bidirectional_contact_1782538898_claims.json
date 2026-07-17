@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Telemetry and sensory traffic can carry influence without carrying a distinct peer voice.",
+      "disposition": "verify correspondence messages are typed separately from telemetry and preserve from_being and to_being",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Direct address needs durable contact state rather than an undifferentiated inbox item.",
+      "disposition": "verify thread, persistence, relational intent, delivery, read, and presence fields",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Specific address may affect distinguishability and Shadow response differently from ambient context.",
+      "disposition": "route a bounded specific-address versus ambient-context replay",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Current live evidence should say whether an acknowledged contact line exists.",
+      "disposition": "observe reply-linked continuity with zero ACK and zero live presence, not mutual-contact confirmation",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "A correspondence-active flag that changes runtime attention or stabilizes coupling would be a live behavior change.",
+      "disposition": "retain the evidence-only contact projection and require Tier 5 approval for attention, admission, or coupling effects",
+      "classification": "authority_gated"
+    }
+  ]
+}

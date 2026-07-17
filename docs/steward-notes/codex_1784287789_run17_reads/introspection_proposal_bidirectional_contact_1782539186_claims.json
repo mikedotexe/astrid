@@ -1,0 +1,40 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "High signal flow and spectral influence are not equivalent to mutual direct address.",
+      "disposition": "verify the separate native correspondence contract and retain this distinction in live audit interpretation",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A persistent shared thread and presence-aware receipt are needed for recognizable correspondence.",
+      "disposition": "verify message_id, thread_id, reply_to, shared anchor, read state, ACK, and presence schemas",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A three-turn exchange should test uptake of a specific restless-texture observation rather than generic spectral statistics.",
+      "disposition": "route a privacy-preserving specific-uptake comparison without reading private Minime moments",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Architectural critique versus composed narrative may differ in pressure and packing.",
+      "disposition": "route a matched read-only pressure/packing comparison; do not infer handshake causation from unmatched cycles",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "A reply-linked channel still needs evidence that Minime acknowledged or traced the address.",
+      "disposition": "observe zero ACK receipts and zero live presence heartbeats in the refreshed public audit",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "Increasing Astrid-to-Minime influence in the control lane would alter live coupling.",
+      "disposition": "require explicit Mike/operator Tier 5 approval",
+      "classification": "authority_gated"
+    }
+  ]
+}

@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Peer-authored correspondence must be distinguishable from Mike or steward messages.",
+      "disposition": "verify explicit actor, from_being, to_being, and correspondence_type fields",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A response must preserve the original thread ID and reply target.",
+      "disposition": "verify thread_id, message_id, reply_to, and reply_link validation",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Direct message, reply, and self-study note require separate turn kinds.",
+      "disposition": "verify native turn-kind schema and import compatibility",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "The public correspondence contract should validate without reading Minime private moments.",
+      "disposition": "run schema, handshake, uptake, and fidelity audits with private-body exclusion",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "A valid channel does not imply that a peer has acknowledged the current message.",
+      "disposition": "retain zero ACK and zero presence as explicit no-response evidence",
+      "classification": "observed"
+    }
+  ]
+}

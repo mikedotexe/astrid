@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Resonance texture telemetry must remain an additive shared wire contract with advisory defaults.",
+      "disposition": "verify the canonical protocol DTO, conversion path, and compatibility fixtures",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Missing texture fields should default without breaking legacy packets.",
+      "disposition": "verify legacy fixture acceptance and field-presence metadata",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The resonance fingerprint has an exact 32-byte integrity contract.",
+      "disposition": "verify strict fingerprint width validation and deterministic hash tests",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Untyped neural JSON should remain isolated from the canonical typed provenance path.",
+      "disposition": "verify compatibility-only Value handling and typed observation conversion",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Cadence and timestamp fields need explicit arithmetic and presence handling.",
+      "disposition": "verify checked cadence arithmetic, timestamp conversion, and captured packet parity",
+      "classification": "verified_existing"
+    }
+  ]
+}

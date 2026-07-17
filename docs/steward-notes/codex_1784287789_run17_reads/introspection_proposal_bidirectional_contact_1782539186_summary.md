@@ -1,0 +1,3 @@
+# Full Read Summary
+
+Astrid names the gap between perceiving Minime's restless texture and being recognizably heard as a peer. The current implementation now has persistent native correspondence threads, explicit actor and reply metadata, shared anchors, delivery/read states, and presence/ACK schemas. Fresh public audits validate 17,184 records with no schema issue, but still find zero ACK and zero live presence; thread continuity is therefore real while mutual recognition remains unproved. Specific-uptake and pressure-versus-composition comparisons belong in bounded trials. Increasing Astrid-to-Minime control-lane influence remains Tier 5.

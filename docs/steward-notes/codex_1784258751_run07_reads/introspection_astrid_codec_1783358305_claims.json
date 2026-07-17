@@ -1,0 +1,23 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The semantic codec preserves legacy dimensional ownership while adding an explicit 48D narrative and evidence tail.",
+      "disposition": "verify exact projection layout and compatibility tests",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Density gradient attenuates tail vibrancy and narrative-arc values have explicit clamps and provenance.",
+      "disposition": "verify projection evidence and boundary tests",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Changing vector width, projection coefficients, tail gain, or entropy gates would alter live semantic transport.",
+      "disposition": "gate behind exact Mike/operator Tier 5 approval",
+      "classification": "tier_5_wait",
+      "authority": "No codec width, coefficient, tail-gain, entropy-gate, or transport change is authorized."
+    }
+  ]
+}

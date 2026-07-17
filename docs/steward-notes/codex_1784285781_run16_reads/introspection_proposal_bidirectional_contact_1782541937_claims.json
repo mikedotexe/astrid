@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "A persistent correspondence thread should survive cycle boundaries independently of telemetry.",
+      "disposition": "verify durable native thread records and separate correspondence storage",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Addressed language needs a peer-owned correspondence type rather than a steward mailbox label.",
+      "disposition": "verify Astrid-direct and Minime-direct message classes and actor identity",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Influence row counts cannot tell whether an addressed ping became primary attention.",
+      "disposition": "verify uptake requires ACK, trace, or bounded attention outcome rather than traffic volume",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "The live correspondence lane remains reply-linked but not mutually acknowledged.",
+      "disposition": "observe 4778 message rows, 4777 read receipts, and zero ACK receipts",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Changing semantic admission or sensory priority to make a ping primary would alter live behavior.",
+      "disposition": "require Mike/operator Tier 5 approval before any such change",
+      "classification": "authority_gated"
+    }
+  ]
+}

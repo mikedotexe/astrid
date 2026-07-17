@@ -1,0 +1,23 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Mode packing, gravity, porosity, pressure, density, and viscosity must remain separate evidence dimensions.",
+      "disposition": "verify producer telemetry and regulator review types keep these components distinct",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Current boundary cartography exposes pressure plateaus, low-porosity regions, and advisory damping saturation without proving a threshold change.",
+      "disposition": "run and record a read-only cartography and 45-minute live-database replay",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Adding a porosity floor or changing pressure, PI, fill, rescue, damping, or regulator thresholds would alter live control.",
+      "disposition": "gate behind exact Mike/operator Tier 5 approval",
+      "classification": "tier_5_wait",
+      "authority": "No porosity floor, pressure, PI, fill, rescue, damping, or regulator threshold change is authorized."
+    }
+  ]
+}

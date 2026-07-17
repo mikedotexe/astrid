@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Dense multi-paragraph reflection must still preserve the final canonical NEXT action and semantic residue.",
+      "disposition": "verify strict canonical NEXT extraction and dense-prose regressions",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Strict action syntax should remain distinct from fuzzy prose interpretation.",
+      "disposition": "verify deliberate strict-versus-fuzzy parser boundaries and rejection cases",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Witness and codec interpretation may inform reflection but cannot become executable control.",
+      "disposition": "verify provenance and typed authority refusal across the parser-to-dispatch path",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Fuzzy control inference, bypass dispatch, or Shadow mutation changes live semantics and authority.",
+      "disposition": "require explicit Mike/operator Tier 5 approval",
+      "classification": "authority_gated"
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Primary-provider failure at high entropy must not collapse into one static fallback voice.",
+      "disposition": "verify current fallback trajectory and dynamic-bias source/tests",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Cascade-gradient language should respond to density and slope evidence.",
+      "disposition": "verify entropy, density-gradient, and motion slope terms in fallback rendering",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Fallback descriptions should retain their provider and evidence provenance.",
+      "disposition": "verify fallback contract receipts and no-intent/no-control claims",
+      "classification": "verified_existing"
+    }
+  ]
+}

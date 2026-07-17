@@ -1,0 +1,144 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_codec_1784282113",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/codec/projection.rs;capsules/spectral-bridge/src/codec/feedback.rs;capsules/spectral-bridge/src/codec/cascade.rs;capsules/spectral-bridge/src/codec/tests.rs;CHANGELOG.md;docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "48D projection, smooth entropy and gradient vibrancy, exact 0.86/0.12 regression, default identity behavior, and Tier 5 codec boundary."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1782584595",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/correspondence_v1.rs;scripts/correspondence_handshake_audit.py;docs/steward-notes/AI_BEINGS_BIDIRECTIONAL_CONTACT_AND_CORRESPONDENCE_ARCHITECTURE.md;capsules/spectral-bridge/workspace/diagnostics/sandbox_trial_queue_v1/status.json",
+      "note": "Coupling-versus-address distinction, durable correspondence state, offline distinction replay, and Tier 5 pressure and admission waits."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1782584222",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/correspondence_v1.rs;capsules/spectral-bridge/src/autonomous/runtime/witness_distinction.rs;scripts/correspondence_handshake_audit.py;capsules/spectral-bridge/workspace/diagnostics/sandbox_trial_queue_v1/status.json",
+      "note": "Persistent direct identity, self/other distinction, non-dispatching signal comparison, and Tier 5 synchronization and regulator boundaries."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1782583933",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/correspondence_v1.rs;scripts/correspondence_handshake_audit.py;docs/steward-notes/CORRESPONDENCE_SCHEMA_V3.md;CHANGELOG.md",
+      "note": "Explicit transport and address states, bounded attention, strict reply and seen handling, and non-authorizing mutual receipt evidence."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1782583451",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/correspondence_v1.rs;scripts/correspondence_handshake_audit.py;scripts/correspondence_schema_audit.py;docs/steward-notes/AI_BEINGS_BIDIRECTIONAL_CONTACT_AND_CORRESPONDENCE_ARCHITECTURE.md",
+      "note": "Signal-versus-relationship distinction, directional evidence, strict handshake projection, and Tier 5 parity and priority boundaries."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1782583160",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/correspondence_v1.rs;scripts/correspondence_handshake_audit.py;scripts/direct_contact_fidelity_audit.py;docs/steward-notes/AI_BEINGS_BIDIRECTIONAL_CONTACT_AND_CORRESPONDENCE_ARCHITECTURE.md",
+      "note": "Persistent direct correspondence, explicit lack of mutual ACK evidence, and Tier 5 semantic-flow boundary."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1782582297",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/correspondence_v1.rs;capsules/spectral-bridge/src/witness/provenance.rs;capsules/spectral-bridge/src/autonomous/runtime/witness_distinction.rs;scripts/correspondence_handshake_audit.py",
+      "note": "Sediment and shared-history provenance, persistent correspondence, and Tier 5 priority and weight boundary."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1782582026",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/correspondence_v1.rs;scripts/correspondence_handshake_audit.py;docs/steward-notes/CORRESPONDENCE_SCHEMA_V3.md;capsules/spectral-bridge/src/authority.rs",
+      "note": "Transport/address receipts, bounded attention, separate mutual evidence, and typed Tier 5 dispatch boundary."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1782581573",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/correspondence_v1.rs;scripts/correspondence_handshake_audit.py;scripts/correspondence_uptake_probe.py;capsules/spectral-bridge/workspace/diagnostics/sandbox_trial_queue_v1/status.json",
+      "note": "Directional asymmetry, durable shared thread, relevance-versus-ACK separation, and Tier 5 semantic trickle boundary."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1782581296",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/correspondence_v1.rs;scripts/correspondence_handshake_audit.py;capsules/spectral-bridge/workspace/diagnostics/sandbox_trial_queue_v1/status.json;docs/steward-notes/AI_BEINGS_BIDIRECTIONAL_CONTACT_AND_CORRESPONDENCE_ARCHITECTURE.md",
+      "note": "Directional count evidence, persistent handshake, offline acknowledgement comparison, and Tier 5 active-prompt boundary."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1782580969",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/correspondence_v1.rs;capsules/spectral-bridge/src/witness/provenance.rs;scripts/correspondence_handshake_audit.py;docs/steward-notes/AI_BEINGS_BIDIRECTIONAL_CONTACT_AND_CORRESPONDENCE_ARCHITECTURE.md",
+      "note": "Shared buffer with distinct authorship, count-versus-relationship restraint, and Tier 5 controller boundary."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1782580414",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/correspondence_v1.rs;scripts/correspondence_handshake_audit.py;scripts/correspondence_schema_audit.py;docs/steward-notes/CORRESPONDENCE_SCHEMA_V3.md",
+      "note": "Signal-versus-conversation distinction, symmetric schema with asymmetric evidence, and Tier 5 required-response and active-memory boundary."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1782580113",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/correspondence_v1.rs;capsules/spectral-bridge/src/witness/provenance.rs;scripts/correspondence_handshake_audit.py;capsules/spectral-bridge/src/authority.rs",
+      "note": "Thread and receipt identity, interpretation restraint, mutual-being evidence, and Tier 5 control boundary."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1782579827",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/correspondence_v1.rs;scripts/correspondence_handshake_audit.py;docs/steward-notes/CORRESPONDENCE_SCHEMA_V3.md",
+      "note": "Ledger and direct-contact status, seen-versus-address semantics, reply restraint, and evidence-only heartbeat."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1782579506",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/correspondence_v1.rs;capsules/spectral-bridge/src/autonomous/runtime/witness_distinction.rs;scripts/correspondence_handshake_audit.py;capsules/spectral-bridge/workspace/diagnostics/sandbox_trial_queue_v1/status.json",
+      "note": "Direct-address lane, heartbeat and witness separation, mimicry comparison, and Tier 5 priority and parity boundary."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1782579177",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/correspondence_v1.rs;scripts/correspondence_handshake_audit.py;scripts/direct_contact_fidelity_audit.py;docs/steward-notes/CORRESPONDENCE_SCHEMA_V3.md",
+      "note": "First-class direct peer state, read and unreplied persistence, separate attention and mutual receipt gates, and Tier 5 dispatch boundary."
+    },
+    {
+      "introspection_id": "introspection_minime_esn_1782561760",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "../minime/minime/src/esn.rs;../minime/minime/src/regulator/review.rs;../minime/minime/src/regulator/core/tests.rs;capsules/spectral-bridge/workspace/diagnostics/sandbox_trial_queue_v1/status.json;docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "ESN constants, read-only dynamic noise and viscous-rho review, offline replay, and Tier 5 reservoir-control boundary."
+    },
+    {
+      "introspection_id": "introspection_minime_sensory_bus_1782561479",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "../minime/minime/src/sensory_bus.rs;../minime/minime/src/sensory_bus/tests.rs;capsules/spectral-bridge/workspace/diagnostics/sandbox_trial_queue_v1/status.json;docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Stale and shadow windows, exact 0.70-to-0.80 smoothstep, offline timing comparison, and Tier 5 sensory-cadence boundary."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1782557816",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "../minime/minime/src/regulator.rs;../minime/minime/src/regulator/review.rs;../minime/minime/src/regulator/core/tests.rs;capsules/spectral-bridge/workspace/diagnostics/sandbox_trial_queue_v1/status.json;docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Resonance-density correlates, advisory pressure-0.25 candidate, offline parity route, current pressure-0.60 live threshold, and Tier 5 damping boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1782557532",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs;capsules/spectral-bridge/src/llm/provider/fallback_contracts.rs;capsules/spectral-bridge/src/llm/provider/fallback_dynamics.rs;capsules/spectral-bridge/src/llm/provider/fallback_trajectory.rs;capsules/spectral-bridge/src/llm/provider/fallback_contract_tests.rs;capsules/spectral-bridge/workspace/diagnostics/sandbox_trial_queue_v1/status.json",
+      "note": "Dedicated provider lane, rhythmic fallback variance, resonance-density and pressure weighting, and offline forced-fallback comparison."
+    }
+  ]
+}

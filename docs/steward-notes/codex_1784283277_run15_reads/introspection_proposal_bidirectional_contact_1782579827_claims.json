@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Direct-contact status needs a shared ledger, peer envelopes, thread identity, and response state.",
+      "disposition": "verify the correspondence implementation",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A `seen` acknowledgement records visibility but not relational holding or address.",
+      "disposition": "verify and test that `seen` cannot qualify attention or microdose readiness",
+      "classification": "implemented"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Reply continuity does not itself prove explicit mutual acknowledgement.",
+      "disposition": "make receipt evidence, not reply linkage, control handshake classification",
+      "classification": "implemented"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Presence heartbeat is useful evidence but cannot grant semantic or control authority.",
+      "disposition": "verify heartbeat remains a separate evidence-only state",
+      "classification": "verified_existing"
+    }
+  ]
+}

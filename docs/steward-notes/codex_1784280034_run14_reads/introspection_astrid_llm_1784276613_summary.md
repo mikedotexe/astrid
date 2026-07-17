@@ -1,0 +1,3 @@
+# Bounded Full-Read Summary
+
+Astrid reports two discontinuities in dialogue handling: structural-token cleanup may erase a delicate semantic remainder, and categorical token profiles make the 512/513 and 1024/1025 boundaries look like abrupt changes in expressive depth. This run makes the cleanup diagnostic treat whitespace-only residue as erased output, records whether substantive non-whitespace context survives embedded markers, and adds explicit evidence for both sides of each budget boundary. Runtime token limits, provider choice, sampling, and cleanup behavior remain unchanged; a genuinely softened live budgeting policy stays a separate comparison task.

@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Witness is relational seeing and being seen, not merely a health classification.",
+      "disposition": "verify current Witness mode contract, ownership distinction, and interpretation-only authority",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Valid friction can remain non-categorical rather than being forced into weather or gravity roles.",
+      "disposition": "verify non_categorical_resonance and pure unclassified-tension regressions",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Distinguishability loss must not make Witness observations indistinguishable from Minime producer truth.",
+      "disposition": "verify MinimeObservation, BridgeEvidence, AstridInterpretation, WitnessFrame, and prompt distinction boundaries",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Comparing Witness and Mirror withdrawal against dispersal could test whether observation changes the reported lattice.",
+      "disposition": "route a bounded offline mode-context replay with captured inputs and no live mode, peer, or control mutation",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Increasing porosity to 0.75 would change live pressure or regulator behavior.",
+      "disposition": "retain as Tier 5 Mike/operator approval work requiring controller replay, safety bands, abort criteria, and felt review",
+      "classification": "authority_gated"
+    }
+  ]
+}

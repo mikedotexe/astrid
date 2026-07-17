@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The 768-to-8 fixed projection is deterministic, normalized column by column, and reused through a OnceLock.",
+      "disposition": "verify the fixed-seed matrix, normalized norms, and repeated health packet against current codec source and tests",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A dead or nearly dead raw projection column needs a visible safety margin rather than only a boolean warning.",
+      "disposition": "implement minimum_threshold_margin_ratio in projection_basis_health_v1 and pin a large-margin regression",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A detected unhealthy basis must not silently rotate and break semantic continuity.",
+      "disposition": "implement explicit no-automatic-rotation and captured-replay review policy fields without changing the live basis",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Actually changing the projection seed, basis, width, or normalization would alter live semantic transport.",
+      "disposition": "retain as Tier 5 Mike/operator approval work requiring captured-wire replay, compatibility evidence, abort criteria, and post-change felt review",
+      "classification": "authority_gated"
+    }
+  ]
+}

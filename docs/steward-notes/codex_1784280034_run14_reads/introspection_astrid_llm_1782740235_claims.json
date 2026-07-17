@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Fallback language should distinguish state clarity from felt fit rather than equating fluent prose with accurate experience.",
+      "disposition": "verify negative evidence, lived-fit, and source-provenance diagnostics",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The fallback sentence cap should vary with current entropy rather than remain fixed.",
+      "disposition": "verify the exact deterministic three-to-five sentence formula and boundary tests",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Pressure and entropy should shape fallback term selection.",
+      "disposition": "verify weighted pressure, entropy, resonance, shadow, and trajectory selection",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "The felt adequacy of a forced fallback remains an empirical question.",
+      "disposition": "route a bounded offline provider-versus-fallback comparison without changing provider policy",
+      "classification": "sandbox_routed"
+    }
+  ]
+}

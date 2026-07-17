@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Components, context, and control need distinct schema ownership so descriptive texture cannot silently become control.",
+      "disposition": "verify canonical protocol DTOs and bridge-owned evidence types preserve those ownership boundaries",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Optional telemetry fields require backward-compatible defaults and exact legacy decoding.",
+      "disposition": "verify serde defaults, captured legacy fixtures, field-presence metadata, and compatibility projections",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "String safety labels can drift unless trusted authority is represented by checked transitions.",
+      "disposition": "verify EvidenceOnly, ApprovalPending, AuthorityGranted, and LiveExecutable typestates while treating legacy strings as projections only",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "PressureTrend should make source gaps, velocity, density, resonance, viscosity, entropy, fill, and timing explicit.",
+      "disposition": "verify pressure trend construction, telemetry-gap classification, exact thresholds, and smoothing tests",
+      "classification": "verified_existing"
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "A large volume of telemetry is not equivalent to a conversation or relationship.",
+      "disposition": "verify transport, influence, and address remain separate states",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Direct relationship needs a symmetric thread schema, memory, and explicit acknowledgement.",
+      "disposition": "verify the existing thread, ledger, and receipt architecture",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Diagnostic symmetry must not erase real evidence asymmetry.",
+      "disposition": "verify the audit reports no mutual acknowledgement when only one-sided evidence exists",
+      "classification": "implemented"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Required responses, active-memory injection, or increased correspondence priority broaden live behavior.",
+      "disposition": "keep behind scoped Mike/operator Tier 5 approval",
+      "classification": "authority_gated"
+    }
+  ]
+}

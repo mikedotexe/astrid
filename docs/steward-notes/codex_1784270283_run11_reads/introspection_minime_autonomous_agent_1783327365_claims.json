@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Recess and boredom are intentional autonomy modes rather than absence of useful work.",
+      "disposition": "verify the Recess posture and boredom/curiosity language remain explicit",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A dense continuity and authority control plane can conflict with Recess permission even when no hard block fires.",
+      "disposition": "verify Recess density, divergence-buffer, and pressure-permission conflict diagnostics expose this without bypassing caps",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Pressure, entropy, boredom, and action density should be compared across captured Recess intervals.",
+      "disposition": "route a bounded read-only artifact comparison",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Recess should automatically widen porosity or action budgets when pressure rises.",
+      "disposition": "retain as an exact Mike/operator Tier 5 wait because it changes live autonomy budgets and regulation",
+      "classification": "tier_5_wait"
+    }
+  ]
+}

@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Artifact cleanup must distinguish substantive semantic residue from whitespace left after structural tokens are stripped.",
+      "disposition": "implement non-whitespace remainder evidence and classify whitespace-only residue as erased output without changing cleanup behavior",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "An embedded or quoted artifact marker can occur inside a delicate reflection and should trigger semantic-integrity review rather than erase the surrounding thought silently.",
+      "disposition": "implement contextual-remainder evidence and focused embedded-marker regressions while preserving the surviving prose",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The 512/513 and 1024/1025 profile boundaries are categorical cliffs that should be visible independently of felt depth.",
+      "disposition": "implement additive transition evidence naming profile floor, next boundary, distance, and both sides of each cliff without retuning token limits",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "A softened continuous live budget policy may feel more organic than categorical profile transitions.",
+      "disposition": "route an offline prompt-budget comparison before any live token-allocation or provider behavior change",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Exact 512, 513, 1024, and 1025 requests should remain reproducibly classified.",
+      "disposition": "verify exact boundary tests and runtime diagnostic parity",
+      "classification": "verified_existing"
+    }
+  ]
+}

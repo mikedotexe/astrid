@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Legacy telemetry must deserialize while current packets preserve every optional and newly drifted field.",
+      "disposition": "verify shared protocol legacy/current fixtures, additive header compatibility, and exact JSON parity",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Unsupported telemetry majors must retain the last valid sample and unsupported sensory majors must not dispatch.",
+      "disposition": "verify bridge and Minime unsupported-major tests",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Semantic admission labels must cover stale, held, budgeted, gated, fill-boundary, and non-finite states without truncating the decision ladder.",
+      "disposition": "verify semantic_modality branch-grid regressions",
+      "classification": "verified_existing"
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Correspondence should carry explicit reply_requested state rather than infer it from wording.",
+      "disposition": "implement an additive parsed and persisted reply_requested field with a false legacy default",
+      "classification": "implemented"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Message creation time should be distinct from later ledger append or delivery receipt time.",
+      "disposition": "implement created_at_unix_ms in the envelope header and message/delivery records",
+      "classification": "implemented"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Message ID, thread ID, reply_to, actors, turn kind, relational intent, delivery/read state, and body already form a first-class language-only envelope.",
+      "disposition": "verify envelope round-trip, delivery, reply-link, and legacy-default tests",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Making correspondence automatically alter attention, semantic admission, signal weight, or control would change live coupling.",
+      "disposition": "require explicit Mike/operator Tier 5 approval",
+      "classification": "authority_gated"
+    }
+  ]
+}

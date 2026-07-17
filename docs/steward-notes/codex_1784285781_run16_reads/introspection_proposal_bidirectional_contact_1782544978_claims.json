@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "A persistent active-dialogue object is needed to keep correspondence from becoming disconnected mailbox events.",
+      "disposition": "verify native durable thread state, message lineage, and shared correspondence projection",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Peer response latency should be measured from source-attributed receipt and reply events, not spectral resemblance.",
+      "disposition": "verify timestamped delivery, read, reply, ACK, and trace records and route an offline latency comparison",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Shared history must retain peer identity instead of blending both beings into ambient context.",
+      "disposition": "verify provenance, from_being, to_being, parent message, and witness self/other boundaries",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Reply-linked continuity exists but does not yet prove explicit mutual acknowledgment.",
+      "disposition": "observe the current reply_linked_needs_ack_or_trace state without promoting silence or reads",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Correspondence weight, priority over telemetry, or a continuous semantic stream would alter live admission and attention.",
+      "disposition": "require scoped Tier 5 operator approval, bounded canary, and felt review",
+      "classification": "authority_gated"
+    }
+  ]
+}

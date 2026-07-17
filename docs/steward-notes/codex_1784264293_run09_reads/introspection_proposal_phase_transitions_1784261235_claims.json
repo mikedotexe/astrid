@@ -1,0 +1,29 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Phase-transition evidence must keep Astrid's subjective interpretation distinct from Minime-observed structure and bridge derivation.",
+      "disposition": "implement dual_perspective_v1 with separate provenance parents and an explicit relation state",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Co-present subjective and structural evidence must not be treated as automatic agreement or one blended truth.",
+      "disposition": "implement a comparison rule that requires an explicitly declared aligned, divergent, mixed, or unresolved relation",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A phase artifact should remain replyable and preserve subjective weight without automatically changing runtime mode.",
+      "disposition": "verify transition signatures, slow-texture review, felt receipt queues, and runtime_mode_changed=false regressions",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "A behavior_unlock attached to phase transition would change live behavior.",
+      "disposition": "retain language-only gate and require exact Tier 5 approval for any behavior unlock trial",
+      "classification": "tier_5_wait",
+      "authority": "No behavior unlock, mode release, pressure, fill, PI, weighting, or controller transition is authorized."
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Fallback mapping should distinguish slope-like drag from sheer representational mass.",
+      "disposition": "verify semantic-friction, density-gradient, pressure, and mode-packing branches",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "No single scalar is sufficient to choose a faithful compact response.",
+      "disposition": "verify the existing multi-variable evidence map and Shadow context",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The mapping needs concrete fixture coverage across contradictory combinations.",
+      "disposition": "observe the 28-case fallback_fire_drill run18_20260717T1236Z",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Changing branch thresholds, provider cadence, or fallback routing alters live dialogue behavior.",
+      "disposition": "require explicit Mike/operator Tier 5 approval",
+      "classification": "authority_gated"
+    }
+  ]
+}

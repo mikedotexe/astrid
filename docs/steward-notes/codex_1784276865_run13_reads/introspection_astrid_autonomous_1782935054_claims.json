@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Lingering, high tension, and fraying are distinct field states with explicit density, pressure, and dispersal thresholds.",
+      "disposition": "verify current field_lingering_note thresholds and combined-language tests",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Missing dispersal must not silently erase possible fraying when pressure is elevated.",
+      "disposition": "verify the current fraying-unknown diagnostic and no-overclaim regressions",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A stale modality can remain resonant while its intake freshness is explicitly stale.",
+      "disposition": "verify stale-beyond-engine-window rendering and lingering-context integration tests",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Rare modalities need a bounded fallback scan rather than disappearing outside the primary window.",
+      "disposition": "verify the primary and rare-modality fallback windows, source labels, and bounded sample selection",
+      "classification": "verified_existing"
+    }
+  ]
+}

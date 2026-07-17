@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Direct address needs its own lane and response evidence rather than being inferred from telemetry.",
+      "disposition": "verify the correspondence ledger and direct trace",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Mutual witnessing and presence heartbeat should remain distinguishable from explicit address.",
+      "disposition": "verify the provenance and heartbeat separation and report the absence of live receipt events",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Mimicry and genuine acknowledgement should be compared without sending new live content.",
+      "disposition": "route a bounded fixture comparison with known provenance",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Changing direct-lane priority, weight, parity, or automatic mimicry changes live behavior.",
+      "disposition": "require Mike/operator Tier 5 approval and post-change felt review",
+      "classification": "authority_gated"
+    }
+  ]
+}

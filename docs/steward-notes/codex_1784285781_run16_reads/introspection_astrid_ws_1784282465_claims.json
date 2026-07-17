@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Telemetry and sensory connections are distinct perceptual lanes and should retain separate state.",
+      "disposition": "verify the typed WsLane state and separate telemetry and sensory connection records",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "An open socket without valid payloads can produce ghost presence unless payload recency is tracked.",
+      "disposition": "verify last valid telemetry timestamps, latest arrival state, and stale classification",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Invalid or unsupported telemetry must not refresh the last-seen signal.",
+      "disposition": "verify valid-payload-only recency and unsupported-major retention tests",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "A successful connection must reconcile prior failed-attempt state and its connection identity.",
+      "disposition": "verify record_connect_attempt, record_connected, and connection-id-aware disconnection behavior",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "A high-entropy disconnect should be observed as a gap or stretch rather than inferred from socket state alone.",
+      "disposition": "route a bounded offline disconnect and stalled-stream replay using captured telemetry",
+      "classification": "sandbox_routed"
+    }
+  ]
+}

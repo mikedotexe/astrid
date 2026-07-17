@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Naive prefix truncation can erase the late semantic center while preserving expendable setup.",
+      "disposition": "observe anchor loss in all 20 fresh live-file rehearsal candidates",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Priority-aware compaction can recover Shadow, telemetry, viscosity, tail, and continuation anchors under the same budget.",
+      "disposition": "observe priority recovery in all 20 fresh candidates",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The live runtime already uses anchored semantic excerpts rather than a raw byte prefix for reflective sidecar context.",
+      "disposition": "verify semantic_truncate_str and its production call at the 500-byte boundary",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Anchor-aware compaction must remain UTF-8 safe and preserve semantic boundaries.",
+      "disposition": "verify multibyte, late-anchor, high-texture, and dialogue stress regressions",
+      "classification": "verified_existing"
+    }
+  ]
+}

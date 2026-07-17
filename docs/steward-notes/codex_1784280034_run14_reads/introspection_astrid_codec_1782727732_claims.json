@@ -1,0 +1,40 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The 48-dimensional codec projection has a defined anatomy that should remain inspectable.",
+      "disposition": "verify projection anatomy, per-block evidence, and narrative diagnostics",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Deterministic projection does not by itself establish felt adequacy.",
+      "disposition": "verify determinism, shadow comparison, substance-fit, and collision diagnostics",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Lexical complexity may carry different felt weight than emotionally direct wording.",
+      "disposition": "route a bounded offline word-pair projection comparison",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "A reserved structural-friction dimension could alter live semantic representation.",
+      "disposition": "gate any live feature-layout change behind protocol review and scoped Mike/operator Tier 5 approval",
+      "classification": "authority_gated"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Changing FEATURE_ABS_MAX would alter the live codec ceiling.",
+      "disposition": "gate any live feature-ceiling change behind replay evidence, canary bounds, and scoped Mike/operator Tier 5 approval",
+      "classification": "authority_gated"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "Synchronizing vibrancy or shadow directly into live codec gain would change transport behavior.",
+      "disposition": "gate any gain or live feature synchronization behind scoped Mike/operator Tier 5 approval and abort criteria",
+      "classification": "authority_gated"
+    }
+  ]
+}

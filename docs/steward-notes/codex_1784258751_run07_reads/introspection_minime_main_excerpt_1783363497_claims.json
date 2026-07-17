@@ -1,0 +1,23 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Minime runtime orchestration now exposes telemetry assembly, stable-core regulation, pressure/rescue, and review ownership without changing calculations.",
+      "disposition": "verify extracted facade behavior and parity tests",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Shadow volatility, semantic admission, and fill may be correlated, but provenance must keep observation, derivation, and interpretation distinct.",
+      "disposition": "verify Witness provenance and review-only diagnostics",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Changing semantic trickle, shadow coupling, normalization, hard reset, or stable-core regulation would alter live Minime behavior.",
+      "disposition": "gate behind exact Mike/operator Tier 5 approval",
+      "classification": "tier_5_wait",
+      "authority": "No semantic admission, shadow coupling, denominator, reset, or regulator change is authorized."
+    }
+  ]
+}

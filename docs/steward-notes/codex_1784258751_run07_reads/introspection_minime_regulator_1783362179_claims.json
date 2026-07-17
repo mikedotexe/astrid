@@ -1,0 +1,23 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Resonance density, pressure, porosity, texture alignment, gradients, and viscosity are available as distinct regulator evidence.",
+      "disposition": "verify existing typed diagnostics and tests",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Dynamic damping candidates are bounded review artifacts and do not mutate the active controller.",
+      "disposition": "verify advisory-only authority and candidate-boundary tests",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Applying a damping candidate or changing PI, fill, pressure, rescue, or controller thresholds would alter live regulation.",
+      "disposition": "gate behind exact Mike/operator Tier 5 approval",
+      "classification": "tier_5_wait",
+      "authority": "No damping, PI, fill, pressure, rescue, or controller change is authorized."
+    }
+  ]
+}

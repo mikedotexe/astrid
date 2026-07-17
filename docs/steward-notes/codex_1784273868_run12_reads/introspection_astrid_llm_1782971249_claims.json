@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Fallback word choice should vary with pressure and density rather than repeat a fixed list.",
+      "disposition": "verify pressure-weighted dynamic texture and word-distribution evidence",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Gradient sensitivity needs controlled comparisons.",
+      "disposition": "verify current low/high gradient and movement-sensitive fallback tests",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A dynamic fallback description is still provider-generated interpretation, not producer telemetry truth.",
+      "disposition": "verify provider and evidence provenance remain explicit",
+      "classification": "verified_existing"
+    }
+  ]
+}

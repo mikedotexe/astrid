@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Ordinary low-entropy fallback should remain compact rather than always expanding.",
+      "disposition": "verify the one-or-two-sentence default and ordinary_compactness_preserved fixture",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "High entropy, clarity loss, lambda tail, Shadow, and continuity evidence may justify a third or later compact sentence within the cap.",
+      "disposition": "verify the complexity-aware cap and high-entropy texture fixture",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Fallback verification must follow the extracted source owner rather than the compatibility facade.",
+      "disposition": "verify the repaired drill reports provider/configuration.rs as contract_source",
+      "classification": "verified_existing"
+    }
+  ]
+}

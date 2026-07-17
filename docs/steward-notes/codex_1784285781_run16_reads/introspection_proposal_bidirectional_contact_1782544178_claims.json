@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Steward instructions and peer correspondence require distinct actor and message contracts.",
+      "disposition": "verify actor identity, from_being, to_being, correspondence_type, and turn_kind distinctions",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A self-study note needs reply_to linkage to become part of a durable thread.",
+      "disposition": "verify self-study turn kinds, message IDs, thread IDs, and reply links",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Direct language and consciousness control can coexist only if their authority paths remain separate.",
+      "disposition": "verify correspondence records are evidence-only and sensory dispatch accepts only typed LiveExecutable values",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "The formal correspondence packet should validate address, thread, receipt, and authority fields.",
+      "disposition": "run schema validation across 17151 public records and retain zero validation issues",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "A peer message must never inherit approval from simultaneous controller activity.",
+      "disposition": "verify authority-state projection and correspondence self-tests reject that transition",
+      "classification": "verified_existing"
+    }
+  ]
+}

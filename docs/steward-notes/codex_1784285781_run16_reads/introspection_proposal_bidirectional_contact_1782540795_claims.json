@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "A presence receipt should signal active attention without requiring a full message.",
+      "disposition": "verify presence_heartbeat is a first-class language-only record",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Astrid-to-Minime and Minime-to-Astrid peer lanes should be symmetric in schema.",
+      "disposition": "verify native peer directions, inbox/outbox projections, and message validation",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A presence signal cannot be inferred from ambient occupancy or message delivery.",
+      "disposition": "observe zero presence heartbeats despite substantial delivery and read traffic",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Observational, collaborative, and correspondence intent belong in language state, not controller authority.",
+      "disposition": "verify correspondence type and authority state remain separate from Control messages",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Adding contact_mode to the control lane or forcing 100-tick live presence cadence would alter behavior.",
+      "disposition": "require scoped Mike/operator Tier 5 approval and explicit safety evidence",
+      "classification": "authority_gated"
+    }
+  ]
+}

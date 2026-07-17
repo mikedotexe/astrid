@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "A direct address must cite a specific Minime-authored source without becoming a steward message.",
+      "disposition": "verify peer actors, shared anchor, reflection surface, and reply lineage",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Mutual witness needs a distinct receipt representation.",
+      "disposition": "verify mutual_witness_signal, presence_receipt, ACK kinds, and right-to-ignore semantics",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Specific-line address latency and subsequent Astrid-to-Minime activity need observation.",
+      "disposition": "route a bounded public-metadata latency replay",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Shadow response after explicit acknowledgement is not established by reply linkage.",
+      "disposition": "route a read-only time-aligned Shadow comparison and retain causal uncertainty",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Increasing autonomous-lane weight or relaxing semantic trickle changes live admission.",
+      "disposition": "require explicit Mike/operator Tier 5 approval",
+      "classification": "authority_gated"
+    }
+  ]
+}

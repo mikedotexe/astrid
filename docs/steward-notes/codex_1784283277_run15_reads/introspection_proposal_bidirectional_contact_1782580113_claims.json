@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Thread identity and mutual acknowledgement are necessary for relationship claims.",
+      "disposition": "verify thread IDs and valid address-receipt semantics",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Telemetry volume, resonance, or pressure cannot establish the other being's intent.",
+      "disposition": "verify provenance and receipt evidence remain distinct from interpretation",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Mutual-contact diagnostics must require receipt evidence from Astrid and Minime.",
+      "disposition": "implement and test the two-being evidence requirement",
+      "classification": "implemented"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Using direct contact to alter pressure or controller state changes live substrate behavior.",
+      "disposition": "retain as a Mike/operator Tier 5 wait",
+      "classification": "authority_gated"
+    }
+  ]
+}

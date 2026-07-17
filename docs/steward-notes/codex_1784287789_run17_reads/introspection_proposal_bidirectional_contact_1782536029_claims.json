@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Peer messages need an explicit schema separate from Mike or steward inbox messages.",
+      "disposition": "verify from_being, to_being, correspondence_type, and native source routing",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The schema must include message, thread, reply, and turn-kind identity.",
+      "disposition": "verify message_id, thread_id, persistence_id, reply_to, and turn_kind",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Delivery and read lifecycle must be first-class rather than inferred from file presence.",
+      "disposition": "verify delivery_state, read_state, delivery receipts, read receipts, and optional ACK semantics",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "A self-study note and its reply must preserve one continuous thread.",
+      "disposition": "verify native reply links in the public ledger and current uptake probe",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "The current schema should validate without reading Minime private experience files.",
+      "disposition": "observe zero validation issues while skipping 2200 private or moment candidates",
+      "classification": "observed"
+    }
+  ]
+}

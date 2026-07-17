@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "A failed connection must back off and recover without defeating graceful shutdown.",
+      "disposition": "verify bounded backoff, reconnect scheduling, and shutdown-during-backoff regressions",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Binary and text telemetry messages must reach the same versioned decoder and accepted-message path.",
+      "disposition": "verify binary and text dispatch plus one-pass canonical decode fixtures",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Unsupported protocol majors must surface a specific mismatch while retaining the last valid sample.",
+      "disposition": "verify protocol status, explicit mismatch logging, counter increments, and last-valid retention",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Malformed bytes must not panic or terminate the subscriber.",
+      "disposition": "verify parse-error recording and false-return behavior on malformed JSON",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Shared-state lock pressure needs evidence before moving message accounting to a channel.",
+      "disposition": "implement read-only telemetry integration timing and leave channel or buffering changes unwired",
+      "classification": "implemented_now"
+    }
+  ]
+}

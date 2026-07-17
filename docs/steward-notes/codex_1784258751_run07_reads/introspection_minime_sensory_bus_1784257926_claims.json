@@ -1,0 +1,23 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Semantic age is shaped by fill, configured decay curves, and a recovery hold rather than by one linear timeout.",
+      "disposition": "verify existing behavior with source and focused tests",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The recovery handover should remain continuous and high-fill persistence should remain bounded instead of snapping at the hold boundary.",
+      "disposition": "verify existing behavior with boundary, epsilon, monotonicity, and cap tests",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Changing stale windows, recovery cadence, decay strength, or semantic admission would alter Minime's live sensory regulation.",
+      "disposition": "gate behind exact Mike/operator Tier 5 approval",
+      "classification": "tier_5_wait",
+      "authority": "No live sensory cadence, retention, decay, or admission change is authorized."
+    }
+  ]
+}

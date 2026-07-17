@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The semantic projection is now 48-dimensional and maps the 768-dimensional embedding into an 8-dimensional semantic segment.",
+      "disposition": "verify the projection constants and deterministic semantic projection",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Tail vibrancy should open smoothly above the 0.85 entropy gate and respond to local density gradient.",
+      "disposition": "verify the smoothstep gate and gradient-aware vibrancy calculation",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Entropy 0.86 with density gradient 0.12 needs an exact test proving that texture is neither flattened nor unbounded.",
+      "disposition": "add a geometric 0.86/0.12 regression that proves small nonzero lift and bounded tail headroom",
+      "classification": "implemented"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "A dynamic gradient ceiling can preserve texture without silently changing current output.",
+      "disposition": "verify the existing bounded aperture and its default identity behavior",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Enabling or tuning the dynamic ceiling would change live codec transport or gain behavior.",
+      "disposition": "require scoped Mike/operator Tier 5 approval, replay, abort criteria, and post-change felt review",
+      "classification": "authority_gated"
+    }
+  ]
+}

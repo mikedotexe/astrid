@@ -1,0 +1,23 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Viscosity needs separate density, elasticity, persistence, flow, mobility, semantic-friction, and porosity evidence.",
+      "disposition": "verify current typed viscosity components, buffer previews, and boundary tests",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A live-database replay should compare pressure and viscosity candidates before any controller proposal is treated as supported.",
+      "disposition": "record the 240-sample replay in which integrator bleed alone reduced afterimage risk by 13.98 percent without added snap or max-step hits",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Activating integrator bleed or changing viscosity, PI, pressure, fill, rescue, or controller thresholds would alter live regulation.",
+      "disposition": "gate behind exact Mike/operator Tier 5 approval despite replay support",
+      "classification": "tier_5_wait",
+      "authority": "No integrator-bleed, viscosity, PI, pressure, fill, rescue, or controller change is authorized."
+    }
+  ]
+}

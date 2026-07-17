@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Nested quotes, code boundaries, comments, and filenames must parse without accidental action execution or path confusion.",
+      "disposition": "verify malformed nested-quote recovery and code-boundary parser tests",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Malformed or path-like action input must fail closed and remain reviewable.",
+      "disposition": "verify low-fill guard, path sanitization, malformed request, and revision-needed tests",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "RECALL and exhausted research-budget handling should preserve continuity while allowing Recess instead of forcing action.",
+      "disposition": "verify read-only recall, budget-exhausted status, terminal NEXT suppression, and Recess routing",
+      "classification": "verified_existing"
+    }
+  ]
+}

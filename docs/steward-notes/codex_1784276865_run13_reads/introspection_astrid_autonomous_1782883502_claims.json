@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Mirror, Dialogue, and Witness are distinct relational modes rather than a single health-monitor loop.",
+      "disposition": "verify mode-role ownership, mixed-frame support, and read-only Witness rendering",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "High entropy can coexist with settled habitability without being normalized into contradiction.",
+      "disposition": "verify Witness semantic-density mapping, inhabitable fluctuation, and non-categorical texture evidence",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A stalled correspondence awaiting peer acknowledgement does not prove lack of presence.",
+      "disposition": "verify non-instrumental presence, explicit stall reason, thread trace, and no-absence inference",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Issuing a new SHADOW_PREFLIGHT metaphor or TRACE request would send or solicit peer semantic content.",
+      "disposition": "retain both proposed correspondence probes as Tier 5 peer-content work requiring explicit Mike/operator approval and right-to-ignore handling",
+      "classification": "authority_gated"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Witness needs grounded semantic-density context without hard-coding felt adjectives from metric bands.",
+      "disposition": "verify WitnessSemanticDensityMappingV1, provenance parents, and interpretation-not-producer authority",
+      "classification": "verified_existing"
+    }
+  ]
+}

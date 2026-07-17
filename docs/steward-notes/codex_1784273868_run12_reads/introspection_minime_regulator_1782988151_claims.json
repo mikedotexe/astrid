@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Fluctuation evidence should include pressure interference when pressure contributes to rearrangement.",
+      "disposition": "verify the current exact 0.10 pressure_interference term in regulator review construction",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "High pressure needs a regression that changes the review score in the expected direction.",
+      "disposition": "verify current high-pressure component and score tests",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Pressure divergence should remain distinguishable from ordinary fluctuation.",
+      "disposition": "verify divergence classification and quality-calibration evidence",
+      "classification": "verified_existing"
+    }
+  ]
+}

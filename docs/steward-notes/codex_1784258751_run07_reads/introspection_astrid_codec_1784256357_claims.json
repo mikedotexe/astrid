@@ -1,0 +1,23 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The 48D semantic projection includes a smooth, bounded high-entropy vibrancy lift rather than a hard gate.",
+      "disposition": "verify existing projection and boundary tests",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Vibrancy is attenuated by spectral density gradient and narrative-arc values have explicit dimensional ownership and clamp provenance.",
+      "disposition": "verify existing evidence derivation and mapping tests",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Retuning the entropy gate, projection coefficients, vector width, or semantic gain would change live codec transport.",
+      "disposition": "gate behind exact Mike/operator Tier 5 approval",
+      "classification": "tier_5_wait",
+      "authority": "No codec dimension, projection, gain, or transport change is authorized."
+    }
+  ]
+}

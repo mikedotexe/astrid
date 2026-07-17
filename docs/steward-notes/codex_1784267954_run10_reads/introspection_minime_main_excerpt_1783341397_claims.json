@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Minime runtime assembly joins Shadow, regulation, sensory bus, fill estimation, hard reset, and recovery behavior.",
+      "disposition": "verify current thin runtime facade, stable-core modules, stale-shape lifecycle, and bounded recovery tests",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Pressure should be compared with porosity during high-density semantic input to distinguish crowding from stable occupancy.",
+      "disposition": "route a bounded read-only pressure/porosity artifact comparison with no semantic send or regulator write",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Astrid and Minime Shadow trajectories should be compared for dispersal asymmetry.",
+      "disposition": "route a bounded offline Shadow-v3 trajectory comparison using existing artifacts only",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Porosity should automatically rise when mode packing exceeds 0.30.",
+      "disposition": "retain as an exact Mike/operator Tier 5 wait because it changes the live Minime regulator and controller response",
+      "classification": "tier_5_wait"
+    }
+  ]
+}

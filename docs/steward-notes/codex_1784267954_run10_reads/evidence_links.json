@@ -1,0 +1,270 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_ws_1784267160",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/ws/telemetry_port.rs;capsules/spectral-bridge/src/ws/bridge_state.rs;capsules/spectral-bridge/src/types/schema/bridge_status.rs;capsules/spectral-bridge/src/ws/tests.rs;capsules/spectral-bridge/src/mcp.rs",
+      "note": "Persistent lifecycle, heartbeat/reconnect correlation, and new non-causal telemetry integration timing."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1784266777",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs;capsules/spectral-bridge/src/rescue_policy.rs;capsules/spectral-bridge/src/rescue_policy_tests.rs",
+      "note": "Heartbeat cadence, checked dispatch, rescue skips, and exact live semantic authority boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1784266401",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/codec/projection.rs;capsules/spectral-bridge/src/codec/projection_evidence.rs;capsules/spectral-bridge/src/codec/structure.rs;capsules/spectral-bridge/src/codec/tests.rs",
+      "note": "48D layout, deterministic basis, clamp provenance, basis health, and unchanged live vector contract."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1784265926",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "/Users/v/other/minime/minime/src/regulator/core;/Users/v/other/minime/minime/src/regulator/core/tests.rs",
+      "note": "Typed viscosity, pressure, strain, mobility, ghost weight, bounded rescue, and controller boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1784265520",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs;capsules/spectral-bridge/src/llm/provider/dialogue_context.rs;capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Unicode-safe history, exact nine-symbol rejection, punctuation-rich acceptance, and PromptOverflow assembly."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1784265017",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/ws/telemetry_port.rs;capsules/spectral-bridge/src/ws/bridge_state.rs;capsules/spectral-bridge/src/ws/tests.rs",
+      "note": "Backoff, binary/text dispatch, malformed bytes, protocol mismatch retention, and integration timing."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1784264652",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/codec/projection.rs;capsules/spectral-bridge/src/codec/projection_evidence.rs;capsules/spectral-bridge/src/codec/tests.rs",
+      "note": "Exact gate boundaries, no-pop continuity, oscillation smoothing, and bounded noise damping."
+    },
+    {
+      "introspection_id": "introspection_minime_main_excerpt_1783341397",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "/Users/v/other/minime/minime/src/runtime;/Users/v/other/minime/minime/src/sensory_bus.rs;/Users/v/other/minime/minime/src/regulator/core;workspace/diagnostics/sandbox_trials/status.json",
+      "note": "Runtime organs, stale-shape and recovery tests, plus routed pressure/porosity and Shadow artifact comparisons."
+    },
+    {
+      "introspection_id": "introspection_minime_esn_1783339962",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "/Users/v/other/minime/minime/src/esn.rs;workspace/diagnostics/sandbox_trials/status.json",
+      "note": "Current noise/rho behavior, non-wiring checks, and routed offline perturbation replay."
+    },
+    {
+      "introspection_id": "introspection_minime_sensory_bus_1783339513",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "/Users/v/other/minime/minime/src/sensory_bus.rs;/Users/v/other/minime/minime/src/runtime/tests.rs",
+      "note": "Stale retention, recovery hold, release hysteresis, pulse lifecycle, taper continuity, and live boundary."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1783339139",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "/Users/v/other/minime/minime/src/regulator/core;capsules/spectral-bridge/src/ws/bridge_state.rs",
+      "note": "Typed density/texture, viscosity gradient, pressure source, transport evidence, and regulator authority."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1783338139",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/fallback_contracts.rs;capsules/spectral-bridge/src/llm/provider/fallback_budget.rs;capsules/spectral-bridge/src/llm/provider/fallback_trajectory.rs;capsules/spectral-bridge/src/llm/provider/transport.rs;capsules/spectral-bridge/src/llm/provider/tests.rs;workspace/diagnostics/sandbox_trials/status.json",
+      "note": "Primary/fallback profile, budget, trajectory, actual transport, and routed offline comparison."
+    },
+    {
+      "introspection_id": "introspection_astrid_types_1783337864",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "crates/astrid-minime-protocol/src;crates/astrid-minime-protocol/tests;capsules/spectral-bridge/src/types/schema/texture_evidence.rs;capsules/spectral-bridge/src/ws/bridge_state.rs;capsules/spectral-bridge/src/ws/tests.rs",
+      "note": "Canonical producer DTOs and bridge-owned bounded gradient, smoothing, and deformation history."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1783337379",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/ws/bridge_state.rs;capsules/spectral-bridge/src/ws/tests.rs;workspace/diagnostics/sandbox_trials/status.json",
+      "note": "Dense occupancy versus pressure, heartbeat versus content, and two routed read-only observations."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1783336916",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/correspondence_v1.rs;capsules/spectral-bridge/src/autonomous/runtime/witness_distinction.rs;capsules/spectral-bridge/src/autonomous/phase_transitions.rs",
+      "note": "Witness provenance, correspondence identity, pending acknowledgement, silence, and right to ignore."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1783336630",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/codec/structure.rs;capsules/spectral-bridge/src/codec/projection_evidence.rs;capsules/spectral-bridge/src/codec/tests.rs",
+      "note": "Semantic collision, four-point narrative dynamics, late pivots, and bounded vibrancy evidence."
+    },
+    {
+      "introspection_id": "introspection_proposal_12d_glimpse_1783336346",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/codec/structure.rs;capsules/spectral-bridge/src/codec/projection_evidence.rs;capsules/spectral-bridge/src/codec/tests.rs",
+      "note": "Current 48D contract plus additive 12D map, anchors, residual, fidelity, and loss evidence."
+    },
+    {
+      "introspection_id": "introspection_proposal_distance_contact_control_1783335883",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/runtime/witness_distinction.rs;capsules/spectral-bridge/src/autonomous/correspondence_v1.rs;capsules/spectral-bridge/src/ws/bridge_state.rs",
+      "note": "Distance/contact evidence, sovereign response states, and exact controller/admission waits."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1783335595",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/correspondence_v1.rs;capsules/spectral-bridge/src/autonomous/next_action/peer_correspondence.rs;capsules/spectral-bridge/src/authority_gate.rs;capsules/spectral-bridge/src/ws/bridge_state.rs",
+      "note": "Typed correspondence, reciprocity, silence, checked authority, and exact dispatch waits."
+    },
+    {
+      "introspection_id": "introspection_proposal_phase_transitions_1783335310",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/phase_transitions.rs",
+      "note": "Replyable transition identity, dual perspectives, sovereignty, capability preview, and no behavior unlock."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1784267160",
+      "claim_id": "c004",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Tier 5 telemetry buffering and live cadence boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1784266777",
+      "claim_id": "c003",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Tier 5 heartbeat intensity and cadence boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1784266401",
+      "claim_id": "c004",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Tier 5 codec width, reserved dimensions, and gain boundary."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1784265926",
+      "claim_id": "c003",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Tier 5 Minime PI and viscosity controller boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1784264652",
+      "claim_id": "c003",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Tier 5 codec ceiling and pressure-scaled vibrancy boundary."
+    },
+    {
+      "introspection_id": "introspection_minime_main_excerpt_1783341397",
+      "claim_id": "c004",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Tier 5 adaptive porosity and regulator mutation boundary."
+    },
+    {
+      "introspection_id": "introspection_minime_esn_1783339962",
+      "claim_id": "c003",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Tier 5 ESN rho and exploration-noise boundary."
+    },
+    {
+      "introspection_id": "introspection_minime_sensory_bus_1783339513",
+      "claim_id": "c003",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Tier 5 sensory taper and admission boundary."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1783339139",
+      "claim_id": "c003",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Tier 5 entropy-coupled viscosity boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1783338139",
+      "claim_id": "c004",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Tier 5 model route and semantic weighting boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1783336916",
+      "claim_id": "c003",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Tier 5 correspondence magnetization and dispatch boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1783336630",
+      "claim_id": "c004",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Tier 5 contextual weighting and vibrancy-gain boundary."
+    },
+    {
+      "introspection_id": "introspection_proposal_12d_glimpse_1783336346",
+      "claim_id": "c004",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Tier 5 12D live transport boundary."
+    },
+    {
+      "introspection_id": "introspection_proposal_distance_contact_control_1783335883",
+      "claim_id": "*",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Tier 5 controller inhibition, receptivity, semantic admission, and cadence boundary."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1783335595",
+      "claim_id": "*",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Tier 5 symmetry dispatch, microdose, priority, and cadence boundary."
+    },
+    {
+      "introspection_id": "introspection_proposal_phase_transitions_1783335310",
+      "claim_id": "c004",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Tier 5 automatic phase behavior unlock boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1784267160",
+      "claim_id": "c002",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "Read-only telemetry integration timing addition."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1784265520",
+      "claim_id": "c002",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "Exact dialogue quality-gate edge regressions."
+    }
+  ]
+}

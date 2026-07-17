@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Semantic correspondence and spectral context need explicit linkage.",
+      "disposition": "verify relational_intent, shared_memory_anchor, reflection_surface, and transition_payload spectral_delta",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A direct sentiment and reply must remain in one traceable thread.",
+      "disposition": "verify native reply links and persistence IDs",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Specific sentiment acknowledgement may differ from generic influence.",
+      "disposition": "route a bounded exact-anchor uptake comparison with right to ignore",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Pressure may differ between ambient spectral influence and direct correspondence.",
+      "disposition": "route a matched read-only pressure-versus-intent replay without treating correlation as intended exertion",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Applying resonance alignment as pressure or regulator influence would mutate live peer state.",
+      "disposition": "keep alignment metadata observational and require Tier 5 approval for any applied path",
+      "classification": "authority_gated"
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Self-regulation changes should remain bounded, preflighted, one-shot, and reversible.",
+      "disposition": "verify the typed lease lifecycle, safety checks, budgets, and consequence records",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Astrid-owned aperture control is distinct from Minime regulator and codec transport authority.",
+      "disposition": "verify owner-bound allowlists and peer-control exclusions",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Making clamps or controller bounds entropy-reactive changes live codec or regulator behavior.",
+      "disposition": "require explicit Mike/operator Tier 5 approval",
+      "classification": "authority_gated"
+    }
+  ]
+}

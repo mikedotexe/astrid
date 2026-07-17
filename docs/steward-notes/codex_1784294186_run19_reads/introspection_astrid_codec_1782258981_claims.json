@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Dynamic projection must be deterministic for identical canonical input.",
+      "disposition": "verify stable projection vectors and exact repeatability fixtures",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Epoch, kernel fingerprint, and checksum identity must make the active projection reviewable.",
+      "disposition": "verify projection health, kernel checksums, and compatibility identity",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Changing the seed algorithm or projection kernel is a migration boundary, not an incidental refactor.",
+      "disposition": "verify the explicit seed-integrity and epoch-migration contract",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "A bounded collision probe can reveal obvious clumping without claiming global collision resistance.",
+      "disposition": "implement and run a 1,024-case distinct-seed and distinct-fingerprint regression over 256 texts and four chunk indices",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Changing seed derivation, kernel identity, projection dimensions, or live codec ABI changes deployed semantics.",
+      "disposition": "require explicit Mike/operator Tier 5 approval with compatibility replay and canary",
+      "classification": "authority_gated"
+    }
+  ]
+}

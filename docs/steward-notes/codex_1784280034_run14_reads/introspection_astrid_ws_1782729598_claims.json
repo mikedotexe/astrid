@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Missing resonance telemetry must remain distinguishable from a measured zero value.",
+      "disposition": "verify field-presence receipt and compatibility projection behavior",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The exact 0.04 resonance threshold needs floating-point-stable classification.",
+      "disposition": "verify epsilon-aware threshold comparisons and exact-boundary tests",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A packet arriving at 4999 milliseconds should remain within the current freshness boundary.",
+      "disposition": "verify exact 4999 millisecond late-packet regression coverage",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Reconnects must not let a previous connection's active packet identity contaminate the new stream.",
+      "disposition": "verify first-valid-packet reset of active source identity and unsupported-major retention",
+      "classification": "verified_existing"
+    }
+  ]
+}

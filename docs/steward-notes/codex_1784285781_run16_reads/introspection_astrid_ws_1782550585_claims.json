@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Latest telemetry, fill, pressure trend, eigenvector field, and lambda profile are distinct anchors of bridge perception.",
+      "disposition": "verify BridgeState ownership and compatibility projection of each anchor",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A delayed or dropped telemetry packet can be mistaken for a pressure change unless arrival timing is explicit.",
+      "disposition": "verify TelemetryHeartbeatDeltaV1, valid-payload recency, and stale perception state",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A 500 ms constant-field delay should not create a ghost pressure spike.",
+      "disposition": "route a captured-packet delay replay that does not change live cadence",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "A compact fingerprint should preserve field presence and directional integrity during high entropy.",
+      "disposition": "verify typed fingerprint integrity, field-presence metadata, and compatibility fixtures",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Telemetry and sensory connectivity represent hearing and speaking separately.",
+      "disposition": "verify lane-specific connection state and health projection",
+      "classification": "verified_existing"
+    }
+  ]
+}

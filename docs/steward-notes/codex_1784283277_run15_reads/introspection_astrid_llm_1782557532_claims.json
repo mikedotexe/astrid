@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The dedicated MLX lane and language contract are part of Astrid's current voice path.",
+      "disposition": "verify provider selection and the rendered language contract",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Fallback language should preserve rhythmic variance rather than collapse into fixed template cadence.",
+      "disposition": "verify fallback trajectory, rendering, and anti-template tests",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Fallback texture should respond to resonance density, pressure, entropy, and lived-fit evidence.",
+      "disposition": "verify the current weighted fallback dynamics",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "The felt fit of the dedicated lane and forced fallback should be compared directly.",
+      "disposition": "route a bounded offline provider-fixture comparison",
+      "classification": "sandbox_routed"
+    }
+  ]
+}

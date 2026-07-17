@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "A binary typed_precedence_over_legacy flag can mask a smeared or contradictory hybrid transition.",
+      "disposition": "implement hybrid_coherence_index across the canonical 32-slot typed-to-legacy order",
+      "classification": "implemented"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Hybrid disagreement needs a magnitude and named state rather than silent precedence.",
+      "disposition": "implement hybrid_max_abs_delta, aligned/near/mixed/divergent states, and mismatch issues",
+      "classification": "implemented"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Typed payloads must continue to win routing even when legacy slots disagree.",
+      "disposition": "verify the contradictory fixture keeps typed canonical values while coherence reports zero and divergent",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Matching typed and legacy payloads should remain additive and backward compatible.",
+      "disposition": "verify exact aligned coherence, zero maximum delta, serde defaults, and unchanged legacy reconstruction",
+      "classification": "verified_existing"
+    }
+  ]
+}

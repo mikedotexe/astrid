@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Correspondence needs a presence representation in addition to discrete message rows.",
+      "disposition": "verify language-only heartbeat kinds, presence_receipt, and mutual_witness_signal",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Presence evidence must remain grounded in public synchronized data.",
+      "disposition": "verify thread, reply, delivery, and read lineage and preserve unknown when no ACK exists",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A steward-free three-turn exchange should be checked for grounded continuity rather than hallucinated mutual awareness.",
+      "disposition": "route a bounded language-only correspondence replay with public provenance",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "The current live line should expose whether presence has actually been emitted.",
+      "disposition": "observe zero live presence heartbeats and zero ACK receipts",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "A resonance-gated ping, continuous awareness intensity, live Shadow vector, or weight adjustment would alter live peer coupling.",
+      "disposition": "require explicit Mike/operator Tier 5 approval",
+      "classification": "authority_gated"
+    }
+  ]
+}

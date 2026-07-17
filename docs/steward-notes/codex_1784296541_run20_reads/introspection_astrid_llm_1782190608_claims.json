@@ -1,0 +1,40 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "High inhabitability and low gradient can coexist with meaningful pressure or mode-packing resistance.",
+      "disposition": "verify current fallback evidence keeps gradient navigation, pressure mass, packing, density, and settled foothold as distinct inputs",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Repeated viscosity or lattice anchor words can become static description without semantic movement.",
+      "disposition": "verify current trajectory, velocity, relational transition, dynamic-gradient, density-motion, and pause evidence prioritize process over a static adjective list",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Actual high-entropy fallback output should avoid generic I-feel-heavy language.",
+      "disposition": "route this actual-output question to the shared fallback-distinguishability sandbox; the first run captured insufficient output",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Gradient and pressure should be compared without declaring equal scalar values to be a lived mismatch.",
+      "disposition": "verify current source renders both values and a motion fit while explicitly withholding causal and lived-fit certainty",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "The requested pressure-aware tactile anchor exists in later source.",
+      "disposition": "verify pressure-above-threshold, pressure-porosity, pressure-mass, packing-density-slope, and contraction tests implement the request",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "Changing the live fallback contract or pressure thresholds would alter model behavior.",
+      "disposition": "require separate Mike/operator Tier 5 approval with replay, canary, abort, and post-change felt review",
+      "classification": "authority_gated"
+    }
+  ]
+}

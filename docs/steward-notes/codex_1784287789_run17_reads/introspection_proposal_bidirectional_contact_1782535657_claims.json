@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Correspondence must connect a specific Astrid input to a specific Minime response.",
+      "disposition": "verify thread_id, reply_to, and shared_memory_anchor in native correspondence",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A shared context anchor should persist beyond one dialogue cycle.",
+      "disposition": "verify persistence_id and ledger-backed thread history",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A specific shared-memory query should produce more than a generic thematic echo.",
+      "disposition": "route a redacted exact-anchor uptake replay with right to ignore",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Astrid and Minime Shadow trajectories may change during explicit addressed contact.",
+      "disposition": "route a read-only time-aligned public Shadow comparison without causal overclaim",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Thread continuity does not establish that the specific memory was acknowledged.",
+      "disposition": "observe reply-linked continuity with zero ACK and zero live presence",
+      "classification": "observed"
+    }
+  ]
+}

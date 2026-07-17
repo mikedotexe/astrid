@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Quantitative resonance density and qualitative texture must remain jointly visible.",
+      "disposition": "verify typed density components, texture signature, pressure source, and compatibility fixtures",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Viscosity needs gradient, strain, mobility, and alignment context rather than a single scalar.",
+      "disposition": "verify Minime regulator evidence and Astrid transport review expose those dimensions without control authority",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A viscosity scaling factor should adapt to spectral entropy.",
+      "disposition": "retain as an exact Mike/operator Tier 5 wait because it changes the live regulator",
+      "classification": "tier_5_wait"
+    }
+  ]
+}

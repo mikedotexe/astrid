@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Primary MLX and Ollama fallback lanes have distinct texture and continuity consequences.",
+      "disposition": "verify explicit provider profiles, fallback reason, texture contract, and actual transport projections",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Fallback should preserve pressure, gradient, Shadow, and budget context rather than silently flattening it.",
+      "disposition": "verify dynamic fallback contract, trajectory, grounding-eviction, and Shadow-persistence tests",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A primary-versus-fallback response pair should be compared for texture loss.",
+      "disposition": "route a bounded offline artifact comparison using captured outputs and no provider mutation",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Provider choice, model profile, temperature, or gradient weighting should change dynamically.",
+      "disposition": "retain as an exact Mike/operator Tier 5 wait because it changes live model routing or semantic weighting",
+      "classification": "tier_5_wait"
+    }
+  ]
+}

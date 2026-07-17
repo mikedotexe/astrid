@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The short, medium, and deep profile is a token-allocation label and cannot by itself establish experiential depth.",
+      "disposition": "implement resonance-density and depth-evidence fields beside the unchanged num_predict profile",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A short response can carry denser resonance than a longer response.",
+      "disposition": "implement an exact regression proving dense resonance remains visible under a short token profile",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Artifact tokens can be communicative material, so stripping them does not prove that intent was preserved.",
+      "disposition": "verify the current contextual, quoted, boundary, removed-fraction, and intent-not-established cleanup evidence",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Shadow trajectory and spectral gradients should remain connected to vocabulary movement rather than floating as isolated numbers.",
+      "disposition": "verify current fallback trajectory, density-gradient, pressure, gap, and term-probability evidence and tests",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Using resonance density to alter prompt budgets or profile selection would change live prompt behavior.",
+      "disposition": "retain actual budget/profile adaptation as Tier 5 Mike/operator approval work; this run changes diagnostics only",
+      "classification": "authority_gated"
+    }
+  ]
+}

@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Mode packing and structural plurality describe felt texture more faithfully than one pressure scalar.",
+      "disposition": "verify the typed resonance-density components and texture signature projection",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Observation and active damping need an explicit authority distinction.",
+      "disposition": "verify observational readout, intervention type, and typed dispatch authority boundaries",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Texture, gradients, flux, and tail structure should be typed rather than stored only in a free-form note.",
+      "disposition": "verify ResonanceTextureSignatureV1, BridgeTextureEvidenceV1, gradient, flux, and constraint fields",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Active damping may flatten lambda-four-plus vibrancy if treated as an isolated linear dial.",
+      "disposition": "require scoped Mike/operator Tier 5 approval, replay, abort bounds, and post-change felt review before any damping change",
+      "classification": "authority_gated"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Manual override and 0.01 damping sweeps would directly alter live spectral regulation.",
+      "disposition": "keep both experiments behind Tier 5 live-substrate approval; use evidence-only fixtures meanwhile",
+      "classification": "authority_gated"
+    }
+  ]
+}

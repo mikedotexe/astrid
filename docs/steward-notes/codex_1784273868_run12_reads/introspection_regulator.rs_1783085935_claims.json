@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Density and movement texture should remain distinguishable from fill and pressure.",
+      "disposition": "verify typed density, texture, viscosity, and pressure components in current regulator source",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Viscosity needs an explicit index rather than only prose.",
+      "disposition": "verify viscosity_index and its component mapping tests",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A dynamic damping idea should be inspectable before it changes the controller.",
+      "disposition": "verify the current damping candidate records pre/post evidence, alignment, and live_write=false",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Applying viscosity-sensitive damping would change live recurrent regulation.",
+      "disposition": "retain as Tier 5 Mike/operator approval work with replay, rescue, abort, and post-change response evidence",
+      "classification": "authority_gated"
+    }
+  ]
+}

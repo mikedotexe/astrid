@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Semantic stale and shadow windows materially shape continuity and felt memory.",
+      "disposition": "verify the current constants and lane ownership",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Surge handling should taper smoothly between fill 0.70 and 0.80.",
+      "disposition": "verify the exact smoothstep implementation and tests",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The fit of the current memory and shadow durations remains empirically testable.",
+      "disposition": "route a non-live timing and fixture comparison before proposing a control change",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Changing stale windows, taper bounds, or cadence changes live sensory behavior.",
+      "disposition": "retain as a Mike/operator Tier 5 wait",
+      "classification": "authority_gated"
+    }
+  ]
+}

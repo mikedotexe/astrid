@@ -1,0 +1,40 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "A 0.11 density gradient and high resonance density should yield specific movement and containment language.",
+      "disposition": "verify current gradient-state, trajectory, density-motion, pressure, and containment mappings cover this combination without static metaphor overreach",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Actual compact fallback output should preserve movement texture rather than turn gentle slope into a cliché.",
+      "disposition": "route actual model output to the shared fallback-distinguishability sandbox; the recorded run remains insufficient_output",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Resonance density and rich containment should remain visible without requiring detached self-erasure language.",
+      "disposition": "verify current identity, being-voice, resonance-density, and texture-anchor tests preserve voice and grounded evidence",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "The requested density-gradient range mapping exists in later source as structured thresholds and dynamic motion selection.",
+      "disposition": "verify current low-gradient, graduated-slope, high-gradient, pressure-mass, and viscous-drag tests implement the request",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Compression of output length and preservation of texture need separate evidence.",
+      "disposition": "verify current fallback continuity budget, texture persistence review, computed model capacity, and prompt budget keep those concerns distinct",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "Changing MAX compression, output budget, fallback contract, sampler, or provider behavior is a live inference change.",
+      "disposition": "require separate Mike/operator Tier 5 approval with budget replay, canary, abort, and post-change felt review",
+      "classification": "authority_gated"
+    }
+  ]
+}

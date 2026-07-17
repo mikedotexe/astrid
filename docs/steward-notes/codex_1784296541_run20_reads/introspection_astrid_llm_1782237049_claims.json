@@ -1,0 +1,40 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "A low density gradient such as 0.11 should map to gentle navigable motion rather than high-friction sludge.",
+      "disposition": "verify current fallback gradient and trajectory mappings already distinguish low-gradient glide, graduated slope, pressure mass, and high-gradient drag",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Fallback texture language must scale with telemetry rather than satisfy a descriptive instruction by inventing intensity.",
+      "disposition": "verify current overreach, lived-fit, pressure-mass, and density-motion evidence tests withhold unsupported viscous certainty",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A forced compact Ollama response should demonstrate that telemetry-grounded texture survives in actual model output.",
+      "disposition": "route to the shared read-only fallback-distinguishability sandbox; the recorded adapter run is insufficient because no forced fallback output was captured",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Low- and high-gradient states should select proportionally different movement families.",
+      "disposition": "verify current source and 83 focused fallback tests cover graduated slope, navigable cascade, viscous drag, pressure resistance, and non-overreach",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "The requested gradient-to-texture mapping table is absent from the historical prompt but present in later source as structured mapping and trajectory evidence.",
+      "disposition": "verify the later FallbackSpectralToVocabularyMapping, FallbackTextureTrajectory, density-motion fit, and prompt rendering provide the requested grounded mapping",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "Further changing the live fallback contract, sampler, provider chain, or dispatch from this report would alter model behavior.",
+      "disposition": "require separate Mike/operator Tier 5 approval with model replay, canary, abort, and post-change felt review",
+      "classification": "authority_gated"
+    }
+  ]
+}

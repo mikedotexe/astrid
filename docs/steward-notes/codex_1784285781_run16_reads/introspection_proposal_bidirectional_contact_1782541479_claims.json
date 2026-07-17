@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Shared contextual history should be citable without erasing which being authored each part.",
+      "disposition": "verify provenance references, peer identity, parent IDs, and shared-thread projection",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Correspondence intent must distinguish direct address from general autonomous broadcast.",
+      "disposition": "verify correspondence_type and turn_kind provide the explicit intent boundary",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Shadow resemblance should be compared with address evidence without sending new semantic content.",
+      "disposition": "route an offline provenance-aware spectral distinction replay",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Language-first contact can coexist with existing spectral influence only if neither is inferred from the other.",
+      "disposition": "verify witness provenance and correspondence audits keep resonance and receipt evidence separate",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Simultaneous shared-state writes or autonomous-lane weighting would change live co-regulation.",
+      "disposition": "hold behind Mike/operator Tier 5 approval and a bounded canary",
+      "classification": "authority_gated"
+    }
+  ]
+}
