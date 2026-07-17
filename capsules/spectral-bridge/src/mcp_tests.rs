@@ -10,6 +10,8 @@ use tokio::sync::RwLock;
 use super::*;
 use crate::types::SpectralTelemetry;
 
+static PROBE_STATE_TEST_LOCK: tokio::sync::Mutex<()> = tokio::sync::Mutex::const_new(());
+
 fn unique_temp_dir(name: &str) -> PathBuf {
     let stamp = SystemTime::now()
         .duration_since(UNIX_EPOCH)
@@ -465,6 +467,7 @@ async fn probe_action_list_files_returns_context_and_logs() {
 
 #[tokio::test]
 async fn probe_action_browse_and_read_more_use_probe_state() {
+    let _probe_state_guard = PROBE_STATE_TEST_LOCK.lock().await;
     clear_probe_read_more_state();
 
     let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
@@ -525,6 +528,7 @@ async fn probe_action_browse_and_read_more_use_probe_state() {
 
 #[tokio::test]
 async fn probe_action_browse_soft_failure_returns_explicit_failure() {
+    let _probe_state_guard = PROBE_STATE_TEST_LOCK.lock().await;
     clear_probe_read_more_state();
 
     let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
@@ -832,6 +836,7 @@ async fn probe_action_compose_returns_experienced_text_and_artifact() {
 
 #[tokio::test]
 async fn probe_action_autoresearch_list_returns_context_when_repo_exists() {
+    let _probe_state_guard = PROBE_STATE_TEST_LOCK.lock().await;
     if !crate::paths::bridge_paths().autoresearch_root().exists() {
         return;
     }
