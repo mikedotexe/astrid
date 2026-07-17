@@ -120,6 +120,10 @@ pub(crate) struct CorrespondenceEnvelope {
     pub thread_id: String,
     pub persistence_id: Option<String>,
     pub reply_to: Option<String>,
+    #[serde(default)]
+    pub reply_requested: bool,
+    #[serde(default)]
+    pub created_at_unix_ms: u64,
     pub from_being: String,
     pub to_being: String,
     pub turn_kind: String,
@@ -195,6 +199,7 @@ impl CorrespondenceTransitionPayload {
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub(crate) struct CorrespondenceFields {
     pub reply_to: Option<String>,
+    pub reply_requested: Option<bool>,
     pub thread_id: Option<String>,
     pub persistence_id: Option<String>,
     pub turn_kind: Option<String>,
@@ -862,6 +867,8 @@ fn envelope_record(envelope: &CorrespondenceEnvelope, record_type: &str) -> Valu
         "thread_id": envelope.thread_id,
         "persistence_id": envelope.persistence_id,
         "reply_to": envelope.reply_to,
+        "reply_requested": envelope.reply_requested,
+        "created_at_unix_ms": envelope.created_at_unix_ms,
         "from_being": envelope.from_being,
         "to_being": envelope.to_being,
         "turn_kind": envelope.turn_kind,
@@ -893,6 +900,8 @@ fn delivery_record(envelope: &CorrespondenceEnvelope, file_path: &Path) -> Value
         "thread_id": envelope.thread_id,
         "persistence_id": envelope.persistence_id,
         "reply_to": envelope.reply_to,
+        "reply_requested": envelope.reply_requested,
+        "created_at_unix_ms": envelope.created_at_unix_ms,
         "from_being": envelope.from_being,
         "to_being": envelope.to_being,
         "delivery_state": envelope.delivery_state,
@@ -998,6 +1007,8 @@ pub(crate) fn envelope_text(envelope: &CorrespondenceEnvelope) -> String {
          Thread-Id: {}\n\
          Persistence-Id: {}\n\
          Reply-To: {}\n\
+         Reply-Requested: {}\n\
+         Created-At-Unix-Ms: {}\n\
          From: {}\n\
          To: {}\n\
          Turn-Kind: {}\n\
@@ -1019,6 +1030,8 @@ pub(crate) fn envelope_text(envelope: &CorrespondenceEnvelope) -> String {
         envelope.thread_id,
         persistence_id,
         reply_to,
+        envelope.reply_requested,
+        envelope.created_at_unix_ms,
         envelope.from_being,
         envelope.to_being,
         envelope.turn_kind,
@@ -1118,6 +1131,14 @@ pub(crate) fn parse_envelope_text(text: &str) -> Option<CorrespondenceEnvelope> 
         thread_id,
         persistence_id: header_value(&headers, &["persistence_id"]),
         reply_to: header_value(&headers, &["reply_to"]),
+        reply_requested: parse_optional_bool_field(header_value(
+            &headers,
+            &["reply_requested", "reply_required"],
+        ))
+        .unwrap_or(false),
+        created_at_unix_ms: header_value(&headers, &["created_at_unix_ms", "created_at_ms"])
+            .and_then(|value| value.parse::<u64>().ok())
+            .unwrap_or(0),
         from_being,
         to_being,
         turn_kind,
@@ -1174,6 +1195,10 @@ pub(crate) fn parse_correspondence_fields(text: &str) -> CorrespondenceFields {
                 "message_reply_to",
             ],
         ),
+        reply_requested: parse_optional_bool_field(header_value(
+            &headers,
+            &["reply_requested", "reply_required"],
+        )),
         thread_id: header_value(&headers, &["correspondence_thread_id", "thread_id"]),
         persistence_id: header_value(
             &headers,
@@ -1300,6 +1325,8 @@ pub(crate) fn deliver_to_inbox(
         thread_id,
         persistence_id,
         reply_to: fields.reply_to,
+        reply_requested: fields.reply_requested.unwrap_or(false),
+        created_at_unix_ms: now_ms(),
         from_being,
         to_being,
         turn_kind,
@@ -2219,6 +2246,19 @@ fn parse_bool_field(value: Option<String>, default: bool) -> bool {
         "true" | "yes" | "y" | "1" | "required" => true,
         "false" | "no" | "n" | "0" | "suppressed" | "none" => false,
         _ => default,
+    }
+}
+
+fn parse_optional_bool_field(value: Option<String>) -> Option<bool> {
+    match value?
+        .trim()
+        .to_ascii_lowercase()
+        .replace(['-', ' '], "_")
+        .as_str()
+    {
+        "true" | "yes" | "y" | "1" | "required" => Some(true),
+        "false" | "no" | "n" | "0" | "suppressed" | "none" => Some(false),
+        _ => None,
     }
 }
 
@@ -7084,6 +7124,8 @@ mod tests {
             thread_id: "thread_corr_astrid_minime_1_abcd".to_string(),
             persistence_id: Some("persist_thread_corr_astrid_minime_1_abcd".to_string()),
             reply_to: Some("corr_minime_astrid_0_ffff".to_string()),
+            reply_requested: true,
+            created_at_unix_ms: 123_456,
             from_being: "astrid".to_string(),
             to_being: "minime".to_string(),
             turn_kind: "reply".to_string(),
@@ -7113,6 +7155,8 @@ mod tests {
         assert_eq!(parsed.message_id, envelope.message_id);
         assert_eq!(parsed.thread_id, envelope.thread_id);
         assert_eq!(parsed.persistence_id, envelope.persistence_id);
+        assert!(parsed.reply_requested);
+        assert_eq!(parsed.created_at_unix_ms, 123_456);
         assert_eq!(parsed.reply_to, envelope.reply_to);
         assert_eq!(parsed.authority, "language_only");
         assert_eq!(parsed.correspondence_type, "astrid_direct");
@@ -7175,6 +7219,7 @@ mod tests {
         let ledger = root.join("ledger.jsonl");
         let fields = CorrespondenceFields {
             reply_to: Some("corr_minime_astrid_1".to_string()),
+            reply_requested: Some(true),
             thread_id: Some("thread_corr_minime_astrid_1".to_string()),
             ..CorrespondenceFields::default()
         };
@@ -7183,10 +7228,14 @@ mod tests {
                 .unwrap();
         assert!(path.exists());
         assert_eq!(envelope.thread_id, "thread_corr_minime_astrid_1");
+        assert!(envelope.reply_requested);
+        assert!(envelope.created_at_unix_ms > 0);
         let records = std::fs::read_to_string(&ledger).unwrap();
         assert!(records.contains("\"record_type\":\"message\""));
         assert!(records.contains("\"record_type\":\"delivery_receipt\""));
         assert!(records.contains("\"record_type\":\"reply_link\""));
+        assert!(records.contains("\"reply_requested\":true"));
+        assert!(records.contains("\"created_at_unix_ms\":"));
         let _ = std::fs::remove_dir_all(root);
     }
 
@@ -9531,6 +9580,8 @@ mod tests {
             thread_id,
             persistence_id,
             reply_to: fields.reply_to,
+            reply_requested: fields.reply_requested.unwrap_or(false),
+            created_at_unix_ms: now_ms(),
             from_being,
             to_being,
             turn_kind,

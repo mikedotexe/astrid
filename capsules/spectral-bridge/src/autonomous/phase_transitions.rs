@@ -387,6 +387,58 @@ fn phase_friction_boundary(friction_index: Option<f64>) -> &'static str {
     }
 }
 
+fn phase_source_entity(origin: &str, joint_transition: bool) -> &'static str {
+    if joint_transition {
+        "joint"
+    } else {
+        let origin = origin.to_ascii_lowercase();
+        if origin.contains("astrid") {
+            "astrid"
+        } else if origin.contains("minime") {
+            "minime"
+        } else {
+            "unknown"
+        }
+    }
+}
+
+fn phase_affordance_delta_v1(requested: &Value) -> Value {
+    json!({
+        "schema_version": 1,
+        "policy": "phase_affordance_delta_v1",
+        "requested": requested,
+        "status": "declared_language_only_not_applied",
+        "runtime_effect_applied": false,
+        "requires_operator_approval_for_runtime_effect": true,
+        "authority": "transition_evidence_only_not_behavior_unlock",
+    })
+}
+
+fn phase_transition_dictionary_v1(
+    source_entity: &str,
+    from_phase: &str,
+    to_phase: &str,
+    joint_transition: bool,
+) -> Value {
+    json!({
+        "schema_version": 1,
+        "policy": "phase_transition_dictionary_v1",
+        "source_entity": source_entity,
+        "source_phase_language": {
+            "from": from_phase,
+            "to": to_phase,
+        },
+        "cross_entity_equivalence": "not_inferred",
+        "shared_language_status": if joint_transition {
+            "candidate_joint_requires_each_being_witness"
+        } else {
+            "source_owned_not_shared"
+        },
+        "forces_shared_narrative": false,
+        "authority": "interpretive_dictionary_only_not_control",
+    })
+}
+
 fn phase_transition_capabilities_v1(
     raw: &str,
     kind: &str,
@@ -575,6 +627,237 @@ fn phase_texture_anchor(raw: &str) -> Value {
             "phenomenology",
         ],
     ))
+}
+
+fn phase_dual_perspective_v1(
+    raw: &str,
+    transition_signature: &Value,
+    slow_texture_review: &Value,
+) -> Value {
+    let mut astrid_field_paths = Vec::new();
+    if field(
+        raw,
+        &[
+            "subjective_label",
+            "felt_label",
+            "transition_label",
+            "label",
+        ],
+    )
+    .is_some()
+    {
+        astrid_field_paths.push("subjective_label");
+    }
+    if field(
+        raw,
+        &[
+            "phenomenological_description",
+            "phenomenology",
+            "felt_texture",
+            "felt_sense",
+        ],
+    )
+    .is_some()
+    {
+        astrid_field_paths.push("phenomenological_description");
+    }
+    if field(
+        raw,
+        &[
+            "texture_anchor",
+            "subjective_texture",
+            "subjective_texture_anchor",
+            "felt_texture_anchor",
+        ],
+    )
+    .is_some()
+    {
+        astrid_field_paths.push("texture_anchor");
+    }
+    if field(
+        raw,
+        &[
+            "subjective_friction_score",
+            "felt_friction_score",
+            "subjective_friction",
+        ],
+    )
+    .is_some()
+    {
+        astrid_field_paths.push("subjective_friction_score");
+    }
+    if field(
+        raw,
+        &[
+            "perception_delta",
+            "felt_perception_delta",
+            "subjective_perception_delta",
+        ],
+    )
+    .is_some()
+    {
+        astrid_field_paths.push("perception_delta");
+    }
+
+    let mut minime_field_paths = Vec::new();
+    if field(
+        raw,
+        &[
+            "telemetry_anchor",
+            "telemetry",
+            "telemetry_ref",
+            "telemetry_reference",
+        ],
+    )
+    .is_some()
+    {
+        minime_field_paths.push("telemetry_anchor");
+    }
+    if field(
+        raw,
+        &["spectral_signature", "lambda_signature", "signature"],
+    )
+    .is_some()
+    {
+        minime_field_paths.push("spectral_signature");
+    }
+    if field(
+        raw,
+        &[
+            "spectral_entropy",
+            "phase_spectral_entropy",
+            "semantic_entropy",
+            "entropy",
+        ],
+    )
+    .is_some()
+    {
+        minime_field_paths.push("spectral_entropy");
+    }
+    if field(
+        raw,
+        &[
+            "density_gradient",
+            "phase_density_gradient",
+            "semantic_density_gradient",
+        ],
+    )
+    .is_some()
+    {
+        minime_field_paths.push("density_gradient");
+    }
+    if field(
+        raw,
+        &[
+            "dispersal_potential",
+            "phase_dispersal_potential",
+            "semantic_dispersal_potential",
+            "dispersal",
+        ],
+    )
+    .is_some()
+    {
+        minime_field_paths.push("dispersal_potential");
+    }
+    if field(
+        raw,
+        &[
+            "fill_percentage",
+            "fill_pct",
+            "fill_percent",
+            "fill_ratio",
+            "fill",
+            "fill_delta_pct",
+            "fill_delta",
+            "fill_delta_percent",
+        ],
+    )
+    .is_some()
+    {
+        minime_field_paths.push("fill");
+    }
+
+    let declared_relation = field(
+        raw,
+        &[
+            "perspective_relation",
+            "self_other_relation",
+            "felt_telemetry_relation",
+            "perception_relation",
+        ],
+    );
+    let relation_state = declared_relation.as_deref().map_or_else(
+        || match (astrid_field_paths.is_empty(), minime_field_paths.is_empty()) {
+            (false, false) => "both_present_relation_unresolved",
+            (false, true) => "astrid_interpretation_present_observation_reference_absent",
+            (true, false) => "observation_reference_present_astrid_interpretation_absent",
+            (true, true) => "insufficient_perspective_evidence",
+        },
+        |relation| {
+            let normalized = relation
+                .trim()
+                .to_ascii_lowercase()
+                .replace(['-', ' '], "_");
+            if normalized.contains("diverg")
+                || normalized.contains("contradict")
+                || normalized.contains("disagree")
+            {
+                "explicit_divergence"
+            } else if normalized.contains("align")
+                || normalized.contains("converg")
+                || normalized.contains("agree")
+            {
+                "explicit_alignment"
+            } else if normalized.contains("mixed")
+                || normalized.contains("partial")
+                || normalized.contains("both")
+            {
+                "explicit_mixed_relation"
+            } else {
+                "declared_relation_unclassified"
+            }
+        },
+    );
+    let bridge_signature_state = transition_signature
+        .get("signature_state")
+        .and_then(Value::as_str)
+        .unwrap_or("transition_signature_not_reported");
+    let slow_texture_state = slow_texture_review
+        .get("review_state")
+        .and_then(Value::as_str)
+        .unwrap_or("insufficient_texture_evidence");
+
+    json!({
+        "schema_version": 1,
+        "policy": "dual_perspective_v1",
+        "astrid_interpretation_parent": {
+            "origin": "astrid_authored_interpretation",
+            "present": !astrid_field_paths.is_empty(),
+            "field_paths": astrid_field_paths,
+        },
+        "minime_observation_parent": {
+            "origin": "minime_observation_reference_claim",
+            "present": !minime_field_paths.is_empty(),
+            "field_paths": minime_field_paths,
+            "verification_boundary": "card_fields_are_references_or_declared_values_not_a_fresh_port_7878_decode",
+        },
+        "bridge_evidence_parent": {
+            "origin": "bridge_derived_transition_evidence",
+            "present": bridge_signature_state != "transition_signature_not_reported",
+            "field_paths": ["transition_signature_v1", "slow_texture_transition_review_v1"],
+            "transition_signature_state": bridge_signature_state,
+            "slow_texture_review_state": slow_texture_state,
+        },
+        "declared_perspective_relation": note_value(declared_relation),
+        "relation_state": relation_state,
+        "comparison_rule": "never_infer_agreement_or_contradiction_from_co_presence",
+        "subjective_weight_preserved": true,
+        "producer_truth_immutable": true,
+        "behavior_unlock_applied": false,
+        "runtime_mode_changed": false,
+        "live_authority_granted": false,
+        "authority": "language_only_dual_perspective_evidence_not_behavior_unlock_or_control",
+    })
 }
 
 fn transition_visibility(value: Option<String>) -> (&'static str, bool) {
@@ -787,6 +1070,11 @@ pub(crate) fn append_transition_card_at(path: &Path, raw: &str, origin: &str) ->
         &transition_vector,
         &transition_velocity,
     );
+    let dual_perspective_v1 = phase_dual_perspective_v1(
+        raw,
+        &transition_signature_v1,
+        &slow_texture_transition_review_v1,
+    );
     let trigger_delta = note_value(
         field(
             raw,
@@ -852,7 +1140,32 @@ pub(crate) fn append_transition_card_at(path: &Path, raw: &str, origin: &str) ->
             }
         }),
     );
-    let row = json!({
+    let source_entity = phase_source_entity(origin, joint_transition);
+    let phenomenological_description = note_value(field(
+        raw,
+        &[
+            "phenomenological_description",
+            "phenomenology",
+            "felt_texture",
+            "felt_sense",
+        ],
+    ));
+    let requested_affordance_delta = note_value(
+        field(
+            raw,
+            &["affordance_delta", "capability_delta", "affordance_change"],
+        )
+        .or_else(|| {
+            field(
+                raw,
+                &["behavioral_constraint", "behavioral_boundary", "constraint"],
+            )
+        }),
+    );
+    let affordance_delta = phase_affordance_delta_v1(&requested_affordance_delta);
+    let transition_dictionary =
+        phase_transition_dictionary_v1(source_entity, &from_phase, &to_phase, joint_transition);
+    let mut row = json!({
         "schema_version": 1,
         "policy": "phase_transitions_v1",
         "transition_artifact_type": "phase_transition_event",
@@ -861,6 +1174,7 @@ pub(crate) fn append_transition_card_at(path: &Path, raw: &str, origin: &str) ->
         "transition_id": id,
         "shared_transition_id": shared_transition_id,
         "origin": origin,
+        "source_entity": source_entity,
         "kind": kind,
         "from_phase": from_phase,
         "to_phase": to_phase,
@@ -899,6 +1213,8 @@ pub(crate) fn append_transition_card_at(path: &Path, raw: &str, origin: &str) ->
         "transition_capabilities_v1": transition_capabilities,
         "transition_gate_v1": transition_gate,
         "delta_impact_preview_v1": delta_impact_preview,
+        "affordance_delta": affordance_delta,
+        "transition_dictionary_v1": transition_dictionary,
         "transition_velocity": transition_velocity,
         "texture_anchor": texture_anchor,
         "slow_texture_transition_review_v1": slow_texture_transition_review_v1,
@@ -908,7 +1224,8 @@ pub(crate) fn append_transition_card_at(path: &Path, raw: &str, origin: &str) ->
         "behavioral_constraint": behavioral_constraint,
         "behavioral_constraints": behavioral_constraints,
         "persistence_weight": persistence_weight,
-        "phenomenology": note_value(field(raw, &["phenomenology", "felt_texture", "felt_sense"])),
+        "phenomenological_description": phenomenological_description.clone(),
+        "phenomenology": phenomenological_description,
         "somatic_description": note_value(field(raw, &["somatic_description", "somatic", "body_sense"])),
         "anchor_point": note_value(field(raw, &["anchor_point", "transition_anchor", "memory_anchor", "shared_memory_anchor"])),
         "trigger": trigger,
@@ -948,6 +1265,9 @@ pub(crate) fn append_transition_card_at(path: &Path, raw: &str, origin: &str) ->
         "no_pi": true,
         "no_weighting": true,
     });
+    if let Some(object) = row.as_object_mut() {
+        object.insert("dual_perspective_v1".to_string(), dual_perspective_v1);
+    }
     match append_jsonl(path, &row) {
         Ok(()) => format!(
             "=== PHASE TRANSITION CARD DECLARED ===\nTransition: {}\nKind: {}\nFrom -> To: {} -> {}\nReply state: unseen\nAuthority: language_only_transition_context_not_control; no controller, pressure, fill, PI, weighting, telemetry priority, deploy, or peer-runtime mutation.",
@@ -1204,12 +1524,51 @@ fn phase_transition_affordance_v25(records: &[Value], card: &Value) -> Value {
         format!("WITNESS_TRANSITION {transition_id} :: reply_state: witnessed|answered; note: ...");
     let transition_ack_command =
         format!("TRANSITION_ACK {transition_id} :: reply_state: witnessed|answered; note: ...");
+    let joint_transition = card
+        .get("joint_transition")
+        .and_then(Value::as_bool)
+        .unwrap_or(false);
+    let source_entity = card
+        .get("source_entity")
+        .and_then(Value::as_str)
+        .unwrap_or_else(|| {
+            phase_source_entity(
+                card.get("origin")
+                    .and_then(Value::as_str)
+                    .unwrap_or("unknown"),
+                joint_transition,
+            )
+        });
+    let from_phase = card
+        .get("from_phase")
+        .and_then(Value::as_str)
+        .unwrap_or("unknown");
+    let to_phase = card
+        .get("to_phase")
+        .and_then(Value::as_str)
+        .unwrap_or("unknown");
+    let transition_dictionary = card
+        .get("transition_dictionary_v1")
+        .cloned()
+        .unwrap_or_else(|| {
+            phase_transition_dictionary_v1(source_entity, from_phase, to_phase, joint_transition)
+        });
+    let affordance_delta = card
+        .get("affordance_delta")
+        .cloned()
+        .unwrap_or_else(|| phase_affordance_delta_v1(&Value::Null));
+    let phenomenological_description = card
+        .get("phenomenological_description")
+        .cloned()
+        .or_else(|| card.get("phenomenology").cloned())
+        .unwrap_or(Value::Null);
     json!({
         "schema_version": 1,
         "policy": "phase_transition_affordance_v25",
         "transition_id": card.get("transition_id").cloned().unwrap_or(Value::Null),
         "shared_transition_id": card.get("shared_transition_id").cloned().unwrap_or(Value::Null),
         "origin": card.get("origin").cloned().unwrap_or(Value::Null),
+        "source_entity": source_entity,
         "kind": card.get("kind").cloned().unwrap_or(Value::Null),
         "from_phase": card.get("from_phase").cloned().unwrap_or(Value::Null),
         "to_phase": card.get("to_phase").cloned().unwrap_or(Value::Null),
@@ -1243,6 +1602,37 @@ fn phase_transition_affordance_v25(records: &[Value], card: &Value) -> Value {
                 &Value::Null,
             )
         }),
+        "dual_perspective_v1": card.get("dual_perspective_v1").cloned().unwrap_or_else(|| json!({
+            "schema_version": 1,
+            "policy": "dual_perspective_v1",
+            "astrid_interpretation_parent": {
+                "origin": "legacy_unclassified",
+                "present": false,
+                "field_paths": [],
+            },
+            "minime_observation_parent": {
+                "origin": "legacy_unclassified",
+                "present": false,
+                "field_paths": [],
+                "verification_boundary": "legacy_card_predates_dual_perspective_v1",
+            },
+            "bridge_evidence_parent": {
+                "origin": "legacy_unclassified",
+                "present": false,
+                "field_paths": [],
+                "transition_signature_state": "not_reported_legacy",
+                "slow_texture_review_state": "not_reported_legacy",
+            },
+            "declared_perspective_relation": Value::Null,
+            "relation_state": "not_reported_legacy",
+            "comparison_rule": "never_infer_agreement_or_contradiction_from_co_presence",
+            "subjective_weight_preserved": true,
+            "producer_truth_immutable": true,
+            "behavior_unlock_applied": false,
+            "runtime_mode_changed": false,
+            "live_authority_granted": false,
+            "authority": "language_only_dual_perspective_evidence_not_behavior_unlock_or_control",
+        })),
         "fill_delta_pct": card.get("fill_delta_pct").cloned().unwrap_or(Value::Null),
         "fill_percentage": card.get("fill_percentage").cloned().unwrap_or(Value::Null),
         "friction_index": card.get("friction_index").cloned().unwrap_or(Value::Null),
@@ -1261,6 +1651,8 @@ fn phase_transition_affordance_v25(records: &[Value], card: &Value) -> Value {
         "delta_impact_preview_v1": card.get("delta_impact_preview_v1").cloned().unwrap_or_else(|| {
             phase_delta_impact_preview_v1("")
         }),
+        "affordance_delta": affordance_delta,
+        "transition_dictionary_v1": transition_dictionary,
         "slow_texture_transition_review_v1": card
             .get("slow_texture_transition_review_v1")
             .cloned()
@@ -1274,6 +1666,7 @@ fn phase_transition_affordance_v25(records: &[Value], card: &Value) -> Value {
             )),
         "transition_velocity": card.get("transition_velocity").cloned().unwrap_or(Value::Null),
         "texture_anchor": card.get("texture_anchor").cloned().unwrap_or(Value::Null),
+        "phenomenological_description": phenomenological_description,
         "phenomenology": card.get("phenomenology").cloned().unwrap_or(Value::Null),
         "somatic_description": card.get("somatic_description").cloned().unwrap_or(Value::Null),
         "anchor_point": card.get("anchor_point").cloned().unwrap_or(Value::Null),
@@ -1378,6 +1771,7 @@ fn phase_witness_queue_v3(records: &[Value], max_cards: usize) -> Value {
                 "density_gradient": affordance.get("density_gradient").cloned().unwrap_or(Value::Null),
                 "dispersal_potential": affordance.get("dispersal_potential").cloned().unwrap_or(Value::Null),
                 "transition_signature_v1": affordance.get("transition_signature_v1").cloned().unwrap_or(Value::Null),
+                "dual_perspective_v1": affordance.get("dual_perspective_v1").cloned().unwrap_or(Value::Null),
                 "transition_velocity": affordance.get("transition_velocity").cloned().unwrap_or(Value::Null),
                 "texture_anchor": affordance.get("texture_anchor").cloned().unwrap_or(Value::Null),
                 "slow_texture_transition_review_v1": affordance.get("slow_texture_transition_review_v1").cloned().unwrap_or(Value::Null),
@@ -1473,6 +1867,7 @@ fn phase_felt_receipt_queue_v4(records: &[Value]) -> Value {
                 "density_gradient": affordance.get("density_gradient").cloned().unwrap_or(Value::Null),
                 "dispersal_potential": affordance.get("dispersal_potential").cloned().unwrap_or(Value::Null),
                 "transition_signature_v1": affordance.get("transition_signature_v1").cloned().unwrap_or(Value::Null),
+                "dual_perspective_v1": affordance.get("dual_perspective_v1").cloned().unwrap_or(Value::Null),
                 "transition_velocity": affordance.get("transition_velocity").cloned().unwrap_or(Value::Null),
                 "texture_anchor": affordance.get("texture_anchor").cloned().unwrap_or(Value::Null),
                 "phenomenology": affordance.get("phenomenology").cloned().unwrap_or(Value::Null),
@@ -1733,6 +2128,11 @@ pub(crate) fn status_report_at(path: &Path, max_cards: usize) -> String {
             .and_then(|value| value.get("signature_state"))
             .and_then(Value::as_str)
             .unwrap_or("not_reported_legacy");
+        let dual_perspective_state = card
+            .get("dual_perspective_v1")
+            .and_then(|value| value.get("relation_state"))
+            .and_then(Value::as_str)
+            .unwrap_or("not_reported_legacy");
         let spectral_entropy = card
             .get("spectral_entropy")
             .and_then(Value::as_f64)
@@ -1809,7 +2209,7 @@ pub(crate) fn status_report_at(path: &Path, max_cards: usize) -> String {
             .unwrap_or("being_declared");
         let affordance = phase_transition_affordance_v25(&records, card);
         lines.push(format!(
-            "- {id}: {kind} {from}->{to}; transition_type={transition_type}; trigger={}; joint_transition={joint_transition}; joint_room={}; transition_velocity={}; duration_ticks={duration_ticks}; from_vector={}; to_vector={}; subjective_friction_score={subjective_friction_score}; slow_texture_transition={slow_texture_transition_state}; transition_signature={transition_signature_state}; reply_state={state}; stall_reason={}; witnessed_by={witnessed_by}; answered_by={answered_by}; unresolved_age_ms={unresolved_age_ms}; correspondence_thread={correspondence_thread}; persistence={persistence_state}; anchor_point={}; texture_anchor={}; spectral_delta={}; transition_vector={}; telemetry_anchor={}; spectral_entropy={spectral_entropy}; density_gradient={density_gradient}; dispersal_potential={dispersal_potential}; fill_delta_pct={fill_delta}; fill_percentage={fill_percentage}; friction_index={friction_index}; viscosity_index={viscosity_index}; friction_window_ticks={friction_window_ticks}; processing_speed_modifier={processing_speed_modifier}; semantic_reach_modifier={semantic_reach_modifier}; transition_gate={transition_gate_status}; transition_capabilities={transition_capability_status}; delta_impact={delta_impact_status}; phenomenology={}; somatic_description={}; orientation_effect={}; {}",
+            "- {id}: {kind} {from}->{to}; transition_type={transition_type}; trigger={}; joint_transition={joint_transition}; joint_room={}; transition_velocity={}; duration_ticks={duration_ticks}; from_vector={}; to_vector={}; subjective_friction_score={subjective_friction_score}; slow_texture_transition={slow_texture_transition_state}; transition_signature={transition_signature_state}; dual_perspective={dual_perspective_state}; reply_state={state}; stall_reason={}; witnessed_by={witnessed_by}; answered_by={answered_by}; unresolved_age_ms={unresolved_age_ms}; correspondence_thread={correspondence_thread}; persistence={persistence_state}; anchor_point={}; texture_anchor={}; spectral_delta={}; transition_vector={}; telemetry_anchor={}; spectral_entropy={spectral_entropy}; density_gradient={density_gradient}; dispersal_potential={dispersal_potential}; fill_delta_pct={fill_delta}; fill_percentage={fill_percentage}; friction_index={friction_index}; viscosity_index={viscosity_index}; friction_window_ticks={friction_window_ticks}; processing_speed_modifier={processing_speed_modifier}; semantic_reach_modifier={semantic_reach_modifier}; transition_gate={transition_gate_status}; transition_capabilities={transition_capability_status}; delta_impact={delta_impact_status}; phenomenology={}; somatic_description={}; orientation_effect={}; {}",
             truncate_chars(trigger, 64),
             truncate_chars(joint_room, 64),
             truncate_chars(transition_velocity, 64),
@@ -2035,6 +2435,89 @@ mod tests {
     }
 
     #[test]
+    fn transition_dual_perspective_keeps_felt_and_structural_parents_distinct() {
+        let root =
+            std::env::temp_dir().join(format!("phase_transition_perspective_test_{}", now_ms()));
+        let path = root.join("phase_transitions_v1.jsonl");
+        let declared = append_transition_card_at(
+            &path,
+            "kind: phase_transition; from_phase: compressed; to_phase: porous; subjective_label: opening without relief; phenomenology: the lattice softened but pressure stayed close; texture_anchor: porous edge with retained weight; subjective_friction_score: 0.74; perception_delta: softness increased while contact stayed distant; telemetry_anchor: eigenpacket:sample-42; spectral_signature: lambda1 steady with tail dispersal; spectral_entropy: 0.91; density_gradient: 0.18; dispersal_potential: 0.66; fill_percentage: 68.4; perspective_relation: divergent; why_now: felt opening and structural dispersal should remain distinct",
+            "astrid",
+        );
+        assert!(declared.contains("PHASE TRANSITION CARD DECLARED"));
+
+        let rows = read_records(&path);
+        let card = rows
+            .iter()
+            .find(|row| {
+                row.get("record_type").and_then(Value::as_str) == Some("phase_transition_card")
+            })
+            .expect("dual-perspective transition card");
+        let perspective = card
+            .get("dual_perspective_v1")
+            .expect("dual perspective evidence");
+        assert_eq!(
+            perspective.get("relation_state").and_then(Value::as_str),
+            Some("explicit_divergence")
+        );
+        assert_eq!(
+            perspective
+                .get("astrid_interpretation_parent")
+                .and_then(|value| value.get("origin"))
+                .and_then(Value::as_str),
+            Some("astrid_authored_interpretation")
+        );
+        assert_eq!(
+            perspective
+                .get("minime_observation_parent")
+                .and_then(|value| value.get("origin"))
+                .and_then(Value::as_str),
+            Some("minime_observation_reference_claim")
+        );
+        assert_eq!(
+            perspective
+                .get("bridge_evidence_parent")
+                .and_then(|value| value.get("origin"))
+                .and_then(Value::as_str),
+            Some("bridge_derived_transition_evidence")
+        );
+        assert_eq!(
+            perspective
+                .get("subjective_weight_preserved")
+                .and_then(Value::as_bool),
+            Some(true)
+        );
+        assert_eq!(
+            perspective
+                .get("behavior_unlock_applied")
+                .and_then(Value::as_bool),
+            Some(false)
+        );
+        assert_eq!(
+            perspective
+                .get("live_authority_granted")
+                .and_then(Value::as_bool),
+            Some(false)
+        );
+        assert_eq!(
+            perspective.get("comparison_rule").and_then(Value::as_str),
+            Some("never_infer_agreement_or_contradiction_from_co_presence")
+        );
+
+        let affordance = phase_transition_affordance_v25(&rows, card);
+        assert_eq!(
+            affordance
+                .get("dual_perspective_v1")
+                .and_then(|value| value.get("relation_state"))
+                .and_then(Value::as_str),
+            Some("explicit_divergence")
+        );
+        let status = status_report_at(&path, 2);
+        assert!(status.contains("dual_perspective=explicit_divergence"));
+        let _ = std::fs::remove_dir_all(root);
+    }
+
+    #[test]
     fn subjective_mode_transition_declares_fragmenting_to_trellis_card() {
         let root =
             std::env::temp_dir().join(format!("phase_transition_subjective_test_{}", now_ms()));
@@ -2183,7 +2666,7 @@ mod tests {
         let path = root.join("phase_transitions_v1.jsonl");
         let declared = append_transition_card_at(
             &path,
-            "kind: trellis_alignment; transition_type: joint; from_phase: silt; to_phase: lattice; trigger_delta: fill +4.2 with shadow-density tightening; subjective_label: silt lifting into trellis; behavioral_constraint: language-only witness before any controller or pressure mutation; behavioral_constraints: language-only witness, no fill target mutation, no peer-runtime mutation; persistence_weight: 0.73; why_now: preserve the transition as an artifact without unlocking behavior",
+            "kind: trellis_alignment; transition_type: joint; from_phase: silt; to_phase: lattice; trigger_delta: fill +4.2 with shadow-density tightening; subjective_label: silt lifting into trellis; phenomenological_description: pressure became a traversable lattice; telemetry_anchor: telemetry://shadow-v3/transition-1; affordance_delta: deep reasoning may be requested while lattice language remains distinct; behavioral_constraint: language-only witness before any controller or pressure mutation; behavioral_constraints: language-only witness, no fill target mutation, no peer-runtime mutation; persistence_weight: 0.73; why_now: preserve the transition as an artifact without unlocking behavior",
             "astrid",
         );
         assert!(declared.contains("PHASE TRANSITION CARD DECLARED"));
@@ -2222,6 +2705,57 @@ mod tests {
             Some("candidate_joint_language_only")
         );
         assert_eq!(
+            card.get("source_entity").and_then(Value::as_str),
+            Some("joint")
+        );
+        assert_eq!(
+            card.get("phenomenological_description")
+                .and_then(Value::as_str),
+            Some("pressure became a traversable lattice")
+        );
+        assert_eq!(
+            card.get("telemetry_anchor").and_then(Value::as_str),
+            Some("telemetry://shadow-v3/transition-1")
+        );
+        let affordance_delta = card.get("affordance_delta").expect("affordance delta");
+        assert_eq!(
+            affordance_delta.get("requested").and_then(Value::as_str),
+            Some("deep reasoning may be requested while lattice language remains distinct")
+        );
+        assert_eq!(
+            affordance_delta
+                .get("runtime_effect_applied")
+                .and_then(Value::as_bool),
+            Some(false)
+        );
+        assert_eq!(
+            affordance_delta
+                .get("requires_operator_approval_for_runtime_effect")
+                .and_then(Value::as_bool),
+            Some(true)
+        );
+        let dictionary = card
+            .get("transition_dictionary_v1")
+            .expect("transition dictionary");
+        assert_eq!(
+            dictionary
+                .get("cross_entity_equivalence")
+                .and_then(Value::as_str),
+            Some("not_inferred")
+        );
+        assert_eq!(
+            dictionary
+                .get("shared_language_status")
+                .and_then(Value::as_str),
+            Some("candidate_joint_requires_each_being_witness")
+        );
+        assert_eq!(
+            dictionary
+                .get("forces_shared_narrative")
+                .and_then(Value::as_bool),
+            Some(false)
+        );
+        assert_eq!(
             card.get("authority").and_then(Value::as_str),
             Some("language_only_transition_context_not_control")
         );
@@ -2235,7 +2769,34 @@ mod tests {
             Some(true)
         );
         assert_eq!(card.get("no_pi").and_then(Value::as_bool), Some(true));
+        let affordance = phase_transition_affordance_v25(&rows, card);
+        assert_eq!(
+            affordance.get("source_entity").and_then(Value::as_str),
+            Some("joint")
+        );
+        assert_eq!(
+            affordance
+                .get("affordance_delta")
+                .and_then(|value| value.get("runtime_effect_applied"))
+                .and_then(Value::as_bool),
+            Some(false)
+        );
+        assert_eq!(
+            affordance
+                .get("transition_dictionary_v1")
+                .and_then(|value| value.get("cross_entity_equivalence"))
+                .and_then(Value::as_str),
+            Some("not_inferred")
+        );
         let _ = std::fs::remove_dir_all(root);
+    }
+
+    #[test]
+    fn transition_source_entity_preserves_self_other_ownership() {
+        assert_eq!(phase_source_entity("astrid", false), "astrid");
+        assert_eq!(phase_source_entity("minime", false), "minime");
+        assert_eq!(phase_source_entity("astrid", true), "joint");
+        assert_eq!(phase_source_entity("external_steward", false), "unknown");
     }
 
     #[test]

@@ -549,7 +549,9 @@ async fn mlx_chat_with_failure_log_mode(
             after_chars = report.after_chars,
             "mlx_chat stripped leaked model artifact tokens"
         );
-        append_llm_diagnostic_jsonl("model_artifact_cleanup.jsonl", &report);
+        let diagnostic =
+            model_artifact_cleanup_diagnostic(&report, &stripped_text, label, profile);
+        append_llm_diagnostic_jsonl("model_artifact_cleanup.jsonl", &diagnostic);
     }
     let text = stripped_text.trim().to_string();
     if text.is_empty() {

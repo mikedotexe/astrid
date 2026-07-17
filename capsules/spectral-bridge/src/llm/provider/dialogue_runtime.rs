@@ -29,6 +29,54 @@ fn dialogue_prompt_budget_profile(num_predict: u32) -> &'static str {
     }
 }
 
+fn fragment_has_non_artifact_content(fragment: &str) -> bool {
+    let mut semantic = fragment.to_string();
+    for token in MODEL_ARTIFACT_TOKENS {
+        semantic = semantic.replace(token, "");
+    }
+    !semantic.trim().is_empty()
+}
+
+fn matching_quote_pair(before: Option<char>, after: Option<char>) -> bool {
+    matches!(
+        (before, after),
+        (Some('"'), Some('"'))
+            | (Some('\''), Some('\''))
+            | (Some('`'), Some('`'))
+            | (Some('“'), Some('”'))
+            | (Some('‘'), Some('’'))
+    )
+}
+
+fn model_artifact_placement_counts(text: &str, token: &str) -> (usize, usize, usize) {
+    let mut boundary_occurrences = 0usize;
+    let mut contextual_occurrences = 0usize;
+    let mut quoted_occurrences = 0usize;
+
+    for (start, matched) in text.match_indices(token) {
+        let end = start.saturating_add(matched.len());
+        let content_before = fragment_has_non_artifact_content(&text[..start]);
+        let content_after = fragment_has_non_artifact_content(&text[end..]);
+        if content_before && content_after {
+            contextual_occurrences = contextual_occurrences.saturating_add(1);
+        } else {
+            boundary_occurrences = boundary_occurrences.saturating_add(1);
+        }
+
+        let before = text[..start].chars().rev().find(|ch| !ch.is_whitespace());
+        let after = text[end..].chars().find(|ch| !ch.is_whitespace());
+        if matching_quote_pair(before, after) {
+            quoted_occurrences = quoted_occurrences.saturating_add(1);
+        }
+    }
+
+    (
+        boundary_occurrences,
+        contextual_occurrences,
+        quoted_occurrences,
+    )
+}
+
 pub(crate) fn strip_model_artifacts_with_report(
     text: &str,
 ) -> (String, Option<StripModelArtifactsReport>) {
@@ -37,9 +85,14 @@ pub(crate) fn strip_model_artifacts_with_report(
     for token in MODEL_ARTIFACT_TOKENS {
         let count = result.matches(token).count();
         if count > 0 {
+            let (boundary_occurrences, contextual_occurrences, quoted_occurrences) =
+                model_artifact_placement_counts(&result, token);
             removed_tokens.push(StripModelArtifactTokenCount {
                 token: (*token).to_string(),
                 count,
+                boundary_occurrences,
+                contextual_occurrences,
+                quoted_occurrences,
             });
             result = result.replace(token, "");
         }
@@ -49,12 +102,17 @@ pub(crate) fn strip_model_artifacts_with_report(
     }
     let removed_total = removed_tokens.iter().map(|entry| entry.count).sum();
     let after_chars = result.len();
+    let after_non_whitespace_chars = result
+        .chars()
+        .filter(|character| !character.is_whitespace())
+        .count();
     (
         result,
         Some(StripModelArtifactsReport {
             removed_total,
             before_chars: text.len(),
             after_chars,
+            after_non_whitespace_chars,
             removed_tokens,
         }),
     )
@@ -445,11 +503,18 @@ pub async fn generate_dialogue(
         mlx_profile,
     );
     let fallback_continuity_budget = fallback_continuity_budget_v1(spectral_summary);
+    let budget_profile = dialogue_prompt_budget_profile(num_predict);
+    let budget_friction_v1 = dialogue_budget_friction_v1(
+        num_predict,
+        budget_profile,
+        DialoguePressureTextureInputs::from_fallback_budget(&fallback_continuity_budget),
+        budget_report.as_ref(),
+    );
     let budget_diag = DialoguePromptBudgetDiagnostic {
         timestamp: unix_timestamp_string(),
         requested_tokens: num_predict,
         effective_tokens: effective_num_predict,
-        budget_profile: dialogue_prompt_budget_profile(num_predict),
+        budget_profile,
         fallback_continuity_budget: fallback_continuity_budget.clone(),
         prompt_budget_chars,
         assembly_prompt_budget_chars,
@@ -462,6 +527,7 @@ pub async fn generate_dialogue(
             .as_ref()
             .map(|value| value.path.display().to_string()),
         budget_report,
+        budget_friction_v1,
     };
     append_llm_diagnostic_jsonl("dialogue_prompt_budget.jsonl", &budget_diag);
     append_llm_diagnostic_jsonl(

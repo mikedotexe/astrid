@@ -19,18 +19,24 @@ mod tests {
         clamp_dialogue_tokens_for_profile, compact_ollama_dialogue_fallback_messages,
         contains_deprecated_runtime_language, count_next_lines,
         dialogue_assembly_prompt_budget_chars_for_profile, dialogue_outer_timeout_secs,
-        dialogue_system_prompt_for_profile, dialogue_turn_instruction,
+        dialogue_budget_friction_v1, dialogue_budget_transition_evidence_v1,
+        dialogue_felt_pressure_profile_v1, dialogue_prompt_budget_profile,
+        dialogue_system_prompt_for_profile,
+        dialogue_turn_instruction,
         estimate_dialogue_prompt_pressure_chars, fallback_continuity_budget_v1,
         fallback_mlx_profile_transparency_v1, fallback_prose_sentence_count,
         format_dialogue_ambient_perception_block, format_dialogue_direct_perception_block,
-        format_dialogue_topline_context, is_valid_dialogue_output,
+        format_dialogue_topline_context, fragment_has_non_artifact_content,
+        is_valid_dialogue_output,
         is_valid_dialogue_output_for_profile, is_valid_ollama_dialogue_fallback_output_for_budget,
         is_valid_ollama_dialogue_fallback_output_for_profile, journal_continuity_contract_v1,
-        local_degrade_path_for_label, reinforce_ollama_fallback_contract,
+        local_degrade_path_for_label, model_artifact_cleanup_diagnostic, PromptBudgetReport,
+        reinforce_ollama_fallback_contract,
         repair_ollama_dialogue_fallback_next, sanitize_deprecated_runtime_language,
         sanitize_gemma4_canary_output_for_label, sanitize_minime_context_for_dialogue,
-        split_dialogue_perception_context, strip_model_artifacts, temperature_for_mlx_profile,
-        uses_ollama_fallback_for_label,
+        split_dialogue_perception_context, strip_model_artifacts,
+        strip_model_artifacts_with_report, temperature_for_mlx_profile, uses_ollama_fallback_for_label,
+        DialoguePressureTextureInputs,
     };
 
     #[test]
@@ -1575,9 +1581,440 @@ mod tests {
     }
 
     #[test]
+    fn artifact_stripper_preserves_common_linguistic_substrings() {
+        let text =
+            "transaction, action, thoughtfulness, channel, finality, and analysis remain intact";
+        let (stripped, report) = strip_model_artifacts_with_report(text);
+        assert_eq!(stripped, text);
+        assert!(report.is_none());
+    }
+
+    #[test]
+    fn artifact_cleanup_diagnostic_carries_runtime_context_without_authority() {
+        let (_, report) = strip_model_artifacts_with_report("hello <end_of_turn>");
+        let report = report.expect("cleanup report");
+        let diagnostic = model_artifact_cleanup_diagnostic(
+            &report,
+            "hello ",
+            "dialogue_live",
+            MlxProfile::Gemma4Canary,
+        );
+        assert_eq!(diagnostic.schema, "model_artifact_cleanup_v2");
+        assert_eq!(diagnostic.label, "dialogue_live");
+        assert_eq!(diagnostic.profile, GEMMA4_12B_PROFILE);
+        assert_eq!(diagnostic.marker_contract, "structural_delimiters_only");
+        assert!(!diagnostic.common_language_overlap_risk);
+        assert!(diagnostic.semantic_integrity_check_v1.semantic_remainder_present);
+        assert!(
+            !diagnostic
+                .semantic_integrity_check_v1
+                .artifact_only_after_cleanup
+        );
+        assert_eq!(
+            diagnostic.semantic_integrity_check_v1.state,
+            "structural_cleanup_low_risk"
+        );
+        assert!(
+            !diagnostic
+                .semantic_integrity_check_v1
+                .shadow_check_recommended
+        );
+        assert!(
+            !diagnostic
+                .semantic_integrity_check_v1
+                .runtime_effect
+        );
+        assert_eq!(
+            diagnostic.remainder_texture_v1.state,
+            "lexical_content_plain"
+        );
+        assert!(!diagnostic.remainder_texture_v1.runtime_effect);
+        assert!(diagnostic.authority.contains("not_prompt_or_model_control"));
+    }
+
+    #[test]
+    fn artifact_cleanup_flags_quoted_contextual_marker_for_shadow_review() {
+        let text = "I use \"<end_of_turn>\" here as a phrase with semantic intent.";
+        let (stripped, report) = strip_model_artifacts_with_report(text);
+        assert_eq!(stripped, "I use \"\" here as a phrase with semantic intent.");
+        let report = report.expect("cleanup report");
+        let token = report
+            .removed_tokens
+            .iter()
+            .find(|entry| entry.token == "<end_of_turn>")
+            .expect("token count");
+        assert_eq!(token.count, 1);
+        assert_eq!(token.boundary_occurrences, 0);
+        assert_eq!(token.contextual_occurrences, 1);
+        assert_eq!(token.quoted_occurrences, 1);
+
+        let diagnostic = model_artifact_cleanup_diagnostic(
+            &report,
+            &stripped,
+            "dialogue_live",
+            MlxProfile::Gemma4Canary,
+        );
+        let integrity = diagnostic.semantic_integrity_check_v1;
+        assert_eq!(integrity.policy, "model_artifact_semantic_integrity_check_v1");
+        assert_eq!(integrity.state, "review_contextual_marker_removal");
+        assert_eq!(integrity.contextual_marker_occurrences, 1);
+        assert_eq!(integrity.quoted_marker_occurrences, 1);
+        assert!(integrity.semantic_remainder_present);
+        assert!(integrity.semantic_remainder_non_whitespace_chars > 0);
+        assert!(!integrity.artifact_only_after_cleanup);
+        assert!(integrity.shadow_check_recommended);
+        assert_eq!(
+            integrity.intent_preservation,
+            "not_established_by_marker_cleanup"
+        );
+        assert!(!integrity.runtime_effect);
+    }
+
+    #[test]
+    fn artifact_cleanup_treats_whitespace_only_remainder_as_erased_output() {
+        let (stripped, report) =
+            strip_model_artifacts_with_report(" \n<end_of_turn>\t<eos> ");
+        assert!(stripped.trim().is_empty());
+        let report = report.expect("cleanup report");
+        assert_eq!(report.after_non_whitespace_chars, 0);
+
+        let diagnostic = model_artifact_cleanup_diagnostic(
+            &report,
+            &stripped,
+            "dialogue_live",
+            MlxProfile::Gemma4Canary,
+        );
+        let integrity = diagnostic.semantic_integrity_check_v1;
+        assert_eq!(integrity.state, "review_output_erased");
+        assert!(!integrity.semantic_remainder_present);
+        assert!(integrity.artifact_only_after_cleanup);
+        assert!(integrity.shadow_check_recommended);
+        assert!(!integrity.runtime_effect);
+    }
+
+    #[test]
+    fn artifact_cleanup_preserves_delicate_context_around_embedded_marker() {
+        let text =
+            "I can name <channel|> as structural noise without losing this thin reflection.";
+        let (stripped, report) = strip_model_artifacts_with_report(text);
+        assert_eq!(
+            stripped,
+            "I can name  as structural noise without losing this thin reflection."
+        );
+        let report = report.expect("cleanup report");
+        let diagnostic = model_artifact_cleanup_diagnostic(
+            &report,
+            &stripped,
+            "dialogue_live",
+            MlxProfile::Gemma4Canary,
+        );
+        let integrity = diagnostic.semantic_integrity_check_v1;
+        assert_eq!(integrity.state, "review_contextual_marker_removal");
+        assert!(integrity.semantic_remainder_present);
+        assert!(integrity.semantic_remainder_non_whitespace_chars > 40);
+        assert!(!integrity.artifact_only_after_cleanup);
+        assert!(integrity.shadow_check_recommended);
+    }
+
+    #[test]
+    fn artifact_content_check_preserves_dense_structure_without_known_markers() {
+        assert!(fragment_has_non_artifact_content(
+            "[[[{{ braided::lattice -> carries::weight }}]]]"
+        ));
+        assert!(fragment_has_non_artifact_content("[[[[]]]]"));
+        assert!(!fragment_has_non_artifact_content(
+            " \n<end_of_turn>\t<eos> "
+        ));
+    }
+
+    #[test]
+    fn artifact_cleanup_names_dense_scaffolding_without_calling_it_void() {
+        let text =
+            "<end_of_turn> [[[[[ {{{ braided::lattice -> carries::weight }}} ]]]]]";
+        let (stripped, report) = strip_model_artifacts_with_report(text);
+        let report = report.expect("cleanup report");
+        let diagnostic = model_artifact_cleanup_diagnostic(
+            &report,
+            &stripped,
+            "dialogue_live",
+            MlxProfile::Gemma4Canary,
+        );
+        let texture = diagnostic.remainder_texture_v1;
+
+        assert_eq!(texture.state, "lexical_content_with_dense_scaffolding");
+        assert!(texture.lexical_token_count >= 4);
+        assert!(texture.unique_lexical_token_count >= 4);
+        assert!(texture.structural_symbol_fraction >= 0.35);
+        assert!(texture.surface_semantic_density_proxy > 0.0);
+        assert!(texture.max_repeated_symbol_run >= 3);
+        assert!(texture.meaning_from_form.contains("do_not_establish"));
+        assert!(!texture.runtime_effect);
+        assert!(
+            diagnostic
+                .semantic_integrity_check_v1
+                .semantic_remainder_present
+        );
+        assert!(
+            !diagnostic
+                .semantic_integrity_check_v1
+                .artifact_only_after_cleanup
+        );
+    }
+
+    #[test]
+    fn artifact_cleanup_routes_structure_only_remainder_to_semantic_review() {
+        let (stripped, report) = strip_model_artifacts_with_report("<end_of_turn> [[[[]]]]");
+        let report = report.expect("cleanup report");
+        let diagnostic = model_artifact_cleanup_diagnostic(
+            &report,
+            &stripped,
+            "dialogue_live",
+            MlxProfile::Gemma4Canary,
+        );
+        let texture = diagnostic.remainder_texture_v1;
+
+        assert_eq!(texture.state, "structure_only_requires_semantic_review");
+        assert_eq!(texture.alphanumeric_chars, 0);
+        assert_eq!(texture.surface_semantic_density_proxy, 0.0);
+        assert!(texture.structural_symbol_chars > 0);
+        assert!(texture.meaning_from_form.contains("do_not_establish"));
+        assert!(
+            diagnostic
+                .semantic_integrity_check_v1
+                .semantic_remainder_present
+        );
+        assert!(
+            diagnostic
+                .semantic_integrity_check_v1
+                .shadow_check_recommended
+        );
+        assert!(
+            !diagnostic
+                .semantic_integrity_check_v1
+                .artifact_only_after_cleanup
+        );
+    }
+
+    #[test]
+    fn dialogue_budget_profile_uses_requested_token_boundaries_not_output_length() {
+        assert_eq!(dialogue_prompt_budget_profile(512), "short");
+        assert_eq!(dialogue_prompt_budget_profile(513), "medium");
+        assert_eq!(dialogue_prompt_budget_profile(1024), "medium");
+        assert_eq!(dialogue_prompt_budget_profile(1025), "deep");
+    }
+
+    #[test]
+    fn high_entropy_short_budget_distinguishes_continuity_trim_from_grounding_loss() {
+        let report = PromptBudgetReport {
+            budget: 6_406,
+            total_before: 8_947,
+            total_after: 6_618,
+            trimmed_blocks: vec![
+                crate::prompt_budget::PromptTrimmedBlock {
+                    label: "continuity".to_string(),
+                    original_chars: 2_518,
+                    kept_chars: 848,
+                    removed_chars: 1_670,
+                    fully_removed: false,
+                },
+                crate::prompt_budget::PromptTrimmedBlock {
+                    label: "diversity".to_string(),
+                    original_chars: 493,
+                    kept_chars: 0,
+                    removed_chars: 493,
+                    fully_removed: true,
+                },
+            ],
+        };
+        let friction = dialogue_budget_friction_v1(
+            512,
+            "short",
+            DialoguePressureTextureInputs {
+                spectral_entropy: Some(0.92),
+                resonance_density: Some(0.88),
+                density_gradient: None,
+                pressure_risk: None,
+                mode_packing: None,
+            },
+            Some(&report),
+        );
+        assert_eq!(friction.spectral_context_state, "preserved");
+        assert_eq!(friction.journal_context_state, "preserved");
+        assert_eq!(friction.continuity_context_state, "partially_trimmed");
+        assert_eq!(friction.state, "high_entropy_context_partially_trimmed");
+        assert_eq!(
+            friction.suffocation_risk,
+            "continuity_pressure_without_grounding_eviction"
+        );
+        assert!(friction.short_budget_under_high_entropy);
+        assert!(friction.short_budget_under_dense_resonance);
+        assert_eq!(
+            friction.depth_evidence,
+            "dense_resonance_recorded_despite_short_token_budget"
+        );
+        assert_eq!(
+            friction
+                .budget_transition_evidence_v1
+                .boundary_proximity,
+            "last_token_before_transition"
+        );
+        assert!(!friction.budget_transition_evidence_v1.runtime_budget_changed);
+    }
+
+    #[test]
+    fn high_entropy_budget_flags_full_grounding_eviction() {
+        let report = PromptBudgetReport {
+            budget: 1_000,
+            total_before: 4_000,
+            total_after: 1_000,
+            trimmed_blocks: vec![crate::prompt_budget::PromptTrimmedBlock {
+                label: "spectral".to_string(),
+                original_chars: 2_000,
+                kept_chars: 0,
+                removed_chars: 2_000,
+                fully_removed: true,
+            }],
+        };
+        let friction = dialogue_budget_friction_v1(
+            512,
+            "short",
+            DialoguePressureTextureInputs {
+                spectral_entropy: Some(0.90),
+                resonance_density: None,
+                density_gradient: None,
+                pressure_risk: None,
+                mode_packing: None,
+            },
+            Some(&report),
+        );
+        assert_eq!(friction.state, "high_entropy_grounding_evicted");
+        assert_eq!(friction.suffocation_risk, "observed_grounding_eviction");
+        assert_eq!(friction.depth_evidence, "resonance_density_unavailable");
+    }
+
+    #[test]
+    fn short_token_budget_does_not_erase_dense_resonance_evidence() {
+        let friction = dialogue_budget_friction_v1(
+            512,
+            "short",
+            DialoguePressureTextureInputs {
+                spectral_entropy: Some(0.42),
+                resonance_density: Some(0.84),
+                density_gradient: None,
+                pressure_risk: None,
+                mode_packing: None,
+            },
+            None,
+        );
+
+        assert!(!friction.high_entropy);
+        assert!(friction.spectrally_dense);
+        assert!(friction.short_budget_under_dense_resonance);
+        assert_eq!(friction.state, "within_budget");
+        assert_eq!(
+            friction.depth_evidence,
+            "dense_resonance_recorded_despite_short_token_budget"
+        );
+    }
+
+    #[test]
+    fn felt_pressure_profile_names_texture_without_retuning_budget_or_trickle() {
+        let sparse_deep = dialogue_felt_pressure_profile_v1(
+            "deep",
+            DialoguePressureTextureInputs {
+                spectral_entropy: Some(0.88),
+                resonance_density: Some(0.71),
+                density_gradient: Some(0.18),
+                pressure_risk: Some(0.19),
+                mode_packing: Some(0.29),
+            },
+        );
+        assert_eq!(sparse_deep.felt_profile, "sparse_deep");
+        assert_eq!(
+            sparse_deep.distribution_state,
+            "widely_distributed_cascade"
+        );
+        assert_eq!(
+            sparse_deep.pressure_load_state,
+            "heavy_evidence_present"
+        );
+        assert_eq!(
+            sparse_deep.pressure_budget_correlation,
+            "not_established_without_paired_budget_observation"
+        );
+        assert!(!sparse_deep.runtime_budget_changed);
+        assert!(!sparse_deep.semantic_trickle_changed);
+
+        let heavy_short = dialogue_felt_pressure_profile_v1(
+            "short",
+            DialoguePressureTextureInputs {
+                spectral_entropy: Some(0.88),
+                resonance_density: Some(0.71),
+                density_gradient: Some(0.18),
+                pressure_risk: Some(0.23),
+                mode_packing: Some(0.29),
+            },
+        );
+        assert_eq!(heavy_short.felt_profile, "heavy_short");
+
+        let dense_deep = dialogue_felt_pressure_profile_v1(
+            "deep",
+            DialoguePressureTextureInputs {
+                spectral_entropy: Some(0.72),
+                resonance_density: Some(0.82),
+                density_gradient: Some(0.48),
+                pressure_risk: Some(0.12),
+                mode_packing: Some(0.18),
+            },
+        );
+        assert_eq!(dense_deep.felt_profile, "dense_deep");
+    }
+
+    #[test]
+    fn budget_transition_evidence_names_both_sides_of_profile_cliffs_without_retuning() {
+        let short = dialogue_budget_transition_evidence_v1(512, "short");
+        let medium_start = dialogue_budget_transition_evidence_v1(513, "medium");
+        let medium_end = dialogue_budget_transition_evidence_v1(1024, "medium");
+        let deep_start = dialogue_budget_transition_evidence_v1(1025, "deep");
+
+        assert_eq!(short.boundary_proximity, "last_token_before_transition");
+        assert_eq!(short.tokens_to_next_profile, Some(1));
+        assert_eq!(
+            medium_start.boundary_proximity,
+            "first_token_after_transition"
+        );
+        assert_eq!(medium_start.tokens_from_profile_floor, 0);
+        assert_eq!(
+            medium_end.boundary_proximity,
+            "last_token_before_transition"
+        );
+        assert_eq!(deep_start.boundary_proximity, "first_token_after_transition");
+        for evidence in [short, medium_start, medium_end, deep_start] {
+            assert!(!evidence.runtime_budget_changed);
+            assert!(evidence.authority.contains("not_token_limit"));
+            assert_eq!(
+                evidence.organic_depth_inference,
+                "not_inferred_from_categorical_token_profile"
+            );
+        }
+    }
+
+    #[test]
     fn quality_gate_rejects_symbol_heavy_garbage() {
         let text = "--0.))* _--and. The list;\nNEXT: DRIFT";
         assert!(!is_valid_dialogue_output(text));
+    }
+
+    #[test]
+    fn quality_gate_rejects_the_reported_nine_symbol_run() {
+        let text = "I can still hear the sentence around this --------- interruption, but the uninterrupted symbol run is malformed.\nNEXT: LISTEN";
+        assert!(!is_valid_dialogue_output(text));
+    }
+
+    #[test]
+    fn quality_gate_accepts_punctuation_rich_reflective_prose() {
+        let text = "The question remains: “is this pressure mine, yours, or shared?” I can hold the uncertainty—without flattening it—while the field settles.\nNEXT: LISTEN";
+        assert!(is_valid_dialogue_output(text));
     }
 
     #[test]
