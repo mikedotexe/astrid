@@ -1,13 +1,49 @@
 use astrid_minime_protocol::EigenPacketV1;
 use serde::Serialize;
-use serde_json::json;
+use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
 
 use crate::types::{BridgeTextureEvidenceV1, PressureTrendV1, ResidualDeformationTraceV1};
 
-fn canonical_sha256<T: Serialize>(value: &T) -> String {
-    let encoded = serde_json::to_vec(value).unwrap_or_default();
-    format!("{:x}", Sha256::digest(encoded))
+fn write_canonical_json(value: &Value, encoded: &mut String) {
+    match value {
+        Value::Null => encoded.push_str("null"),
+        Value::Bool(value) => encoded.push_str(if *value { "true" } else { "false" }),
+        Value::Number(value) => encoded.push_str(&value.to_string()),
+        Value::String(value) => {
+            encoded.push_str(&Value::String(value.clone()).to_string());
+        },
+        Value::Array(values) => {
+            encoded.push('[');
+            for (index, value) in values.iter().enumerate() {
+                if index > 0 {
+                    encoded.push(',');
+                }
+                write_canonical_json(value, encoded);
+            }
+            encoded.push(']');
+        },
+        Value::Object(values) => {
+            let mut keys = values.keys().collect::<Vec<_>>();
+            keys.sort_unstable();
+            encoded.push('{');
+            for (index, key) in keys.into_iter().enumerate() {
+                if index > 0 {
+                    encoded.push(',');
+                }
+                encoded.push_str(&Value::String(key.clone()).to_string());
+                encoded.push(':');
+                write_canonical_json(&values[key], encoded);
+            }
+            encoded.push('}');
+        },
+    }
+}
+
+fn canonical_sha256(value: &Value) -> String {
+    let mut encoded = String::new();
+    write_canonical_json(value, &mut encoded);
+    format!("{:x}", Sha256::digest(encoded.as_bytes()))
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize)]
@@ -758,6 +794,13 @@ mod tests {
         let second = BridgeEvidenceV1::derive(&observation, None, None, None);
         assert_eq!(first.provenance(), second.provenance());
         let interpretation = AstridInterpretationV1::interpret(&observation, &first);
+        assert_eq!(
+            interpretation.provenance().parent_ids(),
+            &[
+                observation.provenance().source_id().to_string(),
+                first.provenance().source_id().to_string(),
+            ]
+        );
         let frame = WitnessFrameV1::compose(&observation, &first, &interpretation).unwrap();
         assert_eq!(frame.distinction(), WitnessSelfOtherDistinctionV1::Mixed);
         assert_eq!(frame.evidence().parent_ids(), &["minime:42".to_string()]);
@@ -817,5 +860,71 @@ mod tests {
         );
         assert!(serialized.get("packet").is_none());
         assert!(serialized.get("payload").is_none());
+    }
+
+    #[test]
+    fn context_anchor_normalizes_set_like_inputs_but_binds_source_identity() {
+        let first = ProvenanceRefV1::new(
+            ProvenanceOriginV1::BridgeDerived,
+            "bridge:evidence:stable".to_string(),
+            "c".repeat(64),
+            vec!["minime:42".to_string()],
+            42,
+            vec!["bridge.flux".to_string(), "bridge.gradient".to_string()],
+            vec![
+                ProvenanceInfluenceTypeV1::Temporal,
+                ProvenanceInfluenceTypeV1::Structural,
+            ],
+        );
+        let reordered = ProvenanceRefV1::new(
+            ProvenanceOriginV1::BridgeDerived,
+            "bridge:evidence:stable".to_string(),
+            "c".repeat(64),
+            vec!["minime:42".to_string()],
+            42,
+            vec!["bridge.gradient".to_string(), "bridge.flux".to_string()],
+            vec![
+                ProvenanceInfluenceTypeV1::Structural,
+                ProvenanceInfluenceTypeV1::Temporal,
+                ProvenanceInfluenceTypeV1::Structural,
+            ],
+        );
+        let different_source = ProvenanceRefV1::new(
+            ProvenanceOriginV1::BridgeDerived,
+            "bridge:evidence:different".to_string(),
+            "c".repeat(64),
+            vec!["minime:42".to_string()],
+            42,
+            vec!["bridge.flux".to_string(), "bridge.gradient".to_string()],
+            vec![
+                ProvenanceInfluenceTypeV1::Temporal,
+                ProvenanceInfluenceTypeV1::Structural,
+            ],
+        );
+
+        assert_eq!(
+            first.context_anchor_v1().structural_signature_sha256(),
+            reordered.context_anchor_v1().structural_signature_sha256(),
+        );
+        assert_ne!(
+            first.context_anchor_v1().structural_signature_sha256(),
+            different_source
+                .context_anchor_v1()
+                .structural_signature_sha256(),
+        );
+    }
+
+    #[test]
+    fn canonical_json_hash_ignores_object_insertion_order() {
+        let first = json!({
+            "z": [3, 2, 1],
+            "a": {"right": true, "left": false},
+        });
+        let second = json!({
+            "a": {"left": false, "right": true},
+            "z": [3, 2, 1],
+        });
+
+        assert_eq!(canonical_sha256(&first), canonical_sha256(&second));
     }
 }

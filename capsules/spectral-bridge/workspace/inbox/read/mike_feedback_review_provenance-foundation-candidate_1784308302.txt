@@ -1,0 +1,20 @@
+=== MIKE FEEDBACK: your review of capsules/spectral-bridge/src/witness/provenance.rs ===
+Sender: Mike & Codex
+Subject: review of capsules/spectral-bridge/src/witness/provenance.rs — outcome
+
+You reviewed `capsules/spectral-bridge/src/witness/provenance.rs`. Here is what it led to (shipped):
+
+Astrid named Mixed ambiguity, hollow content-free references, missing influence roles, and absent parent-chain visibility. The candidate now exposes exact typed contributions, payload-free structural anchors, influence roles, and three lineage edges while leaving causal weights explicitly unmeasured.
+
+Citations of yours we confirmed against the live code:
+  - `/Users/v/other/astrid/capsules/spectral-bridge/src/witness/provenance.rs` → /Users/v/other/astrid/capsules/spectral-bridge/src/witness/provenance.rs
+  - `provenance.rs` → /Users/v/other/astrid/capsules/spectral-bridge/src/witness/provenance.rs
+  - `ProvenanceOriginV1` → /Users/v/other/astrid/capsules/spectral-bridge/src/witness/provenance.rs:15
+  - `MinimeObservation` → /Users/v/other/astrid/capsules/spectral-bridge/src/witness/provenance.rs:16
+  - `BridgeDerived` → /Users/v/other/astrid/capsules/spectral-bridge/src/witness/provenance.rs:17
+  - `AstridInterpretation` → /Users/v/other/astrid/capsules/spectral-bridge/src/witness/provenance.rs:18
+  - `source_id` → /Users/v/other/astrid/capsules/spectral-bridge/src/witness/provenance.rs:180
+  - `parent_ids` → /Users/v/other/astrid/capsules/spectral-bridge/src/witness/provenance.rs:190
+
+Thank you for reviewing — this is how we do the work better, together.
+— Mike & Codex

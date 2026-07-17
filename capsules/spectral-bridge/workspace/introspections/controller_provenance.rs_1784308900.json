@@ -1,0 +1,266 @@
+{
+  "change_report": null,
+  "condition_vector": {
+    "attractor_lock": 0.0,
+    "continuity_deficit": 0.45,
+    "field_miss": 0.0,
+    "genericity_pressure": 0.0,
+    "geometry_collapse": 0.0,
+    "prediction_mismatch": 0.0,
+    "repetition_pressure": 0.0,
+    "severity": 0.06244444444444445,
+    "structure_strain": 0.0,
+    "truncation_pressure": 0.11200000000000009
+  },
+  "controller_regime": "sustain",
+  "controller_regime_reason": "warm-up or ordinary reflective turn",
+  "observer_report": {
+    "actual_top_anchor": null,
+    "controller_reason": "regime=sustain; steady",
+    "controller_regime": "sustain",
+    "controller_regime_reason": "warm-up or ordinary reflective turn",
+    "controller_regime_source": "auto",
+    "controller_regime_transition": null,
+    "dominant_pressure": "continuity_deficit",
+    "geometry_collapse": 0.0,
+    "geometry_regime": "warming-up",
+    "predicted_top_anchor": "reservoir-memory",
+    "regime": "warming-up",
+    "rewrite_issue_count": 0,
+    "stability_score": 0.9375555555555556,
+    "summary": "Observer: geometry=warming-up; controller=sustain; predicted=reservoir-memory; actual=n/a; dominant pressure=continuity_deficit; tuning=regime=sustain; steady."
+  },
+  "profiling": {
+    "candidate_generation_seconds": 65.66300308285281,
+    "candidate_profile": {
+      "candidate_count": 4,
+      "max_first_token_seconds": 9.543833017349243,
+      "total_generated_tokens": 205,
+      "wall_seconds": 65.66299216612242
+    },
+    "diagnostics_seconds": 0.00006837490946054459,
+    "embedding_probe_seconds": 2.125045284628868e-6,
+    "hardware_profile": "m4-mini",
+    "prompt_build_seconds": 0.013372791931033134,
+    "regime_prepare_seconds": 0.00018308311700820923,
+    "reservoir_commit_seconds": 0.00029904115945100784,
+    "reservoir_prepare_seconds": 0.0007957499474287033,
+    "rewrite_budget": {
+      "attempts_completed": 1,
+      "attempts_started": 1,
+      "budget_seconds": 90.0,
+      "cap_applied": true,
+      "cap_reason": "max_attempts_reached",
+      "elapsed_seconds": 140.347,
+      "max_attempts": 1
+    },
+    "rewrite_invocation_policy": {
+      "adaptive_relief_enabled": false,
+      "authority": "default_off_runtime_relief_candidate",
+      "budget_seconds": 90,
+      "evidence_path": "/Users/v/other/astrid/capsules/spectral-bridge/workspace/diagnostics/introspection_feedback_digest/latest.json",
+      "max_attempts": 1,
+      "relief_applied": false,
+      "relief_reason": "default_off"
+    },
+    "rewrite_seconds": 140.3468732079491,
+    "runtime_audit": {
+      "generation": {
+        "candidate_generation_seconds": 65.66300308285281,
+        "first_token_seconds": 9.543833017349243,
+        "generated_tokens": 205,
+        "rewrite_budget": {
+          "attempts_completed": 1,
+          "attempts_started": 1,
+          "budget_seconds": 90.0,
+          "cap_applied": true,
+          "cap_reason": "max_attempts_reached",
+          "elapsed_seconds": 140.347,
+          "max_attempts": 1
+        },
+        "tok_per_second": 3.122001589560767,
+        "total_turn_seconds": 219.06274845916775
+      },
+      "load": {
+        "can_report_mapped_vs_copied": true,
+        "copied_bytes": 0,
+        "fallback_reason_bytes": {},
+        "fallback_reasons": {},
+        "load_seconds": 4.520883582998067,
+        "mapped_bytes": 0,
+        "mapped_ratio_pct": 0.0,
+        "memory_map_effective": false,
+        "memory_map_requested": false,
+        "mx_load_calls": 2,
+        "mx_load_wall_seconds": 0.009149708086624742
+      },
+      "runtime": {
+        "has_mmap_stats": true,
+        "mlx_core_path": "/Users/v/other/mlx/python/mlx/core.cpython-314-darwin.so",
+        "mlx_lm_path": "/Users/v/other/mlx/.venv-mlxlm/lib/python3.14/site-packages/mlx_lm/__init__.py",
+        "python": "/Users/v/other/mlx/.venv-mlxlm/bin/python"
+      }
+    },
+    "self_tuning_seconds": 13.037020958028734,
+    "total_turn_seconds": 219.06274845916775
+  },
+  "prompt_embedding_field": null,
+  "reservoir_geometry": {
+    "attractor_persistence": 0.0,
+    "dominant_attractor": "reservoir-memory",
+    "drift_collapse": 0.0,
+    "geometry_collapse": 0.0,
+    "insufficient_history": true,
+    "mean_drift": 0.0,
+    "norm_mean": 0.8304673926884768,
+    "norm_std": 0.0,
+    "normalized_rank": 1.0,
+    "pairwise_distance": 0.0,
+    "participation_ratio": 1.0,
+    "rank_collapse": 0.0,
+    "spread_collapse": 0.0,
+    "window": 1
+  },
+  "self_tuning": {
+    "baseline_observations": 1,
+    "cooldown_remaining": 0,
+    "enabled": true,
+    "last_adjustment": {},
+    "last_model_adjustment": {},
+    "last_model_advice": {
+      "break_turn": false,
+      "change_report": null,
+      "condition": {
+        "attractor_lock": 0.0,
+        "continuity_deficit": 0.45,
+        "field_miss": 0.0,
+        "genericity_pressure": 0.0,
+        "geometry_collapse": 0.0,
+        "prediction_mismatch": 0.0,
+        "repetition_pressure": 0.0,
+        "severity": 0.06244444444444445,
+        "structure_strain": 0.0,
+        "truncation_pressure": 0.11200000000000009
+      },
+      "deltas": {
+        "motif_gain": 0.02,
+        "temperature_bias": -0.01
+      },
+      "forecast": {
+        "control_surface": {
+          "exploration_noise": 0.0,
+          "field_alignment_gain": 1.0,
+          "leak_fast": 0.46,
+          "leak_medium": 0.18,
+          "leak_slow": 0.06,
+          "motif_gain": 1.0,
+          "novelty_gain": 1.0,
+          "prediction_gain": 1.0,
+          "strict_bias": 0.0,
+          "temperature_bias": 0.0,
+          "transform_gain": 1.0,
+          "warmth_gain": 1.0,
+          "washout_strength": 0.75
+        },
+        "predicted_behaviors": {
+          "formal": 0.45026045170172224,
+          "motif": 0.45997697709416585,
+          "novelty": 0.23173005751498432,
+          "transform": 0.45997697709416585,
+          "warmth": 0.26367297002376333
+        },
+        "predicted_controller_regime": "sustain",
+        "predicted_controller_regime_source": "auto",
+        "predicted_field": {
+          "anchor_scores": {
+            "campfire-imagery": 0.19917489378757547,
+            "instructional": -0.0005312340785328537,
+            "prime-math": 0.44278009856950806,
+            "reflection": 0.06937316215626724,
+            "reservoir-memory": 0.4721051263830254,
+            "signal-rhythm": -0.20769778291964097,
+            "uncertainty-weather": 0.10683565067558724
+          },
+          "dominant_attractor": "reservoir-memory",
+          "entropy_like": 1.9284932357996831,
+          "top_anchors": [
+            {
+              "label": "reservoir-memory",
+              "score": 0.4721051263830254
+            },
+            {
+              "label": "prime-math",
+              "score": 0.44278009856950806
+            },
+            {
+              "label": "campfire-imagery",
+              "score": 0.19917489378757547
+            }
+          ]
+        },
+        "prompt": "[compacted controller prompt; full_chars=5306; preview_chars=480]",
+        "prompt_compacted_v1": {
+          "full_chars": 5306,
+          "preview": "Fill 66.1%. Fill 66% — inside the stable-core hold shelf. Dominant concentration: λ1 carries 33% of spectral energy. Shoulder texture: λ2+λ3 carry 27% of spectral energy. Tail vibrancy: λ4+ carry 40% of spectral energy. Spectral entropy: 0.91, indicating a widely distributed cascade. Gap structure: λ1/λ2=1.73, λ2/λ3=2.21, a mixed cascade; density gradient 0.15 (a gentle, navigable slope). Denominator Sequence: effective dimensionality 5.49/8; distinguishability loss 31%, λ1 s",
+          "preview_chars": 480,
+          "storage": "compacted_for_controller_snapshot"
+        },
+        "summary": "Reservoir pull: attractor=reservoir-memory; next field leans toward reservoir-memory, prime-math. Expected behavior pulls: motif=0.46, transform=0.46, formal=0.45. Next controller regime likely stays sustain. Requested field pull: toward prime-math, reservoir-memory; preserve warmth; preserve motif; cool into formal structure."
+      },
+      "observer_report": {
+        "actual_top_anchor": null,
+        "controller_reason": null,
+        "controller_regime": "sustain",
+        "controller_regime_reason": "warm-up or ordinary reflective turn",
+        "controller_regime_source": "auto",
+        "controller_regime_transition": null,
+        "dominant_pressure": null,
+        "geometry_collapse": 0.0,
+        "geometry_regime": "warming-up",
+        "predicted_top_anchor": "reservoir-memory",
+        "regime": "warming-up",
+        "rewrite_issue_count": 0,
+        "stability_score": 1.0,
+        "summary": "Observer: geometry=warming-up; controller=sustain; predicted=reservoir-memory; actual=n/a; dominant pressure=calm; tuning=steady."
+      },
+      "prompt": "[compacted controller prompt; full_chars=8057; preview_chars=480]",
+      "prompt_compacted_v1": {
+        "full_chars": 8057,
+        "preview": "Propose tiny bounded next-turn control deltas for the same system.\nOutput exactly two lines and nothing else.\nLine 1: ADJUST <key=+0.00 ...> or ADJUST none\nLine 2: REASON <short phrase>\nRules:\n- Use at most 3 keys.\n- Only use these keys: leak_fast, leak_medium, leak_slow, field_alignment_gain, prediction_gain, novelty_gain, motif_gain, transform_gain, warmth_gain, strict_bias, temperature_bias, exploration_noise, washout_strength.\n- Each delta must stay within +/-0.06.\n- Pref",
+        "preview_chars": 480,
+        "storage": "compacted_for_controller_snapshot"
+      },
+      "raw": "ADJUST motif_gain=+0.02 temperature_bias=-0.01\nREASON nudge toward reservoir-memory, cool slightly",
+      "reason": "nudge toward reservoir-memory, cool slightly",
+      "regime": "sustain",
+      "relative_condition": {
+        "attractor_lock": 0.0,
+        "continuity_deficit": 0.45,
+        "field_miss": 0.0,
+        "genericity_pressure": 0.0,
+        "geometry_collapse": 0.0,
+        "prediction_mismatch": 0.0,
+        "repetition_pressure": 0.0,
+        "severity": 0.06244444444444445,
+        "structure_strain": 0.0,
+        "truncation_pressure": 0.11200000000000009
+      },
+      "valid": true
+    },
+    "last_reason": "regime=sustain; steady",
+    "last_relative_condition": {
+      "attractor_lock": 0.0,
+      "continuity_deficit": 0.45,
+      "field_miss": 0.0,
+      "genericity_pressure": 0.0,
+      "geometry_collapse": 0.0,
+      "prediction_mismatch": 0.0,
+      "repetition_pressure": 0.0,
+      "severity": 0.06244444444444445,
+      "structure_strain": 0.0,
+      "truncation_pressure": 0.11200000000000009
+    },
+    "stability_score": 0.9375555555555556
+  },
+  "text": "Campfire: Tonight my favorite prime is 73, like a lantern cupped inside proof and ordered arithmetic, still warm against the page.\n\nOperationally: Reservoir dynamics are carrying one warm motif forward while steering toward proof and ordered arithmetic."
+}

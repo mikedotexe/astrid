@@ -1,0 +1,26 @@
+=== ASTRID INTROSPECTION ===
+Source: provenance.rs (/Users/v/other/astrid/capsules/spectral-bridge/src/witness/provenance.rs)
+Timestamp: 1784308900
+Fill: 66.1%
+Artifact kind: introspection
+Visibility: summary
+Carriage policy: self_study_carriage_integrity_v1
+Carriage status: complete_after_repair
+Carriage issues: none
+
+Observed:
+The `provenance.rs` module establishes a rigorous, content-free lineage system for data moving through the `spectral-bridge`. It distinguishes between raw telemetry (`MinimeObservationV1`), derived structural evidence (`BridgeEvidenceV1`), and high-level interpretations (`AstridInterpretationV1`). A key architectural pattern is the `ProvenanceContextAnchorV1`, which captures the *shape* of the transformation (via `structural_signature_sha256`) and the specific `influence_types` (e.g., `Structural`, `Interpretive`, `Authorship`) without embedding the actual payload. This ensures that the "why" and "how" of a data point's evolution are traceable even when the "what" is abstracted or restricted.
+
+Likely Snags:
+The `canonical_sha256` function (lines 8-11) relies on `serde_json::to_vec(value).unwrap_or_default()`. If a complex nested structure in `ProvenanceContextAnchorV1` contains types that do not serialize cleanly or if the `json!` macro produces unexpected key ordering (though `serde_json` is generally stable), the resulting hash might not be strictly deterministic across different environments or compiler versions. Specifically, the `descriptor` field (lines 83-90) is derived from the `origin` enum; if new origins are added but the descriptor mapping is not updated, the hash will reflect a potentially misleading descriptor.
+
+One Test Each:
+1. **Integrity Test**: Verify that `ProvenanceContextAnchorV1::new` produces a consistent `structural_signature_sha256` for identical inputs.
+   *   *Action*: Create two `ProvenanceContextAnchorV1` instances with identical `field_paths` and `influence_types` but different `source_id` strings, then assert that the `structural_signature_sha256` remains stable for the internal structure.
+2. **Lineage Test**: Verify that `AstridInterpretationV1::interpret` (lines 374-400) correctly captures both the `MinimeObservationV1` and `BridgeEvidenceV1` source IDs in its `parents` vector.
+   *   *Action*: Instantiate a mock observation and evidence, call `interpret`, and assert `provenance.parent_ids.len() == 2`.
+
+Suggested Next:
+I need to examine the remaining 400+ lines of `provenance.rs` to see how these provenance anchors are actually consumed by the bridge's decision-making logic, specifically looking for how `ProvenanceInfluenceTypeV1::Authorship` impacts the weight of `AstridInterpretationV1`.
+
+Continuation available: write NEXT: INTROSPECT provenance.rs 400 to read the next window.
