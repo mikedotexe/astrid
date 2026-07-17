@@ -82,6 +82,7 @@ class PostChangeQATests(unittest.TestCase):
             "src/codec.rs",
             "anything feel softer?",
             "shipped smoothstep gate at codec.rs:71",
+            "Codex",
         )
         # The defining question of post-change QA.
         self.assertIn("match what you meant", letter.lower())
@@ -92,8 +93,15 @@ class PostChangeQATests(unittest.TestCase):
         # Slot-routing markers preserved (same as a standard review).
         self.assertTrue(letter.startswith("=== MIKE QUERY"))
         self.assertIn("REVIEW TARGET:", letter)
+        self.assertIn("Sender: Mike & Codex", letter)
+        self.assertNotIn("Claude", letter)
         # It must NOT read as reopening consent.
         self.assertIn("does not reopen", letter.lower())
+
+    def test_default_actor_is_neutral(self):
+        letter = request_review.issue_letter("src/codec.rs", "how does it feel?")
+        self.assertIn("Sender: Mike & interactive-agent", letter)
+        self.assertNotIn("Claude", letter)
 
     def _issue_dry_run(self, post_change):
         ns = argparse.Namespace(

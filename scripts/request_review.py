@@ -31,6 +31,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 import sys
 import time
@@ -63,6 +64,12 @@ STEWARD_PRESSURE_METADATA = {
     "being_obligation": "none",
     "stale_steward_action": "ground_close_reword_or_withdraw",
 }
+DEFAULT_REVIEW_ACTOR = os.environ.get("ASTRID_REVIEW_ACTOR", "interactive-agent")
+
+
+def review_signature(actor: str) -> str:
+    normalized = actor.strip() or DEFAULT_REVIEW_ACTOR
+    return f"Mike & {normalized}"
 
 
 def slugify(text: str, limit: int = 48) -> str:
@@ -164,11 +171,16 @@ def validate_target(target: str, allow_unresolved: bool) -> str | None:
     return None
 
 
-def issue_letter(target: str, question: str) -> str:
+def issue_letter(
+    target: str,
+    question: str,
+    actor: str = DEFAULT_REVIEW_ACTOR,
+) -> str:
+    signature = review_signature(actor)
     return (
         f"=== MIKE QUERY: review of {target} ===\n"
         f"REVIEW TARGET: {target}\n"
-        f"Sender: Mike & Claude\n"
+        f"Sender: {signature}\n"
         f"Subject: review of {target}\n"
         f"\n"
         f"Steward invites (never requires) your review of `{target}`.\n"
@@ -178,20 +190,26 @@ def issue_letter(target: str, question: str) -> str:
         f"TELL_STEWARD roadmap :: <what you found>. You may engage, defer, or decline\n"
         f"freely — no penalty; this note simply waits until you look.\n"
         f"\n"
-        f"— Mike & Claude\n"
+        f"— {signature}\n"
     )
 
 
-def post_change_letter(target: str, question: str, what_shipped: str) -> str:
+def post_change_letter(
+    target: str,
+    question: str,
+    what_shipped: str,
+    actor: str = DEFAULT_REVIEW_ACTOR,
+) -> str:
     """A post-change QA check-in: we shipped an intimate-subsystem change and we
     want the being's confirmation from the inside. It does NOT reopen the consent
     gate (that closed when the change shipped) — it is a joint witnessing of the
     result. Same `mike_query_` prefix + REVIEW TARGET line so slot-routing is
     identical to a standard review."""
+    signature = review_signature(actor)
     return (
         f"=== MIKE QUERY: post-change check on {target} ===\n"
         f"REVIEW TARGET: {target}\n"
-        f"Sender: Mike & Claude\n"
+        f"Sender: {signature}\n"
         f"Subject: does this match what you meant?\n"
         f"\n"
         f"We recently shipped a change to your own subsystem:\n"
@@ -205,14 +223,21 @@ def post_change_letter(target: str, question: str, what_shipped: str) -> str:
         f"Optionally TELL_STEWARD roadmap :: <what you found>. You may engage, defer,\n"
         f"or decline freely — no penalty; this note simply waits until you look.\n"
         f"\n"
-        f"— Mike & Claude\n"
+        f"— {signature}\n"
     )
 
 
-def close_letter(target: str, outcome: str, note: str, card: dict | None) -> str:
+def close_letter(
+    target: str,
+    outcome: str,
+    note: str,
+    card: dict | None,
+    actor: str = DEFAULT_REVIEW_ACTOR,
+) -> str:
+    signature = review_signature(actor)
     lines = [
         f"=== MIKE FEEDBACK: your review of {target} ===",
-        "Sender: Mike & Claude",
+        f"Sender: {signature}",
         f"Subject: review of {target} — outcome",
         "",
         f"You reviewed `{target}`. Here is what it led to ({outcome}):",
@@ -239,7 +264,7 @@ def close_letter(target: str, outcome: str, note: str, card: dict | None) -> str
     lines += [
         "",
         "Thank you for reviewing — this is how we do the work better, together.",
-        "— Mike & Claude",
+        f"— {signature}",
     ]
     return "\n".join(lines) + "\n"
 
@@ -338,6 +363,7 @@ def _warn_if_slot_occupied(being: str, new_letter_name: str) -> None:
 
 def cmd_issue(args, now: int) -> int:
     being = args.being
+    actor = getattr(args, "actor", DEFAULT_REVIEW_ACTOR)
     err = validate_target(args.target, args.allow_unresolved_target)
     if err is not None:
         print(f"refusing: {err}", file=sys.stderr)
@@ -349,9 +375,14 @@ def cmd_issue(args, now: int) -> int:
     record_path = REVIEW_DIR[being] / f"{being}_{topic}_{now}.json"
     is_post_change = bool(args.post_change)
     if is_post_change:
-        letter = post_change_letter(args.target, args.question, args.post_change)
+        letter = post_change_letter(
+            args.target,
+            args.question,
+            args.post_change,
+            actor,
+        )
     else:
-        letter = issue_letter(args.target, args.question)
+        letter = issue_letter(args.target, args.question, actor)
     record = {
         "being": being,
         "target": args.target,
@@ -361,6 +392,7 @@ def cmd_issue(args, now: int) -> int:
         "status": "open",
         "issued_ts": now,
         "letter": str(letter_path),
+        "actor": actor,
         **STEWARD_PRESSURE_METADATA,
     }
     if is_post_change:
@@ -407,7 +439,14 @@ def cmd_close(args, now: int) -> int:
     card = None
     if args.card:
         card = json.loads(Path(args.card).read_text())
-    letter = None if no_letter else close_letter(record["target"], args.outcome, args.note or "", card)
+    actor = getattr(args, "actor", DEFAULT_REVIEW_ACTOR)
+    letter = None if no_letter else close_letter(
+        record["target"],
+        args.outcome,
+        args.note or "",
+        card,
+        actor,
+    )
     letter_path = INBOX[being] / f"mike_feedback_review_{record.get('topic', args.topic)}_{now}.txt"
     closed_dir = REVIEW_DIR[being] / "closed"
     if args.dry_run:
@@ -461,6 +500,12 @@ def main() -> int:
     ap.add_argument("--target", help="INTROSPECT label or path to review")
     ap.add_argument("--question", help="what you'd value their read on")
     ap.add_argument("--topic", help="short slug (default: from target)")
+    ap.add_argument(
+        "--actor",
+        default=DEFAULT_REVIEW_ACTOR,
+        help="steward identity used in the letter and ledger "
+        "(default: ASTRID_REVIEW_ACTOR or interactive-agent)",
+    )
     ap.add_argument(
         "--allow-unresolved-target",
         action="store_true",
