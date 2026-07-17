@@ -1520,6 +1520,8 @@ def work_item_summary(work_items: dict[str, dict[str, Any]]) -> dict[str, Any]:
         }
         for item in active
         if str(item.get("status") or "") != "verified_existing"
+        and str(item.get("claim_classification") or "")
+        not in {"needs_sandbox", "sandbox_routed"}
         and int(item.get("agency_tier") or 0) < 5
         and live_control_claim(
             " ".join(
@@ -2236,6 +2238,132 @@ def record_read_event(
     }
 
 
+def full_read_batch_rows(manifest_file: Path) -> list[dict[str, Any]]:
+    payload = json.loads(manifest_file.read_text(encoding="utf-8"))
+    rows = payload.get("reads") if isinstance(payload, dict) else payload
+    if not isinstance(rows, list) or not rows:
+        raise ValueError("full-read batch must contain a non-empty reads list")
+
+    normalized: list[dict[str, Any]] = []
+    seen_ids: set[str] = set()
+    for index, row in enumerate(rows, start=1):
+        if not isinstance(row, dict):
+            raise ValueError(f"full-read batch row {index} must be an object")
+        introspection_id = str(row.get("introspection_id") or "").strip()
+        reader = str(row.get("reader") or "").strip()
+        summary_raw = str(row.get("summary_file") or "").strip()
+        claims_raw = str(row.get("claims_file") or "").strip()
+        missing = [
+            key
+            for key, value in (
+                ("introspection_id", introspection_id),
+                ("reader", reader),
+                ("summary_file", summary_raw),
+                ("claims_file", claims_raw),
+            )
+            if not value
+        ]
+        if missing:
+            raise ValueError(
+                f"full-read batch row {index} is missing {', '.join(missing)}"
+            )
+        if introspection_id in seen_ids:
+            raise ValueError(
+                f"full-read batch row {index} duplicates introspection {introspection_id}"
+            )
+        seen_ids.add(introspection_id)
+
+        summary_file = Path(summary_raw)
+        claims_file = Path(claims_raw)
+        if not summary_file.is_absolute():
+            summary_file = manifest_file.parent / summary_file
+        if not claims_file.is_absolute():
+            claims_file = manifest_file.parent / claims_file
+        if not summary_file.is_file():
+            raise ValueError(
+                f"full-read batch row {index} summary file does not exist: "
+                f"{summary_file}"
+            )
+        if not claims_file.is_file():
+            raise ValueError(
+                f"full-read batch row {index} claims file does not exist: "
+                f"{claims_file}"
+            )
+        normalized.append(
+            {
+                "introspection_id": introspection_id,
+                "reader": reader,
+                "summary_file": summary_file,
+                "claims_file": claims_file,
+            }
+        )
+    return normalized
+
+
+def record_read_batch(
+    state_dir: Path,
+    manifest_file: Path,
+    *,
+    write: bool,
+) -> dict[str, Any]:
+    rows = full_read_batch_rows(manifest_file)
+    status = load_or_replay_status(state_dir)
+    artifacts = (
+        status.get("artifacts") if isinstance(status.get("artifacts"), dict) else {}
+    )
+    for index, row in enumerate(rows, start=1):
+        if row["introspection_id"] not in artifacts:
+            raise ValueError(
+                f"full-read batch row {index} references unknown introspection "
+                f"{row['introspection_id']}"
+            )
+
+    events = [
+        record_read_event(
+            row["introspection_id"],
+            row["reader"],
+            row["summary_file"],
+            row["claims_file"],
+        )
+        for row in rows
+    ]
+    materialized = status
+    if write:
+        append_events(state_dir, events)
+        materialized = replay_events(state_dir)
+        write_materialized_status(state_dir, materialized)
+
+    materialized_artifacts = (
+        materialized.get("artifacts")
+        if isinstance(materialized.get("artifacts"), dict)
+        else {}
+    )
+    return {
+        "schema": SCHEMA,
+        "write": write,
+        "events_appended": len(events) if write else 0,
+        "read_count": len(rows),
+        "artifact_statuses": [
+            {
+                "introspection_id": row["introspection_id"],
+                "status": materialized_artifacts.get(
+                    row["introspection_id"], {}
+                ).get("status"),
+                "fully_addressed": materialized_artifacts.get(
+                    row["introspection_id"], {}
+                ).get("fully_addressed"),
+                "proof_missing_claims": materialized_artifacts.get(
+                    row["introspection_id"], {}
+                ).get("proof_missing_claims"),
+            }
+            for row in rows
+        ],
+        "status_path": str(status_path(state_dir)),
+        "queue_path": str(queue_path(state_dir)),
+        "authority_boundary": AUTHORITY_BOUNDARY,
+    }
+
+
 def evidence_event(
     introspection_id: str,
     claim_id: str,
@@ -2260,6 +2388,120 @@ def evidence_event(
     }
 
 
+def evidence_batch_rows(links_file: Path) -> list[dict[str, str]]:
+    payload = json.loads(links_file.read_text(encoding="utf-8"))
+    rows = payload.get("links") if isinstance(payload, dict) else payload
+    if not isinstance(rows, list) or not rows:
+        raise ValueError("evidence batch must contain a non-empty links list")
+
+    normalized: list[dict[str, str]] = []
+    for index, row in enumerate(rows, start=1):
+        if not isinstance(row, dict):
+            raise ValueError(f"evidence batch row {index} must be an object")
+        normalized_row = {
+            "introspection_id": str(row.get("introspection_id") or "").strip(),
+            "claim_id": str(row.get("claim_id") or "").strip(),
+            "kind": str(row.get("kind") or "").strip(),
+            "target": str(row.get("target") or "").strip(),
+            "note": str(row.get("note") or "").strip(),
+        }
+        missing = [
+            key
+            for key in ("introspection_id", "claim_id", "kind", "target")
+            if not normalized_row[key]
+        ]
+        if missing:
+            raise ValueError(
+                f"evidence batch row {index} is missing {', '.join(missing)}"
+            )
+        if normalized_row["kind"] not in EVIDENCE_KINDS:
+            raise ValueError(
+                f"evidence batch row {index} kind must be one of "
+                f"{sorted(EVIDENCE_KINDS)}"
+            )
+        normalized.append(normalized_row)
+    return normalized
+
+
+def link_evidence_batch(
+    state_dir: Path,
+    links_file: Path,
+    *,
+    write: bool,
+) -> dict[str, Any]:
+    rows = evidence_batch_rows(links_file)
+    status = load_or_replay_status(state_dir)
+    artifacts = status.get("artifacts") if isinstance(status.get("artifacts"), dict) else {}
+    expanded_rows: list[dict[str, str]] = []
+    for index, row in enumerate(rows, start=1):
+        artifact = artifacts.get(row["introspection_id"])
+        if not isinstance(artifact, dict):
+            raise ValueError(
+                f"evidence batch row {index} references unknown introspection "
+                f"{row['introspection_id']}"
+            )
+        claims = artifact.get("claims") if isinstance(artifact.get("claims"), dict) else {}
+        claim_ids = sorted(claims) if row["claim_id"] == "*" else [row["claim_id"]]
+        if not claim_ids:
+            raise ValueError(
+                f"evidence batch row {index} wildcard references an introspection "
+                "without claims"
+            )
+        if any(claim_id not in claims for claim_id in claim_ids):
+            raise ValueError(
+                f"evidence batch row {index} references unknown claim "
+                f"{row['introspection_id']}:{row['claim_id']}"
+            )
+        expanded_rows.extend({**row, "claim_id": claim_id} for claim_id in claim_ids)
+
+    events = [
+        evidence_event(
+            row["introspection_id"],
+            row["claim_id"],
+            row["kind"],
+            row["target"],
+            row["note"],
+        )
+        for row in expanded_rows
+    ]
+    materialized = status
+    if write:
+        append_events(state_dir, events)
+        materialized = replay_events(state_dir)
+        write_materialized_status(state_dir, materialized)
+
+    materialized_artifacts = (
+        materialized.get("artifacts")
+        if isinstance(materialized.get("artifacts"), dict)
+        else {}
+    )
+    touched_ids = list(dict.fromkeys(row["introspection_id"] for row in expanded_rows))
+    return {
+        "schema": SCHEMA,
+        "write": write,
+        "events_appended": len(events) if write else 0,
+        "link_count": len(expanded_rows),
+        "batch_row_count": len(rows),
+        "introspection_count": len(touched_ids),
+        "artifact_statuses": [
+            {
+                "introspection_id": introspection_id,
+                "status": materialized_artifacts.get(introspection_id, {}).get("status"),
+                "fully_addressed": materialized_artifacts.get(introspection_id, {}).get(
+                    "fully_addressed"
+                ),
+                "proof_missing_claims": materialized_artifacts.get(
+                    introspection_id, {}
+                ).get("proof_missing_claims"),
+            }
+            for introspection_id in touched_ids
+        ],
+        "status_path": str(status_path(state_dir)),
+        "queue_path": str(queue_path(state_dir)),
+        "authority_boundary": AUTHORITY_BOUNDARY,
+    }
+
+
 def close_event(introspection_id: str, status: str, rationale: str) -> dict[str, Any]:
     if status not in TERMINAL_STATUSES and status != "blocked_needs_steward":
         raise ValueError("close status must be terminal or blocked_needs_steward")
@@ -2277,29 +2519,45 @@ def work_item_from_claim(artifact: dict[str, Any], claim: dict[str, Any]) -> dic
     introspection_id = str(artifact.get("introspection_id") or "")
     claim_id = str(claim.get("claim_id") or "")
     claim_summary = bounded_text(str(claim.get("summary") or ""), limit=700)
-    combined = " ".join(
-        [
-            claim_summary,
-            str(artifact.get("source_family") or ""),
-            str(artifact.get("filename") or ""),
-        ]
-    )
-    tier = agency_tier_for_claim(combined)
+    claim_disposition = bounded_text(str(claim.get("disposition") or ""), limit=900)
+    # Authority follows the concrete claim, never nouns that happen to appear
+    # in a source-family label or filename.
+    tier = agency_tier_for_claim(claim_summary)
     classification = str(claim.get("classification") or "").strip()
     claim_authority = str(claim.get("authority") or "").strip()
     if classification == "tier_5_wait":
         tier = 5
-    elif classification == "needs_sandbox" and tier < 4:
+    elif classification == "authority_gated":
+        # A structured approval disposition outranks heuristic wording. Honor
+        # an explicit Tier 4 disposition when present; otherwise fail closed
+        # at Tier 5 so an unfamiliar live proposal cannot become runnable.
+        disposition_tier = agency_tier_for_claim(claim_disposition)
+        tier = disposition_tier if disposition_tier >= 4 else 5
+    elif classification in {"needs_sandbox", "sandbox_routed"}:
         tier = 3
+    elif classification == "verified_existing" and _is_explicit_verification_claim(
+        claim_disposition
+    ):
+        # Historical reports often phrase a desired property as "should
+        # change" even when the grounded disposition verifies that later
+        # source already implements it. Honor that explicit verification
+        # disposition without letting a bare/mislabeled verified claim mask a
+        # genuine live mutation request.
+        tier = agency_tier_for_claim(claim_disposition)
     created = now_s()
     title = bounded_text(claim_summary, limit=90) or f"{introspection_id}:{claim_id}"
+    claim_evidence = (
+        claim.get("evidence") if isinstance(claim.get("evidence"), list) else []
+    )
     status = AGENCY_TIER_DEFAULT_STATUS.get(tier, "ready_for_implementation")
     if tier < 4:
         status = {
             "implemented": "implemented_awaiting_felt_response",
+            "implemented_now": "implemented_awaiting_felt_response",
             "verified_existing": "verified_existing",
             "observed": "verified_existing",
             "needs_sandbox": "needs_sandbox",
+            "sandbox_routed": "needs_sandbox",
         }.get(classification, status)
     item = {
         "work_item_id": work_item_id_for(introspection_id, claim_id),
@@ -2309,6 +2567,7 @@ def work_item_from_claim(artifact: dict[str, Any], claim: dict[str, Any]) -> dic
         "source_family": artifact.get("source_family"),
         "claim_id": claim_id,
         "claim_classification": classification or None,
+        "claim_disposition": claim_disposition or None,
         "claim_authority": claim_authority or None,
         "being": being_from_source(artifact),
         "title": title,
@@ -2324,6 +2583,9 @@ def work_item_from_claim(artifact: dict[str, Any], claim: dict[str, Any]) -> dic
         "blocked_by": "operator_approval" if tier == 5 else ("steward_grant" if tier == 4 else None),
         "auto_approved": False,
         "fully_addressed_effect": False,
+        "evidence_links": [
+            dict(evidence) for evidence in claim_evidence if isinstance(evidence, dict)
+        ],
     }
     refresh_work_item_authority_packets(item)
     return item
@@ -2524,6 +2786,67 @@ def closure_card_event(
         "closure_card": card,
     }
     return event, card
+
+
+def emit_closure_card_batch(
+    state_dir: Path,
+    work_items: list[dict[str, Any]],
+    *,
+    write: bool,
+    deliver: bool = False,
+) -> dict[str, Any]:
+    if not work_items:
+        raise ValueError("at least one work item is required")
+
+    events: list[dict[str, Any]] = []
+    cards: list[dict[str, Any]] = []
+    for work_item in work_items:
+        event, card = closure_card_event(
+            state_dir,
+            work_item,
+            write=write,
+            deliver=deliver,
+        )
+        events.append(event)
+        cards.append(card)
+
+    materialized: dict[str, Any] = {}
+    if write:
+        append_events(state_dir, events)
+        materialized = replay_events(state_dir)
+        write_materialized_status(state_dir, materialized)
+
+    materialized_items = (
+        materialized.get("work_items")
+        if isinstance(materialized.get("work_items"), dict)
+        else {}
+    )
+    return {
+        "schema": SCHEMA,
+        "write": write,
+        "events_appended": len(events) if write else 0,
+        "closure_cards": cards,
+        "work_item_statuses": [
+            {
+                "work_item_id": card["work_item_id"],
+                "status": (
+                    materialized_items.get(card["work_item_id"], {}).get("status")
+                    if write
+                    else work_item.get("status")
+                ),
+                "closure_card_count": (
+                    len(materialized_items.get(card["work_item_id"], {}).get("closure_cards") or [])
+                    if write
+                    else len(work_item.get("closure_cards") or []) + 1
+                ),
+            }
+            for work_item, card in zip(work_items, cards, strict=True)
+        ],
+        "status_path": str(status_path(state_dir)),
+        "queue_path": str(queue_path(state_dir)),
+        "authority_boundary": AUTHORITY_BOUNDARY,
+        "agency_boundary": AGENCY_BOUNDARY,
+    }
 
 
 def promote_work_items(
@@ -2769,6 +3092,18 @@ def work_item_or_error(state_dir: Path, work_item_id: str) -> tuple[dict[str, An
     if not isinstance(item, dict):
         raise ValueError(f"unknown work item id {work_item_id!r}")
     return status, item
+
+
+def introspection_artifact_or_error(
+    state_dir: Path,
+    introspection_id: str,
+) -> tuple[dict[str, Any], dict[str, Any]]:
+    status = load_or_replay_status(state_dir)
+    artifacts = status.get("artifacts") if isinstance(status.get("artifacts"), dict) else {}
+    artifact = artifacts.get(introspection_id)
+    if not isinstance(artifact, dict):
+        raise ValueError(f"unknown introspection id {introspection_id!r}")
+    return status, artifact
 
 
 class IntrospectionAddressingAuditTests(unittest.TestCase):
@@ -3108,6 +3443,30 @@ class IntrospectionAddressingAuditTests(unittest.TestCase):
         self.assertEqual(summary["tier_mismatch_count"], 1)
         self.assertEqual(summary["tier_mismatches"][0]["work_item_id"], "wi_pending")
 
+    def test_explicit_sandbox_disposition_is_not_a_live_tier_mismatch(self) -> None:
+        for classification in ("needs_sandbox", "sandbox_routed"):
+            with self.subTest(classification=classification):
+                summary = work_item_summary(
+                    {
+                        "wi_sandbox": {
+                            "work_item_id": "wi_sandbox",
+                            "being": "astrid",
+                            "title": "Compare pressure with dispersal and sensory change.",
+                            "claim_summary": (
+                                "Pressure should be compared with dispersal and sensory "
+                                "change rather than inferred from fill alone."
+                            ),
+                            "claim_classification": classification,
+                            "agency_tier": 3,
+                            "route": agency_route_for_tier(3),
+                            "status": "needs_sandbox",
+                            "updated_at": now_s(),
+                        }
+                    }
+                )
+
+                self.assertEqual(summary["tier_mismatch_count"], 0)
+
     def test_next_queue_prioritizes_unread_before_triaged_pending_work(self) -> None:
         status = status_from_records(
             [
@@ -3270,6 +3629,44 @@ class IntrospectionAddressingAuditTests(unittest.TestCase):
             4,
         )
 
+    def test_work_item_authority_uses_claim_not_source_label(self) -> None:
+        item = work_item_from_claim(
+            {
+                "introspection_id": "introspection_proposal_distance_contact_control_1",
+                "filename": "introspection_proposal_distance_contact_control_1.txt",
+                "source_family": "proposal_distance_contact_control",
+            },
+            {
+                "claim_id": "c001",
+                "summary": (
+                    "Pressure should be compared with dispersal and sensory change "
+                    "rather than inferred from fill alone."
+                ),
+                "classification": "needs_sandbox",
+            },
+        )
+
+        self.assertEqual(item["agency_tier"], 3)
+        self.assertEqual(item["status"], "needs_sandbox")
+        self.assertEqual(item["route"], "sandbox_replay_or_simulation")
+        self.assertIsNone(item["blocked_by"])
+
+    def test_implemented_now_claim_is_not_left_runnable(self) -> None:
+        item = work_item_from_claim(
+            {
+                "introspection_id": "introspection_astrid_codec_1",
+                "filename": "introspection_astrid_codec_1.txt",
+                "source_family": "astrid_codec",
+            },
+            {
+                "claim_id": "c001",
+                "summary": "Expose one bounded read-only projection diagnostic.",
+                "classification": "implemented_now",
+            },
+        )
+
+        self.assertEqual(item["status"], "implemented_awaiting_felt_response")
+
     def test_claim_metadata_survives_full_read_parsing(self) -> None:
         import tempfile
 
@@ -3335,6 +3732,13 @@ class IntrospectionAddressingAuditTests(unittest.TestCase):
                     record_read_event(
                         artifact["introspection_id"], "codex", summary, claims
                     ),
+                    evidence_event(
+                        artifact["introspection_id"],
+                        "c001",
+                        "steward_note",
+                        "docs/steward-notes/test.md",
+                        "Bounded verification evidence.",
+                    ),
                 ],
             )
             replayed = replay_events(state)["artifacts"][artifact["introspection_id"]][
@@ -3346,6 +3750,11 @@ class IntrospectionAddressingAuditTests(unittest.TestCase):
         self.assertEqual(replayed["authority"], "offline_read_only_replay")
         self.assertEqual(work_item["claim_classification"], "observed")
         self.assertEqual(work_item["claim_authority"], "offline_read_only_replay")
+        self.assertEqual(len(work_item["evidence_links"]), 1)
+        self.assertEqual(
+            work_item["evidence_links"][0]["target"],
+            "docs/steward-notes/test.md",
+        )
 
     def test_claim_classification_routes_status_without_lowering_live_authority(self) -> None:
         artifact = {
@@ -3387,6 +3796,94 @@ class IntrospectionAddressingAuditTests(unittest.TestCase):
         self.assertEqual(verified_item["status"], "verified_existing")
         self.assertEqual(live_item["agency_tier"], 5)
         self.assertEqual(live_item["status"], "needs_operator_approval")
+
+    def test_structured_sandbox_and_authority_classifications_fail_closed(self) -> None:
+        artifact = {
+            "introspection_id": "introspection_astrid_codec_2",
+            "filename": "introspection_astrid_codec_2.txt",
+            "source_family": "astrid_codec",
+            "path": "/tmp/introspection_astrid_codec_2.txt",
+        }
+        sandbox_item = work_item_from_claim(
+            artifact,
+            {
+                "claim_id": "c001",
+                "summary": "Compare two captured artifacts without live writes.",
+                "disposition": "route a bounded offline comparison",
+                "classification": "sandbox_routed",
+            },
+        )
+        authority_item = work_item_from_claim(
+            artifact,
+            {
+                "claim_id": "c002",
+                "summary": "A future basis migration needs its own boundary.",
+                "disposition": "retain as operator approval work",
+                "classification": "authority_gated",
+            },
+        )
+        steward_item = work_item_from_claim(
+            artifact,
+            {
+                "claim_id": "c003",
+                "summary": "A bounded authority-budget change needs its own boundary.",
+                "disposition": "retain as Tier 4 steward approval work",
+                "classification": "authority_gated",
+            },
+        )
+
+        self.assertEqual(sandbox_item["agency_tier"], 3)
+        self.assertEqual(sandbox_item["status"], "needs_sandbox")
+        self.assertEqual(sandbox_item["route"], "sandbox_replay_or_simulation")
+        self.assertEqual(authority_item["agency_tier"], 5)
+        self.assertEqual(authority_item["status"], "needs_operator_approval")
+        self.assertEqual(authority_item["blocked_by"], "operator_approval")
+        self.assertEqual(steward_item["agency_tier"], 4)
+        self.assertEqual(steward_item["status"], "needs_steward_grant")
+        self.assertEqual(steward_item["blocked_by"], "steward_grant")
+
+    def test_verified_existing_disposition_prevents_historical_should_change_overclassification(
+        self,
+    ) -> None:
+        artifact = {
+            "introspection_id": "introspection_minime_sensory_bus_1",
+            "filename": "introspection_minime_sensory_bus_1.txt",
+            "source_family": "minime_sensory_bus",
+            "path": "/tmp/introspection_minime_sensory_bus_1.txt",
+        }
+        verified_item = work_item_from_claim(
+            artifact,
+            {
+                "claim_id": "c001",
+                "summary": (
+                    "High-fill surge taper should change continuously rather than "
+                    "snap between two weights."
+                ),
+                "disposition": (
+                    "verify the current smoothstep taper and continuity tests "
+                    "without changing live sensory behavior"
+                ),
+                "classification": "verified_existing",
+            },
+        )
+        mislabeled_live_item = work_item_from_claim(
+            artifact,
+            {
+                "claim_id": "c002",
+                "summary": "Apply a live pressure control change.",
+                "disposition": "verify after applying the live pressure control change",
+                "classification": "verified_existing",
+            },
+        )
+
+        self.assertEqual(verified_item["agency_tier"], 1)
+        self.assertEqual(verified_item["status"], "verified_existing")
+        self.assertEqual(
+            verified_item["claim_disposition"],
+            "verify the current smoothstep taper and continuity tests without changing live sensory behavior",
+        )
+        self.assertEqual(mislabeled_live_item["agency_tier"], 5)
+        self.assertEqual(mislabeled_live_item["status"], "needs_operator_approval")
 
     def test_tier_suggestion_does_not_auto_approve_or_auto_grant(self) -> None:
         artifact = {
@@ -3632,6 +4129,278 @@ class IntrospectionAddressingAuditTests(unittest.TestCase):
         self.assertEqual(card_event["event_type"], "closure_card_emitted")
         self.assertEqual(card["authority_boundary_packet_v2"]["lifecycle_state"], "operator_approval_wait")
 
+    def test_closure_card_batch_appends_and_materializes_once(self) -> None:
+        import tempfile
+        from unittest import mock
+
+        work_items = [
+            {
+                "work_item_id": f"wi_batch_{idx}",
+                "source_introspection_id": "introspection_astrid_codec_1",
+                "claim_id": f"c{idx:03d}",
+                "being": "astrid",
+                "agency_tier": 0,
+                "agency_tier_label": AGENCY_TIER_LABELS[0],
+                "status": "verified_existing",
+                "claim_summary": f"bounded claim {idx}",
+                "suggested_next": "record bounded evidence",
+            }
+            for idx in (1, 2)
+        ]
+        replayed = {
+            "work_items": {
+                item["work_item_id"]: {
+                    **item,
+                    "closure_cards": [{"work_item_id": item["work_item_id"]}],
+                }
+                for item in work_items
+            }
+        }
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            state = Path(tmpdir) / "state"
+            with (
+                mock.patch(f"{__name__}.append_events") as append_mock,
+                mock.patch(f"{__name__}.replay_events", return_value=replayed) as replay_mock,
+                mock.patch(f"{__name__}.write_materialized_status") as write_status_mock,
+            ):
+                payload = emit_closure_card_batch(state, work_items, write=True)
+
+        append_mock.assert_called_once()
+        self.assertEqual(len(append_mock.call_args.args[1]), 2)
+        replay_mock.assert_called_once_with(state)
+        write_status_mock.assert_called_once_with(state, replayed)
+        self.assertEqual(payload["events_appended"], 2)
+        self.assertEqual(len(payload["closure_cards"]), 2)
+        self.assertEqual(
+            [row["closure_card_count"] for row in payload["work_item_statuses"]],
+            [1, 1],
+        )
+        self.assertTrue(all(card["right_to_ignore"] for card in payload["closure_cards"]))
+
+    def test_evidence_batch_appends_and_materializes_once(self) -> None:
+        import tempfile
+        from unittest import mock
+
+        status = {
+            "artifacts": {
+                "introspection_astrid_ws_1": {
+                    "status": "triaged_pending_action",
+                    "fully_addressed": False,
+                    "proof_missing_claims": ["c001", "c002"],
+                    "claims": {"c001": {}, "c002": {}},
+                }
+            }
+        }
+        replayed = {
+            "artifacts": {
+                "introspection_astrid_ws_1": {
+                    "status": "addressed_change",
+                    "fully_addressed": True,
+                    "proof_missing_claims": [],
+                    "claims": {"c001": {}, "c002": {}},
+                }
+            }
+        }
+        links = {
+            "links": [
+                {
+                    "introspection_id": "introspection_astrid_ws_1",
+                    "claim_id": "*",
+                    "kind": "test",
+                    "target": "test::telemetry",
+                    "note": "bounded verification",
+                }
+            ]
+        }
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            state = Path(tmpdir) / "state"
+            links_file = Path(tmpdir) / "links.json"
+            links_file.write_text(json.dumps(links), encoding="utf-8")
+            with (
+                mock.patch(f"{__name__}.load_or_replay_status", return_value=status),
+                mock.patch(f"{__name__}.append_events") as append_mock,
+                mock.patch(f"{__name__}.replay_events", return_value=replayed) as replay_mock,
+                mock.patch(f"{__name__}.write_materialized_status") as write_status_mock,
+            ):
+                payload = link_evidence_batch(state, links_file, write=True)
+
+        append_mock.assert_called_once()
+        self.assertEqual(len(append_mock.call_args.args[1]), 2)
+        replay_mock.assert_called_once_with(state)
+        write_status_mock.assert_called_once_with(state, replayed)
+        self.assertEqual(payload["events_appended"], 2)
+        self.assertEqual(payload["link_count"], 2)
+        self.assertEqual(payload["batch_row_count"], 1)
+        self.assertEqual(payload["introspection_count"], 1)
+        self.assertTrue(payload["artifact_statuses"][0]["fully_addressed"])
+        self.assertEqual(payload["artifact_statuses"][0]["proof_missing_claims"], [])
+
+    def test_full_read_batch_appends_and_materializes_once(self) -> None:
+        import tempfile
+        from unittest import mock
+
+        introspection_ids = [
+            "introspection_astrid_ws_1",
+            "introspection_astrid_codec_2",
+        ]
+        status = {
+            "artifacts": {
+                introspection_id: {
+                    "status": "unread",
+                    "fully_addressed": False,
+                    "proof_missing_claims": [],
+                }
+                for introspection_id in introspection_ids
+            }
+        }
+        replayed = {
+            "artifacts": {
+                introspection_id: {
+                    "status": "triaged_pending_action",
+                    "fully_addressed": False,
+                    "proof_missing_claims": ["c001"],
+                }
+                for introspection_id in introspection_ids
+            }
+        }
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            summary_file = root / "summary.md"
+            claims_file = root / "claims.json"
+            manifest_file = root / "manifest.json"
+            summary_file.write_text("Full bounded summary.", encoding="utf-8")
+            claims_file.write_text(
+                json.dumps(
+                    {
+                        "claims": [
+                            {
+                                "claim_id": "c001",
+                                "summary": "A grounded claim.",
+                                "disposition": "verify existing behavior",
+                                "classification": "verified_existing",
+                            }
+                        ]
+                    }
+                ),
+                encoding="utf-8",
+            )
+            manifest_file.write_text(
+                json.dumps(
+                    {
+                        "reads": [
+                            {
+                                "introspection_id": introspection_id,
+                                "reader": "codex-sol",
+                                "summary_file": summary_file.name,
+                                "claims_file": claims_file.name,
+                            }
+                            for introspection_id in introspection_ids
+                        ]
+                    }
+                ),
+                encoding="utf-8",
+            )
+            state = root / "state"
+            with (
+                mock.patch(f"{__name__}.load_or_replay_status", return_value=status),
+                mock.patch(f"{__name__}.append_events") as append_mock,
+                mock.patch(f"{__name__}.replay_events", return_value=replayed) as replay_mock,
+                mock.patch(f"{__name__}.write_materialized_status") as write_status_mock,
+            ):
+                payload = record_read_batch(state, manifest_file, write=True)
+
+        append_mock.assert_called_once()
+        self.assertEqual(len(append_mock.call_args.args[1]), 2)
+        replay_mock.assert_called_once_with(state)
+        write_status_mock.assert_called_once_with(state, replayed)
+        self.assertEqual(payload["events_appended"], 2)
+        self.assertEqual(payload["read_count"], 2)
+        self.assertEqual(len(payload["artifact_statuses"]), 2)
+        self.assertTrue(
+            all(
+                row["status"] == "triaged_pending_action"
+                for row in payload["artifact_statuses"]
+            )
+        )
+
+    def test_full_read_batch_rejects_duplicate_introspection_ids(self) -> None:
+        import tempfile
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            summary_file = root / "summary.md"
+            claims_file = root / "claims.json"
+            manifest_file = root / "manifest.json"
+            summary_file.write_text("Full bounded summary.", encoding="utf-8")
+            claims_file.write_text("Claim one.", encoding="utf-8")
+            manifest_file.write_text(
+                json.dumps(
+                    {
+                        "reads": [
+                            {
+                                "introspection_id": "introspection_astrid_ws_1",
+                                "reader": "codex-sol",
+                                "summary_file": summary_file.name,
+                                "claims_file": claims_file.name,
+                            },
+                            {
+                                "introspection_id": "introspection_astrid_ws_1",
+                                "reader": "codex-sol",
+                                "summary_file": summary_file.name,
+                                "claims_file": claims_file.name,
+                            },
+                        ]
+                    }
+                ),
+                encoding="utf-8",
+            )
+            with self.assertRaisesRegex(ValueError, "duplicates introspection"):
+                full_read_batch_rows(manifest_file)
+
+    def test_unknown_introspection_close_is_rejected_before_append(self) -> None:
+        import tempfile
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            state = Path(tmpdir) / "state"
+            state.mkdir()
+            status_path(state).write_text(
+                json.dumps(
+                    {
+                        "artifacts": {
+                            "introspection_astrid_llm_1": {
+                                "introspection_id": "introspection_astrid_llm_1"
+                            }
+                        }
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            with self.assertRaisesRegex(
+                ValueError,
+                "unknown introspection id 'introspection_astrid_llm_2'",
+            ):
+                main(
+                    [
+                        "--state-dir",
+                        str(state),
+                        "close",
+                        "--id",
+                        "introspection_astrid_llm_2",
+                        "--status",
+                        "addressed_change",
+                        "--rationale",
+                        "test close",
+                        "--write",
+                        "--json",
+                    ]
+                )
+
+            self.assertFalse(event_path(state).exists())
+
     def test_replay_ignores_corrupt_lines_and_duplicate_inventory(self) -> None:
         import tempfile
 
@@ -3707,6 +4476,11 @@ def main(argv: list[str] | None = None) -> int:
     read_p.add_argument("--write", action="store_true")
     read_p.add_argument("--json", action="store_true")
 
+    read_batch_p = sub.add_parser("record-read-batch")
+    read_batch_p.add_argument("--manifest-file", required=True, type=Path)
+    read_batch_p.add_argument("--write", action="store_true")
+    read_batch_p.add_argument("--json", action="store_true")
+
     evidence_p = sub.add_parser("link-evidence")
     evidence_p.add_argument("--id", required=True)
     evidence_p.add_argument("--claim-id", required=True)
@@ -3715,6 +4489,11 @@ def main(argv: list[str] | None = None) -> int:
     evidence_p.add_argument("--note", default="")
     evidence_p.add_argument("--write", action="store_true")
     evidence_p.add_argument("--json", action="store_true")
+
+    evidence_batch_p = sub.add_parser("link-evidence-batch")
+    evidence_batch_p.add_argument("--links-file", required=True, type=Path)
+    evidence_batch_p.add_argument("--write", action="store_true")
+    evidence_batch_p.add_argument("--json", action="store_true")
 
     close_p = sub.add_parser("close")
     close_p.add_argument("--id", required=True)
@@ -3773,7 +4552,13 @@ def main(argv: list[str] | None = None) -> int:
     tier_correction_p.add_argument("--json", action="store_true")
 
     closure_p = sub.add_parser("emit-closure-card")
-    closure_p.add_argument("--id", dest="work_item_id", required=True)
+    closure_p.add_argument(
+        "--id",
+        dest="work_item_ids",
+        action="append",
+        required=True,
+        help="work item id; repeat to emit a batch with one projection refresh",
+    )
     closure_p.add_argument("--write", action="store_true")
     closure_p.add_argument("--deliver", action="store_true")
     closure_p.add_argument("--json", action="store_true")
@@ -3820,6 +4605,7 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     if args.cmd == "record-read":
+        introspection_artifact_or_error(state_dir, args.id)
         payload = preview_or_write_event(
             state_dir,
             record_read_event(args.id, args.reader, args.summary_file, args.claims_file),
@@ -3828,7 +4614,17 @@ def main(argv: list[str] | None = None) -> int:
         print_output(payload, as_json=True if args.json or not args.write else False)
         return 0
 
+    if args.cmd == "record-read-batch":
+        payload = record_read_batch(
+            state_dir,
+            args.manifest_file,
+            write=bool(args.write),
+        )
+        print_output(payload, as_json=True if args.json or not args.write else False)
+        return 0
+
     if args.cmd == "link-evidence":
+        introspection_artifact_or_error(state_dir, args.id)
         payload = preview_or_write_event(
             state_dir,
             evidence_event(args.id, args.claim_id, args.kind, args.target, args.note),
@@ -3837,7 +4633,17 @@ def main(argv: list[str] | None = None) -> int:
         print_output(payload, as_json=True if args.json or not args.write else False)
         return 0
 
+    if args.cmd == "link-evidence-batch":
+        payload = link_evidence_batch(
+            state_dir,
+            args.links_file,
+            write=bool(args.write),
+        )
+        print_output(payload, as_json=True if args.json or not args.write else False)
+        return 0
+
     if args.cmd == "close":
+        introspection_artifact_or_error(state_dir, args.id)
         payload = preview_or_write_event(
             state_dir,
             close_event(args.id, args.status, args.rationale),
@@ -3963,7 +4769,29 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     if args.cmd == "emit-closure-card":
-        _status, item = work_item_or_error(state_dir, args.work_item_id)
+        work_item_ids = list(dict.fromkeys(args.work_item_ids))
+        status = load_or_replay_status(state_dir)
+        items = status.get("work_items") if isinstance(status.get("work_items"), dict) else {}
+        selected: list[dict[str, Any]] = []
+        for work_item_id in work_item_ids:
+            item = items.get(work_item_id)
+            if not isinstance(item, dict):
+                parser.error(f"unknown work item id {work_item_id!r}")
+            selected.append(item)
+        if len(selected) > 1:
+            payload = emit_closure_card_batch(
+                state_dir,
+                selected,
+                write=bool(args.write),
+                deliver=bool(args.deliver),
+            )
+            if args.json or not args.write:
+                print(json.dumps(payload, indent=2, sort_keys=True, ensure_ascii=False))
+            else:
+                print(render_report_markdown(build_report(state_dir)), end="")
+            return 0
+
+        item = selected[0]
         event, card = closure_card_event(
             state_dir,
             item,

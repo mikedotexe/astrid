@@ -207,6 +207,14 @@ def trials_from_sandbox() -> dict[str, dict[str, Any]]:
     return trials if isinstance(trials, dict) else {}
 
 
+def trial_is_corridor_runnable(trial: dict[str, Any]) -> bool:
+    return (
+        str(trial.get("status") or "") == "ready_for_sandbox"
+        and bool(trial.get("runnable"))
+        and str(trial.get("trial_mode") or "") in RUNNABLE_MODES
+    )
+
+
 def packet_event(packet: dict[str, Any]) -> dict[str, Any]:
     return {
         "event_type": "corridor_packet_declared",
@@ -324,11 +332,13 @@ def packet_for_trial(trial: dict[str, Any]) -> dict[str, Any] | None:
     if not trial_id:
         return None
     mode = str(trial.get("trial_mode") or "")
-    runnable = bool(trial.get("runnable")) and mode in RUNNABLE_MODES
+    status = str(trial.get("status") or "")
+    result_recorded = status == "result_recorded" or bool(trial.get("results"))
+    runnable = trial_is_corridor_runnable(trial)
     being = str(trial.get("being") or "astrid")
     boundary_v2 = trial.get("authority_boundary_packet_v2") if isinstance(trial.get("authority_boundary_packet_v2"), dict) else {}
-    action = "run_safe_lab" if runnable else "propose_canary_criteria"
-    state = "safe_lab_ready" if runnable else "canary_criteria_proposed"
+    action = "run_safe_lab" if runnable or result_recorded else "propose_canary_criteria"
+    state = "safe_lab_result_recorded" if result_recorded else ("safe_lab_ready" if runnable else "canary_criteria_proposed")
     canary = None
     safe_lab = None
     if runnable:
@@ -340,7 +350,7 @@ def packet_for_trial(trial: dict[str, Any]) -> dict[str, Any] | None:
             "runnable": True,
             "authority": "sandbox_replay_or_read_only_review_not_live_control",
         }
-    else:
+    elif not result_recorded:
         canary = {
             "proposal_id": stable_uuid("trial_canary", trial_id),
             "surface": str(trial.get("adapter") or "sandbox_trial"),
@@ -414,7 +424,7 @@ def derived_packets(limit_per_source: int = 60) -> dict[str, dict[str, Any]]:
     trial_rows = list(trials_from_sandbox().values())
     trial_rows.sort(
         key=lambda trial: (
-            0 if bool(trial.get("runnable")) and str(trial.get("trial_mode") or "") in RUNNABLE_MODES else 1,
+            0 if trial_is_corridor_runnable(trial) else 1,
             str(trial.get("trial_id") or ""),
         )
     )
@@ -1140,6 +1150,8 @@ def generate_leases_v2(state_dir: Path, *, write: bool) -> dict[str, Any]:
 
 def source_prep_proposal_for_packet(packet: dict[str, Any]) -> dict[str, Any] | None:
     action = str(packet.get("action") or "")
+    if str(packet.get("state") or "") in {"closed", "safe_lab_result_recorded"}:
+        return None
     if action not in {"propose_canary_criteria", "generate_replay_candidate"} and not packet.get("authority_boundary_ids"):
         return None
     surface = "agency_corridor"
@@ -2926,6 +2938,30 @@ class AgencyCorridorTests(unittest.TestCase):
         result_recorded = self.safe_v1_packet(1, state="safe_lab_result_recorded")
         completed = build_queue_steps({str(result_recorded["corridor_id"]): result_recorded}, [])
         self.assertFalse(completed[0]["runnable"])
+
+    def test_v2_adaptive_queue_honors_external_sandbox_result(self) -> None:
+        packet = packet_for_trial(
+            {
+                "trial_id": "trial_completed",
+                "status": "result_recorded",
+                "runnable": True,
+                "trial_mode": "offline_read_only_adapter",
+                "adapter": "shadow_loss_lattice_v1",
+                "results": [{"classification": "lattice_transition_like"}],
+                "authority_boundary_packet_v2": {"boundary_id": "boundary_completed"},
+            }
+        )
+
+        self.assertIsNotNone(packet)
+        self.assertEqual(packet["state"], "safe_lab_result_recorded")
+        self.assertIsNone(packet["safe_lab_candidate"])
+        self.assertIsNone(packet["canary_criteria"])
+
+        converted = v2_packet_for_v1(packet, standing_corridor_leases())
+        self.assertIsNone(converted["source_prep_proposal"])
+        steps = build_queue_steps({str(converted["corridor_id"]): converted}, [])
+        self.assertEqual(len(steps), 1)
+        self.assertFalse(steps[0]["runnable"])
 
     def test_v2_run_next_limits_to_five_safe_actions(self) -> None:
         self.write_v1_source_status([self.safe_v1_packet(idx) for idx in range(7)])

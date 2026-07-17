@@ -22,6 +22,22 @@ SPEC.loader.exec_module(environment_receipts)
 
 
 class EnvironmentReceiptTests(unittest.TestCase):
+    def test_repository_status_preserves_first_porcelain_path(self) -> None:
+        completed = mock.Mock(
+            returncode=0,
+            stdout=" M CHANGELOG.md\n M capsules/spectral-bridge/src/rescue_policy.rs\n",
+        )
+        with mock.patch.object(environment_receipts.subprocess, "run", return_value=completed):
+            status = environment_receipts.run_text(
+                ["git", "status", "--porcelain=v1"], preserve_leading=True
+            )
+
+        self.assertEqual(status.splitlines()[0][3:], "CHANGELOG.md")
+        self.assertEqual(
+            status.splitlines()[1][3:],
+            "capsules/spectral-bridge/src/rescue_policy.rs",
+        )
+
     def test_record_writes_jsonl_latest_json_and_markdown(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             workspace = Path(tmp)
@@ -224,6 +240,52 @@ class EnvironmentReceiptTests(unittest.TestCase):
             self.assertTrue(
                 any("fresh PID" in reason for reason in receipt["compatibility_status"]["failure_reasons"])
             )
+
+    def test_pre_restart_process_snapshot_survives_pid_reuse(self) -> None:
+        live_new = {
+            "pid": 222,
+            "running": True,
+            "started_at": "Thu Jul 16 16:28:01 2026",
+            "command": "/tmp/spectral-bridge-server --autonomous",
+        }
+        with tempfile.TemporaryDirectory() as tmp, mock.patch.object(
+            environment_receipts,
+            "protocol_identity",
+            return_value={"revision": "a" * 40, "compatible": True},
+        ), mock.patch.object(
+            environment_receipts,
+            "process_identity",
+            return_value=live_new,
+        ) as process_identity:
+            receipt, ok = environment_receipts.record_deployment_receipt(
+                Path(tmp),
+                component="test",
+                requested_status="passed",
+                actor=environment_receipts.DEFAULT_ACTOR,
+                old_pid=111,
+                old_started_at="Thu Jul 16 16:20:00 2026",
+                old_command="/tmp/old-spectral-bridge-server --autonomous",
+                old_captured_at="2026-07-16T23:27:59Z",
+                new_pid=222,
+            )
+
+            self.assertTrue(ok)
+            self.assertEqual(receipt["processes"]["old"]["pid"], 111)
+            self.assertEqual(
+                receipt["processes"]["old"]["command"],
+                "/tmp/old-spectral-bridge-server --autonomous",
+            )
+            self.assertEqual(
+                receipt["processes"]["old"]["identity_source"],
+                "pre_restart_snapshot",
+            )
+            self.assertEqual(
+                receipt["processes"]["old"]["captured_at"],
+                "2026-07-16T23:27:59Z",
+            )
+            queried_pids = [call.args[0] for call in process_identity.call_args_list]
+            self.assertIn(222, queried_pids)
+            self.assertNotIn(111, queried_pids)
 
     def test_protocol_compatibility_uses_revision_return_code(self) -> None:
         completed = mock.Mock(returncode=0)

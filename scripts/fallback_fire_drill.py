@@ -26,7 +26,9 @@ ASTRID_ROOT = Path(__file__).resolve().parents[1]
 ASTRID_WORKSPACE = ASTRID_ROOT / "capsules/spectral-bridge/workspace"
 DEFAULT_OUTPUT_ROOT = ASTRID_WORKSPACE / "diagnostics/fallback_fire_drills"
 DEFAULT_DISTILLATION_ROOT = ASTRID_WORKSPACE / "diagnostics/fallback_contract_distillation"
-LLM_RS = ASTRID_ROOT / "capsules/spectral-bridge/src/llm.rs"
+FALLBACK_CONFIGURATION_RS = (
+    ASTRID_ROOT / "capsules/spectral-bridge/src/llm/provider/configuration.rs"
+)
 DEFAULT_OLLAMA_URL = "http://127.0.0.1:11434/api/chat"
 DEFAULT_MODEL = "gemma4:12b"
 COMPATIBILITY_MODEL = "gemma3:4b"
@@ -889,10 +891,12 @@ def extract_rust_string_const(text: str, const_name: str) -> str | None:
 
 
 def extract_fallback_contract() -> str:
-    text = LLM_RS.read_text(encoding="utf-8")
+    text = FALLBACK_CONFIGURATION_RS.read_text(encoding="utf-8")
     contract = extract_rust_string_const(text, "OLLAMA_DIALOGUE_FALLBACK_CONTRACT")
     if not contract:
-        raise RuntimeError(f"could not find fallback contract in {LLM_RS}")
+        raise RuntimeError(
+            f"could not find fallback contract in {FALLBACK_CONFIGURATION_RS}"
+        )
     hard_rules = extract_rust_string_const(text, "OLLAMA_DIALOGUE_FALLBACK_HARD_RULES")
     if hard_rules and hard_rules not in contract:
         return f"{hard_rules}{contract}"
@@ -4490,7 +4494,7 @@ def main() -> int:
         "mode": args.mode,
         "model": args.model,
         "status": status,
-        "contract_source": str(LLM_RS),
+        "contract_source": str(FALLBACK_CONFIGURATION_RS),
         "case_count": len(case_results),
         "error_count": len(errors),
         "errors": errors,

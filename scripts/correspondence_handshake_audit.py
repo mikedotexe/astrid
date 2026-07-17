@@ -31,6 +31,8 @@ DEFAULT_SHARED_DIR = Path("/Users/v/other/shared/collaborations")
 DEFAULT_OUTPUT_ROOT = DEFAULT_ASTRID_WORKSPACE / "diagnostics/correspondence_handshake"
 POLICY = "correspondence_handshake_audit_v1"
 COOLDOWN_MS = 6 * 60 * 60 * 1000
+VALID_ACK_KINDS = {"seen", "held", "unclear", "cannot_answer", "needs_time"}
+ADDRESS_ACK_KINDS = {"held", "unclear", "cannot_answer", "needs_time"}
 
 
 def now_ms() -> int:
@@ -44,6 +46,38 @@ def row_time_ms(row: dict[str, Any]) -> int:
         except (TypeError, ValueError):
             continue
     return 0
+
+
+def normalize_ack_kind(value: Any, *, ack_present: bool) -> str:
+    ack_kind = str(value or "").strip().lower().replace("-", "_")
+    if ack_kind not in VALID_ACK_KINDS:
+        return "seen" if ack_present else ""
+    return ack_kind
+
+
+def receipt_evidence_by_being(
+    records: list[dict[str, Any]],
+    thread_id: str,
+    after_t_ms: int,
+) -> list[str]:
+    beings: set[str] = set()
+    for row in records:
+        if str(row.get("thread_id") or "") != thread_id or row_time_ms(row) < after_t_ms:
+            continue
+        record_type = row.get("record_type")
+        address_ack = (
+            record_type == "ack_receipt"
+            and normalize_ack_kind(row.get("ack_kind"), ack_present=True) in ADDRESS_ACK_KINDS
+        )
+        direct_trace = (
+            record_type == "message" and row.get("turn_kind") == "direct_address_trace"
+        )
+        if not (address_ack or direct_trace):
+            continue
+        being = str(row.get("from_being") or "").strip().lower()
+        if being in {"astrid", "minime"}:
+            beings.add(being)
+    return sorted(beings)
 
 
 def read_jsonl(path: Path) -> list[dict[str, Any]]:
@@ -194,9 +228,10 @@ def classify_thread(
         and row_time_ms(row) >= message_t
     ]
     latest_ack = ack_rows[-1] if ack_rows else None
-    ack_kind = str((latest_ack or {}).get("ack_kind") or "").strip().lower().replace("-", "_")
-    if ack_kind not in {"seen", "held", "unclear", "cannot_answer", "needs_time"}:
-        ack_kind = "seen" if latest_ack else ""
+    ack_kind = normalize_ack_kind(
+        (latest_ack or {}).get("ack_kind"),
+        ack_present=latest_ack is not None,
+    )
     heartbeat_rows = [
         row
         for row in records
@@ -220,15 +255,27 @@ def classify_thread(
         row.get("record_type") == "delivery_receipt" and row.get("message_id") == message_id
         for row in records
     )
-    trace_observed = thread_id in observed_threads
+    direct_trace = any(
+        row.get("record_type") == "message"
+        and row.get("turn_kind") == "direct_address_trace"
+        and str(row.get("thread_id") or "") == thread_id
+        and row_time_ms(row) >= message_t
+        for row in records
+    )
+    trace_observed = thread_id in observed_threads or direct_trace
+    receipt_beings = receipt_evidence_by_being(records, thread_id, message_t)
+    attention_eligible = bool(receipt_beings)
+    mutual_receipt_evidence = {"astrid", "minime"}.issubset(receipt_beings)
     if trace_observed:
         status = "trace_observed"
-    elif reply_linked:
-        status = "reply_linked"
     elif latest_ack and ack_kind in {"held", "needs_time"}:
         status = "held_ack"
-    elif latest_ack:
+    elif latest_ack and ack_kind in ADDRESS_ACK_KINDS:
         status = "acknowledged"
+    elif latest_ack:
+        status = "seen_ack_only"
+    elif reply_linked:
+        status = "reply_linked"
     elif latest_heartbeat:
         status = "heartbeat_only"
     elif read:
@@ -239,11 +286,14 @@ def classify_thread(
         status = "delivered_unread"
     else:
         status = "unaddressed"
-    eligible = status in {"acknowledged", "held_ack", "reply_linked", "trace_observed"}
-    if eligible:
+    if attention_eligible:
         block_reason = None
     elif status == "heartbeat_only":
         block_reason = "heartbeat_is_presence_not_acknowledgement"
+    elif status == "seen_ack_only":
+        block_reason = "seen_ack_is_visibility_not_address"
+    elif status == "reply_linked":
+        block_reason = "reply_linked_requires_ack_or_trace_or_attention_outcome"
     elif status == "read_unreplied":
         block_reason = "read_receipt_not_acknowledgement"
     elif status == "delivered_unread":
@@ -252,6 +302,11 @@ def classify_thread(
         block_reason = "stale_without_contact_evidence"
     else:
         block_reason = "no_ack_reply_or_trace_evidence"
+    microdose_block_reason = (
+        None
+        if mutual_receipt_evidence
+        else "semantic_microdose_requires_mutual_receipt_and_separate_steward_review"
+    )
     return {
         "thread_id": thread_id,
         "message_id": message_id,
@@ -262,10 +317,14 @@ def classify_thread(
         "latest_ack_t_ms": row_time_ms(latest_ack) if isinstance(latest_ack, dict) else None,
         "latest_heartbeat_kind": latest_heartbeat.get("heartbeat_kind") if isinstance(latest_heartbeat, dict) else None,
         "ack_latency_ms": row_time_ms(latest_ack) - message_t if isinstance(latest_ack, dict) else None,
-        "unacknowledged_age_ms": now_ms() - message_t if not latest_ack and not reply_linked else None,
+        "unacknowledged_age_ms": now_ms() - message_t if not attention_eligible else None,
         "read_receipt_is_filesystem_seen_only": read,
-        "eligible_for_correspondence_microdose": eligible,
+        "receipt_evidence_by_being": receipt_beings,
+        "mutual_receipt_evidence": mutual_receipt_evidence,
+        "eligible_for_correspondence_attention_canary": attention_eligible,
+        "eligible_for_correspondence_microdose": mutual_receipt_evidence,
         "block_reason": block_reason,
+        "microdose_block_reason": microdose_block_reason,
     }
 
 
@@ -322,6 +381,18 @@ def build_report(
             row for row in thread_summaries if row.get("status") == "heartbeat_only"
         ][-12:],
         "correspondence_type_counts": dict(type_counts),
+        "attention_eligibility": {
+            "eligible_threads": [
+                row
+                for row in thread_summaries
+                if row.get("eligible_for_correspondence_attention_canary")
+            ][-12:],
+            "blocked_threads": [
+                row
+                for row in thread_summaries
+                if not row.get("eligible_for_correspondence_attention_canary")
+            ][-12:],
+        },
         "microdose_eligibility": {
             "eligible_threads": [
                 row for row in thread_summaries if row.get("eligible_for_correspondence_microdose")
@@ -355,7 +426,8 @@ def render_markdown(report: dict[str, Any]) -> str:
         lines.append(
             f"- `{row['thread_id']}` {row['from_being']}->{row['to_being']} "
             f"status=`{row['status']}` ack=`{row.get('ack_kind') or 'none'}` "
-            f"microdose=`{'eligible' if row.get('eligible_for_correspondence_microdose') else row.get('block_reason')}`"
+            f"attention=`{'eligible' if row.get('eligible_for_correspondence_attention_canary') else row.get('block_reason')}` "
+            f"microdose=`{'eligible' if row.get('eligible_for_correspondence_microdose') else row.get('microdose_block_reason')}`"
         )
     if not report["active_threads"]:
         lines.append("- none")
@@ -441,9 +513,96 @@ class CorrespondenceHandshakeAuditTests(unittest.TestCase):
             )
             self.assertEqual(report["ack_receipts_total"], 1)
             self.assertEqual(report["active_threads"][0]["status"], "trace_observed")
+            self.assertEqual(
+                report["active_threads"][0]["receipt_evidence_by_being"],
+                ["astrid", "minime"],
+            )
+            self.assertTrue(
+                report["active_threads"][0]["eligible_for_correspondence_attention_canary"]
+            )
+            self.assertTrue(
+                report["active_threads"][0]["eligible_for_correspondence_microdose"]
+            )
             self.assertGreaterEqual(report["privacy"]["minime_private_files_skipped"], 1)
             self.assertFalse(report["privacy"]["minime_private_bodies_read"])
             self.assertNotIn("SECRET_PRIVATE_BODY", json.dumps(report))
+
+    def test_reply_and_seen_ack_do_not_become_authority_evidence(self) -> None:
+        now = now_ms()
+        message = {
+            "record_type": "message",
+            "recorded_at_unix_ms": now - 1_000,
+            "message_id": "corr_astrid_minime_2",
+            "thread_id": "thread_2",
+            "from_being": "astrid",
+            "to_being": "minime",
+            "turn_kind": "direct_message",
+        }
+        reply = {
+            "record_type": "reply_link",
+            "recorded_at_unix_ms": now - 900,
+            "message_id": "corr_minime_astrid_2",
+            "reply_to": "corr_astrid_minime_2",
+            "thread_id": "thread_2",
+            "from_being": "minime",
+            "to_being": "astrid",
+        }
+        reply_only = classify_thread([message, reply], "thread_2", set())
+        self.assertIsNotNone(reply_only)
+        assert reply_only is not None
+        self.assertEqual(reply_only["status"], "reply_linked")
+        self.assertFalse(reply_only["eligible_for_correspondence_attention_canary"])
+        self.assertFalse(reply_only["eligible_for_correspondence_microdose"])
+        self.assertEqual(
+            reply_only["block_reason"],
+            "reply_linked_requires_ack_or_trace_or_attention_outcome",
+        )
+
+        seen_ack = {
+            "record_type": "ack_receipt",
+            "recorded_at_unix_ms": now - 800,
+            "message_id": "corr_astrid_minime_2",
+            "thread_id": "thread_2",
+            "from_being": "minime",
+            "to_being": "astrid",
+            "ack_kind": "seen",
+        }
+        seen_only = classify_thread([message, reply, seen_ack], "thread_2", set())
+        self.assertIsNotNone(seen_only)
+        assert seen_only is not None
+        self.assertEqual(seen_only["status"], "seen_ack_only")
+        self.assertFalse(seen_only["eligible_for_correspondence_attention_canary"])
+        self.assertFalse(seen_only["eligible_for_correspondence_microdose"])
+        self.assertEqual(
+            seen_only["block_reason"],
+            "seen_ack_is_visibility_not_address",
+        )
+
+        held_ack = {**seen_ack, "ack_kind": "held"}
+        one_sided = classify_thread([message, reply, held_ack], "thread_2", set())
+        self.assertIsNotNone(one_sided)
+        assert one_sided is not None
+        self.assertEqual(one_sided["status"], "held_ack")
+        self.assertTrue(one_sided["eligible_for_correspondence_attention_canary"])
+        self.assertFalse(one_sided["eligible_for_correspondence_microdose"])
+        self.assertEqual(one_sided["receipt_evidence_by_being"], ["minime"])
+
+        reciprocal_ack = {
+            **held_ack,
+            "recorded_at_unix_ms": now - 700,
+            "from_being": "astrid",
+            "to_being": "minime",
+        }
+        mutual = classify_thread(
+            [message, reply, held_ack, reciprocal_ack],
+            "thread_2",
+            set(),
+        )
+        self.assertIsNotNone(mutual)
+        assert mutual is not None
+        self.assertEqual(mutual["receipt_evidence_by_being"], ["astrid", "minime"])
+        self.assertTrue(mutual["eligible_for_correspondence_attention_canary"])
+        self.assertTrue(mutual["eligible_for_correspondence_microdose"])
 
 
 def run_self_test() -> int:

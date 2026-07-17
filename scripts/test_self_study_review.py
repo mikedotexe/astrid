@@ -4192,6 +4192,12 @@ class SelfStudyReviewTests(unittest.TestCase):
             self.assertIn("activation=", rendered)
 
     def test_fallback_fire_drill_scores_raw_repaired_and_texture_readiness(self) -> None:
+        extracted_contract = fallback_fire_drill.extract_fallback_contract()
+        self.assertIn("fallback_continuity_budget_v1", extracted_contract)
+        self.assertIn("distinguishability_loss", extracted_contract)
+        self.assertIn("prose_sentences <=", extracted_contract)
+        self.assertTrue(fallback_fire_drill.FALLBACK_CONFIGURATION_RS.is_file())
+
         fixture_cases = [
             fallback_fire_drill.score_case(case_id, output)
             for case_id, output in fallback_fire_drill.FIXTURE_OUTPUTS.items()

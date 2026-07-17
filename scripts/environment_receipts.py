@@ -87,7 +87,9 @@ def sha256_file(path: Path) -> str | None:
     return digest.hexdigest()
 
 
-def run_text(command: list[str], *, timeout: float = 10.0) -> str:
+def run_text(
+    command: list[str], *, timeout: float = 10.0, preserve_leading: bool = False
+) -> str:
     try:
         result = subprocess.run(
             command,
@@ -98,7 +100,11 @@ def run_text(command: list[str], *, timeout: float = 10.0) -> str:
         )
     except (OSError, subprocess.SubprocessError):
         return ""
-    return result.stdout.strip() if result.returncode == 0 else ""
+    if result.returncode != 0:
+        return ""
+    if preserve_leading:
+        return result.stdout.rstrip("\r\n")
+    return result.stdout.strip()
 
 
 def repository_identity(path: Path) -> dict[str, Any]:
@@ -107,7 +113,10 @@ def repository_identity(path: Path) -> dict[str, Any]:
         return {"available": False, "path": str(resolved)}
     head = run_text(["git", "-C", str(resolved), "rev-parse", "HEAD"])
     branch = run_text(["git", "-C", str(resolved), "branch", "--show-current"])
-    status = run_text(["git", "-C", str(resolved), "status", "--porcelain=v1", "--untracked-files=all"])
+    status = run_text(
+        ["git", "-C", str(resolved), "status", "--porcelain=v1", "--untracked-files=all"],
+        preserve_leading=True,
+    )
     dirty_paths = [line[3:] for line in status.splitlines() if len(line) >= 4][:120]
     identity_source = json.dumps(
         {"head": head, "status": status}, sort_keys=True, ensure_ascii=True
@@ -183,6 +192,32 @@ def process_identity(pid: int | str | None) -> dict[str, Any]:
         "running": bool(lstart),
         "started_at": " ".join(lstart.split()) or None,
         "command": clamp_text(command, 320) or None,
+    }
+
+
+def captured_process_identity(
+    pid: int | str | None,
+    *,
+    started_at: str = "",
+    command: str = "",
+    captured_at: str = "",
+) -> dict[str, Any]:
+    """Preserve a process identity sampled before a restart can recycle its PID."""
+    try:
+        parsed = int(pid) if pid not in (None, "") else None
+    except (TypeError, ValueError):
+        parsed = None
+    if parsed is None or parsed <= 0:
+        return process_identity(None)
+    clean_started_at = clamp_text(started_at, 120) or None
+    clean_command = clamp_text(command, 320) or None
+    return {
+        "pid": parsed,
+        "running": bool(clean_started_at),
+        "started_at": clean_started_at,
+        "command": clean_command,
+        "captured_at": clamp_text(captured_at, 120) or None,
+        "identity_source": "pre_restart_snapshot",
     }
 
 
@@ -441,6 +476,9 @@ def record_deployment_receipt(
     actor: str,
     acknowledgement: str = "",
     old_pid: int | str | None = None,
+    old_started_at: str = "",
+    old_command: str = "",
+    old_captured_at: str = "",
     new_pid: int | str | None = None,
     process_pids: dict[str, int] | None = None,
     launchd_labels: list[str] | None = None,
@@ -459,7 +497,15 @@ def record_deployment_receipt(
         details={"component": component},
     )
     protocol = protocol_identity(protocol_version)
-    old_process = process_identity(old_pid)
+    if old_started_at or old_command or old_captured_at:
+        old_process = captured_process_identity(
+            old_pid,
+            started_at=old_started_at,
+            command=old_command,
+            captured_at=old_captured_at,
+        )
+    else:
+        old_process = process_identity(old_pid)
     new_process = process_identity(new_pid)
     stack_processes = {
         name: process_identity(pid) for name, pid in (process_pids or {}).items()
@@ -673,6 +719,9 @@ def main() -> int:
     deploy.add_argument("--actor", default=os.environ.get("ASTRID_DEPLOY_ACTOR", DEFAULT_ACTOR))
     deploy.add_argument("--ack", default="")
     deploy.add_argument("--old-pid", default=None)
+    deploy.add_argument("--old-started-at", default="")
+    deploy.add_argument("--old-command", default="")
+    deploy.add_argument("--old-captured-at", default="")
     deploy.add_argument("--new-pid", default=None)
     deploy.add_argument("--process", action="append", default=[])
     deploy.add_argument("--launchd-label", action="append", default=[])
@@ -738,6 +787,9 @@ def main() -> int:
             actor=args.actor,
             acknowledgement=args.ack,
             old_pid=args.old_pid,
+            old_started_at=args.old_started_at,
+            old_command=args.old_command,
+            old_captured_at=args.old_captured_at,
             new_pid=args.new_pid,
             process_pids=process_pids,
             launchd_labels=args.launchd_label,

@@ -28,6 +28,9 @@ RESTART_OK=false
 LOG_OK=false
 TELEMETRY_OK=false
 OLD_PID=""
+OLD_STARTED_AT=""
+OLD_COMMAND=""
+OLD_CAPTURED_AT=""
 NEW_PID=""
 RECEIPT_WRITTEN=0
 
@@ -86,6 +89,9 @@ record_stack_receipt() {
   [ -n "$minime_pid" ] && args+=(--process "minime=$minime_pid")
   [ -n "$model_pid" ] && args+=(--process "model=$model_pid")
   [ -n "$OLD_PID" ] && args+=(--old-pid "$OLD_PID")
+  [ -n "$OLD_STARTED_AT" ] && args+=(--old-started-at "$OLD_STARTED_AT")
+  [ -n "$OLD_COMMAND" ] && args+=(--old-command "$OLD_COMMAND")
+  [ -n "$OLD_CAPTURED_AT" ] && args+=(--old-captured-at "$OLD_CAPTURED_AT")
   [ -n "$NEW_PID" ] && args+=(--new-pid "$NEW_PID")
   [ -f "$MANIFEST" ] && args+=(--manifest "$MANIFEST")
   [ -f "$TELEMETRY" ] && args+=(--telemetry "$TELEMETRY")
@@ -160,6 +166,11 @@ fi
 
 # 3. Restart and require a fresh process plus post-restart telemetry.
 OLD_PID="$(label_pid "$LABEL" || true)"
+if [ -n "$OLD_PID" ]; then
+  OLD_STARTED_AT="$(ps -o lstart= -p "$OLD_PID" 2>/dev/null | awk '{$1=$1; print}')"
+  OLD_COMMAND="$(ps -o command= -p "$OLD_PID" 2>/dev/null | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
+  OLD_CAPTURED_AT="$(date -u +'%Y-%m-%dT%H:%M:%SZ')"
+fi
 OLD_TELEMETRY_MTIME=0
 [ -f "$TELEMETRY" ] && OLD_TELEMETRY_MTIME="$(stat -f %m "$TELEMETRY")"
 LOG_START=1

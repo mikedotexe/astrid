@@ -402,10 +402,18 @@ def apply_event(status: dict[str, Any], event: dict[str, Any]) -> None:
         trial_id = str(event.get("trial_id") or "")
         trial = trials.setdefault(trial_id, {"trial_id": trial_id})
         old_adapter = str(trial.get("adapter") or event.get("old_adapter") or "")
+        old_mode = str(trial.get("trial_mode") or "")
+        old_tier = int(trial.get("agency_tier") or 0)
         new_adapter = str(event.get("new_adapter") or "manual_sandbox_review_v1")
         mode = str(event.get("trial_mode") or trial.get("trial_mode") or "read_only_review")
         trial["adapter"] = new_adapter
         trial["trial_mode"] = mode
+        trial["agency_tier"] = int(event.get("agency_tier") or trial.get("agency_tier") or 0)
+        trial["status"] = str(event.get("status") or trial_status_for_mode(mode))
+        trial["approval_boundary"] = str(
+            event.get("approval_boundary")
+            or (LIVE_APPROVAL_BOUNDARY if mode == "approval_required_live_trial" else AUTHORITY_BOUNDARY)
+        )
         trial["proposed_intervention"] = proposed_intervention(new_adapter, mode)
         trial["success_metrics"] = success_metrics(new_adapter)
         trial["abort_criteria"] = abort_criteria(mode)
@@ -413,6 +421,10 @@ def apply_event(status: dict[str, Any], event: dict[str, Any]) -> None:
         trial["adapter_correction"] = {
             "old_adapter": old_adapter,
             "new_adapter": new_adapter,
+            "old_mode": old_mode,
+            "new_mode": mode,
+            "old_agency_tier": old_tier,
+            "new_agency_tier": trial["agency_tier"],
             "reason": bounded_text(event.get("reason") or "adapter routing corrected", limit=300),
             "corrected_at": event.get("ts") or now_s(),
         }
@@ -1102,7 +1114,7 @@ def trial_created_event(trial: dict[str, Any]) -> dict[str, Any]:
 def adapter_correction_events(
     existing: dict[str, dict[str, Any]], candidates: list[dict[str, Any]]
 ) -> list[dict[str, Any]]:
-    """Repair untouched runnable packets whose adapter no longer matches their claim."""
+    """Repair untouched packets whose adapter or authority route changed."""
     candidate_by_work = {
         str(candidate.get("source_work_item_id")): candidate
         for candidate in candidates
@@ -1110,19 +1122,68 @@ def adapter_correction_events(
     }
     events: list[dict[str, Any]] = []
     for trial_id, trial in existing.items():
+        previous_correction = (
+            trial.get("adapter_correction")
+            if isinstance(trial.get("adapter_correction"), dict)
+            else {}
+        )
+        if (
+            str(trial.get("status") or "") == "approval_required_live_trial"
+            and str(previous_correction.get("reason") or "").startswith(
+                "claim-specific routing repair; source labels"
+            )
+            and str(previous_correction.get("old_mode") or "")
+            == str(previous_correction.get("new_mode") or "")
+            == "approval_required_live_trial"
+            and int(previous_correction.get("old_agency_tier") or 0)
+            == int(previous_correction.get("new_agency_tier") or 0)
+            and str(previous_correction.get("old_adapter") or "")
+            != str(previous_correction.get("new_adapter") or "")
+        ):
+            events.append(
+                {
+                    "event_type": "trial_adapter_corrected",
+                    "schema": SCHEMA,
+                    "ts": now_s(),
+                    "trial_id": trial_id,
+                    "old_adapter": trial.get("adapter"),
+                    "new_adapter": previous_correction.get("old_adapter"),
+                    "trial_mode": "approval_required_live_trial",
+                    "agency_tier": trial.get("agency_tier"),
+                    "status": "approval_required_live_trial",
+                    "approval_boundary": LIVE_APPROVAL_BOUNDARY,
+                    "reason": (
+                        "restore the prior approval-evidence adapter; an unchanged Tier 5 "
+                        "wait must not lose its bounded replay route during authority repair"
+                    ),
+                }
+            )
+            continue
         work_item_id = str(trial.get("source_work_item_id") or "")
         candidate = candidate_by_work.get(work_item_id)
         if candidate is None:
             continue
         old_adapter = str(trial.get("adapter") or "")
         new_adapter = str(candidate.get("adapter") or "")
-        untouched_ready = (
-            str(trial.get("status") or "") == "ready_for_sandbox"
+        old_mode = str(trial.get("trial_mode") or "")
+        new_mode = str(candidate.get("trial_mode") or "")
+        old_tier = int(trial.get("agency_tier") or 0)
+        new_tier = int(candidate.get("agency_tier") or 0)
+        old_status = str(trial.get("status") or "")
+        new_status = str(candidate.get("status") or trial_status_for_mode(new_mode))
+        untouched = (
+            old_status in {"ready_for_sandbox", "approval_required_live_trial"}
             and not trial.get("results")
             and not trial.get("result_cards")
             and not trial.get("proposal_cards")
         )
-        if not untouched_ready or not old_adapter or old_adapter == new_adapter:
+        authority_route_changed = (
+            old_mode != new_mode or old_tier != new_tier or old_status != new_status
+        )
+        route_changed = authority_route_changed or (
+            old_status == "ready_for_sandbox" and old_adapter != new_adapter
+        )
+        if not untouched or not old_adapter or not route_changed:
             continue
         events.append(
             {
@@ -1132,10 +1193,14 @@ def adapter_correction_events(
                 "trial_id": trial_id,
                 "old_adapter": old_adapter,
                 "new_adapter": new_adapter,
-                "trial_mode": candidate.get("trial_mode"),
+                "trial_mode": new_mode,
+                "agency_tier": new_tier,
+                "status": new_status,
+                "approval_boundary": candidate.get("approval_boundary"),
                 "reason": (
-                    "claim-specific routing repair; broad texture, habitability, mode-packing, "
-                    "or porosity words are not sufficient evidence for a specialized adapter"
+                    "claim-specific routing repair; source labels and broad texture, habitability, "
+                    "mode-packing, porosity, pressure, or control words do not override the "
+                    "claim's grounded authority disposition"
                 ),
             }
         )
@@ -3075,8 +3140,11 @@ class SandboxTrialQueueTests(unittest.TestCase):
             {
                 "trial_id": "trial_new_identity",
                 "source_work_item_id": "wi_noise",
+                "agency_tier": 3,
                 "adapter": "manual_sandbox_review_v1",
                 "trial_mode": "offline_read_only_adapter",
+                "status": "ready_for_sandbox",
+                "approval_boundary": AUTHORITY_BOUNDARY,
             }
         ]
 
@@ -3088,6 +3156,80 @@ class SandboxTrialQueueTests(unittest.TestCase):
         self.assertEqual(corrected["adapter"], "manual_sandbox_review_v1")
         self.assertFalse(corrected["runnable"])
         self.assertEqual(corrected["proposed_intervention"], "produce bounded read-only review packet")
+
+    def test_route_correction_releases_untouched_false_live_wait(self) -> None:
+        existing = {
+            "trial_old": {
+                "trial_id": "trial_old",
+                "source_work_item_id": "wi_compare",
+                "agency_tier": 5,
+                "adapter": "manual_sandbox_review_v1",
+                "trial_mode": "approval_required_live_trial",
+                "status": "approval_required_live_trial",
+                "approval_boundary": LIVE_APPROVAL_BOUNDARY,
+                "runnable": False,
+                "results": [],
+            }
+        }
+        candidates = [
+            {
+                "trial_id": "trial_new_identity",
+                "source_work_item_id": "wi_compare",
+                "agency_tier": 3,
+                "adapter": "manual_sandbox_review_v1",
+                "trial_mode": "offline_read_only_adapter",
+                "status": "ready_for_sandbox",
+                "approval_boundary": AUTHORITY_BOUNDARY,
+            }
+        ]
+
+        events = adapter_correction_events(existing, candidates)
+        self.assertEqual(len(events), 1)
+        status = {"trials": existing}
+        apply_event(status, events[0])
+        corrected = status["trials"]["trial_old"]
+        self.assertEqual(corrected["agency_tier"], 3)
+        self.assertEqual(corrected["trial_mode"], "offline_read_only_adapter")
+        self.assertEqual(corrected["status"], "ready_for_sandbox")
+        self.assertEqual(corrected["approval_boundary"], AUTHORITY_BOUNDARY)
+        self.assertFalse(corrected["runnable"])
+
+    def test_route_correction_restores_unchanged_live_wait_adapter(self) -> None:
+        existing = {
+            "trial_old": {
+                "trial_id": "trial_old",
+                "source_work_item_id": "wi_live",
+                "agency_tier": 5,
+                "adapter": "manual_sandbox_review_v1",
+                "trial_mode": "approval_required_live_trial",
+                "status": "approval_required_live_trial",
+                "approval_boundary": LIVE_APPROVAL_BOUNDARY,
+                "runnable": False,
+                "results": [],
+                "adapter_correction": {
+                    "old_adapter": "shadow_loss_lattice_v1",
+                    "new_adapter": "manual_sandbox_review_v1",
+                    "old_mode": "approval_required_live_trial",
+                    "new_mode": "approval_required_live_trial",
+                    "old_agency_tier": 5,
+                    "new_agency_tier": 5,
+                    "reason": (
+                        "claim-specific routing repair; source labels and broad texture "
+                        "words do not override the disposition"
+                    ),
+                },
+            }
+        }
+
+        events = adapter_correction_events(existing, [])
+        self.assertEqual(len(events), 1)
+        status = {"trials": existing}
+        apply_event(status, events[0])
+        restored = status["trials"]["trial_old"]
+        self.assertEqual(restored["adapter"], "shadow_loss_lattice_v1")
+        self.assertEqual(restored["agency_tier"], 5)
+        self.assertEqual(restored["status"], "approval_required_live_trial")
+        self.assertFalse(restored["runnable"])
 
     def test_shadow_influence_replay_uses_bounded_projection(self) -> None:
         import tempfile
