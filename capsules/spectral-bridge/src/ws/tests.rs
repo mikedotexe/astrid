@@ -1,6 +1,7 @@
 #[cfg(test)]
 mod tests {
     use super::*;
+    use astrid_minime_protocol::SensoryPacketV1;
 
     #[test]
     fn estimate_fill_pct_at_observed_mean() {
@@ -3801,15 +3802,20 @@ mod tests {
             features: vec![0.1, -0.2],
             ts_ms: None,
         };
-        let encoded = encode_sensory_packet(&message).unwrap();
+        let encoded = encode_sensory_packet_v1(&message, None, false, 1)
+            .unwrap()
+            .json;
         let value: serde_json::Value = serde_json::from_str(&encoded).unwrap();
         let packet: SensoryPacketV1 = serde_json::from_str(&encoded).unwrap();
 
         assert_eq!(packet.compatibility(), CompatibilityStatus::Current);
         assert_eq!(value["protocol"]["major"], 1);
+        assert_eq!(value["protocol"]["minor"], 0);
         assert_eq!(value["kind"], "semantic");
         assert_eq!(value["features"], serde_json::json!([0.1, -0.2]));
         assert!(value.get("ts_ms").is_none());
+        assert!(value.get("delivery_v1").is_none());
+        assert!(value.get("mutual_address_v1").is_none());
     }
 
     #[tokio::test]

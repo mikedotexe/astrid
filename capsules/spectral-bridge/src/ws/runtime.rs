@@ -9,6 +9,13 @@
 
 #![allow(dead_code)]
 
+#[path = "sensory_delivery.rs"]
+mod sensory_delivery;
+pub use sensory_delivery::{AddressedSensoryMessage, AddressedSensorySender};
+use sensory_delivery::{
+    PendingSensoryDeliveryV1, apply_delivery_receipt, apply_server_hello, encode_sensory_packet_v1,
+    record_pending_delivery, record_unknown_deliveries,
+};
 include!("bridge_state.rs");
 include!("health.rs");
 include!("compatibility_projection.rs");

@@ -81,6 +81,7 @@ pub fn spawn_autonomous_loop(
     state: Arc<RwLock<BridgeState>>,
     db: Arc<BridgeDb>,
     sensory_tx: mpsc::Sender<SensoryMsg>,
+    addressed_sensory_tx: crate::ws::AddressedSensorySender,
     mut shutdown: tokio::sync::watch::Receiver<bool>,
     workspace_path: Option<PathBuf>,
     perception_path: Option<PathBuf>,
@@ -608,6 +609,13 @@ pub fn spawn_autonomous_loop(
                     // never seeds — the slot-seed race that lost a review invitation).
                     let inbox_checked_at = std::time::SystemTime::now();
                     let inbox_content = check_inbox();
+                    let mutual_address_target = inbox_content.as_ref().and_then(|_| {
+                        correspondence_v1::latest_inbox_peer_message_at_read_cutoff(
+                            bridge_paths().astrid_inbox_dir().as_path(),
+                            "minime",
+                            inbox_checked_at,
+                        )
+                    });
                     let perception_text = if let Some(ref inbox) = inbox_content {
                         info!("inbox: found message for Astrid ({} bytes)", inbox.len());
                         let perc = perception_text.as_deref().unwrap_or("");
@@ -3859,7 +3867,24 @@ pub fn spawn_autonomous_loop(
                                 SensoryMsg::Semantic { features, .. } => features.clone(),
                                 _ => Vec::new(),
                             };
-                            if let Err(e) = sensory_tx.send(msg).await {
+                            let send_failed = if let Some(target) = mutual_address_target.as_ref() {
+                                let mutual_address =
+                                    correspondence_v1::mutual_address_envelope_v1(
+                                        target,
+                                        &response_text,
+                                        chunk_idx,
+                                    );
+                                addressed_sensory_tx
+                                    .send(crate::ws::AddressedSensoryMessage::new(
+                                        msg,
+                                        mutual_address,
+                                    ))
+                                    .await
+                                    .is_err()
+                            } else {
+                                sensory_tx.send(msg).await.is_err()
+                            };
+                            if send_failed {
                                 let _ = record_signal_json_v1(
                                     &mut signal_shadow,
                                     safety_stage.into_iter().collect(),
@@ -3873,7 +3898,7 @@ pub fn spawn_autonomous_loop(
                                         json!(false),
                                     )]),
                                 );
-                                warn!(error = %e, "autonomous loop: failed to send chunk {chunk_idx}");
+                                warn!("autonomous loop: failed to send chunk {chunk_idx}");
                                 break;
                             }
                             let dispatched_stage = record_signal_json_v1(

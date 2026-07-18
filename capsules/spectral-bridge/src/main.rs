@@ -381,6 +381,9 @@ async fn main() -> Result<()> {
 
     // Sensory outbound channel — MCP tools and WASM component send here.
     let (sensory_tx, sensory_rx) = mpsc::channel(256);
+    // Exact correspondence/authority lineage uses a separate typed lane so
+    // metadata can never be attached by payload resemblance.
+    let (addressed_sensory_tx, addressed_sensory_rx) = mpsc::channel(64);
 
     // Spawn WebSocket tasks.
     let telemetry_handle = ws::spawn_telemetry_subscriber(
@@ -397,11 +400,13 @@ async fn main() -> Result<()> {
             Arc::clone(&state),
             Arc::clone(&db),
             sensory_rx,
+            addressed_sensory_rx,
             shutdown_rx.clone(),
         ))
     } else {
         info!("rescue profile disabled bridge sensory socket; running telemetry-only");
         drop(sensory_rx);
+        drop(addressed_sensory_rx);
         None
     };
 
@@ -431,12 +436,14 @@ async fn main() -> Result<()> {
             Arc::clone(&state),
             Arc::clone(&db),
             sensory_tx,
+            addressed_sensory_tx,
             shutdown_rx.clone(),
             Some(resolved_paths.minime_workspace().to_path_buf()),
             Some(resolved_paths.perception_path().to_path_buf()),
         ))
     } else {
         drop(sensory_tx); // Not needed if no autonomous loop.
+        drop(addressed_sensory_tx);
         None
     };
 

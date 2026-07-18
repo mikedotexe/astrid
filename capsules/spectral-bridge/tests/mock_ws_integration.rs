@@ -235,6 +235,7 @@ async fn bidirectional_bridge_with_safety_protocol() {
     let state = Arc::new(RwLock::new(spectral_bridge_server::ws::BridgeState::new()));
     let (shutdown_tx, shutdown_rx) = tokio::sync::watch::channel(false);
     let (bridge_sensory_tx, sensory_channel_rx) = tokio::sync::mpsc::channel(256);
+    let (_addressed_sensory_tx, addressed_sensory_rx) = tokio::sync::mpsc::channel(16);
 
     // Spawn both WebSocket tasks.
     let _telemetry = spectral_bridge_server::ws::spawn_telemetry_subscriber(
@@ -249,6 +250,7 @@ async fn bidirectional_bridge_with_safety_protocol() {
         Arc::clone(&state),
         Arc::clone(&db),
         sensory_channel_rx,
+        addressed_sensory_rx,
         shutdown_rx,
     );
 

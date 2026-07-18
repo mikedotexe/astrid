@@ -1118,6 +1118,7 @@ async fn tool_get_latest_telemetry(
                 "pressure_trend_v1": s.pressure_trend_v1.clone(),
                 "telemetry_heartbeat_delta_v1": s.telemetry_heartbeat_delta_v1.clone(),
                 "telemetry_integration_health_v1": s.telemetry_integration_health_v1.clone(),
+                "sensory_delivery_protocol_v1": s.sensory_delivery_protocol_v1.clone(),
                 "cadence_content_distinction_v1": s.cadence_content_distinction_v1(),
                 "pressure_source_analysis_v1": s.pressure_source_analysis_v1(),
                 "safety_decision": s.safety_decision.clone()
@@ -1151,6 +1152,7 @@ async fn tool_get_bridge_status(state: &Arc<RwLock<BridgeState>>) -> Result<Valu
         incidents_total: s.incidents_total,
         telemetry_protocol_v1: s.telemetry_protocol_v1.clone(),
         telemetry_integration_health_v1: s.telemetry_integration_health_v1.clone(),
+        sensory_delivery_protocol_v1: s.sensory_delivery_protocol_v1.clone(),
         telemetry_ws: s.telemetry_ws.clone(),
         sensory_ws: s.sensory_ws.clone(),
         lambda_profile: s.lambda_profile.clone(),
@@ -3160,6 +3162,7 @@ async fn handle_resource_read(
                 incidents_total: s.incidents_total,
                 telemetry_protocol_v1: s.telemetry_protocol_v1.clone(),
                 telemetry_integration_health_v1: s.telemetry_integration_health_v1.clone(),
+                sensory_delivery_protocol_v1: s.sensory_delivery_protocol_v1.clone(),
                 telemetry_ws: s.telemetry_ws.clone(),
                 sensory_ws: s.sensory_ws.clone(),
                 lambda_profile: s.lambda_profile.clone(),

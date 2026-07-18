@@ -2,6 +2,49 @@
 // Bridge → Astrid: Status and events
 // ---------------------------------------------------------------------------
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SensoryDeliveryProtocolStatusV1 {
+    pub policy: String,
+    pub schema_version: u8,
+    pub negotiated: bool,
+    pub protocol_major: Option<u16>,
+    pub protocol_minor: Option<u16>,
+    pub server_process_identity: Option<String>,
+    pub server_deployment_identity: Option<String>,
+    pub last_hello_unix_ms: Option<u64>,
+    pub sent_with_delivery_count: u64,
+    pub pending_delivery_count: u64,
+    pub receipt_count: u64,
+    pub unknown_delivery_count: u64,
+    pub mismatch_count: u64,
+    pub last_receipt_unix_ms: Option<u64>,
+    pub last_delivery_state: Option<String>,
+    pub spectral_causation_established: bool,
+}
+
+impl Default for SensoryDeliveryProtocolStatusV1 {
+    fn default() -> Self {
+        Self {
+            policy: "sensory_delivery_protocol_status_v1".to_string(),
+            schema_version: 1,
+            negotiated: false,
+            protocol_major: None,
+            protocol_minor: None,
+            server_process_identity: None,
+            server_deployment_identity: None,
+            last_hello_unix_ms: None,
+            sent_with_delivery_count: 0,
+            pending_delivery_count: 0,
+            receipt_count: 0,
+            unknown_delivery_count: 0,
+            mismatch_count: 0,
+            last_receipt_unix_ms: None,
+            last_delivery_state: None,
+            spectral_causation_established: false,
+        }
+    }
+}
+
 /// Bridge health status published on `consciousness.v1.status`.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BridgeStatus {
@@ -31,6 +74,9 @@ pub struct BridgeStatus {
     /// Read-only timing evidence for the telemetry integration boundary.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub telemetry_integration_health_v1: Option<TelemetryIntegrationHealthV1>,
+    /// Negotiated port 7879 delivery identity and receipt evidence.
+    #[serde(default)]
+    pub sensory_delivery_protocol_v1: SensoryDeliveryProtocolStatusV1,
     /// Telemetry WebSocket lifecycle metrics.
     #[serde(default)]
     pub telemetry_ws: WebSocketLaneTrace,

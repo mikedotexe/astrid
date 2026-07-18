@@ -2,9 +2,7 @@ use std::collections::{BTreeMap, VecDeque};
 use std::sync::Arc;
 use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
-use astrid_minime_protocol::{
-    CompatibilityStatus, EigenPacketV1, SensoryMsg as WireSensoryMsg, SensoryPacketV1,
-};
+use astrid_minime_protocol::{CompatibilityStatus, EigenPacketV1};
 use futures_util::{SinkExt, StreamExt};
 use tokio::sync::{RwLock, mpsc};
 use tokio_tungstenite::tungstenite::protocol::{CloseFrame, Message};
@@ -23,9 +21,10 @@ use crate::types::{
     MessageDirection, PersistentDeformationSmoothingReviewV1, PressureSourceAnalysisV1,
     PressureTrendSmoothingV1, PressureTrendV1, PullModeRate, PullTopologyProfile,
     ResidualDeformationTraceV1, ResonanceDensityComponents, SafetyDecisionTrace, SafetyLevel,
-    SensoryMsg, SpectralTelemetry, TelemetryHeartbeatDeltaV1, TelemetryIntegrationHealthV1,
-    TelemetryProtocolStatusV1, TextureDynamicFluxVectorV1, TextureShapeOverTimeV2,
-    TextureSignatureIntegrityV1, ViscosityPorosityTransportReviewV1, WebSocketLaneTrace,
+    SensoryDeliveryProtocolStatusV1, SensoryMsg, SpectralTelemetry, TelemetryHeartbeatDeltaV1,
+    TelemetryIntegrationHealthV1, TelemetryProtocolStatusV1, TextureDynamicFluxVectorV1,
+    TextureShapeOverTimeV2, TextureSignatureIntegrityV1, ViscosityPorosityTransportReviewV1,
+    WebSocketLaneTrace,
     resonance_cohesion_score_v1, resonance_stability_context_v1,
     resonance_structural_integrity_index_v1,
     viscosity_porosity_transport_review_with_fingerprint_v1,
@@ -175,12 +174,6 @@ fn build_telemetry_integration_health_v1(
         cadence_write: false,
         authority: "diagnostic_timing_evidence_not_control".to_string(),
     }
-}
-
-fn encode_sensory_packet(message: &SensoryMsg) -> Result<String, serde_json::Error> {
-    let domain_value = serde_json::to_value(message)?;
-    let wire_message: WireSensoryMsg = serde_json::from_value(domain_value)?;
-    serde_json::to_string(&SensoryPacketV1::versioned(wire_message))
 }
 
 #[derive(Debug, Clone)]
@@ -333,6 +326,8 @@ pub struct BridgeState {
     pub telemetry_protocol_v1: TelemetryProtocolStatusV1,
     /// Measured telemetry pipeline and shared-state lock timing.
     pub telemetry_integration_health_v1: Option<TelemetryIntegrationHealthV1>,
+    /// Negotiated technical delivery and same-connection receipt status.
+    pub sensory_delivery_protocol_v1: SensoryDeliveryProtocolStatusV1,
 }
 
 impl Default for BridgeState {
@@ -385,6 +380,7 @@ impl BridgeState {
             incidents_total: 0,
             telemetry_protocol_v1: TelemetryProtocolStatusV1::default(),
             telemetry_integration_health_v1: None,
+            sensory_delivery_protocol_v1: SensoryDeliveryProtocolStatusV1::default(),
         }
     }
 

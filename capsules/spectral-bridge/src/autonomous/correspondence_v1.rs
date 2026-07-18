@@ -9,6 +9,8 @@ use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 use sha2::{Digest as _, Sha256};
 
+use astrid_minime_protocol::MutualAddressEnvelopeV1;
+
 pub(crate) const LEDGER_PATH: &str = "/Users/v/other/shared/collaborations/correspondence_v1.jsonl";
 const SHARED_COLLAB_DIR: &str = "/Users/v/other/shared/collaborations";
 const BODY_PREVIEW_CHARS: usize = 360;
@@ -219,8 +221,39 @@ pub(crate) struct CorrespondenceFields {
 pub(crate) struct InboxPeerMessage {
     pub message_id: String,
     pub thread_id: String,
+    pub persistence_id: Option<String>,
     pub from_being: String,
     pub file_path: PathBuf,
+}
+
+#[must_use]
+pub(crate) fn mutual_address_envelope_v1(
+    target: &InboxPeerMessage,
+    response_body: &str,
+    chunk_index: usize,
+) -> MutualAddressEnvelopeV1 {
+    let body_sha256 = sha256_hex(response_body);
+    let address_id = format!(
+        "correspondence-address-{}",
+        short_hash(&format!(
+            "{}:{}:{chunk_index}:{body_sha256}",
+            target.message_id, target.thread_id
+        ))
+    );
+    MutualAddressEnvelopeV1 {
+        schema_version: 1,
+        address_id,
+        from_being: "astrid".to_string(),
+        to_being: target.from_being.clone(),
+        correspondence_id: Some(target.message_id.clone()),
+        thread_id: Some(target.thread_id.clone()),
+        reply_to: Some(target.message_id.clone()),
+        persistence_id: target.persistence_id.clone(),
+        authority_lineage_id: None,
+        created_at_unix_ms: now_ms(),
+        body_sha256,
+        raw_body_included: false,
+    }
 }
 
 #[must_use]
@@ -1360,6 +1393,23 @@ pub(crate) fn latest_inbox_peer_message(
     inbox_dir: &Path,
     from_being: &str,
 ) -> Option<InboxPeerMessage> {
+    latest_inbox_peer_message_at_cutoff(inbox_dir, from_being, None)
+}
+
+#[must_use]
+pub(crate) fn latest_inbox_peer_message_at_read_cutoff(
+    inbox_dir: &Path,
+    from_being: &str,
+    read_cutoff: std::time::SystemTime,
+) -> Option<InboxPeerMessage> {
+    latest_inbox_peer_message_at_cutoff(inbox_dir, from_being, Some(read_cutoff))
+}
+
+fn latest_inbox_peer_message_at_cutoff(
+    inbox_dir: &Path,
+    from_being: &str,
+    read_cutoff: Option<std::time::SystemTime>,
+) -> Option<InboxPeerMessage> {
     let from_being = normalize_being(from_being);
     let mut candidates = std::fs::read_dir(inbox_dir)
         .ok()?
@@ -1367,10 +1417,16 @@ pub(crate) fn latest_inbox_peer_message(
         .filter_map(|entry| {
             let path = entry.path();
             let modified = entry.metadata().ok()?.modified().ok()?;
+            if read_cutoff.is_some_and(|cutoff| modified > cutoff) {
+                return None;
+            }
             if !path.is_file() || path.extension().is_none_or(|ext| ext != "txt") {
                 return None;
             }
             let content = std::fs::read_to_string(&path).ok()?;
+            if content.trim().is_empty() {
+                return None;
+            }
             if let Some(envelope) = parse_envelope_text(&content)
                 && envelope.from_being == from_being
             {
@@ -1379,6 +1435,7 @@ pub(crate) fn latest_inbox_peer_message(
                     InboxPeerMessage {
                         message_id: envelope.message_id,
                         thread_id: envelope.thread_id,
+                        persistence_id: envelope.persistence_id,
                         from_being: envelope.from_being,
                         file_path: path,
                     },
@@ -1396,6 +1453,7 @@ pub(crate) fn latest_inbox_peer_message(
                     InboxPeerMessage {
                         thread_id: new_thread_id(&synthetic),
                         message_id: synthetic,
+                        persistence_id: None,
                         from_being: "minime".to_string(),
                         file_path: path,
                     },
@@ -1427,6 +1485,10 @@ pub(crate) fn latest_ledger_message(from_being: &str, to_being: &str) -> Option<
             }
             let message_id = value.get("message_id")?.as_str()?.to_string();
             let thread_id = value.get("thread_id")?.as_str()?.to_string();
+            let persistence_id = value
+                .get("persistence_id")
+                .and_then(Value::as_str)
+                .map(str::to_string);
             let recorded = value
                 .get("recorded_at_unix_ms")
                 .and_then(Value::as_u64)
@@ -1436,6 +1498,7 @@ pub(crate) fn latest_ledger_message(from_being: &str, to_being: &str) -> Option<
                 InboxPeerMessage {
                     message_id,
                     thread_id,
+                    persistence_id,
                     from_being: from.clone(),
                     file_path: PathBuf::new(),
                 },
@@ -1458,6 +1521,10 @@ pub(crate) fn latest_claimed_legacy_thread(
     Some(InboxPeerMessage {
         message_id: message.get("message_id")?.as_str()?.to_string(),
         thread_id: message.get("thread_id")?.as_str()?.to_string(),
+        persistence_id: message
+            .get("persistence_id")
+            .and_then(Value::as_str)
+            .map(str::to_string),
         from_being: message.get("from_being")?.as_str()?.to_string(),
         file_path: PathBuf::new(),
     })
@@ -7116,6 +7183,66 @@ fn chamber_correspondence_state_summary() -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn mutual_address_preserves_exact_refs_without_raw_response() {
+        let target = InboxPeerMessage {
+            message_id: "corr_minime_astrid_1".to_string(),
+            thread_id: "thread_shared_1".to_string(),
+            persistence_id: Some("persistence_shared_1".to_string()),
+            from_being: "minime".to_string(),
+            file_path: PathBuf::from("not_persisted"),
+        };
+        let response = "private response prose must not enter the wire envelope";
+        let envelope = mutual_address_envelope_v1(&target, response, 0);
+        let serialized = serde_json::to_string(&envelope).unwrap();
+
+        assert_eq!(
+            envelope.correspondence_id.as_deref(),
+            Some("corr_minime_astrid_1")
+        );
+        assert_eq!(envelope.thread_id.as_deref(), Some("thread_shared_1"));
+        assert_eq!(
+            envelope.persistence_id.as_deref(),
+            Some("persistence_shared_1")
+        );
+        assert_eq!(envelope.reply_to.as_deref(), Some("corr_minime_astrid_1"));
+        assert_eq!(envelope.body_sha256, sha256_hex(response));
+        assert!(!envelope.raw_body_included);
+        assert!(!serialized.contains(response));
+    }
+
+    #[test]
+    fn mutual_address_target_excludes_messages_after_read_cutoff() {
+        let root = std::env::temp_dir().join(format!("corr_read_cutoff_test_{}", now_ms()));
+        let inbox = root.join("inbox");
+        let ledger = root.join("correspondence.jsonl");
+        let (first, _) = deliver_to_inbox_with_ledger(
+            &ledger,
+            &inbox,
+            "minime",
+            "astrid",
+            "first",
+            CorrespondenceFields::default(),
+        )
+        .unwrap();
+        let read_cutoff = std::time::SystemTime::now();
+        std::thread::sleep(std::time::Duration::from_millis(5));
+        let _ = deliver_to_inbox_with_ledger(
+            &ledger,
+            &inbox,
+            "minime",
+            "astrid",
+            "arrived after read",
+            CorrespondenceFields::default(),
+        )
+        .unwrap();
+
+        let selected =
+            latest_inbox_peer_message_at_read_cutoff(&inbox, "minime", read_cutoff).unwrap();
+        assert_eq!(selected.message_id, first.message_id);
+        let _ = std::fs::remove_dir_all(root);
+    }
 
     #[test]
     fn envelope_roundtrip_preserves_thread_and_authority() {
