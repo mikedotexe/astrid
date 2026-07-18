@@ -305,8 +305,26 @@ def source_first_steps() -> tuple[ProjectionStep, ...]:
             ),
         ),
         ProjectionStep(
+            "authority_temporal",
+            ("experiment_dossiers",),
+            (
+                command(
+                    python,
+                    "scripts/authority_temporal_audit.py",
+                    "--workspace",
+                    "{workspace}",
+                    "--json",
+                    "generate",
+                    "--write",
+                ),
+            ),
+            ("authority_lifecycle",),
+            ("action_threads/threads/*/authority_gate.jsonl",),
+            ("diagnostics/authority_temporal_v1/status.json",),
+        ),
+        ProjectionStep(
             "felt_contracts",
-            ("experiment_dossiers", "corridor", "signal_spine"),
+            ("experiment_dossiers", "corridor", "signal_spine", "authority_temporal"),
             (
                 command(
                     python,
@@ -335,6 +353,7 @@ def source_first_steps() -> tuple[ProjectionStep, ...]:
                 "corridor_v2",
                 "signal_spine",
                 "claim_families",
+                "authority_lifecycle",
                 "felt_contracts",
             ),
             (
