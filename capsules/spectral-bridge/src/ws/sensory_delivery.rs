@@ -10,6 +10,7 @@ use astrid_minime_protocol::{
     SensoryMsg as WireSensoryMsg, SensoryPacketV1, SensoryServerHelloV1,
     canonical_sensory_payload_sha256,
 };
+use serde::Serialize;
 use serde_json::{Value, json};
 use sha2::{Digest as _, Sha256};
 use tokio::sync::mpsc;
@@ -55,10 +56,42 @@ pub struct PendingSensoryDeliveryV1 {
     delivery_address_classification: &'static str,
     delivery_id_basis: &'static str,
     pending_resolution: &'static str,
+    felt_effect_boundary_v1: AstridFeltDeliveryEffectBoundaryV1,
     sent_at_unix_ms: u64,
 }
 
-const SPECTRAL_CAUSATION_BASIS: &str = "not_established_no_wire_ack_or_controlled_intervention";
+#[derive(Debug, Serialize)]
+struct AstridFeltDeliveryEffectBoundaryV1 {
+    schema: &'static str,
+    schema_version: u8,
+    interpretation_owner: &'static str,
+    evidence_state: &'static str,
+    causal_disposition: &'static str,
+    source_ref: Option<String>,
+    perceived_weight: Option<f32>,
+    density_gradient: Option<f32>,
+    pressure_control_eligible: bool,
+    linkage_requirement: &'static str,
+}
+
+impl AstridFeltDeliveryEffectBoundaryV1 {
+    const fn unmeasured() -> Self {
+        Self {
+            schema: "astrid_felt_delivery_effect_boundary_v1",
+            schema_version: 1,
+            interpretation_owner: "astrid_authored",
+            evidence_state: "not_observed_at_transport_layer",
+            causal_disposition: "unresolved_not_absent",
+            source_ref: None,
+            perceived_weight: None,
+            density_gradient: None,
+            pressure_control_eligible: false,
+            linkage_requirement: "explicit_astrid_authored_evidence_ref",
+        }
+    }
+}
+
+const SPECTRAL_CAUSATION_BASIS: &str = "not_established_transport_neither_confirms_nor_denies_felt_effect_controlled_intervention_required";
 const DELIVERY_ID_BASIS: &str = "sha256_128_process_deployment_sequence_payload";
 const DELIVERY_ID_ENTROPY_DEPENDENCE: &str = "none";
 const PENDING_RESOLUTION: &str = "exact_delivery_id_receipt_or_unknown_delivery_on_connection_end";
@@ -76,6 +109,7 @@ impl PendingSensoryDeliveryV1 {
             "delivery_id_basis": self.delivery_id_basis,
             "delivery_id_entropy_dependence": DELIVERY_ID_ENTROPY_DEPENDENCE,
             "pending_resolution": self.pending_resolution,
+            "felt_effect_boundary_v1": self.felt_effect_boundary_v1,
             "sent_at_unix_ms": self.sent_at_unix_ms,
             "recorded_at_unix_ms": unix_now_ms(),
             "reason": reason,
@@ -151,6 +185,7 @@ pub(super) fn encode_sensory_packet_v1(
             delivery_address_classification,
             delivery_id_basis: DELIVERY_ID_BASIS,
             pending_resolution: PENDING_RESOLUTION,
+            felt_effect_boundary_v1: AstridFeltDeliveryEffectBoundaryV1::unmeasured(),
             sent_at_unix_ms,
         }),
     })
@@ -332,6 +367,9 @@ fn apply_delivery_receipt_with_path(
         SensoryDeliveryStatusV1::PolicyBlocked => "policy_blocked",
         SensoryDeliveryStatusV1::PartiallyApplied => "partially_applied",
     };
+    let receipt_latency_ms = receipt
+        .received_at_unix_ms
+        .saturating_sub(expected.sent_at_unix_ms);
     let event = json!({
         "schema": "sensory_delivery_event_v1",
         "schema_version": 1,
@@ -344,10 +382,13 @@ fn apply_delivery_receipt_with_path(
         "delivery_id_basis": expected.delivery_id_basis,
         "delivery_id_entropy_dependence": DELIVERY_ID_ENTROPY_DEPENDENCE,
         "pending_resolution": expected.pending_resolution,
+        "felt_effect_boundary_v1": expected.felt_effect_boundary_v1,
         "status": receipt_status,
         "sent_at_unix_ms": expected.sent_at_unix_ms,
         "received_at_unix_ms": receipt.received_at_unix_ms,
         "routed_at_unix_ms": receipt.routed_at_unix_ms,
+        "receipt_latency_ms": receipt_latency_ms,
+        "receipt_latency_relation": "transport_handshake_only_not_perceived_weight_or_spectral_effect",
         "recorded_at_unix_ms": unix_now_ms(),
         "server_process_identity": receipt.server_process_identity,
         "server_deployment_identity": receipt.server_deployment_identity,
@@ -479,7 +520,8 @@ mod tests {
         let packet: SensoryPacketV1 = serde_json::from_str(&encoded.json).unwrap();
         assert!(packet.mutual_address_v1.is_none());
         let delivery = packet.delivery_v1.unwrap();
-        let item = encoded.pending.unwrap();
+        let mut item = encoded.pending.unwrap();
+        item.sent_at_unix_ms = 10;
         let mut pending = BTreeMap::from([(item.delivery_id.clone(), item)]);
         let mut status = SensoryDeliveryProtocolStatusV1::default();
         assert!(apply_server_hello(
@@ -491,8 +533,8 @@ mod tests {
             delivery.delivery_id,
             delivery.payload_sha256,
             SensoryDeliveryStatusV1::Accepted,
-            1,
-            Some(1),
+            37,
+            Some(38),
             None,
             None,
             "minime-pid".to_string(),
@@ -518,6 +560,29 @@ mod tests {
             DELIVERY_ID_ENTROPY_DEPENDENCE
         );
         assert_eq!(row["pending_resolution"], PENDING_RESOLUTION);
+        assert_eq!(
+            row["felt_effect_boundary_v1"]["interpretation_owner"],
+            "astrid_authored"
+        );
+        assert_eq!(
+            row["felt_effect_boundary_v1"]["evidence_state"],
+            "not_observed_at_transport_layer"
+        );
+        assert_eq!(
+            row["felt_effect_boundary_v1"]["causal_disposition"],
+            "unresolved_not_absent"
+        );
+        assert!(row["felt_effect_boundary_v1"]["perceived_weight"].is_null());
+        assert!(row["felt_effect_boundary_v1"]["density_gradient"].is_null());
+        assert_eq!(
+            row["felt_effect_boundary_v1"]["pressure_control_eligible"],
+            false
+        );
+        assert_eq!(row["receipt_latency_ms"], 27);
+        assert_eq!(
+            row["receipt_latency_relation"],
+            "transport_handshake_only_not_perceived_weight_or_spectral_effect"
+        );
         assert_eq!(row["spectral_causation_established"], false);
         assert_eq!(row["spectral_causation_basis"], SPECTRAL_CAUSATION_BASIS);
         let _ = fs::remove_dir_all(path.parent().unwrap());
