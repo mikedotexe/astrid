@@ -2,14 +2,20 @@
 
 use std::fs::{self, OpenOptions};
 use std::io::Write as _;
+#[cfg(unix)]
+use std::os::unix::fs::PermissionsExt as _;
 use std::path::{Path, PathBuf};
 
 use anyhow::{Context, Result, anyhow};
+use fs2::FileExt as _;
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 use sha2::{Digest as _, Sha256};
 use tokio::sync::mpsc;
 
+use crate::authority_temporal::{
+    self, AuthorityTemporalContextV1, DispatchOutcomeKindV1, VerifiedAuthorityContextV1,
+};
 use crate::authority_types::{
     AuthorityGranted, EvidenceOnly, ModeReleaseMicrodose, SemanticMicrodose,
     dispatch_mode_release_microdose, dispatch_semantic_microdose,
@@ -351,6 +357,9 @@ pub fn approve_from_paths(
         .get("authority_boundary_packet_v2")
         .cloned()
         .unwrap_or(Value::Null);
+    let token_id = format!("authtok_{}_{}", location.being, now);
+    let temporal_context =
+        authority_temporal::current_context(scope, &token_id, now, expires_at, 1, bridge_workspace);
     let approval = json!({
         "schema_version": 1,
         "record_schema": POLICY,
@@ -361,7 +370,7 @@ pub fn approve_from_paths(
         "thread_id": location.thread_id,
         "experiment_id": location.request.get("experiment_id").cloned().unwrap_or(Value::Null),
         "scope": scope,
-        "token_id": format!("authtok_{}_{}", location.being, now),
+        "token_id": token_id,
         "token_status": "active",
         "one_shot": true,
         "approved_at_unix_s": now,
@@ -374,6 +383,7 @@ pub fn approve_from_paths(
         "authority_boundary": authority_boundary(),
         "authority_boundary_packet_v2": authority_boundary_packet_v2,
         "authority_lifecycle_v2": authority_lifecycle_v2,
+        "authority_temporal_context_v1": temporal_context,
         "created_at": chrono::Utc::now().to_rfc3339_opts(chrono::SecondsFormat::Secs, true),
         "updated_at": chrono::Utc::now().to_rfc3339_opts(chrono::SecondsFormat::Secs, true),
     });
@@ -484,6 +494,15 @@ pub fn approve_budget_from_paths(
         .ttl_secs
         .unwrap_or(request_ttl)
         .min(DEFAULT_BUDGET_TTL_SECS);
+    let expires_at = now.saturating_add(ttl);
+    let temporal_context = authority_temporal::current_context(
+        EXECUTABLE_SCOPE,
+        budget_id,
+        now,
+        expires_at,
+        max_sends,
+        bridge_workspace,
+    );
     let approval = json!({
         "schema_version": 1,
         "record_schema": BUDGET_POLICY,
@@ -499,7 +518,8 @@ pub fn approve_budget_from_paths(
         "ttl_secs": ttl,
         "remaining_sends": max_sends,
         "approved_at_unix_s": now,
-        "expires_at_unix_s": now.saturating_add(ttl),
+        "expires_at_unix_s": expires_at,
+        "authority_temporal_context_v1": temporal_context,
         "steward": req.steward.unwrap_or_else(|| "steward".to_string()),
         "note": req.note.unwrap_or_default(),
         "eligibility_v1": eligibility,
@@ -643,6 +663,15 @@ pub fn approve_research_budget_from_paths(
         .ttl_secs
         .unwrap_or(request_ttl)
         .min(DEFAULT_RESEARCH_TTL_SECS);
+    let expires_at = now.saturating_add(ttl);
+    let temporal_context = authority_temporal::current_context(
+        READ_ONLY_RESEARCH_SCOPE,
+        budget_id,
+        now,
+        expires_at,
+        max_actions,
+        bridge_workspace,
+    );
     let approval = json!({
         "schema_version": 1,
         "record_schema": RESEARCH_BUDGET_POLICY,
@@ -659,7 +688,8 @@ pub fn approve_research_budget_from_paths(
         "remaining_actions": max_actions,
         "allowed_sources": location.request.get("allowed_sources").cloned().unwrap_or_else(|| json!(["web", "local"])),
         "approved_at_unix_s": now,
-        "expires_at_unix_s": now.saturating_add(ttl),
+        "expires_at_unix_s": expires_at,
+        "authority_temporal_context_v1": temporal_context,
         "steward": req.steward.unwrap_or_else(|| "steward".to_string()),
         "note": req.note.unwrap_or_default(),
         "eligibility_v1": eligibility,
@@ -878,6 +908,23 @@ pub fn execute_semantic_microdose_from_paths(
             .get("budget_id")
             .and_then(Value::as_str)
             .unwrap_or_default();
+        if let Err(reason) = verify_temporal_record(
+            &budget,
+            EXECUTABLE_SCOPE,
+            budget_id,
+            now,
+            bridge_workspace,
+            false,
+        ) {
+            let blocked = budget_execution_block_record(
+                location,
+                &reason,
+                Some(json!({"budget_id": budget_id})),
+                fill_pct,
+            );
+            append_jsonl(&location.gate_path, &blocked)?;
+            return Ok(blocked);
+        }
         if let Some(pending_review) = budget
             .get("pending_review_request_id")
             .and_then(Value::as_str)
@@ -910,6 +957,14 @@ pub fn execute_semantic_microdose_from_paths(
             .get("remaining_sends")
             .and_then(Value::as_u64)
             .unwrap_or(1);
+        let token_context = authority_temporal::current_context(
+            EXECUTABLE_SCOPE,
+            &token_id,
+            now,
+            now.saturating_add(DEFAULT_TOKEN_TTL_SECS),
+            remaining,
+            bridge_workspace,
+        );
         let debit = json!({
             "schema_version": 1,
             "record_schema": BUDGET_POLICY,
@@ -940,6 +995,7 @@ pub fn execute_semantic_microdose_from_paths(
             "token_status": "active",
             "one_shot": true,
             "expires_at_unix_s": now.saturating_add(DEFAULT_TOKEN_TTL_SECS),
+            "authority_temporal_context_v1": token_context,
         })
     } else {
         return Err(anyhow!(
@@ -982,10 +1038,31 @@ pub fn execute_semantic_microdose_from_paths(
         )?;
         return Ok(blocked);
     }
-    if token_consumed(
-        &location.rows,
-        approval.get("token_id").and_then(Value::as_str),
-    ) {
+    let token_id = approval
+        .get("token_id")
+        .and_then(Value::as_str)
+        .unwrap_or_default();
+    if let Some(reservation) = dangling_dispatch_reservation(&location.rows, token_id) {
+        let recovered = recovered_unknown_outcome(&reservation);
+        append_jsonl(&location.gate_path, &recovered)?;
+        let blocked = execution_record(
+            location,
+            &approval,
+            "blocked",
+            "token_outcome_unknown_consumed",
+            Some(json!({
+                "dispatch_reservation_id": reservation.get("reservation_id"),
+                "dispatch_outcome_v1": recovered,
+            })),
+        );
+        append_jsonl(&location.gate_path, &blocked)?;
+        append_jsonl(
+            &location.gate_path,
+            &consequence_record(location, &blocked, fill_pct, previous_fill_pct),
+        )?;
+        return Ok(blocked);
+    }
+    if token_consumed(&location.rows, Some(token_id)) {
         let blocked = execution_record(
             location,
             &approval,
@@ -1022,6 +1099,34 @@ pub fn execute_semantic_microdose_from_paths(
         )?;
         return Ok(blocked);
     }
+    let verified_temporal = match verify_temporal_record(
+        &approval,
+        &scope,
+        token_id,
+        now,
+        bridge_workspace,
+        false,
+    ) {
+        Ok(verified) => verified,
+        Err(reason) => {
+            let blocked = execution_record(
+                location,
+                &approval,
+                "blocked",
+                &reason,
+                Some(json!({
+                    "authority_temporal_context_required": true,
+                    "max_future_clock_skew_secs": authority_temporal::MAX_FUTURE_CLOCK_SKEW_SECS,
+                })),
+            );
+            append_jsonl(&location.gate_path, &blocked)?;
+            append_jsonl(
+                &location.gate_path,
+                &consequence_record(location, &blocked, fill_pct, previous_fill_pct),
+            )?;
+            return Ok(blocked);
+        },
+    };
     // Scope, token identity/status, expiry, one-shot consumption, budget, and
     // lifecycle checks are complete. Safety has deliberately not yet passed.
     let granted = pending.into_granted();
@@ -1054,6 +1159,7 @@ pub fn execute_semantic_microdose_from_paths(
     if scope == MODE_RELEASE_SCOPE {
         return execute_mode_release_microdose(
             granted,
+            &verified_temporal,
             &approval,
             &text,
             fill_pct,
@@ -1095,7 +1201,32 @@ pub fn execute_semantic_microdose_from_paths(
     let executable = granted
         .map(|_| SemanticMicrodose::new(msg, features.len()))
         .into_live();
-    let feature_len = dispatch_semantic_microdose(executable, sensory_tx)?;
+    let reservation = authority_temporal::reservation(&verified_temporal, request_id);
+    append_serialized(&dispatch_location.gate_path, &reservation)?;
+    let feature_len = match dispatch_semantic_microdose(executable, sensory_tx) {
+        Ok(feature_len) => {
+            append_serialized(
+                &dispatch_location.gate_path,
+                &authority_temporal::outcome(
+                    &reservation,
+                    DispatchOutcomeKindV1::Sent,
+                    "semantic_microdose_enqueued",
+                ),
+            )?;
+            feature_len
+        },
+        Err(error) => {
+            append_serialized(
+                &dispatch_location.gate_path,
+                &authority_temporal::outcome(
+                    &reservation,
+                    DispatchOutcomeKindV1::Released,
+                    format!("semantic_microdose_queue_rejected:{error}"),
+                ),
+            )?;
+            return Err(error);
+        },
+    };
     let result = execution_record(
         &dispatch_location,
         &approval,
@@ -1113,6 +1244,7 @@ pub fn execute_semantic_microdose_from_paths(
 
 fn execute_mode_release_microdose(
     granted: AuthorityGranted<GateLocation>,
+    verified_temporal: &VerifiedAuthorityContextV1,
     approval: &Value,
     payload: &str,
     fill_pct: Option<f32>,
@@ -1220,7 +1352,7 @@ fn execute_mode_release_microdose(
         pi_integrator_leak: None,
         esn_leak_override: Some(clamped),
         esn_leak_override_ticks: Some(ticks),
-        esn_leak_authority_request_id: Some(request_id),
+        esn_leak_authority_request_id: Some(request_id.clone()),
         mode_disperse: None,
         mode_disperse_duration_ticks: None,
         mode_disperse_decay_ticks: None,
@@ -1237,7 +1369,32 @@ fn execute_mode_release_microdose(
     let executable = granted
         .map(|_| ModeReleaseMicrodose::new(msg, result_metadata))
         .into_live();
-    let result_metadata = dispatch_mode_release_microdose(executable, sensory_tx)?;
+    let reservation = authority_temporal::reservation(verified_temporal, &request_id);
+    append_serialized(&dispatch_location.gate_path, &reservation)?;
+    let result_metadata = match dispatch_mode_release_microdose(executable, sensory_tx) {
+        Ok(result_metadata) => {
+            append_serialized(
+                &dispatch_location.gate_path,
+                &authority_temporal::outcome(
+                    &reservation,
+                    DispatchOutcomeKindV1::Sent,
+                    "mode_release_microdose_enqueued",
+                ),
+            )?;
+            result_metadata
+        },
+        Err(error) => {
+            append_serialized(
+                &dispatch_location.gate_path,
+                &authority_temporal::outcome(
+                    &reservation,
+                    DispatchOutcomeKindV1::Released,
+                    format!("mode_release_microdose_queue_rejected:{error}"),
+                ),
+            )?;
+            return Err(error);
+        },
+    };
     let result = execution_record(
         &dispatch_location,
         approval,
@@ -1474,6 +1631,7 @@ fn read_jsonl(path: &Path) -> Vec<Value> {
                         || schema == LOOP_POLICY
                         || schema == "authority_consequence_v1"
                         || schema == "mode_release_consequence_v1"
+                        || schema == "authority_dispatch_v1"
                 })
         })
         .collect()
@@ -1483,9 +1641,59 @@ fn append_jsonl(path: &Path, value: &Value) -> Result<()> {
     if let Some(parent) = path.parent() {
         fs::create_dir_all(parent)?;
     }
+    let lock_path = path.with_extension("jsonl.lock");
+    let lock = OpenOptions::new()
+        .create(true)
+        .truncate(false)
+        .read(true)
+        .write(true)
+        .open(&lock_path)?;
+    #[cfg(unix)]
+    {
+        fs::set_permissions(&lock_path, fs::Permissions::from_mode(0o600))?;
+    }
+    lock.lock_exclusive()?;
+
+    let previous_line = fs::read_to_string(path)
+        .unwrap_or_default()
+        .lines()
+        .rev()
+        .find(|line| !line.trim().is_empty())
+        .unwrap_or_default()
+        .to_string();
+    let previous_record_sha256 = if previous_line.is_empty() {
+        "0".repeat(64)
+    } else {
+        format!("{:x}", Sha256::digest(previous_line.as_bytes()))
+    };
+    let mut record = value.clone();
+    if let Some(object) = record.as_object_mut() {
+        object.insert(
+            "previous_record_sha256".to_string(),
+            json!(previous_record_sha256),
+        );
+    }
+    let hash_input = serde_json::to_vec(&record)?;
+    if let Some(object) = record.as_object_mut() {
+        object.insert(
+            "record_sha256".to_string(),
+            json!(format!("{:x}", Sha256::digest(hash_input))),
+        );
+    }
     let mut file = OpenOptions::new().create(true).append(true).open(path)?;
-    writeln!(file, "{}", serde_json::to_string(value)?)?;
+    #[cfg(unix)]
+    {
+        fs::set_permissions(path, fs::Permissions::from_mode(0o600))?;
+    }
+    writeln!(file, "{}", serde_json::to_string(&record)?)?;
+    file.flush()?;
+    file.sync_all()?;
+    fs2::FileExt::unlock(&lock)?;
     Ok(())
+}
+
+fn append_serialized(path: &Path, value: &impl Serialize) -> Result<()> {
+    append_jsonl(path, &serde_json::to_value(value)?)
 }
 
 fn latest_active_approval(rows: &[Value], request_id: &str) -> Option<Value> {
@@ -1501,11 +1709,86 @@ fn token_consumed(rows: &[Value], token_id: Option<&str>) -> bool {
     let Some(token_id) = token_id else {
         return true;
     };
-    rows.iter().any(|row| {
-        matches!(
-            row.get("record_type").and_then(Value::as_str),
-            Some("execution_result" | "blocked")
-        ) && row.get("token_id").and_then(Value::as_str) == Some(token_id)
+    rows.iter()
+        .rev()
+        .find_map(|row| {
+            if row.get("token_id").and_then(Value::as_str) != Some(token_id) {
+                return None;
+            }
+            match row.get("record_type").and_then(Value::as_str) {
+                Some("dispatch_outcome")
+                    if row.get("outcome").and_then(Value::as_str) == Some("released") =>
+                {
+                    Some(false)
+                },
+                Some(
+                    "dispatch_outcome" | "dispatch_reservation" | "execution_result" | "blocked",
+                ) => Some(true),
+                _ => None,
+            }
+        })
+        .unwrap_or(false)
+}
+
+fn verify_temporal_record(
+    record: &Value,
+    expected_scope: &str,
+    expected_token_id: &str,
+    now: u64,
+    bridge_workspace: &Path,
+    read_only_research: bool,
+) -> std::result::Result<VerifiedAuthorityContextV1, String> {
+    let value = record
+        .get("authority_temporal_context_v1")
+        .cloned()
+        .ok_or_else(|| "missing_authority_temporal_context_v1".to_string())?;
+    let context: AuthorityTemporalContextV1 = serde_json::from_value(value)
+        .map_err(|_| "invalid_authority_temporal_context_v1".to_string())?;
+    let result = if read_only_research {
+        authority_temporal::verify_read_only_research(
+            &context,
+            expected_token_id,
+            now,
+            bridge_workspace,
+        )
+    } else {
+        authority_temporal::verify_live(
+            &context,
+            expected_scope,
+            expected_token_id,
+            now,
+            bridge_workspace,
+        )
+    };
+    result.map_err(|error| error.to_string())
+}
+
+fn dangling_dispatch_reservation(rows: &[Value], token_id: &str) -> Option<Value> {
+    let reservation = rows.iter().rev().find(|row| {
+        row.get("record_type").and_then(Value::as_str) == Some("dispatch_reservation")
+            && row.get("token_id").and_then(Value::as_str) == Some(token_id)
+    })?;
+    let reservation_id = reservation.get("reservation_id").and_then(Value::as_str)?;
+    let has_outcome = rows.iter().any(|row| {
+        row.get("record_type").and_then(Value::as_str) == Some("dispatch_outcome")
+            && row.get("reservation_id").and_then(Value::as_str) == Some(reservation_id)
+    });
+    (!has_outcome).then(|| reservation.clone())
+}
+
+fn recovered_unknown_outcome(reservation: &Value) -> Value {
+    json!({
+        "schema": "dispatch_outcome_v1",
+        "schema_version": 1,
+        "record_schema": "authority_dispatch_v1",
+        "record_type": "dispatch_outcome",
+        "reservation_id": reservation.get("reservation_id").cloned().unwrap_or(Value::Null),
+        "request_id": reservation.get("request_id").cloned().unwrap_or(Value::Null),
+        "token_id": reservation.get("token_id").cloned().unwrap_or(Value::Null),
+        "scope": reservation.get("scope").cloned().unwrap_or(Value::Null),
+        "outcome": "outcome_unknown_consumed",
+        "recorded_at_unix_ms": unix_now().saturating_mul(1_000),
+        "reason": "recovered_dangling_dispatch_reservation",
     })
 }
 
@@ -4135,6 +4418,10 @@ mod tests {
             fs::read_to_string(astrid.join("action_threads/threads/th_test/authority_gate.jsonl"))
                 .unwrap();
         assert!(gate_text.contains("\"record_schema\":\"authority_consequence_v1\""));
+        assert!(gate_text.contains("\"record_type\":\"dispatch_reservation\""));
+        assert!(gate_text.contains("\"outcome\":\"sent\""));
+        assert!(gate_text.contains("\"previous_record_sha256\""));
+        assert!(gate_text.contains("\"record_sha256\""));
         assert!(matches!(
             rx.try_recv().unwrap(),
             SensoryMsg::Semantic { .. }
@@ -4152,6 +4439,117 @@ mod tests {
         assert_eq!(blocked["record_type"], "blocked");
         assert_eq!(blocked["reason"], "token_already_consumed");
         assert!(rx.try_recv().is_err());
+    }
+
+    #[test]
+    fn synchronous_queue_rejection_releases_reservation_for_retry() {
+        let temp = tempfile::tempdir().unwrap();
+        let minime = temp.path().join("minime_workspace");
+        let astrid = temp.path().join("astrid_workspace");
+        write_request(&astrid, "authreq_queue_retry", EXECUTABLE_SCOPE, true);
+        approve_from_paths(
+            ApproveAuthorityRequest {
+                request_id: "authreq_queue_retry".to_string(),
+                steward: None,
+                note: None,
+                ttl_secs: None,
+            },
+            SafetyLevel::Green,
+            &minime,
+            &astrid,
+        )
+        .unwrap();
+        let (tx, mut rx) = mpsc::channel(1);
+        tx.try_send(SensoryMsg::Aux {
+            features: vec![0.0, 0.0],
+            ts_ms: None,
+        })
+        .unwrap();
+
+        let error = execute_semantic_microdose_from_paths(
+            "authreq_queue_retry",
+            Some(68.0),
+            Some(68.0),
+            &tx,
+            &minime,
+            &astrid,
+        )
+        .expect_err("full queue must reject synchronously");
+        assert!(error.to_string().contains("send failed"));
+        let _ = rx.try_recv().unwrap();
+
+        let executed = execute_semantic_microdose_from_paths(
+            "authreq_queue_retry",
+            Some(68.0),
+            Some(68.0),
+            &tx,
+            &minime,
+            &astrid,
+        )
+        .unwrap();
+        assert_eq!(executed["record_type"], "execution_result");
+        assert!(matches!(
+            rx.try_recv().unwrap(),
+            SensoryMsg::Semantic { .. }
+        ));
+        let gate_text =
+            fs::read_to_string(astrid.join("action_threads/threads/th_test/authority_gate.jsonl"))
+                .unwrap();
+        assert!(gate_text.contains("\"outcome\":\"released\""));
+        assert!(gate_text.contains("\"outcome\":\"sent\""));
+    }
+
+    #[test]
+    fn dangling_reservation_is_recovered_as_unknown_and_consumed() {
+        let temp = tempfile::tempdir().unwrap();
+        let minime = temp.path().join("minime_workspace");
+        let astrid = temp.path().join("astrid_workspace");
+        let gate = write_request(&astrid, "authreq_unknown_outcome", EXECUTABLE_SCOPE, true);
+        let approval = approve_from_paths(
+            ApproveAuthorityRequest {
+                request_id: "authreq_unknown_outcome".to_string(),
+                steward: None,
+                note: None,
+                ttl_secs: None,
+            },
+            SafetyLevel::Green,
+            &minime,
+            &astrid,
+        )
+        .unwrap();
+        let verified = verify_temporal_record(
+            &approval,
+            EXECUTABLE_SCOPE,
+            approval["token_id"].as_str().unwrap(),
+            unix_now(),
+            &astrid,
+            false,
+        )
+        .unwrap();
+        append_serialized(
+            &gate,
+            &authority_temporal::reservation(&verified, "authreq_unknown_outcome"),
+        )
+        .unwrap();
+        let (tx, mut rx) = mpsc::channel(1);
+
+        let blocked = execute_semantic_microdose_from_paths(
+            "authreq_unknown_outcome",
+            Some(68.0),
+            Some(68.0),
+            &tx,
+            &minime,
+            &astrid,
+        )
+        .unwrap();
+        assert_eq!(blocked["record_type"], "blocked");
+        assert_eq!(blocked["reason"], "token_outcome_unknown_consumed");
+        assert!(rx.try_recv().is_err());
+        assert!(
+            fs::read_to_string(gate)
+                .unwrap()
+                .contains("\"outcome\":\"outcome_unknown_consumed\"")
+        );
     }
 
     #[test]
