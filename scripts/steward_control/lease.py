@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import os
 from pathlib import Path
+import subprocess
 import time
 from typing import Any
 import uuid
@@ -35,6 +36,22 @@ def pid_alive(pid: int) -> bool:
     except PermissionError:
         return True
     return True
+
+
+def process_started_at_unix(pid: int) -> float:
+    try:
+        result = subprocess.run(
+            ["ps", "-o", "lstart=", "-p", str(pid)],
+            check=True,
+            capture_output=True,
+            text=True,
+            timeout=5,
+        )
+        return time.mktime(
+            time.strptime(result.stdout.strip(), "%a %b %d %H:%M:%S %Y")
+        )
+    except (OSError, ValueError, subprocess.SubprocessError):
+        return time.time()
 
 
 class LeaseManager:
@@ -74,9 +91,7 @@ class LeaseManager:
             raise ValueError("pause requires non-empty actor and reason")
         with exclusive_file_lock(self.lock_path):
             state = self.state()
-            generation = int(state.get("pause_generation") or 0)
-            if not state.get("paused"):
-                generation += 1
+            generation = int(state.get("pause_generation") or 0) + 1
             updated = {
                 "schema": "steward_control_state_v1",
                 "schema_version": 1,
@@ -124,6 +139,7 @@ class LeaseManager:
         if adapter_kind not in {"session", "subprocess", "project"}:
             raise ValueError(f"unsupported adapter kind: {adapter_kind}")
         now = time.time()
+        resolved_pid = int(pid or os.getpid())
         with exclusive_file_lock(self.lock_path):
             state = self.state()
             if state.get("paused"):
@@ -145,8 +161,8 @@ class LeaseManager:
                 "adapter_kind": adapter_kind,
                 "token_sha256": token_hash(token),
                 "host": host_identity(),
-                "pid": int(pid or os.getpid()),
-                "process_started_at_unix": now,
+                "pid": resolved_pid,
+                "process_started_at_unix": process_started_at_unix(resolved_pid),
                 "acquired_at": utc_now(),
                 "heartbeat_at_unix": now,
                 "expires_at_unix": now + self.config.lease_ttl_secs,

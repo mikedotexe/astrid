@@ -9,6 +9,7 @@ from typing import Any
 import uuid
 
 from .config import ControlConfig
+from .evidence import verify_evidence
 from .model import atomic_write_json, authority_state, load_json, utc_now
 
 
@@ -39,16 +40,23 @@ class EventSink:
         }
 
     def _append(self, event: dict[str, Any]) -> None:
+        verify_evidence(self.config)
         try:
-            from evidence_store.adapter import append_domain_events
+            from evidence_store import EvidenceEventStore
+            from evidence_store.model import ProvenanceSourceV1
         except ModuleNotFoundError:
-            from scripts.evidence_store.adapter import append_domain_events
+            from scripts.evidence_store import EvidenceEventStore
+            from scripts.evidence_store.model import ProvenanceSourceV1
 
-        append_domain_events(
-            self.config.state_root,
+        EvidenceEventStore(self.config.store_root).append_payloads(
             "steward_control",
             [event],
             actor=str(event.get("payload", {}).get("actor") or "interactive-agent"),
+            source=ProvenanceSourceV1(
+                kind="steward_control",
+                locator="steward_control/events",
+            ),
+            idempotency_keys=[str(event["idempotency_key"])],
         )
 
     def _spool(self, event: dict[str, Any], error: Exception) -> Path:

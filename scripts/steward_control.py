@@ -77,6 +77,17 @@ def parser() -> argparse.ArgumentParser:
 
     commands.add_parser("reconcile")
 
+    project = commands.add_parser("project")
+    project.add_argument("--actor", default="interactive-agent")
+    project.add_argument("--run-id")
+    project.add_argument("--lease-token")
+    project.add_argument(
+        "--phase",
+        choices=("pre", "post", "manual"),
+        default="manual",
+    )
+    project.add_argument("--dry-run", action="store_true")
+
     run = commands.add_parser("run")
     run.add_argument("--actor", default="interactive-agent")
     run.add_argument("--max-secs", type=int)
@@ -89,10 +100,21 @@ def self_test() -> int:
 
     try:
         from test_steward_control import StewardControlTests
+        from test_steward_projection import StewardProjectionTests
     except ModuleNotFoundError:
         from scripts.test_steward_control import StewardControlTests
+        from scripts.test_steward_projection import StewardProjectionTests
 
-    suite = unittest.defaultTestLoader.loadTestsFromTestCase(StewardControlTests)
+    suite = unittest.TestSuite(
+        [
+            unittest.defaultTestLoader.loadTestsFromTestCase(
+                StewardControlTests
+            ),
+            unittest.defaultTestLoader.loadTestsFromTestCase(
+                StewardProjectionTests
+            ),
+        ]
+    )
     return 0 if unittest.TextTestRunner(verbosity=2).run(suite).wasSuccessful() else 1
 
 
@@ -145,6 +167,49 @@ def main(argv: list[str] | None = None) -> int:
             )
         elif args.command == "reconcile":
             value = controller.reconcile()
+        elif args.command == "project":
+            if args.dry_run:
+                value = controller.projections.plan()
+            elif bool(args.run_id) != bool(args.lease_token):
+                raise ValueError(
+                    "--run-id and --lease-token must be supplied together"
+                )
+            elif args.run_id:
+                value = controller.project(
+                    run_id=args.run_id,
+                    lease_token=args.lease_token,
+                    actor=args.actor,
+                    phase=args.phase,
+                )
+            else:
+                begun = controller.begin(
+                    actor=args.actor,
+                    adapter_kind="session",
+                    project_before=False,
+                )
+                try:
+                    value = controller.project(
+                        run_id=begun["run_id"],
+                        lease_token=begun["lease_token"],
+                        actor=args.actor,
+                        phase=args.phase,
+                    )
+                except BaseException:
+                    controller.finish(
+                        run_id=begun["run_id"],
+                        lease_token=begun["lease_token"],
+                        outcome="failed",
+                        summary_ref="manual_projection_failed",
+                        project_after=False,
+                    )
+                    raise
+                controller.finish(
+                    run_id=begun["run_id"],
+                    lease_token=begun["lease_token"],
+                    outcome="success",
+                    summary_ref="manual_projection",
+                    project_after=False,
+                )
         elif args.command == "run":
             command = list(args.argv)
             if command and command[0] == "--":

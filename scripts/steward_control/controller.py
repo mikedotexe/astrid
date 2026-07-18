@@ -8,7 +8,7 @@ import time
 from typing import Any
 
 from .config import ControlConfig
-from .errors import EvidenceInvalidError, LeaseError
+from .errors import EvidenceInvalidError, LeaseError, ProjectionError
 from .events import EventSink
 from .evidence import verify_evidence
 from .git_state import (
@@ -16,15 +16,22 @@ from .git_state import (
     repository_identities,
 )
 from .lease import LeaseManager, token_hash
-from .model import atomic_write_json, load_json, utc_now
+from .model import atomic_write_json, load_json, sha256_canonical, utc_now
+from .projection import ProjectionCoordinator
 
 
 class StewardController:
-    def __init__(self, config: ControlConfig):
+    def __init__(
+        self,
+        config: ControlConfig,
+        *,
+        projection_coordinator: ProjectionCoordinator | None = None,
+    ):
         self.config = config
         self.leases = LeaseManager(config)
         self.events = EventSink(config)
         self.runs_root = config.state_root / "runs"
+        self.projections = projection_coordinator or ProjectionCoordinator(config)
 
     def _emit(
         self,
@@ -138,6 +145,18 @@ class StewardController:
                 "reason_sha256": hashlib.sha256(reason.encode()).hexdigest(),
                 "pause_generation": state["pause_generation"],
                 "active_run_id": active.get("run_id") if active else None,
+                "receipt": {
+                    "schema": "steward_pause_receipt_v1",
+                    "schema_version": 1,
+                    "actor": actor,
+                    "reason_sha256": hashlib.sha256(
+                        reason.encode()
+                    ).hexdigest(),
+                    "pause_generation": state["pause_generation"],
+                    "active_run_id": active.get("run_id") if active else None,
+                    "recorded_at": state["recorded_at"],
+                    "raw_reason_included": False,
+                },
             },
             idempotency_key=(
                 f"pause:{state['pause_generation']}:"
@@ -154,8 +173,8 @@ class StewardController:
 
     def resume(self, *, actor: str, acknowledgement: str) -> dict[str, Any]:
         verify_evidence(self.config)
-        reconciliation = self.events.reconcile()
-        if reconciliation["pending"]:
+        reconciliation = self.reconcile()
+        if reconciliation["events"]["pending"]:
             raise EvidenceInvalidError("pending steward events could not be reconciled")
         state = self.leases.resume(actor, acknowledgement)
         event_result = self._emit(
@@ -177,6 +196,7 @@ class StewardController:
         actor: str,
         adapter_kind: str = "session",
         pid: int | None = None,
+        project_before: bool = True,
     ) -> dict[str, Any]:
         evidence = verify_evidence(self.config)
         identities = repository_identities(self.config.repositories)
@@ -232,19 +252,74 @@ class StewardController:
                 "adapter_kind": adapter_kind,
                 "config_sha256": self.config.config_sha256,
                 "pause_generation": lease["pause_generation"],
+                "receipt": start_receipt,
             },
             idempotency_key=f"run_started:{lease['run_id']}",
         )
-        return {
+        lease_event = self._emit(
+            "steward_lease_acquired",
+            aggregate_type="steward_lease",
+            aggregate_id=lease["run_id"],
+            payload={
+                "actor": actor,
+                "run_id": lease["run_id"],
+                "adapter_kind": adapter_kind,
+                "expires_at_unix": lease["expires_at_unix"],
+                "token_sha256": lease["token_sha256"],
+                "pause_generation": lease["pause_generation"],
+            },
+            idempotency_key=f"lease_acquired:{lease['run_id']}",
+        )
+        result = {
             "run_id": lease["run_id"],
             "lease_token": token,
             "expires_at_unix": lease["expires_at_unix"],
             "heartbeat_interval_secs": self.config.heartbeat_interval_secs,
             "event": event_result,
+            "lease_event": lease_event,
         }
+        if project_before and self.config.profile != "none":
+            try:
+                generation = self.project(
+                    run_id=lease["run_id"],
+                    lease_token=token,
+                    actor=actor,
+                    phase="pre",
+                )
+            except ProjectionError:
+                self.finish(
+                    run_id=lease["run_id"],
+                    lease_token=token,
+                    outcome="failed",
+                    summary_ref="pre_projection_failed",
+                    project_after=False,
+                )
+                raise
+            result["projection_generation_id"] = generation["generation_id"]
+        return result
 
     def heartbeat(self, *, run_id: str, lease_token: str) -> dict[str, Any]:
-        return self.leases.heartbeat(run_id, lease_token)
+        heartbeat = self.leases.heartbeat(run_id, lease_token)
+        lease = self.leases.lease() or {}
+        event = self._emit(
+            "steward_lease_heartbeat",
+            aggregate_type="steward_lease",
+            aggregate_id=run_id,
+            payload={
+                "actor": lease.get("actor"),
+                "run_id": run_id,
+                "expires_at_unix": heartbeat["expires_at_unix"],
+                "stop_requested": heartbeat["stop_requested"],
+                "pause_generation": heartbeat["pause_generation"],
+            },
+            idempotency_key=(
+                f"lease_heartbeat:{run_id}:"
+                f"{float(heartbeat['expires_at_unix']):.6f}:"
+                f"{heartbeat['pause_generation']}:"
+                f"{heartbeat['stop_requested']}"
+            ),
+        )
+        return {**heartbeat, "event": event}
 
     def finish(
         self,
@@ -254,6 +329,7 @@ class StewardController:
         outcome: str,
         exit_code: int | None = None,
         summary_ref: str | None = None,
+        project_after: bool = True,
     ) -> dict[str, Any]:
         if outcome not in {"success", "failed", "cancelled", "policy_violation"}:
             raise ValueError(f"unsupported outcome: {outcome}")
@@ -267,6 +343,28 @@ class StewardController:
             return {"receipt": existing, "idempotent": True}
         if existing is None:
             raise LeaseError(f"missing run receipt for {run_id}")
+
+        projection_generation_id = None
+        projection_error = None
+        if (
+            project_after
+            and outcome == "success"
+            and self.config.profile != "none"
+        ):
+            try:
+                generation = self.project(
+                    run_id=run_id,
+                    lease_token=lease_token,
+                    actor=str(existing.get("actor") or "interactive-agent"),
+                    phase="post",
+                )
+                projection_generation_id = generation["generation_id"]
+            except ProjectionError as error:
+                outcome = "failed"
+                projection_error = {
+                    "error_type": type(error).__name__,
+                    "error_sha256": hashlib.sha256(str(error).encode()).hexdigest(),
+                }
 
         after = repository_identities(self.config.repositories)
         violations = git_policy_violations(
@@ -286,7 +384,7 @@ class StewardController:
             evidence_after = {"valid": False, "error": str(error)}
             if final_outcome == "success":
                 final_outcome = "failed"
-        self.leases.release(run_id, lease_token)
+        released_lease = self.leases.release(run_id, lease_token)
         receipt = {
             **existing,
             "status": "finished",
@@ -302,6 +400,8 @@ class StewardController:
             "repositories_after": after,
             "git_policy_violations": violations,
             "evidence_after": evidence_after,
+            "projection_generation_id": projection_generation_id,
+            "projection_error": projection_error,
         }
         atomic_write_json(receipt_path, receipt)
         event_result = self._emit(
@@ -314,10 +414,58 @@ class StewardController:
                 "exit_code": exit_code,
                 "git_policy_violations": violations,
                 "evidence_valid": evidence_after.get("valid"),
+                "receipt": receipt,
             },
             idempotency_key=f"run_finished:{run_id}:{final_outcome}",
         )
-        return {"receipt": receipt, "event": event_result, "idempotent": False}
+        lease_event = self._emit(
+            "steward_lease_released",
+            aggregate_type="steward_lease",
+            aggregate_id=run_id,
+            payload={
+                "actor": existing.get("actor"),
+                "run_id": run_id,
+                "outcome": final_outcome,
+                "token_sha256": released_lease.get("token_sha256"),
+            },
+            idempotency_key=f"lease_released:{run_id}",
+        )
+        return {
+            "receipt": receipt,
+            "event": event_result,
+            "lease_event": lease_event,
+            "idempotent": False,
+        }
+
+    def project(
+        self,
+        *,
+        run_id: str,
+        lease_token: str,
+        actor: str,
+        phase: str = "manual",
+    ) -> dict[str, Any]:
+        heartbeat = self.leases.heartbeat(run_id, lease_token)
+        if heartbeat["stop_requested"]:
+            raise ProjectionError("projection denied after pause was requested")
+        lease = self.leases.lease()
+        if lease is None or lease.get("actor") != actor:
+            raise LeaseError("projection actor does not own the active lease")
+        manifest = self.projections.run(actor=actor, run_id=run_id, phase=phase)
+        event_result = self._emit(
+            "projection_generation_published",
+            aggregate_type="projection_generation",
+            aggregate_id=str(manifest["generation_id"]),
+            payload={
+                "actor": actor,
+                "run_id": run_id,
+                "phase": phase,
+                "status": manifest["status"],
+                "manifest_sha256": sha256_canonical(manifest),
+            },
+            idempotency_key=f"projection:{manifest['generation_id']}",
+        )
+        return {**manifest, "event": event_result}
 
     def reconcile(self) -> dict[str, Any]:
         stale = self.leases.reap_stale()

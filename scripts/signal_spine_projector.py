@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 from pathlib import Path
 import tempfile
 import unittest
@@ -542,6 +543,31 @@ def render_report(status: dict[str, Any]) -> str:
     )
 
 
+def atomic_write_text(path: Path, payload: str) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    handle = tempfile.NamedTemporaryFile(
+        "w",
+        encoding="utf-8",
+        dir=path.parent,
+        prefix=f".{path.name}.",
+        delete=False,
+    )
+    temporary = Path(handle.name)
+    try:
+        with handle:
+            handle.write(payload)
+            handle.flush()
+            os.fsync(handle.fileno())
+        os.replace(temporary, path)
+        directory_fd = os.open(path.parent, os.O_RDONLY)
+        try:
+            os.fsync(directory_fd)
+        finally:
+            os.close(directory_fd)
+    finally:
+        temporary.unlink(missing_ok=True)
+
+
 def write_projection(workspace: Path, status: dict[str, Any]) -> dict[str, str]:
     root = state_dir(workspace)
     root.mkdir(parents=True, exist_ok=True)
@@ -549,8 +575,8 @@ def write_projection(workspace: Path, status: dict[str, Any]) -> dict[str, str]:
     report_path = root / "report.md"
     status_payload = json.dumps(status, indent=2, sort_keys=True) + "\n"
     report_payload = render_report(status)
-    status_path.write_text(status_payload, encoding="utf-8")
-    report_path.write_text(report_payload, encoding="utf-8")
+    atomic_write_text(status_path, status_payload)
+    atomic_write_text(report_path, report_payload)
     return {
         "projection_status.json": sha256_bytes(status_payload.encode()),
         "report.md": sha256_bytes(report_payload.encode()),

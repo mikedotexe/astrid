@@ -7,6 +7,7 @@ import argparse
 from collections import Counter
 import hashlib
 import json
+import os
 from pathlib import Path
 import re
 import sys
@@ -456,6 +457,31 @@ def render_report(status: dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
+def atomic_write_text(path: Path, payload: str) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    handle = tempfile.NamedTemporaryFile(
+        "w",
+        encoding="utf-8",
+        dir=path.parent,
+        prefix=f".{path.name}.",
+        delete=False,
+    )
+    temporary = Path(handle.name)
+    try:
+        with handle:
+            handle.write(payload)
+            handle.flush()
+            os.fsync(handle.fileno())
+        os.replace(temporary, path)
+        directory_fd = os.open(path.parent, os.O_RDONLY)
+        try:
+            os.fsync(directory_fd)
+        finally:
+            os.close(directory_fd)
+    finally:
+        temporary.unlink(missing_ok=True)
+
+
 def write_projection(workspace: Path, status: dict[str, Any]) -> dict[str, str]:
     root = state_dir(workspace)
     root.mkdir(parents=True, exist_ok=True)
@@ -465,7 +491,7 @@ def write_projection(workspace: Path, status: dict[str, Any]) -> dict[str, str]:
     }
     hashes = {}
     for name, payload in outputs.items():
-        (root / name).write_text(payload, encoding="utf-8")
+        atomic_write_text(root / name, payload)
         hashes[name] = hashlib.sha256(payload.encode()).hexdigest()
     return hashes
 

@@ -287,6 +287,8 @@ def build_parser() -> argparse.ArgumentParser:
     checkpoint.add_argument("--projector", required=True)
     checkpoint.add_argument("--projector-version", type=int, required=True)
     checkpoint.add_argument("--output-hash", action="append", default=[])
+    checkpoint.add_argument("--input-stream", action="append", default=None)
+    checkpoint.add_argument("--source-hash", action="append", default=[])
     return parser
 
 
@@ -369,17 +371,34 @@ def main() -> int:
                     raise EvidenceStoreError("--output-hash values must be NAME=SHA256")
                 name, digest = item.split("=", 1)
                 hashes[name] = digest
+            source_hashes: dict[str, str] = {}
+            for item in args.source_hash:
+                if "=" not in item:
+                    raise EvidenceStoreError("--source-hash values must be NAME=SHA256")
+                name, digest = item.split("=", 1)
+                source_hashes[name] = digest
             if not args.write:
                 _emit(
                     {
-                        "current": store.checkpoint_current(
-                            args.projector, args.projector_version
+                        "current": store.checkpoint_current_for_inputs(
+                            args.projector,
+                            args.projector_version,
+                            input_streams=args.input_stream,
+                            source_hashes=(
+                                source_hashes if args.source_hash else None
+                            ),
                         )
                     },
                     args.json,
                 )
                 return 0
-            path = store.write_checkpoint(args.projector, args.projector_version, hashes)
+            path = store.write_checkpoint(
+                args.projector,
+                args.projector_version,
+                hashes,
+                input_streams=args.input_stream,
+                source_hashes=source_hashes,
+            )
             _emit({"checkpoint": str(path), "current": True}, args.json)
             return 0
     except (EvidenceStoreError, OSError, ValueError) as error:

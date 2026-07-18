@@ -35,3 +35,9 @@ class EvidenceInvalidError(StewardControlError):
     """Canonical evidence cannot be trusted for a mutating run."""
 
     exit_code = 4
+
+
+class ProjectionError(StewardControlError):
+    """A required projection step failed or emitted invalid evidence."""
+
+    exit_code = 5

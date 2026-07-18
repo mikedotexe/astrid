@@ -44,6 +44,7 @@ DEFAULT_ACTOR = "interactive-agent"
 HEAD_SCHEMA = "evidence_event_store_head_v1"
 ACTIVATION_SCHEMA = "evidence_event_store_activation_v1"
 CHECKPOINT_SCHEMA = "evidence_event_projection_checkpoint_v1"
+CHECKPOINT_SCHEMA_V2 = "evidence_event_projection_checkpoint_v2"
 COMPATIBILITY_EXPORT_SCHEMA = "evidence_event_store_compatibility_export_v1"
 SAFE_NAME_RE = re.compile(r"[^a-zA-Z0-9_.-]+")
 
@@ -437,17 +438,78 @@ class EvidenceEventStore:
         events, _ = self.read_envelopes()
         return [copy.deepcopy(event.payload) for event in events if event.stream == stream], 0
 
+    def stream_watermarks(
+        self,
+        streams: Iterable[str],
+    ) -> dict[str, dict[str, Any]]:
+        """Return exact high-water identities for only the declared streams."""
+
+        verification = self.verify()
+        if not verification.valid:
+            raise EvidenceStoreError("cannot read watermarks from an invalid store")
+        requested = sorted({str(stream) for stream in streams if str(stream).strip()})
+        watermarks = {
+            stream: {
+                "stream_seq": 0,
+                "last_global_seq": 0,
+                "last_event_id": None,
+                "last_event_sha256": GENESIS_HASH,
+            }
+            for stream in requested
+        }
+        events, corrupt = self.read_envelopes()
+        if corrupt:
+            raise EvidenceStoreError("cannot read watermarks from corrupt events")
+        for event in events:
+            if event.stream not in watermarks:
+                continue
+            watermarks[event.stream] = {
+                "stream_seq": event.stream_seq,
+                "last_global_seq": event.global_seq,
+                "last_event_id": event.event_id,
+                "last_event_sha256": event.event_sha256,
+            }
+        return watermarks
+
     def write_checkpoint(
         self,
         projector: str,
         projector_version: int,
         output_hashes: dict[str, str],
+        *,
+        input_streams: Iterable[str] | None = None,
+        source_hashes: dict[str, str] | None = None,
     ) -> Path:
         verification = self.verify()
         if not verification.valid:
             raise EvidenceStoreError("cannot checkpoint an invalid store")
         safe_name = SAFE_NAME_RE.sub("_", projector).strip("_") or "projector"
         path = self.checkpoints_dir / f"{safe_name}.json"
+        if input_streams is not None:
+            declared_streams = sorted(
+                {str(stream) for stream in input_streams if str(stream).strip()}
+            )
+            _atomic_write_json(
+                path,
+                {
+                    "schema": CHECKPOINT_SCHEMA_V2,
+                    "schema_version": 2,
+                    "projector": projector,
+                    "projector_version": projector_version,
+                    "input_streams": declared_streams,
+                    "input_stream_watermarks": self.stream_watermarks(
+                        declared_streams
+                    ),
+                    "source_hashes": dict(sorted((source_hashes or {}).items())),
+                    "store_observed_at": {
+                        "last_global_seq": verification.last_global_seq,
+                        "last_event_sha256": verification.last_event_sha256,
+                    },
+                    "output_hashes": dict(sorted(output_hashes.items())),
+                    "recorded_at": _utc_now(),
+                },
+            )
+            return path
         _atomic_write_json(
             path,
             {
@@ -464,6 +526,16 @@ class EvidenceEventStore:
         return path
 
     def checkpoint_current(self, projector: str, projector_version: int) -> bool:
+        return self.checkpoint_current_for_inputs(projector, projector_version)
+
+    def checkpoint_current_for_inputs(
+        self,
+        projector: str,
+        projector_version: int,
+        *,
+        input_streams: Iterable[str] | None = None,
+        source_hashes: dict[str, str] | None = None,
+    ) -> bool:
         safe_name = SAFE_NAME_RE.sub("_", projector).strip("_") or "projector"
         path = self.checkpoints_dir / f"{safe_name}.json"
         if not path.is_file():
@@ -473,6 +545,35 @@ class EvidenceEventStore:
         except (OSError, json.JSONDecodeError):
             return False
         verification = self.verify()
+        if (
+            verification.valid
+            and checkpoint.get("schema") == CHECKPOINT_SCHEMA_V2
+            and int(checkpoint.get("projector_version") or 0) == projector_version
+        ):
+            stored_streams = checkpoint.get("input_streams")
+            if not isinstance(stored_streams, list):
+                return False
+            expected_streams = sorted(
+                {
+                    str(stream)
+                    for stream in (
+                        stored_streams if input_streams is None else input_streams
+                    )
+                    if str(stream).strip()
+                }
+            )
+            if expected_streams != sorted(str(stream) for stream in stored_streams):
+                return False
+            expected_sources = (
+                checkpoint.get("source_hashes")
+                if source_hashes is None
+                else dict(sorted(source_hashes.items()))
+            )
+            return bool(
+                self.stream_watermarks(expected_streams)
+                == checkpoint.get("input_stream_watermarks")
+                and expected_sources == checkpoint.get("source_hashes")
+            )
         return bool(
             verification.valid
             and checkpoint.get("schema") == CHECKPOINT_SCHEMA

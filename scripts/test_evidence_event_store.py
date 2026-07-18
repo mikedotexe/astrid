@@ -314,6 +314,66 @@ class EvidenceEventStoreTests(unittest.TestCase):
             )
             self.assertEqual(rolled_back["active_store"], "v1")
 
+    def test_v2_checkpoint_ignores_unrelated_stream_append(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            store = EvidenceEventStore(Path(tmp) / "store")
+            store.initialize_from_envelopes([], legacy_imported=False)
+            store.append_payloads(
+                "addressing",
+                [{"event_type": "claim_recorded", "claim_id": "claim_one"}],
+            )
+            store.write_checkpoint(
+                "addressing_projection",
+                2,
+                {"status": "abc"},
+                input_streams=["addressing"],
+                source_hashes={"source": "one"},
+            )
+            store.append_payloads(
+                "sandbox",
+                [{"event_type": "trial_recorded", "trial_id": "trial_one"}],
+            )
+            self.assertTrue(
+                store.checkpoint_current_for_inputs(
+                    "addressing_projection",
+                    2,
+                    input_streams=["addressing"],
+                    source_hashes={"source": "one"},
+                )
+            )
+
+    def test_v2_checkpoint_invalidates_declared_stream_or_source(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            store = EvidenceEventStore(Path(tmp) / "store")
+            store.initialize_from_envelopes([], legacy_imported=False)
+            store.write_checkpoint(
+                "addressing_projection",
+                2,
+                {"status": "abc"},
+                input_streams=["addressing"],
+                source_hashes={"source": "one"},
+            )
+            self.assertFalse(
+                store.checkpoint_current_for_inputs(
+                    "addressing_projection",
+                    2,
+                    input_streams=["addressing"],
+                    source_hashes={"source": "two"},
+                )
+            )
+            store.append_payloads(
+                "addressing",
+                [{"event_type": "claim_recorded", "claim_id": "claim_one"}],
+            )
+            self.assertFalse(
+                store.checkpoint_current_for_inputs(
+                    "addressing_projection",
+                    2,
+                    input_streams=["addressing"],
+                    source_hashes={"source": "one"},
+                )
+            )
+
 
 if __name__ == "__main__":
     raise SystemExit(
