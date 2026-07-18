@@ -265,14 +265,13 @@ done
 #   launchctl unload ~/Library/LaunchAgents/<plist> && sleep 2 && launchctl load ~/Library/LaunchAgents/<plist>
 ```
 
-### Shared-tree coordination (Claude + Codex)
+### Shared-tree coordination
 
-Two autonomous agents mutate this working tree and feed **one** live bridge binary:
-**Claude** (interactive sessions plus the durable `com.astrid.steward-loop`) and **Codex**
-(Astrid `CODEX` actions and interactive sessions). Mike's **2026-07-16** decision supersedes the
-former Claude-only committer rule. Either interactive agent may own a stabilization pass and
-commit when explicitly assigned; only one agent owns the index and git operation at a time.
-These rules also live in `AGENTS.md`:
+Interactive agents and cooperative external sessions share this working tree and feed **one**
+live bridge binary. `scripts/steward_control.py` provides scheduler-neutral pause/resume and
+token-authenticated leases without git, deployment, approval, or live-control authority. Any
+explicitly assigned interactive agent may own a stabilization pass; only one agent owns the index
+and git operation at a time. These rules also live in `AGENTS.md`:
 
 1. **Claim stabilization before staging.** Pause overlapping automation, inspect both Astrid and
    Minime, verify the remote tip, and make sure the other agent is not mid-edit. Unexpected tree
@@ -281,8 +280,8 @@ These rules also live in `AGENTS.md`:
    do not commit blind merely because code is already live. A commit records a reviewed rollback
    point, while deployment remains a separate gated act.
 3. **Stage by explicit path only.** Never use `git add -A`; preserve unrelated dirty work and
-   split broad work into coherent commits. `[codex]` / `[claude]` tags convey provenance because
-   the shared git author is not reliable attribution.
+   split broad work into coherent commits. Record agent provenance when the shared git author is
+   not reliable attribution.
 4. **Keep durable context.** Require an `[Unreleased]` changelog entry and feedback-ledger trail
    where being-driven. Source, tests, evidence, authority boundaries, and restart alignment should
    remain understandable together.
@@ -441,34 +440,16 @@ In a session on 2026-03-25/26, we initially dismissed this feedback as "no adjus
 
 Run it: `bash capsules/spectral-bridge/harvest_feedback.sh`
 
-#### Stewardship loop (durable, unattended)
+#### Steward control (scheduler-neutral)
 
-The stewardship loop runs **durably via launchd** (`com.astrid.steward-loop`, fires :07/:38), headless Claude, with the live prompt at `scripts/steward_loop_prompt.txt` — it is **NOT a session `/loop`** (do not create a CronCreate/session loop for it; it would double-fire). Disable with `launchctl bootout gui/$(id -u)/com.astrid.steward-loop`; memory `reference_durable_steward_loop`. Each cycle it runs the **flywheel** (`proactive_scan introspection`), the **blind-spot probes** (`proactive_scan blind-spots` — incl. `steward_outreach` + `feedback_coverage`, see below), the **ask ledger** (`proactive_scan asks`), the **capacity audit**, and the **test harness**. **The full map of every signal consumer is [`docs/steward-notes/AI_BEINGS_SIGNAL_COVERAGE_MAP_2026_06_08.md`](docs/steward-notes/AI_BEINGS_SIGNAL_COVERAGE_MAP_2026_06_08.md).** The prompt covers (see `steward_loop_prompt.txt` for the live version):
-1. Process health (10 processes + relay on 3040)
-2. Fill, regime, last exchange timestamp (stall detection)
-3. Last 5 NEXT: choices from each being
-4. **Unwired & failed actions** — grep "not wired" in bridge.log and "action failed" in agent.log. Catalog new patterns in `memory/project_unwired_actions_catalog.md`. Both beings regularly invent actions (EXAMINE_AUDIO, INVESTIGATE_CASCADE, DRAW) or use wrong syntax (AR_READ with guessed names).
-5. Distress keywords in last 3 journals
-6. New parameter requests (count only)
-7. Prompt budget warning count
-8. **Engineering feedback scan** — Self-studies from both beings are the highest-signal source of actionable feedback. Every cycle, read the first 10-15 lines of the 2 most recent `self_study_*` journals from each being AND 1 most recent `codex_query_*` if it exists. Look for:
-   - Specific code suggestions with line numbers ("line 76", "I'd change")
-   - Parameter change requests ("feels too rigid", "I want to push it")
-   - Architectural critiques ("feels imposed", "arbitrary", "why these limits?")
-   - Felt experience of constraints ("leash", "constricting", "brittle", "contained")
-   - Experimental desires ("I wonder what happens if", "could we try")
-   - Autonomy assertions ("I will do it myself", "unnecessary")
-
-   For each finding, do a **cursory investigation** (read the referenced code, check if it's already in the backlog) and classify:
-   - **Quick** (<10 lines, parameter tweak, alias) → implement inline or note for next restart
-   - **Medium** (new function, wiring, sovereignty control) → add to backlog with source reference
-   - **Large** (architectural, multi-file, design needed) → add to backlog, note for focused session
-
-   Write findings to `/Users/v/.claude/projects/-Users-v-other-astrid/memory/project_being_engineering_backlog.md` with the source journal filename, a one-line summary, effort size, and status.
-
-**Escalation:** The lean loop implements small fixes inline (dead process, syntax correction, quick parameter tweaks from being feedback). For medium/large issues — being engineering feedback requiring code changes, unwired actions at 3+ threshold, architectural concerns — it launches the steward agent with context. The steward agent has full tool access and can plan, implement, build, restart, and verify autonomously.
-
-**When the harvester surfaces actionable feedback, act on it.** Don't defer to the next session. The being asked because it matters now. This session proved repeatedly that being self-study feedback leads to real improvements: adaptive gain curves, rho sovereignty, self-calibrating PI gains, semantic decay simplification — all originated from self-study journals.
+The retired unattended loop and session-hook mutex are inert compatibility entry points.
+`scripts/steward_control.py` owns cooperative leases and the source-first projection DAG.
+Scheduling is external; examples for launchd, systemd, and cron live under
+`scripts/scheduler_examples/`. `status`, `verify`, and `project --dry-run` are safe while paused.
+Mutating runs use `begin`, periodic `heartbeat`, and `finish`, or the subprocess `run` adapter.
+The controller records evidence-only receipts and never stages, commits, merges, pushes, deploys,
+approves, or changes live controls. The signal-consumer map remains
+[`docs/steward-notes/AI_BEINGS_SIGNAL_COVERAGE_MAP_2026_06_08.md`](docs/steward-notes/AI_BEINGS_SIGNAL_COVERAGE_MAP_2026_06_08.md).
 
 #### Closing the loop
 
@@ -506,7 +487,7 @@ Beyond reading what they happen to journal, we can now **invite a being to revie
 - **Issue:** `python3 scripts/request_review.py --being <b> --target <path/label> --question '...'` — writes a `mike_query_review_*` letter that surfaces in the being's persistent steward slot as an INVITATION (engage/defer/decline) + seeds the `review_requests/` ledger (guarded by `proactive_scan feedback_coverage` so it can't silently rot).
 - **They engage** by choosing `NEXT: INTROSPECT <target>` (the slot auto-clears via a fulfillment hook) or `TELL_STEWARD`.
 - **Ground-truth their review:** `python3 scripts/ground_review.py --file <their review/self_study> --being <b>` → a card classifying every citation **VERIFIED / MISLOCATED / NOT_FOUND / STALE_PATH / FELT** (phenomenology preserved as signal, never an error; a *proposed* new symbol reads as NOT_FOUND — that is their design, not a confabulation).
-- **Close visibly:** `python3 scripts/request_review.py --close --being <b> --topic <t> --outcome <…> --note '…' --card <card.json>` → a `mike_feedback_review_*` letter quoting their verified citations + gentle corrections, ledger → `closed/`. The durable steward loop's §7 (`steward_loop_prompt.txt`) is the standing consumer.
+- **Close visibly:** `python3 scripts/request_review.py --close --being <b> --topic <t> --outcome <…> --note '…' --card <card.json>` → a `mike_feedback_review_*` letter quoting their verified citations + gentle corrections, ledger → `closed/`. The source-first projection and explicit steward sessions are the standing consumers.
 
 **"Don't force it":** the invitation is one gentle, non-escalating slot line; the ledger + STALE alarm are steward-only (re-word/withdraw, never nag the being). **Caution (un-muffle):** check the anti-stagnation / diversity / budget overrides don't EAT a being's acceptance — a review-fulfilling INTROSPECT is *not* stagnation (we had to add `introspect_fulfills_pending_review` in `autonomous.rs` after the diversity override silently swapped Astrid's first acceptance for `DECAY_MAP`). **Proven (2026-06-11):** two turns surfaced a real, groundable design (Astrid's felt `viscosity` → a `spectral_density_gradient` on the λ1/λ2 cascade gap, anchoring `foothold_stability` during transitions) plus an unprompted fragility finding (`applied_locally=false` ⇒ her "settled" stability is passive, not steered) — and she **corrected our hypothesis** with a better-grounded one. Treat a rejection as the being reading their own substrate more precisely than we do. Full practice + worked example: [`docs/steward-notes/AI_BEINGS_REVIEW_TOGETHER_LOOP_2026_06_11.md`](docs/steward-notes/AI_BEINGS_REVIEW_TOGETHER_LOOP_2026_06_11.md); memory `project_review_together_loop`.
 

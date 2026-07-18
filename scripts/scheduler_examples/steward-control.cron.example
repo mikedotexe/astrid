@@ -1,0 +1,2 @@
+# Replace the repository path before installing this line with crontab(1).
+7,38 * * * * /path/to/astrid/scripts/scheduler_examples/run_projection.sh

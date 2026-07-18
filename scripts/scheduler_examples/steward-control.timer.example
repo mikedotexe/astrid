@@ -1,0 +1,10 @@
+[Unit]
+Description=Schedule steward control projection generations
+
+[Timer]
+OnCalendar=*:07,38
+Persistent=false
+RandomizedDelaySec=15
+
+[Install]
+WantedBy=timers.target

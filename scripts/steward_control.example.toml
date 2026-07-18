@@ -1,0 +1,14 @@
+[control]
+repo_root = ".."
+workspace = "capsules/spectral-bridge/workspace"
+state_root = "diagnostics/steward_control_v1"
+store_root = "diagnostics/evidence_event_store_v2"
+profile = "source-first"
+lease_ttl_secs = 1800
+heartbeat_interval_secs = 60
+max_run_secs = 1500
+projector_timeout_secs = 600
+pause_grace_secs = 30
+
+[repositories.astrid]
+path = ".."

@@ -75,22 +75,21 @@ An **uplink** is any component that sends/receives messages on behalf of the run
 - Prefer source files under 1000 lines. Treat larger files as an architecture-health review signal, not an automatic block: split when cohesion, ownership, or testability would improve; keep a larger file only with a clear cohesive reason and reviewer-visible note. Generated files, fixtures, long-form docs, schema tables, and deliberately centralized registries are exempt.
 - `CHANGELOG.md` must be updated under `[Unreleased]` for every PR
 
-## Shared-tree coordination (Codex and Claude)
+## Shared-tree coordination
 
 This working tree (`/Users/v/other/astrid`) and the **one** live `spectral-bridge` binary are
-shared by **Codex** and **Claude** (interactive sessions plus the durable
-`com.astrid.steward-loop`). Mike's **2026-07-16** decision supersedes the former Claude-only
-committer rule: either interactive agent may own a stabilization pass and commit when Mike
-explicitly asks or the handoff clearly assigns that responsibility. One agent still owns the
-index and git operation at a time.
+shared by interactive agents and cooperative external sessions. Use
+`scripts/steward_control.py` for durable pause/resume and run leases. The controller has no git,
+deployment, approval, or live-control authority. Any explicitly assigned interactive agent may
+own a stabilization pass and commit; one agent still owns the index and git operation at a time.
 
 1. **Claim the stabilization pass before staging.** Pause overlapping automations, inspect status
    in both Astrid and Minime, verify the remote tip, and confirm the other agent is not mid-edit.
    If another agent is active or the tree changes unexpectedly, wait and re-audit.
 2. **Stage by explicit path only.** Never use `git add -A` or sweep unknown dirty work into a
    commit. Read the diff, preserve unrelated changes, and split broad work into coherent commits.
-   Commit-message tags such as `[codex]` and `[claude]` describe provenance because the shared git
-   author is not reliable attribution.
+   Record agent provenance in the commit message when the shared git author is not reliable
+   attribution.
 3. **Leave a durable review trail.** Update `CHANGELOG.md` under `[Unreleased]` and the
    feedback-to-change ledger when being feedback drove the work. Keep source, tests, evidence,
    restart alignment, and authority boundaries reviewable together.
