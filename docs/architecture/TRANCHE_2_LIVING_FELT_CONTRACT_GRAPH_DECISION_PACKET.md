@@ -1,5 +1,8 @@
 # Tranche 2 Decision Packet: Living Felt Contract Graph
 
+Status: implemented on `codex/experiential-systems-core`; see
+`LIVING_FELT_CONTRACT_GRAPH_V1.md` and the Tranche 3 decision packet.
+
 ## Decision
 
 Build one append-only, typed graph that preserves the relationship between a

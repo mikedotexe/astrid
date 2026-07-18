@@ -104,3 +104,11 @@ underlying architecture:
 
 No upstream branch or pull request should be opened until the maintainer
 assigns the issue.
+
+## Follow-Up Boundary
+
+The completed cooperative lifecycle now coordinates a separate, domain-neutral
+Living Felt Contract Graph candidate. Its identity, replay, and privacy core is
+described independently in
+`LIVING_FELT_CONTRACT_GRAPH_PORTABILITY_DOSSIER_V0_10_1.md`; fork-specific
+projectors remain outside this steward-control issue.
