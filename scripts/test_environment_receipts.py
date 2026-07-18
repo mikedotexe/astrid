@@ -354,6 +354,18 @@ class EnvironmentReceiptTests(unittest.TestCase):
             unsupported = environment_receipts.protocol_identity("2.0")
             self.assertFalse(unsupported["compatible"])
 
+    def test_protocol_1_1_is_default_and_1_0_remains_compatible(self) -> None:
+        completed = mock.Mock(returncode=0)
+        with mock.patch.object(
+            environment_receipts, "pinned_protocol_revision", return_value="b" * 40
+        ), mock.patch.object(environment_receipts.subprocess, "run", return_value=completed):
+            current = environment_receipts.protocol_identity()
+            legacy = environment_receipts.protocol_identity("1.0")
+
+            self.assertEqual(current["version"], "1.1")
+            self.assertTrue(current["compatible"])
+            self.assertTrue(legacy["compatible"])
+
     def test_named_path_and_probe_parsers_are_strict(self) -> None:
         paths = environment_receipts.parse_named_paths(["bridge=./target/release/bridge"])
         self.assertIn("bridge", paths)

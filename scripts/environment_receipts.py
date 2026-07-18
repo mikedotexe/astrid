@@ -29,7 +29,7 @@ DEFAULT_WORKSPACE = ASTRID_ROOT / "capsules/spectral-bridge/workspace"
 RECEIPT_SCHEMA_VERSION = 2
 SUPPORTED_RECEIPT_SCHEMA_VERSIONS = {1, 2}
 RECEIPT_AUTHORITY = "environment_receipt_context_not_command"
-PROTOCOL_VERSION = "1.0"
+PROTOCOL_VERSION = "1.1"
 STACK_REPOSITORIES = {
     "astrid": ASTRID_ROOT,
     "minime": Path("/Users/v/other/minime"),
