@@ -26,6 +26,7 @@ VALID_STREAMS = frozenset(
         "corridor_v2",
         "signal_spine",
         "claim_families",
+        "steward_control",
     }
 )
 
