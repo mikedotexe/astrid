@@ -51,6 +51,7 @@ def projection_paths(workspace: Path) -> dict[str, Path]:
         ("signal_spine", diagnostics / "signal_spine_v1"),
         ("claim_families", diagnostics / "claim_families_v1"),
         ("experiment_dossiers", diagnostics / "experiment_dossiers_v1"),
+        ("model_qos", diagnostics / "model_qos_v1"),
     ):
         for filename in ("status.json", "queue.md", "queue.json", "report.md"):
             path = directory / filename
@@ -70,6 +71,7 @@ def counter_audits(workspace: Path) -> dict[str, Any]:
         ("signal_spine", diagnostics / "signal_spine_v1/projection_status.json"),
         ("claim_families", diagnostics / "claim_families_v1/status.json"),
         ("experiment_dossiers", diagnostics / "experiment_dossiers_v1/status.json"),
+        ("model_qos", diagnostics / "model_qos_v1/status.json"),
     ):
         if not path.is_file():
             result[name] = {"exists": False}

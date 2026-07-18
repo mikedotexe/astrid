@@ -323,8 +323,34 @@ def source_first_steps() -> tuple[ProjectionStep, ...]:
             ("diagnostics/authority_temporal_v1/status.json",),
         ),
         ProjectionStep(
+            "model_qos",
+            ("authority_temporal",),
+            (
+                command(
+                    python,
+                    "scripts/model_qos_projector.py",
+                    "--workspace",
+                    "{workspace}",
+                    "--json",
+                    "generate",
+                    "--write",
+                ),
+            ),
+            ("model_qos",),
+            (
+                "../../../../neural-triple-reservoir/workspace/model_qos_receipts.jsonl",
+            ),
+            ("diagnostics/model_qos_v1/status.json",),
+        ),
+        ProjectionStep(
             "felt_contracts",
-            ("experiment_dossiers", "corridor", "signal_spine", "authority_temporal"),
+            (
+                "experiment_dossiers",
+                "corridor",
+                "signal_spine",
+                "authority_temporal",
+                "model_qos",
+            ),
             (
                 command(
                     python,
@@ -354,6 +380,7 @@ def source_first_steps() -> tuple[ProjectionStep, ...]:
                 "signal_spine",
                 "claim_families",
                 "authority_lifecycle",
+                "model_qos",
                 "felt_contracts",
             ),
             (

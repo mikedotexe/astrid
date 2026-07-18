@@ -27,6 +27,7 @@ VALID_STREAMS = frozenset(
         "signal_spine",
         "claim_families",
         "felt_contracts",
+        "model_qos",
         "steward_control",
     }
 )

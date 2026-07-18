@@ -207,6 +207,7 @@ class StewardProjectionTests(unittest.TestCase):
                 "claim_families",
                 "experiment_dossiers",
                 "authority_temporal",
+                "model_qos",
                 "felt_contracts",
             ],
         )
