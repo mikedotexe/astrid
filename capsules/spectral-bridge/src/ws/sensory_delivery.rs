@@ -601,6 +601,20 @@ mod tests {
             })
             .collect();
         assert_eq!(ids.len(), 4_096);
+        assert_ne!(
+            delivery_id_v1(
+                "pid:123:started_at_unix_ms:456",
+                "minime-source:revision",
+                7,
+                "payload-sha256",
+            ),
+            delivery_id_v1(
+                "pid:123:started_at_unix_ms:456",
+                "minime-source:revision",
+                8,
+                "payload-sha256",
+            )
+        );
         assert_eq!(
             delivery_id_v1(
                 "pid:123:started_at_unix_ms:456",
@@ -698,6 +712,45 @@ mod tests {
             None,
         ));
         assert_eq!(status.mismatch_count, 1);
+        assert_eq!(pending.len(), 1);
+    }
+
+    #[test]
+    fn changed_server_identity_rejects_receipt_without_consuming_pending_delivery() {
+        let encoded = encode_sensory_packet_v1(&semantic(0.4), None, true, 1).unwrap();
+        let packet: SensoryPacketV1 = serde_json::from_str(&encoded.json).unwrap();
+        let delivery = packet.delivery_v1.unwrap();
+        let item = encoded.pending.unwrap();
+        let mut pending = BTreeMap::from([(item.delivery_id.clone(), item)]);
+        let mut status = SensoryDeliveryProtocolStatusV1::default();
+        assert!(apply_server_hello(
+            SensoryServerHelloV1::new("minime-pid".to_string(), "minime-source:before".to_string(),),
+            &mut status,
+        ));
+        let receipt = SensoryDeliveryReceiptV1::new(
+            "receipt-changed-server".to_string(),
+            delivery.delivery_id,
+            delivery.payload_sha256,
+            SensoryDeliveryStatusV1::Accepted,
+            1,
+            Some(1),
+            None,
+            None,
+            "minime-pid".to_string(),
+            "minime-source:after".to_string(),
+        );
+
+        assert!(!apply_delivery_receipt_with_path(
+            receipt,
+            &mut pending,
+            &mut status,
+            None,
+        ));
+        assert_eq!(status.mismatch_count, 1);
+        assert_eq!(
+            status.last_delivery_state.as_deref(),
+            Some("receipt_mismatch")
+        );
         assert_eq!(pending.len(), 1);
     }
 }
