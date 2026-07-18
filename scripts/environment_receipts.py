@@ -39,6 +39,17 @@ DEFAULT_ACTOR = "interactive-agent"
 TEXT_LIMIT = 500
 SUMMARY_LIMIT = 180
 SENSITIVE_KEY_RE = re.compile(r"(?:api|auth|key|secret|token|password|credential)", re.I)
+CHANGE_REF_KINDS = frozenset(
+    {"felt_contract", "claim", "work_item", "implementation_receipt"}
+)
+CHANGE_REF_PATTERNS = {
+    "felt_contract": re.compile(r"^contract_[A-Za-z0-9_.:-]{1,231}$"),
+    "claim": re.compile(r"^[A-Za-z0-9_.-]{1,180}:[A-Za-z0-9_.-]{1,59}$"),
+    "work_item": re.compile(r"^wi_[A-Za-z0-9_.:-]{1,237}$"),
+    "implementation_receipt": re.compile(
+        r"^implementation_[A-Za-z0-9_.:-]{1,225}$"
+    ),
+}
 
 
 def now_ms() -> int:
@@ -352,6 +363,24 @@ def parse_probe(raw: str) -> dict[str, Any]:
     }
 
 
+def parse_change_refs(items: list[str]) -> list[dict[str, str]]:
+    refs: dict[tuple[str, str], dict[str, str]] = {}
+    for raw in items:
+        if "=" not in raw:
+            raise ValueError(f"expected KIND=ID, got: {raw}")
+        kind, identifier = (part.strip() for part in raw.split("=", 1))
+        if kind not in CHANGE_REF_KINDS:
+            raise ValueError(
+                f"change-ref kind must be one of {sorted(CHANGE_REF_KINDS)}, got: {kind}"
+            )
+        if not CHANGE_REF_PATTERNS[kind].fullmatch(identifier):
+            raise ValueError(
+                f"invalid {kind} change-ref ID: {identifier!r}"
+            )
+        refs[(kind, identifier)] = {"kind": kind, "id": identifier}
+    return [refs[key] for key in sorted(refs)]
+
+
 def build_receipt(
     workspace: Path,
     *,
@@ -359,6 +388,7 @@ def build_receipt(
     source: str,
     note: str = "",
     details: dict[str, Any] | None = None,
+    change_refs: list[dict[str, str]] | None = None,
 ) -> dict[str, Any]:
     t_ms = now_ms()
     clean_event = re.sub(r"[^A-Za-z0-9_.:-]+", "_", event.strip()).strip("_") or "event"
@@ -398,6 +428,8 @@ def build_receipt(
         "witness_only": True,
         "authority": RECEIPT_AUTHORITY,
     }
+    if change_refs:
+        receipt["change_refs"] = change_refs
     return apply_artifact_authority_state(receipt, "evidence_only")
 
 
@@ -488,6 +520,7 @@ def record_deployment_receipt(
     scripts: dict[str, Path] | None = None,
     manifest_paths: list[Path] | None = None,
     protocol_version: str = PROTOCOL_VERSION,
+    change_refs: list[dict[str, str]] | None = None,
 ) -> tuple[dict[str, Any], bool]:
     receipt = build_receipt(
         workspace,
@@ -495,6 +528,7 @@ def record_deployment_receipt(
         source=actor or DEFAULT_ACTOR,
         note=f"{component} deployment {requested_status}",
         details={"component": component},
+        change_refs=change_refs,
     )
     protocol = protocol_identity(protocol_version)
     if old_started_at or old_command or old_captured_at:
@@ -731,6 +765,7 @@ def main() -> int:
     deploy.add_argument("--script", action="append", default=[])
     deploy.add_argument("--manifest", type=Path, action="append", default=[])
     deploy.add_argument("--protocol-version", default=PROTOCOL_VERSION)
+    deploy.add_argument("--change-ref", action="append", default=[])
     deploy.add_argument("--json", action="store_true", dest="as_json")
 
     args = parser.parse_args()
@@ -778,6 +813,7 @@ def main() -> int:
             scripts = parse_named_paths(args.script)
             process_pids = parse_named_pids(args.process)
             probes = [parse_probe(raw) for raw in args.probe]
+            change_refs = parse_change_refs(args.change_ref)
         except ValueError as exc:
             parser.error(str(exc))
         receipt, ok = record_deployment_receipt(
@@ -799,6 +835,7 @@ def main() -> int:
             scripts=scripts,
             manifest_paths=args.manifest,
             protocol_version=args.protocol_version,
+            change_refs=change_refs,
         )
         output = receipt if args.as_json else {
             "id": receipt["id"],

@@ -304,6 +304,51 @@ def source_first_steps() -> tuple[ProjectionStep, ...]:
                 "diagnostics/experiment_dossiers_v1/report.md",
             ),
         ),
+        ProjectionStep(
+            "felt_contracts",
+            ("experiment_dossiers", "corridor", "signal_spine"),
+            (
+                command(
+                    python,
+                    "scripts/felt_contract_graph.py",
+                    "--workspace",
+                    "{workspace}",
+                    "generate",
+                    "--write",
+                    "--actor",
+                    "steward-control-projector",
+                    "--json",
+                ),
+                command(
+                    python,
+                    "scripts/felt_contract_graph.py",
+                    "--workspace",
+                    "{workspace}",
+                    "report",
+                    "--json",
+                ),
+            ),
+            (
+                "addressing",
+                "sandbox",
+                "corridor_v1",
+                "corridor_v2",
+                "signal_spine",
+                "claim_families",
+                "felt_contracts",
+            ),
+            (
+                "diagnostics/claim_families_v1/status.json",
+                "diagnostics/experiment_dossiers_v1/status.json",
+                "environment_receipts/environment_receipts.jsonl",
+            ),
+            (
+                "diagnostics/felt_contract_graph_v1/status.json",
+                "diagnostics/felt_contract_graph_v1/contracts.jsonl",
+                "diagnostics/felt_contract_graph_v1/report.md",
+                "diagnostics/felt_contract_graph_v1/migration_receipt.json",
+            ),
+        ),
     )
 
 

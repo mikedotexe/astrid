@@ -785,16 +785,28 @@ def work_item_lifecycle_receipts_v2(item: dict[str, Any], boundary_id: str) -> l
             }
         )
     elif response_status in {"no_response", "not_requested"} and item.get("closure_cards"):
+        receipt_kind = (
+            "review_opportunity_expired"
+            if response_status == "no_response"
+            else "review_not_requested"
+        )
         receipts.append(
             {
-                "receipt_id": stable_uuid("introspection_work_item_lifecycle_receipt_v2", work_item_id, "post_change_waiver"),
+                "receipt_id": stable_uuid(
+                    "introspection_work_item_lifecycle_receipt_v2",
+                    work_item_id,
+                    receipt_kind,
+                ),
                 "boundary_id": boundary_id,
-                "kind": "waiver",
+                "kind": receipt_kind,
                 "issued_by": "introspection_addressing_audit_v2",
                 "issued_at": iso(),
                 "packet_hash": None,
                 "receipt_hash_refs": [],
-                "bounded_summary": f"post_change_being_response waived or not requested: {response_status}",
+                "bounded_summary": (
+                    f"post-change review opportunity recorded neutrally as {response_status}; "
+                    "this is not affirmation, approval, waiver, or felt closure"
+                ),
                 "evidence_refs": work_item_evidence_refs(item),
                 "scoped_approval": None,
                 "replay_result": None,
@@ -3115,6 +3127,20 @@ def introspection_artifact_or_error(
 
 
 class IntrospectionAddressingAuditTests(unittest.TestCase):
+    def test_no_response_is_neutral_review_expiry_not_waiver(self) -> None:
+        receipts = work_item_lifecycle_receipts_v2(
+            {
+                "work_item_id": "wi_neutral_silence",
+                "post_change_response_status": "no_response",
+                "closure_cards": [{"card_id": "card_one"}],
+                "evidence_links": [],
+            },
+            "boundary_one",
+        )
+        self.assertEqual(receipts[0]["kind"], "review_opportunity_expired")
+        self.assertNotIn("waived", receipts[0]["bounded_summary"])
+        self.assertIn("not affirmation", receipts[0]["bounded_summary"])
+
     def test_inventory_includes_cutoff_and_classifies_artifacts(self) -> None:
         import tempfile
 

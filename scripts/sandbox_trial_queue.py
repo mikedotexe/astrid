@@ -849,16 +849,28 @@ def lifecycle_receipts_for_trial(trial: dict[str, Any], boundary_id: str) -> lis
             }
         )
     elif response_status in {"declined", "not_requested", "no_response"}:
+        receipt_kind = {
+            "declined": "review_declined",
+            "not_requested": "review_not_requested",
+            "no_response": "review_opportunity_expired",
+        }[response_status]
         receipts.append(
             {
-                "receipt_id": stable_uuid("sandbox_trial_lifecycle_receipt_v2", trial_id, "post_change_waiver"),
+                "receipt_id": stable_uuid(
+                    "sandbox_trial_lifecycle_receipt_v2",
+                    trial_id,
+                    receipt_kind,
+                ),
                 "boundary_id": boundary_id,
-                "kind": "waiver",
+                "kind": receipt_kind,
                 "issued_by": "sandbox_trial_queue_v2",
                 "issued_at": iso(),
                 "packet_hash": None,
                 "receipt_hash_refs": [],
-                "bounded_summary": f"post_change_being_response waived or not requested: {response_status}",
+                "bounded_summary": (
+                    f"post-change review opportunity recorded neutrally as {response_status}; "
+                    "this is not affirmation, approval, waiver, or felt closure"
+                ),
                 "evidence_refs": authority_evidence_refs_for_trial(trial),
                 "scoped_approval": None,
                 "replay_result": None,
@@ -2590,6 +2602,19 @@ def print_payload(payload: dict[str, Any], *, as_json: bool) -> None:
 
 
 class SandboxTrialQueueTests(unittest.TestCase):
+    def test_no_response_is_neutral_review_expiry_not_waiver(self) -> None:
+        receipts = lifecycle_receipts_for_trial(
+            {
+                "trial_id": "trial_neutral_silence",
+                "post_response_status": "no_response",
+                "evidence_links": [],
+            },
+            "boundary_one",
+        )
+        self.assertEqual(receipts[0]["kind"], "review_opportunity_expired")
+        self.assertNotIn("waived", receipts[0]["bounded_summary"])
+        self.assertIn("not affirmation", receipts[0]["bounded_summary"])
+
     def test_replay_ignores_corrupt_trailing_lines_and_preserves_trials(self) -> None:
         import tempfile
 

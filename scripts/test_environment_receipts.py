@@ -218,6 +218,62 @@ class EnvironmentReceiptTests(unittest.TestCase):
             self.assertTrue(environment_receipts.receipt_paths(workspace)["jsonl"].is_file())
             self.assertTrue(receipt["compatibility_status"]["failure_reasons"])
 
+    def test_change_refs_are_additive_bounded_and_deduplicated(self) -> None:
+        refs = environment_receipts.parse_change_refs(
+            [
+                "felt_contract=contract_example",
+                "claim=introspection_astrid_codec_1:c001",
+                "felt_contract=contract_example",
+            ]
+        )
+        self.assertEqual(
+            refs,
+            [
+                {
+                    "kind": "claim",
+                    "id": "introspection_astrid_codec_1:c001",
+                },
+                {"kind": "felt_contract", "id": "contract_example"},
+            ],
+        )
+        with self.assertRaises(ValueError):
+            environment_receipts.parse_change_refs(["authority_grant=forbidden"])
+        with self.assertRaises(ValueError):
+            environment_receipts.parse_change_refs(
+                ["felt_contract=/private/contract"]
+            )
+        with self.assertRaises(ValueError):
+            environment_receipts.parse_change_refs(
+                ["work_item=contract_wrong_kind"]
+            )
+
+    def test_change_refs_remain_optional_for_existing_v2_writers(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            receipt = environment_receipts.build_receipt(
+                Path(tmp),
+                event="test",
+                source="test",
+            )
+        self.assertNotIn("change_refs", receipt)
+
+    def test_deployment_receipt_preserves_exact_change_refs(self) -> None:
+        refs = [{"kind": "felt_contract", "id": "contract_example"}]
+        with tempfile.TemporaryDirectory() as tmp, mock.patch.object(
+            environment_receipts,
+            "protocol_identity",
+            return_value={"revision": "a" * 40, "compatible": True},
+        ):
+            receipt, ok = environment_receipts.record_deployment_receipt(
+                Path(tmp),
+                component="test",
+                requested_status="passed",
+                actor=environment_receipts.DEFAULT_ACTOR,
+                change_refs=refs,
+            )
+        self.assertTrue(ok)
+        self.assertEqual(receipt["change_refs"], refs)
+        self.assertEqual(receipt["schema_version"], 2)
+
     def test_pid_identity_and_fresh_pid_check(self) -> None:
         identity = environment_receipts.process_identity(os.getpid())
         self.assertTrue(identity["running"])
