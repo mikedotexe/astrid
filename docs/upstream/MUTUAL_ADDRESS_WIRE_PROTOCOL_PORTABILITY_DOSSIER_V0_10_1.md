@@ -26,6 +26,10 @@ maintainer assigns an issue under `CONTRIBUTING.md`.
 - Receipt evidence labels whether delivery has exact mutual-address lineage or
   is technical delivery only. A missing mutual-address ID is therefore
   explicit evidence classification, not a dropped destination.
+- Pending evidence names its ID basis as the first 128 bits of SHA-256 over
+  process identity, deployment identity, connection sequence, and payload hash.
+  It records no entropy dependence and resolves only through an exact-ID
+  receipt or an explicit unknown-delivery outcome when the connection ends.
 - Noncausation evidence names the missing wire acknowledgement or controlled
   intervention rather than deriving an impact score from later telemetry.
 
@@ -83,3 +87,4 @@ adapters.
 - 20 receipt-complete deployed packets with zero hash/routing mismatch
 - explicit unknown-delivery and noncausation behavior
 - accepted technical delivery with no false mutual-address or causal claim
+- 4,096 unique deterministic IDs across the full receiver dedup capacity

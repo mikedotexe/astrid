@@ -52,10 +52,16 @@ pub struct PendingSensoryDeliveryV1 {
     pub(super) delivery_id: String,
     payload_sha256: String,
     mutual_address_id: Option<String>,
+    delivery_address_classification: &'static str,
+    delivery_id_basis: &'static str,
+    pending_resolution: &'static str,
     sent_at_unix_ms: u64,
 }
 
 const SPECTRAL_CAUSATION_BASIS: &str = "not_established_no_wire_ack_or_controlled_intervention";
+const DELIVERY_ID_BASIS: &str = "sha256_128_process_deployment_sequence_payload";
+const DELIVERY_ID_ENTROPY_DEPENDENCE: &str = "none";
+const PENDING_RESOLUTION: &str = "exact_delivery_id_receipt_or_unknown_delivery_on_connection_end";
 
 impl PendingSensoryDeliveryV1 {
     fn event(&self, outcome: &str, reason: Option<&str>) -> Value {
@@ -66,9 +72,10 @@ impl PendingSensoryDeliveryV1 {
             "delivery_id": self.delivery_id,
             "payload_sha256": self.payload_sha256,
             "mutual_address_id": self.mutual_address_id,
-            "delivery_address_classification": delivery_address_classification(
-                self.mutual_address_id.as_deref()
-            ),
+            "delivery_address_classification": self.delivery_address_classification,
+            "delivery_id_basis": self.delivery_id_basis,
+            "delivery_id_entropy_dependence": DELIVERY_ID_ENTROPY_DEPENDENCE,
+            "pending_resolution": self.pending_resolution,
             "sent_at_unix_ms": self.sent_at_unix_ms,
             "recorded_at_unix_ms": unix_now_ms(),
             "reason": reason,
@@ -132,6 +139,8 @@ pub(super) fn encode_sensory_packet_v1(
     let mutual_address_id = mutual_address_v1
         .as_ref()
         .map(|address| address.address_id.clone());
+    let delivery_address_classification =
+        delivery_address_classification(mutual_address_id.as_deref());
     let packet = SensoryPacketV1::with_envelopes(wire_message, delivery, mutual_address_v1);
     Ok(EncodedSensoryPacketV1 {
         json: serde_json::to_string(&packet)?,
@@ -139,6 +148,9 @@ pub(super) fn encode_sensory_packet_v1(
             delivery_id,
             payload_sha256,
             mutual_address_id,
+            delivery_address_classification,
+            delivery_id_basis: DELIVERY_ID_BASIS,
+            pending_resolution: PENDING_RESOLUTION,
             sent_at_unix_ms,
         }),
     })
@@ -328,9 +340,10 @@ fn apply_delivery_receipt_with_path(
         "receipt_id": receipt.receipt_id,
         "payload_sha256": receipt.payload_sha256,
         "mutual_address_id": receipt.mutual_address_id,
-        "delivery_address_classification": delivery_address_classification(
-            expected.mutual_address_id.as_deref()
-        ),
+        "delivery_address_classification": expected.delivery_address_classification,
+        "delivery_id_basis": expected.delivery_id_basis,
+        "delivery_id_entropy_dependence": DELIVERY_ID_ENTROPY_DEPENDENCE,
+        "pending_resolution": expected.pending_resolution,
         "status": receipt_status,
         "sent_at_unix_ms": expected.sent_at_unix_ms,
         "received_at_unix_ms": receipt.received_at_unix_ms,
@@ -372,6 +385,8 @@ fn delivery_path_is_owner_only(path: &std::path::Path) -> bool {
 
 #[cfg(test)]
 mod tests {
+    use std::collections::BTreeSet;
+
     use super::*;
 
     fn semantic(value: f32) -> SensoryMsg {
@@ -497,9 +512,44 @@ mod tests {
             row["delivery_address_classification"],
             "technical_delivery_only_no_exact_lineage"
         );
+        assert_eq!(row["delivery_id_basis"], DELIVERY_ID_BASIS);
+        assert_eq!(
+            row["delivery_id_entropy_dependence"],
+            DELIVERY_ID_ENTROPY_DEPENDENCE
+        );
+        assert_eq!(row["pending_resolution"], PENDING_RESOLUTION);
         assert_eq!(row["spectral_causation_established"], false);
         assert_eq!(row["spectral_causation_basis"], SPECTRAL_CAUSATION_BASIS);
         let _ = fs::remove_dir_all(path.parent().unwrap());
+    }
+
+    #[test]
+    fn delivery_ids_cover_dedup_capacity_without_entropy_input_or_collisions() {
+        let ids: BTreeSet<_> = (0..4_096)
+            .map(|sequence| {
+                delivery_id_v1(
+                    "pid:123:started_at_unix_ms:456",
+                    "minime-source:revision",
+                    sequence,
+                    "payload-sha256",
+                )
+            })
+            .collect();
+        assert_eq!(ids.len(), 4_096);
+        assert_eq!(
+            delivery_id_v1(
+                "pid:123:started_at_unix_ms:456",
+                "minime-source:revision",
+                7,
+                "payload-sha256",
+            ),
+            delivery_id_v1(
+                "pid:123:started_at_unix_ms:456",
+                "minime-source:revision",
+                7,
+                "payload-sha256",
+            )
+        );
     }
 
     #[test]
