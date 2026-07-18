@@ -10,7 +10,10 @@ mod sensory;
 mod telemetry;
 mod version;
 
-pub use sensory::{SensoryMsg, SensoryPacketV1};
+pub use sensory::{
+    DeliveryEnvelopeV1, MutualAddressEnvelopeV1, SensoryDeliveryReceiptV1, SensoryDeliveryStatusV1,
+    SensoryMsg, SensoryPacketV1, SensoryServerHelloV1, canonical_sensory_payload_sha256,
+};
 pub use telemetry::{
     EigenPacketPayloadBudgetReviewV1, EigenPacketV1, EigenvectorComponentV1,
     EigenvectorFieldSummaryV1, EigenvectorFieldV1, EigenvectorModeV1, EigenvectorPairwiseOverlapV1,
@@ -29,5 +32,5 @@ pub use telemetry::{
 };
 pub use version::{
     CompatibilityStatus, PROTOCOL_MAJOR, PROTOCOL_MINOR, PROTOCOL_NAME, ProtocolHeaderV1,
-    classify_protocol, current_protocol,
+    TELEMETRY_PROTOCOL_MINOR, classify_protocol, current_protocol, telemetry_protocol,
 };

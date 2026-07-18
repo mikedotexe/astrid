@@ -3,7 +3,7 @@ use std::collections::BTreeMap;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
-use crate::{CompatibilityStatus, ProtocolHeaderV1, classify_protocol, current_protocol};
+use crate::{CompatibilityStatus, ProtocolHeaderV1, classify_protocol, telemetry_protocol};
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct NeuralOutputs {
@@ -740,7 +740,7 @@ pub struct EigenPacketV1 {
 impl EigenPacketV1 {
     #[must_use]
     pub fn versioned(mut self) -> Self {
-        self.protocol = Some(current_protocol());
+        self.protocol = Some(telemetry_protocol());
         self
     }
 

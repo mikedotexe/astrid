@@ -2,7 +2,8 @@ use serde::{Deserialize, Serialize};
 
 pub const PROTOCOL_NAME: &str = "astrid_minime";
 pub const PROTOCOL_MAJOR: u16 = 1;
-pub const PROTOCOL_MINOR: u16 = 0;
+pub const PROTOCOL_MINOR: u16 = 1;
+pub const TELEMETRY_PROTOCOL_MINOR: u16 = 0;
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ProtocolHeaderV1 {
     pub name: String,
@@ -22,6 +23,15 @@ pub fn current_protocol() -> ProtocolHeaderV1 {
         name: PROTOCOL_NAME.to_string(),
         major: PROTOCOL_MAJOR,
         minor: PROTOCOL_MINOR,
+    }
+}
+
+#[must_use]
+pub fn telemetry_protocol() -> ProtocolHeaderV1 {
+    ProtocolHeaderV1 {
+        name: PROTOCOL_NAME.to_string(),
+        major: PROTOCOL_MAJOR,
+        minor: TELEMETRY_PROTOCOL_MINOR,
     }
 }
 
@@ -56,7 +66,7 @@ pub fn classify_protocol(header: Option<&ProtocolHeaderV1>) -> CompatibilityStat
     if header.major != PROTOCOL_MAJOR {
         return CompatibilityStatus::UnsupportedMajor;
     }
-    if header.minor == PROTOCOL_MINOR {
+    if header.minor <= PROTOCOL_MINOR {
         CompatibilityStatus::Current
     } else {
         CompatibilityStatus::CompatibleMinor
