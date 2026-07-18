@@ -9,6 +9,101 @@ struct MlxRequest {
     /// when `None` → the server uses its default (backward-compatible).
     #[serde(skip_serializing_if = "Option::is_none")]
     aperture: Option<f32>,
+    /// Additive scheduling metadata; it never contains prompt text.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    model_qos_v1: Option<ModelQosV1>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "lowercase")]
+enum ModelQosClassV1 {
+    Interactive,
+    Reflective,
+    Background,
+    Normal,
+}
+
+impl ModelQosClassV1 {
+    const fn queue_wait_cap_secs(self) -> u64 {
+        match self {
+            Self::Interactive => 120,
+            Self::Reflective | Self::Normal => 300,
+            Self::Background => 600,
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+struct ModelQosV1 {
+    schema_version: u8,
+    request_id: String,
+    idempotency_key: String,
+    #[serde(rename = "class")]
+    qos_class: ModelQosClassV1,
+    queue_timeout_ms: u64,
+}
+
+fn model_qos_class_for_label(label: &str) -> ModelQosClassV1 {
+    match label {
+        "dialogue_live" | "correspondence_reply" | "live_reply" => {
+            ModelQosClassV1::Interactive
+        },
+        "introspect"
+        | "witness"
+        | "witness_context"
+        | "self_study"
+        | "evolve"
+        | "evolve_request"
+        | "evolution" => ModelQosClassV1::Reflective,
+        "daydream"
+        | "aspiration"
+        | "creation"
+        | "journal_elaboration"
+        | "meaning_summary"
+        | "moment_capture"
+        | "initiation" => ModelQosClassV1::Background,
+        _ => ModelQosClassV1::Normal,
+    }
+}
+
+fn model_qos_v1(
+    label: &str,
+    messages: &[Message],
+    temperature: f32,
+    max_tokens: u32,
+    request_timeout_secs: u64,
+) -> ModelQosV1 {
+    static REQUEST_SEQUENCE: std::sync::atomic::AtomicU64 =
+        std::sync::atomic::AtomicU64::new(0);
+
+    let qos_class = model_qos_class_for_label(label);
+    let queue_timeout_secs = qos_class
+        .queue_wait_cap_secs()
+        .min(request_timeout_secs.saturating_sub(5).max(1));
+    let sequence = REQUEST_SEQUENCE.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+    let now_nanos = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_nanos();
+    let request_id = format!("mlx-{now_nanos}-{sequence}");
+
+    let mut hasher = Sha256::new();
+    hasher.update(b"astrid-model-qos-idempotency-v1\0");
+    hasher.update(label.as_bytes());
+    hasher.update(b"\0");
+    hasher.update(temperature.to_bits().to_le_bytes());
+    hasher.update(max_tokens.to_le_bytes());
+    if let Ok(encoded) = serde_json::to_vec(messages) {
+        hasher.update(encoded);
+    }
+
+    ModelQosV1 {
+        schema_version: 1,
+        request_id,
+        idempotency_key: format!("{:x}", hasher.finalize()),
+        qos_class,
+        queue_timeout_ms: queue_timeout_secs.saturating_mul(1_000),
+    }
 }
 
 /// MLX response — OpenAI-compatible format.
@@ -462,12 +557,20 @@ async fn mlx_chat_with_failure_log_mode(
     }
 
     let temperature = temperature_for_mlx_profile(label, profile, temperature);
+    let model_qos_v1 = Some(model_qos_v1(
+        label,
+        &messages,
+        temperature,
+        max_tokens,
+        timeout_secs,
+    ));
     let request = MlxRequest {
         messages,
         max_tokens,
         temperature,
         stream: false,
         aperture: Some(astrid_aperture()),
+        model_qos_v1,
     };
 
     let response = match client.post(&mlx_url).json(&request).send().await {

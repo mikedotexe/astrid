@@ -9,6 +9,7 @@
 use std::collections::HashMap;
 
 use serde::{Deserialize, Serialize};
+use sha2::{Digest as _, Sha256};
 use tracing::{debug, warn};
 
 use crate::paths::bridge_paths;

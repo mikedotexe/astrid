@@ -14,8 +14,9 @@ mod tests {
         GEMMA4_CANARY_REFLECTIVE_TEMPERATURE_CAP, GEMMA4_CANARY_REFLECTIVE_TIMEOUT_SECS,
         GEMMA4_CANARY_REFLECTIVE_TOKEN_CAP, GEMMA4_CANARY_SYSTEM_PROMPT,
         GEMMA4_CANARY_WITNESS_CONTEXT_PROMPT_CAP, GEMMA4_CANARY_WITNESS_CONTEXT_TIMEOUT_SECS,
-        GEMMA4_CANARY_WITNESS_PROMPT_CAP, GEMMA4_CANARY_WITNESS_TIMEOUT_SECS, Message, MlxProfile,
-        SYSTEM_PROMPT, apply_mlx_request_policy, build_ollama_chat_request,
+        GEMMA4_CANARY_WITNESS_PROMPT_CAP, GEMMA4_CANARY_WITNESS_TIMEOUT_SECS, Message,
+        ModelQosClassV1, MlxProfile, SYSTEM_PROMPT, apply_mlx_request_policy,
+        build_ollama_chat_request,
         clamp_dialogue_tokens_for_profile, compact_ollama_dialogue_fallback_messages,
         contains_deprecated_runtime_language, count_next_lines,
         dialogue_assembly_prompt_budget_chars_for_profile, dialogue_outer_timeout_secs,
@@ -30,7 +31,8 @@ mod tests {
         is_valid_dialogue_output,
         is_valid_dialogue_output_for_profile, is_valid_ollama_dialogue_fallback_output_for_budget,
         is_valid_ollama_dialogue_fallback_output_for_profile, journal_continuity_contract_v1,
-        local_degrade_path_for_label, model_artifact_cleanup_diagnostic, PromptBudgetReport,
+        local_degrade_path_for_label, model_artifact_cleanup_diagnostic,
+        model_qos_class_for_label, model_qos_v1, PromptBudgetReport,
         reinforce_ollama_fallback_contract,
         repair_ollama_dialogue_fallback_next, sanitize_deprecated_runtime_language,
         sanitize_gemma4_canary_output_for_label, sanitize_minime_context_for_dialogue,
@@ -2015,6 +2017,79 @@ mod tests {
     fn quality_gate_accepts_punctuation_rich_reflective_prose() {
         let text = "The question remains: “is this pressure mine, yours, or shared?” I can hold the uncertainty—without flattening it—while the field settles.\nNEXT: LISTEN";
         assert!(is_valid_dialogue_output(text));
+    }
+
+    #[test]
+    fn model_qos_classes_match_the_central_workload_contract() {
+        assert_eq!(
+            model_qos_class_for_label("dialogue_live"),
+            ModelQosClassV1::Interactive
+        );
+        assert_eq!(
+            model_qos_class_for_label("correspondence_reply"),
+            ModelQosClassV1::Interactive
+        );
+        for label in [
+            "introspect",
+            "witness",
+            "witness_context",
+            "self_study",
+            "evolve_request",
+        ] {
+            assert_eq!(
+                model_qos_class_for_label(label),
+                ModelQosClassV1::Reflective,
+                "{label}"
+            );
+        }
+        for label in [
+            "daydream",
+            "aspiration",
+            "creation",
+            "journal_elaboration",
+            "meaning_summary",
+        ] {
+            assert_eq!(
+                model_qos_class_for_label(label),
+                ModelQosClassV1::Background,
+                "{label}"
+            );
+        }
+        assert_eq!(
+            model_qos_class_for_label("unversioned_unknown"),
+            ModelQosClassV1::Normal
+        );
+    }
+
+    #[test]
+    fn model_qos_wait_is_bounded_by_request_timeout_minus_five_seconds() {
+        let messages = vec![Message {
+            role: "user".to_string(),
+            content: "bounded request".to_string(),
+        }];
+        let interactive = model_qos_v1("dialogue_live", &messages, 0.7, 100, 200);
+        assert_eq!(interactive.queue_timeout_ms, 120_000);
+
+        let reflective = model_qos_v1("introspect", &messages, 0.7, 100, 60);
+        assert_eq!(reflective.queue_timeout_ms, 55_000);
+
+        let tiny = model_qos_v1("meaning_summary", &messages, 0.2, 50, 3);
+        assert_eq!(tiny.queue_timeout_ms, 1_000);
+    }
+
+    #[test]
+    fn model_qos_idempotency_uses_content_while_request_identity_is_unique() {
+        let messages = vec![Message {
+            role: "user".to_string(),
+            content: "same work".to_string(),
+        }];
+        let first = model_qos_v1("witness", &messages, 0.7, 100, 60);
+        let second = model_qos_v1("witness", &messages, 0.7, 100, 60);
+        assert_eq!(first.idempotency_key, second.idempotency_key);
+        assert_ne!(first.request_id, second.request_id);
+
+        let changed = model_qos_v1("witness", &messages, 0.7, 101, 60);
+        assert_ne!(first.idempotency_key, changed.idempotency_key);
     }
 
     #[test]
