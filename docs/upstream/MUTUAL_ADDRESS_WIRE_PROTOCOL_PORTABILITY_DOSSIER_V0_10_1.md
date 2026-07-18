@@ -23,6 +23,11 @@ maintainer assigns an issue under `CONTRIBUTING.md`.
 - A missing receipt becomes unknown delivery. The sender never retries
   automatically.
 - Every envelope and receipt states that spectral causation is not established.
+- Receipt evidence labels whether delivery has exact mutual-address lineage or
+  is technical delivery only. A missing mutual-address ID is therefore
+  explicit evidence classification, not a dropped destination.
+- Noncausation evidence names the missing wire acknowledgement or controlled
+  intervention rather than deriving an impact score from later telemetry.
 
 The protocol types, canonical hashing, capability negotiation, bounded
 deduplication policy, and receipt validation are domain-neutral.
@@ -77,3 +82,4 @@ adapters.
 - no raw prose in envelopes or owner-only metadata receipts
 - 20 receipt-complete deployed packets with zero hash/routing mismatch
 - explicit unknown-delivery and noncausation behavior
+- accepted technical delivery with no false mutual-address or causal claim

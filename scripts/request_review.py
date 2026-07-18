@@ -30,6 +30,7 @@ docs/steward-notes/AI_BEINGS_STEWARD_PRESSURE_ONLY_GUARDRAIL_2026_06_13.md
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import re
@@ -424,6 +425,131 @@ def _find_record(being: str, topic: str) -> Path | None:
     return None
 
 
+def _find_closed_record(being: str, topic: str) -> Path | None:
+    closed = REVIEW_DIR[being] / "closed"
+    if not closed.is_dir():
+        return None
+    hits = sorted(closed.glob(f"{being}_{topic}_*.json"))
+    return hits[-1] if hits else None
+
+
+def _sha256_bytes(payload: bytes) -> str:
+    return hashlib.sha256(payload).hexdigest()
+
+
+def _bounded_source_ref(path: Path) -> str:
+    resolved = path.resolve()
+    for label, root in (("astrid", ASTRID_ROOT), ("minime", MINIME_ROOT)):
+        try:
+            return f"{label}:{resolved.relative_to(root.resolve())}"
+        except ValueError:
+            continue
+    return f"external:{resolved.name}"
+
+
+def _write_owner_only_json(path: Path, payload: dict) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
+    os.chmod(path.parent, 0o700)
+    tmp = path.with_name(f".{path.name}.{os.getpid()}.tmp")
+    encoded = (json.dumps(payload, sort_keys=True, indent=2) + "\n").encode()
+    fd = os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+    try:
+        with os.fdopen(fd, "wb", closefd=True) as handle:
+            handle.write(encoded)
+            handle.flush()
+            os.fsync(handle.fileno())
+        os.replace(tmp, path)
+        dir_fd = os.open(path.parent, os.O_RDONLY)
+        try:
+            os.fsync(dir_fd)
+        finally:
+            os.close(dir_fd)
+    finally:
+        if tmp.exists():
+            tmp.unlink()
+
+
+def cmd_correct_outcome(args, now: int) -> int:
+    """Append a correction without rewriting the original close receipt."""
+    original_path = _find_closed_record(args.being, args.topic)
+    if original_path is None:
+        print(
+            f"no closed review record for {args.being}/{args.topic}",
+            file=sys.stderr,
+        )
+        return 1
+    source_path = Path(args.source_ref).expanduser()
+    if not source_path.is_file():
+        print(f"correction source does not exist: {source_path}", file=sys.stderr)
+        return 1
+
+    original_bytes = original_path.read_bytes()
+    source_bytes = source_path.read_bytes()
+    original = json.loads(original_bytes)
+    actor = getattr(args, "actor", DEFAULT_REVIEW_ACTOR)
+    reason = (args.reason or "").strip()
+    if not reason:
+        print("--correct-outcome requires --reason", file=sys.stderr)
+        return 2
+
+    original_sha256 = _sha256_bytes(original_bytes)
+    source_sha256 = _sha256_bytes(source_bytes)
+    key_payload = "\0".join(
+        (
+            original_sha256,
+            args.outcome,
+            source_sha256,
+            actor,
+            reason,
+        )
+    ).encode()
+    correction_key = _sha256_bytes(key_payload)
+    correction = {
+        "schema": "review_outcome_correction_v1",
+        "schema_version": 1,
+        "correction_id": f"review_correction_{correction_key[:24]}",
+        "correction_key": correction_key,
+        "being": args.being,
+        "topic": args.topic,
+        "original_record": {
+            "filename": original_path.name,
+            "sha256": original_sha256,
+            "issued_ts": original.get("issued_ts"),
+            "closed_ts": original.get("closed_ts"),
+            "recorded_outcome": original.get("outcome"),
+        },
+        "corrected_outcome": args.outcome,
+        "source": {
+            "ref": _bounded_source_ref(source_path),
+            "sha256": source_sha256,
+        },
+        "actor": actor,
+        "reason": reason,
+        "recorded_ts": now,
+        "original_receipt_immutable": True,
+        **STEWARD_PRESSURE_METADATA,
+    }
+    corrections_dir = REVIEW_DIR[args.being] / "corrections"
+    correction_path = corrections_dir / f"{correction['correction_id']}.json"
+    existing = sorted(corrections_dir.glob("*.json")) if corrections_dir.is_dir() else []
+    for path in existing:
+        try:
+            prior = json.loads(path.read_text())
+        except (json.JSONDecodeError, OSError):
+            continue
+        if prior.get("correction_key") == correction_key:
+            print(f"correction → {path}  (idempotent existing record)")
+            return 0
+    if args.dry_run:
+        print(f"[dry-run] would append correction → {correction_path}")
+        print(json.dumps(correction, indent=2))
+        return 0
+    _write_owner_only_json(correction_path, correction)
+    print(f"correction → {correction_path}")
+    print(f"original   → {original_path}  (preserved byte-for-byte)")
+    return 0
+
+
 def cmd_close(args, now: int) -> int:
     being = args.being
     record_path = _find_record(being, args.topic)
@@ -519,8 +645,21 @@ def main() -> int:
         "Scoped to intimate changes; steward-triggered per change; never on a timer.",
     )
     ap.add_argument("--close", action="store_true", help="close the loop instead of issuing")
+    ap.add_argument(
+        "--correct-outcome",
+        action="store_true",
+        help="append a correction for a closed review without rewriting its receipt",
+    )
     ap.add_argument("--outcome", default="acted on", help="(close) shipped / deferred / withdrawn / ...")
     ap.add_argument("--note", help="(close) free-text summary of what their review led to")
+    ap.add_argument(
+        "--source-ref",
+        help="(correct-outcome) full report or receipt supporting the corrected outcome",
+    )
+    ap.add_argument(
+        "--reason",
+        help="(correct-outcome) bounded steward explanation for the correction",
+    )
     ap.add_argument("--card", help="(close) path to a ground_review.py --json card to fold in")
     ap.add_argument(
         "--no-letter",
@@ -536,6 +675,10 @@ def main() -> int:
 
     if args.list:
         return cmd_list()
+    if args.correct_outcome:
+        if not (args.being and args.topic and args.source_ref):
+            ap.error("--correct-outcome requires --being, --topic, and --source-ref")
+        return cmd_correct_outcome(args, now)
     if args.close:
         if not (args.being and args.topic):
             ap.error("--close requires --being and --topic")

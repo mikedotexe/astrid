@@ -15,6 +15,7 @@ import contextlib
 import importlib.util
 import io
 import json
+import os
 import sys
 import tempfile
 import unittest
@@ -403,6 +404,74 @@ class SlotClearOnCloseTests(unittest.TestCase):
         rc = request_review.cmd_close(self._close_args("fb", dry_run=True), now=2)
         self.assertEqual(rc, 0)
         self.assertTrue(self._slot.exists())  # dry-run is non-mutating
+
+
+class OutcomeCorrectionTests(unittest.TestCase):
+    """A report/close race is corrected append-only; history is never rewritten."""
+
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        base = Path(self._tmp.name)
+        self._orig_review = dict(request_review.REVIEW_DIR)
+        self._review = base / "review_requests"
+        self._closed = self._review / "closed"
+        self._closed.mkdir(parents=True)
+        request_review.REVIEW_DIR["astrid"] = self._review
+        self._original = self._closed / "astrid_review-race_10.json"
+        self._original.write_text(json.dumps({
+            "being": "astrid",
+            "topic": "review-race",
+            "issued_ts": 10,
+            "closed_ts": 20,
+            "outcome": "no_response",
+        }))
+        self._report = base / "introspection_target_19.txt"
+        self._report.write_text("private report prose must not enter the correction")
+
+    def tearDown(self):
+        request_review.REVIEW_DIR.clear()
+        request_review.REVIEW_DIR.update(self._orig_review)
+        self._tmp.cleanup()
+
+    def _args(self, dry_run=False):
+        return argparse.Namespace(
+            being="astrid",
+            topic="review-race",
+            outcome="still_friction",
+            source_ref=str(self._report),
+            actor="Codex",
+            reason="report completed before the close receipt was written",
+            dry_run=dry_run,
+        )
+
+    def test_correction_is_append_only_private_and_content_free(self):
+        before = self._original.read_bytes()
+        rc = request_review.cmd_correct_outcome(self._args(), now=21)
+        self.assertEqual(rc, 0)
+        self.assertEqual(self._original.read_bytes(), before)
+        corrections = list((self._review / "corrections").glob("*.json"))
+        self.assertEqual(len(corrections), 1)
+        correction = json.loads(corrections[0].read_text())
+        self.assertEqual(correction["corrected_outcome"], "still_friction")
+        self.assertEqual(correction["original_record"]["recorded_outcome"], "no_response")
+        self.assertTrue(correction["original_receipt_immutable"])
+        self.assertNotIn("private report prose", corrections[0].read_text())
+        self.assertEqual(os.stat(corrections[0]).st_mode & 0o777, 0o600)
+        self.assertEqual(os.stat(corrections[0].parent).st_mode & 0o777, 0o700)
+
+    def test_identical_retry_is_idempotent(self):
+        self.assertEqual(request_review.cmd_correct_outcome(self._args(), now=21), 0)
+        self.assertEqual(request_review.cmd_correct_outcome(self._args(), now=22), 0)
+        self.assertEqual(len(list((self._review / "corrections").glob("*.json"))), 1)
+
+    def test_dry_run_does_not_write(self):
+        self.assertEqual(request_review.cmd_correct_outcome(self._args(True), now=21), 0)
+        self.assertFalse((self._review / "corrections").exists())
+
+    def test_missing_source_is_rejected(self):
+        args = self._args()
+        args.source_ref = str(self._report.with_name("missing.txt"))
+        self.assertEqual(request_review.cmd_correct_outcome(args, now=21), 1)
 
 
 if __name__ == "__main__":

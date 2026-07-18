@@ -13,6 +13,11 @@ use sha2::{Digest as _, Sha256};
 
 use crate::signal_spine::signal_deployment_identity_v1;
 
+/// Acceptance tolerance for a grant's `issued_at_unix_s` only.
+///
+/// This does not shorten the grant expiry window, limit reasoning duration, or
+/// pace dispatch. It rejects records that claim to have been issued too far in
+/// the verifier's future.
 pub const MAX_FUTURE_CLOCK_SKEW_SECS: u64 = 5;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -23,6 +28,8 @@ pub struct AuthorityTemporalContextV1 {
     pub token_id: String,
     pub issued_at_unix_s: u64,
     pub expires_at_unix_s: u64,
+    /// Remaining authorized live consequences, not tokens, model work, entropy,
+    /// semantic energy, or elapsed time.
     pub remaining_budget: u64,
     pub pause_generation: u64,
     pub source_identity: String,
@@ -328,6 +335,42 @@ mod tests {
         )
         .expect_err("future issue time must fail");
         assert!(error.to_string().contains("issued_in_future"));
+    }
+
+    #[test]
+    fn accepted_future_skew_does_not_shorten_expiry() {
+        let workspace = workspace(2);
+        let now = 1_000;
+        let context = current_context(
+            "semantic_microdose",
+            "token",
+            now + MAX_FUTURE_CLOCK_SKEW_SECS,
+            now + 60,
+            1,
+            workspace.path(),
+        );
+        verify_live(
+            &context,
+            "semantic_microdose",
+            "token",
+            now,
+            workspace.path(),
+        )
+        .expect("accepted issuance skew must not shorten the explicit expiry");
+    }
+
+    #[test]
+    fn context_preserves_consequence_budget_without_semantic_inputs() {
+        let workspace = workspace(2);
+        let context = current_context(
+            "semantic_microdose",
+            "token",
+            1_000,
+            1_060,
+            3,
+            workspace.path(),
+        );
+        assert_eq!(context.remaining_budget, 3);
     }
 
     #[test]

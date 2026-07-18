@@ -55,6 +55,8 @@ pub struct PendingSensoryDeliveryV1 {
     sent_at_unix_ms: u64,
 }
 
+const SPECTRAL_CAUSATION_BASIS: &str = "not_established_no_wire_ack_or_controlled_intervention";
+
 impl PendingSensoryDeliveryV1 {
     fn event(&self, outcome: &str, reason: Option<&str>) -> Value {
         json!({
@@ -64,10 +66,14 @@ impl PendingSensoryDeliveryV1 {
             "delivery_id": self.delivery_id,
             "payload_sha256": self.payload_sha256,
             "mutual_address_id": self.mutual_address_id,
+            "delivery_address_classification": delivery_address_classification(
+                self.mutual_address_id.as_deref()
+            ),
             "sent_at_unix_ms": self.sent_at_unix_ms,
             "recorded_at_unix_ms": unix_now_ms(),
             "reason": reason,
             "spectral_causation_established": false,
+            "spectral_causation_basis": SPECTRAL_CAUSATION_BASIS,
             "authority": {
                 "schema": "artifact_authority_state_v1",
                 "schema_version": 1,
@@ -78,6 +84,14 @@ impl PendingSensoryDeliveryV1 {
                 "edits_source_now": false
             }
         })
+    }
+}
+
+fn delivery_address_classification(mutual_address_id: Option<&str>) -> &'static str {
+    if mutual_address_id.is_some() {
+        "exact_mutual_address_lineage"
+    } else {
+        "technical_delivery_only_no_exact_lineage"
     }
 }
 
@@ -314,6 +328,9 @@ fn apply_delivery_receipt_with_path(
         "receipt_id": receipt.receipt_id,
         "payload_sha256": receipt.payload_sha256,
         "mutual_address_id": receipt.mutual_address_id,
+        "delivery_address_classification": delivery_address_classification(
+            expected.mutual_address_id.as_deref()
+        ),
         "status": receipt_status,
         "sent_at_unix_ms": expected.sent_at_unix_ms,
         "received_at_unix_ms": receipt.received_at_unix_ms,
@@ -323,6 +340,7 @@ fn apply_delivery_receipt_with_path(
         "server_deployment_identity": receipt.server_deployment_identity,
         "reason": receipt.reason,
         "spectral_causation_established": false,
+        "spectral_causation_basis": SPECTRAL_CAUSATION_BASIS,
         "authority": {
             "schema": "artifact_authority_state_v1",
             "schema_version": 1,
@@ -437,6 +455,51 @@ mod tests {
         );
         assert_eq!(value["mutual_address_v1"]["raw_body_included"], false);
         assert!(value["mutual_address_v1"].get("body").is_none());
+    }
+
+    #[test]
+    fn technical_delivery_is_accepted_without_claiming_mutual_address_or_causation() {
+        let path = temp_events_path("astrid_technical_delivery_receipt");
+        let encoded = encode_sensory_packet_v1(&semantic(0.25), None, true, 1).unwrap();
+        let packet: SensoryPacketV1 = serde_json::from_str(&encoded.json).unwrap();
+        assert!(packet.mutual_address_v1.is_none());
+        let delivery = packet.delivery_v1.unwrap();
+        let item = encoded.pending.unwrap();
+        let mut pending = BTreeMap::from([(item.delivery_id.clone(), item)]);
+        let mut status = SensoryDeliveryProtocolStatusV1::default();
+        assert!(apply_server_hello(
+            SensoryServerHelloV1::new("minime-pid".to_string(), "minime-source".to_string()),
+            &mut status,
+        ));
+        let receipt = SensoryDeliveryReceiptV1::new(
+            "receipt-technical".to_string(),
+            delivery.delivery_id,
+            delivery.payload_sha256,
+            SensoryDeliveryStatusV1::Accepted,
+            1,
+            Some(1),
+            None,
+            None,
+            "minime-pid".to_string(),
+            "minime-source".to_string(),
+        );
+
+        assert!(apply_delivery_receipt_with_path(
+            receipt,
+            &mut pending,
+            &mut status,
+            Some(&path),
+        ));
+        let row: Value = serde_json::from_str(&fs::read_to_string(&path).unwrap()).unwrap();
+        assert_eq!(row["status"], "accepted");
+        assert!(row["mutual_address_id"].is_null());
+        assert_eq!(
+            row["delivery_address_classification"],
+            "technical_delivery_only_no_exact_lineage"
+        );
+        assert_eq!(row["spectral_causation_established"], false);
+        assert_eq!(row["spectral_causation_basis"], SPECTRAL_CAUSATION_BASIS);
+        let _ = fs::remove_dir_all(path.parent().unwrap());
     }
 
     #[test]

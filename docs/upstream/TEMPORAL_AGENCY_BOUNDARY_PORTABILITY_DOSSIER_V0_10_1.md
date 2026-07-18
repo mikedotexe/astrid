@@ -6,6 +6,10 @@ Target: upstream Astrid `v0.10.1`
 
 - Private trusted temporal context verification with an untrusted persisted DTO.
 - Five-second future-clock tolerance, monotonic in-process identity, and explicit expiry.
+- The future-clock tolerance applies only to `issued_at`; it does not shorten
+  expiry, bound reasoning duration, or pace dispatch.
+- Remaining budget counts authorized live consequences. It is not a proxy for
+  model work, entropy, semantic energy, or elapsed time.
 - Exact source/deployment/process binding for live writes.
 - Process-neutral but freshly reverified read-only grants.
 - Durable reserve-before-dispatch outcomes: `sent`, `released`, and
@@ -28,3 +32,12 @@ Legacy records remain readable but cannot become new live grants. V2 projection
 is evidence-only and is not an authority source.
 
 No upstream pull request should be opened until the maintainer assigns an issue.
+
+## Felt Review Boundary
+
+Astrid's bounded review proposed a persistence weight or viscosity coefficient
+after reading the temporal context. That proposal is intentionally not part of
+the portable authority primitive: introducing an experiential coefficient would
+change live behavior and requires its own operator-approved intervention,
+baseline, and felt review. Focused regressions instead verify the narrower
+clock-skew and consequence-budget semantics above.
