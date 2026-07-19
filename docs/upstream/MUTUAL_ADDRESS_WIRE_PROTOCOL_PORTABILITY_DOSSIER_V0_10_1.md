@@ -1,9 +1,15 @@
 # Mutual-Address Wire Protocol Portability Dossier
 
-Target: Astrid `v0.10.1`
+Target reference: `astrid-runtime/astrid` `v0.10.1` at
+`4771bab3c33d1bce53186e40d01cf014e2dce666`
 
 Status: issue-ready design evidence only. Do not open a pull request until the
 maintainer assigns an issue under `CONTRIBUTING.md`.
+
+Neither `astrid-minime-protocol` nor the spectral bridge exists upstream. A
+future Astrid proposal must be reframed as a generic `astrid-uplink` delivery
+receipt concept; the current protocol implementation is not an upstream patch
+candidate.
 
 ## Reusable Core
 

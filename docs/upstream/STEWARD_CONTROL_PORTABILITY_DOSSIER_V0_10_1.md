@@ -2,7 +2,8 @@
 
 ## Target
 
-Astrid `v0.10.1`.
+`astrid-runtime/astrid` `v0.10.1` at
+`4771bab3c33d1bce53186e40d01cf014e2dce666`.
 
 This is an issue-ready design dossier, not a pull request. `CONTRIBUTING.md`
 requires an issue, maintainer triage, assignment, and the appropriate
@@ -104,6 +105,11 @@ underlying architecture:
 
 No upstream branch or pull request should be opened until the maintainer
 assigns the issue.
+
+The scope request is now
+[astrid-runtime/astrid#1271](https://github.com/astrid-runtime/astrid/issues/1271).
+It is unassigned as of 2026-07-18. No implementation branch or pull request
+has been opened.
 
 ## Follow-Up Boundary
 

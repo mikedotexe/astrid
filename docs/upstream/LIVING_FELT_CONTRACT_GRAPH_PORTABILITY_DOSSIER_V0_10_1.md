@@ -2,7 +2,8 @@
 
 ## Target
 
-Astrid `v0.10.1`.
+`astrid-runtime/astrid` `v0.10.1` at
+`4771bab3c33d1bce53186e40d01cf014e2dce666`.
 
 This is an issue-ready portability dossier, not a pull request. No upstream PR
 should be opened until the maintainer assigns an issue under
@@ -79,3 +80,9 @@ These surfaces should remain outside an initial upstream proposal:
    supplied only by adapters?
 4. Does the maintainer prefer this as a follow-up to the cooperative steward
    lifecycle issue or as an independent proposal?
+
+## Coordination Status
+
+Hold this proposal until the maintainer responds to
+[astrid-runtime/astrid#1271](https://github.com/astrid-runtime/astrid/issues/1271).
+No felt-contract issue, upstream branch, or pull request has been opened.

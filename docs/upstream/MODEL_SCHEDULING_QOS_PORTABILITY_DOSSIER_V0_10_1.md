@@ -1,9 +1,14 @@
 # Model Scheduling And QoS Portability Dossier
 
-Target: Astrid `v0.10.1`
+Target reference: `astrid-runtime/astrid` `v0.10.1` at
+`4771bab3c33d1bce53186e40d01cf014e2dce666`
 
 Status: issue-ready design evidence only. Do not open a pull request until the
 maintainer assigns an issue under `CONTRIBUTING.md`.
+
+The scheduler implementation is owned by the sibling model service rather than
+upstream Astrid. Any Astrid proposal should be limited to additive provider
+request metadata or provider-capsule integration requested by the maintainer.
 
 ## Reusable Core
 

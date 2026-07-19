@@ -1,6 +1,7 @@
 # Temporal Agency Boundary Portability Dossier
 
-Target: upstream Astrid `v0.10.1`
+Target: `astrid-runtime/astrid` `v0.10.1` at
+`4771bab3c33d1bce53186e40d01cf014e2dce666`
 
 ## Reusable Core
 
@@ -32,6 +33,14 @@ Legacy records remain readable but cannot become new live grants. V2 projection
 is evidence-only and is not an authority source.
 
 No upstream pull request should be opened until the maintainer assigns an issue.
+
+The upstream design already has related maintainer-owned issues:
+
+- [#1229 authenticated control connections and scoped delegation](https://github.com/astrid-runtime/astrid/issues/1229)
+- [#694 auto-expiring capability grants](https://github.com/astrid-runtime/astrid/issues/694)
+
+This dossier should be offered as design and regression evidence for those
+efforts, not as a competing authority implementation.
 
 ## Felt Review Boundary
 
