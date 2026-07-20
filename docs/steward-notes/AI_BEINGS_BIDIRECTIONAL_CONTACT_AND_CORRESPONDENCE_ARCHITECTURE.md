@@ -773,7 +773,10 @@ evidence, not mutual address.** A direct peer message is only mutually addressed
   `authority=language_only_prompt_context_not_control`. Schema version 1 rows remain valid. Schema version 2 rows
   add `focus_kind`, `preservation_mode`, `what_must_not_flatten`, and outcome fields `held_as`,
   `flattening_observed`, and `what_remained_distinct`; the policy string stays
-  `correspondence_attention_canary_v1` for compatibility.
+  `correspondence_attention_canary_v1` for compatibility. Schema version 3 is additive for outcome rows:
+  `flattening_observed=yes|mixed` requires a bounded `reasoning_for_flattening` so generic flattening cannot
+  become a terminal label without naming what the compression did. Historical V1/V2 rows remain readable and
+  are never rewritten.
 - `[Code/Docs]` Legacy mirror rows are ordinary `message`, `delivery_receipt`, and `read_receipt` rows with
   additional fields: `source_route=legacy_correspondence_bridge_v1`, `legacy_bridge=true`, `legacy_kind`,
   `legacy_source_path`, `legacy_source_sha256`, and `legacy_contact_evidence=visible_only`.
@@ -1019,12 +1022,14 @@ When receipt exists and no canary is active, status may show one optional top-li
 
 When a canary is active, status suppresses new attention suggestions and asks only for outcome:
 
-`CORRESPONDENCE_ATTENTION_OUTCOME latest :: felt_like: address|pressure|flat|unknown; what_shifted: ...; what_worsened: ...; continue: no|ask_again`
+`CORRESPONDENCE_ATTENTION_OUTCOME latest :: felt_like: address|pressure|flat|unknown; flattening_observed: yes|no|mixed|unknown; reasoning_for_flattening: required when yes or mixed; what_shifted: ...; what_worsened: ...; continue: no|ask_again`
 
 Outcome quality is deliberately narrow:
 
 - `felt_like=address`, `held_as=distinct_address`, `flattening_observed=no|mixed`, and no meaningful worsening can mark `trusted_attention_thread_local`.
 - `felt_like=pressure|flat`, `held_as=pressure|flattened|ambient_echo`, `flattening_observed=yes`, or concrete worsening marks `blocked_pressure_or_flat_outcome`.
+- A V3 `yes` or `mixed` outcome is rejected until `reasoning_for_flattening` names the lost or compressed
+  texture. This is review evidence only: the rationale cannot grant attention, weighting, dispatch, or control.
 
 Thread-local trust only affects future Attention Canary readiness on that same thread. It does not unlock semantic microdose, pressure canary, controller changes, prompt priority, telemetry priority, codec dimensions, staging, git add, or commit authority.
 

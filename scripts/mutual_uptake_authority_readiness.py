@@ -335,6 +335,7 @@ def attention_outcome_quality_v5(outcome: dict[str, Any]) -> dict[str, Any]:
         "felt_like": felt_like,
         "held_as": held_as,
         "flattening_observed": flattening,
+        "reasoning_for_flattening": outcome.get("reasoning_for_flattening"),
         "meaningful_worsening": meaningful_worsening,
         "thread_id": outcome.get("thread_id"),
         "canary_id": outcome.get("canary_id"),

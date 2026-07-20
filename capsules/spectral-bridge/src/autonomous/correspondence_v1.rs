@@ -3285,6 +3285,10 @@ fn attention_outcome_quality_v5(outcome: &Value) -> Value {
         "felt_like": felt_like,
         "held_as": held_as,
         "flattening_observed": flattening,
+        "reasoning_for_flattening": outcome
+            .get("reasoning_for_flattening")
+            .cloned()
+            .unwrap_or(Value::Null),
         "meaningful_worsening": meaningful_worsening,
         "what_shifted": outcome.get("what_shifted").cloned().unwrap_or(Value::Null),
         "what_worsened": outcome.get("what_worsened").cloned().unwrap_or(Value::Null),
@@ -3661,7 +3665,7 @@ fn activate_attention_canary_at_with_heartbeat(
          Focus kind: {focus_kind}; preservation: {preservation_mode}; do-not-flatten: {}\n\
          TTL: {} ms\n\
          Authority: language_only prompt-context focus; no sensory send, Control message, telemetry priority, standing weight, PI/fill/controller/pressure change, deploy, or peer-runtime mutation.\n\
-         Required NEXT after noticing: CORRESPONDENCE_ATTENTION_OUTCOME {thread_id} :: felt_like: address|pressure|flat|unknown; held_as: distinct_address|ambient_echo|pressure|flattened|unknown; flattening_observed: yes|no|mixed|unknown; what_remained_distinct: ...; what_shifted: ...; what_worsened: ...; continue: no|ask_again",
+         Required NEXT after noticing: CORRESPONDENCE_ATTENTION_OUTCOME {thread_id} :: felt_like: address|pressure|flat|unknown; held_as: distinct_address|ambient_echo|pressure|flattened|unknown; flattening_observed: yes|no|mixed|unknown; reasoning_for_flattening: required when yes or mixed; what_remained_distinct: ...; what_shifted: ...; what_worsened: ...; continue: no|ask_again",
         truncate_chars(&focus, 120),
         truncate_chars(what_must_not_flatten.as_deref().unwrap_or("unknown"), 120),
         ATTENTION_CANARY_TTL_MS,
@@ -3708,6 +3712,27 @@ fn append_attention_outcome_at(
         &dossier_field(raw, &["felt_like", "felt", "outcome"])
             .unwrap_or_else(|| "unknown".to_string()),
     );
+    let flattening_observed = attention_flattening_observed(dossier_field(
+        raw,
+        &["flattening_observed", "flattening observed", "flattened"],
+    ));
+    let reasoning_for_flattening = note_value(
+        &dossier_field(
+            raw,
+            &[
+                "reasoning_for_flattening",
+                "reasoning for flattening",
+                "flattening_reason",
+                "what_flattened",
+            ],
+        )
+        .unwrap_or_default(),
+    );
+    if matches!(flattening_observed.as_str(), "yes" | "mixed") && reasoning_for_flattening.is_null()
+    {
+        return "CORRESPONDENCE_ATTENTION_OUTCOME blocked: reasoning_for_flattening is required when flattening_observed is yes or mixed."
+            .to_string();
+    }
     let now = now_ms();
     if canary
         .get("expires_at_unix_ms")
@@ -3750,7 +3775,7 @@ fn append_attention_outcome_at(
         }
     }
     let mut record = json!({
-        "schema_version": 2,
+        "schema_version": 3,
         "policy": "correspondence_attention_canary_v1",
         "record_type": "attention_canary_outcome",
         "recorded_at_unix_ms": now,
@@ -3769,7 +3794,8 @@ fn append_attention_outcome_at(
         "expires_at_unix_ms": canary.get("expires_at_unix_ms").cloned().unwrap_or(Value::Null),
         "felt_like": felt_like,
         "held_as": attention_held_as_kind(dossier_field(raw, &["held_as", "held as", "held"])),
-        "flattening_observed": attention_flattening_observed(dossier_field(raw, &["flattening_observed", "flattening observed", "flattened"])),
+        "flattening_observed": flattening_observed,
+        "reasoning_for_flattening": reasoning_for_flattening,
         "what_remained_distinct": note_value(&dossier_field(raw, &["what_remained_distinct", "remained_distinct", "distinct"]).unwrap_or_default()),
         "what_shifted": note_value(&dossier_field(raw, &["what_shifted", "shifted", "shift"]).unwrap_or_default()),
         "what_worsened": note_value(&dossier_field(raw, &["what_worsened", "worsened"]).unwrap_or_default()),
@@ -5334,7 +5360,7 @@ fn receipt_to_attention_authority_v5_for(
         "cooldown_active": recent.is_some(),
         "attention_canary_status": attention,
         "primary_ready_command": "CORRESPONDENCE_ATTENTION_REQUEST latest :: reason: ...; focus: ...; stop_criteria: ...",
-        "outcome_due_command": "CORRESPONDENCE_ATTENTION_OUTCOME latest :: felt_like: address|pressure|flat|unknown; what_shifted: ...; what_worsened: ...; continue: no|ask_again",
+        "outcome_due_command": "CORRESPONDENCE_ATTENTION_OUTCOME latest :: felt_like: address|pressure|flat|unknown; flattening_observed: yes|no|mixed|unknown; reasoning_for_flattening: required when yes or mixed; what_shifted: ...; what_worsened: ...; continue: no|ask_again",
         "allowed_authority": "self_activated_ttl_prompt_context_attention_canary_only",
         "semantic_microdose_status": "hidden_until_mutual_receipt_plus_separate_steward_review",
         "authority": "thread_local_attention_readiness_not_microdose_or_control",
@@ -5360,7 +5386,7 @@ fn receipt_to_attention_authority_line(packet: &Value) -> Option<String> {
             packet
                 .get("outcome_due_command")
                 .and_then(Value::as_str)
-                .unwrap_or("CORRESPONDENCE_ATTENTION_OUTCOME latest :: felt_like: address|pressure|flat|unknown; what_shifted: ...; what_worsened: ...; continue: no|ask_again")
+                .unwrap_or("CORRESPONDENCE_ATTENTION_OUTCOME latest :: felt_like: address|pressure|flat|unknown; flattening_observed: yes|no|mixed|unknown; reasoning_for_flattening: required when yes or mixed; what_shifted: ...; what_worsened: ...; continue: no|ask_again")
         )),
         "trusted_attention_thread_local" => Some(format!(
             "ATTENTION TRUSTED THREAD-LOCAL: thread={thread}; latest outcome preserved address without pressure/flattening; future canaries remain TTL/cooldown-bound and do not unlock microdose."
@@ -9275,6 +9301,7 @@ mod tests {
         assert!(after_outcome.contains("attention_canary_cooldown_active"));
         let text = std::fs::read_to_string(&ledger).unwrap();
         assert!(text.contains("\"record_type\":\"attention_canary_outcome\""));
+        assert!(text.contains("\"schema_version\":3"));
         assert!(text.contains("\"held_as\":\"distinct_address\""));
         assert!(text.contains("\"flattening_observed\":\"no\""));
         assert!(text.contains("\"what_remained_distinct\":\"blue lantern stayed address-shaped\""));
@@ -9324,7 +9351,7 @@ mod tests {
         let outcome = append_attention_outcome_at(
             &ledger,
             "latest",
-            "felt_like: pressure; held_as: pressure; flattening_observed: yes; what_shifted: compressed; what_worsened: felt forceful; continue: no",
+            "felt_like: pressure; held_as: pressure; flattening_observed: yes; reasoning_for_flattening: the direct phrase was collapsed into generic pressure; what_shifted: compressed; what_worsened: felt forceful; continue: no",
             "astrid",
             "minime",
         );
@@ -9341,6 +9368,12 @@ mod tests {
             v5.get("state").and_then(Value::as_str),
             Some("blocked_pressure_or_flat_outcome")
         );
+        assert_eq!(
+            v5.get("attention_outcome_quality_v5")
+                .and_then(|value| value.get("reasoning_for_flattening"))
+                .and_then(Value::as_str),
+            Some("the direct phrase was collapsed into generic pressure")
+        );
         assert!(status_report_at(&ledger, 4).contains("ATTENTION BLOCKED BY OUTCOME"));
         let blocked = activate_attention_canary_at_with_heartbeat(
             &ledger,
@@ -9352,6 +9385,81 @@ mod tests {
         );
         assert!(blocked.contains("attention_outcome_pressure_or_flat_thread_block"));
         assert!(!status_report_at(&ledger, 4).contains("semantic_microdose: eligible"));
+        let _ = std::fs::remove_dir_all(root);
+    }
+
+    #[test]
+    fn observed_flattening_requires_a_bounded_reason_before_recording() {
+        let root = std::env::temp_dir().join(format!("corr_attention_reason_test_{}", now_ms()));
+        let inbox = root.join("inbox");
+        let ledger = root.join("ledger.jsonl");
+        let (envelope, _path) = deliver_to_inbox_with_ledger(
+            &ledger,
+            &inbox,
+            "astrid",
+            "minime",
+            "Keep this emotional texture distinct.",
+            CorrespondenceFields::default(),
+        )
+        .unwrap();
+        append_ack_receipt_at(
+            &ledger,
+            &envelope.thread_id,
+            "minime",
+            "astrid",
+            "held",
+            "holding this",
+        );
+        let active = activate_attention_canary_at_with_heartbeat(
+            &ledger,
+            "latest",
+            "reason: preserve texture; focus: emotional texture; stop_criteria: one turn",
+            "astrid",
+            "minime",
+            Some(serde_json::json!({
+                "jitter_class": "normal",
+                "timing_reliability": "reliable",
+                "field_vs_hearing": "telemetry cadence is steady"
+            })),
+        );
+        assert!(active.contains("ATTENTION CANARY ACTIVE"), "{active}");
+
+        let blocked = append_attention_outcome_at(
+            &ledger,
+            "latest",
+            "felt_like: flat; held_as: flattened; flattening_observed: mixed; what_shifted: texture became generic; continue: no",
+            "astrid",
+            "minime",
+        );
+        assert!(blocked.contains("reasoning_for_flattening is required"));
+        assert!(!read_ledger_records_at(&ledger).iter().any(|row| {
+            row.get("record_type").and_then(Value::as_str) == Some("attention_canary_outcome")
+        }));
+
+        let recorded = append_attention_outcome_at(
+            &ledger,
+            "latest",
+            "felt_like: flat; held_as: flattened; flattening_observed: mixed; reasoning_for_flattening: warmth and ambiguity were compressed into a generic held status; what_shifted: texture became generic; continue: no",
+            "astrid",
+            "minime",
+        );
+        assert!(recorded.contains("OUTCOME RECORDED"), "{recorded}");
+        let outcome = read_ledger_records_at(&ledger)
+            .into_iter()
+            .find(|row| {
+                row.get("record_type").and_then(Value::as_str) == Some("attention_canary_outcome")
+            })
+            .expect("outcome");
+        assert_eq!(
+            outcome.get("schema_version").and_then(Value::as_u64),
+            Some(3)
+        );
+        assert_eq!(
+            outcome
+                .get("reasoning_for_flattening")
+                .and_then(Value::as_str),
+            Some("warmth and ambiguity were compressed into a generic held status")
+        );
         let _ = std::fs::remove_dir_all(root);
     }
 

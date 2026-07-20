@@ -205,6 +205,7 @@ def attention_outcome_quality_v5(outcome: dict[str, Any]) -> dict[str, Any]:
         "felt_like": felt_like,
         "held_as": held_as,
         "flattening_observed": flattening,
+        "reasoning_for_flattening": outcome.get("reasoning_for_flattening"),
         "meaningful_worsening": meaningful_worsening,
         "thread_id": outcome.get("thread_id"),
         "canary_id": outcome.get("canary_id"),
@@ -365,6 +366,7 @@ def audit(
             **outcomes[-1],
             "attention_outcome_quality_v5": attention_outcome_quality_v5(outcomes[-1]),
             "what_remained_distinct": compact(str(outcomes[-1].get("what_remained_distinct") or ""), 180),
+            "reasoning_for_flattening": compact(str(outcomes[-1].get("reasoning_for_flattening") or ""), 180),
             "what_shifted": compact(str(outcomes[-1].get("what_shifted") or ""), 180),
             "what_worsened": compact(str(outcomes[-1].get("what_worsened") or ""), 180),
         } if outcomes else None),
@@ -425,6 +427,10 @@ def write_outputs(payload: dict[str, Any], output_root: Path | None) -> None:
             f"- Latest held-as: `{latest.get('held_as', 'unknown')}`; "
             f"flattening observed: `{latest.get('flattening_observed', 'unknown')}`"
         )
+        if latest.get("reasoning_for_flattening"):
+            lines.append(
+                f"- Flattening rationale: {latest.get('reasoning_for_flattening')}"
+            )
     lines.append("")
     lines.append("Privacy: Minime private bodies read = false.")
     (out_dir / "correspondence_attention_canary_audit.md").write_text(
@@ -474,14 +480,17 @@ class CorrespondenceAttentionCanaryAuditTests(unittest.TestCase):
                         "no_peer_runtime_mutation": True,
                     }),
                     json.dumps({
-                        "schema_version": 2,
+                        "schema_version": 3,
                         "record_type": "attention_canary_outcome",
                         "recorded_at_unix_ms": now - 500,
                         "canary_id": "old_canary",
                         "thread_id": "old_thread",
                         "felt_like": "address",
                         "held_as": "distinct_address",
-                        "flattening_observed": "no",
+                        "flattening_observed": "mixed",
+                        "reasoning_for_flattening": (
+                            "warmth was compacted while the address remained distinct"
+                        ),
                         "what_remained_distinct": "blue lantern",
                         "authority": "language_only_prompt_context_not_control",
                         "no_sensory_send": True,
@@ -517,8 +526,18 @@ class CorrespondenceAttentionCanaryAuditTests(unittest.TestCase):
             self.assertEqual(payload["boundary_evidence"]["issue_count"], 0)
             self.assertEqual(payload["latest_outcome"]["held_as"], "distinct_address")
             self.assertEqual(
+                payload["latest_outcome"]["reasoning_for_flattening"],
+                "warmth was compacted while the address remained distinct",
+            )
+            self.assertEqual(
                 payload["latest_outcome"]["attention_outcome_quality_v5"]["quality"],
                 "trusted_attention_thread_local",
+            )
+            self.assertEqual(
+                payload["latest_outcome"]["attention_outcome_quality_v5"][
+                    "reasoning_for_flattening"
+                ],
+                "warmth was compacted while the address remained distinct",
             )
             self.assertEqual(
                 payload["receipt_to_attention_authority_v5"]["trusted_thread_local_outcome_count"],

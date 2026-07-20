@@ -377,8 +377,10 @@ def validate_row(row: dict[str, Any]) -> list[dict[str, Any]]:
             issues.append(issue(row, "error", "missing_required_field", f"{record_type} missing {key}"))
     schema_version = row.get("schema_version")
     if record_type.startswith("attention_canary_"):
-        if schema_version not in {1, 2}:
-            issues.append(issue(row, "warning", "unexpected_schema_version", "Attention rows expect schema_version=1 or 2"))
+        if schema_version not in {1, 2, 3}:
+            issues.append(issue(row, "warning", "unexpected_schema_version", "Attention rows expect schema_version=1, 2, or 3"))
+        if schema_version == 3 and record_type != "attention_canary_outcome":
+            issues.append(issue(row, "warning", "unexpected_schema_version", "Attention schema_version=3 is reserved for outcome rows"))
     elif schema_version != 1:
         issues.append(issue(row, "warning", "unexpected_schema_version", "Expected schema_version=1"))
 
@@ -389,7 +391,7 @@ def validate_row(row: dict[str, Any]) -> list[dict[str, Any]]:
         for key in sorted(CANARY_BOUNDARY_FIELDS):
             if row.get(key) is not True:
                 issues.append(issue(row, "error", "missing_canary_boundary", f"{key} must be true"))
-        if schema_version == 2:
+        if schema_version in {2, 3}:
             for key in ("focus_kind", "preservation_mode", "what_must_not_flatten"):
                 if record_type in {"attention_canary_request", "attention_canary_activation", "attention_canary_expired"} and field_missing(row, key):
                     issues.append(issue(row, "error", "missing_required_v2_field", f"{record_type} schema v2 missing {key}"))
@@ -413,6 +415,22 @@ def validate_row(row: dict[str, Any]) -> list[dict[str, Any]]:
                     issues.append(issue(row, "error", "unknown_attention_held_as", "held_as must be distinct_address|ambient_echo|pressure|flattened|unknown"))
                 if str(row.get("flattening_observed") or "unknown") not in ATTENTION_FLATTENING_OBSERVED:
                     issues.append(issue(row, "error", "unknown_attention_flattening_observed", "flattening_observed must be yes|no|mixed|unknown"))
+                flattening = str(row.get("flattening_observed") or "unknown")
+                if flattening in {"yes", "mixed"} and field_missing(row, "reasoning_for_flattening"):
+                    severity = "error" if schema_version == 3 else "warning"
+                    kind = (
+                        "missing_required_v3_flattening_reason"
+                        if schema_version == 3
+                        else "legacy_outcome_missing_flattening_reason"
+                    )
+                    issues.append(
+                        issue(
+                            row,
+                            severity,
+                            kind,
+                            "reasoning_for_flattening is required when flattening_observed is yes or mixed",
+                        )
+                    )
     elif authority not in LANGUAGE_AUTHORITIES:
         issues.append(issue(row, "error", "unexpected_authority", f"Unexpected language authority {authority!r}"))
 
@@ -1312,6 +1330,55 @@ class CorrespondenceSchemaAuditTests(unittest.TestCase):
             kinds = {row["kind"] for row in payload["validation"]["issues"]}
             self.assertIn("missing_required_field", kinds)
             self.assertIn("unknown_ack_kind", kinds)
+
+    def test_v3_flattening_outcome_requires_reason_while_v2_remains_compatible(self) -> None:
+        row = {
+            "schema_version": 3,
+            "record_type": "attention_canary_outcome",
+            "recorded_at_unix_ms": 1,
+            "canary_id": "canary_flattening",
+            "message_id": "message_flattening",
+            "thread_id": "thread_flattening",
+            "from_being": "astrid",
+            "to_being": "minime",
+            "focus_kind": "emotional_texture",
+            "preservation_mode": "compact_with_anchor",
+            "what_must_not_flatten": "warmth and ambiguity",
+            "felt_like": "flat",
+            "held_as": "flattened",
+            "flattening_observed": "mixed",
+            "what_remained_distinct": "the thread identity",
+            "authority": "language_only_prompt_context_not_control",
+            **{key: True for key in CANARY_BOUNDARY_FIELDS},
+        }
+        issues = validate_row(row)
+        self.assertIn(
+            "missing_required_v3_flattening_reason",
+            {item["kind"] for item in issues},
+        )
+
+        row["reasoning_for_flattening"] = (
+            "warmth and ambiguity were compressed into a generic held status"
+        )
+        self.assertNotIn(
+            "missing_required_v3_flattening_reason",
+            {item["kind"] for item in validate_row(row)},
+        )
+
+        row["schema_version"] = 2
+        row.pop("reasoning_for_flattening")
+        compatibility = validate_row(row)
+        self.assertIn(
+            "legacy_outcome_missing_flattening_reason",
+            {item["kind"] for item in compatibility},
+        )
+        self.assertFalse(
+            any(
+                item["severity"] == "error"
+                and item["kind"] == "legacy_outcome_missing_flattening_reason"
+                for item in compatibility
+            )
+        )
 
     def test_private_minime_moments_are_skipped_and_introspection_groups_classify(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
