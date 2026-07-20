@@ -41,3 +41,9 @@ class ProjectionError(StewardControlError):
     """A required projection step failed or emitted invalid evidence."""
 
     exit_code = 5
+
+
+class ProjectionCancelledError(ProjectionError):
+    """A projection stopped cooperatively after a pause request."""
+
+    exit_code = 3

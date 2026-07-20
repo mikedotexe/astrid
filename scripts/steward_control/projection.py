@@ -7,14 +7,16 @@ import hashlib
 import json
 import os
 from pathlib import Path
+import signal
 import subprocess
 import sys
+import tempfile
 import time
 from typing import Any, Callable, Iterable, Sequence
 import uuid
 
 from .config import ControlConfig
-from .errors import ProjectionError
+from .errors import ProjectionCancelledError, ProjectionError
 from .evidence import verify_evidence
 from .model import (
     atomic_write_json,
@@ -47,6 +49,7 @@ class CommandResult:
     stderr: bytes
     duration_ms: int
     timed_out: bool = False
+    cancelled: bool = False
 
 
 def command(*argv: str) -> ProjectionCommand:
@@ -403,32 +406,66 @@ def _default_runner(
     *,
     cwd: Path,
     timeout: int,
+    poll_callback: Callable[[dict[str, Any]], bool] | None = None,
+    poll_interval_secs: float = 0.25,
 ) -> CommandResult:
     started = time.monotonic()
     env = dict(os.environ)
     env["PYTHONDONTWRITEBYTECODE"] = "1"
-    try:
-        result = subprocess.run(
-            list(argv),
-            cwd=cwd,
-            env=env,
-            capture_output=True,
-            check=False,
-            timeout=timeout,
+    stdout_file = tempfile.TemporaryFile()
+    stderr_file = tempfile.TemporaryFile()
+    process = subprocess.Popen(
+        list(argv),
+        cwd=cwd,
+        env=env,
+        stdout=stdout_file,
+        stderr=stderr_file,
+    )
+    deadline = started + timeout
+    timed_out = False
+    cancelled = False
+    interrupted = False
+    while process.poll() is None:
+        progress = {
+            "child_pid": process.pid,
+            "command_elapsed_ms": int((time.monotonic() - started) * 1000),
+        }
+        if poll_callback and poll_callback(progress):
+            cancelled = True
+        if time.monotonic() >= deadline:
+            timed_out = True
+        if (cancelled or timed_out) and not interrupted:
+            process.send_signal(signal.SIGINT)
+            interrupted = True
+        time.sleep(poll_interval_secs)
+    if poll_callback:
+        poll_callback(
+            {
+                "child_pid": process.pid,
+                "command_elapsed_ms": int((time.monotonic() - started) * 1000),
+                "child_exited": True,
+            }
         )
-    except subprocess.TimeoutExpired as error:
+    stdout_file.seek(0)
+    stderr_file.seek(0)
+    stdout = stdout_file.read()
+    stderr = stderr_file.read()
+    stdout_file.close()
+    stderr_file.close()
+    if timed_out:
         return CommandResult(
             return_code=124,
-            stdout=error.stdout or b"",
-            stderr=error.stderr or b"",
+            stdout=stdout,
+            stderr=stderr,
             duration_ms=int((time.monotonic() - started) * 1000),
             timed_out=True,
         )
     return CommandResult(
-        return_code=result.returncode,
-        stdout=result.stdout,
-        stderr=result.stderr,
+        return_code=process.returncode,
+        stdout=stdout,
+        stderr=stderr,
         duration_ms=int((time.monotonic() - started) * 1000),
+        cancelled=cancelled,
     )
 
 
@@ -539,6 +576,10 @@ def audit_projection_outputs(
 
 
 def _parse_json_output(result: CommandResult, step_id: str) -> dict[str, Any]:
+    if result.cancelled:
+        raise ProjectionCancelledError(
+            f"{step_id} command cancelled after pause request"
+        )
     if result.return_code:
         marker = "timeout" if result.timed_out else f"exit_{result.return_code}"
         raise ProjectionError(f"{step_id} command failed: {marker}")
@@ -617,6 +658,7 @@ class ProjectionCoordinator:
         self.config = config
         self.steps = tuple(source_first_steps() if steps is None else steps)
         self.runner = runner or _default_runner
+        self._uses_default_runner = runner is None
         self.root = config.state_root / "projections"
         self.generations_root = self.root / "generations"
         self.failed_root = self.root / "failed_generations"
@@ -659,6 +701,7 @@ class ProjectionCoordinator:
         actor: str,
         run_id: str,
         phase: str,
+        control: Callable[[dict[str, Any] | None], bool] | None = None,
     ) -> dict[str, Any]:
         if phase not in {"pre", "post", "manual"}:
             raise ProjectionError(f"unsupported projection phase: {phase}")
@@ -668,8 +711,31 @@ class ProjectionCoordinator:
         completed: set[str] = set()
         try:
             self._validate_graph()
+            if control and control(
+                {
+                    "generation_id": generation_id,
+                    "status": "starting",
+                    "completed_step_count": 0,
+                    "total_step_count": len(self.steps),
+                }
+            ):
+                raise ProjectionCancelledError(
+                    "projection cancelled before verification"
+                )
             before = verify_evidence(self.config)
             for step in self.steps:
+                if control and control(
+                    {
+                        "generation_id": generation_id,
+                        "status": "running",
+                        "step_id": step.step_id,
+                        "command_id": None,
+                        "completed_step_count": len(completed),
+                    }
+                ):
+                    raise ProjectionCancelledError(
+                        f"projection cancelled before {step.step_id}"
+                    )
                 if not set(step.dependencies).issubset(completed):
                     raise ProjectionError(
                         f"{step.step_id} dependencies did not complete"
@@ -681,11 +747,34 @@ class ProjectionCoordinator:
                 command_receipts = []
                 for command_value in step.commands:
                     resolved_argv = _resolve_argv(command_value, self.config)
-                    result = self.runner(
-                        resolved_argv,
-                        cwd=self.config.repo_root,
-                        timeout=self.config.projector_timeout_secs,
+                    command_id = (
+                        Path(resolved_argv[1]).name
+                        if len(resolved_argv) > 1
+                        else Path(resolved_argv[0]).name
                     )
+                    if control and control(
+                        {
+                            "generation_id": generation_id,
+                            "step_id": step.step_id,
+                            "command_id": command_id,
+                        }
+                    ):
+                        raise ProjectionCancelledError(
+                            f"projection cancelled before {step.step_id} command"
+                        )
+                    if self._uses_default_runner:
+                        result = self.runner(
+                            resolved_argv,
+                            cwd=self.config.repo_root,
+                            timeout=self.config.projector_timeout_secs,
+                            poll_callback=control,
+                        )
+                    else:
+                        result = self.runner(
+                            resolved_argv,
+                            cwd=self.config.repo_root,
+                            timeout=self.config.projector_timeout_secs,
+                        )
                     parsed = _parse_json_output(result, step.step_id)
                     command_receipts.append(
                         _command_receipt(
@@ -727,6 +816,15 @@ class ProjectionCoordinator:
                     }
                 )
                 completed.add(step.step_id)
+                if control:
+                    control(
+                        {
+                            "generation_id": generation_id,
+                            "step_id": step.step_id,
+                            "command_id": None,
+                            "completed_step_count": len(completed),
+                        }
+                    )
             counter_audit = audit_projection_outputs(
                 self.config.workspace,
                 self.steps,
@@ -765,6 +863,14 @@ class ProjectionCoordinator:
             generation_path = self.generations_root / f"{generation_id}.json"
             atomic_write_json(generation_path, manifest)
             atomic_write_json(self.latest_path, manifest)
+            if control:
+                control(
+                    {
+                        "generation_id": generation_id,
+                        "status": "passed",
+                        "completed_step_count": len(completed),
+                    }
+                )
             return manifest
         except Exception as error:
             failed = {

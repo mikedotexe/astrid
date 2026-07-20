@@ -8,7 +8,12 @@ import time
 from typing import Any
 
 from .config import ControlConfig
-from .errors import EvidenceInvalidError, LeaseError, ProjectionError
+from .errors import (
+    EvidenceInvalidError,
+    LeaseError,
+    ProjectionCancelledError,
+    ProjectionError,
+)
 from .events import EventSink
 from .evidence import verify_evidence
 from .git_state import (
@@ -18,6 +23,7 @@ from .git_state import (
 from .lease import LeaseManager, token_hash
 from .model import atomic_write_json, load_json, sha256_canonical, utc_now
 from .projection import ProjectionCoordinator
+from .projection_control import ProjectionLeaseGuard
 
 
 class StewardController:
@@ -113,6 +119,9 @@ class StewardController:
             "evidence": evidence,
             "evidence_error": evidence_error,
             "source_lag": self._source_lag(),
+            "active_projection": load_json(
+                self.config.state_root / "active_projection.json"
+            ),
             "config_sha256": self.config.config_sha256,
         }
 
@@ -286,16 +295,22 @@ class StewardController:
                     actor=actor,
                     phase="pre",
                 )
-            except ProjectionError:
+            except ProjectionError as error:
                 self.finish(
                     run_id=lease["run_id"],
                     lease_token=token,
-                    outcome="failed",
+                    outcome=(
+                        "cancelled"
+                        if isinstance(error, ProjectionCancelledError)
+                        else "failed"
+                    ),
                     summary_ref="pre_projection_failed",
                     project_after=False,
                 )
                 raise
             result["projection_generation_id"] = generation["generation_id"]
+        renewed = self.leases.heartbeat(lease["run_id"], token)
+        result["expires_at_unix"] = renewed["expires_at_unix"]
         return result
 
     def heartbeat(self, *, run_id: str, lease_token: str) -> dict[str, Any]:
@@ -360,7 +375,11 @@ class StewardController:
                 )
                 projection_generation_id = generation["generation_id"]
             except ProjectionError as error:
-                outcome = "failed"
+                outcome = (
+                    "cancelled"
+                    if isinstance(error, ProjectionCancelledError)
+                    else "failed"
+                )
                 projection_error = {
                     "error_type": type(error).__name__,
                     "error_sha256": hashlib.sha256(str(error).encode()).hexdigest(),
@@ -445,13 +464,46 @@ class StewardController:
         actor: str,
         phase: str = "manual",
     ) -> dict[str, Any]:
-        heartbeat = self.leases.heartbeat(run_id, lease_token)
-        if heartbeat["stop_requested"]:
-            raise ProjectionError("projection denied after pause was requested")
         lease = self.leases.lease()
         if lease is None or lease.get("actor") != actor:
             raise LeaseError("projection actor does not own the active lease")
-        manifest = self.projections.run(actor=actor, run_id=run_id, phase=phase)
+        guard = ProjectionLeaseGuard(
+            self.config,
+            self.leases,
+            run_id=run_id,
+            lease_token=lease_token,
+            actor=actor,
+            phase=phase,
+        )
+        if guard.stop_requested:
+            guard.close(status="cancelled")
+            raise ProjectionCancelledError(
+                "projection denied after pause was requested"
+            )
+        try:
+            manifest = self.projections.run(
+                actor=actor,
+                run_id=run_id,
+                phase=phase,
+                control=guard.poll,
+            )
+        except Exception as error:
+            guard.close(
+                status=(
+                    "cancelled"
+                    if isinstance(error, ProjectionCancelledError)
+                    else "failed"
+                )
+            )
+            raise
+        guard.poll(
+            {
+                "generation_id": manifest["generation_id"],
+                "status": "passed",
+            },
+            force=True,
+        )
+        guard.close(status="passed")
         event_result = self._emit(
             "projection_generation_published",
             aggregate_type="projection_generation",

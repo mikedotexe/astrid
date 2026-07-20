@@ -7,7 +7,10 @@ import hashlib
 import json
 from pathlib import Path
 import subprocess
+import sys
 import tempfile
+import threading
+import time
 import unittest
 
 try:
@@ -51,8 +54,22 @@ class FakeCoordinator:
     def __init__(self) -> None:
         self.calls: list[tuple[str, str, str]] = []
 
-    def run(self, *, actor: str, run_id: str, phase: str) -> dict[str, str]:
+    def run(
+        self,
+        *,
+        actor: str,
+        run_id: str,
+        phase: str,
+        control=None,
+    ) -> dict[str, str]:
         self.calls.append((actor, run_id, phase))
+        if control:
+            control(
+                {
+                    "generation_id": f"{phase}_{len(self.calls)}",
+                    "completed_step_count": 1,
+                }
+            )
         return {
             "generation_id": f"{phase}_{len(self.calls)}",
             "status": "passed",
@@ -314,6 +331,105 @@ class StewardProjectionTests(unittest.TestCase):
         self.assertEqual(
             finished["receipt"]["projection_generation_id"],
             "post_2",
+        )
+
+    def test_projection_renews_past_lease_ttl_and_returns_fresh_token(self) -> None:
+        class SlowCoordinator(FakeCoordinator):
+            def run(
+                self,
+                *,
+                actor: str,
+                run_id: str,
+                phase: str,
+                control=None,
+            ) -> dict[str, str]:
+                self.calls.append((actor, run_id, phase))
+                deadline = time.monotonic() + 2.6
+                while time.monotonic() < deadline:
+                    if control:
+                        control(
+                            {
+                                "generation_id": "slow_generation",
+                                "step_id": "slow_step",
+                                "command_id": "fixture",
+                            }
+                        )
+                    time.sleep(0.1)
+                return {
+                    "generation_id": "slow_generation",
+                    "status": "passed",
+                }
+
+        config = ControlConfig(
+            **{
+                **self.config.__dict__,
+                "lease_ttl_secs": 2,
+                "heartbeat_interval_secs": 1,
+            }
+        )
+        controller = StewardController(
+            config,
+            projection_coordinator=SlowCoordinator(),  # type: ignore[arg-type]
+        )
+        controller.resume(actor="test", acknowledgement="fixture")
+        begun = controller.begin(actor="test")
+        self.assertGreater(
+            begun["expires_at_unix"] - time.time(),
+            config.heartbeat_interval_secs,
+        )
+        heartbeat = controller.heartbeat(
+            run_id=begun["run_id"],
+            lease_token=begun["lease_token"],
+        )
+        self.assertFalse(heartbeat["stop_requested"])
+        controller.finish(
+            run_id=begun["run_id"],
+            lease_token=begun["lease_token"],
+            outcome="success",
+            project_after=False,
+        )
+
+    def test_projection_pause_interrupts_child_once_without_force_kill(self) -> None:
+        controller = StewardController(self.config)
+        controller.resume(actor="test", acknowledgement="fixture")
+        begun = controller.begin(actor="test", project_before=False)
+        started = time.monotonic()
+
+        def pause_soon() -> None:
+            time.sleep(0.25)
+            controller.pause(actor="test", reason="fixture pause")
+
+        thread = threading.Thread(target=pause_soon)
+        thread.start()
+        from scripts.steward_control.projection import _default_runner
+
+        result = _default_runner(
+            [
+                sys.executable,
+                "-c",
+                (
+                    "import signal,time; "
+                    "signal.signal(signal.SIGINT, signal.SIG_IGN); "
+                    "time.sleep(0.8)"
+                ),
+            ],
+            cwd=self.repo,
+            timeout=5,
+            poll_callback=lambda progress: controller.heartbeat(
+                run_id=begun["run_id"],
+                lease_token=begun["lease_token"],
+            )["stop_requested"],
+            poll_interval_secs=0.05,
+        )
+        thread.join(timeout=2)
+        self.assertTrue(result.cancelled)
+        self.assertEqual(result.return_code, 0)
+        self.assertGreater(time.monotonic() - started, 0.7)
+        controller.finish(
+            run_id=begun["run_id"],
+            lease_token=begun["lease_token"],
+            outcome="cancelled",
+            project_after=False,
         )
 
 
