@@ -3270,6 +3270,20 @@ mod tests {
                 .issues
                 .contains(&"typed_legacy_hybrid_mismatch".to_string())
         );
+
+        telemetry
+            .spectral_fingerprint
+            .as_mut()
+            .expect("legacy fingerprint")
+            .pop();
+        let short_integrity = telemetry.spectral_fingerprint_integrity_v1();
+        assert_eq!(short_integrity.legacy_vector_len, Some(31));
+        assert_eq!(short_integrity.hybrid_coherence_index, None);
+        assert_eq!(short_integrity.hybrid_max_abs_delta, None);
+        assert_eq!(
+            short_integrity.hybrid_coherence_state,
+            "unavailable_malformed_legacy"
+        );
     }
 
     #[test]
@@ -3523,6 +3537,13 @@ mod tests {
         .expect("telemetry with malformed additive field");
         assert!(malformed.spectral_glimpse_12d.is_some());
         assert!(malformed.spectral_glimpse_12d_view().is_none());
+
+        let mut non_finite = telemetry;
+        non_finite
+            .spectral_glimpse_12d
+            .as_mut()
+            .expect("12D glimpse")[7] = f32::NAN;
+        assert!(non_finite.spectral_glimpse_12d_view().is_none());
     }
 
     #[test]
