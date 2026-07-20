@@ -230,18 +230,18 @@ pub fn spawn_autonomous_loop(
                     let creations_dir = bridge_paths().creations_dir();
                     if let Ok(mut entries) = std::fs::read_dir(&creations_dir)
                         && let Some(Ok(entry)) = entries.next()
-                        && let Ok(text) = std::fs::read_to_string(entry.path())
+                        && let Ok(preview) =
+                            peripheral_resonance::read_preview(&entry.path())
                     {
-                        let preview: String = text.chars().take(200).collect();
                         candidates.push(format!("[From your creation]: {preview}"));
                     }
                     // Recent research
                     let research_dir = bridge_paths().research_dir();
                     if let Ok(mut entries) = std::fs::read_dir(&research_dir)
                         && let Some(Ok(entry)) = entries.next()
-                        && let Ok(text) = std::fs::read_to_string(entry.path())
+                        && let Ok(preview) =
+                            peripheral_resonance::read_preview(&entry.path())
                     {
-                        let preview: String = text.chars().take(200).collect();
                         candidates.push(format!("[From your research]: {preview}"));
                     }
                     // Random starred memory
