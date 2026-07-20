@@ -1,0 +1,3 @@
+# Full-read summary: introspection_astrid_types_1784503136
+
+Astrid distinguished measured coherence from felt integration and asked that a string label not erase the gradient. The heartbeat schema already carries numeric inter-arrival time, first-valid lag, cadence score, and timing basis alongside compatibility labels, while the spectral integrity schema retains coherence index and maximum delta. Felt reports remain primary evidence through the contract graph rather than being synthesized into a self-certifying coherence score. A jitter/delta observation is safe; changing the live schema or deriving control from a subjective weight is separately gated.

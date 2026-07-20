@@ -1,0 +1,5 @@
+{"claims":[
+  {"claim_id":"c001","summary":"A thin meaningful remainder could be mistaken for artifact-only output by a Boolean predicate.","disposition":"verify that structure-only and thin lexical remainders remain present and route to semantic review","classification":"verified_existing"},
+  {"claim_id":"c002","summary":"A graded semantic-density view is needed beside the Boolean cleanup decision.","disposition":"verify the existing remainder-texture and surface-density diagnostic remains evidence-only","classification":"verified_existing"},
+  {"claim_id":"c003","summary":"Semantic density could directly alter cleanup or output allocation.","disposition":"retain as an exact Tier 5 provider and prompt behavior wait pending parity evidence","classification":"authority_gated"}
+]}

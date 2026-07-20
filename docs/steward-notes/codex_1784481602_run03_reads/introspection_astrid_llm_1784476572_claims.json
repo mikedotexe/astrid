@@ -1,0 +1,5 @@
+{"claims":[
+  {"claim_id":"c001","summary":"Long unquoted reflection must remain non-artifact content.","disposition":"verify dense unquoted and nested text remains semantic after known-token cleanup","classification":"verified_existing"},
+  {"claim_id":"c002","summary":"Rigid quote-pair recognition could misclassify nested reflection as boundary placement.","disposition":"verify quote matching only annotates placement counts and does not discard or rewrite expressive content","classification":"verified_existing"},
+  {"claim_id":"c003","summary":"Artifact review should retain semantic density and structural-form uncertainty beyond binary quote syntax.","disposition":"verify existing remainder-texture and semantic-integrity diagnostics already expose those bounded signals without claiming meaning from form","classification":"verified_existing"}
+]}

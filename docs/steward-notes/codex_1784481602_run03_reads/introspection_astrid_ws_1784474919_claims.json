@@ -1,0 +1,5 @@
+{"claims":[
+  {"claim_id":"c001","summary":"A connected socket and meaningful live telemetry must be distinguishable.","disposition":"verify connection perception states separate awaiting, first-valid, and current-telemetry conditions","classification":"verified_existing"},
+  {"claim_id":"c002","summary":"Stalled arrivals should become explicit stale-hearing evidence while the socket remains open.","disposition":"verify inter-arrival classes, cadence clarity, and field-versus-hearing warnings cover the stale stream case","classification":"verified_existing"},
+  {"claim_id":"c003","summary":"Reconnect frequency may correlate with perceived pressure without proving network causation.","disposition":"route a bounded time-aligned pressure-risk versus reconnect-count observation with temporal-association labeling","classification":"sandbox_routed"}
+]}

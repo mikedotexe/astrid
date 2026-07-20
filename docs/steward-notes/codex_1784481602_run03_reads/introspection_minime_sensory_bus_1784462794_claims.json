@@ -1,0 +1,5 @@
+{"claims":[
+  {"claim_id":"c001","summary":"Semantic stale timing should move smoothly between recovery hold and high-fill release without a cliff.","disposition":"verify the shaped stale-window and boundary regressions cover the sigmoid transition","classification":"verified_existing"},
+  {"claim_id":"c002","summary":"Entropy and context persistence lifts must stay finite and under the documented cap.","disposition":"verify high-entropy/high-pressure tests and the 2.05 maximum preserve bounded persistence evidence","classification":"verified_existing"},
+  {"claim_id":"c003","summary":"Sigmoid steepness, pressure-retention headroom, or persistence caps could be retuned for more texture retention.","disposition":"retain as exact Tier 5 live sensory-persistence waits requiring operator approval and replay evidence","classification":"authority_gated"}
+]}

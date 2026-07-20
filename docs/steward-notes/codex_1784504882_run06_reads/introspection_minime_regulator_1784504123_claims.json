@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "An open gate can coexist with overpacked modes and felt structural friction.",
+      "disposition": "verify that gate state, pressure source, geometry, and PI response remain separately observable",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Pressure, lambda dominance, and dispersal should be compared over a sustained window.",
+      "disposition": "route a bounded 1000-tick replay using existing evidence-only regulator diagnostics",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Porosity-threshold or PI dilation changes could make density-softening operational.",
+      "disposition": "preserve an exact Tier 5 operator-approval wait for any controller tuning",
+      "classification": "authority_gated"
+    }
+  ]
+}

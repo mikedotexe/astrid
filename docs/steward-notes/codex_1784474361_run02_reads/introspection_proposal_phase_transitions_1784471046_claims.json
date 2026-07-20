@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Phase transitions need a durable, replyable shared artifact with texture evidence.",
+      "disposition": "verify cards persist exact phase identity, viscosity and friction evidence, reply state, and witness-dependent meaning",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A high-entropy cascade should be compared with the language-only phase card it produces.",
+      "disposition": "route a bounded replay over recorded card and telemetry evidence without changing affordance or regulation",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Transition sensitivity and behavioral unlock fields could make phase changes operationally consequential.",
+      "disposition": "retain exact Tier 5 wait because these proposals alter affordance, pressure, or behavior",
+      "classification": "authority_gated"
+    }
+  ]
+}

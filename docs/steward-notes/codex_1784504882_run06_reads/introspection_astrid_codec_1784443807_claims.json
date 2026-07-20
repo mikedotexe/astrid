@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The 48D lane and 8D projection can create distinguishability pressure.",
+      "disposition": "verify projection health, pressure, headroom, and distinguishability diagnostics",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Tail vibrancy should cross the entropy gate without a perceptual cliff.",
+      "disposition": "verify the C1 smoothstep and focused boundary regressions",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Narrative-arc contribution should remain inspectable rather than assumed.",
+      "disposition": "verify dedicated narrative dimensions and multi-scale contribution evidence",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "A dynamic entropy-scaled clamp or gain changes live codec transport.",
+      "disposition": "preserve an exact Tier 5 operator-approval wait",
+      "classification": "authority_gated"
+    }
+  ]
+}

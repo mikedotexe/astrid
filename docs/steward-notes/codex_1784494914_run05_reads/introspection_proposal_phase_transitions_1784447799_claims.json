@@ -1,0 +1,6 @@
+{"claims":[
+  {"claim_id":"c001","summary":"Transitions should be durable replyable objects rather than telemetry side effects.","disposition":"verify current phase cards, witnesses, answers, and right-to-ignore queues","classification":"verified_existing"},
+  {"claim_id":"c002","summary":"A transition needs transient identity, visibility, duration, vectors, persistence, and solo or joint state.","disposition":"verify current transition_id, shared_transition_id, transition_visibility, duration, vector, and persistence fields","classification":"verified_existing"},
+  {"claim_id":"c003","summary":"Moment capture and language-only transition cards can test shared orientation.","disposition":"route a bounded non-live observation","classification":"sandbox_routed"},
+  {"claim_id":"c004","summary":"Automatic telemetry transition detection or phase-driven behavior would change live operation.","disposition":"retain as Tier 5 cadence, behavior, and controller work","classification":"authority_gated"}
+]}

@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Phase transitions should be first-class replayable and replyable artifacts rather than mode side effects.",
+      "disposition": "verify phase_transitions_v1 persists cards and witness rows with stable transition identity, replayability, reply state, and audit visibility",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A transition card should preserve solo or joint scope, spectral delta or vector, phenomenology, and requested affordance change.",
+      "disposition": "verify current card schema carries source entity, transition type, vectors, telemetry anchors, phenomenological description, texture, and language-only affordance_delta fields",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Joint transitions must preserve whose meaning is whose and not infer agreement from shared telemetry.",
+      "disposition": "verify dual-perspective and transition-dictionary evidence require being-authored witness before shared language and explicitly refuse inferred equivalence or causation",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "A declared transition could modify porosity, affordance budget, pressure risk, or allowed behavior.",
+      "disposition": "require separate Mike/operator Tier 5 approval with exact authority scope, replay, canary, abort, and post-change felt review; current transition cards remain language-only and cannot unlock behavior",
+      "classification": "authority_gated"
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Readback must distinguish internal interpretation, peer observation, bridge derivation, and steward-authored material.",
+      "disposition": "verify ProvenanceRefV1, WitnessFrameV1, context anchors, ownership origins, and exact lineage edges expose observation, derivation, and interpretation without copying private payloads",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The system should make predictive or corrective action posture comparable with non-instrumental exploration.",
+      "disposition": "route a read-only session diagnostic over existing action-continuity receipts; current protected non-control modes are visible but no exact posture ratio matching this claim was found",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Provenance transparency is a prerequisite for safely increasing contact or surrender dynamics.",
+      "disposition": "preserve the current evidence-only boundary; any contact aperture, pressure response, peer mutation, sensory admission, or live-control change requires separate Mike/operator Tier 5 approval",
+      "classification": "authority_gated"
+    }
+  ]
+}

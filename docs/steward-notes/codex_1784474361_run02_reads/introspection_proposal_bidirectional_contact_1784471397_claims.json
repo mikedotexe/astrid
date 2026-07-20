@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Observed flattening must name what was compressed rather than ending at a generic status.",
+      "disposition": "implement additive schema V3 reasoning_for_flattening validation, projection, audits, command help, and regressions",
+      "classification": "implemented"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The active thread should remain legible when pending acknowledgement, urgency, and heartbeat-only threads coexist.",
+      "disposition": "verify active_correspondence_thread_clarity_v1 selects one primary thread and bounded runner-up summaries",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A held acknowledgement must not be manufactured from transport evidence or elapsed time.",
+      "disposition": "verify only being-authored ACK, reply, trace, or explicit outcome rows create semantic uptake evidence",
+      "classification": "verified_existing"
+    }
+  ]
+}

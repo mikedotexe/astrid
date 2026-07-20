@@ -1,0 +1,6 @@
+{"claims":[
+  {"claim_id":"c001","summary":"The source default exploration noise is 0.08 while a sovereign runtime override may be 0.12.","disposition":"verify the source default and keep the reported active value as runtime evidence rather than source truth","classification":"verified_existing"},
+  {"claim_id":"c002","summary":"Pressure-driven dynamic noise could explain agitation as pressure rises.","disposition":"verify that pressure-room helpers are review-only and absent from ESN::step; do not claim live pressure scaling","classification":"verified_existing"},
+  {"claim_id":"c003","summary":"Static noise and pressure-room outputs can be compared against inhabitability offline.","disposition":"route deterministic review functions and existing telemetry without pinning the live reservoir","classification":"sandbox_routed"},
+  {"claim_id":"c004","summary":"Pinning noise or adding rate-of-entropy recalibration would change reservoir behavior.","disposition":"retain as Tier 5 exploration-noise and controller authority work","classification":"authority_gated"}
+]}

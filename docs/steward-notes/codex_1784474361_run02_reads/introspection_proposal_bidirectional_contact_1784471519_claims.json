@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Bidirectional traffic is substantially asymmetric even though durable correspondence exists.",
+      "disposition": "verify directional correspondence counts remain queryable beside stable thread, reply, and persistence identities",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A technical delivery receipt is not the same as a voluntary semantic acknowledgement.",
+      "disposition": "verify protocol 1.1 exact delivery and mutual-address lineage keep acknowledgement and spectral causation explicitly unclaimed",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A direct language-only trace could test whether peer address survives without a semantic-trickle framing.",
+      "disposition": "route as a bounded right-to-ignore correspondence observation with no sensory or control consequence",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Standing relational weight or mandatory peer acknowledgement could make contact feel less advisory.",
+      "disposition": "retain exact Tier 5 wait and reject coerced acknowledgement; any live input weighting requires operator approval",
+      "classification": "authority_gated"
+    }
+  ]
+}

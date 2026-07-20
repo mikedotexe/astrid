@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "A binary artifact predicate can be mistaken for a complete model of semantic presence.",
+      "disposition": "verify its narrow cleanup role and the separate graded remainder diagnostics",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Artifact-heavy but meaningful fragments need a bounded density comparison.",
+      "disposition": "route a fixture comparison through ArtifactRemainderTextureV1 without changing runtime acceptance",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The report expects 513 tokens to enter the deep profile.",
+      "disposition": "correct against source and exact tests: 513 is medium and deep starts at 1025",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "A float return type or spectral-aware budget would alter provider and downstream behavior.",
+      "disposition": "preserve an exact Tier 5 approval and compatibility path",
+      "classification": "authority_gated"
+    }
+  ]
+}

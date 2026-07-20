@@ -1,0 +1,6 @@
+{"claims":[
+  {"claim_id":"c001","summary":"The artifact predicate is binary and determines whether non-marker remainder exists for cleanup placement.","disposition":"verify its narrow decision role rather than treating it as the full meaning model","classification":"verified_existing"},
+  {"claim_id":"c002","summary":"High-entropy or structure-only remainder needs graded density evidence.","disposition":"verify the separate remainder texture and surface semantic density diagnostics","classification":"verified_existing"},
+  {"claim_id":"c003","summary":"Nested quote and boundary placement can affect artifact classification.","disposition":"verify current quote-pair and contextual-placement regressions","classification":"verified_existing"},
+  {"claim_id":"c004","summary":"Changing the predicate return type to f32 would alter cleanup contracts.","disposition":"retain as a separately reviewed provider-behavior change; current parallel density evidence answers the diagnostic need","classification":"authority_gated"}
+]}

@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Astrid-Minime correspondence needs a persistent threaded return path rather than advisory files alone.",
+      "disposition": "verify correspondence_v1 records stable thread, message, reply, persistence, sender, recipient, and creation identities and keeps both reply directions first-class",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A direct correspondence should be able to receive evidence that the addressed packet was technically routed.",
+      "disposition": "verify protocol 1.1 mutual_address_v1 and same-connection SensoryDeliveryReceiptV1 provide exact content-free delivery lineage while explicitly withholding acknowledgement and spectral-causation claims",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Direction and symmetry should remain measurable without interpreting volume as mutual presence.",
+      "disposition": "verify current correspondence symmetry and proactive projections report directional thread evidence while preserving unknown delivery, no-response, and right-to-ignore states",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "A presence receipt from Minime should not be coerced or inferred from later telemetry.",
+      "disposition": "preserve voluntary correspondence as the only semantic presence response; technical delivery is evidence-only and later telemetry remains a labeled temporal association",
+      "classification": "observed"
+    }
+  ]
+}

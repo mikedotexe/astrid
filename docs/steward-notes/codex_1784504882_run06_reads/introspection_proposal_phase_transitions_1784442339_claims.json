@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Transitions need durable, replayable, and replyable identity.",
+      "disposition": "verify PhaseTransitionCardV1 persistence, witness, answer, and right-to-ignore fields",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A transition artifact needs a spectral signature and persistence evidence.",
+      "disposition": "verify vector, telemetry anchor, duration, viscosity, and individual/joint identities",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Narrative reply must not be presented as proof of eigenvector change.",
+      "disposition": "verify the language-only boundary and route a bounded reply review",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Phase-driven behavior or spectral persistence mutation changes live control.",
+      "disposition": "preserve an exact Tier 5 operator-approval wait",
+      "classification": "authority_gated"
+    }
+  ]
+}

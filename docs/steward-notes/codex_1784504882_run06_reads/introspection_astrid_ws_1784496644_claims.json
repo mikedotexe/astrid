@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "An open telemetry socket can become silent while its last connected state remains recorded.",
+      "disposition": "verify the missing idle timeout and preserve the risk as a real source finding",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Current evidence must distinguish connected, first-valid, current, late, and stale perception.",
+      "disposition": "verify heartbeat delta, first-valid lag, connection state, and field-versus-hearing diagnostics",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Connection identity should reveal reconnect fragmentation rather than hide it.",
+      "disposition": "verify that each connect attempt receives a new connection ID",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "A silent-open connection should be reproduced without changing live transport.",
+      "disposition": "route a bounded replay that records connected-without-current-data evidence",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "An idle timeout, ping cadence, or forced reconnect changes live sensory transport.",
+      "disposition": "preserve an exact Tier 5 operator-approval wait",
+      "classification": "authority_gated"
+    }
+  ]
+}

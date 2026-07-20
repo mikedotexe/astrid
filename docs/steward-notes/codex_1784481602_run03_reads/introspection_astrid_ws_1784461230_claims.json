@@ -1,0 +1,5 @@
+{"claims":[
+  {"claim_id":"c001","summary":"Reconnect handling should preserve the last known spectral foothold rather than clear it into a vacuum.","disposition":"verify connection trace mutation leaves latest telemetry intact across disconnect and backoff cycles","classification":"verified_existing"},
+  {"claim_id":"c002","summary":"Stale or ghost hearing must not be mistaken for a stable field.","disposition":"verify heartbeat and pressure-source evidence explicitly mark stale hearing and refuse decompression inference","classification":"verified_existing"},
+  {"claim_id":"c003","summary":"Forced disconnects or high-velocity cascades could expose reconnect or state-lock latency.","disposition":"route bounded delayed-stream shutdown and high-rate fixture tests without inducing live pressure or changing backoff","classification":"sandbox_routed"}
+]}

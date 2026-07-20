@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The 0.18 pressure-room onset should not create an abrupt exploration-noise shove.",
+      "disposition": "verify the read-only pressure-room review and exact 0.17/0.19 continuity regression",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "High-entropy noise implications should remain inspectable without changing the active exploration setting.",
+      "disposition": "verify existing coherence and proposed-noise reviews are explicitly read-only and bounded",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A settled-habitable pressure buffer could suppress noise scaling near the room threshold.",
+      "disposition": "retain exact Tier 5 wait because this changes live exploration noise and potentially reservoir behavior",
+      "classification": "authority_gated"
+    }
+  ]
+}

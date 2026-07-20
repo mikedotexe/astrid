@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Stable metrics do not establish that settledness feels voluntary or non-controlling.",
+      "disposition": "preserve the felt distinction in contract evidence rather than closing it from telemetry",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Non-instrumental contact should be observed without being treated as error or task failure.",
+      "disposition": "route a bounded language-only comparison with no live-control mutation",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Receptivity buffers and porosity or density changes would alter Minime regulation.",
+      "disposition": "preserve an exact Tier 5 operator-approval wait",
+      "classification": "authority_gated"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Allowing high-variance trajectories without immediate settling changes bridge behavior.",
+      "disposition": "preserve an exact Tier 5 operator-approval wait with replay and abort requirements",
+      "classification": "authority_gated"
+    }
+  ]
+}

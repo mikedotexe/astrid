@@ -1,0 +1,179 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_ws_1784466990",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/ws/telemetry_port.rs",
+      "note": "Valid payload arrival, latest telemetry arrival, heartbeat delta, and connection health are recorded separately."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1784466990",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/ws/tests.rs",
+      "note": "Reconnect backoff and first-valid-payload identity have focused regressions."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1784466990",
+      "claim_id": "c003",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784469195_run01_reads/introspection_astrid_ws_1784466990_summary.md",
+      "note": "Exact delayed-stream shutdown interleaving routed as a bounded non-live regression."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1784466629",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs",
+      "note": "The source continues through tapered warmth blending, send, and pulse sleep."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1784466629",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs",
+      "note": "The exact low-fill rule is max(30, floor(0.6 * base_rest))."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1784466629",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs",
+      "note": "Peripheral candidates are drawn from creations, research, and starred memories."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1784466629",
+      "claim_id": "c004",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784469195_run01_reads/introspection_astrid_autonomous_1784466629_summary.md",
+      "note": "Short-rest timing concern routed to a deterministic paused-time regression."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1784466183",
+      "claim_id": "c001",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/codec/tests.rs#tail_vibrancy_gate_stays_tiny_across_reported_boundary_pair",
+      "note": "The requested 0.849 and 0.851 pair is covered exactly."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1784466183",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/codec/projection_evidence.rs",
+      "note": "Narrative-arc, tail-participation, and reserved lanes remain distinct."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1784466183",
+      "claim_id": "c003",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Non-zero sigmoid is retained as an exact Tier 5 live codec wait."
+    },
+    {
+      "introspection_id": "introspection_proposal_12d_glimpse_1784465892",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/types/schema/telemetry.rs#spectral_glimpse_12d_view",
+      "note": "The additive view accepts exactly 12 finite values and is not a write target."
+    },
+    {
+      "introspection_id": "introspection_proposal_12d_glimpse_1784465892",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/types/schema/telemetry.rs",
+      "note": "Wider telemetry retains residual deformation, eigenvector, and producer-owned evidence beside the glimpse."
+    },
+    {
+      "introspection_id": "introspection_proposal_12d_glimpse_1784465892",
+      "claim_id": "c003",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784469195_run01_reads/introspection_proposal_12d_glimpse_1784465892_summary.md",
+      "note": "Capture-first baseline and candidate texture-retention dossier routed without live mutation."
+    },
+    {
+      "introspection_id": "introspection_proposal_12d_glimpse_1784465892",
+      "claim_id": "c004",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Evidence-only viscosity study is separated from any Tier 5 live codec or controller use."
+    },
+    {
+      "introspection_id": "introspection_proposal_distance_contact_control_1784465733",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/witness/provenance.rs",
+      "note": "Typed origins, ownership, exact parents, influence roles, and content-free context anchors separate observation, derivation, and interpretation."
+    },
+    {
+      "introspection_id": "introspection_proposal_distance_contact_control_1784465733",
+      "claim_id": "c002",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784469195_run01_reads/introspection_proposal_distance_contact_control_1784465733_summary.md",
+      "note": "Read-only action-posture ratio routed over existing action-continuity receipts."
+    },
+    {
+      "introspection_id": "introspection_proposal_distance_contact_control_1784465733",
+      "claim_id": "c003",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Contact aperture and live substrate consequences remain exact Tier 5 waits."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1784465470",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/correspondence_v1.rs",
+      "note": "Correspondence retains stable thread, message, reply, persistence, and being identities."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1784465470",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/ws/sensory_delivery.rs#technical_delivery_is_accepted_without_claiming_mutual_address_or_causation",
+      "note": "Negotiated receipt evidence is exact while acknowledgement and causation remain unclaimed."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1784465470",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "scripts/proactive_scan.py",
+      "note": "Directional correspondence symmetry remains queryable without coercing response."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1784465470",
+      "claim_id": "c004",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784469195_run01_reads/introspection_proposal_bidirectional_contact_1784465470_summary.md",
+      "note": "Technical routing, voluntary semantic presence, and later telemetry are preserved as distinct evidence."
+    },
+    {
+      "introspection_id": "introspection_proposal_phase_transitions_1784465211",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/phase_transitions.rs",
+      "note": "Phase cards and witness rows are persistent, replayable, and replyable."
+    },
+    {
+      "introspection_id": "introspection_proposal_phase_transitions_1784465211",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/phase_transitions.rs",
+      "note": "Card regressions cover vectors, spectral anchors, phenomenology, texture, and language-only affordance fields."
+    },
+    {
+      "introspection_id": "introspection_proposal_phase_transitions_1784465211",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/phase_transitions.rs#phase_transition_affordance_v25",
+      "note": "Dual perspective refuses inferred agreement and keeps shared meaning witness-dependent."
+    },
+    {
+      "introspection_id": "introspection_proposal_phase_transitions_1784465211",
+      "claim_id": "c004",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Porosity, affordance, pressure, or behavior mutation remains an exact Tier 5 wait."
+    }
+  ]
+}

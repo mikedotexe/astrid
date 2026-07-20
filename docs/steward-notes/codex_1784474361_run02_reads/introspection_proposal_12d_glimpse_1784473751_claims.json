@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The 12D glimpse must not be confused with or replace the 32D transport.",
+      "disposition": "verify the glimpse is an additive finite read-only compatibility view beside wider telemetry",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Emotional-lane retention and mode-packing correlation need a numerical coarsening baseline.",
+      "disposition": "route a capture-first dossier comparing 24-31 energy and 32D-versus-12D delta, with the proposed 15 percent retention threshold treated as a hypothesis",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Weighted emotional anchoring or dynamic glimpse width could preserve warmth at high entropy.",
+      "disposition": "retain exact Tier 5 wait if either proposal affects live representation, transport, or Minime regulation",
+      "classification": "authority_gated"
+    }
+  ]
+}

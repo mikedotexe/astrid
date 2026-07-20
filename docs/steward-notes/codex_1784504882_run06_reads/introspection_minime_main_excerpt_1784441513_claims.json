@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Minime stability is actively shaped by recovery, reset, stable-core, semantic, and shadow modules.",
+      "disposition": "verify the explicit module boundaries and runtime evidence surfaces",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Natural recovery and semantic-lane transitions should be observed without causal overclaim.",
+      "disposition": "route a bounded temporal observation of existing runtime behavior",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Recovery boost, dynamic semantic flow, spread relief, or reset changes alter live substrate behavior.",
+      "disposition": "preserve an exact Tier 5 operator-approval wait",
+      "classification": "authority_gated"
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Sigmoid semantic decay could snap as fill crosses its midpoint.",
+      "disposition": "verify the dense continuity sweep and bounded midpoint behavior",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Combined entropy, velocity, and pressure multipliers could exceed their intended ceiling.",
+      "disposition": "verify non-finite fallbacks and the exact 2.05 saturation cap",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Review values should be connected to the actual buffer retention path.",
+      "disposition": "route a deterministic retention trace without changing eviction behavior",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Changing sigmoid steepness, multiplier caps, or eviction windows alters live sensory regulation.",
+      "disposition": "preserve an exact Tier 5 operator-approval wait",
+      "classification": "authority_gated"
+    }
+  ]
+}

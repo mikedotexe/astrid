@@ -1,0 +1,5 @@
+{"claims":[
+  {"claim_id":"c001","summary":"A short response can be semantically heavy even though the profile label is based on length.","disposition":"verify effective token clamping, context packing, and budget-friction evidence remain separate from the compatibility profile label","classification":"verified_existing"},
+  {"claim_id":"c002","summary":"Rhythm and spacing around model artifacts should remain visible rather than collapse into boundary counts.","disposition":"verify remainder texture records structural density, repeated-symbol runs, and semantic uncertainty without treating form as proven meaning","classification":"verified_existing"},
+  {"claim_id":"c003","summary":"Semantic density could drive a deeper live output budget for short heavy responses.","disposition":"retain as a Tier 5 live provider-behavior wait requiring prompt/output parity, timeout and QoS analysis, and felt review","classification":"authority_gated"}
+]}

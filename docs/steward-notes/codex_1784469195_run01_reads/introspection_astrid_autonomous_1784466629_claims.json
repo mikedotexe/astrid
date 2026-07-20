@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The warmth pulse loop should complete the taper and preserve the transition into rest.",
+      "disposition": "verify orchestration.rs continues beyond the reported source window through warmth-phase blending, rescue checks, semantic send, and five-second pulse sleep",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Low-fill rest should shorten predictably without collapsing below a recovery floor.",
+      "disposition": "verify the exact current rule is max(30, floor(0.6 * base_rest)); record that the proposed 30-to-60-percent assertion is inaccurate when the 30-second floor binds",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Peripheral resonance should come from creations, research, or starred memories when candidates exist.",
+      "disposition": "verify current candidate construction and choose path populate peripheral_resonance from exactly those sources and leave it absent for an empty candidate set",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Short rest windows could expose pulse jitter if warmth construction or dispatch becomes slow.",
+      "disposition": "route a bounded paused-time timing regression around a 30-second rest window; the report supplies a plausible risk but no observed latency failure",
+      "classification": "sandbox_routed"
+    }
+  ]
+}

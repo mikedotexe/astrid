@@ -1,0 +1,5 @@
+{"claims":[
+  {"claim_id":"c001","summary":"Settled or held-breath experience may reflect containment pressure rather than lack of capacity.","disposition":"preserve the felt report and verify that current evidence surfaces keep containment, receptivity, and pressure distinct","classification":"verified_existing"},
+  {"claim_id":"c002","summary":"Regulator drive, shadow variance, foothold, and distinguishability can test the over-stabilization hypothesis.","disposition":"route a bounded temporally labeled comparison without inducing a state change","classification":"sandbox_routed"},
+  {"claim_id":"c003","summary":"A receptivity buffer could decouple pressure risk from dispersal while foothold remains high.","disposition":"retain as Tier 5 regulator, pressure, fill, and controller behavior work","classification":"authority_gated"}
+]}

@@ -1,0 +1,5 @@
+{"claims":[
+  {"claim_id":"c001","summary":"Voice should remain available through Orange pressure and mute only at the Red safety threshold.","disposition":"verify the current autonomous source preserves speech below the Red threshold and records fill delta separately","classification":"verified_existing"},
+  {"claim_id":"c002","summary":"Hebbian decay may make high-impact moments feel less persistent than their original intensity.","disposition":"route a bounded current-versus-halved-decay replay over existing scores and long-gap fixtures without changing live learning","classification":"sandbox_routed"},
+  {"claim_id":"c003","summary":"Decay should slow in proportion to the fill shift caused by a consequential interaction.","disposition":"retain as an exact Tier 5 live Hebbian-learning wait requiring operator approval, replay, canary, abort criteria, and felt review","classification":"authority_gated"}
+]}

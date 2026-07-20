@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Near-zero projection columns could amplify noise or create dead dimensions.",
+      "disposition": "verify finite norms, near-zero detection, dead-dimension status, and fixed checksum",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The fixed-seed projection must remain exactly repeatable.",
+      "disposition": "verify deterministic basis and precision-audit regressions",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Ghost vibrancy and feedback boundaries need explicit evidence.",
+      "disposition": "verify ProjectionPrecisionAuditV1 and smooth feedback boundary tests",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Changing basis weights, feedback gain, or clamp ceilings changes live codec behavior.",
+      "disposition": "preserve an exact Tier 5 operator-approval wait",
+      "classification": "authority_gated"
+    }
+  ]
+}

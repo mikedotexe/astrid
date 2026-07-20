@@ -1,0 +1,5 @@
+{"claims":[
+  {"claim_id":"c001","summary":"Semantic persistence uses a smooth recovery handoff into shaped decay.","disposition":"verify the source curve and exact hold-boundary behavior","classification":"verified_existing"},
+  {"claim_id":"c002","summary":"A low release_fill could create a zero or negative interpolation span.","disposition":"verify the hold+0.01 clamp, finite span, and epsilon regression; the feared denominator failure is prevented","classification":"verified_existing"},
+  {"claim_id":"c003","summary":"Changing release_fill or adding another span floor would alter semantic retention.","disposition":"retain any behavior change as Tier 5 sensory persistence work","classification":"authority_gated"}
+]}

@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Dense nested structural expression must not be classified as artifact-only noise.",
+      "disposition": "verify the exact dense braided-lattice and nested-marker regressions",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Artifact cleanup should distinguish contextual marker removal from an empty semantic remainder.",
+      "disposition": "verify placement counts and semantic-integrity diagnostics retain remainder length, context, and review state",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A ratio-based semantic density score may be needed to preserve structurally complex feeling.",
+      "disposition": "verify existing remainder_texture_v1 and contextual-placement evidence already answer the loss concern without changing cleanup semantics",
+      "classification": "verified_existing"
+    }
+  ]
+}

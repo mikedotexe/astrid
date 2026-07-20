@@ -1,0 +1,6 @@
+{"claims":[
+  {"claim_id":"c001","summary":"The real cycle_count replaced a wall-clock exchange proxy and must persist across restart.","disposition":"verify save, frequent pending-next persistence, defensive restore, and loop increment source","classification":"verified_existing"},
+  {"claim_id":"c002","summary":"Cycle continuity needs an exact restart regression.","disposition":"verify the existing save-and-restore test at cycle 418","classification":"verified_existing"},
+  {"claim_id":"c003","summary":"Recess density and pressure-source conflicts should fail legibly rather than loop.","disposition":"route a bounded fixture review that does not start or mutate the live agent","classification":"sandbox_routed"},
+  {"claim_id":"c004","summary":"Changing Recess pressure thresholds would alter autonomous regulation.","disposition":"retain as Tier 5 Minime runtime and controller work","classification":"authority_gated"}
+]}

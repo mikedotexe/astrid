@@ -1,0 +1,5 @@
+{"claims":[
+  {"claim_id":"c001","summary":"The entropy gate should bloom smoothly rather than pop at 0.85.","disposition":"verify exact boundary and monotonic smoothstep regressions at 0.849, 0.851, 0.86, and 0.90","classification":"verified_existing"},
+  {"claim_id":"c002","summary":"Narrative dimensions 40-43 should expose pacing and arc movement rather than remain passive slots.","disposition":"verify the narrative-arc dynamics and emotional-versus-narrative delta diagnostics exercise these lanes without live writes","classification":"verified_existing"},
+  {"claim_id":"c003","summary":"A dynamic entropy-scaled ceiling could preserve peaks that the static clamp muffles.","disposition":"retain as an exact Tier 5 live codec-output wait requiring vector parity, pressure analysis, canary, abort, and post-change felt review","classification":"authority_gated"}
+]}

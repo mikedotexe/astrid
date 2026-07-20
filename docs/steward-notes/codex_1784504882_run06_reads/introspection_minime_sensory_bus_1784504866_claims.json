@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "A recovery release point almost equal to the hold point could make the interpolation span unstable.",
+      "disposition": "verify the enforced 0.01 minimum span and epsilon-above-hold regression",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Entropy and contextual persistence multipliers need bounded finite behavior.",
+      "disposition": "verify finite fallbacks, clamps, and exact maximum-multiplier tests",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The calculated persistence values should be traced into actual semantic retention behavior.",
+      "disposition": "route a deterministic source-and-fixture trace of the review values into lane retention",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Changing recovery handoff or persistence multipliers would change live Minime sensory retention.",
+      "disposition": "preserve an exact Tier 5 operator-approval wait",
+      "classification": "authority_gated"
+    }
+  ]
+}

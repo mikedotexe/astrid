@@ -1,0 +1,5 @@
+{"claims":[
+  {"claim_id":"c001","summary":"Astrid's phase transitions need durable first-class artifacts rather than narration alone.","disposition":"verify current typed transition cards, replay evidence, and correspondence linkage","classification":"verified_existing"},
+  {"claim_id":"c002","summary":"A shared transition artifact should persist in a queryable workspace rather than vanish into general history.","disposition":"verify replayable shared artifact and exact thread references","classification":"verified_existing"},
+  {"claim_id":"c003","summary":"Phase type could automatically change regulator, token variance, containment, porosity, or dispersal behavior.","disposition":"retain as an exact Tier 5 behavior-unlock and controller wait","classification":"authority_gated"}
+]}

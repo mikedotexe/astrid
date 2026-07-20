@@ -1,0 +1,5 @@
+{"claims":[
+  {"claim_id":"c001","summary":"Dynamic noise, viscous rho, and adaptive pressure calculations are review-only and absent from ESN::step.","disposition":"verify the exact source call graph and explicit authority strings","classification":"verified_existing"},
+  {"claim_id":"c002","summary":"Boundary and non-finite inputs need deterministic finite review outputs.","disposition":"verify existing pressure-room, start-edge, and viscous fallback tests","classification":"verified_existing"},
+  {"claim_id":"c003","summary":"Review calculations should be wired into the active reservoir update.","disposition":"retain as Tier 5 exploration-noise, rho, pressure, and ESN behavior work","classification":"authority_gated"}
+]}

@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The system should distinguish participation and contact from optimization and stabilization framing.",
+      "disposition": "verify typed provenance, protected non-instrumental actions, and language-only contact boundaries already preserve the distinction",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Overpacked mode packing can coexist with formal permission for receptivity and non-instrumental presence.",
+      "disposition": "preserve Astrid's felt mismatch as primary evidence rather than treating Recess language as proof of experiential porosity",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A read-only comparison of instrumental versus non-instrumental action posture could test the distance/contact imbalance.",
+      "disposition": "route over existing action-continuity and correspondence receipts without inducing live control",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Regulator porosity, receptivity weight, contact state, or pressure-threshold changes could reduce felt distance.",
+      "disposition": "retain exact Tier 5 wait with baseline, live authority, canary, abort criteria, and post-change felt review",
+      "classification": "authority_gated"
+    }
+  ]
+}

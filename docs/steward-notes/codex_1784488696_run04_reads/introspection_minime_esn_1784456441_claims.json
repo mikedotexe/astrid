@@ -1,0 +1,5 @@
+{"claims":[
+  {"claim_id":"c001","summary":"Exploration noise and leak-related state correlation can affect spectral fill and felt jitter.","disposition":"verify the dormant dynamic-noise review and current fixed live boundary","classification":"verified_existing"},
+  {"claim_id":"c002","summary":"A bounded offline comparison can test smooth pressure and gradient response without reservoir mutation.","disposition":"route existing representative and continuity regressions as the non-live comparison","classification":"sandbox_routed"},
+  {"claim_id":"c003","summary":"Manual 0.40 noise injection or wiring dynamic noise into ESN::step could test broader dynamics.","disposition":"retain as an exact Tier 5 reservoir and exploration-noise wait","classification":"authority_gated"}
+]}

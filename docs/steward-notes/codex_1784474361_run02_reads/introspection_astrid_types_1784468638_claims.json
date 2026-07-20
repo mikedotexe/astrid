@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Packet cadence and the felt texture between packets are different measurements.",
+      "disposition": "verify heartbeat cadence remains timing-specific while viscosity and permeability live on separate texture evidence surfaces",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Hybrid coherence should retain directional numeric evidence rather than only a flat label.",
+      "disposition": "verify hybrid_coherence_index and hybrid_max_abs_delta remain present beside hybrid_coherence_state",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Renaming cadence clarity to permeability would better name felt navigability.",
+      "disposition": "verify the current design intentionally keeps timing clarity distinct from stable_core_permeability_review_v1 and viscosity evidence",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Felt viscosity should be compared with cadence and hybridity over a bounded time window.",
+      "disposition": "route a read-only temporal-association study without claiming direct causation or changing telemetry",
+      "classification": "sandbox_routed"
+    }
+  ]
+}

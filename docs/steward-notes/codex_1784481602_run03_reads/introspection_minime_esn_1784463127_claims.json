@@ -1,0 +1,5 @@
+{"claims":[
+  {"claim_id":"c001","summary":"Source-prepared ESN review values must not masquerade as live operational control.","disposition":"verify review packets state their dormant boundary and live step ownership remains separate","classification":"verified_existing"},
+  {"claim_id":"c002","summary":"Dynamic noise should remain finite, bounded, and continuous at representative gradient and pressure inputs.","disposition":"verify existing dynamic-noise bounds, finite fallback, pressure-room, and smooth-knee regressions cover the requested logic","classification":"verified_existing"},
+  {"claim_id":"c003","summary":"Dynamic noise and viscous rho could be wired into the live ESN loop to make analytical guidance operational.","disposition":"retain as an exact Tier 5 reservoir-mathematics change requiring operator approval, replay, canary, and abort criteria","classification":"authority_gated"}
+]}

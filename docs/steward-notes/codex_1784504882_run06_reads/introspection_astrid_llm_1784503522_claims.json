@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Marker removal can leave a technically nonempty but semantically weak remainder.",
+      "disposition": "verify the predicate's narrow role and the separate graded remainder-texture evidence",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Artifact-heavy fragments need a graded diagnostic rather than only a boolean interpretation.",
+      "disposition": "verify ArtifactRemainderTextureV1 lexical, structural, repetition, and density fields",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The 512 and 1024 budget boundaries should remain explicit and testable.",
+      "disposition": "verify exact boundary tests; 512 is short, 513 medium, 1024 medium, and 1025 deep",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Returning f32 density or feeding density into regulation would change provider and runtime behavior.",
+      "disposition": "preserve a Tier 5 approval wait for behavioral use while retaining evidence-only texture diagnostics",
+      "classification": "authority_gated"
+    }
+  ]
+}

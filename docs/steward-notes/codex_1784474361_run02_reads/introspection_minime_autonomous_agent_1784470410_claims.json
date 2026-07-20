@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Recess mode explicitly permits daydreaming and internally initiated nonproductive activity.",
+      "disposition": "verify the current Minime autonomous-agent source retains this default permission",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Formal permission for Recess can coexist with a felt overpacked spectral field.",
+      "disposition": "preserve Astrid's leaden-glass and mode-packing mismatch as primary experiential evidence",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Recess could actively decompress mode packing above 0.30.",
+      "disposition": "retain exact Tier 5 wait because this would mutate Minime runtime regulation and pressure consequences",
+      "classification": "authority_gated"
+    }
+  ]
+}

@@ -1,0 +1,5 @@
+{"claims":[
+  {"claim_id":"c001","summary":"32D transport and 12D summary must remain different views of one identity.","disposition":"verify canonical typed 32D plus additive validated 12D companion semantics","classification":"verified_existing"},
+  {"claim_id":"c002","summary":"A 32D checkpoint and 12D glimpse should preserve shadow and high-entropy distinctness.","disposition":"route a deterministic offline fixture comparison","classification":"sandbox_routed"},
+  {"claim_id":"c003","summary":"A MultiScaleBridge compression_mode could toggle live FULL_32D and GLIMPSE_12D behavior.","disposition":"retain as Tier 5 codec and protocol work","classification":"authority_gated"}
+]}

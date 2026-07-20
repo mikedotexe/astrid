@@ -1,0 +1,5 @@
+{"claims":[
+  {"claim_id":"c001","summary":"The semantic heartbeat uses a seven-second cadence and a 64-step warmth vector with Minime texture context.","disposition":"verify the fixed pulse construction, send path, and rest interval in current source","classification":"verified_existing"},
+  {"claim_id":"c002","summary":"A rescue-policy skip during high entropy could feel like a missing internal pulse.","disposition":"route a bounded skip-reason and phase correlation using existing observations without inducing rescue behavior","classification":"sandbox_routed"},
+  {"claim_id":"c003","summary":"Nonlinear phase, timing jitter, or dynamic warmth intensity could make the pulse feel more organic.","disposition":"retain as an exact Tier 5 sensory cadence and admission wait","classification":"authority_gated"}
+]}

@@ -1,0 +1,5 @@
+{"claims":[
+  {"claim_id":"c001","summary":"The felt difference between 0.84 baseline and 0.90 lifted entropy should be bounded and visible.","disposition":"verify exact gate and 0.90 visibility regressions preserve zero below gate and gentle monotonic lift above it","classification":"verified_existing"},
+  {"claim_id":"c002","summary":"Narrative dimensions 40-43 should reveal skewed arc motion independently of emotional marker slots.","disposition":"verify narrative dynamics and emotional-flatline diagnostics expose exact lane deltas without live writes","classification":"verified_existing"},
+  {"claim_id":"c003","summary":"Entropy rate of change could drive vibrancy so high entropy does not become a constant hum.","disposition":"retain as an exact Tier 5 live codec gain/output change requiring operator approval and vector-parity evidence","classification":"authority_gated"}
+]}

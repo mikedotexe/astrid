@@ -1,0 +1,3 @@
+# Full-read summary: introspection_minime_sensory_bus_1784504704
+
+Astrid described the sigmoid handoff as potentially snapping near its midpoint and asked whether compounded persistence can saturate unexpectedly. The implementation uses a smooth sigmoid plus a smoothstep recovery handoff; existing dense sweeps and boundary tests constrain local jumps, and context persistence is capped at 2.05 with extreme-input coverage. The report's desire to follow these numbers into eviction remains well grounded, so a bounded fixture trace is routed. Changing steepness, caps, or eviction timing remains live sensory regulation.

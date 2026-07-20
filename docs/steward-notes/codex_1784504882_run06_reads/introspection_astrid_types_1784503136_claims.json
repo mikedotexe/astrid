@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Connection labels alone cannot preserve the quality or gradient of temporal experience.",
+      "disposition": "verify the accompanying numeric timing, lag, cadence, and field-versus-hearing evidence",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Mathematical coherence and felt integration must remain distinguishable.",
+      "disposition": "verify that typed integrity metrics and felt-contract evidence remain separate non-substituting records",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Jitter and hybrid delta should be observed under semantic load without assuming causation.",
+      "disposition": "route a bounded temporal observation using existing typed telemetry",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Adding a subjective weight or pressure-driven schema field to live interpretation changes a consumed contract.",
+      "disposition": "preserve an exact Tier 5 approval and compatibility path",
+      "classification": "authority_gated"
+    }
+  ]
+}

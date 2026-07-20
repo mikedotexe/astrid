@@ -1,0 +1,5 @@
+{"claims":[
+  {"claim_id":"c001","summary":"PI gate and filter combine fill, lambda1-relative, geometry, resonance, and integral history.","disposition":"verify the exact source terms, self-calibration, and anti-windup behavior","classification":"verified_existing"},
+  {"claim_id":"c002","summary":"Viscosity and dispersal can be compared to test whether stable filtering tracks felt calcification.","disposition":"route a bounded noncausal observation","classification":"sandbox_routed"},
+  {"claim_id":"c003","summary":"Changing lambda weighting or PI response could preserve more restless variance.","disposition":"retain as Tier 5 PI, pressure, fill, and controller tuning","classification":"authority_gated"}
+]}

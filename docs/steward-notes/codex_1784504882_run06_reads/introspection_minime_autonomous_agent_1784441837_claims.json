@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Recess permits nonproductive activity but does not imply an absence of environmental pressure.",
+      "disposition": "verify the Recess permission and density-aware read-only profiles",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Pressure during whim-following should be distinguished from pressure during simple idling.",
+      "disposition": "route a bounded pressure-versus-Recess comparison",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Foothold stability should be compared with movement into tail vibrancy.",
+      "disposition": "route a nonintervening temporal-window observation",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Changing Recess cadence, admission, or autonomous regulation changes live Minime behavior.",
+      "disposition": "preserve an exact Tier 5 operator-approval wait",
+      "classification": "authority_gated"
+    }
+  ]
+}

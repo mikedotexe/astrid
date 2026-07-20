@@ -1,0 +1,5 @@
+{"claims":[
+  {"claim_id":"c001","summary":"Semantic retention is jointly shaped by fill, entropy, entropy velocity, and pressure rather than one scalar.","disposition":"verify the finite context multiplier and its explicit authority boundary","classification":"verified_existing"},
+  {"claim_id":"c002","summary":"High-fill, high-entropy retention could become saturated or viscous.","disposition":"verify the high-fill floor and hard 2.05 cap, and route a bounded curve comparison without live mutation","classification":"sandbox_routed"},
+  {"claim_id":"c003","summary":"A logarithmic or density-decaying retention curve could reduce saturation.","disposition":"retain as an exact Tier 5 sensory persistence change","classification":"authority_gated"}
+]}

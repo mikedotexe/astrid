@@ -1,0 +1,5 @@
+{"claims":[
+  {"claim_id":"c001","summary":"PI history, viscosity, pressure source, and porosity should remain separately inspectable.","disposition":"verify current regulator types and tests expose these dimensions without collapsing them into fill alone","classification":"verified_existing"},
+  {"claim_id":"c002","summary":"Mode-packing pressure and viscosity may reveal integral lag or overcorrection over time.","disposition":"route a bounded 1000-tick cartography and synthetic impulse replay without live controller mutation","classification":"sandbox_routed"},
+  {"claim_id":"c003","summary":"Porosity could scale inversely with viscosity to protect settled habitability.","disposition":"retain as an exact Tier 5 live pressure/porosity/controller intervention requiring operator approval","classification":"authority_gated"}
+]}

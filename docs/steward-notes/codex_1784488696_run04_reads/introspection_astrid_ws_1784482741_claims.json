@@ -1,0 +1,5 @@
+{"claims":[
+  {"claim_id":"c001","summary":"A connected but silent socket could masquerade as stable current hearing.","disposition":"verify connection, first-valid, current, late, and stale states remain distinct","classification":"verified_existing"},
+  {"claim_id":"c002","summary":"Receive-to-state-update timing should separate prewrite work from lock wait and hold.","disposition":"verify the existing integration health diagnostic and status projection","classification":"verified_existing"},
+  {"claim_id":"c003","summary":"Buffered or actor-owned integration could reduce timing interference.","disposition":"retain as an operator-gated telemetry-intake change pending observed lock causality","classification":"authority_gated"}
+]}

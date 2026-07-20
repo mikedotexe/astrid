@@ -1,0 +1,5 @@
+{"claims":[
+  {"claim_id":"c001","summary":"Telemetry exposes heartbeat, typed fingerprint integrity, raw spectral state, shadow, and residual deformation evidence.","disposition":"verify the additive schema and diagnostic ownership","classification":"verified_existing"},
+  {"claim_id":"c002","summary":"Malformed legacy vectors could make hybrid coherence disappear silently.","disposition":"verify explicit unavailable_malformed_legacy state, retained length, and issue reporting","classification":"verified_existing"},
+  {"claim_id":"c003","summary":"The 12D glimpse must reject 13 elements or non-finite values without replacing typed 32D.","disposition":"verify exact companion validation and canonical typed fingerprint precedence","classification":"verified_existing"}
+]}

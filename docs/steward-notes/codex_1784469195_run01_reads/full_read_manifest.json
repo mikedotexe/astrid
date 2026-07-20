@@ -1,0 +1,46 @@
+{
+  "reads": [
+    {
+      "introspection_id": "introspection_astrid_ws_1784466990",
+      "reader": "codex-heartbeat",
+      "summary_file": "introspection_astrid_ws_1784466990_summary.md",
+      "claims_file": "introspection_astrid_ws_1784466990_claims.json"
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1784466629",
+      "reader": "codex-heartbeat",
+      "summary_file": "introspection_astrid_autonomous_1784466629_summary.md",
+      "claims_file": "introspection_astrid_autonomous_1784466629_claims.json"
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1784466183",
+      "reader": "codex-heartbeat",
+      "summary_file": "introspection_astrid_codec_1784466183_summary.md",
+      "claims_file": "introspection_astrid_codec_1784466183_claims.json"
+    },
+    {
+      "introspection_id": "introspection_proposal_12d_glimpse_1784465892",
+      "reader": "codex-heartbeat",
+      "summary_file": "introspection_proposal_12d_glimpse_1784465892_summary.md",
+      "claims_file": "introspection_proposal_12d_glimpse_1784465892_claims.json"
+    },
+    {
+      "introspection_id": "introspection_proposal_distance_contact_control_1784465733",
+      "reader": "codex-heartbeat",
+      "summary_file": "introspection_proposal_distance_contact_control_1784465733_summary.md",
+      "claims_file": "introspection_proposal_distance_contact_control_1784465733_claims.json"
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1784465470",
+      "reader": "codex-heartbeat",
+      "summary_file": "introspection_proposal_bidirectional_contact_1784465470_summary.md",
+      "claims_file": "introspection_proposal_bidirectional_contact_1784465470_claims.json"
+    },
+    {
+      "introspection_id": "introspection_proposal_phase_transitions_1784465211",
+      "reader": "codex-heartbeat",
+      "summary_file": "introspection_proposal_phase_transitions_1784465211_summary.md",
+      "claims_file": "introspection_proposal_phase_transitions_1784465211_claims.json"
+    }
+  ]
+}

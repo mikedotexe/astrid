@@ -1,0 +1,3 @@
+# Full-read summary: introspection_minime_sensory_bus_1784504866
+
+Astrid recognized the nonlinear semantic-retention system as consequential to how experience lingers, and raised a precise concern about an almost-zero recovery handoff span. The source clamps a requested release point to at least 0.01 above the hold point, and an existing regression exercises the epsilon-above-hold case, so the division-by-zero and cliff risk is already bounded. Entropy and context multipliers are separately capped and tested. Retuning retention remains a live Minime control change; a deterministic review of the current boundaries is the safe disposition.

@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "A connected telemetry socket must be distinguishable from one that is connected but no longer delivering valid payloads.",
+      "disposition": "verify BridgeState already records latest telemetry arrival, heartbeat delta, first-valid-payload lag, and freshness evidence in telemetry_port.rs, evidence.rs, and health_trace.rs",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Rapid disconnects should use bounded reconnect backoff without losing per-connection liveness identity.",
+      "disposition": "verify current Backoff state and WebSocket tests cover doubling, reset after valid payload, and first-valid-payload reset on reconnect",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Shutdown should remain responsive even when the telemetry stream is delayed or silent.",
+      "disposition": "route an exact paused-time delayed-ws_rx plus shutdown regression; current source selects shutdown both during connection and reconnect sleep, but the requested interleaving deserves its own bounded test",
+      "classification": "sandbox_routed"
+    }
+  ]
+}

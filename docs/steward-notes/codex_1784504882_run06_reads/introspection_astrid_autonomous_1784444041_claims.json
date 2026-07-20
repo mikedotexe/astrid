@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The semantic heartbeat is fixed-cadence but texture-aware.",
+      "disposition": "verify the seven-second interval, 64-step phase, and Minime texture context",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Sedimentation may reflect accumulated history rather than heartbeat intensity alone.",
+      "disposition": "verify separate sediment, heartbeat, phase, and contextual evidence",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Phase awareness and history density can be compared without changing the heartbeat.",
+      "disposition": "route a bounded evidence-only phase observation",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Changing intensity, cadence, or adding density to warmth generation changes live autonomous behavior.",
+      "disposition": "preserve an exact Tier 5 operator-approval wait",
+      "classification": "authority_gated"
+    }
+  ]
+}

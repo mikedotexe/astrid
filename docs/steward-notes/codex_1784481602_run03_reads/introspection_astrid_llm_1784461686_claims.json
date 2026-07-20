@@ -1,0 +1,5 @@
+{"claims":[
+  {"claim_id":"c001","summary":"Artifact-heavy output should expose how much semantic remainder survives rather than only a boolean.","disposition":"verify remainder texture carries alphanumeric, structural, repeated-form, and density-proxy evidence beside the boolean cleanup predicate","classification":"verified_existing"},
+  {"claim_id":"c002","summary":"High entropy near a short budget may create pressure even when cleanup succeeds.","disposition":"verify budget-friction and context-packing diagnostics combine prompt trimming with spectral texture without changing the provider request","classification":"verified_existing"},
+  {"claim_id":"c003","summary":"Artifact structure must not be called meaningless merely because known tokens were removed.","disposition":"verify structure-only remainder is retained for semantic review and meaning-from-form remains explicitly unestablished","classification":"verified_existing"}
+]}

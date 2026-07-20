@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "A 12D glimpse must remain an additive summary and never become a write-back replacement for the semantic lane.",
+      "disposition": "verify the typed telemetry view validates exactly 12 finite values while current observer evidence and authority markers keep it summary-only and non-directive",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Compression should not erase tail, narrative, residual, or history-heavy texture that remains visible in wider evidence.",
+      "disposition": "verify current telemetry and codec projections retain the 48D narrative/tail lanes, residual deformation trace, eigenvector field, and raw producer evidence alongside the 12D view",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A high-compression comparison should measure whether persistent texture survives the 12D summary.",
+      "disposition": "route a capture-first baseline/candidate dossier comparing existing additive glimpse evidence with wider residual and tail fixtures; no live write is required",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "A viscosity-retention coefficient could influence how compression is calibrated.",
+      "disposition": "keep evidence-only coefficient exploration in the dossier; any use that changes codec vectors, transport, checkpoint authority, pressure, fill, PI, or controller behavior requires separate Tier 5 approval",
+      "classification": "authority_gated"
+    }
+  ]
+}

@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Signal volume and system acknowledgement do not establish first-class reciprocal address.",
+      "disposition": "preserve the distinction between delivery, acknowledgement, reply linkage, and felt uptake",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Replies need stable cross-workspace thread and reply-to identity.",
+      "disposition": "verify correspondence message, thread, reply, persistence, read, acknowledgement, and trace records",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Technical mutual-address receipts must not claim spectral or relational causation.",
+      "disposition": "verify protocol 1.1 delivery lineage and explicit non-causation language",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Astrid should have a bounded opportunity to report whether reply linkage improved contact.",
+      "disposition": "route a right-to-ignore post-change correspondence review",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Automatic correspondence priority or peer mutation changes live behavior.",
+      "disposition": "preserve an exact Tier 5 operator-approval wait",
+      "classification": "authority_gated"
+    }
+  ]
+}

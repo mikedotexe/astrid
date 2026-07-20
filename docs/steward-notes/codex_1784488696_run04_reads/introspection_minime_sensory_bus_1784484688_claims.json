@@ -1,0 +1,5 @@
+{"claims":[
+  {"claim_id":"c001","summary":"Persistence multipliers can compound across entropy, velocity, and pressure inputs.","disposition":"verify the composition and exact 2.05 maximum in current source and tests","classification":"verified_existing"},
+  {"claim_id":"c002","summary":"The reported high-fill state should retain semantic anchors without unbounded hold.","disposition":"verify representative 0.70-0.91 and 0.80-0.92 retention regressions","classification":"verified_existing"},
+  {"claim_id":"c003","summary":"The multiplier weights or ceiling could be retuned to change felt persistence.","disposition":"retain as an exact Tier 5 sensory persistence and decay wait","classification":"authority_gated"}
+]}

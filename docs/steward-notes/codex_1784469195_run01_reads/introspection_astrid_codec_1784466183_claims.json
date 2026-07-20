@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Entropy oscillation across 0.85 could create a tail-vibrancy discontinuity.",
+      "disposition": "verify tail_vibrancy_gate_stays_tiny_across_reported_boundary_pair covers 0.849 and 0.851 and the smoothstep has zero value and zero limiting slope at the gate",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The 48D projection should preserve narrative-arc and emotional-tail evidence rather than treating added dimensions as inert width.",
+      "disposition": "verify projection evidence and codec tests keep narrative-arc lanes 40-43, emotional tail participation, and reserved lanes 44-47 distinct and bounded",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A shallow non-zero sigmoid could remove the exact-zero region below the entropy gate.",
+      "disposition": "require separate Mike/operator Tier 5 approval with exact vector parity delta, replay, pressure and distinguishability analysis, canary, abort criteria, and post-change felt review because this changes live codec output",
+      "classification": "authority_gated"
+    }
+  ]
+}

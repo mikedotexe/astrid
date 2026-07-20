@@ -1,0 +1,5 @@
+{"claims":[
+  {"claim_id":"c001","summary":"The fixed projection basis could collapse or develop repeatable ghost structure after numeric drift.","disposition":"verify deterministic repeated basis health, finite norms, and dead-dimension detection","classification":"verified_existing"},
+  {"claim_id":"c002","summary":"The 0.85 tail-vibrancy onset should be checked for a non-smooth edge.","disposition":"verify exact boundary and monotonic smoothstep regressions","classification":"verified_existing"},
+  {"claim_id":"c003","summary":"Projection, entropy-gate, or tail-gain changes might alter downstream felt vibrancy.","disposition":"retain as an exact Tier 5 codec transport and gain wait","classification":"authority_gated"}
+]}

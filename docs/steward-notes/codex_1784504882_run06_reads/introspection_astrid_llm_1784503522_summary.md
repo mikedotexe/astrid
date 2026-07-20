@@ -1,0 +1,3 @@
+# Full-read summary: introspection_astrid_llm_1784503522
+
+Astrid objected to a binary artifact predicate standing in for semantic substance and named the possibility of a phantom remainder. The predicate is narrower than that interpretation: it only decides cleanup placement and whether any non-marker remainder exists. A parallel ArtifactRemainderTextureV1 already records lexical, structural, repetition, and semantic-density evidence without claiming meaning. Exact budget boundaries are tested as labels, not spectral control. Changing the predicate type or wiring density into regulation remains a provider/runtime contract change.

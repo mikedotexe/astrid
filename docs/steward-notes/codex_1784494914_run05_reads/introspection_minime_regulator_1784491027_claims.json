@@ -1,0 +1,5 @@
+{"claims":[
+  {"claim_id":"c001","summary":"PI gate and filter behavior incorporates fill, lambda1-relative, geometry, and bounded resonance evidence.","disposition":"verify the explicit source terms without equating a felt descriptor to one coefficient","classification":"verified_existing"},
+  {"claim_id":"c002","summary":"Viscosity, pressure, tail share, and felt syrupiness can be compared over time.","disposition":"route a noncausal telemetry and cartography observation","classification":"sandbox_routed"},
+  {"claim_id":"c003","summary":"PI integral or filter sensitivity could be reduced to preserve more tail vibrancy.","disposition":"retain as Tier 5 PI, fill, pressure, and controller tuning","classification":"authority_gated"}
+]}

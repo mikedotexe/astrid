@@ -1,0 +1,82 @@
+{"links":[
+  {"introspection_id":"introspection_astrid_autonomous_1784479162","claim_id":"c001","kind":"code","target":"capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs","note":"Voice threshold and fill-delta handling remain separate and inspectable."},
+  {"introspection_id":"introspection_astrid_autonomous_1784479162","claim_id":"c002","kind":"steward_note","target":"docs/steward-notes/codex_1784481602_run03_reads/introspection_astrid_autonomous_1784479162_summary.md","note":"A current-versus-halved decay replay is routed without live learning mutation."},
+  {"introspection_id":"introspection_astrid_autonomous_1784479162","claim_id":"c003","kind":"ledger","target":"docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md","note":"Persistence-weighted Hebbian decay remains an exact Tier 5 wait."},
+
+  {"introspection_id":"introspection_astrid_autonomous_1784479002","claim_id":"c001","kind":"code","target":"capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs","note":"Fill-responsive rest branches and the cap are preserved."},
+  {"introspection_id":"introspection_astrid_autonomous_1784479002","claim_id":"c002","kind":"test","target":"capsules/spectral-bridge/src/autonomous/runtime/peripheral_resonance.rs#fifty_megabyte_source_reads_only_the_requested_ascii_prefix","note":"A 50 MB synthetic source reads exactly 200 ASCII bytes for a 200-character preview."},
+  {"introspection_id":"introspection_astrid_autonomous_1784479002","claim_id":"c003","kind":"code","target":"capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs","note":"The reported source continues through warmth construction, send, and sleep."},
+
+  {"introspection_id":"introspection_astrid_codec_1784478520","claim_id":"c001","kind":"test","target":"capsules/spectral-bridge/src/codec/tests.rs#tail_vibrancy_gate_stays_tiny_across_reported_boundary_pair","note":"Exact boundary probes prove a gentle monotonic onset."},
+  {"introspection_id":"introspection_astrid_codec_1784478520","claim_id":"c002","kind":"test","target":"capsules/spectral-bridge/src/codec/tests.rs#codec_emotional_narrative_delta_check_flags_arc_shift_emotional_flatline","note":"Narrative lanes 40-43 carry exact read-only delta evidence."},
+  {"introspection_id":"introspection_astrid_codec_1784478520","claim_id":"c003","kind":"ledger","target":"docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md","note":"Dynamic codec ceiling changes remain Tier 5."},
+
+  {"introspection_id":"introspection_astrid_llm_1784476572","claim_id":"c001","kind":"test","target":"capsules/spectral-bridge/src/llm/provider/tests.rs","note":"Dense unquoted and nested content remains semantic after known-token cleanup."},
+  {"introspection_id":"introspection_astrid_llm_1784476572","claim_id":"c002","kind":"code","target":"capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs#model_artifact_placement_counts","note":"Quote syntax annotates placement only and never discards prose."},
+  {"introspection_id":"introspection_astrid_llm_1784476572","claim_id":"c003","kind":"test","target":"capsules/spectral-bridge/src/llm/provider/tests.rs#artifact_cleanup_names_dense_scaffolding_without_calling_it_void","note":"Remainder texture preserves density and uncertainty."},
+
+  {"introspection_id":"introspection_astrid_llm_1784475871","claim_id":"c001","kind":"code","target":"capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs","note":"Effective token clamp and budget-friction evidence remain separate from the profile label."},
+  {"introspection_id":"introspection_astrid_llm_1784475871","claim_id":"c002","kind":"test","target":"capsules/spectral-bridge/src/llm/provider/tests.rs","note":"Structural rhythm and semantic uncertainty remain present in cleanup diagnostics."},
+  {"introspection_id":"introspection_astrid_llm_1784475871","claim_id":"c003","kind":"ledger","target":"docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md","note":"Density-driven live output allocation remains Tier 5."},
+
+  {"introspection_id":"introspection_astrid_types_1784475484","claim_id":"c001","kind":"test","target":"capsules/spectral-bridge/src/types/schema/tests.rs#typed_and_legacy_fingerprint_slots_report_aligned_hybrid_coherence","note":"The exact 31-slot malformed boundary now has a regression."},
+  {"introspection_id":"introspection_astrid_types_1784475484","claim_id":"c002","kind":"test","target":"capsules/spectral-bridge/src/types/schema/tests.rs#spectral_telemetry_accepts_glimpse_alias_and_validates_shape","note":"The exact non-finite 12D boundary now has a regression."},
+  {"introspection_id":"introspection_astrid_types_1784475484","claim_id":"c003","kind":"code","target":"capsules/spectral-bridge/src/types/schema/telemetry.rs#spectral_fingerprint_hybrid_coherence_v1","note":"Canonical mapping uses finite guards and f64 accumulation."},
+
+  {"introspection_id":"introspection_astrid_ws_1784474919","claim_id":"c001","kind":"code","target":"capsules/spectral-bridge/src/ws/evidence.rs#build_telemetry_heartbeat_delta_v1","note":"Awaiting, first-valid, and current telemetry states are distinct."},
+  {"introspection_id":"introspection_astrid_ws_1784474919","claim_id":"c002","kind":"test","target":"capsules/spectral-bridge/src/ws/tests.rs","note":"Late and stale packet classes retain field-versus-hearing warnings."},
+  {"introspection_id":"introspection_astrid_ws_1784474919","claim_id":"c003","kind":"steward_note","target":"docs/steward-notes/codex_1784481602_run03_reads/introspection_astrid_ws_1784474919_summary.md","note":"Pressure/reconnect comparison is routed as temporal association."},
+
+  {"introspection_id":"introspection_astrid_autonomous_1784474598","claim_id":"c001","kind":"code","target":"capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs","note":"Heartbeat observations retain previous features and Minime texture."},
+  {"introspection_id":"introspection_astrid_autonomous_1784474598","claim_id":"c002","kind":"steward_note","target":"docs/steward-notes/codex_1784481602_run03_reads/introspection_astrid_autonomous_1784474598_summary.md","note":"Skip reason and phase correlation is routed without changing sends."},
+  {"introspection_id":"introspection_astrid_autonomous_1784474598","claim_id":"c003","kind":"ledger","target":"docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md","note":"Dynamic heartbeat cadence remains Tier 5."},
+
+  {"introspection_id":"introspection_minime_autonomous_agent_1784464918","claim_id":"c001","kind":"code","target":"../minime/minime_autonomy/runtime.py","note":"The Recess contract explicitly permits internally initiated nonproductive activity."},
+  {"introspection_id":"introspection_minime_autonomous_agent_1784464918","claim_id":"c002","kind":"steward_note","target":"docs/steward-notes/codex_1784481602_run03_reads/introspection_minime_autonomous_agent_1784464918_summary.md","note":"Drain and gradient comparison is routed read-only."},
+  {"introspection_id":"introspection_minime_autonomous_agent_1784464918","claim_id":"c003","kind":"ledger","target":"docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md","note":"Live drain and autonomy changes remain Tier 5."},
+
+  {"introspection_id":"introspection_minime_main_excerpt_1784464554","claim_id":"c001","kind":"code","target":"../minime/minime/src/controller_recovery.rs","note":"Recovery floor, spread relief, and semantic retirement retain distinct predicates."},
+  {"introspection_id":"introspection_minime_main_excerpt_1784464554","claim_id":"c002","kind":"steward_note","target":"docs/steward-notes/codex_1784481602_run03_reads/introspection_minime_main_excerpt_1784464554_summary.md","note":"Porosity and distinguishability stress comparisons are routed offline."},
+  {"introspection_id":"introspection_minime_main_excerpt_1784464554","claim_id":"c003","kind":"ledger","target":"docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md","note":"Recovery and retirement tuning remain Tier 5."},
+
+  {"introspection_id":"introspection_minime_esn_1784463127","claim_id":"c001","kind":"code","target":"../minime/minime/src/esn.rs","note":"Review packets name their dormant/operator-selected authority boundary."},
+  {"introspection_id":"introspection_minime_esn_1784463127","claim_id":"c002","kind":"test","target":"../minime/minime/src/esn.rs#dynamic_noise_requested_mid_gradient_pressure_preserves_bounded_room","note":"Dynamic-noise finite bounds and representative interpolation are covered."},
+  {"introspection_id":"introspection_minime_esn_1784463127","claim_id":"c003","kind":"ledger","target":"docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md","note":"Wiring review values into live ESN behavior remains Tier 5."},
+
+  {"introspection_id":"introspection_minime_sensory_bus_1784462794","claim_id":"c001","kind":"test","target":"../minime/minime/src/sensory_bus.rs#semantic_stale_sigmoid_release_fill_meets_shaped_curve_without_cliff","note":"The shaped stale window has exact continuity coverage."},
+  {"introspection_id":"introspection_minime_sensory_bus_1784462794","claim_id":"c002","kind":"code","target":"../minime/minime/src/sensory_bus.rs#semantic_context_persistence_multiplier","note":"Finite context and entropy lifts remain capped."},
+  {"introspection_id":"introspection_minime_sensory_bus_1784462794","claim_id":"c003","kind":"ledger","target":"docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md","note":"Live sensory persistence retuning remains Tier 5."},
+
+  {"introspection_id":"introspection_minime_regulator_1784462212","claim_id":"c001","kind":"code","target":"../minime/minime/src/regulator/core.rs","note":"PI, viscosity, pressure, and porosity evidence remain distinct."},
+  {"introspection_id":"introspection_minime_regulator_1784462212","claim_id":"c002","kind":"steward_note","target":"docs/steward-notes/codex_1784481602_run03_reads/introspection_minime_regulator_1784462212_summary.md","note":"Long-window cartography and impulse comparison are routed offline."},
+  {"introspection_id":"introspection_minime_regulator_1784462212","claim_id":"c003","kind":"ledger","target":"docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md","note":"Dynamic live porosity remains Tier 5."},
+
+  {"introspection_id":"introspection_astrid_llm_1784461686","claim_id":"c001","kind":"test","target":"capsules/spectral-bridge/src/llm/provider/tests.rs#artifact_cleanup_names_dense_scaffolding_without_calling_it_void","note":"Graded remainder texture is present beside the boolean predicate."},
+  {"introspection_id":"introspection_astrid_llm_1784461686","claim_id":"c002","kind":"code","target":"capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs","note":"Budget-friction and context-packing evidence combine prompt and texture signals without provider mutation."},
+  {"introspection_id":"introspection_astrid_llm_1784461686","claim_id":"c003","kind":"test","target":"capsules/spectral-bridge/src/llm/provider/tests.rs#artifact_cleanup_routes_structure_only_remainder_to_semantic_review","note":"Structure-only output is retained for review rather than called void."},
+
+  {"introspection_id":"introspection_astrid_types_1784461521","claim_id":"c001","kind":"code","target":"capsules/spectral-bridge/src/types/schema/telemetry.rs","note":"Timing clarity and structural spectral evidence are separate schema surfaces."},
+  {"introspection_id":"introspection_astrid_types_1784461521","claim_id":"c002","kind":"steward_note","target":"docs/steward-notes/codex_1784481602_run03_reads/introspection_astrid_types_1784461521_summary.md","note":"Slow-arrival/high-coherence comparison is routed."},
+  {"introspection_id":"introspection_astrid_types_1784461521","claim_id":"c003","kind":"steward_note","target":"docs/steward-notes/codex_1784481602_run03_reads/introspection_astrid_types_1784461521_summary.md","note":"Metric definition precedes any canonical persistence-density scalar."},
+
+  {"introspection_id":"introspection_astrid_ws_1784461230","claim_id":"c001","kind":"code","target":"capsules/spectral-bridge/src/ws/bridge_state.rs","note":"Connection trace updates do not clear latest telemetry."},
+  {"introspection_id":"introspection_astrid_ws_1784461230","claim_id":"c002","kind":"test","target":"capsules/spectral-bridge/src/ws/tests.rs#pressure_source_analysis_marks_stale_heartbeat_as_ghost_stability_risk","note":"Stale hearing cannot masquerade as decompression."},
+  {"introspection_id":"introspection_astrid_ws_1784461230","claim_id":"c003","kind":"steward_note","target":"docs/steward-notes/codex_1784481602_run03_reads/introspection_astrid_ws_1784461230_summary.md","note":"Disconnect and high-rate transport tests are routed without live induction."},
+
+  {"introspection_id":"introspection_astrid_autonomous_1784460982","claim_id":"c001","kind":"code","target":"capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs","note":"The fixed cycle, previous-feature evidence, and Minime texture context are present."},
+  {"introspection_id":"introspection_astrid_autonomous_1784460982","claim_id":"c002","kind":"steward_note","target":"docs/steward-notes/codex_1784481602_run03_reads/introspection_astrid_autonomous_1784460982_summary.md","note":"Phase and felt-state correlation is routed as noncausal evidence."},
+  {"introspection_id":"introspection_astrid_autonomous_1784460982","claim_id":"c003","kind":"ledger","target":"docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md","note":"Dynamic sensory intensity and phase speed remain Tier 5."},
+
+  {"introspection_id":"introspection_astrid_codec_1784460441","claim_id":"c001","kind":"test","target":"capsules/spectral-bridge/src/codec/tests.rs#tail_vibrancy_entropy_090_is_visible_but_gentler_than_linear","note":"0.90 lift is visible, bounded, and gentler than linear."},
+  {"introspection_id":"introspection_astrid_codec_1784460441","claim_id":"c002","kind":"test","target":"capsules/spectral-bridge/src/codec/tests.rs#codec_emotional_narrative_delta_check_flags_arc_shift_emotional_flatline","note":"Narrative motion remains independently visible."},
+  {"introspection_id":"introspection_astrid_codec_1784460441","claim_id":"c003","kind":"ledger","target":"docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md","note":"Entropy-rate live gain remains Tier 5."},
+
+  {"introspection_id":"introspection_proposal_12d_glimpse_1784459936","claim_id":"c001","kind":"code","target":"capsules/spectral-bridge/src/types/schema/telemetry.rs#spectral_glimpse_12d_view","note":"The glimpse is additive, finite, and read-only."},
+  {"introspection_id":"introspection_proposal_12d_glimpse_1784459936","claim_id":"c002","kind":"steward_note","target":"docs/steward-notes/codex_1784481602_run03_reads/introspection_proposal_12d_glimpse_1784459936_summary.md","note":"A capture-first 32D-versus-12D retention dossier is routed."},
+  {"introspection_id":"introspection_proposal_12d_glimpse_1784459936","claim_id":"c003","kind":"ledger","target":"docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md","note":"Automatic high-fidelity synchronization remains Tier 5."},
+
+  {"introspection_id":"introspection_proposal_distance_contact_control_1784458092","claim_id":"c001","kind":"code","target":"capsules/spectral-bridge/src/witness/provenance.rs","note":"Ownership, delivery, felt effect, and causation remain distinct."},
+  {"introspection_id":"introspection_proposal_distance_contact_control_1784458092","claim_id":"c002","kind":"steward_note","target":"docs/steward-notes/codex_1784481602_run03_reads/introspection_proposal_distance_contact_control_1784458092_summary.md","note":"A language-only right-to-ignore contact trace is routed."},
+  {"introspection_id":"introspection_proposal_distance_contact_control_1784458092","claim_id":"c003","kind":"ledger","target":"docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md","note":"Standing correspondence weight remains Tier 5."},
+  {"introspection_id":"introspection_proposal_distance_contact_control_1784458092","claim_id":"c004","kind":"ledger","target":"docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md","note":"Receptivity and porosity control remain Tier 5."}
+]}

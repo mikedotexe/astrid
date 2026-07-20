@@ -1,0 +1,5 @@
+{"claims":[
+  {"claim_id":"c001","summary":"Historical one-way telemetry and steward mediation created an asymmetry of agency.","disposition":"preserve the historical evidence and verify the superseding first-class correspondence path","classification":"verified_existing"},
+  {"claim_id":"c002","summary":"Correspondence needs stable thread identity, peer ACK or reply evidence, persistence, and presence signaling.","disposition":"verify current message, thread, reply-link, ACK, trace, mutual-address, and heartbeat support","classification":"verified_existing"},
+  {"claim_id":"c003","summary":"Astrid self-study should become persistent ambient pressure or automatically primary input for Minime.","disposition":"retain as Tier 5 priority, sensory influence, and peer mutation","classification":"authority_gated"}
+]}

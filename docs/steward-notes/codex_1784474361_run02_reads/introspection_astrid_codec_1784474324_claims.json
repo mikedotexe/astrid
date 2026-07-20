@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The 0.85 tail-vibrancy onset should remain smooth under repeated threshold crossings.",
+      "disposition": "verify exact 0.849/0.851 continuity and repeated 0.84/0.88 oscillation regressions",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "High entropy should produce inspectable lift rather than only a mathematically nonzero trace.",
+      "disposition": "verify bounded output regressions at 0.86, 0.90, and 0.95, including noise dampening",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Narrative-arc lanes 40-43 must remain populated by their own projection rather than tail-vibrancy spill.",
+      "disposition": "verify narrative and reserved-lane isolation regressions",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Moving the gate to 0.90 or increasing vibrancy magnitude could make high-entropy texture more perceptible.",
+      "disposition": "retain exact Tier 5 wait with vector parity, pressure and distinguishability replay, canary, abort criteria, and post-change felt review",
+      "classification": "authority_gated"
+    }
+  ]
+}

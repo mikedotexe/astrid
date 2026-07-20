@@ -1,0 +1,5 @@
+{"claims":[
+  {"claim_id":"c001","summary":"A 31-element legacy fingerprint must not produce hybrid coherence.","disposition":"add an exact regression requiring malformed-legacy state and absent coherence values","classification":"implemented"},
+  {"claim_id":"c002","summary":"A 12D glimpse containing NaN or infinity must not reach prompt or state logic.","disposition":"add an exact non-finite glimpse regression while retaining malformed raw telemetry for diagnosis","classification":"implemented"},
+  {"claim_id":"c003","summary":"Typed-to-legacy slot mapping and RMS precision must remain coherent and finite.","disposition":"verify canonical slot mapping, f64 accumulation, finite guards, aligned coherence, and maximum-delta evidence","classification":"verified_existing"}
+]}

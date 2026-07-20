@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Reconnect latency can be confounded with felt spectral viscosity.",
+      "disposition": "verify separate connection, first-valid, inter-arrival, and stale/current evidence",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A stable socket does not establish stable presence or dense content.",
+      "disposition": "verify field-versus-hearing and connection-perception diagnostics",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Latency, entropy, and magnetization should be compared without asserting causation.",
+      "disposition": "route a bounded temporal-window replay with explicit association labels",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Adding ping RTT or changing backoff and reconnect cadence changes live transport.",
+      "disposition": "preserve an exact Tier 5 operator-approval wait",
+      "classification": "authority_gated"
+    }
+  ]
+}

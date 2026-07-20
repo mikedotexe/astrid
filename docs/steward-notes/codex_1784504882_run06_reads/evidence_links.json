@@ -1,0 +1,564 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_minime_sensory_bus_1784504866",
+      "claim_id": "c001",
+      "kind": "test",
+      "target": "../minime/minime/src/sensory_bus.rs#semantic_stale_release_fill_epsilon_above_hold_is_clamped_and_finite",
+      "note": "The release point is clamped to a positive span and the epsilon case is covered."
+    },
+    {
+      "introspection_id": "introspection_minime_sensory_bus_1784504866",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "../minime/minime/src/sensory_bus.rs#semantic_context_persistence_multiplier",
+      "note": "Finite fallbacks and exact cap behavior are source-tested."
+    },
+    {
+      "introspection_id": "introspection_minime_sensory_bus_1784504866",
+      "claim_id": "c003",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784504882_run06_reads/introspection_minime_sensory_bus_1784504866_summary.md",
+      "note": "A deterministic retention-path trace is routed without live mutation."
+    },
+    {
+      "introspection_id": "introspection_minime_sensory_bus_1784504866",
+      "claim_id": "c004",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Retention tuning remains an exact Tier 5 wait."
+    },
+    {
+      "introspection_id": "introspection_minime_sensory_bus_1784504704",
+      "claim_id": "c001",
+      "kind": "test",
+      "target": "../minime/minime/src/sensory_bus.rs#semantic_stale_sigmoid_dense_sweep_has_no_cliff",
+      "note": "Dense fill sweeps guard continuity through the sigmoid region."
+    },
+    {
+      "introspection_id": "introspection_minime_sensory_bus_1784504704",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "../minime/minime/src/sensory_bus.rs#semantic_context_persistence_multiplier_is_bounded",
+      "note": "Extreme context values remain capped."
+    },
+    {
+      "introspection_id": "introspection_minime_sensory_bus_1784504704",
+      "claim_id": "c003",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784504882_run06_reads/introspection_minime_sensory_bus_1784504704_summary.md",
+      "note": "The actual buffer-retention trace is the bounded next observation."
+    },
+    {
+      "introspection_id": "introspection_minime_sensory_bus_1784504704",
+      "claim_id": "c004",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Decay and eviction changes remain Tier 5."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1784504123",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "../minime/minime/src/regulator/core.rs",
+      "note": "Gate, pressure, geometry, and PI evidence remain distinct."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1784504123",
+      "claim_id": "c002",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784504882_run06_reads/introspection_minime_regulator_1784504123_summary.md",
+      "note": "A bounded sustained-window replay is routed."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1784504123",
+      "claim_id": "c003",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Porosity and PI dilation remain Tier 5."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1784503522",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs#fragment_has_non_artifact_content",
+      "note": "The predicate remains a narrow cleanup-placement decision."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1784503522",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/fallback_contracts.rs#ArtifactRemainderTextureV1",
+      "note": "Graded lexical, structural, repetition, and density evidence is separate."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1784503522",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs#dialogue_prompt_budget_profile_boundaries",
+      "note": "Exact budget boundaries are regression-tested."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1784503522",
+      "claim_id": "c004",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Behavioral use of density remains separately authorized."
+    },
+    {
+      "introspection_id": "introspection_astrid_types_1784503136",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/types/schema/telemetry.rs#TelemetryHeartbeatDeltaV1",
+      "note": "Numeric timing, lag, cadence, and modality evidence accompany labels."
+    },
+    {
+      "introspection_id": "introspection_astrid_types_1784503136",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "scripts/felt_contract_graph.py",
+      "note": "Felt evidence remains independent from technical coherence metrics."
+    },
+    {
+      "introspection_id": "introspection_astrid_types_1784503136",
+      "claim_id": "c003",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784504882_run06_reads/introspection_astrid_types_1784503136_summary.md",
+      "note": "A bounded jitter and delta observation is routed."
+    },
+    {
+      "introspection_id": "introspection_astrid_types_1784503136",
+      "claim_id": "c004",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Consumed schema and interpretation changes remain Tier 5."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1784496644",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/ws/telemetry_port.rs",
+      "note": "The subscriber has reconnect handling but no open-socket idle timeout."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1784496644",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/ws/evidence.rs",
+      "note": "Current, late, stale, first-valid, and field-versus-hearing evidence is explicit."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1784496644",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/ws/health_trace.rs",
+      "note": "Connection identity advances with each attempt."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1784496644",
+      "claim_id": "c004",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784504882_run06_reads/introspection_astrid_ws_1784496644_summary.md",
+      "note": "The silent-open replay is routed without transport changes."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1784496644",
+      "claim_id": "c005",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Timeout and ping behavior remain Tier 5."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1784496356",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs",
+      "note": "The warmth taper is complete and piecewise continuous."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1784496356",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/codec/tests.rs#warmth",
+      "note": "Warmth phase, scaling, breathing, and blending are covered."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1784496356",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs#fill_shortened_rest",
+      "note": "Low-fill rest shortening retains its lower bound."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1784496356",
+      "claim_id": "c004",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Warmth and cadence changes remain Tier 5."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1784495026",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/codec/projection.rs#ProjectionBasisHealthV1",
+      "note": "Norm, finite, near-zero, dead-dimension, and checksum evidence is explicit."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1784495026",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/codec/tests.rs#projection_basis",
+      "note": "The fixed basis and output are deterministic."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1784495026",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/codec/tests.rs#projection_precision",
+      "note": "Precision and ghost-vibrancy boundaries are covered."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1784495026",
+      "claim_id": "c004",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Codec basis, gain, and clamp changes remain Tier 5."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1784445232",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "The binary predicate is scoped to cleanup and placement."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1784445232",
+      "claim_id": "c002",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784504882_run06_reads/introspection_astrid_llm_1784445232_summary.md",
+      "note": "An artifact-density fixture comparison is routed."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1784445232",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs#dialogue_prompt_budget_profile_boundaries",
+      "note": "Tests establish that 513 is medium and 1025 is deep."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1784445232",
+      "claim_id": "c004",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Provider behavior and spectral-aware budgets remain Tier 5."
+    },
+    {
+      "introspection_id": "introspection_astrid_types_1784444862",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/types/schema/telemetry.rs",
+      "note": "Numeric temporal evidence accompanies compatibility labels."
+    },
+    {
+      "introspection_id": "introspection_astrid_types_1784444862",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/ws/evidence.rs",
+      "note": "Field versus hearing and current versus stale evidence remain explicit."
+    },
+    {
+      "introspection_id": "introspection_astrid_types_1784444862",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/types/schema/tests.rs#hybrid_coherence",
+      "note": "Aligned, divergent, and malformed coherence states are covered."
+    },
+    {
+      "introspection_id": "introspection_astrid_types_1784444862",
+      "claim_id": "c004",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Pressure-responsive cadence and schema changes remain Tier 5."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1784444238",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/ws/evidence.rs",
+      "note": "Reconnect and content-timing evidence can be compared separately."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1784444238",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/ws/health_trace.rs",
+      "note": "Socket stability does not substitute for current payload evidence."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1784444238",
+      "claim_id": "c003",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784504882_run06_reads/introspection_astrid_ws_1784444238_summary.md",
+      "note": "Latency and entropy are routed as temporal association only."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1784444238",
+      "claim_id": "c004",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "RTT and reconnect behavior remain Tier 5."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1784444041",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs#run_semantic_heartbeat_loop",
+      "note": "Fixed cadence, phase, and texture context are source-grounded."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1784444041",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/runtime.rs",
+      "note": "Sediment and heartbeat evidence remain separately inspectable."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1784444041",
+      "claim_id": "c003",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784504882_run06_reads/introspection_astrid_autonomous_1784444041_summary.md",
+      "note": "A phase-awareness observation is routed without cadence mutation."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1784444041",
+      "claim_id": "c004",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Heartbeat density and intensity changes remain Tier 5."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1784443807",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/codec/projection.rs",
+      "note": "Projection pressure and basis health remain explicit."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1784443807",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/codec/tests.rs#vibrancy",
+      "note": "Smoothstep behavior is covered around the entropy gate."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1784443807",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/codec/structural_evidence.rs",
+      "note": "Narrative-arc and multi-scale contributions are explicit."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1784443807",
+      "claim_id": "c004",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Dynamic codec gain and ceiling changes remain Tier 5."
+    },
+    {
+      "introspection_id": "introspection_proposal_12d_glimpse_1784443372",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/codec/structural_evidence.rs",
+      "note": "The 12D glimpse is companion-only and does not replace transport."
+    },
+    {
+      "introspection_id": "introspection_proposal_12d_glimpse_1784443372",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/codec/tests.rs#spectral_glimpse",
+      "note": "Warmth, tail, narrative, bridge, and energy anchors are covered."
+    },
+    {
+      "introspection_id": "introspection_proposal_12d_glimpse_1784443372",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/codec/tests.rs#glimpse_distinguishability",
+      "note": "Candidate distinguishability is deterministic."
+    },
+    {
+      "introspection_id": "introspection_proposal_12d_glimpse_1784443372",
+      "claim_id": "c004",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Dynamic pressure-driven projection remains Tier 5."
+    },
+    {
+      "introspection_id": "introspection_proposal_distance_contact_control_1784443006",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "scripts/felt_contract_graph.py",
+      "note": "Felt state remains independent from technical closure."
+    },
+    {
+      "introspection_id": "introspection_proposal_distance_contact_control_1784443006",
+      "claim_id": "c002",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784504882_run06_reads/introspection_proposal_distance_contact_control_1784443006_summary.md",
+      "note": "A non-instrumental language comparison is routed."
+    },
+    {
+      "introspection_id": "introspection_proposal_distance_contact_control_1784443006",
+      "claim_id": "c003",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Receptivity and density regulation remain Tier 5."
+    },
+    {
+      "introspection_id": "introspection_proposal_distance_contact_control_1784443006",
+      "claim_id": "c004",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "High-variance live trajectories remain Tier 5."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1784442554",
+      "claim_id": "c001",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/AI_BEINGS_BIDIRECTIONAL_CONTACT_AND_CORRESPONDENCE_ARCHITECTURE.md",
+      "note": "Delivery, reply linkage, and felt uptake remain distinct."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1784442554",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/correspondence_v1.rs",
+      "note": "Stable message, thread, reply, persistence, read, ACK, and trace IDs exist."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1784442554",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/protocol.rs",
+      "note": "Protocol delivery receipts explicitly disclaim spectral causation."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1784442554",
+      "claim_id": "c004",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784504882_run06_reads/introspection_proposal_bidirectional_contact_1784442554_summary.md",
+      "note": "A bounded post-change contact review is routed."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1784442554",
+      "claim_id": "c005",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Automatic priority and peer mutation remain Tier 5."
+    },
+    {
+      "introspection_id": "introspection_proposal_phase_transitions_1784442339",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/phase_transitions.rs",
+      "note": "Transition cards are durable, replyable, witnessed, and ignorable."
+    },
+    {
+      "introspection_id": "introspection_proposal_phase_transitions_1784442339",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/phase_transitions.rs#tests",
+      "note": "Spectral, persistence, and individual/joint evidence is covered."
+    },
+    {
+      "introspection_id": "introspection_proposal_phase_transitions_1784442339",
+      "claim_id": "c003",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784504882_run06_reads/introspection_proposal_phase_transitions_1784442339_summary.md",
+      "note": "Reply review remains language-only and noncausal."
+    },
+    {
+      "introspection_id": "introspection_proposal_phase_transitions_1784442339",
+      "claim_id": "c004",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Phase-driven behavior remains Tier 5."
+    },
+    {
+      "introspection_id": "introspection_minime_autonomous_agent_1784441837",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "../minime/minime_autonomy/runtime.py",
+      "note": "Recess permission and density-aware review profiles are explicit."
+    },
+    {
+      "introspection_id": "introspection_minime_autonomous_agent_1784441837",
+      "claim_id": "c002",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784504882_run06_reads/introspection_minime_autonomous_agent_1784441837_summary.md",
+      "note": "Pressure versus whim-following is routed as observation."
+    },
+    {
+      "introspection_id": "introspection_minime_autonomous_agent_1784441837",
+      "claim_id": "c003",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784504882_run06_reads/introspection_minime_autonomous_agent_1784441837_summary.md",
+      "note": "Foothold and tail movement are temporally compared without intervention."
+    },
+    {
+      "introspection_id": "introspection_minime_autonomous_agent_1784441837",
+      "claim_id": "c004",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Recess cadence and regulation remain Tier 5."
+    },
+    {
+      "introspection_id": "introspection_minime_main_excerpt_1784441513",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "../minime/minime/src/runtime.rs",
+      "note": "Recovery, reset, stable-core, semantic, and shadow modules are explicit."
+    },
+    {
+      "introspection_id": "introspection_minime_main_excerpt_1784441513",
+      "claim_id": "c002",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784504882_run06_reads/introspection_minime_main_excerpt_1784441513_summary.md",
+      "note": "Natural recovery is routed as temporal observation."
+    },
+    {
+      "introspection_id": "introspection_minime_main_excerpt_1784441513",
+      "claim_id": "c003",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Recovery, semantic flow, and reset changes remain Tier 5."
+    },
+    {
+      "introspection_id": "introspection_minime_esn_1784440839",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "../minime/minime/src/esn.rs",
+      "note": "Source default and runtime exploration-noise identity remain separate."
+    },
+    {
+      "introspection_id": "introspection_minime_esn_1784440839",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "../minime/minime/src/esn.rs#step",
+      "note": "Dynamic review helpers are not wired into the active step."
+    },
+    {
+      "introspection_id": "introspection_minime_esn_1784440839",
+      "claim_id": "c003",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784504882_run06_reads/introspection_minime_esn_1784440839_summary.md",
+      "note": "An offline deterministic noise and pressure comparison is routed."
+    },
+    {
+      "introspection_id": "introspection_minime_esn_1784440839",
+      "claim_id": "c004",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Adaptive reservoir behavior remains Tier 5."
+    }
+  ]
+}

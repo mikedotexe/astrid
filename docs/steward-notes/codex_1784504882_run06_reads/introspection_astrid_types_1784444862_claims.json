@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "String connection labels are insufficient without numeric temporal evidence.",
+      "disposition": "verify inter-arrival, first-valid lag, jitter class, cadence score, and timing basis fields",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Field and hearing can conflict and should not be collapsed into one label.",
+      "disposition": "verify the explicit field-versus-hearing evidence and stale/current classifications",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Legacy and typed coherence need aligned, divergent, and malformed probes.",
+      "disposition": "verify existing hybrid coherence tests and route a bounded high-jitter observation",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Pressure-responsive cadence or a live spectral-drag field would change consumed interpretation.",
+      "disposition": "preserve an exact Tier 5 approval and compatibility path",
+      "classification": "authority_gated"
+    }
+  ]
+}

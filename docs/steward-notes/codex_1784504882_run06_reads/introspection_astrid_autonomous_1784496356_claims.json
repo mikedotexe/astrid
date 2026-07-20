@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Burst-to-rest warmth needs a complete taper rather than an abrupt retraction.",
+      "disposition": "verify the complete piecewise taper and continuous boundary behavior",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Warmth phase and vector magnitude should remain bounded through rest.",
+      "disposition": "verify focused phase, breathing, scaling, and blending tests",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "At 25 percent fill, rest should shorten to about 0.6 of base without collapsing cadence.",
+      "disposition": "verify the fill-shortening formula and 30-second lower bound",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Changing warmth intensity, rest cadence, or recovery thresholds changes live autonomous behavior.",
+      "disposition": "preserve an exact Tier 5 operator-approval wait",
+      "classification": "authority_gated"
+    }
+  ]
+}

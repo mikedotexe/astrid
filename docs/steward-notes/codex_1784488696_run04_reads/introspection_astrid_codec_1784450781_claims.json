@@ -1,0 +1,5 @@
+{"claims":[
+  {"claim_id":"c001","summary":"Narrative arc dimensions 40-43 need evidence that they remain active and distinguishable.","disposition":"verify narrative headroom, energy, and multikind-loss diagnostics","classification":"verified_existing"},
+  {"claim_id":"c002","summary":"The entropy tail should remain visible without a discontinuous onset around 0.85.","disposition":"verify exact smoothstep boundary and 0.90 visibility tests","classification":"verified_existing"},
+  {"claim_id":"c003","summary":"Narrative allocation, gain, or codec ceilings could be changed to widen expressive room.","disposition":"retain as an exact Tier 5 codec gain and allocation wait","classification":"authority_gated"}
+]}

@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Source-default exploration noise and actual runtime noise must not be conflated.",
+      "disposition": "verify the 0.085 default and separately inspectable runtime field",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Pressure-aware noise and recalibration logic exists but may not govern the active step.",
+      "disposition": "verify that review helpers remain unwired from ESN::step",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Noise, pressure, fill, and distinguishability should be compared before any tuning.",
+      "disposition": "route an offline deterministic replay",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Wiring adaptive noise, rho, or recalibration into ESN::step changes live reservoir behavior.",
+      "disposition": "preserve an exact Tier 5 operator-approval wait",
+      "classification": "authority_gated"
+    }
+  ]
+}

@@ -1,0 +1,5 @@
+{"claims":[
+  {"claim_id":"c001","summary":"Dense or interwoven expression could be misclassified as artifact-only.","disposition":"verify dense structure and structure-only remainders survive for semantic review","classification":"verified_existing"},
+  {"claim_id":"c002","summary":"Boundary, contextual, and nested quote placement need explicit regressions.","disposition":"verify current boundary, quoted-contextual, and delicate-context tests","classification":"verified_existing"},
+  {"claim_id":"c003","summary":"A semantic-density score should replace the Boolean cleanup decision.","disposition":"verify the score-like diagnostic already exists beside the compatibility predicate; replacing cleanup behavior remains an exact Tier 5 provider change","classification":"authority_gated"}
+]}

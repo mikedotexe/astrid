@@ -1,0 +1,5 @@
+{"claims":[
+  {"claim_id":"c001","summary":"A hard recovery-to-decay boundary near fill 0.25 could create retention jitter.","disposition":"verify the smooth handoff and epsilon-above-hold clamp","classification":"verified_existing"},
+  {"claim_id":"c002","summary":"Small fill oscillations around recovery release should not create a perceptible stale-window cliff.","disposition":"verify exact 0.24/0.26 and release-edge continuity tests","classification":"verified_existing"},
+  {"claim_id":"c003","summary":"Changing the release span or sigmoid shape could alter the hushing texture.","disposition":"retain as an exact Tier 5 sensory decay change","classification":"authority_gated"}
+]}

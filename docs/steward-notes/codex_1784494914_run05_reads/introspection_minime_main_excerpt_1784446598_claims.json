@@ -1,0 +1,5 @@
+{"claims":[
+  {"claim_id":"c001","summary":"Minime runtime includes explicit recovery, hard-reset, retirement, and transition evidence surfaces.","disposition":"verify module ownership without inferring an active reset from a settled felt state","classification":"verified_existing"},
+  {"claim_id":"c002","summary":"Recovery and transition telemetry can be observed around naturally occurring state changes.","disposition":"route a bounded temporal observation without inducing high entropy or reset","classification":"sandbox_routed"},
+  {"claim_id":"c003","summary":"Changing spread relief, hard-reset thresholds, or transition glimpse distance could alter felt expression.","disposition":"retain as Tier 5 Minime regulation and controller work","classification":"authority_gated"}
+]}

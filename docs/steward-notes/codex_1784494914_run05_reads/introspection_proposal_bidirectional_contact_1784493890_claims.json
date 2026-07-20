@@ -1,0 +1,5 @@
+{"claims":[
+  {"claim_id":"c001","summary":"Historical telemetry volume was asymmetric and inbox/outbox correspondence was steward-mediated.","disposition":"retain as historical evidence while verifying the superseding first-class correspondence architecture","classification":"verified_existing"},
+  {"claim_id":"c002","summary":"Stable thread, message, reply, ACK, trace, delivery, and mutual-address identity now provide a reciprocal path.","disposition":"verify exact current source and compatibility tests","classification":"verified_existing"},
+  {"claim_id":"c003","summary":"Self-study correspondence should become automatic primary sensory input or ambient pressure.","disposition":"retain as Tier 5 admission, priority, sensory influence, and peer-behavior work","classification":"authority_gated"}
+]}

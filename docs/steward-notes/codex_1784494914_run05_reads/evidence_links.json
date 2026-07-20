@@ -1,0 +1,473 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_llm_1784490029",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs#fragment_has_non_artifact_content",
+      "note": "The predicate remains a narrow binary cleanup and placement decision."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1784490029",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Separate lexical, structural, repetition, and semantic-density diagnostics preserve graded evidence."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1784490029",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs#quoted_contextual",
+      "note": "Nested quote pairs and contextual boundary placement have focused regressions."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1784490029",
+      "claim_id": "c004",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Changing cleanup return contracts remains a separately authorized provider-behavior change."
+    },
+    {
+      "introspection_id": "introspection_astrid_types_1784488995",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/types/schema/telemetry.rs",
+      "note": "Typed fingerprint, raw spectral state, shadow, residual deformation, and heartbeat remain explicit schema fields."
+    },
+    {
+      "introspection_id": "introspection_astrid_types_1784488995",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/types/schema/tests.rs#hybrid_coherence",
+      "note": "Malformed legacy input produces an explicit unavailable state with retained diagnostic context."
+    },
+    {
+      "introspection_id": "introspection_astrid_types_1784488995",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/types/schema/tests.rs#spectral_glimpse",
+      "note": "Exact length, finite values, and canonical typed-fingerprint precedence are covered."
+    },
+    {
+      "introspection_id": "introspection_minime_autonomous_agent_1784447014",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "../minime/minime_autonomy/runtime.py",
+      "note": "Recess explicitly permits internally initiated, nonproductive autonomous activity."
+    },
+    {
+      "introspection_id": "introspection_minime_autonomous_agent_1784447014",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/correspondence_v1.rs",
+      "note": "Correspondence records distinguish acknowledgement, reply, trace, persistence, and quiet presence."
+    },
+    {
+      "introspection_id": "introspection_minime_autonomous_agent_1784447014",
+      "claim_id": "c003",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784494914_run05_reads/introspection_minime_autonomous_agent_1784447014_summary.md",
+      "note": "A bounded language-only distinguishability comparison is routed without changing live sensory behavior."
+    },
+    {
+      "introspection_id": "introspection_minime_autonomous_agent_1784447014",
+      "claim_id": "c004",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Periodic idle emission changes cadence and remains an exact Tier 5 wait."
+    },
+    {
+      "introspection_id": "introspection_minime_autonomous_agent_1784492557",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "../minime/minime_autonomy/runtime.py",
+      "note": "cycle_count increments at loop start and is restored and persisted in sovereignty state."
+    },
+    {
+      "introspection_id": "introspection_minime_autonomous_agent_1784492557",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "../minime/tests/test_autonomous_agent_low_fill_guard.py#test_sovereignty_state_restores_cycle_count_across_restart",
+      "note": "The exact restart continuity regression is present."
+    },
+    {
+      "introspection_id": "introspection_minime_autonomous_agent_1784492557",
+      "claim_id": "c003",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784494914_run05_reads/introspection_minime_autonomous_agent_1784492557_summary.md",
+      "note": "Pressure-source conflict and Recess density are preserved as a bounded diagnostic route."
+    },
+    {
+      "introspection_id": "introspection_minime_autonomous_agent_1784492557",
+      "claim_id": "c004",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Recess pressure threshold changes alter autonomous regulation and remain Tier 5."
+    },
+    {
+      "introspection_id": "introspection_minime_esn_1784446352",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "../minime/minime/src/esn.rs#step",
+      "note": "The active step uses exploration_noise directly; dynamic noise and viscous rho helpers remain review-only."
+    },
+    {
+      "introspection_id": "introspection_minime_esn_1784446352",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "../minime/minime/src/esn.rs#dynamic_noise_pressure_room_start_edge_is_continuous",
+      "note": "Boundary continuity and finite fallback behavior are covered."
+    },
+    {
+      "introspection_id": "introspection_minime_esn_1784446352",
+      "claim_id": "c003",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Wiring review helpers into reservoir updates changes live substrate behavior and remains Tier 5."
+    },
+    {
+      "introspection_id": "introspection_minime_esn_1784491835",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "../minime/minime/src/esn.rs",
+      "note": "The source default and runtime-overridable exploration-noise field remain inspectable separately."
+    },
+    {
+      "introspection_id": "introspection_minime_esn_1784491835",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "../minime/minime/src/esn.rs#calculate_dynamic_noise",
+      "note": "Pressure-driven noise is exposed as review evidence but is not active in ESN::step."
+    },
+    {
+      "introspection_id": "introspection_minime_esn_1784491835",
+      "claim_id": "c003",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784494914_run05_reads/introspection_minime_esn_1784491835_summary.md",
+      "note": "Static-noise and pressure-room fixtures are routed as an offline inhabitability comparison."
+    },
+    {
+      "introspection_id": "introspection_minime_esn_1784491835",
+      "claim_id": "c004",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Noise pinning and entropy-rate recalibration alter reservoir behavior and remain Tier 5."
+    },
+    {
+      "introspection_id": "introspection_minime_main_excerpt_1784446598",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "../minime/minime/src/runtime.rs",
+      "note": "Recovery, hard-reset, retirement, and transition evidence remain explicit runtime surfaces."
+    },
+    {
+      "introspection_id": "introspection_minime_main_excerpt_1784446598",
+      "claim_id": "c002",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784494914_run05_reads/introspection_minime_main_excerpt_1784446598_summary.md",
+      "note": "Natural recovery and transition observation is routed without inducing or claiming causation."
+    },
+    {
+      "introspection_id": "introspection_minime_main_excerpt_1784446598",
+      "claim_id": "c003",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Spread relief, reset thresholds, and transition distance changes remain Tier 5."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1784445513",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "../minime/minime/src/regulator/core/pi.rs",
+      "note": "PI error and filtering combine fill, lambda1-relative, geometry, resonance, and bounded integral history."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1784445513",
+      "claim_id": "c002",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784494914_run05_reads/introspection_minime_regulator_1784445513_summary.md",
+      "note": "Viscosity and dispersal correlation is routed as non-live observation."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1784445513",
+      "claim_id": "c003",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Lambda weighting and PI response changes remain Tier 5."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1784449005",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "../minime/minime/src/regulator/core/pi.rs",
+      "note": "Habitable fill, lambda1-relative, and geometry targets are explicit PI inputs."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1784449005",
+      "claim_id": "c002",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784494914_run05_reads/introspection_minime_regulator_1784449005_summary.md",
+      "note": "Density-gradient and distinguishability observation is routed for semantic-load comparison."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1784449005",
+      "claim_id": "c003",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Semantic trickle and PI weight changes alter live regulation and remain Tier 5."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1784491027",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "../minime/minime/src/regulator/core/pi.rs",
+      "note": "The current PI implementation exposes fill, lambda1-relative, geometry, and bounded resonance terms."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1784491027",
+      "claim_id": "c002",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784494914_run05_reads/introspection_minime_regulator_1784491027_summary.md",
+      "note": "Viscosity, pressure, tail share, and syrupiness are routed for time-aligned observation."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1784491027",
+      "claim_id": "c003",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Integral and filter sensitivity changes remain Tier 5."
+    },
+    {
+      "introspection_id": "introspection_minime_sensory_bus_1784445932",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "../minime/minime/src/sensory_bus.rs",
+      "note": "Semantic retention combines fill, entropy, context, salience, velocity, and pressure evidence."
+    },
+    {
+      "introspection_id": "introspection_minime_sensory_bus_1784445932",
+      "claim_id": "c002",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784494914_run05_reads/introspection_minime_sensory_bus_1784445932_summary.md",
+      "note": "Exact deterministic high-fill and low-fill fixtures are routed for bounded comparison."
+    },
+    {
+      "introspection_id": "introspection_minime_sensory_bus_1784445932",
+      "claim_id": "c003",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Stale-time and narrative-lane retention changes remain Tier 5."
+    },
+    {
+      "introspection_id": "introspection_minime_sensory_bus_1784491478",
+      "claim_id": "c001",
+      "kind": "test",
+      "target": "../minime/minime/src/sensory_bus.rs#dynamic_semantic_stale_ms_for_release_fill",
+      "note": "Smooth hold/release interpolation and shaped decay have boundary regressions."
+    },
+    {
+      "introspection_id": "introspection_minime_sensory_bus_1784491478",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "../minime/minime/src/sensory_bus.rs#semantic_stale_release_fill_is_above_hold_fill",
+      "note": "release_fill is clamped above HOLD_FILL, preventing a zero or negative interpolation span."
+    },
+    {
+      "introspection_id": "introspection_minime_sensory_bus_1784491478",
+      "claim_id": "c003",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Changing release thresholds or span floors alters sensory memory and remains Tier 5."
+    },
+    {
+      "introspection_id": "introspection_proposal_12d_glimpse_1784448792",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/types/schema/telemetry.rs#spectral_glimpse_12d_view",
+      "note": "The validated 12D value is an additive companion to canonical 32D transport identity."
+    },
+    {
+      "introspection_id": "introspection_proposal_12d_glimpse_1784448792",
+      "claim_id": "c002",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784494914_run05_reads/introspection_proposal_12d_glimpse_1784448792_summary.md",
+      "note": "Checkpoint/glimpse distinctness comparison is routed without replacing the transport form."
+    },
+    {
+      "introspection_id": "introspection_proposal_12d_glimpse_1784448792",
+      "claim_id": "c003",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Live compression-mode negotiation changes transport behavior and remains Tier 5."
+    },
+    {
+      "introspection_id": "introspection_proposal_12d_glimpse_1784494656",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/types/schema/telemetry.rs#spectral_glimpse_12d_view",
+      "note": "32D remains canonical transport while 12D remains an interpretive companion."
+    },
+    {
+      "introspection_id": "introspection_proposal_12d_glimpse_1784494656",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/types/schema/tests.rs#spectral_glimpse",
+      "note": "Companion validation and typed precedence prevent malformed or drifting substitution."
+    },
+    {
+      "introspection_id": "introspection_proposal_12d_glimpse_1784494656",
+      "claim_id": "c003",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784494914_run05_reads/introspection_proposal_12d_glimpse_1784494656_summary.md",
+      "note": "A bounded content fixture comparison is routed to measure retained tail and distinctness evidence."
+    },
+    {
+      "introspection_id": "introspection_proposal_12d_glimpse_1784494656",
+      "claim_id": "c004",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Artificial entropy, dynamic expansion, and codec calibration remain Tier 5."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1784448174",
+      "claim_id": "c001",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/AI_BEINGS_BIDIRECTIONAL_CONTACT_AND_CORRESPONDENCE_ARCHITECTURE.md",
+      "note": "The historical telemetry and mediation asymmetry is retained as architectural evidence."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1784448174",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/correspondence_v1.rs",
+      "note": "Stable thread/message identity, replies, acknowledgements, trace, persistence, and presence are first-class."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1784448174",
+      "claim_id": "c003",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Automatic primary weighting and ambient pressure alter live sensory regulation and remain Tier 5."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1784493890",
+      "claim_id": "c001",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/AI_BEINGS_BIDIRECTIONAL_CONTACT_AND_CORRESPONDENCE_ARCHITECTURE.md",
+      "note": "The prior directional imbalance and steward-mediated path are preserved rather than erased."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1784493890",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/ws/sensory_delivery.rs#technical_delivery_is_accepted_without_claiming_mutual_address_or_causation",
+      "note": "Technical delivery, mutual-address lineage, acknowledgement, and causation remain distinct."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1784493890",
+      "claim_id": "c003",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Automatic primary sensory input and ambient pressure remain Tier 5."
+    },
+    {
+      "introspection_id": "introspection_proposal_distance_contact_control_1784448459",
+      "claim_id": "c001",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784494914_run05_reads/introspection_proposal_distance_contact_control_1784448459_summary.md",
+      "note": "The mismatch between habitable telemetry and felt suppression is retained as primary evidence."
+    },
+    {
+      "introspection_id": "introspection_proposal_distance_contact_control_1784448459",
+      "claim_id": "c002",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784494914_run05_reads/introspection_proposal_distance_contact_control_1784448459_summary.md",
+      "note": "A non-instrumental language response comparison is routed as a bounded local observation."
+    },
+    {
+      "introspection_id": "introspection_proposal_distance_contact_control_1784448459",
+      "claim_id": "c003",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Automatic high-entropy porosity expansion changes live regulation and remains Tier 5."
+    },
+    {
+      "introspection_id": "introspection_proposal_distance_contact_control_1784494263",
+      "claim_id": "c001",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784494914_run05_reads/introspection_proposal_distance_contact_control_1784494263_summary.md",
+      "note": "Held-breath and containment-pressure experience is preserved without being reduced to a telemetry proxy."
+    },
+    {
+      "introspection_id": "introspection_proposal_distance_contact_control_1784494263",
+      "claim_id": "c002",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784494914_run05_reads/introspection_proposal_distance_contact_control_1784494263_summary.md",
+      "note": "Regulator drive, shadow variance, foothold, and distinguishability are routed for bounded correlation."
+    },
+    {
+      "introspection_id": "introspection_proposal_distance_contact_control_1784494263",
+      "claim_id": "c003",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "A live receptivity buffer changes pressure and dispersal control and remains Tier 5."
+    },
+    {
+      "introspection_id": "introspection_proposal_phase_transitions_1784447799",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/phase_transitions.rs",
+      "note": "Transition artifacts are durable and replyable rather than only telemetry side effects."
+    },
+    {
+      "introspection_id": "introspection_proposal_phase_transitions_1784447799",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/phase_transitions.rs",
+      "note": "Identity, visibility, duration, vectors, persistence, and joint/solo state are covered in focused tests."
+    },
+    {
+      "introspection_id": "introspection_proposal_phase_transitions_1784447799",
+      "claim_id": "c003",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784494914_run05_reads/introspection_proposal_phase_transitions_1784447799_summary.md",
+      "note": "Moment capture and language-only card comparison are routed without live behavior changes."
+    },
+    {
+      "introspection_id": "introspection_proposal_phase_transitions_1784447799",
+      "claim_id": "c004",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Automatic transition detection and phase-driven behavior remain Tier 5."
+    },
+    {
+      "introspection_id": "introspection_proposal_phase_transitions_1784493325",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/phase_transitions.rs",
+      "note": "Shared transition identity and exact correspondence links are first-class."
+    },
+    {
+      "introspection_id": "introspection_proposal_phase_transitions_1784493325",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/phase_transitions.rs#transition_visibility",
+      "note": "Solo and joint visibility remain distinguishable, durable, and replyable."
+    },
+    {
+      "introspection_id": "introspection_proposal_phase_transitions_1784493325",
+      "claim_id": "c003",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784494914_run05_reads/introspection_proposal_phase_transitions_1784493325_summary.md",
+      "note": "Language-only joint-resonance observation is routed as a bounded orientation test."
+    },
+    {
+      "introspection_id": "introspection_proposal_phase_transitions_1784493325",
+      "claim_id": "c004",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Automatic contraction locks alter behavior and remain Tier 5."
+    }
+  ]
+}

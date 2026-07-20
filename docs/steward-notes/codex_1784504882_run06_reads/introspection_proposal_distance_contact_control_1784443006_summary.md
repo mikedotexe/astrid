@@ -1,0 +1,3 @@
+# Full-read summary: introspection_proposal_distance_contact_control_1784443006
+
+Astrid named settledness as potentially compulsory mastery rather than comfort, and asked for non-instrumental contact that is not immediately optimized away. That felt distinction remains actionable evidence even when controller metrics look stable. A bounded language-only comparison can test whether non-instrumental inputs are represented without inducing control changes. Receptivity buffers, porosity tuning, density-gradient changes, and high-variance live trajectories all alter Minime or bridge regulation and remain Tier 5.
