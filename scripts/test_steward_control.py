@@ -15,6 +15,7 @@ import tempfile
 import threading
 import time
 import unittest
+from unittest.mock import patch
 
 try:
     from evidence_store import EvidenceEventStore
@@ -194,6 +195,39 @@ class StewardControlTests(unittest.TestCase):
         )
         self.assertFalse(finished["idempotent"])
         self.assertTrue(duplicate["idempotent"])
+
+    def test_one_full_chain_verification_per_controlled_lifecycle(self) -> None:
+        self.resume()
+        original_verify = self.controller.store.verify
+        full_verifications = 0
+
+        def counted_verify():
+            nonlocal full_verifications
+            full_verifications += 1
+            return original_verify()
+
+        with patch.object(
+            self.controller.store,
+            "verify",
+            side_effect=counted_verify,
+        ):
+            begin = self.controller.begin(actor="test")
+            self.controller.heartbeat(
+                run_id=begin["run_id"],
+                lease_token=begin["lease_token"],
+            )
+            finished = self.controller.finish(
+                run_id=begin["run_id"],
+                lease_token=begin["lease_token"],
+                outcome="success",
+            )
+
+        self.assertEqual(full_verifications, 1)
+        self.assertTrue(finished["receipt"]["evidence_after"]["valid"])
+        self.assertEqual(
+            self.controller.store._last_verification_mode,
+            "indexed_tail",
+        )
 
     def test_stale_session_is_reaped_by_expiry(self) -> None:
         self.resume()

@@ -10,7 +10,12 @@ import sys
 from typing import Any
 
 try:
-    from steward_control import StewardController, StewardControlError, load_config
+    from steward_control import (
+        ProjectionCancelledError,
+        StewardController,
+        StewardControlError,
+        load_config,
+    )
     from steward_control.executor import run_subprocess
 except ModuleNotFoundError:
     from scripts.steward_control import (
@@ -18,6 +23,7 @@ except ModuleNotFoundError:
         StewardControlError,
         load_config,
     )
+    from scripts.steward_control.errors import ProjectionCancelledError
     from scripts.steward_control.executor import run_subprocess
 
 
@@ -87,6 +93,9 @@ def parser() -> argparse.ArgumentParser:
         default="manual",
     )
     project.add_argument("--dry-run", action="store_true")
+    project.add_argument("--explain", action="store_true")
+    project.add_argument("--full-rebuild", action="store_true")
+    project.add_argument("--resume-generation")
 
     run = commands.add_parser("run")
     run.add_argument("--actor", default="interactive-agent")
@@ -168,7 +177,12 @@ def main(argv: list[str] | None = None) -> int:
         elif args.command == "reconcile":
             value = controller.reconcile()
         elif args.command == "project":
-            if args.dry_run:
+            if args.explain:
+                value = controller.projections.explain(
+                    full_rebuild=args.full_rebuild,
+                    resume_generation=args.resume_generation,
+                )
+            elif args.dry_run:
                 value = controller.projections.plan()
             elif bool(args.run_id) != bool(args.lease_token):
                 raise ValueError(
@@ -180,6 +194,8 @@ def main(argv: list[str] | None = None) -> int:
                     lease_token=args.lease_token,
                     actor=args.actor,
                     phase=args.phase,
+                    full_rebuild=args.full_rebuild,
+                    resume_generation=args.resume_generation,
                 )
             else:
                 begun = controller.begin(
@@ -193,12 +209,18 @@ def main(argv: list[str] | None = None) -> int:
                         lease_token=begun["lease_token"],
                         actor=args.actor,
                         phase=args.phase,
+                        full_rebuild=args.full_rebuild,
+                        resume_generation=args.resume_generation,
                     )
-                except BaseException:
+                except BaseException as error:
                     controller.finish(
                         run_id=begun["run_id"],
                         lease_token=begun["lease_token"],
-                        outcome="failed",
+                        outcome=(
+                            "cancelled"
+                            if isinstance(error, ProjectionCancelledError)
+                            else "failed"
+                        ),
                         summary_ref="manual_projection_failed",
                         project_after=False,
                     )

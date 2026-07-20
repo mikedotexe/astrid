@@ -3,7 +3,8 @@
 from .adapter import append_domain_events, read_domain_events, v2_active_for_state
 from .migration import LegacyEventSource, import_legacy_sources
 from .model import EvidenceEventV2, ProvenanceSourceV1
-from .store import EvidenceEventStore, EvidenceStoreError, StoreVerification
+from .store import EvidenceEventStore, EvidenceStoreError
+from .verification import StoreVerification
 
 __all__ = [
     "EvidenceEventStore",

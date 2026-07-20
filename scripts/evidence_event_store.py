@@ -264,6 +264,12 @@ def build_parser() -> argparse.ArgumentParser:
     subparsers.add_parser("status")
     subparsers.add_parser("verify")
 
+    index = subparsers.add_parser("index")
+    index_commands = index.add_subparsers(dest="index_command", required=True)
+    index_commands.add_parser("status")
+    index_commands.add_parser("verify")
+    index_commands.add_parser("rebuild")
+
     migrate = subparsers.add_parser("import-v1")
     migrate.add_argument("--write", action="store_true")
 
@@ -325,6 +331,34 @@ def main() -> int:
                 args.json,
             )
             return 0 if verification["valid"] else 1
+        if args.command == "index":
+            if args.index_command == "status":
+                result = store.read_index.status()
+                _emit(result, args.json)
+                return 0 if not result.get("exists") or result.get("matches_head") else 1
+            verification = store.verify().to_dict()
+            if not verification["valid"]:
+                _emit(
+                    {
+                        "status": "failed",
+                        "canonical_verification": verification,
+                    },
+                    args.json,
+                )
+                return 1
+            if args.index_command == "rebuild":
+                result = store.read_index.rebuild()
+            else:
+                store.read_index.reconcile()
+                result = store.read_index.verify()
+            _emit(
+                {
+                    "canonical_verification": verification,
+                    "index": result,
+                },
+                args.json,
+            )
+            return 0 if args.index_command == "rebuild" or result.get("valid") else 1
         if args.command == "import-v1":
             receipt = import_legacy_sources(
                 store,

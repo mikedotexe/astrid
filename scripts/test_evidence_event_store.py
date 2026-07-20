@@ -6,7 +6,9 @@ from __future__ import annotations
 import json
 import multiprocessing
 import os
+import stat
 import tempfile
+import time
 import unittest
 from pathlib import Path
 from unittest.mock import patch
@@ -22,6 +24,7 @@ except ModuleNotFoundError:
 try:
     from evidence_store.adapter import append_domain_events, read_domain_events, v2_active_for_state
     from evidence_store.migration import LegacyEventSource, import_legacy_sources
+    from evidence_store.index import EvidenceReadIndexError
     from evidence_store.store import EvidenceEventStore, EvidenceStoreError
 except ModuleNotFoundError:
     from scripts.evidence_store.adapter import (
@@ -30,6 +33,7 @@ except ModuleNotFoundError:
         v2_active_for_state,
     )
     from scripts.evidence_store.migration import LegacyEventSource, import_legacy_sources
+    from scripts.evidence_store.index import EvidenceReadIndexError
     from scripts.evidence_store.store import EvidenceEventStore, EvidenceStoreError
 
 
@@ -44,6 +48,128 @@ def _concurrent_append(root: str, worker: int, count: int) -> None:
 
 
 class EvidenceEventStoreTests(unittest.TestCase):
+    def test_read_index_bootstrap_permissions_lookup_and_deterministic_rebuild(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            store = EvidenceEventStore(Path(tmp) / "store")
+            events = store.append_payloads(
+                "addressing",
+                [
+                    {"event_type": "claim_recorded", "claim_id": "one"},
+                    {"event_type": "claim_recorded", "claim_id": "two"},
+                ],
+                idempotency_keys=["claim:one", "claim:two"],
+            )
+            first = store.read_index.status()
+            self.assertTrue(first["matches_head"])
+            self.assertEqual(first["event_count"], 2)
+            self.assertEqual(
+                stat.S_IMODE(store.read_index.path.stat().st_mode),
+                0o600,
+            )
+            found = store.read_index.event_for_idempotency(
+                "addressing",
+                "claim:two",
+            )
+            self.assertIsNotNone(found)
+            self.assertEqual(found.event_id, events[1].event_id)
+            expected_digest = first["logical_sha256"]
+            store.read_index.path.unlink()
+            self.assertTrue(store.verify().valid)
+            store.read_index.rebuild()
+            rebuilt = store.read_index.status()
+            self.assertEqual(rebuilt["logical_sha256"], expected_digest)
+            self.assertTrue(store.read_index.verify()["valid"])
+
+    def test_read_index_reconciles_only_new_canonical_tail(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "store"
+            first = EvidenceEventStore(root)
+            first.append_payloads(
+                "addressing",
+                [{"event_type": "claim_recorded", "claim_id": "one"}],
+            )
+            second = EvidenceEventStore(root)
+            second.append_payloads(
+                "sandbox",
+                [{"event_type": "trial_recorded", "trial_id": "one"}],
+            )
+            watermarks = first.stream_watermarks(["addressing", "sandbox"])
+            self.assertEqual(watermarks["addressing"]["stream_seq"], 1)
+            self.assertEqual(watermarks["sandbox"]["stream_seq"], 1)
+            status = first.read_index.status()
+            self.assertEqual(status["event_count"], 2)
+            self.assertTrue(status["matches_head"])
+
+    def test_read_index_detects_truncation_and_tampering(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            store = EvidenceEventStore(Path(tmp) / "store")
+            store.append_payloads(
+                "addressing",
+                [{"event_type": "claim_recorded", "claim_id": "one"}],
+            )
+            original = store.events_path.read_bytes()
+            store.events_path.write_bytes(original[:-2])
+            with self.assertRaises(EvidenceReadIndexError):
+                store.read_index.reconcile()
+        with tempfile.TemporaryDirectory() as tmp:
+            store = EvidenceEventStore(Path(tmp) / "store")
+            store.append_payloads(
+                "addressing",
+                [{"event_type": "claim_recorded", "claim_id": "one"}],
+            )
+            text = store.events_path.read_text(encoding="utf-8")
+            store.events_path.write_text(
+                text.replace("claim_recorded", "claim_changed_"),
+                encoding="utf-8",
+            )
+            with self.assertRaises(EvidenceReadIndexError):
+                store.read_index.reconcile()
+
+    def test_verified_projection_session_uses_only_indexed_tail(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "store"
+            store = EvidenceEventStore(root)
+            store.append_payloads(
+                "addressing",
+                [{"event_type": "claim_recorded", "claim_id": "one"}],
+            )
+            verification = store.verify()
+            store.prepare_read_index()
+            session = Path(tmp) / "projection-session.json"
+            session.write_text(
+                json.dumps(
+                    {
+                        "schema": "evidence_projection_session_v1",
+                        "schema_version": 1,
+                        "store_root": str(root.resolve()),
+                        "verified_global_seq": verification.last_global_seq,
+                        "verified_event_sha256": verification.last_event_sha256,
+                        "expires_at_unix": time.time() + 60,
+                    }
+                ),
+                encoding="utf-8",
+            )
+            session.chmod(0o600)
+            with (
+                patch.dict(
+                    os.environ,
+                    {"ASTRID_EVIDENCE_PROJECTION_SESSION": str(session)},
+                ),
+                patch.object(
+                    EvidenceEventStore,
+                    "verify",
+                    side_effect=AssertionError("full verification repeated"),
+                ),
+            ):
+                child = EvidenceEventStore(root)
+                child.append_payloads(
+                    "sandbox",
+                    [{"event_type": "trial_recorded", "trial_id": "one"}],
+                )
+            self.assertTrue(EvidenceEventStore(root).verify().valid)
+
     def test_counter_audits_follow_real_projector_schemas(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             workspace = Path(tmp)
@@ -359,6 +485,68 @@ class EvidenceEventStoreTests(unittest.TestCase):
                     2,
                     input_streams=["addressing"],
                     source_hashes={"source": "two"},
+                )
+            )
+
+    def test_v3_checkpoint_uses_complete_identity_and_retains_v2_reader(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            store = EvidenceEventStore(Path(tmp) / "store")
+            store.initialize_from_envelopes([], legacy_imported=False)
+            store.append_payloads(
+                "addressing",
+                [{"event_type": "claim_recorded", "claim_id": "one"}],
+            )
+            store.write_checkpoint(
+                "projection",
+                3,
+                {"status.json": "output-one"},
+                input_streams=["addressing"],
+                source_hashes={"source": "one"},
+                dependency_output_hashes={"dependency": "one"},
+                command_sha256="command-one",
+                config_sha256="config-one",
+            )
+            store.append_payloads(
+                "sandbox",
+                [{"event_type": "trial_recorded", "trial_id": "one"}],
+            )
+            self.assertTrue(
+                store.checkpoint_current_for_inputs(
+                    "projection",
+                    3,
+                    input_streams=["addressing"],
+                    source_hashes={"source": "one"},
+                    dependency_output_hashes={"dependency": "one"},
+                    command_sha256="command-one",
+                    config_sha256="config-one",
+                    output_hashes={"status.json": "output-one"},
+                )
+            )
+            self.assertFalse(
+                store.checkpoint_current_for_inputs(
+                    "projection",
+                    3,
+                    input_streams=["addressing"],
+                    source_hashes={"source": "one"},
+                    dependency_output_hashes={"dependency": "changed"},
+                    command_sha256="command-one",
+                    config_sha256="config-one",
+                    output_hashes={"status.json": "output-one"},
+                )
+            )
+            store.write_checkpoint(
+                "legacy_v2",
+                2,
+                {"status": "abc"},
+                input_streams=["addressing"],
+                source_hashes={"source": "one"},
+            )
+            self.assertTrue(
+                store.checkpoint_current_for_inputs(
+                    "legacy_v2",
+                    2,
+                    input_streams=["addressing"],
+                    source_hashes={"source": "one"},
                 )
             )
             store.append_payloads(

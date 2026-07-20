@@ -23,17 +23,29 @@ def _sha256_file(path: Path) -> str | None:
     return digest.hexdigest()
 
 
-def verify_evidence(config: ControlConfig, *, require_active: bool = True) -> dict[str, Any]:
+def verify_evidence(
+    config: ControlConfig,
+    *,
+    require_active: bool = True,
+    store: Any | None = None,
+    full_chain: bool = True,
+) -> dict[str, Any]:
     try:
         from evidence_store import EvidenceEventStore
     except ModuleNotFoundError:
         from scripts.evidence_store import EvidenceEventStore
 
-    store = EvidenceEventStore(config.store_root)
-    verification = store.verify()
+    evidence_store = store or EvidenceEventStore(config.store_root)
+    verification = (
+        evidence_store.verify()
+        if full_chain
+        else evidence_store.verify_indexed_tail()
+    )
     activation: dict[str, Any] = {}
     try:
-        raw_activation = json.loads(store.activation_path.read_text(encoding="utf-8"))
+        raw_activation = json.loads(
+            evidence_store.activation_path.read_text(encoding="utf-8")
+        )
         if isinstance(raw_activation, dict):
             activation = raw_activation
     except (OSError, json.JSONDecodeError):
@@ -79,6 +91,7 @@ def verify_evidence(config: ControlConfig, *, require_active: bool = True) -> di
         "last_global_seq": verification.last_global_seq,
         "last_event_sha256": verification.last_event_sha256,
         "stream_counts": verification.stream_counts,
+        "verification_mode": evidence_store._last_verification_mode,
         "legacy_sources": immutable_sources,
         "v1_immutable": immutable,
     }

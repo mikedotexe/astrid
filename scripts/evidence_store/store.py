@@ -8,13 +8,13 @@ import hashlib
 import json
 import os
 import re
+import stat
 import time
 import uuid
 from collections import Counter
-from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any, Iterable
+from typing import Any, Iterable, Iterator
 
 try:
     from authority_state import (
@@ -39,42 +39,22 @@ from .model import (
     ProvenanceSourceV1,
     canonical_json,
 )
+from .index import EvidenceReadIndex, EvidenceReadIndexError
+from .verification import StoreVerification, verify_canonical_events
 
 DEFAULT_ACTOR = "interactive-agent"
+VERIFIED_SESSION_ENV = "ASTRID_EVIDENCE_PROJECTION_SESSION"
 HEAD_SCHEMA = "evidence_event_store_head_v1"
 ACTIVATION_SCHEMA = "evidence_event_store_activation_v1"
 CHECKPOINT_SCHEMA = "evidence_event_projection_checkpoint_v1"
 CHECKPOINT_SCHEMA_V2 = "evidence_event_projection_checkpoint_v2"
+CHECKPOINT_SCHEMA_V3 = "evidence_event_projection_checkpoint_v3"
 COMPATIBILITY_EXPORT_SCHEMA = "evidence_event_store_compatibility_export_v1"
 SAFE_NAME_RE = re.compile(r"[^a-zA-Z0-9_.-]+")
 
 
 class EvidenceStoreError(RuntimeError):
     """Raised when integrity, authority, or lifecycle checks fail."""
-
-
-@dataclass(frozen=True)
-class StoreVerification:
-    valid: bool
-    event_count: int
-    stream_counts: dict[str, int]
-    corrupt_lines: int
-    errors: tuple[str, ...]
-    last_global_seq: int
-    last_event_sha256: str
-
-    def to_dict(self) -> dict[str, Any]:
-        return {
-            "schema": "evidence_event_store_verification_v1",
-            "schema_version": 1,
-            "valid": self.valid,
-            "event_count": self.event_count,
-            "stream_counts": self.stream_counts,
-            "corrupt_lines": self.corrupt_lines,
-            "errors": list(self.errors),
-            "last_global_seq": self.last_global_seq,
-            "last_event_sha256": self.last_event_sha256,
-        }
 
 
 def _utc_now() -> str:
@@ -161,6 +141,13 @@ class EvidenceEventStore:
         self.lock_path = self.root / ".append.lock"
         self.activation_path = self.root / "active_store.json"
         self.checkpoints_dir = self.root / "checkpoints"
+        self.read_index = EvidenceReadIndex(
+            self.root,
+            self.events_path,
+            self.head_path,
+        )
+        self._verified_anchor: tuple[int, str] | None = None
+        self._last_verification_mode: str | None = None
 
     def _empty_head(self) -> dict[str, Any]:
         return {
@@ -210,80 +197,137 @@ class EvidenceEventStore:
         return events, corrupt
 
     def verify(self) -> StoreVerification:
-        events, corrupt = self.read_envelopes()
-        errors: list[str] = []
-        stream_counts: Counter[str] = Counter()
-        expected_previous = GENESIS_HASH
-        expected_global_seq = 1
-        stream_sequences: Counter[str] = Counter()
-        seen_ids: set[str] = set()
-        seen_idempotency: set[tuple[str, str]] = set()
-
-        for event in events:
-            stream_counts[event.stream] += 1
-            stream_sequences[event.stream] += 1
-            prefix = f"event[{event.global_seq}]"
-            if event.event_id in seen_ids:
-                errors.append(f"{prefix}:duplicate_event_id:{event.event_id}")
-            seen_ids.add(event.event_id)
-            if event.global_seq != expected_global_seq:
-                errors.append(
-                    f"{prefix}:global_seq_expected_{expected_global_seq}_got_{event.global_seq}"
-                )
-            if event.stream_seq != stream_sequences[event.stream]:
-                errors.append(
-                    f"{prefix}:stream_seq_expected_{stream_sequences[event.stream]}_got_{event.stream_seq}"
-                )
-            if event.previous_event_sha256 != expected_previous:
-                errors.append(f"{prefix}:previous_hash_mismatch")
-            calculated = event.calculated_sha256()
-            if event.event_sha256 != calculated:
-                errors.append(f"{prefix}:event_hash_mismatch")
-            if event.idempotency_key:
-                identity = (event.stream, event.idempotency_key)
-                if identity in seen_idempotency:
-                    errors.append(f"{prefix}:duplicate_idempotency_key")
-                seen_idempotency.add(identity)
-            try:
-                state = str(event.artifact_authority_state_v1.get("state") or "")
-                ArtifactAuthorityStateV1(state)
-                assert_artifact_authority_tree(event.payload)
-            except (ValueError, TypeError) as error:
-                errors.append(f"{prefix}:authority:{error}")
-            if event.to_dict().get("schema") != EVENT_SCHEMA:
-                errors.append(f"{prefix}:schema_mismatch")
-            expected_previous = event.event_sha256
-            expected_global_seq += 1
-
-        if corrupt:
-            errors.append(f"corrupt_lines:{corrupt}")
-        last_seq = events[-1].global_seq if events else 0
-        last_hash = events[-1].event_sha256 if events else GENESIS_HASH
-        try:
-            head = self.read_head()
-        except EvidenceStoreError as error:
-            errors.append(str(error))
-            head = self._empty_head()
-        if int(head.get("last_global_seq") or 0) != last_seq:
-            errors.append("head_last_global_seq_mismatch")
-        if str(head.get("last_event_sha256") or GENESIS_HASH) != last_hash:
-            errors.append("head_last_event_sha256_mismatch")
-        expected_streams = {key: int(value) for key, value in stream_counts.items()}
-        head_streams = {
-            str(key): int(value)
-            for key, value in (head.get("stream_sequences") or {}).items()
-        }
-        if head_streams != expected_streams:
-            errors.append("head_stream_sequences_mismatch")
-        return StoreVerification(
-            valid=not errors,
-            event_count=len(events),
-            stream_counts=dict(sorted(stream_counts.items())),
-            corrupt_lines=corrupt,
-            errors=tuple(errors),
-            last_global_seq=last_seq,
-            last_event_sha256=last_hash,
+        verification = verify_canonical_events(
+            self.events_path,
+            self.read_head,
+            self._empty_head,
         )
+        self._verified_anchor = (
+            (verification.last_global_seq, verification.last_event_sha256)
+            if verification.valid
+            else None
+        )
+        self._last_verification_mode = "full_chain"
+        return verification
+
+    def verify_indexed_tail(self) -> StoreVerification:
+        """Validate only canonical bytes after an already verified chain anchor."""
+
+        had_anchor = self._verified_anchor is not None
+        if not had_anchor:
+            session_anchor = self._session_anchor()
+            had_anchor = (
+                session_anchor is not None
+                and self.read_index.has_anchor(*session_anchor)
+            )
+        index = self._prepare_read_index()
+        status = index.status(
+            include_details=True,
+            include_logical_digest=False,
+        )
+        errors: list[str] = []
+        if not status.get("valid_schema"):
+            errors.append("index_schema_invalid")
+        if not status.get("matches_head"):
+            errors.append("index_head_mismatch")
+        if status.get("permissions") != "0o600":
+            errors.append("index_permissions_not_owner_only")
+        verification = StoreVerification(
+            valid=not errors,
+            event_count=int(status.get("event_count") or 0),
+            stream_counts={
+                str(stream): int(count)
+                for stream, count in (status.get("stream_counts") or {}).items()
+            },
+            corrupt_lines=0,
+            errors=tuple(errors),
+            last_global_seq=int(status.get("last_global_seq") or 0),
+            last_event_sha256=str(
+                status.get("last_event_sha256") or GENESIS_HASH
+            ),
+        )
+        self._verified_anchor = (
+            (verification.last_global_seq, verification.last_event_sha256)
+            if verification.valid
+            else None
+        )
+        self._last_verification_mode = (
+            "indexed_tail" if had_anchor else "full_chain"
+        )
+        return verification
+
+    def _session_anchor(self) -> tuple[int, str] | None:
+        raw_path = os.environ.get(VERIFIED_SESSION_ENV)
+        if not raw_path:
+            return None
+        path = Path(raw_path)
+        try:
+            if stat.S_IMODE(path.stat().st_mode) & 0o077:
+                return None
+            value = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            return None
+        if (
+            not isinstance(value, dict)
+            or value.get("schema") != "evidence_projection_session_v1"
+            or Path(str(value.get("store_root") or "")).resolve()
+            != self.root.resolve()
+            or float(value.get("expires_at_unix") or 0) <= time.time()
+        ):
+            return None
+        return (
+            int(value.get("verified_global_seq") or 0),
+            str(value.get("verified_event_sha256") or GENESIS_HASH),
+        )
+
+    def _prepare_read_index(
+        self,
+        *,
+        append_lock_held: bool = False,
+    ) -> EvidenceReadIndex:
+        """Verify canonical history once per store instance, then reconcile its tail."""
+
+        def prepare_locked() -> None:
+            head = self.read_head()
+            current_anchor = (
+                int(head.get("last_global_seq") or 0),
+                str(head.get("last_event_sha256") or GENESIS_HASH),
+            )
+            session_anchor = self._session_anchor()
+            can_validate_tail = self._verified_anchor is not None or (
+                session_anchor is not None
+                and self.read_index.has_anchor(*session_anchor)
+            )
+            if self._verified_anchor != current_anchor and not can_validate_tail:
+                verification = self.verify()
+                if not verification.valid:
+                    raise EvidenceStoreError(
+                        "cannot index invalid store: "
+                        + "; ".join(verification.errors)
+                    )
+            try:
+                self.read_index.reconcile()
+            except EvidenceReadIndexError as error:
+                raise EvidenceStoreError(
+                    f"invalid evidence read index: {error}"
+                ) from error
+            self._verified_anchor = current_anchor
+
+        if append_lock_held:
+            prepare_locked()
+        else:
+            self.root.mkdir(parents=True, exist_ok=True)
+            with self.lock_path.open("a+", encoding="utf-8") as lock_handle:
+                fcntl.flock(lock_handle.fileno(), fcntl.LOCK_EX)
+                prepare_locked()
+                fcntl.flock(lock_handle.fileno(), fcntl.LOCK_UN)
+        return self.read_index
+
+    def prepare_read_index(self) -> dict[str, Any]:
+        """Prepare and return the derived index status after canonical verification."""
+
+        self._prepare_read_index()
+        return self.read_index.status(include_details=False)
 
     def append_payloads(
         self,
@@ -306,11 +350,7 @@ class EvidenceEventStore:
         self.root.mkdir(parents=True, exist_ok=True)
         with self.lock_path.open("a+", encoding="utf-8") as lock_handle:
             fcntl.flock(lock_handle.fileno(), fcntl.LOCK_EX)
-            verification = self.verify()
-            if not verification.valid:
-                raise EvidenceStoreError(
-                    "refusing append to invalid store: " + "; ".join(verification.errors)
-                )
+            read_index = self._prepare_read_index(append_lock_held=True)
             head = self.read_head()
             stream_sequences = {
                 str(key): int(value)
@@ -321,20 +361,16 @@ class EvidenceEventStore:
             stream_seq = int(stream_sequences.get(stream, 0))
             appended: list[EvidenceEventV2] = []
             event_source = source or ProvenanceSourceV1("runtime_append", stream)
-            existing_events, corrupt = self.read_envelopes()
-            if corrupt:
-                raise EvidenceStoreError("cannot search idempotency in a corrupt store")
             idempotency_index = {
-                (event.stream, event.idempotency_key): event
-                for event in existing_events
-                if event.idempotency_key
+                key: read_index.event_for_idempotency(stream, key)
+                for key in {key for key in keys if key}
             }
 
             self.events_path.parent.mkdir(parents=True, exist_ok=True)
             with self.events_path.open("a", encoding="utf-8") as event_handle:
                 for payload, idempotency_key in zip(payload_list, keys, strict=True):
                     if idempotency_key:
-                        existing = idempotency_index.get((stream, idempotency_key))
+                        existing = idempotency_index.get(idempotency_key)
                         if existing is not None:
                             appended.append(existing)
                             continue
@@ -377,7 +413,7 @@ class EvidenceEventStore:
                     previous_hash = envelope.event_sha256
                     appended.append(envelope)
                     if idempotency_key:
-                        idempotency_index[(stream, idempotency_key)] = envelope
+                        idempotency_index[idempotency_key] = envelope
                 event_handle.flush()
                 os.fsync(event_handle.fileno())
 
@@ -386,6 +422,13 @@ class EvidenceEventStore:
             head["last_event_sha256"] = previous_hash
             head["stream_sequences"] = dict(sorted(stream_sequences.items()))
             self._write_head(head)
+            self._verified_anchor = (global_seq, previous_hash)
+            try:
+                self.read_index.reconcile()
+            except EvidenceReadIndexError:
+                # Canonical JSONL and head are already durable. The derived index
+                # remains safely rebuildable on the next controlled read.
+                pass
             fcntl.flock(lock_handle.fileno(), fcntl.LOCK_UN)
         return appended
 
@@ -432,11 +475,76 @@ class EvidenceEventStore:
         return verification
 
     def payloads_for_stream(self, stream: str) -> tuple[list[dict[str, Any]], int]:
-        verification = self.verify()
-        if not verification.valid:
-            return [], max(1, verification.corrupt_lines)
-        events, _ = self.read_envelopes()
-        return [copy.deepcopy(event.payload) for event in events if event.stream == stream], 0
+        try:
+            index = self._prepare_read_index()
+            return [
+                copy.deepcopy(event.payload)
+                for event in index.iter_stream(stream)
+            ], 0
+        except (EvidenceStoreError, EvidenceReadIndexError):
+            return [], 1
+
+    def envelopes_for_stream(
+        self,
+        stream: str,
+        *,
+        after_stream_seq: int = 0,
+    ) -> tuple[list[EvidenceEventV2], int]:
+        """Read one stream from the derived offset index.
+
+        Callers that need durable source identities should use envelopes rather
+        than reconstructing them from payloads. The canonical JSONL remains the
+        source of every returned record.
+        """
+
+        try:
+            index = self._prepare_read_index()
+            return [
+                copy.deepcopy(event)
+                for event in index.iter_stream(
+                    stream,
+                    after_stream_seq=after_stream_seq,
+                )
+            ], 0
+        except (EvidenceStoreError, EvidenceReadIndexError):
+            return [], 1
+
+    def iter_envelopes_for_stream(
+        self,
+        stream: str,
+        *,
+        after_stream_seq: int = 0,
+    ) -> Iterator[EvidenceEventV2]:
+        """Stream one canonical V2 stream without accumulating its payloads."""
+
+        try:
+            index = self._prepare_read_index()
+            yield from index.iter_stream(
+                stream,
+                after_stream_seq=after_stream_seq,
+            )
+        except EvidenceReadIndexError as error:
+            raise EvidenceStoreError(
+                f"cannot stream indexed events for {stream}: {error}"
+            ) from error
+
+    def payloads_for_stream_after(
+        self,
+        stream: str,
+        *,
+        after_stream_seq: int,
+    ) -> tuple[list[dict[str, Any]], int]:
+        try:
+            index = self._prepare_read_index()
+            return [
+                copy.deepcopy(event.payload)
+                for event in index.iter_stream(
+                    stream,
+                    after_stream_seq=after_stream_seq,
+                )
+            ], 0
+        except (EvidenceStoreError, EvidenceReadIndexError):
+            return [], 1
 
     def stream_watermarks(
         self,
@@ -444,32 +552,19 @@ class EvidenceEventStore:
     ) -> dict[str, dict[str, Any]]:
         """Return exact high-water identities for only the declared streams."""
 
-        verification = self.verify()
-        if not verification.valid:
-            raise EvidenceStoreError("cannot read watermarks from an invalid store")
         requested = sorted({str(stream) for stream in streams if str(stream).strip()})
-        watermarks = {
-            stream: {
-                "stream_seq": 0,
-                "last_global_seq": 0,
-                "last_event_id": None,
-                "last_event_sha256": GENESIS_HASH,
-            }
-            for stream in requested
-        }
-        events, corrupt = self.read_envelopes()
-        if corrupt:
-            raise EvidenceStoreError("cannot read watermarks from corrupt events")
-        for event in events:
-            if event.stream not in watermarks:
-                continue
-            watermarks[event.stream] = {
-                "stream_seq": event.stream_seq,
-                "last_global_seq": event.global_seq,
-                "last_event_id": event.event_id,
-                "last_event_sha256": event.event_sha256,
-            }
-        return watermarks
+        try:
+            return self._prepare_read_index().stream_watermarks(requested)
+        except EvidenceReadIndexError as error:
+            raise EvidenceStoreError(f"cannot read indexed watermarks: {error}") from error
+
+    def idempotency_keys(self, stream: str) -> set[str]:
+        try:
+            return self._prepare_read_index().idempotency_keys(stream)
+        except EvidenceReadIndexError as error:
+            raise EvidenceStoreError(
+                f"cannot read idempotency keys for {stream}: {error}"
+            ) from error
 
     def write_checkpoint(
         self,
@@ -479,12 +574,65 @@ class EvidenceEventStore:
         *,
         input_streams: Iterable[str] | None = None,
         source_hashes: dict[str, str] | None = None,
+        dependency_output_hashes: dict[str, str] | None = None,
+        command_sha256: str | None = None,
+        config_sha256: str | None = None,
     ) -> Path:
-        verification = self.verify()
-        if not verification.valid:
-            raise EvidenceStoreError("cannot checkpoint an invalid store")
+        self._prepare_read_index()
+        head = self.read_head()
+        observed_global_seq = int(head.get("last_global_seq") or 0)
+        observed_event_sha256 = str(
+            head.get("last_event_sha256") or GENESIS_HASH
+        )
         safe_name = SAFE_NAME_RE.sub("_", projector).strip("_") or "projector"
         path = self.checkpoints_dir / f"{safe_name}.json"
+        if any(
+            value is not None
+            for value in (
+                dependency_output_hashes,
+                command_sha256,
+                config_sha256,
+            )
+        ):
+            declared_streams = sorted(
+                {
+                    str(stream)
+                    for stream in (input_streams or ())
+                    if str(stream).strip()
+                }
+            )
+            input_identity = {
+                "schema": "projection_input_identity_v3",
+                "schema_version": 3,
+                "input_streams": declared_streams,
+                "input_stream_watermarks": self.stream_watermarks(
+                    declared_streams
+                ),
+                "source_hashes": dict(sorted((source_hashes or {}).items())),
+                "dependency_output_hashes": dict(
+                    sorted((dependency_output_hashes or {}).items())
+                ),
+                "command_sha256": command_sha256,
+                "config_sha256": config_sha256,
+                "projector_version": projector_version,
+            }
+            _atomic_write_json(
+                path,
+                {
+                    "schema": CHECKPOINT_SCHEMA_V3,
+                    "schema_version": 3,
+                    "projector": projector,
+                    "projector_version": projector_version,
+                    "input_identity": input_identity,
+                    "store_observed_at": {
+                        "last_global_seq": observed_global_seq,
+                        "last_event_sha256": observed_event_sha256,
+                    },
+                    "output_hashes": dict(sorted(output_hashes.items())),
+                    "recorded_at": _utc_now(),
+                },
+            )
+            return path
         if input_streams is not None:
             declared_streams = sorted(
                 {str(stream) for stream in input_streams if str(stream).strip()}
@@ -502,8 +650,8 @@ class EvidenceEventStore:
                     ),
                     "source_hashes": dict(sorted((source_hashes or {}).items())),
                     "store_observed_at": {
-                        "last_global_seq": verification.last_global_seq,
-                        "last_event_sha256": verification.last_event_sha256,
+                        "last_global_seq": observed_global_seq,
+                        "last_event_sha256": observed_event_sha256,
                     },
                     "output_hashes": dict(sorted(output_hashes.items())),
                     "recorded_at": _utc_now(),
@@ -517,8 +665,8 @@ class EvidenceEventStore:
                 "schema_version": 1,
                 "projector": projector,
                 "projector_version": projector_version,
-                "last_global_seq": verification.last_global_seq,
-                "last_event_sha256": verification.last_event_sha256,
+                "last_global_seq": observed_global_seq,
+                "last_event_sha256": observed_event_sha256,
                 "output_hashes": dict(sorted(output_hashes.items())),
                 "recorded_at": _utc_now(),
             },
@@ -528,6 +676,15 @@ class EvidenceEventStore:
     def checkpoint_current(self, projector: str, projector_version: int) -> bool:
         return self.checkpoint_current_for_inputs(projector, projector_version)
 
+    def read_checkpoint(self, projector: str) -> dict[str, Any] | None:
+        safe_name = SAFE_NAME_RE.sub("_", projector).strip("_") or "projector"
+        path = self.checkpoints_dir / f"{safe_name}.json"
+        try:
+            value = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            return None
+        return value if isinstance(value, dict) else None
+
     def checkpoint_current_for_inputs(
         self,
         projector: str,
@@ -535,18 +692,95 @@ class EvidenceEventStore:
         *,
         input_streams: Iterable[str] | None = None,
         source_hashes: dict[str, str] | None = None,
+        dependency_output_hashes: dict[str, str] | None = None,
+        command_sha256: str | None = None,
+        config_sha256: str | None = None,
+        output_hashes: dict[str, str] | None = None,
     ) -> bool:
-        safe_name = SAFE_NAME_RE.sub("_", projector).strip("_") or "projector"
-        path = self.checkpoints_dir / f"{safe_name}.json"
-        if not path.is_file():
+        checkpoint = self.read_checkpoint(projector)
+        if checkpoint is None:
             return False
         try:
-            checkpoint = json.loads(path.read_text(encoding="utf-8"))
-        except (OSError, json.JSONDecodeError):
-            return False
-        verification = self.verify()
+            self._prepare_read_index()
+            head = self.read_head()
+            store_valid = True
+        except EvidenceStoreError:
+            head = self._empty_head()
+            store_valid = False
         if (
-            verification.valid
+            store_valid
+            and checkpoint.get("schema") == CHECKPOINT_SCHEMA_V3
+            and int(checkpoint.get("projector_version") or 0) == projector_version
+        ):
+            identity = checkpoint.get("input_identity")
+            if not isinstance(identity, dict):
+                return False
+            stored_streams = identity.get("input_streams")
+            stored_sources = identity.get("source_hashes")
+            stored_dependencies = identity.get("dependency_output_hashes")
+            if (
+                not isinstance(stored_streams, list)
+                or not isinstance(stored_sources, dict)
+                or not isinstance(stored_dependencies, dict)
+            ):
+                return False
+            expected_streams = sorted(
+                {
+                    str(stream)
+                    for stream in (
+                        stored_streams if input_streams is None else input_streams
+                    )
+                    if str(stream).strip()
+                }
+            )
+            expected_identity = {
+                "schema": "projection_input_identity_v3",
+                "schema_version": 3,
+                "input_streams": expected_streams,
+                "input_stream_watermarks": self.stream_watermarks(
+                    expected_streams
+                ),
+                "source_hashes": dict(
+                    sorted(
+                        (
+                            stored_sources
+                            if source_hashes is None
+                            else source_hashes
+                        )
+                        .items()
+                    )
+                ),
+                "dependency_output_hashes": dict(
+                    sorted(
+                        (
+                            stored_dependencies
+                            if dependency_output_hashes is None
+                            else dependency_output_hashes
+                        )
+                        .items()
+                    )
+                ),
+                "command_sha256": (
+                    identity.get("command_sha256")
+                    if command_sha256 is None
+                    else command_sha256
+                ),
+                "config_sha256": (
+                    identity.get("config_sha256")
+                    if config_sha256 is None
+                    else config_sha256
+                ),
+                "projector_version": projector_version,
+            }
+            if expected_identity != identity:
+                return False
+            if output_hashes is not None and dict(
+                sorted(output_hashes.items())
+            ) != checkpoint.get("output_hashes"):
+                return False
+            return True
+        if (
+            store_valid
             and checkpoint.get("schema") == CHECKPOINT_SCHEMA_V2
             and int(checkpoint.get("projector_version") or 0) == projector_version
         ):
@@ -575,11 +809,13 @@ class EvidenceEventStore:
                 and expected_sources == checkpoint.get("source_hashes")
             )
         return bool(
-            verification.valid
+            store_valid
             and checkpoint.get("schema") == CHECKPOINT_SCHEMA
             and int(checkpoint.get("projector_version") or 0) == projector_version
-            and int(checkpoint.get("last_global_seq") or 0) == verification.last_global_seq
-            and checkpoint.get("last_event_sha256") == verification.last_event_sha256
+            and int(checkpoint.get("last_global_seq") or 0)
+            == int(head.get("last_global_seq") or 0)
+            and checkpoint.get("last_event_sha256")
+            == str(head.get("last_event_sha256") or GENESIS_HASH)
         )
 
     def export_v1_compatibility(

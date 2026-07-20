@@ -14,9 +14,17 @@ from .model import atomic_write_json, authority_state, load_json, utc_now
 
 
 class EventSink:
-    def __init__(self, config: ControlConfig):
+    def __init__(self, config: ControlConfig, *, store: Any | None = None):
         self.config = config
         self.spool_root = config.state_root / "pending_events"
+        if store is None:
+            try:
+                from evidence_store import EvidenceEventStore
+            except ModuleNotFoundError:
+                from scripts.evidence_store import EvidenceEventStore
+
+            store = EvidenceEventStore(config.store_root)
+        self.store = store
 
     def domain_event(
         self,
@@ -40,15 +48,17 @@ class EventSink:
         }
 
     def _append(self, event: dict[str, Any]) -> None:
-        verify_evidence(self.config)
+        verify_evidence(
+            self.config,
+            store=self.store,
+            full_chain=False,
+        )
         try:
-            from evidence_store import EvidenceEventStore
             from evidence_store.model import ProvenanceSourceV1
         except ModuleNotFoundError:
-            from scripts.evidence_store import EvidenceEventStore
             from scripts.evidence_store.model import ProvenanceSourceV1
 
-        EvidenceEventStore(self.config.store_root).append_payloads(
+        self.store.append_payloads(
             "steward_control",
             [event],
             actor=str(event.get("payload", {}).get("actor") or "interactive-agent"),

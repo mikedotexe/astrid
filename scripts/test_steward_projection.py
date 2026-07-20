@@ -23,6 +23,7 @@ try:
         ProjectionCommand,
         ProjectionCoordinator,
         ProjectionStep,
+        _default_runner,
         hash_source_globs,
         source_first_steps,
     )
@@ -36,6 +37,7 @@ except ModuleNotFoundError:
         ProjectionCommand,
         ProjectionCoordinator,
         ProjectionStep,
+        _default_runner,
         hash_source_globs,
         source_first_steps,
     )
@@ -61,7 +63,10 @@ class FakeCoordinator:
         run_id: str,
         phase: str,
         control=None,
+        full_rebuild: bool = False,
+        resume_generation: str | None = None,
     ) -> dict[str, str]:
+        del full_rebuild, resume_generation
         self.calls.append((actor, run_id, phase))
         if control:
             control(
@@ -174,7 +179,7 @@ class StewardProjectionTests(unittest.TestCase):
         del argv, cwd, timeout
         return CommandResult(0, b'{"schema":"fixture_projection_v1"}', b"", 1)
 
-    def test_generation_runs_in_dependency_order_and_writes_v2_checkpoints(
+    def test_generation_runs_in_dependency_order_and_writes_v3_checkpoints(
         self,
     ) -> None:
         calls: list[tuple[str, ...]] = []
@@ -209,9 +214,12 @@ class StewardProjectionTests(unittest.TestCase):
         )
         self.assertEqual(
             checkpoint["schema"],
-            "evidence_event_projection_checkpoint_v2",
+            "evidence_event_projection_checkpoint_v3",
         )
-        self.assertEqual(checkpoint["input_streams"], ["addressing"])
+        self.assertEqual(
+            checkpoint["input_identity"]["input_streams"],
+            ["addressing"],
+        )
 
     def test_builtin_profile_declares_complete_source_first_order(self) -> None:
         self.assertEqual(
@@ -258,7 +266,12 @@ class StewardProjectionTests(unittest.TestCase):
             runner=failing_runner,
         )
         with self.assertRaises(ProjectionError):
-            failed.run(actor="test", run_id="two", phase="manual")
+            failed.run(
+                actor="test",
+                run_id="two",
+                phase="manual",
+                full_rebuild=True,
+            )
         self.assertEqual(latest_before, failed.latest_path.read_bytes())
         self.assertEqual(
             json.loads(latest_before)["generation_id"],
@@ -314,6 +327,165 @@ class StewardProjectionTests(unittest.TestCase):
             hash_source_globs(self.workspace, ("source/*.json",)),
         )
 
+    def test_no_input_generation_reuses_all_steps_and_appends_no_events(
+        self,
+    ) -> None:
+        calls: list[tuple[str, ...]] = []
+
+        def runner(
+            argv: tuple[str, ...],
+            *,
+            cwd: Path,
+            timeout: int,
+        ) -> CommandResult:
+            del cwd, timeout
+            calls.append(tuple(argv))
+            return CommandResult(0, b'{"schema":"bounded_fixture_v1"}', b"", 1)
+
+        coordinator = ProjectionCoordinator(
+            self.config,
+            steps=self.steps,
+            runner=runner,
+        )
+        first = coordinator.run(actor="test", run_id="one", phase="manual")
+        before_count = EvidenceEventStore(self.store_root).verify().event_count
+        second = coordinator.run(actor="test", run_id="two", phase="manual")
+        after_count = EvidenceEventStore(self.store_root).verify().event_count
+        self.assertEqual(first["executed_step_count"], 2)
+        self.assertEqual(second["reused_step_count"], 2)
+        self.assertEqual(len(calls), 2)
+        self.assertEqual(before_count, after_count)
+        self.assertTrue(
+            all(step["status"] == "reused" for step in second["steps"])
+        )
+
+    def test_unrelated_stream_reuses_but_source_and_dependency_changes_do_not(
+        self,
+    ) -> None:
+        calls: list[tuple[str, ...]] = []
+
+        def runner(
+            argv: tuple[str, ...],
+            *,
+            cwd: Path,
+            timeout: int,
+        ) -> CommandResult:
+            del cwd, timeout
+            calls.append(tuple(argv))
+            return CommandResult(0, b'{"schema":"bounded_fixture_v1"}', b"", 1)
+
+        coordinator = ProjectionCoordinator(
+            self.config,
+            steps=self.steps,
+            runner=runner,
+        )
+        coordinator.run(actor="test", run_id="one", phase="manual")
+        EvidenceEventStore(self.store_root).append_payloads(
+            "unrelated",
+            [{"event_type": "unrelated"}],
+        )
+        unrelated = coordinator.run(
+            actor="test",
+            run_id="two",
+            phase="manual",
+        )
+        self.assertEqual(unrelated["reused_step_count"], 2)
+        self.assertEqual(len(calls), 2)
+
+        self.source.write_text('{"input":2}\n', encoding="utf-8")
+        source_changed = coordinator.run(
+            actor="test",
+            run_id="three",
+            phase="manual",
+        )
+        self.assertEqual(source_changed["executed_step_count"], 1)
+        self.assertEqual(source_changed["steps"][0]["status"], "passed")
+        self.assertEqual(source_changed["steps"][1]["status"], "reused")
+
+        self.first_output.write_text('{"first":2}\n', encoding="utf-8")
+        dependency_changed = coordinator.run(
+            actor="test",
+            run_id="four",
+            phase="manual",
+        )
+        self.assertEqual(dependency_changed["executed_step_count"], 2)
+
+    def test_failed_generation_journal_resumes_completed_steps(self) -> None:
+        calls = 0
+
+        def fail_second(
+            argv: tuple[str, ...],
+            *,
+            cwd: Path,
+            timeout: int,
+        ) -> CommandResult:
+            nonlocal calls
+            del argv, cwd, timeout
+            calls += 1
+            if calls == 2:
+                return CommandResult(9, b"", b"failure", 1)
+            return CommandResult(0, b'{"schema":"fixture_v1"}', b"", 1)
+
+        failed = ProjectionCoordinator(
+            self.config,
+            steps=self.steps,
+            runner=fail_second,
+        )
+        with self.assertRaises(ProjectionError):
+            failed.run(actor="test", run_id="failed", phase="manual")
+        journal_paths = list((failed.root / "journals").glob("*.json"))
+        self.assertEqual(len(journal_paths), 1)
+        failed_generation = journal_paths[0].stem
+        journal = json.loads(journal_paths[0].read_text(encoding="utf-8"))
+        self.assertEqual(journal["status"], "failed")
+        self.assertEqual(journal["completed_step_count"], 1)
+
+        resumed_calls: list[tuple[str, ...]] = []
+
+        def successful(
+            argv: tuple[str, ...],
+            *,
+            cwd: Path,
+            timeout: int,
+        ) -> CommandResult:
+            del cwd, timeout
+            resumed_calls.append(tuple(argv))
+            return CommandResult(0, b'{"schema":"fixture_v1"}', b"", 1)
+
+        resumed = ProjectionCoordinator(
+            self.config,
+            steps=self.steps,
+            runner=successful,
+        ).run(
+            actor="test",
+            run_id="resumed",
+            phase="manual",
+            resume_generation=failed_generation,
+        )
+        self.assertEqual(resumed["reused_step_count"], 1)
+        self.assertEqual(resumed["executed_step_count"], 1)
+        self.assertEqual(len(resumed_calls), 1)
+        self.assertEqual(
+            resumed["resume_source_generation_id"],
+            failed_generation,
+        )
+
+    def test_explain_reports_reuse_without_mutation(self) -> None:
+        coordinator = ProjectionCoordinator(
+            self.config,
+            steps=self.steps,
+            runner=self.successful_runner,
+        )
+        coordinator.run(actor="test", run_id="one", phase="manual")
+        latest_before = coordinator.latest_path.read_bytes()
+        explanation = coordinator.explain()
+        self.assertEqual(
+            [step["action"] for step in explanation["steps"]],
+            ["reuse", "reuse"],
+        )
+        self.assertFalse(explanation["mutates"])
+        self.assertEqual(coordinator.latest_path.read_bytes(), latest_before)
+
     def test_session_adapter_runs_pre_and_post_generations(self) -> None:
         fake = FakeCoordinator()
         controller = StewardController(
@@ -342,7 +514,10 @@ class StewardProjectionTests(unittest.TestCase):
                 run_id: str,
                 phase: str,
                 control=None,
+                full_rebuild: bool = False,
+                resume_generation: str | None = None,
             ) -> dict[str, str]:
+                del full_rebuild, resume_generation
                 self.calls.append((actor, run_id, phase))
                 deadline = time.monotonic() + 2.6
                 while time.monotonic() < deadline:
@@ -401,8 +576,6 @@ class StewardProjectionTests(unittest.TestCase):
 
         thread = threading.Thread(target=pause_soon)
         thread.start()
-        from scripts.steward_control.projection import _default_runner
-
         result = _default_runner(
             [
                 sys.executable,

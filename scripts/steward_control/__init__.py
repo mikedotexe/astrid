@@ -8,6 +8,7 @@ from .errors import (
     EvidenceInvalidError,
     LeaseError,
     PausedError,
+    ProjectionCancelledError,
     ProjectionError,
     StewardControlError,
 )
@@ -19,6 +20,7 @@ __all__ = [
     "EvidenceInvalidError",
     "LeaseError",
     "PausedError",
+    "ProjectionCancelledError",
     "ProjectionError",
     "StewardControlError",
     "StewardController",

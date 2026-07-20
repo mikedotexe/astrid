@@ -34,10 +34,19 @@ class StewardController:
         projection_coordinator: ProjectionCoordinator | None = None,
     ):
         self.config = config
+        try:
+            from evidence_store import EvidenceEventStore
+        except ModuleNotFoundError:
+            from scripts.evidence_store import EvidenceEventStore
+
+        self.store = EvidenceEventStore(config.store_root)
         self.leases = LeaseManager(config)
-        self.events = EventSink(config)
+        self.events = EventSink(config, store=self.store)
         self.runs_root = config.state_root / "runs"
-        self.projections = projection_coordinator or ProjectionCoordinator(config)
+        self.projections = projection_coordinator or ProjectionCoordinator(
+            config,
+            store=self.store,
+        )
 
     def _emit(
         self,
@@ -106,7 +115,11 @@ class StewardController:
             lease["stale"] = self.leases.is_stale(lease)
         evidence_error = None
         try:
-            evidence = verify_evidence(self.config, require_active=False)
+            evidence = verify_evidence(
+                self.config,
+                require_active=False,
+                store=self.store,
+            )
         except Exception as error:
             evidence = {"valid": False}
             evidence_error = type(error).__name__
@@ -126,7 +139,7 @@ class StewardController:
         }
 
     def verify(self) -> dict[str, Any]:
-        evidence = verify_evidence(self.config)
+        evidence = verify_evidence(self.config, store=self.store)
         return {
             "schema": "steward_control_verify_v1",
             "schema_version": 1,
@@ -181,7 +194,7 @@ class StewardController:
         }
 
     def resume(self, *, actor: str, acknowledgement: str) -> dict[str, Any]:
-        verify_evidence(self.config)
+        verify_evidence(self.config, store=self.store)
         reconciliation = self.reconcile()
         if reconciliation["events"]["pending"]:
             raise EvidenceInvalidError("pending steward events could not be reconciled")
@@ -207,7 +220,7 @@ class StewardController:
         pid: int | None = None,
         project_before: bool = True,
     ) -> dict[str, Any]:
-        evidence = verify_evidence(self.config)
+        evidence = verify_evidence(self.config, store=self.store)
         identities = repository_identities(self.config.repositories)
         lease, token, stale = self.leases.acquire(
             actor=actor,
@@ -393,7 +406,11 @@ class StewardController:
         final_outcome = "policy_violation" if violations else outcome
         evidence_after: dict[str, Any]
         try:
-            verified = verify_evidence(self.config)
+            verified = verify_evidence(
+                self.config,
+                store=self.store,
+                full_chain=False,
+            )
             evidence_after = {
                 "valid": True,
                 "last_global_seq": verified["last_global_seq"],
@@ -463,6 +480,8 @@ class StewardController:
         lease_token: str,
         actor: str,
         phase: str = "manual",
+        full_rebuild: bool = False,
+        resume_generation: str | None = None,
     ) -> dict[str, Any]:
         lease = self.leases.lease()
         if lease is None or lease.get("actor") != actor:
@@ -486,6 +505,8 @@ class StewardController:
                 run_id=run_id,
                 phase=phase,
                 control=guard.poll,
+                full_rebuild=full_rebuild,
+                resume_generation=resume_generation,
             )
         except Exception as error:
             guard.close(
