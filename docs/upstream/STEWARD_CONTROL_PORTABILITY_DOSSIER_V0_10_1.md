@@ -112,3 +112,41 @@ Living Felt Contract Graph candidate. Its identity, replay, and privacy core is
 described independently in
 `LIVING_FELT_CONTRACT_GRAPH_PORTABILITY_DOSSIER_V0_10_1.md`; fork-specific
 projectors remain outside this steward-control issue.
+
+## V3 Follow-Up: Incremental Projection Runtime
+
+Production-scale validation exposed a second portable lifecycle concern: a
+cooperative lease must remain valid while pre- and post-run projectors execute,
+and a successful `begin` must not return a token already near expiry. A
+separately assigned upstream issue could reuse:
+
+- the lease-renewal guard and poll-based, one-`SIGINT`, never-force-kill child
+  runner;
+- token-free active-generation status and bounded command receipts;
+- immutable input identities, resumable generation journals, and
+  dependency-aware checkpoint reuse;
+- a rebuildable SQLite offset and idempotency index over an append-only JSONL
+  source; and
+- atomic latest-generation publication only after final source verification.
+
+The derived index is explicitly disposable and non-authoritative. Its
+validation anchors to a fully verified canonical head, reconciles only the
+locked tail, and rejects truncation, tampering, offset drift, or counter
+disagreement. Generic modules use only the Python standard library, contain no
+machine paths or provider names, and remain below 1,000 lines.
+
+The following remain fork-specific and should not be proposed in the portable
+lifecycle issue:
+
+- Astrid's source-first step graph and canonical introspection inventory;
+- Sandbox, Corridor, Signal Spine, claim-family, dossier, model-QoS, authority,
+  and felt-contract schemas;
+- migration baselines, felt-review budgets, and being-feedback ledgers; and
+- any bridge, Minime, deployment, approval, dispatch, or live-control surface.
+
+Copied-production acceptance over more than 351,000 canonical events passed
+the no-input, 20-report delta, and full-rebuild time and memory gates, with
+exact full/incremental felt-contract parity and no no-input family or contract
+event growth. No upstream pull request should be opened until the maintainer
+assigns the lifecycle or incremental-runtime issue and confirms the preferred
+canonical event-store boundary.
