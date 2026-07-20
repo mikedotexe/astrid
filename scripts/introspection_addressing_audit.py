@@ -2540,6 +2540,73 @@ def close_event(introspection_id: str, status: str, rationale: str) -> dict[str,
     }
 
 
+def close_batch(
+    state_dir: Path,
+    introspection_ids: list[str],
+    status: str,
+    rationale: str,
+    *,
+    write: bool,
+) -> dict[str, Any]:
+    if not introspection_ids:
+        raise ValueError("close batch requires at least one introspection id")
+    if len(set(introspection_ids)) != len(introspection_ids):
+        raise ValueError("close batch introspection ids must be unique")
+
+    current = load_or_replay_status(state_dir)
+    artifacts = (
+        current.get("artifacts")
+        if isinstance(current.get("artifacts"), dict)
+        else {}
+    )
+    unknown = [
+        introspection_id
+        for introspection_id in introspection_ids
+        if introspection_id not in artifacts
+    ]
+    if unknown:
+        raise ValueError(f"close batch references unknown introspections: {unknown}")
+
+    events = [
+        close_event(introspection_id, status, rationale)
+        for introspection_id in introspection_ids
+    ]
+    materialized = current
+    if write:
+        append_events(state_dir, events)
+        materialized = replay_events(state_dir)
+        write_materialized_status(state_dir, materialized)
+
+    materialized_artifacts = (
+        materialized.get("artifacts")
+        if isinstance(materialized.get("artifacts"), dict)
+        else {}
+    )
+    return {
+        "schema": SCHEMA,
+        "write": write,
+        "events_appended": len(events) if write else 0,
+        "close_count": len(events),
+        "artifact_statuses": [
+            {
+                "introspection_id": introspection_id,
+                "status": materialized_artifacts.get(introspection_id, {}).get("status"),
+                "fully_addressed": materialized_artifacts.get(
+                    introspection_id, {}
+                ).get("fully_addressed"),
+                "proof_missing_claims": materialized_artifacts.get(
+                    introspection_id, {}
+                ).get("proof_missing_claims"),
+            }
+            for introspection_id in introspection_ids
+        ],
+        "status_path": str(status_path(state_dir)),
+        "queue_path": str(queue_path(state_dir)),
+        "authority_boundary": AUTHORITY_BOUNDARY,
+        "agency_boundary": AGENCY_BOUNDARY,
+    }
+
+
 def work_item_from_claim(artifact: dict[str, Any], claim: dict[str, Any]) -> dict[str, Any]:
     introspection_id = str(artifact.get("introspection_id") or "")
     claim_id = str(claim.get("claim_id") or "")
@@ -4276,6 +4343,71 @@ class IntrospectionAddressingAuditTests(unittest.TestCase):
         self.assertTrue(payload["artifact_statuses"][0]["fully_addressed"])
         self.assertEqual(payload["artifact_statuses"][0]["proof_missing_claims"], [])
 
+    def test_close_batch_appends_and_materializes_once(self) -> None:
+        import tempfile
+        from unittest import mock
+
+        introspection_ids = [
+            "introspection_astrid_ws_1",
+            "introspection_astrid_codec_2",
+        ]
+        current = {
+            "artifacts": {
+                introspection_id: {
+                    "status": "triaged_pending_action",
+                    "fully_addressed": False,
+                    "proof_missing_claims": [],
+                }
+                for introspection_id in introspection_ids
+            }
+        }
+        replayed = {
+            "artifacts": {
+                introspection_id: {
+                    "status": "addressed_duplicate",
+                    "fully_addressed": True,
+                    "proof_missing_claims": [],
+                }
+                for introspection_id in introspection_ids
+            }
+        }
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            state = Path(tmpdir) / "state"
+            with (
+                mock.patch(f"{__name__}.load_or_replay_status", return_value=current),
+                mock.patch(f"{__name__}.append_events") as append_mock,
+                mock.patch(f"{__name__}.replay_events", return_value=replayed) as replay_mock,
+                mock.patch(f"{__name__}.write_materialized_status") as write_status_mock,
+            ):
+                payload = close_batch(
+                    state,
+                    introspection_ids,
+                    "addressed_duplicate",
+                    "All claims retain independent evidence routes.",
+                    write=True,
+                )
+
+        append_mock.assert_called_once()
+        self.assertEqual(len(append_mock.call_args.args[1]), 2)
+        replay_mock.assert_called_once_with(state)
+        write_status_mock.assert_called_once_with(state, replayed)
+        self.assertEqual(payload["events_appended"], 2)
+        self.assertEqual(payload["close_count"], 2)
+        self.assertTrue(
+            all(row["fully_addressed"] for row in payload["artifact_statuses"])
+        )
+
+    def test_close_batch_rejects_duplicate_introspection_ids(self) -> None:
+        with self.assertRaisesRegex(ValueError, "must be unique"):
+            close_batch(
+                Path("/tmp/introspection_addressing_test"),
+                ["introspection_astrid_ws_1", "introspection_astrid_ws_1"],
+                "addressed_duplicate",
+                "duplicate input",
+                write=False,
+            )
+
     def test_full_read_batch_appends_and_materializes_once(self) -> None:
         import tempfile
         from unittest import mock
@@ -4545,6 +4677,22 @@ def main(argv: list[str] | None = None) -> int:
     close_p.add_argument("--write", action="store_true")
     close_p.add_argument("--json", action="store_true")
 
+    close_batch_p = sub.add_parser("close-batch")
+    close_batch_p.add_argument(
+        "--id",
+        dest="introspection_ids",
+        action="append",
+        required=True,
+    )
+    close_batch_p.add_argument(
+        "--status",
+        required=True,
+        choices=sorted(TERMINAL_STATUSES | {"blocked_needs_steward"}),
+    )
+    close_batch_p.add_argument("--rationale", required=True)
+    close_batch_p.add_argument("--write", action="store_true")
+    close_batch_p.add_argument("--json", action="store_true")
+
     report_p = sub.add_parser("report")
     report_p.add_argument("--json", action="store_true")
     report_p.add_argument("--markdown", action="store_true")
@@ -4719,6 +4867,17 @@ def main(argv: list[str] | None = None) -> int:
         payload = preview_or_write_event(
             state_dir,
             close_event(args.id, args.status, args.rationale),
+            write=bool(args.write),
+        )
+        print_output(payload, as_json=True if args.json or not args.write else False)
+        return 0
+
+    if args.cmd == "close-batch":
+        payload = close_batch(
+            state_dir,
+            args.introspection_ids,
+            args.status,
+            args.rationale,
             write=bool(args.write),
         )
         print_output(payload, as_json=True if args.json or not args.write else False)
