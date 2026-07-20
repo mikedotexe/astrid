@@ -23,6 +23,7 @@ def route_deployments(
     workspace: Path,
     source_by_stream: dict[str, list[EvidenceEventV2]],
     existing_graph_envelopes: Iterable[EvidenceEventV2],
+    existing_implementation_nodes: dict[tuple[str, str], str] | None,
     membership: dict[str, str],
     claim_sources: dict[str, Any],
     claim_nodes: dict[str, str],
@@ -65,25 +66,26 @@ def route_deployments(
             if claim_sources[claim_id].family_id == family_id
         )
 
-    existing_implementation_nodes: dict[tuple[str, str], str] = {}
-    for envelope in existing_graph_envelopes:
-        payload = envelope.payload
-        if payload.get("event_type") != "felt_contract_node_recorded":
-            continue
-        node = payload.get("node")
-        metadata = node.get("metadata") if isinstance(node, dict) else None
-        if (
-            isinstance(node, dict)
-            and isinstance(metadata, dict)
-            and node.get("kind") == "implementation"
-            and metadata.get("implementation_receipt_id")
-        ):
-            existing_implementation_nodes[
-                (
-                    str(metadata["implementation_receipt_id"]),
-                    str(node.get("contract_id") or ""),
-                )
-            ] = str(node.get("node_id") or "")
+    if existing_implementation_nodes is None:
+        existing_implementation_nodes = {}
+        for envelope in existing_graph_envelopes:
+            payload = envelope.payload
+            if payload.get("event_type") != "felt_contract_node_recorded":
+                continue
+            node = payload.get("node")
+            metadata = node.get("metadata") if isinstance(node, dict) else None
+            if (
+                isinstance(node, dict)
+                and isinstance(metadata, dict)
+                and node.get("kind") == "implementation"
+                and metadata.get("implementation_receipt_id")
+            ):
+                existing_implementation_nodes[
+                    (
+                        str(metadata["implementation_receipt_id"]),
+                        str(node.get("contract_id") or ""),
+                    )
+                ] = str(node.get("node_id") or "")
 
     deployment_node_count = 0
     temporal_deployment_count = 0

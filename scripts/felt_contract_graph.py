@@ -9,6 +9,7 @@ import hashlib
 import json
 from pathlib import Path
 import sys
+import time
 from typing import Any
 
 try:
@@ -17,6 +18,13 @@ try:
     from evidence_store.adapter import append_domain_events
     from evidence_store.model import canonical_json, sha256_canonical
     from felt_contracts.identity import digest, edge_id, node_id
+    from felt_contracts.incremental_runtime import (
+        GRAPH_STREAM,
+        _atomic_source_hash,
+        _existing_projection,
+        _output_source_hashes,
+        generate,
+    )
     from felt_contracts.model import (
         FeltReviewOutcomeV1,
         build_edge,
@@ -29,16 +37,17 @@ try:
         GraphProjectionError,
         claim_view,
         contract_view,
-        payload_hashes,
         project_graph,
         projection_payloads,
         trace_view,
         write_projection,
     )
     from felt_contracts.sources import (
-        build_source_events,
         graph_state_dir,
         store_root,
+    )
+    from felt_contracts.state_index import (
+        FeltContractStateError,
     )
 except ModuleNotFoundError:
     from scripts.authority_state import assert_artifact_authority_tree
@@ -46,6 +55,13 @@ except ModuleNotFoundError:
     from scripts.evidence_store.adapter import append_domain_events
     from scripts.evidence_store.model import canonical_json, sha256_canonical
     from scripts.felt_contracts.identity import digest, edge_id, node_id
+    from scripts.felt_contracts.incremental_runtime import (
+        GRAPH_STREAM,
+        _atomic_source_hash,
+        _existing_projection,
+        _output_source_hashes,
+        generate,
+    )
     from scripts.felt_contracts.model import (
         FeltReviewOutcomeV1,
         build_edge,
@@ -58,24 +74,27 @@ except ModuleNotFoundError:
         GraphProjectionError,
         claim_view,
         contract_view,
-        payload_hashes,
         project_graph,
         projection_payloads,
         trace_view,
         write_projection,
     )
     from scripts.felt_contracts.sources import (
-        build_source_events,
         graph_state_dir,
         store_root,
     )
+    from scripts.felt_contracts.state_index import (
+        FeltContractStateError,
+    )
+
+try:
+    from projection_receipt import projector_receipt
+except ModuleNotFoundError:
+    from scripts.projection_receipt import projector_receipt
 
 DEFAULT_WORKSPACE = (
     Path(__file__).resolve().parents[1] / "capsules/spectral-bridge/workspace"
 )
-GRAPH_STREAM = "felt_contracts"
-
-
 def _authority(state: str = "evidence_only") -> dict[str, Any]:
     return {
         "schema": "artifact_authority_state_v1",
@@ -83,136 +102,6 @@ def _authority(state: str = "evidence_only") -> dict[str, Any]:
         "state": state,
         "witness_only": True,
     }
-
-
-def _atomic_source_hash(path: Path) -> str:
-    if not path.is_file():
-        return hashlib.sha256(b"").hexdigest()
-    digest_value = hashlib.sha256()
-    with path.open("rb") as handle:
-        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
-            digest_value.update(chunk)
-    return digest_value.hexdigest()
-
-
-def _graph_envelopes(store: EvidenceEventStore) -> list[Any]:
-    envelopes, corrupt = store.read_envelopes()
-    if corrupt:
-        raise EvidenceStoreError(f"V2 store has {corrupt} corrupt event lines")
-    return [envelope for envelope in envelopes if envelope.stream == GRAPH_STREAM]
-
-
-def _existing_projection(workspace: Path) -> tuple[dict[str, Any], list[Any]]:
-    store = EvidenceEventStore(store_root(workspace))
-    verification = store.verify()
-    if not verification.valid:
-        raise EvidenceStoreError(
-            "invalid V2 store: " + "; ".join(verification.errors)
-        )
-    envelopes = _graph_envelopes(store)
-    return project_graph((envelope.payload for envelope in envelopes), workspace=workspace), envelopes
-
-
-def _output_source_hashes(workspace: Path, source_hashes: dict[str, str]) -> dict[str, str]:
-    receipt_log = workspace / "environment_receipts/environment_receipts.jsonl"
-    return {
-        **source_hashes,
-        "environment_receipts": _atomic_source_hash(receipt_log),
-    }
-
-
-def generate(workspace: Path, *, write: bool, actor: str) -> dict[str, Any]:
-    store = EvidenceEventStore(store_root(workspace))
-    verification_before = store.verify()
-    if not verification_before.valid:
-        raise EvidenceStoreError(
-            "invalid V2 store: " + "; ".join(verification_before.errors)
-        )
-    existing_envelopes = _graph_envelopes(store)
-    existing_keys = {
-        envelope.idempotency_key
-        for envelope in existing_envelopes
-        if envelope.idempotency_key
-    }
-    source_build = build_source_events(
-        workspace,
-        existing_graph_envelopes=existing_envelopes,
-    )
-    planned = [
-        event
-        for event in source_build.events
-        if str(event.get("idempotency_key") or "") not in existing_keys
-    ]
-    combined = [envelope.payload for envelope in existing_envelopes] + planned
-    projection = project_graph(combined, workspace=workspace)
-    hashes_for_receipt = payload_hashes(projection_payloads(projection))
-    for event in planned:
-        if event.get("event_type") == "felt_contract_migration_completed":
-            receipt = event.get("migration_receipt")
-            if isinstance(receipt, dict):
-                receipt["projection_hashes"] = hashes_for_receipt
-    if hashes_for_receipt and planned:
-        projection = project_graph(
-            [envelope.payload for envelope in existing_envelopes] + planned,
-            workspace=workspace,
-        )
-
-    projection_hashes: dict[str, str] = {}
-    checkpoint_path: str | None = None
-    if write:
-        append_domain_events(
-            graph_state_dir(workspace),
-            GRAPH_STREAM,
-            planned,
-            actor=actor,
-        )
-        current_envelopes = _graph_envelopes(store)
-        projection = project_graph(
-            (envelope.payload for envelope in current_envelopes),
-            workspace=workspace,
-        )
-        projection_hashes = write_projection(workspace, projection)
-        checkpoint = store.write_checkpoint(
-            "felt_contract_graph_v1",
-            PROJECTOR_VERSION,
-            projection_hashes,
-            input_streams=GRAPH_INPUT_STREAMS,
-            source_hashes=_output_source_hashes(
-                workspace, source_build.source_hashes
-            ),
-        )
-        checkpoint_path = str(checkpoint)
-
-    result = dict(projection["status"])
-    result.update(
-        {
-            "write": write,
-            "planned_event_count": len(planned),
-            "existing_event_count": len(existing_envelopes),
-            "source_stream_counts": source_build.source_counts,
-            "routed_source_event_count": source_build.routed_source_events,
-            "unrouted_source_event_count": source_build.unrouted_source_events,
-            "ambiguous_new_claim_count": source_build.ambiguous_new_claims,
-            "projection_hashes": projection_hashes,
-            "checkpoint_path": checkpoint_path,
-            "v2_before": {
-                "global_seq": verification_before.last_global_seq,
-                "head_sha256": verification_before.last_event_sha256,
-            },
-        }
-    )
-    if write:
-        verification_after = store.verify()
-        result["v2_after"] = {
-            "valid": verification_after.valid,
-            "global_seq": verification_after.last_global_seq,
-            "head_sha256": verification_after.last_event_sha256,
-            "felt_contract_event_count": verification_after.stream_counts.get(
-                GRAPH_STREAM, 0
-            ),
-        }
-    return result
-
 
 def verify(workspace: Path) -> dict[str, Any]:
     store = EvidenceEventStore(store_root(workspace))
@@ -619,12 +508,19 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--self-test", action="store_true")
     commands = parser.add_subparsers(dest="command")
 
-    for name in ("migrate", "generate"):
+    for name in ("migrate", "generate", "project"):
         command = commands.add_parser(name)
         command.add_argument("--write", action="store_true")
         command.add_argument("--dry-run", action="store_true")
+        command.add_argument(
+            "--full-replay",
+            action="store_true",
+            help="rebuild derived state and require exact reference-replay parity",
+        )
         command.add_argument("--actor", default="interactive-agent")
         command.add_argument("--json", action="store_true")
+        if name == "project":
+            command.add_argument("--receipt-json", action="store_true")
 
     report = commands.add_parser("report")
     report.add_argument("--json", action="store_true")
@@ -687,14 +583,38 @@ def main() -> int:
         return 2
     workspace = args.workspace.expanduser().resolve()
     try:
-        if args.command in {"migrate", "generate"}:
+        if args.command in {"migrate", "generate", "project"}:
             if args.write and args.dry_run:
                 raise ValueError("--write and --dry-run are mutually exclusive")
+            started = time.monotonic()
             result = generate(
                 workspace,
                 write=bool(args.write),
                 actor=args.actor,
+                full_replay=bool(args.full_replay),
             )
+            if args.command == "project":
+                root = graph_state_dir(workspace)
+                print(
+                    json.dumps(
+                        projector_receipt(
+                            "felt_contracts",
+                            _summary(result),
+                            {
+                                "status.json": root / "status.json",
+                                "contracts.jsonl": root / "contracts.jsonl",
+                                "report.md": root / "report.md",
+                                "migration_receipt.json": (
+                                    root / "migration_receipt.json"
+                                ),
+                            },
+                            started_monotonic=started,
+                        ),
+                        indent=2,
+                        sort_keys=True,
+                    )
+                )
+                return 0
             print(json.dumps(_summary(result), indent=2, sort_keys=True))
             return 0
         if args.command == "verify":
@@ -746,6 +666,7 @@ def main() -> int:
         return 0
     except (
         EvidenceStoreError,
+        FeltContractStateError,
         GraphProjectionError,
         KeyError,
         OSError,

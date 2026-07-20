@@ -8,6 +8,7 @@ import hashlib
 import json
 import os
 import tempfile
+import time
 import unittest
 from collections import Counter
 from pathlib import Path
@@ -21,6 +22,18 @@ except ModuleNotFoundError:
     from scripts.authority_state import ArtifactAuthorityStateV1
     from scripts.evidence_store import EvidenceEventStore
     from scripts.evidence_store.model import ProvenanceSourceV1, canonical_json
+
+try:
+    from projection_receipt import projector_receipt
+except ModuleNotFoundError:
+    from scripts.projection_receipt import projector_receipt
+try:
+    from projection_cursors import ProjectionCursorError, ProjectionInputCursor
+except ModuleNotFoundError:
+    from scripts.projection_cursors import (
+        ProjectionCursorError,
+        ProjectionInputCursor,
+    )
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_WORKSPACE = ROOT / "capsules/spectral-bridge/workspace"
@@ -43,25 +56,30 @@ def sha256_bytes(value: bytes) -> str:
     return hashlib.sha256(value).hexdigest()
 
 
-def read_rows(path: Path) -> tuple[list[dict[str, Any]], list[str]]:
+def parse_rows(
+    path: Path,
+    source_rows: list[tuple[int, str]],
+    *,
+    previous_raw_sha256: str | None = None,
+) -> tuple[list[dict[str, Any]], list[str], str | None]:
     rows: list[dict[str, Any]] = []
     errors: list[str] = []
-    previous_raw = ""
-    for line_number, raw in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+    previous_hash = previous_raw_sha256
+    for line_number, raw in source_rows:
         if not raw.strip():
             continue
         try:
             row = json.loads(raw)
         except json.JSONDecodeError:
             errors.append(f"{path}:{line_number}:invalid_json")
-            previous_raw = raw
+            previous_hash = sha256_bytes(raw.encode("utf-8"))
             continue
         if not isinstance(row, dict):
             errors.append(f"{path}:{line_number}:not_object")
-            previous_raw = raw
+            previous_hash = sha256_bytes(raw.encode("utf-8"))
             continue
         if "record_sha256" in row:
-            expected_previous = sha256_bytes(previous_raw.encode("utf-8")) if previous_raw else "0" * 64
+            expected_previous = previous_hash or "0" * 64
             if row.get("previous_record_sha256") != expected_previous:
                 errors.append(f"{path}:{line_number}:previous_hash_mismatch")
             unsigned = dict(row)
@@ -71,7 +89,15 @@ def read_rows(path: Path) -> tuple[list[dict[str, Any]], list[str]]:
         row["_line_number"] = line_number
         row["_raw_sha256"] = sha256_bytes(raw.encode("utf-8"))
         rows.append(row)
-        previous_raw = raw
+        previous_hash = row["_raw_sha256"]
+    return rows, errors, previous_hash
+
+
+def read_rows(path: Path) -> tuple[list[dict[str, Any]], list[str]]:
+    source_rows = list(
+        enumerate(path.read_text(encoding="utf-8").splitlines(), 1)
+    )
+    rows, errors, _ = parse_rows(path, source_rows)
     return rows, errors
 
 
@@ -127,38 +153,92 @@ def generate(workspace: Path, *, write: bool) -> dict[str, Any]:
     payloads: list[dict[str, Any]] = []
     errors: list[str] = []
     counts: Counter[str] = Counter()
-    active_legacy = 0
+    active_legacy_tokens: set[str] = set()
+    cursor = ProjectionInputCursor(
+        workspace / "diagnostics/authority_temporal_v1/ingestion_cursor_v1.json",
+        "authority_temporal",
+    )
+    cursor_updates: dict[str, dict[str, Any]] = {}
+    prior_keys = set((cursor.value.get("jsonl") or {}).keys())
+    current_keys = {
+        path.relative_to(workspace).as_posix() for path in gate_paths
+    }
+    if write and prior_keys - current_keys:
+        errors.append(
+            "authority_gate_removed_after_cursor:"
+            + ",".join(sorted(prior_keys - current_keys))
+        )
     for path in gate_paths:
-        rows, row_errors = read_rows(path)
+        key = path.relative_to(workspace).as_posix()
+        file_counts: Counter[str] = Counter()
+        file_active_legacy_tokens: set[str] = set()
+        if write:
+            source_rows, next_state = cursor.jsonl_tail(path, key=key)
+            prior_state = cursor.jsonl_metadata(key)
+            rows, row_errors, last_raw_sha256 = parse_rows(
+                path,
+                source_rows,
+                previous_raw_sha256=(
+                    str(prior_state.get("last_raw_sha256"))
+                    if prior_state.get("last_raw_sha256")
+                    else None
+                ),
+            )
+            file_counts.update(prior_state.get("record_type_counts") or {})
+            file_active_legacy_tokens.update(
+                str(value)
+                for value in (prior_state.get("active_legacy_token_hashes") or [])
+            )
+        else:
+            rows, row_errors = read_rows(path)
+            next_state = {}
+            last_raw_sha256 = None
         errors.extend(row_errors)
-        consumed_tokens = {
-            str(row.get("token_id"))
-            for row in rows
-            if row.get("record_type")
-            in {"execution_result", "blocked", "dispatch_reservation", "dispatch_outcome"}
-            and row.get("outcome") != "released"
-        }
         for row in rows:
             record_type = str(row.get("record_type") or "")
             if record_type not in LIFECYCLE_TYPES:
                 continue
-            counts[record_type] += 1
+            file_counts[record_type] += 1
+            token = str(row.get("token_id") or row.get("budget_id") or "")
+            token_hash = sha256_bytes(token.encode()) if token else ""
             if record_type in {"steward_approval", "budget_approval"}:
-                token = str(row.get("token_id") or row.get("budget_id") or "")
                 if (
                     row.get("status", "active") == "active"
-                    and token not in consumed_tokens
                     and not isinstance(row.get("authority_temporal_context_v1"), dict)
                 ):
-                    active_legacy += 1
+                    file_active_legacy_tokens.add(token_hash)
+            if (
+                record_type
+                in {
+                    "execution_result",
+                    "blocked",
+                    "dispatch_reservation",
+                    "dispatch_outcome",
+                }
+                and row.get("outcome") != "released"
+            ):
+                file_active_legacy_tokens.discard(token_hash)
             if isinstance(row.get("authority_temporal_context_v1"), dict) or record_type.startswith(
                 "dispatch_"
             ):
                 payloads.append(bounded_payload(path, workspace, row))
+        if write:
+            cursor_updates[key] = {
+                **next_state,
+                "last_raw_sha256": last_raw_sha256,
+                "record_type_counts": dict(sorted(file_counts.items())),
+                "active_legacy_token_hashes": sorted(
+                    file_active_legacy_tokens
+                ),
+            }
+        counts.update(file_counts)
+        active_legacy_tokens.update(file_active_legacy_tokens)
 
+    active_legacy = len(active_legacy_tokens)
     if write and active_legacy:
         errors.append(f"active_legacy_authority_records:{active_legacy}")
     appended = 0
+    total_projectable = len(payloads)
     if write and not errors:
         store = EvidenceEventStore(workspace / "diagnostics/evidence_event_store_v2")
         events = store.append_payloads(
@@ -171,6 +251,11 @@ def generate(workspace: Path, *, write: bool) -> dict[str, Any]:
             ],
         )
         appended = len(events)
+        historical, corrupt = store.payloads_for_stream("authority_lifecycle")
+        if corrupt:
+            errors.append("authority_lifecycle_stream_corrupt")
+        else:
+            total_projectable = len(historical)
 
     result = {
         "schema": "authority_temporal_projection_status_v1",
@@ -178,7 +263,8 @@ def generate(workspace: Path, *, write: bool) -> dict[str, Any]:
         "valid": not errors,
         "write": write,
         "gate_file_count": len(gate_paths),
-        "projectable_receipt_count": len(payloads),
+        "projectable_receipt_count": total_projectable,
+        "delta_projectable_receipt_count": len(payloads),
         "appended_or_existing_count": appended,
         "active_legacy_authority_count": active_legacy,
         "record_type_counts": dict(sorted(counts.items())),
@@ -190,6 +276,7 @@ def generate(workspace: Path, *, write: bool) -> dict[str, Any]:
             workspace / "diagnostics/authority_temporal_v1/status.json",
             canonical_json(result) + "\n",
         )
+        cursor.commit_jsonl(cursor_updates)
     return result
 
 
@@ -238,13 +325,43 @@ def main() -> int:
     parser.add_argument("--workspace", type=Path, default=DEFAULT_WORKSPACE)
     parser.add_argument("--json", action="store_true")
     parser.add_argument("--self-test", action="store_true")
-    parser.add_argument("command", nargs="?", choices=("generate", "verify"), default="verify")
+    parser.add_argument(
+        "command",
+        nargs="?",
+        choices=("generate", "project", "verify"),
+        default="verify",
+    )
     parser.add_argument("--write", action="store_true")
+    parser.add_argument("--receipt-json", action="store_true")
     args = parser.parse_args()
     if args.self_test:
         suite = unittest.defaultTestLoader.loadTestsFromTestCase(SelfTest)
         return 0 if unittest.TextTestRunner(verbosity=2).run(suite).wasSuccessful() else 1
-    result = generate(args.workspace.resolve(), write=args.write and args.command == "generate")
+    started = time.monotonic()
+    workspace = args.workspace.resolve()
+    result = generate(
+        workspace,
+        write=args.write and args.command in {"generate", "project"},
+    )
+    if args.command == "project":
+        print(
+            json.dumps(
+                projector_receipt(
+                    "authority_temporal",
+                    result,
+                    {
+                        "status.json": (
+                            workspace
+                            / "diagnostics/authority_temporal_v1/status.json"
+                        )
+                    },
+                    started_monotonic=started,
+                ),
+                indent=2,
+                sort_keys=True,
+            )
+        )
+        return 0 if result["valid"] else 1
     print(json.dumps(result, indent=2, sort_keys=True) if args.json else canonical_json(result))
     return 0 if result["valid"] else 1
 

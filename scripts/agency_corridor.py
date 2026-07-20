@@ -37,6 +37,11 @@ except ModuleNotFoundError:
         v2_active_for_state,
     )
 
+try:
+    from projection_receipt import projector_receipt
+except ModuleNotFoundError:
+    from scripts.projection_receipt import projector_receipt
+
 ASTRID_REPO = Path("/Users/v/other/astrid")
 ASTRID_WORKSPACE = ASTRID_REPO / "capsules/spectral-bridge/workspace"
 DEFAULT_STATE_DIR = ASTRID_WORKSPACE / "diagnostics/agency_corridor_v1"
@@ -3148,6 +3153,10 @@ def build_parser() -> argparse.ArgumentParser:
     generate_p.add_argument("--write", action="store_true")
     generate_p.add_argument("--json", action="store_true")
 
+    project_p = sub.add_parser("project")
+    project_p.add_argument("--write", action="store_true")
+    project_p.add_argument("--receipt-json", action="store_true")
+
     report_p = sub.add_parser("report")
     report_p.add_argument("--json", action="store_true")
     report_p.add_argument("--markdown", action="store_true")
@@ -3264,6 +3273,37 @@ def main(argv: list[str] | None = None) -> int:
         return 2
     if args.cmd == "generate":
         print_payload(generate(args.state_dir, write=bool(args.write)), as_json=bool(args.json or not args.write))
+        return 0
+    if args.cmd == "project":
+        started = time.monotonic()
+        write = bool(args.write)
+        generate(args.state_dir, write=write)
+        generate_leases_v2(args.state_dir, write=write)
+        status = generate_v2_status(args.state_dir, write=write)
+        generate_programs_v2(args.state_dir, write=write)
+        root = resolve_v2_state_dir(args.state_dir)
+        print(
+            json.dumps(
+                projector_receipt(
+                    "corridor",
+                    {
+                        "summary": status.get("summary", {}),
+                        "counter_audit": status.get("counter_audit", {}),
+                    },
+                    {
+                        "status.json": root / STATUS_FILE,
+                        "leases.json": root / LEASES_FILE,
+                        "queue.json": root / QUEUE_JSON_FILE,
+                        "programs.json": root / PROGRAMS_FILE,
+                        "report.md": root / REPORT_FILE,
+                    },
+                    started_monotonic=started,
+                ),
+                indent=2,
+                sort_keys=True,
+                ensure_ascii=False,
+            )
+        )
         return 0
     if args.cmd == "report":
         status = load_status(args.state_dir)

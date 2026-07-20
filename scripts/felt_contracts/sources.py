@@ -249,7 +249,35 @@ def _claim_sources(workspace: Path) -> tuple[list[ClaimSource], str]:
                     source_path_ref=_repository_ref(claim.get("source_path"), roots),
                 )
             )
-    return claims, hashlib.sha256(raw).hexdigest()
+    return claims, sha256_canonical(
+        [
+            {
+                "claim_id": claim.claim_id,
+                "introspection_id": claim.introspection_id,
+                "local_claim_id": claim.local_claim_id,
+                "source_sha256": claim.source_sha256,
+                "queue_order": list(claim.queue_order),
+                "family_id": claim.family_id,
+                "authority_class": claim.authority_class,
+                "target_surface": claim.target_surface,
+                "requested_outcome": claim.requested_outcome,
+                "polarity": claim.polarity,
+                "text_sha256": hashlib.sha256(claim.text.encode()).hexdigest(),
+                "disposition": claim.disposition,
+                "classification": claim.classification,
+                "record_sha256": claim.record_sha256,
+                "source_path_ref": claim.source_path_ref,
+            }
+            for claim in claims
+        ]
+    )
+
+
+def claim_family_semantic_sha256(workspace: Path) -> str:
+    """Hash only the stable family/claim fields consumed by this graph."""
+
+    _, semantic_sha256 = _claim_sources(workspace)
+    return semantic_sha256
 
 
 def _current_graph_membership(
@@ -497,24 +525,51 @@ def build_source_events(
     workspace: Path,
     *,
     existing_graph_envelopes: Iterable[EvidenceEventV2] = (),
+    existing_membership: dict[str, str] | None = None,
+    existing_contract_ids: set[str] | None = None,
+    existing_implementation_nodes: dict[tuple[str, str], str] | None = None,
+    source_envelopes: Iterable[EvidenceEventV2] | None = None,
+    source_watermarks: dict[str, dict[str, Any]] | None = None,
 ) -> SourceBuild:
     existing_graph_envelopes = tuple(existing_graph_envelopes)
     store = EvidenceEventStore(store_root(workspace))
-    envelopes, corrupt = store.read_envelopes()
-    if corrupt:
-        raise ValueError(f"V2 store has {corrupt} corrupt event lines")
-    source_envelopes = [
-        envelope for envelope in envelopes if envelope.stream in SOURCE_STREAMS
-    ]
+    if source_envelopes is None:
+        selected: list[EvidenceEventV2] = []
+        for stream in SOURCE_STREAMS:
+            stream_events, corrupt = store.envelopes_for_stream(stream)
+            if corrupt:
+                raise ValueError(f"V2 store has corrupt events in {stream}")
+            selected.extend(stream_events)
+        source_envelopes = sorted(selected, key=lambda envelope: envelope.global_seq)
+    else:
+        source_envelopes = sorted(
+            (
+                envelope
+                for envelope in source_envelopes
+                if envelope.stream in SOURCE_STREAMS
+            ),
+            key=lambda envelope: envelope.global_seq,
+        )
     source_by_stream: dict[str, list[EvidenceEventV2]] = defaultdict(list)
     for envelope in source_envelopes:
         source_by_stream[envelope.stream].append(envelope)
 
     claims, family_status_sha256 = _claim_sources(workspace)
     claim_sources = {claim.claim_id: claim for claim in claims}
-    existing_membership, existing_contracts = _current_graph_membership(
-        existing_graph_envelopes
-    )
+    if existing_membership is None or existing_contract_ids is None:
+        replay_membership, replay_contracts = _current_graph_membership(
+            existing_graph_envelopes
+        )
+        existing_membership = (
+            replay_membership
+            if existing_membership is None
+            else existing_membership
+        )
+        existing_contract_ids = (
+            set(replay_contracts)
+            if existing_contract_ids is None
+            else existing_contract_ids
+        )
     membership, suggestions, ambiguous = _assignment_plan(
         claims, existing_membership
     )
@@ -548,7 +603,7 @@ def build_source_events(
             )
             else "evidence_only"
         )
-        if contract_id not in existing_contracts:
+        if contract_id not in existing_contract_ids:
             contract = build_contract(
                 contract_id=contract_id,
                 anchor_claim_id=anchor.claim_id,
@@ -734,6 +789,7 @@ def build_source_events(
         workspace=workspace,
         source_by_stream=source_by_stream,
         existing_graph_envelopes=existing_graph_envelopes,
+        existing_implementation_nodes=existing_implementation_nodes,
         membership=membership,
         claim_sources=claim_sources,
         claim_nodes=claim_nodes,
@@ -744,6 +800,16 @@ def build_source_events(
         events=events,
     )
 
+    canonical_source_counts = {
+        stream: int(
+            (source_watermarks or {}).get(stream, {}).get(
+                "stream_seq",
+                len(source_by_stream[stream]),
+            )
+        )
+        for stream in SOURCE_STREAMS
+    }
+    canonical_source_total = sum(canonical_source_counts.values())
     migration_receipt = {
         "schema": "felt_contract_migration_receipt_v1",
         "schema_version": 1,
@@ -758,13 +824,13 @@ def build_source_events(
         ),
         "ambiguous_new_claim_count": ambiguous,
         "routed_source_event_count": len(routed_source_ids),
-        "unrouted_source_event_count": len(source_envelopes) - len(routed_source_ids),
+        "unrouted_source_event_count": (
+            canonical_source_total - len(routed_source_ids)
+        ),
         "environment_receipt_count": environment_receipt_count,
         "deployment_node_count": deployment_node_count,
         "temporal_deployment_node_count": temporal_deployment_count,
-        "source_stream_counts": {
-            stream: len(source_by_stream[stream]) for stream in SOURCE_STREAMS
-        },
+        "source_stream_counts": canonical_source_counts,
         "counter_audit": {
             "every_claim_assigned_once": len(membership) == len(claims),
             "claim_ids_unique": len({claim.claim_id for claim in claims}) == len(claims),
@@ -777,7 +843,11 @@ def build_source_events(
             "family_membership_does_not_propagate_authority": True,
             "private_content_not_copied": True,
         },
-        "source_watermarks": store.stream_watermarks(SOURCE_STREAMS),
+        "source_watermarks": (
+            source_watermarks
+            if source_watermarks is not None
+            else store.stream_watermarks(SOURCE_STREAMS)
+        ),
         "source_hashes": {
             "claim_family_status": family_status_sha256,
             "environment_receipts": environment_receipts_sha256,
@@ -798,12 +868,16 @@ def build_source_events(
         claim_count=len(claims),
         contract_count=len(contracts),
         source_counts={
-            stream: len(source_by_stream[stream]) for stream in SOURCE_STREAMS
+            stream: canonical_source_counts[stream] for stream in SOURCE_STREAMS
         },
         routed_source_events=len(routed_source_ids),
-        unrouted_source_events=len(source_envelopes) - len(routed_source_ids),
+        unrouted_source_events=canonical_source_total - len(routed_source_ids),
         ambiguous_new_claims=ambiguous,
-        source_watermarks=store.stream_watermarks(SOURCE_STREAMS),
+        source_watermarks=(
+            source_watermarks
+            if source_watermarks is not None
+            else store.stream_watermarks(SOURCE_STREAMS)
+        ),
         source_hashes={
             "claim_family_status": family_status_sha256,
             "environment_receipts": environment_receipts_sha256,

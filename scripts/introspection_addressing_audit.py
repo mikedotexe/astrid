@@ -33,6 +33,11 @@ except ModuleNotFoundError:
         v2_active_for_state,
     )
 
+try:
+    from projection_receipt import projector_receipt
+except ModuleNotFoundError:
+    from scripts.projection_receipt import projector_receipt
+
 ASTRID_REPO = Path(__file__).resolve().parents[1]
 ASTRID_WORKSPACE = ASTRID_REPO / "capsules/spectral-bridge/workspace"
 DEFAULT_INTROSPECTIONS_DIR = ASTRID_WORKSPACE / "introspections"
@@ -4497,6 +4502,10 @@ def main(argv: list[str] | None = None) -> int:
     inventory_p.add_argument("--json", action="store_true")
     inventory_p.add_argument("--write", action="store_true")
 
+    project_p = sub.add_parser("project")
+    project_p.add_argument("--write", action="store_true")
+    project_p.add_argument("--receipt-json", action="store_true")
+
     next_p = sub.add_parser("next")
     next_p.add_argument("--limit", type=int, default=3)
     next_p.add_argument("--json", action="store_true")
@@ -4623,6 +4632,35 @@ def main(argv: list[str] | None = None) -> int:
             write=bool(args.write),
         )
         print_output(payload, as_json=bool(args.json))
+        return 0
+
+    if args.cmd == "project":
+        started = time.monotonic()
+        payload = build_inventory(
+            introspections_dir,
+            state_dir,
+            "latest",
+            write=bool(args.write),
+        )
+        print(
+            json.dumps(
+                projector_receipt(
+                    "addressing",
+                    {
+                        "summary": payload.get("summary", {}),
+                        "counter_audit": payload.get("counter_audit", {}),
+                    },
+                    {
+                        "status.json": state_dir / "status.json",
+                        "queue.md": state_dir / "queue.md",
+                    },
+                    started_monotonic=started,
+                ),
+                indent=2,
+                sort_keys=True,
+                ensure_ascii=False,
+            )
+        )
         return 0
 
     if args.cmd == "next":

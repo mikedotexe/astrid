@@ -35,7 +35,7 @@ from .model import (
 )
 from .sources import graph_state_dir
 
-PROJECTOR_VERSION = 1
+PROJECTOR_VERSION = 2
 GRAPH_INPUT_STREAMS = (
     "addressing",
     "sandbox",

@@ -9,6 +9,7 @@ import json
 import os
 from pathlib import Path
 import tempfile
+import time
 import unittest
 from typing import Any
 
@@ -21,8 +22,17 @@ except ModuleNotFoundError:
     from scripts.evidence_store.adapter import append_domain_events, read_domain_events
     from scripts.evidence_store.model import canonical_json
 
+try:
+    from projection_receipt import projector_receipt
+except ModuleNotFoundError:
+    from scripts.projection_receipt import projector_receipt
+try:
+    from projection_cursors import ProjectionInputCursor
+except ModuleNotFoundError:
+    from scripts.projection_cursors import ProjectionInputCursor
+
 DEFAULT_WORKSPACE = Path("/Users/v/other/astrid/capsules/spectral-bridge/workspace")
-PROJECTOR_VERSION = 1
+PROJECTOR_VERSION = 2
 
 
 def state_dir(workspace: Path) -> Path:
@@ -262,10 +272,16 @@ def verify_temporal_association(value: dict[str, Any]) -> dict[str, Any]:
     return {"valid": not errors, "errors": errors}
 
 
-def source_events(workspace: Path) -> list[dict[str, Any]]:
+def source_events(
+    workspace: Path,
+    *,
+    selected_paths: set[Path] | None = None,
+) -> list[dict[str, Any]]:
     root = state_dir(workspace)
     events: list[dict[str, Any]] = []
     for path in sorted((root / "journeys").glob("*.json")):
+        if selected_paths is not None and path not in selected_paths:
+            continue
         raw = path.read_bytes()
         value = load_json(path)
         if value is None or value.get("schema") != "causal_signal_journey_v1":
@@ -314,6 +330,8 @@ def source_events(workspace: Path) -> list[dict[str, Any]]:
             }
         )
     for path in sorted((root / "temporal_associations").glob("*.json")):
+        if selected_paths is not None and path not in selected_paths:
+            continue
         raw = path.read_bytes()
         value = load_json(path)
         if value is None or value.get("schema") != "signal_temporal_association_v1":
@@ -365,6 +383,8 @@ def source_events(workspace: Path) -> list[dict[str, Any]]:
             }
         )
     for path in sorted((root / "capture_gaps").glob("*.json")):
+        if selected_paths is not None and path not in selected_paths:
+            continue
         raw = path.read_bytes()
         value = load_json(path)
         if value is None or value.get("schema") != "signal_capture_gap_v1":
@@ -584,8 +604,27 @@ def write_projection(workspace: Path, status: dict[str, Any]) -> dict[str, str]:
 
 
 def run(workspace: Path, *, write: bool) -> dict[str, Any]:
-    source = source_events(workspace)
     directory = state_dir(workspace)
+    cursor = ProjectionInputCursor(
+        directory / "ingestion_cursor_v1.json",
+        "signal_spine",
+    )
+    input_paths = [
+        *sorted((directory / "journeys").glob("*.json")),
+        *sorted((directory / "temporal_associations").glob("*.json")),
+        *sorted((directory / "capture_gaps").glob("*.json")),
+    ]
+    manifest: dict[str, dict[str, Any]] = {}
+    removed: list[str] = []
+    if write:
+        changed, manifest, removed = cursor.changed_files(
+            input_paths,
+            root=workspace,
+        )
+        source = source_events(workspace, selected_paths=set(changed))
+    else:
+        changed = input_paths
+        source = source_events(workspace)
     if write and source:
         append_domain_events(directory, "signal_spine", source)
     if write:
@@ -596,6 +635,9 @@ def run(workspace: Path, *, write: bool) -> dict[str, Any]:
         events = source
     status = project(events)
     status["source_event_count"] = len(source)
+    status["changed_source_file_count"] = len(changed)
+    status["settled_source_file_count"] = len(input_paths) - len(changed)
+    status["removed_source_file_count"] = len(removed)
     if write:
         hashes = write_projection(workspace, status)
         root = workspace / "diagnostics/evidence_event_store_v2"
@@ -603,6 +645,7 @@ def run(workspace: Path, *, write: bool) -> dict[str, Any]:
             "signal_spine_v1", PROJECTOR_VERSION, hashes
         )
         status["projection_hashes"] = hashes
+        cursor.commit_files(manifest)
     return status
 
 
@@ -866,6 +909,9 @@ def build_parser() -> argparse.ArgumentParser:
     commands = parser.add_subparsers(dest="command")
     generate = commands.add_parser("generate")
     generate.add_argument("--write", action="store_true")
+    project = commands.add_parser("project")
+    project.add_argument("--write", action="store_true")
+    project.add_argument("--receipt-json", action="store_true")
     commands.add_parser("report")
     return parser
 
@@ -878,13 +924,32 @@ def main() -> int:
             SignalSpineProjectorTests
         )
         return 0 if unittest.TextTestRunner(verbosity=2).run(suite).wasSuccessful() else 1
-    if args.command not in {"generate", "report"}:
+    if args.command not in {"generate", "project", "report"}:
         parser.print_help()
         return 2
+    started = time.monotonic()
     status = run(
         args.workspace.resolve(),
-        write=args.command == "generate" and bool(args.write),
+        write=args.command in {"generate", "project"} and bool(args.write),
     )
+    if args.command == "project":
+        root = state_dir(args.workspace.resolve())
+        print(
+            json.dumps(
+                projector_receipt(
+                    "signal_spine",
+                    status,
+                    {
+                        "projection_status.json": root / "projection_status.json",
+                        "report.md": root / "report.md",
+                    },
+                    started_monotonic=started,
+                ),
+                indent=2,
+                sort_keys=True,
+            )
+        )
+        return 0
     print(json.dumps(status, indent=2, sort_keys=True))
     return 0
 

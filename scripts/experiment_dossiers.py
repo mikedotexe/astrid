@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 from collections import Counter
+import copy
 import hashlib
 import json
 import os
@@ -12,7 +13,7 @@ from pathlib import Path
 import re
 import sys
 import tempfile
-import unittest
+import time
 from typing import Any
 
 try:
@@ -24,8 +25,15 @@ except ModuleNotFoundError:
     from scripts.evidence_store.adapter import append_domain_events, read_domain_events
     from scripts.evidence_store.model import canonical_json
 
+try:
+    from projection_receipt import projector_receipt
+    from projection_cursors import ProjectionInputCursor
+except ModuleNotFoundError:
+    from scripts.projection_receipt import projector_receipt
+    from scripts.projection_cursors import ProjectionInputCursor
+
 DEFAULT_WORKSPACE = Path("/Users/v/other/astrid/capsules/spectral-bridge/workspace")
-PROJECTOR_VERSION = 1
+PROJECTOR_VERSION = 2
 DOSSIER_STATES = (
     "draft",
     "capture-ready",
@@ -191,7 +199,8 @@ def initial_dossier_events(workspace: Path) -> list[dict[str, Any]]:
                     "claim_family_status_sha256": hashlib.sha256(family_raw).hexdigest(),
                 },
                 "idempotency_key": (
-                    f"experiment_dossier_unrouted:{trial['trial_id']}:{source_sha256}"
+                    f"experiment_dossier_unrouted:{trial['trial_id']}:"
+                    f"{digest(trial)}"
                 ),
                 "artifact_authority_state_v1": authority_state("evidence_only"),
             }
@@ -237,13 +246,94 @@ def initial_dossier_events(workspace: Path) -> list[dict[str, Any]]:
                     "sandbox_status_sha256": hashlib.sha256(sandbox_raw).hexdigest(),
                     "claim_family_status_sha256": hashlib.sha256(family_raw).hexdigest(),
                 },
-                "idempotency_key": f"experiment_dossier:{dossier_id}:{source_sha256}",
+                "idempotency_key": (
+                    f"experiment_dossier:{dossier_id}:{digest(dossier)}"
+                ),
                 "artifact_authority_state_v1": dossier[
                     "artifact_authority_state_v1"
                 ],
             }
         )
     return events
+
+
+def delta_dossier_events(
+    candidates: list[dict[str, Any]],
+    existing_events: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    """Emit only new or source-relevant dossier records."""
+
+    return delta_dossier_events_from_status(
+        candidates,
+        project(existing_events),
+    )
+
+
+def delta_dossier_events_from_status(
+    candidates: list[dict[str, Any]],
+    current: dict[str, Any],
+) -> list[dict[str, Any]]:
+    """Compare candidates with a verified materialized dossier projection."""
+
+    dossiers = current.get("dossiers") or {}
+    unrouted = current.get("unrouted_trials") or {}
+    stateful_fields = {
+        "state",
+        "baseline_capture_ref",
+        "candidate_capture_ref",
+        "comparison_ref",
+        "result_ref",
+        "review_ref",
+        "closure_ref",
+        "dossier_sufficient",
+        "candidate_comparison_allowed",
+        "live_authority_granted",
+    }
+    authority_projection_fields = {
+        "authority_projection_v2",
+        "auto_approved",
+        "edits_source_now",
+        "grants_approval",
+        "live_eligible_now",
+    }
+
+    def source_identity(dossier: dict[str, Any]) -> dict[str, Any]:
+        source = {
+            key: value
+            for key, value in dossier.items()
+            if key not in stateful_fields
+            and key not in authority_projection_fields
+            and key != "artifact_authority_state_v1"
+        }
+        authority = dossier.get("artifact_authority_state_v1")
+        source["authority_state"] = (
+            authority.get("state") if isinstance(authority, dict) else None
+        )
+        return source
+
+    result: list[dict[str, Any]] = []
+    for event in candidates:
+        event_type = event.get("event_type")
+        if event_type == "experiment_dossier_projected":
+            dossier_id = str(event.get("dossier_id") or "")
+            candidate = event.get("dossier")
+            existing = dossiers.get(dossier_id)
+            if not isinstance(candidate, dict):
+                continue
+            if isinstance(existing, dict):
+                candidate_source = source_identity(candidate)
+                existing_source = source_identity(existing)
+                if candidate_source == existing_source:
+                    continue
+        elif event_type == "experiment_dossier_trial_unrouted":
+            trial = event.get("unrouted_trial")
+            if (
+                isinstance(trial, dict)
+                and unrouted.get(str(trial.get("trial_id") or "")) == trial
+            ):
+                continue
+        result.append(event)
+    return result
 
 
 def validate_transition(
@@ -313,11 +403,62 @@ def apply_transition(
     return updated
 
 
-def project(events: list[dict[str, Any]]) -> dict[str, Any]:
-    dossiers: dict[str, dict[str, Any]] = {}
-    history: list[dict[str, Any]] = []
-    unrouted: dict[str, dict[str, Any]] = {}
-    transition_violations: list[dict[str, Any]] = []
+def _status_from_state(
+    dossiers: dict[str, dict[str, Any]],
+    history: list[dict[str, Any]],
+    unrouted: dict[str, dict[str, Any]],
+    transition_violations: list[dict[str, Any]],
+) -> dict[str, Any]:
+    counts = Counter(
+        str(dossier.get("state") or "draft")
+        for dossier in dossiers.values()
+    )
+    baseline_missing = sum(
+        1
+        for dossier in dossiers.values()
+        if dossier.get("state")
+        in {
+            "candidate-captured",
+            "comparison-ready",
+            "result-recorded",
+            "review-pending",
+            "closed",
+        }
+        and not dossier.get("baseline_capture_ref")
+    )
+    return {
+        "schema": "experiment_dossier_status_v1",
+        "schema_version": 1,
+        "dossier_count": len(dossiers),
+        "state_counts": dict(sorted(counts.items())),
+        "baseline_missing_violation_count": baseline_missing,
+        "transition_violation_count": len(transition_violations),
+        "unrouted_trial_count": len(unrouted),
+        "counter_audit": {
+            "all_dossiers_have_one_state": sum(counts.values())
+            == len(dossiers),
+            "candidate_or_later_has_baseline": baseline_missing == 0,
+            "transition_replay_valid": not transition_violations,
+        },
+        "dossiers": dict(sorted(dossiers.items())),
+        "transition_history": history,
+        "transition_violations": transition_violations,
+        "unrouted_trials": dict(sorted(unrouted.items())),
+        "artifact_authority_state_v1": authority_state("evidence_only"),
+    }
+
+
+def apply_dossier_events(
+    status: dict[str, Any] | None,
+    events: list[dict[str, Any]],
+) -> dict[str, Any]:
+    current = status or {}
+    dossiers = copy.deepcopy(current.get("dossiers") or {})
+    history = copy.deepcopy(current.get("transition_history") or [])
+    unrouted = copy.deepcopy(current.get("unrouted_trials") or {})
+    transition_violations = copy.deepcopy(
+        current.get("transition_violations") or []
+    )
     stateful_fields = {
         "state",
         "baseline_capture_ref",
@@ -399,39 +540,16 @@ def project(events: list[dict[str, Any]]) -> dict[str, Any]:
             trial = event.get("unrouted_trial")
             if isinstance(trial, dict) and trial.get("trial_id"):
                 unrouted[str(trial["trial_id"])] = trial
-    counts = Counter(str(dossier.get("state") or "draft") for dossier in dossiers.values())
-    baseline_missing = sum(
-        1
-        for dossier in dossiers.values()
-        if dossier.get("state")
-        in {
-            "candidate-captured",
-            "comparison-ready",
-            "result-recorded",
-            "review-pending",
-            "closed",
-        }
-        and not dossier.get("baseline_capture_ref")
+    return _status_from_state(
+        dossiers,
+        history,
+        unrouted,
+        transition_violations,
     )
-    return {
-        "schema": "experiment_dossier_status_v1",
-        "schema_version": 1,
-        "dossier_count": len(dossiers),
-        "state_counts": dict(sorted(counts.items())),
-        "baseline_missing_violation_count": baseline_missing,
-        "transition_violation_count": len(transition_violations),
-        "unrouted_trial_count": len(unrouted),
-        "counter_audit": {
-            "all_dossiers_have_one_state": sum(counts.values()) == len(dossiers),
-            "candidate_or_later_has_baseline": baseline_missing == 0,
-            "transition_replay_valid": not transition_violations,
-        },
-        "dossiers": dict(sorted(dossiers.items())),
-        "transition_history": history,
-        "transition_violations": transition_violations,
-        "unrouted_trials": dict(sorted(unrouted.items())),
-        "artifact_authority_state_v1": authority_state("evidence_only"),
-    }
+
+
+def project(events: list[dict[str, Any]]) -> dict[str, Any]:
+    return apply_dossier_events(None, events)
 
 
 def render_report(status: dict[str, Any]) -> str:
@@ -496,26 +614,151 @@ def write_projection(workspace: Path, status: dict[str, Any]) -> dict[str, str]:
     return hashes
 
 
+def _cursor_path(workspace: Path) -> Path:
+    return state_dir(workspace) / "projection_cursor_v1.json"
+
+
+def _status_sha256(workspace: Path) -> str | None:
+    path = state_dir(workspace) / "status.json"
+    if not path.is_file():
+        return None
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def _incremental_base(
+    workspace: Path,
+    store: EvidenceEventStore,
+) -> tuple[
+    dict[str, Any],
+    ProjectionInputCursor,
+    int,
+    int,
+    bool,
+]:
+    cursor = ProjectionInputCursor(
+        _cursor_path(workspace),
+        "experiment_dossiers_v2",
+    )
+    metadata = cursor.jsonl_metadata("claim_families_v2")
+    watermark = store.stream_watermarks(("claim_families",))[
+        "claim_families"
+    ]
+    current_stream_seq = int(watermark.get("stream_seq") or 0)
+    cursor_stream_seq = int(metadata.get("stream_seq") or 0)
+    cached_hash = _status_sha256(workspace)
+    cache_valid = (
+        cursor_stream_seq <= current_stream_seq
+        and cursor_stream_seq > 0
+        and cached_hash is not None
+        and cached_hash == metadata.get("status_sha256")
+    )
+    if cache_valid:
+        status = load_object(state_dir(workspace) / "status.json")
+        envelopes, corrupt = store.envelopes_for_stream(
+            "claim_families",
+            after_stream_seq=cursor_stream_seq,
+        )
+        if corrupt:
+            raise EvidenceStoreError("claim family tail is corrupt")
+        tail = [
+            envelope.payload
+            for envelope in envelopes
+            if str(envelope.payload.get("event_type") or "").startswith(
+                "experiment_dossier_"
+            )
+        ]
+        return (
+            apply_dossier_events(status, tail),
+            cursor,
+            current_stream_seq,
+            len(tail),
+            False,
+        )
+
+    events, corrupt = read_domain_events(
+        family_state_dir(workspace),
+        "claim_families",
+    )
+    if corrupt:
+        raise EvidenceStoreError("claim family stream is corrupt")
+    return project(events), cursor, current_stream_seq, len(events), True
+
+
 def generate(workspace: Path, *, write: bool) -> dict[str, Any]:
-    generated = initial_dossier_events(workspace)
+    candidates = initial_dossier_events(workspace)
     if write:
+        store = EvidenceEventStore(
+            workspace / "diagnostics/evidence_event_store_v2"
+        )
+        store.verify_indexed_tail()
+        current, cursor, prior_stream_seq, consumed_count, full_replay = (
+            _incremental_base(workspace, store)
+        )
+        generated = delta_dossier_events_from_status(candidates, current)
         append_domain_events(
             family_state_dir(workspace), "claim_families", generated
         )
-        events, corrupt = read_domain_events(
-            family_state_dir(workspace), "claim_families"
+        appended, corrupt = store.envelopes_for_stream(
+            "claim_families",
+            after_stream_seq=prior_stream_seq,
         )
         if corrupt:
-            raise EvidenceStoreError("claim family stream is corrupt")
+            raise EvidenceStoreError("appended claim family tail is corrupt")
+        canonical_generated = [
+            envelope.payload
+            for envelope in appended
+            if str(envelope.payload.get("event_type") or "").startswith(
+                "experiment_dossier_"
+            )
+        ]
+        status = apply_dossier_events(current, canonical_generated)
     else:
-        events = generated
-    status = project(events)
+        generated = candidates
+        canonical_generated = generated
+        status = project(candidates)
+        full_replay = False
+        consumed_count = len(candidates)
+        prior_stream_seq = 0
     status["generated_event_count"] = len(generated)
+    status["canonical_applied_event_count"] = len(canonical_generated)
+    status["incremental_consumed_event_count"] = consumed_count
+    status["full_reference_replay"] = full_replay
     if write:
         hashes = write_projection(workspace, status)
-        EvidenceEventStore(
-            workspace / "diagnostics/evidence_event_store_v2"
-        ).write_checkpoint("experiment_dossiers_v1", PROJECTOR_VERSION, hashes)
+        final_watermark = store.stream_watermarks(("claim_families",))[
+            "claim_families"
+        ]
+        store.write_checkpoint(
+            "experiment_dossiers_v1",
+            PROJECTOR_VERSION,
+            hashes,
+            input_streams=("claim_families",),
+            source_hashes={
+                "sandbox_status": hashlib.sha256(
+                    sandbox_status_path(workspace).read_bytes()
+                ).hexdigest(),
+                "claim_family_status": hashlib.sha256(
+                    family_status_path(workspace).read_bytes()
+                ).hexdigest(),
+            },
+        )
+        cursor.commit_jsonl(
+            {
+                "claim_families_v2": {
+                    "stream_seq": int(final_watermark.get("stream_seq") or 0),
+                    "last_global_seq": int(
+                        final_watermark.get("last_global_seq") or 0
+                    ),
+                    "last_event_id": final_watermark.get("last_event_id"),
+                    "last_event_sha256": final_watermark.get(
+                        "last_event_sha256"
+                    ),
+                    "status_sha256": _status_sha256(workspace),
+                    "prior_stream_seq": prior_stream_seq,
+                    "full_reference_replay": full_replay,
+                }
+            }
+        )
         status["projection_hashes"] = hashes
     return status
 
@@ -560,134 +803,6 @@ def transition(
     return event
 
 
-class ExperimentDossierTests(unittest.TestCase):
-    capture_ref = f"sha256:{'a' * 64}"
-
-    def dossier(self, authority: str = "evidence_only") -> dict[str, Any]:
-        return {
-            "dossier_id": "dossier_one",
-            "state": "capture-ready",
-            "baseline_capture_ref": None,
-            "candidate_capture_ref": None,
-            "candidate_comparison_allowed": False,
-            "dossier_sufficient": False,
-            "artifact_authority_state_v1": authority_state(authority),
-        }
-
-    def test_candidate_is_refused_without_baseline(self) -> None:
-        dossier = self.dossier()
-        dossier["state"] = "baseline-captured"
-        dossier["baseline_capture_ref"] = None
-        with self.assertRaisesRegex(ValueError, "requires a valid baseline"):
-            validate_transition(
-                dossier, "candidate-captured", self.capture_ref, None
-            )
-
-    def test_approval_pending_candidate_requires_external_receipt(self) -> None:
-        dossier = self.dossier("approval_pending")
-        dossier["state"] = "baseline-captured"
-        dossier["baseline_capture_ref"] = self.capture_ref
-        with self.assertRaisesRegex(ValueError, "external approval receipt"):
-            validate_transition(
-                dossier, "candidate-captured", self.capture_ref, None
-            )
-        validate_transition(
-            dossier,
-            "candidate-captured",
-            self.capture_ref,
-            "operator_receipt",
-        )
-
-    def test_reprojection_preserves_advanced_state(self) -> None:
-        projected = self.dossier()
-        events = [
-            {
-                "event_type": "experiment_dossier_projected",
-                "dossier_id": "dossier_one",
-                "dossier": projected,
-            },
-            {
-                "event_type": "experiment_dossier_transitioned",
-                "dossier_id": "dossier_one",
-                "target_state": "baseline-captured",
-                "evidence_ref": self.capture_ref,
-            },
-            {
-                "event_type": "experiment_dossier_projected",
-                "dossier_id": "dossier_one",
-                "dossier": projected,
-            },
-        ]
-        dossier = project(events)["dossiers"]["dossier_one"]
-        self.assertEqual(dossier["state"], "baseline-captured")
-        self.assertEqual(dossier["baseline_capture_ref"], self.capture_ref)
-
-    def test_invalid_replay_transition_is_held_as_a_violation(self) -> None:
-        status = project(
-            [
-                {
-                    "event_type": "experiment_dossier_projected",
-                    "dossier_id": "dossier_one",
-                    "dossier": self.dossier(),
-                },
-                {
-                    "event_type": "experiment_dossier_transitioned",
-                    "dossier_id": "dossier_one",
-                    "target_state": "candidate-captured",
-                    "evidence_ref": self.capture_ref,
-                },
-            ]
-        )
-        self.assertEqual(
-            status["dossiers"]["dossier_one"]["state"], "capture-ready"
-        )
-        self.assertEqual(status["transition_violation_count"], 1)
-        self.assertFalse(status["counter_audit"]["transition_replay_valid"])
-
-    def test_legacy_unresolved_family_is_reported_as_unrouted(self) -> None:
-        dossier = {
-            **self.dossier(),
-            "claim_family_id": "family_unresolved_old",
-            "trial_refs": [{"trial_id": "trial_one"}],
-        }
-        status = project(
-            [
-                {
-                    "event_type": "experiment_dossier_projected",
-                    "dossier_id": "dossier_old",
-                    "dossier": dossier,
-                }
-            ]
-        )
-        self.assertEqual(status["dossier_count"], 0)
-        self.assertEqual(status["unrouted_trial_count"], 1)
-
-    def test_projection_never_produces_comparison_without_baseline(self) -> None:
-        events = [
-            {
-                "event_type": "experiment_dossier_projected",
-                "dossier_id": "dossier_one",
-                "dossier": self.dossier(),
-            }
-        ]
-        status = project(events)
-        self.assertEqual(status["baseline_missing_violation_count"], 0)
-        self.assertFalse(
-            status["dossiers"]["dossier_one"]["candidate_comparison_allowed"]
-        )
-
-    def test_intervention_signature_is_stable_and_bounded(self) -> None:
-        trial = {
-            "adapter": "offline_replay",
-            "trial_mode": "read_only",
-            "proposed_intervention": "compare bounded fixtures",
-            "agency_tier": 2,
-        }
-        self.assertEqual(
-            intervention_signature(trial), intervention_signature(dict(trial))
-        )
-
-
 def cli_summary(status: dict[str, Any]) -> dict[str, Any]:
     return {
         key: value
@@ -710,6 +825,9 @@ def build_parser() -> argparse.ArgumentParser:
     commands = parser.add_subparsers(dest="command")
     generate_parser = commands.add_parser("generate")
     generate_parser.add_argument("--write", action="store_true")
+    project_parser = commands.add_parser("project")
+    project_parser.add_argument("--write", action="store_true")
+    project_parser.add_argument("--receipt-json", action="store_true")
     commands.add_parser("report")
     advance = commands.add_parser("advance")
     advance.add_argument("--dossier-id", required=True)
@@ -724,17 +842,35 @@ def main() -> int:
     parser = build_parser()
     args = parser.parse_args()
     if args.self_test:
-        suite = unittest.defaultTestLoader.loadTestsFromTestCase(
-            ExperimentDossierTests
-        )
-        return 0 if unittest.TextTestRunner(verbosity=2).run(suite).wasSuccessful() else 1
+        from experiment_dossiers_selftest import run
+
+        return run()
     workspace = args.workspace.resolve()
     try:
-        if args.command in {"generate", "report"}:
+        if args.command in {"generate", "project", "report"}:
+            started = time.monotonic()
             status = generate(
                 workspace,
-                write=args.command == "generate" and bool(args.write),
+                write=args.command in {"generate", "project"} and bool(args.write),
             )
+            if args.command == "project":
+                root = state_dir(workspace)
+                print(
+                    json.dumps(
+                        projector_receipt(
+                            "experiment_dossiers",
+                            cli_summary(status),
+                            {
+                                "status.json": root / "status.json",
+                                "report.md": root / "report.md",
+                            },
+                            started_monotonic=started,
+                        ),
+                        indent=2,
+                        sort_keys=True,
+                    )
+                )
+                return 0
             print(json.dumps(cli_summary(status), indent=2, sort_keys=True))
             return 0
         if args.command == "advance":

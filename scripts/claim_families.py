@@ -12,7 +12,7 @@ import os
 from pathlib import Path
 import sys
 import tempfile
-import unittest
+import time
 from typing import Any
 
 from claim_family_matcher import (
@@ -25,6 +25,12 @@ from claim_family_matcher import (
     weighted_similarity,
 )
 from claim_family_deployment import latest_successful_deployment
+from claim_family_incremental import (
+    incremental_events as build_incremental_events,
+    incremental_events_from_status,
+)
+from claim_family_state import apply_claim_family_events
+from projection_cursors import ProjectionInputCursor
 
 try:
     from evidence_store import EvidenceEventStore, EvidenceStoreError
@@ -35,8 +41,13 @@ except ModuleNotFoundError:
     from scripts.evidence_store.adapter import append_domain_events, read_domain_events
     from scripts.evidence_store.model import canonical_json
 
+try:
+    from projection_receipt import projector_receipt
+except ModuleNotFoundError:
+    from scripts.projection_receipt import projector_receipt
+
 DEFAULT_WORKSPACE = Path("/Users/v/other/astrid/capsules/spectral-bridge/workspace")
-PROJECTOR_VERSION = 1
+PROJECTOR_VERSION = 2
 
 
 def state_dir(workspace: Path) -> Path:
@@ -361,108 +372,22 @@ def migration_events(
     )
     return events
 
+
+def incremental_events(
+    claims: list[ClaimRecord],
+    events: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    return build_incremental_events(
+        claims,
+        events,
+        project_status=project,
+    )
+
 def project(
     events: list[dict[str, Any]],
     deployment_receipt_id: str | None,
 ) -> dict[str, Any]:
-    family_records: dict[str, dict[str, Any]] = {}
-    assignments: dict[str, dict[str, Any]] = {}
-    migration_receipt: dict[str, Any] = {}
-    delivered: set[tuple[str, str]] = set()
-    responses: list[dict[str, Any]] = []
-    history: list[dict[str, Any]] = []
-    for event in events:
-        event_type = event.get("event_type")
-        if event_type == "claim_family_created" and isinstance(event.get("family"), dict):
-            family_records[str(event["family"]["family_id"])] = event["family"]
-        elif event_type in {
-            "claim_family_membership_assigned",
-            "claim_family_membership_corrected",
-        }:
-            claim_id = str(event.get("canonical_claim_id") or "")
-            if claim_id:
-                assignments[claim_id] = event
-            if event_type == "claim_family_membership_corrected":
-                history.append(event)
-        elif event_type == "claim_family_migration_completed":
-            if isinstance(event.get("migration_receipt"), dict):
-                migration_receipt = event["migration_receipt"]
-        elif event_type == "felt_review_packet_delivered":
-            delivered.add(
-                (
-                    str(event.get("family_id") or ""),
-                    str(event.get("deployment_receipt_id") or ""),
-                )
-            )
-        elif event_type == "felt_review_response_recorded":
-            responses.append(event)
-        elif event_type in {"claim_family_merged", "claim_family_split"}:
-            history.append(event)
-    families: dict[str, dict[str, Any]] = {}
-    for claim_id, assignment in sorted(assignments.items()):
-        family_id = str(assignment.get("family_id") or "")
-        family = families.setdefault(
-            family_id,
-            {
-                **family_records.get(family_id, {}),
-                "family_id": family_id,
-                "claims": {},
-            },
-        )
-        family["claims"][claim_id] = assignment.get("claim")
-    changed_family_ids = set(migration_receipt.get("family_ids") or [])
-    for event in history:
-        for key in ("family_id", "from_family_id", "to_family_id", "new_family_id"):
-            if event.get(key):
-                changed_family_ids.add(str(event[key]))
-    review_budget = {}
-    if deployment_receipt_id:
-        for family_id in sorted(changed_family_ids):
-            review_budget[family_id] = {
-                "schema": "felt_review_budget_v1",
-                "schema_version": 1,
-                "family_id": family_id,
-                "deployment_receipt_id": deployment_receipt_id,
-                "packet_budget": 1,
-                "delivered_packet_count": (
-                    1 if (family_id, deployment_receipt_id) in delivered else 0
-                ),
-                "packet_available": (
-                    (family_id, deployment_receipt_id) not in delivered
-                ),
-                "individual_cards_queryable": True,
-                "duplicate_delivery_held": True,
-                "objection_or_still_friction_bypasses_hold": True,
-                "silence_classification": "no_response",
-            }
-    claim_count = len(assignments)
-    membership_count = sum(len(family["claims"]) for family in families.values())
-    return {
-        "schema": "claim_family_status_v1",
-        "schema_version": 1,
-        "matcher_version": MATCHER_VERSION,
-        "match_threshold": MATCH_THRESHOLD,
-        "claim_count": claim_count,
-        "family_count": len(families),
-        "singleton_family_count": sum(
-            1 for family in families.values() if len(family["claims"]) == 1
-        ),
-        "counter_audit": {
-            "every_claim_assigned_once": membership_count == claim_count,
-            "membership_count_equals_claim_count": membership_count == claim_count,
-            "unassigned_claim_count": 0,
-        },
-        "families": families,
-        "migration_receipt": migration_receipt,
-        "membership_history": history,
-        "felt_review_budget_v1": review_budget,
-        "felt_review_responses": responses,
-        "closure_propagated_by_family": False,
-        "evidence_sufficiency_propagated_by_family": False,
-        "supersession_propagated_by_family": False,
-        "authority_propagated_by_family": False,
-        "artifact_authority_state_v1": authority_state(),
-    }
+    return apply_claim_family_events(None, events, deployment_receipt_id)
 
 def render_report(status: dict[str, Any]) -> str:
     audit = status["counter_audit"]
@@ -523,26 +448,168 @@ def write_projection(workspace: Path, status: dict[str, Any]) -> dict[str, str]:
         hashes[name] = hashlib.sha256(payload.encode()).hexdigest()
     return hashes
 
+
+def _cursor_path(workspace: Path) -> Path:
+    return state_dir(workspace) / "projection_cursor_v1.json"
+
+
+def _status_sha256(workspace: Path) -> str | None:
+    path = state_dir(workspace) / "status.json"
+    if not path.is_file():
+        return None
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
 def generate(workspace: Path, *, write: bool) -> dict[str, Any]:
-    claims, source_sha256 = load_claims(workspace)
-    families, suggestions = family_claims(claims)
-    generated = migration_events(claims, families, suggestions, source_sha256)
     directory = state_dir(workspace)
-    if write:
-        append_domain_events(directory, "claim_families", generated)
+    claims, source_sha256 = load_claims(workspace)
+    deployment_receipt_id = latest_successful_deployment(workspace)
+    store = EvidenceEventStore(
+        workspace / "diagnostics/evidence_event_store_v2"
+    )
+    store.verify_indexed_tail()
+    watermark = store.stream_watermarks(("claim_families",))[
+        "claim_families"
+    ]
+    prior_stream_seq = int(watermark.get("stream_seq") or 0)
+    cursor = ProjectionInputCursor(
+        _cursor_path(workspace),
+        "claim_families_v3",
+    )
+    metadata = cursor.jsonl_metadata("claim_families_v3")
+    cached_sha256 = _status_sha256(workspace)
+    cursor_stream_seq = int(metadata.get("stream_seq") or 0)
+    cache_valid = (
+        cursor_stream_seq > 0
+        and cursor_stream_seq <= prior_stream_seq
+        and cached_sha256 is not None
+        and cached_sha256 == metadata.get("status_sha256")
+    )
+    if cache_valid:
+        cached = json.loads(
+            (directory / "status.json").read_text(encoding="utf-8")
+        )
+        if not isinstance(cached, dict):
+            raise ValueError("claim family status must be an object")
+        tail, corrupt = store.envelopes_for_stream(
+            "claim_families",
+            after_stream_seq=cursor_stream_seq,
+        )
+        if corrupt:
+            raise EvidenceStoreError("claim family tail is corrupt")
+        status = apply_claim_family_events(
+            cached,
+            (envelope.payload for envelope in tail),
+            deployment_receipt_id,
+        )
+        generated = incremental_events_from_status(claims, status)
+        consumed_count = len(tail)
+        full_reference_replay = False
+    else:
         events, corrupt = read_domain_events(directory, "claim_families")
         if corrupt:
-            raise EvidenceStoreError(f"claim family stream has {corrupt} corrupt events")
-    else:
-        events = generated
-    status = project(events, latest_successful_deployment(workspace))
+            raise EvidenceStoreError(
+                f"claim family stream has {corrupt} corrupt events"
+            )
+        status = project(events, deployment_receipt_id)
+        has_membership = any(
+            event.get("event_type")
+            == "claim_family_membership_assigned"
+            for event in events
+        )
+        if not has_membership:
+            families, suggestions = family_claims(claims)
+            baseline = migration_events(
+                claims,
+                families,
+                suggestions,
+                source_sha256,
+            )
+            for event in baseline:
+                event_type = event.get("event_type")
+                if event_type == "claim_family_created":
+                    event["idempotency_key"] = (
+                        f"claim_family_created:{event['family']['family_id']}"
+                    )
+                elif event_type == "claim_family_membership_assigned":
+                    event["idempotency_key"] = (
+                        f"claim_membership:{event['canonical_claim_id']}:"
+                        f"{event['family_id']}"
+                    )
+                elif event_type == "claim_family_migration_completed":
+                    event["idempotency_key"] = (
+                        "claim_family_migration:baseline_v3"
+                    )
+            generated = [
+                *baseline,
+                *incremental_events(claims, [*events, *baseline]),
+            ]
+        elif (
+            isinstance(status.get("migration_receipt"), dict)
+            and status["migration_receipt"].get("schema")
+            == "claim_family_v3_migration_receipt_v1"
+        ):
+            generated = incremental_events_from_status(claims, status)
+        else:
+            generated = incremental_events(claims, events)
+        consumed_count = len(events)
+        full_reference_replay = True
+        del events
+    if write and generated:
+        append_domain_events(directory, "claim_families", generated)
+        appended, corrupt = store.envelopes_for_stream(
+            "claim_families",
+            after_stream_seq=prior_stream_seq,
+        )
+        if corrupt:
+            raise EvidenceStoreError("appended claim family tail is corrupt")
+        status = apply_claim_family_events(
+            status,
+            (envelope.payload for envelope in appended),
+            deployment_receipt_id,
+        )
+    elif not write:
+        status = apply_claim_family_events(
+            status,
+            generated,
+            deployment_receipt_id,
+        )
     status["source_status_sha256"] = source_sha256
     status["generated_event_count"] = len(generated)
+    status["incremental_consumed_event_count"] = consumed_count
+    status["full_reference_replay"] = full_reference_replay
     if write:
         hashes = write_projection(workspace, status)
-        EvidenceEventStore(
-            workspace / "diagnostics/evidence_event_store_v2"
-        ).write_checkpoint("claim_families_v1", PROJECTOR_VERSION, hashes)
+        final_watermark = store.stream_watermarks(("claim_families",))[
+            "claim_families"
+        ]
+        store.write_checkpoint(
+            "claim_families_v1",
+            PROJECTOR_VERSION,
+            hashes,
+            input_streams=("claim_families",),
+            source_hashes={
+                "addressing_status": source_sha256,
+            },
+        )
+        cursor.commit_jsonl(
+            {
+                "claim_families_v3": {
+                    "stream_seq": int(
+                        final_watermark.get("stream_seq") or 0
+                    ),
+                    "last_global_seq": int(
+                        final_watermark.get("last_global_seq") or 0
+                    ),
+                    "last_event_id": final_watermark.get("last_event_id"),
+                    "last_event_sha256": final_watermark.get(
+                        "last_event_sha256"
+                    ),
+                    "status_sha256": _status_sha256(workspace),
+                    "full_reference_replay": full_reference_replay,
+                }
+            }
+        )
         status["projection_hashes"] = hashes
     return status
 
@@ -747,151 +814,6 @@ def append_membership_history(
     return history_events
 
 
-class ClaimFamilyTests(unittest.TestCase):
-    def claim(self, claim_id: str, summary: str, target: str = "astrid_codec") -> ClaimRecord:
-        return ClaimRecord(
-            canonical_claim_id=claim_id,
-            introspection_id=claim_id.split(":")[0],
-            claim_id=claim_id.split(":")[-1],
-            summary=summary,
-            authority_class="evidence_only_non_live",
-            target_surface=target,
-            requested_outcome=requested_outcome(summary),
-            polarity=polarity(summary),
-            record={"canonical_claim_id": claim_id, "text": summary},
-        )
-
-    def test_strict_match_joins_duplicates_and_keeps_ambiguous_singleton(self) -> None:
-        claims = [
-            self.claim("a:c001", "Preserve exact sensory JSON compatibility."),
-            self.claim("b:c001", "Preserve exact sensory JSON compatibility."),
-            self.claim("c:c001", "Preserve sensory compatibility where practical."),
-        ]
-        families, suggestions = family_claims(claims)
-        sizes = sorted(family["member_count"] for family in families)
-        self.assertEqual(sizes, [1, 2])
-        assigned = [
-            member for family in families for member in family["member_claim_ids"]
-        ]
-        self.assertEqual(sorted(assigned), sorted(claim.canonical_claim_id for claim in claims))
-        self.assertTrue(
-            all(
-                family["membership_propagates_closure"] is False
-                for family in families
-            )
-        )
-        self.assertIsInstance(suggestions, dict)
-
-    def test_authority_or_target_mismatch_never_auto_joins(self) -> None:
-        left = self.claim("a:c001", "Preserve exact sensory JSON compatibility.")
-        right = self.claim(
-            "b:c001",
-            "Preserve exact sensory JSON compatibility.",
-            target="minime_regulator",
-        )
-        families, _ = family_claims([left, right])
-        self.assertEqual(len(families), 2)
-
-    def test_review_budget_allows_one_packet_and_immediate_objection(self) -> None:
-        events = [
-            {
-                "event_type": "claim_family_created",
-                "family": {"family_id": "family_one"},
-            },
-            {
-                "event_type": "claim_family_membership_assigned",
-                "family_id": "family_one",
-                "canonical_claim_id": "a:c001",
-                "claim": {"text": "claim"},
-            },
-            {
-                "event_type": "claim_family_migration_completed",
-                "migration_receipt": {"family_ids": ["family_one"]},
-            },
-            {
-                "event_type": "felt_review_response_recorded",
-                "family_id": "family_one",
-                "classification": "objection",
-                "immediate_surface": True,
-            },
-        ]
-        status = project(events, "receipt_one")
-        self.assertTrue(
-            status["felt_review_budget_v1"]["family_one"]["packet_available"]
-        )
-        self.assertTrue(status["felt_review_responses"][0]["immediate_surface"])
-
-    def test_membership_correction_replays_without_propagating_closure(self) -> None:
-        events = [
-            {
-                "event_type": "claim_family_created",
-                "family": {"family_id": "family_one"},
-            },
-            {
-                "event_type": "claim_family_created",
-                "family": {"family_id": "family_two"},
-            },
-            {
-                "event_type": "claim_family_membership_assigned",
-                "family_id": "family_one",
-                "canonical_claim_id": "a:c001",
-                "claim": {"text": "claim"},
-            },
-            {
-                "event_type": "claim_family_membership_corrected",
-                "family_id": "family_two",
-                "from_family_id": "family_one",
-                "to_family_id": "family_two",
-                "canonical_claim_id": "a:c001",
-                "claim": {"text": "claim"},
-                "closure_propagated": False,
-            },
-        ]
-        status = project(events, None)
-        self.assertNotIn("a:c001", status["families"].get("family_one", {}).get("claims", {}))
-        self.assertIn("a:c001", status["families"]["family_two"]["claims"])
-        self.assertFalse(status["membership_history"][0]["closure_propagated"])
-
-    def test_realistic_status_preserves_claim_identity_and_queue_position(self) -> None:
-        with tempfile.TemporaryDirectory() as directory:
-            workspace = Path(directory)
-            path = addressing_status_path(workspace)
-            path.parent.mkdir(parents=True)
-            path.write_text(
-                json.dumps(
-                    {
-                        "next_queue": [{"introspection_id": "intro_one"}],
-                        "artifacts": {
-                            "intro_one": {
-                                "introspection_id": "intro_one",
-                                "source_family": "astrid_codec",
-                                "status": "read",
-                                "fully_addressed": False,
-                                "sha256": "source",
-                                "claims": {
-                                    "c001": {
-                                        "claim_id": "c001",
-                                        "summary": "Preserve exact output.",
-                                        "disposition": "verified",
-                                        "evidence": [{"target": "test"}],
-                                    }
-                                },
-                            }
-                        },
-                    }
-                ),
-                encoding="utf-8",
-            )
-            claims, _ = load_claims(workspace)
-            self.assertEqual(claims[0].canonical_claim_id, "intro_one:c001")
-            self.assertEqual(claims[0].record["claim_id"], "c001")
-            self.assertEqual(claims[0].record["queue_position"], 0)
-            self.assertEqual(
-                claims[0].record["evidence_links"],
-                [{"kind": None, "target": "test", "ts": None}],
-            )
-
-
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--workspace", type=Path, default=DEFAULT_WORKSPACE)
@@ -900,6 +822,9 @@ def build_parser() -> argparse.ArgumentParser:
     commands = parser.add_subparsers(dest="command")
     generate_parser = commands.add_parser("generate")
     generate_parser.add_argument("--write", action="store_true")
+    project_parser = commands.add_parser("project")
+    project_parser.add_argument("--write", action="store_true")
+    project_parser.add_argument("--receipt-json", action="store_true")
     commands.add_parser("report")
     deliver = commands.add_parser("deliver-review")
     deliver.add_argument("--family-id", required=True)
@@ -953,15 +878,38 @@ def main() -> int:
     parser = build_parser()
     args = parser.parse_args()
     if args.self_test:
-        suite = unittest.defaultTestLoader.loadTestsFromTestCase(ClaimFamilyTests)
-        return 0 if unittest.TextTestRunner(verbosity=2).run(suite).wasSuccessful() else 1
+        from claim_families_selftest import run
+
+        return run()
     workspace = args.workspace.resolve()
     try:
-        if args.command in {"generate", "report"}:
+        if args.command in {"generate", "project", "report"}:
+            started = time.monotonic()
             status = generate(
                 workspace,
-                write=args.command == "generate" and bool(args.write),
+                write=args.command in {"generate", "project"} and bool(args.write),
             )
+            if args.command == "project":
+                root = state_dir(workspace)
+                print(
+                    json.dumps(
+                        projector_receipt(
+                            "claim_families",
+                            cli_summary(status),
+                            {
+                                "status.json": root / "status.json",
+                                "report.md": root / "report.md",
+                                "migration_receipt.json": (
+                                    root / "migration_receipt.json"
+                                ),
+                            },
+                            started_monotonic=started,
+                        ),
+                        indent=2,
+                        sort_keys=True,
+                    )
+                )
+                return 0
             print(json.dumps(cli_summary(status), indent=2, sort_keys=True))
             return 0
         if args.command in {"deliver-review", "record-response"}:

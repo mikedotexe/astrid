@@ -31,6 +31,11 @@ except ModuleNotFoundError:
         v2_active_for_state,
     )
 
+try:
+    from projection_receipt import projector_receipt
+except ModuleNotFoundError:
+    from scripts.projection_receipt import projector_receipt
+
 ASTRID_REPO = Path("/Users/v/other/astrid")
 MINIME_REPO = Path("/Users/v/other/minime")
 ASTRID_WORKSPACE = ASTRID_REPO / "capsules/spectral-bridge/workspace"
@@ -3387,6 +3392,10 @@ def main(argv: list[str] | None = None) -> int:
     gen_p.add_argument("--write", action="store_true")
     gen_p.add_argument("--json", action="store_true")
 
+    project_p = sub.add_parser("project")
+    project_p.add_argument("--write", action="store_true")
+    project_p.add_argument("--receipt-json", action="store_true")
+
     report_p = sub.add_parser("report")
     report_p.add_argument("--json", action="store_true")
     report_p.add_argument("--markdown", action="store_true")
@@ -3432,6 +3441,29 @@ def main(argv: list[str] | None = None) -> int:
             print(json.dumps(payload, indent=2, sort_keys=True, ensure_ascii=False))
         else:
             print(render_queue_markdown(load_status(args.state_dir)), end="")
+        return 0
+    if args.cmd == "project":
+        started = time.monotonic()
+        payload = generate_candidates(args.state_dir, write=bool(args.write))
+        print(
+            json.dumps(
+                projector_receipt(
+                    "sandbox",
+                    {
+                        "summary": payload.get("summary", {}),
+                        "counter_audit": payload.get("counter_audit", {}),
+                    },
+                    {
+                        "status.json": args.state_dir / STATUS_FILE,
+                        "queue.md": args.state_dir / QUEUE_FILE,
+                    },
+                    started_monotonic=started,
+                ),
+                indent=2,
+                sort_keys=True,
+                ensure_ascii=False,
+            )
+        )
         return 0
     if args.cmd in {"report", "queue"}:
         status = load_status(args.state_dir)

@@ -8,6 +8,7 @@ import hashlib
 import json
 import os
 import tempfile
+import time
 import unittest
 from pathlib import Path
 from typing import Any
@@ -20,6 +21,15 @@ except ModuleNotFoundError:
     from scripts.authority_state import ArtifactAuthorityStateV1
     from scripts.evidence_store import EvidenceEventStore
     from scripts.evidence_store.model import ProvenanceSourceV1, canonical_json
+
+try:
+    from projection_receipt import projector_receipt
+except ModuleNotFoundError:
+    from scripts.projection_receipt import projector_receipt
+try:
+    from projection_cursors import ProjectionInputCursor
+except ModuleNotFoundError:
+    from scripts.projection_cursors import ProjectionInputCursor
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_WORKSPACE = ROOT / "capsules/spectral-bridge/workspace"
@@ -125,12 +135,28 @@ def bounded_payload(receipt: dict[str, Any], source_hash: str) -> dict[str, Any]
 
 
 def generate(workspace: Path, receipts_path: Path, *, write: bool) -> dict[str, Any]:
-    source_bytes = receipts_path.read_bytes() if receipts_path.is_file() else b""
-    source_hash = sha256_bytes(source_bytes)
+    cursor = ProjectionInputCursor(
+        workspace / "diagnostics/model_qos_v1/ingestion_cursor_v1.json",
+        "model_qos",
+    )
+    cursor_key = receipts_path.name
+    if write:
+        source_rows, next_cursor = cursor.jsonl_tail(
+            receipts_path,
+            key=cursor_key,
+        )
+        source_hash = str(next_cursor["source_sha256"])
+    else:
+        source_bytes = receipts_path.read_bytes() if receipts_path.is_file() else b""
+        source_hash = sha256_bytes(source_bytes)
+        source_rows = list(
+            enumerate(source_bytes.decode("utf-8").splitlines(), 1)
+        )
+        next_cursor = {}
     payloads: list[dict[str, Any]] = []
     errors: list[str] = []
     seen: set[str] = set()
-    for line_number, raw in enumerate(source_bytes.splitlines(), 1):
+    for line_number, raw in source_rows:
         if not raw.strip():
             continue
         try:
@@ -151,10 +177,10 @@ def generate(workspace: Path, receipts_path: Path, *, write: bool) -> dict[str, 
             payloads.append(bounded_payload(value, source_hash))
 
     appended = 0
+    store = EvidenceEventStore(
+        workspace / "diagnostics/evidence_event_store_v2"
+    )
     if write and not errors:
-        store = EvidenceEventStore(
-            workspace / "diagnostics/evidence_event_store_v2"
-        )
         events = store.append_payloads(
             "model_qos",
             payloads,
@@ -169,6 +195,17 @@ def generate(workspace: Path, receipts_path: Path, *, write: bool) -> dict[str, 
         )
         appended = len(events)
 
+    total_receipt_ids = set(seen)
+    if write and not errors:
+        historical, corrupt = store.payloads_for_stream("model_qos")
+        if corrupt:
+            errors.append("model_qos_stream_corrupt")
+        else:
+            total_receipt_ids = {
+                str(payload.get("receipt_id") or "")
+                for payload in historical
+                if payload.get("receipt_id")
+            }
     checks = {
         "all_lines_valid": not errors,
         "all_valid_receipts_projectable": len(payloads) == len(seen),
@@ -184,8 +221,9 @@ def generate(workspace: Path, receipts_path: Path, *, write: bool) -> dict[str, 
         "source_present": receipts_path.is_file(),
         "source_locator": receipts_path.name,
         "source_sha256": source_hash,
-        "receipt_count": len(seen),
-        "projectable_receipt_count": len(payloads),
+        "receipt_count": len(total_receipt_ids),
+        "projectable_receipt_count": len(total_receipt_ids),
+        "delta_receipt_count": len(payloads),
         "appended_or_existing_count": appended,
         "counter_audit": {
             "status": "consistent" if all(checks.values()) else "inconsistent",
@@ -199,6 +237,7 @@ def generate(workspace: Path, receipts_path: Path, *, write: bool) -> dict[str, 
             workspace / "diagnostics/model_qos_v1/status.json",
             canonical_json(result) + "\n",
         )
+        cursor.commit_jsonl({cursor_key: next_cursor})
     return result
 
 
@@ -284,17 +323,43 @@ def main() -> int:
     )
     parser.add_argument("--json", action="store_true")
     parser.add_argument("--self-test", action="store_true")
-    parser.add_argument("command", nargs="?", choices=("generate", "verify"), default="verify")
+    parser.add_argument(
+        "command",
+        nargs="?",
+        choices=("generate", "project", "verify"),
+        default="verify",
+    )
     parser.add_argument("--write", action="store_true")
+    parser.add_argument("--receipt-json", action="store_true")
     args = parser.parse_args()
     if args.self_test:
         suite = unittest.defaultTestLoader.loadTestsFromTestCase(SelfTest)
         return 0 if unittest.TextTestRunner(verbosity=2).run(suite).wasSuccessful() else 1
+    started = time.monotonic()
+    workspace = args.workspace.resolve()
     result = generate(
-        args.workspace.resolve(),
+        workspace,
         args.receipts.expanduser().resolve(),
-        write=args.write and args.command == "generate",
+        write=args.write and args.command in {"generate", "project"},
     )
+    if args.command == "project":
+        print(
+            json.dumps(
+                projector_receipt(
+                    "model_qos",
+                    result,
+                    {
+                        "status.json": (
+                            workspace / "diagnostics/model_qos_v1/status.json"
+                        )
+                    },
+                    started_monotonic=started,
+                ),
+                indent=2,
+                sort_keys=True,
+            )
+        )
+        return 0 if result["valid"] else 1
     print(json.dumps(result, indent=2, sort_keys=True) if args.json else canonical_json(result))
     return 0 if result["valid"] else 1
 
