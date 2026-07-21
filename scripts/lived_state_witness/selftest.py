@@ -235,6 +235,7 @@ class LivedStateWitnessTests(unittest.TestCase):
             "active_generation_and_reservoir_ms": 7,
             "active_work_scope": "worker_selection_to_response_after_reservoir_checkin_not_cognitive_effort",
             "timing_completeness": "provider_split_observed",
+            "timing_completeness_scope": "technical_metadata_availability_not_experiential_wholeness_or_continuity",
             "repair_parent_call_id": None,
             "response_sha256": response_sha256,
             "response_hash_scope": "output_integrity_not_being_or_continuity_identity",
@@ -272,6 +273,34 @@ class LivedStateWitnessTests(unittest.TestCase):
         _validate_model_route(invalid_timing, 0, 25, set(), errors)
         self.assertIn("model_routes[0].active_work_scope:invalid", errors)
 
+        partial = dict(route)
+        partial["response_claim_content_relation"] = (
+            "not_inspected_or_adjudicated_by_this_receipt"
+        )
+        partial["active_generation_and_reservoir_ms"] = None
+        partial["timing_completeness"] = "queue_wait_only"
+        errors = []
+        _validate_model_route(partial, 0, 25, set(), errors)
+        self.assertEqual(errors, [])
+
+        partial["timing_completeness_scope"] = "experiential_wholeness_score"
+        errors = []
+        _validate_model_route(partial, 0, 25, set(), errors)
+        self.assertIn("model_routes[0].timing_completeness_scope:invalid", errors)
+
+        scope_without_timing = dict(route)
+        for field in (
+            "queue_wait_ms",
+            "queue_wait_scope",
+            "active_generation_and_reservoir_ms",
+            "active_work_scope",
+            "timing_completeness",
+        ):
+            scope_without_timing.pop(field)
+        errors = []
+        _validate_model_route(scope_without_timing, 0, 25, set(), errors)
+        self.assertIn("model_routes[0].provider_timing:scope_without_timing", errors)
+
         legacy = dict(route)
         for field in (
             "response_claim_content_relation",
@@ -284,6 +313,7 @@ class LivedStateWitnessTests(unittest.TestCase):
             "active_generation_and_reservoir_ms",
             "active_work_scope",
             "timing_completeness",
+            "timing_completeness_scope",
         ):
             legacy.pop(field)
         legacy.update(

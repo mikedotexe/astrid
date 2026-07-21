@@ -275,6 +275,7 @@ pub struct LivedStateModelRouteV1 {
     active_generation_and_reservoir_ms: Option<u64>,
     active_work_scope: &'static str,
     timing_completeness: &'static str,
+    timing_completeness_scope: &'static str,
     repair_parent_call_id: Option<String>,
     response_sha256: String,
     response_hash_scope: &'static str,
@@ -302,13 +303,15 @@ impl LivedStateModelRouteV1 {
         repair_parent_call_id: Option<String>,
         response_sha256: String,
     ) -> Self {
-        let (queue_wait_ms, active_generation_and_reservoir_ms, timing_completeness) =
-            match (queue_wait_ms, active_generation_and_reservoir_ms) {
-                (Some(queue_wait_ms), Some(active_ms)) => {
-                    (Some(queue_wait_ms), Some(active_ms), "provider_split_observed")
-                },
-                _ => (None, None, "aggregate_only_provider_split_unavailable"),
-            };
+        let timing_completeness = match (
+            queue_wait_ms.is_some(),
+            active_generation_and_reservoir_ms.is_some(),
+        ) {
+            (true, true) => "provider_split_observed",
+            (true, false) => "queue_wait_only",
+            (false, true) => "active_work_only",
+            (false, false) => "aggregate_only_provider_split_unavailable",
+        };
         Self {
             schema: "lived_state_model_route_v1",
             schema_version: 1,
@@ -330,6 +333,7 @@ impl LivedStateModelRouteV1 {
             active_generation_and_reservoir_ms,
             active_work_scope: "worker_selection_to_response_after_reservoir_checkin_not_cognitive_effort",
             timing_completeness,
+            timing_completeness_scope: "technical_metadata_availability_not_experiential_wholeness_or_continuity",
             repair_parent_call_id,
             response_sha256,
             response_hash_scope: "output_integrity_not_being_or_continuity_identity",

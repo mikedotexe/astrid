@@ -447,11 +447,18 @@ def _validate_model_route_identity_boundaries(
         "timing_completeness",
     }
     present_timing = timing_fields.intersection(route)
+    completeness_scope = route.get("timing_completeness_scope")
     if present_timing and len(present_timing) != len(timing_fields):
         errors.append(f"{prefix}.provider_timing:incomplete")
         return
     if not present_timing:
+        if completeness_scope is not None:
+            errors.append(f"{prefix}.provider_timing:scope_without_timing")
         return
+    if completeness_scope is not None and completeness_scope != (
+        "technical_metadata_availability_not_experiential_wholeness_or_continuity"
+    ):
+        errors.append(f"{prefix}.timing_completeness_scope:invalid")
     if route.get("queue_wait_scope") != (
         "request_enqueue_to_worker_selection_not_experiential_wait"
     ):
@@ -474,6 +481,22 @@ def _validate_model_route_identity_boundaries(
                 or not 0 <= value <= 3_600_000
             ):
                 errors.append(f"{prefix}.{field}:invalid")
+    elif completeness == "queue_wait_only":
+        if (
+            not isinstance(queue_wait, int)
+            or isinstance(queue_wait, bool)
+            or not 0 <= queue_wait <= 3_600_000
+            or active_work is not None
+        ):
+            errors.append(f"{prefix}.provider_timing:queue_wait_only_invalid")
+    elif completeness == "active_work_only":
+        if (
+            queue_wait is not None
+            or not isinstance(active_work, int)
+            or isinstance(active_work, bool)
+            or not 0 <= active_work <= 3_600_000
+        ):
+            errors.append(f"{prefix}.provider_timing:active_work_only_invalid")
     elif completeness == "aggregate_only_provider_split_unavailable":
         if queue_wait is not None or active_work is not None:
             errors.append(f"{prefix}.provider_timing:unexpected_split")
@@ -515,6 +538,7 @@ def _validate_model_route(
             "active_generation_and_reservoir_ms",
             "active_work_scope",
             "timing_completeness",
+            "timing_completeness_scope",
             "repair_parent_call_id",
             "response_sha256",
             "response_hash_scope",

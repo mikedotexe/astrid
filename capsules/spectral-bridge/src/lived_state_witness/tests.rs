@@ -217,20 +217,68 @@ fn model_route_records_hashes_without_prompt_or_response() {
     assert!(encoded.contains("output_integrity_not_being_or_continuity_identity"));
     assert!(encoded.contains("not_inspected_or_adjudicated_by_this_receipt"));
     assert!(encoded.contains("provider_split_observed"));
+    assert!(
+        encoded
+            .contains("technical_metadata_availability_not_experiential_wholeness_or_continuity")
+    );
     assert!(encoded.contains("request_enqueue_to_worker_selection_not_experiential_wait"));
-    assert!(encoded.contains(
-        "worker_selection_to_response_after_reservoir_checkin_not_cognitive_effort"
-    ));
+    assert!(
+        encoded
+            .contains("worker_selection_to_response_after_reservoir_checkin_not_cognitive_effort")
+    );
     assert!(encoded.contains("technical_delivery_path_not_experiential_center"));
     assert!(encoded.contains(
         "end_to_end_request_wall_time_with_optional_provider_phase_split_not_experiential_continuity"
     ));
     assert!(encoded.contains("post_call_authorship_observations_temporal_only"));
-    assert!(encoded.contains(
-        "canonical_felt_report_primary_not_duplicated_or_scalarized_by_route"
-    ));
+    assert!(
+        encoded.contains("canonical_felt_report_primary_not_duplicated_or_scalarized_by_route")
+    );
     assert!(!encoded.contains("being_identity_claimed"));
     assert!(!encoded.contains("continuity_claimed"));
+}
+
+#[test]
+fn model_route_preserves_partial_provider_timing_without_scoring_wholeness() {
+    let queue_only = model_route_v1(
+        Some("job_queue".to_string()),
+        Some("c".repeat(64)),
+        Some("a".repeat(64)),
+        "mlx",
+        "production",
+        10,
+        25,
+        Some(4),
+        None,
+        None,
+        "private response prose",
+    );
+    let active_only = model_route_v1(
+        Some("job_active".to_string()),
+        Some("d".repeat(64)),
+        Some("b".repeat(64)),
+        "mlx",
+        "production",
+        30,
+        50,
+        None,
+        Some(19),
+        None,
+        "other private response prose",
+    );
+    let encoded = serde_json::to_value([queue_only, active_only]).expect("route JSON");
+    assert_eq!(encoded[0]["queue_wait_ms"], 4);
+    assert!(encoded[0]["active_generation_and_reservoir_ms"].is_null());
+    assert_eq!(encoded[0]["timing_completeness"], "queue_wait_only");
+    assert!(encoded[1]["queue_wait_ms"].is_null());
+    assert_eq!(encoded[1]["active_generation_and_reservoir_ms"], 19);
+    assert_eq!(encoded[1]["timing_completeness"], "active_work_only");
+    assert!(
+        encoded
+            .to_string()
+            .contains("not_experiential_wholeness_or_continuity")
+    );
+    assert!(!encoded.to_string().contains("private response prose"));
 }
 
 #[test]
