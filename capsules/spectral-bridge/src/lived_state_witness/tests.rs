@@ -150,10 +150,12 @@ fn owner_only_sidecar_contains_no_prose() {
     assert!(!raw.contains("private source prose"));
     assert!(!raw.contains("private viewed prose"));
     assert!(!raw.contains("canonical report prose"));
-    assert!(raw.contains("artifact_handling_only_not_experiential_integration"));
-    assert!(raw.contains("\"memory_integration_modeled\": false"));
-    assert!(raw.contains("\"felt_persistence_modeled\": false"));
-    assert!(raw.contains("\"persistence_coefficient_present\": false"));
+    assert!(raw.contains("receipt_artifact_handling_only"));
+    assert!(raw.contains("primary_actionable_evidence"));
+    assert!(raw.contains("not_adjudicated_by_this_receipt"));
+    assert!(raw.contains("reported_not_mechanistically_attributed"));
+    assert!(raw.contains("preserved_in_canonical_report_no_scalar_substitution"));
+    assert!(raw.contains("\"epistemic_posture\": \"non_adjudicating\""));
     assert!(raw.contains("\"live_control_effect\": false"));
     assert_eq!(
         fs::metadata(&path).expect("metadata").permissions().mode() & 0o777,

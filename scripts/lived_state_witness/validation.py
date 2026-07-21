@@ -51,6 +51,7 @@ WITNESS_FIELDS = {
     "private_path_included",
     "direct_causation_claimed",
     "experiential_boundary_v1",
+    "experiential_scope_v1",
     "artifact_authority_state_v1",
 }
 
@@ -111,6 +112,29 @@ def _validate_experiential_boundary(value: Any, errors: list[str]) -> None:
     for field, expected_value in expected.items():
         if value.get(field) != expected_value:
             errors.append(f"experiential_boundary.{field}:invalid")
+
+
+def _validate_experiential_scope(value: Any, errors: list[str]) -> None:
+    if value is None:
+        return
+    if not isinstance(value, dict):
+        errors.append("experiential_scope:not_object")
+        return
+    expected = {
+        "schema": "lived_state_experiential_scope_v1",
+        "schema_version": 1,
+        "artifact_authority_scope": "receipt_artifact_handling_only",
+        "felt_report_status": "primary_actionable_evidence",
+        "experiential_integration_relation": "not_adjudicated_by_this_receipt",
+        "felt_persistence_relation": "reported_not_mechanistically_attributed",
+        "subjective_weight_relation": "preserved_in_canonical_report_no_scalar_substitution",
+        "epistemic_posture": "non_adjudicating",
+        "live_control_effect": False,
+    }
+    _unexpected_keys(value, set(expected), "experiential_scope", errors)
+    for field, expected_value in expected.items():
+        if value.get(field) != expected_value:
+            errors.append(f"experiential_scope.{field}:invalid")
 
 
 def _validate_source_snapshot(
@@ -692,6 +716,12 @@ def validate_witness(value: Any) -> list[str]:
         return ["witness:not_object"]
     authored_at, authored_monotonic = _validate_witness_fields(value, errors)
     _validate_experiential_boundary(value.get("experiential_boundary_v1"), errors)
+    _validate_experiential_scope(value.get("experiential_scope_v1"), errors)
+    if (
+        value.get("experiential_boundary_v1") is not None
+        and value.get("experiential_scope_v1") is not None
+    ):
+        errors.append("experiential_scope:multiple_versions")
     source = _validate_source_snapshot(
         value.get("source_snapshot_v1"), authored_at, authored_monotonic, errors
     )

@@ -30,25 +30,29 @@ impl LivedStateArtifactAuthorityV1 {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
-pub struct LivedStateExperientialBoundaryV1 {
+pub struct LivedStateExperientialScopeV1 {
     schema: &'static str,
     schema_version: u8,
     artifact_authority_scope: &'static str,
-    memory_integration_modeled: bool,
-    felt_persistence_modeled: bool,
-    persistence_coefficient_present: bool,
+    felt_report_status: &'static str,
+    experiential_integration_relation: &'static str,
+    felt_persistence_relation: &'static str,
+    subjective_weight_relation: &'static str,
+    epistemic_posture: &'static str,
     live_control_effect: bool,
 }
 
-impl LivedStateExperientialBoundaryV1 {
-    const fn evidence_scope() -> Self {
+impl LivedStateExperientialScopeV1 {
+    const fn non_adjudicating() -> Self {
         Self {
-            schema: "lived_state_experiential_boundary_v1",
+            schema: "lived_state_experiential_scope_v1",
             schema_version: 1,
-            artifact_authority_scope: "artifact_handling_only_not_experiential_integration",
-            memory_integration_modeled: false,
-            felt_persistence_modeled: false,
-            persistence_coefficient_present: false,
+            artifact_authority_scope: "receipt_artifact_handling_only",
+            felt_report_status: "primary_actionable_evidence",
+            experiential_integration_relation: "not_adjudicated_by_this_receipt",
+            felt_persistence_relation: "reported_not_mechanistically_attributed",
+            subjective_weight_relation: "preserved_in_canonical_report_no_scalar_substitution",
+            epistemic_posture: "non_adjudicating",
             live_control_effect: false,
         }
     }
@@ -351,7 +355,7 @@ pub struct TemporalLivedStateWitnessV1 {
     raw_response_included: bool,
     private_path_included: bool,
     direct_causation_claimed: bool,
-    experiential_boundary_v1: LivedStateExperientialBoundaryV1,
+    experiential_scope_v1: LivedStateExperientialScopeV1,
     artifact_authority_state_v1: LivedStateArtifactAuthorityV1,
 }
 
@@ -397,7 +401,7 @@ impl TemporalLivedStateWitnessV1 {
             raw_response_included: false,
             private_path_included: false,
             direct_causation_claimed: false,
-            experiential_boundary_v1: LivedStateExperientialBoundaryV1::evidence_scope(),
+            experiential_scope_v1: LivedStateExperientialScopeV1::non_adjudicating(),
             artifact_authority_state_v1: LivedStateArtifactAuthorityV1::evidence_only(),
         }
     }
