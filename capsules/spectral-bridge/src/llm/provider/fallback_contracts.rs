@@ -211,6 +211,7 @@ pub(crate) struct PreservedModelArtifactTokenCount {
     pub token: String,
     pub count: usize,
     pub quoted_reference_occurrences: usize,
+    pub grouped_reference_occurrences: usize,
     pub explicit_relation_occurrences: usize,
 }
 
@@ -454,13 +455,13 @@ fn model_artifact_cleanup_diagnostic<'a>(
     let exact_token_integrity_check_v1 =
         model_artifact_exact_token_integrity_check_v1(report, &remainder_surface_v2);
     ModelArtifactCleanupDiagnostic {
-        schema: "model_artifact_cleanup_v7",
-        schema_version: 7,
+        schema: "model_artifact_cleanup_v8",
+        schema_version: 8,
         timestamp: unix_timestamp_string(),
         label,
         profile: profile.as_str(),
         marker_contract:
-            "private_typed_exact_known_model_token_with_quotes_or_following_relation",
+            "private_typed_exact_known_model_token_with_matching_quote_grouping_or_following_relation",
         common_language_overlap_risk: model_artifact_language_overlap_risk(report),
         remainder_surface_v2,
         exact_token_integrity_check_v1,
@@ -470,23 +471,23 @@ fn model_artifact_cleanup_diagnostic<'a>(
 }
 
 #[derive(Debug, Clone, Serialize, PartialEq)]
-struct DialogueBudgetFrictionV1 {
+struct DialogueBudgetContextV2 {
     policy: &'static str,
-    budget_profile: &'static str,
-    budget_profile_basis: &'static str,
+    requested_token_band: &'static str,
+    requested_token_band_basis: &'static str,
     spectral_entropy: Option<f32>,
     high_entropy: bool,
-    short_budget_under_high_entropy: bool,
+    low_requested_token_band_under_high_entropy: bool,
     resonance_density: Option<f32>,
     spectrally_dense: bool,
-    short_budget_under_dense_resonance: bool,
-    depth_evidence: &'static str,
+    low_requested_token_band_under_dense_resonance: bool,
+    resonance_context_evidence: &'static str,
     spectral_context_state: &'static str,
     journal_context_state: &'static str,
     continuity_context_state: &'static str,
     removed_fraction: f32,
-    budget_transition_evidence_v1: DialogueBudgetTransitionEvidenceV1,
-    felt_pressure_profile_v1: DialogueFeltPressureProfileV1,
+    requested_token_transition_evidence_v2: DialogueRequestedTokenTransitionEvidenceV2,
+    felt_pressure_context_v2: DialogueFeltPressureContextV2,
     state: &'static str,
     suffocation_risk: &'static str,
     authority: &'static str,
@@ -515,10 +516,10 @@ impl DialoguePressureTextureInputs {
 }
 
 #[derive(Debug, Clone, Serialize, PartialEq)]
-struct DialogueFeltPressureProfileV1 {
+struct DialogueFeltPressureContextV2 {
     policy: &'static str,
-    categorical_token_profile: &'static str,
-    felt_profile: &'static str,
+    requested_token_band: &'static str,
+    joint_observation_label: &'static str,
     distribution_state: &'static str,
     density_gradient_state: &'static str,
     pressure_load_state: &'static str,
@@ -529,6 +530,7 @@ struct DialogueFeltPressureProfileV1 {
     mode_packing: Option<f32>,
     evidence_basis: Vec<&'static str>,
     pressure_budget_correlation: &'static str,
+    content_complexity_inference: &'static str,
     pre_generation_pressure_prediction: &'static str,
     runtime_budget_changed: bool,
     semantic_trickle_changed: bool,
@@ -536,57 +538,56 @@ struct DialogueFeltPressureProfileV1 {
 }
 
 #[derive(Debug, Clone, Serialize, PartialEq, Eq)]
-struct DialogueBudgetTransitionEvidenceV1 {
+struct DialogueRequestedTokenTransitionEvidenceV2 {
     policy: &'static str,
     num_predict: u32,
-    categorical_profile: &'static str,
-    profile_floor_tokens: u32,
-    next_profile_at_tokens: Option<u32>,
-    tokens_from_profile_floor: u32,
-    tokens_to_next_profile: Option<u32>,
+    requested_token_band: &'static str,
+    band_floor_tokens: u32,
+    next_band_at_tokens: Option<u32>,
+    tokens_from_band_floor: u32,
+    tokens_to_next_band: Option<u32>,
     boundary_proximity: &'static str,
-    organic_depth_inference: &'static str,
+    content_complexity_inference: &'static str,
     runtime_budget_changed: bool,
     authority: &'static str,
 }
 
-fn dialogue_budget_transition_evidence_v1(
+fn dialogue_requested_token_transition_evidence_v2(
     num_predict: u32,
-    budget_profile: &'static str,
-) -> DialogueBudgetTransitionEvidenceV1 {
-    let (profile_floor_tokens, next_profile_at_tokens): (u32, Option<u32>) =
-        match budget_profile {
-        "short" => (0, Some(513)),
-        "medium" => (513, Some(1025)),
+    requested_token_band: &'static str,
+) -> DialogueRequestedTokenTransitionEvidenceV2 {
+    let (band_floor_tokens, next_band_at_tokens): (u32, Option<u32>) =
+        match requested_token_band {
+        "requested_tokens_0_to_512" => (0, Some(513)),
+        "requested_tokens_513_to_1024" => (513, Some(1025)),
         _ => (1025, None),
         };
-    let tokens_from_profile_floor = num_predict.saturating_sub(profile_floor_tokens);
-    let tokens_to_next_profile =
-        next_profile_at_tokens.map(|next| next.saturating_sub(num_predict));
-    let boundary_proximity = if tokens_to_next_profile == Some(1) {
+    let tokens_from_band_floor = num_predict.saturating_sub(band_floor_tokens);
+    let tokens_to_next_band = next_band_at_tokens.map(|next| next.saturating_sub(num_predict));
+    let boundary_proximity = if tokens_to_next_band == Some(1) {
         "last_token_before_transition"
-    } else if profile_floor_tokens > 0 && tokens_from_profile_floor == 0 {
+    } else if band_floor_tokens > 0 && tokens_from_band_floor == 0 {
         "first_token_after_transition"
-    } else if tokens_to_next_profile.is_some_and(|distance| distance <= 16)
-        || (profile_floor_tokens > 0 && tokens_from_profile_floor <= 16)
+    } else if tokens_to_next_band.is_some_and(|distance| distance <= 16)
+        || (band_floor_tokens > 0 && tokens_from_band_floor <= 16)
     {
         "near_transition_boundary"
-    } else if next_profile_at_tokens.is_none() {
-        "open_ended_deep_profile"
+    } else if next_band_at_tokens.is_none() {
+        "open_ended_requested_token_band"
     } else {
-        "profile_interior"
+        "requested_token_band_interior"
     };
 
-    DialogueBudgetTransitionEvidenceV1 {
-        policy: "dialogue_budget_transition_evidence_v1",
+    DialogueRequestedTokenTransitionEvidenceV2 {
+        policy: "dialogue_requested_token_transition_evidence_v2",
         num_predict,
-        categorical_profile: budget_profile,
-        profile_floor_tokens,
-        next_profile_at_tokens,
-        tokens_from_profile_floor,
-        tokens_to_next_profile,
+        requested_token_band,
+        band_floor_tokens,
+        next_band_at_tokens,
+        tokens_from_band_floor,
+        tokens_to_next_band,
         boundary_proximity,
-        organic_depth_inference: "not_inferred_from_categorical_token_profile",
+        content_complexity_inference: "not_inferred_from_requested_token_band",
         runtime_budget_changed: false,
         authority: "read_only_budget_boundary_evidence_not_token_limit_sampler_or_provider_control",
     }
@@ -610,10 +611,10 @@ fn prompt_block_trim_state(
     }
 }
 
-fn dialogue_felt_pressure_profile_v1(
-    budget_profile: &'static str,
+fn dialogue_felt_pressure_context_v2(
+    requested_token_band: &'static str,
     inputs: DialoguePressureTextureInputs,
-) -> DialogueFeltPressureProfileV1 {
+) -> DialogueFeltPressureContextV2 {
     let high_entropy = inputs
         .spectral_entropy
         .is_some_and(|entropy| entropy >= 0.85);
@@ -633,13 +634,23 @@ fn dialogue_felt_pressure_profile_v1(
             .mode_packing
             .is_some_and(|packing| packing >= 0.25);
 
-    let felt_profile = match budget_profile {
-        "short" if pressure_heavy => "heavy_short",
-        "deep" if gentle_gradient => "sparse_deep",
-        "deep" if steep_gradient || dense_resonance => "dense_deep",
-        "medium" if pressure_heavy => "heavy_medium",
-        "deep" if high_entropy => "distributed_deep",
-        _ => budget_profile,
+    let joint_observation_label = match requested_token_band {
+        "requested_tokens_0_to_512" if pressure_heavy => {
+            "pressure_heavy_requested_tokens_0_to_512"
+        }
+        "requested_tokens_1025_plus" if gentle_gradient => {
+            "gentle_gradient_requested_tokens_1025_plus"
+        }
+        "requested_tokens_1025_plus" if steep_gradient || dense_resonance => {
+            "dense_resonance_requested_tokens_1025_plus"
+        }
+        "requested_tokens_513_to_1024" if pressure_heavy => {
+            "pressure_heavy_requested_tokens_513_to_1024"
+        }
+        "requested_tokens_1025_plus" if high_entropy => {
+            "high_entropy_requested_tokens_1025_plus"
+        }
+        _ => requested_token_band,
     };
     let distribution_state = if high_entropy && gentle_gradient {
         "widely_distributed_cascade"
@@ -683,10 +694,10 @@ fn dialogue_felt_pressure_profile_v1(
         evidence_basis.push("mode_packing");
     }
 
-    DialogueFeltPressureProfileV1 {
-        policy: "dialogue_felt_pressure_profile_v1",
-        categorical_token_profile: budget_profile,
-        felt_profile,
+    DialogueFeltPressureContextV2 {
+        policy: "dialogue_felt_pressure_context_v2",
+        requested_token_band,
+        joint_observation_label,
         distribution_state,
         density_gradient_state,
         pressure_load_state,
@@ -697,6 +708,7 @@ fn dialogue_felt_pressure_profile_v1(
         mode_packing: inputs.mode_packing,
         evidence_basis,
         pressure_budget_correlation: "not_established_without_paired_budget_observation",
+        content_complexity_inference: "not_inferred_from_requested_token_band_or_spectral_context",
         pre_generation_pressure_prediction:
             "texture_risk_classification_only_not_causal_pressure_prediction",
         runtime_budget_changed: false,
@@ -705,23 +717,25 @@ fn dialogue_felt_pressure_profile_v1(
     }
 }
 
-fn dialogue_budget_friction_v1(
+fn dialogue_budget_context_v2(
     num_predict: u32,
-    budget_profile: &'static str,
+    requested_token_band: &'static str,
     inputs: DialoguePressureTextureInputs,
     budget_report: Option<&PromptBudgetReport>,
-) -> DialogueBudgetFrictionV1 {
+) -> DialogueBudgetContextV2 {
     let spectral_entropy = inputs.spectral_entropy;
     let resonance_density = inputs.resonance_density;
     let high_entropy = spectral_entropy.is_some_and(|entropy| entropy >= 0.85);
     let spectrally_dense = resonance_density.is_some_and(|density| density >= 0.80);
-    let short_budget_under_dense_resonance = spectrally_dense && budget_profile == "short";
-    let depth_evidence = if short_budget_under_dense_resonance {
-        "dense_resonance_recorded_despite_short_token_budget"
+    let low_requested_token_band = requested_token_band == "requested_tokens_0_to_512";
+    let low_requested_token_band_under_dense_resonance =
+        spectrally_dense && low_requested_token_band;
+    let resonance_context_evidence = if low_requested_token_band_under_dense_resonance {
+        "dense_resonance_observed_with_requested_tokens_0_to_512"
     } else if spectrally_dense {
-        "dense_resonance_recorded_separately_from_token_budget"
+        "dense_resonance_observed_separately_from_requested_token_band"
     } else if resonance_density.is_some() {
-        "resonance_density_recorded_below_dense_threshold"
+        "resonance_density_observed_below_dense_threshold"
     } else {
         "resonance_density_unavailable"
     };
@@ -766,26 +780,27 @@ fn dialogue_budget_friction_v1(
         ("within_budget", "not_observed_in_budget_record")
     };
 
-    DialogueBudgetFrictionV1 {
-        policy: "dialogue_budget_friction_v1",
-        budget_profile,
-        budget_profile_basis: "requested_num_predict_not_generated_output_length",
+    DialogueBudgetContextV2 {
+        policy: "dialogue_budget_context_v2",
+        requested_token_band,
+        requested_token_band_basis:
+            "requested_num_predict_not_generated_output_or_content_complexity",
         spectral_entropy,
         high_entropy,
-        short_budget_under_high_entropy: high_entropy && budget_profile == "short",
+        low_requested_token_band_under_high_entropy: high_entropy && low_requested_token_band,
         resonance_density,
         spectrally_dense,
-        short_budget_under_dense_resonance,
-        depth_evidence,
+        low_requested_token_band_under_dense_resonance,
+        resonance_context_evidence,
         spectral_context_state,
         journal_context_state,
         continuity_context_state,
         removed_fraction,
-        budget_transition_evidence_v1: dialogue_budget_transition_evidence_v1(
+        requested_token_transition_evidence_v2: dialogue_requested_token_transition_evidence_v2(
             num_predict,
-            budget_profile,
+            requested_token_band,
         ),
-        felt_pressure_profile_v1: dialogue_felt_pressure_profile_v1(budget_profile, inputs),
+        felt_pressure_context_v2: dialogue_felt_pressure_context_v2(requested_token_band, inputs),
         state,
         suffocation_risk,
         authority: "diagnostic_prompt_budget_evidence_not_budget_or_model_control",
@@ -794,10 +809,13 @@ fn dialogue_budget_friction_v1(
 
 #[derive(Debug, Clone, Serialize)]
 struct DialoguePromptBudgetDiagnostic {
+    schema: &'static str,
+    schema_version: u8,
     timestamp: String,
     requested_tokens: u32,
     effective_tokens: u32,
-    budget_profile: &'static str,
+    requested_token_band: &'static str,
+    requested_token_band_basis: &'static str,
     fallback_continuity_budget: FallbackContinuityBudget,
     prompt_budget_chars: usize,
     assembly_prompt_budget_chars: usize,
@@ -808,7 +826,7 @@ struct DialoguePromptBudgetDiagnostic {
     overflow_summary: Option<String>,
     overflow_path: Option<String>,
     budget_report: Option<PromptBudgetReport>,
-    budget_friction_v1: DialogueBudgetFrictionV1,
+    budget_context_v2: DialogueBudgetContextV2,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]

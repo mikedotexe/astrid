@@ -19,13 +19,13 @@ fn append_llm_diagnostic_jsonl(file_name: &str, value: &impl Serialize) {
     let _ = writeln!(file, "{line}");
 }
 
-fn dialogue_prompt_budget_profile(num_predict: u32) -> &'static str {
+fn dialogue_requested_token_band(num_predict: u32) -> &'static str {
     if num_predict > 1024 {
-        "deep"
+        "requested_tokens_1025_plus"
     } else if num_predict > 512 {
-        "medium"
+        "requested_tokens_513_to_1024"
     } else {
-        "short"
+        "requested_tokens_0_to_512"
     }
 }
 
@@ -49,6 +49,7 @@ struct ExactKnownModelArtifactOccurrence {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum ExactArtifactReferenceContext {
     QuotedExactKnownToken,
+    GroupedExactKnownToken,
     ExplicitExactKnownTokenRelation,
 }
 
@@ -61,8 +62,8 @@ impl ExactKnownModelArtifactOccurrence {
         let after = text[self.end..]
             .chars()
             .find(|character| !character.is_whitespace());
-        if matching_quote_pair(before, after) {
-            return Some(ExactArtifactReferenceContext::QuotedExactKnownToken);
+        if let Some(context) = exact_reference_delimiter_context(before, after) {
+            return Some(context);
         }
         if self.followed_by_explicit_exact_token_relation(text) {
             return Some(ExactArtifactReferenceContext::ExplicitExactKnownTokenRelation);
@@ -150,15 +151,33 @@ fn fragment_has_non_artifact_content(fragment: &str) -> bool {
     !semantic.trim().is_empty()
 }
 
-fn matching_quote_pair(before: Option<char>, after: Option<char>) -> bool {
-    matches!(
+fn exact_reference_delimiter_context(
+    before: Option<char>,
+    after: Option<char>,
+) -> Option<ExactArtifactReferenceContext> {
+    if matches!(
         (before, after),
         (Some('"'), Some('"'))
             | (Some('\''), Some('\''))
             | (Some('`'), Some('`'))
             | (Some('“'), Some('”'))
             | (Some('‘'), Some('’'))
-    )
+            | (Some('«'), Some('»'))
+            | (Some('‹'), Some('›'))
+            | (Some('„'), Some('“'))
+            | (Some('‚'), Some('‘'))
+            | (Some('「'), Some('」'))
+            | (Some('『'), Some('』'))
+    ) {
+        Some(ExactArtifactReferenceContext::QuotedExactKnownToken)
+    } else if matches!(
+        (before, after),
+        (Some('['), Some(']')) | (Some('('), Some(')')) | (Some('{'), Some('}'))
+    ) {
+        Some(ExactArtifactReferenceContext::GroupedExactKnownToken)
+    } else {
+        None
+    }
 }
 
 fn model_artifact_placement_counts(
@@ -180,7 +199,10 @@ fn model_artifact_placement_counts(
     let after = text[occurrence.end..]
         .chars()
         .find(|ch| !ch.is_whitespace());
-    let quoted_occurrences = usize::from(matching_quote_pair(before, after));
+    let quoted_occurrences = usize::from(
+        exact_reference_delimiter_context(before, after)
+            == Some(ExactArtifactReferenceContext::QuotedExactKnownToken),
+    );
 
     (
         boundary_occurrences,
@@ -237,6 +259,14 @@ pub(crate) fn strip_model_artifacts_with_report(
                         == Some(ExactArtifactReferenceContext::QuotedExactKnownToken)
             })
             .count();
+        let grouped_reference_occurrences = matches
+            .iter()
+            .filter(|artifact_match| {
+                artifact_match.occurrence.token == *token
+                    && artifact_match.reference_context
+                        == Some(ExactArtifactReferenceContext::GroupedExactKnownToken)
+            })
+            .count();
         let explicit_relation_occurrences = matches
             .iter()
             .filter(|artifact_match| {
@@ -248,12 +278,14 @@ pub(crate) fn strip_model_artifacts_with_report(
             })
             .count();
         let preserved_count = quoted_reference_occurrences
+            .saturating_add(grouped_reference_occurrences)
             .saturating_add(explicit_relation_occurrences);
         if preserved_count > 0 {
             preserved_tokens.push(PreservedModelArtifactTokenCount {
                 token: (*token).to_string(),
                 count: preserved_count,
                 quoted_reference_occurrences,
+                grouped_reference_occurrences,
                 explicit_relation_occurrences,
             });
         }
@@ -695,18 +727,21 @@ pub async fn generate_dialogue(
         mlx_profile,
     );
     let fallback_continuity_budget = fallback_continuity_budget_v1(spectral_summary);
-    let budget_profile = dialogue_prompt_budget_profile(num_predict);
-    let budget_friction_v1 = dialogue_budget_friction_v1(
+    let requested_token_band = dialogue_requested_token_band(num_predict);
+    let budget_context_v2 = dialogue_budget_context_v2(
         num_predict,
-        budget_profile,
+        requested_token_band,
         DialoguePressureTextureInputs::from_fallback_budget(&fallback_continuity_budget),
         budget_report.as_ref(),
     );
     let budget_diag = DialoguePromptBudgetDiagnostic {
+        schema: "dialogue_prompt_budget_v2",
+        schema_version: 2,
         timestamp: unix_timestamp_string(),
         requested_tokens: num_predict,
         effective_tokens: effective_num_predict,
-        budget_profile,
+        requested_token_band,
+        requested_token_band_basis: "requested_num_predict_not_generated_output_or_content_complexity",
         fallback_continuity_budget: fallback_continuity_budget.clone(),
         prompt_budget_chars,
         assembly_prompt_budget_chars,
@@ -719,7 +754,7 @@ pub async fn generate_dialogue(
             .as_ref()
             .map(|value| value.path.display().to_string()),
         budget_report,
-        budget_friction_v1,
+        budget_context_v2,
     };
     append_llm_diagnostic_jsonl("dialogue_prompt_budget.jsonl", &budget_diag);
     append_llm_diagnostic_jsonl(

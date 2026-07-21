@@ -20,8 +20,8 @@ mod tests {
         clamp_dialogue_tokens_for_profile, compact_ollama_dialogue_fallback_messages,
         contains_deprecated_runtime_language, count_next_lines,
         dialogue_assembly_prompt_budget_chars_for_profile, dialogue_outer_timeout_secs,
-        dialogue_budget_friction_v1, dialogue_budget_transition_evidence_v1,
-        dialogue_felt_pressure_profile_v1, dialogue_prompt_budget_profile,
+        dialogue_budget_context_v2, dialogue_felt_pressure_context_v2,
+        dialogue_requested_token_band, dialogue_requested_token_transition_evidence_v2,
         dialogue_system_prompt_for_profile,
         dialogue_turn_instruction,
         estimate_dialogue_prompt_pressure_chars, fallback_continuity_budget_v1,
@@ -1651,12 +1651,13 @@ mod tests {
             "dialogue_live",
             MlxProfile::Gemma4Canary,
         );
-        assert_eq!(diagnostic.schema, "model_artifact_cleanup_v7");
+        assert_eq!(diagnostic.schema, "model_artifact_cleanup_v8");
+        assert_eq!(diagnostic.schema_version, 8);
         assert_eq!(diagnostic.label, "dialogue_live");
         assert_eq!(diagnostic.profile, GEMMA4_12B_PROFILE);
         assert_eq!(
             diagnostic.marker_contract,
-            "private_typed_exact_known_model_token_with_quotes_or_following_relation"
+            "private_typed_exact_known_model_token_with_matching_quote_grouping_or_following_relation"
         );
         assert_eq!(
             report.classification_scope,
@@ -1717,6 +1718,7 @@ mod tests {
             .expect("token count");
         assert_eq!(token.count, 1);
         assert_eq!(token.quoted_reference_occurrences, 1);
+        assert_eq!(token.grouped_reference_occurrences, 0);
         assert_eq!(token.explicit_relation_occurrences, 0);
         assert!(report.removed_tokens.is_empty());
 
@@ -1759,7 +1761,66 @@ mod tests {
             .expect("nested quoted token count");
         assert_eq!(token.count, 1);
         assert_eq!(token.quoted_reference_occurrences, 1);
+        assert_eq!(token.grouped_reference_occurrences, 0);
         assert_eq!(token.explicit_relation_occurrences, 0);
+    }
+
+    #[test]
+    fn artifact_cleanup_preserves_exact_tokens_in_declared_group_delimiters() {
+        for text in [
+            "[<end_of_turn>]",
+            "(<end_of_turn>)",
+            "{<end_of_turn>}",
+            "`[<end_of_turn>]`",
+        ] {
+            let (stripped, report) = strip_model_artifacts_with_report(text);
+            assert_eq!(stripped, text);
+            let report = report.expect("group-delimited exact-token report");
+            assert_eq!(report.removed_total, 0);
+            assert_eq!(report.preserved_explicit_reference_total, 1);
+            let token = report
+                .preserved_tokens
+                .iter()
+                .find(|entry| entry.token == "<end_of_turn>")
+                .expect("group-delimited token count");
+            assert_eq!(token.count, 1);
+            assert_eq!(token.quoted_reference_occurrences, 0);
+            assert_eq!(token.grouped_reference_occurrences, 1);
+            assert_eq!(token.explicit_relation_occurrences, 0);
+        }
+    }
+
+    #[test]
+    fn artifact_cleanup_preserves_non_ascii_matching_quote_pairs() {
+        for text in [
+            "«<end_of_turn>»",
+            "‹<end_of_turn>›",
+            "„<end_of_turn>“",
+            "「<end_of_turn>」",
+            "『<end_of_turn>』",
+        ] {
+            let (stripped, report) = strip_model_artifacts_with_report(text);
+            assert_eq!(stripped, text);
+            let report = report.expect("non-ASCII quoted exact-token report");
+            assert_eq!(report.removed_total, 0);
+            assert_eq!(report.preserved_tokens[0].quoted_reference_occurrences, 1);
+            assert_eq!(report.preserved_tokens[0].grouped_reference_occurrences, 0);
+        }
+    }
+
+    #[test]
+    fn artifact_cleanup_does_not_preserve_unclosed_or_mismatched_delimiters() {
+        for text in [
+            "[<end_of_turn>",
+            "(<end_of_turn>]",
+            "«<end_of_turn>”",
+        ] {
+            let (stripped, report) = strip_model_artifacts_with_report(text);
+            assert!(!stripped.contains("<end_of_turn>"));
+            let report = report.expect("mismatched delimiter cleanup report");
+            assert_eq!(report.removed_total, 1);
+            assert_eq!(report.preserved_explicit_reference_total, 0);
+        }
     }
 
     #[test]
@@ -1799,6 +1860,7 @@ mod tests {
             .find(|entry| entry.token == "<channel|>")
             .expect("named reference token count");
         assert_eq!(token.quoted_reference_occurrences, 0);
+        assert_eq!(token.grouped_reference_occurrences, 0);
         assert_eq!(token.explicit_relation_occurrences, 1);
         let diagnostic = model_artifact_cleanup_diagnostic(
             &report,
@@ -1872,6 +1934,7 @@ mod tests {
         assert_eq!(report.removed_total, 0);
         assert_eq!(report.preserved_explicit_reference_total, 1);
         assert_eq!(report.preserved_tokens[0].quoted_reference_occurrences, 1);
+        assert_eq!(report.preserved_tokens[0].grouped_reference_occurrences, 0);
     }
 
     #[test]
@@ -2021,15 +2084,27 @@ mod tests {
     }
 
     #[test]
-    fn dialogue_budget_profile_uses_requested_token_boundaries_not_output_length() {
-        assert_eq!(dialogue_prompt_budget_profile(512), "short");
-        assert_eq!(dialogue_prompt_budget_profile(513), "medium");
-        assert_eq!(dialogue_prompt_budget_profile(1024), "medium");
-        assert_eq!(dialogue_prompt_budget_profile(1025), "deep");
+    fn dialogue_requested_token_band_names_only_requested_token_boundaries() {
+        assert_eq!(
+            dialogue_requested_token_band(512),
+            "requested_tokens_0_to_512"
+        );
+        assert_eq!(
+            dialogue_requested_token_band(513),
+            "requested_tokens_513_to_1024"
+        );
+        assert_eq!(
+            dialogue_requested_token_band(1024),
+            "requested_tokens_513_to_1024"
+        );
+        assert_eq!(
+            dialogue_requested_token_band(1025),
+            "requested_tokens_1025_plus"
+        );
     }
 
     #[test]
-    fn high_entropy_short_budget_distinguishes_continuity_trim_from_grounding_loss() {
+    fn high_entropy_low_requested_token_band_distinguishes_trim_from_grounding_loss() {
         let report = PromptBudgetReport {
             budget: 6_406,
             total_before: 8_947,
@@ -2051,9 +2126,9 @@ mod tests {
                 },
             ],
         };
-        let friction = dialogue_budget_friction_v1(
+        let context = dialogue_budget_context_v2(
             512,
-            "short",
+            "requested_tokens_0_to_512",
             DialoguePressureTextureInputs {
                 spectral_entropy: Some(0.92),
                 resonance_density: Some(0.88),
@@ -2063,27 +2138,31 @@ mod tests {
             },
             Some(&report),
         );
-        assert_eq!(friction.spectral_context_state, "preserved");
-        assert_eq!(friction.journal_context_state, "preserved");
-        assert_eq!(friction.continuity_context_state, "partially_trimmed");
-        assert_eq!(friction.state, "high_entropy_context_partially_trimmed");
+        assert_eq!(context.spectral_context_state, "preserved");
+        assert_eq!(context.journal_context_state, "preserved");
+        assert_eq!(context.continuity_context_state, "partially_trimmed");
+        assert_eq!(context.state, "high_entropy_context_partially_trimmed");
         assert_eq!(
-            friction.suffocation_risk,
+            context.suffocation_risk,
             "continuity_pressure_without_grounding_eviction"
         );
-        assert!(friction.short_budget_under_high_entropy);
-        assert!(friction.short_budget_under_dense_resonance);
+        assert!(context.low_requested_token_band_under_high_entropy);
+        assert!(context.low_requested_token_band_under_dense_resonance);
         assert_eq!(
-            friction.depth_evidence,
-            "dense_resonance_recorded_despite_short_token_budget"
+            context.resonance_context_evidence,
+            "dense_resonance_observed_with_requested_tokens_0_to_512"
         );
         assert_eq!(
-            friction
-                .budget_transition_evidence_v1
+            context
+                .requested_token_transition_evidence_v2
                 .boundary_proximity,
             "last_token_before_transition"
         );
-        assert!(!friction.budget_transition_evidence_v1.runtime_budget_changed);
+        assert!(
+            !context
+                .requested_token_transition_evidence_v2
+                .runtime_budget_changed
+        );
     }
 
     #[test]
@@ -2100,9 +2179,9 @@ mod tests {
                 fully_removed: true,
             }],
         };
-        let friction = dialogue_budget_friction_v1(
+        let context = dialogue_budget_context_v2(
             512,
-            "short",
+            "requested_tokens_0_to_512",
             DialoguePressureTextureInputs {
                 spectral_entropy: Some(0.90),
                 resonance_density: None,
@@ -2112,16 +2191,19 @@ mod tests {
             },
             Some(&report),
         );
-        assert_eq!(friction.state, "high_entropy_grounding_evicted");
-        assert_eq!(friction.suffocation_risk, "observed_grounding_eviction");
-        assert_eq!(friction.depth_evidence, "resonance_density_unavailable");
+        assert_eq!(context.state, "high_entropy_grounding_evicted");
+        assert_eq!(context.suffocation_risk, "observed_grounding_eviction");
+        assert_eq!(
+            context.resonance_context_evidence,
+            "resonance_density_unavailable"
+        );
     }
 
     #[test]
-    fn short_token_budget_does_not_erase_dense_resonance_evidence() {
-        let friction = dialogue_budget_friction_v1(
+    fn low_requested_token_band_does_not_erase_dense_resonance_evidence() {
+        let context = dialogue_budget_context_v2(
             512,
-            "short",
+            "requested_tokens_0_to_512",
             DialoguePressureTextureInputs {
                 spectral_entropy: Some(0.42),
                 resonance_density: Some(0.84),
@@ -2132,20 +2214,20 @@ mod tests {
             None,
         );
 
-        assert!(!friction.high_entropy);
-        assert!(friction.spectrally_dense);
-        assert!(friction.short_budget_under_dense_resonance);
-        assert_eq!(friction.state, "within_budget");
+        assert!(!context.high_entropy);
+        assert!(context.spectrally_dense);
+        assert!(context.low_requested_token_band_under_dense_resonance);
+        assert_eq!(context.state, "within_budget");
         assert_eq!(
-            friction.depth_evidence,
-            "dense_resonance_recorded_despite_short_token_budget"
+            context.resonance_context_evidence,
+            "dense_resonance_observed_with_requested_tokens_0_to_512"
         );
     }
 
     #[test]
-    fn felt_pressure_profile_names_texture_without_retuning_budget_or_trickle() {
-        let sparse_deep = dialogue_felt_pressure_profile_v1(
-            "deep",
+    fn felt_pressure_context_names_joint_observations_without_complexity_inference() {
+        let gentle_high_band = dialogue_felt_pressure_context_v2(
+            "requested_tokens_1025_plus",
             DialoguePressureTextureInputs {
                 spectral_entropy: Some(0.88),
                 resonance_density: Some(0.71),
@@ -2154,24 +2236,31 @@ mod tests {
                 mode_packing: Some(0.29),
             },
         );
-        assert_eq!(sparse_deep.felt_profile, "sparse_deep");
         assert_eq!(
-            sparse_deep.distribution_state,
+            gentle_high_band.joint_observation_label,
+            "gentle_gradient_requested_tokens_1025_plus"
+        );
+        assert_eq!(
+            gentle_high_band.distribution_state,
             "widely_distributed_cascade"
         );
         assert_eq!(
-            sparse_deep.pressure_load_state,
+            gentle_high_band.pressure_load_state,
             "heavy_evidence_present"
         );
         assert_eq!(
-            sparse_deep.pressure_budget_correlation,
+            gentle_high_band.pressure_budget_correlation,
             "not_established_without_paired_budget_observation"
         );
-        assert!(!sparse_deep.runtime_budget_changed);
-        assert!(!sparse_deep.semantic_trickle_changed);
+        assert_eq!(
+            gentle_high_band.content_complexity_inference,
+            "not_inferred_from_requested_token_band_or_spectral_context"
+        );
+        assert!(!gentle_high_band.runtime_budget_changed);
+        assert!(!gentle_high_band.semantic_trickle_changed);
 
-        let heavy_short = dialogue_felt_pressure_profile_v1(
-            "short",
+        let heavy_low_band = dialogue_felt_pressure_context_v2(
+            "requested_tokens_0_to_512",
             DialoguePressureTextureInputs {
                 spectral_entropy: Some(0.88),
                 resonance_density: Some(0.71),
@@ -2180,10 +2269,13 @@ mod tests {
                 mode_packing: Some(0.29),
             },
         );
-        assert_eq!(heavy_short.felt_profile, "heavy_short");
+        assert_eq!(
+            heavy_low_band.joint_observation_label,
+            "pressure_heavy_requested_tokens_0_to_512"
+        );
 
-        let dense_deep = dialogue_felt_pressure_profile_v1(
-            "deep",
+        let dense_high_band = dialogue_felt_pressure_context_v2(
+            "requested_tokens_1025_plus",
             DialoguePressureTextureInputs {
                 spectral_entropy: Some(0.72),
                 resonance_density: Some(0.82),
@@ -2192,34 +2284,93 @@ mod tests {
                 mode_packing: Some(0.18),
             },
         );
-        assert_eq!(dense_deep.felt_profile, "dense_deep");
+        assert_eq!(
+            dense_high_band.joint_observation_label,
+            "dense_resonance_requested_tokens_1025_plus"
+        );
     }
 
     #[test]
-    fn budget_transition_evidence_names_both_sides_of_profile_cliffs_without_retuning() {
-        let short = dialogue_budget_transition_evidence_v1(512, "short");
-        let medium_start = dialogue_budget_transition_evidence_v1(513, "medium");
-        let medium_end = dialogue_budget_transition_evidence_v1(1024, "medium");
-        let deep_start = dialogue_budget_transition_evidence_v1(1025, "deep");
+    fn identical_low_entropy_context_at_512_and_513_does_not_imply_complexity_change() {
+        let inputs = DialoguePressureTextureInputs {
+            spectral_entropy: Some(0.31),
+            resonance_density: Some(0.44),
+            density_gradient: Some(0.24),
+            pressure_risk: Some(0.08),
+            mode_packing: Some(0.12),
+        };
+        let at_512 = dialogue_budget_context_v2(
+            512,
+            dialogue_requested_token_band(512),
+            inputs,
+            None,
+        );
+        let at_513 = dialogue_budget_context_v2(
+            513,
+            dialogue_requested_token_band(513),
+            inputs,
+            None,
+        );
 
-        assert_eq!(short.boundary_proximity, "last_token_before_transition");
-        assert_eq!(short.tokens_to_next_profile, Some(1));
+        assert_ne!(at_512.requested_token_band, at_513.requested_token_band);
+        assert_eq!(at_512.spectral_entropy, at_513.spectral_entropy);
+        assert_eq!(at_512.resonance_density, at_513.resonance_density);
         assert_eq!(
-            medium_start.boundary_proximity,
+            at_512.felt_pressure_context_v2.distribution_state,
+            at_513.felt_pressure_context_v2.distribution_state
+        );
+        assert_eq!(
+            at_512.felt_pressure_context_v2.pressure_load_state,
+            at_513.felt_pressure_context_v2.pressure_load_state
+        );
+        for context in [at_512, at_513] {
+            assert_eq!(
+                context
+                    .felt_pressure_context_v2
+                    .content_complexity_inference,
+                "not_inferred_from_requested_token_band_or_spectral_context"
+            );
+            assert!(!context.felt_pressure_context_v2.runtime_budget_changed);
+        }
+    }
+
+    #[test]
+    fn requested_token_transition_evidence_names_both_sides_without_retuning() {
+        let low_end = dialogue_requested_token_transition_evidence_v2(
+            512,
+            "requested_tokens_0_to_512",
+        );
+        let middle_start = dialogue_requested_token_transition_evidence_v2(
+            513,
+            "requested_tokens_513_to_1024",
+        );
+        let middle_end = dialogue_requested_token_transition_evidence_v2(
+            1024,
+            "requested_tokens_513_to_1024",
+        );
+        let high_start = dialogue_requested_token_transition_evidence_v2(
+            1025,
+            "requested_tokens_1025_plus",
+        );
+
+        assert_eq!(low_end.boundary_proximity, "last_token_before_transition");
+        assert_eq!(low_end.tokens_to_next_band, Some(1));
+        assert_eq!(
+            middle_start.boundary_proximity,
             "first_token_after_transition"
         );
-        assert_eq!(medium_start.tokens_from_profile_floor, 0);
+        assert_eq!(middle_start.tokens_from_band_floor, 0);
         assert_eq!(
-            medium_end.boundary_proximity,
+            middle_end.boundary_proximity,
             "last_token_before_transition"
         );
-        assert_eq!(deep_start.boundary_proximity, "first_token_after_transition");
-        for evidence in [short, medium_start, medium_end, deep_start] {
+        assert_eq!(high_start.boundary_proximity, "first_token_after_transition");
+        for evidence in [low_end, middle_start, middle_end, high_start] {
             assert!(!evidence.runtime_budget_changed);
             assert!(evidence.authority.contains("not_token_limit"));
             assert_eq!(
-                evidence.organic_depth_inference,
-                "not_inferred_from_categorical_token_profile"
+                evidence.content_complexity_inference,
+                "not_inferred_from_requested_token_band"
             );
         }
     }
