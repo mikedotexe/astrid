@@ -403,7 +403,8 @@ def _is_explicit_verification_claim(text: str) -> bool:
 
     lower = text.strip().lower()
     if not re.match(
-        r"^(?:verify|observe|record|preserve|confirm|inspect|test)\b",
+        r"^(?:verify|verified|observe|observed|record|recorded|preserve|preserved|"
+        r"confirm|confirmed|inspect|inspected|test|tested)\b",
         lower,
     ):
         return False
@@ -1223,10 +1224,14 @@ def replay_events(state_dir: Path) -> dict[str, Any]:
                 claim_id = str(claim.get("claim_id") or "")
                 if not claim_id:
                     continue
+                grounded_disposition = str(
+                    claim.get("disposition") or "triaged_pending_action"
+                )
                 claims[claim_id] = {
                     "claim_id": claim_id,
                     "summary": bounded_text(str(claim.get("summary") or ""), limit=500),
-                    "disposition": str(claim.get("disposition") or "triaged_pending_action"),
+                    "disposition": grounded_disposition,
+                    "grounded_disposition": grounded_disposition,
                     "classification": str(claim.get("classification") or "") or None,
                     "authority": str(claim.get("authority") or "") or None,
                     "evidence": [],
@@ -1266,6 +1271,10 @@ def replay_events(state_dir: Path) -> dict[str, Any]:
             )
             for claim in (record.get("claims") or {}).values():
                 if claim.get("disposition") not in TERMINAL_STATUSES:
+                    claim.setdefault(
+                        "grounded_disposition",
+                        str(claim.get("disposition") or "triaged_pending_action"),
+                    )
                     claim["disposition"] = status
                 if rationale:
                     claim["rationale"] = rationale
@@ -1277,6 +1286,22 @@ def replay_events(state_dir: Path) -> dict[str, Any]:
             if not work_item_id:
                 continue
             work_items[work_item_id] = _merge_work_item(work_items.get(work_item_id), item)
+        elif event_type == "work_item_claim_metadata_refreshed":
+            work_item_id = str(event.get("work_item_id") or "")
+            if not work_item_id:
+                continue
+            item = _merge_work_item(
+                work_items.get(work_item_id), {"work_item_id": work_item_id}
+            )
+            for key in (
+                "claim_disposition",
+                "claim_classification",
+                "claim_authority",
+            ):
+                if key in event:
+                    item[key] = event.get(key)
+            item["updated_at"] = event.get("ts")
+            work_items[work_item_id] = item
         elif event_type == "work_status_set":
             work_item_id = str(event.get("work_item_id") or "")
             if not work_item_id:
@@ -2611,7 +2636,10 @@ def work_item_from_claim(artifact: dict[str, Any], claim: dict[str, Any]) -> dic
     introspection_id = str(artifact.get("introspection_id") or "")
     claim_id = str(claim.get("claim_id") or "")
     claim_summary = bounded_text(str(claim.get("summary") or ""), limit=700)
-    claim_disposition = bounded_text(str(claim.get("disposition") or ""), limit=900)
+    claim_disposition = bounded_text(
+        str(claim.get("grounded_disposition") or claim.get("disposition") or ""),
+        limit=900,
+    )
     # Authority follows the concrete claim, never nouns that happen to appear
     # in a source-family label or filename.
     tier = agency_tier_for_claim(claim_summary)
@@ -2690,6 +2718,21 @@ def work_item_created_event(item: dict[str, Any]) -> dict[str, Any]:
         "schema": SCHEMA,
         "work_item_id": item.get("work_item_id"),
         "work_item": item,
+    }
+
+
+def work_item_claim_metadata_event(item: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "event_type": "work_item_claim_metadata_refreshed",
+        "ts": now_s(),
+        "schema": SCHEMA,
+        "work_item_id": item.get("work_item_id"),
+        "claim_disposition": item.get("claim_disposition"),
+        "claim_classification": item.get("claim_classification"),
+        "claim_authority": item.get("claim_authority"),
+        "authority_effect": "none",
+        "grants_approval": False,
+        "live_eligible_now": False,
     }
 
 
@@ -2965,6 +3008,7 @@ def promote_work_items(
     events: list[dict[str, Any]] = []
     skipped: list[dict[str, str]] = []
     created: list[dict[str, Any]] = []
+    refreshed: list[dict[str, Any]] = []
     for artifact in selected:
         claims = artifact.get("claims") if isinstance(artifact.get("claims"), dict) else {}
         if not claims:
@@ -2980,7 +3024,27 @@ def promote_work_items(
                 continue
             item = work_item_from_claim(artifact, claim)
             if item["work_item_id"] in existing:
-                skipped.append({"work_item_id": item["work_item_id"], "reason": "already_exists"})
+                current = existing[item["work_item_id"]]
+                metadata_keys = (
+                    "claim_disposition",
+                    "claim_classification",
+                    "claim_authority",
+                )
+                if any(current.get(key) != item.get(key) for key in metadata_keys):
+                    refreshed.append(
+                        {
+                            "work_item_id": item["work_item_id"],
+                            **{key: item.get(key) for key in metadata_keys},
+                        }
+                    )
+                    events.append(work_item_claim_metadata_event(item))
+                else:
+                    skipped.append(
+                        {
+                            "work_item_id": item["work_item_id"],
+                            "reason": "already_exists",
+                        }
+                    )
                 continue
             created.append(item)
             events.append(work_item_created_event(item))
@@ -2992,8 +3056,10 @@ def promote_work_items(
         "schema": SCHEMA,
         "write": write,
         "created_count": len(created),
+        "refreshed_count": len(refreshed),
         "skipped": skipped,
         "work_items": created,
+        "refreshed_work_items": refreshed,
         "events_appended": len(events) if write else 0,
         "authority_boundary": AUTHORITY_BOUNDARY,
         "agency_boundary": AGENCY_BOUNDARY,
@@ -3862,6 +3928,161 @@ class IntrospectionAddressingAuditTests(unittest.TestCase):
             "docs/steward-notes/test.md",
         )
 
+    def test_promotion_after_report_close_retains_grounded_disposition(self) -> None:
+        import tempfile
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            state = root / "state"
+            summary = root / "summary.txt"
+            claims = root / "claims.json"
+            summary.write_text("read carefully")
+            claims.write_text(
+                json.dumps(
+                    {
+                        "claims": [
+                            {
+                                "claim_id": "c001",
+                                "summary": (
+                                    "Remaining authority budget counts live consequences "
+                                    "rather than semantic energy."
+                                ),
+                                "disposition": (
+                                    "Verify reservation and outcome accounting preserve "
+                                    "consequence semantics."
+                                ),
+                                "classification": "verified_existing",
+                            }
+                        ]
+                    }
+                )
+            )
+            artifact = {
+                "introspection_id": "introspection_authority_temporal_42",
+                "filename": "introspection_authority_temporal_42.txt",
+                "source_family": "authority_temporal",
+                "path": "/tmp/introspection_authority_temporal_42.txt",
+                "sha256": "abc",
+                "candidate_evidence": [],
+                "excerpt": "x",
+            }
+            append_events(
+                state,
+                [
+                    event_inventory_artifact(artifact),
+                    record_read_event(
+                        artifact["introspection_id"], "codex", summary, claims
+                    ),
+                    evidence_event(
+                        artifact["introspection_id"],
+                        "c001",
+                        "test",
+                        "tests/authority_temporal.rs",
+                        "Bounded verification evidence.",
+                    ),
+                    close_event(
+                        artifact["introspection_id"],
+                        "addressed_change",
+                        "Report-level evidence is complete.",
+                    ),
+                ],
+            )
+            replayed = replay_events(state)["artifacts"][artifact["introspection_id"]][
+                "claims"
+            ]["c001"]
+            work_item = work_item_from_claim(artifact, replayed)
+
+        self.assertEqual(replayed["disposition"], "addressed_change")
+        self.assertEqual(
+            replayed["grounded_disposition"],
+            "Verify reservation and outcome accounting preserve consequence semantics.",
+        )
+        self.assertEqual(work_item["claim_disposition"], replayed["grounded_disposition"])
+        self.assertEqual(work_item["agency_tier"], 1)
+        self.assertEqual(work_item["status"], "verified_existing")
+
+    def test_promotion_refreshes_existing_grounded_claim_metadata_only(self) -> None:
+        import tempfile
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            state = root / "state"
+            summary = root / "summary.txt"
+            claims = root / "claims.json"
+            summary.write_text("read carefully")
+            claims.write_text(
+                json.dumps(
+                    {
+                        "claims": [
+                            {
+                                "claim_id": "c001",
+                                "summary": "Verify the current receipt boundary.",
+                                "disposition": "Verify receipt identity from source and tests.",
+                                "classification": "verified_existing",
+                            }
+                        ]
+                    }
+                )
+            )
+            artifact = {
+                "introspection_id": "introspection_sensory_delivery_42",
+                "filename": "introspection_sensory_delivery_42.txt",
+                "source_family": "sensory_delivery",
+                "path": "/tmp/introspection_sensory_delivery_42.txt",
+                "sha256": "abc",
+                "candidate_evidence": [],
+                "excerpt": "x",
+            }
+            stale_item = work_item_from_claim(
+                artifact,
+                {
+                    "claim_id": "c001",
+                    "summary": "Verify the current receipt boundary.",
+                    "disposition": "addressed_change",
+                    "classification": "verified_existing",
+                },
+            )
+            append_events(
+                state,
+                [
+                    event_inventory_artifact(artifact),
+                    record_read_event(
+                        artifact["introspection_id"], "codex", summary, claims
+                    ),
+                    evidence_event(
+                        artifact["introspection_id"],
+                        "c001",
+                        "test",
+                        "tests/sensory_delivery.rs",
+                        "Bounded verification evidence.",
+                    ),
+                    close_event(
+                        artifact["introspection_id"],
+                        "addressed_change",
+                        "Report-level evidence is complete.",
+                    ),
+                    work_item_created_event(stale_item),
+                ],
+            )
+
+            payload = promote_work_items(
+                state,
+                ids=[artifact["introspection_id"]],
+                write=True,
+            )
+            replayed = replay_events(state)["work_items"][stale_item["work_item_id"]]
+
+        self.assertEqual(payload["created_count"], 0)
+        self.assertEqual(payload["refreshed_count"], 1)
+        self.assertEqual(payload["events_appended"], 1)
+        self.assertEqual(
+            replayed["claim_disposition"],
+            "Verify receipt identity from source and tests.",
+        )
+        self.assertEqual(replayed["status"], stale_item["status"])
+        self.assertEqual(replayed["agency_tier"], stale_item["agency_tier"])
+        self.assertFalse(payload["refreshed_work_items"][0].get("grants_approval", False))
+
     def test_claim_classification_routes_status_without_lowering_live_authority(self) -> None:
         artifact = {
             "introspection_id": "introspection_astrid_llm_1",
@@ -3886,6 +4107,21 @@ class IntrospectionAddressingAuditTests(unittest.TestCase):
                 "classification": "verified_existing",
             },
         )
+        verified_past_tense_item = work_item_from_claim(
+            artifact,
+            {
+                "claim_id": "c003",
+                "summary": (
+                    "A low-dimensional glimpse must remain additive rather than "
+                    "replace live semantic transport."
+                ),
+                "disposition": (
+                    "Verified current 12D glimpse is an optional companion; canonical "
+                    "semantic transport is now 48D."
+                ),
+                "classification": "verified_existing",
+            },
+        )
         live_item = work_item_from_claim(
             artifact,
             {
@@ -3900,6 +4136,8 @@ class IntrospectionAddressingAuditTests(unittest.TestCase):
         self.assertEqual(sandbox_item["claim_authority"], "non_live_only")
         self.assertEqual(verified_item["agency_tier"], 1)
         self.assertEqual(verified_item["status"], "verified_existing")
+        self.assertEqual(verified_past_tense_item["agency_tier"], 1)
+        self.assertEqual(verified_past_tense_item["status"], "verified_existing")
         self.assertEqual(live_item["agency_tier"], 5)
         self.assertEqual(live_item["status"], "needs_operator_approval")
 
