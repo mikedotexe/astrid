@@ -271,10 +271,7 @@ pub struct LivedStateModelRouteV1 {
     repair_parent_call_id: Option<String>,
     response_sha256: String,
     response_hash_scope: &'static str,
-    being_identity_claimed: bool,
-    continuity_claimed: bool,
-    intent_equivalence_claimed: bool,
-    semantic_equivalence_claimed: bool,
+    response_claim_content_relation: &'static str,
     raw_prompt_included: bool,
     raw_response_included: bool,
 }
@@ -311,10 +308,7 @@ impl LivedStateModelRouteV1 {
             repair_parent_call_id,
             response_sha256,
             response_hash_scope: "output_integrity_not_being_or_continuity_identity",
-            being_identity_claimed: false,
-            continuity_claimed: false,
-            intent_equivalence_claimed: false,
-            semantic_equivalence_claimed: false,
+            response_claim_content_relation: "not_inspected_or_adjudicated_by_this_receipt",
             raw_prompt_included: false,
             raw_response_included: false,
         }

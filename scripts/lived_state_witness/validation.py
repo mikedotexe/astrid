@@ -413,6 +413,14 @@ def _validate_model_route_identity_boundaries(
         if field in route and route.get(field) is not False:
             errors.append(f"{prefix}.{field}:must_be_false")
 
+    relation_field = "response_claim_content_relation"
+    if relation_field in route and route.get(relation_field) != (
+        "not_inspected_or_adjudicated_by_this_receipt"
+    ):
+        errors.append(f"{prefix}.{relation_field}:invalid")
+    if present_claims and relation_field in route:
+        errors.append(f"{prefix}.response_claim_content:multiple_versions")
+
 
 def _validate_model_route(
     route: Any,
@@ -444,6 +452,7 @@ def _validate_model_route(
             "repair_parent_call_id",
             "response_sha256",
             "response_hash_scope",
+            "response_claim_content_relation",
             "being_identity_claimed",
             "continuity_claimed",
             "intent_equivalence_claimed",

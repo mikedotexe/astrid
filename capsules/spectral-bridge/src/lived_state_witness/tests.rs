@@ -213,6 +213,9 @@ fn model_route_records_hashes_without_prompt_or_response() {
     assert!(encoded.contains("request_content_anchor_sha256"));
     assert!(encoded.contains("model_call_event_not_being_or_continuity_identity"));
     assert!(encoded.contains("output_integrity_not_being_or_continuity_identity"));
+    assert!(encoded.contains("not_inspected_or_adjudicated_by_this_receipt"));
+    assert!(!encoded.contains("being_identity_claimed"));
+    assert!(!encoded.contains("continuity_claimed"));
 }
 
 #[test]
@@ -280,7 +283,7 @@ fn repair_route_preserves_only_hashed_parent_ancestry() {
 }
 
 #[test]
-fn response_changes_do_not_change_the_request_content_anchor_or_claim_continuity() {
+fn response_changes_do_not_change_the_request_anchor_or_classify_response_claims() {
     let first = model_route_v1(
         Some("job_first".to_string()),
         Some("d".repeat(64)),
@@ -310,10 +313,14 @@ fn response_changes_do_not_change_the_request_content_anchor_or_claim_continuity
         encoded[1]["request_content_anchor_sha256"]
     );
     for route in encoded.as_array().expect("route array") {
-        assert_eq!(route["being_identity_claimed"], false);
-        assert_eq!(route["continuity_claimed"], false);
-        assert_eq!(route["intent_equivalence_claimed"], false);
-        assert_eq!(route["semantic_equivalence_claimed"], false);
+        assert_eq!(
+            route["response_claim_content_relation"],
+            "not_inspected_or_adjudicated_by_this_receipt"
+        );
+        assert!(route.get("being_identity_claimed").is_none());
+        assert!(route.get("continuity_claimed").is_none());
+        assert!(route.get("intent_equivalence_claimed").is_none());
+        assert!(route.get("semantic_equivalence_claimed").is_none());
     }
 }
 

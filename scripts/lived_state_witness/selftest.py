@@ -231,20 +231,33 @@ class LivedStateWitnessTests(unittest.TestCase):
             "repair_parent_call_id": None,
             "response_sha256": response_sha256,
             "response_hash_scope": "output_integrity_not_being_or_continuity_identity",
-            "being_identity_claimed": False,
-            "continuity_claimed": False,
-            "intent_equivalence_claimed": False,
-            "semantic_equivalence_claimed": False,
+            "response_claim_content_relation": "not_inspected_or_adjudicated_by_this_receipt",
             "raw_prompt_included": False,
             "raw_response_included": False,
         }
         errors: list[str] = []
         _validate_model_route(route, 0, 25, set(), errors)
         self.assertEqual(errors, [])
-        route["continuity_claimed"] = True
+        route["response_claim_content_relation"] = "response_claims_absent"
         errors = []
         _validate_model_route(route, 0, 25, set(), errors)
-        self.assertIn("model_routes[0].continuity_claimed:must_be_false", errors)
+        self.assertIn(
+            "model_routes[0].response_claim_content_relation:invalid", errors
+        )
+
+        legacy = dict(route)
+        legacy.pop("response_claim_content_relation")
+        legacy.update(
+            {
+                "being_identity_claimed": False,
+                "continuity_claimed": False,
+                "intent_equivalence_claimed": False,
+                "semantic_equivalence_claimed": False,
+            }
+        )
+        errors = []
+        _validate_model_route(legacy, 0, 25, set(), errors)
+        self.assertEqual(errors, [])
 
     def test_valid_sidecar_and_privacy_rejection(self) -> None:
         witness = valid_witness()
