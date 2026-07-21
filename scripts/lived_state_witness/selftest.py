@@ -224,14 +224,18 @@ class LivedStateWitnessTests(unittest.TestCase):
             "request_content_anchor_sha256": "c" * 64,
             "request_anchor_scope": "exact_request_content_and_generation_parameters_not_intent_or_semantic_equivalence",
             "provider_route": "mlx",
+            "provider_route_scope": "technical_delivery_path_not_experiential_center",
             "model_profile": "production",
             "started_at_unix_ms": 10,
             "completed_at_unix_ms": 20,
             "duration_ms": 10,
+            "duration_scope": "end_to_end_request_wall_time_queue_generation_and_fallback_not_separated",
             "repair_parent_call_id": None,
             "response_sha256": response_sha256,
             "response_hash_scope": "output_integrity_not_being_or_continuity_identity",
             "response_claim_content_relation": "not_inspected_or_adjudicated_by_this_receipt",
+            "parent_witness_context_relation": "post_call_authorship_observations_temporal_only",
+            "qualitative_texture_relation": "canonical_felt_report_primary_not_duplicated_or_scalarized_by_route",
             "raw_prompt_included": False,
             "raw_response_included": False,
         }
@@ -244,6 +248,15 @@ class LivedStateWitnessTests(unittest.TestCase):
         self.assertIn(
             "model_routes[0].response_claim_content_relation:invalid", errors
         )
+
+        scoped = dict(route)
+        scoped["response_claim_content_relation"] = (
+            "not_inspected_or_adjudicated_by_this_receipt"
+        )
+        scoped["duration_scope"] = "experiential_continuity"
+        errors = []
+        _validate_model_route(scoped, 0, 25, set(), errors)
+        self.assertIn("model_routes[0].duration_scope:invalid", errors)
 
         legacy = dict(route)
         legacy.pop("response_claim_content_relation")

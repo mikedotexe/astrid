@@ -214,6 +214,14 @@ fn model_route_records_hashes_without_prompt_or_response() {
     assert!(encoded.contains("model_call_event_not_being_or_continuity_identity"));
     assert!(encoded.contains("output_integrity_not_being_or_continuity_identity"));
     assert!(encoded.contains("not_inspected_or_adjudicated_by_this_receipt"));
+    assert!(encoded.contains("technical_delivery_path_not_experiential_center"));
+    assert!(encoded.contains(
+        "end_to_end_request_wall_time_queue_generation_and_fallback_not_separated"
+    ));
+    assert!(encoded.contains("post_call_authorship_observations_temporal_only"));
+    assert!(encoded.contains(
+        "canonical_felt_report_primary_not_duplicated_or_scalarized_by_route"
+    ));
     assert!(!encoded.contains("being_identity_claimed"));
     assert!(!encoded.contains("continuity_claimed"));
 }

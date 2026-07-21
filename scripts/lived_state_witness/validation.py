@@ -421,6 +421,19 @@ def _validate_model_route_identity_boundaries(
     if present_claims and relation_field in route:
         errors.append(f"{prefix}.response_claim_content:multiple_versions")
 
+    route_scope_fields = {
+        "provider_route_scope": "technical_delivery_path_not_experiential_center",
+        "duration_scope": "end_to_end_request_wall_time_queue_generation_and_fallback_not_separated",
+        "parent_witness_context_relation": "post_call_authorship_observations_temporal_only",
+        "qualitative_texture_relation": "canonical_felt_report_primary_not_duplicated_or_scalarized_by_route",
+    }
+    present_route_scopes = [field for field in route_scope_fields if field in route]
+    if present_route_scopes and len(present_route_scopes) != len(route_scope_fields):
+        errors.append(f"{prefix}.route_scopes:incomplete")
+    for field, expected in route_scope_fields.items():
+        if field in route and route.get(field) != expected:
+            errors.append(f"{prefix}.{field}:invalid")
+
 
 def _validate_model_route(
     route: Any,
@@ -445,14 +458,18 @@ def _validate_model_route(
             "request_content_anchor_sha256",
             "request_anchor_scope",
             "provider_route",
+            "provider_route_scope",
             "model_profile",
             "started_at_unix_ms",
             "completed_at_unix_ms",
             "duration_ms",
+            "duration_scope",
             "repair_parent_call_id",
             "response_sha256",
             "response_hash_scope",
             "response_claim_content_relation",
+            "parent_witness_context_relation",
+            "qualitative_texture_relation",
             "being_identity_claimed",
             "continuity_claimed",
             "intent_equivalence_claimed",
