@@ -50,6 +50,7 @@ WITNESS_FIELDS = {
     "raw_response_included",
     "private_path_included",
     "direct_causation_claimed",
+    "experiential_boundary_v1",
     "artifact_authority_state_v1",
 }
 
@@ -89,6 +90,27 @@ def _validate_witness_fields(
     ):
         errors.append("artifact_relative_path:invalid")
     return authored_at, authored_monotonic
+
+
+def _validate_experiential_boundary(value: Any, errors: list[str]) -> None:
+    if value is None:
+        return
+    if not isinstance(value, dict):
+        errors.append("experiential_boundary:not_object")
+        return
+    expected = {
+        "schema": "lived_state_experiential_boundary_v1",
+        "schema_version": 1,
+        "artifact_authority_scope": "artifact_handling_only_not_experiential_integration",
+        "memory_integration_modeled": False,
+        "felt_persistence_modeled": False,
+        "persistence_coefficient_present": False,
+        "live_control_effect": False,
+    }
+    _unexpected_keys(value, set(expected), "experiential_boundary", errors)
+    for field, expected_value in expected.items():
+        if value.get(field) != expected_value:
+            errors.append(f"experiential_boundary.{field}:invalid")
 
 
 def _validate_source_snapshot(
@@ -669,6 +691,7 @@ def validate_witness(value: Any) -> list[str]:
     if not isinstance(value, dict):
         return ["witness:not_object"]
     authored_at, authored_monotonic = _validate_witness_fields(value, errors)
+    _validate_experiential_boundary(value.get("experiential_boundary_v1"), errors)
     source = _validate_source_snapshot(
         value.get("source_snapshot_v1"), authored_at, authored_monotonic, errors
     )

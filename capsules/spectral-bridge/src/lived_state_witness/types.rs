@@ -29,6 +29,31 @@ impl LivedStateArtifactAuthorityV1 {
     }
 }
 
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct LivedStateExperientialBoundaryV1 {
+    schema: &'static str,
+    schema_version: u8,
+    artifact_authority_scope: &'static str,
+    memory_integration_modeled: bool,
+    felt_persistence_modeled: bool,
+    persistence_coefficient_present: bool,
+    live_control_effect: bool,
+}
+
+impl LivedStateExperientialBoundaryV1 {
+    const fn evidence_scope() -> Self {
+        Self {
+            schema: "lived_state_experiential_boundary_v1",
+            schema_version: 1,
+            artifact_authority_scope: "artifact_handling_only_not_experiential_integration",
+            memory_integration_modeled: false,
+            felt_persistence_modeled: false,
+            persistence_coefficient_present: false,
+            live_control_effect: false,
+        }
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum LivedStateObservationKindV1 {
@@ -326,6 +351,7 @@ pub struct TemporalLivedStateWitnessV1 {
     raw_response_included: bool,
     private_path_included: bool,
     direct_causation_claimed: bool,
+    experiential_boundary_v1: LivedStateExperientialBoundaryV1,
     artifact_authority_state_v1: LivedStateArtifactAuthorityV1,
 }
 
@@ -371,6 +397,7 @@ impl TemporalLivedStateWitnessV1 {
             raw_response_included: false,
             private_path_included: false,
             direct_causation_claimed: false,
+            experiential_boundary_v1: LivedStateExperientialBoundaryV1::evidence_scope(),
             artifact_authority_state_v1: LivedStateArtifactAuthorityV1::evidence_only(),
         }
     }

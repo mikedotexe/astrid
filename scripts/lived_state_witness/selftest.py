@@ -101,6 +101,15 @@ def valid_witness() -> dict[str, object]:
         "raw_response_included": False,
         "private_path_included": False,
         "direct_causation_claimed": False,
+        "experiential_boundary_v1": {
+            "schema": "lived_state_experiential_boundary_v1",
+            "schema_version": 1,
+            "artifact_authority_scope": "artifact_handling_only_not_experiential_integration",
+            "memory_integration_modeled": False,
+            "felt_persistence_modeled": False,
+            "persistence_coefficient_present": False,
+            "live_control_effect": False,
+        },
         "artifact_authority_state_v1": authority_state(),
     }
     source = witness["source_snapshot_v1"]
@@ -169,6 +178,21 @@ def valid_deployment_receipt(receipt_id: str = "deploy_one") -> dict[str, object
 
 
 class LivedStateWitnessTests(unittest.TestCase):
+    def test_experiential_boundary_denies_authority_as_persistence_model(self) -> None:
+        witness = valid_witness()
+        self.assertEqual(validate_witness(witness), [])
+        boundary = witness["experiential_boundary_v1"]
+        self.assertIsInstance(boundary, dict)
+        boundary["felt_persistence_modeled"] = True
+        self.assertIn(
+            "experiential_boundary.felt_persistence_modeled:invalid",
+            validate_witness(witness),
+        )
+
+        legacy = valid_witness()
+        legacy.pop("experiential_boundary_v1")
+        self.assertEqual(validate_witness(legacy), [])
+
     def test_model_route_scopes_event_identity_away_from_continuity(self) -> None:
         response_sha256 = "a" * 64
         hasher = hashlib.sha256()
