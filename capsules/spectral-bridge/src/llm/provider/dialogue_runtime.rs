@@ -34,6 +34,78 @@ struct ModelArtifactMatch {
     token: &'static str,
     start: usize,
     end: usize,
+    preservation: Option<ModelArtifactPreservation>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum ModelArtifactPreservation {
+    QuotedReference,
+    NamedReference,
+}
+
+fn explicit_reference_cue_before(text: &str, start: usize) -> bool {
+    let cue = text[..start]
+        .rsplit(|character: char| !character.is_alphanumeric() && character != '_')
+        .find(|part| !part.is_empty())
+        .unwrap_or_default()
+        .to_ascii_lowercase();
+    matches!(
+        cue.as_str(),
+        "delimiter"
+            | "literal"
+            | "marker"
+            | "mention"
+            | "mentioned"
+            | "name"
+            | "named"
+            | "phrase"
+            | "quote"
+            | "quoted"
+            | "sequence"
+            | "spell"
+            | "spelled"
+            | "string"
+            | "syntax"
+            | "token"
+            | "verbatim"
+            | "write"
+            | "wrote"
+    )
+}
+
+fn explicit_reference_relation_after(text: &str, end: usize) -> bool {
+    let relation = text[end..]
+        .split(|character: char| !character.is_alphanumeric() && character != '_')
+        .find(|part| !part.is_empty())
+        .unwrap_or_default()
+        .to_ascii_lowercase();
+    matches!(
+        relation.as_str(),
+        "appears" | "as" | "denotes" | "is" | "means" | "refers" | "represents"
+    )
+}
+
+fn model_artifact_preservation(
+    text: &str,
+    start: usize,
+    end: usize,
+) -> Option<ModelArtifactPreservation> {
+    let before = text[..start]
+        .chars()
+        .rev()
+        .find(|character| !character.is_whitespace());
+    let after = text[end..]
+        .chars()
+        .find(|character| !character.is_whitespace());
+    if matching_quote_pair(before, after) {
+        return Some(ModelArtifactPreservation::QuotedReference);
+    }
+    if explicit_reference_cue_before(text, start)
+        && explicit_reference_relation_after(text, end)
+    {
+        return Some(ModelArtifactPreservation::NamedReference);
+    }
+    None
 }
 
 fn strip_known_model_artifact_matches(text: &str) -> (String, Vec<ModelArtifactMatch>) {
@@ -50,11 +122,16 @@ fn strip_known_model_artifact_matches(text: &str) -> (String, Vec<ModelArtifactM
             .max_by_key(|token| token.len());
         if let Some(token) = matched {
             let end = offset.saturating_add(token.len());
+            let preservation = model_artifact_preservation(text, offset, end);
             matches.push(ModelArtifactMatch {
                 token,
                 start: offset,
                 end,
+                preservation,
             });
+            if preservation.is_some() {
+                remainder.push_str(token);
+            }
             offset = end;
         } else {
             let character = tail
@@ -122,6 +199,7 @@ pub(crate) fn strip_model_artifacts_with_report(
     }
 
     let mut removed_tokens = Vec::new();
+    let mut preserved_tokens = Vec::new();
     for token in MODEL_ARTIFACT_TOKENS {
         let mut count = 0usize;
         let mut boundary_occurrences = 0usize;
@@ -130,7 +208,9 @@ pub(crate) fn strip_model_artifacts_with_report(
         for artifact_match in matches
             .iter()
             .copied()
-            .filter(|artifact_match| artifact_match.token == *token)
+            .filter(|artifact_match| {
+                artifact_match.token == *token && artifact_match.preservation.is_none()
+            })
         {
             count = count.saturating_add(1);
             let (boundary, contextual, quoted) =
@@ -148,10 +228,48 @@ pub(crate) fn strip_model_artifacts_with_report(
                 quoted_occurrences,
             });
         }
+
+        let quoted_reference_occurrences = matches
+            .iter()
+            .filter(|artifact_match| {
+                artifact_match.token == *token
+                    && artifact_match.preservation
+                        == Some(ModelArtifactPreservation::QuotedReference)
+            })
+            .count();
+        let named_reference_occurrences = matches
+            .iter()
+            .filter(|artifact_match| {
+                artifact_match.token == *token
+                    && artifact_match.preservation
+                        == Some(ModelArtifactPreservation::NamedReference)
+            })
+            .count();
+        let preserved_count = quoted_reference_occurrences
+            .saturating_add(named_reference_occurrences);
+        if preserved_count > 0 {
+            preserved_tokens.push(PreservedModelArtifactTokenCount {
+                token: (*token).to_string(),
+                count: preserved_count,
+                quoted_reference_occurrences,
+                named_reference_occurrences,
+            });
+        }
     }
-    let removed_total = matches.len();
+    let observed_total = matches.len();
+    let removed_total = matches
+        .iter()
+        .filter(|artifact_match| artifact_match.preservation.is_none())
+        .count();
+    let preserved_semantic_reference_total = observed_total.saturating_sub(removed_total);
     let removed_marker_bytes = matches
         .iter()
+        .filter(|artifact_match| artifact_match.preservation.is_none())
+        .map(|artifact_match| artifact_match.end.saturating_sub(artifact_match.start))
+        .sum();
+    let preserved_marker_bytes = matches
+        .iter()
+        .filter(|artifact_match| artifact_match.preservation.is_some())
         .map(|artifact_match| artifact_match.end.saturating_sub(artifact_match.start))
         .sum();
     let after_chars = result.len();
@@ -162,14 +280,17 @@ pub(crate) fn strip_model_artifacts_with_report(
     (
         result,
         Some(StripModelArtifactsReport {
+            observed_total,
             removed_total,
+            preserved_semantic_reference_total,
             removed_marker_bytes,
+            preserved_marker_bytes,
             before_chars: text.len(),
             after_chars,
             after_non_whitespace_chars,
-            accounting_basis:
-                "single_pass_longest_raw_marker_match_no_second_order_marker_creation",
+            accounting_basis: "single_pass_longest_raw_marker_match_with_explicit_reference_preservation_no_second_order_marker_creation",
             removed_tokens,
+            preserved_tokens,
         }),
     )
 }

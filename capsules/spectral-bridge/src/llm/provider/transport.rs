@@ -646,12 +646,20 @@ async fn mlx_chat_with_failure_log_mode(
     // checks or end up stored in journals.
     let (stripped_text, strip_report) = strip_model_artifacts_with_report(&raw_text);
     if let Some(report) = strip_report {
-        warn!(
-            removed_total = report.removed_total,
-            before_chars = report.before_chars,
-            after_chars = report.after_chars,
-            "mlx_chat stripped leaked model artifact tokens"
-        );
+        if report.removed_total > 0 {
+            warn!(
+                removed_total = report.removed_total,
+                preserved_semantic_reference_total = report.preserved_semantic_reference_total,
+                before_chars = report.before_chars,
+                after_chars = report.after_chars,
+                "mlx_chat handled model artifact tokens"
+            );
+        } else {
+            debug!(
+                preserved_semantic_reference_total = report.preserved_semantic_reference_total,
+                "mlx_chat preserved explicitly referenced model artifact tokens"
+            );
+        }
         let diagnostic =
             model_artifact_cleanup_diagnostic(&report, &stripped_text, label, profile);
         append_llm_diagnostic_jsonl("model_artifact_cleanup.jsonl", &diagnostic);

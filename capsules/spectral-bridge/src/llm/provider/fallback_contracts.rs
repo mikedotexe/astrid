@@ -182,13 +182,17 @@ const MODEL_ARTIFACT_TOKENS: &[&str] = &[
 
 #[derive(Debug, Clone, Serialize)]
 pub(crate) struct StripModelArtifactsReport {
+    pub observed_total: usize,
     pub removed_total: usize,
+    pub preserved_semantic_reference_total: usize,
     pub removed_marker_bytes: usize,
+    pub preserved_marker_bytes: usize,
     pub before_chars: usize,
     pub after_chars: usize,
     pub after_non_whitespace_chars: usize,
     pub accounting_basis: &'static str,
     pub removed_tokens: Vec<StripModelArtifactTokenCount>,
+    pub preserved_tokens: Vec<PreservedModelArtifactTokenCount>,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -198,6 +202,14 @@ pub(crate) struct StripModelArtifactTokenCount {
     pub boundary_occurrences: usize,
     pub contextual_occurrences: usize,
     pub quoted_occurrences: usize,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub(crate) struct PreservedModelArtifactTokenCount {
+    pub token: String,
+    pub count: usize,
+    pub quoted_reference_occurrences: usize,
+    pub named_reference_occurrences: usize,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -324,6 +336,7 @@ struct ModelArtifactSemanticIntegrityCheckV1 {
     artifact_only_after_cleanup: bool,
     contextual_marker_occurrences: usize,
     quoted_marker_occurrences: usize,
+    preserved_semantic_reference_occurrences: usize,
     removed_marker_bytes: usize,
     removed_fraction_of_raw_output: f64,
     shadow_check_recommended: bool,
@@ -370,6 +383,7 @@ fn model_artifact_semantic_integrity_check_v1(
         .iter()
         .map(|entry| entry.quoted_occurrences)
         .sum();
+    let preserved_semantic_reference_occurrences = report.preserved_semantic_reference_total;
     let removed_marker_bytes = report.removed_marker_bytes;
     let before_bytes = u32::try_from(report.before_chars).unwrap_or(u32::MAX);
     let removed_bytes = u32::try_from(removed_marker_bytes).unwrap_or(u32::MAX);
@@ -380,8 +394,12 @@ fn model_artifact_semantic_integrity_check_v1(
     };
     let high_removal_fraction =
         removed_marker_bytes >= 64 && removed_fraction_of_raw_output >= 0.25;
-    let state = if !semantic_remainder_present {
+    let state = if report.removed_total == 0 && preserved_semantic_reference_occurrences > 0 {
+        "explicit_semantic_reference_preserved"
+    } else if !semantic_remainder_present {
         "review_output_erased"
+    } else if preserved_semantic_reference_occurrences > 0 {
+        "mixed_structural_cleanup_and_reference_preservation"
     } else if contextual_marker_occurrences > 0 {
         "review_contextual_marker_removal"
     } else if high_removal_fraction {
@@ -400,10 +418,20 @@ fn model_artifact_semantic_integrity_check_v1(
         artifact_only_after_cleanup: !semantic_remainder_present,
         contextual_marker_occurrences,
         quoted_marker_occurrences,
+        preserved_semantic_reference_occurrences,
         removed_marker_bytes,
         removed_fraction_of_raw_output,
-        shadow_check_recommended: state != "structural_cleanup_low_risk" || structure_only_review,
-        intent_preservation: "not_established_by_marker_cleanup",
+        shadow_check_recommended: matches!(
+            state,
+            "review_output_erased"
+                | "review_contextual_marker_removal"
+                | "review_high_removal_fraction"
+        ) || structure_only_review,
+        intent_preservation: if preserved_semantic_reference_occurrences > 0 {
+            "explicit_reference_context_preserved_not_semantic_intent_inference"
+        } else {
+            "not_established_by_marker_cleanup"
+        },
         basis:
             "marker_placement_removed_byte_fraction_and_surface_remainder_texture_not_semantic_intent_inference",
         runtime_effect: false,
@@ -420,12 +448,12 @@ fn model_artifact_cleanup_diagnostic<'a>(
     let semantic_integrity_check_v1 =
         model_artifact_semantic_integrity_check_v1(report, &remainder_texture_v1);
     ModelArtifactCleanupDiagnostic {
-        schema: "model_artifact_cleanup_v2",
-        schema_version: 2,
+        schema: "model_artifact_cleanup_v3",
+        schema_version: 3,
         timestamp: unix_timestamp_string(),
         label,
         profile: profile.as_str(),
-        marker_contract: "structural_delimiters_only",
+        marker_contract: "structural_delimiters_with_explicit_reference_preservation",
         common_language_overlap_risk: model_artifact_language_overlap_risk(report),
         remainder_texture_v1,
         semantic_integrity_check_v1,

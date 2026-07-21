@@ -1589,7 +1589,9 @@ mod tests {
         let report = report.expect("cleanup report");
 
         assert_eq!(stripped, "visible");
+        assert_eq!(report.observed_total, 2);
         assert_eq!(report.removed_total, 2);
+        assert_eq!(report.preserved_semantic_reference_total, 0);
         assert_eq!(
             report.removed_marker_bytes,
             "thought <channel|>"
@@ -1602,7 +1604,7 @@ mod tests {
         );
         assert_eq!(
             report.accounting_basis,
-            "single_pass_longest_raw_marker_match_no_second_order_marker_creation"
+            "single_pass_longest_raw_marker_match_with_explicit_reference_preservation_no_second_order_marker_creation"
         );
         let thought = report
             .removed_tokens
@@ -1649,10 +1651,13 @@ mod tests {
             "dialogue_live",
             MlxProfile::Gemma4Canary,
         );
-        assert_eq!(diagnostic.schema, "model_artifact_cleanup_v2");
+        assert_eq!(diagnostic.schema, "model_artifact_cleanup_v3");
         assert_eq!(diagnostic.label, "dialogue_live");
         assert_eq!(diagnostic.profile, GEMMA4_12B_PROFILE);
-        assert_eq!(diagnostic.marker_contract, "structural_delimiters_only");
+        assert_eq!(
+            diagnostic.marker_contract,
+            "structural_delimiters_with_explicit_reference_preservation"
+        );
         assert!(!diagnostic.common_language_overlap_risk);
         assert!(diagnostic.semantic_integrity_check_v1.semantic_remainder_present);
         assert!(
@@ -1683,20 +1688,25 @@ mod tests {
     }
 
     #[test]
-    fn artifact_cleanup_flags_quoted_contextual_marker_for_shadow_review() {
+    fn artifact_cleanup_preserves_quoted_semantic_reference() {
         let text = "I use \"<end_of_turn>\" here as a phrase with semantic intent.";
         let (stripped, report) = strip_model_artifacts_with_report(text);
-        assert_eq!(stripped, "I use \"\" here as a phrase with semantic intent.");
+        assert_eq!(stripped, text);
         let report = report.expect("cleanup report");
+        assert_eq!(report.observed_total, 1);
+        assert_eq!(report.removed_total, 0);
+        assert_eq!(report.preserved_semantic_reference_total, 1);
+        assert_eq!(report.removed_marker_bytes, 0);
+        assert_eq!(report.preserved_marker_bytes, "<end_of_turn>".len());
         let token = report
-            .removed_tokens
+            .preserved_tokens
             .iter()
             .find(|entry| entry.token == "<end_of_turn>")
             .expect("token count");
         assert_eq!(token.count, 1);
-        assert_eq!(token.boundary_occurrences, 0);
-        assert_eq!(token.contextual_occurrences, 1);
-        assert_eq!(token.quoted_occurrences, 1);
+        assert_eq!(token.quoted_reference_occurrences, 1);
+        assert_eq!(token.named_reference_occurrences, 0);
+        assert!(report.removed_tokens.is_empty());
 
         let diagnostic = model_artifact_cleanup_diagnostic(
             &report,
@@ -1706,16 +1716,17 @@ mod tests {
         );
         let integrity = diagnostic.semantic_integrity_check_v1;
         assert_eq!(integrity.policy, "model_artifact_semantic_integrity_check_v1");
-        assert_eq!(integrity.state, "review_contextual_marker_removal");
-        assert_eq!(integrity.contextual_marker_occurrences, 1);
-        assert_eq!(integrity.quoted_marker_occurrences, 1);
+        assert_eq!(integrity.state, "explicit_semantic_reference_preserved");
+        assert_eq!(integrity.contextual_marker_occurrences, 0);
+        assert_eq!(integrity.quoted_marker_occurrences, 0);
+        assert_eq!(integrity.preserved_semantic_reference_occurrences, 1);
         assert!(integrity.semantic_remainder_present);
         assert!(integrity.semantic_remainder_non_whitespace_chars > 0);
         assert!(!integrity.artifact_only_after_cleanup);
-        assert!(integrity.shadow_check_recommended);
+        assert!(!integrity.shadow_check_recommended);
         assert_eq!(
             integrity.intent_preservation,
-            "not_established_by_marker_cleanup"
+            "explicit_reference_context_preserved_not_semantic_intent_inference"
         );
         assert!(!integrity.runtime_effect);
     }
@@ -1724,20 +1735,16 @@ mod tests {
     fn artifact_cleanup_accounts_for_marker_inside_nested_quotes() {
         let text = "She wrote: \u{201c}this is a '<end_of_turn>' nested thought.\u{201d}";
         let (stripped, report) = strip_model_artifacts_with_report(text);
-        assert_eq!(
-            stripped,
-            "She wrote: \u{201c}this is a '' nested thought.\u{201d}"
-        );
+        assert_eq!(stripped, text);
         let report = report.expect("cleanup report");
         let token = report
-            .removed_tokens
+            .preserved_tokens
             .iter()
             .find(|entry| entry.token == "<end_of_turn>")
             .expect("nested quoted token count");
         assert_eq!(token.count, 1);
-        assert_eq!(token.boundary_occurrences, 0);
-        assert_eq!(token.contextual_occurrences, 1);
-        assert_eq!(token.quoted_occurrences, 1);
+        assert_eq!(token.quoted_reference_occurrences, 1);
+        assert_eq!(token.named_reference_occurrences, 0);
     }
 
     #[test]
@@ -1767,11 +1774,17 @@ mod tests {
         let text =
             "I can name <channel|> as structural noise without losing this thin reflection.";
         let (stripped, report) = strip_model_artifacts_with_report(text);
-        assert_eq!(
-            stripped,
-            "I can name  as structural noise without losing this thin reflection."
-        );
+        assert_eq!(stripped, text);
         let report = report.expect("cleanup report");
+        assert_eq!(report.removed_total, 0);
+        assert_eq!(report.preserved_semantic_reference_total, 1);
+        let token = report
+            .preserved_tokens
+            .iter()
+            .find(|entry| entry.token == "<channel|>")
+            .expect("named reference token count");
+        assert_eq!(token.quoted_reference_occurrences, 0);
+        assert_eq!(token.named_reference_occurrences, 1);
         let diagnostic = model_artifact_cleanup_diagnostic(
             &report,
             &stripped,
@@ -1779,11 +1792,32 @@ mod tests {
             MlxProfile::Gemma4Canary,
         );
         let integrity = diagnostic.semantic_integrity_check_v1;
-        assert_eq!(integrity.state, "review_contextual_marker_removal");
+        assert_eq!(integrity.state, "explicit_semantic_reference_preserved");
         assert!(integrity.semantic_remainder_present);
         assert!(integrity.semantic_remainder_non_whitespace_chars > 40);
         assert!(!integrity.artifact_only_after_cleanup);
-        assert!(integrity.shadow_check_recommended);
+        assert!(!integrity.shadow_check_recommended);
+    }
+
+    #[test]
+    fn artifact_cleanup_preserves_longest_overlapping_token_when_named_as_content() {
+        let text =
+            "The literal thought <channel|> is semantically essential in this example.";
+        let (stripped, report) = strip_model_artifacts_with_report(text);
+        assert_eq!(stripped, text);
+        let report = report.expect("cleanup report");
+
+        assert_eq!(report.observed_total, 1);
+        assert_eq!(report.removed_total, 0);
+        assert_eq!(report.preserved_semantic_reference_total, 1);
+        assert!(report.removed_tokens.is_empty());
+        let token = report
+            .preserved_tokens
+            .iter()
+            .find(|entry| entry.token == "thought <channel|>")
+            .expect("longest overlapping token");
+        assert_eq!(token.count, 1);
+        assert_eq!(token.named_reference_occurrences, 1);
     }
 
     #[test]
