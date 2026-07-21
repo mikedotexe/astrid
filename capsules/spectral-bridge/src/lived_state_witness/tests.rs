@@ -203,6 +203,8 @@ fn model_route_records_hashes_without_prompt_or_response() {
         "production",
         10,
         25,
+        Some(4),
+        Some(11),
         None,
         "private response prose",
     );
@@ -214,9 +216,14 @@ fn model_route_records_hashes_without_prompt_or_response() {
     assert!(encoded.contains("model_call_event_not_being_or_continuity_identity"));
     assert!(encoded.contains("output_integrity_not_being_or_continuity_identity"));
     assert!(encoded.contains("not_inspected_or_adjudicated_by_this_receipt"));
+    assert!(encoded.contains("provider_split_observed"));
+    assert!(encoded.contains("request_enqueue_to_worker_selection_not_experiential_wait"));
+    assert!(encoded.contains(
+        "worker_selection_to_response_after_reservoir_checkin_not_cognitive_effort"
+    ));
     assert!(encoded.contains("technical_delivery_path_not_experiential_center"));
     assert!(encoded.contains(
-        "end_to_end_request_wall_time_queue_generation_and_fallback_not_separated"
+        "end_to_end_request_wall_time_with_optional_provider_phase_split_not_experiential_continuity"
     ));
     assert!(encoded.contains("post_call_authorship_observations_temporal_only"));
     assert!(encoded.contains(
@@ -236,6 +243,8 @@ fn model_route_identity_hashes_the_bounded_persisted_profile() {
         &"profile".repeat(80),
         10,
         25,
+        None,
+        None,
         None,
         "private response prose",
     );
@@ -272,6 +281,8 @@ fn repair_route_preserves_only_hashed_parent_ancestry() {
         10,
         20,
         None,
+        None,
+        None,
         "first private response",
     );
     let repair = model_route_v1(
@@ -282,6 +293,8 @@ fn repair_route_preserves_only_hashed_parent_ancestry() {
         "production",
         21,
         30,
+        None,
+        None,
         Some(first.call_id().to_string()),
         "repair private response",
     );
@@ -301,6 +314,8 @@ fn response_changes_do_not_change_the_request_anchor_or_classify_response_claims
         10,
         20,
         None,
+        None,
+        None,
         "same meaning.",
     );
     let punctuation_variant = model_route_v1(
@@ -311,6 +326,8 @@ fn response_changes_do_not_change_the_request_anchor_or_classify_response_claims
         "production",
         21,
         30,
+        None,
+        None,
         None,
         "same meaning!",
     );

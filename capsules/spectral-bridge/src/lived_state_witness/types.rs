@@ -270,6 +270,11 @@ pub struct LivedStateModelRouteV1 {
     completed_at_unix_ms: u64,
     duration_ms: u64,
     duration_scope: &'static str,
+    queue_wait_ms: Option<u64>,
+    queue_wait_scope: &'static str,
+    active_generation_and_reservoir_ms: Option<u64>,
+    active_work_scope: &'static str,
+    timing_completeness: &'static str,
     repair_parent_call_id: Option<String>,
     response_sha256: String,
     response_hash_scope: &'static str,
@@ -292,9 +297,18 @@ impl LivedStateModelRouteV1 {
         started_at_unix_ms: u64,
         completed_at_unix_ms: u64,
         duration_ms: u64,
+        queue_wait_ms: Option<u64>,
+        active_generation_and_reservoir_ms: Option<u64>,
         repair_parent_call_id: Option<String>,
         response_sha256: String,
     ) -> Self {
+        let (queue_wait_ms, active_generation_and_reservoir_ms, timing_completeness) =
+            match (queue_wait_ms, active_generation_and_reservoir_ms) {
+                (Some(queue_wait_ms), Some(active_ms)) => {
+                    (Some(queue_wait_ms), Some(active_ms), "provider_split_observed")
+                },
+                _ => (None, None, "aggregate_only_provider_split_unavailable"),
+            };
         Self {
             schema: "lived_state_model_route_v1",
             schema_version: 1,
@@ -310,7 +324,12 @@ impl LivedStateModelRouteV1 {
             started_at_unix_ms,
             completed_at_unix_ms,
             duration_ms,
-            duration_scope: "end_to_end_request_wall_time_queue_generation_and_fallback_not_separated",
+            duration_scope: "end_to_end_request_wall_time_with_optional_provider_phase_split_not_experiential_continuity",
+            queue_wait_ms,
+            queue_wait_scope: "request_enqueue_to_worker_selection_not_experiential_wait",
+            active_generation_and_reservoir_ms,
+            active_work_scope: "worker_selection_to_response_after_reservoir_checkin_not_cognitive_effort",
+            timing_completeness,
             repair_parent_call_id,
             response_sha256,
             response_hash_scope: "output_integrity_not_being_or_continuity_identity",

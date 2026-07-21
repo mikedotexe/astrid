@@ -423,7 +423,7 @@ def _validate_model_route_identity_boundaries(
 
     route_scope_fields = {
         "provider_route_scope": "technical_delivery_path_not_experiential_center",
-        "duration_scope": "end_to_end_request_wall_time_queue_generation_and_fallback_not_separated",
+        "duration_scope": "end_to_end_request_wall_time_with_optional_provider_phase_split_not_experiential_continuity",
         "parent_witness_context_relation": "post_call_authorship_observations_temporal_only",
         "qualitative_texture_relation": "canonical_felt_report_primary_not_duplicated_or_scalarized_by_route",
     }
@@ -431,8 +431,54 @@ def _validate_model_route_identity_boundaries(
     if present_route_scopes and len(present_route_scopes) != len(route_scope_fields):
         errors.append(f"{prefix}.route_scopes:incomplete")
     for field, expected in route_scope_fields.items():
-        if field in route and route.get(field) != expected:
+        legacy_duration = (
+            field == "duration_scope"
+            and route.get(field)
+            == "end_to_end_request_wall_time_queue_generation_and_fallback_not_separated"
+        )
+        if field in route and route.get(field) != expected and not legacy_duration:
             errors.append(f"{prefix}.{field}:invalid")
+
+    timing_fields = {
+        "queue_wait_ms",
+        "queue_wait_scope",
+        "active_generation_and_reservoir_ms",
+        "active_work_scope",
+        "timing_completeness",
+    }
+    present_timing = timing_fields.intersection(route)
+    if present_timing and len(present_timing) != len(timing_fields):
+        errors.append(f"{prefix}.provider_timing:incomplete")
+        return
+    if not present_timing:
+        return
+    if route.get("queue_wait_scope") != (
+        "request_enqueue_to_worker_selection_not_experiential_wait"
+    ):
+        errors.append(f"{prefix}.queue_wait_scope:invalid")
+    if route.get("active_work_scope") != (
+        "worker_selection_to_response_after_reservoir_checkin_not_cognitive_effort"
+    ):
+        errors.append(f"{prefix}.active_work_scope:invalid")
+    completeness = route.get("timing_completeness")
+    queue_wait = route.get("queue_wait_ms")
+    active_work = route.get("active_generation_and_reservoir_ms")
+    if completeness == "provider_split_observed":
+        for field, value in (
+            ("queue_wait_ms", queue_wait),
+            ("active_generation_and_reservoir_ms", active_work),
+        ):
+            if (
+                not isinstance(value, int)
+                or isinstance(value, bool)
+                or not 0 <= value <= 3_600_000
+            ):
+                errors.append(f"{prefix}.{field}:invalid")
+    elif completeness == "aggregate_only_provider_split_unavailable":
+        if queue_wait is not None or active_work is not None:
+            errors.append(f"{prefix}.provider_timing:unexpected_split")
+    else:
+        errors.append(f"{prefix}.timing_completeness:invalid")
 
 
 def _validate_model_route(
@@ -464,6 +510,11 @@ def _validate_model_route(
             "completed_at_unix_ms",
             "duration_ms",
             "duration_scope",
+            "queue_wait_ms",
+            "queue_wait_scope",
+            "active_generation_and_reservoir_ms",
+            "active_work_scope",
+            "timing_completeness",
             "repair_parent_call_id",
             "response_sha256",
             "response_hash_scope",

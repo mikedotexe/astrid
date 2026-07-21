@@ -15,7 +15,8 @@ mod tests {
         GEMMA4_CANARY_REFLECTIVE_TOKEN_CAP, GEMMA4_CANARY_SYSTEM_PROMPT,
         GEMMA4_CANARY_WITNESS_CONTEXT_PROMPT_CAP, GEMMA4_CANARY_WITNESS_CONTEXT_TIMEOUT_SECS,
         GEMMA4_CANARY_WITNESS_PROMPT_CAP, GEMMA4_CANARY_WITNESS_TIMEOUT_SECS, Message,
-        ModelQosClassV1, MlxProfile, SYSTEM_PROMPT, apply_mlx_request_policy,
+        ModelQosClassV1, ModelQosTimingV1, MlxProfile, MlxResponse, SYSTEM_PROMPT,
+        apply_mlx_request_policy,
         build_ollama_chat_request,
         clamp_dialogue_tokens_for_profile, compact_ollama_dialogue_fallback_messages,
         contains_deprecated_runtime_language, count_next_lines,
@@ -2533,6 +2534,46 @@ mod tests {
 
         let changed = model_qos_v1("witness", &messages, 0.7, 101, 60);
         assert_ne!(first.idempotency_key, changed.idempotency_key);
+    }
+
+    #[test]
+    fn model_qos_timing_is_optional_bounded_and_scope_validated() {
+        let legacy: MlxResponse = serde_json::from_value(serde_json::json!({
+            "choices": [{"message": {"role": "assistant", "content": "legacy"}}]
+        }))
+        .expect("legacy response");
+        assert!(legacy.model_qos_timing_v1.is_none());
+
+        let timed: MlxResponse = serde_json::from_value(serde_json::json!({
+            "choices": [{"message": {"role": "assistant", "content": "timed"}}],
+            "model_qos_timing_v1": {
+                "schema": "model_qos_timing_v1",
+                "schema_version": 1,
+                "queue_wait_ms": 11,
+                "active_generation_and_reservoir_ms": 29,
+                "queue_wait_scope": "request_enqueue_to_worker_selection_not_experiential_wait",
+                "active_work_scope": "worker_selection_to_response_after_reservoir_checkin_not_cognitive_effort"
+            }
+        }))
+        .expect("timed response");
+        assert_eq!(
+            timed
+                .model_qos_timing_v1
+                .and_then(ModelQosTimingV1::validated),
+            Some((11, 29))
+        );
+
+        let tampered = ModelQosTimingV1 {
+            schema: "model_qos_timing_v1".to_string(),
+            schema_version: 1,
+            queue_wait_ms: 11,
+            active_generation_and_reservoir_ms: 29,
+            queue_wait_scope: "experiential_wait".to_string(),
+            active_work_scope:
+                "worker_selection_to_response_after_reservoir_checkin_not_cognitive_effort"
+                    .to_string(),
+        };
+        assert_eq!(tampered.validated(), None);
     }
 
     #[test]

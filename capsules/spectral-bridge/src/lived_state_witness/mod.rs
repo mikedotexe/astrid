@@ -404,6 +404,8 @@ pub(crate) fn model_route_v1(
     model_profile: &str,
     started_at_unix_ms: u64,
     completed_at_unix_ms: u64,
+    queue_wait_ms: Option<u64>,
+    active_generation_and_reservoir_ms: Option<u64>,
     repair_parent_call_id: Option<String>,
     response_text: &str,
 ) -> LivedStateModelRouteV1 {
@@ -435,6 +437,8 @@ pub(crate) fn model_route_v1(
         started_at_unix_ms,
         completed_at_unix_ms,
         completed_at_unix_ms.saturating_sub(started_at_unix_ms),
+        queue_wait_ms,
+        active_generation_and_reservoir_ms,
         repair_parent_call_id,
         response_sha256,
     )

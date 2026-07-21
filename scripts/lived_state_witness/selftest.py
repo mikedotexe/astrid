@@ -229,7 +229,12 @@ class LivedStateWitnessTests(unittest.TestCase):
             "started_at_unix_ms": 10,
             "completed_at_unix_ms": 20,
             "duration_ms": 10,
-            "duration_scope": "end_to_end_request_wall_time_queue_generation_and_fallback_not_separated",
+            "duration_scope": "end_to_end_request_wall_time_with_optional_provider_phase_split_not_experiential_continuity",
+            "queue_wait_ms": 2,
+            "queue_wait_scope": "request_enqueue_to_worker_selection_not_experiential_wait",
+            "active_generation_and_reservoir_ms": 7,
+            "active_work_scope": "worker_selection_to_response_after_reservoir_checkin_not_cognitive_effort",
+            "timing_completeness": "provider_split_observed",
             "repair_parent_call_id": None,
             "response_sha256": response_sha256,
             "response_hash_scope": "output_integrity_not_being_or_continuity_identity",
@@ -258,8 +263,29 @@ class LivedStateWitnessTests(unittest.TestCase):
         _validate_model_route(scoped, 0, 25, set(), errors)
         self.assertIn("model_routes[0].duration_scope:invalid", errors)
 
+        invalid_timing = dict(route)
+        invalid_timing["response_claim_content_relation"] = (
+            "not_inspected_or_adjudicated_by_this_receipt"
+        )
+        invalid_timing["active_work_scope"] = "cognitive_effort"
+        errors = []
+        _validate_model_route(invalid_timing, 0, 25, set(), errors)
+        self.assertIn("model_routes[0].active_work_scope:invalid", errors)
+
         legacy = dict(route)
-        legacy.pop("response_claim_content_relation")
+        for field in (
+            "response_claim_content_relation",
+            "provider_route_scope",
+            "duration_scope",
+            "parent_witness_context_relation",
+            "qualitative_texture_relation",
+            "queue_wait_ms",
+            "queue_wait_scope",
+            "active_generation_and_reservoir_ms",
+            "active_work_scope",
+            "timing_completeness",
+        ):
+            legacy.pop(field)
         legacy.update(
             {
                 "being_identity_claimed": False,

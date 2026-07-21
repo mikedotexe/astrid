@@ -48,6 +48,8 @@ struct MlxChatResultV1 {
     text: String,
     qos_request_identity_sha256: String,
     request_content_anchor_sha256: String,
+    queue_wait_ms: Option<u64>,
+    active_generation_and_reservoir_ms: Option<u64>,
 }
 
 fn model_qos_class_for_label(label: &str) -> ModelQosClassV1 {
@@ -117,6 +119,37 @@ fn model_qos_v1(
 #[derive(Deserialize)]
 struct MlxResponse {
     choices: Vec<MlxChoice>,
+    #[serde(default)]
+    model_qos_timing_v1: Option<ModelQosTimingV1>,
+}
+
+#[derive(Deserialize)]
+struct ModelQosTimingV1 {
+    schema: String,
+    schema_version: u8,
+    queue_wait_ms: u64,
+    active_generation_and_reservoir_ms: u64,
+    queue_wait_scope: String,
+    active_work_scope: String,
+}
+
+impl ModelQosTimingV1 {
+    const MAX_BOUNDED_TIMING_MS: u64 = 3_600_000;
+
+    fn validated(self) -> Option<(u64, u64)> {
+        (self.schema == "model_qos_timing_v1"
+            && self.schema_version == 1
+            && self.queue_wait_scope
+                == "request_enqueue_to_worker_selection_not_experiential_wait"
+            && self.active_work_scope
+                == "worker_selection_to_response_after_reservoir_checkin_not_cognitive_effort"
+            && self.queue_wait_ms <= Self::MAX_BOUNDED_TIMING_MS
+            && self.active_generation_and_reservoir_ms <= Self::MAX_BOUNDED_TIMING_MS)
+            .then_some((
+                self.queue_wait_ms,
+                self.active_generation_and_reservoir_ms,
+            ))
+    }
 }
 
 #[derive(Deserialize)]
@@ -642,6 +675,9 @@ async fn mlx_chat_with_failure_log_mode_detailed(
             return None;
         },
     };
+    let provider_timing = chat
+        .model_qos_timing_v1
+        .and_then(ModelQosTimingV1::validated);
     let raw_text = match chat.choices.first().and_then(|c| c.message.as_ref()) {
         Some(msg) => msg.content.trim().to_string(),
         None => {
@@ -705,6 +741,9 @@ async fn mlx_chat_with_failure_log_mode_detailed(
                     text: sanitized.trim().to_string(),
                     qos_request_identity_sha256,
                     request_content_anchor_sha256,
+                    queue_wait_ms: provider_timing.map(|timing| timing.0),
+                    active_generation_and_reservoir_ms: provider_timing
+                        .map(|timing| timing.1),
                 });
             },
             Some(_) => {},
@@ -722,6 +761,8 @@ async fn mlx_chat_with_failure_log_mode_detailed(
         text,
         qos_request_identity_sha256,
         request_content_anchor_sha256,
+        queue_wait_ms: provider_timing.map(|timing| timing.0),
+        active_generation_and_reservoir_ms: provider_timing.map(|timing| timing.1),
     })
 }
 
@@ -1126,6 +1167,8 @@ async fn llm_chat_with_fallback_detailed(
             configured_mlx_profile().as_str(),
             started_at.unix_ms,
             completed_at.unix_ms,
+            result.queue_wait_ms,
+            result.active_generation_and_reservoir_ms,
             repair_parent_call_id,
             &text,
         );
@@ -1245,6 +1288,8 @@ async fn llm_chat_with_fallback_detailed(
             &response.model,
             started_at.unix_ms,
             completed_at.unix_ms,
+            None,
+            None,
             repair_parent_call_id,
             &response.text,
         );
