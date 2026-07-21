@@ -66,6 +66,38 @@ def family_status_path(workspace: Path) -> Path:
     return workspace / "diagnostics/claim_families_v1/status.json"
 
 
+def lived_state_context_path(workspace: Path) -> Path:
+    return workspace / "diagnostics/lived_state_witness_v1/context_index.jsonl"
+
+
+def lived_state_context_index(workspace: Path) -> dict[str, dict[str, Any]]:
+    path = lived_state_context_path(workspace)
+    result: dict[str, dict[str, Any]] = {}
+    if not path.is_file():
+        return result
+    for raw in path.read_text(encoding="utf-8", errors="replace").splitlines():
+        try:
+            row = json.loads(raw)
+        except json.JSONDecodeError:
+            continue
+        if not isinstance(row, dict):
+            continue
+        introspection_id = str(row.get("introspection_id") or "")
+        witness_id = str(row.get("witness_id") or "")
+        if introspection_id and witness_id:
+            result[introspection_id] = {
+                "witness_id": witness_id,
+                "introspection_id": introspection_id,
+                "alignment": row.get("alignment"),
+                "gap_count": int(row.get("gap_count") or 0),
+                "reconciliation_ref": row.get("reconciliation_ref"),
+                "state_transition_implied": False,
+                "authority_propagated": False,
+                "raw_prose_included": False,
+            }
+    return result
+
+
 def authority_state(state: str) -> dict[str, Any]:
     if state not in {"evidence_only", "approval_pending"}:
         raise ValueError(f"invalid dossier authority state: {state}")
@@ -134,6 +166,12 @@ def initial_dossier_events(workspace: Path) -> list[dict[str, Any]]:
     sandbox = json.loads(sandbox_raw)
     family_status = json.loads(family_raw)
     families = claim_family_index(family_status)
+    lived_contexts = lived_state_context_index(workspace)
+    lived_context_raw = (
+        lived_state_context_path(workspace).read_bytes()
+        if lived_state_context_path(workspace).is_file()
+        else b""
+    )
     trials = sandbox.get("trials")
     if not isinstance(trials, dict):
         raise ValueError("sandbox status trials must be an object")
@@ -181,6 +219,9 @@ def initial_dossier_events(workspace: Path) -> list[dict[str, Any]]:
         {
             "sandbox": hashlib.sha256(sandbox_raw).hexdigest(),
             "families": hashlib.sha256(family_raw).hexdigest(),
+            "lived_state_context": hashlib.sha256(
+                lived_context_raw
+            ).hexdigest(),
         }
     )
     events = []
@@ -197,6 +238,10 @@ def initial_dossier_events(workspace: Path) -> list[dict[str, Any]]:
                 "source_receipt": {
                     "sandbox_status_sha256": hashlib.sha256(sandbox_raw).hexdigest(),
                     "claim_family_status_sha256": hashlib.sha256(family_raw).hexdigest(),
+                    "lived_state_context_sha256": hashlib.sha256(
+                        lived_context_raw
+                    ).hexdigest(),
+                    "combined_source_sha256": source_sha256,
                 },
                 "idempotency_key": (
                     f"experiment_dossier_unrouted:{trial['trial_id']}:"
@@ -212,6 +257,19 @@ def initial_dossier_events(workspace: Path) -> list[dict[str, Any]]:
             for trial in trial_refs
         )
         dossier_id = f"dossier_{digest([family_id, signature])[:20]}"
+        context_refs = {
+            canonical_json(lived_contexts[introspection_id]): lived_contexts[
+                introspection_id
+            ]
+            for trial in trial_refs
+            for introspection_id in [
+                str(trial.get("canonical_claim_id") or "").rsplit(":", 1)[0]
+            ]
+            if introspection_id in lived_contexts
+        }
+        bounded_context_refs = [
+            context_refs[key] for key in sorted(context_refs)[:64]
+        ]
         dossier = {
             "schema": "experiment_dossier_v1",
             "schema_version": 1,
@@ -226,6 +284,9 @@ def initial_dossier_events(workspace: Path) -> list[dict[str, Any]]:
             "result_ref": None,
             "review_ref": None,
             "closure_ref": None,
+            "lived_state_context_refs": bounded_context_refs,
+            "lived_state_context_ref_count": len(context_refs),
+            "lived_state_context_refs_truncated": len(context_refs) > 64,
             "dossier_sufficient": False,
             "candidate_comparison_allowed": False,
             "live_authority_granted": False,
@@ -245,6 +306,10 @@ def initial_dossier_events(workspace: Path) -> list[dict[str, Any]]:
                 "source_receipt": {
                     "sandbox_status_sha256": hashlib.sha256(sandbox_raw).hexdigest(),
                     "claim_family_status_sha256": hashlib.sha256(family_raw).hexdigest(),
+                    "lived_state_context_sha256": hashlib.sha256(
+                        lived_context_raw
+                    ).hexdigest(),
+                    "combined_source_sha256": source_sha256,
                 },
                 "idempotency_key": (
                     f"experiment_dossier:{dossier_id}:{digest(dossier)}"

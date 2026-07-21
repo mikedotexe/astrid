@@ -42,6 +42,7 @@ GRAPH_INPUT_STREAMS = (
     "corridor_v1",
     "corridor_v2",
     "signal_spine",
+    "lived_state_witness",
     "claim_families",
     "felt_contracts",
 )

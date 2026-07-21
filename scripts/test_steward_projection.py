@@ -229,12 +229,42 @@ class StewardProjectionTests(unittest.TestCase):
                 "sandbox",
                 "corridor",
                 "signal_spine",
+                "lived_state_witness",
                 "claim_families",
                 "experiment_dossiers",
                 "authority_temporal",
                 "model_qos",
                 "felt_contracts",
             ],
+        )
+        steps = {step.step_id: step for step in source_first_steps()}
+        self.assertEqual(
+            steps["lived_state_witness"].dependencies,
+            ("signal_spine",),
+        )
+        self.assertEqual(
+            steps["lived_state_witness"].input_streams,
+            ("addressing", "signal_spine"),
+        )
+        self.assertIn(
+            "diagnostics/lived_state_witness_v1/witnesses.jsonl",
+            steps["lived_state_witness"].outputs,
+        )
+        self.assertIn(
+            "diagnostics/lived_state_witness_v1/gaps.jsonl",
+            steps["lived_state_witness"].outputs,
+        )
+        self.assertNotIn(
+            "lived_state_witness",
+            steps["claim_families"].dependencies,
+        )
+        self.assertNotIn(
+            "lived_state_witness",
+            steps["experiment_dossiers"].input_streams,
+        )
+        self.assertIn(
+            "diagnostics/lived_state_witness_v1/context_index.jsonl",
+            steps["experiment_dossiers"].source_globs,
         )
 
     def test_failure_preserves_previous_successful_manifest(self) -> None:

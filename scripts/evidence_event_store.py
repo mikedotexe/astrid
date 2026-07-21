@@ -49,6 +49,7 @@ def projection_paths(workspace: Path) -> dict[str, Path]:
         ("corridor_v1", diagnostics / "agency_corridor_v1"),
         ("corridor_v2", diagnostics / "agency_corridor_v2"),
         ("signal_spine", diagnostics / "signal_spine_v1"),
+        ("lived_state_witness", diagnostics / "lived_state_witness_v1"),
         ("claim_families", diagnostics / "claim_families_v1"),
         ("experiment_dossiers", diagnostics / "experiment_dossiers_v1"),
         ("model_qos", diagnostics / "model_qos_v1"),
@@ -69,6 +70,7 @@ def counter_audits(workspace: Path) -> dict[str, Any]:
         ("corridor_v1", diagnostics / "agency_corridor_v1/status.json"),
         ("corridor_v2", diagnostics / "agency_corridor_v2/status.json"),
         ("signal_spine", diagnostics / "signal_spine_v1/projection_status.json"),
+        ("lived_state_witness", diagnostics / "lived_state_witness_v1/status.json"),
         ("claim_families", diagnostics / "claim_families_v1/status.json"),
         ("experiment_dossiers", diagnostics / "experiment_dossiers_v1/status.json"),
         ("model_qos", diagnostics / "model_qos_v1/status.json"),
@@ -162,6 +164,18 @@ def counter_audits(workspace: Path) -> dict[str, Any]:
             )
             audit["capture_gap_count"] = int(value.get("capture_gap_count") or 0)
             audit["consistent"] = bool(value.get("zero_mismatch"))
+        if name == "lived_state_witness":
+            audit["witness_count"] = int(value.get("witness_count") or 0)
+            audit["gap_count"] = int(value.get("gap_count") or 0)
+            audit["orphan_count"] = int(value.get("orphan_count") or 0)
+            audit["reconciliation_count"] = int(
+                value.get("reconciliation_count") or 0
+            )
+            audit["consistent"] = (
+                bool(value.get("valid"))
+                and (value.get("counter_audit") or {}).get("status")
+                == "consistent"
+            )
         if "consistent" not in audit:
             corrupt = audit.get("corrupt_event_lines")
             live_violations = (

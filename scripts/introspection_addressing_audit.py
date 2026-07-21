@@ -54,7 +54,7 @@ CHANGELOG = ASTRID_REPO / "CHANGELOG.md"
 SCHEMA = "introspection_addressing_v1"
 SCHEMA_VERSION = 1
 TIMESTAMP_RE = re.compile(r"_(\d{10})\.txt$")
-HEADER_RE = re.compile(r"^([A-Za-z][A-Za-z ]+):\s*(.*)$")
+HEADER_RE = re.compile(r"^([A-Za-z][A-Za-z -]+):\s*(.*)$")
 SECTION_NAMES = ("Observed", "Likely Snags", "One Test Each", "Suggested Next")
 TERMINAL_STATUSES = {
     "addressed_change",
@@ -910,7 +910,13 @@ def header_metadata(text: str) -> dict[str, str]:
         match = HEADER_RE.match(line.strip())
         if not match:
             continue
-        key = match.group(1).strip().lower().replace(" ", "_")
+        key = (
+            match.group(1)
+            .strip()
+            .lower()
+            .replace("-", "_")
+            .replace(" ", "_")
+        )
         metadata[key] = match.group(2).strip()
     return metadata
 
@@ -982,8 +988,93 @@ def artifact_record(path: Path, introspections_dir: Path, sources: dict[str, str
         "sections_present": section_presence(text),
         "excerpt": bounded_text(text, limit=700),
     }
+    record["lived_state_witness_id"] = record["header"].get(
+        "lived_state_witness"
+    )
+    record["lived_state_alignment"] = (
+        "pending_projection" if record["lived_state_witness_id"] else None
+    )
+    record["lived_state_gap_count"] = 0
+    record["lived_state_reconciliation_ref"] = None
     record["candidate_evidence"] = candidate_evidence_for(record, sources)
     return record
+
+
+def lived_state_context_index_path(state_dir: Path) -> Path:
+    return state_dir.parent / "lived_state_witness_v1/context_index.jsonl"
+
+
+def overlay_lived_state_context(
+    status: dict[str, Any], state_dir: Path
+) -> dict[str, Any]:
+    if not status:
+        return status
+    artifacts = (
+        status.get("artifacts")
+        if isinstance(status.get("artifacts"), dict)
+        else {}
+    )
+    contexts: dict[str, dict[str, Any]] = {}
+    path = lived_state_context_index_path(state_dir)
+    if path.is_file():
+        for raw in path.read_text(
+            encoding="utf-8", errors="replace"
+        ).splitlines():
+            try:
+                row = json.loads(raw)
+            except json.JSONDecodeError:
+                continue
+            if not isinstance(row, dict):
+                continue
+            introspection_id = str(row.get("introspection_id") or "")
+            if introspection_id:
+                contexts[introspection_id] = row
+    for introspection_id, artifact in artifacts.items():
+        if not isinstance(artifact, dict):
+            continue
+        pointer = str(
+            artifact.get("lived_state_witness_id")
+            or (artifact.get("header") or {}).get("lived_state_witness")
+            or ""
+        )
+        context = contexts.get(str(introspection_id))
+        if not pointer and context:
+            pointer = str(context.get("witness_id") or "")
+        artifact["lived_state_witness_id"] = pointer or None
+        if context:
+            alignment = context.get("alignment")
+            artifact["lived_state_alignment"] = (
+                alignment.get("outcome")
+                if isinstance(alignment, dict)
+                else None
+            )
+            artifact["lived_state_gap_count"] = int(
+                context.get("gap_count") or 0
+            )
+            artifact["lived_state_reconciliation_ref"] = context.get(
+                "reconciliation_ref"
+            )
+        elif pointer:
+            artifact["lived_state_alignment"] = "pending_projection"
+            artifact["lived_state_gap_count"] = 0
+            artifact["lived_state_reconciliation_ref"] = None
+    status["lived_state_context_overlay"] = {
+        "schema": "addressing_lived_state_context_overlay_v1",
+        "context_count": len(contexts),
+        "source_path": (
+            path.relative_to(state_dir.parent.parent).as_posix()
+            if path.is_file()
+            else None
+        ),
+        "changes_queue_order": False,
+        "propagates_closure": False,
+        "propagates_authority": False,
+        "raw_prose_included": False,
+    }
+    if artifacts:
+        status["next_queue"] = queue_items(status, limit=20)
+        status["report"] = report_from_status(status)
+    return status
 
 
 def inventory_records(
@@ -1481,6 +1572,14 @@ def queue_items(status: dict[str, Any], *, limit: int | None = None) -> list[dic
             "fully_addressed": bool(row.get("fully_addressed")),
             "path": row.get("path"),
             "excerpt": row.get("excerpt"),
+            "lived_state_witness_id": row.get("lived_state_witness_id"),
+            "lived_state_alignment": row.get("lived_state_alignment"),
+            "lived_state_gap_count": int(
+                row.get("lived_state_gap_count") or 0
+            ),
+            "lived_state_reconciliation_ref": row.get(
+                "lived_state_reconciliation_ref"
+            ),
         }
         for row in rows
     ]
@@ -1878,7 +1977,7 @@ def write_materialized_status(state_dir: Path, status: dict[str, Any]) -> None:
 
 
 def build_report(state_dir: Path = DEFAULT_STATE_DIR) -> dict[str, Any]:
-    status = load_status(state_dir)
+    status = overlay_lived_state_context(load_status(state_dir), state_dir)
     if not status:
         return report_from_status({})
     report = status.get("report") if isinstance(status.get("report"), dict) else {}
@@ -3236,10 +3335,10 @@ def render_work_queue_markdown(status: dict[str, Any], *, limit: int = 20) -> st
 def load_or_replay_status(state_dir: Path) -> dict[str, Any]:
     status = load_status(state_dir)
     if status:
-        return status
+        return overlay_lived_state_context(status, state_dir)
     events, _ = read_events(state_dir)
     if events:
-        return replay_events(state_dir)
+        return overlay_lived_state_context(replay_events(state_dir), state_dir)
     return {}
 
 
@@ -3265,6 +3364,20 @@ def introspection_artifact_or_error(
 
 
 class IntrospectionAddressingAuditTests(unittest.TestCase):
+    def test_lived_state_header_is_additive_and_body_compatible(self) -> None:
+        body = "Observed:\n- exact body\n\nSuggested Next:\n- continue\n"
+        text = (
+            "=== ASTRID INTROSPECTION ===\n"
+            "Timestamp: 1234567890\n"
+            f"Lived-state witness: lsw_{'a' * 64}\n"
+            "Fill: 68.0%\n\n"
+            f"{body}"
+        )
+        metadata = header_metadata(text)
+        self.assertEqual(metadata["lived_state_witness"], f"lsw_{'a' * 64}")
+        self.assertEqual(text.split("\n\n", 1)[1], body)
+        self.assertTrue(section_presence(text)["observed"])
+
     def test_no_response_is_neutral_review_expiry_not_waiver(self) -> None:
         receipts = work_item_lifecycle_receipts_v2(
             {

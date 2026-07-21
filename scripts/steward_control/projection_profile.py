@@ -110,6 +110,36 @@ def source_first_steps() -> tuple[ProjectionStep, ...]:
             ),
         ),
         ProjectionStep(
+            "lived_state_witness",
+            ("signal_spine",),
+            (
+                command(
+                    python,
+                    "scripts/lived_state_witness.py",
+                    "--workspace",
+                    "{workspace}",
+                    "project",
+                    "--write",
+                    "--receipt-json",
+                ),
+            ),
+            ("addressing", "signal_spine"),
+            (
+                "introspections/introspection_*.txt",
+                "introspections/lived_state_witnesses/**/*.json",
+                "environment_receipts/environment_receipts.jsonl",
+                "../../../../neural-triple-reservoir/workspace/model_qos_receipts.jsonl",
+            ),
+            (
+                "diagnostics/lived_state_witness_v1/status.json",
+                "diagnostics/lived_state_witness_v1/witnesses.jsonl",
+                "diagnostics/lived_state_witness_v1/gaps.jsonl",
+                "diagnostics/lived_state_witness_v1/context_index.jsonl",
+                "diagnostics/lived_state_witness_v1/report.md",
+                "diagnostics/lived_state_witness_v1/migration_receipt.json",
+            ),
+        ),
+        ProjectionStep(
             "claim_families",
             ("addressing", "signal_spine"),
             (
@@ -152,6 +182,7 @@ def source_first_steps() -> tuple[ProjectionStep, ...]:
             (
                 "diagnostics/sandbox_trial_queue_v1/status.json",
                 "diagnostics/claim_families_v1/status.json",
+                "diagnostics/lived_state_witness_v1/context_index.jsonl",
             ),
             (
                 "diagnostics/experiment_dossiers_v1/status.json",
@@ -204,6 +235,7 @@ def source_first_steps() -> tuple[ProjectionStep, ...]:
                 "experiment_dossiers",
                 "corridor",
                 "signal_spine",
+                "lived_state_witness",
                 "authority_temporal",
                 "model_qos",
             ),
@@ -227,6 +259,7 @@ def source_first_steps() -> tuple[ProjectionStep, ...]:
                 "corridor_v1",
                 "corridor_v2",
                 "signal_spine",
+                "lived_state_witness",
                 "claim_families",
                 "authority_lifecycle",
                 "model_qos",

@@ -103,6 +103,7 @@ def _aggregate_for_payload(payload: dict[str, Any]) -> dict[str, str]:
         ("proposal", "proposal_id"),
         ("artifact", "artifact_id"),
         ("causal_signal_journey", "journey_id"),
+        ("temporal_lived_state_witness", "witness_id"),
         ("claim_family", "family_id"),
         ("experiment_dossier", "dossier_id"),
     )

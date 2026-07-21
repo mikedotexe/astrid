@@ -38,6 +38,7 @@ SOURCE_STREAMS = (
     "corridor_v1",
     "corridor_v2",
     "signal_spine",
+    "lived_state_witness",
     "claim_families",
 )
 _TIMESTAMP_RE = re.compile(r"_(\d{9,})$")
@@ -433,7 +434,14 @@ def _edge_record(
         relation=relation,
         source_event_id=source.event_id,
         occurred_at=occurred_at,
-        causal_parent=relation != "related_to",
+        causal_parent=relation
+        not in {
+            "related_to",
+            "context_exactly_observed_by",
+            "context_temporally_associated_with",
+            "context_witness_gap_for",
+            "context_unresolved_for",
+        },
     ).to_dict()
 
 

@@ -10,7 +10,9 @@ import tempfile
 import unittest
 
 from evidence_store import EvidenceEventStore
+from evidence_store.model import ProvenanceSourceV1
 from felt_contract_graph import generate
+from lived_state_witness.model import authority_state
 from felt_contracts.sources import (
     claim_family_semantic_sha256,
     graph_state_dir,
@@ -127,6 +129,104 @@ class FeltContractIncrementalTests(unittest.TestCase):
             stat.S_IMODE(index.path.stat().st_mode),
             0o600,
         )
+
+    def test_lived_witness_edges_label_exact_and_temporal_without_propagation(
+        self,
+    ) -> None:
+        store = EvidenceEventStore(store_root(self.workspace))
+        full_read = {
+            "event_type": "full_read",
+            "introspection_id": "introspection_astrid_100",
+            "summary_sha256": hashlib.sha256(b"summary").hexdigest(),
+            "idempotency_key": "full_read_fixture",
+            "artifact_authority_state_v1": authority_state(),
+        }
+        exact = {
+            "event_type": "temporal_lived_state_witness_recorded",
+            "witness_id": "lsw_" + "a" * 64,
+            "introspection_id": "introspection_astrid_100",
+            "alignment": {
+                "outcome": "same_deployment",
+                "exact_identity_match": True,
+            },
+            "idempotency_key": "exact_witness_fixture",
+            "artifact_authority_state_v1": authority_state(),
+        }
+        temporal = {
+            "event_type": "historical_lived_state_witness_migrated",
+            "witness_id": "lsw_" + "b" * 64,
+            "introspection_id": "introspection_astrid_100",
+            "alignment": {
+                "outcome": "temporal_association_only",
+                "exact_identity_match": False,
+            },
+            "idempotency_key": "temporal_witness_fixture",
+            "artifact_authority_state_v1": authority_state(),
+        }
+        gap = {
+            "event_type": "lived_state_witness_gap_detected",
+            "witness_id": "lsw_" + "c" * 64,
+            "introspection_id": "introspection_astrid_100",
+            "idempotency_key": "gap_witness_fixture",
+            "artifact_authority_state_v1": authority_state(),
+        }
+        store.append_payloads(
+            "addressing",
+            [full_read],
+            actor="test",
+            source=ProvenanceSourceV1("test", "full_read"),
+            idempotency_keys=["full_read_fixture"],
+        )
+        store.append_payloads(
+            "lived_state_witness",
+            [exact, temporal, gap],
+            actor="test",
+            source=ProvenanceSourceV1("test", "witness"),
+            idempotency_keys=[
+                "exact_witness_fixture",
+                "temporal_witness_fixture",
+                "gap_witness_fixture",
+            ],
+        )
+        generate(self.workspace, write=True, actor="test")
+        projection = FeltContractStateIndex(
+            graph_state_dir(self.workspace)
+        ).load_projection()
+        self.assertIsNotNone(projection)
+        assert projection is not None
+        witness_nodes = [
+            node
+            for node in projection["nodes"].values()
+            if node.get("kind") == "lived_state_witness"
+        ]
+        self.assertEqual(len(witness_nodes), 3)
+        for node in witness_nodes:
+            metadata = node["metadata"]
+            self.assertFalse(metadata["closure_propagated"])
+            self.assertFalse(metadata["evidence_sufficiency_propagated"])
+            self.assertFalse(metadata["authority_propagated"])
+            self.assertFalse(metadata["felt_resolution_propagated"])
+        relations = {
+            edge["relation"]: edge
+            for edge in projection["edges"].values()
+            if edge["relation"].startswith("context_")
+        }
+        self.assertIn("context_exactly_observed_by", relations)
+        self.assertIn("context_temporally_associated_with", relations)
+        self.assertIn("context_witness_gap_for", relations)
+        self.assertFalse(
+            relations["context_exactly_observed_by"]["causal_parent"]
+        )
+        self.assertFalse(
+            relations["context_temporally_associated_with"][
+                "causal_parent"
+            ]
+        )
+        self.assertFalse(relations["context_witness_gap_for"]["causal_parent"])
+        gap_node = next(
+            node for node in witness_nodes if node["metadata"]["witness_gap"]
+        )
+        self.assertFalse(gap_node["metadata"]["temporal_association_only"])
 
     def test_one_new_claim_is_bounded_and_does_not_move_prior_membership(self) -> None:
         generate(self.workspace, write=True, actor="test")

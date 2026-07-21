@@ -1,0 +1,306 @@
+"""Focused tests for temporal lived-state witness validation and migration."""
+
+from __future__ import annotations
+
+import hashlib
+import json
+from pathlib import Path
+import tempfile
+import unittest
+
+from .model import (
+    authority_state,
+    validate_witness,
+)
+from .projector import _alignment, _exact_deployment_match, _review_outcome
+from .records import parse_source_ref
+
+
+def provenance_ref(origin: str = "bridge_derived") -> dict[str, object]:
+    descriptor = {
+        "minime_observation": "producer_telemetry_shape",
+        "bridge_derived": "bridge_evidence_shape",
+        "astrid_interpretation": "astrid_interpretive_context_shape",
+        "mixed": "composed_witness_shape",
+        "unknown": "unknown_context_shape",
+    }[origin]
+    return {
+        "origin": origin,
+        "source_id": "fixture",
+        "canonical_sha256": "9" * 64,
+        "parent_ids": [],
+        "timestamp_ms": 123456788000,
+        "field_paths": ["fixture.value"],
+        "context_anchor_v1": {
+            "descriptor": descriptor,
+            "structural_signature_sha256": "8" * 64,
+            "influence_types": ["temporal"],
+            "private_payload_included": False,
+        },
+    }
+
+
+def valid_witness() -> dict[str, object]:
+    witness: dict[str, object] = {
+        "schema": "temporal_lived_state_witness_v1",
+        "schema_version": 1,
+        "witness_id": "",
+        "artifact_kind": "introspection",
+        "artifact_relative_path": "introspection_test_123456789.txt",
+        "artifact_sha256": "b" * 64,
+        "authored_at_unix_ms": 123456789000,
+        "authored_monotonic_ns": 10,
+        "source_snapshot_v1": {
+            "schema": "lived_state_source_snapshot_v1",
+            "schema_version": 1,
+            "source_owner": "astrid",
+            "repository_relative_path": "capsules/spectral-bridge/src/lib.rs",
+            "window_start_line": 0,
+            "window_end_line": 10,
+            "total_file_lines": 20,
+            "file_sha256": "c" * 64,
+            "window_sha256": "d" * 64,
+            "source_read_at_unix_ms": 123456788000,
+            "source_read_monotonic_ns": 1,
+            "provenance_ref_v1": provenance_ref("astrid_interpretation"),
+            "private_path_included": False,
+        },
+        "observed_process_v1": {
+            "schema": "lived_state_process_identity_v1",
+            "schema_version": 1,
+            "pid": 41,
+            "process_started_at_unix_ms": 123456000000,
+            "executable_basename": "spectral-bridge-server",
+            "runtime_instance_id": "runtime_test",
+            "process_identity_sha256": "",
+            "private_path_included": False,
+        },
+        "startup_build_candidate_v1": {
+            "schema": "lived_state_build_candidate_v1",
+            "schema_version": 1,
+            "manifest_sha256": "f" * 64,
+            "source_identity_sha256": "1" * 64,
+            "dirty_state_sha256": "2" * 64,
+            "artifact_sha256": "3" * 64,
+            "protocol_revision": "revision",
+            "protocol_version": "1.1",
+            "observed_at_process_start_unix_ms": 123456000000,
+            "relation_to_process": "startup_observation_not_deployment_proof",
+            "deployment_established": False,
+            "private_path_included": False,
+        },
+        "model_routes_v1": [],
+        "parameter_observations_v1": [],
+        "peer_process_identity": None,
+        "peer_deployment_identity": None,
+        "source_provenance_ref_v1": None,
+        "process_provenance_ref_v1": provenance_ref(),
+        "raw_introspection_prose_included": False,
+        "raw_prompt_included": False,
+        "raw_response_included": False,
+        "private_path_included": False,
+        "direct_causation_claimed": False,
+        "artifact_authority_state_v1": authority_state(),
+    }
+    source = witness["source_snapshot_v1"]
+    assert isinstance(source, dict)
+    source_provenance = source["provenance_ref_v1"]
+    assert isinstance(source_provenance, dict)
+    source_provenance["canonical_sha256"] = source["window_sha256"]
+    witness["source_provenance_ref_v1"] = dict(source_provenance)
+    process = witness["observed_process_v1"]
+    assert isinstance(process, dict)
+    process["process_identity_sha256"] = hashlib.sha256(
+        (
+            f"{process['pid']}\0{process['process_started_at_unix_ms']}\0"
+            f"{process['executable_basename']}\0{process['runtime_instance_id']}"
+        ).encode()
+    ).hexdigest()
+    process_provenance = witness["process_provenance_ref_v1"]
+    assert isinstance(process_provenance, dict)
+    process_provenance["canonical_sha256"] = process["process_identity_sha256"]
+    witness_hasher = hashlib.sha256()
+    witness_hasher.update(b"astrid-temporal-lived-state-witness-v1\0")
+    witness_hasher.update(str(process["runtime_instance_id"]).encode())
+    witness_hasher.update(int(witness["authored_at_unix_ms"]).to_bytes(8, "little"))
+    witness_hasher.update(int(witness["authored_monotonic_ns"]).to_bytes(8, "little"))
+    witness_hasher.update(str(witness["artifact_kind"]).encode())
+    witness_hasher.update(str(source["window_sha256"]).encode())
+    witness["witness_id"] = f"lsw_{witness_hasher.hexdigest()}"
+    return witness
+
+
+def valid_deployment_receipt(receipt_id: str = "deploy_one") -> dict[str, object]:
+    return {
+        "schema": "stack_environment_receipt_v2",
+        "schema_version": 2,
+        "id": receipt_id,
+        "t_ms": 123456700000,
+        "component": "spectral-bridge",
+        "deployment": {"status": "passed"},
+        "compatibility_status": {"compatible": True},
+        "artifact_authority_state_v1": {
+            "schema": "artifact_authority_state_v1",
+            "schema_version": 1,
+            "state": "evidence_only",
+            "witness_only": True,
+        },
+        "live_eligible_now": False,
+        "auto_approved": False,
+        "grants_approval": False,
+        "edits_source_now": False,
+        "repositories": {
+            "astrid": {"source_identity_sha256": "1" * 64}
+        },
+        "artifacts": {
+            "binaries": {
+                "spectral-bridge": {"exists": True, "sha256": "3" * 64}
+            }
+        },
+        "processes": {
+            "new": {
+                "pid": 41,
+                "running": True,
+                "started_at": "Thu Nov 29 13:20:00 1973",
+            }
+        },
+    }
+
+
+class LivedStateWitnessTests(unittest.TestCase):
+    def test_valid_sidecar_and_privacy_rejection(self) -> None:
+        witness = valid_witness()
+        self.assertEqual(validate_witness(witness), [])
+        witness["peer_process_identity"] = "/private/process"
+        self.assertIn("private_absolute_path", " ".join(validate_witness(witness)))
+
+    def test_untrusted_extra_prose_field_is_rejected(self) -> None:
+        witness = valid_witness()
+        witness["response_text"] = "untrusted prose"
+        self.assertIn(
+            "witness.response_text:unexpected_field",
+            validate_witness(witness),
+        )
+
+    def test_hash_and_time_tampering_is_rejected_without_throwing(self) -> None:
+        mutations = (
+            (
+                "process hash",
+                lambda row: row["observed_process_v1"].__setitem__("pid", 42),
+                "observed_process.process_identity_sha256:mismatch",
+            ),
+            (
+                "witness hash",
+                lambda row: row.__setitem__("witness_id", "lsw_" + "0" * 64),
+                "witness_id:mismatch",
+            ),
+            (
+                "negative time",
+                lambda row: row.__setitem__("authored_at_unix_ms", -1),
+                "authored_at_unix_ms:invalid_integer",
+            ),
+            (
+                "hidden authority",
+                lambda row: row["artifact_authority_state_v1"].__setitem__(
+                    "authority_granted", True
+                ),
+                "authority:not_evidence_only",
+            ),
+        )
+        for name, mutate, expected in mutations:
+            with self.subTest(name=name):
+                witness = valid_witness()
+                mutate(witness)
+                self.assertIn(expected, validate_witness(witness))
+
+    def test_build_candidate_cannot_establish_deployment_without_exact_receipt(self) -> None:
+        witness = valid_witness()
+        receipt = valid_deployment_receipt()
+        self.assertTrue(_exact_deployment_match(witness, receipt))
+        receipt["deployment"]["status"] = "failed"
+        # Failed receipts are filtered before matching; an absent successful
+        # receipt therefore remains deployment_unknown.
+        alignment = _alignment(witness, 123456789000, [], historical=False)
+        self.assertEqual(alignment["outcome"], "deployment_unknown")
+
+    def test_historical_alignment_is_only_temporal(self) -> None:
+        receipt = {
+            "id": "deploy_one",
+            "t_ms": 100,
+        }
+        alignment = _alignment(None, 200, [receipt], historical=True)
+        self.assertEqual(alignment["outcome"], "temporal_association_only")
+        self.assertFalse(alignment["exact_identity_match"])
+
+    def test_historical_source_paths_are_redacted(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            source = root / "src/lib.rs"
+            result = parse_source_ref(
+                f"astrid:lib ({source})", {"astrid": root}
+            )
+            self.assertEqual(result["repository_relative_path"], "src/lib.rs")
+            self.assertNotIn(str(root), json.dumps(result))
+
+    def test_reconciliation_outcomes_do_not_promote_build_candidates(self) -> None:
+        witness = valid_witness()
+        event = {
+            "witness": witness,
+            "alignment": {
+                "deployment_receipt_id": "deploy_original",
+                "exact_identity_match": True,
+            },
+        }
+        latest = valid_deployment_receipt("deploy_original")
+        self.assertEqual(
+            _review_outcome(event, latest, None), "same_deployment"
+        )
+        event["alignment"] = {}
+        self.assertEqual(
+            _review_outcome(event, latest, None), "same_deployment"
+        )
+        event["alignment"] = {
+            "deployment_receipt_id": "deploy_original",
+            "exact_identity_match": True,
+        }
+        latest["id"] = "deploy_restart"
+        latest["processes"]["new"]["pid"] = 42
+        self.assertEqual(
+            _review_outcome(event, latest, None), "same_source_new_process"
+        )
+        latest["repositories"]["astrid"]["source_identity_sha256"] = "8" * 64
+        self.assertEqual(
+            _review_outcome(
+                event,
+                latest,
+                {"source_identity_sha256": "9" * 64},
+            ),
+            "source_changed_not_deployed",
+        )
+        self.assertEqual(
+            _review_outcome(event, latest, None), "deployed_changed"
+        )
+        self.assertEqual(
+            _review_outcome(event, None, None), "deployment_unknown"
+        )
+        historical = {
+            "witness": {"schema": "historical_lived_state_witness_v1"},
+            "alignment": {"deployment_receipt_id": "temporal"},
+        }
+        self.assertEqual(
+            _review_outcome(historical, latest, None),
+            "temporal_association_only",
+        )
+        historical["alignment"] = {}
+        self.assertEqual(
+            _review_outcome(historical, latest, None),
+            "historical_unrecoverable",
+        )
+
+
+def run_self_tests() -> int:
+    suite = unittest.defaultTestLoader.loadTestsFromTestCase(
+        LivedStateWitnessTests
+    )
+    result = unittest.TextTestRunner(verbosity=2).run(suite)
+    return 0 if result.wasSuccessful() else 1

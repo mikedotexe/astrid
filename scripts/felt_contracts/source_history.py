@@ -535,6 +535,104 @@ def route_history(
         trial_nodes[trial_id] = child
         routed_source_ids.add(envelope.event_id)
 
+    claims_by_introspection: dict[str, list[Any]] = {}
+    for claim in claims:
+        claims_by_introspection.setdefault(claim.introspection_id, []).append(
+            claim
+        )
+    for envelope in source_by_stream["lived_state_witness"]:
+        payload = envelope.payload
+        event_type = str(payload.get("event_type") or "")
+        if event_type not in {
+            "temporal_lived_state_witness_recorded",
+            "historical_lived_state_witness_migrated",
+            "lived_state_witness_gap_detected",
+            "lived_state_writer_gap_recorded",
+            "lived_state_review_context_reconciled",
+        }:
+            continue
+        introspection_id = str(payload.get("introspection_id") or "")
+        if not introspection_id:
+            continue
+        contract_claims: dict[str, list[Any]] = {}
+        for claim in claims_by_introspection.get(introspection_id, []):
+            contract_id = membership.get(claim.claim_id)
+            if contract_id and claim.claim_id in claim_nodes:
+                contract_claims.setdefault(contract_id, []).append(claim)
+        if not contract_claims:
+            continue
+        occurred_at = _event_time(envelope)
+        alignment = payload.get("alignment")
+        alignment = alignment if isinstance(alignment, dict) else {}
+        alignment_outcome = str(
+            alignment.get("outcome") or payload.get("outcome") or ""
+        )
+        exact = bool(
+            alignment.get("exact_identity_match")
+            or payload.get("exact_identity_match")
+        )
+        temporal = alignment_outcome == "temporal_association_only"
+        gap = "gap" in event_type or alignment_outcome == "witness_gap"
+        for contract_id, contract_sources in sorted(contract_claims.items()):
+            parents = sorted(
+                claim_nodes[claim.claim_id] for claim in contract_sources
+            )
+            child = node_id(
+                envelope.event_id,
+                f"lived_state_witness:{event_type}",
+                contract_id,
+            )
+            node = build_node(
+                node_id=child,
+                contract_id=contract_id,
+                kind="lived_state_witness",
+                source_event_id=envelope.event_id,
+                occurred_at=occurred_at,
+                source_ref=None,
+                metadata={
+                    "witness_id": payload.get("witness_id"),
+                    "introspection_id": introspection_id,
+                    "source_event_type": event_type,
+                    "alignment_outcome": alignment_outcome or None,
+                    "exact_identity_match": exact,
+                    "temporal_association_only": temporal,
+                    "witness_gap": gap,
+                    "closure_propagated": False,
+                    "evidence_sufficiency_propagated": False,
+                    "authority_propagated": False,
+                    "felt_resolution_propagated": False,
+                    "private_content_copied": False,
+                },
+                authority_state="evidence_only",
+            ).to_dict()
+            if exact:
+                relation = "context_exactly_observed_by"
+            elif temporal:
+                relation = "context_temporally_associated_with"
+            elif gap:
+                relation = "context_witness_gap_for"
+            else:
+                relation = "context_unresolved_for"
+            events.append(
+                _node_event(
+                    node,
+                    [
+                        _edge_record(
+                            contract_id,
+                            parent,
+                            child,
+                            relation,
+                            envelope,
+                            occurred_at,
+                        )
+                        for parent in parents
+                    ],
+                    envelope,
+                    authority_state="evidence_only",
+                )
+            )
+        routed_source_ids.add(envelope.event_id)
+
     for stream in (
         "corridor_v1",
         "corridor_v2",

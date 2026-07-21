@@ -16,6 +16,7 @@ from experiment_dossiers import (
     generate,
     project,
     state_dir,
+    transition,
 )
 from evidence_store.adapter import read_domain_events
 
@@ -117,6 +118,58 @@ class ExperimentDossierIncrementalTests(unittest.TestCase):
         )
         for key, value in reference.items():
             self.assertEqual(persisted[key], value)
+
+    def test_lived_context_refresh_never_advances_dossier_state(self) -> None:
+        context_root = (
+            self.workspace / "diagnostics/lived_state_witness_v1"
+        )
+        context_root.mkdir(parents=True)
+        context_path = context_root / "context_index.jsonl"
+        context = {
+            "schema": "lived_state_context_index_v1",
+            "witness_id": "lsw_" + "a" * 64,
+            "introspection_id": "introspection_astrid_100",
+            "alignment": {"outcome": "temporal_association_only"},
+            "gap_count": 0,
+            "reconciliation_ref": None,
+        }
+        context_path.write_text(
+            json.dumps(context, sort_keys=True) + "\n", encoding="utf-8"
+        )
+        first = generate(self.workspace, write=True)
+        dossier_id = next(iter(first["dossiers"]))
+        self.assertEqual(
+            first["dossiers"][dossier_id]["state"], "capture-ready"
+        )
+        self.assertEqual(
+            first["dossiers"][dossier_id]["lived_state_context_refs"][0][
+                "witness_id"
+            ],
+            context["witness_id"],
+        )
+        transition(
+            self.workspace,
+            dossier_id,
+            "baseline-captured",
+            "sha256:" + "b" * 64,
+            None,
+        )
+        context["alignment"] = {"outcome": "same_source_new_process"}
+        context_path.write_text(
+            json.dumps(context, sort_keys=True) + "\n", encoding="utf-8"
+        )
+        refreshed = generate(self.workspace, write=True)
+        dossier = refreshed["dossiers"][dossier_id]
+        self.assertEqual(dossier["state"], "baseline-captured")
+        self.assertEqual(
+            dossier["lived_state_context_refs"][0]["alignment"]["outcome"],
+            "same_source_new_process",
+        )
+        self.assertFalse(
+            dossier["lived_state_context_refs"][0][
+                "state_transition_implied"
+            ]
+        )
 
 
 if __name__ == "__main__":
