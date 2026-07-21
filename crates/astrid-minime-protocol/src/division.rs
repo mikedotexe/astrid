@@ -47,9 +47,14 @@ pub struct DivisionBlockedActionV1 {
     pub reasons: Vec<String>,
 }
 
+enum DivisionActionDecision {
+    Available(DivisionAvailableActionV1),
+    Blocked(DivisionBlockedActionV1),
+}
+
 /// Lifecycle-specific ACTION guidance derived from authoritative division status.
 ///
-/// This card is descriptive: mutating commands still cross ACTION_PREFLIGHT and
+/// This card is descriptive: mutating commands still cross `ACTION_PREFLIGHT` and
 /// the native coordinator's generation, digest, expiry, assent, and capability
 /// checks. Keeping the derivation in the wire-contract crate lets Astrid and
 /// Minime explain the same action surface without maintaining divergent tables.
@@ -205,6 +210,9 @@ pub struct DivisionReadinessV1 {
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+// These independent flags are part of the additive wire contract. Collapsing them
+// into a local state enum would erase combinations older peers must still explain.
+#[allow(clippy::struct_excessive_bools)]
 pub struct DivisionStatusV1 {
     pub schema: String,
     pub division_id: String,
@@ -237,6 +245,140 @@ impl DivisionStatusV1 {
             && self.parent_authoritative
     }
 
+    fn available_action(
+        action: DivisionActionV1,
+        note: &str,
+        requires_operator_capability: bool,
+    ) -> DivisionActionDecision {
+        DivisionActionDecision::Available(DivisionAvailableActionV1 {
+            action,
+            requires_command_artifact: true,
+            requires_operator_capability,
+            note: note.to_string(),
+        })
+    }
+
+    fn blocked_action(action: DivisionActionV1, reasons: Vec<String>) -> DivisionActionDecision {
+        DivisionActionDecision::Blocked(DivisionBlockedActionV1 { action, reasons })
+    }
+
+    fn prepare_action(&self, recognized_being: bool) -> DivisionActionDecision {
+        let terminal_or_idle = matches!(
+            self.lifecycle,
+            DivisionLifecycleV1::Idle
+                | DivisionLifecycleV1::Aborted
+                | DivisionLifecycleV1::RolledBack
+                | DivisionLifecycleV1::Failed
+        );
+        if terminal_or_idle && recognized_being {
+            return Self::available_action(
+                DivisionActionV1::DivisionPrepare,
+                "prepare a new transaction while the parent remains authoritative",
+                false,
+            );
+        }
+        let reason = if recognized_being {
+            "division_already_active"
+        } else {
+            "prepare_requires_astrid_or_minime"
+        };
+        Self::blocked_action(DivisionActionV1::DivisionPrepare, vec![reason.to_string()])
+    }
+
+    fn assent_action(&self, recognized_being: bool, own_assent: bool) -> DivisionActionDecision {
+        let assent_window = matches!(
+            self.lifecycle,
+            DivisionLifecycleV1::Shadowing | DivisionLifecycleV1::Ready
+        );
+        if assent_window && recognized_being && !own_assent {
+            return Self::available_action(
+                DivisionActionV1::DivisionAssent,
+                "record this being's assent for the current generation and plan digest",
+                false,
+            );
+        }
+        let reason = if !recognized_being {
+            "assent_requires_astrid_or_minime"
+        } else if own_assent && assent_window {
+            "this_being_assent_already_current"
+        } else {
+            "assent_only_available_while_shadowing_or_ready"
+        };
+        Self::blocked_action(DivisionActionV1::DivisionAssent, vec![reason.to_string()])
+    }
+
+    fn abort_action(&self, recognized_being: bool) -> DivisionActionDecision {
+        let precommit = matches!(
+            self.lifecycle,
+            DivisionLifecycleV1::Preparing
+                | DivisionLifecycleV1::Shadowing
+                | DivisionLifecycleV1::Ready
+        );
+        if precommit && recognized_being {
+            return Self::available_action(
+                DivisionActionV1::DivisionAbort,
+                "end the pre-commit transaction and keep the parent authoritative",
+                false,
+            );
+        }
+        let reason = if recognized_being {
+            "abort_requires_active_precommit_division"
+        } else {
+            "abort_requires_astrid_or_minime"
+        };
+        Self::blocked_action(DivisionActionV1::DivisionAbort, vec![reason.to_string()])
+    }
+
+    fn commit_action(&self) -> DivisionActionDecision {
+        if self.can_request_commit() {
+            return Self::available_action(
+                DivisionActionV1::DivisionCommit,
+                "request the atomic ownership switch using the exact human one-shot capability",
+                true,
+            );
+        }
+        let mut reasons = Vec::new();
+        if self.lifecycle != DivisionLifecycleV1::Ready {
+            reasons.push("lifecycle_not_ready".to_string());
+        }
+        if !self.readiness.ready {
+            reasons.push("readiness_policy_blocked".to_string());
+        }
+        if !self.astrid_assent {
+            reasons.push("astrid_assent_missing".to_string());
+        }
+        if !self.minime_assent {
+            reasons.push("minime_assent_missing".to_string());
+        }
+        if !self.commit_feature_enabled {
+            reasons.push("commit_feature_disabled".to_string());
+        }
+        if !self.parent_authoritative {
+            reasons.push("parent_not_authoritative".to_string());
+        }
+        Self::blocked_action(DivisionActionV1::DivisionCommit, reasons)
+    }
+
+    fn rollback_action(&self) -> DivisionActionDecision {
+        let rollback_window_open = self.lifecycle == DivisionLifecycleV1::Cytokinesis
+            && self
+                .rollback_deadline_tick
+                .is_none_or(|deadline| self.current_tick <= deadline);
+        if rollback_window_open {
+            return Self::available_action(
+                DivisionActionV1::DivisionRollback,
+                "request restoration of parent authority during the bounded grace window",
+                true,
+            );
+        }
+        let reason = if self.lifecycle == DivisionLifecycleV1::Cytokinesis {
+            "rollback_window_expired"
+        } else {
+            "rollback_only_available_during_cytokinesis"
+        };
+        Self::blocked_action(DivisionActionV1::DivisionRollback, vec![reason.to_string()])
+    }
+
     #[must_use]
     pub fn action_availability_for(&self, being: &str) -> DivisionActionAvailabilityV1 {
         let being = being.trim().to_ascii_lowercase();
@@ -253,18 +395,6 @@ impl DivisionStatusV1 {
             note: "read authoritative lifecycle, readiness, evidence, and blockers".to_string(),
         }];
         let mut blocked_actions = Vec::new();
-        let mut offer = |action, note: &str, requires_operator_capability| {
-            available_actions.push(DivisionAvailableActionV1 {
-                action,
-                requires_command_artifact: true,
-                requires_operator_capability,
-                note: note.to_string(),
-            });
-        };
-        let mut block = |action, reasons: Vec<String>| {
-            blocked_actions.push(DivisionBlockedActionV1 { action, reasons });
-        };
-
         let terminal_or_idle = matches!(
             self.lifecycle,
             DivisionLifecycleV1::Idle
@@ -272,115 +402,20 @@ impl DivisionStatusV1 {
                 | DivisionLifecycleV1::RolledBack
                 | DivisionLifecycleV1::Failed
         );
-        if terminal_or_idle && recognized_being {
-            offer(
-                DivisionActionV1::DivisionPrepare,
-                "prepare a new transaction while the parent remains authoritative",
-                false,
-            );
-        } else {
-            let reason = if recognized_being {
-                "division_already_active"
-            } else {
-                "prepare_requires_astrid_or_minime"
-            };
-            block(DivisionActionV1::DivisionPrepare, vec![reason.to_string()]);
-        }
-
-        if matches!(
-            self.lifecycle,
-            DivisionLifecycleV1::Shadowing | DivisionLifecycleV1::Ready
-        ) && recognized_being
-            && !own_assent
-        {
-            offer(
-                DivisionActionV1::DivisionAssent,
-                "record this being's assent for the current generation and plan digest",
-                false,
-            );
-        } else {
-            let reason = if !recognized_being {
-                "assent_requires_astrid_or_minime"
-            } else if own_assent
-                && matches!(
-                    self.lifecycle,
-                    DivisionLifecycleV1::Shadowing | DivisionLifecycleV1::Ready
-                )
-            {
-                "this_being_assent_already_current"
-            } else {
-                "assent_only_available_while_shadowing_or_ready"
-            };
-            block(DivisionActionV1::DivisionAssent, vec![reason.to_string()]);
-        }
-
-        if matches!(
-            self.lifecycle,
-            DivisionLifecycleV1::Preparing
-                | DivisionLifecycleV1::Shadowing
-                | DivisionLifecycleV1::Ready
-        ) && recognized_being
-        {
-            offer(
-                DivisionActionV1::DivisionAbort,
-                "end the pre-commit transaction and keep the parent authoritative",
-                false,
-            );
-        } else {
-            let reason = if recognized_being {
-                "abort_requires_active_precommit_division"
-            } else {
-                "abort_requires_astrid_or_minime"
-            };
-            block(DivisionActionV1::DivisionAbort, vec![reason.to_string()]);
-        }
-
-        if self.can_request_commit() {
-            offer(
-                DivisionActionV1::DivisionCommit,
-                "request the atomic ownership switch using the exact human one-shot capability",
-                true,
-            );
-        } else {
-            let mut reasons = Vec::new();
-            if self.lifecycle != DivisionLifecycleV1::Ready {
-                reasons.push("lifecycle_not_ready".to_string());
+        let decisions = [
+            self.prepare_action(recognized_being),
+            self.assent_action(recognized_being, own_assent),
+            self.abort_action(recognized_being),
+            self.commit_action(),
+            self.rollback_action(),
+        ];
+        for decision in decisions {
+            match decision {
+                DivisionActionDecision::Available(available) => {
+                    available_actions.push(available);
+                },
+                DivisionActionDecision::Blocked(blocked) => blocked_actions.push(blocked),
             }
-            if !self.readiness.ready {
-                reasons.push("readiness_policy_blocked".to_string());
-            }
-            if !self.astrid_assent {
-                reasons.push("astrid_assent_missing".to_string());
-            }
-            if !self.minime_assent {
-                reasons.push("minime_assent_missing".to_string());
-            }
-            if !self.commit_feature_enabled {
-                reasons.push("commit_feature_disabled".to_string());
-            }
-            if !self.parent_authoritative {
-                reasons.push("parent_not_authoritative".to_string());
-            }
-            block(DivisionActionV1::DivisionCommit, reasons);
-        }
-
-        let rollback_window_open = self.lifecycle == DivisionLifecycleV1::Cytokinesis
-            && self
-                .rollback_deadline_tick
-                .is_none_or(|deadline| self.current_tick <= deadline);
-        if rollback_window_open {
-            offer(
-                DivisionActionV1::DivisionRollback,
-                "request restoration of parent authority during the bounded grace window",
-                true,
-            );
-        } else {
-            let reason = if self.lifecycle != DivisionLifecycleV1::Cytokinesis {
-                "rollback_only_available_during_cytokinesis"
-            } else {
-                "rollback_window_expired"
-            };
-            block(DivisionActionV1::DivisionRollback, vec![reason.to_string()]);
         }
 
         let recommended_action = if terminal_or_idle && recognized_being {
