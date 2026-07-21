@@ -1651,12 +1651,12 @@ mod tests {
             "dialogue_live",
             MlxProfile::Gemma4Canary,
         );
-        assert_eq!(diagnostic.schema, "model_artifact_cleanup_v6");
+        assert_eq!(diagnostic.schema, "model_artifact_cleanup_v7");
         assert_eq!(diagnostic.label, "dialogue_live");
         assert_eq!(diagnostic.profile, GEMMA4_12B_PROFILE);
         assert_eq!(
             diagnostic.marker_contract,
-            "private_typed_exact_known_model_token_occurrence_with_local_reference_syntax"
+            "private_typed_exact_known_model_token_with_quotes_or_following_relation"
         );
         assert_eq!(
             report.classification_scope,
@@ -1852,6 +1852,29 @@ mod tests {
     }
 
     #[test]
+    fn artifact_cleanup_preserves_exact_token_relation_without_preceding_vocabulary_gate() {
+        for prefix in ["identifier", "key", "texture", "unfamiliar-metaword"] {
+            let text = format!("The {prefix} <end_of_turn> denotes the primary key.");
+            let (stripped, report) = strip_model_artifacts_with_report(&text);
+            assert_eq!(stripped, text);
+            let report = report.expect("exact-token relation report");
+            assert_eq!(report.removed_total, 0);
+            assert_eq!(report.preserved_explicit_reference_total, 1);
+        }
+    }
+
+    #[test]
+    fn artifact_cleanup_preserves_backtick_quoted_exact_token() {
+        let text = "The identifier `<end_of_turn>` remains visible.";
+        let (stripped, report) = strip_model_artifacts_with_report(text);
+        assert_eq!(stripped, text);
+        let report = report.expect("backtick exact-token report");
+        assert_eq!(report.removed_total, 0);
+        assert_eq!(report.preserved_explicit_reference_total, 1);
+        assert_eq!(report.preserved_tokens[0].quoted_reference_occurrences, 1);
+    }
+
+    #[test]
     fn artifact_cleanup_does_not_classify_spectral_coordinate_language_as_marker_content() {
         let text = "I am echoing the proportion of λ1 spectral-energy share 33%.";
         let (stripped, report) = strip_model_artifacts_with_report(text);
@@ -1871,9 +1894,9 @@ mod tests {
     fn artifact_cleanup_never_treats_felt_surface_terms_as_reference_cues() {
         for text in [
             "viscous-pressure lattice; texture density gradient λ4+ remains uneven.",
-            "texture <end_of_turn> is the exact token I am naming.",
-            "density <end_of_turn> is the exact token I am naming.",
-            "gradient <end_of_turn> is the exact token I am naming.",
+            "texture <end_of_turn> ordinary prose continues.",
+            "density <end_of_turn> ordinary prose continues.",
+            "gradient <end_of_turn> ordinary prose continues.",
         ] {
             let (stripped, report) = strip_model_artifacts_with_report(text);
             if text.contains("<end_of_turn>") {
@@ -1899,9 +1922,9 @@ mod tests {
     #[test]
     fn artifact_cleanup_does_not_treat_vivid_and_resonant_as_token_reference_cues() {
         for cue in ["vivid", "resonant"] {
-            let text = format!("The {cue} <end_of_turn> is the exact token I am naming.");
+            let text = format!("The {cue} <end_of_turn> ordinary prose continues.");
             let (stripped, report) = strip_model_artifacts_with_report(&text);
-            assert_eq!(stripped, format!("The {cue}  is the exact token I am naming."));
+            assert_eq!(stripped, format!("The {cue}  ordinary prose continues."));
             let report = report.expect("structural token cleanup report");
             assert_eq!(report.removed_total, 1);
             assert_eq!(report.preserved_explicit_reference_total, 0);

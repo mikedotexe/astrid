@@ -64,56 +64,28 @@ impl ExactKnownModelArtifactOccurrence {
         if matching_quote_pair(before, after) {
             return Some(ExactArtifactReferenceContext::QuotedExactKnownToken);
         }
-        if self.followed_by_exact_token_subject_relation(text)
-            || (self.preceded_by_metalinguistic_token_cue(text)
-                && self.followed_by_token_naming_relation(text))
-        {
+        if self.followed_by_explicit_exact_token_relation(text) {
             return Some(ExactArtifactReferenceContext::ExplicitExactKnownTokenRelation);
         }
         None
     }
 
-    fn preceded_by_metalinguistic_token_cue(self, text: &str) -> bool {
-        let cue = text[..self.start]
-            .rsplit(|character: char| !character.is_alphanumeric() && character != '_')
-            .find(|part| !part.is_empty())
-            .unwrap_or_default()
-            .to_ascii_lowercase();
-        matches!(
-            cue.as_str(),
-            "delimiter"
-                | "literal"
-                | "marker"
-                | "mention"
-                | "mentioned"
-                | "name"
-                | "named"
-                | "phrase"
-                | "quote"
-                | "quoted"
-                | "sequence"
-                | "spell"
-                | "spelled"
-                | "string"
-                | "syntax"
-                | "token"
-                | "verbatim"
-                | "write"
-                | "wrote"
-        )
-    }
-
-    fn followed_by_exact_token_subject_relation(self, text: &str) -> bool {
+    /// An exact known token is the grammatical subject here. The preceding words are never
+    /// classified, so novel metalinguistic vocabulary and felt language have identical behavior.
+    fn followed_by_explicit_exact_token_relation(self, text: &str) -> bool {
         matches!(
             first_word_after(text, self.end).as_str(),
-            "corresponds" | "echoes" | "embodies" | "manifests"
-        )
-    }
-
-    fn followed_by_token_naming_relation(self, text: &str) -> bool {
-        matches!(
-            first_word_after(text, self.end).as_str(),
-            "appears" | "as" | "denotes" | "is" | "means" | "refers" | "represents"
+            "appears"
+                | "as"
+                | "corresponds"
+                | "denotes"
+                | "echoes"
+                | "embodies"
+                | "is"
+                | "manifests"
+                | "means"
+                | "refers"
+                | "represents"
         )
     }
 }

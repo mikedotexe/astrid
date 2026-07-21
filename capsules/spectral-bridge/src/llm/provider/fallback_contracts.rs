@@ -454,13 +454,13 @@ fn model_artifact_cleanup_diagnostic<'a>(
     let exact_token_integrity_check_v1 =
         model_artifact_exact_token_integrity_check_v1(report, &remainder_surface_v2);
     ModelArtifactCleanupDiagnostic {
-        schema: "model_artifact_cleanup_v6",
-        schema_version: 6,
+        schema: "model_artifact_cleanup_v7",
+        schema_version: 7,
         timestamp: unix_timestamp_string(),
         label,
         profile: profile.as_str(),
         marker_contract:
-            "private_typed_exact_known_model_token_occurrence_with_local_reference_syntax",
+            "private_typed_exact_known_model_token_with_quotes_or_following_relation",
         common_language_overlap_risk: model_artifact_language_overlap_risk(report),
         remainder_surface_v2,
         exact_token_integrity_check_v1,
