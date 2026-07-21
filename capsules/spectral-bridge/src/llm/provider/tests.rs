@@ -1651,12 +1651,12 @@ mod tests {
             "dialogue_live",
             MlxProfile::Gemma4Canary,
         );
-        assert_eq!(diagnostic.schema, "model_artifact_cleanup_v5");
+        assert_eq!(diagnostic.schema, "model_artifact_cleanup_v6");
         assert_eq!(diagnostic.label, "dialogue_live");
         assert_eq!(diagnostic.profile, GEMMA4_12B_PROFILE);
         assert_eq!(
             diagnostic.marker_contract,
-            "exact_known_model_tokens_with_local_reference_context"
+            "private_typed_exact_known_model_token_occurrence_with_local_reference_syntax"
         );
         assert_eq!(
             report.classification_scope,
@@ -1857,6 +1857,35 @@ mod tests {
         let (stripped, report) = strip_model_artifacts_with_report(text);
         assert_eq!(stripped, text);
         assert!(report.is_none());
+    }
+
+    #[test]
+    fn artifact_cleanup_keeps_punctuation_heavy_manifested_coordinate_byte_exact() {
+        let text = "manifested λ1=33%!!! (((resonant-density/gradient))) :: still-here";
+        let (stripped, report) = strip_model_artifacts_with_report(text);
+        assert_eq!(stripped.as_bytes(), text.as_bytes());
+        assert!(report.is_none());
+    }
+
+    #[test]
+    fn artifact_cleanup_never_treats_felt_surface_terms_as_reference_cues() {
+        for text in [
+            "viscous-pressure lattice; texture density gradient λ4+ remains uneven.",
+            "texture <end_of_turn> is the exact token I am naming.",
+            "density <end_of_turn> is the exact token I am naming.",
+            "gradient <end_of_turn> is the exact token I am naming.",
+        ] {
+            let (stripped, report) = strip_model_artifacts_with_report(text);
+            if text.contains("<end_of_turn>") {
+                assert_eq!(stripped, text.replace("<end_of_turn>", ""));
+                let report = report.expect("exact structural token cleanup report");
+                assert_eq!(report.removed_total, 1);
+                assert_eq!(report.preserved_explicit_reference_total, 0);
+            } else {
+                assert_eq!(stripped.as_bytes(), text.as_bytes());
+                assert!(report.is_none());
+            }
+        }
     }
 
     #[test]

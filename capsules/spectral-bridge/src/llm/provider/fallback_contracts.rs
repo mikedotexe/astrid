@@ -439,7 +439,7 @@ fn model_artifact_exact_token_integrity_check_v1(
         classification_scope: report.classification_scope,
         excluded_meaning_scope: report.excluded_meaning_scope,
         basis:
-            "exact_token_placement_removed_byte_fraction_and_surface_remainder_texture_not_semantic_intent_inference",
+            "exact_token_placement_removed_byte_fraction_and_surface_remainder_measurements_not_semantic_intent_inference",
         runtime_effect: false,
     }
 }
@@ -454,12 +454,13 @@ fn model_artifact_cleanup_diagnostic<'a>(
     let exact_token_integrity_check_v1 =
         model_artifact_exact_token_integrity_check_v1(report, &remainder_surface_v2);
     ModelArtifactCleanupDiagnostic {
-        schema: "model_artifact_cleanup_v5",
-        schema_version: 5,
+        schema: "model_artifact_cleanup_v6",
+        schema_version: 6,
         timestamp: unix_timestamp_string(),
         label,
         profile: profile.as_str(),
-        marker_contract: "exact_known_model_tokens_with_local_reference_context",
+        marker_contract:
+            "private_typed_exact_known_model_token_occurrence_with_local_reference_syntax",
         common_language_overlap_risk: model_artifact_language_overlap_risk(report),
         remainder_surface_v2,
         exact_token_integrity_check_v1,

@@ -31,105 +31,116 @@ fn dialogue_prompt_budget_profile(num_predict: u32) -> &'static str {
 
 #[derive(Debug, Clone, Copy)]
 struct ModelArtifactMatch {
+    occurrence: ExactKnownModelArtifactOccurrence,
+    reference_context: Option<ExactArtifactReferenceContext>,
+}
+
+/// A byte range proven to be one of `MODEL_ARTIFACT_TOKENS` by the longest-match scanner.
+///
+/// Keeping construction inside `longest_exact_known_model_artifact_at` makes it impossible for
+/// felt, spectral, or otherwise ordinary language to enter reference-context classification.
+#[derive(Debug, Clone, Copy)]
+struct ExactKnownModelArtifactOccurrence {
     token: &'static str,
     start: usize,
     end: usize,
-    reference_context: Option<ExactArtifactReferenceContext>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum ExactArtifactReferenceContext {
-    QuotedLiteral,
-    ExplicitRelation,
+    QuotedExactKnownToken,
+    ExplicitExactKnownTokenRelation,
 }
 
-fn explicit_reference_cue_before(text: &str, start: usize) -> bool {
-    let cue = text[..start]
-        .rsplit(|character: char| !character.is_alphanumeric() && character != '_')
-        .find(|part| !part.is_empty())
-        .unwrap_or_default()
-        .to_ascii_lowercase();
-    matches!(
-        cue.as_str(),
-        "delimiter"
-            | "echo"
-            | "echoed"
-            | "echoing"
-            | "embodied"
-            | "embody"
-            | "embodying"
-            | "literal"
-            | "manifest"
-            | "manifested"
-            | "manifesting"
-            | "marker"
-            | "mention"
-            | "mentioned"
-            | "name"
-            | "named"
-            | "phrase"
-            | "quote"
-            | "quoted"
-            | "sequence"
-            | "spell"
-            | "spelled"
-            | "string"
-            | "syntax"
-            | "token"
-            | "verbatim"
-            | "write"
-            | "wrote"
-    )
+impl ExactKnownModelArtifactOccurrence {
+    fn reference_context(self, text: &str) -> Option<ExactArtifactReferenceContext> {
+        let before = text[..self.start]
+            .chars()
+            .rev()
+            .find(|character| !character.is_whitespace());
+        let after = text[self.end..]
+            .chars()
+            .find(|character| !character.is_whitespace());
+        if matching_quote_pair(before, after) {
+            return Some(ExactArtifactReferenceContext::QuotedExactKnownToken);
+        }
+        if self.followed_by_exact_token_subject_relation(text)
+            || (self.preceded_by_metalinguistic_token_cue(text)
+                && self.followed_by_token_naming_relation(text))
+        {
+            return Some(ExactArtifactReferenceContext::ExplicitExactKnownTokenRelation);
+        }
+        None
+    }
+
+    fn preceded_by_metalinguistic_token_cue(self, text: &str) -> bool {
+        let cue = text[..self.start]
+            .rsplit(|character: char| !character.is_alphanumeric() && character != '_')
+            .find(|part| !part.is_empty())
+            .unwrap_or_default()
+            .to_ascii_lowercase();
+        matches!(
+            cue.as_str(),
+            "delimiter"
+                | "literal"
+                | "marker"
+                | "mention"
+                | "mentioned"
+                | "name"
+                | "named"
+                | "phrase"
+                | "quote"
+                | "quoted"
+                | "sequence"
+                | "spell"
+                | "spelled"
+                | "string"
+                | "syntax"
+                | "token"
+                | "verbatim"
+                | "write"
+                | "wrote"
+        )
+    }
+
+    fn followed_by_exact_token_subject_relation(self, text: &str) -> bool {
+        matches!(
+            first_word_after(text, self.end).as_str(),
+            "corresponds" | "echoes" | "embodies" | "manifests"
+        )
+    }
+
+    fn followed_by_token_naming_relation(self, text: &str) -> bool {
+        matches!(
+            first_word_after(text, self.end).as_str(),
+            "appears" | "as" | "denotes" | "is" | "means" | "refers" | "represents"
+        )
+    }
 }
 
-fn explicit_relational_attribution_after(text: &str, end: usize) -> bool {
-    let relation = text[end..]
+fn first_word_after(text: &str, end: usize) -> String {
+    text[end..]
         .split(|character: char| !character.is_alphanumeric() && character != '_')
         .find(|part| !part.is_empty())
         .unwrap_or_default()
-        .to_ascii_lowercase();
-    matches!(
-        relation.as_str(),
-        "corresponds" | "echoes" | "embodies" | "manifests"
-    )
+        .to_ascii_lowercase()
 }
 
-fn explicit_reference_relation_after(text: &str, end: usize) -> bool {
-    let relation = text[end..]
-        .split(|character: char| !character.is_alphanumeric() && character != '_')
-        .find(|part| !part.is_empty())
-        .unwrap_or_default()
-        .to_ascii_lowercase();
-    matches!(
-        relation.as_str(),
-        "appears" | "as" | "denotes" | "is" | "means" | "refers" | "represents"
-    )
-}
-
-/// Classify only the local syntax around an exact known model-token occurrence.
-/// This is not a classifier for felt texture, memory, spectral state, or meaning.
-fn exact_artifact_reference_context(
+fn longest_exact_known_model_artifact_at(
     text: &str,
-    start: usize,
-    end: usize,
-) -> Option<ExactArtifactReferenceContext> {
-    let before = text[..start]
-        .chars()
-        .rev()
-        .find(|character| !character.is_whitespace());
-    let after = text[end..]
-        .chars()
-        .find(|character| !character.is_whitespace());
-    if matching_quote_pair(before, after) {
-        return Some(ExactArtifactReferenceContext::QuotedLiteral);
-    }
-    if explicit_relational_attribution_after(text, end)
-        || (explicit_reference_cue_before(text, start)
-            && explicit_reference_relation_after(text, end))
-    {
-        return Some(ExactArtifactReferenceContext::ExplicitRelation);
-    }
-    None
+    offset: usize,
+) -> Option<ExactKnownModelArtifactOccurrence> {
+    let tail = &text[offset..];
+    let token = MODEL_ARTIFACT_TOKENS
+        .iter()
+        .copied()
+        .filter(|token| tail.starts_with(token))
+        .max_by_key(|token| token.len())?;
+    Some(ExactKnownModelArtifactOccurrence {
+        token,
+        start: offset,
+        end: offset.saturating_add(token.len()),
+    })
 }
 
 fn strip_known_model_artifact_matches(text: &str) -> (String, Vec<ModelArtifactMatch>) {
@@ -139,24 +150,16 @@ fn strip_known_model_artifact_matches(text: &str) -> (String, Vec<ModelArtifactM
 
     while offset < text.len() {
         let tail = &text[offset..];
-        let matched = MODEL_ARTIFACT_TOKENS
-            .iter()
-            .copied()
-            .filter(|token| tail.starts_with(token))
-            .max_by_key(|token| token.len());
-        if let Some(token) = matched {
-            let end = offset.saturating_add(token.len());
-            let reference_context = exact_artifact_reference_context(text, offset, end);
+        if let Some(occurrence) = longest_exact_known_model_artifact_at(text, offset) {
+            let reference_context = occurrence.reference_context(text);
             matches.push(ModelArtifactMatch {
-                token,
-                start: offset,
-                end,
+                occurrence,
                 reference_context,
             });
             if reference_context.is_some() {
-                remainder.push_str(token);
+                remainder.push_str(occurrence.token);
             }
-            offset = end;
+            offset = occurrence.end;
         } else {
             let character = tail
                 .chars()
@@ -188,21 +191,21 @@ fn matching_quote_pair(before: Option<char>, after: Option<char>) -> bool {
 
 fn model_artifact_placement_counts(
     text: &str,
-    artifact_match: ModelArtifactMatch,
+    occurrence: ExactKnownModelArtifactOccurrence,
 ) -> (usize, usize, usize) {
-    let content_before = fragment_has_non_artifact_content(&text[..artifact_match.start]);
-    let content_after = fragment_has_non_artifact_content(&text[artifact_match.end..]);
+    let content_before = fragment_has_non_artifact_content(&text[..occurrence.start]);
+    let content_after = fragment_has_non_artifact_content(&text[occurrence.end..]);
     let (boundary_occurrences, contextual_occurrences) = if content_before && content_after {
         (0, 1)
     } else {
         (1, 0)
     };
 
-    let before = text[..artifact_match.start]
+    let before = text[..occurrence.start]
         .chars()
         .rev()
         .find(|ch| !ch.is_whitespace());
-    let after = text[artifact_match.end..]
+    let after = text[occurrence.end..]
         .chars()
         .find(|ch| !ch.is_whitespace());
     let quoted_occurrences = usize::from(matching_quote_pair(before, after));
@@ -233,12 +236,13 @@ pub(crate) fn strip_model_artifacts_with_report(
             .iter()
             .copied()
             .filter(|artifact_match| {
-                artifact_match.token == *token && artifact_match.reference_context.is_none()
+                artifact_match.occurrence.token == *token
+                    && artifact_match.reference_context.is_none()
             })
         {
             count = count.saturating_add(1);
             let (boundary, contextual, quoted) =
-                model_artifact_placement_counts(text, artifact_match);
+                model_artifact_placement_counts(text, artifact_match.occurrence);
             boundary_occurrences = boundary_occurrences.saturating_add(boundary);
             contextual_occurrences = contextual_occurrences.saturating_add(contextual);
             quoted_occurrences = quoted_occurrences.saturating_add(quoted);
@@ -256,17 +260,19 @@ pub(crate) fn strip_model_artifacts_with_report(
         let quoted_reference_occurrences = matches
             .iter()
             .filter(|artifact_match| {
-                artifact_match.token == *token
+                artifact_match.occurrence.token == *token
                     && artifact_match.reference_context
-                        == Some(ExactArtifactReferenceContext::QuotedLiteral)
+                        == Some(ExactArtifactReferenceContext::QuotedExactKnownToken)
             })
             .count();
         let explicit_relation_occurrences = matches
             .iter()
             .filter(|artifact_match| {
-                artifact_match.token == *token
+                artifact_match.occurrence.token == *token
                     && artifact_match.reference_context
-                        == Some(ExactArtifactReferenceContext::ExplicitRelation)
+                        == Some(
+                            ExactArtifactReferenceContext::ExplicitExactKnownTokenRelation,
+                        )
             })
             .count();
         let preserved_count = quoted_reference_occurrences
@@ -289,12 +295,22 @@ pub(crate) fn strip_model_artifacts_with_report(
     let removed_marker_bytes = matches
         .iter()
         .filter(|artifact_match| artifact_match.reference_context.is_none())
-        .map(|artifact_match| artifact_match.end.saturating_sub(artifact_match.start))
+        .map(|artifact_match| {
+            artifact_match
+                .occurrence
+                .end
+                .saturating_sub(artifact_match.occurrence.start)
+        })
         .sum();
     let preserved_marker_bytes = matches
         .iter()
         .filter(|artifact_match| artifact_match.reference_context.is_some())
-        .map(|artifact_match| artifact_match.end.saturating_sub(artifact_match.start))
+        .map(|artifact_match| {
+            artifact_match
+                .occurrence
+                .end
+                .saturating_sub(artifact_match.occurrence.start)
+        })
         .sum();
     let after_chars = result.len();
     let after_non_whitespace_chars = result
