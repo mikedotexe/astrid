@@ -115,12 +115,12 @@ fn web_search_prompt_body_puts_meaning_first() {
 }
 
 #[test]
-fn strip_model_artifacts_reports_removed_tokens() {
+fn sanitize_model_control_markers_reports_removed_tokens() {
     let (stripped, report) =
-        llm::strip_model_artifacts_with_report("hello<end_of_turn> [INST]world<|im_end|>");
+        llm::sanitize_model_control_markers_with_report("hello<end_of_turn> [INST]world<|im_end|>");
 
     assert_eq!(stripped, "hello world");
-    let report = report.expect("artifact cleanup report should exist");
+    let report = report.expect("control marker cleanup report should exist");
     assert_eq!(report.removed_total, 3);
     assert_eq!(
         report.before_chars,

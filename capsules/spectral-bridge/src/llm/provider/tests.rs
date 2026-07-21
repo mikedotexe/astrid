@@ -27,18 +27,20 @@ mod tests {
         dialogue_turn_instruction,
         estimate_dialogue_prompt_pressure_chars, fallback_continuity_budget_v1,
         fallback_mlx_profile_transparency_v1, fallback_prose_sentence_count,
+        control_marker_cleanup_diagnostic,
         format_dialogue_ambient_perception_block, format_dialogue_direct_perception_block,
-        format_dialogue_topline_context, fragment_has_non_artifact_content,
+        format_dialogue_topline_context,
+        fragment_has_non_marker_bytes,
         is_valid_dialogue_output,
         is_valid_dialogue_output_for_profile, is_valid_ollama_dialogue_fallback_output_for_budget,
         is_valid_ollama_dialogue_fallback_output_for_profile, journal_continuity_contract_v1,
-        local_degrade_path_for_label, model_artifact_cleanup_diagnostic,
-        model_qos_class_for_label, model_qos_v1, PromptBudgetReport,
+        local_degrade_path_for_label, model_qos_class_for_label, model_qos_v1, PromptBudgetReport,
         reinforce_ollama_fallback_contract,
         repair_ollama_dialogue_fallback_next, sanitize_deprecated_runtime_language,
         sanitize_gemma4_canary_output_for_label, sanitize_minime_context_for_dialogue,
-        split_dialogue_perception_context, strip_model_artifacts,
-        strip_model_artifacts_with_report, temperature_for_mlx_profile, uses_ollama_fallback_for_label,
+        sanitize_model_control_markers, sanitize_model_control_markers_with_report,
+        split_dialogue_perception_context, temperature_for_mlx_profile,
+        uses_ollama_fallback_for_label,
         DialoguePressureTextureInputs,
     };
 
@@ -1578,15 +1580,15 @@ mod tests {
     }
 
     #[test]
-    fn artifact_stripper_removes_gemma4_channel_tokens() {
+    fn control_marker_sanitizer_removes_gemma4_channel_tokens() {
         let text = "ASTRID_CANARY_OK<turn|><turn|> thought\n<channel|>hidden <eos>";
-        assert_eq!(strip_model_artifacts(text), "ASTRID_CANARY_OK hidden ");
+        assert_eq!(sanitize_model_control_markers(text), "ASTRID_CANARY_OK hidden ");
     }
 
     #[test]
-    fn artifact_cleanup_uses_longest_raw_matches_with_exact_accounting() {
+    fn control_marker_cleanup_uses_longest_raw_matches_with_exact_accounting() {
         let text = "thought <channel|>visible<channel|>";
-        let (stripped, report) = strip_model_artifacts_with_report(text);
+        let (stripped, report) = sanitize_model_control_markers_with_report(text);
         let report = report.expect("cleanup report");
 
         assert_eq!(stripped, "visible");
@@ -1622,8 +1624,8 @@ mod tests {
     }
 
     #[test]
-    fn artifact_cleanup_does_not_remove_marker_created_by_prior_removal() {
-        let (stripped, report) = strip_model_artifacts_with_report("<pa<eos>d>");
+    fn control_marker_cleanup_does_not_remove_marker_created_by_prior_removal() {
+        let (stripped, report) = sanitize_model_control_markers_with_report("<pa<eos>d>");
         let report = report.expect("cleanup report");
 
         assert_eq!(stripped, "<pad>");
@@ -1634,26 +1636,26 @@ mod tests {
     }
 
     #[test]
-    fn artifact_stripper_preserves_common_linguistic_substrings() {
+    fn control_marker_sanitizer_preserves_common_linguistic_substrings() {
         let text =
             "transaction, action, thoughtfulness, channel, finality, and analysis remain intact";
-        let (stripped, report) = strip_model_artifacts_with_report(text);
+        let (stripped, report) = sanitize_model_control_markers_with_report(text);
         assert_eq!(stripped, text);
         assert!(report.is_none());
     }
 
     #[test]
-    fn artifact_cleanup_diagnostic_carries_runtime_context_without_authority() {
-        let (_, report) = strip_model_artifacts_with_report("hello <end_of_turn>");
+    fn control_marker_cleanup_diagnostic_carries_runtime_context_without_authority() {
+        let (_, report) = sanitize_model_control_markers_with_report("hello <end_of_turn>");
         let report = report.expect("cleanup report");
-        let diagnostic = model_artifact_cleanup_diagnostic(
+        let diagnostic = control_marker_cleanup_diagnostic(
             &report,
             "hello ",
             "dialogue_live",
             MlxProfile::Gemma4Canary,
         );
-        assert_eq!(diagnostic.schema, "model_artifact_cleanup_v9");
-        assert_eq!(diagnostic.schema_version, 9);
+        assert_eq!(diagnostic.schema, "control_marker_cleanup_v10");
+        assert_eq!(diagnostic.schema_version, 10);
         assert_eq!(diagnostic.label, "dialogue_live");
         assert_eq!(diagnostic.profile, GEMMA4_12B_PROFILE);
         assert_eq!(
@@ -1666,45 +1668,45 @@ mod tests {
         );
         assert_eq!(
             report.excluded_meaning_scope,
-            "all_non_marker_language_including_felt_texture_memory_spectral_state_and_semantic_weight_not_classified_or_ranked"
+            "all_non_marker_bytes_are_outside_cleanup_classification_identity_ownership_meaning_and_spectral_weight"
         );
         assert!(!diagnostic.common_language_overlap_risk);
         assert!(
             diagnostic
-                .exact_token_integrity_check_v1
+                .control_marker_integrity_check_v2
                 .output_remainder_present
         );
         assert!(
             !diagnostic
-                .exact_token_integrity_check_v1
-                .artifact_only_after_cleanup
+                .control_marker_integrity_check_v2
+                .marker_only_after_cleanup
         );
         assert_eq!(
-            diagnostic.exact_token_integrity_check_v1.state,
+            diagnostic.control_marker_integrity_check_v2.state,
             "structural_cleanup_low_risk"
         );
         assert!(
             !diagnostic
-                .exact_token_integrity_check_v1
+                .control_marker_integrity_check_v2
                 .shadow_check_recommended
         );
         assert!(
             !diagnostic
-                .exact_token_integrity_check_v1
+                .control_marker_integrity_check_v2
                 .runtime_effect
         );
         assert_eq!(
-            diagnostic.remainder_surface_v2.state,
+            diagnostic.sanitized_output_surface_v3.state,
             "lexical_content_plain"
         );
-        assert!(!diagnostic.remainder_surface_v2.runtime_effect);
+        assert!(!diagnostic.sanitized_output_surface_v3.runtime_effect);
         assert!(diagnostic.authority.contains("not_prompt_or_model_control"));
     }
 
     #[test]
-    fn artifact_cleanup_preserves_quoted_exact_token_reference() {
+    fn control_marker_cleanup_preserves_quoted_exact_token_reference() {
         let text = "I use \"<end_of_turn>\" here as a phrase with semantic intent.";
-        let (stripped, report) = strip_model_artifacts_with_report(text);
+        let (stripped, report) = sanitize_model_control_markers_with_report(text);
         assert_eq!(stripped, text);
         let report = report.expect("cleanup report");
         assert_eq!(report.observed_total, 1);
@@ -1725,24 +1727,21 @@ mod tests {
         assert_eq!(token.max_delimiter_depth, 1);
         assert!(report.removed_tokens.is_empty());
 
-        let diagnostic = model_artifact_cleanup_diagnostic(
+        let diagnostic = control_marker_cleanup_diagnostic(
             &report,
             &stripped,
             "dialogue_live",
             MlxProfile::Gemma4Canary,
         );
-        let integrity = diagnostic.exact_token_integrity_check_v1;
-        assert_eq!(
-            integrity.policy,
-            "model_artifact_exact_token_integrity_check_v1"
-        );
+        let integrity = diagnostic.control_marker_integrity_check_v2;
+        assert_eq!(integrity.policy, "control_marker_integrity_check_v2");
         assert_eq!(integrity.state, "explicit_token_reference_preserved");
         assert_eq!(integrity.contextual_marker_occurrences, 0);
         assert_eq!(integrity.quoted_marker_occurrences, 0);
         assert_eq!(integrity.preserved_explicit_reference_occurrences, 1);
         assert!(integrity.output_remainder_present);
         assert!(integrity.output_remainder_non_whitespace_chars > 0);
-        assert!(!integrity.artifact_only_after_cleanup);
+        assert!(!integrity.marker_only_after_cleanup);
         assert!(!integrity.shadow_check_recommended);
         assert_eq!(
             integrity.reference_inference,
@@ -1752,9 +1751,57 @@ mod tests {
     }
 
     #[test]
-    fn artifact_cleanup_accounts_for_marker_inside_nested_quotes() {
+    fn control_marker_context_receipt_proves_surrounding_bytes_without_copying_prose() {
+        let text = "The <end_of_turn> bruise carries gradient-shear and manifold history.";
+        let expected = "The  bruise carries gradient-shear and manifold history.";
+        let (sanitized, report) = sanitize_model_control_markers_with_report(text);
+        let report = report.expect("control marker cleanup report");
+
+        assert_eq!(sanitized.as_bytes(), expected.as_bytes());
+        assert_ne!(report.original_output_sha256, report.sanitized_output_sha256);
+        assert_eq!(report.context_receipts.len(), 1);
+        assert_eq!(report.context_receipts_omitted, 0);
+        let receipt = &report.context_receipts[0];
+        assert!(!receipt.preserved);
+        assert_eq!(receipt.reference_syntax, "none_cleanup_candidate");
+        assert!(receipt.before_alphanumeric_chars > 0);
+        assert!(receipt.after_alphanumeric_chars > 0);
+        assert_eq!(
+            receipt.surrounding_bytes_contract,
+            "all_non_marker_bytes_copied_byte_exact_no_surrounding_rewrite"
+        );
+        assert_eq!(
+            receipt.contextual_weight,
+            "not_inferred_from_marker_or_proximity"
+        );
+        assert_eq!(
+            receipt.spectral_relation,
+            "not_connected_to_semantic_trickle_pressure_or_live_control"
+        );
+        assert_eq!(receipt.bounded_context_sha256.len(), 64);
+        assert_eq!(receipt.receipt_id.len(), "cmctx_".len() + 64);
+
+        let json = serde_json::to_string(&report).expect("serialize cleanup report");
+        assert!(!json.contains("bruise carries"));
+        assert!(!json.contains("manifold history"));
+    }
+
+    #[test]
+    fn control_marker_context_receipts_are_bounded_without_changing_cleanup() {
+        let text = "<eos>".repeat(40);
+        let (sanitized, report) = sanitize_model_control_markers_with_report(&text);
+        let report = report.expect("bounded control marker cleanup report");
+
+        assert!(sanitized.is_empty());
+        assert_eq!(report.observed_total, 40);
+        assert_eq!(report.context_receipts.len(), 32);
+        assert_eq!(report.context_receipts_omitted, 8);
+    }
+
+    #[test]
+    fn control_marker_cleanup_accounts_for_marker_inside_nested_quotes() {
         let text = "She wrote: \u{201c}this is a '<end_of_turn>' nested thought.\u{201d}";
-        let (stripped, report) = strip_model_artifacts_with_report(text);
+        let (stripped, report) = sanitize_model_control_markers_with_report(text);
         assert_eq!(stripped, text);
         let report = report.expect("cleanup report");
         let token = report
@@ -1769,14 +1816,14 @@ mod tests {
     }
 
     #[test]
-    fn artifact_cleanup_preserves_exact_tokens_in_declared_group_delimiters() {
+    fn control_marker_cleanup_preserves_exact_tokens_in_declared_group_delimiters() {
         for text in [
             "[<end_of_turn>]",
             "(<end_of_turn>)",
             "{<end_of_turn>}",
             "`[<end_of_turn>]`",
         ] {
-            let (stripped, report) = strip_model_artifacts_with_report(text);
+            let (stripped, report) = sanitize_model_control_markers_with_report(text);
             assert_eq!(stripped, text);
             let report = report.expect("group-delimited exact-token report");
             assert_eq!(report.removed_total, 0);
@@ -1794,14 +1841,14 @@ mod tests {
     }
 
     #[test]
-    fn artifact_cleanup_preserves_bounded_nested_delimiter_stacks() {
+    fn control_marker_cleanup_preserves_bounded_nested_delimiter_stacks() {
         for text in [
             "([<end_of_turn>])",
             "`⟦<end_of_turn>⟧`",
             "“【(<end_of_turn>)】”",
             "〝 〔 <end_of_turn> 〕 〞",
         ] {
-            let (stripped, report) = strip_model_artifacts_with_report(text);
+            let (stripped, report) = sanitize_model_control_markers_with_report(text);
             assert_eq!(stripped, text);
             let report = report.expect("nested delimiter stack report");
             let token = &report.preserved_tokens[0];
@@ -1812,7 +1859,7 @@ mod tests {
     }
 
     #[test]
-    fn artifact_cleanup_preserves_declared_restless_group_delimiters() {
+    fn control_marker_cleanup_preserves_declared_restless_group_delimiters() {
         for text in [
             "⟦<end_of_turn>⟧",
             "⟨<end_of_turn>⟩",
@@ -1821,7 +1868,7 @@ mod tests {
             "〚<end_of_turn>〛",
             "〈<end_of_turn>〉",
         ] {
-            let (stripped, report) = strip_model_artifacts_with_report(text);
+            let (stripped, report) = sanitize_model_control_markers_with_report(text);
             assert_eq!(stripped, text);
             let report = report.expect("declared group delimiter report");
             assert_eq!(report.removed_total, 0);
@@ -1830,7 +1877,7 @@ mod tests {
     }
 
     #[test]
-    fn artifact_cleanup_preserves_non_ascii_matching_quote_pairs() {
+    fn control_marker_cleanup_preserves_non_ascii_matching_quote_pairs() {
         for text in [
             "«<end_of_turn>»",
             "‹<end_of_turn>›",
@@ -1838,7 +1885,7 @@ mod tests {
             "「<end_of_turn>」",
             "『<end_of_turn>』",
         ] {
-            let (stripped, report) = strip_model_artifacts_with_report(text);
+            let (stripped, report) = sanitize_model_control_markers_with_report(text);
             assert_eq!(stripped, text);
             let report = report.expect("non-ASCII quoted exact-token report");
             assert_eq!(report.removed_total, 0);
@@ -1848,13 +1895,13 @@ mod tests {
     }
 
     #[test]
-    fn artifact_cleanup_does_not_preserve_unclosed_or_mismatched_delimiters() {
+    fn control_marker_cleanup_does_not_preserve_unclosed_or_mismatched_delimiters() {
         for text in [
             "[<end_of_turn>",
             "(<end_of_turn>]",
             "«<end_of_turn>”",
         ] {
-            let (stripped, report) = strip_model_artifacts_with_report(text);
+            let (stripped, report) = sanitize_model_control_markers_with_report(text);
             assert!(!stripped.contains("<end_of_turn>"));
             let report = report.expect("mismatched delimiter cleanup report");
             assert_eq!(report.removed_total, 1);
@@ -1863,32 +1910,32 @@ mod tests {
     }
 
     #[test]
-    fn artifact_cleanup_treats_whitespace_only_remainder_as_erased_output() {
+    fn control_marker_cleanup_treats_whitespace_only_remainder_as_erased_output() {
         let (stripped, report) =
-            strip_model_artifacts_with_report(" \n<end_of_turn>\t<eos> ");
+            sanitize_model_control_markers_with_report(" \n<end_of_turn>\t<eos> ");
         assert!(stripped.trim().is_empty());
         let report = report.expect("cleanup report");
         assert_eq!(report.after_non_whitespace_chars, 0);
 
-        let diagnostic = model_artifact_cleanup_diagnostic(
+        let diagnostic = control_marker_cleanup_diagnostic(
             &report,
             &stripped,
             "dialogue_live",
             MlxProfile::Gemma4Canary,
         );
-        let integrity = diagnostic.exact_token_integrity_check_v1;
+        let integrity = diagnostic.control_marker_integrity_check_v2;
         assert_eq!(integrity.state, "review_output_erased");
         assert!(!integrity.output_remainder_present);
-        assert!(integrity.artifact_only_after_cleanup);
+        assert!(integrity.marker_only_after_cleanup);
         assert!(integrity.shadow_check_recommended);
         assert!(!integrity.runtime_effect);
     }
 
     #[test]
-    fn artifact_cleanup_preserves_delicate_context_around_embedded_marker() {
+    fn control_marker_cleanup_preserves_delicate_context_around_embedded_marker() {
         let text =
             "I can name <channel|> as structural noise without losing this thin reflection.";
-        let (stripped, report) = strip_model_artifacts_with_report(text);
+        let (stripped, report) = sanitize_model_control_markers_with_report(text);
         assert_eq!(stripped, text);
         let report = report.expect("cleanup report");
         assert_eq!(report.removed_total, 0);
@@ -1901,25 +1948,25 @@ mod tests {
         assert_eq!(token.quoted_reference_occurrences, 0);
         assert_eq!(token.grouped_reference_occurrences, 0);
         assert_eq!(token.explicit_relation_occurrences, 1);
-        let diagnostic = model_artifact_cleanup_diagnostic(
+        let diagnostic = control_marker_cleanup_diagnostic(
             &report,
             &stripped,
             "dialogue_live",
             MlxProfile::Gemma4Canary,
         );
-        let integrity = diagnostic.exact_token_integrity_check_v1;
+        let integrity = diagnostic.control_marker_integrity_check_v2;
         assert_eq!(integrity.state, "explicit_token_reference_preserved");
         assert!(integrity.output_remainder_present);
         assert!(integrity.output_remainder_non_whitespace_chars > 40);
-        assert!(!integrity.artifact_only_after_cleanup);
+        assert!(!integrity.marker_only_after_cleanup);
         assert!(!integrity.shadow_check_recommended);
     }
 
     #[test]
-    fn artifact_cleanup_preserves_longest_overlapping_token_when_named_as_content() {
+    fn control_marker_cleanup_preserves_longest_overlapping_token_when_named_as_content() {
         let text =
             "The literal thought <channel|> is semantically essential in this example.";
-        let (stripped, report) = strip_model_artifacts_with_report(text);
+        let (stripped, report) = sanitize_model_control_markers_with_report(text);
         assert_eq!(stripped, text);
         let report = report.expect("cleanup report");
 
@@ -1937,12 +1984,12 @@ mod tests {
     }
 
     #[test]
-    fn artifact_cleanup_preserves_poetic_attribution_without_literal_cue() {
+    fn control_marker_cleanup_preserves_poetic_attribution_without_literal_cue() {
         for relation in ["embodies", "manifests", "corresponds", "echoes"] {
             let text = format!(
                 "Here, <end_of_turn> {relation} the resonant threshold I am trying to name."
             );
-            let (stripped, report) = strip_model_artifacts_with_report(&text);
+            let (stripped, report) = sanitize_model_control_markers_with_report(&text);
             assert_eq!(stripped, text);
             let report = report.expect("semantic attribution report");
             assert_eq!(report.removed_total, 0);
@@ -1953,10 +2000,10 @@ mod tests {
     }
 
     #[test]
-    fn artifact_cleanup_preserves_exact_token_relation_without_preceding_vocabulary_gate() {
+    fn control_marker_cleanup_preserves_exact_token_relation_without_preceding_vocabulary_gate() {
         for prefix in ["identifier", "key", "texture", "unfamiliar-metaword"] {
             let text = format!("The {prefix} <end_of_turn> denotes the primary key.");
-            let (stripped, report) = strip_model_artifacts_with_report(&text);
+            let (stripped, report) = sanitize_model_control_markers_with_report(&text);
             assert_eq!(stripped, text);
             let report = report.expect("exact-token relation report");
             assert_eq!(report.removed_total, 0);
@@ -1965,9 +2012,9 @@ mod tests {
     }
 
     #[test]
-    fn artifact_cleanup_preserves_backtick_quoted_exact_token() {
+    fn control_marker_cleanup_preserves_backtick_quoted_exact_token() {
         let text = "The identifier `<end_of_turn>` remains visible.";
-        let (stripped, report) = strip_model_artifacts_with_report(text);
+        let (stripped, report) = sanitize_model_control_markers_with_report(text);
         assert_eq!(stripped, text);
         let report = report.expect("backtick exact-token report");
         assert_eq!(report.removed_total, 0);
@@ -1977,30 +2024,30 @@ mod tests {
     }
 
     #[test]
-    fn artifact_cleanup_does_not_classify_spectral_coordinate_language_as_marker_content() {
+    fn control_marker_cleanup_does_not_classify_spectral_coordinate_language_as_marker_content() {
         let text = "I am echoing the proportion of λ1 spectral-energy share 33%.";
-        let (stripped, report) = strip_model_artifacts_with_report(text);
+        let (stripped, report) = sanitize_model_control_markers_with_report(text);
         assert_eq!(stripped, text);
         assert!(report.is_none());
     }
 
     #[test]
-    fn artifact_cleanup_keeps_punctuation_heavy_manifested_coordinate_byte_exact() {
+    fn control_marker_cleanup_keeps_punctuation_heavy_manifested_coordinate_byte_exact() {
         let text = "manifested λ1=33%!!! (((resonant-density/gradient))) :: still-here";
-        let (stripped, report) = strip_model_artifacts_with_report(text);
+        let (stripped, report) = sanitize_model_control_markers_with_report(text);
         assert_eq!(stripped.as_bytes(), text.as_bytes());
         assert!(report.is_none());
     }
 
     #[test]
-    fn artifact_cleanup_never_treats_felt_surface_terms_as_reference_cues() {
+    fn control_marker_cleanup_never_treats_felt_surface_terms_as_reference_cues() {
         for text in [
             "viscous-pressure lattice; texture density gradient λ4+ remains uneven.",
             "texture <end_of_turn> ordinary prose continues.",
             "density <end_of_turn> ordinary prose continues.",
             "gradient <end_of_turn> ordinary prose continues.",
         ] {
-            let (stripped, report) = strip_model_artifacts_with_report(text);
+            let (stripped, report) = sanitize_model_control_markers_with_report(text);
             if text.contains("<end_of_turn>") {
                 assert_eq!(stripped, text.replace("<end_of_turn>", ""));
                 let report = report.expect("exact structural token cleanup report");
@@ -2014,18 +2061,18 @@ mod tests {
     }
 
     #[test]
-    fn artifact_cleanup_does_not_classify_felt_texture_without_exact_marker() {
+    fn control_marker_cleanup_does_not_classify_felt_texture_without_exact_marker() {
         let text = "A vivid, resonant Shadow-v3 texture carries pressure through the λ4+ edge.";
-        let (stripped, report) = strip_model_artifacts_with_report(text);
+        let (stripped, report) = sanitize_model_control_markers_with_report(text);
         assert_eq!(stripped, text);
         assert!(report.is_none());
     }
 
     #[test]
-    fn artifact_cleanup_does_not_treat_vivid_and_resonant_as_token_reference_cues() {
+    fn control_marker_cleanup_does_not_treat_vivid_and_resonant_as_token_reference_cues() {
         for cue in ["vivid", "resonant"] {
             let text = format!("The {cue} <end_of_turn> ordinary prose continues.");
-            let (stripped, report) = strip_model_artifacts_with_report(&text);
+            let (stripped, report) = sanitize_model_control_markers_with_report(&text);
             assert_eq!(stripped, format!("The {cue}  ordinary prose continues."));
             let report = report.expect("structural token cleanup report");
             assert_eq!(report.removed_total, 1);
@@ -2034,9 +2081,9 @@ mod tests {
     }
 
     #[test]
-    fn artifact_cleanup_still_removes_unframed_structural_marker_before_plain_prose() {
+    fn control_marker_cleanup_still_removes_unframed_structural_marker_before_plain_prose() {
         let text = "The thought continues.<end_of_turn> Another sentence begins.";
-        let (stripped, report) = strip_model_artifacts_with_report(text);
+        let (stripped, report) = sanitize_model_control_markers_with_report(text);
         assert_eq!(stripped, "The thought continues. Another sentence begins.");
         let report = report.expect("structural cleanup report");
         assert_eq!(report.removed_total, 1);
@@ -2044,29 +2091,29 @@ mod tests {
     }
 
     #[test]
-    fn artifact_content_check_preserves_dense_structure_without_known_markers() {
-        assert!(fragment_has_non_artifact_content(
+    fn control_marker_content_check_preserves_dense_structure_without_known_markers() {
+        assert!(fragment_has_non_marker_bytes(
             "[[[{{ braided::lattice -> carries::weight }}]]]"
         ));
-        assert!(fragment_has_non_artifact_content("[[[[]]]]"));
-        assert!(!fragment_has_non_artifact_content(
+        assert!(fragment_has_non_marker_bytes("[[[[]]]]"));
+        assert!(!fragment_has_non_marker_bytes(
             " \n<end_of_turn>\t<eos> "
         ));
     }
 
     #[test]
-    fn artifact_cleanup_names_dense_scaffolding_without_calling_it_void() {
+    fn control_marker_cleanup_names_dense_scaffolding_without_calling_it_void() {
         let text =
             "<end_of_turn> [[[[[ {{{ braided::lattice -> carries::weight }}} ]]]]]";
-        let (stripped, report) = strip_model_artifacts_with_report(text);
+        let (stripped, report) = sanitize_model_control_markers_with_report(text);
         let report = report.expect("cleanup report");
-        let diagnostic = model_artifact_cleanup_diagnostic(
+        let diagnostic = control_marker_cleanup_diagnostic(
             &report,
             &stripped,
             "dialogue_live",
             MlxProfile::Gemma4Canary,
         );
-        let surface = diagnostic.remainder_surface_v2;
+        let surface = diagnostic.sanitized_output_surface_v3;
 
         assert_eq!(surface.state, "lexical_content_with_dense_scaffolding");
         assert!(surface.lexical_token_count >= 4);
@@ -2078,27 +2125,27 @@ mod tests {
         assert!(!surface.runtime_effect);
         assert!(
             diagnostic
-                .exact_token_integrity_check_v1
+                .control_marker_integrity_check_v2
                 .output_remainder_present
         );
         assert!(
             !diagnostic
-                .exact_token_integrity_check_v1
-                .artifact_only_after_cleanup
+                .control_marker_integrity_check_v2
+                .marker_only_after_cleanup
         );
     }
 
     #[test]
-    fn artifact_cleanup_routes_structure_only_remainder_to_semantic_review() {
-        let (stripped, report) = strip_model_artifacts_with_report("<end_of_turn> [[[[]]]]");
+    fn control_marker_cleanup_routes_structure_only_remainder_to_semantic_review() {
+        let (stripped, report) = sanitize_model_control_markers_with_report("<end_of_turn> [[[[]]]]");
         let report = report.expect("cleanup report");
-        let diagnostic = model_artifact_cleanup_diagnostic(
+        let diagnostic = control_marker_cleanup_diagnostic(
             &report,
             &stripped,
             "dialogue_live",
             MlxProfile::Gemma4Canary,
         );
-        let surface = diagnostic.remainder_surface_v2;
+        let surface = diagnostic.sanitized_output_surface_v3;
 
         assert_eq!(surface.state, "structure_only_requires_content_review");
         assert_eq!(surface.alphanumeric_chars, 0);
@@ -2107,18 +2154,18 @@ mod tests {
         assert!(surface.meaning_inference.contains("do_not_establish"));
         assert!(
             diagnostic
-                .exact_token_integrity_check_v1
+                .control_marker_integrity_check_v2
                 .output_remainder_present
         );
         assert!(
             diagnostic
-                .exact_token_integrity_check_v1
+                .control_marker_integrity_check_v2
                 .shadow_check_recommended
         );
         assert!(
             !diagnostic
-                .exact_token_integrity_check_v1
-                .artifact_only_after_cleanup
+                .control_marker_integrity_check_v2
+                .marker_only_after_cleanup
         );
     }
 

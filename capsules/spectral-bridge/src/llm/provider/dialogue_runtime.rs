@@ -35,11 +35,10 @@ struct KnownModelControlMarkerMatch {
     reference_syntax: Option<ExactKnownMarkerReferenceSyntax>,
 }
 
-/// A byte range proven to be one of `MODEL_ARTIFACT_TOKENS` by the longest-match scanner.
+/// A byte range proven to be one of `KNOWN_MODEL_CONTROL_MARKERS` by exact byte matching.
 ///
-/// Keeping construction inside `longest_exact_known_model_artifact_at` makes it impossible for
-/// felt, spectral, or otherwise ordinary language to enter transport-marker classification. This
-/// sanitizer does not decide whether any other language is meaningful, stable, or an artifact.
+/// Construction proves only that this range is a known transport/control sequence. It makes no
+/// identity, meaning, ownership, stability, or spectral claim about this or any surrounding byte.
 #[derive(Debug, Clone, Copy)]
 struct ExactKnownModelControlMarkerOccurrence {
     token: &'static str,
@@ -74,8 +73,8 @@ impl ExactKnownModelControlMarkerOccurrence {
         None
     }
 
-    /// An exact known token is the grammatical subject here. The preceding words are never
-    /// classified, so novel metalinguistic vocabulary and felt language have identical behavior.
+    /// This exact marker is the grammatical subject here. No preceding word is inspected or
+    /// classified, and the relation is used only to decide whether the marker bytes stay visible.
     fn followed_by_explicit_exact_token_relation(self, text: &str) -> bool {
         matches!(
             first_word_after(text, self.end).as_str(),
@@ -102,12 +101,12 @@ fn first_word_after(text: &str, end: usize) -> String {
         .to_ascii_lowercase()
 }
 
-fn longest_exact_known_model_artifact_at(
+fn longest_exact_known_model_control_marker_at(
     text: &str,
     offset: usize,
 ) -> Option<ExactKnownModelControlMarkerOccurrence> {
     let tail = &text[offset..];
-    let token = MODEL_ARTIFACT_TOKENS
+    let token = KNOWN_MODEL_CONTROL_MARKERS
         .iter()
         .copied()
         .filter(|token| tail.starts_with(token))
@@ -119,7 +118,7 @@ fn longest_exact_known_model_artifact_at(
     })
 }
 
-fn strip_known_model_artifact_matches(
+fn scan_known_model_control_markers(
     text: &str,
 ) -> (String, Vec<KnownModelControlMarkerMatch>) {
     let mut remainder = String::with_capacity(text.len());
@@ -128,7 +127,7 @@ fn strip_known_model_artifact_matches(
 
     while offset < text.len() {
         let tail = &text[offset..];
-        if let Some(occurrence) = longest_exact_known_model_artifact_at(text, offset) {
+        if let Some(occurrence) = longest_exact_known_model_control_marker_at(text, offset) {
             let reference_syntax = occurrence.reference_syntax(text);
             matches.push(KnownModelControlMarkerMatch {
                 occurrence,
@@ -151,9 +150,9 @@ fn strip_known_model_artifact_matches(
     (remainder, matches)
 }
 
-fn fragment_has_non_artifact_content(fragment: &str) -> bool {
-    let (semantic, _) = strip_known_model_artifact_matches(fragment);
-    !semantic.trim().is_empty()
+fn fragment_has_non_marker_bytes(fragment: &str) -> bool {
+    let (without_markers, _) = scan_known_model_control_markers(fragment);
+    !without_markers.trim().is_empty()
 }
 
 const MAX_EXACT_REFERENCE_DELIMITER_DEPTH: usize = 4;
@@ -226,12 +225,12 @@ fn exact_reference_delimiter_syntax(
     })
 }
 
-fn model_artifact_placement_counts(
+fn control_marker_placement_counts(
     text: &str,
     occurrence: ExactKnownModelControlMarkerOccurrence,
 ) -> (usize, usize, usize) {
-    let content_before = fragment_has_non_artifact_content(&text[..occurrence.start]);
-    let content_after = fragment_has_non_artifact_content(&text[occurrence.end..]);
+    let content_before = fragment_has_non_marker_bytes(&text[..occurrence.start]);
+    let content_after = fragment_has_non_marker_bytes(&text[occurrence.end..]);
     let (boundary_occurrences, contextual_occurrences) = if content_before && content_after {
         (0, 1)
     } else {
@@ -252,38 +251,130 @@ fn model_artifact_placement_counts(
     )
 }
 
-pub(crate) fn strip_model_artifacts_with_report(
+const CONTROL_MARKER_CONTEXT_WINDOW_CHARS: usize = 64;
+const MAX_CONTROL_MARKER_CONTEXT_RECEIPTS: usize = 32;
+
+fn sha256_parts(parts: &[&[u8]]) -> String {
+    let mut hasher = Sha256::new();
+    for part in parts {
+        hasher.update(part);
+        hasher.update([0]);
+    }
+    format!("{:x}", hasher.finalize())
+}
+
+fn trailing_bounded_chars(text: &str) -> String {
+    let mut chars = text
+        .chars()
+        .rev()
+        .take(CONTROL_MARKER_CONTEXT_WINDOW_CHARS)
+        .collect::<Vec<_>>();
+    chars.reverse();
+    chars.into_iter().collect()
+}
+
+fn leading_bounded_chars(text: &str) -> String {
+    text.chars()
+        .take(CONTROL_MARKER_CONTEXT_WINDOW_CHARS)
+        .collect()
+}
+
+fn control_marker_context_receipt_v1(
     text: &str,
-) -> (String, Option<StripModelArtifactsReport>) {
-    let (result, matches) = strip_known_model_artifact_matches(text);
+    original_output_sha256: &str,
+    marker_match: KnownModelControlMarkerMatch,
+) -> ControlMarkerContextReceiptV1 {
+    let occurrence = marker_match.occurrence;
+    let before = trailing_bounded_chars(&text[..occurrence.start]);
+    let after = leading_bounded_chars(&text[occurrence.end..]);
+    let (reference_syntax, delimiter_depth) = match marker_match.reference_syntax {
+        Some(ExactKnownMarkerReferenceSyntax {
+            context: ExactKnownMarkerReferenceContext::QuotedExactKnownToken,
+            delimiter_depth,
+        }) => ("quoted_exact_marker", delimiter_depth),
+        Some(ExactKnownMarkerReferenceSyntax {
+            context: ExactKnownMarkerReferenceContext::GroupedExactKnownToken,
+            delimiter_depth,
+        }) => ("grouped_exact_marker", delimiter_depth),
+        Some(ExactKnownMarkerReferenceSyntax {
+            context: ExactKnownMarkerReferenceContext::ExplicitExactKnownTokenRelation,
+            ..
+        }) => ("following_exact_relation", 0),
+        None => ("none_cleanup_candidate", 0),
+    };
+    let start = occurrence.start.to_string();
+    let end = occurrence.end.to_string();
+    let receipt_id = sha256_parts(&[
+        b"control_marker_context_receipt_v1",
+        original_output_sha256.as_bytes(),
+        start.as_bytes(),
+        end.as_bytes(),
+        occurrence.token.as_bytes(),
+    ]);
+
+    ControlMarkerContextReceiptV1 {
+        receipt_id: format!("cmctx_{receipt_id}"),
+        marker: occurrence.token.to_string(),
+        start_byte: occurrence.start,
+        end_byte: occurrence.end,
+        preserved: marker_match.reference_syntax.is_some(),
+        reference_syntax,
+        delimiter_depth,
+        before_window_chars: before.chars().count(),
+        after_window_chars: after.chars().count(),
+        before_alphanumeric_chars: before
+            .chars()
+            .filter(|character| character.is_alphanumeric())
+            .count(),
+        after_alphanumeric_chars: after
+            .chars()
+            .filter(|character| character.is_alphanumeric())
+            .count(),
+        bounded_context_sha256: sha256_parts(&[
+            before.as_bytes(),
+            occurrence.token.as_bytes(),
+            after.as_bytes(),
+        ]),
+        surrounding_bytes_contract:
+            "all_non_marker_bytes_copied_byte_exact_no_surrounding_rewrite",
+        contextual_weight: "not_inferred_from_marker_or_proximity",
+        spectral_relation: "not_connected_to_semantic_trickle_pressure_or_live_control",
+        authority: "content_free_cleanup_evidence_not_identity_meaning_spectral_or_control",
+    }
+}
+
+pub(crate) fn sanitize_model_control_markers_with_report(
+    text: &str,
+) -> (String, Option<ControlMarkerCleanupReport>) {
+    let (result, matches) = scan_known_model_control_markers(text);
     if matches.is_empty() {
         return (result, None);
     }
 
     let mut removed_tokens = Vec::new();
     let mut preserved_tokens = Vec::new();
-    for token in MODEL_ARTIFACT_TOKENS {
+    for token in KNOWN_MODEL_CONTROL_MARKERS {
         let mut count = 0usize;
         let mut boundary_occurrences = 0usize;
         let mut contextual_occurrences = 0usize;
         let mut quoted_occurrences = 0usize;
-        for artifact_match in matches
+        for marker_match in matches
             .iter()
             .copied()
-            .filter(|artifact_match| {
-                artifact_match.occurrence.token == *token
-                    && artifact_match.reference_syntax.is_none()
+            .filter(|marker_match| {
+                marker_match.occurrence.token == *token
+                    && marker_match.reference_syntax.is_none()
             })
         {
             count = count.saturating_add(1);
             let (boundary, contextual, quoted) =
-                model_artifact_placement_counts(text, artifact_match.occurrence);
+                control_marker_placement_counts(text, marker_match.occurrence);
             boundary_occurrences = boundary_occurrences.saturating_add(boundary);
             contextual_occurrences = contextual_occurrences.saturating_add(contextual);
             quoted_occurrences = quoted_occurrences.saturating_add(quoted);
         }
         if count > 0 {
-            removed_tokens.push(StripModelArtifactTokenCount {
+            removed_tokens.push(RemovedControlMarkerCount {
                 token: (*token).to_string(),
                 count,
                 boundary_occurrences,
@@ -294,27 +385,27 @@ pub(crate) fn strip_model_artifacts_with_report(
 
         let quoted_reference_occurrences = matches
             .iter()
-            .filter(|artifact_match| {
-                artifact_match.occurrence.token == *token
-                    && artifact_match.reference_syntax.is_some_and(|syntax| {
+            .filter(|marker_match| {
+                marker_match.occurrence.token == *token
+                    && marker_match.reference_syntax.is_some_and(|syntax| {
                         syntax.context == ExactKnownMarkerReferenceContext::QuotedExactKnownToken
                     })
             })
             .count();
         let grouped_reference_occurrences = matches
             .iter()
-            .filter(|artifact_match| {
-                artifact_match.occurrence.token == *token
-                    && artifact_match.reference_syntax.is_some_and(|syntax| {
+            .filter(|marker_match| {
+                marker_match.occurrence.token == *token
+                    && marker_match.reference_syntax.is_some_and(|syntax| {
                         syntax.context == ExactKnownMarkerReferenceContext::GroupedExactKnownToken
                     })
             })
             .count();
         let explicit_relation_occurrences = matches
             .iter()
-            .filter(|artifact_match| {
-                artifact_match.occurrence.token == *token
-                    && artifact_match.reference_syntax.is_some_and(|syntax| {
+            .filter(|marker_match| {
+                marker_match.occurrence.token == *token
+                    && marker_match.reference_syntax.is_some_and(|syntax| {
                         syntax.context
                             == ExactKnownMarkerReferenceContext::ExplicitExactKnownTokenRelation
                     })
@@ -322,17 +413,17 @@ pub(crate) fn strip_model_artifacts_with_report(
             .count();
         let nested_delimited_reference_occurrences = matches
             .iter()
-            .filter(|artifact_match| {
-                artifact_match.occurrence.token == *token
-                    && artifact_match
+            .filter(|marker_match| {
+                marker_match.occurrence.token == *token
+                    && marker_match
                         .reference_syntax
                         .is_some_and(|syntax| syntax.delimiter_depth > 1)
             })
             .count();
         let max_delimiter_depth = matches
             .iter()
-            .filter(|artifact_match| artifact_match.occurrence.token == *token)
-            .filter_map(|artifact_match| artifact_match.reference_syntax)
+            .filter(|marker_match| marker_match.occurrence.token == *token)
+            .filter_map(|marker_match| marker_match.reference_syntax)
             .map(|syntax| syntax.delimiter_depth)
             .max()
             .unwrap_or(0);
@@ -340,7 +431,7 @@ pub(crate) fn strip_model_artifacts_with_report(
             .saturating_add(grouped_reference_occurrences)
             .saturating_add(explicit_relation_occurrences);
         if preserved_count > 0 {
-            preserved_tokens.push(PreservedModelArtifactTokenCount {
+            preserved_tokens.push(PreservedControlMarkerCount {
                 token: (*token).to_string(),
                 count: preserved_count,
                 quoted_reference_occurrences,
@@ -354,27 +445,27 @@ pub(crate) fn strip_model_artifacts_with_report(
     let observed_total = matches.len();
     let removed_total = matches
         .iter()
-        .filter(|artifact_match| artifact_match.reference_syntax.is_none())
+        .filter(|marker_match| marker_match.reference_syntax.is_none())
         .count();
     let preserved_explicit_reference_total = observed_total.saturating_sub(removed_total);
     let removed_marker_bytes = matches
         .iter()
-        .filter(|artifact_match| artifact_match.reference_syntax.is_none())
-        .map(|artifact_match| {
-            artifact_match
+        .filter(|marker_match| marker_match.reference_syntax.is_none())
+        .map(|marker_match| {
+            marker_match
                 .occurrence
                 .end
-                .saturating_sub(artifact_match.occurrence.start)
+                .saturating_sub(marker_match.occurrence.start)
         })
         .sum();
     let preserved_marker_bytes = matches
         .iter()
-        .filter(|artifact_match| artifact_match.reference_syntax.is_some())
-        .map(|artifact_match| {
-            artifact_match
+        .filter(|marker_match| marker_match.reference_syntax.is_some())
+        .map(|marker_match| {
+            marker_match
                 .occurrence
                 .end
-                .saturating_sub(artifact_match.occurrence.start)
+                .saturating_sub(marker_match.occurrence.start)
         })
         .sum();
     let after_chars = result.len();
@@ -382,9 +473,20 @@ pub(crate) fn strip_model_artifacts_with_report(
         .chars()
         .filter(|character| !character.is_whitespace())
         .count();
+    let original_output_sha256 = sha256_parts(&[text.as_bytes()]);
+    let sanitized_output_sha256 = sha256_parts(&[result.as_bytes()]);
+    let context_receipts = matches
+        .iter()
+        .copied()
+        .take(MAX_CONTROL_MARKER_CONTEXT_RECEIPTS)
+        .map(|marker_match| {
+            control_marker_context_receipt_v1(text, &original_output_sha256, marker_match)
+        })
+        .collect::<Vec<_>>();
+    let context_receipts_omitted = matches.len().saturating_sub(context_receipts.len());
     (
         result,
-        Some(StripModelArtifactsReport {
+        Some(ControlMarkerCleanupReport {
             observed_total,
             removed_total,
             preserved_explicit_reference_total,
@@ -395,16 +497,20 @@ pub(crate) fn strip_model_artifacts_with_report(
             after_non_whitespace_chars,
             classification_scope: "exact_known_model_control_marker_occurrence_only",
             excluded_meaning_scope:
-                "all_non_marker_language_including_felt_texture_memory_spectral_state_and_semantic_weight_not_classified_or_ranked",
+                "all_non_marker_bytes_are_outside_cleanup_classification_identity_ownership_meaning_and_spectral_weight",
             accounting_basis: "single_pass_longest_raw_control_marker_match_with_bounded_exact_reference_syntax_preservation_no_second_order_marker_creation",
+            original_output_sha256,
+            sanitized_output_sha256,
+            context_receipts,
+            context_receipts_omitted,
             removed_tokens,
             preserved_tokens,
         }),
     )
 }
 
-fn strip_model_artifacts(text: &str) -> String {
-    strip_model_artifacts_with_report(text).0
+fn sanitize_model_control_markers(text: &str) -> String {
+    sanitize_model_control_markers_with_report(text).0
 }
 
 fn is_peer_action_directive_line(line: &str) -> bool {
@@ -441,8 +547,8 @@ fn sanitize_minime_context_for_dialogue(text: &str) -> String {
 }
 
 fn is_valid_dialogue_output(text: &str) -> bool {
-    // Strip leaked model tokens before any analysis — they corrupt alpha/punct ratios.
-    let stripped = strip_model_artifacts(text);
+    // Remove exact leaked control sequences before measuring output shape.
+    let stripped = sanitize_model_control_markers(text);
 
     let body = stripped
         .lines()

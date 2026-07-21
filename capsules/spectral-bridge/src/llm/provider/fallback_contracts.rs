@@ -154,10 +154,9 @@ pub(crate) fn dialogue_retry_tokens(requested_tokens: u32, prompt_pressure_chars
     }
 }
 
-/// Model-artifact tokens that Gemma (and similar) sometimes leak into output.
-/// These are stripped before any quality-gate evaluation so they don't inflate
-/// punctuation counts or deflate alpha ratios.
-const MODEL_ARTIFACT_TOKENS: &[&str] = &[
+/// Exact transport/control byte sequences that model runtimes sometimes leak into output.
+/// This list says nothing about the identity, meaning, or ownership of any other bytes.
+const KNOWN_MODEL_CONTROL_MARKERS: &[&str] = &[
     "thought <channel|>",
     "thought\n<channel|>",
     "analysis <channel|>",
@@ -181,7 +180,7 @@ const MODEL_ARTIFACT_TOKENS: &[&str] = &[
 ];
 
 #[derive(Debug, Clone, Serialize)]
-pub(crate) struct StripModelArtifactsReport {
+pub(crate) struct ControlMarkerCleanupReport {
     pub observed_total: usize,
     pub removed_total: usize,
     pub preserved_explicit_reference_total: usize,
@@ -193,12 +192,16 @@ pub(crate) struct StripModelArtifactsReport {
     pub classification_scope: &'static str,
     pub excluded_meaning_scope: &'static str,
     pub accounting_basis: &'static str,
-    pub removed_tokens: Vec<StripModelArtifactTokenCount>,
-    pub preserved_tokens: Vec<PreservedModelArtifactTokenCount>,
+    pub original_output_sha256: String,
+    pub sanitized_output_sha256: String,
+    pub context_receipts: Vec<ControlMarkerContextReceiptV1>,
+    pub context_receipts_omitted: usize,
+    pub removed_tokens: Vec<RemovedControlMarkerCount>,
+    pub preserved_tokens: Vec<PreservedControlMarkerCount>,
 }
 
 #[derive(Debug, Clone, Serialize)]
-pub(crate) struct StripModelArtifactTokenCount {
+pub(crate) struct RemovedControlMarkerCount {
     pub token: String,
     pub count: usize,
     pub boundary_occurrences: usize,
@@ -207,7 +210,7 @@ pub(crate) struct StripModelArtifactTokenCount {
 }
 
 #[derive(Debug, Clone, Serialize)]
-pub(crate) struct PreservedModelArtifactTokenCount {
+pub(crate) struct PreservedControlMarkerCount {
     pub token: String,
     pub count: usize,
     pub quoted_reference_occurrences: usize,
@@ -218,7 +221,27 @@ pub(crate) struct PreservedModelArtifactTokenCount {
 }
 
 #[derive(Debug, Clone, Serialize)]
-pub(crate) struct ArtifactRemainderSurfaceV2 {
+pub(crate) struct ControlMarkerContextReceiptV1 {
+    pub receipt_id: String,
+    pub marker: String,
+    pub start_byte: usize,
+    pub end_byte: usize,
+    pub preserved: bool,
+    pub reference_syntax: &'static str,
+    pub delimiter_depth: usize,
+    pub before_window_chars: usize,
+    pub after_window_chars: usize,
+    pub before_alphanumeric_chars: usize,
+    pub after_alphanumeric_chars: usize,
+    pub bounded_context_sha256: String,
+    pub surrounding_bytes_contract: &'static str,
+    pub contextual_weight: &'static str,
+    pub spectral_relation: &'static str,
+    pub authority: &'static str,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub(crate) struct SanitizedOutputSurfaceV3 {
     pub policy: &'static str,
     pub state: &'static str,
     pub non_whitespace_chars: usize,
@@ -235,7 +258,7 @@ pub(crate) struct ArtifactRemainderSurfaceV2 {
     pub runtime_effect: bool,
 }
 
-fn artifact_remainder_surface_v2(text: &str) -> ArtifactRemainderSurfaceV2 {
+fn sanitized_output_surface_v3(text: &str) -> SanitizedOutputSurfaceV3 {
     let mut non_whitespace_chars = 0usize;
     let mut alphanumeric_chars = 0usize;
     let mut structural_symbol_chars = 0usize;
@@ -313,8 +336,8 @@ fn artifact_remainder_surface_v2(text: &str) -> ArtifactRemainderSurfaceV2 {
         "lexical_content_plain"
     };
 
-    ArtifactRemainderSurfaceV2 {
-        policy: "artifact_remainder_surface_v2",
+    SanitizedOutputSurfaceV3 {
+        policy: "sanitized_output_surface_v3",
         state,
         non_whitespace_chars,
         alphanumeric_chars,
@@ -333,12 +356,12 @@ fn artifact_remainder_surface_v2(text: &str) -> ArtifactRemainderSurfaceV2 {
 }
 
 #[derive(Debug, Serialize)]
-struct ModelArtifactExactTokenIntegrityCheckV1 {
+struct ControlMarkerIntegrityCheckV2 {
     policy: &'static str,
     state: &'static str,
     output_remainder_present: bool,
     output_remainder_non_whitespace_chars: usize,
-    artifact_only_after_cleanup: bool,
+    marker_only_after_cleanup: bool,
     contextual_marker_occurrences: usize,
     quoted_marker_occurrences: usize,
     preserved_explicit_reference_occurrences: usize,
@@ -353,7 +376,7 @@ struct ModelArtifactExactTokenIntegrityCheckV1 {
 }
 
 #[derive(Debug, Serialize)]
-struct ModelArtifactCleanupDiagnostic<'a> {
+struct ControlMarkerCleanupDiagnostic<'a> {
     schema: &'static str,
     schema_version: u8,
     timestamp: String,
@@ -361,24 +384,24 @@ struct ModelArtifactCleanupDiagnostic<'a> {
     profile: &'static str,
     marker_contract: &'static str,
     common_language_overlap_risk: bool,
-    remainder_surface_v2: ArtifactRemainderSurfaceV2,
-    exact_token_integrity_check_v1: ModelArtifactExactTokenIntegrityCheckV1,
+    sanitized_output_surface_v3: SanitizedOutputSurfaceV3,
+    control_marker_integrity_check_v2: ControlMarkerIntegrityCheckV2,
     authority: &'static str,
     #[serde(flatten)]
-    report: &'a StripModelArtifactsReport,
+    report: &'a ControlMarkerCleanupReport,
 }
 
-fn model_artifact_language_overlap_risk(report: &StripModelArtifactsReport) -> bool {
+fn control_marker_language_overlap_risk(report: &ControlMarkerCleanupReport) -> bool {
     report
         .removed_tokens
         .iter()
         .any(|entry| !entry.token.contains('<') && !entry.token.contains('['))
 }
 
-fn model_artifact_exact_token_integrity_check_v1(
-    report: &StripModelArtifactsReport,
-    remainder_surface: &ArtifactRemainderSurfaceV2,
-) -> ModelArtifactExactTokenIntegrityCheckV1 {
+fn control_marker_integrity_check_v2(
+    report: &ControlMarkerCleanupReport,
+    sanitized_output_surface: &SanitizedOutputSurfaceV3,
+) -> ControlMarkerIntegrityCheckV2 {
     let output_remainder_present = report.after_non_whitespace_chars > 0;
     let contextual_marker_occurrences = report
         .removed_tokens
@@ -415,14 +438,14 @@ fn model_artifact_exact_token_integrity_check_v1(
         "structural_cleanup_low_risk"
     };
     let structure_only_review =
-        remainder_surface.state == "structure_only_requires_content_review";
+        sanitized_output_surface.state == "structure_only_requires_content_review";
 
-    ModelArtifactExactTokenIntegrityCheckV1 {
-        policy: "model_artifact_exact_token_integrity_check_v1",
+    ControlMarkerIntegrityCheckV2 {
+        policy: "control_marker_integrity_check_v2",
         state,
         output_remainder_present,
         output_remainder_non_whitespace_chars: report.after_non_whitespace_chars,
-        artifact_only_after_cleanup: !output_remainder_present,
+        marker_only_after_cleanup: !output_remainder_present,
         contextual_marker_occurrences,
         quoted_marker_occurrences,
         preserved_explicit_reference_occurrences,
@@ -447,26 +470,26 @@ fn model_artifact_exact_token_integrity_check_v1(
     }
 }
 
-fn model_artifact_cleanup_diagnostic<'a>(
-    report: &'a StripModelArtifactsReport,
-    remainder: &str,
+fn control_marker_cleanup_diagnostic<'a>(
+    report: &'a ControlMarkerCleanupReport,
+    sanitized_output: &str,
     label: &'a str,
     profile: MlxProfile,
-) -> ModelArtifactCleanupDiagnostic<'a> {
-    let remainder_surface_v2 = artifact_remainder_surface_v2(remainder);
-    let exact_token_integrity_check_v1 =
-        model_artifact_exact_token_integrity_check_v1(report, &remainder_surface_v2);
-    ModelArtifactCleanupDiagnostic {
-        schema: "model_artifact_cleanup_v9",
-        schema_version: 9,
+) -> ControlMarkerCleanupDiagnostic<'a> {
+    let sanitized_output_surface_v3 = sanitized_output_surface_v3(sanitized_output);
+    let control_marker_integrity_check_v2 =
+        control_marker_integrity_check_v2(report, &sanitized_output_surface_v3);
+    ControlMarkerCleanupDiagnostic {
+        schema: "control_marker_cleanup_v10",
+        schema_version: 10,
         timestamp: unix_timestamp_string(),
         label,
         profile: profile.as_str(),
         marker_contract:
             "private_typed_exact_known_model_control_marker_with_bounded_matching_delimiter_stack_or_following_relation",
-        common_language_overlap_risk: model_artifact_language_overlap_risk(report),
-        remainder_surface_v2,
-        exact_token_integrity_check_v1,
+        common_language_overlap_risk: control_marker_language_overlap_risk(report),
+        sanitized_output_surface_v3,
+        control_marker_integrity_check_v2,
         authority: "diagnostic_output_integrity_not_prompt_or_model_control",
         report,
     }
