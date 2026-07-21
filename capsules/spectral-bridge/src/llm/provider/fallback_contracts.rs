@@ -215,7 +215,7 @@ pub(crate) struct PreservedModelArtifactTokenCount {
 }
 
 #[derive(Debug, Clone, Serialize)]
-pub(crate) struct ArtifactRemainderTextureV1 {
+pub(crate) struct ArtifactRemainderSurfaceV2 {
     pub policy: &'static str,
     pub state: &'static str,
     pub non_whitespace_chars: usize,
@@ -224,15 +224,15 @@ pub(crate) struct ArtifactRemainderTextureV1 {
     pub unique_lexical_token_count: usize,
     pub structural_symbol_chars: usize,
     pub structural_symbol_fraction: f64,
-    pub surface_semantic_density_proxy: f64,
+    pub alphanumeric_surface_fraction: f64,
     pub lexical_diversity: f64,
     pub max_repeated_symbol_run: usize,
-    pub meaning_from_form: &'static str,
+    pub meaning_inference: &'static str,
     pub authority: &'static str,
     pub runtime_effect: bool,
 }
 
-fn artifact_remainder_texture_v1(text: &str) -> ArtifactRemainderTextureV1 {
+fn artifact_remainder_surface_v2(text: &str) -> ArtifactRemainderSurfaceV2 {
     let mut non_whitespace_chars = 0usize;
     let mut alphanumeric_chars = 0usize;
     let mut structural_symbol_chars = 0usize;
@@ -287,7 +287,7 @@ fn artifact_remainder_texture_v1(text: &str) -> ArtifactRemainderTextureV1 {
     } else {
         f64::from(structural_symbol_u32) / f64::from(non_whitespace_u32)
     };
-    let surface_semantic_density_proxy = if non_whitespace_u32 == 0 {
+    let alphanumeric_surface_fraction = if non_whitespace_u32 == 0 {
         0.0
     } else {
         f64::from(alphanumeric_u32) / f64::from(non_whitespace_u32)
@@ -301,7 +301,7 @@ fn artifact_remainder_texture_v1(text: &str) -> ArtifactRemainderTextureV1 {
     let state = if non_whitespace_chars == 0 {
         "empty_after_cleanup"
     } else if alphanumeric_chars == 0 {
-        "structure_only_requires_semantic_review"
+        "structure_only_requires_content_review"
     } else if structural_symbol_fraction >= 0.35 {
         "lexical_content_with_dense_scaffolding"
     } else if structural_symbol_chars > 0 {
@@ -310,8 +310,8 @@ fn artifact_remainder_texture_v1(text: &str) -> ArtifactRemainderTextureV1 {
         "lexical_content_plain"
     };
 
-    ArtifactRemainderTextureV1 {
-        policy: "artifact_remainder_texture_v1",
+    ArtifactRemainderSurfaceV2 {
+        policy: "artifact_remainder_surface_v2",
         state,
         non_whitespace_chars,
         alphanumeric_chars,
@@ -319,12 +319,12 @@ fn artifact_remainder_texture_v1(text: &str) -> ArtifactRemainderTextureV1 {
         unique_lexical_token_count,
         structural_symbol_chars,
         structural_symbol_fraction,
-        surface_semantic_density_proxy,
+        alphanumeric_surface_fraction,
         lexical_diversity,
         max_repeated_symbol_run,
-        meaning_from_form:
+        meaning_inference:
             "surface_counts_do_not_establish_semantic_intent_or_make_structure_discardable",
-        authority: "diagnostic_remainder_texture_not_cleanup_prompt_model_or_control",
+        authority: "diagnostic_remainder_surface_not_cleanup_prompt_model_or_control",
         runtime_effect: false,
     }
 }
@@ -358,7 +358,7 @@ struct ModelArtifactCleanupDiagnostic<'a> {
     profile: &'static str,
     marker_contract: &'static str,
     common_language_overlap_risk: bool,
-    remainder_texture_v1: ArtifactRemainderTextureV1,
+    remainder_surface_v2: ArtifactRemainderSurfaceV2,
     exact_token_integrity_check_v1: ModelArtifactExactTokenIntegrityCheckV1,
     authority: &'static str,
     #[serde(flatten)]
@@ -374,7 +374,7 @@ fn model_artifact_language_overlap_risk(report: &StripModelArtifactsReport) -> b
 
 fn model_artifact_exact_token_integrity_check_v1(
     report: &StripModelArtifactsReport,
-    remainder_texture: &ArtifactRemainderTextureV1,
+    remainder_surface: &ArtifactRemainderSurfaceV2,
 ) -> ModelArtifactExactTokenIntegrityCheckV1 {
     let output_remainder_present = report.after_non_whitespace_chars > 0;
     let contextual_marker_occurrences = report
@@ -412,7 +412,7 @@ fn model_artifact_exact_token_integrity_check_v1(
         "structural_cleanup_low_risk"
     };
     let structure_only_review =
-        remainder_texture.state == "structure_only_requires_semantic_review";
+        remainder_surface.state == "structure_only_requires_content_review";
 
     ModelArtifactExactTokenIntegrityCheckV1 {
         policy: "model_artifact_exact_token_integrity_check_v1",
@@ -450,18 +450,18 @@ fn model_artifact_cleanup_diagnostic<'a>(
     label: &'a str,
     profile: MlxProfile,
 ) -> ModelArtifactCleanupDiagnostic<'a> {
-    let remainder_texture_v1 = artifact_remainder_texture_v1(remainder);
+    let remainder_surface_v2 = artifact_remainder_surface_v2(remainder);
     let exact_token_integrity_check_v1 =
-        model_artifact_exact_token_integrity_check_v1(report, &remainder_texture_v1);
+        model_artifact_exact_token_integrity_check_v1(report, &remainder_surface_v2);
     ModelArtifactCleanupDiagnostic {
-        schema: "model_artifact_cleanup_v4",
-        schema_version: 4,
+        schema: "model_artifact_cleanup_v5",
+        schema_version: 5,
         timestamp: unix_timestamp_string(),
         label,
         profile: profile.as_str(),
         marker_contract: "exact_known_model_tokens_with_local_reference_context",
         common_language_overlap_risk: model_artifact_language_overlap_risk(report),
-        remainder_texture_v1,
+        remainder_surface_v2,
         exact_token_integrity_check_v1,
         authority: "diagnostic_output_integrity_not_prompt_or_model_control",
         report,

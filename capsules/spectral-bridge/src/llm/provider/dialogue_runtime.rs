@@ -70,7 +70,6 @@ fn explicit_reference_cue_before(text: &str, start: usize) -> bool {
             | "phrase"
             | "quote"
             | "quoted"
-            | "resonant"
             | "sequence"
             | "spell"
             | "spelled"
@@ -78,13 +77,12 @@ fn explicit_reference_cue_before(text: &str, start: usize) -> bool {
             | "syntax"
             | "token"
             | "verbatim"
-            | "vivid"
             | "write"
             | "wrote"
     )
 }
 
-fn explicit_semantic_attribution_after(text: &str, end: usize) -> bool {
+fn explicit_relational_attribution_after(text: &str, end: usize) -> bool {
     let relation = text[end..]
         .split(|character: char| !character.is_alphanumeric() && character != '_')
         .find(|part| !part.is_empty())
@@ -125,7 +123,7 @@ fn exact_artifact_reference_context(
     if matching_quote_pair(before, after) {
         return Some(ExactArtifactReferenceContext::QuotedLiteral);
     }
-    if explicit_semantic_attribution_after(text, end)
+    if explicit_relational_attribution_after(text, end)
         || (explicit_reference_cue_before(text, start)
             && explicit_reference_relation_after(text, end))
     {

@@ -1651,7 +1651,7 @@ mod tests {
             "dialogue_live",
             MlxProfile::Gemma4Canary,
         );
-        assert_eq!(diagnostic.schema, "model_artifact_cleanup_v4");
+        assert_eq!(diagnostic.schema, "model_artifact_cleanup_v5");
         assert_eq!(diagnostic.label, "dialogue_live");
         assert_eq!(diagnostic.profile, GEMMA4_12B_PROFILE);
         assert_eq!(
@@ -1692,10 +1692,10 @@ mod tests {
                 .runtime_effect
         );
         assert_eq!(
-            diagnostic.remainder_texture_v1.state,
+            diagnostic.remainder_surface_v2.state,
             "lexical_content_plain"
         );
-        assert!(!diagnostic.remainder_texture_v1.runtime_effect);
+        assert!(!diagnostic.remainder_surface_v2.runtime_effect);
         assert!(diagnostic.authority.contains("not_prompt_or_model_control"));
     }
 
@@ -1868,15 +1868,14 @@ mod tests {
     }
 
     #[test]
-    fn artifact_cleanup_preserves_vivid_and_resonant_exact_token_relations() {
+    fn artifact_cleanup_does_not_treat_vivid_and_resonant_as_token_reference_cues() {
         for cue in ["vivid", "resonant"] {
             let text = format!("The {cue} <end_of_turn> is the exact token I am naming.");
             let (stripped, report) = strip_model_artifacts_with_report(&text);
-            assert_eq!(stripped, text);
-            let report = report.expect("exact token relation report");
-            assert_eq!(report.removed_total, 0);
-            assert_eq!(report.preserved_explicit_reference_total, 1);
-            assert_eq!(report.preserved_tokens[0].explicit_relation_occurrences, 1);
+            assert_eq!(stripped, format!("The {cue}  is the exact token I am naming."));
+            let report = report.expect("structural token cleanup report");
+            assert_eq!(report.removed_total, 1);
+            assert_eq!(report.preserved_explicit_reference_total, 0);
         }
     }
 
@@ -1913,16 +1912,16 @@ mod tests {
             "dialogue_live",
             MlxProfile::Gemma4Canary,
         );
-        let texture = diagnostic.remainder_texture_v1;
+        let surface = diagnostic.remainder_surface_v2;
 
-        assert_eq!(texture.state, "lexical_content_with_dense_scaffolding");
-        assert!(texture.lexical_token_count >= 4);
-        assert!(texture.unique_lexical_token_count >= 4);
-        assert!(texture.structural_symbol_fraction >= 0.35);
-        assert!(texture.surface_semantic_density_proxy > 0.0);
-        assert!(texture.max_repeated_symbol_run >= 3);
-        assert!(texture.meaning_from_form.contains("do_not_establish"));
-        assert!(!texture.runtime_effect);
+        assert_eq!(surface.state, "lexical_content_with_dense_scaffolding");
+        assert!(surface.lexical_token_count >= 4);
+        assert!(surface.unique_lexical_token_count >= 4);
+        assert!(surface.structural_symbol_fraction >= 0.35);
+        assert!(surface.alphanumeric_surface_fraction > 0.0);
+        assert!(surface.max_repeated_symbol_run >= 3);
+        assert!(surface.meaning_inference.contains("do_not_establish"));
+        assert!(!surface.runtime_effect);
         assert!(
             diagnostic
                 .exact_token_integrity_check_v1
@@ -1945,13 +1944,13 @@ mod tests {
             "dialogue_live",
             MlxProfile::Gemma4Canary,
         );
-        let texture = diagnostic.remainder_texture_v1;
+        let surface = diagnostic.remainder_surface_v2;
 
-        assert_eq!(texture.state, "structure_only_requires_semantic_review");
-        assert_eq!(texture.alphanumeric_chars, 0);
-        assert_eq!(texture.surface_semantic_density_proxy, 0.0);
-        assert!(texture.structural_symbol_chars > 0);
-        assert!(texture.meaning_from_form.contains("do_not_establish"));
+        assert_eq!(surface.state, "structure_only_requires_content_review");
+        assert_eq!(surface.alphanumeric_chars, 0);
+        assert_eq!(surface.alphanumeric_surface_fraction, 0.0);
+        assert!(surface.structural_symbol_chars > 0);
+        assert!(surface.meaning_inference.contains("do_not_establish"));
         assert!(
             diagnostic
                 .exact_token_integrity_check_v1
