@@ -52,7 +52,16 @@ fn explicit_reference_cue_before(text: &str, start: usize) -> bool {
     matches!(
         cue.as_str(),
         "delimiter"
+            | "echo"
+            | "echoed"
+            | "echoing"
+            | "embodied"
+            | "embody"
+            | "embodying"
             | "literal"
+            | "manifest"
+            | "manifested"
+            | "manifesting"
             | "marker"
             | "mention"
             | "mentioned"
@@ -70,6 +79,18 @@ fn explicit_reference_cue_before(text: &str, start: usize) -> bool {
             | "verbatim"
             | "write"
             | "wrote"
+    )
+}
+
+fn explicit_semantic_attribution_after(text: &str, end: usize) -> bool {
+    let relation = text[end..]
+        .split(|character: char| !character.is_alphanumeric() && character != '_')
+        .find(|part| !part.is_empty())
+        .unwrap_or_default()
+        .to_ascii_lowercase();
+    matches!(
+        relation.as_str(),
+        "corresponds" | "echoes" | "embodies" | "manifests"
     )
 }
 
@@ -100,8 +121,9 @@ fn model_artifact_preservation(
     if matching_quote_pair(before, after) {
         return Some(ModelArtifactPreservation::QuotedReference);
     }
-    if explicit_reference_cue_before(text, start)
-        && explicit_reference_relation_after(text, end)
+    if explicit_semantic_attribution_after(text, end)
+        || (explicit_reference_cue_before(text, start)
+            && explicit_reference_relation_after(text, end))
     {
         return Some(ModelArtifactPreservation::NamedReference);
     }

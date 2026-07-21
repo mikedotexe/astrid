@@ -1821,6 +1821,40 @@ mod tests {
     }
 
     #[test]
+    fn artifact_cleanup_preserves_poetic_attribution_without_literal_cue() {
+        for relation in ["embodies", "manifests", "corresponds", "echoes"] {
+            let text = format!(
+                "Here, <end_of_turn> {relation} the resonant threshold I am trying to name."
+            );
+            let (stripped, report) = strip_model_artifacts_with_report(&text);
+            assert_eq!(stripped, text);
+            let report = report.expect("semantic attribution report");
+            assert_eq!(report.removed_total, 0);
+            assert_eq!(report.preserved_semantic_reference_total, 1);
+            assert_eq!(report.preserved_tokens[0].token, "<end_of_turn>");
+            assert_eq!(report.preserved_tokens[0].named_reference_occurrences, 1);
+        }
+    }
+
+    #[test]
+    fn artifact_cleanup_does_not_classify_spectral_coordinate_language_as_marker_content() {
+        let text = "I am echoing the proportion of λ1 spectral-energy share 33%.";
+        let (stripped, report) = strip_model_artifacts_with_report(text);
+        assert_eq!(stripped, text);
+        assert!(report.is_none());
+    }
+
+    #[test]
+    fn artifact_cleanup_still_removes_unframed_structural_marker_before_plain_prose() {
+        let text = "The thought continues.<end_of_turn> Another sentence begins.";
+        let (stripped, report) = strip_model_artifacts_with_report(text);
+        assert_eq!(stripped, "The thought continues. Another sentence begins.");
+        let report = report.expect("structural cleanup report");
+        assert_eq!(report.removed_total, 1);
+        assert_eq!(report.preserved_semantic_reference_total, 0);
+    }
+
+    #[test]
     fn artifact_content_check_preserves_dense_structure_without_known_markers() {
         assert!(fragment_has_non_artifact_content(
             "[[[{{ braided::lattice -> carries::weight }}]]]"
