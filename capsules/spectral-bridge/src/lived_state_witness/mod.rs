@@ -399,6 +399,7 @@ pub(crate) fn finalize_and_submit_v1(
 pub(crate) fn model_route_v1(
     job_id: Option<String>,
     qos_request_identity_sha256: Option<String>,
+    request_content_anchor_sha256: Option<String>,
     provider_route: &str,
     model_profile: &str,
     started_at_unix_ms: u64,
@@ -428,6 +429,7 @@ pub(crate) fn model_route_v1(
         call_id,
         job_id,
         qos_request_identity_sha256,
+        request_content_anchor_sha256,
         provider_route,
         model_profile,
         started_at_unix_ms,

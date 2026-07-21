@@ -14,6 +14,7 @@ from .model import (
 )
 from .projector import _alignment, _exact_deployment_match, _review_outcome
 from .records import parse_source_ref
+from .validation import _validate_model_route
 
 
 def provenance_ref(origin: str = "bridge_derived") -> dict[str, object]:
@@ -168,6 +169,48 @@ def valid_deployment_receipt(receipt_id: str = "deploy_one") -> dict[str, object
 
 
 class LivedStateWitnessTests(unittest.TestCase):
+    def test_model_route_scopes_event_identity_away_from_continuity(self) -> None:
+        response_sha256 = "a" * 64
+        hasher = hashlib.sha256()
+        hasher.update(b"astrid-lived-state-model-route-v1\0")
+        hasher.update(b"job_test")
+        hasher.update(("b" * 64).encode())
+        hasher.update(b"mlx")
+        hasher.update(b"production")
+        hasher.update((10).to_bytes(8, "little"))
+        hasher.update(response_sha256.encode())
+        route: dict[str, object] = {
+            "schema": "lived_state_model_route_v1",
+            "schema_version": 1,
+            "call_id": f"lscall_{hasher.hexdigest()}",
+            "call_identity_scope": "model_call_event_not_being_or_continuity_identity",
+            "job_id": "job_test",
+            "qos_request_identity_sha256": "b" * 64,
+            "request_content_anchor_sha256": "c" * 64,
+            "request_anchor_scope": "exact_request_content_and_generation_parameters_not_intent_or_semantic_equivalence",
+            "provider_route": "mlx",
+            "model_profile": "production",
+            "started_at_unix_ms": 10,
+            "completed_at_unix_ms": 20,
+            "duration_ms": 10,
+            "repair_parent_call_id": None,
+            "response_sha256": response_sha256,
+            "response_hash_scope": "output_integrity_not_being_or_continuity_identity",
+            "being_identity_claimed": False,
+            "continuity_claimed": False,
+            "intent_equivalence_claimed": False,
+            "semantic_equivalence_claimed": False,
+            "raw_prompt_included": False,
+            "raw_response_included": False,
+        }
+        errors: list[str] = []
+        _validate_model_route(route, 0, 25, set(), errors)
+        self.assertEqual(errors, [])
+        route["continuity_claimed"] = True
+        errors = []
+        _validate_model_route(route, 0, 25, set(), errors)
+        self.assertIn("model_routes[0].continuity_claimed:must_be_false", errors)
+
     def test_valid_sidecar_and_privacy_rejection(self) -> None:
         witness = valid_witness()
         self.assertEqual(validate_witness(witness), [])

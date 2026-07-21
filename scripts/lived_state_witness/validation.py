@@ -339,6 +339,35 @@ def _validate_build_candidate(
     )
 
 
+def _validate_model_route_identity_boundaries(
+    route: dict[str, Any], prefix: str, errors: list[str]
+) -> None:
+    scope_fields = {
+        "call_identity_scope": "model_call_event_not_being_or_continuity_identity",
+        "request_anchor_scope": "exact_request_content_and_generation_parameters_not_intent_or_semantic_equivalence",
+        "response_hash_scope": "output_integrity_not_being_or_continuity_identity",
+    }
+    present_scopes = [field for field in scope_fields if field in route]
+    if present_scopes and len(present_scopes) != len(scope_fields):
+        errors.append(f"{prefix}.identity_scopes:incomplete")
+    for field, expected in scope_fields.items():
+        if field in route and route.get(field) != expected:
+            errors.append(f"{prefix}.{field}:invalid")
+
+    claim_fields = (
+        "being_identity_claimed",
+        "continuity_claimed",
+        "intent_equivalence_claimed",
+        "semantic_equivalence_claimed",
+    )
+    present_claims = [field for field in claim_fields if field in route]
+    if present_claims and len(present_claims) != len(claim_fields):
+        errors.append(f"{prefix}.identity_claims:incomplete")
+    for field in claim_fields:
+        if field in route and route.get(field) is not False:
+            errors.append(f"{prefix}.{field}:must_be_false")
+
+
 def _validate_model_route(
     route: Any,
     index: int,
@@ -356,8 +385,11 @@ def _validate_model_route(
             "schema",
             "schema_version",
             "call_id",
+            "call_identity_scope",
             "job_id",
             "qos_request_identity_sha256",
+            "request_content_anchor_sha256",
+            "request_anchor_scope",
             "provider_route",
             "model_profile",
             "started_at_unix_ms",
@@ -365,6 +397,11 @@ def _validate_model_route(
             "duration_ms",
             "repair_parent_call_id",
             "response_sha256",
+            "response_hash_scope",
+            "being_identity_claimed",
+            "continuity_claimed",
+            "intent_equivalence_claimed",
+            "semantic_equivalence_claimed",
             "raw_prompt_included",
             "raw_response_included",
         },
@@ -386,6 +423,13 @@ def _validate_model_route(
         errors,
         optional=True,
     )
+    _hash_field(
+        route.get("request_content_anchor_sha256"),
+        f"{prefix}.request_content_anchor_sha256",
+        errors,
+        optional=True,
+    )
+    _validate_model_route_identity_boundaries(route, prefix, errors)
     for field in ("raw_prompt_included", "raw_response_included"):
         if route.get(field) is not False:
             errors.append(f"{prefix}.{field}:must_be_false")

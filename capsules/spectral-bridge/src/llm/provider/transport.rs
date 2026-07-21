@@ -47,6 +47,7 @@ struct ModelQosV1 {
 struct MlxChatResultV1 {
     text: String,
     qos_request_identity_sha256: String,
+    request_content_anchor_sha256: String,
 }
 
 fn model_qos_class_for_label(label: &str) -> ModelQosClassV1 {
@@ -573,6 +574,7 @@ async fn mlx_chat_with_failure_log_mode_detailed(
     let qos_request_identity_sha256 = serde_json::to_vec(&model_qos)
         .ok()
         .map(|encoded| format!("{:x}", Sha256::digest(encoded)))?;
+    let request_content_anchor_sha256 = model_qos.idempotency_key.clone();
     let request = MlxRequest {
         messages,
         max_tokens,
@@ -702,6 +704,7 @@ async fn mlx_chat_with_failure_log_mode_detailed(
                 return Some(MlxChatResultV1 {
                     text: sanitized.trim().to_string(),
                     qos_request_identity_sha256,
+                    request_content_anchor_sha256,
                 });
             },
             Some(_) => {},
@@ -718,6 +721,7 @@ async fn mlx_chat_with_failure_log_mode_detailed(
     Some(MlxChatResultV1 {
         text,
         qos_request_identity_sha256,
+        request_content_anchor_sha256,
     })
 }
 
@@ -1117,6 +1121,7 @@ async fn llm_chat_with_fallback_detailed(
         let route = crate::lived_state_witness::model_route_v1(
             job_id,
             Some(result.qos_request_identity_sha256),
+            Some(result.request_content_anchor_sha256),
             "mlx",
             configured_mlx_profile().as_str(),
             started_at.unix_ms,
@@ -1234,6 +1239,7 @@ async fn llm_chat_with_fallback_detailed(
         let completed_at = crate::lived_state_witness::clock_sample_v1();
         let route = crate::lived_state_witness::model_route_v1(
             job_id,
+            None,
             None,
             "ollama",
             &response.model,

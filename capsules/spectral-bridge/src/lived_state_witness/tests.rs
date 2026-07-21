@@ -191,6 +191,7 @@ fn model_route_records_hashes_without_prompt_or_response() {
     let route = model_route_v1(
         Some("job_test".to_string()),
         Some("c".repeat(64)),
+        Some("a".repeat(64)),
         "mlx",
         "production",
         10,
@@ -202,6 +203,9 @@ fn model_route_records_hashes_without_prompt_or_response() {
     assert!(!encoded.contains("private response prose"));
     assert!(encoded.contains("response_sha256"));
     assert!(encoded.contains("qos_request_identity_sha256"));
+    assert!(encoded.contains("request_content_anchor_sha256"));
+    assert!(encoded.contains("model_call_event_not_being_or_continuity_identity"));
+    assert!(encoded.contains("output_integrity_not_being_or_continuity_identity"));
 }
 
 #[test]
@@ -209,6 +213,7 @@ fn model_route_identity_hashes_the_bounded_persisted_profile() {
     let route = model_route_v1(
         Some("job_test".to_string()),
         Some("c".repeat(64)),
+        Some("a".repeat(64)),
         "mlx",
         &"profile".repeat(80),
         10,
@@ -243,6 +248,7 @@ fn repair_route_preserves_only_hashed_parent_ancestry() {
     let first = model_route_v1(
         Some("job_first".to_string()),
         Some("d".repeat(64)),
+        Some("a".repeat(64)),
         "mlx",
         "production",
         10,
@@ -253,6 +259,7 @@ fn repair_route_preserves_only_hashed_parent_ancestry() {
     let repair = model_route_v1(
         Some("job_repair".to_string()),
         Some("e".repeat(64)),
+        Some("b".repeat(64)),
         "mlx",
         "production",
         21,
@@ -263,6 +270,44 @@ fn repair_route_preserves_only_hashed_parent_ancestry() {
     let encoded = serde_json::to_value([first, repair]).expect("routes JSON");
     assert_eq!(encoded[1]["repair_parent_call_id"], encoded[0]["call_id"]);
     assert!(!encoded.to_string().contains("private response"));
+}
+
+#[test]
+fn response_changes_do_not_change_the_request_content_anchor_or_claim_continuity() {
+    let first = model_route_v1(
+        Some("job_first".to_string()),
+        Some("d".repeat(64)),
+        Some("a".repeat(64)),
+        "mlx",
+        "production",
+        10,
+        20,
+        None,
+        "same meaning.",
+    );
+    let punctuation_variant = model_route_v1(
+        Some("job_second".to_string()),
+        Some("e".repeat(64)),
+        Some("a".repeat(64)),
+        "mlx",
+        "production",
+        21,
+        30,
+        None,
+        "same meaning!",
+    );
+    let encoded = serde_json::to_value([first, punctuation_variant]).expect("routes JSON");
+    assert_ne!(encoded[0]["call_id"], encoded[1]["call_id"]);
+    assert_eq!(
+        encoded[0]["request_content_anchor_sha256"],
+        encoded[1]["request_content_anchor_sha256"]
+    );
+    for route in encoded.as_array().expect("route array") {
+        assert_eq!(route["being_identity_claimed"], false);
+        assert_eq!(route["continuity_claimed"], false);
+        assert_eq!(route["intent_equivalence_claimed"], false);
+        assert_eq!(route["semantic_equivalence_claimed"], false);
+    }
 }
 
 #[test]
