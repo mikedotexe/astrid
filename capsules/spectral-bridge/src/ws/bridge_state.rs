@@ -685,6 +685,7 @@ impl BridgeState {
             policy: "cadence_content_distinction_v1".to_string(),
             schema_version: 1,
             cadence_state: cadence_state.to_string(),
+            cadence_jitter_class: heartbeat.map(|value| value.jitter_class.clone()),
             cadence_clarity_score: heartbeat.and_then(|value| value.cadence_clarity_score),
             cadence_evidence_basis: heartbeat.map_or_else(
                 || "no_telemetry_heartbeat_delta_available".to_string(),

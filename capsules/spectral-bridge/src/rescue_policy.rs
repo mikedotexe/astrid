@@ -1,5 +1,5 @@
 use std::path::{Path, PathBuf};
-use std::time::{SystemTime, UNIX_EPOCH};
+use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
 use serde_json::{Value, json};
 
@@ -173,6 +173,45 @@ pub(crate) struct SemanticHeartbeatObservationV1 {
     configured_intensity: f32,
     signal_evidence: Option<SemanticHeartbeatSignalEvidenceV1>,
     texture_context: Option<SemanticHeartbeatTextureContextV1>,
+}
+
+#[derive(Debug)]
+pub(crate) struct SemanticHeartbeatEnqueueProbeV1 {
+    status_path: PathBuf,
+    source: &'static str,
+    configured_interval_secs: u64,
+    admitted_at: Instant,
+}
+
+impl SemanticHeartbeatEnqueueProbeV1 {
+    fn new(status_path: PathBuf, source: &'static str, configured_interval_secs: u64) -> Self {
+        Self {
+            status_path,
+            source,
+            configured_interval_secs,
+            admitted_at: Instant::now(),
+        }
+    }
+
+    pub(crate) fn record_enqueued(self) {
+        record_semantic_heartbeat_enqueue_outcome(
+            &self.status_path,
+            self.source,
+            self.configured_interval_secs,
+            self.admitted_at.elapsed(),
+            "enqueued",
+        );
+    }
+
+    pub(crate) fn record_channel_closed(self) {
+        record_semantic_heartbeat_enqueue_outcome(
+            &self.status_path,
+            self.source,
+            self.configured_interval_secs,
+            self.admitted_at.elapsed(),
+            "channel_closed",
+        );
+    }
 }
 
 impl SemanticHeartbeatObservationV1 {
@@ -2106,6 +2145,141 @@ fn record_semantic_heartbeat_sent(
     write_status(path, &status);
 }
 
+fn record_semantic_heartbeat_enqueue_outcome(
+    path: &Path,
+    source: &str,
+    configured_interval_secs: u64,
+    queue_wait: Duration,
+    outcome: &str,
+) {
+    let mut status = read_status(path);
+    if !status.is_object() {
+        status = json!({});
+    }
+    let now = now_unix_s();
+    let prior_success_at = status
+        .get("last_enqueue_success_at_unix_s")
+        .and_then(Value::as_f64)
+        .filter(|at| at.is_finite() && now >= *at);
+    let inter_enqueue_gap_secs = if outcome == "enqueued" {
+        prior_success_at.map(|at| now - at)
+    } else {
+        None
+    };
+    let queue_wait_ms = queue_wait.as_secs_f64() * 1_000.0;
+    let enqueue_attempt_count = status
+        .get("enqueue_attempt_count")
+        .and_then(Value::as_u64)
+        .unwrap_or(0)
+        .saturating_add(1);
+    let enqueue_success_count = status
+        .get("enqueue_success_count")
+        .and_then(Value::as_u64)
+        .unwrap_or(0)
+        .saturating_add(u64::from(outcome == "enqueued"));
+    let enqueue_closed_count = status
+        .get("enqueue_closed_count")
+        .and_then(Value::as_u64)
+        .unwrap_or(0)
+        .saturating_add(u64::from(outcome == "channel_closed"));
+
+    let mut samples: Vec<Value> = status
+        .get("enqueue_samples_v1")
+        .and_then(Value::as_array)
+        .into_iter()
+        .flatten()
+        .filter(|sample| {
+            sample
+                .get("completed_at_unix_s")
+                .and_then(Value::as_f64)
+                .is_some_and(|at| {
+                    at.is_finite()
+                        && now >= at
+                        && now - at <= SEMANTIC_HEARTBEAT_OBSERVATION_WINDOW_SECS
+                })
+        })
+        .cloned()
+        .collect();
+    samples.push(json!({
+        "completed_at_unix_s": now,
+        "source": source,
+        "outcome": outcome,
+        "queue_wait_ms": queue_wait_ms,
+        "inter_enqueue_gap_secs": inter_enqueue_gap_secs,
+        "configured_interval_secs": configured_interval_secs,
+    }));
+    let samples_truncated = samples.len() > SEMANTIC_HEARTBEAT_OBSERVATION_MAX_SAMPLES;
+    if samples_truncated {
+        let keep_from = samples
+            .len()
+            .saturating_sub(SEMANTIC_HEARTBEAT_OBSERVATION_MAX_SAMPLES);
+        samples.drain(..keep_from);
+    }
+    let queue_waits: Vec<f64> = samples
+        .iter()
+        .filter_map(|sample| sample.get("queue_wait_ms").and_then(Value::as_f64))
+        .filter(|value| value.is_finite())
+        .collect();
+    let inter_enqueue_gaps: Vec<f64> = samples
+        .iter()
+        .filter_map(|sample| sample.get("inter_enqueue_gap_secs").and_then(Value::as_f64))
+        .filter(|value| value.is_finite())
+        .collect();
+    let mean_queue_wait_ms = (!queue_waits.is_empty())
+        .then(|| queue_waits.iter().sum::<f64>() / queue_waits.len() as f64);
+    let max_queue_wait_ms = queue_waits.iter().copied().reduce(f64::max);
+    let mean_inter_enqueue_gap_secs = (!inter_enqueue_gaps.is_empty())
+        .then(|| inter_enqueue_gaps.iter().sum::<f64>() / inter_enqueue_gaps.len() as f64);
+    let max_inter_enqueue_gap_secs = inter_enqueue_gaps.iter().copied().reduce(f64::max);
+    let delayed_gap_count = u64::try_from(
+        samples
+            .iter()
+            .filter(|sample| {
+                let Some(gap) = sample.get("inter_enqueue_gap_secs").and_then(Value::as_f64) else {
+                    return false;
+                };
+                let interval = sample
+                    .get("configured_interval_secs")
+                    .and_then(Value::as_u64)
+                    .unwrap_or(0) as f64;
+                interval > 0.0 && gap > interval * 2.0
+            })
+            .count(),
+    )
+    .unwrap_or(u64::MAX);
+
+    status["enqueue_attempt_count"] = json!(enqueue_attempt_count);
+    status["enqueue_success_count"] = json!(enqueue_success_count);
+    status["enqueue_closed_count"] = json!(enqueue_closed_count);
+    status["last_enqueue_outcome"] = json!(outcome);
+    status["last_enqueue_source"] = json!(source);
+    status["last_enqueue_completed_at_unix_s"] = json!(now);
+    status["last_enqueue_wait_ms"] = json!(queue_wait_ms);
+    status["last_inter_enqueue_gap_secs"] = json!(inter_enqueue_gap_secs);
+    if outcome == "enqueued" {
+        status["last_enqueue_success_at_unix_s"] = json!(now);
+    }
+    status["enqueue_samples_v1"] = json!(samples);
+    status["enqueue_samples_truncated"] = json!(samples_truncated);
+    status["delivery_health_v1"] = json!({
+        "schema": "semantic_heartbeat_delivery_health_v1",
+        "schema_version": 1,
+        "window_duration_secs": SEMANTIC_HEARTBEAT_OBSERVATION_WINDOW_SECS,
+        "sample_count": queue_waits.len(),
+        "mean_queue_wait_ms": mean_queue_wait_ms,
+        "max_queue_wait_ms": max_queue_wait_ms,
+        "mean_inter_enqueue_gap_secs": mean_inter_enqueue_gap_secs,
+        "max_inter_enqueue_gap_secs": max_inter_enqueue_gap_secs,
+        "gap_over_twice_configured_interval_count": delayed_gap_count,
+        "latest_outcome": outcome,
+        "send_count_compatibility_semantics": "rescue_policy_admission_before_channel_enqueue",
+        "interpretation": "bounded_channel_enqueue_timing_only; downstream_processing_or_minime_arrival_not_inferred",
+        "runtime_effect_applied": false,
+        "authority": "read_only_enqueue_evidence_not_cadence_intensity_rescue_dispatch_or_control"
+    });
+    write_status(path, &status);
+}
+
 fn record_limited_write_sent(
     path: &Path,
     policy: &RescueBridgePolicy,
@@ -2254,18 +2428,32 @@ pub(crate) fn prepare_semantic_write_for_path(
     Ok(())
 }
 
+#[cfg(test)]
 pub(crate) fn prepare_semantic_heartbeat_for_path_with_observation(
     msg: &mut SensoryMsg,
     path: &Path,
     observation: SemanticHeartbeatObservationV1,
 ) -> Result<(), String> {
+    prepare_semantic_heartbeat_for_path_with_enqueue_probe(msg, path, observation).map(drop)
+}
+
+fn prepare_semantic_heartbeat_for_path_with_enqueue_probe(
+    msg: &mut SensoryMsg,
+    path: &Path,
+    observation: SemanticHeartbeatObservationV1,
+) -> Result<SemanticHeartbeatEnqueueProbeV1, String> {
+    let status_path = semantic_heartbeat_status_path_for_profile(path);
+    let enqueue_probe = SemanticHeartbeatEnqueueProbeV1::new(
+        status_path.clone(),
+        observation.source,
+        observation.interval_secs,
+    );
     if !matches!(msg, SensoryMsg::Semantic { .. }) {
-        return Ok(());
+        return Ok(enqueue_probe);
     }
     let Some(policy) = load_policy(path) else {
-        return Ok(());
+        return Ok(enqueue_probe);
     };
-    let status_path = semantic_heartbeat_status_path_for_profile(path);
     let health = if policy.limited_write_v2_active() {
         load_limited_write_health(path, policy.limited_write_health_max_age_secs).ok()
     } else {
@@ -2294,7 +2482,7 @@ pub(crate) fn prepare_semantic_heartbeat_for_path_with_observation(
         observation,
         delivered_signal,
     );
-    Ok(())
+    Ok(enqueue_probe)
 }
 
 pub(crate) fn prepare_semantic_write(
@@ -2307,14 +2495,14 @@ pub(crate) fn prepare_semantic_write(
     prepare_semantic_write_for_path(msg, &path, context)
 }
 
-pub(crate) fn prepare_semantic_heartbeat_with_observation(
+pub(crate) fn prepare_semantic_heartbeat_with_enqueue_probe(
     msg: &mut SensoryMsg,
     observation: SemanticHeartbeatObservationV1,
-) -> Result<(), String> {
+) -> Result<SemanticHeartbeatEnqueueProbeV1, String> {
     let path = bridge_paths()
         .minime_workspace()
         .join("rescue_profile.json");
-    prepare_semantic_heartbeat_for_path_with_observation(msg, &path, observation)
+    prepare_semantic_heartbeat_for_path_with_enqueue_probe(msg, &path, observation)
 }
 
 #[cfg(test)]

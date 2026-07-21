@@ -21,6 +21,10 @@ pub struct TelemetryHeartbeatDeltaV1 {
     pub first_valid_packet_at_unix_s: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub first_valid_packet_lag_ms: Option<f32>,
+    /// Spectral entropy observed on the first schema-valid packet for this
+    /// connection. It is evidence about the initial field, not handshake data.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub first_valid_spectral_entropy: Option<f32>,
     #[serde(default)]
     pub connection_perception_state: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]

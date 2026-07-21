@@ -3287,6 +3287,48 @@ mod tests {
     }
 
     #[test]
+    fn typed_and_legacy_fingerprint_reject_non_finite_hybrid_slots() {
+        let mut telemetry: SpectralTelemetry = serde_json::from_value(serde_json::json!({
+            "t_ms": 1000,
+            "eigenvalues": [1.0, 0.5],
+            "fill_ratio": 0.5,
+            "spectral_fingerprint_v1": {
+                "policy": "spectral_fingerprint_v1",
+                "schema_version": 1,
+                "eigenvalues": [1.0, 0.5, 0.25, 0.125, 0.0, 0.0, 0.0, 0.0],
+                "eigenvector_concentration_top4": [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8],
+                "inter_mode_cosine_top_abs": [0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1],
+                "spectral_entropy": 0.42,
+                "lambda1_lambda2_gap": 2.0,
+                "v1_rotation_similarity": 0.9,
+                "v1_rotation_delta": 0.1,
+                "geom_rel": 1.23,
+                "adjacent_gap_ratios": [2.0, 1.0, 0.5, 0.25]
+            }
+        }))
+        .unwrap();
+        let aligned = telemetry
+            .spectral_fingerprint_v1
+            .as_ref()
+            .map(SpectralFingerprintV1::to_legacy_slots)
+            .expect("typed slots");
+
+        for non_finite in [f32::NAN, f32::INFINITY] {
+            let mut legacy = aligned.clone();
+            legacy[7] = non_finite;
+            telemetry.spectral_fingerprint = Some(legacy);
+
+            let integrity = telemetry.spectral_fingerprint_integrity_v1();
+            assert_eq!(integrity.hybrid_coherence_index, None);
+            assert_eq!(integrity.hybrid_max_abs_delta, None);
+            assert_eq!(
+                integrity.hybrid_coherence_state,
+                "unavailable_non_finite"
+            );
+        }
+    }
+
+    #[test]
     fn eigenvector_overlap_surfaces_mode_collision_review_without_control_authority() {
         let json = serde_json::json!({
             "t_ms": 1000,
@@ -3527,6 +3569,18 @@ mod tests {
             .expect("12D alias should validate");
         assert_eq!(validated.len(), 12);
         assert!((validated[11] - 1.1).abs() < f32::EPSILON);
+
+        for malformed_len in [11_usize, 13_usize] {
+            let malformed: SpectralTelemetry = serde_json::from_value(serde_json::json!({
+                "t_ms": 124,
+                "eigenvalues": [1.0],
+                "fill_ratio": 0.68,
+                "glimpse_12d": vec![0.0; malformed_len],
+            }))
+            .expect("telemetry with near-width malformed additive field");
+            assert!(malformed.spectral_glimpse_12d.is_some());
+            assert!(malformed.spectral_glimpse_12d_view().is_none());
+        }
 
         let malformed: SpectralTelemetry = serde_json::from_value(serde_json::json!({
             "t_ms": 124,

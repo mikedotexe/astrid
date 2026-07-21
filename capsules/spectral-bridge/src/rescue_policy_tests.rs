@@ -1619,6 +1619,76 @@ fn semantic_heartbeat_observation_window_counts_blocks_and_carries_phase() {
 }
 
 #[test]
+fn semantic_heartbeat_delivery_health_separates_admission_from_enqueue() {
+    let dir = unique_temp_dir("semantic_heartbeat_delivery_health");
+    let path = dir.join("rescue_profile.json");
+    std::fs::write(&path, budgeted_sovereignty_profile_json()).unwrap();
+    write_v2_health(&dir, 64.0, "hold", 65.0, true, 0.006, 12, 12);
+
+    let mut first = semantic_msg();
+    let first_probe = prepare_semantic_heartbeat_for_path_with_enqueue_probe(
+        &mut first,
+        &path,
+        heartbeat_observation(),
+    )
+    .unwrap();
+    first_probe.record_enqueued();
+
+    let mut second = semantic_msg();
+    let second_probe = prepare_semantic_heartbeat_for_path_with_enqueue_probe(
+        &mut second,
+        &path,
+        heartbeat_observation(),
+    )
+    .unwrap();
+    second_probe.record_channel_closed();
+
+    let status = read_status(&semantic_heartbeat_status_path_for_profile(&path));
+    assert_eq!(status.get("send_count").and_then(Value::as_u64), Some(2));
+    assert_eq!(
+        status.get("enqueue_attempt_count").and_then(Value::as_u64),
+        Some(2)
+    );
+    assert_eq!(
+        status.get("enqueue_success_count").and_then(Value::as_u64),
+        Some(1)
+    );
+    assert_eq!(
+        status.get("enqueue_closed_count").and_then(Value::as_u64),
+        Some(1)
+    );
+    assert_eq!(
+        status.get("last_enqueue_outcome").and_then(Value::as_str),
+        Some("channel_closed")
+    );
+    let delivery = status.get("delivery_health_v1").unwrap();
+    assert_eq!(
+        delivery
+            .get("send_count_compatibility_semantics")
+            .and_then(Value::as_str),
+        Some("rescue_policy_admission_before_channel_enqueue")
+    );
+    assert_eq!(
+        delivery
+            .get("runtime_effect_applied")
+            .and_then(Value::as_bool),
+        Some(false)
+    );
+    assert_eq!(
+        delivery.get("authority").and_then(Value::as_str),
+        Some("read_only_enqueue_evidence_not_cadence_intensity_rescue_dispatch_or_control")
+    );
+    assert_eq!(
+        status
+            .get("enqueue_samples_v1")
+            .and_then(Value::as_array)
+            .map(Vec::len),
+        Some(2)
+    );
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
 fn semantic_heartbeat_observation_compares_pressure_and_texture_without_control() {
     let dir = unique_temp_dir("semantic_heartbeat_pressure_texture");
     let path = dir.join("rescue_profile.json");

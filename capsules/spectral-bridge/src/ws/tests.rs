@@ -224,8 +224,8 @@ mod tests {
             42.0,
         );
 
-        record_valid_payload(&mut state, WsLane::Telemetry, 42.125);
-        record_valid_payload(&mut state, WsLane::Telemetry, 42.250);
+        record_valid_payload(&mut state, WsLane::Telemetry, 42.125, Some(0.91));
+        record_valid_payload(&mut state, WsLane::Telemetry, 42.250, Some(0.42));
         assert_eq!(
             state
                 .telemetry_ws
@@ -237,6 +237,12 @@ mod tests {
                 .telemetry_ws
                 .active_connection_valid_payloads_received,
             2
+        );
+        assert_eq!(
+            state
+                .telemetry_ws
+                .active_connection_first_valid_spectral_entropy,
+            Some(0.91)
         );
 
         let next_connection = record_connect_attempt(&mut state, WsLane::Telemetry);
@@ -255,6 +261,12 @@ mod tests {
         assert_eq!(
             state
                 .telemetry_ws
+                .active_connection_first_valid_spectral_entropy,
+            None
+        );
+        assert_eq!(
+            state
+                .telemetry_ws
                 .active_connection_valid_payloads_received,
             0
         );
@@ -265,11 +277,16 @@ mod tests {
         let mut lane_json = serde_json::to_value(WebSocketLaneTrace::default()).unwrap();
         let lane = lane_json.as_object_mut().unwrap();
         lane.remove("active_connection_first_valid_payload_at_unix_s");
+        lane.remove("active_connection_first_valid_spectral_entropy");
         lane.remove("active_connection_valid_payloads_received");
         let legacy_lane: WebSocketLaneTrace = serde_json::from_value(lane_json).unwrap();
         assert_eq!(legacy_lane.active_connection_valid_payloads_received, 0);
         assert_eq!(
             legacy_lane.active_connection_first_valid_payload_at_unix_s,
+            None
+        );
+        assert_eq!(
+            legacy_lane.active_connection_first_valid_spectral_entropy,
             None
         );
 
@@ -285,6 +302,7 @@ mod tests {
             }))
             .unwrap();
         assert_eq!(legacy_heartbeat.first_valid_packet_lag_ms, None);
+        assert_eq!(legacy_heartbeat.first_valid_spectral_entropy, None);
         assert_eq!(legacy_heartbeat.cadence_clarity_score, None);
         assert!(legacy_heartbeat.connection_perception_state.is_empty());
     }
@@ -1409,6 +1427,7 @@ mod tests {
             .expect("cadence-content distinction");
 
         assert_eq!(distinction.cadence_state, "cadence_clear");
+        assert_eq!(distinction.cadence_jitter_class.as_deref(), Some("normal"));
         assert_eq!(distinction.cadence_clarity_score, Some(1.0));
         assert_eq!(distinction.content_state, "persistent_semantic_residue");
         assert!(
@@ -1428,6 +1447,14 @@ mod tests {
             distinction.authority,
             "read_only_transport_content_distinction_not_cadence_semantic_or_control"
         );
+
+        let mut legacy_json = serde_json::to_value(&distinction).unwrap();
+        legacy_json
+            .as_object_mut()
+            .unwrap()
+            .remove("cadence_jitter_class");
+        let legacy: CadenceContentDistinctionV1 = serde_json::from_value(legacy_json).unwrap();
+        assert_eq!(legacy.cadence_jitter_class, None);
     }
 
     #[test]
@@ -2607,6 +2634,7 @@ mod tests {
             active_connection_started_at_unix_s: Some(99.9),
             first_valid_packet_at_unix_s: Some(100.0),
             first_valid_packet_lag_ms: Some(100.0),
+            first_valid_spectral_entropy: None,
             connection_perception_state: "connected_with_current_telemetry".to_string(),
             cadence_clarity_score: Some(0.0),
             cadence_clarity_basis:
@@ -3640,6 +3668,7 @@ mod tests {
             active_connection_id: Some(7),
             active_connection_started_at_unix_s: Some(99.75),
             active_connection_first_valid_payload_at_unix_s: Some(100.0),
+            active_connection_first_valid_spectral_entropy: Some(0.88),
             active_connection_valid_payloads_received: 1,
             last_disconnect_reason: Some("test_disconnect".to_string()),
             ..WebSocketLaneTrace::default()
@@ -3652,6 +3681,7 @@ mod tests {
             "first_valid_packet_after_connect"
         );
         assert_eq!(no_history.first_valid_packet_lag_ms, Some(250.0));
+        assert_eq!(no_history.first_valid_spectral_entropy, Some(0.88));
         assert_eq!(no_history.cadence_clarity_score, None);
         assert!(
             no_history

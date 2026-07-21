@@ -206,6 +206,9 @@ pub struct CadenceContentDistinctionV1 {
     pub policy: String,
     pub schema_version: u8,
     pub cadence_state: String,
+    /// Exact heartbeat classification carried into this compatibility view.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub cadence_jitter_class: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub cadence_clarity_score: Option<f32>,
     pub cadence_evidence_basis: String,

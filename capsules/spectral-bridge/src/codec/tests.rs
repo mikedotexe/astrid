@@ -4937,6 +4937,32 @@ mod tests {
     }
 
     #[test]
+    fn warmth_heartbeat_stays_smooth_across_reported_phase_32_33_boundary() {
+        let phase_32 = craft_warmth_vector(32.0 / 64.0, 0.30);
+        let phase_33 = craft_warmth_vector(33.0 / 64.0, 0.30);
+        let mut squared_delta_sum = 0.0_f32;
+        let mut max_abs_delta = 0.0_f32;
+
+        for (left, right) in phase_32.iter().zip(&phase_33) {
+            let delta = right - left;
+            squared_delta_sum += delta * delta;
+            max_abs_delta = max_abs_delta.max(delta.abs());
+        }
+        let rms_delta = (squared_delta_sum / SEMANTIC_DIM as f32).sqrt();
+
+        assert!(phase_32[24] > 0.0 && phase_33[24] > 0.0);
+        assert!(phase_32[25] < 0.0 && phase_33[25] < 0.0);
+        assert!(
+            max_abs_delta < 0.08,
+            "adjacent heartbeat phases must not jump: max_abs_delta={max_abs_delta}"
+        );
+        assert!(
+            rms_delta < 0.03,
+            "adjacent heartbeat phases must remain a smooth contour: rms_delta={rms_delta}"
+        );
+    }
+
+    #[test]
     fn warmth_intensity_scales() {
         let low = craft_warmth_vector(0.5, 0.2);
         let high = craft_warmth_vector(0.5, 0.9);

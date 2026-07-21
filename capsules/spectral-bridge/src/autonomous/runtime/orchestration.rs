@@ -43,17 +43,21 @@ async fn run_semantic_heartbeat_loop(
             features,
             ts_ms: None,
         };
-        if let Err(reason) =
-            rescue_policy::prepare_semantic_heartbeat_with_observation(&mut msg, observation)
-        {
-            debug!(
-                reason = %reason,
-                "semantic heartbeat skipped by rescue write policy"
-            );
-            continue;
-        }
-        if sensory_tx.send(msg).await.is_err() {
-            return;
+        match rescue_policy::prepare_semantic_heartbeat_with_enqueue_probe(&mut msg, observation) {
+            Err(reason) => {
+                debug!(
+                    reason = %reason,
+                    "semantic heartbeat skipped by rescue write policy"
+                );
+                continue;
+            }
+            Ok(enqueue_probe) => {
+                if sensory_tx.send(msg).await.is_err() {
+                    enqueue_probe.record_channel_closed();
+                    return;
+                }
+                enqueue_probe.record_enqueued();
+            }
         }
     }
 }
@@ -341,16 +345,23 @@ pub fn spawn_autonomous_loop(
                         features,
                         ts_ms: None,
                     };
-                    if let Err(reason) = rescue_policy::prepare_semantic_heartbeat_with_observation(
+                    match rescue_policy::prepare_semantic_heartbeat_with_enqueue_probe(
                         &mut msg,
                         observation,
                     ) {
-                        debug!(
-                            reason = %reason,
-                            "autonomous semantic heartbeat skipped by rescue write policy"
-                        );
-                    } else if sensory_tx.send(msg).await.is_err() {
-                        return;
+                        Err(reason) => {
+                            debug!(
+                                reason = %reason,
+                                "autonomous semantic heartbeat skipped by rescue write policy"
+                            );
+                        }
+                        Ok(enqueue_probe) => {
+                            if sensory_tx.send(msg).await.is_err() {
+                                enqueue_probe.record_channel_closed();
+                                return;
+                            }
+                            enqueue_probe.record_enqueued();
+                        }
                     }
                     tokio::time::sleep(Duration::from_secs(5)).await;
                 }

@@ -400,7 +400,15 @@ async fn handle_telemetry_message_at(
         let mut s = state.write().await;
         let write_lock_wait_ms = telemetry_duration_ms(write_lock_wait_started.elapsed());
         let write_lock_hold_started = Instant::now();
-        record_valid_payload(&mut s, WsLane::Telemetry, observed_at_unix_s);
+        let first_valid_spectral_entropy = telemetry
+            .typed_fingerprint()
+            .map(|fingerprint| fingerprint.spectral_entropy);
+        record_valid_payload(
+            &mut s,
+            WsLane::Telemetry,
+            observed_at_unix_s,
+            first_valid_spectral_entropy,
+        );
         let previous_fill_pct = s.latest_telemetry.as_ref().map(|_| s.fill_pct);
         let previous_arrival = s.latest_telemetry_arrival_unix_s;
         let heartbeat = build_telemetry_heartbeat_delta_v1(

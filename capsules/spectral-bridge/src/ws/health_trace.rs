@@ -44,12 +44,18 @@ fn record_connected(state: &mut BridgeState, lane: WsLane, connection_id: u64, a
     trace.active_connection_id = Some(connection_id);
     trace.active_connection_started_at_unix_s = Some(at_unix_s);
     trace.active_connection_first_valid_payload_at_unix_s = None;
+    trace.active_connection_first_valid_spectral_entropy = None;
     trace.active_connection_valid_payloads_received = 0;
     trace.last_connect_at_unix_s = Some(at_unix_s);
     trace.last_error = None;
 }
 
-fn record_valid_payload(state: &mut BridgeState, lane: WsLane, at_unix_s: f64) {
+fn record_valid_payload(
+    state: &mut BridgeState,
+    lane: WsLane,
+    at_unix_s: f64,
+    spectral_entropy: Option<f32>,
+) {
     let trace = lane_trace_mut(state, lane);
     trace.active_connection_valid_payloads_received = trace
         .active_connection_valid_payloads_received
@@ -59,6 +65,9 @@ fn record_valid_payload(state: &mut BridgeState, lane: WsLane, at_unix_s: f64) {
         .is_none()
     {
         trace.active_connection_first_valid_payload_at_unix_s = Some(at_unix_s);
+        trace.active_connection_first_valid_spectral_entropy = spectral_entropy
+            .filter(|value| value.is_finite())
+            .map(|value| value.clamp(0.0, 1.0));
     }
 }
 

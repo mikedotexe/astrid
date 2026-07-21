@@ -193,6 +193,10 @@ pub struct WebSocketLaneTrace {
     /// First schema-valid payload observed on the active connection.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub active_connection_first_valid_payload_at_unix_s: Option<f64>,
+    /// Spectral entropy carried by the first schema-valid telemetry payload.
+    /// This is absent for lanes or payloads without a typed fingerprint.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub active_connection_first_valid_spectral_entropy: Option<f32>,
     /// Number of schema-valid payloads observed on the active connection.
     #[serde(default)]
     pub active_connection_valid_payloads_received: u64,

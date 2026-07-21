@@ -979,6 +979,7 @@ fn build_telemetry_heartbeat_delta_v1(
         first_valid_packet_at_unix_s: trace
             .active_connection_first_valid_payload_at_unix_s,
         first_valid_packet_lag_ms,
+        first_valid_spectral_entropy: trace.active_connection_first_valid_spectral_entropy,
         connection_perception_state,
         cadence_clarity_score,
         cadence_clarity_basis:
