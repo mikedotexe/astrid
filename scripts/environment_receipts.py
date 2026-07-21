@@ -239,11 +239,14 @@ def artifact_hashes(items: dict[str, Path]) -> dict[str, dict[str, Any]]:
     }
 
 
-def load_build_manifest(path: Path) -> dict[str, Any]:
+def load_build_manifest(
+    path: Path, *, protocol_participant: bool = True
+) -> dict[str, Any]:
     payload = read_json(path)
     return {
         "path": str(path),
         "available": bool(payload),
+        "protocol_participant": protocol_participant,
         "manifest": payload or None,
     }
 
@@ -469,22 +472,30 @@ def manifest_compatibility(
     manifest_entry: dict[str, Any],
     *,
     pinned_revision: str | None,
+    require_protocol: bool = True,
 ) -> tuple[bool, list[str]]:
     reasons: list[str] = []
     path = Path(str(manifest_entry.get("path") or ""))
     manifest = manifest_entry.get("manifest")
     if not isinstance(manifest, dict):
         return False, [f"build manifest missing: {path}"]
-    protocol = manifest.get("protocol") if isinstance(manifest.get("protocol"), dict) else {}
-    version = str(protocol.get("version") or "")
-    try:
-        major = int(version.split(".", 1)[0])
-    except ValueError:
-        major = -1
-    if major != 1:
-        reasons.append(f"unsupported protocol major in manifest {path}: {version or 'missing'}")
-    if pinned_revision and protocol.get("revision") != pinned_revision:
-        reasons.append(f"protocol revision mismatch in manifest {path}")
+    if require_protocol:
+        protocol = (
+            manifest.get("protocol")
+            if isinstance(manifest.get("protocol"), dict)
+            else {}
+        )
+        version = str(protocol.get("version") or "")
+        try:
+            major = int(version.split(".", 1)[0])
+        except ValueError:
+            major = -1
+        if major != 1:
+            reasons.append(
+                f"unsupported protocol major in manifest {path}: {version or 'missing'}"
+            )
+        if pinned_revision and protocol.get("revision") != pinned_revision:
+            reasons.append(f"protocol revision mismatch in manifest {path}")
     artifacts = manifest.get("artifacts") if isinstance(manifest.get("artifacts"), dict) else {}
     if not artifacts:
         reasons.append(f"manifest has no artifacts: {path}")
@@ -519,6 +530,7 @@ def record_deployment_receipt(
     binaries: dict[str, Path] | None = None,
     scripts: dict[str, Path] | None = None,
     manifest_paths: list[Path] | None = None,
+    context_manifest_paths: list[Path] | None = None,
     protocol_version: str = PROTOCOL_VERSION,
     change_refs: list[dict[str, str]] | None = None,
 ) -> tuple[dict[str, Any], bool]:
@@ -549,6 +561,14 @@ def record_deployment_receipt(
     manifests = {
         path.name: load_build_manifest(path) for path in (manifest_paths or [])
     }
+    for path in context_manifest_paths or []:
+        if path.name in manifests:
+            raise ValueError(
+                f"manifest cannot be both a protocol participant and context: {path}"
+            )
+        manifests[path.name] = load_build_manifest(
+            path, protocol_participant=False
+        )
     failures: list[str] = []
     checks: list[dict[str, Any]] = []
 
@@ -558,11 +578,19 @@ def record_deployment_receipt(
         failures.append("protocol major/revision compatibility failed")
 
     for name, entry in manifests.items():
+        protocol_participant = entry.get("protocol_participant") is not False
         compatible, reasons = manifest_compatibility(
             entry,
             pinned_revision=protocol.get("revision"),
+            require_protocol=protocol_participant,
         )
-        checks.append({"name": f"manifest:{name}", "passed": compatible})
+        checks.append(
+            {
+                "name": f"manifest:{name}",
+                "passed": compatible,
+                "protocol_participant": protocol_participant,
+            }
+        )
         failures.extend(reasons)
 
     if new_pid not in (None, ""):
@@ -764,6 +792,13 @@ def main() -> int:
     deploy.add_argument("--binary", action="append", default=[])
     deploy.add_argument("--script", action="append", default=[])
     deploy.add_argument("--manifest", type=Path, action="append", default=[])
+    deploy.add_argument(
+        "--context-manifest",
+        type=Path,
+        action="append",
+        default=[],
+        help="hash-check an adjacent component without treating it as a wire participant",
+    )
     deploy.add_argument("--protocol-version", default=PROTOCOL_VERSION)
     deploy.add_argument("--change-ref", action="append", default=[])
     deploy.add_argument("--json", action="store_true", dest="as_json")
@@ -834,6 +869,7 @@ def main() -> int:
             binaries=binaries,
             scripts=scripts,
             manifest_paths=args.manifest,
+            context_manifest_paths=args.context_manifest,
             protocol_version=args.protocol_version,
             change_refs=change_refs,
         )

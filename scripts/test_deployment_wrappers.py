@@ -50,6 +50,7 @@ class DeploymentWrapperTests(unittest.TestCase):
         self.assertIn("coupled-stack", stack)
         self.assertIn("/readyz", stack)
         self.assertIn("--process", stack)
+        self.assertIn('--context-manifest "$MODEL_MANIFEST"', stack)
 
     def test_help_paths_are_side_effect_free(self) -> None:
         for path in SCRIPTS[:4]:

@@ -86,7 +86,7 @@ args=(
   --script "model-wrapper=$ASTRID/scripts/restart_coupled_model.sh"
   --manifest "$BRIDGE_MANIFEST"
   --manifest "$MINIME_MANIFEST"
-  --manifest "$MODEL_MANIFEST"
+  --context-manifest "$MODEL_MANIFEST"
   --telemetry "$BRIDGE_TELEMETRY"
   --telemetry "$MINIME_TELEMETRY"
 )

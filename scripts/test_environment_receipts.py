@@ -157,6 +157,54 @@ class EnvironmentReceiptTests(unittest.TestCase):
             self.assertFalse(compatible)
             self.assertTrue(any("manifest mismatch" in reason for reason in reasons))
 
+    def test_context_manifest_checks_artifact_without_wire_revision(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp, mock.patch.object(
+            environment_receipts,
+            "protocol_identity",
+            return_value={"revision": "b" * 40, "compatible": True},
+        ):
+            root = Path(tmp)
+            artifact = root / "model.py"
+            manifest_path = root / "model.json"
+            artifact.write_bytes(b"model")
+            environment_receipts.write_build_manifest(
+                manifest_path,
+                component="adjacent-model",
+                repository=root,
+                artifacts={"model": artifact},
+                actor=environment_receipts.DEFAULT_ACTOR,
+                command="model start",
+                protocol_revision="a" * 40,
+            )
+
+            receipt, ok = environment_receipts.record_deployment_receipt(
+                root,
+                component="stack",
+                requested_status="passed",
+                actor=environment_receipts.DEFAULT_ACTOR,
+                context_manifest_paths=[manifest_path],
+            )
+
+            self.assertTrue(ok, receipt["compatibility_status"]["failure_reasons"])
+            entry = receipt["artifacts"]["build_manifests"]["model.json"]
+            self.assertFalse(entry["protocol_participant"])
+            check = next(
+                row
+                for row in receipt["compatibility_status"]["checks"]
+                if row["name"] == "manifest:model.json"
+            )
+            self.assertFalse(check["protocol_participant"])
+
+            artifact.write_bytes(b"tampered")
+            _, tampered_ok = environment_receipts.record_deployment_receipt(
+                root,
+                component="stack",
+                requested_status="passed",
+                actor=environment_receipts.DEFAULT_ACTOR,
+                context_manifest_paths=[manifest_path],
+            )
+            self.assertFalse(tampered_ok)
+
     def test_manifest_cli_keeps_subcommand_separate_from_build_command(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
