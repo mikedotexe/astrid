@@ -649,14 +649,14 @@ async fn mlx_chat_with_failure_log_mode(
         if report.removed_total > 0 {
             warn!(
                 removed_total = report.removed_total,
-                preserved_semantic_reference_total = report.preserved_semantic_reference_total,
+                preserved_explicit_reference_total = report.preserved_explicit_reference_total,
                 before_chars = report.before_chars,
                 after_chars = report.after_chars,
                 "mlx_chat handled model artifact tokens"
             );
         } else {
             debug!(
-                preserved_semantic_reference_total = report.preserved_semantic_reference_total,
+                preserved_explicit_reference_total = report.preserved_explicit_reference_total,
                 "mlx_chat preserved explicitly referenced model artifact tokens"
             );
         }

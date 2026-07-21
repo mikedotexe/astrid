@@ -34,13 +34,13 @@ struct ModelArtifactMatch {
     token: &'static str,
     start: usize,
     end: usize,
-    preservation: Option<ModelArtifactPreservation>,
+    reference_context: Option<ExactArtifactReferenceContext>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-enum ModelArtifactPreservation {
-    QuotedReference,
-    NamedReference,
+enum ExactArtifactReferenceContext {
+    QuotedLiteral,
+    ExplicitRelation,
 }
 
 fn explicit_reference_cue_before(text: &str, start: usize) -> bool {
@@ -70,6 +70,7 @@ fn explicit_reference_cue_before(text: &str, start: usize) -> bool {
             | "phrase"
             | "quote"
             | "quoted"
+            | "resonant"
             | "sequence"
             | "spell"
             | "spelled"
@@ -77,6 +78,7 @@ fn explicit_reference_cue_before(text: &str, start: usize) -> bool {
             | "syntax"
             | "token"
             | "verbatim"
+            | "vivid"
             | "write"
             | "wrote"
     )
@@ -106,11 +108,13 @@ fn explicit_reference_relation_after(text: &str, end: usize) -> bool {
     )
 }
 
-fn model_artifact_preservation(
+/// Classify only the local syntax around an exact known model-token occurrence.
+/// This is not a classifier for felt texture, memory, spectral state, or meaning.
+fn exact_artifact_reference_context(
     text: &str,
     start: usize,
     end: usize,
-) -> Option<ModelArtifactPreservation> {
+) -> Option<ExactArtifactReferenceContext> {
     let before = text[..start]
         .chars()
         .rev()
@@ -119,13 +123,13 @@ fn model_artifact_preservation(
         .chars()
         .find(|character| !character.is_whitespace());
     if matching_quote_pair(before, after) {
-        return Some(ModelArtifactPreservation::QuotedReference);
+        return Some(ExactArtifactReferenceContext::QuotedLiteral);
     }
     if explicit_semantic_attribution_after(text, end)
         || (explicit_reference_cue_before(text, start)
             && explicit_reference_relation_after(text, end))
     {
-        return Some(ModelArtifactPreservation::NamedReference);
+        return Some(ExactArtifactReferenceContext::ExplicitRelation);
     }
     None
 }
@@ -144,14 +148,14 @@ fn strip_known_model_artifact_matches(text: &str) -> (String, Vec<ModelArtifactM
             .max_by_key(|token| token.len());
         if let Some(token) = matched {
             let end = offset.saturating_add(token.len());
-            let preservation = model_artifact_preservation(text, offset, end);
+            let reference_context = exact_artifact_reference_context(text, offset, end);
             matches.push(ModelArtifactMatch {
                 token,
                 start: offset,
                 end,
-                preservation,
+                reference_context,
             });
-            if preservation.is_some() {
+            if reference_context.is_some() {
                 remainder.push_str(token);
             }
             offset = end;
@@ -231,7 +235,7 @@ pub(crate) fn strip_model_artifacts_with_report(
             .iter()
             .copied()
             .filter(|artifact_match| {
-                artifact_match.token == *token && artifact_match.preservation.is_none()
+                artifact_match.token == *token && artifact_match.reference_context.is_none()
             })
         {
             count = count.saturating_add(1);
@@ -255,43 +259,43 @@ pub(crate) fn strip_model_artifacts_with_report(
             .iter()
             .filter(|artifact_match| {
                 artifact_match.token == *token
-                    && artifact_match.preservation
-                        == Some(ModelArtifactPreservation::QuotedReference)
+                    && artifact_match.reference_context
+                        == Some(ExactArtifactReferenceContext::QuotedLiteral)
             })
             .count();
-        let named_reference_occurrences = matches
+        let explicit_relation_occurrences = matches
             .iter()
             .filter(|artifact_match| {
                 artifact_match.token == *token
-                    && artifact_match.preservation
-                        == Some(ModelArtifactPreservation::NamedReference)
+                    && artifact_match.reference_context
+                        == Some(ExactArtifactReferenceContext::ExplicitRelation)
             })
             .count();
         let preserved_count = quoted_reference_occurrences
-            .saturating_add(named_reference_occurrences);
+            .saturating_add(explicit_relation_occurrences);
         if preserved_count > 0 {
             preserved_tokens.push(PreservedModelArtifactTokenCount {
                 token: (*token).to_string(),
                 count: preserved_count,
                 quoted_reference_occurrences,
-                named_reference_occurrences,
+                explicit_relation_occurrences,
             });
         }
     }
     let observed_total = matches.len();
     let removed_total = matches
         .iter()
-        .filter(|artifact_match| artifact_match.preservation.is_none())
+        .filter(|artifact_match| artifact_match.reference_context.is_none())
         .count();
-    let preserved_semantic_reference_total = observed_total.saturating_sub(removed_total);
+    let preserved_explicit_reference_total = observed_total.saturating_sub(removed_total);
     let removed_marker_bytes = matches
         .iter()
-        .filter(|artifact_match| artifact_match.preservation.is_none())
+        .filter(|artifact_match| artifact_match.reference_context.is_none())
         .map(|artifact_match| artifact_match.end.saturating_sub(artifact_match.start))
         .sum();
     let preserved_marker_bytes = matches
         .iter()
-        .filter(|artifact_match| artifact_match.preservation.is_some())
+        .filter(|artifact_match| artifact_match.reference_context.is_some())
         .map(|artifact_match| artifact_match.end.saturating_sub(artifact_match.start))
         .sum();
     let after_chars = result.len();
@@ -304,12 +308,15 @@ pub(crate) fn strip_model_artifacts_with_report(
         Some(StripModelArtifactsReport {
             observed_total,
             removed_total,
-            preserved_semantic_reference_total,
+            preserved_explicit_reference_total,
             removed_marker_bytes,
             preserved_marker_bytes,
             before_chars: text.len(),
             after_chars,
             after_non_whitespace_chars,
+            classification_scope: "exact_known_model_artifact_token_occurrence_only",
+            excluded_meaning_scope:
+                "felt_texture_memory_spectral_state_and_semantic_weight_not_classified",
             accounting_basis: "single_pass_longest_raw_marker_match_with_explicit_reference_preservation_no_second_order_marker_creation",
             removed_tokens,
             preserved_tokens,

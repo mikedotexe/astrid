@@ -184,12 +184,14 @@ const MODEL_ARTIFACT_TOKENS: &[&str] = &[
 pub(crate) struct StripModelArtifactsReport {
     pub observed_total: usize,
     pub removed_total: usize,
-    pub preserved_semantic_reference_total: usize,
+    pub preserved_explicit_reference_total: usize,
     pub removed_marker_bytes: usize,
     pub preserved_marker_bytes: usize,
     pub before_chars: usize,
     pub after_chars: usize,
     pub after_non_whitespace_chars: usize,
+    pub classification_scope: &'static str,
+    pub excluded_meaning_scope: &'static str,
     pub accounting_basis: &'static str,
     pub removed_tokens: Vec<StripModelArtifactTokenCount>,
     pub preserved_tokens: Vec<PreservedModelArtifactTokenCount>,
@@ -209,7 +211,7 @@ pub(crate) struct PreservedModelArtifactTokenCount {
     pub token: String,
     pub count: usize,
     pub quoted_reference_occurrences: usize,
-    pub named_reference_occurrences: usize,
+    pub explicit_relation_occurrences: usize,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -328,19 +330,21 @@ fn artifact_remainder_texture_v1(text: &str) -> ArtifactRemainderTextureV1 {
 }
 
 #[derive(Debug, Serialize)]
-struct ModelArtifactSemanticIntegrityCheckV1 {
+struct ModelArtifactExactTokenIntegrityCheckV1 {
     policy: &'static str,
     state: &'static str,
-    semantic_remainder_present: bool,
-    semantic_remainder_non_whitespace_chars: usize,
+    output_remainder_present: bool,
+    output_remainder_non_whitespace_chars: usize,
     artifact_only_after_cleanup: bool,
     contextual_marker_occurrences: usize,
     quoted_marker_occurrences: usize,
-    preserved_semantic_reference_occurrences: usize,
+    preserved_explicit_reference_occurrences: usize,
     removed_marker_bytes: usize,
     removed_fraction_of_raw_output: f64,
     shadow_check_recommended: bool,
-    intent_preservation: &'static str,
+    reference_inference: &'static str,
+    classification_scope: &'static str,
+    excluded_meaning_scope: &'static str,
     basis: &'static str,
     runtime_effect: bool,
 }
@@ -355,7 +359,7 @@ struct ModelArtifactCleanupDiagnostic<'a> {
     marker_contract: &'static str,
     common_language_overlap_risk: bool,
     remainder_texture_v1: ArtifactRemainderTextureV1,
-    semantic_integrity_check_v1: ModelArtifactSemanticIntegrityCheckV1,
+    exact_token_integrity_check_v1: ModelArtifactExactTokenIntegrityCheckV1,
     authority: &'static str,
     #[serde(flatten)]
     report: &'a StripModelArtifactsReport,
@@ -368,11 +372,11 @@ fn model_artifact_language_overlap_risk(report: &StripModelArtifactsReport) -> b
         .any(|entry| !entry.token.contains('<') && !entry.token.contains('['))
 }
 
-fn model_artifact_semantic_integrity_check_v1(
+fn model_artifact_exact_token_integrity_check_v1(
     report: &StripModelArtifactsReport,
     remainder_texture: &ArtifactRemainderTextureV1,
-) -> ModelArtifactSemanticIntegrityCheckV1 {
-    let semantic_remainder_present = report.after_non_whitespace_chars > 0;
+) -> ModelArtifactExactTokenIntegrityCheckV1 {
+    let output_remainder_present = report.after_non_whitespace_chars > 0;
     let contextual_marker_occurrences = report
         .removed_tokens
         .iter()
@@ -383,7 +387,7 @@ fn model_artifact_semantic_integrity_check_v1(
         .iter()
         .map(|entry| entry.quoted_occurrences)
         .sum();
-    let preserved_semantic_reference_occurrences = report.preserved_semantic_reference_total;
+    let preserved_explicit_reference_occurrences = report.preserved_explicit_reference_total;
     let removed_marker_bytes = report.removed_marker_bytes;
     let before_bytes = u32::try_from(report.before_chars).unwrap_or(u32::MAX);
     let removed_bytes = u32::try_from(removed_marker_bytes).unwrap_or(u32::MAX);
@@ -394,12 +398,12 @@ fn model_artifact_semantic_integrity_check_v1(
     };
     let high_removal_fraction =
         removed_marker_bytes >= 64 && removed_fraction_of_raw_output >= 0.25;
-    let state = if report.removed_total == 0 && preserved_semantic_reference_occurrences > 0 {
-        "explicit_semantic_reference_preserved"
-    } else if !semantic_remainder_present {
+    let state = if report.removed_total == 0 && preserved_explicit_reference_occurrences > 0 {
+        "explicit_token_reference_preserved"
+    } else if !output_remainder_present {
         "review_output_erased"
-    } else if preserved_semantic_reference_occurrences > 0 {
-        "mixed_structural_cleanup_and_reference_preservation"
+    } else if preserved_explicit_reference_occurrences > 0 {
+        "mixed_structural_cleanup_and_explicit_reference_preservation"
     } else if contextual_marker_occurrences > 0 {
         "review_contextual_marker_removal"
     } else if high_removal_fraction {
@@ -410,15 +414,15 @@ fn model_artifact_semantic_integrity_check_v1(
     let structure_only_review =
         remainder_texture.state == "structure_only_requires_semantic_review";
 
-    ModelArtifactSemanticIntegrityCheckV1 {
-        policy: "model_artifact_semantic_integrity_check_v1",
+    ModelArtifactExactTokenIntegrityCheckV1 {
+        policy: "model_artifact_exact_token_integrity_check_v1",
         state,
-        semantic_remainder_present,
-        semantic_remainder_non_whitespace_chars: report.after_non_whitespace_chars,
-        artifact_only_after_cleanup: !semantic_remainder_present,
+        output_remainder_present,
+        output_remainder_non_whitespace_chars: report.after_non_whitespace_chars,
+        artifact_only_after_cleanup: !output_remainder_present,
         contextual_marker_occurrences,
         quoted_marker_occurrences,
-        preserved_semantic_reference_occurrences,
+        preserved_explicit_reference_occurrences,
         removed_marker_bytes,
         removed_fraction_of_raw_output,
         shadow_check_recommended: matches!(
@@ -427,13 +431,15 @@ fn model_artifact_semantic_integrity_check_v1(
                 | "review_contextual_marker_removal"
                 | "review_high_removal_fraction"
         ) || structure_only_review,
-        intent_preservation: if preserved_semantic_reference_occurrences > 0 {
-            "explicit_reference_context_preserved_not_semantic_intent_inference"
+        reference_inference: if preserved_explicit_reference_occurrences > 0 {
+            "local_reference_syntax_preserved_not_semantic_intent_inference"
         } else {
             "not_established_by_marker_cleanup"
         },
+        classification_scope: report.classification_scope,
+        excluded_meaning_scope: report.excluded_meaning_scope,
         basis:
-            "marker_placement_removed_byte_fraction_and_surface_remainder_texture_not_semantic_intent_inference",
+            "exact_token_placement_removed_byte_fraction_and_surface_remainder_texture_not_semantic_intent_inference",
         runtime_effect: false,
     }
 }
@@ -445,18 +451,18 @@ fn model_artifact_cleanup_diagnostic<'a>(
     profile: MlxProfile,
 ) -> ModelArtifactCleanupDiagnostic<'a> {
     let remainder_texture_v1 = artifact_remainder_texture_v1(remainder);
-    let semantic_integrity_check_v1 =
-        model_artifact_semantic_integrity_check_v1(report, &remainder_texture_v1);
+    let exact_token_integrity_check_v1 =
+        model_artifact_exact_token_integrity_check_v1(report, &remainder_texture_v1);
     ModelArtifactCleanupDiagnostic {
-        schema: "model_artifact_cleanup_v3",
-        schema_version: 3,
+        schema: "model_artifact_cleanup_v4",
+        schema_version: 4,
         timestamp: unix_timestamp_string(),
         label,
         profile: profile.as_str(),
-        marker_contract: "structural_delimiters_with_explicit_reference_preservation",
+        marker_contract: "exact_known_model_tokens_with_local_reference_context",
         common_language_overlap_risk: model_artifact_language_overlap_risk(report),
         remainder_texture_v1,
-        semantic_integrity_check_v1,
+        exact_token_integrity_check_v1,
         authority: "diagnostic_output_integrity_not_prompt_or_model_control",
         report,
     }
