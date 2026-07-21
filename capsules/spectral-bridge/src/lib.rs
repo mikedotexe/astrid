@@ -44,6 +44,7 @@ pub mod experiment_conveyor;
 pub mod journal;
 pub mod lambda_edge;
 pub mod lambda_tail;
+pub mod lived_state_witness;
 pub mod llm;
 pub mod llm_jobs;
 #[path = "../../shared/managed_dir.rs"]

@@ -45,6 +45,7 @@ pub(super) struct ResolvedIntrospectTarget {
 pub(super) struct IntrospectWindow {
     pub text: String,
     pub next_offset: Option<usize>,
+    pub source_snapshot_v1: crate::lived_state_witness::LivedStateSourceSnapshotV1,
 }
 
 fn minime_autonomy_implementation(minime_root: &Path) -> PathBuf {
@@ -975,6 +976,7 @@ pub(super) fn read_introspect_window(
     let canonical = validate_introspect_source_path(label, path)?;
     let content =
         fs::read_to_string(&canonical).map_err(|err| format!("target read failed: {err}"))?;
+    let source_read_at = crate::lived_state_witness::clock_sample_v1();
     if text_looks_noisy_or_binary(content.get(..8000).unwrap_or(&content)) {
         return Err("target text looks binary or decoder-noisy".to_string());
     }
@@ -1020,9 +1022,20 @@ pub(super) fn read_introspect_window(
     let xref = within_file_xrefs(&all_lines, start, end);
     let cross = cross_file_xrefs(&canonical, &all_lines, start, end);
 
+    let text = format!("{header}{page}{xref}{cross}{footer}");
+    let source_snapshot_v1 = crate::lived_state_witness::source_snapshot_v1(
+        &canonical,
+        &content,
+        &text,
+        start,
+        end,
+        total,
+        source_read_at,
+    );
     Ok(IntrospectWindow {
-        text: format!("{header}{page}{xref}{cross}{footer}"),
+        text,
         next_offset,
+        source_snapshot_v1,
     })
 }
 

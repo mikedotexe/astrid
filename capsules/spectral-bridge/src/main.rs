@@ -19,7 +19,7 @@ use clap::Parser;
 use spectral_bridge_server::{
     attractor_atlas, authority_gate, autonomous, condition_metrics,
     db::BridgeDb,
-    mcp,
+    lived_state_witness, mcp,
     message_archive::{self, BridgeMessageMaintenanceConfig},
     paths::{BridgePathOverrides, configure_bridge_paths},
     rescue_policy,
@@ -182,6 +182,7 @@ async fn main() -> Result<()> {
         introspector_script: cli.introspector_script.clone(),
         reflective_sidecar_script: cli.reflective_sidecar_script.clone(),
     });
+    lived_state_witness::initialize_runtime_identity_v1();
     let archive_dir = cli.message_archive_dir.clone().unwrap_or_else(|| {
         resolved_paths
             .bridge_workspace()

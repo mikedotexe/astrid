@@ -1,0 +1,402 @@
+use serde::Serialize;
+
+use crate::witness::ProvenanceRefV1;
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct LivedStateArtifactAuthorityV1 {
+    schema: &'static str,
+    schema_version: u8,
+    state: &'static str,
+    witness_only: bool,
+    live_eligible_now: bool,
+    auto_approved: bool,
+    grants_approval: bool,
+    edits_source_now: bool,
+}
+
+impl LivedStateArtifactAuthorityV1 {
+    pub(super) const fn evidence_only() -> Self {
+        Self {
+            schema: "artifact_authority_state_v1",
+            schema_version: 1,
+            state: "evidence_only",
+            witness_only: true,
+            live_eligible_now: false,
+            auto_approved: false,
+            grants_approval: false,
+            edits_source_now: false,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum LivedStateObservationKindV1 {
+    CompiledConstant,
+    RuntimeObserved,
+    PeerObserved,
+    #[allow(dead_code)]
+    SourceDeclared,
+    Unknown,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct LivedStateBuildCandidateV1 {
+    schema: &'static str,
+    schema_version: u8,
+    manifest_sha256: String,
+    source_identity_sha256: Option<String>,
+    dirty_state_sha256: Option<String>,
+    artifact_sha256: Option<String>,
+    protocol_revision: Option<String>,
+    protocol_version: Option<String>,
+    observed_at_process_start_unix_ms: u64,
+    relation_to_process: &'static str,
+    deployment_established: bool,
+    private_path_included: bool,
+}
+
+impl LivedStateBuildCandidateV1 {
+    pub(super) fn new(
+        manifest_sha256: String,
+        source_identity_sha256: Option<String>,
+        dirty_state_sha256: Option<String>,
+        artifact_sha256: Option<String>,
+        protocol_revision: Option<String>,
+        protocol_version: Option<String>,
+        observed_at_process_start_unix_ms: u64,
+    ) -> Self {
+        Self {
+            schema: "lived_state_build_candidate_v1",
+            schema_version: 1,
+            manifest_sha256,
+            source_identity_sha256,
+            dirty_state_sha256,
+            artifact_sha256,
+            protocol_revision,
+            protocol_version,
+            observed_at_process_start_unix_ms,
+            relation_to_process: "startup_observation_not_deployment_proof",
+            deployment_established: false,
+            private_path_included: false,
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct LivedStateProcessIdentityV1 {
+    schema: &'static str,
+    schema_version: u8,
+    pid: u32,
+    process_started_at_unix_ms: u64,
+    executable_basename: String,
+    runtime_instance_id: String,
+    process_identity_sha256: String,
+    private_path_included: bool,
+}
+
+impl LivedStateProcessIdentityV1 {
+    pub(super) fn new(
+        pid: u32,
+        process_started_at_unix_ms: u64,
+        executable_basename: String,
+        runtime_instance_id: String,
+        process_identity_sha256: String,
+    ) -> Self {
+        Self {
+            schema: "lived_state_process_identity_v1",
+            schema_version: 1,
+            pid,
+            process_started_at_unix_ms,
+            executable_basename,
+            runtime_instance_id,
+            process_identity_sha256,
+            private_path_included: false,
+        }
+    }
+
+    pub(crate) fn runtime_instance_id(&self) -> &str {
+        &self.runtime_instance_id
+    }
+
+    pub(crate) fn process_identity_sha256(&self) -> &str {
+        &self.process_identity_sha256
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct LivedStateSourceSnapshotV1 {
+    schema: &'static str,
+    schema_version: u8,
+    source_owner: String,
+    repository_relative_path: String,
+    window_start_line: usize,
+    window_end_line: usize,
+    total_file_lines: usize,
+    file_sha256: String,
+    window_sha256: String,
+    source_read_at_unix_ms: u64,
+    source_read_monotonic_ns: u64,
+    provenance_ref_v1: ProvenanceRefV1,
+    private_path_included: bool,
+}
+
+impl LivedStateSourceSnapshotV1 {
+    #[allow(clippy::too_many_arguments)]
+    pub(super) fn new(
+        source_owner: String,
+        repository_relative_path: String,
+        window_start_line: usize,
+        window_end_line: usize,
+        total_file_lines: usize,
+        file_sha256: String,
+        window_sha256: String,
+        source_read_at_unix_ms: u64,
+        source_read_monotonic_ns: u64,
+        provenance_ref_v1: ProvenanceRefV1,
+    ) -> Self {
+        Self {
+            schema: "lived_state_source_snapshot_v1",
+            schema_version: 1,
+            source_owner,
+            repository_relative_path,
+            window_start_line,
+            window_end_line,
+            total_file_lines,
+            file_sha256,
+            window_sha256,
+            source_read_at_unix_ms,
+            source_read_monotonic_ns,
+            provenance_ref_v1,
+            private_path_included: false,
+        }
+    }
+
+    pub(crate) fn window_sha256(&self) -> &str {
+        &self.window_sha256
+    }
+
+    pub(crate) fn provenance_ref_v1(&self) -> ProvenanceRefV1 {
+        self.provenance_ref_v1.clone()
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize)]
+pub struct LivedStateParameterObservationV1 {
+    schema: &'static str,
+    schema_version: u8,
+    name: String,
+    value: Option<f64>,
+    unit: String,
+    observation_kind: LivedStateObservationKindV1,
+    observed_at_unix_ms: u64,
+    age_ms: Option<u64>,
+    fresh: Option<bool>,
+    source_ref: String,
+    direct_causation_claimed: bool,
+}
+
+impl LivedStateParameterObservationV1 {
+    #[allow(clippy::too_many_arguments)]
+    pub(super) fn new(
+        name: String,
+        value: Option<f64>,
+        unit: String,
+        observation_kind: LivedStateObservationKindV1,
+        observed_at_unix_ms: u64,
+        age_ms: Option<u64>,
+        fresh: Option<bool>,
+        source_ref: String,
+    ) -> Self {
+        Self {
+            schema: "lived_state_parameter_observation_v1",
+            schema_version: 1,
+            name,
+            value,
+            unit,
+            observation_kind,
+            observed_at_unix_ms,
+            age_ms,
+            fresh,
+            source_ref,
+            direct_causation_claimed: false,
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct LivedStateModelRouteV1 {
+    schema: &'static str,
+    schema_version: u8,
+    call_id: String,
+    job_id: Option<String>,
+    qos_request_identity_sha256: Option<String>,
+    provider_route: String,
+    model_profile: String,
+    started_at_unix_ms: u64,
+    completed_at_unix_ms: u64,
+    duration_ms: u64,
+    repair_parent_call_id: Option<String>,
+    response_sha256: String,
+    raw_prompt_included: bool,
+    raw_response_included: bool,
+}
+
+impl LivedStateModelRouteV1 {
+    #[allow(clippy::too_many_arguments)]
+    pub(crate) fn observed(
+        call_id: String,
+        job_id: Option<String>,
+        qos_request_identity_sha256: Option<String>,
+        provider_route: String,
+        model_profile: String,
+        started_at_unix_ms: u64,
+        completed_at_unix_ms: u64,
+        duration_ms: u64,
+        repair_parent_call_id: Option<String>,
+        response_sha256: String,
+    ) -> Self {
+        Self {
+            schema: "lived_state_model_route_v1",
+            schema_version: 1,
+            call_id,
+            job_id,
+            qos_request_identity_sha256,
+            provider_route,
+            model_profile,
+            started_at_unix_ms,
+            completed_at_unix_ms,
+            duration_ms,
+            repair_parent_call_id,
+            response_sha256,
+            raw_prompt_included: false,
+            raw_response_included: false,
+        }
+    }
+
+    pub fn call_id(&self) -> &str {
+        &self.call_id
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct LivedStateLlmResultV1 {
+    pub text: String,
+    pub route: LivedStateModelRouteV1,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize)]
+pub struct TemporalLivedStateWitnessV1 {
+    schema: &'static str,
+    schema_version: u8,
+    witness_id: String,
+    artifact_kind: String,
+    artifact_relative_path: String,
+    artifact_sha256: String,
+    authored_at_unix_ms: u64,
+    authored_monotonic_ns: u64,
+    source_snapshot_v1: Option<LivedStateSourceSnapshotV1>,
+    observed_process_v1: LivedStateProcessIdentityV1,
+    startup_build_candidate_v1: Option<LivedStateBuildCandidateV1>,
+    model_routes_v1: Vec<LivedStateModelRouteV1>,
+    parameter_observations_v1: Vec<LivedStateParameterObservationV1>,
+    peer_process_identity: Option<String>,
+    peer_deployment_identity: Option<String>,
+    source_provenance_ref_v1: Option<ProvenanceRefV1>,
+    process_provenance_ref_v1: ProvenanceRefV1,
+    raw_introspection_prose_included: bool,
+    raw_prompt_included: bool,
+    raw_response_included: bool,
+    private_path_included: bool,
+    direct_causation_claimed: bool,
+    artifact_authority_state_v1: LivedStateArtifactAuthorityV1,
+}
+
+impl TemporalLivedStateWitnessV1 {
+    #[allow(clippy::too_many_arguments)]
+    pub(super) fn new(
+        witness_id: String,
+        artifact_kind: String,
+        artifact_relative_path: String,
+        artifact_sha256: String,
+        authored_at_unix_ms: u64,
+        authored_monotonic_ns: u64,
+        source_snapshot_v1: Option<LivedStateSourceSnapshotV1>,
+        observed_process_v1: LivedStateProcessIdentityV1,
+        startup_build_candidate_v1: Option<LivedStateBuildCandidateV1>,
+        model_routes_v1: Vec<LivedStateModelRouteV1>,
+        parameter_observations_v1: Vec<LivedStateParameterObservationV1>,
+        peer_process_identity: Option<String>,
+        peer_deployment_identity: Option<String>,
+        source_provenance_ref_v1: Option<ProvenanceRefV1>,
+        process_provenance_ref_v1: ProvenanceRefV1,
+    ) -> Self {
+        Self {
+            schema: "temporal_lived_state_witness_v1",
+            schema_version: 1,
+            witness_id,
+            artifact_kind,
+            artifact_relative_path,
+            artifact_sha256,
+            authored_at_unix_ms,
+            authored_monotonic_ns,
+            source_snapshot_v1,
+            observed_process_v1,
+            startup_build_candidate_v1,
+            model_routes_v1,
+            parameter_observations_v1,
+            peer_process_identity,
+            peer_deployment_identity,
+            source_provenance_ref_v1,
+            process_provenance_ref_v1,
+            raw_introspection_prose_included: false,
+            raw_prompt_included: false,
+            raw_response_included: false,
+            private_path_included: false,
+            direct_causation_claimed: false,
+            artifact_authority_state_v1: LivedStateArtifactAuthorityV1::evidence_only(),
+        }
+    }
+
+    pub fn witness_id(&self) -> &str {
+        &self.witness_id
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct LivedStateGapReceiptV1 {
+    schema: &'static str,
+    schema_version: u8,
+    gap_id: String,
+    witness_id: String,
+    reason: String,
+    detected_at_unix_ms: u64,
+    sidecar_expected: bool,
+    report_persistence_blocked: bool,
+    artifact_authority_state_v1: LivedStateArtifactAuthorityV1,
+}
+
+impl LivedStateGapReceiptV1 {
+    pub(super) fn new(
+        gap_id: String,
+        witness_id: String,
+        reason: String,
+        detected_at_unix_ms: u64,
+    ) -> Self {
+        Self {
+            schema: "lived_state_gap_receipt_v1",
+            schema_version: 1,
+            gap_id,
+            witness_id,
+            reason,
+            detected_at_unix_ms,
+            sidecar_expected: true,
+            report_persistence_blocked: false,
+            artifact_authority_state_v1: LivedStateArtifactAuthorityV1::evidence_only(),
+        }
+    }
+
+    pub(super) fn gap_id(&self) -> &str {
+        &self.gap_id
+    }
+}

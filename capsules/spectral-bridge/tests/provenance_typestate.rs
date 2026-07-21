@@ -5,4 +5,6 @@ fn provenance_domains_cannot_be_forged_or_dispatched() {
     cases.compile_fail("tests/ui/producer_cannot_construct_bridge_evidence.rs");
     cases.compile_fail("tests/ui/observation_cannot_deserialize.rs");
     cases.compile_fail("tests/ui/interpretation_cannot_dispatch.rs");
+    cases.compile_fail("tests/ui/lived_state_witness_cannot_be_forged.rs");
+    cases.compile_fail("tests/ui/lived_state_witness_cannot_deserialize.rs");
 }

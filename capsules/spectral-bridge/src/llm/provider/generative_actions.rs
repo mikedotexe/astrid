@@ -33,6 +33,29 @@ pub async fn generate_introspection(
     web_context: Option<&str>,
     num_predict: u32,
 ) -> Option<String> {
+    generate_introspection_detailed(
+        label,
+        source_code,
+        spectral_summary,
+        fill_pct,
+        internal_state_context,
+        web_context,
+        num_predict,
+    )
+    .await
+    .map(|result| result.text)
+}
+
+/// Additive introspection result carrying content-free model routing evidence.
+pub async fn generate_introspection_detailed(
+    label: &str,
+    source_code: &str,
+    spectral_summary: &str,
+    fill_pct: f32,
+    internal_state_context: Option<&str>,
+    web_context: Option<&str>,
+    num_predict: u32,
+) -> Option<crate::lived_state_witness::LivedStateLlmResultV1> {
     let internal_block = internal_state_context
         .map(|ctx| {
             format!(
@@ -72,7 +95,16 @@ pub async fn generate_introspection(
     ];
 
     debug!("querying LLM for introspection on {}", label);
-    llm_chat_with_fallback("introspect", messages, 0.7, num_predict, 120, 120).await
+    llm_chat_with_fallback_detailed(
+        "introspect",
+        messages,
+        0.7,
+        num_predict,
+        120,
+        120,
+        None,
+    )
+    .await
 }
 
 /// Repair a thin or continuation-only introspection response into the required
@@ -84,6 +116,27 @@ pub async fn repair_introspection(
     continuation_note: &str,
     num_predict: u32,
 ) -> Option<String> {
+    repair_introspection_detailed(
+        label,
+        source_code,
+        previous_output,
+        continuation_note,
+        num_predict,
+        None,
+    )
+    .await
+    .map(|result| result.text)
+}
+
+/// Additive repair result that binds the repair call to its exact parent call.
+pub async fn repair_introspection_detailed(
+    label: &str,
+    source_code: &str,
+    previous_output: &str,
+    continuation_note: &str,
+    num_predict: u32,
+    repair_parent_call_id: Option<String>,
+) -> Option<crate::lived_state_witness::LivedStateLlmResultV1> {
     let messages = vec![
         Message {
             role: "system".to_string(),
@@ -109,7 +162,16 @@ pub async fn repair_introspection(
         },
     ];
 
-    llm_chat_with_fallback("introspect", messages, 0.4, num_predict, 120, 120).await
+    llm_chat_with_fallback_detailed(
+        "introspect",
+        messages,
+        0.4,
+        num_predict,
+        120,
+        120,
+        repair_parent_call_id,
+    )
+    .await
 }
 
 fn extract_json_object(raw: &str) -> Option<&str> {

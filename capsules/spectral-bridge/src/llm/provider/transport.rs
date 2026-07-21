@@ -43,6 +43,12 @@ struct ModelQosV1 {
     queue_timeout_ms: u64,
 }
 
+#[derive(Debug)]
+struct MlxChatResultV1 {
+    text: String,
+    qos_request_identity_sha256: String,
+}
+
 fn model_qos_class_for_label(label: &str) -> ModelQosClassV1 {
     match label {
         "dialogue_live" | "correspondence_reply" | "live_reply" => {
@@ -508,14 +514,14 @@ struct ChatResponse {
 }
 
 /// Send a chat request to the MLX server and extract the response text.
-async fn mlx_chat_with_failure_log_mode(
+async fn mlx_chat_with_failure_log_mode_detailed(
     label: &str,
     messages: Vec<Message>,
     temperature: f32,
     max_tokens: u32,
     timeout_secs: u64,
     failure_log_mode: MlxFailureLogMode,
-) -> Option<String> {
+) -> Option<MlxChatResultV1> {
     let profile = configured_mlx_profile();
     let policy = apply_mlx_request_policy(label, profile, messages, max_tokens, timeout_secs);
     if let Some(ref diagnostic) = policy.diagnostic {
@@ -557,20 +563,23 @@ async fn mlx_chat_with_failure_log_mode(
     }
 
     let temperature = temperature_for_mlx_profile(label, profile, temperature);
-    let model_qos_v1 = Some(model_qos_v1(
+    let model_qos = model_qos_v1(
         label,
         &messages,
         temperature,
         max_tokens,
         timeout_secs,
-    ));
+    );
+    let qos_request_identity_sha256 = serde_json::to_vec(&model_qos)
+        .ok()
+        .map(|encoded| format!("{:x}", Sha256::digest(encoded)))?;
     let request = MlxRequest {
         messages,
         max_tokens,
         temperature,
         stream: false,
         aperture: Some(astrid_aperture()),
-        model_qos_v1,
+        model_qos_v1: Some(model_qos),
     };
 
     let response = match client.post(&mlx_url).json(&request).send().await {
@@ -690,7 +699,10 @@ async fn mlx_chat_with_failure_log_mode(
                     "{label}: Gemma 4 profile sanitized legacy selfhood wording before persistence: {}",
                     &text[..text.floor_char_boundary(120)]
                 );
-                return Some(sanitized.trim().to_string());
+                return Some(MlxChatResultV1 {
+                    text: sanitized.trim().to_string(),
+                    qos_request_identity_sha256,
+                });
             },
             Some(_) => {},
             None => {
@@ -703,7 +715,30 @@ async fn mlx_chat_with_failure_log_mode(
         }
     }
 
-    Some(text)
+    Some(MlxChatResultV1 {
+        text,
+        qos_request_identity_sha256,
+    })
+}
+
+async fn mlx_chat_with_failure_log_mode(
+    label: &str,
+    messages: Vec<Message>,
+    temperature: f32,
+    max_tokens: u32,
+    timeout_secs: u64,
+    failure_log_mode: MlxFailureLogMode,
+) -> Option<String> {
+    mlx_chat_with_failure_log_mode_detailed(
+        label,
+        messages,
+        temperature,
+        max_tokens,
+        timeout_secs,
+        failure_log_mode,
+    )
+    .await
+    .map(|result| result.text)
 }
 
 async fn mlx_chat(
@@ -1006,14 +1041,16 @@ fn trim_messages_for_ollama(mut messages: Vec<Message>, max_prompt_chars: usize)
     messages
 }
 
-async fn llm_chat_with_fallback(
+async fn llm_chat_with_fallback_detailed(
     label: &str,
     messages: Vec<Message>,
     temperature: f32,
     max_tokens: u32,
     mlx_timeout_secs: u64,
     ollama_timeout_secs: u64,
-) -> Option<String> {
+    repair_parent_call_id: Option<String>,
+) -> Option<crate::lived_state_witness::LivedStateLlmResultV1> {
+    let started_at = crate::lived_state_witness::clock_sample_v1();
     let prompt_preview = messages
         .iter()
         .filter(|message| message.role != "system")
@@ -1050,7 +1087,8 @@ async fn llm_chat_with_fallback(
     } else {
         MlxFailureLogMode::LocalDegrade
     };
-    if let Some(text) = mlx_chat_with_failure_log_mode(
+    let job_id = job.as_ref().map(|job| job.job_id.clone());
+    if let Some(result) = mlx_chat_with_failure_log_mode_detailed(
         label,
         messages,
         temperature,
@@ -1060,6 +1098,7 @@ async fn llm_chat_with_fallback(
     )
     .await
     {
+        let text = result.text;
         let completed = crate::llm_jobs::finish_call(
             job.as_ref(),
             "completed",
@@ -1074,7 +1113,18 @@ async fn llm_chat_with_fallback(
             warn!("{label}: LLM job was canceled; dropping MLX result");
             return None;
         }
-        return Some(text);
+        let completed_at = crate::lived_state_witness::clock_sample_v1();
+        let route = crate::lived_state_witness::model_route_v1(
+            job_id,
+            Some(result.qos_request_identity_sha256),
+            "mlx",
+            configured_mlx_profile().as_str(),
+            started_at.unix_ms,
+            completed_at.unix_ms,
+            repair_parent_call_id,
+            &text,
+        );
+        return Some(crate::lived_state_witness::LivedStateLlmResultV1 { text, route });
     }
 
     if !uses_ollama_fallback {
@@ -1180,5 +1230,42 @@ async fn llm_chat_with_fallback(
             Some("no_response"),
         );
     }
-    result.map(|response| response.text)
+    result.map(|response| {
+        let completed_at = crate::lived_state_witness::clock_sample_v1();
+        let route = crate::lived_state_witness::model_route_v1(
+            job_id,
+            None,
+            "ollama",
+            &response.model,
+            started_at.unix_ms,
+            completed_at.unix_ms,
+            repair_parent_call_id,
+            &response.text,
+        );
+        crate::lived_state_witness::LivedStateLlmResultV1 {
+            text: response.text,
+            route,
+        }
+    })
+}
+
+async fn llm_chat_with_fallback(
+    label: &str,
+    messages: Vec<Message>,
+    temperature: f32,
+    max_tokens: u32,
+    mlx_timeout_secs: u64,
+    ollama_timeout_secs: u64,
+) -> Option<String> {
+    llm_chat_with_fallback_detailed(
+        label,
+        messages,
+        temperature,
+        max_tokens,
+        mlx_timeout_secs,
+        ollama_timeout_secs,
+        None,
+    )
+    .await
+    .map(|result| result.text)
 }

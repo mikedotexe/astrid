@@ -1,6 +1,13 @@
 const SEMANTIC_HEARTBEAT_INTERVAL: Duration = Duration::from_secs(7);
 const SEMANTIC_HEARTBEAT_INTENSITY: f32 = 0.30;
 
+pub(crate) const fn semantic_heartbeat_constants_v1() -> (u64, f32) {
+    (
+        SEMANTIC_HEARTBEAT_INTERVAL.as_secs(),
+        SEMANTIC_HEARTBEAT_INTENSITY,
+    )
+}
+
 async fn run_semantic_heartbeat_loop(
     state: Arc<RwLock<BridgeState>>,
     sensory_tx: mpsc::Sender<SensoryMsg>,
@@ -2840,7 +2847,8 @@ pub fn spawn_autonomous_loop(
                                 );
                             }
 
-                            let mut llm_response = if let Some(ref code) = source_text {
+                            let mut model_routes_v1 = Vec::new();
+                            let initial_llm_result = if let Some(ref code) = source_text {
                                 info!(label = %label, lines = code.lines().count(), "introspect: sending source to LLM");
 
                                 // Web search for related concepts — use targeted queries
@@ -2911,7 +2919,7 @@ pub fn spawn_autonomous_loop(
 
                                 match tokio::time::timeout(
                                     Duration::from_secs(timeout_secs),
-                                    crate::llm::generate_introspection(
+                                    crate::llm::generate_introspection_detailed(
                                         &label,
                                         code,
                                         &interpret_spectral(&telemetry),
@@ -2930,6 +2938,10 @@ pub fn spawn_autonomous_loop(
                             } else {
                                 None
                             };
+                            let mut llm_response = initial_llm_result.map(|result| {
+                                model_routes_v1.push(result.route);
+                                result.text
+                            });
 
                             let mut artifact_kind = "introspection";
                             let mut artifact_visibility = "summary";
@@ -2946,14 +2958,22 @@ pub fn spawn_autonomous_loop(
                             {
                                 let continuation =
                                     introspect::continuation_note(&label, next_offset);
-                                let repair_response = crate::llm::repair_introspection(
+                                let repair_parent_call_id = model_routes_v1
+                                    .last()
+                                    .map(|route| route.call_id().to_string());
+                                let repair_result = crate::llm::repair_introspection_detailed(
                                     &label,
                                     code,
                                     first_response,
                                     &continuation,
                                     1536,
+                                    repair_parent_call_id,
                                 )
                                 .await;
+                                let repair_response = repair_result.map(|result| {
+                                    model_routes_v1.push(result.route);
+                                    result.text
+                                });
                                 if introspect::introspection_has_required_sections_for_target(
                                     repair_response.as_deref(),
                                     &label,
@@ -2993,14 +3013,22 @@ pub fn spawn_autonomous_loop(
                                         "Self-study carriage integrity failed ({integrity_summary}). \
                                          Preserve all four sections and finish Suggested Next. {continuation}"
                                     );
-                                    let repair_response = crate::llm::repair_introspection(
+                                    let repair_parent_call_id = model_routes_v1
+                                        .last()
+                                        .map(|route| route.call_id().to_string());
+                                    let repair_result = crate::llm::repair_introspection_detailed(
                                         &label,
                                         code,
                                         current_response,
                                         &repair_note,
                                         1536,
+                                        repair_parent_call_id,
                                     )
                                     .await;
+                                    let repair_response = repair_result.map(|result| {
+                                        model_routes_v1.push(result.route);
+                                        result.text
+                                    });
                                     let repair_integrity =
                                         introspect::self_study_carriage_integrity_v1(
                                             repair_response.as_deref(),
@@ -3047,6 +3075,10 @@ pub fn spawn_autonomous_loop(
                                 warn!(label = %label, "introspect: no LLM response; protected notice path may handle");
                             }
 
+                            let source_snapshot_v1 = source_window
+                                .as_ref()
+                                .ok()
+                                .map(|window| window.source_snapshot_v1.clone());
                             match llm_response {
                                 Some(text) => {
                                     let ts = chrono_timestamp();
@@ -3086,18 +3118,31 @@ pub fn spawn_autonomous_loop(
                                     let safe_label = introspect::safe_artifact_label(&label);
                                     let filename = format!("{artifact_kind}_{safe_label}_{ts}.txt");
                                     let artifact_path = introspect_dir.join(&filename);
-                                    let artifact_write = std::fs::write(
-                                        &artifact_path,
-                                        format!(
-                                            "=== ASTRID INTROSPECTION ===\nSource: {label} ({})\nTimestamp: {ts}\nFill: {fill_pct:.1}%\nArtifact kind: {artifact_kind}\nVisibility: {artifact_visibility}\nCarriage policy: self_study_carriage_integrity_v1\nCarriage status: {carriage_status}\nCarriage issues: {}\n\n{text}",
-                                            source_path.display(),
-                                            if carriage_issues.is_empty() {
-                                                "none".to_string()
-                                            } else {
-                                                carriage_issues.join(", ")
-                                            }
+                                    let runtime_context_v1 = {
+                                        let guard = state.read().await;
+                                        crate::lived_state_witness::runtime_context_v1(
+                                            &guard,
+                                            fill_pct,
                                         )
+                                    };
+                                    let authorship_v1 =
+                                        crate::lived_state_witness::begin_authorship_v1(
+                                            source_snapshot_v1.as_ref(),
+                                            &model_routes_v1,
+                                            artifact_kind,
+                                        );
+                                    let artifact_bytes = format!(
+                                        "=== ASTRID INTROSPECTION ===\nSource: {label} ({})\nTimestamp: {ts}\nLived-state witness: {}\nFill: {fill_pct:.1}%\nArtifact kind: {artifact_kind}\nVisibility: {artifact_visibility}\nCarriage policy: self_study_carriage_integrity_v1\nCarriage status: {carriage_status}\nCarriage issues: {}\n\n{text}",
+                                        source_path.display(),
+                                        authorship_v1.witness_id(),
+                                        if carriage_issues.is_empty() {
+                                            "none".to_string()
+                                        } else {
+                                            carriage_issues.join(", ")
+                                        }
                                     );
+                                    let artifact_write =
+                                        std::fs::write(&artifact_path, artifact_bytes.as_bytes());
                                     let artifact_written = match artifact_write {
                                         Ok(()) => {
                                             info!(
@@ -3117,6 +3162,31 @@ pub fn spawn_autonomous_loop(
                                             false
                                         }
                                     };
+                                    if artifact_written {
+                                        match crate::lived_state_witness::finalize_and_submit_v1(
+                                            &authorship_v1,
+                                            artifact_kind,
+                                            &filename,
+                                            artifact_bytes.as_bytes(),
+                                            source_snapshot_v1.clone(),
+                                            model_routes_v1,
+                                            runtime_context_v1,
+                                        ) {
+                                            crate::lived_state_witness::WitnessSubmitResultV1::Accepted => {},
+                                            crate::lived_state_witness::WitnessSubmitResultV1::QueueFull => {
+                                                warn!(
+                                                    witness_id = authorship_v1.witness_id(),
+                                                    "lived-state witness queue saturated; projector will record a gap"
+                                                );
+                                            },
+                                            crate::lived_state_witness::WitnessSubmitResultV1::Disconnected => {
+                                                warn!(
+                                                    witness_id = authorship_v1.witness_id(),
+                                                    "lived-state witness writer unavailable; projector will record a gap"
+                                                );
+                                            },
+                                        }
+                                    }
                                     if review_artifact_fulfills_invitation(
                                         artifact_kind,
                                         &carriage_status,
@@ -3165,12 +3235,48 @@ pub fn spawn_autonomous_loop(
                                     let safe_label = introspect::safe_artifact_label(&source);
                                     let filename =
                                         format!("thin_introspection_output_{safe_label}_{ts}.txt");
-                                    let _ = std::fs::write(
-                                        introspect_dir.join(&filename),
-                                        format!(
-                                            "=== ASTRID INTROSPECTION NOTICE ===\nSource: {source}\nTimestamp: {ts}\nFill: {fill_pct:.1}%\nArtifact kind: thin_introspection_output\nVisibility: protected\n\n{text}"
-                                        ),
+                                    let runtime_context_v1 = {
+                                        let guard = state.read().await;
+                                        crate::lived_state_witness::runtime_context_v1(
+                                            &guard,
+                                            fill_pct,
+                                        )
+                                    };
+                                    let authorship_v1 =
+                                        crate::lived_state_witness::begin_authorship_v1(
+                                            source_snapshot_v1.as_ref(),
+                                            &model_routes_v1,
+                                            "thin_introspection_output",
+                                        );
+                                    let artifact_bytes = format!(
+                                        "=== ASTRID INTROSPECTION NOTICE ===\nSource: {source}\nTimestamp: {ts}\nLived-state witness: {}\nFill: {fill_pct:.1}%\nArtifact kind: thin_introspection_output\nVisibility: protected\n\n{text}",
+                                        authorship_v1.witness_id()
                                     );
+                                    let artifact_written = std::fs::write(
+                                        introspect_dir.join(&filename),
+                                        artifact_bytes.as_bytes(),
+                                    )
+                                    .is_ok();
+                                    if artifact_written {
+                                        let submit =
+                                            crate::lived_state_witness::finalize_and_submit_v1(
+                                                &authorship_v1,
+                                                "thin_introspection_output",
+                                                &filename,
+                                                artifact_bytes.as_bytes(),
+                                                source_snapshot_v1,
+                                                model_routes_v1,
+                                                runtime_context_v1,
+                                            );
+                                        if submit
+                                            != crate::lived_state_witness::WitnessSubmitResultV1::Accepted
+                                        {
+                                            warn!(
+                                                witness_id = authorship_v1.witness_id(),
+                                                "lived-state notice witness unavailable; projector will record a gap"
+                                            );
+                                        }
+                                    }
                                     ("introspect_notice", text, source)
                                 }
                             }
