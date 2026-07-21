@@ -20,8 +20,9 @@ mod tests {
         clamp_dialogue_tokens_for_profile, compact_ollama_dialogue_fallback_messages,
         contains_deprecated_runtime_language, count_next_lines,
         dialogue_assembly_prompt_budget_chars_for_profile, dialogue_outer_timeout_secs,
-        dialogue_budget_context_v2, dialogue_felt_pressure_context_v2,
-        dialogue_requested_token_band, dialogue_requested_token_transition_evidence_v2,
+        dialogue_felt_pressure_observation_v3, dialogue_prompt_context_observation_v3,
+        dialogue_requested_token_band, dialogue_requested_token_observation_v3,
+        dialogue_requested_token_transition_evidence_v3,
         dialogue_system_prompt_for_profile,
         dialogue_turn_instruction,
         estimate_dialogue_prompt_pressure_chars, fallback_continuity_budget_v1,
@@ -1604,7 +1605,7 @@ mod tests {
         );
         assert_eq!(
             report.accounting_basis,
-            "single_pass_longest_raw_marker_match_with_explicit_reference_preservation_no_second_order_marker_creation"
+            "single_pass_longest_raw_control_marker_match_with_bounded_exact_reference_syntax_preservation_no_second_order_marker_creation"
         );
         let thought = report
             .removed_tokens
@@ -1651,21 +1652,21 @@ mod tests {
             "dialogue_live",
             MlxProfile::Gemma4Canary,
         );
-        assert_eq!(diagnostic.schema, "model_artifact_cleanup_v8");
-        assert_eq!(diagnostic.schema_version, 8);
+        assert_eq!(diagnostic.schema, "model_artifact_cleanup_v9");
+        assert_eq!(diagnostic.schema_version, 9);
         assert_eq!(diagnostic.label, "dialogue_live");
         assert_eq!(diagnostic.profile, GEMMA4_12B_PROFILE);
         assert_eq!(
             diagnostic.marker_contract,
-            "private_typed_exact_known_model_token_with_matching_quote_grouping_or_following_relation"
+            "private_typed_exact_known_model_control_marker_with_bounded_matching_delimiter_stack_or_following_relation"
         );
         assert_eq!(
             report.classification_scope,
-            "exact_known_model_artifact_token_occurrence_only"
+            "exact_known_model_control_marker_occurrence_only"
         );
         assert_eq!(
             report.excluded_meaning_scope,
-            "felt_texture_memory_spectral_state_and_semantic_weight_not_classified"
+            "all_non_marker_language_including_felt_texture_memory_spectral_state_and_semantic_weight_not_classified_or_ranked"
         );
         assert!(!diagnostic.common_language_overlap_risk);
         assert!(
@@ -1720,6 +1721,8 @@ mod tests {
         assert_eq!(token.quoted_reference_occurrences, 1);
         assert_eq!(token.grouped_reference_occurrences, 0);
         assert_eq!(token.explicit_relation_occurrences, 0);
+        assert_eq!(token.nested_delimited_reference_occurrences, 0);
+        assert_eq!(token.max_delimiter_depth, 1);
         assert!(report.removed_tokens.is_empty());
 
         let diagnostic = model_artifact_cleanup_diagnostic(
@@ -1787,6 +1790,42 @@ mod tests {
             assert_eq!(token.quoted_reference_occurrences, 0);
             assert_eq!(token.grouped_reference_occurrences, 1);
             assert_eq!(token.explicit_relation_occurrences, 0);
+        }
+    }
+
+    #[test]
+    fn artifact_cleanup_preserves_bounded_nested_delimiter_stacks() {
+        for text in [
+            "([<end_of_turn>])",
+            "`⟦<end_of_turn>⟧`",
+            "“【(<end_of_turn>)】”",
+            "〝 〔 <end_of_turn> 〕 〞",
+        ] {
+            let (stripped, report) = strip_model_artifacts_with_report(text);
+            assert_eq!(stripped, text);
+            let report = report.expect("nested delimiter stack report");
+            let token = &report.preserved_tokens[0];
+            assert_eq!(token.count, 1);
+            assert_eq!(token.nested_delimited_reference_occurrences, 1);
+            assert!((2..=4).contains(&token.max_delimiter_depth));
+        }
+    }
+
+    #[test]
+    fn artifact_cleanup_preserves_declared_restless_group_delimiters() {
+        for text in [
+            "⟦<end_of_turn>⟧",
+            "⟨<end_of_turn>⟩",
+            "【<end_of_turn>】",
+            "〔<end_of_turn>〕",
+            "〚<end_of_turn>〛",
+            "〈<end_of_turn>〉",
+        ] {
+            let (stripped, report) = strip_model_artifacts_with_report(text);
+            assert_eq!(stripped, text);
+            let report = report.expect("declared group delimiter report");
+            assert_eq!(report.removed_total, 0);
+            assert_eq!(report.preserved_tokens[0].grouped_reference_occurrences, 1);
         }
     }
 
@@ -2104,7 +2143,7 @@ mod tests {
     }
 
     #[test]
-    fn high_entropy_low_requested_token_band_distinguishes_trim_from_grounding_loss() {
+    fn high_entropy_prompt_context_distinguishes_trim_from_grounding_loss() {
         let report = PromptBudgetReport {
             budget: 6_406,
             total_before: 8_947,
@@ -2126,9 +2165,7 @@ mod tests {
                 },
             ],
         };
-        let context = dialogue_budget_context_v2(
-            512,
-            "requested_tokens_0_to_512",
+        let context = dialogue_prompt_context_observation_v3(
             DialoguePressureTextureInputs {
                 spectral_entropy: Some(0.92),
                 resonance_density: Some(0.88),
@@ -2146,22 +2183,25 @@ mod tests {
             context.suffocation_risk,
             "continuity_pressure_without_grounding_eviction"
         );
-        assert!(context.low_requested_token_band_under_high_entropy);
-        assert!(context.low_requested_token_band_under_dense_resonance);
         assert_eq!(
             context.resonance_context_evidence,
-            "dense_resonance_observed_with_requested_tokens_0_to_512"
+            "dense_resonance_observed_without_requested_token_join"
         );
         assert_eq!(
-            context
-                .requested_token_transition_evidence_v2
-                .boundary_proximity,
+            context.requested_token_relation,
+            "not_joined_with_requested_token_observation"
+        );
+        assert!(!context.runtime_effect);
+
+        let requested = dialogue_requested_token_observation_v3(512);
+        assert_eq!(
+            requested.transition_evidence_v3.boundary_proximity,
             "last_token_before_transition"
         );
-        assert!(
-            !context
-                .requested_token_transition_evidence_v2
-                .runtime_budget_changed
+        assert!(!requested.transition_evidence_v3.runtime_budget_changed);
+        assert_eq!(
+            requested.felt_pressure_relation,
+            "not_joined_with_felt_or_spectral_observations"
         );
     }
 
@@ -2179,9 +2219,7 @@ mod tests {
                 fully_removed: true,
             }],
         };
-        let context = dialogue_budget_context_v2(
-            512,
-            "requested_tokens_0_to_512",
+        let context = dialogue_prompt_context_observation_v3(
             DialoguePressureTextureInputs {
                 spectral_entropy: Some(0.90),
                 resonance_density: None,
@@ -2200,10 +2238,8 @@ mod tests {
     }
 
     #[test]
-    fn low_requested_token_band_does_not_erase_dense_resonance_evidence() {
-        let context = dialogue_budget_context_v2(
-            512,
-            "requested_tokens_0_to_512",
+    fn dense_resonance_evidence_is_independent_of_requested_token_observation() {
+        let context = dialogue_prompt_context_observation_v3(
             DialoguePressureTextureInputs {
                 spectral_entropy: Some(0.42),
                 resonance_density: Some(0.84),
@@ -2216,18 +2252,16 @@ mod tests {
 
         assert!(!context.high_entropy);
         assert!(context.spectrally_dense);
-        assert!(context.low_requested_token_band_under_dense_resonance);
         assert_eq!(context.state, "within_budget");
         assert_eq!(
             context.resonance_context_evidence,
-            "dense_resonance_observed_with_requested_tokens_0_to_512"
+            "dense_resonance_observed_without_requested_token_join"
         );
     }
 
     #[test]
-    fn felt_pressure_context_names_joint_observations_without_complexity_inference() {
-        let gentle_high_band = dialogue_felt_pressure_context_v2(
-            "requested_tokens_1025_plus",
+    fn felt_pressure_observation_names_texture_without_token_join() {
+        let gentle = dialogue_felt_pressure_observation_v3(
             DialoguePressureTextureInputs {
                 spectral_entropy: Some(0.88),
                 resonance_density: Some(0.71),
@@ -2237,30 +2271,26 @@ mod tests {
             },
         );
         assert_eq!(
-            gentle_high_band.joint_observation_label,
-            "gentle_gradient_requested_tokens_1025_plus"
+            gentle.observation_label,
+            "pressure_heavy_observation"
         );
         assert_eq!(
-            gentle_high_band.distribution_state,
+            gentle.distribution_state,
             "widely_distributed_cascade"
         );
+        assert_eq!(gentle.pressure_load_state, "heavy_evidence_present");
         assert_eq!(
-            gentle_high_band.pressure_load_state,
-            "heavy_evidence_present"
+            gentle.requested_token_relation,
+            "not_joined_with_requested_token_observation"
         );
         assert_eq!(
-            gentle_high_band.pressure_budget_correlation,
-            "not_established_without_paired_budget_observation"
+            gentle.content_complexity_inference,
+            "not_inferred_from_spectral_or_pressure_observation"
         );
-        assert_eq!(
-            gentle_high_band.content_complexity_inference,
-            "not_inferred_from_requested_token_band_or_spectral_context"
-        );
-        assert!(!gentle_high_band.runtime_budget_changed);
-        assert!(!gentle_high_band.semantic_trickle_changed);
+        assert!(!gentle.runtime_budget_changed);
+        assert!(!gentle.semantic_trickle_changed);
 
-        let heavy_low_band = dialogue_felt_pressure_context_v2(
-            "requested_tokens_0_to_512",
+        let heavy = dialogue_felt_pressure_observation_v3(
             DialoguePressureTextureInputs {
                 spectral_entropy: Some(0.88),
                 resonance_density: Some(0.71),
@@ -2269,13 +2299,9 @@ mod tests {
                 mode_packing: Some(0.29),
             },
         );
-        assert_eq!(
-            heavy_low_band.joint_observation_label,
-            "pressure_heavy_requested_tokens_0_to_512"
-        );
+        assert_eq!(heavy.observation_label, "pressure_heavy_observation");
 
-        let dense_high_band = dialogue_felt_pressure_context_v2(
-            "requested_tokens_1025_plus",
+        let dense = dialogue_felt_pressure_observation_v3(
             DialoguePressureTextureInputs {
                 spectral_entropy: Some(0.72),
                 resonance_density: Some(0.82),
@@ -2284,14 +2310,11 @@ mod tests {
                 mode_packing: Some(0.18),
             },
         );
-        assert_eq!(
-            dense_high_band.joint_observation_label,
-            "dense_resonance_requested_tokens_1025_plus"
-        );
+        assert_eq!(dense.observation_label, "dense_resonance_observation");
     }
 
     #[test]
-    fn identical_low_entropy_context_at_512_and_513_does_not_imply_complexity_change() {
+    fn requested_token_boundaries_are_not_joined_to_identical_felt_context() {
         let inputs = DialoguePressureTextureInputs {
             spectral_entropy: Some(0.31),
             resonance_density: Some(0.44),
@@ -2299,56 +2322,40 @@ mod tests {
             pressure_risk: Some(0.08),
             mode_packing: Some(0.12),
         };
-        let at_512 = dialogue_budget_context_v2(
-            512,
-            dialogue_requested_token_band(512),
-            inputs,
-            None,
-        );
-        let at_513 = dialogue_budget_context_v2(
-            513,
-            dialogue_requested_token_band(513),
-            inputs,
-            None,
-        );
+        let context = dialogue_prompt_context_observation_v3(inputs, None);
+        let at_512 = dialogue_requested_token_observation_v3(512);
+        let at_513 = dialogue_requested_token_observation_v3(513);
 
         assert_ne!(at_512.requested_token_band, at_513.requested_token_band);
-        assert_eq!(at_512.spectral_entropy, at_513.spectral_entropy);
-        assert_eq!(at_512.resonance_density, at_513.resonance_density);
         assert_eq!(
-            at_512.felt_pressure_context_v2.distribution_state,
-            at_513.felt_pressure_context_v2.distribution_state
+            at_512.felt_pressure_relation,
+            "not_joined_with_felt_or_spectral_observations"
         );
+        assert_eq!(at_512.felt_pressure_relation, at_513.felt_pressure_relation);
         assert_eq!(
-            at_512.felt_pressure_context_v2.pressure_load_state,
-            at_513.felt_pressure_context_v2.pressure_load_state
+            context.felt_pressure_observation_v3.requested_token_relation,
+            "not_joined_with_requested_token_observation"
         );
-        for context in [at_512, at_513] {
-            assert_eq!(
-                context
-                    .felt_pressure_context_v2
-                    .content_complexity_inference,
-                "not_inferred_from_requested_token_band_or_spectral_context"
-            );
-            assert!(!context.felt_pressure_context_v2.runtime_budget_changed);
-        }
+        assert!(!context.runtime_effect);
+        assert!(!at_512.runtime_effect);
+        assert!(!at_513.runtime_effect);
     }
 
     #[test]
     fn requested_token_transition_evidence_names_both_sides_without_retuning() {
-        let low_end = dialogue_requested_token_transition_evidence_v2(
+        let low_end = dialogue_requested_token_transition_evidence_v3(
             512,
             "requested_tokens_0_to_512",
         );
-        let middle_start = dialogue_requested_token_transition_evidence_v2(
+        let middle_start = dialogue_requested_token_transition_evidence_v3(
             513,
             "requested_tokens_513_to_1024",
         );
-        let middle_end = dialogue_requested_token_transition_evidence_v2(
+        let middle_end = dialogue_requested_token_transition_evidence_v3(
             1024,
             "requested_tokens_513_to_1024",
         );
-        let high_start = dialogue_requested_token_transition_evidence_v2(
+        let high_start = dialogue_requested_token_transition_evidence_v3(
             1025,
             "requested_tokens_1025_plus",
         );

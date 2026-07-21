@@ -30,43 +30,46 @@ fn dialogue_requested_token_band(num_predict: u32) -> &'static str {
 }
 
 #[derive(Debug, Clone, Copy)]
-struct ModelArtifactMatch {
-    occurrence: ExactKnownModelArtifactOccurrence,
-    reference_context: Option<ExactArtifactReferenceContext>,
+struct KnownModelControlMarkerMatch {
+    occurrence: ExactKnownModelControlMarkerOccurrence,
+    reference_syntax: Option<ExactKnownMarkerReferenceSyntax>,
 }
 
 /// A byte range proven to be one of `MODEL_ARTIFACT_TOKENS` by the longest-match scanner.
 ///
 /// Keeping construction inside `longest_exact_known_model_artifact_at` makes it impossible for
-/// felt, spectral, or otherwise ordinary language to enter reference-context classification.
+/// felt, spectral, or otherwise ordinary language to enter transport-marker classification. This
+/// sanitizer does not decide whether any other language is meaningful, stable, or an artifact.
 #[derive(Debug, Clone, Copy)]
-struct ExactKnownModelArtifactOccurrence {
+struct ExactKnownModelControlMarkerOccurrence {
     token: &'static str,
     start: usize,
     end: usize,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-enum ExactArtifactReferenceContext {
+struct ExactKnownMarkerReferenceSyntax {
+    context: ExactKnownMarkerReferenceContext,
+    delimiter_depth: usize,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum ExactKnownMarkerReferenceContext {
     QuotedExactKnownToken,
     GroupedExactKnownToken,
     ExplicitExactKnownTokenRelation,
 }
 
-impl ExactKnownModelArtifactOccurrence {
-    fn reference_context(self, text: &str) -> Option<ExactArtifactReferenceContext> {
-        let before = text[..self.start]
-            .chars()
-            .rev()
-            .find(|character| !character.is_whitespace());
-        let after = text[self.end..]
-            .chars()
-            .find(|character| !character.is_whitespace());
-        if let Some(context) = exact_reference_delimiter_context(before, after) {
-            return Some(context);
+impl ExactKnownModelControlMarkerOccurrence {
+    fn reference_syntax(self, text: &str) -> Option<ExactKnownMarkerReferenceSyntax> {
+        if let Some(syntax) = exact_reference_delimiter_syntax(text, self.start, self.end) {
+            return Some(syntax);
         }
         if self.followed_by_explicit_exact_token_relation(text) {
-            return Some(ExactArtifactReferenceContext::ExplicitExactKnownTokenRelation);
+            return Some(ExactKnownMarkerReferenceSyntax {
+                context: ExactKnownMarkerReferenceContext::ExplicitExactKnownTokenRelation,
+                delimiter_depth: 0,
+            });
         }
         None
     }
@@ -102,21 +105,23 @@ fn first_word_after(text: &str, end: usize) -> String {
 fn longest_exact_known_model_artifact_at(
     text: &str,
     offset: usize,
-) -> Option<ExactKnownModelArtifactOccurrence> {
+) -> Option<ExactKnownModelControlMarkerOccurrence> {
     let tail = &text[offset..];
     let token = MODEL_ARTIFACT_TOKENS
         .iter()
         .copied()
         .filter(|token| tail.starts_with(token))
         .max_by_key(|token| token.len())?;
-    Some(ExactKnownModelArtifactOccurrence {
+    Some(ExactKnownModelControlMarkerOccurrence {
         token,
         start: offset,
         end: offset.saturating_add(token.len()),
     })
 }
 
-fn strip_known_model_artifact_matches(text: &str) -> (String, Vec<ModelArtifactMatch>) {
+fn strip_known_model_artifact_matches(
+    text: &str,
+) -> (String, Vec<KnownModelControlMarkerMatch>) {
     let mut remainder = String::with_capacity(text.len());
     let mut matches = Vec::new();
     let mut offset = 0usize;
@@ -124,12 +129,12 @@ fn strip_known_model_artifact_matches(text: &str) -> (String, Vec<ModelArtifactM
     while offset < text.len() {
         let tail = &text[offset..];
         if let Some(occurrence) = longest_exact_known_model_artifact_at(text, offset) {
-            let reference_context = occurrence.reference_context(text);
-            matches.push(ModelArtifactMatch {
+            let reference_syntax = occurrence.reference_syntax(text);
+            matches.push(KnownModelControlMarkerMatch {
                 occurrence,
-                reference_context,
+                reference_syntax,
             });
-            if reference_context.is_some() {
+            if reference_syntax.is_some() {
                 remainder.push_str(occurrence.token);
             }
             offset = occurrence.end;
@@ -151,10 +156,12 @@ fn fragment_has_non_artifact_content(fragment: &str) -> bool {
     !semantic.trim().is_empty()
 }
 
-fn exact_reference_delimiter_context(
+const MAX_EXACT_REFERENCE_DELIMITER_DEPTH: usize = 4;
+
+fn exact_reference_delimiter_pair(
     before: Option<char>,
     after: Option<char>,
-) -> Option<ExactArtifactReferenceContext> {
+) -> Option<ExactKnownMarkerReferenceContext> {
     if matches!(
         (before, after),
         (Some('"'), Some('"'))
@@ -168,21 +175,60 @@ fn exact_reference_delimiter_context(
             | (Some('‚'), Some('‘'))
             | (Some('「'), Some('」'))
             | (Some('『'), Some('』'))
+            | (Some('〝'), Some('〞'))
     ) {
-        Some(ExactArtifactReferenceContext::QuotedExactKnownToken)
+        Some(ExactKnownMarkerReferenceContext::QuotedExactKnownToken)
     } else if matches!(
         (before, after),
         (Some('['), Some(']')) | (Some('('), Some(')')) | (Some('{'), Some('}'))
+            | (Some('⟦'), Some('⟧'))
+            | (Some('⟨'), Some('⟩'))
+            | (Some('【'), Some('】'))
+            | (Some('〔'), Some('〕'))
+            | (Some('〚'), Some('〛'))
+            | (Some('〈'), Some('〉'))
     ) {
-        Some(ExactArtifactReferenceContext::GroupedExactKnownToken)
+        Some(ExactKnownMarkerReferenceContext::GroupedExactKnownToken)
     } else {
         None
     }
 }
 
+fn exact_reference_delimiter_syntax(
+    text: &str,
+    start: usize,
+    end: usize,
+) -> Option<ExactKnownMarkerReferenceSyntax> {
+    let before = text[..start]
+        .chars()
+        .rev()
+        .filter(|character| !character.is_whitespace())
+        .take(MAX_EXACT_REFERENCE_DELIMITER_DEPTH)
+        .collect::<Vec<_>>();
+    let after = text[end..]
+        .chars()
+        .filter(|character| !character.is_whitespace())
+        .take(MAX_EXACT_REFERENCE_DELIMITER_DEPTH)
+        .collect::<Vec<_>>();
+    let context = exact_reference_delimiter_pair(before.first().copied(), after.first().copied())?;
+    let delimiter_depth = before
+        .iter()
+        .copied()
+        .zip(after.iter().copied())
+        .take_while(|(opening, closing)| {
+            exact_reference_delimiter_pair(Some(*opening), Some(*closing)).is_some()
+        })
+        .count();
+
+    Some(ExactKnownMarkerReferenceSyntax {
+        context,
+        delimiter_depth,
+    })
+}
+
 fn model_artifact_placement_counts(
     text: &str,
-    occurrence: ExactKnownModelArtifactOccurrence,
+    occurrence: ExactKnownModelControlMarkerOccurrence,
 ) -> (usize, usize, usize) {
     let content_before = fragment_has_non_artifact_content(&text[..occurrence.start]);
     let content_after = fragment_has_non_artifact_content(&text[occurrence.end..]);
@@ -192,16 +238,11 @@ fn model_artifact_placement_counts(
         (1, 0)
     };
 
-    let before = text[..occurrence.start]
-        .chars()
-        .rev()
-        .find(|ch| !ch.is_whitespace());
-    let after = text[occurrence.end..]
-        .chars()
-        .find(|ch| !ch.is_whitespace());
     let quoted_occurrences = usize::from(
-        exact_reference_delimiter_context(before, after)
-            == Some(ExactArtifactReferenceContext::QuotedExactKnownToken),
+        exact_reference_delimiter_syntax(text, occurrence.start, occurrence.end)
+            .is_some_and(|syntax| {
+                syntax.context == ExactKnownMarkerReferenceContext::QuotedExactKnownToken
+            }),
     );
 
     (
@@ -231,7 +272,7 @@ pub(crate) fn strip_model_artifacts_with_report(
             .copied()
             .filter(|artifact_match| {
                 artifact_match.occurrence.token == *token
-                    && artifact_match.reference_context.is_none()
+                    && artifact_match.reference_syntax.is_none()
             })
         {
             count = count.saturating_add(1);
@@ -255,28 +296,46 @@ pub(crate) fn strip_model_artifacts_with_report(
             .iter()
             .filter(|artifact_match| {
                 artifact_match.occurrence.token == *token
-                    && artifact_match.reference_context
-                        == Some(ExactArtifactReferenceContext::QuotedExactKnownToken)
+                    && artifact_match.reference_syntax.is_some_and(|syntax| {
+                        syntax.context == ExactKnownMarkerReferenceContext::QuotedExactKnownToken
+                    })
             })
             .count();
         let grouped_reference_occurrences = matches
             .iter()
             .filter(|artifact_match| {
                 artifact_match.occurrence.token == *token
-                    && artifact_match.reference_context
-                        == Some(ExactArtifactReferenceContext::GroupedExactKnownToken)
+                    && artifact_match.reference_syntax.is_some_and(|syntax| {
+                        syntax.context == ExactKnownMarkerReferenceContext::GroupedExactKnownToken
+                    })
             })
             .count();
         let explicit_relation_occurrences = matches
             .iter()
             .filter(|artifact_match| {
                 artifact_match.occurrence.token == *token
-                    && artifact_match.reference_context
-                        == Some(
-                            ExactArtifactReferenceContext::ExplicitExactKnownTokenRelation,
-                        )
+                    && artifact_match.reference_syntax.is_some_and(|syntax| {
+                        syntax.context
+                            == ExactKnownMarkerReferenceContext::ExplicitExactKnownTokenRelation
+                    })
             })
             .count();
+        let nested_delimited_reference_occurrences = matches
+            .iter()
+            .filter(|artifact_match| {
+                artifact_match.occurrence.token == *token
+                    && artifact_match
+                        .reference_syntax
+                        .is_some_and(|syntax| syntax.delimiter_depth > 1)
+            })
+            .count();
+        let max_delimiter_depth = matches
+            .iter()
+            .filter(|artifact_match| artifact_match.occurrence.token == *token)
+            .filter_map(|artifact_match| artifact_match.reference_syntax)
+            .map(|syntax| syntax.delimiter_depth)
+            .max()
+            .unwrap_or(0);
         let preserved_count = quoted_reference_occurrences
             .saturating_add(grouped_reference_occurrences)
             .saturating_add(explicit_relation_occurrences);
@@ -287,18 +346,20 @@ pub(crate) fn strip_model_artifacts_with_report(
                 quoted_reference_occurrences,
                 grouped_reference_occurrences,
                 explicit_relation_occurrences,
+                nested_delimited_reference_occurrences,
+                max_delimiter_depth,
             });
         }
     }
     let observed_total = matches.len();
     let removed_total = matches
         .iter()
-        .filter(|artifact_match| artifact_match.reference_context.is_none())
+        .filter(|artifact_match| artifact_match.reference_syntax.is_none())
         .count();
     let preserved_explicit_reference_total = observed_total.saturating_sub(removed_total);
     let removed_marker_bytes = matches
         .iter()
-        .filter(|artifact_match| artifact_match.reference_context.is_none())
+        .filter(|artifact_match| artifact_match.reference_syntax.is_none())
         .map(|artifact_match| {
             artifact_match
                 .occurrence
@@ -308,7 +369,7 @@ pub(crate) fn strip_model_artifacts_with_report(
         .sum();
     let preserved_marker_bytes = matches
         .iter()
-        .filter(|artifact_match| artifact_match.reference_context.is_some())
+        .filter(|artifact_match| artifact_match.reference_syntax.is_some())
         .map(|artifact_match| {
             artifact_match
                 .occurrence
@@ -332,10 +393,10 @@ pub(crate) fn strip_model_artifacts_with_report(
             before_chars: text.len(),
             after_chars,
             after_non_whitespace_chars,
-            classification_scope: "exact_known_model_artifact_token_occurrence_only",
+            classification_scope: "exact_known_model_control_marker_occurrence_only",
             excluded_meaning_scope:
-                "felt_texture_memory_spectral_state_and_semantic_weight_not_classified",
-            accounting_basis: "single_pass_longest_raw_marker_match_with_explicit_reference_preservation_no_second_order_marker_creation",
+                "all_non_marker_language_including_felt_texture_memory_spectral_state_and_semantic_weight_not_classified_or_ranked",
+            accounting_basis: "single_pass_longest_raw_control_marker_match_with_bounded_exact_reference_syntax_preservation_no_second_order_marker_creation",
             removed_tokens,
             preserved_tokens,
         }),
@@ -727,21 +788,18 @@ pub async fn generate_dialogue(
         mlx_profile,
     );
     let fallback_continuity_budget = fallback_continuity_budget_v1(spectral_summary);
-    let requested_token_band = dialogue_requested_token_band(num_predict);
-    let budget_context_v2 = dialogue_budget_context_v2(
-        num_predict,
-        requested_token_band,
+    let requested_token_observation_v3 = dialogue_requested_token_observation_v3(num_predict);
+    let prompt_context_observation_v3 = dialogue_prompt_context_observation_v3(
         DialoguePressureTextureInputs::from_fallback_budget(&fallback_continuity_budget),
         budget_report.as_ref(),
     );
     let budget_diag = DialoguePromptBudgetDiagnostic {
-        schema: "dialogue_prompt_budget_v2",
-        schema_version: 2,
+        schema: "dialogue_prompt_budget_v3",
+        schema_version: 3,
         timestamp: unix_timestamp_string(),
         requested_tokens: num_predict,
         effective_tokens: effective_num_predict,
-        requested_token_band,
-        requested_token_band_basis: "requested_num_predict_not_generated_output_or_content_complexity",
+        requested_token_observation_v3,
         fallback_continuity_budget: fallback_continuity_budget.clone(),
         prompt_budget_chars,
         assembly_prompt_budget_chars,
@@ -754,7 +812,8 @@ pub async fn generate_dialogue(
             .as_ref()
             .map(|value| value.path.display().to_string()),
         budget_report,
-        budget_context_v2,
+        prompt_context_observation_v3,
+        diagnostic_runtime_effect: false,
     };
     append_llm_diagnostic_jsonl("dialogue_prompt_budget.jsonl", &budget_diag);
     append_llm_diagnostic_jsonl(

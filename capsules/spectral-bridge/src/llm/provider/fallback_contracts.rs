@@ -213,6 +213,8 @@ pub(crate) struct PreservedModelArtifactTokenCount {
     pub quoted_reference_occurrences: usize,
     pub grouped_reference_occurrences: usize,
     pub explicit_relation_occurrences: usize,
+    pub nested_delimited_reference_occurrences: usize,
+    pub max_delimiter_depth: usize,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -455,13 +457,13 @@ fn model_artifact_cleanup_diagnostic<'a>(
     let exact_token_integrity_check_v1 =
         model_artifact_exact_token_integrity_check_v1(report, &remainder_surface_v2);
     ModelArtifactCleanupDiagnostic {
-        schema: "model_artifact_cleanup_v8",
-        schema_version: 8,
+        schema: "model_artifact_cleanup_v9",
+        schema_version: 9,
         timestamp: unix_timestamp_string(),
         label,
         profile: profile.as_str(),
         marker_contract:
-            "private_typed_exact_known_model_token_with_matching_quote_grouping_or_following_relation",
+            "private_typed_exact_known_model_control_marker_with_bounded_matching_delimiter_stack_or_following_relation",
         common_language_overlap_risk: model_artifact_language_overlap_risk(report),
         remainder_surface_v2,
         exact_token_integrity_check_v1,
@@ -471,25 +473,22 @@ fn model_artifact_cleanup_diagnostic<'a>(
 }
 
 #[derive(Debug, Clone, Serialize, PartialEq)]
-struct DialogueBudgetContextV2 {
+struct DialoguePromptContextObservationV3 {
     policy: &'static str,
-    requested_token_band: &'static str,
-    requested_token_band_basis: &'static str,
     spectral_entropy: Option<f32>,
     high_entropy: bool,
-    low_requested_token_band_under_high_entropy: bool,
     resonance_density: Option<f32>,
     spectrally_dense: bool,
-    low_requested_token_band_under_dense_resonance: bool,
     resonance_context_evidence: &'static str,
     spectral_context_state: &'static str,
     journal_context_state: &'static str,
     continuity_context_state: &'static str,
     removed_fraction: f32,
-    requested_token_transition_evidence_v2: DialogueRequestedTokenTransitionEvidenceV2,
-    felt_pressure_context_v2: DialogueFeltPressureContextV2,
+    felt_pressure_observation_v3: DialogueFeltPressureObservationV3,
     state: &'static str,
     suffocation_risk: &'static str,
+    requested_token_relation: &'static str,
+    runtime_effect: bool,
     authority: &'static str,
 }
 
@@ -516,10 +515,9 @@ impl DialoguePressureTextureInputs {
 }
 
 #[derive(Debug, Clone, Serialize, PartialEq)]
-struct DialogueFeltPressureContextV2 {
+struct DialogueFeltPressureObservationV3 {
     policy: &'static str,
-    requested_token_band: &'static str,
-    joint_observation_label: &'static str,
+    observation_label: &'static str,
     distribution_state: &'static str,
     density_gradient_state: &'static str,
     pressure_load_state: &'static str,
@@ -529,7 +527,7 @@ struct DialogueFeltPressureContextV2 {
     pressure_risk: Option<f32>,
     mode_packing: Option<f32>,
     evidence_basis: Vec<&'static str>,
-    pressure_budget_correlation: &'static str,
+    requested_token_relation: &'static str,
     content_complexity_inference: &'static str,
     pre_generation_pressure_prediction: &'static str,
     runtime_budget_changed: bool,
@@ -538,7 +536,21 @@ struct DialogueFeltPressureContextV2 {
 }
 
 #[derive(Debug, Clone, Serialize, PartialEq, Eq)]
-struct DialogueRequestedTokenTransitionEvidenceV2 {
+struct DialogueRequestedTokenObservationV3 {
+    policy: &'static str,
+    num_predict: u32,
+    requested_token_band: &'static str,
+    requested_token_band_basis: &'static str,
+    transition_evidence_v3: DialogueRequestedTokenTransitionEvidenceV3,
+    felt_pressure_relation: &'static str,
+    content_complexity_inference: &'static str,
+    behavior_decision_dependency: &'static str,
+    runtime_effect: bool,
+    authority: &'static str,
+}
+
+#[derive(Debug, Clone, Serialize, PartialEq, Eq)]
+struct DialogueRequestedTokenTransitionEvidenceV3 {
     policy: &'static str,
     num_predict: u32,
     requested_token_band: &'static str,
@@ -552,10 +564,10 @@ struct DialogueRequestedTokenTransitionEvidenceV2 {
     authority: &'static str,
 }
 
-fn dialogue_requested_token_transition_evidence_v2(
+fn dialogue_requested_token_transition_evidence_v3(
     num_predict: u32,
     requested_token_band: &'static str,
-) -> DialogueRequestedTokenTransitionEvidenceV2 {
+) -> DialogueRequestedTokenTransitionEvidenceV3 {
     let (band_floor_tokens, next_band_at_tokens): (u32, Option<u32>) =
         match requested_token_band {
         "requested_tokens_0_to_512" => (0, Some(513)),
@@ -578,8 +590,8 @@ fn dialogue_requested_token_transition_evidence_v2(
         "requested_token_band_interior"
     };
 
-    DialogueRequestedTokenTransitionEvidenceV2 {
-        policy: "dialogue_requested_token_transition_evidence_v2",
+    DialogueRequestedTokenTransitionEvidenceV3 {
+        policy: "dialogue_requested_token_transition_evidence_v3",
         num_predict,
         requested_token_band,
         band_floor_tokens,
@@ -590,6 +602,28 @@ fn dialogue_requested_token_transition_evidence_v2(
         content_complexity_inference: "not_inferred_from_requested_token_band",
         runtime_budget_changed: false,
         authority: "read_only_budget_boundary_evidence_not_token_limit_sampler_or_provider_control",
+    }
+}
+
+fn dialogue_requested_token_observation_v3(
+    num_predict: u32,
+) -> DialogueRequestedTokenObservationV3 {
+    let requested_token_band = dialogue_requested_token_band(num_predict);
+    DialogueRequestedTokenObservationV3 {
+        policy: "dialogue_requested_token_observation_v3",
+        num_predict,
+        requested_token_band,
+        requested_token_band_basis:
+            "requested_num_predict_not_generated_output_or_content_complexity",
+        transition_evidence_v3: dialogue_requested_token_transition_evidence_v3(
+            num_predict,
+            requested_token_band,
+        ),
+        felt_pressure_relation: "not_joined_with_felt_or_spectral_observations",
+        content_complexity_inference: "not_inferred_from_requested_token_band",
+        behavior_decision_dependency: "none_diagnostic_is_constructed_after_runtime_limits",
+        runtime_effect: false,
+        authority: "read_only_requested_token_observation_not_token_limit_sampler_provider_or_spectral_control",
     }
 }
 
@@ -611,10 +645,9 @@ fn prompt_block_trim_state(
     }
 }
 
-fn dialogue_felt_pressure_context_v2(
-    requested_token_band: &'static str,
+fn dialogue_felt_pressure_observation_v3(
     inputs: DialoguePressureTextureInputs,
-) -> DialogueFeltPressureContextV2 {
+) -> DialogueFeltPressureObservationV3 {
     let high_entropy = inputs
         .spectral_entropy
         .is_some_and(|entropy| entropy >= 0.85);
@@ -634,23 +667,21 @@ fn dialogue_felt_pressure_context_v2(
             .mode_packing
             .is_some_and(|packing| packing >= 0.25);
 
-    let joint_observation_label = match requested_token_band {
-        "requested_tokens_0_to_512" if pressure_heavy => {
-            "pressure_heavy_requested_tokens_0_to_512"
-        }
-        "requested_tokens_1025_plus" if gentle_gradient => {
-            "gentle_gradient_requested_tokens_1025_plus"
-        }
-        "requested_tokens_1025_plus" if steep_gradient || dense_resonance => {
-            "dense_resonance_requested_tokens_1025_plus"
-        }
-        "requested_tokens_513_to_1024" if pressure_heavy => {
-            "pressure_heavy_requested_tokens_513_to_1024"
-        }
-        "requested_tokens_1025_plus" if high_entropy => {
-            "high_entropy_requested_tokens_1025_plus"
-        }
-        _ => requested_token_band,
+    let observation_label = if pressure_heavy {
+        "pressure_heavy_observation"
+    } else if steep_gradient || dense_resonance {
+        "dense_resonance_observation"
+    } else if high_entropy && gentle_gradient {
+        "widely_distributed_high_entropy_observation"
+    } else if high_entropy {
+        "high_entropy_observation"
+    } else if inputs.spectral_entropy.is_some()
+        || inputs.resonance_density.is_some()
+        || inputs.density_gradient.is_some()
+    {
+        "bounded_texture_observation"
+    } else {
+        "texture_observation_unavailable"
     };
     let distribution_state = if high_entropy && gentle_gradient {
         "widely_distributed_cascade"
@@ -694,10 +725,9 @@ fn dialogue_felt_pressure_context_v2(
         evidence_basis.push("mode_packing");
     }
 
-    DialogueFeltPressureContextV2 {
-        policy: "dialogue_felt_pressure_context_v2",
-        requested_token_band,
-        joint_observation_label,
+    DialogueFeltPressureObservationV3 {
+        policy: "dialogue_felt_pressure_observation_v3",
+        observation_label,
         distribution_state,
         density_gradient_state,
         pressure_load_state,
@@ -707,8 +737,8 @@ fn dialogue_felt_pressure_context_v2(
         pressure_risk: inputs.pressure_risk,
         mode_packing: inputs.mode_packing,
         evidence_basis,
-        pressure_budget_correlation: "not_established_without_paired_budget_observation",
-        content_complexity_inference: "not_inferred_from_requested_token_band_or_spectral_context",
+        requested_token_relation: "not_joined_with_requested_token_observation",
+        content_complexity_inference: "not_inferred_from_spectral_or_pressure_observation",
         pre_generation_pressure_prediction:
             "texture_risk_classification_only_not_causal_pressure_prediction",
         runtime_budget_changed: false,
@@ -717,23 +747,16 @@ fn dialogue_felt_pressure_context_v2(
     }
 }
 
-fn dialogue_budget_context_v2(
-    num_predict: u32,
-    requested_token_band: &'static str,
+fn dialogue_prompt_context_observation_v3(
     inputs: DialoguePressureTextureInputs,
     budget_report: Option<&PromptBudgetReport>,
-) -> DialogueBudgetContextV2 {
+) -> DialoguePromptContextObservationV3 {
     let spectral_entropy = inputs.spectral_entropy;
     let resonance_density = inputs.resonance_density;
     let high_entropy = spectral_entropy.is_some_and(|entropy| entropy >= 0.85);
     let spectrally_dense = resonance_density.is_some_and(|density| density >= 0.80);
-    let low_requested_token_band = requested_token_band == "requested_tokens_0_to_512";
-    let low_requested_token_band_under_dense_resonance =
-        spectrally_dense && low_requested_token_band;
-    let resonance_context_evidence = if low_requested_token_band_under_dense_resonance {
-        "dense_resonance_observed_with_requested_tokens_0_to_512"
-    } else if spectrally_dense {
-        "dense_resonance_observed_separately_from_requested_token_band"
+    let resonance_context_evidence = if spectrally_dense {
+        "dense_resonance_observed_without_requested_token_join"
     } else if resonance_density.is_some() {
         "resonance_density_observed_below_dense_threshold"
     } else {
@@ -780,29 +803,22 @@ fn dialogue_budget_context_v2(
         ("within_budget", "not_observed_in_budget_record")
     };
 
-    DialogueBudgetContextV2 {
-        policy: "dialogue_budget_context_v2",
-        requested_token_band,
-        requested_token_band_basis:
-            "requested_num_predict_not_generated_output_or_content_complexity",
+    DialoguePromptContextObservationV3 {
+        policy: "dialogue_prompt_context_observation_v3",
         spectral_entropy,
         high_entropy,
-        low_requested_token_band_under_high_entropy: high_entropy && low_requested_token_band,
         resonance_density,
         spectrally_dense,
-        low_requested_token_band_under_dense_resonance,
         resonance_context_evidence,
         spectral_context_state,
         journal_context_state,
         continuity_context_state,
         removed_fraction,
-        requested_token_transition_evidence_v2: dialogue_requested_token_transition_evidence_v2(
-            num_predict,
-            requested_token_band,
-        ),
-        felt_pressure_context_v2: dialogue_felt_pressure_context_v2(requested_token_band, inputs),
+        felt_pressure_observation_v3: dialogue_felt_pressure_observation_v3(inputs),
         state,
         suffocation_risk,
+        requested_token_relation: "not_joined_with_requested_token_observation",
+        runtime_effect: false,
         authority: "diagnostic_prompt_budget_evidence_not_budget_or_model_control",
     }
 }
@@ -814,8 +830,7 @@ struct DialoguePromptBudgetDiagnostic {
     timestamp: String,
     requested_tokens: u32,
     effective_tokens: u32,
-    requested_token_band: &'static str,
-    requested_token_band_basis: &'static str,
+    requested_token_observation_v3: DialogueRequestedTokenObservationV3,
     fallback_continuity_budget: FallbackContinuityBudget,
     prompt_budget_chars: usize,
     assembly_prompt_budget_chars: usize,
@@ -826,7 +841,8 @@ struct DialoguePromptBudgetDiagnostic {
     overflow_summary: Option<String>,
     overflow_path: Option<String>,
     budget_report: Option<PromptBudgetReport>,
-    budget_context_v2: DialogueBudgetContextV2,
+    prompt_context_observation_v3: DialoguePromptContextObservationV3,
+    diagnostic_runtime_effect: bool,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
