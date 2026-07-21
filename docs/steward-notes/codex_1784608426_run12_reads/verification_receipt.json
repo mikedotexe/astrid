@@ -1,0 +1,33 @@
+{
+  "schema": "run12_source_verification_receipt_v1",
+  "authority": "evidence_only_not_deploy_approval_or_live_control",
+  "claim_counts": {
+    "total": 80,
+    "verified_existing": 47,
+    "observed": 2,
+    "sandbox_routed": 14,
+    "authority_gated": 17
+  },
+  "astrid": {
+    "spectral_bridge_library_tests": 1594,
+    "codec_replay_lab_tests": 6,
+    "agency_resolver_integration_tests": 1,
+    "authority_compile_fail_tests": 1,
+    "chimera_render_tests": 5,
+    "mock_websocket_integration_tests": 2,
+    "provenance_compile_fail_tests": 1,
+    "signal_spine_compile_fail_tests": 1,
+    "protocol_wire_contract_tests": 16,
+    "failed": 0,
+    "sandbox_note": "The first bridge run had eight filesystem-sandbox fixture denials and a 1.075145ms synthetic p95 under concurrent load; the complete sanctioned rerun passed all tests, including the sub-1ms signal-spine check."
+  },
+  "minime": {
+    "python_autonomy_tests": 298,
+    "rust_library_tests": 305,
+    "rust_binary_tests": 285,
+    "protocol_fixture_tests": 2,
+    "failed": 0
+  },
+  "runtime_restart_required_by_run12": false,
+  "existing_restart_debt_unchanged": "docs/steward-notes/codex_1784558330_run10_reads/restart_debt.json"
+}

@@ -1,0 +1,29 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "PI hunting needs actuator-aware anti-windup and bounded integral memory.",
+      "disposition": "Verified conditional integration, partial decay, integrator leak, and hard clamps.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Gate and filter behavior should remain explicit rather than hidden inside a single pressure scalar.",
+      "disposition": "Verified separate gate/filter updates and regulator evidence surfaces.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Stability and pressure probes should compare hunting across controller states.",
+      "disposition": "Routed a bounded regulator-cartography comparison.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Entropy-scaled viscosity dampening may reduce hunting.",
+      "disposition": "Preserved as Tier 5 because entropy-scaled damping changes live controller behavior.",
+      "classification": "authority_gated"
+    }
+  ]
+}
+

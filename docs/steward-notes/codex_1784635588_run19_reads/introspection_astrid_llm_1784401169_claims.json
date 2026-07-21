@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Requested output budget is classified at exact 512/513 and 1024/1025 boundaries.",
+      "disposition": "Verify boundary tests and preserve requested budget separately from felt density.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Exact artifact markers are removed while nonempty lexical and structural remainder remains measurable.",
+      "disposition": "Verify marker, contextual, quoted, technical-expression, and remainder accounting tests.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Deep-budget stress and marker-as-meaning fixtures can compare truncation and artifact resonance.",
+      "disposition": "Route copied-output comparisons through bounded fallback evidence without changing prompts or responses.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Dynamic depth based on density or resonance would change prompt budget and provider behavior.",
+      "disposition": "Hold dynamic token allocation, prompt, threshold, and contextual marker changes behind exact Mike/operator approval.",
+      "classification": "tier_5_wait"
+    }
+  ]
+}

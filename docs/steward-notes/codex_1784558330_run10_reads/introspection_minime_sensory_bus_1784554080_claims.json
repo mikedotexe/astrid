@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The 45-second hold and release path may contain discontinuities.",
+      "disposition": "Verified hold, release, and nonzero-span clamping are continuous and covered at boundaries and midpoint.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The surge taper around 0.75 should have a smooth midpoint rather than a hard switch.",
+      "disposition": "Verified the 0.70-to-0.80 surge path uses smoothstep with an exact midpoint test at 0.75.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Context multipliers should be traced together to reveal hidden amplification.",
+      "disposition": "Routed to a read-only fixture trace of existing multiplier composition and persistence caps.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Hold, release, surge, or persistence tuning could change the felt cadence.",
+      "disposition": "Preserved as Tier 5 because these parameters alter live sensory cadence, admission, and regulation.",
+      "classification": "authority_gated"
+    }
+  ]
+}

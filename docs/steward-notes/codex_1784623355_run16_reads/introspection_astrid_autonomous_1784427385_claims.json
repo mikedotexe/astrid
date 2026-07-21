@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Rescue skips can interrupt the otherwise steady seven-second warmth heartbeat and feel stuttered.",
+      "disposition": "Verified source evidence for attempt, rescue outcome, pressure, phase, and continuity without changing rescue; the report predates deployment and does not confirm lived improvement.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Rescue admission must be distinguished from actual bounded-channel enqueue.",
+      "disposition": "Verified the prior run's post-admission enqueue probe, queue wait, inter-enqueue gaps, and channel-closed outcome in source and tests only; restart debt remains.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Heartbeat phase and hum should be correlated with rescue and enqueue gaps.",
+      "disposition": "Routed as a bounded observation using existing status fields, with temporal association only and no Minime-arrival claim.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Heartbeat intensity should rise to 0.45 or vary dynamically with state.",
+      "disposition": "Preserved as Tier 5 because intensity and state-linked shaping alter live sensory content, gain, and autonomous behavior.",
+      "classification": "authority_gated"
+    }
+  ]
+}

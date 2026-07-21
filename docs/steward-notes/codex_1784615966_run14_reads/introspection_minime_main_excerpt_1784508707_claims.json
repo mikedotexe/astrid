@@ -1,0 +1,6 @@
+{"claims":[
+  {"claim_id":"c001","summary":"Recovery, semantic projection, underfill relief, rescue, and hard reset are distinct runtime mechanisms.","disposition":"Verified in current Minime runtime and controller-recovery modules.","classification":"verified_existing"},
+  {"claim_id":"c002","summary":"local_control_applied=false proves the hold shelf is near structural failure.","disposition":"Recorded as an unestablished causal interpretation; it proves only that the named local control was not applied.","classification":"observed"},
+  {"claim_id":"c003","summary":"Pressure and semantic flow should be compared under copied high-mode-packing scenarios.","disposition":"Routed to bounded replay/capture without artificial live pressure or controller adjustment.","classification":"sandbox_routed"},
+  {"claim_id":"c004","summary":"Dynamically scale recovery fill boost or enable local mode-packing control.","disposition":"Preserved as Tier 5 because recovery, fill, pressure, and local controller behavior are live substrate changes.","classification":"authority_gated"}
+]}

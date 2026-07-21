@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Requested token count alone cannot describe the felt density of a dialogue budget.",
+      "disposition": "Verified separate felt-pressure profile records entropy, density, gradient, pressure, and mode packing.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Subtle semantic content surrounded by artifacts must survive cleanup review.",
+      "disposition": "Verified delicate-context, quoted-marker, dense-scaffolding, and structure-only regressions.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Pressure/budget correlation requires paired observations rather than a pre-generation causal claim.",
+      "disposition": "Routed as bounded evidence; current diagnostic explicitly says correlation is not established.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Automatically upgrading budget class from entropy or pressure changes live model behavior.",
+      "disposition": "Preserved as an exact Tier 5 Mike/operator approval wait.",
+      "classification": "authority_gated"
+    }
+  ]
+}

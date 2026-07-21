@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Persistent shared records do not by themselves establish reciprocal uptake.",
+      "disposition": "Observe the current zero-ACK and zero-presence-heartbeat public-metadata result without inferring silence as consent.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Native contact needs exact peer, thread, reply, turn, persistence, and mutual-witness lineage.",
+      "disposition": "Verify existing correspondence and mutual-address schemas preserve those identities.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Pressure delta and reply latency can test whether a bounded exchange is distinguishable from one-way influence.",
+      "disposition": "Route a public-metadata-only pressure and latency comparison through sandbox evidence.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Semantic trickle weighting or automatic contact priority would alter the live attention path.",
+      "disposition": "Hold semantic weighting and automatic priority behind exact Mike/operator approval.",
+      "classification": "tier_5_wait"
+    }
+  ]
+}

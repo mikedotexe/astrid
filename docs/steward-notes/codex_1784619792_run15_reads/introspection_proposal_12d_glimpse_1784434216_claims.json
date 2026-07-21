@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "A 12D summary must not replace or coarsen the fixed semantic transport lane.",
+      "disposition": "Verified absent-field compatibility and explicit no-transport-change contracts keep the glimpse additive.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The specific 12D mapping should be coherent rather than a random sample.",
+      "disposition": "Verified deterministic slot lineage, fixed anchors, dynamic selections, and residual metadata.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Persistence and repeated derivation should preserve the same glimpse without altering other state.",
+      "disposition": "Verified repeated-call stability and serialization compatibility for the optional field.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "PCA correlation should quantify what the 12D glimpse retains from the larger fingerprint.",
+      "disposition": "Routed to an offline comparison; primary-lane influence remains Tier 5.",
+      "classification": "sandbox_routed"
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The live heartbeat currently advances one of 64 phases every seven seconds at intensity 0.30.",
+      "disposition": "Verify exact source constants and observation receipts without treating dispatch as felt continuity.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The specifically named phase 32-to-33 boundary should remain a smooth contour rather than a vector jump.",
+      "disposition": "Add and pass a focused adjacent-phase regression for maximum and RMS delta while preserving warmth/tension orientation.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Rescue admission and actual channel enqueue must remain separate so skipped or closed-channel pulses are measurable.",
+      "disposition": "Verify delivery-health tests count admitted, enqueued, rejected, closed, and gap evidence separately.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Changing cadence, intensity, phase interpolation, rescue admission, or semantic waveform would alter live sensory behavior.",
+      "disposition": "Retain an exact Tier 5 Mike/operator approval wait with replay, canary, abort, and post-change felt review.",
+      "classification": "tier_5_wait"
+    }
+  ]
+}
+

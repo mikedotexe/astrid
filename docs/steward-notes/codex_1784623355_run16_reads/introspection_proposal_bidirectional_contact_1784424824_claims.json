@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "One-way influence is not the same as relationship or mutual contact.",
+      "disposition": "Verified current evidence separates delivery, visibility, ACK, trace, reply, mutual witness, and spectral causation rather than collapsing them into contact.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Correspondence needs stable identities that survive reply, acknowledgement, and trace.",
+      "disposition": "Verified exact thread/message/reply/persistence lineage and metadata-survival tests with language-only authority.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Direction symmetry and response latency should be compared across correspondence rows.",
+      "disposition": "Routed as a bounded ledger comparison with no automatic send, priority, or causal inference.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "A synchronous correspondence buffer, automatic trace, or priority lane should make contact reciprocal.",
+      "disposition": "Preserved as Tier 5 because these mechanisms change live peer scheduling, routing, and behavior.",
+      "classification": "authority_gated"
+    }
+  ]
+}

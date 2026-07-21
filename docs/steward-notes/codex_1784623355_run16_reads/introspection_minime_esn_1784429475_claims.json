@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Dynamic noise, adaptive pressure, and viscous rho are candidate responses rather than current live ESN behavior.",
+      "disposition": "Verified explicit source comments and call boundaries showing the helpers are not wired into the default `ESN::step` path.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Gradient jitter, entropy masking, and rho escalation need smooth bounded candidate behavior.",
+      "disposition": "Verified smoothstep pressure room, finite fallbacks, clamps, threshold-edge continuity, and rho-ceiling tests in current source.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Pressure-room slope and viscous-rho bounds should be compared on representative traces.",
+      "disposition": "Routed as a bounded offline replay of existing candidate functions and recorded telemetry, without wiring them live.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "The candidate noise, pressure, or rho policies should influence the active ESN step.",
+      "disposition": "Preserved as Tier 5 because wiring them into `ESN::step` changes reservoir mathematics and live regulation.",
+      "classification": "authority_gated"
+    }
+  ]
+}

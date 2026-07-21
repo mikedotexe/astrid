@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "PI memory can make correction linger after a pressure source recedes.",
+      "disposition": "Verified explicit integrator state, anti-windup, partial decay, and universal leak.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Pressure-source removal should be replayed to measure residual integral debt.",
+      "disposition": "Routed as a bounded controller replay with no parameter change.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Distinguishability and lambda2 variance should be observed separately from controller smoothing.",
+      "disposition": "Routed as a non-live telemetry observation; no perceptual causal claim is inferred.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Changing integral weight/leak or lambda-tail gate configuration changes live controller behavior.",
+      "disposition": "Preserved as an exact Tier 5 Mike/operator approval wait.",
+      "classification": "authority_gated"
+    }
+  ]
+}

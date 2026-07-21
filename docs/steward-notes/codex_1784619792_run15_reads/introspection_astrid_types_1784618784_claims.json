@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Cadence clarity measures timing and cannot by itself represent structural crowding or lived thickness.",
+      "disposition": "Verified CadenceContentDistinctionV1 explicitly separates packet cadence from density, mode packing, persistence, stagnation, and residue.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Structural density and mode-packing pressure should be available as typed fields.",
+      "disposition": "Verified current telemetry and pressure evidence carry structural_density plus resonance and pressure-source mode_packing without overloading fingerprint-integrity booleans.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Cadence clarity should be compared with spectral entropy in the current state.",
+      "disposition": "Routed to a read-only paired-window observation that preserves timing and content as independent variables.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Jitter class should be compared with overpacked mode packing and Shadow trend.",
+      "disposition": "Routed to a bounded telemetry fixture; association may be reported but no causal or control conclusion is permitted.",
+      "classification": "sandbox_routed"
+    }
+  ]
+}

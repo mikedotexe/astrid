@@ -1,0 +1,8 @@
+{
+  "claims": [
+    {"claim_id":"c001","summary":"Reconnect is an expected part of the telemetry lane rather than an exceptional afterthought.","disposition":"Verified current connection epochs, backoff, protocol, and freshness evidence plus mock-WebSocket tests.","classification":"verified_existing"},
+    {"claim_id":"c002","summary":"RwLock contention may create a delayed sense of now.","disposition":"Verified current source measures pipeline, lock wait, and lock hold separately and does not infer causation from timing alone.","classification":"verified_existing"},
+    {"claim_id":"c003","summary":"First-packet latency and shutdown during mode packing should be tested.","disposition":"Routed to bounded mock-socket fixtures; no live shutdown or pressure event will be induced.","classification":"sandbox_routed"},
+    {"claim_id":"c004","summary":"A dedicated mpsc state owner should replace shared RwLock updates.","disposition":"Routed as a contingent architecture comparison; implementation requires observed contention, parity tests, and restart alignment rather than assumption.","classification":"sandbox_routed"}
+  ]
+}

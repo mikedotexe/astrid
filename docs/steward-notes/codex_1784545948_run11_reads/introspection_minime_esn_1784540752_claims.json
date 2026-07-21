@@ -1,0 +1,8 @@
+{
+  "claims": [
+    {"claim_id":"c001","summary":"DYNAMIC_NOISE_STEEP_GRADIENT=0.70 may be a discontinuous noise jump.","disposition":"Mechanism correction: 0.70 is the upper gradient boundary; the proposed output is a bounded smoothstep, not a jump to 0.70 noise.","classification":"verified_existing"},
+    {"claim_id":"c002","summary":"Exploration-noise response should be continuous across pressure and gradient.","disposition":"Verified the dormant helper is C1-smooth and eight focused continuity and bound tests passed.","classification":"verified_existing"},
+    {"claim_id":"c003","summary":"Pressure and gradient combinations should be compared before live use.","disposition":"Routed to an offline sweep over the existing read-only helper.","classification":"sandbox_routed"},
+    {"claim_id":"c004","summary":"Noise should be locked, increased, or wired into live ESN stepping.","disposition":"Preserved as Tier 5 reservoir-dynamics authority; current helper is explicitly not wired into ESN::step.","classification":"authority_gated"}
+  ]
+}

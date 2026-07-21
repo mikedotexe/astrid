@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Semantic stale timing is nonlinear and smoothly blended rather than a hard 25s-to-10s switch.",
+      "disposition": "Verify sigmoid, recovery-handoff, hysteresis-review, and monotonic sweep tests.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The semantic lane is 48D with explicit narrative-arc dimensions and shared bounded retention.",
+      "disposition": "Verify LLAVA dimension, narrative retention review, and additive glimpse lineage.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Persistence snap and shadow-dispersal associations can be observed without changing either path.",
+      "disposition": "Route copied-state stale-window and shadow-cap comparisons through bounded review.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Changing stale interpolation, retention windows, or shadow influence caps would alter live sensory input.",
+      "disposition": "Hold semantic persistence and shadow-gain changes behind exact Mike/operator approval.",
+      "classification": "tier_5_wait"
+    }
+  ]
+}

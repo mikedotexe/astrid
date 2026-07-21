@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Wrong-length legacy fingerprints must not be reconstructed as trusted typed state.",
+      "disposition": "Verified short legacy vectors return no typed fingerprint and malformed 31-slot hybrid evidence remains unavailable.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A 12D glimpse containing NaN or the wrong number of values must remain raw diagnostic data rather than prompt/state signal.",
+      "disposition": "Verified `spectral_glimpse_12d_view` requires exactly twelve finite values and rejects malformed/non-finite vectors.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Typed reconstruction and legacy compatibility need an explicit precedence rule.",
+      "disposition": "Verified typed canonical fingerprints take precedence, legacy reconstruction remains compatible, and divergent hybrid evidence stays visible.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Denominator and geometry calculations should reject non-finite input rather than silently treating it as coherent evidence.",
+      "disposition": "Verified finite filtering and unavailable-non-finite integrity states in current schema and tests.",
+      "classification": "verified_existing"
+    }
+  ]
+}

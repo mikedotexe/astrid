@@ -1,0 +1,53 @@
+{
+  "schema": "run19_source_verification_receipt_v1",
+  "authority": "evidence_only_not_deploy_approval_or_live_control",
+  "claim_counts": {
+    "total": 82,
+    "verified_existing": 48,
+    "sandbox_routed": 19,
+    "authority_gated": 15,
+    "implemented_now": 0
+  },
+  "work_items": {
+    "total": 82,
+    "verified_existing": 48,
+    "needs_sandbox": 19,
+    "needs_operator_approval": 15,
+    "authority_marker_violations": 0
+  },
+  "right_to_ignore_cards": {
+    "generated": 82,
+    "delivered": 0,
+    "undelivered": 82
+  },
+  "astrid_focused_tests": {
+    "strip_model_artifacts": 1,
+    "model_artifact": 1,
+    "telemetry_heartbeat": 1,
+    "phase_transition": 16,
+    "glimpse": 15,
+    "semantic_heartbeat": 12,
+    "total": 46,
+    "failed": 0
+  },
+  "minime_focused_tests": {
+    "semantic_stale_library_and_binary": 36,
+    "dynamic_noise_library_and_binary": 16,
+    "semantic_viscosity_library_and_binary": 4,
+    "python_autonomy": 268,
+    "failed": 0
+  },
+  "tooling_self_tests": {
+    "agency_corridor": 18,
+    "introspection_addressing": 37,
+    "sandbox_trial_queue": 27,
+    "recent_signal_summary": 38,
+    "proactive_scan": 110,
+    "evidence_event_store": 13,
+    "steward_control": 30,
+    "total": 273,
+    "failed": 0
+  },
+  "runtime_restart_required_by_run19": false,
+  "existing_restart_debt_unchanged": "docs/steward-notes/codex_1784619792_run15_reads/restart_debt.json"
+}

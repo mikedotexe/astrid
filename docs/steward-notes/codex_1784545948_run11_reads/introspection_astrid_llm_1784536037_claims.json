@@ -1,0 +1,8 @@
+{
+  "claims": [
+    {"claim_id":"c001","summary":"Marker stripping can destroy spatial evidence and create false empty-content results.","disposition":"Verified the current single-pass matcher records raw start/end spans and longest matches without cascading second-order removal.","classification":"verified_existing"},
+    {"claim_id":"c002","summary":"Dense structural language may be suppressed when it resembles scaffolding.","disposition":"Mechanism correction: arbitrary structural language is not in the marker list, and dense no-marker content is explicitly tested as active.","classification":"verified_existing"},
+    {"claim_id":"c003","summary":"Contextual and boundary occurrences should remain auditable.","disposition":"Verified placement and quoted occurrence counts are retained in bounded cleanup evidence.","classification":"verified_existing"},
+    {"claim_id":"c004","summary":"Semantic-density scoring should change whether output is accepted or retained.","disposition":"Preserved as Tier 5 model-quality/history behavior; current evidence route changes no acceptance policy.","classification":"authority_gated"}
+  ]
+}

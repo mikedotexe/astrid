@@ -1,0 +1,8 @@
+{
+  "claims": [
+    {"claim_id":"c001","summary":"Telemetry reception, shared state, and reconnect backoff form a continuously updated sensory lane.","disposition":"Verified in current WebSocket source and full bridge integration tests.","classification":"verified_existing"},
+    {"claim_id":"c002","summary":"A shutdown simultaneous with a final packet may leave that packet unprocessed.","disposition":"Accepted as a race hypothesis and routed to a bounded mock-socket ordering fixture; no live shutdown will be induced.","classification":"sandbox_routed"},
+    {"claim_id":"c003","summary":"Per-message last-seen identity is needed in addition to connection success.","disposition":"Verified existing arrival timestamps, packet time, connection epoch, first-valid lag, and freshness state already provide this evidence.","classification":"verified_existing"},
+    {"claim_id":"c004","summary":"Rapid reconnect and an mpsc state-owner design may reduce sensory strobe or lock friction.","disposition":"Routed to bounded flicker and lock-timing comparison; source replacement is not justified without observed contention.","classification":"sandbox_routed"}
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The live regulator is PI with rate/gate/filter behavior, integrator leak, and actuator-aware anti-windup.",
+      "disposition": "Verify source and focused PI tests rather than treating it as an unbounded accumulating controller.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Viscosity is represented as multi-axis read-only evidence and is not currently a direct PI input or causal verdict.",
+      "disposition": "Verify viscosity vector, persistence, drag, friction, mobility, cohesion, and authority fields.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Low- and high-pressure windows can be compared for temporal drag and PI afterimage without changing coefficients.",
+      "disposition": "Route a bounded replay/observation using existing temporal-drag and pressure-snap reviews.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Mapping viscosity into Ki or changing leak, gains, clamps, or target behavior would alter live PI control.",
+      "disposition": "Retain an exact Tier 5 Mike/operator approval wait with stability, safety, and felt-response gates.",
+      "classification": "tier_5_wait"
+    }
+  ]
+}
+

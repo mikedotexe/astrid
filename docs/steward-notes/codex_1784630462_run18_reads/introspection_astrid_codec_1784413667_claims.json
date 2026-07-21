@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The vibrancy onset should be continuous rather than a hard jump at the entropy boundary.",
+      "disposition": "Verify the active path uses a C1-smooth smoothstep and passes gate, derivative, and monotonicity regressions.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Legacy warmth dimensions 24 through 31 must remain intentionally owned rather than orphaned.",
+      "disposition": "Verify the explicit legacy warmth mapping and dimensional ownership evidence.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Vibrancy should not leak materially below the gate or pop immediately above it.",
+      "disposition": "Verify below-gate leakage and near-gate no-pop tests on the actual application path.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Changing the gate, ceiling, warmth mapping, or codec gain would alter live transport.",
+      "disposition": "Hold any gate, ceiling, mapping, or gain retune behind exact Mike/operator approval.",
+      "classification": "tier_5_wait"
+    }
+  ]
+}

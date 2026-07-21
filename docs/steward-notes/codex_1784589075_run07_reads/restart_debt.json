@@ -1,0 +1,23 @@
+{
+  "schema": "restart_debt_v1",
+  "recorded_at": "2026-07-21T00:13:55Z",
+  "alignment": "restart_debt",
+  "our_live_consumed_surfaces": [
+    "capsules/spectral-bridge/src/types/schema/sensory.rs",
+    "capsules/spectral-bridge/src/types/schema/telemetry.rs",
+    "capsules/spectral-bridge/src/types/schema/tests.rs",
+    "capsules/spectral-bridge/src/ws/evidence.rs",
+    "capsules/spectral-bridge/src/ws/health_trace.rs",
+    "capsules/spectral-bridge/src/ws/telemetry_port.rs",
+    "capsules/spectral-bridge/src/ws/tests.rs"
+  ],
+  "blocker": "Concurrent unreviewed protocol, authority, autonomy, and Minime runtime edits appeared after this steward run began. The sanctioned bridge wrapper would compile and deploy those unrelated changes together with this additive evidence field.",
+  "foreign_work_preserved": true,
+  "force_used": false,
+  "first_safe_sequence": [
+    "Wait for the concurrent owner to finish or hand off the protocol and Minime edits.",
+    "Re-audit both repositories and review the combined source and tests.",
+    "Run scripts/build_bridge.sh --ack \"deploy reviewed first-valid connection entropy evidence after concurrent protocol work is stabilized\" --restart.",
+    "Verify the fresh PID, process start, binary hash, logs, ports, telemetry, and first_valid_spectral_entropy output."
+  ]
+}

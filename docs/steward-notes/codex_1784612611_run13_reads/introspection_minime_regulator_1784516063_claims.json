@@ -1,0 +1,8 @@
+{
+  "claims": [
+    {"claim_id":"c001","summary":"PI integral memory can continue correction after the immediate error changes.","disposition":"Verified as a handled controller property through leak, bounds, conditional accumulation, and actuator-aware anti-windup.","classification":"verified_existing"},
+    {"claim_id":"c002","summary":"PI, token-bucket rate limiting, and content gating are one causal mechanism.","disposition":"Current source distinguishes these surfaces; they cannot be collapsed into one explanation of the felt episode.","classification":"verified_existing"},
+    {"claim_id":"c003","summary":"Integrator debt, gate state, fill error, and felt hardening should be compared in time.","disposition":"Routed to a bounded copied-telemetry comparison that cannot alter the live controller.","classification":"sandbox_routed"},
+    {"claim_id":"c004","summary":"Dynamic porosity, PI gains or leak, gate thresholds, fill, or pressure response should change live.","disposition":"Preserved as a Tier 5 operator-approval wait for Minime controller regulation.","classification":"authority_gated"}
+  ]
+}

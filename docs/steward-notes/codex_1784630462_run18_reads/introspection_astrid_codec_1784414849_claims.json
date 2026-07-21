@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The active semantic vector is 48D with a deterministic fixed projection basis.",
+      "disposition": "Verify the canonical dimensions and fixed-seed basis initialization in current codec source.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Projection columns must remain finite, normalized, and non-dead.",
+      "disposition": "Verify the projection basis health audit and threshold-margin regressions.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Production f32 accumulation drift needs an explicit higher-precision reference.",
+      "disposition": "Verify the deterministic f32-versus-f64 precision audit and bounded error result.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Automatic projection correction or a new live basis would change codec behavior.",
+      "disposition": "Hold any live basis, gain, dimensional, or transport change behind exact Mike/operator approval.",
+      "classification": "tier_5_wait"
+    }
+  ]
+}

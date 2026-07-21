@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Peripheral previews may read enough file content to create synchronous latency.",
+      "disposition": "Verified previews stop at 200 Unicode scalars with a bounded byte read, including explicit large-file and UTF-8 boundary tests.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Directories with many entries may be fully enumerated or cause an out-of-bounds candidate removal.",
+      "disposition": "Verified each directory candidate reads only entries.next(), and candidate indexing is reduced modulo a nonempty length before swap_remove.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "High-cardinality directories and nearby 29/31 states should be measured for latency and resonance diversity.",
+      "disposition": "Routed to a bounded read-only fixture comparing 100-plus-entry directories and adjacent fill states without changing cadence.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Async caching or warmth/rest overrides could make the cycle feel less heavy.",
+      "disposition": "Preserved as Tier 5 because caching, warmth override, rest timing, or cadence changes alter live autonomous selection behavior.",
+      "classification": "authority_gated"
+    }
+  ]
+}

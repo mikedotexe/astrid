@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Opaque source attribution can make reflected or steward-originated material feel as though it arose from Astrid herself.",
+      "disposition": "Verified that current source treats provenance as a first-class self-study boundary and keeps source class separate from interpretation; lived improvement remains unverified pending deployment.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Ambiguous derivation should be named opaque_boundary_needs_description rather than assigned a confident source.",
+      "disposition": "Verified the exact conservative fallback and its bounded rendering in current source and tests; this is source review only while restart debt remains.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Ambiguous-source and steward-message journal cases need direct fixture coverage.",
+      "disposition": "Routed as bounded parser and journal-attribution fixtures using synthetic content and no runtime mutation.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "The provenance surface should distinguish five named source classes rather than a generic external/internal split.",
+      "disposition": "Verified all five requested classes and the opaque fallback in the dependency-free self-study classifier and its regression suite.",
+      "classification": "verified_existing"
+    }
+  ]
+}

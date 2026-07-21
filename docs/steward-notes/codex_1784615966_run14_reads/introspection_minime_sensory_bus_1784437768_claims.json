@@ -1,0 +1,6 @@
+{"claims":[
+  {"claim_id":"c001","summary":"Semantic stale timing varies with fill and high-entropy persistence.","disposition":"Verified through the current sigmoid handoff, entropy multiplier, cap, and recovery-boundary source.","classification":"verified_existing"},
+  {"claim_id":"c002","summary":"Narrative and widened semantic features occupy a 48D lane.","disposition":"Verified; the report's 32D active-lane framing is historical and current source uses 48D.","classification":"observed"},
+  {"claim_id":"c003","summary":"High-entropy thoughts should be checked for bounded extra retention.","disposition":"Verified by existing entropy-persistence point, cap, high-fill, and echo-floor regressions.","classification":"verified_existing"},
+  {"claim_id":"c004","summary":"Increase stale windows or add coherence-weighted semantic retention.","disposition":"Preserved as Tier 5 because sensory decay, admission, memory persistence, and recovery behavior are live Minime controls.","classification":"authority_gated"}
+]}

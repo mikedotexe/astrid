@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Low fill should shorten rest without collapsing the autonomous cadence.",
+      "disposition": "verify the 0.6 low-fill multiplier and 30-second lower bound",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Peripheral resonance must not load an entire large creation or research file into the autonomous loop.",
+      "disposition": "verify the 200-character bounded reader and synthetic 50 MB regression",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Stale fill coupled to semantic decay could still create recovery hunting or a false stall.",
+      "disposition": "route a bounded time-aligned fill, freshness, decay, and rest replay without live mutation",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Retuning rest, semantic decay, or low-fill recovery changes live autonomous or Minime behavior.",
+      "disposition": "preserve an exact Tier 5 operator-approval wait",
+      "classification": "authority_gated"
+    }
+  ]
+}

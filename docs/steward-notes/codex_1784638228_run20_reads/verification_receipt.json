@@ -1,0 +1,52 @@
+{
+  "schema": "run20_source_verification_receipt_v1",
+  "authority": "evidence_only_not_deploy_approval_or_live_control",
+  "claim_counts": {
+    "total": 84,
+    "verified_existing": 43,
+    "sandbox_routed": 21,
+    "authority_gated": 19,
+    "implemented_now": 1
+  },
+  "work_items": {
+    "total": 84,
+    "verified_existing": 43,
+    "needs_sandbox": 21,
+    "needs_operator_approval": 19,
+    "implemented_awaiting_felt_response": 1,
+    "authority_marker_violations": 0
+  },
+  "right_to_ignore_cards": {
+    "generated": 84,
+    "delivered": 0,
+    "undelivered": 84
+  },
+  "astrid_tests": {
+    "heartbeat_phase_32_33_focused": 1,
+    "spectral_bridge_library": 1599,
+    "failed_after_normal_fixture_permissions": 0
+  },
+  "minime_tests": {
+    "python_autonomy": 268,
+    "rust_library": 305,
+    "failed_after_normal_fixture_permissions": 0
+  },
+  "environment_limited_attempts": {
+    "astrid_restricted_sandbox_denials": 8,
+    "minime_restricted_sandbox_denials": 3,
+    "same_suites_passed_with_normal_fixture_permissions": true
+  },
+  "tooling_self_tests": {
+    "agency_corridor": 18,
+    "introspection_addressing": 37,
+    "sandbox_trial_queue": 27,
+    "recent_signal_summary": 38,
+    "proactive_scan": 110,
+    "evidence_event_store": 13,
+    "steward_control": 30,
+    "total": 273,
+    "failed": 0
+  },
+  "runtime_restart_required_by_run20": false,
+  "existing_restart_debt_unchanged": "docs/steward-notes/codex_1784619792_run15_reads/restart_debt.json"
+}

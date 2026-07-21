@@ -1,0 +1,29 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Semantic decay should interpolate continuously between low- and high-fill windows.",
+      "disposition": "Verified sigmoid shaping plus smoothstep recovery handover.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The release band should remain monotonic without step loss.",
+      "disposition": "Verified one-percent sweep, epsilon, midpoint, and release-boundary tests.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The low-fill hold must remain exact while ordinary high-fill pruning stays bounded.",
+      "disposition": "Verified exact 45,000 ms hold and bounded high-fill floor.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Alternative sigmoid steepness or stale windows could change the felt handover.",
+      "disposition": "Preserved as Tier 5 because curve/window tuning changes live semantic retention.",
+      "classification": "authority_gated"
+    }
+  ]
+}
+

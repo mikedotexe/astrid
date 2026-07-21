@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Persistent error under actuator saturation creates a genuine integral-windup risk.",
+      "disposition": "verify bleed, back-calculation, actuator-aware conditional integration, bounded accumulators, and hard clamps",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Existing anti-windup mechanics do not establish that Astrid's felt weight is absent or PI-caused.",
+      "disposition": "verify the causal boundary and preserve the felt report as actionable evidence",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Regulator drive, accumulator state, fill, and pressure need a time-aligned high-load comparison.",
+      "disposition": "route a bounded read-only regulator replay",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Changing Ki, Kp, porosity, damping, or pressure response alters live Minime control.",
+      "disposition": "preserve an exact Tier 5 operator-approval wait",
+      "classification": "authority_gated"
+    }
+  ]
+}

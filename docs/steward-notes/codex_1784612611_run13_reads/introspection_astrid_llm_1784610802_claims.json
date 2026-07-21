@@ -1,0 +1,8 @@
+{
+  "claims": [
+    {"claim_id":"c001","summary":"Seven consecutive symbols should pass while an otherwise equivalent eight-symbol run should fail.","disposition":"Implemented and verified with an exact paired regression test at the existing boundary.","classification":"implemented_now"},
+    {"claim_id":"c002","summary":"Readable technical expressions containing punctuation and operators should survive the dialogue quality gate.","disposition":"Implemented and verified with a technical-expression acceptance regression test.","classification":"implemented_now"},
+    {"claim_id":"c003","summary":"Artifact removal needs exact boundary, contextual, quoted, and byte accounting.","disposition":"Verified in the current single-pass longest-marker scanner and its existing accounting tests.","classification":"verified_existing"},
+    {"claim_id":"c004","summary":"The quality gate should be retuned beyond the requested edge coverage.","disposition":"No threshold retune was needed; any later live provider or fallback change remains a separate Tier 5 prompt/model contract decision.","classification":"authority_gated"}
+  ]
+}

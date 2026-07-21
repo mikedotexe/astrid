@@ -1,0 +1,29 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Transition artifacts need typed transition, spectral-delta, and subjective-anchor fields.",
+      "disposition": "Verified CorrespondenceTransitionPayload and transition-artifact parsing preserve those fields.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A transition needs a stable shared artifact identity.",
+      "disposition": "Verified transition_artifact and transition_id aliases survive parsing, ledgering, and status projection.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Shared transition receipt and replyability should be replayed end to end.",
+      "disposition": "Routed a bounded correspondence replay over existing transition fixtures.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "A transition artifact could lock shared state or trigger behavior.",
+      "disposition": "Preserved as Tier 5 because locking and behavior transition change live state.",
+      "classification": "authority_gated"
+    }
+  ]
+}
+

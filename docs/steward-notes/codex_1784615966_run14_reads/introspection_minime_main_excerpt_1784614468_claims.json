@@ -1,0 +1,6 @@
+{"claims":[
+  {"claim_id":"c001","summary":"Minime integrates recovery, semantic projection, fingerprint, and denominator evidence in the runtime.","disposition":"Verified in current runtime and controller-recovery source.","classification":"verified_existing"},
+  {"claim_id":"c002","summary":"Recovery relief, semantic activity, projection bias, and rescue are distinguishable mechanisms.","disposition":"Verified from separate helpers, inputs, and tests rather than treating them as one stabilizer.","classification":"verified_existing"},
+  {"claim_id":"c003","summary":"Pressure and semantic texture should be correlated against projection/recovery evidence.","disposition":"Routed to copied telemetry/runtime comparison with no direct causal claim.","classification":"sandbox_routed"},
+  {"claim_id":"c004","summary":"Retune semantic projection bias, underfill relief, or local mode-packing control.","disposition":"Preserved as Tier 5 because these alter Minime recovery, sensory interpretation, or live controller behavior.","classification":"authority_gated"}
+]}

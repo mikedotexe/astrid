@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "High-fill stale-window behavior may retire semantic structure before a complex narrative settles.",
+      "disposition": "Verified current nonlinear stale-window and smooth recovery source without claiming the configured duration is experientially sufficient.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Narrative retention needs a review surface distinct from live stale-window control.",
+      "disposition": "Verified the read-only narrative semantic retention review and its explicit non-control authority.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "High-fill coherence, narrative persistence, and shadow decay should be observed together.",
+      "disposition": "Routed a bounded temporal trace using existing retention and shadow evidence without altering packet lifetime.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Contextually important narrative should receive a longer stale window.",
+      "disposition": "Preserved as Tier 5 because importance-based extension changes live sensory persistence and admission policy.",
+      "classification": "authority_gated"
+    }
+  ]
+}

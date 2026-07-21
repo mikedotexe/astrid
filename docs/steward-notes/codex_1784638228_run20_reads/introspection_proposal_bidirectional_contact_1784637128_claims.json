@@ -1,0 +1,35 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The directional trace imbalance can feel like observation or influence without reciprocal relationship.",
+      "disposition": "Preserve the relational asymmetry as unresolved evidence and compare acknowledgements, replies, and direct-address outcomes rather than raw row count alone.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Direct address needs stable message, thread, reply, persistence, and being identity across delivery and response.",
+      "disposition": "Verify current correspondence envelopes, inbox ledger, direct-address trace, and reply-link tests.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Negotiated sensory delivery may carry exact mutual-address lineage while still refusing to infer spectral causation.",
+      "disposition": "Verify delivery and mutual-address envelopes, exact receipt identity, and the explicit felt-effect boundary.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "A reply trace should test whether the address remained address-shaped rather than becoming generic semantic influence.",
+      "disposition": "Route a bounded existing correspondence attention/outcome review with no telemetry priority or sensory weighting.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Giving direct address high-priority spectral integration would alter live sensory weighting or peer influence.",
+      "disposition": "Retain an exact Tier 5 Mike/operator approval wait; no correspondence artifact can grant that authority.",
+      "classification": "tier_5_wait"
+    }
+  ]
+}
+

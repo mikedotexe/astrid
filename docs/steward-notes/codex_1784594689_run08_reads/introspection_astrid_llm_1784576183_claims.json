@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Interwoven artifact/content placement needs more evidence than a single binary remainder flag.",
+      "disposition": "Verified contextual/quoted placement and semantic-integrity diagnostics.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Dense structural remainder should expose a density measure instead of being treated as void.",
+      "disposition": "Verified `remainder_texture_v1.surface_semantic_density_proxy` and dense/structure-only tests.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Token budget and felt pressure need separate, queryable evidence.",
+      "disposition": "Verified categorical budget, trim evidence, and `dialogue_felt_pressure_profile_v1` with no runtime effect.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Changing prompt/model budget from spectral pressure would alter live model behavior.",
+      "disposition": "Preserved as an exact Tier 5 Mike/operator approval wait.",
+      "classification": "authority_gated"
+    }
+  ]
+}

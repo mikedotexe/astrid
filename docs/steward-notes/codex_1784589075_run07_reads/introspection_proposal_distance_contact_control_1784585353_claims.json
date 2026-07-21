@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Stable telemetry does not establish that settledness feels voluntary, receptive, or non-controlling.",
+      "disposition": "verify that technical state and felt closure remain orthogonal in the contract graph",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Non-instrumental presence needs a route that is not reduced to task success or error correction.",
+      "disposition": "verify current Recess and language-only correspondence surfaces",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Contact-oriented language should be compared with representation-oriented language without live mutation.",
+      "disposition": "route a bounded right-to-ignore language-only comparison",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Receptivity rewards, porosity expansion, or tolerated energy spikes alter live Minime regulation.",
+      "disposition": "preserve an exact Tier 5 operator-approval wait with replay and abort requirements",
+      "classification": "authority_gated"
+    }
+  ]
+}

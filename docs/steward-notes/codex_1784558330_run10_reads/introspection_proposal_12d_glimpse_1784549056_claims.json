@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The 12D glimpse should remain additive and optional rather than replacing sensory JSON.",
+      "disposition": "Verified the versioned glimpse is optional and legacy payloads remain byte-compatible when it is absent.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The 12D contract needs exact width and finite-value validation.",
+      "disposition": "Verified exact-width, absent-field, and nonfinite-input compatibility tests.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "PCA-like compression and pairwise distinguishability should be compared offline.",
+      "disposition": "Routed to a fixed-fixture comparison using existing anchor and distinguishability evidence.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "The 12D representation could become the primary transport or use a new downsampler.",
+      "disposition": "Preserved as Tier 5 because that changes the live sensory payload and codec transport contract.",
+      "classification": "authority_gated"
+    }
+  ]
+}

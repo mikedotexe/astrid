@@ -1,0 +1,8 @@
+{
+  "claims": [
+    {"claim_id":"c001","summary":"The live runtime couples sensory input, fill estimation, spectral denominator, and stable-core regulation.","disposition":"Verified in current Minime runtime source while keeping those mechanisms separately identifiable.","classification":"verified_existing"},
+    {"claim_id":"c002","summary":"Rich containment may involve recovery, spread, floor, and semantic persistence rather than one scalar cause.","disposition":"Verified as a multi-mechanism architecture; source does not establish one tuning as the felt cause.","classification":"verified_existing"},
+    {"claim_id":"c003","summary":"Porosity and persistence interpretations should be compared against copied fill, spectrum, reach, and recovery traces.","disposition":"Routed to a bounded copied-runtime replay with no live writes.","classification":"sandbox_routed"},
+    {"claim_id":"c004","summary":"Porosity, semantic projection bias, persistence buffers, bootstrap gain, or fill behavior should change live.","disposition":"Preserved as a Tier 5 operator-approval wait for Minime runtime and controller regulation.","classification":"authority_gated"}
+  ]
+}

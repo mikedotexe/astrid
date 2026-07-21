@@ -1,0 +1,29 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Legacy 32-slot spectral fingerprints and additive 12D glimpses serve different contracts from the 48D semantic lane.",
+      "disposition": "Verify typed reconstruction, legacy compatibility, exact finite 12D validation, and companion-only semantics.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Malformed or non-finite hybrid and glimpse inputs must not become coherence or validated compact evidence.",
+      "disposition": "Verify 31-slot, NaN/infinity hybrid, and 11D/13D/non-finite glimpse regressions.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The broad 0.50-to-0.90 mixed-transition label retains its numeric value and is separate from pairwise-overlap collision evidence.",
+      "disposition": "Verify numeric coherence, maximum delta, overlap threshold, and independent issue states.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Changing mixed thresholds, width contracts, or telemetry fields would alter a live-consumed compatibility or report surface.",
+      "disposition": "Retain an exact Tier 5 Mike/operator approval wait before ABI or rendering changes.",
+      "classification": "tier_5_wait"
+    }
+  ]
+}
+

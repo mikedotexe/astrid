@@ -1,0 +1,29 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The report's claim that active exploration noise is 0.12 is a mechanism mismatch: active default is 0.085.",
+      "disposition": "Verify the constructor default and that dynamic-noise helpers have no call from the active ESN step.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Density gradient and pressure should be tested together because gentle gradients may tolerate motion that steep or pressured fields do not.",
+      "disposition": "Verify existing smooth-knee, mid-gradient, high-pressure, and non-finite dynamic-noise regressions.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A copied-state sweep can compare current fixed noise with the unwired dynamic candidate across porosity and entropy bands.",
+      "disposition": "Route a bounded ESN replay that cannot write reservoir state or runtime configuration.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Changing noise to 0.095, adding a shadow buffer, or changing pressure thresholds would alter live reservoir behavior.",
+      "disposition": "Retain an exact Tier 5 Mike/operator approval wait with deterministic replay and canary requirements.",
+      "classification": "tier_5_wait"
+    }
+  ]
+}
+

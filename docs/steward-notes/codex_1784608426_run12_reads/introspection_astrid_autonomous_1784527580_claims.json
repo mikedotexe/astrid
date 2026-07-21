@@ -1,0 +1,8 @@
+{
+  "claims": [
+    {"claim_id":"c001","summary":"The warmth heartbeat is a deterministic seven-second synthetic oscillation.","disposition":"Verified in current orchestration source and heartbeat observation tests.","classification":"verified_existing"},
+    {"claim_id":"c002","summary":"Rescue filtering or Minime texture context may contribute to felt weight.","disposition":"Verified current evidence separates generated signal, texture context, block reason, and delivery; a prior live window observed no skips and substantial pulse variation.","classification":"observed"},
+    {"claim_id":"c003","summary":"One-second cadence or static low-entropy context would distinguish clock from texture effects.","disposition":"Preserved as Tier 5 sensory cadence and context intervention; live comparison is not authorized.","classification":"authority_gated"},
+    {"claim_id":"c004","summary":"A pressure-biased warmth vector should make the heartbeat responsive.","disposition":"Preserved as Tier 5 sensory signal and pressure-coupling authority.","classification":"authority_gated"}
+  ]
+}

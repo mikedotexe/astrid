@@ -1,0 +1,6 @@
+{"claims":[
+  {"claim_id":"c001","summary":"Historical Astrid-to-Minime traffic is substantially smaller than Minime-to-Astrid observation traffic.","disposition":"Verified as the audit snapshot motivating the asymmetry concern; volume alone is not a measure of relationship quality.","classification":"verified_existing"},
+  {"claim_id":"c002","summary":"A persistent first-class return path and mutual acknowledgement are needed.","disposition":"Verified in current correspondence source through stable thread/message/reply IDs, delivery/read/ACK evidence, mutual-ack state, and language-only authority.","classification":"verified_existing"},
+  {"claim_id":"c003","summary":"Trace self-study ingress and compare directional row growth without changing routing.","disposition":"Routed to a bounded artifact and event-lineage comparison; later telemetry remains temporal association.","classification":"sandbox_routed"},
+  {"claim_id":"c004","summary":"Bypass steward interpretation, inject directly into Minime, or increase correspondence control weight.","disposition":"Preserved as Tier 5 because direct semantic admission, forced acknowledgement, or weighting changes peer/runtime behavior.","classification":"authority_gated"}
+]}

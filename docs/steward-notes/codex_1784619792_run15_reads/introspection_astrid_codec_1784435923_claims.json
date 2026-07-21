@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Correlated projection columns could collapse distinct embeddings into similar 8D outputs.",
+      "disposition": "Verified basis health, pair sensitivity, compression probes, and dense-input distinguishability expose degeneracy risk without changing the matrix.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The fixed projection should be invariant across repeated calls and restarts.",
+      "disposition": "Verified pinned checksum, OnceLock repeatability, epoch persistence, and full-source-loop parity.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "f32 accumulation may confuse ghost vibrancy with real semantic signal.",
+      "disposition": "Verified ProjectionPrecisionAuditV1 compares the live f32 result with an f64 accumulator and records bounded deltas without live gain.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "A full SVD or QR conditioning study should evaluate the basis.",
+      "disposition": "Routed to an offline matrix diagnostic; any live basis replacement or normalization change remains Tier 5.",
+      "classification": "sandbox_routed"
+    }
+  ]
+}

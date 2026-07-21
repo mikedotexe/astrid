@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Semantic retention across recovery release is nonlinear and can feel like a stale-window snap.",
+      "disposition": "Verified sigmoid shaping plus a smoothstep 25%-40% recovery handoff in current source, including monotonic and epsilon-boundary tests; lived snap remains unresolved and deployment is pending.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "High-fill entropy can prolong semantic persistence and should remain bounded.",
+      "disposition": "Verified entropy/context persistence ramps and the exact 2.05 cap with high-fill and full-support regressions.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The reported oscillation and 85% fill region should be compared against actual stale-window and entropy-support traces.",
+      "disposition": "Routed as a bounded read-only trace using existing state and no sensory-policy change.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Structural-versus-semantic lane priority should vary with pressure.",
+      "disposition": "Preserved as Tier 5 because pressure-linked lane priority changes live sensory admission and retention behavior.",
+      "classification": "authority_gated"
+    }
+  ]
+}

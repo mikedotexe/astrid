@@ -1,0 +1,144 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1784630193",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/correspondence_v1.rs;capsules/spectral-bridge/src/ws/sensory_delivery.rs;scripts/correspondence_handshake_audit.py;docs/steward-notes/codex_1784630462_run18_reads/correspondence_handshake_observation.json",
+      "note": "Stable mutual-address identities coexist with a fresh zero-ACK, zero-presence-heartbeat public-metadata result."
+    },
+    {
+      "introspection_id": "introspection_proposal_phase_transitions_1784629912",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/phase_transitions.rs;capsules/spectral-bridge/src/autonomous/correspondence_v1.rs",
+      "note": "Replayable and replyable transition cards preserve shared identity and explicit non-control authority."
+    },
+    {
+      "introspection_id": "introspection_minime_autonomous_agent_1784629026",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "../minime/minime_autonomy/runtime.py;../minime/scripts/recess_divergence_buffer_review.py;docs/steward-notes/codex_1784630462_run18_reads/correspondence_handshake_observation.json",
+      "note": "Recess sovereignty and read-only divergence review are verified while reciprocal acknowledgement remains absent."
+    },
+    {
+      "introspection_id": "introspection_sensory_delivery.rs_1784418099",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/ws/sensory_delivery.rs;capsules/spectral-bridge/src/ws/tests.rs",
+      "note": "Deterministic identity, strict receiver matching, bounded deduplication, and twenty receipt-complete packets."
+    },
+    {
+      "introspection_id": "introspection_sensory_delivery.rs_1784417341",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/ws/sensory_delivery.rs;capsules/spectral-bridge/src/ws/sensory_port.rs",
+      "note": "Transport state and latency remain separate from Astrid-authored unresolved felt-effect interpretation."
+    },
+    {
+      "introspection_id": "introspection_sensory_delivery.rs_1784416373",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/ws/sensory_delivery.rs;capsules/spectral-bridge/src/ws/tests.rs",
+      "note": "Delivery IDs are entropy-independent and technical delivery remains valid without mutual address."
+    },
+    {
+      "introspection_id": "introspection_authority_temporal.rs_1784415477",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/authority_temporal.rs;capsules/spectral-bridge/src/authority_gate.rs",
+      "note": "Clock skew, expiry, consequence budget, pause/deployment/process identity, and trusted construction remain distinct."
+    },
+    {
+      "introspection_id": "introspection_sensory_delivery.rs_1784415215",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/ws/sensory_delivery.rs;capsules/spectral-bridge/src/ws/sensory_port.rs",
+      "note": "Receipt outcomes remain explicit and never establish spectral causation."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1784414849",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/codec/projection.rs;capsules/spectral-bridge/src/codec/tests.rs",
+      "note": "48D ownership, fixed-basis health, and f32/f64 precision evidence."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1784414098",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/ws/telemetry_port.rs;capsules/spectral-bridge/src/ws/evidence.rs;capsules/spectral-bridge/src/ws/tests.rs",
+      "note": "Connection and freshness are distinct; current subscriber has no payload-idle reconnect trigger."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1784413667",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/codec/feedback.rs;capsules/spectral-bridge/src/codec/structure.rs;capsules/spectral-bridge/src/codec/tests.rs",
+      "note": "C1 smoothstep onset, retained warmth ownership, and leakage/no-pop regressions."
+    },
+    {
+      "introspection_id": "introspection_proposal_12d_glimpse_1784413159",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/codec/interpretation.rs;capsules/spectral-bridge/src/codec/evidence_types.rs;capsules/spectral-bridge/src/codec/tests.rs",
+      "note": "Persisted deterministic 12D companion remains additive to canonical 48D transport."
+    },
+    {
+      "introspection_id": "introspection_proposal_distance_contact_control_1784412525",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/correspondence_v1.rs;capsules/spectral-bridge/src/autonomous/runtime.rs;capsules/spectral-bridge/src/authority.rs",
+      "note": "Recess, receptive correspondence, and right-to-ignore preserve non-instrumental contact."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1784412040",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/correspondence_v1.rs;scripts/correspondence_handshake_audit.py;docs/steward-notes/codex_1784630462_run18_reads/correspondence_handshake_observation.json",
+      "note": "Exact thread lineage and shared anchors do not imply acknowledgement; current public evidence remains read-unreplied."
+    },
+    {
+      "introspection_id": "introspection_minime_autonomous_agent_1784410623",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "../minime/minime_autonomy/runtime.py;../minime/tests/test_autonomous_agent_low_fill_guard.py;../minime/scripts/recess_divergence_buffer_review.py",
+      "note": "Recess, bounded budgets, and read-only divergence review verified by 268 focused Python checks."
+    },
+    {
+      "introspection_id": "introspection_minime_main_excerpt_1784410368",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "../minime/minime_autonomy/runtime.py;../minime/minime/src/stable_core.rs",
+      "note": "Autonomy orchestration and read-only pressure/porosity review remain distinct from live regulation."
+    },
+    {
+      "introspection_id": "introspection_minime_esn_1784410132",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "../minime/minime/src/esn.rs",
+      "note": "Smooth dynamic-noise candidate and tests exist but the helper remains outside the active ESN step."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1784409633",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "../minime/minime/src/regulator/core/pi.rs;../minime/minime/src/regulator/core/pressure_source.rs;../minime/minime/src/stable_core.rs",
+      "note": "PI leak and anti-windup are active; dynamic viscosity remains read-only review evidence."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1784409167",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/fallback_contracts.rs;capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs;capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Exact marker cleanup preserves nonempty semantic remainder and keeps output budget distinct from felt pressure."
+    },
+    {
+      "introspection_id": "introspection_astrid_types_1784408815",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/types/schema/telemetry.rs;capsules/spectral-bridge/src/types/schema/bridge_status.rs;capsules/spectral-bridge/src/types/schema/tests.rs",
+      "note": "Compatibility labels coexist with numeric cadence, entropy, coherence, and delta evidence."
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Delivery identity must be deterministic and independent of sensory entropy.",
+      "disposition": "Verify delivery IDs bind sender process, deployment, sequence, and canonical payload hash.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A receipt from the wrong server process or deployment must fail closed.",
+      "disposition": "Verify strict receiver process and deployment identity checks preserve pending state on mismatch.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Sequence and payload identity must remain distinguishable across a bounded deduplication window.",
+      "disposition": "Verify the 4,096-ID collision and duplicate-routing regressions.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Receipt-complete transport should preserve payload consistency across a sustained sample.",
+      "disposition": "Verify the twenty same-connection receipt fixture reports zero payload or routing mismatches.",
+      "classification": "verified_existing"
+    }
+  ]
+}

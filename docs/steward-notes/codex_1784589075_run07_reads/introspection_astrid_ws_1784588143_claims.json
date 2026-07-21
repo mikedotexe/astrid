@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Connection identity and first-valid timing are necessary but do not describe the initial spectral configuration.",
+      "disposition": "verify existing connection, first-valid, reconnect, disconnect, and cadence evidence",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Each telemetry connection should retain the spectral entropy of its first schema-valid packet.",
+      "disposition": "implement an additive first-valid spectral entropy snapshot with legacy-compatible defaults and reconnect reset",
+      "classification": "implemented"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Backoff and shared-state integration can mask timing degradation even while the connection remains active.",
+      "disposition": "verify separate prewrite, write-lock-wait, write-lock-hold, cadence, and first-valid diagnostics",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "The current connection should be observed without treating packet timing as spectral quality.",
+      "disposition": "observe connection 1 with zero reconnects or disconnects, current telemetry, and a late timing-ambiguous packet",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "A state-actor decomposition should be justified by measured contention rather than inferred from felt density alone.",
+      "disposition": "route a bounded integration-timing observation before any cohesive lock-ownership refactor",
+      "classification": "sandbox_routed"
+    }
+  ]
+}

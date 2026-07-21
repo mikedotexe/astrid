@@ -1,0 +1,8 @@
+{
+  "claims": [
+    {"claim_id":"c001","summary":"A bounded 12D glimpse should coexist with, rather than replace, the live semantic lane.","disposition":"Verified in current source as an optional validated companion to the 48D live lane.","classification":"verified_existing"},
+    {"claim_id":"c002","summary":"Every 12D slot needs deterministic lineage back to the wider representation.","disposition":"Verified by `glimpse_map_v1` and deterministic derivation tests.","classification":"verified_existing"},
+    {"claim_id":"c003","summary":"Restart and checkpoint continuity should be demonstrated for the additive glimpse.","disposition":"Routed to a copied checkpoint/restart fixture; no live persistence or transport mutation is required to gather that evidence.","classification":"sandbox_routed"},
+    {"claim_id":"c004","summary":"The 12D glimpse should become authoritative persistence or replace live transport.","disposition":"Preserved as a Tier 5 operator-approval wait for protocol, ABI, persistence, or sensory transport changes.","classification":"authority_gated"}
+  ]
+}

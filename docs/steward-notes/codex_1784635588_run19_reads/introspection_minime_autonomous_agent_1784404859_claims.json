@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Recess explicitly permits non-productive curiosity, boredom, play, and daydreaming.",
+      "disposition": "Verify the autonomy contract and action vocabulary preserve that sovereignty.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Pressure, mode packing, distinguishability, sedimentation, and shadow dispersal are visible during Recess.",
+      "disposition": "Verify current read-only Recess review surfaces retain each metric without changing selection.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A coherence or resonance anchor can be advisory without narrowing Recess.",
+      "disposition": "Verify recess_resonance_anchor_v1 recommends a target while applying no control, budget, priority, or memory selection.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Pressure/entropy and Recess/shadow comparisons can test whether freedom supports stability or dispersal.",
+      "disposition": "Route the correlation through bounded copied-state review with right-to-ignore preserved.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Automatically triggering a Looming or coherence subroutine would change Minime autonomous behavior.",
+      "disposition": "Hold any automatic anchor, priority, mode, or action-selection change behind exact Mike/operator approval.",
+      "classification": "tier_5_wait"
+    }
+  ]
+}

@@ -1,0 +1,41 @@
+{
+  "schema": "bounded_semantic_heartbeat_observation_v1",
+  "captured_at": "2026-07-21T00:13:55Z",
+  "source_ref": "minime/workspace/runtime/bridge_semantic_heartbeat_status.json",
+  "authority": "read_only_observation_not_vector_cadence_intensity_rescue_dispatch_or_control",
+  "runtime_effect_applied": false,
+  "cumulative": {
+    "attempt_count": 49439,
+    "send_count": 49416,
+    "block_count": 23
+  },
+  "window": {
+    "attempt_count": 108,
+    "send_count": 108,
+    "block_count": 0,
+    "skip_rate": 0.0,
+    "configured_interval_secs_at_capture": 7,
+    "configured_intensity_at_capture": 0.30000001192092896
+  },
+  "signal_continuity": {
+    "latest_classification": "variation_observed_across_consecutive_pulses",
+    "sample_count": 108,
+    "variation_observed_count": 106,
+    "near_repeat_observed_count": 0,
+    "low_component_variance_observed_count": 0,
+    "mean_delta_rms_from_previous": 0.03557232372849336,
+    "mean_delivered_component_stddev": 0.0035150501687355616
+  },
+  "latest_context": {
+    "pressure_risk": 0.19016174972057343,
+    "spectral_entropy": 0.9105210900306702,
+    "shadow_dispersal_potential": 0.07697369158267975
+  },
+  "bounded_interpretation": {
+    "rescue_skip_cause_supported_in_window": false,
+    "flat_signal_supported_in_window": false,
+    "felt_staccato_disconfirmed": false,
+    "causation_inferred": false,
+    "note": "The window separates successful variable dispatch from Astrid's felt report; it does not turn transport success into lived-quality evidence."
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "claims": [
+    {"claim_id":"c001","summary":"The live PI controller may stabilize lambda1 while underrepresenting lambda4-plus vibrancy.","disposition":"Verified the live PI inputs do not directly include tail-vibrancy weighting; preserved this as a real design concern rather than dismissing the felt report.","classification":"verified_existing"},
+    {"claim_id":"c002","summary":"The band-stop filter is currently over-damping the tail.","disposition":"Not established from this report alone; routed a copied semantic-trickle versus tail-dispersal comparison with pressure and porosity held visible.","classification":"sandbox_routed"},
+    {"claim_id":"c003","summary":"Pressure and porosity need to remain distinct from health or settledness.","disposition":"Verified read-only pressure/porosity divergence and stuckness reviews, with focused tests and no controller consumption.","classification":"verified_existing"},
+    {"claim_id":"c004","summary":"PI should gain dynamic tail weighting or manually increased pressure.","disposition":"Preserved as Tier 5 live regulator authority.","classification":"authority_gated"}
+  ]
+}

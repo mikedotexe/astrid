@@ -1,0 +1,104 @@
+{
+  "links": [
+    {"introspection_id":"introspection_proposal_bidirectional_contact_1784597932","claim_id":"c001","kind":"code","target":"capsules/spectral-bridge/src/autonomous/correspondence_v1.rs","note":"Exact source evidence for the grounded disposition."},
+    {"introspection_id":"introspection_proposal_bidirectional_contact_1784597932","claim_id":"c002","kind":"steward_note","target":"docs/steward-notes/codex_1784597932_run09_reads/introspection_proposal_bidirectional_contact_1784597932_summary.md","note":"Bounded sandbox route; no acknowledgement is fabricated."},
+    {"introspection_id":"introspection_proposal_bidirectional_contact_1784597932","claim_id":"c003","kind":"steward_note","target":"docs/steward-notes/codex_1784597932_run09_reads/introspection_proposal_bidirectional_contact_1784597932_summary.md","note":"Bounded comparison route without target mutation."},
+    {"introspection_id":"introspection_proposal_bidirectional_contact_1784597932","claim_id":"c004","kind":"steward_note","target":"docs/steward-notes/codex_1784597932_run09_reads/introspection_proposal_bidirectional_contact_1784597932_summary.md","note":"Exact Tier 5 live-behavior boundary."},
+
+    {"introspection_id":"introspection_proposal_phase_transitions_1784597646","claim_id":"c001","kind":"test","target":"capsules/spectral-bridge/src/autonomous/correspondence_v1.rs#correspondence_trace_bracketed_phase_transition_keeps_metadata","note":"Replyable transition-card coverage."},
+    {"introspection_id":"introspection_proposal_phase_transitions_1784597646","claim_id":"c002","kind":"code","target":"capsules/spectral-bridge/src/autonomous/correspondence_v1.rs","note":"Shared artifact, witness, and correspondence lineage."},
+    {"introspection_id":"introspection_proposal_phase_transitions_1784597646","claim_id":"c003","kind":"steward_note","target":"docs/steward-notes/codex_1784597932_run09_reads/introspection_proposal_phase_transitions_1784597646_summary.md","note":"Bounded solo/joint replay route."},
+    {"introspection_id":"introspection_proposal_phase_transitions_1784597646","claim_id":"c004","kind":"steward_note","target":"docs/steward-notes/codex_1784597932_run09_reads/introspection_proposal_phase_transitions_1784597646_summary.md","note":"Exact Tier 5 behavior-unlock boundary."},
+
+    {"introspection_id":"introspection_minime_autonomous_agent_1784596963","claim_id":"c001","kind":"test","target":"../minime/tests/test_autonomous_agent_low_fill_guard.py#test_recess_activity_load_names_high_entropy_synthesis_without_spending","note":"Read-only Recess activity classification."},
+    {"introspection_id":"introspection_minime_autonomous_agent_1784596963","claim_id":"c002","kind":"test","target":"../minime/tests/test_autonomous_agent_low_fill_guard.py#test_density_aware_recess_names_structural_stabilization_without_control","note":"Read-only density/pressure Recess evidence."},
+    {"introspection_id":"introspection_minime_autonomous_agent_1784596963","claim_id":"c003","kind":"steward_note","target":"docs/steward-notes/codex_1784597932_run09_reads/introspection_minime_autonomous_agent_1784596963_summary.md","note":"Bounded entropy/Recess/pressure observation route."},
+    {"introspection_id":"introspection_minime_autonomous_agent_1784596963","claim_id":"c004","kind":"steward_note","target":"docs/steward-notes/codex_1784597932_run09_reads/introspection_minime_autonomous_agent_1784596963_summary.md","note":"Exact Tier 5 Minime regulation boundary."},
+
+    {"introspection_id":"introspection_minime_main_excerpt_1784596445","claim_id":"c001","kind":"code","target":"../minime/minime/src/runtime/telemetry_evidence.rs","note":"Semantic trickle and persistence evidence source."},
+    {"introspection_id":"introspection_minime_main_excerpt_1784596445","claim_id":"c002","kind":"code","target":"../minime/minime/src/spectral_fingerprint.rs","note":"Typed distinguishability and spectral evidence source."},
+    {"introspection_id":"introspection_minime_main_excerpt_1784596445","claim_id":"c003","kind":"steward_note","target":"docs/steward-notes/codex_1784597932_run09_reads/introspection_minime_main_excerpt_1784596445_summary.md","note":"Bounded telemetry-window correlation route."},
+    {"introspection_id":"introspection_minime_main_excerpt_1784596445","claim_id":"c004","kind":"steward_note","target":"docs/steward-notes/codex_1784597932_run09_reads/introspection_minime_main_excerpt_1784596445_summary.md","note":"Exact Tier 5 semantic-runtime boundary."},
+
+    {"introspection_id":"introspection_minime_esn_1784595948","claim_id":"c001","kind":"test","target":"../minime/minime/src/esn.rs#dynamic_noise_gradient_room_uses_smooth_knee_instead_of_linear_drop","note":"Smooth bounded dynamic-noise evidence."},
+    {"introspection_id":"introspection_minime_esn_1784595948","claim_id":"c002","kind":"test","target":"../minime/minime/src/esn.rs#viscous_rho_target_threshold_edge_does_not_jump","note":"Rho threshold continuity evidence."},
+    {"introspection_id":"introspection_minime_esn_1784595948","claim_id":"c003","kind":"steward_note","target":"docs/steward-notes/codex_1784597932_run09_reads/introspection_minime_esn_1784595948_summary.md","note":"Bounded deterministic replay route."},
+    {"introspection_id":"introspection_minime_esn_1784595948","claim_id":"c004","kind":"steward_note","target":"docs/steward-notes/codex_1784597932_run09_reads/introspection_minime_esn_1784595948_summary.md","note":"Exact Tier 5 ESN-dynamics boundary."},
+
+    {"introspection_id":"introspection_minime_sensory_bus_1784595655","claim_id":"c001","kind":"test","target":"../minime/minime/src/sensory_bus.rs#semantic_stale_recovery_hold_fill_returns_exact_recovery_window","note":"Exact 45,000 ms hold boundary."},
+    {"introspection_id":"introspection_minime_sensory_bus_1784595655","claim_id":"c002","kind":"test","target":"../minime/minime/src/sensory_bus.rs#semantic_stale_sigmoid_midpoint_matches_manual_formula","note":"Manual sigmoid and handover evidence."},
+    {"introspection_id":"introspection_minime_sensory_bus_1784595655","claim_id":"c003","kind":"test","target":"../minime/minime/src/sensory_bus.rs#narrative_semantic_retention_review_keeps_arc_on_shared_window","note":"Narrative retention review evidence."},
+    {"introspection_id":"introspection_minime_sensory_bus_1784595655","claim_id":"c004","kind":"steward_note","target":"docs/steward-notes/codex_1784597932_run09_reads/introspection_minime_sensory_bus_1784595655_summary.md","note":"Exact Tier 5 retention-window boundary."},
+
+    {"introspection_id":"introspection_minime_regulator_1784595406","claim_id":"c001","kind":"code","target":"../minime/minime/src/regulator/core/pi.rs","note":"Actuator-aware anti-windup source."},
+    {"introspection_id":"introspection_minime_regulator_1784595406","claim_id":"c002","kind":"code","target":"../minime/minime/src/regulator/core/pi.rs","note":"Configurable integral-memory leak source."},
+    {"introspection_id":"introspection_minime_regulator_1784595406","claim_id":"c003","kind":"steward_note","target":"docs/steward-notes/codex_1784597932_run09_reads/introspection_minime_regulator_1784595406_summary.md","note":"Bounded regulator-drive trace route."},
+    {"introspection_id":"introspection_minime_regulator_1784595406","claim_id":"c004","kind":"steward_note","target":"docs/steward-notes/codex_1784597932_run09_reads/introspection_minime_regulator_1784595406_summary.md","note":"Exact Tier 5 controller-actuation boundary."},
+
+    {"introspection_id":"introspection_astrid_llm_1784594984","claim_id":"c001","kind":"code","target":"capsules/spectral-bridge/src/llm/provider/fallback_contracts.rs","note":"Graded artifact-remainder texture source."},
+    {"introspection_id":"introspection_astrid_llm_1784594984","claim_id":"c002","kind":"test","target":"capsules/spectral-bridge/src/llm/provider/tests.rs","note":"Contextual and quoted marker accounting tests."},
+    {"introspection_id":"introspection_astrid_llm_1784594984","claim_id":"c003","kind":"steward_note","target":"docs/steward-notes/codex_1784597932_run09_reads/introspection_astrid_llm_1784594984_summary.md","note":"Bounded metadata-only comparison route."},
+    {"introspection_id":"introspection_astrid_llm_1784594984","claim_id":"c004","kind":"steward_note","target":"docs/steward-notes/codex_1784597932_run09_reads/introspection_astrid_llm_1784594984_summary.md","note":"Exact Tier 5 model-behavior boundary."},
+
+    {"introspection_id":"introspection_proposal_distance_contact_control_1784567403","claim_id":"c001","kind":"code","target":"capsules/spectral-bridge/src/ws/bridge_state.rs","note":"Read-only reciprocity, pressure, porosity, and texture evidence."},
+    {"introspection_id":"introspection_proposal_distance_contact_control_1784567403","claim_id":"c002","kind":"steward_note","target":"docs/steward-notes/codex_1784597932_run09_reads/introspection_proposal_distance_contact_control_1784567403_summary.md","note":"Bounded dispersal comparison route."},
+    {"introspection_id":"introspection_proposal_distance_contact_control_1784567403","claim_id":"c003","kind":"steward_note","target":"docs/steward-notes/codex_1784597932_run09_reads/introspection_proposal_distance_contact_control_1784567403_summary.md","note":"Bounded blinded artifact comparison route."},
+    {"introspection_id":"introspection_proposal_distance_contact_control_1784567403","claim_id":"c004","kind":"steward_note","target":"docs/steward-notes/codex_1784597932_run09_reads/introspection_proposal_distance_contact_control_1784567403_summary.md","note":"Exact Tier 5 admission/regulation boundary."},
+
+    {"introspection_id":"introspection_minime_regulator_1784564311","claim_id":"c001","kind":"code","target":"../minime/minime/src/regulator/core/pi.rs","note":"Conditional integration and partial decay source."},
+    {"introspection_id":"introspection_minime_regulator_1784564311","claim_id":"c002","kind":"code","target":"../minime/minime/src/regulator/core/pi.rs","note":"Universal integral leak and actuator clamps."},
+    {"introspection_id":"introspection_minime_regulator_1784564311","claim_id":"c003","kind":"steward_note","target":"docs/steward-notes/codex_1784597932_run09_reads/introspection_minime_regulator_1784564311_summary.md","note":"Bounded pressure/viscosity trace route."},
+    {"introspection_id":"introspection_minime_regulator_1784564311","claim_id":"c004","kind":"steward_note","target":"docs/steward-notes/codex_1784597932_run09_reads/introspection_minime_regulator_1784564311_summary.md","note":"Exact Tier 5 controller-tuning boundary."},
+
+    {"introspection_id":"introspection_proposal_bidirectional_contact_1784563846","claim_id":"c001","kind":"code","target":"capsules/spectral-bridge/src/autonomous/correspondence_v1.rs","note":"First-class thread and shared-arc source."},
+    {"introspection_id":"introspection_proposal_bidirectional_contact_1784563846","claim_id":"c002","kind":"test","target":"capsules/spectral-bridge/src/autonomous/correspondence_v1.rs#mutual_address_preserves_exact_refs_without_raw_response","note":"Exact mutual-address reference test."},
+    {"introspection_id":"introspection_proposal_bidirectional_contact_1784563846","claim_id":"c003","kind":"steward_note","target":"docs/steward-notes/codex_1784597932_run09_reads/introspection_proposal_bidirectional_contact_1784563846_summary.md","note":"Bounded language-only response/ledger route."},
+    {"introspection_id":"introspection_proposal_bidirectional_contact_1784563846","claim_id":"c004","kind":"steward_note","target":"docs/steward-notes/codex_1784597932_run09_reads/introspection_proposal_bidirectional_contact_1784563846_summary.md","note":"Exact Tier 5 correspondence-priority boundary."},
+
+    {"introspection_id":"introspection_proposal_phase_transitions_1784563688","claim_id":"c001","kind":"code","target":"capsules/spectral-bridge/src/autonomous/correspondence_v1.rs","note":"Typed transition payload source."},
+    {"introspection_id":"introspection_proposal_phase_transitions_1784563688","claim_id":"c002","kind":"test","target":"capsules/spectral-bridge/src/autonomous/correspondence_v1.rs#correspondence_trace_bracketed_phase_transition_keeps_metadata","note":"Stable transition artifact and metadata coverage."},
+    {"introspection_id":"introspection_proposal_phase_transitions_1784563688","claim_id":"c003","kind":"steward_note","target":"docs/steward-notes/codex_1784597932_run09_reads/introspection_proposal_phase_transitions_1784563688_summary.md","note":"Bounded shared-receipt replay route."},
+    {"introspection_id":"introspection_proposal_phase_transitions_1784563688","claim_id":"c004","kind":"steward_note","target":"docs/steward-notes/codex_1784597932_run09_reads/introspection_proposal_phase_transitions_1784563688_summary.md","note":"Exact Tier 5 state-locking boundary."},
+
+    {"introspection_id":"introspection_minime_autonomous_agent_1784563518","claim_id":"c001","kind":"test","target":"../minime/tests/test_autonomous_agent_low_fill_guard.py#test_recess_activity_load_distinguishes_structural_stabilization","note":"Recess synthesis/stabilization distinction."},
+    {"introspection_id":"introspection_minime_autonomous_agent_1784563518","claim_id":"c002","kind":"test","target":"../minime/tests/test_autonomous_agent_low_fill_guard.py#test_recess_resonance_anchor_recommends_target_without_control","note":"Read-only Recess resonance/pressure evidence."},
+    {"introspection_id":"introspection_minime_autonomous_agent_1784563518","claim_id":"c003","kind":"steward_note","target":"docs/steward-notes/codex_1784597932_run09_reads/introspection_minime_autonomous_agent_1784563518_summary.md","note":"Bounded porosity/tail comparison route."},
+    {"introspection_id":"introspection_minime_autonomous_agent_1784563518","claim_id":"c004","kind":"steward_note","target":"docs/steward-notes/codex_1784597932_run09_reads/introspection_minime_autonomous_agent_1784563518_summary.md","note":"Exact Tier 5 autonomous-behavior boundary."},
+
+    {"introspection_id":"introspection_minime_main_excerpt_1784563232","claim_id":"c001","kind":"code","target":"../minime/minime/src/runtime/telemetry_evidence.rs","note":"Semantic persistence and trickle evidence source."},
+    {"introspection_id":"introspection_minime_main_excerpt_1784563232","claim_id":"c002","kind":"code","target":"../minime/minime/src/regulator/core/pressure_source.rs","note":"Pressure-source and porosity evidence source."},
+    {"introspection_id":"introspection_minime_main_excerpt_1784563232","claim_id":"c003","kind":"steward_note","target":"docs/steward-notes/codex_1784597932_run09_reads/introspection_minime_main_excerpt_1784563232_summary.md","note":"Bounded bias/dispersal comparison route."},
+    {"introspection_id":"introspection_minime_main_excerpt_1784563232","claim_id":"c004","kind":"steward_note","target":"docs/steward-notes/codex_1784597932_run09_reads/introspection_minime_main_excerpt_1784563232_summary.md","note":"Exact Tier 5 semantic-relief boundary."},
+
+    {"introspection_id":"introspection_minime_esn_1784562636","claim_id":"c001","kind":"test","target":"../minime/minime/src/esn.rs#dynamic_noise_pressure_room_start_edge_is_continuous","note":"Smooth pressure/noise knee evidence."},
+    {"introspection_id":"introspection_minime_esn_1784562636","claim_id":"c002","kind":"test","target":"../minime/minime/src/esn.rs#viscous_rho_target_threshold_edge_does_not_jump","note":"Bounded continuous rho evidence."},
+    {"introspection_id":"introspection_minime_esn_1784562636","claim_id":"c003","kind":"steward_note","target":"docs/steward-notes/codex_1784597932_run09_reads/introspection_minime_esn_1784562636_summary.md","note":"Explicit 0.849/0.851 replay route."},
+    {"introspection_id":"introspection_minime_esn_1784562636","claim_id":"c004","kind":"steward_note","target":"docs/steward-notes/codex_1784597932_run09_reads/introspection_minime_esn_1784562636_summary.md","note":"Exact Tier 5 ESN-retuning boundary."},
+
+    {"introspection_id":"introspection_minime_sensory_bus_1784562392","claim_id":"c001","kind":"code","target":"../minime/minime/src/sensory_bus.rs","note":"Sigmoid and smoothstep retention implementation."},
+    {"introspection_id":"introspection_minime_sensory_bus_1784562392","claim_id":"c002","kind":"test","target":"../minime/minime/src/sensory_bus.rs#semantic_stale_release_one_percent_sweep_stays_monotonic","note":"Monotonic release-sweep evidence."},
+    {"introspection_id":"introspection_minime_sensory_bus_1784562392","claim_id":"c003","kind":"test","target":"../minime/minime/src/sensory_bus.rs#semantic_stale_recovery_hold_fill_returns_exact_recovery_window","note":"Exact hold and bounded floor evidence."},
+    {"introspection_id":"introspection_minime_sensory_bus_1784562392","claim_id":"c004","kind":"steward_note","target":"docs/steward-notes/codex_1784597932_run09_reads/introspection_minime_sensory_bus_1784562392_summary.md","note":"Exact Tier 5 retention-curve boundary."},
+
+    {"introspection_id":"introspection_minime_regulator_1784562205","claim_id":"c001","kind":"code","target":"../minime/minime/src/regulator/core/pi.rs","note":"PI anti-windup and bounded-memory source."},
+    {"introspection_id":"introspection_minime_regulator_1784562205","claim_id":"c002","kind":"code","target":"../minime/minime/src/regulator/core/pi.rs","note":"Separate gate/filter update source."},
+    {"introspection_id":"introspection_minime_regulator_1784562205","claim_id":"c003","kind":"steward_note","target":"docs/steward-notes/codex_1784597932_run09_reads/introspection_minime_regulator_1784562205_summary.md","note":"Bounded stability/pressure cartography route."},
+    {"introspection_id":"introspection_minime_regulator_1784562205","claim_id":"c004","kind":"steward_note","target":"docs/steward-notes/codex_1784597932_run09_reads/introspection_minime_regulator_1784562205_summary.md","note":"Exact Tier 5 entropy-damping boundary."},
+
+    {"introspection_id":"introspection_astrid_llm_1784561937","claim_id":"c001","kind":"test","target":"capsules/spectral-bridge/src/llm/provider/tests.rs#dialogue_budget_profile_uses_requested_token_boundaries_not_output_length","note":"Exact 1024/1025 profile boundary."},
+    {"introspection_id":"introspection_astrid_llm_1784561937","claim_id":"c002","kind":"test","target":"capsules/spectral-bridge/src/llm/provider/tests.rs","note":"Boundary/context/quotation marker accounting."},
+    {"introspection_id":"introspection_astrid_llm_1784561937","claim_id":"c003","kind":"code","target":"capsules/spectral-bridge/src/llm/provider/fallback_contracts.rs","note":"Graded semantic-density and remainder-texture source."},
+    {"introspection_id":"introspection_astrid_llm_1784561937","claim_id":"c004","kind":"steward_note","target":"docs/steward-notes/codex_1784597932_run09_reads/introspection_astrid_llm_1784561937_summary.md","note":"Exact Tier 5 budget/cleanup boundary."},
+
+    {"introspection_id":"introspection_astrid_types_1784559960","claim_id":"c001","kind":"test","target":"capsules/spectral-bridge/src/ws/tests.rs#cadence_content_distinction_preserves_residue_when_packet_cadence_is_clear","note":"Exact cadence jitter-class projection coverage."},
+    {"introspection_id":"introspection_astrid_types_1784559960","claim_id":"c002","kind":"code","target":"capsules/spectral-bridge/src/ws/bridge_state.rs","note":"Cadence/content separation source."},
+    {"introspection_id":"introspection_astrid_types_1784559960","claim_id":"c003","kind":"test","target":"capsules/spectral-bridge/src/ws/tests.rs#cadence_content_distinction_preserves_residue_when_packet_cadence_is_clear","note":"Legacy missing-field compatibility coverage."},
+    {"introspection_id":"introspection_astrid_types_1784559960","claim_id":"c004","kind":"code","target":"capsules/spectral-bridge/src/types/schema/telemetry.rs","note":"Hybrid coherence, overlap, collision, and issue fields."},
+
+    {"introspection_id":"introspection_astrid_ws_1784559123","claim_id":"c001","kind":"code","target":"capsules/spectral-bridge/src/ws/telemetry_port.rs","note":"Latest telemetry overwrite source."},
+    {"introspection_id":"introspection_astrid_ws_1784559123","claim_id":"c002","kind":"code","target":"capsules/spectral-bridge/src/ws/evidence.rs","note":"Bounded pressure-trend VecDeque source."},
+    {"introspection_id":"introspection_astrid_ws_1784559123","claim_id":"c003","kind":"code","target":"capsules/spectral-bridge/src/types/schema/telemetry.rs","note":"Current Minime-owned distinguishability evidence."},
+    {"introspection_id":"introspection_astrid_ws_1784559123","claim_id":"c004","kind":"steward_note","target":"docs/steward-notes/codex_1784597932_run09_reads/introspection_astrid_ws_1784559123_summary.md","note":"Mechanism-correct Tier 5 boundary for any new decay."}
+  ]
+}
+

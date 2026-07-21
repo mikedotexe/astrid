@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "First-valid spectral entropy is a connection-origin snapshot and must not stand in for current lived entropy.",
+      "disposition": "Verified that the heartbeat field is explicitly first-valid connection evidence and is not overwritten as a current-state value.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Current entropy and its motion need a separate typed surface.",
+      "disposition": "Verified `PressureTrendV1` and `PressureTrendSmoothingV1` carry latest entropy, bounded recent samples, pressure and texture deltas, and fast/slow edges.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "High clarity can coexist with high entropy, so clarity must not be interpreted as low complexity.",
+      "disposition": "Verified current evidence keeps cadence clarity, schema validity, entropy, density, and viscosity in separate fields rather than collapsing them into one score.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "A rolling initial-versus-current entropy and trend diagnostic is needed.",
+      "disposition": "Verified the existing first-valid snapshot plus rolling trend/smoothing pair answers this request read-only and makes no causal or control claim.",
+      "classification": "verified_existing"
+    }
+  ]
+}

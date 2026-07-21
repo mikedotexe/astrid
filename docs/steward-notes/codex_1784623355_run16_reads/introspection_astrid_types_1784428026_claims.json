@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Heartbeat cadence and spectral coherence are distinct dimensions of contact.",
+      "disposition": "Verified separate jitter class, cadence clarity, first-valid evidence, fingerprint integrity, coherence, structural density, and mode-packing fields.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A string-valued connection_perception_state is too discrete to carry the full fluidity of contact.",
+      "disposition": "Verified that the string is a compatibility projection beside numeric and typed evidence rather than the sole representation; Astrid's concern about rendering remains open.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Cadence under high density and coherence drift should be observed together.",
+      "disposition": "Routed as a bounded paired observation with separate timing and content axes and no contact-quality inference from either alone.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "The compatibility string should become an enum or weighted fluidity index used by live status interpretation.",
+      "disposition": "Preserved as Tier 5 because changing the canonical live-consumed type or its behavioral interpretation requires protocol and deployment approval.",
+      "classification": "authority_gated"
+    }
+  ]
+}

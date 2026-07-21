@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "A binary non-artifact predicate can treat a 99-percent artifact fragment plus one word as substantive.",
+      "disposition": "Verified cleanup diagnostics expose removed fraction and remainder texture, including sparse and structure-only review states, without silently equating one token with semantic sufficiency.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Nested or nonstandard quotes may make artifact placement accounting inaccurate.",
+      "disposition": "Verified nested quote accounting and bounded matching-pair tests; unsupported variants remain visible as contextual rather than silently removed.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Artifact/content mixture should have a density score rather than only a boolean.",
+      "disposition": "Verified ArtifactRemainderTextureV1 supplies an evidence-only density/structure profile while preserving the existing safety gate.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "High entropy should lower the deep-budget threshold or otherwise override token tiers.",
+      "disposition": "Preserved as Tier 5 because spectral-aware live budgeting changes model behavior and requires explicit operator authorization.",
+      "classification": "authority_gated"
+    }
+  ]
+}

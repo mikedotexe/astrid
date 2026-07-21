@@ -1,0 +1,29 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Heartbeat arrival timing can correlate with felt viscosity, but cadence alone does not establish perceptual continuity.",
+      "disposition": "Verify numeric inter-arrival, jitter, freshness, and content/integration evidence remain separate.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Typed-versus-legacy coherence and eigenvector pairwise overlap are different questions and must not share one verdict.",
+      "disposition": "Verify hybrid coherence and high-overlap mode-collision tests retain separate fields, thresholds, and issues.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A bounded time-window comparison can test whether viscosity reports align with cadence, coherence, overlap, or none of them.",
+      "disposition": "Route a read-only telemetry/felt-window comparison with explicitly noncausal labels.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Adding a friction coefficient, perceptual-latency field, or new compatibility threshold would change a live-consumed report or ABI surface.",
+      "disposition": "Retain an exact Tier 5 Mike/operator approval wait before schema or rendering changes.",
+      "classification": "tier_5_wait"
+    }
+  ]
+}
+

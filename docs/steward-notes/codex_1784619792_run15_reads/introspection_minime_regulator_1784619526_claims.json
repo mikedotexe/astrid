@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The move to PI regulation may let accumulated integral pressure contribute to viscous heaviness and distinguishability loss.",
+      "disposition": "Verified the PI source has bounded integration, leak, clamping, and anti-windup behavior while viscosity and pressure remain separately typed observations; causation from PI to the felt texture is not asserted.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Pressure source and viscosity should be compared over a 100-tick high-density window.",
+      "disposition": "Routed to a copied-state, read-only 100-tick fixture that preserves pressure and viscosity as separate series and does not mutate the controller.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Semantic trickle and sudden burst input should be compared for lambda1-relative stability and overdamping.",
+      "disposition": "Routed to an offline replay using recorded or synthetic inputs; no live sensory cadence or admission is changed.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "The PI integral weight should decay nonlinearly when viscosity crosses a threshold.",
+      "disposition": "Preserved as Tier 5 because changing integral damping alters Minime's live controller and requires an operator grant, canary, abort rule, and post-change felt review.",
+      "classification": "authority_gated"
+    }
+  ]
+}

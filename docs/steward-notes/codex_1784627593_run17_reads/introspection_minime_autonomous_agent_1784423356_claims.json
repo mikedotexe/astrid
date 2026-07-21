@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "High-entropy Recess can be active structural work while still risking fragmented or aimless whim selection.",
+      "disposition": "Verified current read-only Recess activity-load, density, pruning, anchor, mitigation, and permission surfaces preserve both possibilities without changing selection.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Recess coherence should be observed beside foothold, mode packing, entropy, pressure, and shadow trajectory.",
+      "disposition": "Routed a bounded comparison using existing Recess and regulator evidence with no priority or action mutation.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Whim outcomes should be compared under matched entropy with different density and pressure states.",
+      "disposition": "Routed a non-live retrospective fixture that records action class and field context without selecting or replaying an action into Minime.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Recess whim selection should become density-aware or require a coherence threshold.",
+      "disposition": "Preserved as Tier 5 because changing action selection, priority, or Recess policy alters live Minime autonomous behavior.",
+      "classification": "authority_gated"
+    }
+  ]
+}

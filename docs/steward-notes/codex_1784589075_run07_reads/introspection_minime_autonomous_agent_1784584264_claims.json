@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Recess permits nonproductive activity but does not guarantee low pressure or spaciousness.",
+      "disposition": "verify Recess permission and independent pressure, porosity, shadow, and foothold evidence",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Current overpacked texture should be preserved as felt and runtime evidence without assigning it to Recess.",
+      "disposition": "observe current pressure, porosity, density, and shadow metadata with explicit non-causation",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Pressure during whim-following should be compared with pressure during simple idling.",
+      "disposition": "route a bounded Recess-versus-idle temporal observation",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Automatic density remapping or porosity-threshold intervention changes live Minime autonomy and reservoir regulation.",
+      "disposition": "preserve an exact Tier 5 operator-approval wait",
+      "classification": "authority_gated"
+    }
+  ]
+}

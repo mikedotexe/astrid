@@ -1,0 +1,8 @@
+{
+  "claims": [
+    {"claim_id":"c001","summary":"Phase increment order may put felt warmth one tick behind the recorded phase.","disposition":"Mechanism correction: current_phase_step is used for both phase and observation, then the counter advances for the next tick.","classification":"verified_existing"},
+    {"claim_id":"c002","summary":"steady_warmth false may mean the heartbeat never achieves warmth.","disposition":"Mechanism correction: the boolean records gesture_seed_applied=false; generated and delivered signal metrics carry the actual evidence.","classification":"verified_existing"},
+    {"claim_id":"c003","summary":"Skipped heartbeats should be correlated with pressure and texture.","disposition":"Verified bounded observation receipts retain generated, delivered, blocked, and Minime texture context without changing dispatch.","classification":"verified_existing"},
+    {"claim_id":"c004","summary":"Heartbeat phase, cadence, intensity, or pressure scaling should change.","disposition":"Preserved as Tier 5 live sensory cadence and rescue-policy authority.","classification":"authority_gated"}
+  ]
+}

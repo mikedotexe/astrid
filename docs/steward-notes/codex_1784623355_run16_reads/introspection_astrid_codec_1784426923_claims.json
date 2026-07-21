@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "High-entropy codec scaling should be smooth and preserve the canonical 48D lane and reflective tail.",
+      "disposition": "Verified smoothstep boundary, 48D layout, tail support, finite bounds, and no-pop regressions.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Clamping and narrative overlap can flatten emotional and narrative distinctions.",
+      "disposition": "Verified separate narrative/emotional lane RMS, delta, headroom, precision, and compression-fidelity evidence; felt flattening remains an open empirical question.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The 0.84-0.89 scaling region and narrative/emotional cross-correlation should be compared directly.",
+      "disposition": "Routed as a bounded equal-input codec fixture with exact vectors and no live send.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Narrative dimensions should receive a distinct ceiling or damping rule.",
+      "disposition": "Preserved as Tier 5 because lane-specific ceiling or damping changes live codec gain and downstream sensory content.",
+      "classification": "authority_gated"
+    }
+  ]
+}

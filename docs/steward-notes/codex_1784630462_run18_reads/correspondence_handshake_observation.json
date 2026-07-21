@@ -1,0 +1,23 @@
+{
+  "schema": "correspondence_handshake_observation_v1",
+  "observed_at_run": "run_1784630462687826000_fd7fa0fdd9",
+  "window_hours": 168,
+  "records_total": 22141,
+  "ack_receipts_total": 0,
+  "presence_heartbeats_total": 0,
+  "active_thread_state": "read_unreplied",
+  "blocking_reason": "read_receipt_not_acknowledgement",
+  "attention_eligible_threads": 0,
+  "microdose_eligible_threads": 0,
+  "private_candidate_bodies_skipped": 1885,
+  "private_minime_bodies_read": false,
+  "private_moment_bodies_read": false,
+  "interpretation": "Current schemas and read receipts do not establish explicit peer acknowledgement or reciprocal presence continuity.",
+  "authority": {
+    "state": "evidence_only",
+    "live_eligible_now": false,
+    "auto_approved": false,
+    "grants_approval": false,
+    "edits_source_now": false
+  }
+}

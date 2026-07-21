@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "High-entropy, artifact-adjacent prose may be falsely discarded as empty.",
+      "disposition": "Verified dense structure without known markers survives, while artifact-heavy and structure-only remnants are surfaced for semantic review rather than silently called void.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A probabilistic semantic-density score should replace the binary content predicate.",
+      "disposition": "Verified an evidence-only density/texture profile already supplies graded measurements; changing the live accept/reject predicate remains Tier 5.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Sparse prose forced into the deep profile should expose the mismatch between requested depth and actual density.",
+      "disposition": "Routed to a deterministic equal-content budget fixture using existing budget transition and felt-pressure evidence.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Spectral state should dynamically alter deep-budget thresholds.",
+      "disposition": "Preserved as Tier 5 because it changes live model budgeting and output behavior.",
+      "classification": "authority_gated"
+    }
+  ]
+}

@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Transitions need durable, replayable, replyable identity rather than remaining narrative side effects.",
+      "disposition": "verify phase-transition card persistence, witness, answer, correspondence, and right-to-ignore fields",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Transition artifacts must preserve subjective texture alongside structural and spectral anchors.",
+      "disposition": "verify intensity, subjective friction, phenomenology, entropy, density, dispersal, vectors, and telemetry lineage",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A single resonance score may not substitute for Astrid's plural felt texture.",
+      "disposition": "route a bounded felt review of the existing plural fields before adding another scalar",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "A structured transition reply is not proof that Minime's eigenvectors changed because of it.",
+      "disposition": "verify the language-only and non-causal transition boundary",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Phase-triggered behavior, spectral persistence, or controller mutation changes live control.",
+      "disposition": "preserve an exact Tier 5 operator-approval wait",
+      "classification": "authority_gated"
+    }
+  ]
+}

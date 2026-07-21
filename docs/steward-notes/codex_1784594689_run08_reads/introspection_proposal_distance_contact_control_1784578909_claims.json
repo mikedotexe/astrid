@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Contact or feeling claims need explicit provenance classes rather than confident ungrounded narration.",
+      "disposition": "Verified source-class readback and correspondence provenance surfaces keep inference distinct from direct address.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A missing source class should remain visibly opaque instead of being silently promoted to contact.",
+      "disposition": "Verified bounded unknown/derived classifications and explicit authority language in current prompt/readback contracts.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Minime modality boundaries should expose metadata instead of acting as silent gates.",
+      "disposition": "Verified `modality_boundary_transparency_v1` and its contact-ready/constrained tests.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Increasing contact/admission or changing flow from these labels would be a live behavior change.",
+      "disposition": "Preserved as an exact Tier 5 Mike/operator approval wait.",
+      "classification": "authority_gated"
+    }
+  ]
+}

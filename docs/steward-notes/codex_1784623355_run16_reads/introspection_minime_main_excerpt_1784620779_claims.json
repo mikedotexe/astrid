@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Reported stability is an active negotiation of rescue and recovery rather than a passive scalar state.",
+      "disposition": "Verified explicit rescue, recovery, pressure, and source distinctions in current Minime runtime and diagnostics; Astrid's felt account remains primary and deployed effect is unknown.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Rising shadow dispersal beside a held stable core may feel syrupy through temporal lock-in and density.",
+      "disposition": "Verified that current evidence can represent dispersal, persistence, density, and viscosity separately without declaring their co-occurrence causal.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Pressure/porosity should be compared with semantic trickle and shadow dispersal/focus.",
+      "disposition": "Routed as bounded matched-window probes with temporal-association labels and no runtime mutation.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Recovery keep ceiling, underfill spread, or semantic projection bias should be retuned.",
+      "disposition": "Preserved as Tier 5 because these changes alter live Minime recovery, sensory projection, and controller behavior.",
+      "classification": "authority_gated"
+    }
+  ]
+}

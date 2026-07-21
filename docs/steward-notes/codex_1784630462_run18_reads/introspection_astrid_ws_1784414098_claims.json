@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The telemetry subscriber maintains a persistent WebSocket with bounded reconnect backoff.",
+      "disposition": "Verify current connection, shutdown, receive, and backoff branches from source and tests.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Socket connection is not equivalent to recent schema-valid telemetry.",
+      "disposition": "Verify status separates connection, first valid packet, latest valid packet, cadence, and integration freshness.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The current subscriber has no payload-idle timeout, so a half-open connected socket can remain silent.",
+      "disposition": "Observe the source-level absence and route a bounded lock-wait and approximately 31-second pulse profile through sandbox evidence.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Adding an idle timeout or changing reconnect cadence alters live telemetry admission.",
+      "disposition": "Hold timeout, reconnect, and cadence changes behind exact Mike/operator approval.",
+      "classification": "tier_5_wait"
+    }
+  ]
+}

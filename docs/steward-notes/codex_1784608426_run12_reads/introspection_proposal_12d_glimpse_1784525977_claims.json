@@ -1,0 +1,8 @@
+{
+  "claims": [
+    {"claim_id":"c001","summary":"A low-dimensional glimpse must remain additive rather than replace live semantic transport.","disposition":"Verified current 12D glimpse is an optional companion; canonical semantic transport is now 48D, not the historical 32D described in the report.","classification":"verified_existing"},
+    {"claim_id":"c002","summary":"The 12D glimpse should persist and remain readable without changing existing fingerprints.","disposition":"Verified current telemetry/state surfaces and tests preserve exact-width optional glimpse data independently of the fingerprint.","classification":"verified_existing"},
+    {"claim_id":"c003","summary":"Compression should retain distinguishable warmth, tail, and residual geometry.","disposition":"Verified by Astrid and Minime glimpse, distinguishability, and residual-pairing tests.","classification":"verified_existing"},
+    {"claim_id":"c004","summary":"A 12D representation could become the primary semantic input.","disposition":"Preserved as Tier 5 transport, codec, and Minime sensory-contract authority; no replacement is authorized.","classification":"authority_gated"}
+  ]
+}

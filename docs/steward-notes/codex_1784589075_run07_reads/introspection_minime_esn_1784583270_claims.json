@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Dynamic noise and pressure-room helpers are reviewable but do not currently govern ESN::step.",
+      "disposition": "verify the helpers remain outside the active reservoir step",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Pressure-room interpolation should remain bounded, finite, and continuous.",
+      "disposition": "verify three focused dynamic-noise pressure-room tests and existing non-finite fallbacks",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Recorded entropy and pressure should be compared with candidate noise before any live wiring.",
+      "disposition": "route a deterministic fixture replay over entropy, gradient, pressure, and foothold",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Wiring dynamic noise, viscous rho, or adaptive pressure thresholds into ESN::step changes live reservoir behavior.",
+      "disposition": "preserve an exact Tier 5 operator-approval wait",
+      "classification": "authority_gated"
+    }
+  ]
+}

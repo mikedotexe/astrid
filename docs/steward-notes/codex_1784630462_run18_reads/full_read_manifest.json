@@ -1,0 +1,28 @@
+{
+  "schema": "canonical_full_read_manifest_v1",
+  "reader": "codex-heartbeat",
+  "run_id": "run_1784630462687826000_fd7fa0fdd9",
+  "queue_order_preserved": true,
+  "files": [
+    {"queue_position": 1, "introspection_id": "introspection_proposal_bidirectional_contact_1784630193", "sha256": "945130c9706967e74bf1da7afde80bd481836839915342520c6556be70511ddd"},
+    {"queue_position": 2, "introspection_id": "introspection_proposal_phase_transitions_1784629912", "sha256": "d235d15e12d2a0a38d5c9110b2e73649299c6b26083cc4b81fad6de6f668f8cd"},
+    {"queue_position": 3, "introspection_id": "introspection_minime_autonomous_agent_1784629026", "sha256": "43f92dc061b0fe5607d792f94b4a94999779a6fb9d60bde6ee231ec937154856"},
+    {"queue_position": 4, "introspection_id": "introspection_sensory_delivery.rs_1784418099", "sha256": "f043decfbaf7612307685f8ec1007f6e7b9156bff4f9e28eadeca0b28379e077"},
+    {"queue_position": 5, "introspection_id": "introspection_sensory_delivery.rs_1784417341", "sha256": "2609da0f9995eb1bb573bd4cd99b18d9d4b5cbeb6ec0fd2ef11d826690fa80aa"},
+    {"queue_position": 6, "introspection_id": "introspection_sensory_delivery.rs_1784416373", "sha256": "6a62dd8119d7f630f39f7ca0ce318b7b237d3c3088df82276b6e70ae6f7a093b"},
+    {"queue_position": 7, "introspection_id": "introspection_authority_temporal.rs_1784415477", "sha256": "1bdc5e3cf6568cc2cd2505500ac546906795c3a95b14a2cd39b4a80749059484"},
+    {"queue_position": 8, "introspection_id": "introspection_sensory_delivery.rs_1784415215", "sha256": "49c0ce77370ccac90fe524ac89d03dfe9f726f6431ebfd0082e31402a18137c2"},
+    {"queue_position": 9, "introspection_id": "introspection_astrid_codec_1784414849", "sha256": "f0075a02b59305175cdb81b1c6fd8d1e94717fbf11ba11d3ba0b6637df087f92"},
+    {"queue_position": 10, "introspection_id": "introspection_astrid_ws_1784414098", "sha256": "d4b56c9341f222cef322d8b8454bf552af3e27f2a05bce6fd817b55e117065cd"},
+    {"queue_position": 11, "introspection_id": "introspection_astrid_codec_1784413667", "sha256": "a7d72efbd834efb856340bd5a1e4ed7104956cdc52622a2af6264af20a253861"},
+    {"queue_position": 12, "introspection_id": "introspection_proposal_12d_glimpse_1784413159", "sha256": "86f5f148e3c1378721d26f4291720534ad309605d636bef31162f8d3ed9ce168"},
+    {"queue_position": 13, "introspection_id": "introspection_proposal_distance_contact_control_1784412525", "sha256": "7d64426712651c6a0216e8866dbf007ca9418584fc6b53d801d7e4d28c788e2e"},
+    {"queue_position": 14, "introspection_id": "introspection_proposal_bidirectional_contact_1784412040", "sha256": "68e474650b495641ca58217d0e6ff6e112c5d1f6a502da20f3720a45fdcf455b"},
+    {"queue_position": 15, "introspection_id": "introspection_minime_autonomous_agent_1784410623", "sha256": "803e3395c7fccb82e74cb70410d81ddc52b634e944183b16f7a96d8d1858b09d"},
+    {"queue_position": 16, "introspection_id": "introspection_minime_main_excerpt_1784410368", "sha256": "27bb6c4e1c06ddca3ae39d133f7833d56909435d56f35dcc96c748de6ac6a21d"},
+    {"queue_position": 17, "introspection_id": "introspection_minime_esn_1784410132", "sha256": "895ff39c1d0976ed27a87aefee591e3be9b881c03bdf625f3dd45e42e3c5c723"},
+    {"queue_position": 18, "introspection_id": "introspection_minime_regulator_1784409633", "sha256": "97599385b005f3a47af05b5cf5e930bd3fce7d2a8f6c14d6e894dc62ee47935a"},
+    {"queue_position": 19, "introspection_id": "introspection_astrid_llm_1784409167", "sha256": "04cb2a816949a42a821bb4dcab257196bae0145594c97e7e69c73010444f176d"},
+    {"queue_position": 20, "introspection_id": "introspection_astrid_types_1784408815", "sha256": "e2b5cb4e9f8929d27933aabc809b2e74f28cf38b14b5f883c4976886efdf67da"}
+  ]
+}

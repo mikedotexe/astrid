@@ -1,0 +1,6 @@
+{"claims":[
+  {"claim_id":"c001","summary":"The compact glimpse is a secondary view rather than the primary semantic lane.","disposition":"Verified: the finite exact-width 12D companion remains optional and the canonical live semantic lane remains 48D.","classification":"verified_existing"},
+  {"claim_id":"c002","summary":"The 12D mapping needs explicit source-slot lineage and malformed-width rejection.","disposition":"Verified by deterministic mapping and 11D/13D/non-finite rejection tests.","classification":"verified_existing"},
+  {"claim_id":"c003","summary":"Tail vibrancy and warmth should be compared between compact and full views.","disposition":"Routed to a bounded paired fixture; matching numbers would not alone prove preserved felt meaning.","classification":"sandbox_routed"},
+  {"claim_id":"c004","summary":"Use the 12D glimpse as an authoritative persistence or restart anchor.","disposition":"Preserved as Tier 5 because persistence authority, restart identity, codec transport, and state restoration are live contracts.","classification":"authority_gated"}
+]}

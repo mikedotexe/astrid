@@ -1,0 +1,29 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "BridgeState may be accumulating eigenvalue history across packets.",
+      "disposition": "Verified the current packet replaces latest_telemetry; no eigenvalue history is accumulated there.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Any retained telemetry history should be explicitly bounded.",
+      "disposition": "Verified the pressure-trend VecDeque pops from the front above its bounded dynamic capacity.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Distinguishability should be traced to its actual source before proposing decay.",
+      "disposition": "Verified distinguishability is supplied by current Minime telemetry and bridge views preserve source ownership.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Temporal decay could be added to reduce old eigenvalue influence.",
+      "disposition": "Preserved as Tier 5 because no such bridge accumulation exists and adding decay would change live interpretation/control semantics.",
+      "classification": "authority_gated"
+    }
+  ]
+}
+

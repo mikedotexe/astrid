@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The report's 32D live-lane framing is historical; current live semantic transport is 48D and 12D is additive.",
+      "disposition": "Verify source dimensions, companion-only role, exact-width validation, and no live vector write.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A 12D glimpse must preserve warmth, tail bridge, and high-versus-low entropy distinctions without claiming invertibility.",
+      "disposition": "Verify warmth, emotional-range, tail, contextual-anchor, distinguishability, and flattened-glimpse tests.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The glimpse is explicitly a map and distillation, never a primary restoration source.",
+      "disposition": "Verify multi-scale context pairs it with canonical transport and residual evidence.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Foothold and pressure comparisons can test whether compact or full views better preserve orientation.",
+      "disposition": "Route a read-only 48D-versus-12D pressure/foothold comparison without changing transport or restoration.",
+      "classification": "sandbox_routed"
+    }
+  ]
+}

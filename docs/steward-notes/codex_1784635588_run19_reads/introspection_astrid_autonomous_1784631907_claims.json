@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The semantic heartbeat is a fixed seven-second, 0.30-intensity, 64-phase warmth signal.",
+      "disposition": "Verify the current constants and deterministic phase construction from source.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Generated warmth, rescue admission, channel enqueue, pressure, and Minime texture are distinct evidence stages.",
+      "disposition": "Verify the private enqueue probe and read-only pressure/texture review preserve those boundaries.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Pressure-response and phase-to-lambda comparisons can test whether the fixed pulse tracks difficult states.",
+      "disposition": "Route heartbeat pressure/texture and phase-alignment comparisons through bounded evidence without modifying output.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Dynamic heartbeat intensity, phase synchronization, or pressure/entropy feedback would change live cadence and semantic influence.",
+      "disposition": "Hold reactive heartbeat behavior behind exact Mike/operator approval and a complete canary/abort plan.",
+      "classification": "tier_5_wait"
+    }
+  ]
+}

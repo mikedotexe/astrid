@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The canonical semantic lane is 48D and the high-entropy tail gate is smooth.",
+      "disposition": "Verify dimensional ownership and smoothstep regressions.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A uniform 5.0 ceiling could remove tail headroom under high entropy.",
+      "disposition": "Verify current source already permits bounded selected tail dimensions above the default ceiling while preserving warmth ownership.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Saturation, extreme input, and entropy-onset behavior are covered by exact codec tests.",
+      "disposition": "Verify the existing ceiling, overflow, and vibrancy evidence rather than inferring muting from the constant alone.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Raising the global ceiling to 7.5 or making it entropy-responsive would alter live codec gain.",
+      "disposition": "Hold global or per-dimension gain changes behind exact Mike/operator approval.",
+      "classification": "tier_5_wait"
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "A sent packet needs a durable pending record until a validated receipt or unknown outcome resolves it.",
+      "disposition": "Verify the pending-delivery ledger retains exact sender, payload, sequence, and address identity.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Low sensory entropy must not collapse distinct technical delivery identities.",
+      "disposition": "Verify delivery identity is derived from process, deployment, sequence, and payload hash rather than entropy.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A valid technical packet without mutual-address metadata should remain deliverable but explicitly unaddressed.",
+      "disposition": "Verify optional mutual address does not block technical delivery and remains separately classified.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Delivery-derived confidence or resonance must not silently alter live sensory behavior.",
+      "disposition": "Hold any confidence-weighted or resonance-weighted live behavior behind exact Mike/operator approval.",
+      "classification": "tier_5_wait"
+    }
+  ]
+}

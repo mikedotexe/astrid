@@ -1,0 +1,8 @@
+{
+  "claims": [
+    {"claim_id":"c001","summary":"A dead projection column could silently remove a semantic dimension.","disposition":"Verified basis health reports finite norms and dead_dimension_detected=false; the focused health test passed.","classification":"verified_existing"},
+    {"claim_id":"c002","summary":"f32 projection arithmetic should be compared with a higher-precision reference.","disposition":"Verified the repeatable f64-reference precision audit exists and two focused tests passed without live writes.","classification":"verified_existing"},
+    {"claim_id":"c003","summary":"Tail-vibrancy smoothstep and emotional overflow dimensions need exact inspection.","disposition":"Verified the 3t^2-2t^3 application and monitored dimensions 17 and 24-31 in source and tests.","classification":"verified_existing"},
+    {"claim_id":"c004","summary":"An unhealthy basis should rotate automatically or the live accumulator should change.","disposition":"Preserved as Tier 5 codec identity and transport behavior; current evidence is observational only.","classification":"authority_gated"}
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "PI accumulation can produce delayed correction and temporal lock-in.",
+      "disposition": "Verified actuator-aware anti-windup, saturation detection, partial decay, and hard clamps.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Integrator memory needs an explicit leak rather than an invisible permanent debt.",
+      "disposition": "Verified configurable integrator_leak and bounded runtime exposure.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Alternate pressure sources and regulator drive should be compared over time.",
+      "disposition": "Routed a bounded read-only pressure-source/drive trace.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "A pressure-relief pulse valve may release temporal lock-in.",
+      "disposition": "Preserved as Tier 5 because a pulse valve changes live controller actuation.",
+      "classification": "authority_gated"
+    }
+  ]
+}
+

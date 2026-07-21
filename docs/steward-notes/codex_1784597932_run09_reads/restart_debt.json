@@ -1,0 +1,20 @@
+{
+  "schema": "restart_debt_v1",
+  "status": "restart_debt",
+  "reason": "An additive live-consumed bridge status field changed while concurrent unreviewed protocol, authority, autonomy, and Minime edits remain in the shared trees.",
+  "surfaces": [
+    "capsules/spectral-bridge/src/types/schema/bridge_status.rs",
+    "capsules/spectral-bridge/src/ws/bridge_state.rs",
+    "capsules/spectral-bridge/src/ws/tests.rs"
+  ],
+  "runtime_effect": "diagnostic_projection_only",
+  "live_behavior_changed": false,
+  "blocker": "No exclusive stabilization owner has reviewed the complete concurrent shared-source candidate, so the guarded bridge wrapper must not deploy only this run's subset.",
+  "first_safe_command_after_exclusive_review": "scripts/build_bridge.sh --ack \"deploy reviewed run09 cadence jitter status projection with shared-tree changes\" --restart",
+  "requires": [
+    "exclusive stabilization ownership",
+    "complete shared-tree diff review",
+    "passing bridge validation from the reviewed source identity",
+    "sanctioned wrapper restart and post-deploy identity checks"
+  ]
+}

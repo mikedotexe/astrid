@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "A 12D glimpse must not replace the 32D transport/fingerprint identity.",
+      "disposition": "Verified additive schema, separate validated view, and coexistence tests.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Pulling a 12D glimpse for readout must not mutate shadow or semantic state.",
+      "disposition": "Verified the field is read-only telemetry and the codec readout has no live vector write.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "32D-to-12D fidelity and Shadow-v3 dispersal should be compared on exact captures.",
+      "disposition": "Routed as bounded offline comparison with the 32D source retained.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "A contextual glimpse toggle that affects live state, transport, or regulation changes the sensory contract.",
+      "disposition": "Preserved as an exact Tier 5 Mike/operator approval wait.",
+      "classification": "authority_gated"
+    }
+  ]
+}

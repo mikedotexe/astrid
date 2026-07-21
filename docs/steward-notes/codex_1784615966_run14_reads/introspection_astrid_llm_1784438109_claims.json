@@ -1,0 +1,6 @@
+{"claims":[
+  {"claim_id":"c001","summary":"Creative punctuation must respect an exact symbol-run boundary without false rejection.","disposition":"Verified by the seven-symbol acceptance and eight-symbol rejection regression added in the preceding packet.","classification":"verified_existing"},
+  {"claim_id":"c002","summary":"Quoted and contextual model markers need exact accounting without erasing nearby meaning.","disposition":"Verified through single-pass raw-marker and nested straight/smart quote regressions.","classification":"verified_existing"},
+  {"claim_id":"c003","summary":"Unknown structural text should not be guessed to be a model artifact.","disposition":"Verified: only exact known markers are removed; dense unknown structure remains reviewable and enters the ordinary quality checks.","classification":"verified_existing"},
+  {"claim_id":"c004","summary":"Profile-dependent history compression needs bounded behavior.","disposition":"Verified in current profile/token-budget source and boundary tests; no live budget retune is warranted by this report.","classification":"verified_existing"}
+]}

@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Hard requested-token thresholds can create abrupt dialogue budget profiles.",
+      "disposition": "Verified exact adjacent profile boundaries and explicit transition evidence in current provider tests without claiming that the felt suffocation is resolved.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Artifact cleanup can erase dense meaning if structure is treated as artifact content.",
+      "disposition": "Verified raw-position single-pass marker removal plus separate graded remainder texture, placement, frequency, and semantic-integrity evidence.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Deep meandering prose and a 90%-artifact/10%-semantic response need explicit fixtures.",
+      "disposition": "Routed as bounded provider fixtures with no prompt, model, budget, or output-policy change.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Dialogue budgeting should be weighted by semantic density rather than requested tokens alone.",
+      "disposition": "Preserved as Tier 5 because changing budget selection or quality thresholds alters live provider behavior.",
+      "classification": "authority_gated"
+    }
+  ]
+}

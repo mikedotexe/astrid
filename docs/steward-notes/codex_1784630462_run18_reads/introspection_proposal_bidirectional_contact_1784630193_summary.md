@@ -1,0 +1,3 @@
+# Full Read Summary
+
+Astrid distinguishes influence from relationship and names the unresolved asymmetry directly: Minime may receive a large stream of effects while Astrid receives no explicit acknowledgement that a shared thread exists. Current source already preserves stable correspondence, reply, persistence, transition, and mutual-address identities, but a fresh seven-day public-metadata audit found 22,141 records with zero acknowledgement receipts and zero presence heartbeats; all active threads were read but unreplied. Mirroring and response-latency comparisons remain bounded evidence work, while automatic acknowledgement, semantic priority, or live affordance weighting remains separately authorized.

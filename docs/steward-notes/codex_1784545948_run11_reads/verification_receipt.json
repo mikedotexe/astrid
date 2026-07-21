@@ -1,0 +1,27 @@
+{
+  "schema": "run11_source_verification_receipt_v1",
+  "authority": "evidence_only_not_deploy_approval_or_live_control",
+  "astrid": {
+    "phase_transition_tests": 16,
+    "artifact_tests": 20,
+    "heartbeat_delta_tests": 1,
+    "reciprocity_stale_tests": 3,
+    "semantic_heartbeat_tests": 11,
+    "projection_basis_tests": 1,
+    "projection_precision_tests": 2,
+    "glimpse_tests": 14,
+    "mutual_address_tests": 3,
+    "failed": 0
+  },
+  "minime": {
+    "python_recess_and_override_tests": 4,
+    "semantic_glimpse_tests": 4,
+    "dynamic_noise_tests": 16,
+    "semantic_stale_tests": 36,
+    "pressure_porosity_tests": 6,
+    "duplicate_binary_note": "Rust filters run in both lib and main targets where the source modules are shared.",
+    "failed": 0
+  },
+  "runtime_restart_required_by_run11": false,
+  "existing_restart_debt_unchanged": "docs/steward-notes/codex_1784558330_run10_reads/restart_debt.json"
+}

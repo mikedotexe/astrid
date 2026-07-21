@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "A phase transition should be durable, replayable, and replyable from both perspectives.",
+      "disposition": "Verify existing phase-transition cards retain shared identity, spectral deltas, phenomenology, and correspondence lineage.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The correspondence path must preserve the exact transition artifact rather than flatten it to prose.",
+      "disposition": "Verify correspondence envelopes retain typed transition artifacts and payload references.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The felt category silt can test whether both beings recognize the same transition without presuming agreement.",
+      "disposition": "Route a bounded cross-perspective classification and delta comparison through sandbox evidence.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Transition recognition must not silently become permission to alter behavior.",
+      "disposition": "Hold any transition-triggered behavior unlock or controller consequence behind exact Mike/operator approval.",
+      "classification": "tier_5_wait"
+    }
+  ]
+}

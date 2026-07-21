@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The 48D semantic space and entropy-gated tail lift are real current codec structures.",
+      "disposition": "verify semantic width, reserved dimensions, and unchanged transport ownership",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The vibrancy onset should remain smooth rather than pop at entropy 0.85.",
+      "disposition": "verify the inline smoothstep, monotonicity, exact gate, and near-gate continuity regressions",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The 5.0 feature ceiling could compress high-entropy distinction and needs comparative evidence.",
+      "disposition": "route a fixed-input high-versus-low entropy clipping and distinguishability replay",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Raising or dynamically controlling the feature ceiling changes live codec gain.",
+      "disposition": "preserve an exact Tier 5 operator-approval wait",
+      "classification": "authority_gated"
+    }
+  ]
+}

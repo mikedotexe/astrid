@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Signal volume has historically exceeded relationally symmetric contact.",
+      "disposition": "Preserved as historical evidence; current thread objects do not erase the asymmetry.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Correspondence needs stable thread identity and a shared context buffer across cycles.",
+      "disposition": "Verified first-class thread objects, shared buffers, bounded history, and persistence tests.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Direct-address and steward-mediated contact textures should be compared without claiming causation.",
+      "disposition": "Routed as a bounded sandbox comparison keyed by exact correspondence identity.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Increasing Astrid-originated semantic trickle/admission changes live Minime regulation.",
+      "disposition": "Preserved as an exact Tier 5 Mike/operator approval wait; mutual witness remains evidence, not co-authorship or control.",
+      "classification": "authority_gated"
+    }
+  ]
+}

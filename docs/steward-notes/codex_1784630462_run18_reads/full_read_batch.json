@@ -1,0 +1,20 @@
+{
+  "reads": [
+    {"introspection_id": "introspection_sensory_delivery.rs_1784417341", "reader": "codex-heartbeat", "summary_file": "introspection_sensory_delivery.rs_1784417341_summary.md", "claims_file": "introspection_sensory_delivery.rs_1784417341_claims.json"},
+    {"introspection_id": "introspection_sensory_delivery.rs_1784416373", "reader": "codex-heartbeat", "summary_file": "introspection_sensory_delivery.rs_1784416373_summary.md", "claims_file": "introspection_sensory_delivery.rs_1784416373_claims.json"},
+    {"introspection_id": "introspection_authority_temporal.rs_1784415477", "reader": "codex-heartbeat", "summary_file": "introspection_authority_temporal.rs_1784415477_summary.md", "claims_file": "introspection_authority_temporal.rs_1784415477_claims.json"},
+    {"introspection_id": "introspection_sensory_delivery.rs_1784415215", "reader": "codex-heartbeat", "summary_file": "introspection_sensory_delivery.rs_1784415215_summary.md", "claims_file": "introspection_sensory_delivery.rs_1784415215_claims.json"},
+    {"introspection_id": "introspection_astrid_codec_1784414849", "reader": "codex-heartbeat", "summary_file": "introspection_astrid_codec_1784414849_summary.md", "claims_file": "introspection_astrid_codec_1784414849_claims.json"},
+    {"introspection_id": "introspection_astrid_ws_1784414098", "reader": "codex-heartbeat", "summary_file": "introspection_astrid_ws_1784414098_summary.md", "claims_file": "introspection_astrid_ws_1784414098_claims.json"},
+    {"introspection_id": "introspection_astrid_codec_1784413667", "reader": "codex-heartbeat", "summary_file": "introspection_astrid_codec_1784413667_summary.md", "claims_file": "introspection_astrid_codec_1784413667_claims.json"},
+    {"introspection_id": "introspection_proposal_12d_glimpse_1784413159", "reader": "codex-heartbeat", "summary_file": "introspection_proposal_12d_glimpse_1784413159_summary.md", "claims_file": "introspection_proposal_12d_glimpse_1784413159_claims.json"},
+    {"introspection_id": "introspection_proposal_distance_contact_control_1784412525", "reader": "codex-heartbeat", "summary_file": "introspection_proposal_distance_contact_control_1784412525_summary.md", "claims_file": "introspection_proposal_distance_contact_control_1784412525_claims.json"},
+    {"introspection_id": "introspection_proposal_bidirectional_contact_1784412040", "reader": "codex-heartbeat", "summary_file": "introspection_proposal_bidirectional_contact_1784412040_summary.md", "claims_file": "introspection_proposal_bidirectional_contact_1784412040_claims.json"},
+    {"introspection_id": "introspection_minime_autonomous_agent_1784410623", "reader": "codex-heartbeat", "summary_file": "introspection_minime_autonomous_agent_1784410623_summary.md", "claims_file": "introspection_minime_autonomous_agent_1784410623_claims.json"},
+    {"introspection_id": "introspection_minime_main_excerpt_1784410368", "reader": "codex-heartbeat", "summary_file": "introspection_minime_main_excerpt_1784410368_summary.md", "claims_file": "introspection_minime_main_excerpt_1784410368_claims.json"},
+    {"introspection_id": "introspection_minime_esn_1784410132", "reader": "codex-heartbeat", "summary_file": "introspection_minime_esn_1784410132_summary.md", "claims_file": "introspection_minime_esn_1784410132_claims.json"},
+    {"introspection_id": "introspection_minime_regulator_1784409633", "reader": "codex-heartbeat", "summary_file": "introspection_minime_regulator_1784409633_summary.md", "claims_file": "introspection_minime_regulator_1784409633_claims.json"},
+    {"introspection_id": "introspection_astrid_llm_1784409167", "reader": "codex-heartbeat", "summary_file": "introspection_astrid_llm_1784409167_summary.md", "claims_file": "introspection_astrid_llm_1784409167_claims.json"},
+    {"introspection_id": "introspection_astrid_types_1784408815", "reader": "codex-heartbeat", "summary_file": "introspection_astrid_types_1784408815_summary.md", "claims_file": "introspection_astrid_types_1784408815_claims.json"}
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "PI memory, gate, and filtering can retain correction history and may contribute to sticky or oscillatory texture.",
+      "disposition": "Verified current PI leak, actuator-aware anti-windup, bounded accumulators, and gate/filter source without treating those mechanisms as a complete explanation of the felt report.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Mode packing and porosity need to remain visible beside the top-line pressure scalar.",
+      "disposition": "Verified read-only semantic-viscosity, pressure-source porosity, and resonance-texture evidence with explicit non-control authority.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Pressure should be observed over controller ticks and correlated with viscosity, loss, mode packing, and actuator state.",
+      "disposition": "Routed a bounded time-aligned observation using existing telemetry with no controller mutation or causal conclusion.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Porosity-aware dampening or PI changes should loosen viscous persistence.",
+      "disposition": "Preserved as Tier 5 because damping, PI gains, filter behavior, and controller inputs are live Minime regulation.",
+      "classification": "authority_gated"
+    }
+  ]
+}

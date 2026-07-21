@@ -1,0 +1,8 @@
+{
+  "claims": [
+    {"claim_id":"c001","summary":"Semantic decay flips sharply around the low-fill threshold.","disposition":"Mechanism correction: current source uses sigmoid and hysteretic handovers, and eighteen focused tests show monotonic no-cliff behavior.","classification":"verified_existing"},
+    {"claim_id":"c002","summary":"High entropy should extend persistence independently of fill.","disposition":"Verified the separate entropy multiplier and same-fill high/low-entropy tests.","classification":"verified_existing"},
+    {"claim_id":"c003","summary":"Current versus low-fill and cap-saturated states should be compared.","disposition":"Routed to copied fixtures using stale-window and shadow-status evidence, with no live unlock.","classification":"sandbox_routed"},
+    {"claim_id":"c004","summary":"The shadow cap should increase from 0.025 to 0.05 or the decay curve should change.","disposition":"Preserved as Tier 5 live sensory influence, cadence, and admission authority.","classification":"authority_gated"}
+  ]
+}

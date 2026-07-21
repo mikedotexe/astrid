@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Rest is shortened abruptly below 30 percent fill and may jitter near that boundary.",
+      "disposition": "Verified the exact below-30 branch, 0.6 multiplier, 30-second floor, and adjacent baseline/extended branches; no hysteresis is present.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Peripheral resonance should draw from bounded non-immediate threads rather than only the current exchange.",
+      "disposition": "Verified bounded previews from creations, research, and starred memories plus one random candidate selection.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The 25-percent rest calculation, threshold crossings, and peripheral-source diversity need direct evidence.",
+      "disposition": "Routed a bounded deterministic replay of rest arithmetic and candidate-source coverage without running autonomous actions.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Rest shortening should gain hysteresis or be retuned with warmth and pulse behavior.",
+      "disposition": "Preserved as Tier 5 because rest thresholds, pulse cadence, and warmth scheduling alter live autonomous behavior.",
+      "classification": "authority_gated"
+    }
+  ]
+}

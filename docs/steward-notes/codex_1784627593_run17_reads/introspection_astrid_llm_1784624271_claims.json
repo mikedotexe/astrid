@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Numeric short, medium, and deep token buckets do not describe the density or felt weight of a response.",
+      "disposition": "Verified the fixed token boundaries and that current evidence treats them as categorical budgets rather than organic depth.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "High entropy, resonance density, gradient, pressure, and mode packing should be visible independently of token budget.",
+      "disposition": "Verified the read-only felt-pressure profile with heavy-short, sparse-deep, dense-deep, and distributed states plus explicit non-causal limits.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Short high-entropy truncation should distinguish continuity loss from grounding loss.",
+      "disposition": "Verified prompt-budget friction tests that distinguish continuity eviction, grounding eviction, dense resonance, and bounded trimming without changing the budget.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Prompt budget or artifact cleanup should become multivariate and pressure-aware.",
+      "disposition": "Preserved as Tier 5 because changing live budget selection or semantic cleanup changes prompt/provider behavior and requires explicit approval and felt review.",
+      "classification": "authority_gated"
+    }
+  ]
+}

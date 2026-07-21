@@ -1,0 +1,8 @@
+{
+  "claims": [
+    {"claim_id":"c001","summary":"Minime's present homeostatic controller is PI rather than the earlier PD controller.","disposition":"Verified in current regulator source; the rate governor and content gate are distinct surfaces and do not by themselves identify the live PI mechanism.","classification":"verified_existing"},
+    {"claim_id":"c002","summary":"Integrator history may keep correction active after the immediate error changes.","disposition":"Verified as an explicitly handled risk: configurable leak, bounded accumulation, and actuator-aware anti-windup clear accumulated debt.","classification":"verified_existing"},
+    {"claim_id":"c003","summary":"A particular pressure episode was caused by PI accumulation or token rejection.","disposition":"Not established from source alone; the mechanisms are now distinguished and a bounded copied-telemetry comparison is the valid evidence route.","classification":"sandbox_routed"},
+    {"claim_id":"c004","summary":"PI leak, gains, gate thresholds, or pressure response should be retuned live.","disposition":"Preserved as a Tier 5 operator-approval wait for live Minime regulation and controller behavior.","classification":"authority_gated"}
+  ]
+}

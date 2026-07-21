@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "A 12D glimpse must remain additive and must not replace canonical wider transport.",
+      "disposition": "verify the companion-only contract and retained full-dimensional evidence",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The glimpse needs stable high-level anchors and restart-safe persistence.",
+      "disposition": "verify named warmth, tail, narrative, bridge, energy, persistence, and deterministic distinguishability coverage",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A PCA candidate should be compared for reconstruction and felt distinguishability before adoption.",
+      "disposition": "route a capture-first offline comparison against the current deterministic layout",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Replacing the wider lane or making the glimpse pressure-dynamic changes live interpretation and protocol behavior.",
+      "disposition": "preserve an exact Tier 5 operator-approval wait",
+      "classification": "authority_gated"
+    }
+  ]
+}

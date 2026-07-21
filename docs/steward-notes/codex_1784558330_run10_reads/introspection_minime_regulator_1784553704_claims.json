@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Gate and filter behavior may be confused with the PI controller itself.",
+      "disposition": "Verified current control remains PI-only and review/receptivity artifacts are evidence-only.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The integrator should resist windup and stale accumulated pressure.",
+      "disposition": "Verified actuator-aware conditional integration, leak, and clamps are explicit and tested.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Crowded and open states should be compared across gate and filter stages.",
+      "disposition": "Routed to an offline copied-trace comparison that records stage contributions without applying control.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Filter, gain, pressure, or porosity tuning could improve receptivity.",
+      "disposition": "Preserved as Tier 5 because these changes alter live regulator behavior and substrate targets.",
+      "classification": "authority_gated"
+    }
+  ]
+}

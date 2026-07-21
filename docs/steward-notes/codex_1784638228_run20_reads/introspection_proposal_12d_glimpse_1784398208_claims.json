@@ -1,0 +1,35 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The report combines historical semantic width with descriptive fingerprint width; current contracts keep them distinct.",
+      "disposition": "Verify 48D semantic transport, 32-slot fingerprint compatibility, and additive 12D interpretation separately.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A compact view must remain paired with canonical and residual evidence rather than becoming a restoration source.",
+      "disposition": "Verify companion-only, noninvertible, multi-scale context, and fallback-to-live-review boundaries.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Warmth, tail texture, and high-versus-low entropy distinctions already have explicit 12D regressions.",
+      "disposition": "Verify direct anchor, contextual anchor, distinguishability, fidelity, and flattened-glimpse tests.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "PCA or another reduction can be compared offline against the deterministic map for retention and stability.",
+      "disposition": "Route a bounded fixture comparison with content hashes and no live transport change.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Replacing the deterministic map or changing semantic/fingerprint width would alter live codec or protocol contracts.",
+      "disposition": "Retain an exact Tier 5 Mike/operator approval wait before any live replacement.",
+      "classification": "tier_5_wait"
+    }
+  ]
+}
+

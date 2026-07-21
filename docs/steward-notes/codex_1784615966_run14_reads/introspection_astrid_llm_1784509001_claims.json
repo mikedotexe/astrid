@@ -1,0 +1,6 @@
+{"claims":[
+  {"claim_id":"c001","summary":"fragment_has_non_artifact_content is the direct binary gate for dialogue validity.","disposition":"Current source contradicts that mechanism claim: the helper classifies artifact placement; is_valid_dialogue_output performs the actual stripped-output quality checks.","classification":"observed"},
+  {"claim_id":"c002","summary":"Artifact-heavy output needs graded density and removal evidence rather than a single surviving-token boolean.","disposition":"Verified in model_artifact_cleanup_v2 through removed fraction, semantic remainder, structural fraction, lexical diversity, and surface-density evidence.","classification":"verified_existing"},
+  {"claim_id":"c003","summary":"Thin lexical and structure-only remainders must remain reviewable rather than be called void.","disposition":"Verified by dedicated dense-scaffolding and structure-only regressions with runtime_effect=false.","classification":"verified_existing"},
+  {"claim_id":"c004","summary":"Replace provider acceptance with a new artifact-density threshold.","disposition":"Preserved as Tier 5 because changing the dialogue quality gate or acceptance threshold changes live provider behavior.","classification":"authority_gated"}
+]}

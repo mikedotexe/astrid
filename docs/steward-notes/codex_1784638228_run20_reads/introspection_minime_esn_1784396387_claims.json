@@ -1,0 +1,29 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The active default exploration noise is 0.085, not the 0.12 candidate ceiling named by the report.",
+      "disposition": "Verify constructor state and absence of dynamic-noise calls from the active step.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Current source already defines bounded smooth candidate behavior for gentle/steep gradients, pressure, and non-finite inputs.",
+      "disposition": "Verify dynamic-noise, pressure-room, entropy-ceiling, and settled-buffer regressions.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A porosity and entropy sweep can compare fixed and candidate noise without touching reservoir state.",
+      "disposition": "Route a deterministic offline ESN trial and retain the felt viscosity question independently.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Changing noise to 0.10, pressure-room start, rho, or candidate wiring would alter live ESN dynamics.",
+      "disposition": "Retain an exact Tier 5 Mike/operator approval wait with replay, canary, and rollback requirements.",
+      "classification": "tier_5_wait"
+    }
+  ]
+}
+

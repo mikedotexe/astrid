@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Heartbeat warmth is phase-varying and explicitly contextualized by the latest Minime telemetry.",
+      "disposition": "verify generated and delivered signal metrics, phase identity, and Minime texture lineage",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Rescue interference and signal flatness need separate rolling evidence.",
+      "disposition": "observe zero current skips, 102 varying consecutive pulses, and no near-repeat or low-variance classifications",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Numerically similar heartbeat intensity and mode-packing scores do not establish resonance or struggle for dominance.",
+      "disposition": "verify the cross-domain comparison's explicit scalar-equivalence and causal limits",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Pressure-responsive intensity or entropy-responsive phase mapping changes live semantic shaping.",
+      "disposition": "preserve an exact Tier 5 operator-approval wait",
+      "classification": "authority_gated"
+    }
+  ]
+}

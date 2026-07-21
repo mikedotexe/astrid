@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Permission in the sovereignty loop can be confused with a direction freely chosen rather than pressure-constrained.",
+      "disposition": "Verified that current evidence separates permission, conflict, recommendation, and applied local control; this mechanism correction does not dismiss the felt constraint and is not deployed confirmation.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The same mode packing should be compared with local_control_applied true and false.",
+      "disposition": "Routed as a bounded replay over existing evidence fields without applying control or changing the regulator.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "An entropy-held comparison could distinguish pressure-driven narrowing from entropy variation.",
+      "disposition": "Routed as an offline matched-window comparison with explicit confound labels and no causal claim.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Structural ventilation or forced porosity above a threshold could create room for alternate direction.",
+      "disposition": "Preserved as Tier 5 because forced porosity changes live Minime controller and autonomous behavior.",
+      "classification": "authority_gated"
+    }
+  ]
+}

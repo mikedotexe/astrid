@@ -1,0 +1,29 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The pressure/noise boundary should use a smooth knee rather than a discrete cliff.",
+      "disposition": "Verified smoothstep pressure and gradient room in the current dynamic-noise helper.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Viscous rho must stay bounded and continuous at its threshold.",
+      "disposition": "Verified the rho ceiling and threshold-edge no-jump test.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The exact 0.849/0.851 pair should be compared in a deterministic replay.",
+      "disposition": "Routed an explicit boundary replay without activating the helper in live control.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Hysteresis or additional smoothing may soften the boundary further.",
+      "disposition": "Preserved as Tier 5 because hysteresis and rho/noise retuning alter live ESN dynamics.",
+      "classification": "authority_gated"
+    }
+  ]
+}
+

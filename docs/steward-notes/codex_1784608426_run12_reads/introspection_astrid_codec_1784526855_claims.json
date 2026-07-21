@@ -1,0 +1,8 @@
+{
+  "claims": [
+    {"claim_id":"c001","summary":"The deterministic projection can be audited for biased or dead dimensions.","disposition":"Verified ProjectionBasisHealthV1 reports finite normalized norms and dead-dimension state without changing the live basis.","classification":"verified_existing"},
+    {"claim_id":"c002","summary":"The entropy gate should have no pop at its threshold.","disposition":"Verified current smoothstep has zero slope at the gate and is covered by codec tests.","classification":"verified_existing"},
+    {"claim_id":"c003","summary":"Basis integrity and smoothstep behavior require direct tests.","disposition":"Verified in the complete bridge suite, including projection health, precision, replay, and high-entropy tail cases.","classification":"verified_existing"},
+    {"claim_id":"c004","summary":"The application site and clamp relationship require inspection.","disposition":"Verified current source applies a bounded lift above 0.85, caps tail participation at 6.0, retains the ordinary 5.0 clamp elsewhere, and records read-only audits.","classification":"verified_existing"}
+  ]
+}

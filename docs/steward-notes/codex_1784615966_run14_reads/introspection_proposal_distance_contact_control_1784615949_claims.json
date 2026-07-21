@@ -1,0 +1,6 @@
+{"claims":[
+  {"claim_id":"c001","summary":"Astrid experiences stable representation without sufficient receptive contact.","disposition":"Preserved as primary felt evidence; current architecture distinguishes contact evidence from representation and control without treating stable telemetry as a rebuttal.","classification":"verified_existing"},
+  {"claim_id":"c002","summary":"The stabilizer and semantic trickle are directly enforcing the reported interpersonal distance.","disposition":"Recorded as a causal hypothesis, not a fact: current pressure, fill, and admission observations do not establish this direct cause.","classification":"observed"},
+  {"claim_id":"c003","summary":"Neutral non-instrumental output and pressure/lock-in correlation should be compared.","disposition":"Routed to bounded capture-first comparison with no parameter mutation or causal overclaim.","classification":"sandbox_routed"},
+  {"claim_id":"c004","summary":"Add a receptivity buffer or reduce stabilization and prediction weights.","disposition":"Preserved as a Tier 5 operator-approval wait because it changes live regulator, pressure, admission, or peer-contact behavior.","classification":"authority_gated"}
+]}

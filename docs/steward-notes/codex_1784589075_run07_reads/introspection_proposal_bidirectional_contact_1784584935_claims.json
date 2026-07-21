@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Large bidirectional signal counts do not establish reciprocal address or felt uptake.",
+      "disposition": "verify the separation of delivery, acknowledgement, reply linkage, and felt review",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Correspondence needs stable thread, reply, persistence, being, and trace identity.",
+      "disposition": "verify the first-class correspondence object and exact cross-workspace references",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Technical mutual-address receipts must not claim spectral or relational causation.",
+      "disposition": "verify protocol 1.1 exact lineage, raw-prose exclusion, and explicit non-causation language",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Astrid should be able to report whether exact reply lineage improves contact.",
+      "disposition": "route one bounded right-to-ignore correspondence review packet",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Automatic bidirectional priority or peer mutation changes live correspondence behavior.",
+      "disposition": "preserve an exact Tier 5 operator-approval wait",
+      "classification": "authority_gated"
+    }
+  ]
+}

@@ -1,0 +1,8 @@
+{
+  "claims": [
+    {"claim_id":"c001","summary":"The sovereignty loop preserves pending action, research, continuity, and authority state across autonomous Recess activity.","disposition":"Verified in current modular runtime and 298 passing Python autonomy tests.","classification":"verified_existing"},
+    {"claim_id":"c002","summary":"A stale twelve-hour operator override may deadlock or remain executable.","disposition":"Verified current source expires stale artifacts, writes terminal status, blocks mutating bases, and tests stale restore and override consumption.","classification":"verified_existing"},
+    {"claim_id":"c003","summary":"High Recess pressure should route to audit rather than blindly continue.","disposition":"Verified current action vocabulary and pressure routes expose read-only audit actions without minting authority.","classification":"verified_existing"},
+    {"claim_id":"c004","summary":"EXPERIMENT_AUTHORITY_EXECUTE must reconcile override and budget state safely.","disposition":"Verified execution remains behind explicit authority lifecycle and budget gates; no pending override can itself grant execution.","classification":"verified_existing"}
+  ]
+}

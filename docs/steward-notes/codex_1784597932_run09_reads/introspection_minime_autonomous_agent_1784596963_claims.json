@@ -1,0 +1,29 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Recess can contain active high-entropy synthesis rather than inactivity.",
+      "disposition": "Verified recess_activity_load_v1 distinguishes active synthesis from structural stabilization without spending budget or changing priority.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Recess pressure, porosity, and density should remain visible as possible sedimentary work.",
+      "disposition": "Verified density-aware Recess and spectral-pruning evidence with explicit no-control markers.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Entropy, Recess mode, and pressure should be compared across observed windows.",
+      "disposition": "Routed a bounded read-only correlation using existing Recess and pressure profiles.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "A sediment-decay mechanism could relieve accumulated Recess pressure.",
+      "disposition": "Preserved as Tier 5 because decay changes Minime runtime state and regulation.",
+      "classification": "authority_gated"
+    }
+  ]
+}
+

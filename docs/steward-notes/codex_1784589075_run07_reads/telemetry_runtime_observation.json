@@ -1,0 +1,23 @@
+{
+  "schema": "bounded_telemetry_connection_observation_v1",
+  "captured_at": "2026-07-21T00:13:55Z",
+  "source_ref": "spectral-bridge/workspace/telemetry_heartbeat_delta_v1.json",
+  "authority": "read_only_connection_evidence_not_transport_cadence_admission_or_control",
+  "runtime_effect_applied": false,
+  "active_connection_id": 1,
+  "reconnect_count": 0,
+  "disconnect_count": 0,
+  "first_valid_packet_lag_ms": 1608.7361,
+  "inter_arrival_ms": 7.1001053,
+  "jitter_class": "normal",
+  "timing_reliability": "reliable",
+  "connection_perception_state": "connected_with_current_telemetry",
+  "cadence_clarity_score": 1.0,
+  "first_valid_spectral_entropy": null,
+  "bounded_interpretation": {
+    "connection_current_at_capture": true,
+    "spectral_quality_inferred_from_timing": false,
+    "felt_density_disconfirmed": false,
+    "note": "The deployed binary predates the additive first-valid spectral-entropy field; null records restart debt rather than absence of an initial spectral state."
+  }
+}

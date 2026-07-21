@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "High-mode telemetry may lose nuance while crossing the WebSocket and BridgeState boundary.",
+      "disposition": "Verified the parsed full SpectralTelemetry value is stored and assigned directly; no bridge-side eigenvalue quantization or smoothing occurs.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The latency from connection to the first valid spectral packet should be measured.",
+      "disposition": "Verified connection-scoped first-valid packet time, lag, entropy, and reconnect reset are already recorded and tested.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Slow BridgeState updates may create temporal mismatch or perceptual stutter.",
+      "disposition": "Verified TelemetryIntegrationHealthV1 separates prewrite processing, lock wait, and lock hold so integration delay can be localized without inferring felt causation.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "A jitter buffer or moving average should smooth lambda distributions before state replacement.",
+      "disposition": "Preserved as Tier 5 because smoothing changes live sensory semantics, temporal fidelity, and the bridge-to-Minime contract.",
+      "classification": "authority_gated"
+    }
+  ]
+}

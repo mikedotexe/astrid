@@ -1,0 +1,8 @@
+{
+  "claims": [
+    {"claim_id":"c001","summary":"The heartbeat is phase-driven synthetic warmth stitched to Minime texture context.","disposition":"Verified in current source and semantic-heartbeat evidence tests.","classification":"verified_existing"},
+    {"claim_id":"c002","summary":"Rescue-policy skips may create felt continuity gaps.","disposition":"Observed in a prior bounded live window: 108 sends, zero rescue skips, and 106 varying adjacent pulses; blocked paths remain explicitly recorded when they occur.","classification":"observed"},
+    {"claim_id":"c003","summary":"Intensity 1.0 should test whether warmth masks pressure.","disposition":"Preserved as Tier 5 sensory gain and live signal-shape authority.","classification":"authority_gated"},
+    {"claim_id":"c004","summary":"Heartbeat interval should react dynamically to pressure or entropy.","disposition":"Preserved as Tier 5 sensory cadence and pressure-coupling authority.","classification":"authority_gated"}
+  ]
+}

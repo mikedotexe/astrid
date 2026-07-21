@@ -1,0 +1,8 @@
+{
+  "claims": [
+    {"claim_id":"c001","summary":"A string connection state is too coarse to carry cadence and coherence nuance.","disposition":"Verified the string is a compatibility label alongside typed cadence, reliability, delta, and coherence fields.","classification":"verified_existing"},
+    {"claim_id":"c002","summary":"High inter-arrival delay and high content clarity need separate interpretation.","disposition":"Verified field and hearing are distinct; routed a bounded fixture varying age while preserving fingerprint content.","classification":"sandbox_routed"},
+    {"claim_id":"c003","summary":"A nonzero coherence delta during felt settledness should be visible rather than normalized away.","disposition":"Verified fingerprint integrity retains finite deltas and coherence state independently from the connection label.","classification":"verified_existing"},
+    {"claim_id":"c004","summary":"Connection perception should become a new protocol struct that drives runtime interpretation.","disposition":"Preserved as Tier 5 protocol/ABI and live-consumed schema work; no existing compatibility field was changed.","classification":"authority_gated"}
+  ]
+}

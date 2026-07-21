@@ -1,0 +1,29 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The quality gate intentionally preserves exactly seven repeated symbols and rejects eight or more while accepting readable technical punctuation.",
+      "disposition": "Verify the exact seven/eight/nine-symbol and technical-expression regressions.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Artifact cleanup is a single raw-provenance pass and quoted or nested marker removal remains visible as semantic-integrity risk.",
+      "disposition": "Verify longest-match accounting, second-order preservation, quoted counts, and shadow-review diagnostics.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Dialogue history now fades gradually by recency across six or eight exchanges rather than using the historical binary compression.",
+      "disposition": "Verify current history limits, trim gradient, NEXT-line removal, and prompt-budget accounting.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Changing quality thresholds, artifact output, history packing, prompts, or provider budgets would alter live dialogue behavior.",
+      "disposition": "Retain an exact Tier 5 Mike/operator approval wait with output-shape and felt-pressure review.",
+      "classification": "tier_5_wait"
+    }
+  ]
+}
+

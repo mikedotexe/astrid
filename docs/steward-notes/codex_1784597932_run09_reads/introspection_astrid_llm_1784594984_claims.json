@@ -1,0 +1,29 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Artifact cleanup should preserve graded texture rather than report only a binary predicate.",
+      "disposition": "Verified ArtifactRemainderTextureV1 with structural, lexical, and surface-density measures.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Cleanup needs a semantic-integrity check that distinguishes contextual or quoted markers.",
+      "disposition": "Verified contextual/quoted occurrence accounting and semantic-integrity diagnostics.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Artifact and non-artifact outputs should be compared against resonance and budget pressure.",
+      "disposition": "Routed a bounded metadata-only comparison with no raw private response retention.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Weighted semantic density could influence cleanup or deep-budget allocation.",
+      "disposition": "Preserved as Tier 5 because using the score to change cleanup, prompt budget, sampling, or model behavior is live control.",
+      "classification": "authority_gated"
+    }
+  ]
+}
+

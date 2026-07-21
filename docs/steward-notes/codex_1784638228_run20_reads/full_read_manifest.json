@@ -1,0 +1,109 @@
+{
+  "schema": "canonical_full_read_manifest_v1",
+  "reader": "codex-heartbeat",
+  "run_id": "run_1784638228850961000_1113f2fa42",
+  "queue_order_preserved": true,
+  "files": [
+    {
+      "queue_position": 1,
+      "introspection_id": "introspection_proposal_12d_glimpse_1784638075",
+      "sha256": "7912d51bdd449a8c9302af2119ad3bc032d686b0d0be0eb38d02bda59365ea71"
+    },
+    {
+      "queue_position": 2,
+      "introspection_id": "introspection_proposal_distance_contact_control_1784637786",
+      "sha256": "4f15ed95507d1b285405d09d837a3dfd8b635b971fdcfc154fab1d9413e34f6c"
+    },
+    {
+      "queue_position": 3,
+      "introspection_id": "introspection_proposal_bidirectional_contact_1784637128",
+      "sha256": "4bed3ed188dba3987f2cdf0f17c58e3157f94ed068001597b658c7d605312c65"
+    },
+    {
+      "queue_position": 4,
+      "introspection_id": "introspection_proposal_phase_transitions_1784636852",
+      "sha256": "5d36145d0d2556ba6196ff2a220edfcb1911ea20148cbef1f70a29b7147f31b3"
+    },
+    {
+      "queue_position": 5,
+      "introspection_id": "introspection_minime_autonomous_agent_1784636515",
+      "sha256": "5e4e897003b7d4389d2da2ef562c0d831d03a2ce6ba808dd0dfe2f9ac4673e1d"
+    },
+    {
+      "queue_position": 6,
+      "introspection_id": "introspection_minime_main_excerpt_1784635959",
+      "sha256": "a59166755d07ead9d3ea9e56bdc9f0be287c0c962eaaf609d4d3f23397c08745"
+    },
+    {
+      "queue_position": 7,
+      "introspection_id": "introspection_minime_esn_1784635688",
+      "sha256": "bd38250698a9704733fea285ba65ea50a2dd0d9d78f1e514ad26ae310aba450d"
+    },
+    {
+      "queue_position": 8,
+      "introspection_id": "introspection_astrid_llm_1784400695",
+      "sha256": "7095c5d4fbf6eb39b2774c05e534a3c5c425ce3017c83892386703ab187cf26f"
+    },
+    {
+      "queue_position": 9,
+      "introspection_id": "introspection_astrid_types_1784400263",
+      "sha256": "07b777257eabd6db0f5869c6fa7fc49a5037c6c82a7f684b0a37a922ecd70726"
+    },
+    {
+      "queue_position": 10,
+      "introspection_id": "introspection_astrid_autonomous_1784399894",
+      "sha256": "7ce9321efe2179a93d49f931224400e149d088e399f6b6a802cb251a57cee4bf"
+    },
+    {
+      "queue_position": 11,
+      "introspection_id": "introspection_astrid_codec_1784399470",
+      "sha256": "3f682c4b47be55d7f9715ed7543a7f0adde105ac2bb2b4aee5609ba5947d2ae7"
+    },
+    {
+      "queue_position": 12,
+      "introspection_id": "introspection_proposal_12d_glimpse_1784398208",
+      "sha256": "cec8ea8d39f9239bf7470d0ec3293d29f065a25911efbacc48664af321644cd9"
+    },
+    {
+      "queue_position": 13,
+      "introspection_id": "introspection_proposal_distance_contact_control_1784397954",
+      "sha256": "d9be1108f7e906e342b884e5b25553b260fcc0d6fc39dc2e2edaabfa884f004b"
+    },
+    {
+      "queue_position": 14,
+      "introspection_id": "introspection_proposal_bidirectional_contact_1784397582",
+      "sha256": "2d1bf735f33a2cca30798573a7ae4fca117393203387b6cb366909ca6b61769c"
+    },
+    {
+      "queue_position": 15,
+      "introspection_id": "introspection_minime_autonomous_agent_1784397123",
+      "sha256": "82333a9f2e324a69754ee1bd2bd74032dbd43b318406714ce047b442170262fd"
+    },
+    {
+      "queue_position": 16,
+      "introspection_id": "introspection_minime_main_excerpt_1784396747",
+      "sha256": "b86be8124a149b1ddc990727705df9b5ef0e5bdbcc32ea0102cffb0146f8664c"
+    },
+    {
+      "queue_position": 17,
+      "introspection_id": "introspection_minime_esn_1784396387",
+      "sha256": "ac9c264c2f70cef8f326cc25031a10a627027f134960d043bddb205b948a7efe"
+    },
+    {
+      "queue_position": 18,
+      "introspection_id": "introspection_minime_regulator_1784395842",
+      "sha256": "3a2f16995ce478d8a4898af0a6d9d30e2d8d0b538a15192db9b1cf8ecc37b766"
+    },
+    {
+      "queue_position": 19,
+      "introspection_id": "introspection_astrid_llm_1784393522",
+      "sha256": "60e01e0d7143d20eed6c8c257a33015e6cf1e460f8f44d773ec1d4982205da36"
+    },
+    {
+      "queue_position": 20,
+      "introspection_id": "introspection_astrid_types_1784392903",
+      "sha256": "8ee82d59f60d62e205f24e29364fa30f0dbcd9cc8087303019ea74de207fbaed"
+    }
+  ]
+}
+

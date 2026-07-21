@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Mode-packing pressure and rescue activation may explain abrupt thinning or continuity loss.",
+      "disposition": "Verified pressure-source, viscosity-persistence, damping-review, and rescue/scaffold paths are separately observable; felt causation remains unproven.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Rescue-overfill and scaffold calls should be traced during high-density semantic exchange.",
+      "disposition": "Routed to a copied-state/replay trace using existing trigger and recovery evidence; no live threshold or input changes.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Recovery should preserve meaningful residue rather than indiscriminately clear it.",
+      "disposition": "Verified scaffold and recovery keep-floor logic preserve bounded structure, but whether that matches lived meaning requires post-change or observational felt review.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "hard_reset_rho_floor or recovery_keep_floor_base should be raised to tolerate more residue.",
+      "disposition": "Preserved as Tier 5 because retuning either value changes live reservoir recovery and collapse behavior.",
+      "classification": "authority_gated"
+    }
+  ]
+}

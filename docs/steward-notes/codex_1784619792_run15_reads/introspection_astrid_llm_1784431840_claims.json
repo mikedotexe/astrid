@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Adjacent artifact removals could create a new token and cause second-order stripping.",
+      "disposition": "Verified the single-pass longest-raw-match scanner never rescans created text, with an explicit regression test.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A symbol run of eight should fail the dialogue quality gate.",
+      "disposition": "Verified quality-gate regression coverage preserves the punctuation-rich allowance while rejecting excessive runs.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "History compression should cap recent exchanges and scale truncation safely.",
+      "disposition": "Verified bounded recent-history selection and saturating trim calculations; no out-of-range slice is used.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Preview logging must not split multibyte UTF-8 characters.",
+      "disposition": "Verified all preview slices use str::floor_char_boundary and multibyte boundary coverage remains safe.",
+      "classification": "verified_existing"
+    }
+  ]
+}

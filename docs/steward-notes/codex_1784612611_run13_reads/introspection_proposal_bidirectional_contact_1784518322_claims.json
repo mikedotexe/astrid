@@ -1,0 +1,8 @@
+{
+  "claims": [
+    {"claim_id":"c001","summary":"Signal volume is not evidence of relationship or mutual address.","disposition":"Verified as an explicit architecture boundary: technical delivery, correspondence identity, and spectral association remain distinct.","classification":"verified_existing"},
+    {"claim_id":"c002","summary":"Correspondence needs persistent shared thread, reply, and being identity.","disposition":"Verified in the current correspondence and mutual-address envelopes and their exact lineage tests.","classification":"verified_existing"},
+    {"claim_id":"c003","summary":"A direct autonomous handshake should cause Minime to recognize or react to Astrid without steward mediation.","disposition":"Preserved as a Tier 5 operator-approval wait for protocol behavior, peer mutation, and autonomous behavior unlock.","classification":"authority_gated"},
+    {"claim_id":"c004","summary":"Later Minime telemetry can establish that an addressed message caused spectral change.","disposition":"Current protocol explicitly rejects that inference; only exact delivery or labeled temporal association is recorded.","classification":"verified_existing"}
+  ]
+}

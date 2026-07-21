@@ -1,0 +1,8 @@
+{
+  "claims": [
+    {"claim_id":"c001","summary":"The hard-coded pending-NEXT allowlist can omit newly declared actions.","disposition":"Verified the design risk and routed a vocabulary-to-allowlist consistency audit; no current omission was found for the named actions.","classification":"sandbox_routed"},
+    {"claim_id":"c002","summary":"EXPERIMENT_AUTHORITY_BUDGET_REQUEST should remain reachable without minting authority.","disposition":"Verified it is explicitly allowlisted and its authority route records a pending request rather than a token.","classification":"verified_existing"},
+    {"claim_id":"c003","summary":"RESERVOIR_READ and RESERVOIR_RESONANCE should remain available during Recess.","disposition":"Verified both actions are declared, allowlisted, and presented in the runtime action surface.","classification":"verified_existing"},
+    {"claim_id":"c004","summary":"High-entropy Recess could automatically prune, decompress, or choose new actions.","disposition":"Preserved as Tier 5 live autonomous policy; current Recess pressure profiles remain evidence-only and control_applied=false.","classification":"authority_gated"}
+  ]
+}

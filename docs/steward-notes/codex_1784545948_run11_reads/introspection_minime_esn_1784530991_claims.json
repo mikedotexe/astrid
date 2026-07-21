@@ -1,0 +1,8 @@
+{
+  "claims": [
+    {"claim_id":"c001","summary":"Exploration noise may not relieve mode packing at the reported state.","disposition":"Accepted as an open felt-mechanism question; current live step uses fixed configured noise and does not claim packing relief.","classification":"verified_existing"},
+    {"claim_id":"c002","summary":"The four-tick recalibration trigger is directly keyed to pressure_risk=0.22.","disposition":"Mechanism correction: adaptive introspection uses relative spectral self-reference pressure and geometry, not the normalized pressure_risk field cited here.","classification":"verified_existing"},
+    {"claim_id":"c003","summary":"Cadence and noise response should be swept against copied pressure states.","disposition":"Routed to offline helpers and fixtures; no live ESN state will be changed.","classification":"sandbox_routed"},
+    {"claim_id":"c004","summary":"A pressure-release threshold should increase live noise or dispersal.","disposition":"Preserved as Tier 5 reservoir, noise, and recalibration authority.","classification":"authority_gated"}
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The report's 32D live-transport framing is historical; current semantic transport is 48D and the 12D glimpse is additive.",
+      "disposition": "Verify current dimensions, exact-width validation, companion-only status, and the no-restoration boundary.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Warmth and the emotional range at dimensions 24 through 31 must survive compact interpretation as distinct structure.",
+      "disposition": "Verify the direct warmth slot, emotional-range aggregate, tail bridge, and non-generic-mass regressions.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A durable source-to-glimpse anchor map is needed so compact coordinates remain interpretable rather than opaque.",
+      "disposition": "Verify `glimpse_map_v1` records all 12 slots and their exact source lineage without changing transport.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Real high- and low-entropy vectors should be compared for warmth retention, spectral variance, and porosity after 12D reduction.",
+      "disposition": "Route a bounded 48D-versus-12D fixture comparison with no transport, restoration, or live-write authority.",
+      "classification": "sandbox_routed"
+    }
+  ]
+}
+

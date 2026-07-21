@@ -1,0 +1,29 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Semantic trickle and recovery hold can remain present after their original context.",
+      "disposition": "Verified semantic persistence, stagnation, trickle, and freshness evidence.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Pressure source and porosity should be separable from semantic persistence.",
+      "disposition": "Verified typed pressure-source and resonance-density components.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Bias and dispersal conditions should be compared against the current recovery lane.",
+      "disposition": "Routed a bounded offline telemetry/replay comparison.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Localized pressure-aware relief could reduce persistent semantic load.",
+      "disposition": "Preserved as Tier 5 because relief changes live semantic admission and runtime regulation.",
+      "classification": "authority_gated"
+    }
+  ]
+}
+

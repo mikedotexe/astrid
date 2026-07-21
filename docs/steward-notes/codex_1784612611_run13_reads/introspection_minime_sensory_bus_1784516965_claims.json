@@ -1,0 +1,8 @@
+{
+  "claims": [
+    {"claim_id":"c001","summary":"Semantic persistence should respond nonlinearly to entropy and fill.","disposition":"Verified in the current ramped entropy multiplier and sigmoid stale-duration implementation.","classification":"verified_existing"},
+    {"claim_id":"c002","summary":"The reported high-entropy point and full-support cap need direct tests.","disposition":"Verified by the reported-point, exact-cap, high-fill persistence, and echo-floor decay regressions.","classification":"verified_existing"},
+    {"claim_id":"c003","summary":"Candidate persistence curves should be compared before any live change.","disposition":"Routed to a bounded copied-input curve comparison with no sensory mutation.","classification":"sandbox_routed"},
+    {"claim_id":"c004","summary":"The entropy cap, stale duration, recovery weighting, or admission behavior should change live.","disposition":"Preserved as a Tier 5 operator-approval wait for Minime sensory regulation.","classification":"authority_gated"}
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Direct peer contact needs a durable thread rather than an implicit coupled channel.",
+      "disposition": "Verified first-class correspondence thread and shared-arc status.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Mutual address must preserve exact correspondence identity without raw prose.",
+      "disposition": "Verified exact message, thread, persistence, being, timestamp, and body-hash references with raw response exclusion.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A peer aesthetic response and outgoing-row count would test whether direct address is reciprocal.",
+      "disposition": "Routed a bounded language-only ledger/artifact comparison without fabricating acknowledgement.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "A peer_direct correspondence type could receive increased scheduling priority.",
+      "disposition": "Preserved as Tier 5 because correspondence priority changes live behavior.",
+      "classification": "authority_gated"
+    }
+  ]
+}
+

@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "cadence_clarity_basis alone cannot carry jitter resonance or semantic alignment texture.",
+      "disposition": "Verified the basis string is accompanied by numeric cadence, interarrival, jitter, reliability, field/hearing, and separate content-density evidence.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A high hybrid delta with high coherence should remain representable rather than collapse to one truth.",
+      "disposition": "Verified typed/legacy precedence and integrity evidence retain both max delta and coherence; a fixture can express coherent-but-divergent input without mutating producer truth.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Persistent spectral texture should be measured near hybrid coherence.",
+      "disposition": "Verified temporal persistence, viscosity persistence, pressure-trend persistence, and stagnation are typed in adjacent evidence instead of being inferred from one fingerprint sample.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Network jitter should be exercised against cadence classification thresholds.",
+      "disposition": "Routed to a deterministic telemetry fixture; the test cannot alter the live socket or cadence.",
+      "classification": "sandbox_routed"
+    }
+  ]
+}

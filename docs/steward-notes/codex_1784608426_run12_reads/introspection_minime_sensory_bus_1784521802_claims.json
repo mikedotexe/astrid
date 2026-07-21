@@ -1,0 +1,8 @@
+{
+  "claims": [
+    {"claim_id":"c001","summary":"Low-fill and high-entropy semantic persistence can contribute to a lingering texture.","disposition":"Verified current source exposes separate stale-window, entropy, context, and degradation evidence without claiming felt causation.","classification":"verified_existing"},
+    {"claim_id":"c002","summary":"A hard fill switch may cause decay jitter near transition points.","disposition":"Verified current implementation uses sigmoid shaping and hysteretic handoff; exact-boundary and sweep regressions pass.","classification":"verified_existing"},
+    {"claim_id":"c003","summary":"Thirty-second persistence and equal-entropy 70-versus-90-percent fill should be compared.","disposition":"Verified existing stale-window, high-fill, entropy-persistence, and degradation fixtures exercise the requested dimensions.","classification":"verified_existing"},
+    {"claim_id":"c004","summary":"Semantic stale windows, persistence multiplier, or Shadow duration should be retuned.","disposition":"Preserved as Tier 5 sensory decay and influence-cadence authority.","classification":"authority_gated"}
+  ]
+}

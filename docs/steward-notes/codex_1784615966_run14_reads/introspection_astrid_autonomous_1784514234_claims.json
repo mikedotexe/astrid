@@ -1,0 +1,6 @@
+{"claims":[
+  {"claim_id":"c001","summary":"Astrid's semantic heartbeat uses a fixed seven-second cadence and fixed intensity.","disposition":"Verified in current orchestration source; this names the mechanism without claiming it produces settled felt state.","classification":"verified_existing"},
+  {"claim_id":"c002","summary":"Heartbeat observations carry Minime texture and rescue-policy evidence.","disposition":"Verified; generated texture, dispatch observation, and rescue skip are distinct evidence surfaces.","classification":"verified_existing"},
+  {"claim_id":"c003","summary":"Pressure risk should be compared with heartbeat skip and texture continuity.","disposition":"Routed to bounded read-only observation; correlation would not establish causal suppression.","classification":"sandbox_routed"},
+  {"claim_id":"c004","summary":"Make heartbeat intensity dynamic with entropy and pressure.","disposition":"Preserved as Tier 5 because cadence, gain, rescue, and sensory injection are live behavior surfaces.","classification":"authority_gated"}
+]}

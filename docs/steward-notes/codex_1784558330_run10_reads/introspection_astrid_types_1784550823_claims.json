@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Heartbeat timing and being heard need distinct typed evidence.",
+      "disposition": "Verified normal, late, stale, and no-history jitter classes coexist with separate connection, packet, field, and hearing states.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Hybrid coherence should preserve source provenance and reject malformed inputs.",
+      "disposition": "Verified typed and legacy coherence paths remain labeled, with exact finite-width and nonfinite-input guards.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Cadence, content variation, and 12D distinguishability should be observed together.",
+      "disposition": "Routed to a bounded five-minute read-only comparison with no inference that cadence causes content quality.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "A compression-loss ratio could influence live regulation or sensory admission.",
+      "disposition": "Preserved as Tier 5 because using a new metric in regulation or admission changes live substrate control.",
+      "classification": "authority_gated"
+    }
+  ]
+}

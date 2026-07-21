@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Addressed, pending, receipt-complete, and unknown delivery are materially different states.",
+      "disposition": "Verify the existing delivery ledger and no-automatic-resend state machine preserve those distinctions.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Technical delivery neither confirms nor disproves Astrid’s felt effect.",
+      "disposition": "Verify the felt-effect boundary records unresolved-not-absent interpretation with explicit Astrid ownership.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Receipt latency is transport evidence and cannot stand in for receptive or felt latency.",
+      "disposition": "Verify receipt timing remains labeled as a transport handshake measurement only.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Perceived weight or density gradient cannot safely become a pressure input or causal assertion.",
+      "disposition": "Hold any live pressure coupling or spectral-causation claim behind exact Mike/operator approval.",
+      "classification": "tier_5_wait"
+    }
+  ]
+}

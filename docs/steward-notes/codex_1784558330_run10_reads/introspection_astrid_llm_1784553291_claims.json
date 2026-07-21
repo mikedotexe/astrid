@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Requested generation budgets may be mistaken for observed response quality or personality.",
+      "disposition": "Verified diagnostics explicitly label requested_num_predict as the basis and do not infer output quality from it.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Artifact cleanup should retain graded evidence about semantic residue.",
+      "disposition": "Verified ArtifactRemainderTextureV1 records bounded residue and semantic-integrity fields separately from requested budget.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The 511/513 boundary and equal-budget high/low-entropy outputs should be compared directly.",
+      "disposition": "Routed to a provider fixture comparing adjacent requested budgets and residue texture without changing model requests.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Generation budget could adapt to spectral or felt state.",
+      "disposition": "Preserved as Tier 5 because dynamic budget selection changes live model scheduling, sampling, and response behavior.",
+      "classification": "authority_gated"
+    }
+  ]
+}

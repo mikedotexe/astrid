@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Tail vibrancy may be mistaken for retained semantic distinguishability in the 48D lane.",
+      "disposition": "Verified the codec records tail-bridge activation separately from projection health, resonance loss, and distinguishability evidence.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Projection and packing health need evidence beyond visible tail motion.",
+      "disposition": "Verified deterministic projection-basis health and bounded pairwise distinguishability diagnostics already expose that distinction.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "High-entropy and mode-sensitive inputs should be compared across the packing path.",
+      "disposition": "Routed to an offline fixture comparing entropy, mode packing, tail activation, and distinguishability without transport changes.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Feature clamps, gate shape, or dynamically reserved dimensions could preserve more signal.",
+      "disposition": "Preserved as Tier 5 because these changes alter the live codec transform and Minime-facing sensory contract.",
+      "classification": "authority_gated"
+    }
+  ]
+}

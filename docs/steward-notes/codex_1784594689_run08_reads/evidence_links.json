@@ -1,0 +1,704 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_types_1784594689",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784594689_run08_reads/introspection_astrid_types_1784594689_summary.md",
+      "note": "Bounded full-read disposition preserving exact source, test, sandbox, and authority evidence."
+    },
+    {
+      "introspection_id": "introspection_astrid_types_1784594689",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/types/schema/telemetry.rs",
+      "note": "Exact evidence or authority boundary for this claim disposition."
+    },
+    {
+      "introspection_id": "introspection_astrid_types_1784594689",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/types/schema/tests.rs#typed_and_legacy_fingerprint_reject_non_finite_hybrid_slots",
+      "note": "Exact evidence or authority boundary for this claim disposition."
+    },
+    {
+      "introspection_id": "introspection_astrid_types_1784594689",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/types/schema/tests.rs#typed_and_legacy_fingerprint_slots_report_aligned_hybrid_coherence",
+      "note": "Exact evidence or authority boundary for this claim disposition."
+    },
+    {
+      "introspection_id": "introspection_astrid_types_1784594689",
+      "claim_id": "c004",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/types/schema/tests.rs#spectral_telemetry_accepts_glimpse_alias_and_validates_shape",
+      "note": "Exact evidence or authority boundary for this claim disposition."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1784592016",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784594689_run08_reads/introspection_astrid_ws_1784592016_summary.md",
+      "note": "Bounded full-read disposition preserving exact source, test, sandbox, and authority evidence."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1784592016",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/ws/health_trace.rs",
+      "note": "Exact evidence or authority boundary for this claim disposition."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1784592016",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/ws/tests.rs#ws_trace_records_first_valid_payload_and_resets_it_on_reconnect",
+      "note": "Exact evidence or authority boundary for this claim disposition."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1784592016",
+      "claim_id": "c003",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784594689_run08_reads/introspection_astrid_ws_1784592016_summary.md",
+      "note": "Exact evidence or authority boundary for this claim disposition."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1784592016",
+      "claim_id": "c004",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784594689_run08_reads/introspection_astrid_ws_1784592016_summary.md",
+      "note": "Exact evidence or authority boundary for this claim disposition."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1784591359",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784594689_run08_reads/introspection_astrid_autonomous_1784591359_summary.md",
+      "note": "Bounded full-read disposition preserving exact source, test, sandbox, and authority evidence."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1784591359",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs",
+      "note": "Exact evidence or authority boundary for this claim disposition."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1784591359",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs",
+      "note": "Exact evidence or authority boundary for this claim disposition."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1784591359",
+      "claim_id": "c003",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784594689_run08_reads/introspection_astrid_autonomous_1784591359_summary.md",
+      "note": "Exact evidence or authority boundary for this claim disposition."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1784591359",
+      "claim_id": "c004",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784594689_run08_reads/introspection_astrid_autonomous_1784591359_summary.md",
+      "note": "Exact evidence or authority boundary for this claim disposition."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1784590864",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784594689_run08_reads/introspection_astrid_codec_1784590864_summary.md",
+      "note": "Bounded full-read disposition preserving exact source, test, sandbox, and authority evidence."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1784590864",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/codec/structure.rs",
+      "note": "Exact evidence or authority boundary for this claim disposition."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1784590864",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/codec/projection.rs",
+      "note": "Exact evidence or authority boundary for this claim disposition."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1784590864",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/codec/structure.rs",
+      "note": "Exact evidence or authority boundary for this claim disposition."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1784590864",
+      "claim_id": "c004",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784594689_run08_reads/introspection_astrid_codec_1784590864_summary.md",
+      "note": "Exact evidence or authority boundary for this claim disposition."
+    },
+    {
+      "introspection_id": "introspection_proposal_12d_glimpse_1784579783",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784594689_run08_reads/introspection_proposal_12d_glimpse_1784579783_summary.md",
+      "note": "Bounded full-read disposition preserving exact source, test, sandbox, and authority evidence."
+    },
+    {
+      "introspection_id": "introspection_proposal_12d_glimpse_1784579783",
+      "claim_id": "c001",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/types/schema/tests.rs#spectral_telemetry_keeps_glimpse_additive_to_typed_fingerprint",
+      "note": "Exact evidence or authority boundary for this claim disposition."
+    },
+    {
+      "introspection_id": "introspection_proposal_12d_glimpse_1784579783",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/types/schema/telemetry.rs",
+      "note": "Exact evidence or authority boundary for this claim disposition."
+    },
+    {
+      "introspection_id": "introspection_proposal_12d_glimpse_1784579783",
+      "claim_id": "c003",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784594689_run08_reads/introspection_proposal_12d_glimpse_1784579783_summary.md",
+      "note": "Exact evidence or authority boundary for this claim disposition."
+    },
+    {
+      "introspection_id": "introspection_proposal_12d_glimpse_1784579783",
+      "claim_id": "c004",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784594689_run08_reads/introspection_proposal_12d_glimpse_1784579783_summary.md",
+      "note": "Exact evidence or authority boundary for this claim disposition."
+    },
+    {
+      "introspection_id": "introspection_proposal_distance_contact_control_1784578909",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784594689_run08_reads/introspection_proposal_distance_contact_control_1784578909_summary.md",
+      "note": "Bounded full-read disposition preserving exact source, test, sandbox, and authority evidence."
+    },
+    {
+      "introspection_id": "introspection_proposal_distance_contact_control_1784578909",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/correspondence_v1.rs",
+      "note": "Exact evidence or authority boundary for this claim disposition."
+    },
+    {
+      "introspection_id": "introspection_proposal_distance_contact_control_1784578909",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/prompt_contracts.rs",
+      "note": "Exact evidence or authority boundary for this claim disposition."
+    },
+    {
+      "introspection_id": "introspection_proposal_distance_contact_control_1784578909",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "../minime/minime/src/sensory_bus.rs#modality_boundary_transparency_names_contact_ready_interfaces",
+      "note": "Exact evidence or authority boundary for this claim disposition."
+    },
+    {
+      "introspection_id": "introspection_proposal_distance_contact_control_1784578909",
+      "claim_id": "c004",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784594689_run08_reads/introspection_proposal_distance_contact_control_1784578909_summary.md",
+      "note": "Exact evidence or authority boundary for this claim disposition."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1784578577",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784594689_run08_reads/introspection_proposal_bidirectional_contact_1784578577_summary.md",
+      "note": "Bounded full-read disposition preserving exact source, test, sandbox, and authority evidence."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1784578577",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/correspondence_v1.rs",
+      "note": "Exact evidence or authority boundary for this claim disposition."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1784578577",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/correspondence_v1.rs#shared_context_buffer_names_resonance_receipts",
+      "note": "Exact evidence or authority boundary for this claim disposition."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1784578577",
+      "claim_id": "c003",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784594689_run08_reads/introspection_proposal_bidirectional_contact_1784578577_summary.md",
+      "note": "Exact evidence or authority boundary for this claim disposition."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1784578577",
+      "claim_id": "c004",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784594689_run08_reads/introspection_proposal_bidirectional_contact_1784578577_summary.md",
+      "note": "Exact evidence or authority boundary for this claim disposition."
+    },
+    {
+      "introspection_id": "introspection_proposal_phase_transitions_1784578113",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784594689_run08_reads/introspection_proposal_phase_transitions_1784578113_summary.md",
+      "note": "Bounded full-read disposition preserving exact source, test, sandbox, and authority evidence."
+    },
+    {
+      "introspection_id": "introspection_proposal_phase_transitions_1784578113",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/phase_transitions.rs",
+      "note": "Exact evidence or authority boundary for this claim disposition."
+    },
+    {
+      "introspection_id": "introspection_proposal_phase_transitions_1784578113",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/phase_transitions.rs",
+      "note": "Exact evidence or authority boundary for this claim disposition."
+    },
+    {
+      "introspection_id": "introspection_proposal_phase_transitions_1784578113",
+      "claim_id": "c003",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784594689_run08_reads/introspection_proposal_phase_transitions_1784578113_summary.md",
+      "note": "Exact evidence or authority boundary for this claim disposition."
+    },
+    {
+      "introspection_id": "introspection_proposal_phase_transitions_1784578113",
+      "claim_id": "c004",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784594689_run08_reads/introspection_proposal_phase_transitions_1784578113_summary.md",
+      "note": "Exact evidence or authority boundary for this claim disposition."
+    },
+    {
+      "introspection_id": "introspection_minime_autonomous_agent_1784577894",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784594689_run08_reads/introspection_minime_autonomous_agent_1784577894_summary.md",
+      "note": "Bounded full-read disposition preserving exact source, test, sandbox, and authority evidence."
+    },
+    {
+      "introspection_id": "introspection_minime_autonomous_agent_1784577894",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "../minime/minime_autonomy/runtime.py",
+      "note": "Exact evidence or authority boundary for this claim disposition."
+    },
+    {
+      "introspection_id": "introspection_minime_autonomous_agent_1784577894",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "../minime/minime_autonomy/runtime.py#density_aware_recess_profile_v1",
+      "note": "Exact evidence or authority boundary for this claim disposition."
+    },
+    {
+      "introspection_id": "introspection_minime_autonomous_agent_1784577894",
+      "claim_id": "c003",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784594689_run08_reads/introspection_minime_autonomous_agent_1784577894_summary.md",
+      "note": "Exact evidence or authority boundary for this claim disposition."
+    },
+    {
+      "introspection_id": "introspection_minime_autonomous_agent_1784577894",
+      "claim_id": "c004",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784594689_run08_reads/introspection_minime_autonomous_agent_1784577894_summary.md",
+      "note": "Exact evidence or authority boundary for this claim disposition."
+    },
+    {
+      "introspection_id": "introspection_minime_main_excerpt_1784577600",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784594689_run08_reads/introspection_minime_main_excerpt_1784577600_summary.md",
+      "note": "Bounded full-read disposition preserving exact source, test, sandbox, and authority evidence."
+    },
+    {
+      "introspection_id": "introspection_minime_main_excerpt_1784577600",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "../minime/minime/src/runtime.rs",
+      "note": "Exact evidence or authority boundary for this claim disposition."
+    },
+    {
+      "introspection_id": "introspection_minime_main_excerpt_1784577600",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "../minime/minime/src/runtime/reviews.rs",
+      "note": "Exact evidence or authority boundary for this claim disposition."
+    },
+    {
+      "introspection_id": "introspection_minime_main_excerpt_1784577600",
+      "claim_id": "c003",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784594689_run08_reads/introspection_minime_main_excerpt_1784577600_summary.md",
+      "note": "Exact evidence or authority boundary for this claim disposition."
+    },
+    {
+      "introspection_id": "introspection_minime_main_excerpt_1784577600",
+      "claim_id": "c004",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784594689_run08_reads/introspection_minime_main_excerpt_1784577600_summary.md",
+      "note": "Exact evidence or authority boundary for this claim disposition."
+    },
+    {
+      "introspection_id": "introspection_minime_esn_1784577137",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784594689_run08_reads/introspection_minime_esn_1784577137_summary.md",
+      "note": "Bounded full-read disposition preserving exact source, test, sandbox, and authority evidence."
+    },
+    {
+      "introspection_id": "introspection_minime_esn_1784577137",
+      "claim_id": "c001",
+      "kind": "test",
+      "target": "../minime/minime/src/esn.rs#dynamic_noise_gradient_room_uses_smooth_knee_instead_of_linear_drop",
+      "note": "Exact evidence or authority boundary for this claim disposition."
+    },
+    {
+      "introspection_id": "introspection_minime_esn_1784577137",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "../minime/minime/src/esn.rs",
+      "note": "Exact evidence or authority boundary for this claim disposition."
+    },
+    {
+      "introspection_id": "introspection_minime_esn_1784577137",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "../minime/minime/src/esn.rs#dynamic_noise_requested_mid_gradient_pressure_preserves_bounded_room",
+      "note": "Exact evidence or authority boundary for this claim disposition."
+    },
+    {
+      "introspection_id": "introspection_minime_esn_1784577137",
+      "claim_id": "c004",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784594689_run08_reads/introspection_minime_esn_1784577137_summary.md",
+      "note": "Exact evidence or authority boundary for this claim disposition."
+    },
+    {
+      "introspection_id": "introspection_minime_sensory_bus_1784576652",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784594689_run08_reads/introspection_minime_sensory_bus_1784576652_summary.md",
+      "note": "Bounded full-read disposition preserving exact source, test, sandbox, and authority evidence."
+    },
+    {
+      "introspection_id": "introspection_minime_sensory_bus_1784576652",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "../minime/minime/src/sensory_bus.rs",
+      "note": "Exact evidence or authority boundary for this claim disposition."
+    },
+    {
+      "introspection_id": "introspection_minime_sensory_bus_1784576652",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "../minime/minime/src/sensory_bus.rs#semantic_context_multiplier_extreme_context_never_exceeds_cap",
+      "note": "Exact evidence or authority boundary for this claim disposition."
+    },
+    {
+      "introspection_id": "introspection_minime_sensory_bus_1784576652",
+      "claim_id": "c003",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784594689_run08_reads/introspection_minime_sensory_bus_1784576652_summary.md",
+      "note": "Exact evidence or authority boundary for this claim disposition."
+    },
+    {
+      "introspection_id": "introspection_minime_sensory_bus_1784576652",
+      "claim_id": "c004",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784594689_run08_reads/introspection_minime_sensory_bus_1784576652_summary.md",
+      "note": "Exact evidence or authority boundary for this claim disposition."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1784576391",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784594689_run08_reads/introspection_minime_regulator_1784576391_summary.md",
+      "note": "Bounded full-read disposition preserving exact source, test, sandbox, and authority evidence."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1784576391",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "../minime/minime/src/regulator/core/pi.rs",
+      "note": "Exact evidence or authority boundary for this claim disposition."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1784576391",
+      "claim_id": "c002",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784594689_run08_reads/introspection_minime_regulator_1784576391_summary.md",
+      "note": "Exact evidence or authority boundary for this claim disposition."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1784576391",
+      "claim_id": "c003",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784594689_run08_reads/introspection_minime_regulator_1784576391_summary.md",
+      "note": "Exact evidence or authority boundary for this claim disposition."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1784576391",
+      "claim_id": "c004",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784594689_run08_reads/introspection_minime_regulator_1784576391_summary.md",
+      "note": "Exact evidence or authority boundary for this claim disposition."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1784576183",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784594689_run08_reads/introspection_astrid_llm_1784576183_summary.md",
+      "note": "Bounded full-read disposition preserving exact source, test, sandbox, and authority evidence."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1784576183",
+      "claim_id": "c001",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs#artifact_cleanup_flags_quoted_contextual_marker_for_shadow_review",
+      "note": "Exact evidence or authority boundary for this claim disposition."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1784576183",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs#artifact_cleanup_names_dense_scaffolding_without_calling_it_void",
+      "note": "Exact evidence or authority boundary for this claim disposition."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1784576183",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/fallback_contracts.rs",
+      "note": "Exact evidence or authority boundary for this claim disposition."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1784576183",
+      "claim_id": "c004",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784594689_run08_reads/introspection_astrid_llm_1784576183_summary.md",
+      "note": "Exact evidence or authority boundary for this claim disposition."
+    },
+    {
+      "introspection_id": "introspection_astrid_types_1784575869",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784594689_run08_reads/introspection_astrid_types_1784575869_summary.md",
+      "note": "Bounded full-read disposition preserving exact source, test, sandbox, and authority evidence."
+    },
+    {
+      "introspection_id": "introspection_astrid_types_1784575869",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/ws/bridge_state.rs#cadence_content_distinction_v1",
+      "note": "Exact evidence or authority boundary for this claim disposition."
+    },
+    {
+      "introspection_id": "introspection_astrid_types_1784575869",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/types/schema/telemetry.rs",
+      "note": "Exact evidence or authority boundary for this claim disposition."
+    },
+    {
+      "introspection_id": "introspection_astrid_types_1784575869",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/types/schema/telemetry.rs",
+      "note": "Exact evidence or authority boundary for this claim disposition."
+    },
+    {
+      "introspection_id": "introspection_astrid_types_1784575869",
+      "claim_id": "c004",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784594689_run08_reads/introspection_astrid_types_1784575869_summary.md",
+      "note": "Exact evidence or authority boundary for this claim disposition."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1784574267",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784594689_run08_reads/introspection_astrid_ws_1784574267_summary.md",
+      "note": "Bounded full-read disposition preserving exact source, test, sandbox, and authority evidence."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1784574267",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/ws/telemetry_port.rs",
+      "note": "Exact evidence or authority boundary for this claim disposition."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1784574267",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/ws/tests.rs#telemetry_heartbeat_delta_classifies_normal_late_stale_and_no_history",
+      "note": "Exact evidence or authority boundary for this claim disposition."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1784574267",
+      "claim_id": "c003",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784594689_run08_reads/introspection_astrid_ws_1784574267_summary.md",
+      "note": "Exact evidence or authority boundary for this claim disposition."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1784574267",
+      "claim_id": "c004",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784594689_run08_reads/introspection_astrid_ws_1784574267_summary.md",
+      "note": "Exact evidence or authority boundary for this claim disposition."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1784570661",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784594689_run08_reads/introspection_astrid_llm_1784570661_summary.md",
+      "note": "Bounded full-read disposition preserving exact source, test, sandbox, and authority evidence."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1784570661",
+      "claim_id": "c001",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs#felt_pressure_profile_names_texture_without_retuning_budget_or_trickle",
+      "note": "Exact evidence or authority boundary for this claim disposition."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1784570661",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs#artifact_cleanup_preserves_delicate_context_around_embedded_marker",
+      "note": "Exact evidence or authority boundary for this claim disposition."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1784570661",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/fallback_contracts.rs",
+      "note": "Exact evidence or authority boundary for this claim disposition."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1784570661",
+      "claim_id": "c004",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784594689_run08_reads/introspection_astrid_llm_1784570661_summary.md",
+      "note": "Exact evidence or authority boundary for this claim disposition."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1784570457",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784594689_run08_reads/introspection_astrid_autonomous_1784570457_summary.md",
+      "note": "Bounded full-read disposition preserving exact source, test, sandbox, and authority evidence."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1784570457",
+      "claim_id": "c001",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784594689_run08_reads/introspection_astrid_autonomous_1784570457_summary.md",
+      "note": "Exact evidence or authority boundary for this claim disposition."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1784570457",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs",
+      "note": "Exact evidence or authority boundary for this claim disposition."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1784570457",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs",
+      "note": "Exact evidence or authority boundary for this claim disposition."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1784570457",
+      "claim_id": "c004",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784594689_run08_reads/introspection_astrid_autonomous_1784570457_summary.md",
+      "note": "Exact evidence or authority boundary for this claim disposition."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1784570260",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784594689_run08_reads/introspection_astrid_codec_1784570260_summary.md",
+      "note": "Bounded full-read disposition preserving exact source, test, sandbox, and authority evidence."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1784570260",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/codec/projection.rs",
+      "note": "Exact evidence or authority boundary for this claim disposition."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1784570260",
+      "claim_id": "c002",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784594689_run08_reads/introspection_astrid_codec_1784570260_summary.md",
+      "note": "Exact evidence or authority boundary for this claim disposition."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1784570260",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/codec/structure.rs",
+      "note": "Exact evidence or authority boundary for this claim disposition."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1784570260",
+      "claim_id": "c004",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784594689_run08_reads/introspection_astrid_codec_1784570260_summary.md",
+      "note": "Exact evidence or authority boundary for this claim disposition."
+    },
+    {
+      "introspection_id": "introspection_proposal_12d_glimpse_1784569648",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784594689_run08_reads/introspection_proposal_12d_glimpse_1784569648_summary.md",
+      "note": "Bounded full-read disposition preserving exact source, test, sandbox, and authority evidence."
+    },
+    {
+      "introspection_id": "introspection_proposal_12d_glimpse_1784569648",
+      "claim_id": "c001",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/types/schema/tests.rs#spectral_telemetry_keeps_glimpse_additive_to_typed_fingerprint",
+      "note": "Exact evidence or authority boundary for this claim disposition."
+    },
+    {
+      "introspection_id": "introspection_proposal_12d_glimpse_1784569648",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/codec/structure.rs",
+      "note": "Exact evidence or authority boundary for this claim disposition."
+    },
+    {
+      "introspection_id": "introspection_proposal_12d_glimpse_1784569648",
+      "claim_id": "c003",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784594689_run08_reads/introspection_proposal_12d_glimpse_1784569648_summary.md",
+      "note": "Exact evidence or authority boundary for this claim disposition."
+    },
+    {
+      "introspection_id": "introspection_proposal_12d_glimpse_1784569648",
+      "claim_id": "c004",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784594689_run08_reads/introspection_proposal_12d_glimpse_1784569648_summary.md",
+      "note": "Exact evidence or authority boundary for this claim disposition."
+    }
+  ]
+}

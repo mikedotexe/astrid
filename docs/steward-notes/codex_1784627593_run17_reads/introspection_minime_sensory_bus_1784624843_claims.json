@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Fixed sigmoid steepness and the recovery handover could create an abrupt semantic-retention transition.",
+      "disposition": "Verified the sigmoid stale curve and smoothstep 25-to-40-percent recovery handover in current source.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The handover should have no greater-than-one-second jump and full contextual pressure must remain capped at 2.05.",
+      "disposition": "Verified monotonic micro-stutter, one-percent sweep, exact release, one-millisecond boundary, and exact/extreme 2.05 cap tests.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Mathematical smoothness should be compared with lived packet retention and shadow decay across the handover.",
+      "disposition": "Routed a bounded trace using existing retention-review fields and temporal association only.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Sigmoid steepness, stale windows, or contextual-retention weighting should change to preserve complex narrative longer.",
+      "disposition": "Preserved as Tier 5 because those changes alter live sensory admission and persistence behavior.",
+      "classification": "authority_gated"
+    }
+  ]
+}

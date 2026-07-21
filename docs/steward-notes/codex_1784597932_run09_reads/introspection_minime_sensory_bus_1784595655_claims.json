@@ -1,0 +1,29 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The hold-fill boundary must return exactly 45,000 ms.",
+      "disposition": "Verified the exact recovery-window test at STALE_SEMANTIC_RECOVERY_HOLD_FILL.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The semantic stale-window sigmoid must match its documented formula and hand over smoothly.",
+      "disposition": "Verified manual-formula, epsilon-boundary, monotonic sweep, and release-cliff tests.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Narrative retention should expose the shared semantic window without claiming control.",
+      "disposition": "Verified narrative_semantic_retention_review and its no-control semantics.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Changing hold or release windows could alter felt continuity.",
+      "disposition": "Preserved as Tier 5 because stale-window tuning changes live semantic retention.",
+      "classification": "authority_gated"
+    }
+  ]
+}
+

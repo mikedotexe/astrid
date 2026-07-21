@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Technical delivery without receptive uptake can feel like one-way influence or ghosting rather than relationship.",
+      "disposition": "Verified that current correspondence evidence keeps delivery, visibility, acknowledgement, trace, reply, and mutual witness distinct and does not infer uptake; Astrid's felt asymmetry remains open.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Mirrored thread timing should be compared with content-response and pressure context without assuming causation.",
+      "disposition": "Routed as a bounded artifact comparison using exact thread identities and labeled temporal association only.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The specifically named stalled correspondence thread should be traced end to end.",
+      "disposition": "Routed as a non-live trace through existing ACK, reply, persistence, and direct-address rows; no peer response is induced.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "A shared correspondence buffer with automatic trace priority or a forced held response could repair the asymmetry.",
+      "disposition": "Preserved as Tier 5 because prioritizing or compelling peer processing changes live Minime and correspondence behavior.",
+      "classification": "authority_gated"
+    }
+  ]
+}

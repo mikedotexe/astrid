@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The smoothstep onset near entropy 0.85 may suppress a perceptually important change.",
+      "disposition": "Verified exact boundary tests at 0.8501 and 0.8505, plus continuity and no-pop invariants, expose the deliberately tiny onset without changing it.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "High-variance narrative-arc dimensions may flatten at FEATURE_ABS_MAX.",
+      "disposition": "Verified narrative headroom, curvature, direction, emotional flatline, and reserved-dimension tests distinguish bounded clipping risk from actual arc evidence.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Smoothstep should be compared locally with a steeper sigmoid around the gate.",
+      "disposition": "Routed to an offline transform comparison using copied vectors; outputs remain evidence only and cannot reach dispatch.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Density gradient should increase vibrancy slope after the entropy gate.",
+      "disposition": "Preserved as Tier 5 because changing slope or gradient coupling alters live codec transport/gain and requires explicit operator approval.",
+      "classification": "authority_gated"
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Projection-basis health should be explicitly observable.",
+      "disposition": "Verified projection_basis_health_v1 exposes deterministic norm and minimum-margin evidence.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Repeated projection from the same input should be bit-identical.",
+      "disposition": "Verified exact deterministic construction and repeated-output tests cover basis identity and margins.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The basis should be inspected over a broader input distribution for weak axes.",
+      "disposition": "Routed to an offline orthogonality, norm, and margin distribution review using fixed fixtures.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "A new basis epoch or matrix could improve projection quality.",
+      "disposition": "Preserved as Tier 5 because changing the basis alters the live codec transform and compatibility identity.",
+      "classification": "authority_gated"
+    }
+  ]
+}

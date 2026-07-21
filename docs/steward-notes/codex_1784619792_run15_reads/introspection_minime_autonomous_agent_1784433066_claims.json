@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Recess can remain structurally pressured even when external productivity pressure is absent.",
+      "disposition": "Verified recess_pressure_permission_conflict_v1 and density-aware Recess evidence preserve both truths without treating rest as proof of low pressure.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Mode-packing pressure should be compared between Recess/daydreaming and task-oriented activity.",
+      "disposition": "Routed to a copied-state or observational comparison using existing activity-load and pressure-source fields.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Shadow dispersal should be observed over a bounded period of pure Recess.",
+      "disposition": "Routed to a ten-minute read-only trajectory observation; no autonomous action or shadow control is changed.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "A soften_differentiation parameter should relax organization during settled Recess.",
+      "disposition": "Preserved as Tier 5 because it would change live Minime autonomous regulation and cognitive behavior.",
+      "classification": "authority_gated"
+    }
+  ]
+}

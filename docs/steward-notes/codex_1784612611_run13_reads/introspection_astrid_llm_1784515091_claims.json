@@ -1,0 +1,8 @@
+{
+  "claims": [
+    {"claim_id":"c001","summary":"Artifact cleanup uses brittle repeated string replacement that can erase or create marker patterns.","disposition":"Current source supersedes that mechanism with a single-pass longest-raw-marker scanner and explicit no-second-order accounting.","classification":"verified_existing"},
+    {"claim_id":"c002","summary":"Ordinary linguistic substrings and semantic remainder must survive artifact cleanup.","disposition":"Verified by common-language, delicate-context, dense-structure, and erased-output regressions.","classification":"verified_existing"},
+    {"claim_id":"c003","summary":"Nested quoted artifact markers need exact contextual and quoted accounting.","disposition":"Implemented and verified with a nested straight-and-smart-quote regression in run 13.","classification":"implemented_now"},
+    {"claim_id":"c004","summary":"A token-aware parser is needed instead of blind replacement.","disposition":"Verified as already implemented by the current scanner; no live parser, prompt, or marker-contract retune was necessary.","classification":"verified_existing"}
+  ]
+}

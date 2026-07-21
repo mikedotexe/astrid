@@ -1,0 +1,6 @@
+{"claims":[
+  {"claim_id":"c001","summary":"Minime uses PI regulation alongside rate governance, content gating, and filtering.","disposition":"Verified in current regulator source; these are related but distinct mechanisms.","classification":"verified_existing"},
+  {"claim_id":"c002","summary":"Integral accumulation needs boundedness, leak, and anti-windup.","disposition":"Verified through configurable leak, clamps, actuator-aware anti-windup, and focused tests.","classification":"verified_existing"},
+  {"claim_id":"c003","summary":"PI lag or oscillation should be compared with fill, lambda1, pressure, and shadow evidence.","disposition":"Routed to copied telemetry/replay; contemporaneous movement would remain correlation, not felt causation.","classification":"sandbox_routed"},
+  {"claim_id":"c004","summary":"Add a density-gradient shear coefficient or retune PI gains.","disposition":"Preserved as Tier 5 because PI, filter, pressure, fill, and controller behavior require explicit operator approval.","classification":"authority_gated"}
+]}

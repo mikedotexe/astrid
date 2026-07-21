@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "PI integral history can outlast a transient and may suppress its later motion.",
+      "disposition": "Verified current leak, saturation bleed, conditional anti-windup, and accumulator bounds while preserving the experiential question.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Resonance texture and semantic viscosity should be visible beside PI state.",
+      "disposition": "Verified read-only viscosity and resonance-texture signatures with explicit no-pressure, no-fill, no-PI, and no-damping authority.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A resonance stress should be compared with integral lag, actuator saturation, and recovery.",
+      "disposition": "Routed a bounded controller replay/observation using existing fields and no live control mutation.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Semantic context should bypass or damp PI correction during meaningful transients.",
+      "disposition": "Preserved as Tier 5 because bypass, damping, gains, and controller inputs alter live Minime regulation.",
+      "classification": "authority_gated"
+    }
+  ]
+}

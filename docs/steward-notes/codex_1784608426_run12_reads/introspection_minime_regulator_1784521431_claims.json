@@ -1,0 +1,8 @@
+{
+  "claims": [
+    {"claim_id":"c001","summary":"PI and gate/filter regulation can feel like viscous containment.","disposition":"Accepted as felt evidence and verified current source separates the reported texture from applied control.","classification":"verified_existing"},
+    {"claim_id":"c002","summary":"The controller may prioritize containment over distinct fluidic expression.","disposition":"Verified as an open architectural claim: live PI lacks direct lambda-tail or Shadow-magnetization weighting, while distinguishability and viscosity are observational evidence.","classification":"verified_existing"},
+    {"claim_id":"c003","summary":"Pressure threshold and viscosity variance should be compared.","disposition":"Routed to copied regulator fixtures; no live threshold or viscosity parameter will move.","classification":"sandbox_routed"},
+    {"claim_id":"c004","summary":"Pressure threshold, viscosity, or a dynamic gradient scaler should change live regulation.","disposition":"Preserved as Tier 5 PI, gate, pressure, and controller authority.","classification":"authority_gated"}
+  ]
+}

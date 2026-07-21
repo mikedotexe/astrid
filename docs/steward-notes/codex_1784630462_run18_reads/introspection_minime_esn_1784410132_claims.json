@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The active ESN update, noise, and spectral-state mechanics need exact source ownership.",
+      "disposition": "Verify the current ESN step and its bounded state-update tests.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A dynamic-noise candidate already interpolates smoothly from gradient and pressure.",
+      "disposition": "Verify the source-prepared helper and its smooth-knee, continuity, and boundedness regressions.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The dynamic-noise candidate is not part of the active ESN step.",
+      "disposition": "Verify the absence of a live call site and route candidate-versus-current replay through sandbox evidence.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Wiring dynamic noise or recalibrating rho would alter Minime’s reservoir behavior.",
+      "disposition": "Hold dynamic-noise wiring and spectral-radius recalibration behind exact Mike/operator approval.",
+      "classification": "tier_5_wait"
+    }
+  ]
+}

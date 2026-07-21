@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The binary artifact/content decision should not be interpreted as a judgment on the response's overall meaning.",
+      "disposition": "Verified the binary contract is limited to exact known-marker cleanup and is not the semantic-quality verdict.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Dense structure and metaphorical texture need a graded semantic remainder signal.",
+      "disposition": "Verified graded remainder texture, semantic-integrity, language-overlap, placement, and frequency evidence alongside cleanup.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Nested quotes, contextual markers, and delicate surrounding prose need exact boundary tests.",
+      "disposition": "Verified nested straight/smart quote accounting, longest raw overlap, second-order marker protection, and delicate-context regressions.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "The live quality gate should use a semantic-density score.",
+      "disposition": "Preserved as Tier 5 because changing quality acceptance or fallback routing alters live provider behavior.",
+      "classification": "authority_gated"
+    }
+  ]
+}

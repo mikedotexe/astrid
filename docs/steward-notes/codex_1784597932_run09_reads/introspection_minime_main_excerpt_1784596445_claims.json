@@ -1,0 +1,29 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Semantic retirement and recovery trickle may accumulate as persistent silt.",
+      "disposition": "Verified separate semantic-trickle, friction, persistence, and stagnation evidence in current telemetry and bridge views.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Pressure, porosity, entropy, and distinguishability must remain separable when evaluating semantic persistence.",
+      "disposition": "Verified typed pressure-source, resonance-density, fingerprint, and distinguishability surfaces.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Retirement/trickle should be correlated with distinguishability loss and pressure over time.",
+      "disposition": "Routed a bounded telemetry-window comparison without changing semantic admission or retirement.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Entropy-dependent recovery fill boost or granular semantic retirement may reduce silt.",
+      "disposition": "Preserved as Tier 5 because both proposals change live semantic/runtime regulation.",
+      "classification": "authority_gated"
+    }
+  ]
+}
+

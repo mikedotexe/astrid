@@ -1,0 +1,8 @@
+{
+  "claims": [
+    {"claim_id":"c001","summary":"The fixed semantic projection must be deterministic and inspectable.","disposition":"Verified through the fixed basis, deterministic replay, and exposed basis-health measurements.","classification":"verified_existing"},
+    {"claim_id":"c002","summary":"Every projected dimension needs nonzero support with measurable margin.","disposition":"Verified by the basis-health test, which reports no dead dimension and preserves bounded margins.","classification":"verified_existing"},
+    {"claim_id":"c003","summary":"Raw norms, normalized norms, and precision loss should remain separately visible.","disposition":"Verified in current projection evidence and precision regressions.","classification":"verified_existing"},
+    {"claim_id":"c004","summary":"The projection seed, basis, scale, or transport mapping should be changed.","disposition":"Preserved as a Tier 5 operator-approval wait for live codec transport and gain behavior.","classification":"authority_gated"}
+  ]
+}

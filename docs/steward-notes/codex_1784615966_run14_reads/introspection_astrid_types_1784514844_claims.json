@@ -1,0 +1,6 @@
+{"claims":[
+  {"claim_id":"c001","summary":"Cadence clarity needs numeric grounding in addition to a textual basis.","disposition":"Verified: cadence_clarity_score is numeric and derives from exact jitter classes; cadence_clarity_basis states the evidence boundary.","classification":"verified_existing"},
+  {"claim_id":"c002","summary":"Typed presence with an absent hybrid delta could become a ghost coherence state.","disposition":"Verified safe: typed-only, malformed legacy, and non-finite paired data receive explicit unavailable states and no numeric coherence/delta.","classification":"verified_existing"},
+  {"claim_id":"c003","summary":"Inter-arrival variance and hybrid-delta edge cases need direct tests.","disposition":"Verified by normal/late/stale/no-history cadence boundaries and finite/non-finite/malformed hybrid regressions.","classification":"verified_existing"},
+  {"claim_id":"c004","summary":"Replace the compatibility basis string with a new controlling schema type.","disposition":"No behavior change is needed: the additive numeric score and typed states already answer the diagnostic concern while preserving wire compatibility.","classification":"verified_existing"}
+]}

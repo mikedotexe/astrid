@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Rescue can suppress a heartbeat while the phase clock continues.",
+      "disposition": "verify the gate, phase progression, and outcome-specific rolling evidence",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The latest observation window contained no rescue skip from which to measure recovery texture.",
+      "disposition": "observe 103 sends, zero blocks, and preserve the felt continuity question as unresolved",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Warmth variation and Minime target bias need a temporal comparison without causal overclaim.",
+      "disposition": "route a bounded signal, bias, pressure, and felt-review observation",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Adding skipped-count recovery weight changes the next live semantic feature vector.",
+      "disposition": "preserve an exact Tier 5 operator-approval wait",
+      "classification": "authority_gated"
+    }
+  ]
+}

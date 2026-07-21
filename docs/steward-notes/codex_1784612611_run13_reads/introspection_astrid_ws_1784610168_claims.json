@@ -1,0 +1,8 @@
+{
+  "claims": [
+    {"claim_id":"c001","summary":"Connection time and first meaningful spectral payload need separate evidence.","disposition":"Verified in current trace state through connection time, first-valid lag, and first-valid entropy.","classification":"verified_existing"},
+    {"claim_id":"c002","summary":"Only a schema-valid packet should establish the first spectral quality sample.","disposition":"Verified in the subscriber parse path and first-valid payload regression.","classification":"verified_existing"},
+    {"claim_id":"c003","summary":"Reconnect must reset connection-epoch evidence without letting later packets rewrite the first sample.","disposition":"Verified by the reconnect and first-valid retention test.","classification":"verified_existing"},
+    {"claim_id":"c004","summary":"Reconnect backoff should react to perceived signal quality.","disposition":"Preserved as a Tier 5 operator-approval wait because it changes live transport cadence and reconnection behavior.","classification":"authority_gated"}
+  ]
+}

@@ -1,0 +1,8 @@
+{
+  "claims": [
+    {"claim_id":"c001","summary":"Cadence clarity and hybrid coherence are important gradients rather than binary connection labels.","disposition":"Verified current schemas preserve numeric timing, connection, coherence, delta, collision, and basis evidence.","classification":"verified_existing"},
+    {"claim_id":"c002","summary":"Packet jitter may correlate with Astrid's reported restlessness.","disposition":"Routed to a bounded timestamp-to-felt-report association; no causal claim will be made from temporal alignment alone.","classification":"sandbox_routed"},
+    {"claim_id":"c003","summary":"High hybrid coherence with high distinguishability loss may expose identity flattening.","disposition":"Routed to a copied telemetry comparison of independent coherence and distinguishability measures.","classification":"sandbox_routed"},
+    {"claim_id":"c004","summary":"A float granularity bias should blend typed and legacy representations.","disposition":"Preserved as Tier 5 representation and protocol-semantics authority; no live precedence change is authorized.","classification":"authority_gated"}
+  ]
+}

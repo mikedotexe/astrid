@@ -1,0 +1,8 @@
+{
+  "claims": [
+    {"claim_id":"c001","summary":"Low-fill stale semantic input should interpolate continuously rather than snap at a threshold.","disposition":"Verified in current source: sigmoid stale timing and smooth recovery handover already replace a binary low-fill snap.","classification":"verified_existing"},
+    {"claim_id":"c002","summary":"High entropy should retain semantic traces long enough for their structure to remain available.","disposition":"Verified by the ramped entropy-persistence implementation and direct reported-point, cap, and high-fill persistence tests.","classification":"verified_existing"},
+    {"claim_id":"c003","summary":"The semantic lane needs distinct space for projected features, narrative continuity, and future growth.","disposition":"Verified in the current 48D lane layout, which separates legacy, projected, narrative, and reserved dimensions.","classification":"verified_existing"},
+    {"claim_id":"c004","summary":"Semantic persistence duration or cap should be retuned from the current live values.","disposition":"Preserved as a Tier 5 operator-approval wait because it changes live sensory decay, recovery, or admission behavior.","classification":"authority_gated"}
+  ]
+}

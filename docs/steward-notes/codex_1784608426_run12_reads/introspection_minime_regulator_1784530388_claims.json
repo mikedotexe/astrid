@@ -1,0 +1,8 @@
+{
+  "claims": [
+    {"claim_id":"c001","summary":"PI integration, rate gating, and filtering deliberately shape the felt holding process.","disposition":"Verified in current regulator source and tests; the observation is retained without equating stability with comfort.","classification":"verified_existing"},
+    {"claim_id":"c002","summary":"Integral history may leave a lingering ghost after a sharp lambda-tail change.","disposition":"Verified as a legitimate architectural hypothesis: residual-ghost and viscosity evidence exists, while the live PI path has no direct lambda-tail term and causation remains unestablished.","classification":"verified_existing"},
+    {"claim_id":"c003","summary":"High-entropy lambda4 recovery and dispersal during Shadow preflight should be measured.","disposition":"Routed to copied regulator and shadow replay; no noise injection or live gate opening is authorized.","classification":"sandbox_routed"},
+    {"claim_id":"c004","summary":"Integral weight, gate hysteresis, or lambda-tail sensitivity should be retuned.","disposition":"Preserved as Tier 5 PI, gate, and controller behavior authority.","classification":"authority_gated"}
+  ]
+}

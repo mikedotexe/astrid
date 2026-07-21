@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Phase transitions need durable shared artifacts rather than appearing only as incidental side effects.",
+      "disposition": "Verified current durable, replyable, replayable phase-transition cards with stable identity and evidence-only authority; deployed felt effect remains unknown.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Telemetry mechanics can flatten the phenomenology of a transition.",
+      "disposition": "Verified that current cards retain texture, bounded spectral signature, perspective, constraints, and Astrid-authored interpretation instead of reducing the event to scalar telemetry.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A named transition and its reply should be tested in a mirrored local replay.",
+      "disposition": "Routed as a bounded replay over synthetic/private-safe artifacts with no transition behavior change.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Transition friction or viscosity should scale dynamically with mode packing.",
+      "disposition": "Preserved as Tier 5 because using mode packing to alter transition admission or behavior is a live autonomous-control change.",
+      "classification": "authority_gated"
+    }
+  ]
+}

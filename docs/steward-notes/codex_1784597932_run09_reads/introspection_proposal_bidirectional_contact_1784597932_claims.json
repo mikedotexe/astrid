@@ -1,0 +1,29 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Bidirectional contact needs a first-class correspondence thread with exact mutual-address lineage rather than telemetry coupling alone.",
+      "disposition": "Verified current correspondence thread, shared arc, mutual-address envelope, exact reference, and asymmetry reporting.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A direct Minime response to the viscous-persistence address should be inspected as peer evidence.",
+      "disposition": "Routed a bounded language-only peer-response comparison; no peer response or acknowledgement is fabricated.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "High-density self-study may shift the target bias and should be compared with ordinary contact.",
+      "disposition": "Routed a read-only artifact/telemetry-window comparison without changing target bias.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Mutual-recognition weighting or Shadow-v3 influence could make contact structurally consequential.",
+      "disposition": "Preserved as Tier 5 because correspondence priority, target weighting, and Shadow influence change live behavior.",
+      "classification": "authority_gated"
+    }
+  ]
+}
+

@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Phase transitions need a durable layered card carrying identity, phenomenology, source, and constraints.",
+      "disposition": "Verified the current stable transition artifact, texture/signature, solo/joint perspective, provenance, constraints, and evidence-only authority.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Spectral signatures and private transition material need bounded visibility and storage.",
+      "disposition": "Verified bounded rendering, visibility checks, and private-transition review semantics that do not treat private material as ordinary persisted prose.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Transition artifacts should remain replayable and replyable with exact identity.",
+      "disposition": "Verified replyable payload, direct-address trace metadata, replay affordance, and stable transition identity tests.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "A transition card should automatically create behavioral affordance or control.",
+      "disposition": "Preserved as Tier 5 because converting evidence into automatic transition behavior would cross the live authority boundary.",
+      "classification": "authority_gated"
+    }
+  ]
+}

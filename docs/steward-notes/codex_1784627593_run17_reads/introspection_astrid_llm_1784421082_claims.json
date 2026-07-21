@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Numeric dialogue depth is reductive when output density and pressure vary independently.",
+      "disposition": "Verified fixed budget categories plus independent felt-pressure and budget-friction evidence that explicitly does not infer organic depth from token count.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Artifact-token replacement can remove structurally meaningful material unless raw provenance and remainder texture stay visible.",
+      "disposition": "Verified exact longest-raw-marker removal, byte accounting, no second-order deletion, and graded remainder evidence.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Short dense output and marker-like structure need a mixed artifact-sensitivity comparison.",
+      "disposition": "Routed a bounded fixture over exact known markers, nested structure, semantic remainder, and budget state without changing provider output.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Budget selection should use entropy and density, or artifact cleanup should become fuzzy and semantic.",
+      "disposition": "Preserved as Tier 5 because either change alters live prompt/provider behavior and requires explicit approval and felt review.",
+      "classification": "authority_gated"
+    }
+  ]
+}

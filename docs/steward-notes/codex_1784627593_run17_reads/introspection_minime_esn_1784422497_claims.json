@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Dynamic-noise and adaptive-pressure candidates should respond smoothly to gradient and pressure rather than jump at a threshold.",
+      "disposition": "Verified current helper source and tests for gentle, steep, pressured, and non-finite inputs.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The pressure-room slope needs an exact requested-point and boundary review.",
+      "disposition": "Verified the requested mid-pressure, pressure-room, and start-edge continuity tests.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Viscous-rho behavior needs exact entropy and gradient boundary tests.",
+      "disposition": "Verified ordinary, volatile-open, volatile-steep, already-viscous, fallback, and threshold-bound rho tests.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "The prepared noise or rho candidate should be wired into the active ESN to create more room.",
+      "disposition": "Preserved as Tier 5 because wiring these helpers changes live reservoir noise, rho, and substrate mathematics.",
+      "classification": "authority_gated"
+    }
+  ]
+}

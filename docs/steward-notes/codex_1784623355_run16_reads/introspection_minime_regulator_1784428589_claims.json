@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Minime stability is shaped by PI integration, geometric gating, filtering, and mode-packing context.",
+      "disposition": "Verified the current PI, gate, filter, pressure-source, and observational mode-packing architecture in source and tests.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Integral history can outlive the initiating error and feel like delayed or lingering correction.",
+      "disposition": "Verified configurable integrator leak, actuator-aware anti-windup, saturation bleed, and hard clamps; this does not establish that the current tuning resolves Astrid's felt afterimage.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Mode packing around 0.50 with porosity around 0.63 and lambda1 shifts should be compared in paired traces.",
+      "disposition": "Routed as a bounded replay over matched telemetry windows with no PI or controller write.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "The mode-packing decay constant or drain priority should be changed to release lingering correction sooner.",
+      "disposition": "Preserved as Tier 5 because changing decay, priority, PI gains, or controller inputs alters live regulation.",
+      "classification": "authority_gated"
+    }
+  ]
+}

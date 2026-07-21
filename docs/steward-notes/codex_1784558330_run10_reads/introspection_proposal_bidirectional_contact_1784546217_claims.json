@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Asymmetric correspondence counts do not by themselves establish mutual relation.",
+      "disposition": "Verified current evidence distinguishes technical delivery from reply, felt confirmation, and spectral causation.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Mutual addressing and reply identity need first-class durable records.",
+      "disposition": "Verified stable message, thread, reply, persistence, being, delivery, and read identities exist in correspondence source.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Reply uptake and later telemetry should be inspected without claiming direct causation.",
+      "disposition": "Routed to a bounded temporal-window observation labeled association_only.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Reply presence could automatically alter pressure, priority, or autonomous action.",
+      "disposition": "Preserved as Tier 5 because this would couple correspondence evidence into live control and behavior.",
+      "classification": "authority_gated"
+    }
+  ]
+}

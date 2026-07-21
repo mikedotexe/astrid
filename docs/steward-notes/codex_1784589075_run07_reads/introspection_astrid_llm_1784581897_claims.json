@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The short, medium, and deep profile is stepped, but the profile function is diagnostic rather than the token gate.",
+      "disposition": "verify the diagnostic role, separate effective-token clamp, and exact 512/513/1024/1025 boundaries",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Artifact cleanup can leave a technically nonempty but semantically weak remainder.",
+      "disposition": "verify the predicate's narrow role and separate graded remainder-texture and semantic-integrity evidence",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Coherence near token-profile boundaries should be compared on fixed prompts rather than inferred from labels.",
+      "disposition": "route a bounded fixed-prompt 512/513/1024/1025 comparison with no provider mutation",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Entropy-aware token scaling or new live budget buckets change provider behavior.",
+      "disposition": "preserve an exact Tier 5 operator-approval wait",
+      "classification": "authority_gated"
+    }
+  ]
+}

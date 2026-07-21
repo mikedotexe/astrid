@@ -1,0 +1,65 @@
+{
+  "schema": "run14_source_verification_receipt_v1",
+  "authority": "evidence_only_not_deploy_approval_or_live_control",
+  "claim_counts": {
+    "total": 80,
+    "verified_existing": 42,
+    "observed": 6,
+    "sandbox_routed": 14,
+    "authority_gated": 18,
+    "implemented_now": 0
+  },
+  "work_items": {
+    "total": 80,
+    "verified_or_observed": 48,
+    "needs_sandbox": 14,
+    "needs_operator_approval": 18,
+    "authority_marker_violations": 0
+  },
+  "right_to_ignore_cards": {
+    "generated": 80,
+    "delivered": 0,
+    "undelivered": 80
+  },
+  "sandbox": {
+    "packet_trials": 32,
+    "ready_manual_reviews": 14,
+    "approval_required_live_candidates": 18,
+    "packet_runnable_live_trials": 0,
+    "runnable_live_violations": 0,
+    "results_recorded_by_run14": 0
+  },
+  "astrid_focused_tests": {
+    "filters_passed": [
+      "telemetry_heartbeat_delta_classifies_normal_late_stale_and_no_history",
+      "telemetry_integration_health_separates_pipeline_wait_and_hold",
+      "artifact_cleanup_",
+      "bracketed_phase_transition_message_becomes_replyable_payload",
+      "joint_transition"
+    ],
+    "filters_failed": 0,
+    "initial_workspace_invocation": "failed_non_blocking_wrong_workspace_package_scope_then_reran_from_capsules_spectral_bridge"
+  },
+  "minime_focused_tests": {
+    "dynamic_noise_tests_across_library_and_binary": 16,
+    "entropy_persistence_tests_across_library_and_binary": 4,
+    "pi_pressure_wiring_replay_tests": 3,
+    "failed": 0,
+    "target_directory": "/tmp/minime-run14-target"
+  },
+  "tooling_self_tests": {
+    "agency_corridor": 18,
+    "introspection_addressing": 35,
+    "sandbox_trial_queue": 27,
+    "recent_signal_summary": 38,
+    "proactive_scan": 110,
+    "evidence_event_store": 13,
+    "steward_control": 30,
+    "total": 271,
+    "failed": 0
+  },
+  "format_check": "passed_with_stable_rustfmt_ignoring_configured_nightly_only_options",
+  "diff_check": "passed",
+  "runtime_restart_required_by_run14": false,
+  "existing_restart_debt_unchanged": "docs/steward-notes/codex_1784558330_run10_reads/restart_debt.json"
+}

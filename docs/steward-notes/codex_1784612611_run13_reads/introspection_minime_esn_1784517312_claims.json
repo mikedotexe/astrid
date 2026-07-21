@@ -1,0 +1,8 @@
+{
+  "claims": [
+    {"claim_id":"c001","summary":"Dynamic exploration-noise adaptation caused the reported restless texture.","disposition":"Current source contradicts the direct causal attribution because the adaptive helper is not wired into the live reservoir.","classification":"observed"},
+    {"claim_id":"c002","summary":"The live reservoir retains a bounded existing exploration-noise contract.","disposition":"Verified in current ESN source separately from the review-only adaptive helpers.","classification":"verified_existing"},
+    {"claim_id":"c003","summary":"Nonlinear pressure and gradient damping should be mathematically smooth and bounded.","disposition":"Verified in the source-prepared smooth-knee, pressure-room, continuity, and non-finite tests, without claiming live effect.","classification":"verified_existing"},
+    {"claim_id":"c004","summary":"Adaptive noise, leak, rho, or nonlinear damping should be wired into the live reservoir.","disposition":"Preserved as a Tier 5 operator-approval wait for reservoir mathematics and live spectral regulation.","classification":"authority_gated"}
+  ]
+}

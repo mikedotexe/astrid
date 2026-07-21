@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The live regulator uses PI dynamics with explicit filtering and bounded actuation.",
+      "disposition": "Verify the active regulator path and current coefficient ownership from source and tests.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Integrator leak and actuator-aware anti-windup should prevent unbounded persistence under saturation.",
+      "disposition": "Verify leak, saturation bleed, conditional integration, and anti-windup regressions.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Semantic and dynamic viscosity candidates are review evidence rather than active control.",
+      "disposition": "Verify those surfaces are unwired and route pressure, viscosity, and hunting comparison through sandbox evidence.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Wiring viscosity or changing PI coefficients would alter live Minime regulation.",
+      "disposition": "Hold viscosity coupling and PI coefficient changes behind exact Mike/operator approval.",
+      "classification": "tier_5_wait"
+    }
+  ]
+}

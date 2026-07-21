@@ -1,0 +1,8 @@
+{
+  "claims": [
+    {"claim_id":"c001","summary":"Dynamic-noise and viscous-rho helpers describe bounded pressure, gradient, and entropy responses.","disposition":"Verified in current source as source-prepared review mathematics that is explicitly not wired into the live reservoir.","classification":"verified_existing"},
+    {"claim_id":"c002","summary":"The 0.5 gradient and 0.5 pressure point and below-threshold rho behavior need direct coverage.","disposition":"Verified by existing midpoint, smooth-knee, threshold-continuity, and current-rho fallback tests in Minime's ESN module.","classification":"verified_existing"},
+    {"claim_id":"c003","summary":"The current felt texture is produced by live dynamic-noise adaptation.","disposition":"Current source contradicts that direct causal attribution: the adaptive helpers are review-only and no live consumer was found.","classification":"observed"},
+    {"claim_id":"c004","summary":"Adaptive noise or viscous rho should be wired into the live reservoir.","disposition":"Preserved as a Tier 5 operator-approval wait because this would change live reservoir noise, pressure response, or spectral memory.","classification":"authority_gated"}
+  ]
+}

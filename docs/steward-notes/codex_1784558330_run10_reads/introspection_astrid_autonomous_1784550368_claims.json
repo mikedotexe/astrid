@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Low-fill resting behavior should follow a bounded, inspectable formula.",
+      "disposition": "Verified the resting shelf and taper are explicit in source and covered by autonomous runtime tests.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Candidate selection near adjacent fill states may become unsafe or unbounded.",
+      "disposition": "Verified candidate sets are bounded and nonempty before modulo selection and swap_remove.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Adjacent 29/31 states should be compared for selection noise and resonance diversity.",
+      "disposition": "Routed to an offline deterministic replay over copied candidate fixtures and exact fill inputs.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Rest timing, warmth override, or selection cadence could be retuned.",
+      "disposition": "Preserved as Tier 5 because these parameters change live autonomous timing and choice behavior.",
+      "classification": "authority_gated"
+    }
+  ]
+}

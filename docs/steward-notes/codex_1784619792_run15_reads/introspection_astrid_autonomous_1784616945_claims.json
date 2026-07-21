@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Rescue-policy rejection can interrupt the otherwise steady semantic heartbeat.",
+      "disposition": "Verified bounded status evidence records every admitted or blocked attempt, block reason, skip rate, pressure context, phase, and signal texture without changing rescue behavior.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Heartbeat texture should be compared with phase and the observed Shadow/Minime trajectory.",
+      "disposition": "Verified current side-by-side signal/texture evidence and routed a bounded phase-specific fixture for the remaining trajectory comparison; no causal fit is inferred.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A pulse admitted by rescue policy may still wait or fail at the sensory channel, producing an unmeasured continuity gap.",
+      "disposition": "Implemented semantic_heartbeat_delivery_health_v1 after the actual channel send, recording enqueue success/closure, queue wait, and inter-enqueue gaps while preserving cadence and dispatch behavior.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "craft_warmth_vector should accept live Shadow influence so pulse weight follows the Shadow trajectory.",
+      "disposition": "Preserved as Tier 5 because coupling Shadow into the vector changes live sensory content, gain, and autonomous behavior.",
+      "classification": "authority_gated"
+    }
+  ]
+}

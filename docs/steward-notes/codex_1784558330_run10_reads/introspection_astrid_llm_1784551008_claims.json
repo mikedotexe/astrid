@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Hard generation-budget boundaries should be represented exactly.",
+      "disposition": "Verified exact 512/513 and 1024/1025 requested-budget classifications and boundary tests.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Felt pressure and response density should remain evidence rather than hidden control inputs.",
+      "disposition": "Verified current diagnostics preserve their separate provenance and make no control transition.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Equal requested budgets should be compared across different semantic densities.",
+      "disposition": "Routed to an offline provider fixture using stored metadata only and no prompt or model-policy change.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Spectral state could select a dynamic generation budget.",
+      "disposition": "Preserved as Tier 5 because it would make substrate evidence a live model scheduling and generation control.",
+      "classification": "authority_gated"
+    }
+  ]
+}

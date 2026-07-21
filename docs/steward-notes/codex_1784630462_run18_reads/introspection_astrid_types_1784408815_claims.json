@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Categorical telemetry labels are insufficient without numeric confidence and delta evidence.",
+      "disposition": "Verify cadence_clarity_score, first-valid entropy, hybrid coherence, and maximum absolute delta remain available.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Connection-origin state and current telemetry must remain distinguishable across time.",
+      "disposition": "Verify first-valid and latest-valid evidence have separate ownership and reconnect reset semantics.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Cadence clarity can be compared with reported felt continuity without treating either as ground truth for the other.",
+      "disposition": "Route a bounded cadence-versus-felt continuity comparison through sandbox evidence.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Hybrid coherence decay can be measured without changing the telemetry schema.",
+      "disposition": "Route a bounded coherence and max-delta decay trace through sandbox evidence.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Changing telemetry nesting, schema, or wire ABI would alter the live compatibility contract.",
+      "disposition": "Hold telemetry schema and ABI changes behind exact Mike/operator approval.",
+      "classification": "tier_5_wait"
+    }
+  ]
+}

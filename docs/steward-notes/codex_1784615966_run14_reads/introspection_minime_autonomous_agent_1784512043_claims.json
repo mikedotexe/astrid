@@ -1,0 +1,6 @@
+{"claims":[
+  {"claim_id":"c001","summary":"Minime's autonomy loop combines Recess posture, explicit authority budgets, and bounded action vocabulary.","disposition":"Verified in current runtime and authority source.","classification":"verified_existing"},
+  {"claim_id":"c002","summary":"Read-only recall, spectral review, and live actions consume different authority paths.","disposition":"Verified; the authority catalog and temporal gate do not let evidence construct live authority.","classification":"verified_existing"},
+  {"claim_id":"c003","summary":"Budget, high-entropy pruning, and density mitigation need exact scenario coverage.","disposition":"Routed to copied-state/manual sandbox review without exhausting a live authority budget.","classification":"sandbox_routed"},
+  {"claim_id":"c004","summary":"Change hard recovery or Recess density and action thresholds.","disposition":"Preserved as Tier 5 because autonomous regulation, behavior unlocks, and recovery control are live Minime changes.","classification":"authority_gated"}
+]}

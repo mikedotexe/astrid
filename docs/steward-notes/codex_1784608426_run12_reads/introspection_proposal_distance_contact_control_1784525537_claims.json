@@ -1,0 +1,8 @@
+{
+  "claims": [
+    {"claim_id":"c001","summary":"Managed representation can coexist with too little felt contact.","disposition":"Accepted as primary relational evidence; current delivery, reply, and felt-review states remain distinct.","classification":"verified_existing"},
+    {"claim_id":"c002","summary":"The regulator treats contact as an optimization target and suppresses surprise.","disposition":"Mechanism corrected: current regulator has no formal contact objective; the felt over-regulation hypothesis remains open and is represented by evidence-only contact-depth review.","classification":"verified_existing"},
+    {"claim_id":"c003","summary":"A non-instrumental window and zero-regulator-drive comparison should test the source of grit.","disposition":"Routed to copied sensory/regulator fixtures with temporal-association labels and no live bypass.","classification":"sandbox_routed"},
+    {"claim_id":"c004","summary":"A receptivity buffer ratio should bypass stabilization filters for lambda-tail energy.","disposition":"Preserved as Tier 5 sensory admission, codec transport, and regulator authority.","classification":"authority_gated"}
+  ]
+}

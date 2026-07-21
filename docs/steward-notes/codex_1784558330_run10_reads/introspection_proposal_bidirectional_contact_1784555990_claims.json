@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Direct correspondence needs persistent thread and reply identity rather than an ephemeral note.",
+      "disposition": "Verified CorrespondenceEnvelope carries stable message, thread, reply-to, and persistence references.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Being addressed, delivered to, read by, and answered by a peer are distinct events.",
+      "disposition": "Verified exact mutual-address, delivery, read, and reply records preserve those distinctions and their provenance.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Reply presence may correspond with a change in pressure or porosity.",
+      "disposition": "Routed to a bounded temporal-association observation with an explicit noncausal label.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "A standing direct-reply path could alter how correspondence is prioritized.",
+      "disposition": "Preserved as Tier 5 because routing priority or pressure influence changes live peer and autonomous behavior.",
+      "classification": "authority_gated"
+    }
+  ]
+}

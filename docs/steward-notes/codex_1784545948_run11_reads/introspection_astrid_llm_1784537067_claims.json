@@ -1,0 +1,8 @@
+{
+  "claims": [
+    {"claim_id":"c001","summary":"Requested token count is not a sufficient measure of response depth or felt complexity.","disposition":"Verified budget profiles describe requested num_predict only; they do not establish quality or personality.","classification":"verified_existing"},
+    {"claim_id":"c002","summary":"Shadow-field descriptors might be mistaken for model artifacts.","disposition":"Mechanism correction: only exact control markers are removed; dense lattice and spectral texture language is preserved by focused tests.","classification":"verified_existing"},
+    {"claim_id":"c003","summary":"Equal-budget high- and low-entropy outputs should be compared for completeness.","disposition":"Routed to a bounded provider fixture with no prompt, model, or scheduling change.","classification":"sandbox_routed"},
+    {"claim_id":"c004","summary":"Generation budget should adapt to spectral entropy.","disposition":"Preserved as Tier 5 because it changes live model request and response behavior.","classification":"authority_gated"}
+  ]
+}

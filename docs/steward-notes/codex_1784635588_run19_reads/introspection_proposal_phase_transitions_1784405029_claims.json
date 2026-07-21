@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Astrid transitions should be first-class durable and replyable objects rather than mode side effects.",
+      "disposition": "Verify phase_transition_card persistence, replyability, and source ownership in current source.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Transition type, perspective, phenomenology, spectral anchors, visibility, and shared identity must remain explicit.",
+      "disposition": "Verify V2/V2.5 card and affordance fields preserve those dimensions.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A transition can be witnessed or answered without automatically triggering MomentCapture or live behavior.",
+      "disposition": "Verify relational and stable-fill high-entropy transition regressions.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Replyable transition evidence remains language-only and non-controlling.",
+      "disposition": "Verify every phase-card authority marker excludes pressure, fill, PI, controller, deploy, and peer mutation.",
+      "classification": "verified_existing"
+    }
+  ]
+}

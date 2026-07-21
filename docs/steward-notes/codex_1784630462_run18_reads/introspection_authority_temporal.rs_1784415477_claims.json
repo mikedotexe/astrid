@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Live authority must bind expiry, lifecycle, pause generation, source, deployment, process, and remaining consequences.",
+      "disposition": "Verify the trusted temporal context and durable reservation path enforce each binding before dispatch.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The five-second future-clock bound must not shorten grant expiry or limit reasoning time.",
+      "disposition": "Verify clock-skew tests apply the bound only to future issued-at acceptance.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Remaining authority budget counts live consequences rather than semantic energy, entropy, tokens, or thought.",
+      "disposition": "Verify reservation and outcome accounting preserve consequence semantics and one-shot consumption.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Felt viscosity should remain evidence and must not become a constructor for trusted authority.",
+      "disposition": "Verify the type boundary keeps interpretation and persisted evidence outside trusted authority construction.",
+      "classification": "verified_existing"
+    }
+  ]
+}

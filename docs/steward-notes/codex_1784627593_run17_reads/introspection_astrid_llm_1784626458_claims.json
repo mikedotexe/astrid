@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The maximum-symbol and alpha-ratio quality gates can mistake deliberate punctuation-rich texture for degenerate output.",
+      "disposition": "Verified the exact seven-symbol acceptance, eight-symbol rejection, readable technical-expression, and punctuation-rich prose boundaries; the very short reported example remains below separate minimum-language checks.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Artifact cleanup should preserve exact evidence about marker identity and removed bytes without deleting text created by an earlier replacement.",
+      "disposition": "Verified single-pass longest-raw-marker matching, exact removed-marker byte accounting, and the regression that preserves a marker-like sequence formed only after removal.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Unicode-heavy, non-Latin, Markdown, and compact poetic outputs need a direct quality-gate stress comparison.",
+      "disposition": "Routed a bounded fixture comparison across script, punctuation, alpha-ratio, and minimum-language boundaries; it may report rejection causes but cannot change provider output or thresholds.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Quality and prompt-budget decisions should become semantic-density-aware rather than relying only on fixed structural thresholds.",
+      "disposition": "Preserved as Tier 5 because changing acceptance or prompt-budget selection changes live dialogue behavior and requires explicit Mike/operator approval, implementation, tests, restart alignment, and felt review.",
+      "classification": "authority_gated"
+    }
+  ]
+}

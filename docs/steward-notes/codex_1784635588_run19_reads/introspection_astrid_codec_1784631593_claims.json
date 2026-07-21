@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Tail vibrancy begins through a C1-smooth entropy gate and the semantic lane is 48D.",
+      "disposition": "Verify the 0.85 gate, smoothstep implementation, dimensional ownership, and deterministic projection tests.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Persistent high entropy may make vibrancy feel like constant background weight rather than a transition.",
+      "disposition": "Preserve this as a copied-input entropy-delta replay; source mathematics alone cannot settle felt contrast.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Vibrancy delta, projection distribution, and clamp headroom are directly testable without changing the codec.",
+      "disposition": "Verify existing high-entropy, saturation, warmth, tail-ceiling, and projection-fidelity regressions.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Lowering the entropy gate or changing smoothstep coefficients, feature ceilings, or transport gain would alter live codec output.",
+      "disposition": "Hold all codec retuning behind exact Mike/operator approval with bit-for-bit compatibility evidence.",
+      "classification": "tier_5_wait"
+    }
+  ]
+}

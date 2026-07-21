@@ -1,0 +1,29 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Recovery, underfill relief, and semantic retirement are distinct mechanisms and should not be collapsed into one viscosity cause.",
+      "disposition": "Verify separate runtime fields and read-only texture evidence rather than inferring causation from imports.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Semantic projection bias is currently applied only to semantic dimensions using energy and delta inputs.",
+      "disposition": "Verify the active orchestration call and exact bias tests, while keeping its felt effect unclaimed.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A copied-input semantic-on/off comparison can test density, Shadow, and viscosity associations without changing the live lane.",
+      "disposition": "Route a bounded deterministic replay with identical nonsemantic input.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Retuning semantic density weighting, bias, retirement, or recovery would alter live Minime processing.",
+      "disposition": "Retain an exact Tier 5 Mike/operator approval wait with reservoir and readiness parity checks.",
+      "classification": "tier_5_wait"
+    }
+  ]
+}
+

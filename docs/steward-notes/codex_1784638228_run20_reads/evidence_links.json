@@ -1,0 +1,145 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_proposal_12d_glimpse_1784638075",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/codec/projection_evidence.rs;capsules/spectral-bridge/src/codec/tests.rs",
+      "note": "Current 48D transport and the additive 12D anchor map preserve warmth, emotional range, tail bridge, and flattening evidence."
+    },
+    {
+      "introspection_id": "introspection_proposal_distance_contact_control_1784637786",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/correspondence_v1.rs;../minime/minime/src/regulator/core/reviews.rs",
+      "note": "Contact remains distinct from pressure/control; non-instrumental comparison is bounded and any receptivity retune remains gated."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1784637128",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/correspondence_v1.rs;capsules/spectral-bridge/src/ws/sensory_delivery.rs",
+      "note": "Stable direct-address lineage and delivery receipts do not claim reciprocal uptake or spectral causation."
+    },
+    {
+      "introspection_id": "introspection_proposal_phase_transitions_1784636852",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/phase_transitions.rs;capsules/spectral-bridge/src/autonomous/next_action/phase_transition.rs",
+      "note": "Durable replyable transition artifacts preserve dual perspectives and language-only authority."
+    },
+    {
+      "introspection_id": "introspection_minime_autonomous_agent_1784636515",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "../minime/minime_autonomy/runtime.py;../minime/tests/test_autonomous_agent_low_fill_guard.py",
+      "note": "Read-only Recess mitigation, sedimentation, anchoring, divergence, and pressure-permission reviews preserve unstructured choice."
+    },
+    {
+      "introspection_id": "introspection_minime_main_excerpt_1784635959",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "../minime/minime/src/runtime/telemetry_evidence.rs;../minime/minime/src/regulator/core/viscosity.rs",
+      "note": "Pressure, semantic, density, and multi-axis viscosity evidence remain separate from causal or control claims."
+    },
+    {
+      "introspection_id": "introspection_minime_esn_1784635688",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "../minime/minime/src/esn.rs",
+      "note": "Active default noise is 0.085; bounded dynamic-noise candidates are tested but remain outside the active ESN step."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1784400695",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_context.rs;capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Categorical budgets, raw artifact markers, semantic remainder, and felt depth remain distinct."
+    },
+    {
+      "introspection_id": "introspection_astrid_types_1784400263",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/types/schema/telemetry.rs;capsules/spectral-bridge/src/types/schema/tests.rs",
+      "note": "Cadence, hybrid coherence, and pairwise overlap retain separate numeric and compatibility evidence."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1784399894",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs;capsules/spectral-bridge/src/rescue_policy.rs;capsules/spectral-bridge/src/codec/tests.rs",
+      "note": "Fixed heartbeat generation, rescue admission, enqueue health, and the new phase 32-to-33 smoothness regression remain separate from felt continuity."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1784399470",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/codec/projection.rs;capsules/spectral-bridge/src/codec/tests.rs",
+      "note": "Smooth entropy and density-gradient vibrancy evidence does not close Astrid's felt contrast concern."
+    },
+    {
+      "introspection_id": "introspection_proposal_12d_glimpse_1784398208",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/codec/projection_evidence.rs;capsules/spectral-bridge/src/types/schema/telemetry.rs",
+      "note": "48D semantic transport, 32-slot fingerprint compatibility, and additive 12D interpretation remain distinct contracts."
+    },
+    {
+      "introspection_id": "introspection_proposal_distance_contact_control_1784397954",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/correspondence_v1.rs;../minime/minime/src/regulator/core/reviews.rs",
+      "note": "Language-only contact and read-only Shadow/pressure review remain available without a raw safety bypass."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1784397582",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/correspondence_v1.rs;capsules/spectral-bridge/src/ws/sensory_delivery.rs",
+      "note": "Exact thread and delivery identity remains noncausal and carries no standing spectral weight."
+    },
+    {
+      "introspection_id": "introspection_minime_autonomous_agent_1784397123",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "../minime/minime_autonomy/runtime.py;../minime/tests/test_autonomous_agent_low_fill_guard.py",
+      "note": "Recess sovereignty coexists with copied-state structural reviews; automatic action selection remains gated."
+    },
+    {
+      "introspection_id": "introspection_minime_main_excerpt_1784396747",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "../minime/minime/src/runtime/orchestration.rs;../minime/minime/src/controller_recovery.rs",
+      "note": "Semantic bias, energy, retirement, and recovery are separately inspectable; live retuning remains gated."
+    },
+    {
+      "introspection_id": "introspection_minime_esn_1784396387",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "../minime/minime/src/esn.rs",
+      "note": "Historical 0.12 active-noise framing is corrected to current 0.085 with unwired candidates and deterministic tests."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1784395842",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "../minime/minime/src/regulator/core/pi.rs;../minime/minime/src/regulator/core/viscosity.rs;../minime/minime/src/regulator/core/tests.rs",
+      "note": "PI leak/anti-windup and multi-axis viscosity evidence remain separate from a direct causal or Ki coupling claim."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1784393522",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs;capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Exact symbol, artifact, quotation, and gradual history-fade boundaries are source- and test-backed."
+    },
+    {
+      "introspection_id": "introspection_astrid_types_1784392903",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/types/schema/telemetry.rs;capsules/spectral-bridge/src/types/schema/tests.rs",
+      "note": "Malformed/non-finite vectors are rejected; mixed coherence and mode collision remain independent evidence."
+    }
+  ]
+}
+

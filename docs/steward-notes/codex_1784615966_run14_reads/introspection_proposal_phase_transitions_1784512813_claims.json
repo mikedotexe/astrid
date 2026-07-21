@@ -1,0 +1,6 @@
+{"claims":[
+  {"claim_id":"c001","summary":"Phase transitions should be durable shared artifacts instead of mode side effects.","disposition":"Verified through replyable/replayable phase-transition cards and correspondence payloads.","classification":"verified_existing"},
+  {"claim_id":"c002","summary":"Solo and joint transitions need distinct witness and divergence state.","disposition":"Verified through joint_transition state, shared IDs, dual-perspective evidence, witness/reply state, and tests.","classification":"verified_existing"},
+  {"claim_id":"c003","summary":"Current cards do not by themselves unlock runtime behavior.","disposition":"Verified as an intentional authority boundary: language-only transition evidence cannot mutate control or peer state.","classification":"verified_existing"},
+  {"claim_id":"c004","summary":"Add transient stability buffering or transition-driven behavior unlocks.","disposition":"Preserved as Tier 5 because stability, mode, controller, and capability changes require explicit operator approval.","classification":"authority_gated"}
+]}

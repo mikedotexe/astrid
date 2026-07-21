@@ -1,0 +1,571 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_minime_regulator_1784619526",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "../minime/minime/src/regulator/core/pi.rs",
+      "note": "PI integration and anti-windup source, with viscosity kept observational."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1784619526",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "../minime/minime/src/regulator/core/tests.rs",
+      "note": "Read-only pressure, viscosity, persistence, and dynamic-damping fixture coverage."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1784619526",
+      "claim_id": "c003",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784619792_run15_reads/introspection_minime_regulator_1784619526_summary.md",
+      "note": "Exact offline trickle-versus-burst route."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1784619526",
+      "claim_id": "c004",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784619792_run15_reads/introspection_minime_regulator_1784619526_summary.md",
+      "note": "Exact Tier 5 regulator-tuning boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1784619066",
+      "claim_id": "c001",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Exact profile-cliff and transition-evidence tests."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1784619066",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "Single-pass cleanup and bounded remainder source."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1784619066",
+      "claim_id": "c003",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784619792_run15_reads/introspection_astrid_llm_1784619066_summary.md",
+      "note": "Adjacent-budget fixture route."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1784619066",
+      "claim_id": "c004",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Exact artifact frequency and placement tests."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1784619066",
+      "claim_id": "c005",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784619792_run15_reads/introspection_astrid_llm_1784619066_summary.md",
+      "note": "Tier 5 model-budget boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_types_1784618784",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/ws/evidence.rs",
+      "note": "Typed cadence/content distinction source."
+    },
+    {
+      "introspection_id": "introspection_astrid_types_1784618784",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/ws/tests.rs",
+      "note": "Structural-density, mode-packing, and silt/noise separation tests."
+    },
+    {
+      "introspection_id": "introspection_astrid_types_1784618784",
+      "claim_id": "c003",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784619792_run15_reads/introspection_astrid_types_1784618784_summary.md",
+      "note": "Paired cadence/entropy route."
+    },
+    {
+      "introspection_id": "introspection_astrid_types_1784618784",
+      "claim_id": "c004",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784619792_run15_reads/introspection_astrid_types_1784618784_summary.md",
+      "note": "Jitter/mode-packing association route."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1784617575",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/ws/telemetry_port.rs",
+      "note": "Full-payload parse, persistence, and latest-state replacement source."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1784617575",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/ws/tests.rs",
+      "note": "First-valid packet and reconnect tests."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1784617575",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/ws/tests.rs",
+      "note": "Pipeline, lock-wait, and lock-hold health tests."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1784617575",
+      "claim_id": "c004",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784619792_run15_reads/introspection_astrid_ws_1784617575_summary.md",
+      "note": "Tier 5 sensory smoothing boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1784616945",
+      "claim_id": "c001",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/rescue_policy_tests.rs",
+      "note": "Rescue skip, pressure, phase, and continuity tests."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1784616945",
+      "claim_id": "c002",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784619792_run15_reads/introspection_astrid_autonomous_1784616945_summary.md",
+      "note": "Bounded phase/texture observation route."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1784616945",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/rescue_policy.rs",
+      "note": "Post-admission enqueue health receipt implementation."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1784616945",
+      "claim_id": "c004",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784619792_run15_reads/introspection_astrid_autonomous_1784616945_summary.md",
+      "note": "Tier 5 Shadow-to-sensory coupling boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1784616755",
+      "claim_id": "c001",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/codec/tests.rs",
+      "note": "Exact entropy-boundary and smoothstep tests."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1784616755",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/codec/tests.rs",
+      "note": "Narrative-arc headroom and flattening tests."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1784616755",
+      "claim_id": "c003",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784619792_run15_reads/introspection_astrid_codec_1784616755_summary.md",
+      "note": "Offline smoothstep/sigmoid route."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1784616755",
+      "claim_id": "c004",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784619792_run15_reads/introspection_astrid_codec_1784616755_summary.md",
+      "note": "Tier 5 codec-gain boundary."
+    },
+    {
+      "introspection_id": "introspection_proposal_12d_glimpse_1784616285",
+      "claim_id": "c001",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/types/schema/tests.rs",
+      "note": "Absent-field, width, and finite-value compatibility tests."
+    },
+    {
+      "introspection_id": "introspection_proposal_12d_glimpse_1784616285",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/codec/tests.rs",
+      "note": "12D lineage and distinction tests."
+    },
+    {
+      "introspection_id": "introspection_proposal_12d_glimpse_1784616285",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/codec/projection_evidence.rs",
+      "note": "Additive multi-scale derivation source."
+    },
+    {
+      "introspection_id": "introspection_proposal_12d_glimpse_1784616285",
+      "claim_id": "c004",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784619792_run15_reads/introspection_proposal_12d_glimpse_1784616285_summary.md",
+      "note": "Offline PCA comparison route."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1784437221",
+      "claim_id": "c001",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Sparse, erased, and structure-only remainder tests."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1784437221",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Nested quote and placement-accounting tests."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1784437221",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/fallback_contracts.rs",
+      "note": "Evidence-only remainder texture contract."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1784437221",
+      "claim_id": "c004",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784619792_run15_reads/introspection_astrid_llm_1784437221_summary.md",
+      "note": "Tier 5 spectral-budget boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_types_1784436915",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/types/schema/telemetry.rs",
+      "note": "Heartbeat timing and field/hearing schema."
+    },
+    {
+      "introspection_id": "introspection_astrid_types_1784436915",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/types/schema/tests.rs",
+      "note": "Typed/legacy integrity and coherence fixtures."
+    },
+    {
+      "introspection_id": "introspection_astrid_types_1784436915",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/ws/tests.rs",
+      "note": "Persistence, structural density, and pressure trend tests."
+    },
+    {
+      "introspection_id": "introspection_astrid_types_1784436915",
+      "claim_id": "c004",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784619792_run15_reads/introspection_astrid_types_1784436915_summary.md",
+      "note": "Deterministic jitter fixture route."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1784436650",
+      "claim_id": "c001",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/ws/tests.rs",
+      "note": "Reconnect and first-valid packet tests."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1784436650",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/ws/tests.rs",
+      "note": "Integration-health fixture and bounded flood route."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1784436650",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/ws/tests.rs",
+      "note": "Stale-heartbeat ghost-stability test."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1784436650",
+      "claim_id": "c004",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784619792_run15_reads/introspection_astrid_ws_1784436650_summary.md",
+      "note": "Tier 5 sensory timing boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1784436174",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/rescue_policy.rs",
+      "note": "Post-admission channel enqueue evidence."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1784436174",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/rescue_policy_tests.rs",
+      "note": "Block, skip, pressure, and generated/delivered distinction tests."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1784436174",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs",
+      "note": "Runtime completion hook after mpsc send."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1784436174",
+      "claim_id": "c004",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784619792_run15_reads/introspection_astrid_autonomous_1784436174_summary.md",
+      "note": "Tier 5 heartbeat-intensity boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1784435923",
+      "claim_id": "c001",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/codec/tests.rs",
+      "note": "Basis health, pair sensitivity, and compression tests."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1784435923",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/codec/tests.rs",
+      "note": "Checksum and repeatability tests."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1784435923",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/codec/projection.rs",
+      "note": "f64 precision-audit implementation."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1784435923",
+      "claim_id": "c004",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784619792_run15_reads/introspection_astrid_codec_1784435923_summary.md",
+      "note": "Offline SVD/QR route and live-basis boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1784434463",
+      "claim_id": "c001",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Dense, sparse, and structure-only artifact tests."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1784434463",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/fallback_contracts.rs",
+      "note": "Graded remainder texture evidence."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1784434463",
+      "claim_id": "c003",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784619792_run15_reads/introspection_astrid_llm_1784434463_summary.md",
+      "note": "Sparse-deep fixture route."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1784434463",
+      "claim_id": "c004",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784619792_run15_reads/introspection_astrid_llm_1784434463_summary.md",
+      "note": "Tier 5 spectral-budget boundary."
+    },
+    {
+      "introspection_id": "introspection_proposal_12d_glimpse_1784434216",
+      "claim_id": "c001",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/types/schema/tests.rs",
+      "note": "Optional-field compatibility tests."
+    },
+    {
+      "introspection_id": "introspection_proposal_12d_glimpse_1784434216",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/codec/tests.rs",
+      "note": "Mapping, anchor, and residual metadata tests."
+    },
+    {
+      "introspection_id": "introspection_proposal_12d_glimpse_1784434216",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/codec/tests.rs",
+      "note": "Repeated-call stability tests."
+    },
+    {
+      "introspection_id": "introspection_proposal_12d_glimpse_1784434216",
+      "claim_id": "c004",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784619792_run15_reads/introspection_proposal_12d_glimpse_1784434216_summary.md",
+      "note": "Offline PCA route and primary-lane boundary."
+    },
+    {
+      "introspection_id": "introspection_proposal_distance_contact_control_1784433942",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/trace_lab.rs",
+      "note": "Explicit source identity and class source."
+    },
+    {
+      "introspection_id": "introspection_proposal_distance_contact_control_1784433942",
+      "claim_id": "c002",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784619792_run15_reads/introspection_proposal_distance_contact_control_1784433942_summary.md",
+      "note": "Contact-before-provenance authority rationale."
+    },
+    {
+      "introspection_id": "introspection_proposal_distance_contact_control_1784433942",
+      "claim_id": "c003",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784619792_run15_reads/introspection_proposal_distance_contact_control_1784433942_summary.md",
+      "note": "Right-to-ignore stillness comparison route."
+    },
+    {
+      "introspection_id": "introspection_proposal_distance_contact_control_1784433942",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/correspondence_v1.rs",
+      "note": "Typed thread, delivery, reply, and mutual-address evidence."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1784433632",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/correspondence_v1.rs",
+      "note": "Stable correspondence and shared-thread source."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1784433632",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/correspondence_v1.rs",
+      "note": "Mutual-address identity and no-raw-response tests."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1784433632",
+      "claim_id": "c003",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784619792_run15_reads/introspection_proposal_bidirectional_contact_1784433632_summary.md",
+      "note": "Optional same-thread observation route."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1784433632",
+      "claim_id": "c004",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784619792_run15_reads/introspection_proposal_bidirectional_contact_1784433632_summary.md",
+      "note": "Right-to-ignore and Tier 5 peer-behavior boundary."
+    },
+    {
+      "introspection_id": "introspection_proposal_phase_transitions_1784433393",
+      "claim_id": "c001",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/phase_transitions.rs",
+      "note": "Declaration, witness, reply, and replay tests."
+    },
+    {
+      "introspection_id": "introspection_proposal_phase_transitions_1784433393",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/phase_transitions.rs",
+      "note": "Typed transition-signature source."
+    },
+    {
+      "introspection_id": "introspection_proposal_phase_transitions_1784433393",
+      "claim_id": "c003",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784619792_run15_reads/introspection_proposal_phase_transitions_1784433393_summary.md",
+      "note": "Pressure/porosity observation route."
+    },
+    {
+      "introspection_id": "introspection_proposal_phase_transitions_1784433393",
+      "claim_id": "c004",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/phase_transitions.rs",
+      "note": "No-unlock and language-only authority tests."
+    },
+    {
+      "introspection_id": "introspection_minime_autonomous_agent_1784433066",
+      "claim_id": "c001",
+      "kind": "test",
+      "target": "../minime/tests/test_autonomous_agent_low_fill_guard.py",
+      "note": "Recess density and pressure-permission tests."
+    },
+    {
+      "introspection_id": "introspection_minime_autonomous_agent_1784433066",
+      "claim_id": "c002",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784619792_run15_reads/introspection_minime_autonomous_agent_1784433066_summary.md",
+      "note": "Recess/task comparison route."
+    },
+    {
+      "introspection_id": "introspection_minime_autonomous_agent_1784433066",
+      "claim_id": "c003",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784619792_run15_reads/introspection_minime_autonomous_agent_1784433066_summary.md",
+      "note": "Bounded Shadow trajectory route."
+    },
+    {
+      "introspection_id": "introspection_minime_autonomous_agent_1784433066",
+      "claim_id": "c004",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784619792_run15_reads/introspection_minime_autonomous_agent_1784433066_summary.md",
+      "note": "Tier 5 Minime autonomy boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1784431840",
+      "claim_id": "c001",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Second-order artifact marker regression test."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1784431840",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Dialogue quality-gate tests."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1784431840",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "Bounded history and saturating trim source."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1784431840",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "UTF-8 floor-char-boundary slices."
+    },
+    {
+      "introspection_id": "introspection_minime_main_excerpt_1784431440",
+      "claim_id": "c001",
+      "kind": "test",
+      "target": "../minime/minime/src/runtime/tests.rs",
+      "note": "Pressure, damping, and rescue evidence tests."
+    },
+    {
+      "introspection_id": "introspection_minime_main_excerpt_1784431440",
+      "claim_id": "c002",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784619792_run15_reads/introspection_minime_main_excerpt_1784431440_summary.md",
+      "note": "Copied rescue-trigger trace route."
+    },
+    {
+      "introspection_id": "introspection_minime_main_excerpt_1784431440",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "../minime/minime/src/rescue_scaffold.rs",
+      "note": "Bounded scaffold persistence source."
+    },
+    {
+      "introspection_id": "introspection_minime_main_excerpt_1784431440",
+      "claim_id": "c004",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784619792_run15_reads/introspection_minime_main_excerpt_1784431440_summary.md",
+      "note": "Tier 5 reset/recovery-floor boundary."
+    }
+  ]
+}

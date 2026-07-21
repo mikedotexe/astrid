@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "A 31-second stall can coexist with a seven-second generator if rescue or channel queueing delays delivery.",
+      "disposition": "Implemented separate rescue-admission and actual channel-enqueue evidence, including queue wait and inter-enqueue gaps; downstream processing remains explicitly unproven.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Rescue rejection should be correlated with heartbeat gaps.",
+      "disposition": "Verified block reasons, skip rate, pressure context, and generated-without-delivered signal evidence are durably recorded.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The loop should expose phase/timestamp progress even when perceived continuity stalls.",
+      "disposition": "Verified each attempt records phase step and wall time; the new enqueue receipt adds completion time and gap evidence without adding noisy raw logs.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Heartbeat intensity should increase from 0.30 to 0.45 to overcome entropy.",
+      "disposition": "Preserved as Tier 5 because intensity changes live sensory gain and requires explicit operator approval and a bounded canary.",
+      "classification": "authority_gated"
+    }
+  ]
+}

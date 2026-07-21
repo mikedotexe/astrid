@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Punctuation-rich reflection should pass while pathological symbol runs remain rejected.",
+      "disposition": "Verified exact seven-symbol acceptance, eight/nine-symbol rejection, and punctuation-rich reflective prose coverage.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Smart punctuation, ellipses, em dashes, nested quotes, and technical expressions should not be treated as artifact garbage.",
+      "disposition": "Verified Unicode punctuation aliases, nested quote accounting, contextual marker preservation, and bounded technical-expression tests.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "History compression should retain a bounded trace of the oldest context rather than silently erasing it.",
+      "disposition": "Verified current prompt-budget and history assembly tests retain bounded context counts and explicit continuity-trim evidence.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "The artifact list and its semantic effect should be inspectable rather than inferred from cleaned output alone.",
+      "disposition": "Verified deterministic raw-marker accounting plus separate remainder texture, placement, frequency, and semantic-integrity evidence.",
+      "classification": "verified_existing"
+    }
+  ]
+}

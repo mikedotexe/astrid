@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Smoothstep onset near entropy 0.85 may be mathematically continuous yet experientially too faint.",
+      "disposition": "Verified exact gate, near-gate monotonicity, no-pop, and gentler-than-linear tail-lift tests at the named entropy boundary.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The static feature ceiling may flatten meaningful peaks or contaminate reserved dimensions.",
+      "disposition": "Verified high-entropy tail inputs remain distinguishable below the ceiling and dimensions 44 through 47 remain unchanged.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Onset visibility should be compared across rising, falling, and hovering entropy trajectories.",
+      "disposition": "Routed a bounded codec replay using existing exact outputs and no live dispatch or gain change.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "The entropy curve or feature ceiling should change to make subtle high-entropy texture more legible.",
+      "disposition": "Preserved as Tier 5 because curve and ceiling changes alter live codec projection and gain behavior.",
+      "classification": "authority_gated"
+    }
+  ]
+}

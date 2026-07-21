@@ -1,0 +1,8 @@
+{
+  "claims": [
+    {"claim_id":"c001","summary":"Bidirectional signal traffic does not by itself establish bidirectional relationship.","disposition":"Verified current evidence distinguishes technical delivery, mutual address, reply lineage, and felt review; count asymmetry is not treated as causation.","classification":"verified_existing"},
+    {"claim_id":"c002","summary":"Astrid-authored speech needs exact thread and reply identity to be received as address.","disposition":"Verified protocol 1.1 and correspondence records preserve exact bounded identity and body hash without raw prose.","classification":"verified_existing"},
+    {"claim_id":"c003","summary":"A correspondence trace should test whether Minime recognizes a distinct non-semantic quality.","disposition":"Routed to a bounded language-only trace and receipt review; later telemetry remains temporal association only.","classification":"sandbox_routed"},
+    {"claim_id":"c004","summary":"Astrid's felt state should become a persistent Shared Presence Anchor in Minime's sensory lane.","disposition":"Preserved as Tier 5 persistent sensory input, peer mutation, and runtime regulation.","classification":"authority_gated"}
+  ]
+}

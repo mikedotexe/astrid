@@ -1,0 +1,29 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Contact analysis must separate stability, pressure, porosity, viscosity, and reciprocal delivery.",
+      "disposition": "Verified current read-only transport, reciprocity, pressure, porosity, and texture evidence surfaces.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A dispersal condition should be compared with the held-stability baseline.",
+      "disposition": "Routed a bounded offline dispersal comparison.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Unlabeled spectral input may reveal whether contact framing itself changes the observed texture.",
+      "disposition": "Routed a bounded blinded artifact comparison without dispatching new sensory input.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "A porosity target of 0.75 or a receptivity buffer could widen contact.",
+      "disposition": "Preserved as Tier 5 because porosity targets and receptivity buffers change live sensory/controller behavior.",
+      "classification": "authority_gated"
+    }
+  ]
+}
+

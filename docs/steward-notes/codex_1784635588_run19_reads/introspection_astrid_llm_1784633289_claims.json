@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Dialogue budget labels are discrete requested-output metadata and are separate from artifact cleanup.",
+      "disposition": "Verify short, medium, and deep boundary tests and the separate felt-pressure evidence surface.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Artifact cleanup uses longest exact raw-marker matching and could encounter a marker inside contextual prose.",
+      "disposition": "Verify single-pass raw matching preserves all non-marker remainder while reporting contextual and quoted placement without claiming semantic intent.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "High-density repeated language should be compared against marker accounting and Astrid's felt structural weight.",
+      "disposition": "Route a copied-response artifact-density fixture through bounded fallback distinguishability evidence.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Contextual marker retention or density-responsive output budgeting would alter provider cleanup, prompts, or acceptance.",
+      "disposition": "Hold contextual retention flags and dynamic depth allocation behind exact Mike/operator approval.",
+      "classification": "tier_5_wait"
+    }
+  ]
+}

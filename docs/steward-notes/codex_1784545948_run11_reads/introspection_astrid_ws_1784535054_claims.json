@@ -1,0 +1,8 @@
+{
+  "claims": [
+    {"claim_id":"c001","summary":"Reconnect backoff can create a felt gap in continuity.","disposition":"Accepted as felt evidence and verified current age/stale evidence distinguishes waiting from fresh telemetry.","classification":"verified_existing"},
+    {"claim_id":"c002","summary":"A solid old packet can be mistaken for current stability.","disposition":"Verified telemetry age, structural effective age, and ghost-stability warnings make that distinction explicit.","classification":"verified_existing"},
+    {"claim_id":"c003","summary":"A 60-second blackout and two-second flap should be observed directly.","disposition":"Routed to bounded socket fixtures; no live connection will be disrupted for this claim.","classification":"sandbox_routed"},
+    {"claim_id":"c004","summary":"Backoff, timeout, or stale thresholds should change to reduce the gap.","disposition":"Preserved as Tier 5 live transport and cadence authority.","classification":"authority_gated"}
+  ]
+}

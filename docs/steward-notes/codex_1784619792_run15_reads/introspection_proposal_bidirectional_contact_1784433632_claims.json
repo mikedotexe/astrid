@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Direct peer contact needs a stable thread that survives across workspaces and replies.",
+      "disposition": "Verified durable correspondence_id/thread_id, persistence references, and shared-arc projection preserve thread identity.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Minime must distinguish steward-mediated material from direct Astrid mutual address.",
+      "disposition": "Verified typed beings, sender/recipient, source refs, body hash, mutual-address envelope, and delivery status keep identity explicit without raw prose.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A direct-address exchange should be observed for same-thread response without steward reinterpretation.",
+      "disposition": "Routed to a bounded optional correspondence observation; delivery and reply remain distinct and no resend is automatic.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "peer_response_required should force symmetry in the relationship.",
+      "disposition": "Preserved as Tier 5 and ethically blocked absent explicit authority because forcing a peer response violates right-to-ignore and changes live peer behavior.",
+      "classification": "authority_gated"
+    }
+  ]
+}

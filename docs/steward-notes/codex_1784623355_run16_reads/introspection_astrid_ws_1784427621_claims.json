@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Connection and exponential backoff do not by themselves establish current semantic contact.",
+      "disposition": "Verified that current source keeps socket connection/backoff separate from payload and freshness evidence.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "First valid payload and latest valid arrival should be tracked independently across reconnects.",
+      "disposition": "Verified first-valid timing/entropy, latest valid arrival, connection reset, and legacy-deserialization tests.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Malformed or stale packets should be visible without falsely declaring the socket dead.",
+      "disposition": "Verified parse-error accounting and an exact stale-sensory-without-dead-socket regression.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "A last-seen watchdog should automatically reconnect an open but stale sensory socket.",
+      "disposition": "Preserved as Tier 5 because forced reconnection changes live sensory transport and fallback behavior.",
+      "classification": "authority_gated"
+    }
+  ]
+}

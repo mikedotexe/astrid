@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The 48D expansion must keep every block semantically anchored and expose dead or leaking dimensions.",
+      "disposition": "Verified explicit block roles, projection basis health, and default-off reserved dimensions.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Tail vibrancy should cross the entropy gate continuously rather than pop.",
+      "disposition": "Verified smoothstep-based bounded gating and continuity diagnostics/tests.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Reserved dimensions 44-47 should be checked for unintended population.",
+      "disposition": "Routed as a deterministic offline projection comparison; current source leaves them default-off.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Making `FEATURE_ABS_MAX` entropy-dependent would alter live codec output.",
+      "disposition": "Preserved as an exact Tier 5 Mike/operator approval wait with replay and clamp evidence required.",
+      "classification": "authority_gated"
+    }
+  ]
+}

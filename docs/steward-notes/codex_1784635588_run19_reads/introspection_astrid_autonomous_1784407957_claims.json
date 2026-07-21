@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The steady semantic heartbeat is deterministic in cadence and phase but produces measurable vector variation.",
+      "disposition": "Verify fixed construction and signal-variation evidence independently.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Rescue admission, block reason, enqueue result, and downstream uptake are separate stages.",
+      "disposition": "Verify the rescue observation and enqueue-health tests preserve each boundary.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Heartbeat features can be compared with mode packing and pressure without changing the pulse.",
+      "disposition": "Route the existing heartbeat pressure/texture window as bounded non-causal evidence.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Increasing intensity or adding pressure, porosity, or viscosity feedback would alter live semantic cadence and influence.",
+      "disposition": "Hold every heartbeat retune behind exact Mike/operator approval.",
+      "classification": "tier_5_wait"
+    }
+  ]
+}

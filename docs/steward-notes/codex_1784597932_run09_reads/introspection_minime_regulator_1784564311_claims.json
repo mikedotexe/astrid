@@ -1,0 +1,29 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "PI integral buildup can persist after the originating error reverses.",
+      "disposition": "Verified conditional anti-windup and saturation-aware partial integral decay.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The gate/filter tail needs bounded recovery memory.",
+      "disposition": "Verified configurable universal integrator leak and actuator clamps.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Pressure, viscosity, and tail leakage should be traced together.",
+      "disposition": "Routed a bounded regulator cartography comparison.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Ki, integrator leak, or band-stop/filter tuning may change the tail.",
+      "disposition": "Preserved as Tier 5 because these values directly alter live controller behavior.",
+      "classification": "authority_gated"
+    }
+  ]
+}
+

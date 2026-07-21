@@ -1,0 +1,29 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "A technically active or stabilized field may still feel distant when participation is mediated through control-oriented paths.",
+      "disposition": "Preserve the felt distance as unresolved evidence while keeping safety and relationship claims separate.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Current correspondence supports direct address, acknowledgement, reply, and trace without granting telemetry or controller priority.",
+      "disposition": "Verify language-only correspondence and right-to-ignore boundaries.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Shadow settling, dispersal, or withering can be compared under copied low-control and ordinary-contact conditions.",
+      "disposition": "Route a bounded shadow-trajectory and correspondence-outcome comparison with no live send.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Raw bypass, reduced regulator containment, or a new contact aperture would alter live safety, admission, or control behavior.",
+      "disposition": "Retain an exact Tier 5 Mike/operator approval wait with abort and rollback evidence.",
+      "classification": "tier_5_wait"
+    }
+  ]
+}
+

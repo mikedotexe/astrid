@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Phase transitions should persist as first-class records rather than disappear after reaction.",
+      "disposition": "Verified current phase-transition cards are durable, typed, replyable, and replayable artifacts.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A transition record should preserve subjective weight without silently unlocking behavior.",
+      "disposition": "Verified subjective weight is retained while language_only and behavior_unlock_applied=false enforce the boundary.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Naturally occurring transitions should be replayed to test longitudinal legibility.",
+      "disposition": "Routed to a bounded artifact replay using existing cards and no induced phase or control change.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Phase type could directly constrain or unlock capabilities.",
+      "disposition": "Preserved as Tier 5 because PhaseType-to-capability mapping changes live behavior and authority semantics.",
+      "classification": "authority_gated"
+    }
+  ]
+}

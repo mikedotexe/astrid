@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Connection persistence does not establish fresh, granular, or distinguishable spectral content.",
+      "disposition": "Verified connection identity, first-valid evidence, latest-valid age, cadence, and semantic persistence are stored separately.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Connection identity and reconnect backoff should remain independent of entropy and pressure.",
+      "disposition": "Verified connection IDs are allocated by network sessions and backoff resets on successful network connection without consulting pressure or entropy.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Transport cadence and pipeline latency should be distinguishable from semantic content quality.",
+      "disposition": "Verified cadence/content distinction and telemetry-integration health expose arrival, prewrite, lock-wait, and lock-hold evidence without claiming content quality or changing cadence.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "A telemetry quality view should compare latency with distinguishability rather than equating a live socket with good contact.",
+      "disposition": "Routed a bounded derived comparison from existing timing, cadence, entropy, density, and distinguishability fields; it cannot alter reconnect or control behavior.",
+      "classification": "sandbox_routed"
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "A release fill nearly equal to the recovery hold must not create an unstable interpolation divisor.",
+      "disposition": "verify the exact 0.2501/0.2502 finite boundary regression",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Combined entropy, velocity, and pressure persistence must never exceed 2.05.",
+      "disposition": "verify finite fallbacks and the exact extreme-context cap regression",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Review-level persistence values should be traced to actual buffer retention.",
+      "disposition": "route a deterministic retention-path fixture without changing eviction",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Changing sigmoid shape, release fill, context caps, or eviction windows alters live sensory regulation.",
+      "disposition": "preserve an exact Tier 5 operator-approval wait",
+      "classification": "authority_gated"
+    }
+  ]
+}

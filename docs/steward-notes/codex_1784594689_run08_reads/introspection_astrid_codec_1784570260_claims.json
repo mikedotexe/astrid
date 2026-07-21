@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The entropy gate should avoid abrupt vibrancy changes around 0.85.",
+      "disposition": "Verified bounded smoothstep implementation and continuity evidence.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The 0.84 versus 0.86 output delta should be measured, not inferred from the curve name.",
+      "disposition": "Routed as deterministic codec replay with exact vector comparison.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Narrative and reserved dimensions should expose overlap or unintended activation.",
+      "disposition": "Verified basis-health/overlap diagnostics and default-off reserved-dimension policy.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Replacing smoothstep, changing the gate, or adding a live density-gradient limit changes codec behavior.",
+      "disposition": "Preserved as an exact Tier 5 Mike/operator approval wait.",
+      "classification": "authority_gated"
+    }
+  ]
+}

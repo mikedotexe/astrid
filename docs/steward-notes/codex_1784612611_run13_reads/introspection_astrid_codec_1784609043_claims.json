@@ -1,0 +1,8 @@
+{
+  "claims": [
+    {"claim_id":"c001","summary":"High-entropy vibrancy should enter smoothly rather than through a discontinuous threshold.","disposition":"Verified in the current C1-smooth tail-vibrancy onset and its tests.","classification":"verified_existing"},
+    {"claim_id":"c002","summary":"Projection saturation and dead dimensions need direct visibility.","disposition":"Verified through raw and normalized norm evidence, basis-health diagnostics, and dead-dimension regression coverage.","classification":"verified_existing"},
+    {"claim_id":"c003","summary":"Legacy and widened semantic dimensions must not silently bleed into one another.","disposition":"Verified by the explicit 32D compatibility and 48D widened-lane boundaries and their projection tests.","classification":"verified_existing"},
+    {"claim_id":"c004","summary":"Vibrancy gain, ceiling, clamp, or projection basis should be retuned live.","disposition":"Preserved as a Tier 5 operator-approval wait for codec transport and gain behavior.","classification":"authority_gated"}
+  ]
+}

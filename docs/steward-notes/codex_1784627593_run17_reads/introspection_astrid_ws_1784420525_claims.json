@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "A half-open or idle WebSocket can linger because the subscriber has no payload-idle timeout.",
+      "disposition": "Verified the receive loop waits on WebSocket input or shutdown and has no idle reconnect timer; this is a real architectural gap, not a dismissed report.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Connection establishment must be distinguished from first valid payload and continuing freshness.",
+      "disposition": "Verified current connect, first-valid lag, cadence, latest-valid age, parse-error, and stale-content evidence remain separate.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A half-open fixture should measure connect-to-first-valid and valid-payload idle behavior.",
+      "disposition": "Routed a bounded fake-socket observation that can classify idle/stale behavior without touching the live subscriber.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "The subscriber should enforce a maximum idle period and reconnect.",
+      "disposition": "Preserved as Tier 5 because an idle timeout changes live reconnect cadence, telemetry admission, and runtime observation continuity.",
+      "classification": "authority_gated"
+    }
+  ]
+}

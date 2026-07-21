@@ -1,0 +1,29 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Recess should distinguish creative permission from structural silt.",
+      "disposition": "Verified separate active-synthesis and structural-stabilization Recess states.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Pressure, porosity, density, and resonance anchors should be visible during Recess.",
+      "disposition": "Verified read-only density, pruning, pressure/porosity, and resonance-anchor profiles.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A porosity mirror and tail-driven action comparison could distinguish silt from synthesis.",
+      "disposition": "Routed a bounded no-actuation comparison using current profile outputs.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "A dissipative vent or tail-driven action selection could relieve silt.",
+      "disposition": "Preserved as Tier 5 because venting and action selection alter Minime autonomous behavior.",
+      "classification": "authority_gated"
+    }
+  ]
+}
+

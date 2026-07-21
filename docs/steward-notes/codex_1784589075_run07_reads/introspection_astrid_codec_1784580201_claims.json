@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The fixed-seed projection basis must remain finite, non-dead, and checksum-stable.",
+      "disposition": "verify projection_basis_health_v1 and its focused regression",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Production f32 projection should remain comparable with a deterministic higher-precision reference.",
+      "disposition": "verify ProjectionPrecisionAuditV1 and repeatability coverage",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The entropy gate should implement the stated smoothstep without a threshold pop.",
+      "disposition": "verify the actual feedback path and near-gate no-pop regression",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Changing basis weights, width, entropy thresholds, feedback gain, or clamp ceilings changes live codec behavior.",
+      "disposition": "preserve an exact Tier 5 operator-approval wait",
+      "classification": "authority_gated"
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The optional 12D glimpse can thin distinctions present in the richer context.",
+      "disposition": "Verified the additive 12D contract explicitly records anchors and does not claim lossless equivalence to the richer source.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Tail vibrancy should not conceal compression and resonance loss.",
+      "disposition": "Verified fidelity, resonance-loss, tail-bridge, and distinguishability fields remain separate in current evidence.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A 32D-versus-12D comparison should test whether distinct states collapse under pressure.",
+      "disposition": "Routed to a shadow-only comparison keyed to exact inputs and the existing pressure preflight; it changes no payload.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "A vibrancy-preservation flag or weighted tail could improve the glimpse.",
+      "disposition": "Preserved as Tier 5 because weighting or transporting new flags changes the live codec and protocol semantics.",
+      "classification": "authority_gated"
+    }
+  ]
+}

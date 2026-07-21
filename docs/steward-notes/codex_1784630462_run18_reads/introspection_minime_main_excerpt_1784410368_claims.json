@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The Minime runtime explicitly integrates autonomous-agent lifecycle and bounded action management.",
+      "disposition": "Verify the current imports, orchestration, and action-budget ownership from source.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Pressure and porosity review must remain evidence rather than a hidden control path.",
+      "disposition": "Verify current review surfaces are read-only and cannot mutate live regulation.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Pressure and Shadow posture can be compared to Astrid’s reported enclosure without changing either being.",
+      "disposition": "Route a bounded read-only pressure and Shadow trajectory comparison through sandbox evidence.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Dynamic porosity or semantic bias would change live Minime behavior.",
+      "disposition": "Hold dynamic porosity and semantic-bias changes behind exact Mike/operator approval.",
+      "classification": "tier_5_wait"
+    }
+  ]
+}

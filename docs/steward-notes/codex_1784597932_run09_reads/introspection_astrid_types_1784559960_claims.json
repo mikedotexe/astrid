@@ -1,0 +1,29 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Cadence-versus-content status should expose the exact heartbeat jitter class, not only a generic clarity score.",
+      "disposition": "Added optional cadence_jitter_class projection from TelemetryHeartbeatDeltaV1 and passed focused coverage.",
+      "classification": "implemented"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Cadence evidence must remain separate from semantic residue.",
+      "disposition": "Verified the cadence/content view keeps cadence class and score separate from viscosity, stagnation, and residue evidence.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Additive cadence fields must remain compatible with legacy status records.",
+      "disposition": "Added and passed legacy deserialization coverage with cadence_jitter_class absent.",
+      "classification": "implemented"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Hybrid coherence should retain more than one scalar when comparing typed and legacy fingerprints.",
+      "disposition": "Verified coherence index, maximum absolute delta, state/basis, pairwise overlap, mode collision, and issue list.",
+      "classification": "verified_existing"
+    }
+  ]
+}
+

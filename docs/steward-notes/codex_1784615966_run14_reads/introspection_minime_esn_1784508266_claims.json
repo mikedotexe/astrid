@@ -1,0 +1,6 @@
+{"claims":[
+  {"claim_id":"c001","summary":"Adaptive pressure-noise and viscous-rho helpers define bounded candidate mathematics.","disposition":"Verified as source-prepared review mathematics with exact endpoint and continuity tests.","classification":"verified_existing"},
+  {"claim_id":"c002","summary":"Those adaptive helpers currently drive the live ESN texture and explain the reported 0.12 value.","disposition":"Current source contradicts direct causation: no live ESN::step consumer wires these helpers, and a report-time value does not identify its source.","classification":"observed"},
+  {"claim_id":"c003","summary":"Pressure/noise and sovereignty-decay behavior should be compared over a bounded window.","disposition":"Routed to copied telemetry or offline replay with no reservoir mutation.","classification":"sandbox_routed"},
+  {"claim_id":"c004","summary":"Retune the pressure gradient or wire adaptive noise/rho into the reservoir.","disposition":"Preserved as Tier 5 because exploration noise, rho, pressure response, and reservoir memory are live-control surfaces.","classification":"authority_gated"}
+]}

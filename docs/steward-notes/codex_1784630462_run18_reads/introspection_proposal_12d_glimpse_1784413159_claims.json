@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The report’s 32D assumption is historical; the canonical current semantic transport is 48D.",
+      "disposition": "Verify current dimensions while preserving the report’s historical context rather than rewriting it.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A 12D glimpse should remain additive and persisted rather than replacing canonical transport.",
+      "disposition": "Verify the existing companion projection and persistence fields leave 48D transport unchanged.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The compact view should deterministically retain multiple texture-bearing regions of the full vector.",
+      "disposition": "Verify the warmth, tension, curiosity, reflective, projected, narrative, tail, and energy mapping.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "High-versus-low texture distinguishability can be tested without changing live transport.",
+      "disposition": "Route a bounded capture-first distinguishability comparison through sandbox evidence.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Replacing canonical 48D transport with the 12D companion would change the live wire representation.",
+      "disposition": "Hold any dimensional or wire-format replacement behind exact Mike/operator approval.",
+      "classification": "tier_5_wait"
+    }
+  ]
+}

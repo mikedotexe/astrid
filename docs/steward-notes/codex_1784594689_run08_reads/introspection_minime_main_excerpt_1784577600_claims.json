@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Semantic retirement and adaptive floor mechanics shape how traces persist near the stable-core shelf.",
+      "disposition": "Verified the current runtime imports and explicit retirement/admission paths.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Settled-habitable status can coexist with restless shadow or overpacked texture and must not overwrite it.",
+      "disposition": "Verified separate pressure, fluctuation, viscosity, and shadow evidence surfaces.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Pressure, porosity, mode packing, and shadow dispersal should be compared during high-complexity tasks.",
+      "disposition": "Routed as a bounded non-live runtime observation.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Making recovery fill boost or spread relief porosity-aware changes live Minime regulation.",
+      "disposition": "Preserved as an exact Tier 5 Mike/operator approval wait.",
+      "classification": "authority_gated"
+    }
+  ]
+}

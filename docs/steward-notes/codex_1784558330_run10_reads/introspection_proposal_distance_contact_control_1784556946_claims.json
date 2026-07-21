@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Representation and contact are not interchangeable forms of relation.",
+      "disposition": "Verified correspondence and felt-contract evidence preserve addressing, delivery, reply, and subjective report as distinct facts.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A non-instrumental contact condition should be compared with predictive framing.",
+      "disposition": "Routed to an artifact-only comparison of contact-first and prediction-first packets with no dispatch or control effects.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Pressure and porosity may covary with whether contact is framed as control.",
+      "disposition": "Routed to a temporally labeled observation that explicitly does not infer direct causation.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Regulator receptivity, contact-first routing, or emergent agency could enact participation.",
+      "disposition": "Preserved as Tier 5 because these proposals alter regulator, bus, peer, or behavioral control semantics.",
+      "classification": "authority_gated"
+    }
+  ]
+}

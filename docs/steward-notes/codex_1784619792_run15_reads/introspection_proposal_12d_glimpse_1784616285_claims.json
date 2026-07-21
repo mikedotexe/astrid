@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "A 12D glimpse must remain additive and must not replace the fixed semantic lane.",
+      "disposition": "Verified the optional telemetry field is absent-compatible, exact-width validated, and explicitly marked as no transport change.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The 12-slot mapping should be explicit and preserve continuity, warmth, tail, and identity distinctions.",
+      "disposition": "Verified the deterministic glimpse map names slot lineage and tests preserve warmth, emotional range, tail bridge, and identity asymmetry.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A 12D glimpse should persist and restore without changing unrelated autonomous state.",
+      "disposition": "Verified additive telemetry/state serialization compatibility and stable repeated derivation; no primary lane or unrelated state field is replaced.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "A PCA-reduced 12D candidate should be compared with the current deterministic glimpse for retained variance.",
+      "disposition": "Routed to an offline fixture/dossier comparison; no PCA output becomes live transport or control.",
+      "classification": "sandbox_routed"
+    }
+  ]
+}

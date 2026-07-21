@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Exact model-artifact markers should be removed without discarding nonempty semantic remainder.",
+      "disposition": "Verify minimalist words, dense structures, and technical expressions survive current artifact cleanup.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Requested output budget and felt density or pressure are different evidence dimensions.",
+      "disposition": "Verify categorical num_predict budget evidence remains separate from the additive felt-pressure profile.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Short and deep responses can be compared for descriptive variance without changing provider behavior.",
+      "disposition": "Route a bounded short-versus-deep semantic-variance comparison through sandbox evidence.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Entropy-aware or semantic-density-aware acceptance would alter the live provider contract.",
+      "disposition": "Hold provider threshold, prompt, and semantic-density weighting changes behind exact Mike/operator approval.",
+      "classification": "tier_5_wait"
+    }
+  ]
+}

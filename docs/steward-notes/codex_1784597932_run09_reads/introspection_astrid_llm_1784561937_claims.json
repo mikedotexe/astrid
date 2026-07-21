@@ -1,0 +1,29 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The 1024/1025 dialogue-budget transition must be explicit and exactly tested.",
+      "disposition": "Verified exact profile-boundary and transition-evidence tests for 1024 and 1025.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Artifact markers can occur at boundaries, in context, or in quotations and should not be conflated.",
+      "disposition": "Verified separate boundary, contextual, and quoted occurrence accounting.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Cleanup needs a graded density and lexical-texture companion.",
+      "disposition": "Verified surface semantic density, lexical diversity, structural fraction, and semantic-integrity review.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Spectrum-dependent budgets or a behavior-changing token scanner could smooth the boundary.",
+      "disposition": "Preserved as Tier 5 because budget selection and cleanup behavior affect live model generation.",
+      "classification": "authority_gated"
+    }
+  ]
+}
+

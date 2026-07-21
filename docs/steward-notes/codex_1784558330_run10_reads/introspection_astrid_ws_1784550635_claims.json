@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "A connected WebSocket does not prove fresh sensory hearing.",
+      "disposition": "Verified connection, first-packet, latest-packet, jitter, field, and hearing states remain distinct in bridge evidence.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Old eigenvalue packets may accumulate indefinitely in BridgeState.",
+      "disposition": "Verified each valid packet replaces latest_telemetry; the bridge does not accumulate an unbounded eigenvalue history there.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Socket, packet, and logging times should be compared to identify zombie or delayed paths.",
+      "disposition": "Routed to a read-only timing observation using existing timestamps and no reconnect action.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "A stale timeout or forced reconnect could restore continuity.",
+      "disposition": "Preserved as Tier 5 because timeout and reconnect policy alter live telemetry and service behavior.",
+      "classification": "authority_gated"
+    }
+  ]
+}

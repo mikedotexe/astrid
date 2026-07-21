@@ -1,0 +1,8 @@
+{
+  "claims": [
+    {"claim_id":"c001","summary":"Cadence and hybrid coherence need traceable numeric support, not labels alone.","disposition":"Verified current schemas retain numeric measurements, source times, thresholds, connection identity, and issue arrays alongside compatibility strings.","classification":"verified_existing"},
+    {"claim_id":"c002","summary":"String cadence and coherence states may flatten nuance.","disposition":"Verified as a rendering concern but not a loss of the underlying numbers; current source preserves score, delta, overlap, and basis evidence.","classification":"verified_existing"},
+    {"claim_id":"c003","summary":"Cadence versus warmth and coherence versus Shadow dispersal should be compared.","disposition":"Routed to bounded temporal association with no direct-causation claim.","classification":"sandbox_routed"},
+    {"claim_id":"c004","summary":"Cadence basis should become a new struct and fingerprint integrity should add Shadow dispersal delta.","disposition":"Preserved as Tier 5 additive protocol, ABI, and report-surface authority; current numeric evidence remains compatible.","classification":"authority_gated"}
+  ]
+}

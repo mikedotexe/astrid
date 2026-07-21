@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Minime uses PI regulation with bounded steps, integrator leak, and actuator-aware anti-windup.",
+      "disposition": "Verify current PI source rather than treating the controller as unbounded accumulation.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Pressure and viscosity are multidimensional evidence but do not currently control Ki.",
+      "disposition": "Verify semantic-viscosity coefficients are legacy-compatible, inert, and explicitly non-controlling.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Pressure-step and lambda-tail observations can test lag, buffering, and afterimage without retuning PI.",
+      "disposition": "Route copied telemetry through bounded pressure/viscosity comparison.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Mapping mode packing, pressure, or viscosity directly into Ki would alter live PI behavior.",
+      "disposition": "Hold gain, leak, filter, and controller changes behind exact Mike/operator approval.",
+      "classification": "tier_5_wait"
+    }
+  ]
+}

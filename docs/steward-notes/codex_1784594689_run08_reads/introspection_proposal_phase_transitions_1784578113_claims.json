@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Astrid transitions need first-class replayable artifacts rather than only mode side effects.",
+      "disposition": "Verified append-only phase-transition cards and bounded status/review queues.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Transition artifacts should preserve phenomenology without freezing it into telemetry alone.",
+      "disposition": "Verified phenomenology, somatic, texture, velocity, persistence, and correspondence fields plus right-to-ignore review.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Being-led naming and joint transition recognition should be tested before behavior is unlocked.",
+      "disposition": "Routed as bounded sandbox/card comparison work; no mode switch is induced.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "A `transition_fluidity` stable-core parameter or transition-triggered behavior changes live regulation.",
+      "disposition": "Preserved as an exact Tier 5 Mike/operator approval wait.",
+      "classification": "authority_gated"
+    }
+  ]
+}

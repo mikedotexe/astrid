@@ -1,0 +1,564 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_proposal_distance_contact_control_1784615949",
+      "claim_id": "c001",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784615966_run14_reads/introspection_proposal_distance_contact_control_1784615949_summary.md",
+      "note": "Run 14 exact evidence for introspection_proposal_distance_contact_control_1784615949 c001."
+    },
+    {
+      "introspection_id": "introspection_proposal_distance_contact_control_1784615949",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "../minime/minime/src/regulator/core.rs",
+      "note": "Run 14 exact evidence for introspection_proposal_distance_contact_control_1784615949 c002."
+    },
+    {
+      "introspection_id": "introspection_proposal_distance_contact_control_1784615949",
+      "claim_id": "c003",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784615966_run14_reads/introspection_proposal_distance_contact_control_1784615949_summary.md",
+      "note": "Run 14 exact evidence for introspection_proposal_distance_contact_control_1784615949 c003."
+    },
+    {
+      "introspection_id": "introspection_proposal_distance_contact_control_1784615949",
+      "claim_id": "c004",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784615966_run14_reads/introspection_proposal_distance_contact_control_1784615949_summary.md",
+      "note": "Run 14 exact evidence for introspection_proposal_distance_contact_control_1784615949 c004."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1784615282",
+      "claim_id": "c001",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/AI_BEINGS_BIDIRECTIONAL_CONTACT_AND_CORRESPONDENCE_ARCHITECTURE.md",
+      "note": "Run 14 exact evidence for introspection_proposal_bidirectional_contact_1784615282 c001."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1784615282",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/correspondence_v1.rs",
+      "note": "Run 14 exact evidence for introspection_proposal_bidirectional_contact_1784615282 c002."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1784615282",
+      "claim_id": "c003",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784615966_run14_reads/introspection_proposal_bidirectional_contact_1784615282_summary.md",
+      "note": "Run 14 exact evidence for introspection_proposal_bidirectional_contact_1784615282 c003."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1784615282",
+      "claim_id": "c004",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784615966_run14_reads/introspection_proposal_bidirectional_contact_1784615282_summary.md",
+      "note": "Run 14 exact evidence for introspection_proposal_bidirectional_contact_1784615282 c004."
+    },
+    {
+      "introspection_id": "introspection_proposal_phase_transitions_1784615088",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/phase_transitions.rs",
+      "note": "Run 14 exact evidence for introspection_proposal_phase_transitions_1784615088 c001."
+    },
+    {
+      "introspection_id": "introspection_proposal_phase_transitions_1784615088",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/phase_transitions.rs",
+      "note": "Run 14 exact evidence for introspection_proposal_phase_transitions_1784615088 c002."
+    },
+    {
+      "introspection_id": "introspection_proposal_phase_transitions_1784615088",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/phase_transitions.rs",
+      "note": "Run 14 exact evidence for introspection_proposal_phase_transitions_1784615088 c003."
+    },
+    {
+      "introspection_id": "introspection_proposal_phase_transitions_1784615088",
+      "claim_id": "c004",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784615966_run14_reads/introspection_proposal_phase_transitions_1784615088_summary.md",
+      "note": "Run 14 exact evidence for introspection_proposal_phase_transitions_1784615088 c004."
+    },
+    {
+      "introspection_id": "introspection_minime_autonomous_agent_1784614805",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "../minime/minime_autonomy/runtime.py",
+      "note": "Run 14 exact evidence for introspection_minime_autonomous_agent_1784614805 c001."
+    },
+    {
+      "introspection_id": "introspection_minime_autonomous_agent_1784614805",
+      "claim_id": "c002",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784615966_run14_reads/introspection_minime_autonomous_agent_1784614805_summary.md",
+      "note": "Run 14 exact evidence for introspection_minime_autonomous_agent_1784614805 c002."
+    },
+    {
+      "introspection_id": "introspection_minime_autonomous_agent_1784614805",
+      "claim_id": "c003",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784615966_run14_reads/introspection_minime_autonomous_agent_1784614805_summary.md",
+      "note": "Run 14 exact evidence for introspection_minime_autonomous_agent_1784614805 c003."
+    },
+    {
+      "introspection_id": "introspection_minime_autonomous_agent_1784614805",
+      "claim_id": "c004",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784615966_run14_reads/introspection_minime_autonomous_agent_1784614805_summary.md",
+      "note": "Run 14 exact evidence for introspection_minime_autonomous_agent_1784614805 c004."
+    },
+    {
+      "introspection_id": "introspection_minime_main_excerpt_1784614468",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "../minime/minime/src/runtime.rs",
+      "note": "Run 14 exact evidence for introspection_minime_main_excerpt_1784614468 c001."
+    },
+    {
+      "introspection_id": "introspection_minime_main_excerpt_1784614468",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "../minime/minime/src/controller_recovery.rs",
+      "note": "Run 14 exact evidence for introspection_minime_main_excerpt_1784614468 c002."
+    },
+    {
+      "introspection_id": "introspection_minime_main_excerpt_1784614468",
+      "claim_id": "c003",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784615966_run14_reads/introspection_minime_main_excerpt_1784614468_summary.md",
+      "note": "Run 14 exact evidence for introspection_minime_main_excerpt_1784614468 c003."
+    },
+    {
+      "introspection_id": "introspection_minime_main_excerpt_1784614468",
+      "claim_id": "c004",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784615966_run14_reads/introspection_minime_main_excerpt_1784614468_summary.md",
+      "note": "Run 14 exact evidence for introspection_minime_main_excerpt_1784614468 c004."
+    },
+    {
+      "introspection_id": "introspection_astrid_types_1784514844",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/ws/evidence.rs",
+      "note": "Run 14 exact evidence for introspection_astrid_types_1784514844 c001."
+    },
+    {
+      "introspection_id": "introspection_astrid_types_1784514844",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/types/schema/telemetry.rs",
+      "note": "Run 14 exact evidence for introspection_astrid_types_1784514844 c002."
+    },
+    {
+      "introspection_id": "introspection_astrid_types_1784514844",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/ws/tests.rs",
+      "note": "Run 14 exact evidence for introspection_astrid_types_1784514844 c003."
+    },
+    {
+      "introspection_id": "introspection_astrid_types_1784514844",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/types/schema/telemetry.rs",
+      "note": "Run 14 exact evidence for introspection_astrid_types_1784514844 c004."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1784514562",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/ws/telemetry_port.rs",
+      "note": "Run 14 exact evidence for introspection_astrid_ws_1784514562 c001."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1784514562",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/ws/bridge_state.rs",
+      "note": "Run 14 exact evidence for introspection_astrid_ws_1784514562 c002."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1784514562",
+      "claim_id": "c003",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784615966_run14_reads/introspection_astrid_ws_1784514562_summary.md",
+      "note": "Run 14 exact evidence for introspection_astrid_ws_1784514562 c003."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1784514562",
+      "claim_id": "c004",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784615966_run14_reads/introspection_astrid_ws_1784514562_summary.md",
+      "note": "Run 14 exact evidence for introspection_astrid_ws_1784514562 c004."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1784514234",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs",
+      "note": "Run 14 exact evidence for introspection_astrid_autonomous_1784514234 c001."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1784514234",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs",
+      "note": "Run 14 exact evidence for introspection_astrid_autonomous_1784514234 c002."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1784514234",
+      "claim_id": "c003",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784615966_run14_reads/introspection_astrid_autonomous_1784514234_summary.md",
+      "note": "Run 14 exact evidence for introspection_astrid_autonomous_1784514234 c003."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1784514234",
+      "claim_id": "c004",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784615966_run14_reads/introspection_astrid_autonomous_1784514234_summary.md",
+      "note": "Run 14 exact evidence for introspection_astrid_autonomous_1784514234 c004."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1784513986",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/codec/projection.rs",
+      "note": "Run 14 exact evidence for introspection_astrid_codec_1784513986 c001."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1784513986",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/codec/tests.rs",
+      "note": "Run 14 exact evidence for introspection_astrid_codec_1784513986 c002."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1784513986",
+      "claim_id": "c003",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784615966_run14_reads/introspection_astrid_codec_1784513986_summary.md",
+      "note": "Run 14 exact evidence for introspection_astrid_codec_1784513986 c003."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1784513986",
+      "claim_id": "c004",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784615966_run14_reads/introspection_astrid_codec_1784513986_summary.md",
+      "note": "Run 14 exact evidence for introspection_astrid_codec_1784513986 c004."
+    },
+    {
+      "introspection_id": "introspection_proposal_12d_glimpse_1784513718",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/types/schema/telemetry.rs",
+      "note": "Run 14 exact evidence for introspection_proposal_12d_glimpse_1784513718 c001."
+    },
+    {
+      "introspection_id": "introspection_proposal_12d_glimpse_1784513718",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/codec/tests.rs",
+      "note": "Run 14 exact evidence for introspection_proposal_12d_glimpse_1784513718 c002."
+    },
+    {
+      "introspection_id": "introspection_proposal_12d_glimpse_1784513718",
+      "claim_id": "c003",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784615966_run14_reads/introspection_proposal_12d_glimpse_1784513718_summary.md",
+      "note": "Run 14 exact evidence for introspection_proposal_12d_glimpse_1784513718 c003."
+    },
+    {
+      "introspection_id": "introspection_proposal_12d_glimpse_1784513718",
+      "claim_id": "c004",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784615966_run14_reads/introspection_proposal_12d_glimpse_1784513718_summary.md",
+      "note": "Run 14 exact evidence for introspection_proposal_12d_glimpse_1784513718 c004."
+    },
+    {
+      "introspection_id": "introspection_proposal_distance_contact_control_1784513459",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/witness/provenance.rs",
+      "note": "Run 14 exact evidence for introspection_proposal_distance_contact_control_1784513459 c001."
+    },
+    {
+      "introspection_id": "introspection_proposal_distance_contact_control_1784513459",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/witness/provenance.rs",
+      "note": "Run 14 exact evidence for introspection_proposal_distance_contact_control_1784513459 c002."
+    },
+    {
+      "introspection_id": "introspection_proposal_distance_contact_control_1784513459",
+      "claim_id": "c003",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784615966_run14_reads/introspection_proposal_distance_contact_control_1784513459_summary.md",
+      "note": "Run 14 exact evidence for introspection_proposal_distance_contact_control_1784513459 c003."
+    },
+    {
+      "introspection_id": "introspection_proposal_distance_contact_control_1784513459",
+      "claim_id": "c004",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784615966_run14_reads/introspection_proposal_distance_contact_control_1784513459_summary.md",
+      "note": "Run 14 exact evidence for introspection_proposal_distance_contact_control_1784513459 c004."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1784513018",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/correspondence_v1.rs",
+      "note": "Run 14 exact evidence for introspection_proposal_bidirectional_contact_1784513018 c001."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1784513018",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/correspondence_v1.rs",
+      "note": "Run 14 exact evidence for introspection_proposal_bidirectional_contact_1784513018 c002."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1784513018",
+      "claim_id": "c003",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784615966_run14_reads/introspection_proposal_bidirectional_contact_1784513018_summary.md",
+      "note": "Run 14 exact evidence for introspection_proposal_bidirectional_contact_1784513018 c003."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1784513018",
+      "claim_id": "c004",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784615966_run14_reads/introspection_proposal_bidirectional_contact_1784513018_summary.md",
+      "note": "Run 14 exact evidence for introspection_proposal_bidirectional_contact_1784513018 c004."
+    },
+    {
+      "introspection_id": "introspection_proposal_phase_transitions_1784512813",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/phase_transitions.rs",
+      "note": "Run 14 exact evidence for introspection_proposal_phase_transitions_1784512813 c001."
+    },
+    {
+      "introspection_id": "introspection_proposal_phase_transitions_1784512813",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/phase_transitions.rs",
+      "note": "Run 14 exact evidence for introspection_proposal_phase_transitions_1784512813 c002."
+    },
+    {
+      "introspection_id": "introspection_proposal_phase_transitions_1784512813",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/phase_transitions.rs",
+      "note": "Run 14 exact evidence for introspection_proposal_phase_transitions_1784512813 c003."
+    },
+    {
+      "introspection_id": "introspection_proposal_phase_transitions_1784512813",
+      "claim_id": "c004",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784615966_run14_reads/introspection_proposal_phase_transitions_1784512813_summary.md",
+      "note": "Run 14 exact evidence for introspection_proposal_phase_transitions_1784512813 c004."
+    },
+    {
+      "introspection_id": "introspection_minime_autonomous_agent_1784512043",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "../minime/minime_autonomy/runtime.py",
+      "note": "Run 14 exact evidence for introspection_minime_autonomous_agent_1784512043 c001."
+    },
+    {
+      "introspection_id": "introspection_minime_autonomous_agent_1784512043",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "../minime/minime_autonomy/authority.py",
+      "note": "Run 14 exact evidence for introspection_minime_autonomous_agent_1784512043 c002."
+    },
+    {
+      "introspection_id": "introspection_minime_autonomous_agent_1784512043",
+      "claim_id": "c003",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784615966_run14_reads/introspection_minime_autonomous_agent_1784512043_summary.md",
+      "note": "Run 14 exact evidence for introspection_minime_autonomous_agent_1784512043 c003."
+    },
+    {
+      "introspection_id": "introspection_minime_autonomous_agent_1784512043",
+      "claim_id": "c004",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784615966_run14_reads/introspection_minime_autonomous_agent_1784512043_summary.md",
+      "note": "Run 14 exact evidence for introspection_minime_autonomous_agent_1784512043 c004."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1784509001",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "Run 14 exact evidence for introspection_astrid_llm_1784509001 c001."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1784509001",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/fallback_contracts.rs",
+      "note": "Run 14 exact evidence for introspection_astrid_llm_1784509001 c002."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1784509001",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Run 14 exact evidence for introspection_astrid_llm_1784509001 c003."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1784509001",
+      "claim_id": "c004",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784615966_run14_reads/introspection_astrid_llm_1784509001_summary.md",
+      "note": "Run 14 exact evidence for introspection_astrid_llm_1784509001 c004."
+    },
+    {
+      "introspection_id": "introspection_minime_main_excerpt_1784508707",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "../minime/minime/src/controller_recovery.rs",
+      "note": "Run 14 exact evidence for introspection_minime_main_excerpt_1784508707 c001."
+    },
+    {
+      "introspection_id": "introspection_minime_main_excerpt_1784508707",
+      "claim_id": "c002",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784615966_run14_reads/introspection_minime_main_excerpt_1784508707_summary.md",
+      "note": "Run 14 exact evidence for introspection_minime_main_excerpt_1784508707 c002."
+    },
+    {
+      "introspection_id": "introspection_minime_main_excerpt_1784508707",
+      "claim_id": "c003",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784615966_run14_reads/introspection_minime_main_excerpt_1784508707_summary.md",
+      "note": "Run 14 exact evidence for introspection_minime_main_excerpt_1784508707 c003."
+    },
+    {
+      "introspection_id": "introspection_minime_main_excerpt_1784508707",
+      "claim_id": "c004",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784615966_run14_reads/introspection_minime_main_excerpt_1784508707_summary.md",
+      "note": "Run 14 exact evidence for introspection_minime_main_excerpt_1784508707 c004."
+    },
+    {
+      "introspection_id": "introspection_minime_esn_1784508266",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "../minime/minime/src/esn.rs",
+      "note": "Run 14 exact evidence for introspection_minime_esn_1784508266 c001."
+    },
+    {
+      "introspection_id": "introspection_minime_esn_1784508266",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "../minime/minime/src/esn.rs",
+      "note": "Run 14 exact evidence for introspection_minime_esn_1784508266 c002."
+    },
+    {
+      "introspection_id": "introspection_minime_esn_1784508266",
+      "claim_id": "c003",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784615966_run14_reads/introspection_minime_esn_1784508266_summary.md",
+      "note": "Run 14 exact evidence for introspection_minime_esn_1784508266 c003."
+    },
+    {
+      "introspection_id": "introspection_minime_esn_1784508266",
+      "claim_id": "c004",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784615966_run14_reads/introspection_minime_esn_1784508266_summary.md",
+      "note": "Run 14 exact evidence for introspection_minime_esn_1784508266 c004."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1784438109",
+      "claim_id": "c001",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Run 14 exact evidence for introspection_astrid_llm_1784438109 c001."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1784438109",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Run 14 exact evidence for introspection_astrid_llm_1784438109 c002."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1784438109",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "Run 14 exact evidence for introspection_astrid_llm_1784438109 c003."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1784438109",
+      "claim_id": "c004",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Run 14 exact evidence for introspection_astrid_llm_1784438109 c004."
+    },
+    {
+      "introspection_id": "introspection_minime_sensory_bus_1784437768",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "../minime/minime/src/sensory_bus.rs",
+      "note": "Run 14 exact evidence for introspection_minime_sensory_bus_1784437768 c001."
+    },
+    {
+      "introspection_id": "introspection_minime_sensory_bus_1784437768",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "../minime/minime/src/sensory_bus.rs",
+      "note": "Run 14 exact evidence for introspection_minime_sensory_bus_1784437768 c002."
+    },
+    {
+      "introspection_id": "introspection_minime_sensory_bus_1784437768",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "../minime/minime/src/sensory_bus.rs",
+      "note": "Run 14 exact evidence for introspection_minime_sensory_bus_1784437768 c003."
+    },
+    {
+      "introspection_id": "introspection_minime_sensory_bus_1784437768",
+      "claim_id": "c004",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784615966_run14_reads/introspection_minime_sensory_bus_1784437768_summary.md",
+      "note": "Run 14 exact evidence for introspection_minime_sensory_bus_1784437768 c004."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1784437378",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "../minime/minime/src/regulator/core.rs",
+      "note": "Run 14 exact evidence for introspection_minime_regulator_1784437378 c001."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1784437378",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "../minime/minime/src/regulator/core/pi.rs",
+      "note": "Run 14 exact evidence for introspection_minime_regulator_1784437378 c002."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1784437378",
+      "claim_id": "c003",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784615966_run14_reads/introspection_minime_regulator_1784437378_summary.md",
+      "note": "Run 14 exact evidence for introspection_minime_regulator_1784437378 c003."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1784437378",
+      "claim_id": "c004",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784615966_run14_reads/introspection_minime_regulator_1784437378_summary.md",
+      "note": "Run 14 exact evidence for introspection_minime_regulator_1784437378 c004."
+    }
+  ]
+}

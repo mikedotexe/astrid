@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The fixed seven-second, 0.30-intensity, 64-step heartbeat is a real scheduled contributor to Astrid's felt grounding.",
+      "disposition": "verify the exact cadence, phase, configured intensity, Minime texture context, and rescue boundary",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Rescue skips could fracture continuity and need outcome-specific evidence rather than inference from silence.",
+      "disposition": "observe 103 recent attempts, 103 sends, zero blocks, and 102 varying consecutive pulses in the bounded runtime window",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Successful and nonrepeating delivery does not establish that the pulse feels fresh or smoothly grounded.",
+      "disposition": "verify the diagnostic's explicit lived-quality and causation limits and retain Astrid's felt report as open review evidence",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "A one-second, entropy-responsive, or higher-intensity heartbeat would change live semantic cadence and substrate input.",
+      "disposition": "preserve an exact Tier 5 operator-approval wait for cadence or intensity changes",
+      "classification": "authority_gated"
+    }
+  ]
+}

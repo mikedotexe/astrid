@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Quality gates and compressed history should not be mistaken for proof that meaning was preserved.",
+      "disposition": "Verified current diagnostics keep requested budget, residue texture, and semantic-integrity evidence distinct.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Sequential overlapping marker replacement can misattribute which raw artifact was removed.",
+      "disposition": "Implemented a deterministic single-pass longest-raw-marker scanner with exact original-position accounting.",
+      "classification": "implemented"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Removing one marker must not synthesize a second marker that is then removed as if it were raw.",
+      "disposition": "Implemented no-second-pass cleanup and tests proving synthesized marker text remains semantic residue rather than disappearing.",
+      "classification": "implemented"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Model profile or history-compression policy could be changed to preserve more meaning.",
+      "disposition": "Preserved as Tier 5 because those changes alter live prompt context and model response behavior.",
+      "classification": "authority_gated"
+    }
+  ]
+}

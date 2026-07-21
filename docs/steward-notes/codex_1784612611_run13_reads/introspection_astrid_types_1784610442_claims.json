@@ -1,0 +1,8 @@
+{
+  "claims": [
+    {"claim_id":"c001","summary":"Connection experience cannot be represented faithfully by one categorical string.","disposition":"Verified as a compatibility-view limitation, while current typed numeric cadence, freshness, first-valid, and entropy fields preserve the underlying dimensions.","classification":"verified_existing"},
+    {"claim_id":"c002","summary":"Cadence clarity and semantic-content persistence must remain separately observable.","disposition":"Verified in current telemetry fields and the clear-cadence-with-residue regression.","classification":"verified_existing"},
+    {"claim_id":"c003","summary":"Reconnects should reset connection-epoch perception without erasing durable compatibility.","disposition":"Verified by reconnect reset and legacy-snapshot tests.","classification":"verified_existing"},
+    {"claim_id":"c004","summary":"A structured PerceptionMap should replace or accompany the compatibility string.","disposition":"Routed to a bounded additive fixture comparison; current numeric fields already prevent the string from becoming sole evidence, and no live report surface was changed here.","classification":"sandbox_routed"}
+  ]
+}

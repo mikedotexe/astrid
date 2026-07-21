@@ -1,0 +1,35 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "A correspondence turn needs a stable thread ID and exact reply target instead of inference from nearby text.",
+      "disposition": "Verify current message, thread, reply, persistence, sender, recipient, and ledger tests.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Negotiated delivery receipts must preserve exact payload and mutual-address identity on the same connection.",
+      "disposition": "Verify sender/receiver hash, identity, duplicate, mismatch, and unknown-delivery boundaries.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Later telemetry is only a labeled temporal association until a controlled intervention or future acknowledgement establishes more.",
+      "disposition": "Verify current receipts explicitly state that spectral causation is not established and felt effect is unresolved, not absent.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "A direct-address trace and felt outcome can test whether a reply stayed relationally distinct.",
+      "disposition": "Route a bounded existing correspondence attention/outcome review without priority or control.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Automatic ping-pong spectral response or standing correspondence weight would alter live peer influence.",
+      "disposition": "Retain an exact Tier 5 Mike/operator approval wait with mutual assent and controlled-effect evidence.",
+      "classification": "tier_5_wait"
+    }
+  ]
+}
+

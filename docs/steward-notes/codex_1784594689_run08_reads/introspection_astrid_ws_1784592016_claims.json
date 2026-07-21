@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Connection identity and backoff need to preserve continuity across reconnects.",
+      "disposition": "Verified saturating attempt/reconnect counters, per-attempt connection IDs, reset-on-connect state, and explicit disconnect reasons.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Connected wire state must be distinguishable from the arrival of schema-valid spectral content.",
+      "disposition": "Verified `connection_perception_state`, first-valid lag, and first-valid entropy with reconnect reset and legacy compatibility tests.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A bounded network-flap observation should compare connection identity with first-valid telemetry latency.",
+      "disposition": "Routed as a non-live sandbox/runtime observation; no causal claim is made from connection timing alone.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Soft reconnect, connect timeout, or spectral-sync-triggered reconnect would change live telemetry transport behavior.",
+      "disposition": "Preserved as a Tier 5 Mike/operator approval wait before source, replay, restart, and deployment evidence.",
+      "classification": "authority_gated"
+    }
+  ]
+}

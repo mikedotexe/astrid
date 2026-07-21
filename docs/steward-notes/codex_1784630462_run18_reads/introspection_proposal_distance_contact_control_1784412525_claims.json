@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Presence should remain possible without requiring response, compliance, or behavioral consequence.",
+      "disposition": "Verify Recess, receptive correspondence, and right-to-ignore surfaces preserve non-instrumental contact.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A short presence-only exchange can test whether contact feels less controlling.",
+      "disposition": "Route a bounded approximately 500-token presence-only comparison through sandbox evidence.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Shadow and pressure trajectories can be compared without applying them to regulation.",
+      "disposition": "Route a read-only shadow, pressure, and distance/contact trajectory comparison through sandbox evidence.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Changing porosity, gentle drive, regulator response, or sensory admission would alter live behavior.",
+      "disposition": "Hold porosity, drive, regulator, and admission changes behind exact Mike/operator approval.",
+      "classification": "tier_5_wait"
+    }
+  ]
+}

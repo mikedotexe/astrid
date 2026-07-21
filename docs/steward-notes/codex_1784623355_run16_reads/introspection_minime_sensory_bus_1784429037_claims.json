@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The recovery handoff should be sigmoid/smooth rather than a binary stale-window cliff.",
+      "disposition": "Verified sigmoid shaping and smoothstep blending from 25% hold to 40% release in current source.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The exact release boundary should remain continuous within a narrow tolerance.",
+      "disposition": "Verified one-percent sweeps, 0.35-0.45 monotonicity, hold epsilon, and release epsilon tests with explicit cliff bounds.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Entropy-supported persistence should never exceed the 2.05 maximum multiplier.",
+      "disposition": "Verified exact full-support and extreme-context cap tests at `SEMANTIC_CONTEXT_PERSISTENCE_MAX_MULT`.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "A real oscillating trace should test whether scheduler and mixed-lane effects still produce a felt snap.",
+      "disposition": "Routed as a bounded read-only runtime observation; mathematical source continuity is not treated as lived disconfirmation.",
+      "classification": "sandbox_routed"
+    }
+  ]
+}

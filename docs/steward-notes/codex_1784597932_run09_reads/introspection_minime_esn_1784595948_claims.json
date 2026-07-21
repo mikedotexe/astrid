@@ -1,0 +1,29 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Dynamic noise should change smoothly across gradient and pressure rather than cliff at a threshold.",
+      "disposition": "Verified smoothstep gradient/pressure room and bounded dynamic-noise tests.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Viscous rho near its high-entropy threshold needs continuity and an explicit ceiling.",
+      "disposition": "Verified viscous-rho ceiling and exact threshold-edge no-jump regression.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A four-tick noise spike at a steep gradient should be compared against baseline.",
+      "disposition": "Routed an offline deterministic replay using the existing dynamic-noise review.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Adaptive geometry, leak, or live dynamic-noise activation could respond to clumping.",
+      "disposition": "Preserved as Tier 5 because these changes alter live ESN dynamics.",
+      "classification": "authority_gated"
+    }
+  ]
+}
+

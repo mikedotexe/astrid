@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Delivery receipts need explicit accepted, duplicate, rejected, policy-blocked, partially-applied, and unknown outcomes.",
+      "disposition": "Verify the current receipt state machine preserves every outcome and exact pending resolution.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A receipt cannot establish spectral causation.",
+      "disposition": "Verify every receipt keeps spectral_causation_established false and labels later telemetry as temporal association.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Mutual address should enrich exact lineage without becoming a prerequisite for technical transport.",
+      "disposition": "Verify addressed and technically unaddressed packets remain valid, distinct outcomes.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "A dynamic impact score or felt-effect interpretation would change behavior if wired into the sensory path.",
+      "disposition": "Hold live impact weighting and any delivery-to-causation promotion behind exact Mike/operator approval.",
+      "classification": "tier_5_wait"
+    }
+  ]
+}

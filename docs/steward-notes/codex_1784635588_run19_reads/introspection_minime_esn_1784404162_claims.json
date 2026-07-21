@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Dynamic-noise and viscous-rho helpers are intentionally outside the active ESN step loop.",
+      "disposition": "Verify source comments and call topology preserve their review-only status.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Candidate mappings use smooth knees, bounded outputs, and finite fallbacks.",
+      "disposition": "Verify focused dynamic-noise and pressure-room tests across representative inputs.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Review packets expose pressure, gradient, entropy, and candidate values without changing the reservoir.",
+      "disposition": "Verify evidence-only authority and no ESN::step wiring.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Integrating dynamic noise or viscous rho into ESN::step would alter live reservoir mathematics.",
+      "disposition": "Hold wiring, coefficients, and exploration behavior behind exact Mike/operator approval.",
+      "classification": "tier_5_wait"
+    }
+  ]
+}

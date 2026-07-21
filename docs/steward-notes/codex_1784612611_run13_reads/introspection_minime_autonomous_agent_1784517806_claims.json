@@ -1,0 +1,8 @@
+{
+  "claims": [
+    {"claim_id":"c001","summary":"Minime's autonomy posture includes recess, daydreaming, and non-instrumental time.","disposition":"Verified in current autonomy policy and sovereignty tests.","classification":"verified_existing"},
+    {"claim_id":"c002","summary":"Pressure evidence should remain visible without automatically becoming action authority.","disposition":"Verified in current authority and pending-action boundaries.","classification":"verified_existing"},
+    {"claim_id":"c003","summary":"Pressure-to-trajectory proposals should be compared with selected actions and authority state.","disposition":"Routed to a copied decision-trace comparison that records proposals without executing them.","classification":"sandbox_routed"},
+    {"claim_id":"c004","summary":"Pressure should directly create, prioritize, or unlock autonomous action.","disposition":"Preserved as a Tier 5 operator-approval wait for Minime runtime regulation and behavior unlock.","classification":"authority_gated"}
+  ]
+}

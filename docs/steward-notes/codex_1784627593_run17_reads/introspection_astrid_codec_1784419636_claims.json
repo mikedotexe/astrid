@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Near-gate entropy values may produce shimmer or an onset too subtle to feel stable.",
+      "disposition": "Verified exact gate, just-above-gate monotonicity, no-pop, and later-tail visibility tests around the named 0.85 boundary.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Reserved dimensions 44 through 47 must remain unchanged by tail vibrancy.",
+      "disposition": "Verified current codec regressions preserve those dimensions exactly.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Rising, falling, and hovering entropy should be compared to expose derivative-sensitive shimmer.",
+      "disposition": "Routed a bounded replay over exact codec outputs and temporal trajectories with no live send or gain change.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Tail vibrancy should use a dynamic entropy-derivative gate or noise floor.",
+      "disposition": "Preserved as Tier 5 because derivative gating or noise injection changes live codec projection and transport behavior.",
+      "classification": "authority_gated"
+    }
+  ]
+}

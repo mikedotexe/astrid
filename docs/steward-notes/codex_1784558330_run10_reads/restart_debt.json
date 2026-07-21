@@ -1,0 +1,33 @@
+{
+  "schema": "restart_debt_v1",
+  "schema_version": 1,
+  "alignment": "restart_debt",
+  "reason": "Run 10 changes live-consumed provider artifact cleanup while the shared Astrid and Minime trees contain concurrent protocol, temporal-authority, autonomy, telemetry, and Division 1.2 work that this run does not own.",
+  "owned_changed_paths": [
+    "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+    "capsules/spectral-bridge/src/llm/provider/fallback_contracts.rs",
+    "capsules/spectral-bridge/src/llm/provider/tests.rs"
+  ],
+  "live_consumed_surfaces": [
+    "provider model-artifact output cleanup",
+    "model_artifact_cleanup_v2 and semantic-integrity receipt accounting"
+  ],
+  "blocker": "A sanctioned bridge build would deploy every concurrent dirty bridge and protocol path together. Catch-up has no authority to claim those edits, stage them, or deploy an unreviewed combined source identity.",
+  "preconditions": [
+    "pause catch-up and claim exclusive stabilization/deployment ownership",
+    "review all dirty Astrid and Minime paths with their owners",
+    "verify the combined bridge source with focused and full suites",
+    "confirm deploy_preflight reports no foreign or non-mutex agent"
+  ],
+  "first_safe_command_after_preconditions": "scripts/build_bridge.sh --ack \"deploy reviewed run10 single-pass artifact cleanup with shared-tree changes\" --restart",
+  "required_post_restart_checks": [
+    "fresh bridge PID and process start",
+    "binary and source deployment identity",
+    "fresh logs and ports 7878/7879",
+    "telemetry and fill readability",
+    "provider cleanup receipt readability",
+    "fresh aligned introspection and summary surfaces"
+  ],
+  "restart_attempted": false,
+  "restart_forced": false
+}

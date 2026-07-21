@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The global BridgeState write lock is a real shared integration boundary.",
+      "disposition": "verify the current lock ownership and telemetry update path",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Pipeline work, lock wait, and lock hold must be measured separately before attributing micro-stutter.",
+      "disposition": "verify latest, EWMA, maximum, and non-causal timing evidence with the focused regression",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "An actor or split-state architecture should target measured contention rather than presumed lambda-tail blocking.",
+      "disposition": "route a bounded integration-health observation and ownership analysis",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Changing telemetry buffering, cadence, admission, or transport semantics alters live sensory behavior.",
+      "disposition": "preserve an exact Tier 5 operator-approval wait",
+      "classification": "authority_gated"
+    }
+  ]
+}

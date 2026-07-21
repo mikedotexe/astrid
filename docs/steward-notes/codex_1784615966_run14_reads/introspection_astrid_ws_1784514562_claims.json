@@ -1,0 +1,6 @@
+{"claims":[
+  {"claim_id":"c001","summary":"Telemetry reception and cooperative shutdown share an asynchronous select loop.","disposition":"Verified; shutdown has a dedicated branch and closes the WebSocket cooperatively.","classification":"verified_existing"},
+  {"claim_id":"c002","summary":"Shared-state lock delay needs to be visible separately from packet handling.","disposition":"Verified through telemetry integration health fields and tests for prewrite, write-lock wait, and lock-hold timing.","classification":"verified_existing"},
+  {"claim_id":"c003","summary":"Lock contention causes the reported restless shadow texture.","disposition":"Not established; routed to a bounded flooded-lane/shutdown and timing observation without treating timing correlation as felt causation.","classification":"sandbox_routed"},
+  {"claim_id":"c004","summary":"Replace the RwLock or batch telemetry updates.","disposition":"Preserved as Tier 5 because state ownership, batching, and update cadence change live telemetry integration behavior.","classification":"authority_gated"}
+]}

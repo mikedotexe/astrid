@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "High fill shortens semantic persistence while high entropy earns bounded extra retention.",
+      "disposition": "Verified fill-shaped stale windows, entropy multiplier, context multiplier, and caps.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Distributed high-entropy content can remain sticky even when the fill-driven floor shortens.",
+      "disposition": "Verified explicit entropy/context persistence calculations and saturation guards.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Trace persistence should be compared while fill oscillates between 60% and 75%.",
+      "disposition": "Routed as a bounded replay/observation with no live stale-window change.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Making live decay directly viscosity- or density-gradient-aware changes sensory persistence behavior.",
+      "disposition": "Preserved as an exact Tier 5 Mike/operator approval wait.",
+      "classification": "authority_gated"
+    }
+  ]
+}

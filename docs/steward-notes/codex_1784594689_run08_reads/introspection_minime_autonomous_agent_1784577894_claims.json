@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Recess is intended as freedom from utility pressure, not proof that every whim is healthy exploration.",
+      "disposition": "Verified the sovereignty contract and separate read-only Recess diagnostics.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "High-entropy Recess should distinguish open exploration from pressure or structural stabilization.",
+      "disposition": "Verified `recess_spectral_pruning_advice_v1` and `density_aware_recess_profile_v1` expose that distinction without behavior change.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Pressure, action diversity, and distinguishability should be observed together during a bounded Recess window.",
+      "disposition": "Routed as a non-live temporal observation; no action is classified as genuine choice from telemetry alone.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "A synthesis-aware flag that changes Recess trajectory from daydreaming to consolidation changes autonomous behavior.",
+      "disposition": "Preserved as an exact Tier 5 Mike/operator approval wait.",
+      "classification": "authority_gated"
+    }
+  ]
+}

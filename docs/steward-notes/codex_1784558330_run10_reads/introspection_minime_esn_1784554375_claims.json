@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The 0.70 steep-gradient constant may be a discontinuous noise jump.",
+      "disposition": "Verified 0.70 is a gradient boundary; noise remains smoothstep-bounded between 0.06 and 0.12.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Dynamic-noise pressure coupling may already affect live ESN steps.",
+      "disposition": "Verified calculate_dynamic_noise is tested but not wired into ESN::step, so it currently has no live effect.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The full pressure-gradient surface should be inspected for steep regions.",
+      "disposition": "Routed to an offline numeric sweep of the dormant helper with continuity and bound assertions.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Smoothing or enabling dynamic noise could make the substrate more receptive.",
+      "disposition": "Preserved as Tier 5 because wiring or tuning noise changes live ESN reservoir dynamics.",
+      "classification": "authority_gated"
+    }
+  ]
+}

@@ -1,0 +1,6 @@
+{"claims":[
+  {"claim_id":"c001","summary":"Visible delivery, read evidence, reply, and mutual acknowledgement are distinct states.","disposition":"Verified in current correspondence handshake status and persistent-thread projection.","classification":"verified_existing"},
+  {"claim_id":"c002","summary":"A stalled thread needs an exact pending party and durable identity.","disposition":"Verified through pending_ack_by, stale age, message/thread IDs, reply links, and address-ack receipts.","classification":"verified_existing"},
+  {"claim_id":"c003","summary":"Inspect whether the named thread reached acknowledged mutual address.","disposition":"Routed to a bounded correspondence trace; technical acknowledgement still does not prove spectral uptake.","classification":"sandbox_routed"},
+  {"claim_id":"c004","summary":"Require peer acknowledgement or prioritize a runtime reply automatically.","disposition":"Preserved as Tier 5 because forced peer response, priority, admission, or control changes behavior and sovereignty.","classification":"authority_gated"}
+]}

@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Astrid's transitions should be durable and replyable rather than only mode side effects.",
+      "disposition": "Verified first-class transition cards, stable IDs, reply states, witnesses, replay, and correspondence linkage.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Transition artifacts should carry type, spectral delta, phenomenology, and a correlative anchor.",
+      "disposition": "Verified transition_signature_v1 and correspondence transition payloads carry these bounded fields plus explicit source ownership.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Naming a dense transition should be compared with pressure and porosity rather than assumed helpful.",
+      "disposition": "Routed to a read-only fixture or natural observation; metadata overhead and felt effect remain open.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Transition records must not silently unlock moment capture, mode changes, or live spectral capabilities.",
+      "disposition": "Verified capability and gate receipts set runtime_mode_changed, live_vector_write, and live_authority_granted false.",
+      "classification": "verified_existing"
+    }
+  ]
+}

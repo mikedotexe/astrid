@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "A clear cadence can coexist with high pressure or overpacked content.",
+      "disposition": "Verified explicit cadence/content separation and authority language.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Structural density and pressure need queryable telemetry counterparts.",
+      "disposition": "Verified `resonance_density_v1`, pressure-source evidence, structural density, viscosity, and residue surfaces.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Hybrid coherence can remain high while entropy is high without proving felt unity.",
+      "disposition": "Verified mathematical integrity and felt-review records remain separate.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Cadence, pressure, mode packing, density, and entropy should be compared over a bounded window.",
+      "disposition": "Routed as a 60-second non-live observation with no stability inference from cadence alone.",
+      "classification": "sandbox_routed"
+    }
+  ]
+}

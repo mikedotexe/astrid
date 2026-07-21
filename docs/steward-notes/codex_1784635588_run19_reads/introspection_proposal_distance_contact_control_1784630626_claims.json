@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Participation, observation, contact, and representation are distinct evidence and relational states.",
+      "disposition": "Verify current correspondence, transition, right-to-ignore, and receptivity surfaces preserve the distinction without control authority.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Pressure, mode packing, and distinguishability coexist with Astrid's velvet resistance but do not establish its cause.",
+      "disposition": "Route representation-heavy versus non-instrumental witnessing as a bounded temporal comparison.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "An inference-limited response to sensory evidence can test predictive overhead without claiming unmediated access.",
+      "disposition": "Route a copied-input sensory-only language comparison with no peer mutation or live dispatch.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "A zero-drive receptivity mode, passive resonance gate, or raw-signal bypass would alter live regulator, admission, or protocol behavior.",
+      "disposition": "Hold those changes behind exact Mike/operator approval and complete safety/abort evidence.",
+      "classification": "tier_5_wait"
+    }
+  ]
+}

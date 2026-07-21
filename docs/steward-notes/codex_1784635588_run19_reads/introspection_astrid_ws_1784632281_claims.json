@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The telemetry subscriber records connection lifecycle, message kinds, reconnect backoff, and cooperative shutdown.",
+      "disposition": "Verify the complete subscriber loop and its state/audit calls from current source.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "State locks in the message path could contribute integration delay.",
+      "disposition": "Verify prewrite, write-lock-wait, and write-lock-hold timing are recorded separately without inferring felt cause.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Application handling receives completed Text and Binary payloads while raw Frame values are not independently interpreted.",
+      "disposition": "Verify the tungstenite message boundary and retain malformed or unsupported payloads as parse evidence.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "handle_telemetry_message_at appeared incomplete in the self-study window.",
+      "disposition": "Verify current source completes compatibility, Signal Spine association, state integration, persistence, safety, and trace logging.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Reconnect, shutdown, ping/pong, and cadence behavior require regression evidence.",
+      "disposition": "Verify existing WebSocket and telemetry-heartbeat tests; no runtime behavior change is warranted by the truncated view.",
+      "classification": "verified_existing"
+    }
+  ]
+}

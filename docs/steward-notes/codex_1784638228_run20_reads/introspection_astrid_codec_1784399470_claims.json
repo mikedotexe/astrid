@@ -1,0 +1,29 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The 48D codec gives narrative and tail texture explicit room rather than leaving them inside the historical 32D contract.",
+      "disposition": "Verify current lane ownership, bounded output, and narrative/tail evidence surfaces.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The entropy gate should rise smoothly and density gradient should not create a discontinuous vibrancy pop.",
+      "disposition": "Verify exact gate-edge, requested entropy-point, density-gradient, and warmth-preservation regressions.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A copied-vector replay can compare current vibrancy with alternative gate or gradient curves while preserving the felt contrast question.",
+      "disposition": "Route a bounded codec replay that cannot write transport vectors or runtime configuration.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Changing entropy gate, gain, width, tail ownership, or density-gradient scaling would alter live codec transport.",
+      "disposition": "Retain an exact Tier 5 Mike/operator approval wait with parity, saturation, and post-change felt review.",
+      "classification": "tier_5_wait"
+    }
+  ]
+}
+

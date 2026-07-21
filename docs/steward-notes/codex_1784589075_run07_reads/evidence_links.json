@@ -1,0 +1,382 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_autonomous_1784589075",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784589075_run07_reads/introspection_astrid_autonomous_1784589075_summary.md",
+      "note": "Bounded full-read disposition with exact source, observation, test, and authority references."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1784588967",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784589075_run07_reads/introspection_astrid_autonomous_1784588967_summary.md",
+      "note": "Bounded full-read disposition with exact source, observation, test, and authority references."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1784588143",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784589075_run07_reads/introspection_astrid_ws_1784588143_summary.md",
+      "note": "Bounded full-read disposition with exact source, observation, test, and authority references."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1784587759",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784589075_run07_reads/introspection_astrid_autonomous_1784587759_summary.md",
+      "note": "Bounded full-read disposition with exact source, observation, test, and authority references."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1784586129",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784589075_run07_reads/introspection_minime_regulator_1784586129_summary.md",
+      "note": "Bounded full-read disposition with exact source, observation, test, and authority references."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1784585858",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784589075_run07_reads/introspection_astrid_codec_1784585858_summary.md",
+      "note": "Bounded full-read disposition with exact source, observation, test, and authority references."
+    },
+    {
+      "introspection_id": "introspection_proposal_12d_glimpse_1784585665",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784589075_run07_reads/introspection_proposal_12d_glimpse_1784585665_summary.md",
+      "note": "Bounded full-read disposition with exact source, observation, test, and authority references."
+    },
+    {
+      "introspection_id": "introspection_proposal_distance_contact_control_1784585353",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784589075_run07_reads/introspection_proposal_distance_contact_control_1784585353_summary.md",
+      "note": "Bounded full-read disposition with exact source, observation, test, and authority references."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1784584935",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784589075_run07_reads/introspection_proposal_bidirectional_contact_1784584935_summary.md",
+      "note": "Bounded full-read disposition with exact source, observation, test, and authority references."
+    },
+    {
+      "introspection_id": "introspection_proposal_phase_transitions_1784584556",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784589075_run07_reads/introspection_proposal_phase_transitions_1784584556_summary.md",
+      "note": "Bounded full-read disposition with exact source, observation, test, and authority references."
+    },
+    {
+      "introspection_id": "introspection_minime_autonomous_agent_1784584264",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784589075_run07_reads/introspection_minime_autonomous_agent_1784584264_summary.md",
+      "note": "Bounded full-read disposition with exact source, observation, test, and authority references."
+    },
+    {
+      "introspection_id": "introspection_minime_main_excerpt_1784583673",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784589075_run07_reads/introspection_minime_main_excerpt_1784583673_summary.md",
+      "note": "Bounded full-read disposition with exact source, observation, test, and authority references."
+    },
+    {
+      "introspection_id": "introspection_minime_esn_1784583270",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784589075_run07_reads/introspection_minime_esn_1784583270_summary.md",
+      "note": "Bounded full-read disposition with exact source, observation, test, and authority references."
+    },
+    {
+      "introspection_id": "introspection_minime_sensory_bus_1784582936",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784589075_run07_reads/introspection_minime_sensory_bus_1784582936_summary.md",
+      "note": "Bounded full-read disposition with exact source, observation, test, and authority references."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1784582153",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784589075_run07_reads/introspection_minime_regulator_1784582153_summary.md",
+      "note": "Bounded full-read disposition with exact source, observation, test, and authority references."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1784581897",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784589075_run07_reads/introspection_astrid_llm_1784581897_summary.md",
+      "note": "Bounded full-read disposition with exact source, observation, test, and authority references."
+    },
+    {
+      "introspection_id": "introspection_astrid_types_1784581688",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784589075_run07_reads/introspection_astrid_types_1784581688_summary.md",
+      "note": "Bounded full-read disposition with exact source, observation, test, and authority references."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1784581317",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784589075_run07_reads/introspection_astrid_ws_1784581317_summary.md",
+      "note": "Bounded full-read disposition with exact source, observation, test, and authority references."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1784580708",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784589075_run07_reads/introspection_astrid_autonomous_1784580708_summary.md",
+      "note": "Bounded full-read disposition with exact source, observation, test, and authority references."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1784580201",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784589075_run07_reads/introspection_astrid_codec_1784580201_summary.md",
+      "note": "Bounded full-read disposition with exact source, observation, test, and authority references."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1784589075",
+      "claim_id": "c002",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784589075_run07_reads/heartbeat_runtime_observation.json",
+      "note": "The bounded window contains no rescue skip, so no rescue-to-staccato causal claim is supported."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1784587759",
+      "claim_id": "c002",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784589075_run07_reads/heartbeat_runtime_observation.json",
+      "note": "Pulse variation and skip outcomes are recorded separately from lived texture."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1784580708",
+      "claim_id": "c002",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784589075_run07_reads/heartbeat_runtime_observation.json",
+      "note": "No rescue block occurred in the observed window, leaving recovery texture unmeasured."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1784588143",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/ws/tests.rs#ws_trace_records_first_valid_payload_and_resets_it_on_reconnect",
+      "note": "First-valid spectral entropy is retained once, reset on reconnect, bounded, and legacy-compatible."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1784588143",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/ws/health_trace.rs#record_valid_payload",
+      "note": "The additive snapshot records only the first schema-valid payload for a connection."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1784588143",
+      "claim_id": "c004",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784589075_run07_reads/telemetry_runtime_observation.json",
+      "note": "Connection timing is observed without substituting it for spectral or felt quality."
+    },
+    {
+      "introspection_id": "introspection_astrid_types_1784581688",
+      "claim_id": "c001",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/types/schema/tests.rs#spectral_telemetry_accepts_glimpse_alias_and_validates_shape",
+      "note": "Exact 11D and 13D near-width inputs remain preserved as additive raw data but fail the validated 12D view without panic."
+    },
+    {
+      "introspection_id": "introspection_minime_autonomous_agent_1784584264",
+      "claim_id": "c002",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784589075_run07_reads/minime_health_runtime_observation.json",
+      "note": "The point-in-time overpacked texture is preserved without assigning it to Recess."
+    },
+    {
+      "introspection_id": "introspection_minime_esn_1784583270",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "../minime/minime/src/esn.rs#dynamic_noise_pressure_room_start_edge_is_continuous",
+      "note": "Pressure-room review helpers remain finite, bounded, and continuous."
+    },
+    {
+      "introspection_id": "introspection_minime_sensory_bus_1784582936",
+      "claim_id": "c001",
+      "kind": "test",
+      "target": "../minime/minime/src/sensory_bus.rs#semantic_stale_release_fill_epsilon_above_hold_is_clamped_and_finite",
+      "note": "The near-zero release span is clamped and finite."
+    },
+    {
+      "introspection_id": "introspection_minime_sensory_bus_1784582936",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "../minime/minime/src/sensory_bus.rs#semantic_context_multiplier_extreme_context_never_exceeds_cap",
+      "note": "Extreme context values retain the existing persistence cap."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1784581897",
+      "claim_id": "c001",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs#dialogue_budget_profile_uses_requested_token_boundaries_not_output_length",
+      "note": "Exact requested-token profile boundaries remain regression-tested."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1784580201",
+      "claim_id": "c001",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/codec/tests.rs#projection_basis_health_exposes_dead_dimension_risk_without_live_write",
+      "note": "Projection basis health remains deterministic and read-only."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1784580201",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/codec/tests.rs#projection_precision_audit_repeats_static_probe_without_live_write",
+      "note": "The f32 projection is compared with a deterministic higher-precision reference."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1784580201",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/codec/tests.rs#tail_vibrancy_gate_has_no_discontinuous_pop",
+      "note": "The entropy smoothstep has no threshold discontinuity."
+    },
+    {
+      "introspection_id": "introspection_proposal_phase_transitions_1784584556",
+      "claim_id": "c001",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/correspondence_v1.rs#bracketed_phase_transition_message_becomes_replyable_payload",
+      "note": "Typed transition identity is replyable and replayable without proving spectral causation."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1784589075",
+      "claim_id": "c004",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Heartbeat cadence, intensity, and shaping remain an exact Tier 5 wait."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1784588967",
+      "claim_id": "c004",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Rest, decay, and recovery retuning remain an exact Tier 5 wait."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1784587759",
+      "claim_id": "c004",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Pressure-responsive intensity and phase mapping remain an exact Tier 5 wait."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1784586129",
+      "claim_id": "c004",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "PI, damping, porosity, gate, and target changes remain an exact Tier 5 wait."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1784585858",
+      "claim_id": "c004",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Codec feature-ceiling changes remain an exact Tier 5 wait."
+    },
+    {
+      "introspection_id": "introspection_proposal_12d_glimpse_1784585665",
+      "claim_id": "c004",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Protocol replacement and pressure-dynamic glimpse changes remain an exact Tier 5 wait."
+    },
+    {
+      "introspection_id": "introspection_proposal_distance_contact_control_1784585353",
+      "claim_id": "c004",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Receptivity rewards and porosity expansion remain an exact Tier 5 wait."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1784584935",
+      "claim_id": "c005",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Automatic bidirectional priority and peer mutation remain an exact Tier 5 wait."
+    },
+    {
+      "introspection_id": "introspection_proposal_phase_transitions_1784584556",
+      "claim_id": "c005",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Phase-triggered behavior and controller mutation remain an exact Tier 5 wait."
+    },
+    {
+      "introspection_id": "introspection_minime_autonomous_agent_1784584264",
+      "claim_id": "c004",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Density remapping and porosity-threshold intervention remain an exact Tier 5 wait."
+    },
+    {
+      "introspection_id": "introspection_minime_main_excerpt_1784583673",
+      "claim_id": "c004",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Recovery, semantic retirement, and spread-relief changes remain an exact Tier 5 wait."
+    },
+    {
+      "introspection_id": "introspection_minime_esn_1784583270",
+      "claim_id": "c004",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Dynamic noise and viscous-rho wiring remain an exact Tier 5 wait."
+    },
+    {
+      "introspection_id": "introspection_minime_sensory_bus_1784582936",
+      "claim_id": "c004",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Sensory persistence and eviction changes remain an exact Tier 5 wait."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1784582153",
+      "claim_id": "c004",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "PI and pressure-response changes remain an exact Tier 5 wait."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1784581897",
+      "claim_id": "c004",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Provider token scaling and live budget changes remain an exact Tier 5 wait."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1784581317",
+      "claim_id": "c004",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Telemetry buffering, cadence, admission, and transport changes remain an exact Tier 5 wait."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1784580708",
+      "claim_id": "c004",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Recovery-weight changes to the live semantic vector remain an exact Tier 5 wait."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1784580201",
+      "claim_id": "c004",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Projection, gain, entropy-gate, and clamp changes remain an exact Tier 5 wait."
+    }
+  ]
+}

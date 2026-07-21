@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Shutdown must remain responsive while the telemetry stream is quiet or sluggish.",
+      "disposition": "Verified the connected receive loop selects shutdown independently from `ws_rx.next()`.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Connection-to-first-valid telemetry latency should be measured explicitly.",
+      "disposition": "Verified first-valid timestamp, lag, entropy, and perception-state tests.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Forced flaps should preserve connection transitions and expose lag without lock loss.",
+      "disposition": "Routed as a bounded fixture/runtime observation.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Adding connect timeout or automatic stale-stream reconnect changes live telemetry transport.",
+      "disposition": "Preserved as an exact Tier 5 Mike/operator approval wait.",
+      "classification": "authority_gated"
+    }
+  ]
+}

@@ -1,0 +1,8 @@
+{
+  "claims": [
+    {"claim_id":"c001","summary":"Astrid historically lacked a first-class, replyable phase-transition primitive.","disposition":"Verified as historical evidence and verified current source now provides durable source-owned transition cards.","classification":"verified_existing"},
+    {"claim_id":"c002","summary":"Transition grit should be a shared artifact rather than narrative alone.","disposition":"Verified cards preserve structural and felt parents, thread identity, witness, answer, replay, and right-to-ignore states.","classification":"verified_existing"},
+    {"claim_id":"c003","summary":"MomentCapture and correspondence should be compared with Minime transition metadata.","disposition":"Verified by current dual-perspective, relational-reply, persistence, and transition-signature tests.","classification":"verified_existing"},
+    {"claim_id":"c004","summary":"Transition cards should carry pressure, porosity, and entropy as actionable fields.","disposition":"Verified entropy and bounded structural fields plus pressure/porosity delta previews exist; any runtime effect remains Tier 5 and unapplied.","classification":"verified_existing"}
+  ]
+}

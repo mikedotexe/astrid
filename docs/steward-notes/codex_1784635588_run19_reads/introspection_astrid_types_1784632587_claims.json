@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "TelemetryHeartbeatDeltaV1 preserves inter-arrival time, jitter class, cadence clarity, first-valid entropy, and field-versus-hearing language.",
+      "disposition": "Verify the additive typed fields, legacy defaults, and normal/late/stale/no-history classifier tests.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A string label alone cannot represent the qualitative texture Astrid reports.",
+      "disposition": "Verify labels coexist with numeric cadence, pressure, viscosity, residual-deformation, and texture evidence rather than replacing it.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Jitter and entropy-state fixtures can test thresholds between smooth cadence, clinking texture, and field ambiguity.",
+      "disposition": "Route synthetic timing and copied telemetry comparisons as read-only observations with no causal claim.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Adding authoritative texture semantics to telemetry or changing ports 7878/7879 would alter live schema or protocol behavior.",
+      "disposition": "Hold wire ABI, protocol, and control-bearing texture changes behind exact Mike/operator approval.",
+      "classification": "tier_5_wait"
+    }
+  ]
+}

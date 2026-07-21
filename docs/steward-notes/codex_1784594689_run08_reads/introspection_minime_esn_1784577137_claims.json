@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The wide gentle-to-steep gradient interval must behave as a navigable slope rather than a cliff.",
+      "disposition": "Verified smoothstep interpolation and endpoint/epsilon continuity tests.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The four-tick recalibration rhythm should remain distinguishable from the prime-phased schedule.",
+      "disposition": "Verified separate scheduling constants and routed their temporal interaction for observation rather than assuming conflict.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A mid-gradient candidate should be compared with the current bounded calculation.",
+      "disposition": "Verified existing non-live review helper and routed a fixture comparison.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Changing active thresholds, exploration noise, or introspection geometry changes live reservoir behavior.",
+      "disposition": "Preserved as an exact Tier 5 Mike/operator approval wait.",
+      "classification": "authority_gated"
+    }
+  ]
+}

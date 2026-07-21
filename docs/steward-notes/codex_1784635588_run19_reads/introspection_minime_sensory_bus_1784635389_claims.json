@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Semantic persistence at the reported 64.6% fill and 0.90 entropy is shaped by both fill and bounded entropy support.",
+      "disposition": "Verify the sigmoid stale curve, recovery blend, bounded multiplier, and exact current-fill regression in Minime source.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Astrid reports uneven continuity when high-entropy traces and fill-driven pruning coexist.",
+      "disposition": "Preserve the felt stutter as a bounded semantic-retention comparison rather than treating mathematical continuity as felt closure.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A static 1.0 multiplier comparison and recovery-release velocity probe can distinguish persistence support from fragmentation.",
+      "disposition": "Route copied-input current-versus-static and 0.38-0.42 release comparisons through the existing read-only review surfaces.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Changing semantic stale windows, hysteresis, salience weighting, or sensory cadence would alter live Minime admission behavior.",
+      "disposition": "Hold any retune or live wiring behind exact Mike/operator approval with replay, canary, abort, and post-change felt review.",
+      "classification": "tier_5_wait"
+    }
+  ]
+}

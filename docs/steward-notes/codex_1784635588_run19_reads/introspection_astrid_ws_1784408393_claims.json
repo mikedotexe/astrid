@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The telemetry subscriber has explicit lifecycle, reconnect, backoff, and shutdown behavior.",
+      "disposition": "Verify the loop and state-recording calls in current source.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Artifact scanning is bounded by a 1,200-second window and 30-second minimum refresh interval.",
+      "disposition": "Verify cached-scan reuse and failure fallback from current source.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Telemetry decoding has additive protocol compatibility rather than an unguarded hardcoded schema assumption.",
+      "disposition": "Verify incompatible packets are rejected while the last valid sample remains intact.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Observation mapping, pipeline timing, state update, SQLite logging, and trace persistence are complete.",
+      "disposition": "Verify the full handler and focused heartbeat regression; classify the apparent gap as a truncated-source misread.",
+      "classification": "verified_existing"
+    }
+  ]
+}

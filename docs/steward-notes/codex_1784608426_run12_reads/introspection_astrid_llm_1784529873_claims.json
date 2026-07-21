@@ -1,0 +1,8 @@
+{
+  "claims": [
+    {"claim_id":"c001","summary":"Dialogue uses gradual history fade and a quality gate to preserve continuity and reject degenerate output.","disposition":"Verified in current source and the complete bridge suite.","classification":"verified_existing"},
+    {"claim_id":"c002","summary":"The trim_len implementation is incomplete and may exceed prompt budgets.","disposition":"Current source fully implements profile-aware trim lengths and saturating budget accounting; the report had reached the end of its source window.","classification":"verified_existing"},
+    {"claim_id":"c003","summary":"Symbol-heavy output and eight-exchange history compression require direct tests.","disposition":"Verified by existing quality, artifact, prompt-budget, and history tests, all passing in the full bridge suite.","classification":"verified_existing"},
+    {"claim_id":"c004","summary":"History compression should be completed or retuned for profile differences.","disposition":"No missing implementation remains; any behavior retune is preserved as Tier 5 live prompt and model-profile contract authority.","classification":"authority_gated"}
+  ]
+}

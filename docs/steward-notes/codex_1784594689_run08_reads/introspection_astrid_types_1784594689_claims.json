@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Dynamic JSON-valued telemetry fields need bounded schema-on-read handling rather than unchecked key assumptions.",
+      "disposition": "Verified optional pointer/type/finite guards in `types/schema/telemetry.rs` and interpretation-side typed access.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Typed/legacy hybrid coherence must reject NaN and infinity without producing a numeric coherence.",
+      "disposition": "Added and passed `typed_and_legacy_fingerprint_reject_non_finite_hybrid_slots` for both NaN and infinity.",
+      "classification": "implemented"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Legacy-only 32D fingerprints must reconstruct the canonical typed slot mapping deterministically.",
+      "disposition": "Verified existing slot-by-slot reconstruction and aligned-hybrid tests.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "A validated 12D glimpse must remain lifetime-safe and reject malformed or non-finite values.",
+      "disposition": "Verified Rust borrow ownership plus exact 11D, 13D, short, and non-finite regressions.",
+      "classification": "verified_existing"
+    }
+  ]
+}

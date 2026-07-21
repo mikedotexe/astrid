@@ -1,0 +1,8 @@
+{
+  "claims": [
+    {"claim_id":"c001","summary":"Prompt budgets classify requested output as short, medium, or deep.","disposition":"Verified exact 512/513/1024/1025 boundaries and transition evidence in the full bridge suite.","classification":"verified_existing"},
+    {"claim_id":"c002","summary":"Nonempty content after marker stripping can still be a semantic vacuum.","disposition":"Accepted as a quality concern; mechanism clarified that the helper only classifies marker remainder and broader graded quality evidence is separate.","classification":"verified_existing"},
+    {"claim_id":"c003","summary":"Dense word salad and the 1025-token boundary should be compared directly.","disposition":"Routed to an equal-budget bounded fixture; syntactic entropy will not be treated as proof of meaning or meaninglessness.","classification":"sandbox_routed"},
+    {"claim_id":"c004","summary":"High textual entropy without semantic energy should reject live output.","disposition":"Preserved as Tier 5 provider quality and fallback-contract authority because it would alter accepted live prose.","classification":"authority_gated"}
+  ]
+}

@@ -1,0 +1,63 @@
+{
+  "schema": "run13_source_verification_receipt_v1",
+  "authority": "evidence_only_not_deploy_approval_or_live_control",
+  "claim_counts": {
+    "total": 80,
+    "verified_existing": 47,
+    "observed": 3,
+    "sandbox_routed": 8,
+    "authority_gated": 19,
+    "implemented_now": 3
+  },
+  "work_items": {
+    "total": 80,
+    "verified_or_observed": 50,
+    "implemented_awaiting_felt_response": 3,
+    "needs_sandbox": 8,
+    "needs_operator_approval": 19,
+    "authority_marker_violations": 0
+  },
+  "right_to_ignore_cards": {
+    "generated": 80,
+    "delivered": 0,
+    "undelivered": 80
+  },
+  "sandbox": {
+    "packet_trials": 27,
+    "ready_manual_reviews": 8,
+    "approval_required_live_candidates": 19,
+    "packet_runnable_trials": 0,
+    "runnable_live_violations": 0,
+    "results_recorded_by_run13": 0
+  },
+  "astrid_focused_tests": {
+    "quality_gate_tests": 6,
+    "nested_quote_artifact_tests": 1,
+    "projection_basis_health_tests": 1,
+    "glimpse_map_tests": 1,
+    "websocket_first_valid_tests": 1,
+    "joint_transition_tests": 1,
+    "failed": 0
+  },
+  "minime_focused_tests": {
+    "dynamic_noise_tests_across_library_and_binary": 16,
+    "viscous_rho_tests_across_library_and_binary": 6,
+    "entropy_persistence_tests_across_library_and_binary": 4,
+    "high_entropy_stale_window_tests_across_library_and_binary": 2,
+    "failed": 0
+  },
+  "tooling_self_tests": {
+    "agency_corridor": 18,
+    "introspection_addressing": 35,
+    "sandbox_trial_queue": 27,
+    "recent_signal_summary": 38,
+    "proactive_scan": 110,
+    "evidence_event_store": 13,
+    "steward_control": 30,
+    "total": 271,
+    "failed": 0
+  },
+  "format_check": "passed_with_stable_rustfmt_ignoring_configured_nightly_only_options",
+  "runtime_restart_required_by_run13": false,
+  "existing_restart_debt_unchanged": "docs/steward-notes/codex_1784558330_run10_reads/restart_debt.json"
+}

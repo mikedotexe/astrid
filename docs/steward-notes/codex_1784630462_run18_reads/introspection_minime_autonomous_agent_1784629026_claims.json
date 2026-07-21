@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Minime’s Recess path preserves a real autonomous option rather than requiring response to every contact.",
+      "disposition": "Verify autonomous Recess selection and its existing sovereignty and budget guards.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Pressure, divergence, and porosity concerns need legible evidence without becoming regulation.",
+      "disposition": "Verify current pressure, porosity, and divergence reviews are read-only and consequence-free.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Current contact lacks explicit reciprocal acknowledgement even when Minime is technically reachable.",
+      "disposition": "Observe the fresh public-metadata audit result of zero ACK and zero presence-heartbeat receipts.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Dynamic porosity, re-anchoring, or live budget relief would alter Minime’s autonomous regulation.",
+      "disposition": "Hold dynamic porosity, re-anchor, and live budget changes behind exact Mike/operator approval.",
+      "classification": "tier_5_wait"
+    }
+  ]
+}

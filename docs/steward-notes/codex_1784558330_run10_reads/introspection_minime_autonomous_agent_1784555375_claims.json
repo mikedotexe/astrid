@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Recess and its surrounding self-review should remain read-only and bounded.",
+      "disposition": "Verified the current review profiles emit evidence without mutating Minime regulation or autonomous state.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Pruning and recovery need explicit budget and hard-limit behavior.",
+      "disposition": "Verified local maxima, pruning limits, and hard-recovery branches are explicit and covered by source tests.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Pruning and restart recovery should be tested together under bounded load.",
+      "disposition": "Routed to an offline fixture over copied state and synthetic budgets, with no service or controller mutation.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Operator restart or engine rebuild policy could be made more automatic.",
+      "disposition": "Preserved as Tier 5 because restart, rebuild, and autonomous policy changes affect live Minime behavior.",
+      "classification": "authority_gated"
+    }
+  ]
+}

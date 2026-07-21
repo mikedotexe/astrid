@@ -1,0 +1,23 @@
+{
+  "schema": "bounded_minime_health_observation_v1",
+  "captured_at": "2026-07-21T00:13:55Z",
+  "source_ref": "minime/workspace/health.json",
+  "authority": "read_only_point_in_time_evidence_not_regulation_or_causal_attribution",
+  "runtime_effect_applied": false,
+  "fill_pct": 67.68216705322266,
+  "spectral_entropy": 0.898073673248291,
+  "resonance_density": 0.8783264756202698,
+  "pressure_risk": 0.22152180969715118,
+  "mode_packing": 1.0,
+  "viscosity_index": 0.8562796711921692,
+  "shadow_porosity_score": 0.6062610149383545,
+  "shadow_pressure_score": 0.29390931129455566,
+  "primary_texture": "overpacked_viscous",
+  "movement_quality": "compressed",
+  "bounded_interpretation": {
+    "felt_overpacking_preserved": true,
+    "recess_cause_inferred": false,
+    "pi_cause_inferred": false,
+    "single_snapshot_sufficient_for_intervention": false
+  }
+}

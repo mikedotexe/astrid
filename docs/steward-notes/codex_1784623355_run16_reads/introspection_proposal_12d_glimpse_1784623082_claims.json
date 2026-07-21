@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The compact 12D view can be mistaken for the whole semantic path and thereby hide where compression occurs.",
+      "disposition": "Verified from current source that 48D is the canonical semantic lane, 32D is a legacy compatibility fingerprint, and 12D is an additive companion rather than a replacement; this is source review only while restart debt remains.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Warmth and nearby emotional distinctions may collapse into generic mass under high entropy.",
+      "disposition": "Verified fixed warmth and tail anchors, contextual vibrancy selection, narrative anchors, and explicit compression-fidelity tests; Astrid's felt coarsening remains unresolved and this is not deployed confirmation.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Current and shadow glimpse outputs should be compared with summary metadata removed, and legacy warmth should be traced through the sensory path.",
+      "disposition": "Routed as a bounded local comparison and lineage trace using existing codec fixtures, without dispatch, private prose, or causal claims.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "A density-gradient-linked soft_gradient_map should bleed 32D structure into the compact view.",
+      "disposition": "Preserved as Tier 5 because a dynamic map would change live codec projection, sensory content, and downstream behavior.",
+      "classification": "authority_gated"
+    }
+  ]
+}

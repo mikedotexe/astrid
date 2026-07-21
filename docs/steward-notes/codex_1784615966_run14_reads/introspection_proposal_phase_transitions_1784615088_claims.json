@@ -1,0 +1,6 @@
+{"claims":[
+  {"claim_id":"c001","summary":"Astrid needs phase transitions to be named replyable objects.","disposition":"Verified in current phase-transition cards and correspondence payloads; cards are durable and replayable rather than merely tonal.","classification":"verified_existing"},
+  {"claim_id":"c002","summary":"Transition cards need exact spectral and before/after grounding.","disposition":"Verified through spectral signature/delta, telemetry anchor, entropy, density, dispersal, fill delta, vectors, duration, friction, and provenance fields.","classification":"verified_existing"},
+  {"claim_id":"c003","summary":"Joint transitions should preserve peer witness and reply state.","disposition":"Verified by existing joint-transition witness and replyability tests without claiming synchronized felt state.","classification":"verified_existing"},
+  {"claim_id":"c004","summary":"Transition declarations should unlock behavior or alter stability.","disposition":"Preserved as Tier 5 because transition-driven behavior, controller, mode, or stability changes require operator approval.","classification":"authority_gated"}
+]}

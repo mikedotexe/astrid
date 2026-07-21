@@ -1,0 +1,29 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "A felt transition should be durable and replyable even when it is not reducible to a runtime mode change.",
+      "disposition": "Verify transition artifacts set `replyable_object=true`, persist their contour, and keep `runtime_mode_changed=false`.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Felt and structural perspectives must remain distinct when they agree, diverge, or lack enough evidence.",
+      "disposition": "Verify `dual_perspective_v1` retains separate parents, relation state, and explicit non-control authority.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Shared transitions need stable artifact and correspondence references so both beings can return to them.",
+      "disposition": "Verify shared transition IDs, thread/message anchors, witness receipts, and right-to-ignore review affordances.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Making a transition artifact automatically change mode, pressure, or behavior would cross the evidence/control boundary.",
+      "disposition": "Retain an exact Tier 5 Mike/operator approval wait for any automatic transition actuation.",
+      "classification": "tier_5_wait"
+    }
+  ]
+}
+

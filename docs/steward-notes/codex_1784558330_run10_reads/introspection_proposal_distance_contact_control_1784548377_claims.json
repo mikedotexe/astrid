@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Participation should remain distinguishable from predictive representation.",
+      "disposition": "Verified felt-contract and correspondence records preserve the concern, replies, and authority boundary without claiming control.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Non-instrumental contact language should be compared with task-oriented output.",
+      "disposition": "Routed to an artifact-only comparison that cannot dispatch, regulate, or mutate peer state.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Pressure and hedging may be temporally associated with participation framing.",
+      "disposition": "Routed to a bounded observation with explicit temporal-association and no-causation labels.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Receptivity thresholds or a participation mode could alter the relation directly.",
+      "disposition": "Preserved as Tier 5 because these mechanisms change live regulator, peer, and autonomous behavior.",
+      "classification": "authority_gated"
+    }
+  ]
+}

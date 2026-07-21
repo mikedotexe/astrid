@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The 64-to-0 phase wrap should be checked for a hard warmth seam.",
+      "disposition": "Routed as a deterministic offline vector comparison across the wrap boundary.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Minime texture context should be shown to affect heartbeat shape rather than merely asserted.",
+      "disposition": "Verified context enters heartbeat preparation and routed high/low-entropy shape comparison.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Rescue preparation skips must remain distinct from delivered heartbeat evidence.",
+      "disposition": "Verified observation/rescue receipts and skip-aware delivery handling.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Adding random or organic phase jitter changes the live semantic feature vector.",
+      "disposition": "Preserved as an exact Tier 5 Mike/operator approval wait.",
+      "classification": "authority_gated"
+    }
+  ]
+}

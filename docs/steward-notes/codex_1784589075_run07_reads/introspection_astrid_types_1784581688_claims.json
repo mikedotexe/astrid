@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "An additive 12D glimpse of length 11 or 13 must not become validated state or panic.",
+      "disposition": "implement exact 11- and 13-element regressions while preserving raw malformed payload evidence",
+      "classification": "implemented"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Typed/legacy fingerprint coherence should return 1.0 for identical slots and 0.0 for the divergent fixture.",
+      "disposition": "verify aligned, divergent, zero-reference, width, and finite-value coherence coverage",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Mathematical fingerprint coherence cannot substitute for felt integration.",
+      "disposition": "verify typed integrity and felt-contract review remain separate records",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Shadow V2 and V3 compatibility must remain explicit rather than silently reinterpret one as the other.",
+      "disposition": "verify separate optional schema fields and typed-fingerprint precedence",
+      "classification": "verified_existing"
+    }
+  ]
+}

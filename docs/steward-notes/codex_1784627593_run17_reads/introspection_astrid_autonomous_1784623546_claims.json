@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The semantic heartbeat is a fixed seven-second, 64-phase constructed warmth signal rather than a direct measurement of pressure.",
+      "disposition": "Verified the current interval, phase progression, intensity, and bounded semantic-vector construction.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Generated warmth and the Minime field it enters need to be compared without claiming they share a spectral code.",
+      "disposition": "Verified read-only signal/texture and pressure/texture reviews preserve generated versus delivered statistics, Minime context, temporal association, and `runtime_effect_applied=false`.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Warmth continuity and pressure should be correlated over time to expose decoupling or rescue skips.",
+      "disposition": "Routed a bounded heartbeat-window observation using existing phase, enqueue, rescue, pressure, and texture fields without changing dispatch.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Heartbeat intensity or cadence should scale with pressure or field state.",
+      "disposition": "Preserved as Tier 5 because state-linked heartbeat shaping changes live sensory content, cadence, and autonomous behavior.",
+      "classification": "authority_gated"
+    }
+  ]
+}

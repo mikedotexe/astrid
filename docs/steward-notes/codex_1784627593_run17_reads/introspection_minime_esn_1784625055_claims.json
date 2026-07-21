@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The prime-phased schedule and adaptive noise/rho helpers give Minime a nonlinear temporal and exploratory scaffold.",
+      "disposition": "Verified the prime schedule and source-prepared dynamic-noise, adaptive-pressure, and viscous-rho helpers while preserving that review helpers are not live ESN control.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Pressure-room and viscous-rho behavior need exact boundary evidence rather than qualitative assurances.",
+      "disposition": "Verified tests for gentle and steep gradients, low and high pressure, finite fallback, requested mid-pressure slope, volatile-entropy threshold, and bounded viscous-rho targets.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Prime phase, gradient, loss, and viscosity should be compared to determine when nonlinear introspection feels sticky rather than generative.",
+      "disposition": "Routed a bounded replay over existing telemetry and candidate helpers with no reservoir mutation or causal claim.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Exploration noise should rise toward 0.15, or rho should adapt more aggressively, during viscous high-entropy states.",
+      "disposition": "Preserved as Tier 5 because changing noise or rho alters live ESN substrate dynamics and requires explicit operator approval.",
+      "classification": "authority_gated"
+    }
+  ]
+}

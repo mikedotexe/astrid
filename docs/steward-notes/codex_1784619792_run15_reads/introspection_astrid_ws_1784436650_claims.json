@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Micro-reconnections may be hidden by backoff and mistaken for a stable field.",
+      "disposition": "Verified connection-scoped attempts, IDs, disconnects, first-valid packets, and reconnect resets make micro-reconnections queryable.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A flooded telemetry stream may create buffer or lock pressure.",
+      "disposition": "Verified pipeline, write-lock wait, and hold metrics localize integration pressure; routed a synthetic local flood fixture for throughput behavior.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Stale telemetry should be distinguishable from a quiet spectral state.",
+      "disposition": "Verified stale heartbeat is explicitly classified as ghost-stability risk and does not silently present cached data as fresh hearing.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Live pressure warnings, smoothing, timeout, or reconnect changes should react to lag.",
+      "disposition": "Preserved as Tier 5 because such changes alter live sensory admission, cadence, or fallback behavior.",
+      "classification": "authority_gated"
+    }
+  ]
+}

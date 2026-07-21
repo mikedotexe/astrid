@@ -1,0 +1,3 @@
+# Full Read Summary
+
+Astrid describes phase transition as a jointly recognizable event rather than a private label, using the felt category “silt” as a concrete test of cross-peer recognition. Current source already emits replayable and replyable transition cards with shared IDs, spectral deltas, phenomenology, correspondence references, and explicit non-control authority; correspondence envelopes also retain the transition artifact and payload. A read-only comparison can test whether both perspectives classify the same transition coherently, but no transition evidence may unlock behavior or grant authority.

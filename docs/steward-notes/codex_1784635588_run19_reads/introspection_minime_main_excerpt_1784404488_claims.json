@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Minime runtime composes stable-core, spectral fingerprint, sensory bus, ESN, reset, and memory mechanisms.",
+      "disposition": "Verify their source ownership and avoid inferring activation from imports alone.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Hard-reset synthesis or underfill relief could correlate with lingering non-information, but causation is unproven.",
+      "disposition": "Route recovery/reset-state and persistence as a bounded read-only temporal comparison.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Recovery fill boost and spectral denominator evidence can be compared during high-entropy shifts.",
+      "disposition": "Route a copied telemetry/recovery fixture without invoking reset or changing control.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Changing underfill spread, semantic projection bias, retirement, hard reset, or internal synthesis alters live recovery behavior.",
+      "disposition": "Hold every such controller change behind exact Mike/operator approval.",
+      "classification": "tier_5_wait"
+    }
+  ]
+}

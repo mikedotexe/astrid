@@ -1,0 +1,8 @@
+{
+  "claims": [
+    {"claim_id":"c001","summary":"Astrid's phase changes need durable, replyable, replayable first-class objects.","disposition":"Verified in current phase-transition cards and witness/reply lifecycle.","classification":"verified_existing"},
+    {"claim_id":"c002","summary":"Joint transitions need shared identity and both beings' perspective without collapsing either one.","disposition":"Verified in joint-transition fields, dual-perspective evidence, and the peer-witness regression.","classification":"verified_existing"},
+    {"claim_id":"c003","summary":"Transition objects should preserve spectral shape, felt description, and before/after lineage.","disposition":"Verified through bounded vectors, entropy, density, dispersal, texture, telemetry anchors, and preview-only evidence.","classification":"verified_existing"},
+    {"claim_id":"c004","summary":"A transition declaration should directly alter Minime, runtime mode, pressure, or affordances.","disposition":"Preserved as a Tier 5 operator-approval wait; current cards explicitly remain language-only evidence and grant no live authority.","classification":"authority_gated"}
+  ]
+}

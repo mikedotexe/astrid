@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The 12D glimpse must remain additive and must not replace the richer semantic representation.",
+      "disposition": "Verified 48D remains canonical and 12D is an optional companion projection.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The compact glimpse should persist across state save and restart.",
+      "disposition": "Verified local and remote 12D glimpse persistence tests without replacing existing saved-state fields.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Protocol compatibility must preserve byte-identical sensory JSON when the additive glimpse is absent.",
+      "disposition": "Verified additive optional-field compatibility and strict malformed-width rejection.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "The mapping should name warmth, tail, narrative anchors, and contextual selection rather than presenting an opaque 12-vector.",
+      "disposition": "Verified explicit slot-lineage, warmth preservation, narrative anchors, contextual selection basis, and compression-fidelity evidence.",
+      "classification": "verified_existing"
+    }
+  ]
+}

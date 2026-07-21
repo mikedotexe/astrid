@@ -1,0 +1,8 @@
+{
+  "claims": [
+    {"claim_id":"c001","summary":"A coarse summary may hide tail detail and make stability look more complete than it is.","disposition":"Verified current glimpse evidence retains fidelity, residual, tail, and distinguishability loss rather than treating 12D as essence.","classification":"verified_existing"},
+    {"claim_id":"c002","summary":"A secondary 12D glimpse should accompany, not replace, the detailed lane.","disposition":"Verified additive 48D-to-12D and spectral glimpse contracts on both Astrid and Minime, with companion-not-replacement authority.","classification":"verified_existing"},
+    {"claim_id":"c003","summary":"High-pressure 12D and full-width views should be compared for distinguishability.","disposition":"Routed to a copied fixture using current 48D source, 12D glimpse, residual, and pressure metadata.","classification":"sandbox_routed"},
+    {"claim_id":"c004","summary":"The 12D view should anchor live restart or sensory behavior.","disposition":"Preserved as Tier 5 if it changes live transport, protocol, or controller input; existing persistence remains additive evidence.","classification":"authority_gated"}
+  ]
+}

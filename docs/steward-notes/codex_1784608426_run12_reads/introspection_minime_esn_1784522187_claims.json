@@ -1,0 +1,8 @@
+{
+  "claims": [
+    {"claim_id":"c001","summary":"Dynamic noise and adaptive pressure are review candidates not wired into ESN::step.","disposition":"Verified current source states and tests this boundary explicitly.","classification":"verified_existing"},
+    {"claim_id":"c002","summary":"Review behavior may drift from actual reservoir behavior.","disposition":"Verified as an architectural gap made visible by separate review authority and unwired-helper tests; no review receipt is treated as live behavior.","classification":"verified_existing"},
+    {"claim_id":"c003","summary":"Pressure-room boundaries and non-finite inputs require direct safety tests.","disposition":"Verified smooth-knee, reported-point, continuity, NaN fallback, and bounded-room tests pass in both Minime targets.","classification":"verified_existing"},
+    {"claim_id":"c004","summary":"Dynamic noise should be migrated into the active ESN loop.","disposition":"Preserved as Tier 5 reservoir mathematics and exploration-noise authority.","classification":"authority_gated"}
+  ]
+}

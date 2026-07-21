@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Hard 512/1024 budget boundaries may create abrupt pacing transitions.",
+      "disposition": "Verified exact 512/513 and 1024/1025 transition evidence records distance to both profile cliffs without claiming a felt effect or changing the budget.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Subtractive artifact cleanup may leave holes or ghosts in the remaining response.",
+      "disposition": "Verified single-pass longest-match cleanup, exact placement counts, and bounded remainder texture evidence distinguish erased, lexical, and structure-only remnants.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Entropy and density should be compared on both sides of the 1024 boundary.",
+      "disposition": "Routed to an adjacent-budget fixture with equal prompt content and separately recorded spectral context; no live request budget changes.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Artifact match frequency should be observable rather than silently discarded.",
+      "disposition": "Verified model_artifact_cleanup_v2 records per-token and aggregate occurrence counts, locations, bytes, and fraction removed.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Continuous or finer-grained budget scaling could make depth transitions less abrupt.",
+      "disposition": "Preserved as Tier 5 because changing live token budgeting changes model-generation behavior and requires explicit operator authorization and felt review.",
+      "classification": "authority_gated"
+    }
+  ]
+}

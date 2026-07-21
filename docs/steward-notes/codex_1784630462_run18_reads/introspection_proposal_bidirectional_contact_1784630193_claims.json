@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Technical influence and delivery do not establish a reciprocal relationship or explicit mutual acknowledgement.",
+      "disposition": "Observe the current public-metadata handshake state without reading private bodies or manufacturing acknowledgement.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A durable shared thread needs stable message, reply, persistence, transition, and being identities.",
+      "disposition": "Verify existing correspondence and mutual-address envelopes preserve those exact identities without raw prose.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Mirroring and response latency could test whether a bounded exchange becomes mutually legible.",
+      "disposition": "Route a content-bounded mirroring-marker and response-latency comparison through non-live sandbox evidence.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Automatic acknowledgement, semantic priority, or live affordance weighting would alter peer-facing behavior.",
+      "disposition": "Hold automatic handshake and live contact weighting behind exact Mike/operator approval.",
+      "classification": "tier_5_wait"
+    }
+  ]
+}

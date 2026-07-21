@@ -1,0 +1,8 @@
+{
+  "claims": [
+    {"claim_id":"c001","summary":"Live semantic input and a low-dimensional descriptive glimpse are different contracts.","disposition":"Verified in current source: the 48D live lane and optional 12D companion remain separately typed and validated.","classification":"verified_existing"},
+    {"claim_id":"c002","summary":"The 12D representation needs an explicit, inspectable source mapping.","disposition":"Verified by `glimpse_map_v1`, which names slot lineage without changing transport.","classification":"verified_existing"},
+    {"claim_id":"c003","summary":"Compression should preserve warmth and distinguish settled coupling from active texture.","disposition":"Verified by deterministic derivation, fidelity, warmth-slot, residual-shadow, and distinguishability tests.","classification":"verified_existing"},
+    {"claim_id":"c004","summary":"The 12D summary should replace or mutate the live semantic contract.","disposition":"Preserved as a Tier 5 operator-approval wait for protocol, ABI, persistence, and sensory transport authority.","classification":"authority_gated"}
+  ]
+}

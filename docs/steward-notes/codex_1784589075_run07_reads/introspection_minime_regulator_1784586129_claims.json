@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The current regulator is explicitly PI-based and balances fill and lambda-relative state rather than the old token gate.",
+      "disposition": "verify the current regulator module boundary and PI source",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Integral accumulation needs anti-windup protection when the actuator cannot correct persistent error.",
+      "disposition": "verify bounded accumulators, back-calculation, actuator-aware conditional integration, and hard clamps",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Viscosity lag and PI hunting require a sustained temporal comparison rather than a one-snapshot causal story.",
+      "disposition": "route a bounded idle and high-semantic-load regulator replay using existing evidence-only diagnostics",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Changing Kp, Ki, damping, gate behavior, porosity, or lambda targets alters live Minime control.",
+      "disposition": "preserve an exact Tier 5 operator-approval wait",
+      "classification": "authority_gated"
+    }
+  ]
+}

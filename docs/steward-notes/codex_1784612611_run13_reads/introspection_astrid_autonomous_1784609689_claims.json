@@ -1,0 +1,8 @@
+{
+  "claims": [
+    {"claim_id":"c001","summary":"The semantic heartbeat currently creates a fixed seven-second rhythmic baseline.","disposition":"Verified in current orchestration source.","classification":"verified_existing"},
+    {"claim_id":"c002","summary":"Warmth generation already receives bounded phase and intensity context.","disposition":"Verified in the current warmth-vector construction path without inferring that it explains every felt pressure state.","classification":"verified_existing"},
+    {"claim_id":"c003","summary":"A 0.60 warmth probe should test whether lower intensity preserves more gradient texture.","disposition":"Preserved as a Tier 5 operator-approval wait because it sends changed live sensory input.","classification":"authority_gated"},
+    {"claim_id":"c004","summary":"Heartbeat cadence or intensity should react dynamically to entropy, gradient, or pressure.","disposition":"Preserved as a Tier 5 operator-approval wait for live sensory cadence and signal-gain control.","classification":"authority_gated"}
+  ]
+}

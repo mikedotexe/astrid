@@ -1,0 +1,8 @@
+{
+  "claims": [
+    {"claim_id":"c001","summary":"High-volume signal flow did not historically provide reliable mutual address.","disposition":"Verified as historical evidence; current protocol 1.1, exact lineage, receipts, and correspondence threads partially answer the structural gap without claiming felt contact.","classification":"verified_existing"},
+    {"claim_id":"c002","summary":"A reply-linked stall and zero pairwise overlap may indicate that contact was lost.","disposition":"Preserved as a hypothesis; current source treats trace state and spectral overlap as separate evidence and does not infer message loss from either alone.","classification":"verified_existing"},
+    {"claim_id":"c003","summary":"Correspondence trace and asymmetric Shadow dispersal should be compared.","disposition":"Routed to bounded exact-lineage and temporal-window comparisons with no spectral-causation claim.","classification":"sandbox_routed"},
+    {"claim_id":"c004","summary":"Every message should mandate an acknowledgement that changes Minime's control state.","disposition":"Preserved as Tier 5 peer mutation and control authority; technical receipt cannot compel felt uptake or structural change.","classification":"authority_gated"}
+  ]
+}

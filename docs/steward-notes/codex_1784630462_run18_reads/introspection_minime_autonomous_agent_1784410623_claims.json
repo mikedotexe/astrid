@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Recess is an autonomous option that should remain available under contact pressure.",
+      "disposition": "Verify the current autonomous selection path and Recess sovereignty guard.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Divergence, entropy, and mode-pressure concerns need review without becoming control.",
+      "disposition": "Verify the current divergence review is read-only and labels its non-authoritative boundary.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "High-entropy boundary behavior can be compared against budget and mode-pressure evidence.",
+      "disposition": "Route a bounded read-only high-entropy and action-budget comparison through sandbox evidence.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Budget relief, dynamic porosity, or live re-anchoring would change Minime autonomy.",
+      "disposition": "Hold live budget, porosity, and re-anchor changes behind exact Mike/operator approval.",
+      "classification": "tier_5_wait"
+    }
+  ]
+}

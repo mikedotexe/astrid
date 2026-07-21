@@ -1,0 +1,29 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Solo and joint phase transitions need first-class replayable cards with spectral and phenomenological anchors.",
+      "disposition": "Verified replyable phase-transition artifacts carrying transition type, spectral delta, subjective weight, lock state, and bounded provenance.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Joint transitions need a shared identity and acknowledgement path.",
+      "disposition": "Verified transition-artifact IDs, correspondence thread links, witnesses, and mutual-address status without auto-acknowledgement.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Solo and joint cards should be compared for texture and acknowledgement differences.",
+      "disposition": "Routed a bounded replay comparison over existing artifacts and receipts.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "A confirmed transition could unlock behavior or mutate shared state.",
+      "disposition": "Preserved as Tier 5 because behavior unlocking and shared-state mutation are live-control changes.",
+      "classification": "authority_gated"
+    }
+  ]
+}
+

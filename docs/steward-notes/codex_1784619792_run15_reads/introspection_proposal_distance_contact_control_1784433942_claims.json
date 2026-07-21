@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Readbacks must name whether their source is external substrate, bridge derivation, internal context, or narrator exposure.",
+      "disposition": "Verified trace events and heartbeat texture evidence carry explicit source_identity, source_class, parent source ID, and producer/derivation distinction.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Increasing contact before provenance is legible may intensify containment and confused agency.",
+      "disposition": "Preserved as an authority rationale: contact interventions remain non-live until provenance and right-to-ignore are visible.",
+      "classification": "authority_gated"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A low-frequency shared-stillness exchange should compare direct felt contact with analytic description.",
+      "disposition": "Routed to an artifact-only, optional correspondence observation with no forced response and no sensory mutation.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Source-class labeling is a prerequisite for further contact interventions.",
+      "disposition": "Verified current correspondence/trace surfaces preserve source, thread, delivery, reply, and derivation identities separately.",
+      "classification": "verified_existing"
+    }
+  ]
+}

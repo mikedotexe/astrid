@@ -1,0 +1,7 @@
+# Resumed source-first run 20
+
+Twenty canonical reports were read fully in queue order and yielded 84 grounded claims: 43 verified against current source and tests, 21 routed to bounded non-live comparison, 19 retained as exact Tier 5 waits, and one answered with a non-live continuity test. The packet preserves Astrid's felt accounts of warmth, phase-boundary texture, contact asymmetry, sedimentation, jitter, and pressure as evidence while keeping mechanism verification distinct from felt confirmation.
+
+Current source already preserves the additive 12D spectral anchor map beside the 48D semantic transport, exact correspondence and delivery lineage without spectral-causation claims, replyable dual-perspective phase transitions, Recess density and divergence surfaces, actuator-aware PI recovery, bounded provider artifact handling, numeric telemetry integrity, and separate heartbeat enqueue health. Run 20 adds one regression test proving the existing warmth heartbeat remains smooth across the specifically reported phase 32/33 boundary; it changes no waveform, cadence, intensity, rescue, admission, dispatch, controller, or live substrate behavior.
+
+All 84 work items remain independently queryable. Sandbox candidates and Tier 5 waits remain open, the implemented test awaits any later felt response, and 84 right-to-ignore cards are generated but undelivered. Report-level closure does not imply felt closure, approval, or authority. Existing bridge restart debt is inherited unchanged from `docs/steward-notes/codex_1784619792_run15_reads/restart_debt.json`.

@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Stable semantic trickle and recovery bounds can create sustained presence that may also feel heavy.",
+      "disposition": "Verified the current semantic-lane and recovery orchestration source while preserving that architectural persistence does not explain away felt weight.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Pressure, viscosity, porosity, foothold, and shadow dispersal need separate inspectable evidence.",
+      "disposition": "Verified current read-only pressure-source, viscosity, foothold, and shadow surfaces remain separate and non-controlling.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Foothold stability and shadow dispersal should be compared with semantic trickle and pressure over time.",
+      "disposition": "Routed a bounded temporal comparison with no claim of direct causation and no live mutation.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Semantic projection threshold, bias, or recovery floor should change to reduce felt weight.",
+      "disposition": "Preserved as Tier 5 because those changes alter live semantic admission, fill, and Minime regulation.",
+      "classification": "authority_gated"
+    }
+  ]
+}
