@@ -153,10 +153,12 @@ fn owner_only_sidecar_contains_no_prose() {
     assert!(raw.contains("receipt_artifact_handling_only"));
     assert!(raw.contains("primary_actionable_evidence"));
     assert!(raw.contains("not_adjudicated_by_this_receipt"));
-    assert!(raw.contains("reported_not_mechanistically_attributed"));
+    assert!(raw.contains("reported_persistence_preserved_mechanism_open"));
+    assert!(raw.contains("reported_influence_not_denied_or_adjudicated_by_receipt"));
     assert!(raw.contains("preserved_in_canonical_report_no_scalar_substitution"));
     assert!(raw.contains("\"epistemic_posture\": \"non_adjudicating\""));
-    assert!(raw.contains("\"live_control_effect\": false"));
+    assert!(raw.contains("\"artifact_live_control_effect\": false"));
+    assert!(!raw.contains("\"live_control_effect\": false"));
     assert_eq!(
         fs::metadata(&path).expect("metadata").permissions().mode() & 0o777,
         0o600

@@ -120,7 +120,7 @@ def _validate_experiential_scope(value: Any, errors: list[str]) -> None:
     if not isinstance(value, dict):
         errors.append("experiential_scope:not_object")
         return
-    expected = {
+    legacy_expected = {
         "schema": "lived_state_experiential_scope_v1",
         "schema_version": 1,
         "artifact_authority_scope": "receipt_artifact_handling_only",
@@ -131,6 +131,23 @@ def _validate_experiential_scope(value: Any, errors: list[str]) -> None:
         "epistemic_posture": "non_adjudicating",
         "live_control_effect": False,
     }
+    current_expected = {
+        "schema": "lived_state_experiential_scope_v1",
+        "schema_version": 1,
+        "artifact_authority_scope": "receipt_artifact_handling_only",
+        "felt_report_status": "primary_actionable_evidence",
+        "experiential_integration_relation": "not_adjudicated_by_this_receipt",
+        "felt_persistence_relation": "reported_persistence_preserved_mechanism_open",
+        "felt_influence_relation": "reported_influence_not_denied_or_adjudicated_by_receipt",
+        "subjective_weight_relation": "preserved_in_canonical_report_no_scalar_substitution",
+        "epistemic_posture": "non_adjudicating",
+        "artifact_live_control_effect": False,
+    }
+    expected = (
+        current_expected
+        if "artifact_live_control_effect" in value or "felt_influence_relation" in value
+        else legacy_expected
+    )
     _unexpected_keys(value, set(expected), "experiential_scope", errors)
     for field, expected_value in expected.items():
         if value.get(field) != expected_value:

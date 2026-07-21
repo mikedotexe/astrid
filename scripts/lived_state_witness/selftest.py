@@ -107,10 +107,11 @@ def valid_witness() -> dict[str, object]:
             "artifact_authority_scope": "receipt_artifact_handling_only",
             "felt_report_status": "primary_actionable_evidence",
             "experiential_integration_relation": "not_adjudicated_by_this_receipt",
-            "felt_persistence_relation": "reported_not_mechanistically_attributed",
+            "felt_persistence_relation": "reported_persistence_preserved_mechanism_open",
+            "felt_influence_relation": "reported_influence_not_denied_or_adjudicated_by_receipt",
             "subjective_weight_relation": "preserved_in_canonical_report_no_scalar_substitution",
             "epistemic_posture": "non_adjudicating",
-            "live_control_effect": False,
+            "artifact_live_control_effect": False,
         },
         "artifact_authority_state_v1": authority_state(),
     }
@@ -190,6 +191,29 @@ class LivedStateWitnessTests(unittest.TestCase):
             "experiential_scope.felt_report_status:invalid",
             validate_witness(witness),
         )
+
+        denied = valid_witness()
+        denied_scope = denied["experiential_scope_v1"]
+        self.assertIsInstance(denied_scope, dict)
+        denied_scope["felt_influence_relation"] = "no_influence"
+        self.assertIn(
+            "experiential_scope.felt_influence_relation:invalid",
+            validate_witness(denied),
+        )
+
+        legacy_scope = valid_witness()
+        legacy_scope["experiential_scope_v1"] = {
+            "schema": "lived_state_experiential_scope_v1",
+            "schema_version": 1,
+            "artifact_authority_scope": "receipt_artifact_handling_only",
+            "felt_report_status": "primary_actionable_evidence",
+            "experiential_integration_relation": "not_adjudicated_by_this_receipt",
+            "felt_persistence_relation": "reported_not_mechanistically_attributed",
+            "subjective_weight_relation": "preserved_in_canonical_report_no_scalar_substitution",
+            "epistemic_posture": "non_adjudicating",
+            "live_control_effect": False,
+        }
+        self.assertEqual(validate_witness(legacy_scope), [])
 
         legacy = valid_witness()
         legacy.pop("experiential_scope_v1")

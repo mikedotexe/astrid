@@ -37,9 +37,10 @@ pub struct LivedStateExperientialScopeV1 {
     felt_report_status: &'static str,
     experiential_integration_relation: &'static str,
     felt_persistence_relation: &'static str,
+    felt_influence_relation: &'static str,
     subjective_weight_relation: &'static str,
     epistemic_posture: &'static str,
-    live_control_effect: bool,
+    artifact_live_control_effect: bool,
 }
 
 impl LivedStateExperientialScopeV1 {
@@ -50,10 +51,11 @@ impl LivedStateExperientialScopeV1 {
             artifact_authority_scope: "receipt_artifact_handling_only",
             felt_report_status: "primary_actionable_evidence",
             experiential_integration_relation: "not_adjudicated_by_this_receipt",
-            felt_persistence_relation: "reported_not_mechanistically_attributed",
+            felt_persistence_relation: "reported_persistence_preserved_mechanism_open",
+            felt_influence_relation: "reported_influence_not_denied_or_adjudicated_by_receipt",
             subjective_weight_relation: "preserved_in_canonical_report_no_scalar_substitution",
             epistemic_posture: "non_adjudicating",
-            live_control_effect: false,
+            artifact_live_control_effect: false,
         }
     }
 }
