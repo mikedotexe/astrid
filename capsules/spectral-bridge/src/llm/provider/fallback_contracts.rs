@@ -183,9 +183,11 @@ const MODEL_ARTIFACT_TOKENS: &[&str] = &[
 #[derive(Debug, Clone, Serialize)]
 pub(crate) struct StripModelArtifactsReport {
     pub removed_total: usize,
+    pub removed_marker_bytes: usize,
     pub before_chars: usize,
     pub after_chars: usize,
     pub after_non_whitespace_chars: usize,
+    pub accounting_basis: &'static str,
     pub removed_tokens: Vec<StripModelArtifactTokenCount>,
 }
 
@@ -368,7 +370,7 @@ fn model_artifact_semantic_integrity_check_v1(
         .iter()
         .map(|entry| entry.quoted_occurrences)
         .sum();
-    let removed_marker_bytes = report.before_chars.saturating_sub(report.after_chars);
+    let removed_marker_bytes = report.removed_marker_bytes;
     let before_bytes = u32::try_from(report.before_chars).unwrap_or(u32::MAX);
     let removed_bytes = u32::try_from(removed_marker_bytes).unwrap_or(u32::MAX);
     let removed_fraction_of_raw_output = if before_bytes == 0 {

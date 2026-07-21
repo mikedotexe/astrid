@@ -29,11 +29,48 @@ fn dialogue_prompt_budget_profile(num_predict: u32) -> &'static str {
     }
 }
 
-fn fragment_has_non_artifact_content(fragment: &str) -> bool {
-    let mut semantic = fragment.to_string();
-    for token in MODEL_ARTIFACT_TOKENS {
-        semantic = semantic.replace(token, "");
+#[derive(Debug, Clone, Copy)]
+struct ModelArtifactMatch {
+    token: &'static str,
+    start: usize,
+    end: usize,
+}
+
+fn strip_known_model_artifact_matches(text: &str) -> (String, Vec<ModelArtifactMatch>) {
+    let mut remainder = String::with_capacity(text.len());
+    let mut matches = Vec::new();
+    let mut offset = 0usize;
+
+    while offset < text.len() {
+        let tail = &text[offset..];
+        let matched = MODEL_ARTIFACT_TOKENS
+            .iter()
+            .copied()
+            .filter(|token| tail.starts_with(token))
+            .max_by_key(|token| token.len());
+        if let Some(token) = matched {
+            let end = offset.saturating_add(token.len());
+            matches.push(ModelArtifactMatch {
+                token,
+                start: offset,
+                end,
+            });
+            offset = end;
+        } else {
+            let character = tail
+                .chars()
+                .next()
+                .expect("non-empty UTF-8 tail has one character");
+            remainder.push(character);
+            offset = offset.saturating_add(character.len_utf8());
+        }
     }
+
+    (remainder, matches)
+}
+
+fn fragment_has_non_artifact_content(fragment: &str) -> bool {
+    let (semantic, _) = strip_known_model_artifact_matches(fragment);
     !semantic.trim().is_empty()
 }
 
@@ -48,27 +85,26 @@ fn matching_quote_pair(before: Option<char>, after: Option<char>) -> bool {
     )
 }
 
-fn model_artifact_placement_counts(text: &str, token: &str) -> (usize, usize, usize) {
-    let mut boundary_occurrences = 0usize;
-    let mut contextual_occurrences = 0usize;
-    let mut quoted_occurrences = 0usize;
+fn model_artifact_placement_counts(
+    text: &str,
+    artifact_match: ModelArtifactMatch,
+) -> (usize, usize, usize) {
+    let content_before = fragment_has_non_artifact_content(&text[..artifact_match.start]);
+    let content_after = fragment_has_non_artifact_content(&text[artifact_match.end..]);
+    let (boundary_occurrences, contextual_occurrences) = if content_before && content_after {
+        (0, 1)
+    } else {
+        (1, 0)
+    };
 
-    for (start, matched) in text.match_indices(token) {
-        let end = start.saturating_add(matched.len());
-        let content_before = fragment_has_non_artifact_content(&text[..start]);
-        let content_after = fragment_has_non_artifact_content(&text[end..]);
-        if content_before && content_after {
-            contextual_occurrences = contextual_occurrences.saturating_add(1);
-        } else {
-            boundary_occurrences = boundary_occurrences.saturating_add(1);
-        }
-
-        let before = text[..start].chars().rev().find(|ch| !ch.is_whitespace());
-        let after = text[end..].chars().find(|ch| !ch.is_whitespace());
-        if matching_quote_pair(before, after) {
-            quoted_occurrences = quoted_occurrences.saturating_add(1);
-        }
-    }
+    let before = text[..artifact_match.start]
+        .chars()
+        .rev()
+        .find(|ch| !ch.is_whitespace());
+    let after = text[artifact_match.end..]
+        .chars()
+        .find(|ch| !ch.is_whitespace());
+    let quoted_occurrences = usize::from(matching_quote_pair(before, after));
 
     (
         boundary_occurrences,
@@ -80,13 +116,30 @@ fn model_artifact_placement_counts(text: &str, token: &str) -> (usize, usize, us
 pub(crate) fn strip_model_artifacts_with_report(
     text: &str,
 ) -> (String, Option<StripModelArtifactsReport>) {
-    let mut result = text.to_string();
+    let (result, matches) = strip_known_model_artifact_matches(text);
+    if matches.is_empty() {
+        return (result, None);
+    }
+
     let mut removed_tokens = Vec::new();
     for token in MODEL_ARTIFACT_TOKENS {
-        let count = result.matches(token).count();
+        let mut count = 0usize;
+        let mut boundary_occurrences = 0usize;
+        let mut contextual_occurrences = 0usize;
+        let mut quoted_occurrences = 0usize;
+        for artifact_match in matches
+            .iter()
+            .copied()
+            .filter(|artifact_match| artifact_match.token == *token)
+        {
+            count = count.saturating_add(1);
+            let (boundary, contextual, quoted) =
+                model_artifact_placement_counts(text, artifact_match);
+            boundary_occurrences = boundary_occurrences.saturating_add(boundary);
+            contextual_occurrences = contextual_occurrences.saturating_add(contextual);
+            quoted_occurrences = quoted_occurrences.saturating_add(quoted);
+        }
         if count > 0 {
-            let (boundary_occurrences, contextual_occurrences, quoted_occurrences) =
-                model_artifact_placement_counts(&result, token);
             removed_tokens.push(StripModelArtifactTokenCount {
                 token: (*token).to_string(),
                 count,
@@ -94,13 +147,13 @@ pub(crate) fn strip_model_artifacts_with_report(
                 contextual_occurrences,
                 quoted_occurrences,
             });
-            result = result.replace(token, "");
         }
     }
-    if removed_tokens.is_empty() {
-        return (result, None);
-    }
-    let removed_total = removed_tokens.iter().map(|entry| entry.count).sum();
+    let removed_total = matches.len();
+    let removed_marker_bytes = matches
+        .iter()
+        .map(|artifact_match| artifact_match.end.saturating_sub(artifact_match.start))
+        .sum();
     let after_chars = result.len();
     let after_non_whitespace_chars = result
         .chars()
@@ -110,9 +163,12 @@ pub(crate) fn strip_model_artifacts_with_report(
         result,
         Some(StripModelArtifactsReport {
             removed_total,
+            removed_marker_bytes,
             before_chars: text.len(),
             after_chars,
             after_non_whitespace_chars,
+            accounting_basis:
+                "single_pass_longest_raw_marker_match_no_second_order_marker_creation",
             removed_tokens,
         }),
     )

@@ -1583,6 +1583,54 @@ mod tests {
     }
 
     #[test]
+    fn artifact_cleanup_uses_longest_raw_matches_with_exact_accounting() {
+        let text = "thought <channel|>visible<channel|>";
+        let (stripped, report) = strip_model_artifacts_with_report(text);
+        let report = report.expect("cleanup report");
+
+        assert_eq!(stripped, "visible");
+        assert_eq!(report.removed_total, 2);
+        assert_eq!(
+            report.removed_marker_bytes,
+            "thought <channel|>"
+                .len()
+                .saturating_add("<channel|>".len())
+        );
+        assert_eq!(
+            report.before_chars.saturating_sub(report.after_chars),
+            report.removed_marker_bytes
+        );
+        assert_eq!(
+            report.accounting_basis,
+            "single_pass_longest_raw_marker_match_no_second_order_marker_creation"
+        );
+        let thought = report
+            .removed_tokens
+            .iter()
+            .find(|entry| entry.token == "thought <channel|>")
+            .expect("longest channel marker");
+        assert_eq!(thought.count, 1);
+        let channel = report
+            .removed_tokens
+            .iter()
+            .find(|entry| entry.token == "<channel|>")
+            .expect("standalone channel marker");
+        assert_eq!(channel.count, 1);
+    }
+
+    #[test]
+    fn artifact_cleanup_does_not_remove_marker_created_by_prior_removal() {
+        let (stripped, report) = strip_model_artifacts_with_report("<pa<eos>d>");
+        let report = report.expect("cleanup report");
+
+        assert_eq!(stripped, "<pad>");
+        assert_eq!(report.removed_total, 1);
+        assert_eq!(report.removed_marker_bytes, "<eos>".len());
+        assert_eq!(report.removed_tokens.len(), 1);
+        assert_eq!(report.removed_tokens[0].token, "<eos>");
+    }
+
+    #[test]
     fn artifact_stripper_preserves_common_linguistic_substrings() {
         let text =
             "transaction, action, thoughtfulness, channel, finality, and analysis remain intact";
@@ -1670,6 +1718,26 @@ mod tests {
             "not_established_by_marker_cleanup"
         );
         assert!(!integrity.runtime_effect);
+    }
+
+    #[test]
+    fn artifact_cleanup_accounts_for_marker_inside_nested_quotes() {
+        let text = "She wrote: \u{201c}this is a '<end_of_turn>' nested thought.\u{201d}";
+        let (stripped, report) = strip_model_artifacts_with_report(text);
+        assert_eq!(
+            stripped,
+            "She wrote: \u{201c}this is a '' nested thought.\u{201d}"
+        );
+        let report = report.expect("cleanup report");
+        let token = report
+            .removed_tokens
+            .iter()
+            .find(|entry| entry.token == "<end_of_turn>")
+            .expect("nested quoted token count");
+        assert_eq!(token.count, 1);
+        assert_eq!(token.boundary_occurrences, 0);
+        assert_eq!(token.contextual_occurrences, 1);
+        assert_eq!(token.quoted_occurrences, 1);
     }
 
     #[test]
@@ -2011,6 +2079,21 @@ mod tests {
     fn quality_gate_rejects_the_reported_nine_symbol_run() {
         let text = "I can still hear the sentence around this --------- interruption, but the uninterrupted symbol run is malformed.\nNEXT: LISTEN";
         assert!(!is_valid_dialogue_output(text));
+    }
+
+    #[test]
+    fn quality_gate_preserves_the_exact_seven_symbol_boundary() {
+        let seven = "This reflective sentence can carry ------- as a deliberate texture while its surrounding language remains clear and complete.\nNEXT: LISTEN";
+        let eight = "This reflective sentence cannot carry -------- as a deliberate texture even when its surrounding language remains clear and complete.\nNEXT: LISTEN";
+
+        assert!(is_valid_dialogue_output(seven));
+        assert!(!is_valid_dialogue_output(eight));
+    }
+
+    #[test]
+    fn quality_gate_accepts_readable_technical_expressions() {
+        let text = "The bounded check keeps (x > 0) && (y < 0) inside a readable technical sentence without losing semantic context or intent.\nNEXT: LISTEN";
+        assert!(is_valid_dialogue_output(text));
     }
 
     #[test]
