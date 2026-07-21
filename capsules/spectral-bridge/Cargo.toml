@@ -6,6 +6,13 @@ rust-version = "1.94"
 description = "Native MCP server for the spectral bridge capsule"
 publish = false
 
+[features]
+default = []
+# Source-prepared reservoir-division rehearsal. Production builds intentionally
+# omit this feature; an operator acknowledgement is still required when it is
+# compiled in.
+division-rehearsal = []
+
 [lib]
 name = "spectral_bridge_server"
 path = "src/lib.rs"

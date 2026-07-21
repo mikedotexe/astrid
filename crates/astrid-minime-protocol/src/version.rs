@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 
 pub const PROTOCOL_NAME: &str = "astrid_minime";
 pub const PROTOCOL_MAJOR: u16 = 1;
-pub const PROTOCOL_MINOR: u16 = 1;
+pub const PROTOCOL_MINOR: u16 = 2;
 pub const TELEMETRY_PROTOCOL_MINOR: u16 = 0;
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ProtocolHeaderV1 {

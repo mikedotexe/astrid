@@ -234,8 +234,7 @@ pub fn spawn_autonomous_loop(
                     let creations_dir = bridge_paths().creations_dir();
                     if let Ok(mut entries) = std::fs::read_dir(&creations_dir)
                         && let Some(Ok(entry)) = entries.next()
-                        && let Ok(preview) =
-                            peripheral_resonance::read_preview(&entry.path())
+                        && let Ok(preview) = peripheral_resonance::read_preview(&entry.path())
                     {
                         candidates.push(format!("[From your creation]: {preview}"));
                     }
@@ -243,8 +242,7 @@ pub fn spawn_autonomous_loop(
                     let research_dir = bridge_paths().research_dir();
                     if let Ok(mut entries) = std::fs::read_dir(&research_dir)
                         && let Some(Ok(entry)) = entries.next()
-                        && let Ok(preview) =
-                            peripheral_resonance::read_preview(&entry.path())
+                        && let Ok(preview) = peripheral_resonance::read_preview(&entry.path())
                     {
                         candidates.push(format!("[From your research]: {preview}"));
                     }
@@ -1353,7 +1351,12 @@ pub fn spawn_autonomous_loop(
                             } else {
                                 Some(continuity_parts.join("\n\n"))
                             };
-                            let topline_hint = introspection_freshness_prompt_note();
+                            let topline_hint = merge_hints([
+                                introspection_freshness_prompt_note(),
+                                crate::autonomous::next_action::division_action_prompt_note(
+                                    conv.remote_workspace.as_deref(),
+                                ),
+                            ]);
                             feedback_hint = merge_hints([
                                 feedback_hint,
                                 btsp::render_astrid_prompt_block(),

@@ -427,6 +427,18 @@ fn monotonic_time_ms() -> u64 {
 
 fn compact_sensory_payload(sensory_msg: &SensoryMsg, fill_pct: f32, lambda1: Option<f32>) -> Value {
     match sensory_msg {
+        SensoryMsg::Division { command } => json!({
+            "kind": "sensory_send_compact_v1",
+            "sensory_kind": "division",
+            "division_id": command.division_id,
+            "action": command.action,
+            "idempotency_key": command.idempotency_key,
+            "expected_parent_generation": command.expected_parent_generation,
+            "plan_digest": command.plan_digest,
+            "fill_pct_at_send": fill_pct,
+            "lambda1_at_send": lambda1,
+            "authority_payload_redacted": true,
+        }),
         SensoryMsg::Video { features, ts_ms } => {
             compact_feature_payload("video", features.len(), *ts_ms, fill_pct, lambda1, None)
         },
@@ -531,6 +543,7 @@ fn control_field_count(sensory_msg: &SensoryMsg) -> usize {
 
 fn authority_class_for_sensory(sensory_msg: &SensoryMsg) -> &'static str {
     match sensory_msg {
+        SensoryMsg::Division { .. } => "division_control_versioned",
         SensoryMsg::Video { .. } | SensoryMsg::Audio { .. } | SensoryMsg::Aux { .. } => {
             "sensory_observation"
         },

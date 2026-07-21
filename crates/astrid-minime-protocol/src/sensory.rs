@@ -3,8 +3,8 @@ use serde_json::Value;
 use sha2::{Digest as _, Sha256};
 
 use crate::{
-    CompatibilityStatus, PROTOCOL_MAJOR, ProtocolHeaderV1, classify_protocol, current_protocol,
-    telemetry_protocol,
+    CompatibilityStatus, DivisionCommandV1, PROTOCOL_MAJOR, ProtocolHeaderV1, classify_protocol,
+    current_protocol, telemetry_protocol,
 };
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -171,6 +171,8 @@ impl SensoryServerHelloV1 {
                 "delivery_v1".to_string(),
                 "mutual_address_v1".to_string(),
                 "sensory_delivery_receipt_v1".to_string(),
+                "division_command_v1".to_string(),
+                "division_receipt_v1".to_string(),
             ],
             server_process_identity,
             server_deployment_identity,
@@ -299,6 +301,8 @@ fn valid_sha256(value: &str) -> bool {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(tag = "kind", rename_all = "lowercase")]
 pub enum SensoryMsg {
+    /// Dedicated ACTION-controlled reservoir-division command lane.
+    Division { command: DivisionCommandV1 },
     Video {
         features: Vec<f32>,
         #[serde(default, skip_serializing_if = "Option::is_none")]

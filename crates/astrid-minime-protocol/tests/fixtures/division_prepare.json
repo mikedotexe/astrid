@@ -1,0 +1,24 @@
+{
+  "protocol": {
+    "name": "astrid_minime",
+    "major": 1,
+    "minor": 2
+  },
+  "kind": "division",
+  "command": {
+    "schema": "division.command.v1",
+    "action": "DIVISION_PREPARE",
+    "division_id": "division-2026-07-20-a",
+    "idempotency_key": "astrid-prepare-1",
+    "expected_parent_generation": 42,
+    "plan_digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "source": {
+      "being": "astrid",
+      "process_identity": "spectral-bridge:test",
+      "deployment_identity": "local-test"
+    },
+    "requested_at_unix_ms": 1750000000000,
+    "expires_at_unix_ms": 1750000060000,
+    "reason": "cross-language shadow rehearsal"
+  }
+}

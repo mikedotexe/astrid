@@ -249,6 +249,11 @@ pub struct SafetyDecisionTrace {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(tag = "kind", rename_all = "lowercase")]
 pub enum SensoryMsg {
+    /// Versioned reservoir-division command. This is intentionally separate
+    /// from generic `Control` so authority and idempotency cannot be omitted.
+    Division {
+        command: astrid_minime_protocol::DivisionCommandV1,
+    },
     /// Video features (8D).
     Video {
         features: Vec<f32>,

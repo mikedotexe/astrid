@@ -6,10 +6,19 @@
 
 #![deny(unsafe_code)]
 
+mod division;
 mod sensory;
 mod telemetry;
 mod version;
 
+pub use division::{
+    DIVISION_ACTION_AVAILABILITY_SCHEMA_V1, DIVISION_COMMAND_SCHEMA_V1, DIVISION_COMMIT_SCOPE_V1,
+    DIVISION_EVENT_SCHEMA_V1, DIVISION_READINESS_POLICY_V1, DIVISION_RECEIPT_SCHEMA_V1,
+    DIVISION_ROLLBACK_SCOPE_V1, DIVISION_STATUS_SCHEMA_V1, DivisionActionAvailabilityV1,
+    DivisionActionV1, DivisionAvailableActionV1, DivisionBlockedActionV1, DivisionCapabilityRefV1,
+    DivisionCommandV1, DivisionEventV1, DivisionLifecycleV1, DivisionReadinessV1,
+    DivisionReceiptStatusV1, DivisionReceiptV1, DivisionSourceIdentityV1, DivisionStatusV1,
+};
 pub use sensory::{
     DeliveryEnvelopeV1, MutualAddressEnvelopeV1, SensoryDeliveryReceiptV1, SensoryDeliveryStatusV1,
     SensoryMsg, SensoryPacketV1, SensoryServerHelloV1, canonical_sensory_payload_sha256,

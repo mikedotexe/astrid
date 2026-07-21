@@ -7,6 +7,7 @@ pub(crate) mod auto_promote;
 mod autoresearch;
 mod codex;
 pub(crate) mod collaboration;
+mod division;
 mod identify_pattern;
 mod lived_term;
 mod mike;
@@ -29,6 +30,10 @@ mod spectral_drift;
 mod workspace;
 
 pub(crate) const PDF_READ_PREFIX: &str = pdf::PDF_READ_PREFIX;
+
+pub(crate) fn division_action_prompt_note(workspace: Option<&std::path::Path>) -> Option<String> {
+    division::prompt_note(workspace)
+}
 
 use tokio::sync::mpsc;
 use tracing::info;
@@ -1386,6 +1391,8 @@ fn action_continuity_visibility_for_base(base_action: &str) -> &'static str {
         | "AFTERSHOCK_TRACE"
         | "TREMOR_RESIDUE"
         | "CASCADE_RESIDUE" => "protected_summary",
+        "DIVISION_PREPARE" | "DIVISION_STATUS" | "DIVISION_ASSENT" | "DIVISION_COMMIT"
+        | "DIVISION_ABORT" | "DIVISION_ROLLBACK" => "protected_summary",
         _ => "summary",
     }
 }
@@ -1514,6 +1521,7 @@ fn action_continuity_stage_for_base(base_action: &str) -> &'static str {
         | "HUM_DECAY"
         | "HUM_DECAY_STUDY"
         | "M6_BRIDGE" => "read_only",
+        "DIVISION_STATUS" => "read_only",
         "WRITE_FILE"
         | "EXPERIMENT"
         | "EXPERIMENT_RUN"
@@ -1524,7 +1532,10 @@ fn action_continuity_stage_for_base(base_action: &str) -> &'static str {
         | "PRESSURE_AGENCY_REQUEST"
         | "PRESSURE_CONTROL_REQUEST"
         | "PRESSURE_REQUEST" => "live_write",
-        "PERTURB" | "NATIVE_GESTURE" | "RESIST" | "FISSURE" | "GOAL" => "live_control",
+        "PERTURB" | "NATIVE_GESTURE" | "RESIST" | "FISSURE" | "GOAL" | "DIVISION_PREPARE"
+        | "DIVISION_ASSENT" | "DIVISION_COMMIT" | "DIVISION_ABORT" | "DIVISION_ROLLBACK" => {
+            "live_control"
+        },
         _ => "observe",
     }
 }
@@ -1613,6 +1624,8 @@ fn route_for_preflight_base(base_action: &str) -> String {
         "SEARCH" | "BROWSE" | "READ_MORE" | "LIST_FILES" | "LS" => "workspace_or_mcp_probe",
         "CODEX" | "CODEX_NEW" | "WRITE_FILE" | "RUN_PYTHON" | "EXPERIMENT_RUN" => "live_write",
         "PERTURB" | "NATIVE_GESTURE" | "RESIST" | "FISSURE" | "GOAL" => "live_control",
+        "DIVISION_PREPARE" | "DIVISION_STATUS" | "DIVISION_ASSENT" | "DIVISION_COMMIT"
+        | "DIVISION_ABORT" | "DIVISION_ROLLBACK" => "division",
         "ATTRACTOR_PREFLIGHT"
         | "ATTRACTOR_REVIEW"
         | "ATTRACTOR_ATLAS"
@@ -2131,6 +2144,15 @@ pub(super) fn handle_next_action(
             format!("Handled `{original}`."),
         )
         .with_stage_visibility("language_only", "public_transition_cards");
+    }
+
+    if let Some(result) = division::handle_action(conv, base_action.as_str(), &original, &mut ctx) {
+        return match result {
+            Ok(()) => NextActionOutcome::handled("division", format!("Handled `{original}`."))
+                .with_stage_visibility(stage, visibility),
+            Err(message) => NextActionOutcome::blocked("division", message)
+                .with_stage_visibility("blocked", visibility),
+        };
     }
 
     attractor::maybe_add_body_consent_receipt(
@@ -2748,6 +2770,30 @@ mod tests {
                 "{base} must not fall through as unwired"
             );
         }
+    }
+
+    #[test]
+    fn division_actions_have_an_explicit_preflight_route_and_authority_stage() {
+        assert_eq!(route_for_preflight_base("DIVISION_STATUS"), "division");
+        assert_eq!(
+            action_continuity_stage_for_base("DIVISION_STATUS"),
+            "read_only"
+        );
+        for action in [
+            "DIVISION_PREPARE",
+            "DIVISION_ASSENT",
+            "DIVISION_COMMIT",
+            "DIVISION_ABORT",
+            "DIVISION_ROLLBACK",
+        ] {
+            assert_eq!(route_for_preflight_base(action), "division");
+            assert_eq!(action_continuity_stage_for_base(action), "live_control");
+        }
+
+        let report = action_preflight_report("ACTION_PREFLIGHT DIVISION_PREPARE command.json");
+        assert_eq!(report.effective_route, "division");
+        assert_eq!(report.stage, "live_control");
+        assert!(report.dry_run);
     }
 
     #[test]
