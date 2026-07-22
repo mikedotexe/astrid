@@ -3118,11 +3118,15 @@ pub fn spawn_autonomous_loop(
                                     let safe_label = introspect::safe_artifact_label(&label);
                                     let filename = format!("{artifact_kind}_{safe_label}_{ts}.txt");
                                     let artifact_path = introspect_dir.join(&filename);
+                                    let astrid_shadow_context_v1 = conv
+                                        .astrid_shadow
+                                        .lived_state_scalar_observation_v1();
                                     let runtime_context_v1 = {
                                         let guard = state.read().await;
                                         crate::lived_state_witness::runtime_context_v1(
                                             &guard,
                                             fill_pct,
+                                            astrid_shadow_context_v1,
                                         )
                                     };
                                     let authorship_v1 =
@@ -3235,11 +3239,15 @@ pub fn spawn_autonomous_loop(
                                     let safe_label = introspect::safe_artifact_label(&source);
                                     let filename =
                                         format!("thin_introspection_output_{safe_label}_{ts}.txt");
+                                    let astrid_shadow_context_v1 = conv
+                                        .astrid_shadow
+                                        .lived_state_scalar_observation_v1();
                                     let runtime_context_v1 = {
                                         let guard = state.read().await;
                                         crate::lived_state_witness::runtime_context_v1(
                                             &guard,
                                             fill_pct,
+                                            astrid_shadow_context_v1,
                                         )
                                     };
                                     let authorship_v1 =

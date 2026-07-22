@@ -911,6 +911,9 @@ def _validate_parameter_observation(
         "source_json_malformed",
         "source_timestamp_unavailable_scalar_withheld",
         "bounded_observation_without_stronger_relation",
+        "runtime_pressure_scalar_observed_context_only_no_mechanism_claim",
+        "runtime_mode_packing_scalar_observed_context_only_no_mechanism_claim",
+        "astrid_shadow_scalar_observed_temporal_context_only_no_mechanism_claim",
     }:
         errors.append(f"{prefix}.value_relation:invalid")
     scalar = observation.get("value")

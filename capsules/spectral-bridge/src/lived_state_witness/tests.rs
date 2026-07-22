@@ -820,6 +820,8 @@ fn runtime_spectral_context_preserves_entropy_and_density_without_causation() {
     let observations = runtime_spectral_observations(
         Some(0.90),
         Some(0.11),
+        Some(0.23),
+        Some(0.41),
         1_000,
         Some(25),
         Some(true),
@@ -829,17 +831,48 @@ fn runtime_spectral_context_preserves_entropy_and_density_without_causation() {
     assert_eq!(encoded[0]["value"], 0.90);
     assert_eq!(encoded[1]["name"], "bridge.spectral_density_gradient");
     assert_eq!(encoded[1]["value"], 0.11);
+    assert_eq!(encoded[2]["name"], "bridge.pressure_risk");
+    assert_eq!(encoded[2]["value"], 0.23);
+    assert_eq!(encoded[3]["name"], "bridge.mode_packing");
+    assert_eq!(encoded[3]["value"], 0.41);
     assert!(encoded.as_array().expect("observation array").iter().all(|row| {
         row["observation_kind"] == "runtime_observed"
             && row["fresh"] == true
             && row["direct_causation_claimed"] == false
     }));
 
-    let unavailable = runtime_spectral_observations(None, None, 2_000, None, None);
+    let unavailable =
+        runtime_spectral_observations(None, None, None, None, 2_000, None, None);
     let unavailable = serde_json::to_value(unavailable).expect("unknown observations");
     assert!(unavailable.as_array().expect("observation array").iter().all(
         |row| row["observation_kind"] == "unknown" && row["value"].is_null()
     ));
+}
+
+#[test]
+fn runtime_shadow_context_is_bounded_temporal_evidence_only() {
+    let observations = runtime_shadow_observations(
+        Some(crate::astrid_shadow::AstridShadowScalarObservationV1 {
+            observed_at_unix_ms: 980,
+            field_norm: 0.81,
+            field_norm_delta: Some(-0.03),
+            dispersal_potential: 0.27,
+        }),
+        1_000,
+    );
+    let encoded = serde_json::to_value(observations).expect("runtime shadow observations");
+    assert_eq!(encoded[0]["name"], "astrid_shadow.field_norm");
+    assert_eq!(encoded[1]["name"], "astrid_shadow.field_norm_delta");
+    assert_eq!(encoded[2]["name"], "astrid_shadow.dispersal_potential");
+    assert!(encoded.as_array().expect("observation array").iter().all(|row| {
+        row["observation_kind"] == "runtime_observed"
+            && row["age_ms"] == 20
+            && row["direct_causation_claimed"] == false
+            && row["value_relation"]
+                == "astrid_shadow_scalar_observed_temporal_context_only_no_mechanism_claim"
+    }));
+    assert!(!encoded.to_string().contains("coupling"));
+    assert!(!encoded.to_string().contains("history"));
 }
 
 #[test]

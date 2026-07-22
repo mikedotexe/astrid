@@ -223,9 +223,38 @@ pub struct AstridShadowComputer {
     in_flight_minime_influence: Option<InFlightMinimeInfluence>,
 }
 
+/// Bounded, read-only scalars from Astrid's latest compatibility-shadow
+/// observation. This is technical temporal context for evidence capture; it
+/// carries no shadow vectors and cannot affect the observer or live controls.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub(crate) struct AstridShadowScalarObservationV1 {
+    pub observed_at_unix_ms: u64,
+    pub field_norm: f32,
+    pub field_norm_delta: Option<f32>,
+    pub dispersal_potential: f32,
+}
+
 impl AstridShadowComputer {
     pub fn new() -> Self {
         Self::default()
+    }
+
+    pub(crate) fn lived_state_scalar_observation_v1(
+        &self,
+    ) -> Option<AstridShadowScalarObservationV1> {
+        let latest = self.snapshot_history.back()?;
+        let field_norm_delta = self
+            .snapshot_history
+            .iter()
+            .rev()
+            .nth(1)
+            .map(|previous| latest.field_norm - previous.field_norm);
+        Some(AstridShadowScalarObservationV1 {
+            observed_at_unix_ms: latest.t_ms,
+            field_norm: latest.field_norm,
+            field_norm_delta,
+            dispersal_potential: latest.fissure_tendency,
+        })
     }
 
     /// Push a new codec-feature vector and recompute the shadow. Returns

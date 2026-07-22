@@ -332,10 +332,12 @@ fn peer_scalar_observations(now_ms: u64) -> Vec<LivedStateParameterObservationV1
 fn runtime_spectral_observations(
     spectral_entropy: Option<f64>,
     density_gradient: Option<f64>,
+    pressure_risk: Option<f64>,
+    mode_packing: Option<f64>,
     now_ms: u64,
     telemetry_age_ms: Option<u64>,
     telemetry_fresh: Option<bool>,
-) -> [LivedStateParameterObservationV1; 2] {
+) -> [LivedStateParameterObservationV1; 4] {
     [
         parameter(
             "bridge.spectral_entropy",
@@ -365,10 +367,87 @@ fn runtime_spectral_observations(
             telemetry_fresh,
             "codec::spectral_density_gradient(bridge_state.latest_telemetry.eigenvalues)",
         ),
+        parameter_with_relation(
+            "bridge.pressure_risk",
+            pressure_risk,
+            "ratio",
+            if pressure_risk.is_some() {
+                LivedStateObservationKindV1::RuntimeObserved
+            } else {
+                LivedStateObservationKindV1::Unknown
+            },
+            now_ms,
+            telemetry_age_ms,
+            telemetry_fresh,
+            "bridge_state.latest_telemetry.resonance_density_v1.pressure_risk",
+            "runtime_pressure_scalar_observed_context_only_no_mechanism_claim",
+        ),
+        parameter_with_relation(
+            "bridge.mode_packing",
+            mode_packing,
+            "ratio",
+            if mode_packing.is_some() {
+                LivedStateObservationKindV1::RuntimeObserved
+            } else {
+                LivedStateObservationKindV1::Unknown
+            },
+            now_ms,
+            telemetry_age_ms,
+            telemetry_fresh,
+            "bridge_state.latest_telemetry.resonance_density_v1.components.mode_packing",
+            "runtime_mode_packing_scalar_observed_context_only_no_mechanism_claim",
+        ),
     ]
 }
 
-pub(crate) fn runtime_context_v1(state: &BridgeState, fill_pct: f32) -> LivedStateRuntimeContextV1 {
+fn runtime_shadow_observations(
+    shadow: Option<crate::astrid_shadow::AstridShadowScalarObservationV1>,
+    now_ms: u64,
+) -> [LivedStateParameterObservationV1; 3] {
+    let age_ms = shadow.map(|value| now_ms.saturating_sub(value.observed_at_unix_ms));
+    let fresh = age_ms.map(|age| age <= MAX_SIDECAR_PEER_SCALAR_AGE_MS);
+    let observed_at = shadow.map_or(now_ms, |value| value.observed_at_unix_ms);
+    let observation = |name: &str, value: Option<f64>, source_ref: &str| {
+        parameter_with_relation(
+            name,
+            value,
+            "ratio",
+            if value.is_some() {
+                LivedStateObservationKindV1::RuntimeObserved
+            } else {
+                LivedStateObservationKindV1::Unknown
+            },
+            observed_at,
+            age_ms,
+            fresh,
+            source_ref,
+            "astrid_shadow_scalar_observed_temporal_context_only_no_mechanism_claim",
+        )
+    };
+    [
+        observation(
+            "astrid_shadow.field_norm",
+            shadow.map(|value| f64::from(value.field_norm)),
+            "astrid_shadow.latest_snapshot.field_norm",
+        ),
+        observation(
+            "astrid_shadow.field_norm_delta",
+            shadow.and_then(|value| value.field_norm_delta.map(f64::from)),
+            "astrid_shadow.latest_snapshot.field_norm_minus_previous",
+        ),
+        observation(
+            "astrid_shadow.dispersal_potential",
+            shadow.map(|value| f64::from(value.dispersal_potential)),
+            "astrid_shadow.latest_snapshot.fissure_tendency",
+        ),
+    ]
+}
+
+pub(crate) fn runtime_context_v1(
+    state: &BridgeState,
+    fill_pct: f32,
+    astrid_shadow: Option<crate::astrid_shadow::AstridShadowScalarObservationV1>,
+) -> LivedStateRuntimeContextV1 {
     let now = clock_sample_v1();
     let (heartbeat_interval_s, heartbeat_intensity) =
         crate::autonomous::semantic_heartbeat_constants_v1();
@@ -392,6 +471,16 @@ pub(crate) fn runtime_context_v1(state: &BridgeState, fill_pct: f32) -> LivedSta
         .as_ref()
         .and_then(|telemetry| crate::codec::spectral_density_gradient(&telemetry.eigenvalues))
         .map(f64::from);
+    let pressure_risk = state
+        .latest_telemetry
+        .as_ref()
+        .and_then(|telemetry| telemetry.resonance_density_v1.as_ref())
+        .map(|resonance| f64::from(resonance.pressure_risk));
+    let mode_packing = state
+        .latest_telemetry
+        .as_ref()
+        .and_then(|telemetry| telemetry.resonance_density_v1.as_ref())
+        .map(|resonance| f64::from(resonance.components.mode_packing));
     let mut observations = vec![
         parameter(
             "bridge.fill_pct",
@@ -439,11 +528,14 @@ pub(crate) fn runtime_context_v1(state: &BridgeState, fill_pct: f32) -> LivedSta
         runtime_spectral_observations(
             spectral_entropy,
             density_gradient,
+            pressure_risk,
+            mode_packing,
             now.unix_ms,
             telemetry_age_ms,
             telemetry_fresh,
         ),
     );
+    observations.extend(runtime_shadow_observations(astrid_shadow, now.unix_ms));
     observations.extend(peer_scalar_observations(now.unix_ms));
     LivedStateRuntimeContextV1 {
         parameter_observations: observations,
