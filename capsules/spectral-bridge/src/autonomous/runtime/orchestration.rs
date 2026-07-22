@@ -2838,6 +2838,13 @@ pub fn spawn_autonomous_loop(
                             };
                             let source_text = source_window.as_ref().ok().map(|window| window.text.clone());
                             let next_offset = source_window.as_ref().ok().and_then(|window| window.next_offset);
+                            let shadow_capture_clock_v1 =
+                                crate::lived_state_witness::clock_sample_v1();
+                            let pregeneration_astrid_shadow_context_v1 = conv
+                                .astrid_shadow
+                                .lived_state_scalar_observation_v1(
+                                    shadow_capture_clock_v1.unix_ms,
+                                );
 
                             if source_text.is_none() {
                                 warn!(
@@ -3118,15 +3125,12 @@ pub fn spawn_autonomous_loop(
                                     let safe_label = introspect::safe_artifact_label(&label);
                                     let filename = format!("{artifact_kind}_{safe_label}_{ts}.txt");
                                     let artifact_path = introspect_dir.join(&filename);
-                                    let astrid_shadow_context_v1 = conv
-                                        .astrid_shadow
-                                        .lived_state_scalar_observation_v1();
                                     let runtime_context_v1 = {
                                         let guard = state.read().await;
                                         crate::lived_state_witness::runtime_context_v1(
                                             &guard,
                                             fill_pct,
-                                            astrid_shadow_context_v1,
+                                            pregeneration_astrid_shadow_context_v1,
                                         )
                                     };
                                     let authorship_v1 =
@@ -3239,15 +3243,12 @@ pub fn spawn_autonomous_loop(
                                     let safe_label = introspect::safe_artifact_label(&source);
                                     let filename =
                                         format!("thin_introspection_output_{safe_label}_{ts}.txt");
-                                    let astrid_shadow_context_v1 = conv
-                                        .astrid_shadow
-                                        .lived_state_scalar_observation_v1();
                                     let runtime_context_v1 = {
                                         let guard = state.read().await;
                                         crate::lived_state_witness::runtime_context_v1(
                                             &guard,
                                             fill_pct,
-                                            astrid_shadow_context_v1,
+                                            pregeneration_astrid_shadow_context_v1,
                                         )
                                     };
                                     let authorship_v1 =

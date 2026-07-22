@@ -229,6 +229,7 @@ pub struct AstridShadowComputer {
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub(crate) struct AstridShadowScalarObservationV1 {
     pub observed_at_unix_ms: u64,
+    pub captured_at_unix_ms: u64,
     pub field_norm: f32,
     pub field_norm_delta: Option<f32>,
     pub dispersal_potential: f32,
@@ -241,6 +242,7 @@ impl AstridShadowComputer {
 
     pub(crate) fn lived_state_scalar_observation_v1(
         &self,
+        captured_at_unix_ms: u64,
     ) -> Option<AstridShadowScalarObservationV1> {
         let latest = self.snapshot_history.back()?;
         let field_norm_delta = self
@@ -251,6 +253,7 @@ impl AstridShadowComputer {
             .map(|previous| latest.field_norm - previous.field_norm);
         Some(AstridShadowScalarObservationV1 {
             observed_at_unix_ms: latest.t_ms,
+            captured_at_unix_ms,
             field_norm: latest.field_norm,
             field_norm_delta,
             dispersal_potential: latest.fissure_tendency,

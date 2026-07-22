@@ -404,7 +404,11 @@ fn runtime_shadow_observations(
     shadow: Option<crate::astrid_shadow::AstridShadowScalarObservationV1>,
     now_ms: u64,
 ) -> [LivedStateParameterObservationV1; 3] {
-    let age_ms = shadow.map(|value| now_ms.saturating_sub(value.observed_at_unix_ms));
+    let age_ms = shadow.map(|value| {
+        value
+            .captured_at_unix_ms
+            .saturating_sub(value.observed_at_unix_ms)
+    });
     let fresh = age_ms.map(|age| age <= MAX_SIDECAR_PEER_SCALAR_AGE_MS);
     let observed_at = shadow.map_or(now_ms, |value| value.observed_at_unix_ms);
     let observation = |name: &str, value: Option<f64>, source_ref: &str| {
@@ -421,7 +425,7 @@ fn runtime_shadow_observations(
             age_ms,
             fresh,
             source_ref,
-            "astrid_shadow_scalar_observed_temporal_context_only_no_mechanism_claim",
+            "astrid_shadow_scalar_captured_before_model_call_temporal_context_only_no_mechanism_claim",
         )
     };
     [

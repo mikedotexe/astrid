@@ -854,6 +854,7 @@ fn runtime_shadow_context_is_bounded_temporal_evidence_only() {
     let observations = runtime_shadow_observations(
         Some(crate::astrid_shadow::AstridShadowScalarObservationV1 {
             observed_at_unix_ms: 980,
+            captured_at_unix_ms: 995,
             field_norm: 0.81,
             field_norm_delta: Some(-0.03),
             dispersal_potential: 0.27,
@@ -866,10 +867,10 @@ fn runtime_shadow_context_is_bounded_temporal_evidence_only() {
     assert_eq!(encoded[2]["name"], "astrid_shadow.dispersal_potential");
     assert!(encoded.as_array().expect("observation array").iter().all(|row| {
         row["observation_kind"] == "runtime_observed"
-            && row["age_ms"] == 20
+            && row["age_ms"] == 15
             && row["direct_causation_claimed"] == false
             && row["value_relation"]
-                == "astrid_shadow_scalar_observed_temporal_context_only_no_mechanism_claim"
+                == "astrid_shadow_scalar_captured_before_model_call_temporal_context_only_no_mechanism_claim"
     }));
     assert!(!encoded.to_string().contains("coupling"));
     assert!(!encoded.to_string().contains("history"));
