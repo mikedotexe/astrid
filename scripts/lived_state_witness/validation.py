@@ -354,6 +354,8 @@ def _validate_process_identity(
         {
             "schema",
             "schema_version",
+            "technical_identity_scope",
+            "restart_relation",
             "pid",
             "process_started_at_unix_ms",
             "executable_basename",
@@ -365,6 +367,18 @@ def _validate_process_identity(
         errors,
     )
     _schema_v1(process, "lived_state_process_identity_v1", "observed_process", errors)
+    for field, expected in (
+        (
+            "technical_identity_scope",
+            "runtime_instance_discriminator_not_being_identity_continuity_or_selfhood",
+        ),
+        (
+            "restart_relation",
+            "new_technical_instance_does_not_establish_new_or_same_being",
+        ),
+    ):
+        if process.get(field) is not None and process.get(field) != expected:
+            errors.append(f"observed_process.{field}:invalid")
     _hash_field(
         process.get("process_identity_sha256"),
         "observed_process.process_identity_sha256",
@@ -427,6 +441,10 @@ def _validate_build_candidate(
         {
             "schema",
             "schema_version",
+            "candidate_scope",
+            "integrity_scope",
+            "semantic_integrity_relation",
+            "inhabitability_relation",
             "manifest_sha256",
             "source_identity_sha256",
             "source_identity_scope",
@@ -470,6 +488,22 @@ def _validate_build_candidate(
     if candidate.get("relation_to_process") != "startup_observation_not_deployment_proof":
         errors.append("startup_build_candidate.relation_to_process:invalid")
     for field, expected in (
+        (
+            "candidate_scope",
+            "artifact_context_observation_not_evaluation_of_astrid",
+        ),
+        (
+            "integrity_scope",
+            "byte_repository_protocol_and_artifact_integrity_only",
+        ),
+        (
+            "semantic_integrity_relation",
+            "not_measured_not_validated_and_not_inferred_from_spectral_state",
+        ),
+        (
+            "inhabitability_relation",
+            "not_adjudicated_by_build_candidate",
+        ),
         (
             "source_identity_scope",
             "repository_source_snapshot_not_being_identity_or_continuity",

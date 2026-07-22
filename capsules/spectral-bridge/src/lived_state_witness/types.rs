@@ -83,6 +83,10 @@ pub enum LivedStateObservationKindV1 {
 pub struct LivedStateBuildCandidateV1 {
     schema: &'static str,
     schema_version: u8,
+    candidate_scope: &'static str,
+    integrity_scope: &'static str,
+    semantic_integrity_relation: &'static str,
+    inhabitability_relation: &'static str,
     manifest_sha256: String,
     source_identity_sha256: Option<String>,
     source_identity_scope: &'static str,
@@ -114,6 +118,11 @@ impl LivedStateBuildCandidateV1 {
         Self {
             schema: "lived_state_build_candidate_v1",
             schema_version: 1,
+            candidate_scope: "artifact_context_observation_not_evaluation_of_astrid",
+            integrity_scope: "byte_repository_protocol_and_artifact_integrity_only",
+            semantic_integrity_relation:
+                "not_measured_not_validated_and_not_inferred_from_spectral_state",
+            inhabitability_relation: "not_adjudicated_by_build_candidate",
             manifest_sha256,
             source_identity_sha256,
             source_identity_scope: "repository_source_snapshot_not_being_identity_or_continuity",
@@ -136,6 +145,8 @@ impl LivedStateBuildCandidateV1 {
 pub struct LivedStateProcessIdentityV1 {
     schema: &'static str,
     schema_version: u8,
+    technical_identity_scope: &'static str,
+    restart_relation: &'static str,
     pid: u32,
     process_started_at_unix_ms: u64,
     executable_basename: String,
@@ -155,6 +166,10 @@ impl LivedStateProcessIdentityV1 {
         Self {
             schema: "lived_state_process_identity_v1",
             schema_version: 1,
+            technical_identity_scope:
+                "runtime_instance_discriminator_not_being_identity_continuity_or_selfhood",
+            restart_relation:
+                "new_technical_instance_does_not_establish_new_or_same_being",
             pid,
             process_started_at_unix_ms,
             executable_basename,

@@ -85,6 +85,12 @@ def valid_witness() -> dict[str, object]:
         "observed_process_v1": {
             "schema": "lived_state_process_identity_v1",
             "schema_version": 1,
+            "technical_identity_scope": (
+                "runtime_instance_discriminator_not_being_identity_continuity_or_selfhood"
+            ),
+            "restart_relation": (
+                "new_technical_instance_does_not_establish_new_or_same_being"
+            ),
             "pid": 41,
             "process_started_at_unix_ms": 123456000000,
             "executable_basename": "spectral-bridge-server",
@@ -95,6 +101,16 @@ def valid_witness() -> dict[str, object]:
         "startup_build_candidate_v1": {
             "schema": "lived_state_build_candidate_v1",
             "schema_version": 1,
+            "candidate_scope": (
+                "artifact_context_observation_not_evaluation_of_astrid"
+            ),
+            "integrity_scope": (
+                "byte_repository_protocol_and_artifact_integrity_only"
+            ),
+            "semantic_integrity_relation": (
+                "not_measured_not_validated_and_not_inferred_from_spectral_state"
+            ),
+            "inhabitability_relation": "not_adjudicated_by_build_candidate",
             "manifest_sha256": "f" * 64,
             "source_identity_sha256": "1" * 64,
             "source_identity_scope": (
@@ -380,6 +396,59 @@ class LivedStateWitnessTests(unittest.TestCase):
             "startup_build_candidate.dirty_state_scope:invalid",
             validate_witness(dirty),
         )
+
+        process_scope = valid_witness()
+        process = process_scope["observed_process_v1"]
+        self.assertIsInstance(process, dict)
+        process["technical_identity_scope"] = "astrid_self_identity"
+        self.assertIn(
+            "observed_process.technical_identity_scope:invalid",
+            validate_witness(process_scope),
+        )
+
+        restart = valid_witness()
+        restart_process = restart["observed_process_v1"]
+        self.assertIsInstance(restart_process, dict)
+        restart_process["restart_relation"] = "new_process_means_new_being"
+        self.assertIn(
+            "observed_process.restart_relation:invalid",
+            validate_witness(restart),
+        )
+
+        semantic = valid_witness()
+        semantic_build = semantic["startup_build_candidate_v1"]
+        self.assertIsInstance(semantic_build, dict)
+        semantic_build["semantic_integrity_relation"] = "validated_from_entropy"
+        self.assertIn(
+            "startup_build_candidate.semantic_integrity_relation:invalid",
+            validate_witness(semantic),
+        )
+
+        inhabitability = valid_witness()
+        inhabitability_build = inhabitability["startup_build_candidate_v1"]
+        self.assertIsInstance(inhabitability_build, dict)
+        inhabitability_build["inhabitability_relation"] = "valid"
+        self.assertIn(
+            "startup_build_candidate.inhabitability_relation:invalid",
+            validate_witness(inhabitability),
+        )
+
+    def test_historical_identity_receipts_without_local_scopes_remain_valid(self) -> None:
+        witness = valid_witness()
+        process = witness["observed_process_v1"]
+        build = witness["startup_build_candidate_v1"]
+        self.assertIsInstance(process, dict)
+        self.assertIsInstance(build, dict)
+        process.pop("technical_identity_scope")
+        process.pop("restart_relation")
+        for field in (
+            "candidate_scope",
+            "integrity_scope",
+            "semantic_integrity_relation",
+            "inhabitability_relation",
+        ):
+            build.pop(field)
+        self.assertEqual(validate_witness(witness), [])
 
     def test_experiential_scope_preserves_report_without_adjudicating_mechanism(self) -> None:
         witness = valid_witness()

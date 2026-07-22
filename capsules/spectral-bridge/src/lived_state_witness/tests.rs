@@ -68,6 +68,22 @@ fn startup_build_candidate_is_an_observation_not_deployment_proof() {
     let encoded = serde_json::to_value(&candidate).expect("serialize candidate");
     assert_eq!(encoded["deployment_established"], false);
     assert_eq!(
+        encoded["candidate_scope"],
+        "artifact_context_observation_not_evaluation_of_astrid"
+    );
+    assert_eq!(
+        encoded["integrity_scope"],
+        "byte_repository_protocol_and_artifact_integrity_only"
+    );
+    assert_eq!(
+        encoded["semantic_integrity_relation"],
+        "not_measured_not_validated_and_not_inferred_from_spectral_state"
+    );
+    assert_eq!(
+        encoded["inhabitability_relation"],
+        "not_adjudicated_by_build_candidate"
+    );
+    assert_eq!(
         encoded["source_identity_scope"],
         "repository_source_snapshot_not_being_identity_or_continuity"
     );
@@ -203,6 +219,15 @@ fn runtime_instance_identity_is_stable_for_process_lifetime() {
     assert_eq!(
         first.process.runtime_instance_id(),
         second.process.runtime_instance_id()
+    );
+    let process = serde_json::to_value(&first.process).expect("process identity JSON");
+    assert_eq!(
+        process["technical_identity_scope"],
+        "runtime_instance_discriminator_not_being_identity_continuity_or_selfhood"
+    );
+    assert_eq!(
+        process["restart_relation"],
+        "new_technical_instance_does_not_establish_new_or_same_being"
     );
 }
 
