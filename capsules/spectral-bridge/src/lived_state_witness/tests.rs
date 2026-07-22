@@ -408,8 +408,12 @@ fn stale_or_absent_peer_state_is_unknown_not_active_inference() {
         "spectral_entropy": 0.75,
         "structural_entropy": 0.5
     });
-    let stale =
-        peer_scalar_observations_from_snapshot(Some(&value), Some(MAX_PEER_STATE_AGE_MS + 1), 100);
+    let stale = peer_scalar_observations_from_snapshot(
+        Some(&value),
+        Some(MAX_PEER_STATE_AGE_MS + 1),
+        100,
+        PeerSnapshotStatusV1::Observed,
+    );
     let stale_json = serde_json::to_value(stale).expect("stale observations");
     assert!(stale_json.as_array().expect("array").iter().all(|row| {
         row["observation_kind"] == "unknown"
@@ -422,6 +426,7 @@ fn stale_or_absent_peer_state_is_unknown_not_active_inference() {
         Some(&value),
         Some(MAX_PEER_STATE_AGE_MS),
         101,
+        PeerSnapshotStatusV1::Observed,
     );
     let fresh_json = serde_json::to_value(fresh).expect("fresh observations");
     assert!(fresh_json.as_array().expect("array").iter().all(|row| {
@@ -430,7 +435,12 @@ fn stale_or_absent_peer_state_is_unknown_not_active_inference() {
             && row["fresh"] == true
             && row["value_relation"] == "fresh_peer_scalar_observed"
     }));
-    let absent = peer_scalar_observations_from_snapshot(None, None, 100);
+    let absent = peer_scalar_observations_from_snapshot(
+        None,
+        None,
+        100,
+        PeerSnapshotStatusV1::FileMissing,
+    );
     let absent_json = serde_json::to_value(absent).expect("absent observations");
     assert!(
         absent_json
@@ -439,6 +449,61 @@ fn stale_or_absent_peer_state_is_unknown_not_active_inference() {
             .iter()
             .all(|row| { row["observation_kind"] == "unknown" && row["value"].is_null() })
     );
+    assert!(
+        absent_json
+            .as_array()
+            .expect("array")
+            .iter()
+            .all(|row| row["value_relation"] == "source_file_missing")
+    );
+}
+
+#[test]
+fn peer_snapshot_distinguishes_missing_unreadable_and_malformed_sources() {
+    let root = temp_root("peer_snapshot_status");
+    fs::create_dir_all(&root).expect("temp root");
+    let missing = peer_snapshot::load_for_test(&root.join("missing.json"));
+    assert_eq!(missing.status, PeerSnapshotStatusV1::FileMissing);
+
+    let unreadable = peer_snapshot::load_for_test(&root);
+    assert_eq!(unreadable.status, PeerSnapshotStatusV1::FileUnreadable);
+
+    let malformed_path = root.join("malformed.json");
+    fs::write(&malformed_path, "{").expect("malformed fixture");
+    let malformed = peer_snapshot::load_for_test(&malformed_path);
+    assert_eq!(malformed.status, PeerSnapshotStatusV1::JsonMalformed);
+
+    let observed_path = root.join("observed.json");
+    fs::write(
+        &observed_path,
+        r#"{"fill_pct":68.0,"spectral_entropy":0.8,"structural_entropy":0.7}"#,
+    )
+    .expect("observed fixture");
+    let observed = peer_snapshot::load_for_test(&observed_path);
+    assert_eq!(observed.status, PeerSnapshotStatusV1::Observed);
+    assert_eq!(
+        observed
+            .value
+            .as_ref()
+            .and_then(|value| value.get("fill_pct"))
+            .and_then(serde_json::Value::as_f64),
+        Some(68.0)
+    );
+    let _ = fs::remove_dir_all(root);
+}
+
+#[test]
+fn cached_peer_snapshot_read_is_below_one_millisecond_p95() {
+    let mut elapsed = (0..1_000)
+        .map(|_| {
+            let started = std::time::Instant::now();
+            let _ = peer_snapshot::snapshot();
+            started.elapsed().as_nanos()
+        })
+        .collect::<Vec<_>>();
+    elapsed.sort_unstable();
+    let p95 = elapsed[949];
+    assert!(p95 < 1_000_000, "cached snapshot p95 was {p95}ns");
 }
 
 #[test]

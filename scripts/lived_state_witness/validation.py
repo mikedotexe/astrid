@@ -725,6 +725,11 @@ def _validate_parameter_observation(
         "compiled_value_observed_in_running_binary",
         "runtime_scalar_observed",
         "source_declared_not_runtime_activation_proof",
+        "source_value_missing_or_non_scalar",
+        "source_file_missing",
+        "source_file_unreadable",
+        "source_json_malformed",
+        "source_timestamp_unavailable_scalar_withheld",
         "bounded_observation_without_stronger_relation",
     }:
         errors.append(f"{prefix}.value_relation:invalid")

@@ -1,13 +1,12 @@
 //! Immutable evidence-only context for authored introspection reports.
 
 mod identity;
+mod peer_snapshot;
 mod types;
 mod writer;
 
-use std::fs;
 use std::path::Path;
 use std::sync::atomic::{AtomicU64, Ordering};
-use std::time::UNIX_EPOCH;
 
 use serde_json::Value;
 use sha2::{Digest, Sha256};
@@ -23,6 +22,7 @@ pub(crate) use writer::WitnessSubmitResultV1;
 use crate::paths::bridge_paths;
 use crate::witness::{ProvenanceInfluenceTypeV1, ProvenanceOriginV1, ProvenanceRefV1};
 use crate::ws::BridgeState;
+use peer_snapshot::PeerSnapshotStatusV1;
 
 const MAX_PEER_STATE_AGE_MS: u64 = 30_000;
 static WITNESS_SEQUENCE: AtomicU64 = AtomicU64::new(0);
@@ -74,6 +74,11 @@ fn next_witness_sequence() -> u64 {
 
 pub fn initialize_runtime_identity_v1() {
     let _ = identity::initialize();
+    peer_snapshot::initialize(
+        bridge_paths()
+            .minime_workspace()
+            .join("spectral_state.json"),
+    );
 }
 
 pub(crate) fn clock_sample_v1() -> LivedStateClockSampleV1 {
@@ -224,6 +229,31 @@ fn parameter(
         }
         _ => "bounded_observation_without_stronger_relation",
     };
+    parameter_with_relation(
+        name,
+        value,
+        unit,
+        kind,
+        observed_at_unix_ms,
+        age_ms,
+        fresh,
+        source_ref,
+        value_relation,
+    )
+}
+
+#[allow(clippy::too_many_arguments)]
+fn parameter_with_relation(
+    name: &str,
+    value: Option<f64>,
+    unit: &str,
+    kind: LivedStateObservationKindV1,
+    observed_at_unix_ms: u64,
+    age_ms: Option<u64>,
+    fresh: Option<bool>,
+    source_ref: &str,
+    value_relation: &'static str,
+) -> LivedStateParameterObservationV1 {
     LivedStateParameterObservationV1::new(
         name.to_string(),
         value.filter(|value| value.is_finite()),
@@ -237,21 +267,11 @@ fn parameter(
     )
 }
 
-fn file_age_ms(path: &Path, now_ms: u64) -> Option<u64> {
-    let modified = fs::metadata(path).ok()?.modified().ok()?;
-    let modified_ms: u64 = modified
-        .duration_since(UNIX_EPOCH)
-        .ok()?
-        .as_millis()
-        .try_into()
-        .ok()?;
-    Some(now_ms.saturating_sub(modified_ms))
-}
-
 fn peer_scalar_observations_from_snapshot(
     value: Option<&Value>,
     age_ms: Option<u64>,
     now_ms: u64,
+    status: PeerSnapshotStatusV1,
 ) -> Vec<LivedStateParameterObservationV1> {
     let fresh = age_ms.is_some_and(|age| age <= MAX_PEER_STATE_AGE_MS);
     let fields = [
@@ -262,8 +282,23 @@ fn peer_scalar_observations_from_snapshot(
     fields
         .into_iter()
         .map(|(name, field, unit)| {
-            let scalar = fresh.then(|| value?.get(field)?.as_f64()).flatten();
-            parameter(
+            let observed_scalar = value.and_then(|value| value.get(field)).and_then(Value::as_f64);
+            let scalar = fresh.then_some(observed_scalar).flatten();
+            let value_relation = if scalar.is_some() {
+                "fresh_peer_scalar_observed"
+            } else if age_ms.is_some_and(|age| age > MAX_PEER_STATE_AGE_MS) {
+                "peer_scalar_withheld_as_stale_temporal_context_only"
+            } else if observed_scalar.is_some() && age_ms.is_none() {
+                "source_timestamp_unavailable_scalar_withheld"
+            } else {
+                match status {
+                    PeerSnapshotStatusV1::Observed => "source_value_missing_or_non_scalar",
+                    PeerSnapshotStatusV1::FileMissing => "source_file_missing",
+                    PeerSnapshotStatusV1::FileUnreadable => "source_file_unreadable",
+                    PeerSnapshotStatusV1::JsonMalformed => "source_json_malformed",
+                }
+            };
+            parameter_with_relation(
                 name,
                 scalar,
                 unit,
@@ -276,20 +311,23 @@ fn peer_scalar_observations_from_snapshot(
                 age_ms,
                 Some(fresh),
                 "minime_workspace/spectral_state.json",
+                value_relation,
             )
         })
         .collect()
 }
 
 fn peer_scalar_observations(now_ms: u64) -> Vec<LivedStateParameterObservationV1> {
-    let path = bridge_paths()
-        .minime_workspace()
-        .join("spectral_state.json");
-    let age_ms = file_age_ms(&path, now_ms);
-    let value = fs::read_to_string(&path)
-        .ok()
-        .and_then(|raw| serde_json::from_str::<Value>(&raw).ok());
-    peer_scalar_observations_from_snapshot(value.as_ref(), age_ms, now_ms)
+    let snapshot = peer_snapshot::snapshot();
+    let age_ms = snapshot
+        .file_modified_unix_ms
+        .map(|modified| now_ms.saturating_sub(modified));
+    peer_scalar_observations_from_snapshot(
+        snapshot.value.as_ref(),
+        age_ms,
+        now_ms,
+        snapshot.status,
+    )
 }
 
 pub(crate) fn runtime_context_v1(state: &BridgeState, fill_pct: f32) -> LivedStateRuntimeContextV1 {
