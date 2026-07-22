@@ -170,6 +170,55 @@ class FeltContractIncrementalTests(unittest.TestCase):
             "idempotency_key": "gap_witness_fixture",
             "artifact_authority_state_v1": authority_state(),
         }
+        cluster = {
+            "event_type": "lived_state_temporal_cluster_observed",
+            "cluster_id": "lstc_" + "d" * 64,
+            "witness_id": "lsw_" + "b" * 64,
+            "introspection_id": "introspection_astrid_100",
+            "cluster": {
+                "cluster_id": "lstc_" + "d" * 64,
+                "member_refs": [
+                    {
+                        "witness_id": "lsw_" + "b" * 64,
+                        "introspection_id": "introspection_astrid_100",
+                        "authored_at_unix_ms": 100_000,
+                    }
+                ],
+                "association_count": 3,
+                "membership_sha256": "e" * 64,
+                "temporal_density_weight": 0.375,
+                "density_class": "clustered",
+                "causation_established": False,
+                "direct_causation_claimed": False,
+                "artifact_authority_state_v1": authority_state(),
+            },
+            "idempotency_key": "temporal_cluster_fixture",
+            "artifact_authority_state_v1": authority_state(),
+        }
+        concordance = {
+            "event_type": "lived_state_concordance_cluster_observed",
+            "cluster_id": "lstc_" + "d" * 64,
+            "witness_id": "lsw_" + "b" * 64,
+            "concordance": {
+                "schema": "lived_state_concordance_cluster_v1",
+                "schema_version": 1,
+                "cluster_id": "lstc_" + "d" * 64,
+                "temporal_cluster_membership_sha256": "e" * 64,
+                "exact_fresh_context_member_count": 0,
+                "measurements": {
+                    "bridge.pressure_risk": {
+                        "status": "insufficient_exact_fresh_samples"
+                    }
+                },
+                "concordance_status": "capture_insufficient",
+                "mechanism_established": False,
+                "causation_established": False,
+                "felt_state_inferred": False,
+                "artifact_authority_state_v1": authority_state(),
+            },
+            "idempotency_key": "concordance_cluster_fixture",
+            "artifact_authority_state_v1": authority_state(),
+        }
         store.append_payloads(
             "addressing",
             [full_read],
@@ -179,13 +228,15 @@ class FeltContractIncrementalTests(unittest.TestCase):
         )
         store.append_payloads(
             "lived_state_witness",
-            [exact, temporal, gap],
+            [exact, temporal, gap, cluster, concordance],
             actor="test",
             source=ProvenanceSourceV1("test", "witness"),
             idempotency_keys=[
                 "exact_witness_fixture",
                 "temporal_witness_fixture",
                 "gap_witness_fixture",
+                "temporal_cluster_fixture",
+                "concordance_cluster_fixture",
             ],
         )
         generate(self.workspace, write=True, actor="test")
@@ -199,7 +250,7 @@ class FeltContractIncrementalTests(unittest.TestCase):
             for node in projection["nodes"].values()
             if node.get("kind") == "lived_state_witness"
         ]
-        self.assertEqual(len(witness_nodes), 3)
+        self.assertEqual(len(witness_nodes), 5)
         for node in witness_nodes:
             metadata = node["metadata"]
             self.assertFalse(metadata["closure_propagated"])
@@ -214,6 +265,8 @@ class FeltContractIncrementalTests(unittest.TestCase):
         self.assertIn("context_exactly_observed_by", relations)
         self.assertIn("context_temporally_associated_with", relations)
         self.assertIn("context_witness_gap_for", relations)
+        self.assertIn("context_temporal_cluster_for", relations)
+        self.assertIn("context_concordance_for", relations)
         self.assertFalse(
             relations["context_exactly_observed_by"]["causal_parent"]
         )
@@ -223,6 +276,27 @@ class FeltContractIncrementalTests(unittest.TestCase):
             ]
         )
         self.assertFalse(relations["context_witness_gap_for"]["causal_parent"])
+        self.assertFalse(
+            relations["context_temporal_cluster_for"]["causal_parent"]
+        )
+        self.assertFalse(relations["context_concordance_for"]["causal_parent"])
+        cluster_node = next(
+            node
+            for node in witness_nodes
+            if node["metadata"].get("temporal_cluster_context_only")
+        )
+        self.assertEqual(cluster_node["metadata"]["temporal_density_weight"], 0.375)
+        self.assertFalse(cluster_node["metadata"]["causation_established"])
+        concordance_node = next(
+            node
+            for node in witness_nodes
+            if node["metadata"].get("concordance_context_only")
+        )
+        self.assertEqual(
+            concordance_node["metadata"]["concordance_status"],
+            "capture_insufficient",
+        )
+        self.assertFalse(concordance_node["metadata"]["felt_state_inferred"])
         gap_node = next(
             node for node in witness_nodes if node["metadata"]["witness_gap"]
         )

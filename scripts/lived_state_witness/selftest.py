@@ -14,6 +14,14 @@ from .model import (
 )
 from .projector import _alignment, _exact_deployment_match, _review_outcome
 from .records import parse_source_ref
+from .temporal_clusters import (
+    build_temporal_cluster_events,
+    validate_temporal_cluster,
+)
+from .concordance import (
+    build_concordance_events,
+    validate_concordance_preflight,
+)
 from .validation import _validate_model_route
 
 
@@ -771,6 +779,85 @@ class LivedStateWitnessTests(unittest.TestCase):
         alignment = _alignment(None, 200, [receipt], historical=True)
         self.assertEqual(alignment["outcome"], "temporal_association_only")
         self.assertFalse(alignment["exact_identity_match"])
+
+    def test_temporal_density_cluster_preserves_timing_without_causation(
+        self,
+    ) -> None:
+        events = []
+        for index, authored_at in enumerate(
+            (7_200_100, 7_300_100, 7_400_100), start=1
+        ):
+            events.append(
+                {
+                    "event_type": "historical_lived_state_witness_migrated",
+                    "witness_id": "lsw_" + f"{index:x}" * 64,
+                    "introspection_id": f"introspection_fixture_{index}",
+                    "witness": {"authored_at_unix_ms": authored_at},
+                    "alignment": {
+                        "outcome": "temporal_association_only",
+                        "deployment_receipt_id": "deployment_fixture",
+                    },
+                }
+            )
+        cluster_events = build_temporal_cluster_events(events)
+        self.assertEqual(len(cluster_events), 1)
+        cluster = cluster_events[0]["cluster"]
+        self.assertEqual(cluster["association_count"], 3)
+        self.assertEqual(cluster["temporal_density_weight"], 0.375)
+        self.assertEqual(cluster["density_class"], "clustered")
+        self.assertFalse(cluster["causation_established"])
+        self.assertFalse(cluster["direct_causation_claimed"])
+        self.assertEqual(validate_temporal_cluster(cluster), [])
+
+        cluster["causation_established"] = True
+        self.assertIn(
+            "temporal_cluster:causation_established",
+            validate_temporal_cluster(cluster),
+        )
+
+    def test_sparse_temporal_associations_do_not_form_a_cluster(self) -> None:
+        events = [
+            {
+                "witness_id": "lsw_" + f"{index:x}" * 64,
+                "introspection_id": f"introspection_sparse_{index}",
+                "witness": {"authored_at_unix_ms": index * 7_200_000 + 1},
+                "alignment": {
+                    "outcome": "temporal_association_only",
+                    "deployment_receipt_id": "deployment_fixture",
+                },
+            }
+            for index in range(1, 4)
+        ]
+        self.assertEqual(build_temporal_cluster_events(events), [])
+
+    def test_concordance_refuses_proxy_when_exact_fresh_context_is_absent(
+        self,
+    ) -> None:
+        witness_events = [
+            {
+                "witness_id": "lsw_" + f"{index:x}" * 64,
+                "introspection_id": f"introspection_concordance_{index}",
+                "witness": {
+                    "schema": "historical_lived_state_witness_v1",
+                    "authored_at_unix_ms": 7_200_000 + index,
+                },
+                "alignment": {
+                    "outcome": "temporal_association_only",
+                    "deployment_receipt_id": "deployment_fixture",
+                },
+            }
+            for index in range(1, 4)
+        ]
+        clusters = build_temporal_cluster_events(witness_events)
+        events = build_concordance_events(witness_events, clusters)
+        preflight = events[-1]["preflight"]
+        self.assertEqual(
+            preflight["status"], "insufficient_contemporaneous_evidence"
+        )
+        self.assertIsNone(preflight["felt_density_proxy"]["value"])
+        self.assertFalse(preflight["mechanism_established"])
+        self.assertFalse(preflight["causation_established"])
+        self.assertEqual(validate_concordance_preflight(preflight), [])
 
     def test_historical_source_paths_are_redacted(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

@@ -439,6 +439,8 @@ def _edge_record(
             "related_to",
             "context_exactly_observed_by",
             "context_temporally_associated_with",
+            "context_temporal_cluster_for",
+            "context_concordance_for",
             "context_witness_gap_for",
             "context_unresolved_for",
         },

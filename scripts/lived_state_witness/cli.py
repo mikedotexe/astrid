@@ -82,6 +82,13 @@ def main(argv: list[str] | None = None) -> int:
                     "witnesses.jsonl": root / "witnesses.jsonl",
                     "auxiliary_artifacts.jsonl": root
                     / "auxiliary_artifacts.jsonl",
+                    "gaps.jsonl": root / "gaps.jsonl",
+                    "temporal_clusters.jsonl": root
+                    / "temporal_clusters.jsonl",
+                    "concordance_clusters.jsonl": root
+                    / "concordance_clusters.jsonl",
+                    "concordance_preflight.json": root
+                    / "concordance_preflight.json",
                     "context_index.jsonl": root / "context_index.jsonl",
                     "report.md": root / "report.md",
                     "migration_receipt.json": root / "migration_receipt.json",

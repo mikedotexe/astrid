@@ -13,6 +13,10 @@ import unittest
 from evidence_store import EvidenceEventStore
 from evidence_store.model import ProvenanceSourceV1
 from lived_state_witness.model import authority_state
+from lived_state_witness.concordance import (
+    build_concordance_events,
+    validate_concordance_preflight,
+)
 from lived_state_witness.projector import (
     PROJECTOR_VERSION,
     STREAM,
@@ -22,6 +26,7 @@ from lived_state_witness.projector import (
     state_dir,
     verify,
 )
+from lived_state_witness.views import _materialize
 
 
 def sha256(value: bytes) -> str:
@@ -351,7 +356,195 @@ class LivedStateWitnessProjectionTests(unittest.TestCase):
         self.assertTrue(all(result["valid"] for result in results))
         events, corrupt = self.store.payloads_for_stream(STREAM)
         self.assertEqual(corrupt, 0)
-        self.assertEqual(len(events), 2)
+        self.assertEqual(len(events), 3)
+
+    def test_temporal_clusters_are_bounded_noncausal_and_idempotent(
+        self,
+    ) -> None:
+        self._write_exact_fixture()
+        historical_ids = []
+        for timestamp in (1_700_000_200, 1_700_000_300, 1_700_000_400):
+            introspection_id = f"introspection_history_{timestamp}"
+            historical_ids.append(introspection_id)
+            (self.introspections / f"{introspection_id}.txt").write_text(
+                "=== ASTRID INTROSPECTION ===\n"
+                "Source: fixture\n"
+                f"Timestamp: {timestamp}\n"
+                "Fill: 68.0%\n\n"
+                "Observed:\n- historical fixture remains primary\n",
+                encoding="utf-8",
+            )
+
+        first = project(self.workspace, write=True)
+        self.assertTrue(first["valid"])
+        self.assertEqual(first["temporal_cluster_count"], 1)
+        self.assertEqual(first["clustered_temporal_association_count"], 4)
+        cluster = next(iter(first["temporal_clusters"].values()))["cluster"]
+        self.assertEqual(cluster["density_class"], "clustered")
+        self.assertFalse(cluster["causation_established"])
+        self.assertFalse(cluster["direct_causation_claimed"])
+        self.assertFalse(cluster["authority_propagated"])
+        self.assertTrue(
+            (state_dir(self.workspace) / "temporal_clusters.jsonl").is_file()
+        )
+        contexts = [
+            json.loads(line)
+            for line in (
+                state_dir(self.workspace) / "context_index.jsonl"
+            ).read_text(encoding="utf-8").splitlines()
+        ]
+        clustered_contexts = [
+            row
+            for row in contexts
+            if row.get("introspection_id") in historical_ids
+        ]
+        self.assertEqual(len(clustered_contexts), 3)
+        self.assertTrue(
+            all(len(row["temporal_cluster_refs"]) == 1 for row in clustered_contexts)
+        )
+        first_watermark = self.store.stream_watermarks((STREAM,))[STREAM][
+            "stream_seq"
+        ]
+        first_hashes = dict(first["projection_hashes"])
+
+        second = project(self.workspace, write=True)
+        self.assertEqual(
+            self.store.stream_watermarks((STREAM,))[STREAM]["stream_seq"],
+            first_watermark,
+        )
+        self.assertEqual(second["projection_hashes"], first_hashes)
+
+    def test_concordance_requires_exact_fresh_coverage_and_never_infers_felt_state(
+        self,
+    ) -> None:
+        witnesses = []
+        clusters = []
+        for cluster_index in range(8):
+            members = []
+            for member_index in range(3):
+                witness_id = "lsw_" + hashlib.sha256(
+                    f"{cluster_index}:{member_index}".encode()
+                ).hexdigest()
+                members.append(
+                    {
+                        "witness_id": witness_id,
+                        "introspection_id": f"report_{cluster_index}_{member_index}",
+                        "authored_at_unix_ms": 1_700_000_000_000
+                        + cluster_index * 10_000
+                        + member_index,
+                    }
+                )
+                witnesses.append(
+                    {
+                        "witness_id": witness_id,
+                        "witness": {
+                            "schema": "temporal_lived_state_witness_v1",
+                            "parameter_observations_v1": [
+                                {
+                                    "name": "bridge.pressure_risk",
+                                    "value": 0.1 + cluster_index * 0.05,
+                                    "observation_kind": "runtime_observed",
+                                    "fresh": True,
+                                    "direct_causation_claimed": False,
+                                }
+                            ],
+                        },
+                    }
+                )
+            clusters.append(
+                {
+                    "cluster": {
+                        "cluster_id": "lstc_"
+                        + hashlib.sha256(str(cluster_index).encode()).hexdigest(),
+                        "association_count": 3,
+                        "membership_sha256": hashlib.sha256(
+                            json.dumps(members, sort_keys=True).encode()
+                        ).hexdigest(),
+                        "member_refs": members,
+                        "temporal_density_weight": round(
+                            0.1 + cluster_index * 0.1, 6
+                        ),
+                    }
+                }
+            )
+        events = build_concordance_events(witnesses, clusters)
+        preflight = events[-1]["preflight"]
+        pressure = preflight["correlations"]["bridge.pressure_risk"]
+        self.assertEqual(
+            pressure["status"], "descriptive_correlation_available"
+        )
+        self.assertAlmostEqual(pressure["pearson_r"], 1.0)
+        self.assertIsNone(preflight["felt_density_proxy"]["value"])
+        self.assertFalse(preflight["mechanism_established"])
+        self.assertFalse(preflight["causation_established"])
+        self.assertFalse(preflight["felt_state_inferred"])
+        self.assertEqual(
+            preflight["density_gradient_change"]["status"],
+            "approval_pending",
+        )
+        self.assertEqual(validate_concordance_preflight(preflight), [])
+
+        preflight["felt_density_proxy"]["value"] = 0.5
+        self.assertIn(
+            "concordance_preflight:felt_density_proxy_inferred",
+            validate_concordance_preflight(preflight),
+        )
+
+    def test_concordance_identity_includes_density_and_exact_cluster_revision(
+        self,
+    ) -> None:
+        members = [
+            {
+                "witness_id": "lsw_" + "1" * 64,
+                "introspection_id": "report_1",
+                "authored_at_unix_ms": 1_700_000_000_000,
+            },
+            {
+                "witness_id": "lsw_" + "2" * 64,
+                "introspection_id": "report_2",
+                "authored_at_unix_ms": 1_700_000_000_001,
+            },
+            {
+                "witness_id": "lsw_" + "3" * 64,
+                "introspection_id": "report_3",
+                "authored_at_unix_ms": 1_700_000_000_002,
+            },
+        ]
+        cluster_id = "lstc_" + "4" * 64
+        membership = "5" * 64
+        cluster = {
+            "cluster": {
+                "cluster_id": cluster_id,
+                "membership_sha256": membership,
+                "association_count": 3,
+                "member_refs": members,
+                "temporal_density_weight": 0.375,
+            }
+        }
+        first = build_concordance_events([], [cluster])
+        cluster["cluster"]["temporal_density_weight"] = 0.5
+        second = build_concordance_events([], [cluster])
+        self.assertNotEqual(
+            first[-1]["idempotency_key"], second[-1]["idempotency_key"]
+        )
+
+        temporal_event = {
+            "event_type": "lived_state_temporal_cluster_observed",
+            "cluster_id": cluster_id,
+            "cluster": {
+                "cluster_id": cluster_id,
+                "membership_sha256": "6" * 64,
+            },
+            "artifact_authority_state_v1": authority_state(),
+        }
+        concordance_event = first[0]
+        materialized = _materialize([temporal_event, concordance_event])
+        self.assertFalse(materialized["valid"])
+        self.assertFalse(
+            materialized["counter_audit"]["checks"][
+                "concordance_cluster_pairing_valid"
+            ]
+        )
 
     def test_missing_sidecar_is_gap_and_tampered_output_fails_verify(self) -> None:
         witness_id = "lsw_" + "b" * 64

@@ -540,48 +540,57 @@ def route_history(
         claims_by_introspection.setdefault(claim.introspection_id, []).append(
             claim
         )
-    for envelope in source_by_stream["lived_state_witness"]:
-        payload = envelope.payload
-        event_type = str(payload.get("event_type") or "")
-        if event_type not in {
-            "temporal_lived_state_witness_recorded",
-            "historical_lived_state_witness_migrated",
-            "lived_state_witness_gap_detected",
-            "lived_state_writer_gap_recorded",
-            "lived_state_review_context_reconciled",
-        }:
-            continue
-        introspection_id = str(payload.get("introspection_id") or "")
-        if not introspection_id:
-            continue
+
+    def append_lived_context(
+        envelope: Any,
+        *,
+        event_type: str,
+        introspection_id: str,
+        witness_id: str | None,
+        alignment_outcome: str,
+        exact: bool,
+        temporal: bool,
+        gap: bool,
+        relation: str,
+        extra_metadata: dict[str, Any] | None = None,
+    ) -> None:
         contract_claims: dict[str, list[Any]] = {}
         for claim in claims_by_introspection.get(introspection_id, []):
             contract_id = membership.get(claim.claim_id)
             if contract_id and claim.claim_id in claim_nodes:
                 contract_claims.setdefault(contract_id, []).append(claim)
-        if not contract_claims:
-            continue
         occurred_at = _event_time(envelope)
-        alignment = payload.get("alignment")
-        alignment = alignment if isinstance(alignment, dict) else {}
-        alignment_outcome = str(
-            alignment.get("outcome") or payload.get("outcome") or ""
-        )
-        exact = bool(
-            alignment.get("exact_identity_match")
-            or payload.get("exact_identity_match")
-        )
-        temporal = alignment_outcome == "temporal_association_only"
-        gap = "gap" in event_type or alignment_outcome == "witness_gap"
         for contract_id, contract_sources in sorted(contract_claims.items()):
             parents = sorted(
                 claim_nodes[claim.claim_id] for claim in contract_sources
             )
+            semantic_role = f"lived_state_witness:{event_type}"
+            if event_type in {
+                "lived_state_temporal_cluster_observed",
+                "lived_state_concordance_cluster_observed",
+            }:
+                semantic_role = f"{semantic_role}:{witness_id or ''}"
             child = node_id(
                 envelope.event_id,
-                f"lived_state_witness:{event_type}",
+                semantic_role,
                 contract_id,
             )
+            metadata = {
+                "witness_id": witness_id,
+                "introspection_id": introspection_id,
+                "source_event_type": event_type,
+                "alignment_outcome": alignment_outcome or None,
+                "exact_identity_match": exact,
+                "temporal_association_only": temporal,
+                "witness_gap": gap,
+                "closure_propagated": False,
+                "evidence_sufficiency_propagated": False,
+                "authority_propagated": False,
+                "felt_resolution_propagated": False,
+                "private_content_copied": False,
+            }
+            if extra_metadata:
+                metadata.update(extra_metadata)
             node = build_node(
                 node_id=child,
                 contract_id=contract_id,
@@ -589,30 +598,9 @@ def route_history(
                 source_event_id=envelope.event_id,
                 occurred_at=occurred_at,
                 source_ref=None,
-                metadata={
-                    "witness_id": payload.get("witness_id"),
-                    "introspection_id": introspection_id,
-                    "source_event_type": event_type,
-                    "alignment_outcome": alignment_outcome or None,
-                    "exact_identity_match": exact,
-                    "temporal_association_only": temporal,
-                    "witness_gap": gap,
-                    "closure_propagated": False,
-                    "evidence_sufficiency_propagated": False,
-                    "authority_propagated": False,
-                    "felt_resolution_propagated": False,
-                    "private_content_copied": False,
-                },
+                metadata=metadata,
                 authority_state="evidence_only",
             ).to_dict()
-            if exact:
-                relation = "context_exactly_observed_by"
-            elif temporal:
-                relation = "context_temporally_associated_with"
-            elif gap:
-                relation = "context_witness_gap_for"
-            else:
-                relation = "context_unresolved_for"
             events.append(
                 _node_event(
                     node,
@@ -631,6 +619,182 @@ def route_history(
                     authority_state="evidence_only",
                 )
             )
+
+    temporal_clusters_by_identity = {
+        (
+            str(envelope.payload.get("cluster_id") or ""),
+            str(
+                envelope.payload.get("cluster", {}).get(
+                    "membership_sha256"
+                )
+                or ""
+            ),
+        ): envelope.payload.get("cluster")
+        for envelope in source_by_stream["lived_state_witness"]
+        if envelope.payload.get("event_type")
+        == "lived_state_temporal_cluster_observed"
+        and isinstance(envelope.payload.get("cluster"), dict)
+    }
+
+    for envelope in source_by_stream["lived_state_witness"]:
+        payload = envelope.payload
+        event_type = str(payload.get("event_type") or "")
+        if event_type == "lived_state_temporal_cluster_observed":
+            cluster = payload.get("cluster")
+            if (
+                not isinstance(cluster, dict)
+                or cluster.get("causation_established") is not False
+                or cluster.get("direct_causation_claimed") is not False
+                or cluster.get("artifact_authority_state_v1", {}).get(
+                    "state"
+                )
+                != "evidence_only"
+            ):
+                continue
+            for member in cluster.get("member_refs", []):
+                if not isinstance(member, dict):
+                    continue
+                introspection_id = str(member.get("introspection_id") or "")
+                witness_id = str(member.get("witness_id") or "")
+                if not introspection_id or not witness_id:
+                    continue
+                append_lived_context(
+                    envelope,
+                    event_type=event_type,
+                    introspection_id=introspection_id,
+                    witness_id=witness_id,
+                    alignment_outcome="temporal_cluster_context",
+                    exact=False,
+                    temporal=True,
+                    gap=False,
+                    relation="context_temporal_cluster_for",
+                    extra_metadata={
+                        "temporal_cluster_id": cluster.get("cluster_id"),
+                        "temporal_density_weight": cluster.get(
+                            "temporal_density_weight"
+                        ),
+                        "temporal_density_class": cluster.get(
+                            "density_class"
+                        ),
+                        "temporal_association_count": cluster.get(
+                            "association_count"
+                        ),
+                        "temporal_cluster_context_only": True,
+                        "causation_established": False,
+                        "direct_causation_claimed": False,
+                    },
+                )
+            routed_source_ids.add(envelope.event_id)
+            continue
+        if event_type == "lived_state_concordance_cluster_observed":
+            concordance = payload.get("concordance")
+            cluster_id = str(payload.get("cluster_id") or "")
+            membership_sha256 = str(
+                concordance.get("temporal_cluster_membership_sha256") or ""
+            ) if isinstance(concordance, dict) else ""
+            cluster = temporal_clusters_by_identity.get(
+                (cluster_id, membership_sha256)
+            )
+            if (
+                not isinstance(concordance, dict)
+                or not isinstance(cluster, dict)
+                or concordance.get("mechanism_established") is not False
+                or concordance.get("causation_established") is not False
+                or concordance.get("felt_state_inferred") is not False
+                or concordance.get("artifact_authority_state_v1", {}).get(
+                    "state"
+                )
+                != "evidence_only"
+            ):
+                continue
+            measurements = concordance.get("measurements")
+            measurement_status = {
+                str(name): row.get("status")
+                for name, row in (
+                    measurements.items()
+                    if isinstance(measurements, dict)
+                    else []
+                )
+                if isinstance(row, dict)
+            }
+            for member in cluster.get("member_refs", []):
+                if not isinstance(member, dict):
+                    continue
+                introspection_id = str(member.get("introspection_id") or "")
+                witness_id = str(member.get("witness_id") or "")
+                if not introspection_id or not witness_id:
+                    continue
+                append_lived_context(
+                    envelope,
+                    event_type=event_type,
+                    introspection_id=introspection_id,
+                    witness_id=witness_id,
+                    alignment_outcome="concordance_context",
+                    exact=False,
+                    temporal=True,
+                    gap=False,
+                    relation="context_concordance_for",
+                    extra_metadata={
+                        "temporal_cluster_id": cluster_id,
+                        "temporal_cluster_membership_sha256": (
+                            membership_sha256
+                        ),
+                        "concordance_status": concordance.get(
+                            "concordance_status"
+                        ),
+                        "exact_fresh_context_member_count": concordance.get(
+                            "exact_fresh_context_member_count"
+                        ),
+                        "measurement_status": measurement_status,
+                        "concordance_context_only": True,
+                        "mechanism_established": False,
+                        "causation_established": False,
+                        "felt_state_inferred": False,
+                    },
+                )
+            routed_source_ids.add(envelope.event_id)
+            continue
+        if event_type not in {
+            "temporal_lived_state_witness_recorded",
+            "historical_lived_state_witness_migrated",
+            "lived_state_witness_gap_detected",
+            "lived_state_writer_gap_recorded",
+            "lived_state_review_context_reconciled",
+        }:
+            continue
+        introspection_id = str(payload.get("introspection_id") or "")
+        if not introspection_id:
+            continue
+        alignment = payload.get("alignment")
+        alignment = alignment if isinstance(alignment, dict) else {}
+        alignment_outcome = str(
+            alignment.get("outcome") or payload.get("outcome") or ""
+        )
+        exact = bool(
+            alignment.get("exact_identity_match")
+            or payload.get("exact_identity_match")
+        )
+        temporal = alignment_outcome == "temporal_association_only"
+        gap = "gap" in event_type or alignment_outcome == "witness_gap"
+        if exact:
+            relation = "context_exactly_observed_by"
+        elif temporal:
+            relation = "context_temporally_associated_with"
+        elif gap:
+            relation = "context_witness_gap_for"
+        else:
+            relation = "context_unresolved_for"
+        append_lived_context(
+            envelope,
+            event_type=event_type,
+            introspection_id=introspection_id,
+            witness_id=str(payload.get("witness_id") or "") or None,
+            alignment_outcome=alignment_outcome,
+            exact=exact,
+            temporal=temporal,
+            gap=gap,
+            relation=relation,
+        )
         routed_source_ids.add(envelope.event_id)
 
     for stream in (
