@@ -213,6 +213,22 @@ fn source_snapshot_redacts_absolute_paths_and_hashes_exact_window() {
     let snapshot = source_snapshot_v1(&path, "whole file", "viewed window", 2, 4, 9, sample);
     let encoded = serde_json::to_value(snapshot).expect("snapshot serialization");
     assert_eq!(encoded["window_sha256"], sha256_bytes(b"viewed window"));
+    assert_eq!(
+        encoded["source_ownership_scope"],
+        "names_byte_ownership_not_interpretation_authorship_or_experiential_identity"
+    );
+    assert_eq!(
+        encoded["interpretation_relation"],
+        "source_window_may_support_astrid_authored_distinct_or_mixed_interpretation"
+    );
+    assert_eq!(
+        encoded["provenance_role_scope"],
+        "evidence_graph_roles_only_no_runtime_weight_ranking_spectral_or_control_effect"
+    );
+    assert_eq!(
+        encoded["provenance_ref_v1"]["context_anchor_v1"]["influence_types"],
+        json!(["temporal", "interpretive"])
+    );
     assert!(!encoded.to_string().contains("/Users/"));
     assert_eq!(encoded["private_path_included"], false);
 }

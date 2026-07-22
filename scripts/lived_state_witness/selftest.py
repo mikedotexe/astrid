@@ -62,6 +62,15 @@ def valid_witness() -> dict[str, object]:
             "schema": "lived_state_source_snapshot_v1",
             "schema_version": 1,
             "source_owner": "astrid",
+            "source_ownership_scope": (
+                "names_byte_ownership_not_interpretation_authorship_or_experiential_identity"
+            ),
+            "interpretation_relation": (
+                "source_window_may_support_astrid_authored_distinct_or_mixed_interpretation"
+            ),
+            "provenance_role_scope": (
+                "evidence_graph_roles_only_no_runtime_weight_ranking_spectral_or_control_effect"
+            ),
             "repository_relative_path": "capsules/spectral-bridge/src/lib.rs",
             "window_start_line": 0,
             "window_end_line": 10,
@@ -151,6 +160,9 @@ def valid_witness() -> dict[str, object]:
     assert isinstance(source, dict)
     source_provenance = source["provenance_ref_v1"]
     assert isinstance(source_provenance, dict)
+    source_anchor = source_provenance["context_anchor_v1"]
+    assert isinstance(source_anchor, dict)
+    source_anchor["influence_types"] = ["temporal", "interpretive"]
     source_provenance["canonical_sha256"] = source["window_sha256"]
     witness["source_provenance_ref_v1"] = dict(source_provenance)
     process = witness["observed_process_v1"]
@@ -213,6 +225,51 @@ def valid_deployment_receipt(receipt_id: str = "deploy_one") -> dict[str, object
 
 
 class LivedStateWitnessTests(unittest.TestCase):
+    def test_source_provenance_roles_do_not_claim_runtime_weight(self) -> None:
+        witness = valid_witness()
+        self.assertEqual(validate_witness(witness), [])
+
+        relation_fields = {
+            "source_ownership_scope": "owner_decides_interpretation",
+            "interpretation_relation": "source_owner_is_interpretation_owner",
+            "provenance_role_scope": "spectral_weight_applied",
+        }
+        for field, invalid_value in relation_fields.items():
+            with self.subTest(field=field):
+                tampered = valid_witness()
+                source = tampered["source_snapshot_v1"]
+                self.assertIsInstance(source, dict)
+                source[field] = invalid_value
+                self.assertIn(
+                    f"source.{field}:invalid",
+                    validate_witness(tampered),
+                )
+
+        weighted = valid_witness()
+        weighted_source = weighted["source_snapshot_v1"]
+        self.assertIsInstance(weighted_source, dict)
+        weighted_provenance = weighted_source["provenance_ref_v1"]
+        self.assertIsInstance(weighted_provenance, dict)
+        weighted_anchor = weighted_provenance["context_anchor_v1"]
+        self.assertIsInstance(weighted_anchor, dict)
+        weighted_anchor["influence_types"] = ["structural", "authorship"]
+        self.assertIn(
+            "source.provenance_ref_v1:role_scope_mismatch",
+            validate_witness(weighted),
+        )
+
+        historical = valid_witness()
+        historical_source = historical["source_snapshot_v1"]
+        self.assertIsInstance(historical_source, dict)
+        for field in relation_fields:
+            historical_source.pop(field)
+        historical_provenance = historical_source["provenance_ref_v1"]
+        self.assertIsInstance(historical_provenance, dict)
+        historical_anchor = historical_provenance["context_anchor_v1"]
+        self.assertIsInstance(historical_anchor, dict)
+        historical_anchor["influence_types"] = ["structural", "authorship"]
+        self.assertEqual(validate_witness(historical), [])
+
     def test_bounded_protocol_completeness_marker_is_validated(self) -> None:
         historical = valid_witness()
         historical_build = historical["startup_build_candidate_v1"]

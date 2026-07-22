@@ -139,8 +139,8 @@ pub(crate) fn source_snapshot_v1(
             "source.window_lines".to_string(),
         ],
         vec![
-            ProvenanceInfluenceTypeV1::Structural,
-            ProvenanceInfluenceTypeV1::Authorship,
+            ProvenanceInfluenceTypeV1::Temporal,
+            ProvenanceInfluenceTypeV1::Interpretive,
         ],
     );
     LivedStateSourceSnapshotV1::new(

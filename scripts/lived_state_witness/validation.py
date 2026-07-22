@@ -231,6 +231,9 @@ def _validate_source_snapshot(
             "schema",
             "schema_version",
             "source_owner",
+            "source_ownership_scope",
+            "interpretation_relation",
+            "provenance_role_scope",
             "repository_relative_path",
             "window_start_line",
             "window_end_line",
@@ -254,6 +257,23 @@ def _validate_source_snapshot(
         "unknown",
     }:
         errors.append("source.source_owner:invalid")
+    relation_fields = {
+        "source_ownership_scope": (
+            "names_byte_ownership_not_interpretation_authorship_or_experiential_identity"
+        ),
+        "interpretation_relation": (
+            "source_window_may_support_astrid_authored_distinct_or_mixed_interpretation"
+        ),
+        "provenance_role_scope": (
+            "evidence_graph_roles_only_no_runtime_weight_ranking_spectral_or_control_effect"
+        ),
+    }
+    present_relations = relation_fields.keys() & source.keys()
+    if present_relations and len(present_relations) != len(relation_fields):
+        errors.append("source.provenance_relations:incomplete")
+    for field, expected in relation_fields.items():
+        if field in source and source.get(field) != expected:
+            errors.append(f"source.{field}:invalid")
     _hash_field(source.get("file_sha256"), "source.file_sha256", errors)
     _hash_field(source.get("window_sha256"), "source.window_sha256", errors)
     source_path = source.get("repository_relative_path")
@@ -276,6 +296,11 @@ def _validate_source_snapshot(
     )
     if isinstance(provenance, dict) and provenance.get("origin") != expected_origin:
         errors.append("source.provenance_ref_v1:origin_mismatch")
+    if present_relations and isinstance(provenance, dict):
+        anchor = provenance.get("context_anchor_v1")
+        influence_types = anchor.get("influence_types") if isinstance(anchor, dict) else None
+        if influence_types != ["temporal", "interpretive"]:
+            errors.append("source.provenance_ref_v1:role_scope_mismatch")
     if (
         isinstance(provenance, dict)
         and provenance.get("canonical_sha256") != source.get("window_sha256")

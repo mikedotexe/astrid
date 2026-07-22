@@ -178,6 +178,9 @@ pub struct LivedStateSourceSnapshotV1 {
     schema: &'static str,
     schema_version: u8,
     source_owner: String,
+    source_ownership_scope: &'static str,
+    interpretation_relation: &'static str,
+    provenance_role_scope: &'static str,
     repository_relative_path: String,
     window_start_line: usize,
     window_end_line: usize,
@@ -208,6 +211,12 @@ impl LivedStateSourceSnapshotV1 {
             schema: "lived_state_source_snapshot_v1",
             schema_version: 1,
             source_owner,
+            source_ownership_scope:
+                "names_byte_ownership_not_interpretation_authorship_or_experiential_identity",
+            interpretation_relation:
+                "source_window_may_support_astrid_authored_distinct_or_mixed_interpretation",
+            provenance_role_scope:
+                "evidence_graph_roles_only_no_runtime_weight_ranking_spectral_or_control_effect",
             repository_relative_path,
             window_start_line,
             window_end_line,
