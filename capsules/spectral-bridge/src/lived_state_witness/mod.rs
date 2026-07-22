@@ -323,6 +323,45 @@ fn peer_scalar_observations(now_ms: u64) -> Vec<LivedStateParameterObservationV1
     peer_scalar_observations_from_snapshot(snapshot.value.as_ref(), age_ms, now_ms, snapshot.status)
 }
 
+fn runtime_spectral_observations(
+    spectral_entropy: Option<f64>,
+    density_gradient: Option<f64>,
+    now_ms: u64,
+    telemetry_age_ms: Option<u64>,
+    telemetry_fresh: Option<bool>,
+) -> [LivedStateParameterObservationV1; 2] {
+    [
+        parameter(
+            "bridge.spectral_entropy",
+            spectral_entropy,
+            "ratio",
+            if spectral_entropy.is_some() {
+                LivedStateObservationKindV1::RuntimeObserved
+            } else {
+                LivedStateObservationKindV1::Unknown
+            },
+            now_ms,
+            telemetry_age_ms,
+            telemetry_fresh,
+            "bridge_state.latest_telemetry.spectral_fingerprint_v1.spectral_entropy",
+        ),
+        parameter(
+            "bridge.spectral_density_gradient",
+            density_gradient,
+            "ratio",
+            if density_gradient.is_some() {
+                LivedStateObservationKindV1::RuntimeObserved
+            } else {
+                LivedStateObservationKindV1::Unknown
+            },
+            now_ms,
+            telemetry_age_ms,
+            telemetry_fresh,
+            "codec::spectral_density_gradient(bridge_state.latest_telemetry.eigenvalues)",
+        ),
+    ]
+}
+
 pub(crate) fn runtime_context_v1(state: &BridgeState, fill_pct: f32) -> LivedStateRuntimeContextV1 {
     let now = clock_sample_v1();
     let (heartbeat_interval_s, heartbeat_intensity) =
@@ -341,6 +380,11 @@ pub(crate) fn runtime_context_v1(state: &BridgeState, fill_pct: f32) -> LivedSta
         .as_ref()
         .and_then(|telemetry| telemetry.spectral_fingerprint_v1.as_ref())
         .map(|fingerprint| f64::from(fingerprint.spectral_entropy));
+    let density_gradient = state
+        .latest_telemetry
+        .as_ref()
+        .and_then(|telemetry| crate::codec::spectral_density_gradient(&telemetry.eigenvalues))
+        .map(f64::from);
     let mut observations = vec![
         parameter(
             "bridge.fill_pct",
@@ -351,20 +395,6 @@ pub(crate) fn runtime_context_v1(state: &BridgeState, fill_pct: f32) -> LivedSta
             telemetry_age_ms,
             telemetry_fresh,
             "bridge_state.fill_pct",
-        ),
-        parameter(
-            "bridge.spectral_entropy",
-            spectral_entropy,
-            "ratio",
-            if spectral_entropy.is_some() {
-                LivedStateObservationKindV1::RuntimeObserved
-            } else {
-                LivedStateObservationKindV1::Unknown
-            },
-            now.unix_ms,
-            telemetry_age_ms,
-            telemetry_fresh,
-            "bridge_state.latest_telemetry.spectral_fingerprint_v1.spectral_entropy",
         ),
         parameter(
             "bridge.semantic_dimensions",
@@ -397,6 +427,16 @@ pub(crate) fn runtime_context_v1(state: &BridgeState, fill_pct: f32) -> LivedSta
             "autonomous::SEMANTIC_HEARTBEAT_INTENSITY",
         ),
     ];
+    observations.splice(
+        1..1,
+        runtime_spectral_observations(
+            spectral_entropy,
+            density_gradient,
+            now.unix_ms,
+            telemetry_age_ms,
+            telemetry_fresh,
+        ),
+    );
     observations.extend(peer_scalar_observations(now.unix_ms));
     LivedStateRuntimeContextV1 {
         parameter_observations: observations,

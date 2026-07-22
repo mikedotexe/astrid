@@ -816,6 +816,33 @@ fn stale_or_absent_peer_state_is_unknown_not_active_inference() {
 }
 
 #[test]
+fn runtime_spectral_context_preserves_entropy_and_density_without_causation() {
+    let observations = runtime_spectral_observations(
+        Some(0.90),
+        Some(0.11),
+        1_000,
+        Some(25),
+        Some(true),
+    );
+    let encoded = serde_json::to_value(observations).expect("runtime spectral observations");
+    assert_eq!(encoded[0]["name"], "bridge.spectral_entropy");
+    assert_eq!(encoded[0]["value"], 0.90);
+    assert_eq!(encoded[1]["name"], "bridge.spectral_density_gradient");
+    assert_eq!(encoded[1]["value"], 0.11);
+    assert!(encoded.as_array().expect("observation array").iter().all(|row| {
+        row["observation_kind"] == "runtime_observed"
+            && row["fresh"] == true
+            && row["direct_causation_claimed"] == false
+    }));
+
+    let unavailable = runtime_spectral_observations(None, None, 2_000, None, None);
+    let unavailable = serde_json::to_value(unavailable).expect("unknown observations");
+    assert!(unavailable.as_array().expect("observation array").iter().all(
+        |row| row["observation_kind"] == "unknown" && row["value"].is_null()
+    ));
+}
+
+#[test]
 fn peer_snapshot_distinguishes_missing_unreadable_and_malformed_sources() {
     let root = temp_root("peer_snapshot_status");
     fs::create_dir_all(&root).expect("temp root");
