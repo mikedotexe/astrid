@@ -32,6 +32,7 @@ fn test_witness(artifact_bytes: &[u8]) -> TemporalLivedStateWitnessV1 {
         sha256_bytes(artifact_bytes),
         authorship.authored_at.unix_ms,
         authorship.authored_at.monotonic_ns,
+        authorship.authored_process_sequence,
         None,
         startup.process,
         startup.build_candidate,
@@ -132,6 +133,7 @@ fn owner_only_sidecar_contains_no_prose() {
         sha256_bytes(b"canonical report prose"),
         authorship.authored_at.unix_ms,
         authorship.authored_at.monotonic_ns,
+        authorship.authored_process_sequence,
         Some(source),
         startup.process,
         startup.build_candidate,
@@ -410,7 +412,23 @@ fn stale_or_absent_peer_state_is_unknown_not_active_inference() {
         peer_scalar_observations_from_snapshot(Some(&value), Some(MAX_PEER_STATE_AGE_MS + 1), 100);
     let stale_json = serde_json::to_value(stale).expect("stale observations");
     assert!(stale_json.as_array().expect("array").iter().all(|row| {
-        row["observation_kind"] == "unknown" && row["value"].is_null() && row["fresh"] == false
+        row["observation_kind"] == "unknown"
+            && row["value"].is_null()
+            && row["fresh"] == false
+            && row["value_relation"]
+                == "peer_scalar_withheld_as_stale_temporal_context_only"
+    }));
+    let fresh = peer_scalar_observations_from_snapshot(
+        Some(&value),
+        Some(MAX_PEER_STATE_AGE_MS),
+        101,
+    );
+    let fresh_json = serde_json::to_value(fresh).expect("fresh observations");
+    assert!(fresh_json.as_array().expect("array").iter().all(|row| {
+        row["observation_kind"] == "peer_observed"
+            && !row["value"].is_null()
+            && row["fresh"] == true
+            && row["value_relation"] == "fresh_peer_scalar_observed"
     }));
     let absent = peer_scalar_observations_from_snapshot(None, None, 100);
     let absent_json = serde_json::to_value(absent).expect("absent observations");
@@ -420,6 +438,28 @@ fn stale_or_absent_peer_state_is_unknown_not_active_inference() {
             .expect("array")
             .iter()
             .all(|row| { row["observation_kind"] == "unknown" && row["value"].is_null() })
+    );
+}
+
+#[test]
+fn capture_sequence_and_identity_scopes_are_explicit() {
+    let first = begin_authorship_v1(None, &[], "introspection");
+    let second = begin_authorship_v1(None, &[], "introspection");
+    assert!(second.authored_process_sequence > first.authored_process_sequence);
+
+    let encoded = serde_json::to_value(test_witness(b"scope")).expect("witness JSON");
+    assert!(encoded["authored_process_sequence"].as_u64().is_some());
+    assert_eq!(
+        encoded["authored_process_sequence_scope"],
+        "per_runtime_instance_capture_order_not_experiential_time_or_global_order"
+    );
+    assert_eq!(
+        encoded["peer_identity_scope"],
+        "witnessed_protocol_advertisement_not_being_identity_or_peer_self_authority"
+    );
+    assert_eq!(
+        encoded["privacy_hash_scope"],
+        "absolute_path_redaction_not_being_or_continuity_identity"
     );
 }
 

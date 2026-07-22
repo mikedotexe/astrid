@@ -6,6 +6,7 @@ mod writer;
 
 use std::fs;
 use std::path::Path;
+use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::UNIX_EPOCH;
 
 use serde_json::Value;
@@ -24,6 +25,7 @@ use crate::witness::{ProvenanceInfluenceTypeV1, ProvenanceOriginV1, ProvenanceRe
 use crate::ws::BridgeState;
 
 const MAX_PEER_STATE_AGE_MS: u64 = 30_000;
+static WITNESS_SEQUENCE: AtomicU64 = AtomicU64::new(0);
 
 #[derive(Debug, Clone, Copy)]
 pub(crate) struct LivedStateClockSampleV1 {
@@ -35,6 +37,7 @@ pub(crate) struct LivedStateClockSampleV1 {
 pub(crate) struct LivedStateAuthorshipV1 {
     witness_id: String,
     authored_at: LivedStateClockSampleV1,
+    authored_process_sequence: u64,
 }
 
 #[derive(Debug, Clone, Default)]
@@ -59,6 +62,14 @@ fn bounded_identity(value: Option<&str>) -> Option<String> {
                 value.chars().take(160).collect()
             }
         })
+}
+
+fn next_witness_sequence() -> u64 {
+    WITNESS_SEQUENCE
+        .fetch_update(Ordering::Relaxed, Ordering::Relaxed, |current| {
+            current.checked_add(1)
+        })
+        .map_or(u64::MAX, |previous| previous.saturating_add(1))
 }
 
 pub fn initialize_runtime_identity_v1() {
@@ -147,6 +158,7 @@ pub(crate) fn begin_authorship_v1(
     artifact_kind: &str,
 ) -> LivedStateAuthorshipV1 {
     let authored_at = clock_sample_v1();
+    let authored_process_sequence = next_witness_sequence();
     let startup = identity::snapshot();
     let mut hasher = Sha256::new();
     hasher.update(b"astrid-temporal-lived-state-witness-v1\0");
@@ -160,17 +172,19 @@ pub(crate) fn begin_authorship_v1(
     for route in model_routes {
         hasher.update(route.call_id().as_bytes());
     }
-    LivedStateAuthorshipV1::finish_witness_id(hasher, authored_at)
+    LivedStateAuthorshipV1::finish_witness_id(hasher, authored_at, authored_process_sequence)
 }
 
 impl LivedStateAuthorshipV1 {
     fn finish_witness_id(
         hasher: Sha256,
         authored_at: LivedStateClockSampleV1,
+        authored_process_sequence: u64,
     ) -> LivedStateAuthorshipV1 {
         LivedStateAuthorshipV1 {
             witness_id: format!("lsw_{:x}", hasher.finalize()),
             authored_at,
+            authored_process_sequence,
         }
     }
 
@@ -189,6 +203,27 @@ fn parameter(
     fresh: Option<bool>,
     source_ref: &str,
 ) -> LivedStateParameterObservationV1 {
+    let value_relation = match (kind, value, fresh) {
+        (LivedStateObservationKindV1::PeerObserved, Some(_), Some(true)) => {
+            "fresh_peer_scalar_observed"
+        }
+        (LivedStateObservationKindV1::Unknown, None, Some(false)) => {
+            "peer_scalar_withheld_as_stale_temporal_context_only"
+        }
+        (LivedStateObservationKindV1::Unknown, None, _) => {
+            "source_unavailable_or_value_unobserved"
+        }
+        (LivedStateObservationKindV1::CompiledConstant, Some(_), _) => {
+            "compiled_value_observed_in_running_binary"
+        }
+        (LivedStateObservationKindV1::RuntimeObserved, Some(_), _) => {
+            "runtime_scalar_observed"
+        }
+        (LivedStateObservationKindV1::SourceDeclared, Some(_), _) => {
+            "source_declared_not_runtime_activation_proof"
+        }
+        _ => "bounded_observation_without_stronger_relation",
+    };
     LivedStateParameterObservationV1::new(
         name.to_string(),
         value.filter(|value| value.is_finite()),
@@ -198,6 +233,7 @@ fn parameter(
         age_ms,
         fresh,
         source_ref.to_string(),
+        value_relation,
     )
 }
 
@@ -378,6 +414,7 @@ pub(crate) fn finalize_and_submit_v1(
         sha256_bytes(artifact_bytes),
         authorship.authored_at.unix_ms,
         authorship.authored_at.monotonic_ns,
+        authorship.authored_process_sequence,
         source_snapshot,
         startup.process,
         startup.build_candidate,

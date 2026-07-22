@@ -36,6 +36,8 @@ WITNESS_FIELDS = {
     "artifact_sha256",
     "authored_at_unix_ms",
     "authored_monotonic_ns",
+    "authored_process_sequence",
+    "authored_process_sequence_scope",
     "source_snapshot_v1",
     "observed_process_v1",
     "startup_build_candidate_v1",
@@ -43,6 +45,8 @@ WITNESS_FIELDS = {
     "parameter_observations_v1",
     "peer_process_identity",
     "peer_deployment_identity",
+    "peer_identity_scope",
+    "privacy_hash_scope",
     "source_provenance_ref_v1",
     "process_provenance_ref_v1",
     "raw_introspection_prose_included",
@@ -70,6 +74,32 @@ def _validate_witness_fields(
     authored_monotonic = value.get("authored_monotonic_ns")
     _integer(authored_at, "authored_at_unix_ms", errors, minimum=1)
     _integer(authored_monotonic, "authored_monotonic_ns", errors)
+    sequence = value.get("authored_process_sequence")
+    _integer(
+        sequence,
+        "authored_process_sequence",
+        errors,
+        minimum=1,
+        optional=True,
+    )
+    if sequence is not None and value.get("authored_process_sequence_scope") != (
+        "per_runtime_instance_capture_order_not_experiential_time_or_global_order"
+    ):
+        errors.append("authored_process_sequence_scope:invalid")
+    if value.get("authored_process_sequence_scope") is not None and sequence is None:
+        errors.append("authored_process_sequence_scope:without_sequence")
+    for field, expected in (
+        (
+            "peer_identity_scope",
+            "witnessed_protocol_advertisement_not_being_identity_or_peer_self_authority",
+        ),
+        (
+            "privacy_hash_scope",
+            "absolute_path_redaction_not_being_or_continuity_identity",
+        ),
+    ):
+        if value.get(field) is not None and value.get(field) != expected:
+            errors.append(f"{field}:invalid")
     if not _valid_authority(value.get("artifact_authority_state_v1")):
         errors.append("authority:not_evidence_only")
     for field in (
@@ -667,6 +697,7 @@ def _validate_parameter_observation(
             "age_ms",
             "fresh",
             "source_ref",
+            "value_relation",
             "direct_causation_claimed",
         },
         prefix,
@@ -686,6 +717,17 @@ def _validate_parameter_observation(
     _bounded_string(observation.get("name"), f"{prefix}.name", errors, 160)
     _bounded_string(observation.get("unit"), f"{prefix}.unit", errors, 80)
     _bounded_string(observation.get("source_ref"), f"{prefix}.source_ref", errors, 300)
+    value_relation = observation.get("value_relation")
+    if value_relation is not None and value_relation not in {
+        "fresh_peer_scalar_observed",
+        "peer_scalar_withheld_as_stale_temporal_context_only",
+        "source_unavailable_or_value_unobserved",
+        "compiled_value_observed_in_running_binary",
+        "runtime_scalar_observed",
+        "source_declared_not_runtime_activation_proof",
+        "bounded_observation_without_stronger_relation",
+    }:
+        errors.append(f"{prefix}.value_relation:invalid")
     scalar = observation.get("value")
     if scalar is not None and (
         isinstance(scalar, bool)

@@ -51,6 +51,10 @@ def valid_witness() -> dict[str, object]:
         "artifact_sha256": "b" * 64,
         "authored_at_unix_ms": 123456789000,
         "authored_monotonic_ns": 10,
+        "authored_process_sequence": 1,
+        "authored_process_sequence_scope": (
+            "per_runtime_instance_capture_order_not_experiential_time_or_global_order"
+        ),
         "source_snapshot_v1": {
             "schema": "lived_state_source_snapshot_v1",
             "schema_version": 1,
@@ -94,6 +98,10 @@ def valid_witness() -> dict[str, object]:
         "parameter_observations_v1": [],
         "peer_process_identity": None,
         "peer_deployment_identity": None,
+        "peer_identity_scope": (
+            "witnessed_protocol_advertisement_not_being_identity_or_peer_self_authority"
+        ),
+        "privacy_hash_scope": "absolute_path_redaction_not_being_or_continuity_identity",
         "source_provenance_ref_v1": None,
         "process_provenance_ref_v1": provenance_ref(),
         "raw_introspection_prose_included": False,

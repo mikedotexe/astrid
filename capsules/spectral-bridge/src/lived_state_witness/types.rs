@@ -224,6 +224,7 @@ pub struct LivedStateParameterObservationV1 {
     age_ms: Option<u64>,
     fresh: Option<bool>,
     source_ref: String,
+    value_relation: &'static str,
     direct_causation_claimed: bool,
 }
 
@@ -238,6 +239,7 @@ impl LivedStateParameterObservationV1 {
         age_ms: Option<u64>,
         fresh: Option<bool>,
         source_ref: String,
+        value_relation: &'static str,
     ) -> Self {
         Self {
             schema: "lived_state_parameter_observation_v1",
@@ -250,6 +252,7 @@ impl LivedStateParameterObservationV1 {
             age_ms,
             fresh,
             source_ref,
+            value_relation,
             direct_causation_claimed: false,
         }
     }
@@ -368,6 +371,8 @@ pub struct TemporalLivedStateWitnessV1 {
     artifact_sha256: String,
     authored_at_unix_ms: u64,
     authored_monotonic_ns: u64,
+    authored_process_sequence: u64,
+    authored_process_sequence_scope: &'static str,
     source_snapshot_v1: Option<LivedStateSourceSnapshotV1>,
     observed_process_v1: LivedStateProcessIdentityV1,
     startup_build_candidate_v1: Option<LivedStateBuildCandidateV1>,
@@ -375,6 +380,8 @@ pub struct TemporalLivedStateWitnessV1 {
     parameter_observations_v1: Vec<LivedStateParameterObservationV1>,
     peer_process_identity: Option<String>,
     peer_deployment_identity: Option<String>,
+    peer_identity_scope: &'static str,
+    privacy_hash_scope: &'static str,
     source_provenance_ref_v1: Option<ProvenanceRefV1>,
     process_provenance_ref_v1: ProvenanceRefV1,
     raw_introspection_prose_included: bool,
@@ -395,6 +402,7 @@ impl TemporalLivedStateWitnessV1 {
         artifact_sha256: String,
         authored_at_unix_ms: u64,
         authored_monotonic_ns: u64,
+        authored_process_sequence: u64,
         source_snapshot_v1: Option<LivedStateSourceSnapshotV1>,
         observed_process_v1: LivedStateProcessIdentityV1,
         startup_build_candidate_v1: Option<LivedStateBuildCandidateV1>,
@@ -414,6 +422,9 @@ impl TemporalLivedStateWitnessV1 {
             artifact_sha256,
             authored_at_unix_ms,
             authored_monotonic_ns,
+            authored_process_sequence,
+            authored_process_sequence_scope:
+                "per_runtime_instance_capture_order_not_experiential_time_or_global_order",
             source_snapshot_v1,
             observed_process_v1,
             startup_build_candidate_v1,
@@ -421,6 +432,10 @@ impl TemporalLivedStateWitnessV1 {
             parameter_observations_v1,
             peer_process_identity,
             peer_deployment_identity,
+            peer_identity_scope:
+                "witnessed_protocol_advertisement_not_being_identity_or_peer_self_authority",
+            privacy_hash_scope:
+                "absolute_path_redaction_not_being_or_continuity_identity",
             source_provenance_ref_v1,
             process_provenance_ref_v1,
             raw_introspection_prose_included: false,
