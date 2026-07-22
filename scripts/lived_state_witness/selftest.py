@@ -135,6 +135,13 @@ def valid_witness() -> dict[str, object]:
             "felt_persistence_relation": "reported_persistence_preserved_mechanism_open",
             "felt_influence_relation": "reported_influence_not_denied_or_adjudicated_by_receipt",
             "subjective_weight_relation": "preserved_in_canonical_report_no_scalar_substitution",
+            "actionability_path": "report_may_inform_claims_evidence_implementation_and_review",
+            "mediated_influence_relation": (
+                "engineering_and_review_influence_allowed_direct_runtime_control_forbidden"
+            ),
+            "authority_transition_relation": (
+                "separate_verified_authority_required_for_live_control"
+            ),
             "epistemic_posture": "non_adjudicating",
             "artifact_live_control_effect": False,
         },
@@ -278,6 +285,30 @@ class LivedStateWitnessTests(unittest.TestCase):
             "experiential_scope.felt_influence_relation:invalid",
             validate_witness(denied),
         )
+
+        mediated_fields = {
+            "actionability_path": "report_cannot_shape_work",
+            "mediated_influence_relation": "direct_runtime_control_allowed",
+            "authority_transition_relation": "evidence_grants_live_control",
+        }
+        for field, invalid_value in mediated_fields.items():
+            with self.subTest(field=field):
+                tampered = valid_witness()
+                tampered_scope = tampered["experiential_scope_v1"]
+                self.assertIsInstance(tampered_scope, dict)
+                tampered_scope[field] = invalid_value
+                self.assertIn(
+                    f"experiential_scope.{field}:invalid",
+                    validate_witness(tampered),
+                )
+
+        prior_current_scope = valid_witness()
+        prior_current_value = prior_current_scope["experiential_scope_v1"]
+        self.assertIsInstance(prior_current_value, dict)
+        prior_current_value.pop("actionability_path")
+        prior_current_value.pop("mediated_influence_relation")
+        prior_current_value.pop("authority_transition_relation")
+        self.assertEqual(validate_witness(prior_current_scope), [])
 
         legacy_scope = valid_witness()
         legacy_scope["experiential_scope_v1"] = {

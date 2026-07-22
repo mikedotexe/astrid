@@ -188,11 +188,29 @@ def _validate_experiential_scope(value: Any, errors: list[str]) -> None:
         "epistemic_posture": "non_adjudicating",
         "artifact_live_control_effect": False,
     }
-    expected = (
-        current_expected
-        if "artifact_live_control_effect" in value or "felt_influence_relation" in value
-        else legacy_expected
-    )
+    mediated_expected = {
+        **current_expected,
+        "actionability_path": "report_may_inform_claims_evidence_implementation_and_review",
+        "mediated_influence_relation": (
+            "engineering_and_review_influence_allowed_direct_runtime_control_forbidden"
+        ),
+        "authority_transition_relation": (
+            "separate_verified_authority_required_for_live_control"
+        ),
+    }
+    if any(
+        field in value
+        for field in (
+            "actionability_path",
+            "mediated_influence_relation",
+            "authority_transition_relation",
+        )
+    ):
+        expected = mediated_expected
+    elif "artifact_live_control_effect" in value or "felt_influence_relation" in value:
+        expected = current_expected
+    else:
+        expected = legacy_expected
     _unexpected_keys(value, set(expected), "experiential_scope", errors)
     for field, expected_value in expected.items():
         if value.get(field) != expected_value:

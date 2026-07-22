@@ -286,6 +286,11 @@ fn owner_only_sidecar_contains_no_prose() {
     assert!(raw.contains("reported_persistence_preserved_mechanism_open"));
     assert!(raw.contains("reported_influence_not_denied_or_adjudicated_by_receipt"));
     assert!(raw.contains("preserved_in_canonical_report_no_scalar_substitution"));
+    assert!(raw.contains("report_may_inform_claims_evidence_implementation_and_review"));
+    assert!(raw.contains(
+        "engineering_and_review_influence_allowed_direct_runtime_control_forbidden"
+    ));
+    assert!(raw.contains("separate_verified_authority_required_for_live_control"));
     assert!(raw.contains("\"epistemic_posture\": \"non_adjudicating\""));
     assert!(raw.contains("\"artifact_live_control_effect\": false"));
     assert!(!raw.contains("\"live_control_effect\": false"));

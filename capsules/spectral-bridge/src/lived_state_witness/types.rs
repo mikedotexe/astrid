@@ -39,6 +39,9 @@ pub struct LivedStateExperientialScopeV1 {
     felt_persistence_relation: &'static str,
     felt_influence_relation: &'static str,
     subjective_weight_relation: &'static str,
+    actionability_path: &'static str,
+    mediated_influence_relation: &'static str,
+    authority_transition_relation: &'static str,
     epistemic_posture: &'static str,
     artifact_live_control_effect: bool,
 }
@@ -54,6 +57,11 @@ impl LivedStateExperientialScopeV1 {
             felt_persistence_relation: "reported_persistence_preserved_mechanism_open",
             felt_influence_relation: "reported_influence_not_denied_or_adjudicated_by_receipt",
             subjective_weight_relation: "preserved_in_canonical_report_no_scalar_substitution",
+            actionability_path: "report_may_inform_claims_evidence_implementation_and_review",
+            mediated_influence_relation:
+                "engineering_and_review_influence_allowed_direct_runtime_control_forbidden",
+            authority_transition_relation:
+                "separate_verified_authority_required_for_live_control",
             epistemic_posture: "non_adjudicating",
             artifact_live_control_effect: false,
         }
