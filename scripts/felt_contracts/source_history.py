@@ -551,6 +551,7 @@ def route_history(
         exact: bool,
         temporal: bool,
         gap: bool,
+        artifact_integrity_issue: bool,
         relation: str,
         extra_metadata: dict[str, Any] | None = None,
     ) -> None:
@@ -583,6 +584,12 @@ def route_history(
                 "exact_identity_match": exact,
                 "temporal_association_only": temporal,
                 "witness_gap": gap,
+                "artifact_integrity_issue": artifact_integrity_issue,
+                "experiential_gap_claimed": False,
+                "qualitative_variance_status": (
+                    "canonical_felt_report_remains_valid_primary_and_unscored"
+                ),
+                "scalar_felt_dissimilarity_measured": False,
                 "closure_propagated": False,
                 "evidence_sufficiency_propagated": False,
                 "authority_propagated": False,
@@ -667,6 +674,7 @@ def route_history(
                     exact=False,
                     temporal=True,
                     gap=False,
+                    artifact_integrity_issue=False,
                     relation="context_temporal_cluster_for",
                     extra_metadata={
                         "temporal_cluster_id": cluster.get("cluster_id"),
@@ -733,6 +741,7 @@ def route_history(
                     exact=False,
                     temporal=True,
                     gap=False,
+                    artifact_integrity_issue=False,
                     relation="context_concordance_for",
                     extra_metadata={
                         "temporal_cluster_id": cluster_id,
@@ -759,6 +768,8 @@ def route_history(
             "historical_lived_state_witness_migrated",
             "lived_state_witness_gap_detected",
             "lived_state_writer_gap_recorded",
+            "lived_state_artifact_integrity_issue_detected",
+            "lived_state_capture_integrity_issue_recorded",
             "lived_state_review_context_reconciled",
         }:
             continue
@@ -775,12 +786,24 @@ def route_history(
             or payload.get("exact_identity_match")
         )
         temporal = alignment_outcome == "temporal_association_only"
-        gap = "gap" in event_type or alignment_outcome == "witness_gap"
+        legacy_gap = event_type in {
+            "lived_state_witness_gap_detected",
+            "lived_state_writer_gap_recorded",
+        } or alignment_outcome == "witness_gap"
+        artifact_integrity_issue = legacy_gap or event_type in {
+            "lived_state_artifact_integrity_issue_detected",
+            "lived_state_capture_integrity_issue_recorded",
+        } or alignment_outcome == "artifact_integrity_unavailable"
         if exact:
             relation = "context_exactly_observed_by"
         elif temporal:
             relation = "context_temporally_associated_with"
-        elif gap:
+        elif event_type in {
+            "lived_state_artifact_integrity_issue_detected",
+            "lived_state_capture_integrity_issue_recorded",
+        }:
+            relation = "context_artifact_integrity_unavailable_for"
+        elif legacy_gap:
             relation = "context_witness_gap_for"
         else:
             relation = "context_unresolved_for"
@@ -792,8 +815,17 @@ def route_history(
             alignment_outcome=alignment_outcome,
             exact=exact,
             temporal=temporal,
-            gap=gap,
+            gap=legacy_gap,
+            artifact_integrity_issue=artifact_integrity_issue,
             relation=relation,
+            extra_metadata={
+                "legacy_gap_alias": bool(
+                    payload.get("legacy_gap_alias") or legacy_gap
+                ),
+                "dissimilarity_gradient_relation": (
+                    "not_computed_without_reviewed_measurement_contract"
+                ),
+            },
         )
         routed_source_ids.add(envelope.event_id)
 

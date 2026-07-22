@@ -36,6 +36,18 @@ fn qualitative_texture_anchor_hashes_exact_body_without_copying_it() {
         anchor["scalar_comparison_relation"],
         "not_comparable_without_reviewed_measurement_contract"
     );
+    assert_eq!(
+        anchor["artifact_integrity_mismatch_relation"],
+        "byte_binding_failure_not_experiential_variance_or_qualitative_deficit"
+    );
+    assert_eq!(
+        anchor["felt_scalar_divergence_relation"],
+        "valid_nonreducible_and_unscored_no_error_inferred"
+    );
+    assert_eq!(
+        anchor["dissimilarity_gradient_relation"],
+        "not_computed_without_reviewed_measurement_contract"
+    );
     assert_eq!(anchor["raw_prose_included"], false);
     assert_eq!(anchor["direct_causation_claimed"], false);
 

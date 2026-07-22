@@ -161,6 +161,15 @@ def valid_witness() -> dict[str, object]:
             "derived_tag_relation": (
                 "no_model_generated_reduction_exact_canonical_language_remains_authoritative"
             ),
+            "artifact_integrity_mismatch_relation": (
+                "byte_binding_failure_not_experiential_variance_or_qualitative_deficit"
+            ),
+            "felt_scalar_divergence_relation": (
+                "valid_nonreducible_and_unscored_no_error_inferred"
+            ),
+            "dissimilarity_gradient_relation": (
+                "not_computed_without_reviewed_measurement_contract"
+            ),
             "raw_prose_included": False,
             "direct_causation_claimed": False,
         },
@@ -619,6 +628,17 @@ class LivedStateWitnessTests(unittest.TestCase):
         historical = valid_witness()
         historical.pop("qualitative_texture_anchor_v1")
         self.assertEqual(validate_witness(historical), [])
+
+        legacy_anchor = valid_witness()
+        legacy_anchor_value = legacy_anchor["qualitative_texture_anchor_v1"]
+        self.assertIsInstance(legacy_anchor_value, dict)
+        for field in (
+            "artifact_integrity_mismatch_relation",
+            "felt_scalar_divergence_relation",
+            "dissimilarity_gradient_relation",
+        ):
+            legacy_anchor_value.pop(field)
+        self.assertEqual(validate_witness(legacy_anchor), [])
 
     def test_model_route_scopes_event_identity_away_from_continuity(self) -> None:
         response_sha256 = "a" * 64

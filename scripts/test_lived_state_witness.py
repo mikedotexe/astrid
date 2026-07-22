@@ -26,7 +26,11 @@ from lived_state_witness.projector import (
     state_dir,
     verify,
 )
-from lived_state_witness.qualitative_texture import artifact_texture_anchor_errors
+from lived_state_witness.qualitative_texture import (
+    EXPECTED as TEXTURE_EXPECTED,
+    SEMANTIC_EXTENSION as TEXTURE_SEMANTIC_EXTENSION,
+    artifact_texture_anchor_errors,
+)
 from lived_state_witness.views import _materialize
 
 
@@ -585,7 +589,9 @@ class LivedStateWitnessProjectionTests(unittest.TestCase):
             ]
         )
 
-    def test_missing_sidecar_is_gap_and_tampered_output_fails_verify(self) -> None:
+    def test_missing_sidecar_is_artifact_issue_and_tampering_fails_verify(
+        self,
+    ) -> None:
         witness_id = "lsw_" + "b" * 64
         timestamp = 1_700_000_200
         (self.introspections / f"introspection_gap_{timestamp}.txt").write_text(
@@ -596,7 +602,11 @@ class LivedStateWitnessProjectionTests(unittest.TestCase):
             encoding="utf-8",
         )
         status = project(self.workspace, write=True)
+        self.assertEqual(
+            status["migration_counters"]["artifact_integrity_issue"], 1
+        )
         self.assertEqual(status["migration_counters"]["gap"], 1)
+        self.assertEqual(status["experiential_gap_count"], 0)
         self.assertEqual(status["witness_count"], 0)
         context = json.loads(
             (state_dir(self.workspace) / "context_index.jsonl")
@@ -604,8 +614,18 @@ class LivedStateWitnessProjectionTests(unittest.TestCase):
             .strip()
         )
         self.assertEqual(context["witness_id"], witness_id)
+        self.assertEqual(context["artifact_integrity_issue_count"], 1)
         self.assertEqual(context["gap_count"], 1)
-        self.assertEqual(context["alignment"]["outcome"], "witness_gap")
+        self.assertEqual(
+            context["alignment"]["outcome"],
+            "artifact_integrity_unavailable",
+        )
+        self.assertEqual(
+            context["alignment"]["legacy_alignment_outcome"],
+            "witness_gap",
+        )
+        self.assertFalse(context["experiential_gap_claimed"])
+        self.assertFalse(context["scalar_felt_dissimilarity_measured"])
         self.assertTrue(verify(self.workspace)["valid"])
         (state_dir(self.workspace) / "context_index.jsonl").write_text(
             "tampered\n", encoding="utf-8"
@@ -635,6 +655,7 @@ class LivedStateWitnessProjectionTests(unittest.TestCase):
         )
 
         first = project(self.workspace, write=True)
+        self.assertEqual(first["artifact_integrity_issue_count"], 1)
         self.assertEqual(first["gap_count"], 1)
         self.assertEqual(first["resolved_gap_count"], 0)
         sidecar_path.write_text(
@@ -644,6 +665,10 @@ class LivedStateWitnessProjectionTests(unittest.TestCase):
 
         second = project(self.workspace, write=True)
         self.assertEqual(second["migration_counters"]["gap"], 0)
+        self.assertEqual(second["artifact_integrity_issue_count"], 0)
+        self.assertEqual(
+            second["resolved_artifact_integrity_issue_count"], 1
+        )
         self.assertEqual(second["gap_count"], 0)
         self.assertEqual(second["resolved_gap_count"], 1)
         self.assertTrue(
@@ -661,16 +686,73 @@ class LivedStateWitnessProjectionTests(unittest.TestCase):
         self.assertEqual(corrupt, 0)
         self.assertTrue(
             any(
-                event.get("event_type") == "lived_state_witness_gap_detected"
+                event.get("event_type")
+                == "lived_state_artifact_integrity_issue_detected"
                 for event in events
             )
         )
         self.assertTrue(
             any(
-                event.get("event_type") == "lived_state_witness_gap_resolved"
+                event.get("event_type")
+                == "lived_state_artifact_integrity_issue_resolved"
                 for event in events
             )
         )
+
+    def test_adjective_change_is_binding_issue_not_felt_deficit(self) -> None:
+        witness_id, filename = self._write_exact_fixture()
+        report_path = self.introspections / filename
+        original = report_path.read_bytes()
+        original_body = original.split(b"\n\n", 1)[1]
+        sidecar_path = (
+            self.introspections
+            / "lived_state_witnesses/witnesses"
+            / f"{witness_id}.json"
+        )
+        sidecar = json.loads(sidecar_path.read_text(encoding="utf-8"))
+        sidecar["qualitative_texture_anchor_v1"] = {
+            **TEXTURE_EXPECTED,
+            **TEXTURE_SEMANTIC_EXTENSION,
+            "canonical_body_sha256": sha256(original_body),
+            "canonical_body_byte_count": len(original_body),
+        }
+        changed = original.replace(b"bounded fixture", b"restless fixture")
+        self.assertNotEqual(changed, original)
+        report_path.write_bytes(changed)
+        sidecar["artifact_sha256"] = sha256(changed)
+        sidecar_path.write_text(
+            json.dumps(sidecar, sort_keys=True) + "\n", encoding="utf-8"
+        )
+
+        status = project(self.workspace, write=True)
+        issue = next(iter(status["artifact_integrity_issues"].values()))
+        self.assertEqual(issue["issue_class"], "artifact_binding_mismatch")
+        self.assertTrue(issue["report_remains_primary"])
+        self.assertFalse(issue["experiential_gap_claimed"])
+        self.assertFalse(issue["scalar_felt_dissimilarity_measured"])
+        self.assertEqual(report_path.read_bytes(), changed)
+
+    def test_legacy_gap_events_remain_compatibility_readable(self) -> None:
+        gap_key = "legacy-gap-key"
+        legacy_gap = {
+            "event_type": "lived_state_witness_gap_detected",
+            "witness_id": "lsw_" + "a" * 64,
+            "idempotency_key": gap_key,
+            "artifact_authority_state_v1": authority_state(),
+        }
+        resolved = {
+            "event_type": "lived_state_witness_gap_resolved",
+            "witness_id": legacy_gap["witness_id"],
+            "resolved_gap_idempotency_key": gap_key,
+            "idempotency_key": "legacy-resolution-key",
+            "artifact_authority_state_v1": authority_state(),
+        }
+        materialized = _materialize([legacy_gap, resolved])
+        self.assertEqual(materialized["artifact_integrity_issue_count"], 0)
+        self.assertEqual(
+            materialized["resolved_artifact_integrity_issue_count"], 1
+        )
+        self.assertEqual(materialized["experiential_gap_count"], 0)
 
     def test_intact_noncanonical_artifact_is_auxiliary_not_orphan(self) -> None:
         witness_id, canonical_name = self._write_exact_fixture()
@@ -741,10 +823,13 @@ class LivedStateWitnessProjectionTests(unittest.TestCase):
         gap = next(
             event
             for event in events
-            if event.get("event_type") == "lived_state_writer_gap_recorded"
+            if event.get("event_type")
+            == "lived_state_capture_integrity_issue_recorded"
         )
         self.assertIsNone(gap["gap_receipt"])
         self.assertFalse(gap["invalid_payload_copied"])
+        self.assertFalse(gap["experiential_gap_claimed"])
+        self.assertFalse(gap["scalar_felt_dissimilarity_measured"])
         self.assertNotIn(private_text, json.dumps(gap, sort_keys=True))
 
 

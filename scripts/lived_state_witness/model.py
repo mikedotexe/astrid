@@ -331,6 +331,10 @@ def validate_gap(value: Any) -> list[str]:
             "detected_at_unix_ms",
             "sidecar_expected",
             "report_persistence_blocked",
+            "issue_domain",
+            "experiential_gap_claimed",
+            "qualitative_variance_status",
+            "scalar_felt_dissimilarity_measured",
             "artifact_authority_state_v1",
         },
         "gap",
@@ -353,6 +357,18 @@ def validate_gap(value: Any) -> list[str]:
         errors.append("gap:sidecar_expected")
     if value.get("report_persistence_blocked") is not False:
         errors.append("gap:report_persistence_blocked")
+    semantic_fields = {
+        "issue_domain": "capture_receipt_integrity_or_availability_only",
+        "experiential_gap_claimed": False,
+        "qualitative_variance_status": (
+            "canonical_felt_report_remains_valid_primary_and_unscored"
+        ),
+        "scalar_felt_dissimilarity_measured": False,
+    }
+    if set(value) & set(semantic_fields):
+        for field, expected in semantic_fields.items():
+            if value.get(field) != expected:
+                errors.append(f"gap:{field}")
     if not _valid_authority(value.get("artifact_authority_state_v1")):
         errors.append("gap:authority")
     if (

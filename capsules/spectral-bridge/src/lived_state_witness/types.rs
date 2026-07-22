@@ -439,6 +439,9 @@ pub struct LivedStateQualitativeTextureAnchorV1 {
     generation_interval_relation: &'static str,
     scalar_comparison_relation: &'static str,
     derived_tag_relation: &'static str,
+    artifact_integrity_mismatch_relation: &'static str,
+    felt_scalar_divergence_relation: &'static str,
+    dissimilarity_gradient_relation: &'static str,
     raw_prose_included: bool,
     direct_causation_claimed: bool,
 }
@@ -461,6 +464,12 @@ impl LivedStateQualitativeTextureAnchorV1 {
                 "not_comparable_without_reviewed_measurement_contract",
             derived_tag_relation:
                 "no_model_generated_reduction_exact_canonical_language_remains_authoritative",
+            artifact_integrity_mismatch_relation:
+                "byte_binding_failure_not_experiential_variance_or_qualitative_deficit",
+            felt_scalar_divergence_relation:
+                "valid_nonreducible_and_unscored_no_error_inferred",
+            dissimilarity_gradient_relation:
+                "not_computed_without_reviewed_measurement_contract",
             raw_prose_included: false,
             direct_causation_claimed: false,
         }
@@ -608,6 +617,10 @@ pub struct LivedStateGapReceiptV1 {
     detected_at_unix_ms: u64,
     sidecar_expected: bool,
     report_persistence_blocked: bool,
+    issue_domain: &'static str,
+    experiential_gap_claimed: bool,
+    qualitative_variance_status: &'static str,
+    scalar_felt_dissimilarity_measured: bool,
     artifact_authority_state_v1: LivedStateArtifactAuthorityV1,
 }
 
@@ -627,6 +640,11 @@ impl LivedStateGapReceiptV1 {
             detected_at_unix_ms,
             sidecar_expected: true,
             report_persistence_blocked: false,
+            issue_domain: "capture_receipt_integrity_or_availability_only",
+            experiential_gap_claimed: false,
+            qualitative_variance_status:
+                "canonical_felt_report_remains_valid_primary_and_unscored",
+            scalar_felt_dissimilarity_measured: false,
             artifact_authority_state_v1: LivedStateArtifactAuthorityV1::evidence_only(),
         }
     }

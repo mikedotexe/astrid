@@ -42,7 +42,7 @@ from .temporal_clusters import build_temporal_cluster_events
 from .concordance import build_concordance_events
 from .views import _materialize, _write_outputs
 
-PROJECTOR_VERSION = 4
+PROJECTOR_VERSION = 5
 STREAM = "lived_state_witness"
 
 
@@ -118,6 +118,45 @@ def _report_ref(workspace: Path, path: Path, report_sha256: str) -> dict[str, An
     }
 
 
+def _artifact_integrity_issue_fields(
+    errors: list[str], *, issue_class_override: str | None = None
+) -> dict[str, Any]:
+    if issue_class_override is not None:
+        issue_class = issue_class_override
+    elif any("private" in error or "prose" in error for error in errors):
+        issue_class = "privacy_rejection"
+    elif "pointer_sidecar_missing" in errors:
+        issue_class = "capture_receipt_missing"
+    elif any(
+        marker in error
+        for error in errors
+        for marker in (
+            "artifact_",
+            "body_",
+            "witness_pointer_mismatch",
+            "sidecar_filename_witness_id_mismatch",
+        )
+    ):
+        issue_class = "artifact_binding_mismatch"
+    elif any("sidecar_write_failed" in error for error in errors):
+        issue_class = "capture_receipt_write_failure"
+    else:
+        issue_class = "receipt_validation_failure"
+    return {
+        "issue_class": issue_class,
+        "issue_domain": "capture_receipt_integrity_or_availability_only",
+        "experiential_gap_claimed": False,
+        "qualitative_variance_status": (
+            "canonical_felt_report_remains_valid_primary_and_unscored"
+        ),
+        "scalar_felt_dissimilarity_measured": False,
+        "dissimilarity_gradient_relation": (
+            "not_computed_without_reviewed_measurement_contract"
+        ),
+        "legacy_gap_alias": True,
+    }
+
+
 def _migrate_report(
     workspace: Path,
     path: Path,
@@ -150,21 +189,23 @@ def _migrate_report(
         if not errors:
             witness = candidate
     if pointer and errors:
+        counters["artifact_integrity_issue"] += 1
         counters["gap"] += 1
         privacy_rejection = any(
             "private" in error or "prose" in error for error in errors
         )
         counters["privacy_rejection"] += int(privacy_rejection)
         return event_record(
-            "lived_state_witness_gap_detected",
+            "lived_state_artifact_integrity_issue_detected",
             pointer,
-            f"lived-state-gap:{pointer}:{report_sha256}:"
+            f"lived-state-artifact-integrity-issue:{pointer}:{report_sha256}:"
             f"{sha256_bytes(canonical_json(errors).encode())}",
             introspection_id=path.stem,
             report_ref=_report_ref(workspace, path, report_sha256),
             errors=sorted(errors),
             privacy_rejection=privacy_rejection,
             report_remains_primary=True,
+            **_artifact_integrity_issue_fields(errors),
         )
     if witness is not None:
         alignment = _alignment(
@@ -306,7 +347,7 @@ def _unreferenced_sidecar_events(
     return events
 
 
-def _writer_gap_events(
+def _writer_integrity_issue_events(
     workspace: Path, writer_gaps: list[dict[str, Any]], counters: Counter[str]
 ) -> list[dict[str, Any]]:
     events: list[dict[str, Any]] = []
@@ -314,12 +355,16 @@ def _writer_gap_events(
         value = row["value"]
         witness_id = str(value.get("witness_id") or "")
         gap_receipt = value if not row["errors"] else None
+        semantic_errors = list(row["errors"])
+        if not semantic_errors:
+            semantic_errors.append(str(value.get("reason") or "capture_receipt_write_failed"))
+        counters["artifact_integrity_issue"] += 1
         counters["gap"] += 1
         events.append(
             event_record(
-                "lived_state_writer_gap_recorded",
+                "lived_state_capture_integrity_issue_recorded",
                 witness_id,
-                f"lived-state-writer-gap:{sha256_file(row['path'])}",
+                f"lived-state-capture-integrity-issue:{sha256_file(row['path'])}",
                 gap_receipt=gap_receipt,
                 source_receipt={
                     "relative_path": row["path"].relative_to(workspace).as_posix(),
@@ -327,6 +372,8 @@ def _writer_gap_events(
                 },
                 validation_errors=row["errors"],
                 invalid_payload_copied=False,
+                report_remains_primary=True,
+                **_artifact_integrity_issue_fields(semantic_errors),
             )
         )
     return events
@@ -358,6 +405,7 @@ def _migration_watermarks(
             canonical_json(report_manifest).encode()
         ),
         "sidecar_count": sidecar_count,
+        "writer_artifact_integrity_issue_count": writer_gap_count,
         "writer_gap_count": writer_gap_count,
         "successful_deployment_receipt_count": deployment_count,
         "environment_receipts_sha256": (
@@ -411,7 +459,7 @@ def migration_events(workspace: Path) -> tuple[list[dict[str, Any]], dict[str, A
             workspace, sidecars, referenced, deployments, counters
         )
     )
-    events.extend(_writer_gap_events(workspace, writer_gaps, counters))
+    events.extend(_writer_integrity_issue_events(workspace, writer_gaps, counters))
     source_watermarks = _migration_watermarks(
         workspace,
         reports,
@@ -426,7 +474,10 @@ def migration_events(workspace: Path) -> tuple[list[dict[str, Any]], dict[str, A
             "exact_deployment_match": counters["exact_deployment_match"],
             "temporal_only": counters["temporal_only"],
             "unknown": counters["unknown"],
+            "artifact_integrity_issue": counters["artifact_integrity_issue"],
             "gap": counters["gap"],
+            "experiential_gap": 0,
+            "scalar_felt_dissimilarity_measurement": 0,
             "auxiliary": counters["auxiliary"],
             "orphan": counters["orphan"],
             "privacy_rejection": counters["privacy_rejection"],
@@ -484,13 +535,24 @@ def _resolved_gap_events(
     unresolved: dict[str, dict[str, Any]] = {}
     for event in existing_events:
         event_type = str(event.get("event_type") or "")
-        if event_type == "lived_state_witness_gap_detected":
+        if event_type in {
+            "lived_state_witness_gap_detected",
+            "lived_state_artifact_integrity_issue_detected",
+        }:
             gap_key = str(event.get("idempotency_key") or "")
             if gap_key:
                 unresolved[gap_key] = event
-        elif event_type == "lived_state_witness_gap_resolved":
+        elif event_type in {
+            "lived_state_witness_gap_resolved",
+            "lived_state_artifact_integrity_issue_resolved",
+        }:
             unresolved.pop(
-                str(event.get("resolved_gap_idempotency_key") or ""), None
+                str(
+                    event.get("resolved_artifact_integrity_issue_idempotency_key")
+                    or event.get("resolved_gap_idempotency_key")
+                    or ""
+                ),
+                None,
             )
 
     exact_by_witness = {
@@ -507,18 +569,22 @@ def _resolved_gap_events(
         exact_key = str(exact.get("idempotency_key") or "")
         resolutions.append(
             event_record(
-                "lived_state_witness_gap_resolved",
+                "lived_state_artifact_integrity_issue_resolved",
                 witness_id,
                 (
-                    "lived-state-gap-resolved:"
+                    "lived-state-artifact-integrity-issue-resolved:"
                     f"{sha256_bytes(gap_key.encode())}:"
                     f"{sha256_bytes(exact_key.encode())}"
                 ),
+                resolved_artifact_integrity_issue_idempotency_key=gap_key,
                 resolved_gap_idempotency_key=gap_key,
                 resolution_witness_event_idempotency_key=exact_key,
                 resolution_reason="validated_sidecar_now_projects_exactly",
                 historical_gap_preserved=True,
                 report_remains_primary=True,
+                **_artifact_integrity_issue_fields(
+                    [], issue_class_override="resolved_artifact_integrity_issue"
+                ),
             )
         )
     return resolutions
@@ -574,7 +640,14 @@ def project(workspace: Path, *, write: bool) -> dict[str, Any]:
     status["write"] = write
     status["migration_counters"] = migration["counts"]
     status["source_watermarks"] = migration["source_watermarks"]
+    issue_counter_matches = (
+        status["artifact_integrity_issue_count"]
+        == migration["counts"]["artifact_integrity_issue"]
+    )
     gap_counter_matches = status["gap_count"] == migration["counts"]["gap"]
+    status["counter_audit"]["checks"][
+        "unresolved_artifact_integrity_issue_count_matches_migration"
+    ] = issue_counter_matches
     status["counter_audit"]["checks"][
         "unresolved_gap_count_matches_migration"
     ] = gap_counter_matches
@@ -583,7 +656,9 @@ def project(workspace: Path, *, write: bool) -> dict[str, Any]:
         if all(status["counter_audit"]["checks"].values())
         else "inconsistent"
     )
-    status["valid"] = status["valid"] and gap_counter_matches
+    status["valid"] = (
+        status["valid"] and issue_counter_matches and gap_counter_matches
+    )
     if write:
         hashes = _write_outputs(workspace, status, migration)
         store.write_checkpoint(

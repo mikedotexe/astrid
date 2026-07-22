@@ -3184,13 +3184,13 @@ pub fn spawn_autonomous_loop(
                                             crate::lived_state_witness::WitnessSubmitResultV1::QueueFull => {
                                                 warn!(
                                                     witness_id = authorship_v1.witness_id(),
-                                                    "lived-state witness queue saturated; projector will record a gap"
+                                                    "lived-state witness queue saturated; projector will record a capture integrity issue"
                                                 );
                                             },
                                             crate::lived_state_witness::WitnessSubmitResultV1::Disconnected => {
                                                 warn!(
                                                     witness_id = authorship_v1.witness_id(),
-                                                    "lived-state witness writer unavailable; projector will record a gap"
+                                                    "lived-state witness writer unavailable; projector will record a capture integrity issue"
                                                 );
                                             },
                                         }
@@ -3282,7 +3282,7 @@ pub fn spawn_autonomous_loop(
                                         {
                                             warn!(
                                                 witness_id = authorship_v1.witness_id(),
-                                                "lived-state notice witness unavailable; projector will record a gap"
+                                                "lived-state notice witness unavailable; projector will record a capture integrity issue"
                                             );
                                         }
                                     }

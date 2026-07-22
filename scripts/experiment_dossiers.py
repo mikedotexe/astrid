@@ -89,7 +89,14 @@ def lived_state_context_index(workspace: Path) -> dict[str, dict[str, Any]]:
                 "witness_id": witness_id,
                 "introspection_id": introspection_id,
                 "alignment": row.get("alignment"),
+                "artifact_integrity_issue_count": int(
+                    row.get("artifact_integrity_issue_count")
+                    or row.get("gap_count")
+                    or 0
+                ),
                 "gap_count": int(row.get("gap_count") or 0),
+                "experiential_gap_claimed": False,
+                "scalar_felt_dissimilarity_measured": False,
                 "reconciliation_ref": row.get("reconciliation_ref"),
                 "state_transition_implied": False,
                 "authority_propagated": False,

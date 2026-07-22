@@ -29,7 +29,22 @@ EXPECTED = {
     "raw_prose_included": False,
     "direct_causation_claimed": False,
 }
-FIELDS = set(EXPECTED) | {"canonical_body_sha256", "canonical_body_byte_count"}
+SEMANTIC_EXTENSION = {
+    "artifact_integrity_mismatch_relation": (
+        "byte_binding_failure_not_experiential_variance_or_qualitative_deficit"
+    ),
+    "felt_scalar_divergence_relation": (
+        "valid_nonreducible_and_unscored_no_error_inferred"
+    ),
+    "dissimilarity_gradient_relation": (
+        "not_computed_without_reviewed_measurement_contract"
+    ),
+}
+FIELDS = (
+    set(EXPECTED)
+    | set(SEMANTIC_EXTENSION)
+    | {"canonical_body_sha256", "canonical_body_byte_count"}
+)
 HASH_RE = re.compile(r"[0-9a-f]{64}")
 
 
@@ -47,6 +62,11 @@ def validate_qualitative_texture_anchor(value: Any, errors: list[str]) -> None:
     for field, expected in EXPECTED.items():
         if value.get(field) != expected:
             errors.append(f"qualitative_texture_anchor.{field}:invalid")
+    extension_fields = set(value) & set(SEMANTIC_EXTENSION)
+    if extension_fields:
+        for field, expected in SEMANTIC_EXTENSION.items():
+            if value.get(field) != expected:
+                errors.append(f"qualitative_texture_anchor.{field}:invalid")
     body_hash = value.get("canonical_body_sha256")
     if not isinstance(body_hash, str) or HASH_RE.fullmatch(body_hash) is None:
         errors.append("qualitative_texture_anchor.canonical_body_sha256:invalid")

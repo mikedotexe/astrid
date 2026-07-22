@@ -1041,6 +1041,27 @@ fn bounded_writer_reports_saturation_without_waiting() {
 }
 
 #[test]
+fn capture_gap_receipt_never_claims_an_experiential_gap() {
+    let receipt = LivedStateGapReceiptV1::new(
+        format!("lsgap_{}", "a".repeat(64)),
+        format!("lsw_{}", "b".repeat(64)),
+        format!("sidecar_write_failed:sha256:{}", "c".repeat(64)),
+        123,
+    );
+    let encoded = serde_json::to_value(receipt).expect("serialize gap receipt");
+    assert_eq!(
+        encoded["issue_domain"],
+        "capture_receipt_integrity_or_availability_only"
+    );
+    assert_eq!(encoded["experiential_gap_claimed"], false);
+    assert_eq!(
+        encoded["qualitative_variance_status"],
+        "canonical_felt_report_remains_valid_primary_and_unscored"
+    );
+    assert_eq!(encoded["scalar_felt_dissimilarity_measured"], false);
+}
+
+#[test]
 fn witness_enqueue_is_below_one_millisecond_p95() {
     let root = temp_root("latency");
     let results = writer::bounded_submit_probe_for_test(&root, test_witness(b"report"), 128, 100);

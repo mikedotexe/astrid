@@ -441,6 +441,7 @@ def _edge_record(
             "context_temporally_associated_with",
             "context_temporal_cluster_for",
             "context_concordance_for",
+            "context_artifact_integrity_unavailable_for",
             "context_witness_gap_for",
             "context_unresolved_for",
         },

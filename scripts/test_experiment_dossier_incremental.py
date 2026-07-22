@@ -130,7 +130,10 @@ class ExperimentDossierIncrementalTests(unittest.TestCase):
             "witness_id": "lsw_" + "a" * 64,
             "introspection_id": "introspection_astrid_100",
             "alignment": {"outcome": "temporal_association_only"},
+            "artifact_integrity_issue_count": 0,
             "gap_count": 0,
+            "experiential_gap_claimed": False,
+            "scalar_felt_dissimilarity_measured": False,
             "reconciliation_ref": None,
         }
         context_path.write_text(
@@ -147,6 +150,12 @@ class ExperimentDossierIncrementalTests(unittest.TestCase):
             ],
             context["witness_id"],
         )
+        lived_ref = first["dossiers"][dossier_id][
+            "lived_state_context_refs"
+        ][0]
+        self.assertEqual(lived_ref["artifact_integrity_issue_count"], 0)
+        self.assertFalse(lived_ref["experiential_gap_claimed"])
+        self.assertFalse(lived_ref["scalar_felt_dissimilarity_measured"])
         transition(
             self.workspace,
             dossier_id,

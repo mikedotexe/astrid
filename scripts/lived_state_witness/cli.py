@@ -82,6 +82,8 @@ def main(argv: list[str] | None = None) -> int:
                     "witnesses.jsonl": root / "witnesses.jsonl",
                     "auxiliary_artifacts.jsonl": root
                     / "auxiliary_artifacts.jsonl",
+                    "artifact_integrity_issues.jsonl": root
+                    / "artifact_integrity_issues.jsonl",
                     "gaps.jsonl": root / "gaps.jsonl",
                     "temporal_clusters.jsonl": root
                     / "temporal_clusters.jsonl",

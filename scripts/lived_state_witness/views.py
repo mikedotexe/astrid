@@ -75,11 +75,18 @@ def _materialize(events: list[dict[str, Any]]) -> dict[str, Any]:
         elif event_type in {
             "lived_state_witness_gap_detected",
             "lived_state_writer_gap_recorded",
+            "lived_state_artifact_integrity_issue_detected",
+            "lived_state_capture_integrity_issue_recorded",
         }:
             gaps[str(event.get("idempotency_key") or witness_id)] = event
-        elif event_type == "lived_state_witness_gap_resolved":
+        elif event_type in {
+            "lived_state_witness_gap_resolved",
+            "lived_state_artifact_integrity_issue_resolved",
+        }:
             resolved_key = str(
-                event.get("resolved_gap_idempotency_key") or ""
+                event.get("resolved_artifact_integrity_issue_idempotency_key")
+                or event.get("resolved_gap_idempotency_key")
+                or ""
             )
             if resolved_key:
                 gaps.pop(resolved_key, None)
@@ -186,6 +193,23 @@ def _materialize(events: list[dict[str, Any]]) -> dict[str, Any]:
                 is False
             )
         ),
+        "artifact_issues_never_claim_experiential_gap": all(
+            event.get("experiential_gap_claimed") is not True
+            for event in gaps.values()
+        ),
+        "no_scalar_felt_dissimilarity_measurement": all(
+            event.get("scalar_felt_dissimilarity_measured") is not True
+            for event in events
+        ),
+        "new_artifact_issues_preserve_report_primacy": all(
+            event.get("report_remains_primary") is True
+            for event in gaps.values()
+            if event.get("event_type")
+            in {
+                "lived_state_artifact_integrity_issue_detected",
+                "lived_state_capture_integrity_issue_recorded",
+            }
+        ),
     }
     return {
         "schema": "lived_state_witness_projection_v1",
@@ -193,6 +217,13 @@ def _materialize(events: list[dict[str, Any]]) -> dict[str, Any]:
         "valid": all(checks.values()),
         "witness_count": len(witnesses),
         "auxiliary_artifact_count": len(auxiliary_artifacts),
+        "artifact_integrity_issue_count": len(gaps),
+        "resolved_artifact_integrity_issue_count": len(resolved_gaps),
+        "experiential_gap_count": 0,
+        "scalar_felt_dissimilarity_measured": False,
+        "legacy_gap_alias_scope": (
+            "technical_capture_or_receipt_integrity_only_not_experiential_deficit"
+        ),
         "gap_count": len(gaps),
         "resolved_gap_count": len(resolved_gaps),
         "orphan_count": len(orphans),
@@ -222,6 +253,10 @@ def _materialize(events: list[dict[str, Any]]) -> dict[str, Any]:
         },
         "witnesses": dict(sorted(witnesses.items())),
         "auxiliary_artifacts": dict(sorted(auxiliary_artifacts.items())),
+        "artifact_integrity_issues": dict(sorted(gaps.items())),
+        "resolved_artifact_integrity_issues": dict(
+            sorted(resolved_gaps.items())
+        ),
         "gaps": dict(sorted(gaps.items())),
         "resolved_gaps": dict(sorted(resolved_gaps.items())),
         "orphans": dict(sorted(orphans.items())),
@@ -249,8 +284,17 @@ def _render_report(status: dict[str, Any]) -> str:
         f"- Valid: `{str(status['valid']).lower()}`",
         f"- Canonical witnesses: {status['witness_count']}",
         f"- Auxiliary artifact witnesses: {status['auxiliary_artifact_count']}",
-        f"- Gaps: {status['gap_count']}",
-        f"- Resolved gap history: {status['resolved_gap_count']}",
+        (
+            "- Artifact integrity/capture issues: "
+            f"{status['artifact_integrity_issue_count']}"
+        ),
+        (
+            "- Resolved artifact integrity history: "
+            f"{status['resolved_artifact_integrity_issue_count']}"
+        ),
+        "- Legacy `gap` counters are compatibility aliases for technical receipt issues only.",
+        "- Experiential gaps or qualitative deficits claimed: 0",
+        "- Felt/scalar dissimilarity remains valid, non-reducible, and unscored.",
         f"- True orphans: {status['orphan_count']}",
         f"- Reconciliations: {status['reconciliation_count']}",
         f"- Temporal density clusters: {status['temporal_cluster_count']}",
@@ -288,7 +332,7 @@ def _render_report(status: dict[str, Any]) -> str:
 def _context_index_payload(status: dict[str, Any]) -> str:
     gaps_by_witness: Counter[str] = Counter()
     first_gap_by_witness: dict[str, dict[str, Any]] = {}
-    for event in status["gaps"].values():
+    for event in status["artifact_integrity_issues"].values():
         witness_id = str(event.get("witness_id") or "")
         if witness_id:
             gaps_by_witness[witness_id] += 1
@@ -334,7 +378,8 @@ def _context_index_payload(status: dict[str, Any]) -> str:
         alignment = event.get("alignment")
         if not isinstance(alignment, dict) and gaps_by_witness[witness_id]:
             alignment = {
-                "outcome": "witness_gap",
+                "outcome": "artifact_integrity_unavailable",
+                "legacy_alignment_outcome": "witness_gap",
                 "exact_identity_match": False,
                 "temporal_association_only": False,
                 "direct_causation_claimed": False,
@@ -347,9 +392,19 @@ def _context_index_payload(status: dict[str, Any]) -> str:
             "alignment": alignment,
             "evidence_completeness": (
                 event.get("evidence_completeness")
-                or ("gap" if gaps_by_witness[witness_id] else None)
+                or (
+                    "artifact_integrity_unavailable"
+                    if gaps_by_witness[witness_id]
+                    else None
+                )
             ),
+            "artifact_integrity_issue_count": gaps_by_witness[witness_id],
             "gap_count": gaps_by_witness[witness_id],
+            "experiential_gap_claimed": False,
+            "qualitative_variance_status": (
+                "canonical_felt_report_remains_valid_primary_and_unscored"
+            ),
+            "scalar_felt_dissimilarity_measured": False,
             "reconciliation_ref": (
                 {
                     "outcome": reconciliation.get("outcome"),
@@ -421,6 +476,7 @@ def _write_outputs(workspace: Path, status: dict[str, Any], migration: dict[str,
     base_hashes = {
         "witnesses.jsonl": sha256_bytes(witness_payload.encode()),
         "auxiliary_artifacts.jsonl": sha256_bytes(auxiliary_payload.encode()),
+        "artifact_integrity_issues.jsonl": sha256_bytes(gap_payload.encode()),
         "gaps.jsonl": sha256_bytes(gap_payload.encode()),
         "temporal_clusters.jsonl": sha256_bytes(
             temporal_cluster_payload.encode()
@@ -451,6 +507,8 @@ def _write_outputs(workspace: Path, status: dict[str, Any], migration: dict[str,
         not in {
             "witnesses",
             "auxiliary_artifacts",
+            "artifact_integrity_issues",
+            "resolved_artifact_integrity_issues",
             "gaps",
             "resolved_gaps",
             "orphans",
@@ -473,6 +531,7 @@ def _write_outputs(workspace: Path, status: dict[str, Any], migration: dict[str,
         "status.json": status_payload,
         "witnesses.jsonl": witness_payload,
         "auxiliary_artifacts.jsonl": auxiliary_payload,
+        "artifact_integrity_issues.jsonl": gap_payload,
         "gaps.jsonl": gap_payload,
         "temporal_clusters.jsonl": temporal_cluster_payload,
         "concordance_clusters.jsonl": concordance_payload,

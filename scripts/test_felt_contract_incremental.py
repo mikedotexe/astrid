@@ -170,6 +170,22 @@ class FeltContractIncrementalTests(unittest.TestCase):
             "idempotency_key": "gap_witness_fixture",
             "artifact_authority_state_v1": authority_state(),
         }
+        artifact_issue = {
+            "event_type": "lived_state_artifact_integrity_issue_detected",
+            "witness_id": "lsw_" + "f" * 64,
+            "introspection_id": "introspection_astrid_100",
+            "issue_class": "artifact_binding_mismatch",
+            "issue_domain": "capture_receipt_integrity_or_availability_only",
+            "experiential_gap_claimed": False,
+            "qualitative_variance_status": (
+                "canonical_felt_report_remains_valid_primary_and_unscored"
+            ),
+            "scalar_felt_dissimilarity_measured": False,
+            "legacy_gap_alias": True,
+            "report_remains_primary": True,
+            "idempotency_key": "artifact_issue_fixture",
+            "artifact_authority_state_v1": authority_state(),
+        }
         cluster = {
             "event_type": "lived_state_temporal_cluster_observed",
             "cluster_id": "lstc_" + "d" * 64,
@@ -228,13 +244,14 @@ class FeltContractIncrementalTests(unittest.TestCase):
         )
         store.append_payloads(
             "lived_state_witness",
-            [exact, temporal, gap, cluster, concordance],
+            [exact, temporal, gap, artifact_issue, cluster, concordance],
             actor="test",
             source=ProvenanceSourceV1("test", "witness"),
             idempotency_keys=[
                 "exact_witness_fixture",
                 "temporal_witness_fixture",
                 "gap_witness_fixture",
+                "artifact_issue_fixture",
                 "temporal_cluster_fixture",
                 "concordance_cluster_fixture",
             ],
@@ -250,13 +267,15 @@ class FeltContractIncrementalTests(unittest.TestCase):
             for node in projection["nodes"].values()
             if node.get("kind") == "lived_state_witness"
         ]
-        self.assertEqual(len(witness_nodes), 5)
+        self.assertEqual(len(witness_nodes), 6)
         for node in witness_nodes:
             metadata = node["metadata"]
             self.assertFalse(metadata["closure_propagated"])
             self.assertFalse(metadata["evidence_sufficiency_propagated"])
             self.assertFalse(metadata["authority_propagated"])
             self.assertFalse(metadata["felt_resolution_propagated"])
+            self.assertFalse(metadata["experiential_gap_claimed"])
+            self.assertFalse(metadata["scalar_felt_dissimilarity_measured"])
         relations = {
             edge["relation"]: edge
             for edge in projection["edges"].values()
@@ -265,6 +284,9 @@ class FeltContractIncrementalTests(unittest.TestCase):
         self.assertIn("context_exactly_observed_by", relations)
         self.assertIn("context_temporally_associated_with", relations)
         self.assertIn("context_witness_gap_for", relations)
+        self.assertIn(
+            "context_artifact_integrity_unavailable_for", relations
+        )
         self.assertIn("context_temporal_cluster_for", relations)
         self.assertIn("context_concordance_for", relations)
         self.assertFalse(
@@ -276,6 +298,11 @@ class FeltContractIncrementalTests(unittest.TestCase):
             ]
         )
         self.assertFalse(relations["context_witness_gap_for"]["causal_parent"])
+        self.assertFalse(
+            relations["context_artifact_integrity_unavailable_for"][
+                "causal_parent"
+            ]
+        )
         self.assertFalse(
             relations["context_temporal_cluster_for"]["causal_parent"]
         )

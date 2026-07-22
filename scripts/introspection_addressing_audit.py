@@ -994,7 +994,10 @@ def artifact_record(path: Path, introspections_dir: Path, sources: dict[str, str
     record["lived_state_alignment"] = (
         "pending_projection" if record["lived_state_witness_id"] else None
     )
+    record["lived_state_artifact_integrity_issue_count"] = 0
     record["lived_state_gap_count"] = 0
+    record["lived_state_experiential_gap_claimed"] = False
+    record["lived_state_scalar_felt_dissimilarity_measured"] = False
     record["lived_state_reconciliation_ref"] = None
     record["candidate_evidence"] = candidate_evidence_for(record, sources)
     return record
@@ -1048,15 +1051,25 @@ def overlay_lived_state_context(
                 if isinstance(alignment, dict)
                 else None
             )
+            artifact["lived_state_artifact_integrity_issue_count"] = int(
+                context.get("artifact_integrity_issue_count")
+                or context.get("gap_count")
+                or 0
+            )
             artifact["lived_state_gap_count"] = int(
                 context.get("gap_count") or 0
             )
+            artifact["lived_state_experiential_gap_claimed"] = False
+            artifact["lived_state_scalar_felt_dissimilarity_measured"] = False
             artifact["lived_state_reconciliation_ref"] = context.get(
                 "reconciliation_ref"
             )
         elif pointer:
             artifact["lived_state_alignment"] = "pending_projection"
+            artifact["lived_state_artifact_integrity_issue_count"] = 0
             artifact["lived_state_gap_count"] = 0
+            artifact["lived_state_experiential_gap_claimed"] = False
+            artifact["lived_state_scalar_felt_dissimilarity_measured"] = False
             artifact["lived_state_reconciliation_ref"] = None
     status["lived_state_context_overlay"] = {
         "schema": "addressing_lived_state_context_overlay_v1",
@@ -1574,9 +1587,14 @@ def queue_items(status: dict[str, Any], *, limit: int | None = None) -> list[dic
             "excerpt": row.get("excerpt"),
             "lived_state_witness_id": row.get("lived_state_witness_id"),
             "lived_state_alignment": row.get("lived_state_alignment"),
+            "lived_state_artifact_integrity_issue_count": int(
+                row.get("lived_state_artifact_integrity_issue_count") or 0
+            ),
             "lived_state_gap_count": int(
                 row.get("lived_state_gap_count") or 0
             ),
+            "lived_state_experiential_gap_claimed": False,
+            "lived_state_scalar_felt_dissimilarity_measured": False,
             "lived_state_reconciliation_ref": row.get(
                 "lived_state_reconciliation_ref"
             ),
