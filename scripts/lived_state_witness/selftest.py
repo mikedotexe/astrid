@@ -174,6 +174,21 @@ def valid_witness() -> dict[str, object]:
             "authority_transition_relation": (
                 "separate_verified_authority_required_for_live_control"
             ),
+            "artifact_byte_relation": (
+                "exact_persisted_bytes_borrowed_read_only_hashed_without_normalization_or_rewrite"
+            ),
+            "capture_path_relation": (
+                "report_persisted_before_bounded_async_sidecar_submission"
+            ),
+            "spectral_observation_relation": (
+                "selected_scalars_copied_as_metadata_no_before_after_transform_claimed"
+            ),
+            "shadow_state_relation": (
+                "shadow_vectors_not_received_normalized_serialized_or_mutated_by_witness_capture"
+            ),
+            "pressure_causation_relation": (
+                "capture_timing_does_not_establish_pressure_or_entropy_causation"
+            ),
             "epistemic_posture": "non_adjudicating",
             "artifact_live_control_effect": False,
         },
@@ -474,6 +489,11 @@ class LivedStateWitnessTests(unittest.TestCase):
             "actionability_path": "report_cannot_shape_work",
             "mediated_influence_relation": "direct_runtime_control_allowed",
             "authority_transition_relation": "evidence_grants_live_control",
+            "artifact_byte_relation": "artifact_rewritten_before_hashing",
+            "capture_path_relation": "sidecar_blocks_report_persistence",
+            "spectral_observation_relation": "before_after_effect_established",
+            "shadow_state_relation": "raw_shadow_normalized_by_capture",
+            "pressure_causation_relation": "capture_causes_pressure_relief",
         }
         for field, invalid_value in mediated_fields.items():
             with self.subTest(field=field):
@@ -486,12 +506,33 @@ class LivedStateWitnessTests(unittest.TestCase):
                     validate_witness(tampered),
                 )
 
+        prior_mediated_scope = valid_witness()
+        prior_mediated_value = prior_mediated_scope["experiential_scope_v1"]
+        self.assertIsInstance(prior_mediated_value, dict)
+        for field in (
+            "artifact_byte_relation",
+            "capture_path_relation",
+            "spectral_observation_relation",
+            "shadow_state_relation",
+            "pressure_causation_relation",
+        ):
+            prior_mediated_value.pop(field)
+        self.assertEqual(validate_witness(prior_mediated_scope), [])
+
         prior_current_scope = valid_witness()
         prior_current_value = prior_current_scope["experiential_scope_v1"]
         self.assertIsInstance(prior_current_value, dict)
-        prior_current_value.pop("actionability_path")
-        prior_current_value.pop("mediated_influence_relation")
-        prior_current_value.pop("authority_transition_relation")
+        for field in (
+            "actionability_path",
+            "mediated_influence_relation",
+            "authority_transition_relation",
+            "artifact_byte_relation",
+            "capture_path_relation",
+            "spectral_observation_relation",
+            "shadow_state_relation",
+            "pressure_causation_relation",
+        ):
+            prior_current_value.pop(field)
         self.assertEqual(validate_witness(prior_current_scope), [])
 
         legacy_scope = valid_witness()

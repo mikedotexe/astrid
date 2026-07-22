@@ -381,6 +381,50 @@ fn owner_only_sidecar_contains_no_prose() {
 }
 
 #[test]
+fn witness_builder_hashes_persisted_bytes_without_rewriting_or_shadow_state() {
+    let artifact_bytes = b"restless texture\0preserved exactly\n".to_vec();
+    let original_bytes = artifact_bytes.clone();
+    let authorship = begin_authorship_v1(None, &[], "introspection");
+    let witness = build_witness_v1(
+        &authorship,
+        "introspection",
+        "introspection_test.txt",
+        &artifact_bytes,
+        None,
+        Vec::new(),
+        LivedStateRuntimeContextV1::default(),
+    );
+
+    assert_eq!(artifact_bytes, original_bytes);
+    let encoded = serde_json::to_value(witness).expect("serialize witness");
+    assert_eq!(encoded["artifact_sha256"], sha256_bytes(&original_bytes));
+    let scope = &encoded["experiential_scope_v1"];
+    assert_eq!(
+        scope["artifact_byte_relation"],
+        "exact_persisted_bytes_borrowed_read_only_hashed_without_normalization_or_rewrite"
+    );
+    assert_eq!(
+        scope["capture_path_relation"],
+        "report_persisted_before_bounded_async_sidecar_submission"
+    );
+    assert_eq!(
+        scope["spectral_observation_relation"],
+        "selected_scalars_copied_as_metadata_no_before_after_transform_claimed"
+    );
+    assert_eq!(
+        scope["shadow_state_relation"],
+        "shadow_vectors_not_received_normalized_serialized_or_mutated_by_witness_capture"
+    );
+    assert_eq!(
+        scope["pressure_causation_relation"],
+        "capture_timing_does_not_establish_pressure_or_entropy_causation"
+    );
+    let raw = serde_json::to_string(&encoded).expect("serialize witness value");
+    assert!(!raw.contains("\"shadow_field\""));
+    assert!(!raw.contains("\"raw_shadow\""));
+}
+
+#[test]
 fn owner_sidecars_are_write_once_and_idempotent() {
     let root = temp_root("write_once");
     let path = root.join("witnesses/immutable.json");

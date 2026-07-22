@@ -201,7 +201,36 @@ def _validate_experiential_scope(value: Any, errors: list[str]) -> None:
             "separate_verified_authority_required_for_live_control"
         ),
     }
+    capture_expected = {
+        **mediated_expected,
+        "artifact_byte_relation": (
+            "exact_persisted_bytes_borrowed_read_only_hashed_without_normalization_or_rewrite"
+        ),
+        "capture_path_relation": (
+            "report_persisted_before_bounded_async_sidecar_submission"
+        ),
+        "spectral_observation_relation": (
+            "selected_scalars_copied_as_metadata_no_before_after_transform_claimed"
+        ),
+        "shadow_state_relation": (
+            "shadow_vectors_not_received_normalized_serialized_or_mutated_by_witness_capture"
+        ),
+        "pressure_causation_relation": (
+            "capture_timing_does_not_establish_pressure_or_entropy_causation"
+        ),
+    }
     if any(
+        field in value
+        for field in (
+            "artifact_byte_relation",
+            "capture_path_relation",
+            "spectral_observation_relation",
+            "shadow_state_relation",
+            "pressure_causation_relation",
+        )
+    ):
+        expected = capture_expected
+    elif any(
         field in value
         for field in (
             "actionability_path",

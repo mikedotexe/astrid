@@ -416,7 +416,7 @@ pub(crate) fn runtime_context_v1(state: &BridgeState, fill_pct: f32) -> LivedSta
 }
 
 #[allow(clippy::too_many_arguments)]
-pub(crate) fn finalize_and_submit_v1(
+fn build_witness_v1(
     authorship: &LivedStateAuthorshipV1,
     artifact_kind: &str,
     artifact_relative_path: &str,
@@ -424,7 +424,7 @@ pub(crate) fn finalize_and_submit_v1(
     source_snapshot: Option<LivedStateSourceSnapshotV1>,
     model_routes: Vec<LivedStateModelRouteV1>,
     runtime_context: LivedStateRuntimeContextV1,
-) -> WitnessSubmitResultV1 {
+) -> TemporalLivedStateWitnessV1 {
     let startup = identity::snapshot();
     let source_provenance = source_snapshot
         .as_ref()
@@ -438,7 +438,7 @@ pub(crate) fn finalize_and_submit_v1(
         vec!["observed_process_v1".to_string()],
         vec![ProvenanceInfluenceTypeV1::Temporal],
     );
-    let witness = TemporalLivedStateWitnessV1::new(
+    TemporalLivedStateWitnessV1::new(
         authorship.witness_id.clone(),
         artifact_kind.chars().take(80).collect(),
         artifact_relative_path.chars().take(400).collect(),
@@ -455,6 +455,27 @@ pub(crate) fn finalize_and_submit_v1(
         runtime_context.peer_deployment_identity,
         source_provenance,
         process_provenance,
+    )
+}
+
+#[allow(clippy::too_many_arguments)]
+pub(crate) fn finalize_and_submit_v1(
+    authorship: &LivedStateAuthorshipV1,
+    artifact_kind: &str,
+    artifact_relative_path: &str,
+    artifact_bytes: &[u8],
+    source_snapshot: Option<LivedStateSourceSnapshotV1>,
+    model_routes: Vec<LivedStateModelRouteV1>,
+    runtime_context: LivedStateRuntimeContextV1,
+) -> WitnessSubmitResultV1 {
+    let witness = build_witness_v1(
+        authorship,
+        artifact_kind,
+        artifact_relative_path,
+        artifact_bytes,
+        source_snapshot,
+        model_routes,
+        runtime_context,
     );
     writer::try_submit(
         &bridge_paths()

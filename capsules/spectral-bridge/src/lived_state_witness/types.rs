@@ -42,6 +42,11 @@ pub struct LivedStateExperientialScopeV1 {
     actionability_path: &'static str,
     mediated_influence_relation: &'static str,
     authority_transition_relation: &'static str,
+    artifact_byte_relation: &'static str,
+    capture_path_relation: &'static str,
+    spectral_observation_relation: &'static str,
+    shadow_state_relation: &'static str,
+    pressure_causation_relation: &'static str,
     epistemic_posture: &'static str,
     artifact_live_control_effect: bool,
 }
@@ -62,6 +67,16 @@ impl LivedStateExperientialScopeV1 {
                 "engineering_and_review_influence_allowed_direct_runtime_control_forbidden",
             authority_transition_relation:
                 "separate_verified_authority_required_for_live_control",
+            artifact_byte_relation:
+                "exact_persisted_bytes_borrowed_read_only_hashed_without_normalization_or_rewrite",
+            capture_path_relation:
+                "report_persisted_before_bounded_async_sidecar_submission",
+            spectral_observation_relation:
+                "selected_scalars_copied_as_metadata_no_before_after_transform_claimed",
+            shadow_state_relation:
+                "shadow_vectors_not_received_normalized_serialized_or_mutated_by_witness_capture",
+            pressure_causation_relation:
+                "capture_timing_does_not_establish_pressure_or_entropy_causation",
             epistemic_posture: "non_adjudicating",
             artifact_live_control_effect: false,
         }
