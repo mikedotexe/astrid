@@ -479,6 +479,8 @@ pub(crate) fn model_route_v1(
     response_text: &str,
 ) -> LivedStateModelRouteV1 {
     let job_id = bounded_identity(job_id.as_deref());
+    let provider_route_complete = provider_route.chars().count() <= 40;
+    let provider_route_sha256 = sha256_bytes(provider_route.as_bytes());
     let provider_route: String = provider_route.chars().take(40).collect();
     let model_profile =
         bounded_identity(Some(model_profile)).unwrap_or_else(|| "unknown".to_string());
@@ -491,7 +493,7 @@ pub(crate) fn model_route_v1(
     if let Some(qos) = qos_request_identity_sha256.as_deref() {
         hasher.update(qos.as_bytes());
     }
-    hasher.update(provider_route.as_bytes());
+    hasher.update(provider_route_sha256.as_bytes());
     hasher.update(model_profile.as_bytes());
     hasher.update(started_at_unix_ms.to_le_bytes());
     hasher.update(response_sha256.as_bytes());
@@ -502,6 +504,8 @@ pub(crate) fn model_route_v1(
         qos_request_identity_sha256,
         request_content_anchor_sha256,
         provider_route,
+        provider_route_complete,
+        provider_route_sha256,
         model_profile,
         started_at_unix_ms,
         completed_at_unix_ms,

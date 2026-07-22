@@ -614,6 +614,9 @@ def _validate_model_route(
             "request_content_anchor_sha256",
             "request_anchor_scope",
             "provider_route",
+            "provider_route_complete",
+            "provider_route_sha256",
+            "provider_route_hash_scope",
             "provider_route_scope",
             "model_profile",
             "started_at_unix_ms",
@@ -663,6 +666,26 @@ def _validate_model_route(
         errors,
         optional=True,
     )
+    route_hash_fields = (
+        "provider_route_complete",
+        "provider_route_sha256",
+        "provider_route_hash_scope",
+    )
+    present_route_hash_fields = [field for field in route_hash_fields if field in route]
+    if present_route_hash_fields and len(present_route_hash_fields) != len(route_hash_fields):
+        errors.append(f"{prefix}.provider_route_hash:incomplete")
+    if present_route_hash_fields:
+        if not isinstance(route.get("provider_route_complete"), bool):
+            errors.append(f"{prefix}.provider_route_complete:not_boolean")
+        _hash_field(
+            route.get("provider_route_sha256"),
+            f"{prefix}.provider_route_sha256",
+            errors,
+        )
+        if route.get("provider_route_hash_scope") != (
+            "full_technical_route_integrity_not_experiential_identity"
+        ):
+            errors.append(f"{prefix}.provider_route_hash_scope:invalid")
     _validate_model_route_identity_boundaries(route, prefix, errors)
     for field in ("raw_prompt_included", "raw_response_included"):
         if route.get(field) is not False:
@@ -697,7 +720,15 @@ def _validate_model_route(
             hasher.update(route["job_id"].encode())
         if isinstance(route.get("qos_request_identity_sha256"), str):
             hasher.update(route["qos_request_identity_sha256"].encode())
-        hasher.update(route["provider_route"].encode())
+        provider_route_identity = route.get("provider_route_sha256")
+        if not isinstance(provider_route_identity, str):
+            provider_route_identity = route["provider_route"]
+        if route.get("provider_route_complete") is True and (
+            hashlib.sha256(route["provider_route"].encode()).hexdigest()
+            != provider_route_identity
+        ):
+            errors.append(f"{prefix}.provider_route_sha256:mismatch")
+        hasher.update(provider_route_identity.encode())
         hasher.update(route["model_profile"].encode())
         hasher.update(int(started).to_bytes(8, "little"))
         hasher.update(route["response_sha256"].encode())

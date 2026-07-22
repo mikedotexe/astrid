@@ -468,7 +468,7 @@ fn model_route_identity_hashes_the_bounded_persisted_profile() {
     hasher.update(b"astrid-lived-state-model-route-v1\0");
     hasher.update(b"job_test");
     hasher.update("c".repeat(64).as_bytes());
-    hasher.update(b"mlx");
+    hasher.update(sha256_bytes(b"mlx").as_bytes());
     hasher.update(profile.as_bytes());
     hasher.update(10_u64.to_le_bytes());
     hasher.update(
@@ -481,6 +481,91 @@ fn model_route_identity_hashes_the_bounded_persisted_profile() {
         encoded["call_id"],
         format!("lscall_{:x}", hasher.finalize())
     );
+    assert_eq!(encoded["provider_route"], "mlx");
+    assert_eq!(encoded["provider_route_complete"], true);
+    assert_eq!(encoded["provider_route_sha256"], sha256_bytes(b"mlx"));
+    assert_eq!(
+        encoded["provider_route_hash_scope"],
+        "full_technical_route_integrity_not_experiential_identity"
+    );
+}
+
+#[test]
+fn model_route_identity_hashes_the_complete_route_before_bounding_display() {
+    let prefix = "route/".repeat(8);
+    let first_route = format!("{prefix}first");
+    let second_route = format!("{prefix}second");
+    assert_eq!(
+        first_route.chars().take(40).collect::<String>(),
+        second_route.chars().take(40).collect::<String>()
+    );
+    let first = model_route_v1(
+        Some("job_test".to_string()),
+        Some("c".repeat(64)),
+        Some("a".repeat(64)),
+        &first_route,
+        "production",
+        10,
+        25,
+        None,
+        None,
+        None,
+        "same private response",
+    );
+    let second = model_route_v1(
+        Some("job_test".to_string()),
+        Some("c".repeat(64)),
+        Some("a".repeat(64)),
+        &second_route,
+        "production",
+        10,
+        25,
+        None,
+        None,
+        None,
+        "same private response",
+    );
+    let encoded = serde_json::to_value([first, second]).expect("route JSON");
+    assert_eq!(encoded[0]["provider_route"], encoded[1]["provider_route"]);
+    assert_eq!(encoded[0]["provider_route_complete"], false);
+    assert_eq!(encoded[1]["provider_route_complete"], false);
+    assert_ne!(
+        encoded[0]["provider_route_sha256"],
+        encoded[1]["provider_route_sha256"]
+    );
+    assert_ne!(encoded[0]["call_id"], encoded[1]["call_id"]);
+}
+
+#[test]
+fn model_route_call_identity_distinguishes_request_start_time() {
+    let first = model_route_v1(
+        None,
+        None,
+        None,
+        "mlx",
+        "production",
+        10,
+        25,
+        None,
+        None,
+        None,
+        "same private response",
+    );
+    let second = model_route_v1(
+        None,
+        None,
+        None,
+        "mlx",
+        "production",
+        11,
+        25,
+        None,
+        None,
+        None,
+        "same private response",
+    );
+    let encoded = serde_json::to_value([first, second]).expect("route JSON");
+    assert_ne!(encoded[0]["call_id"], encoded[1]["call_id"]);
 }
 
 #[test]

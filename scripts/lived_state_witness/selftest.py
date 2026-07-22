@@ -312,7 +312,8 @@ class LivedStateWitnessTests(unittest.TestCase):
         hasher.update(b"astrid-lived-state-model-route-v1\0")
         hasher.update(b"job_test")
         hasher.update(("b" * 64).encode())
-        hasher.update(b"mlx")
+        provider_route_sha256 = hashlib.sha256(b"mlx").hexdigest()
+        hasher.update(provider_route_sha256.encode())
         hasher.update(b"production")
         hasher.update((10).to_bytes(8, "little"))
         hasher.update(response_sha256.encode())
@@ -326,6 +327,9 @@ class LivedStateWitnessTests(unittest.TestCase):
             "request_content_anchor_sha256": "c" * 64,
             "request_anchor_scope": "exact_request_content_and_generation_parameters_not_intent_or_semantic_equivalence",
             "provider_route": "mlx",
+            "provider_route_complete": True,
+            "provider_route_sha256": provider_route_sha256,
+            "provider_route_hash_scope": "full_technical_route_integrity_not_experiential_identity",
             "provider_route_scope": "technical_delivery_path_not_experiential_center",
             "model_profile": "production",
             "started_at_unix_ms": 10,
@@ -375,6 +379,12 @@ class LivedStateWitnessTests(unittest.TestCase):
         _validate_model_route(invalid_timing, 0, 25, set(), errors)
         self.assertIn("model_routes[0].active_work_scope:invalid", errors)
 
+        invalid_route_hash = dict(route)
+        invalid_route_hash["provider_route_hash_scope"] = "being_identity"
+        errors = []
+        _validate_model_route(invalid_route_hash, 0, 25, set(), errors)
+        self.assertIn("model_routes[0].provider_route_hash_scope:invalid", errors)
+
         partial = dict(route)
         partial["response_claim_content_relation"] = (
             "not_inspected_or_adjudicated_by_this_receipt"
@@ -410,6 +420,9 @@ class LivedStateWitnessTests(unittest.TestCase):
             "duration_scope",
             "parent_witness_context_relation",
             "qualitative_texture_relation",
+            "provider_route_complete",
+            "provider_route_sha256",
+            "provider_route_hash_scope",
             "queue_wait_ms",
             "queue_wait_scope",
             "active_generation_and_reservoir_ms",
@@ -426,6 +439,15 @@ class LivedStateWitnessTests(unittest.TestCase):
                 "semantic_equivalence_claimed": False,
             }
         )
+        legacy_hasher = hashlib.sha256()
+        legacy_hasher.update(b"astrid-lived-state-model-route-v1\0")
+        legacy_hasher.update(b"job_test")
+        legacy_hasher.update(("b" * 64).encode())
+        legacy_hasher.update(b"mlx")
+        legacy_hasher.update(b"production")
+        legacy_hasher.update((10).to_bytes(8, "little"))
+        legacy_hasher.update(response_sha256.encode())
+        legacy["call_id"] = f"lscall_{legacy_hasher.hexdigest()}"
         errors = []
         _validate_model_route(legacy, 0, 25, set(), errors)
         self.assertEqual(errors, [])
