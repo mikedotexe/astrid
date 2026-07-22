@@ -13,8 +13,7 @@ use serde_json::Value;
 use sha2::{Digest, Sha256};
 
 use types::{
-    LivedStateBuildCandidateV1, LivedStateObservationKindV1,
-    LivedStateQualitativeTextureAnchorV1,
+    LivedStateBuildCandidateV1, LivedStateCanonicalBodyBindingV1, LivedStateObservationKindV1,
 };
 pub use types::{
     LivedStateGapReceiptV1, LivedStateLlmResultV1, LivedStateModelRouteV1,
@@ -466,8 +465,7 @@ pub(crate) fn runtime_context_v1(
         };
         now.unix_ms.saturating_sub(arrival_ms)
     });
-    let telemetry_fresh =
-        telemetry_age_ms.map(|age| age <= MAX_SIDECAR_PEER_SCALAR_AGE_MS);
+    let telemetry_fresh = telemetry_age_ms.map(|age| age <= MAX_SIDECAR_PEER_SCALAR_AGE_MS);
     let spectral_entropy = state
         .latest_telemetry
         .as_ref()
@@ -584,7 +582,7 @@ fn build_witness_v1(
         vec!["observed_process_v1".to_string()],
         vec![ProvenanceInfluenceTypeV1::Temporal],
     );
-    let qualitative_texture_anchor = (artifact_kind == "introspection")
+    let canonical_body = (artifact_kind == "introspection")
         .then(|| {
             artifact_bytes
                 .windows(2)
@@ -592,10 +590,12 @@ fn build_witness_v1(
                 .map(|separator| &artifact_bytes[separator.saturating_add(2)..])
         })
         .flatten()
-        .filter(|body| !body.is_empty())
-        .map(|body| {
-            LivedStateQualitativeTextureAnchorV1::new(sha256_bytes(body), body.len())
-        });
+        .filter(|body| !body.is_empty());
+    let canonical_body_binding = canonical_body.map(|body| {
+        let binding = LivedStateCanonicalBodyBindingV1::new(sha256_bytes(body), body.len());
+        debug_assert!(binding.verify_integrity(body));
+        binding
+    });
     TemporalLivedStateWitnessV1::new(
         authorship.witness_id.clone(),
         artifact_kind.chars().take(80).collect(),
@@ -609,7 +609,7 @@ fn build_witness_v1(
         startup.build_candidate,
         model_routes,
         runtime_context.parameter_observations,
-        qualitative_texture_anchor,
+        canonical_body_binding,
         runtime_context.peer_process_identity,
         runtime_context.peer_deployment_identity,
         source_provenance,

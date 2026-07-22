@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::fs::{self, OpenOptions};
 use std::io::Write;
 use std::os::unix::fs::{OpenOptionsExt, PermissionsExt};
@@ -76,7 +77,12 @@ pub(super) fn atomic_owner_write(path: &Path, bytes: &[u8]) -> std::io::Result<(
     Ok(())
 }
 
-fn write_gap(root: &Path, witness_id: &str, reason: &str) -> std::io::Result<()> {
+fn write_gap(
+    root: &Path,
+    witness_id: &str,
+    previous_witness_id: Option<&str>,
+    reason: &str,
+) -> std::io::Result<()> {
     ensure_owner_directory(root)?;
     let now = clock_sample_v1();
     let digest = format!(
@@ -86,6 +92,7 @@ fn write_gap(root: &Path, witness_id: &str, reason: &str) -> std::io::Result<()>
     let gap = LivedStateGapReceiptV1::new(
         format!("lsgap_{digest}"),
         witness_id.to_string(),
+        previous_witness_id.map(str::to_string),
         reason.chars().take(160).collect(),
         now.unix_ms,
     );
@@ -118,18 +125,38 @@ impl WitnessWriterV1 {
                 let started = std::thread::Builder::new()
                     .name("lived-state-witness-writer".to_string())
                     .spawn(move || {
+                        let mut previous_witness_by_root = HashMap::<PathBuf, String>::new();
                         while let Ok(job) = rx.recv() {
-                            if let Err(error) = write_witness(&job) {
-                                let error_sha256 =
-                                    format!("{:x}", Sha256::digest(error.to_string().as_bytes()));
-                                let reason = format!("sidecar_write_failed:sha256:{error_sha256}");
-                                if write_gap(&job.root, job.witness.witness_id(), &reason).is_err()
-                                {
-                                    warn!(
-                                        witness_id = job.witness.witness_id(),
-                                        "lived-state witness and gap writes both failed"
+                            match write_witness(&job) {
+                                Ok(()) => {
+                                    previous_witness_by_root.insert(
+                                        job.root.clone(),
+                                        job.witness.witness_id().to_string(),
                                     );
-                                }
+                                },
+                                Err(error) => {
+                                    let error_sha256 = format!(
+                                        "{:x}",
+                                        Sha256::digest(error.to_string().as_bytes())
+                                    );
+                                    let reason =
+                                        format!("sidecar_write_failed:sha256:{error_sha256}");
+                                    let previous_witness_id =
+                                        previous_witness_by_root.get(&job.root).map(String::as_str);
+                                    if write_gap(
+                                        &job.root,
+                                        job.witness.witness_id(),
+                                        previous_witness_id,
+                                        &reason,
+                                    )
+                                    .is_err()
+                                    {
+                                        warn!(
+                                            witness_id = job.witness.witness_id(),
+                                            "lived-state witness and gap writes both failed"
+                                        );
+                                    }
+                                },
                             }
                         }
                     });

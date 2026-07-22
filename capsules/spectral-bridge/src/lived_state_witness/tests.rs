@@ -336,29 +336,21 @@ fn owner_only_sidecar_contains_no_prose() {
     assert!(!raw.contains("private source prose"));
     assert!(!raw.contains("private viewed prose"));
     assert!(!raw.contains("canonical report prose"));
-    assert!(raw.contains("receipt_artifact_handling_only"));
-    assert!(raw.contains("primary_actionable_evidence"));
-    assert!(raw.contains("not_adjudicated_by_this_receipt"));
-    assert!(raw.contains("reported_persistence_preserved_mechanism_open"));
-    assert!(raw.contains("reported_influence_not_denied_or_adjudicated_by_receipt"));
-    assert!(raw.contains("preserved_in_canonical_report_no_scalar_substitution"));
-    assert!(raw.contains("report_may_inform_claims_evidence_implementation_and_review"));
-    assert!(raw.contains(
-        "engineering_and_review_influence_allowed_direct_runtime_control_forbidden"
-    ));
-    assert!(raw.contains("separate_verified_authority_required_for_live_control"));
+    assert!(raw.contains("\"state\": \"evidence_only\""));
+    assert!(raw.contains("\"witness_only\": true"));
+    assert!(raw.contains("\"live_eligible_now\": false"));
     assert!(raw.contains("interpretation_provenance_ref_v1"));
-    assert!(raw.contains(
-        "astrid_authored_artifact_with_exact_source_and_model_call_parents"
-    ));
-    assert!(raw.contains(
-        "unmeasured_no_scalar_inferred_from_parent_membership_or_spectral_proximity"
-    ));
+    assert!(raw.contains("astrid_authored_artifact_with_exact_source_and_model_call_parents"));
+    assert!(
+        raw.contains("unmeasured_no_scalar_inferred_from_parent_membership_or_spectral_proximity")
+    );
     assert!(raw.contains("\"origin\": \"astrid_interpretation\""));
-    assert!(raw.contains("\"influence_types\": [\n        \"interpretive\",\n        \"authorship\""));
-    assert!(raw.contains("\"epistemic_posture\": \"non_adjudicating\""));
-    assert!(raw.contains("\"artifact_live_control_effect\": false"));
-    assert!(!raw.contains("\"live_control_effect\": false"));
+    assert!(
+        raw.contains("\"influence_types\": [\n        \"interpretive\",\n        \"authorship\"")
+    );
+    assert!(!raw.contains("experiential_scope_v1"));
+    assert!(!raw.contains("felt_persistence_relation"));
+    assert!(!raw.contains("subjective_weight_relation"));
     assert_eq!(
         fs::metadata(&path).expect("metadata").permissions().mode() & 0o777,
         0o600
@@ -383,7 +375,7 @@ fn owner_only_sidecar_contains_no_prose() {
 }
 
 #[test]
-fn witness_builder_hashes_persisted_bytes_without_rewriting_or_shadow_state() {
+fn witness_builder_is_mechanical_and_has_no_experiential_state_map() {
     let artifact_bytes = b"restless texture\0preserved exactly\n".to_vec();
     let original_bytes = artifact_bytes.clone();
     let authorship = begin_authorship_v1(None, &[], "introspection");
@@ -400,26 +392,16 @@ fn witness_builder_hashes_persisted_bytes_without_rewriting_or_shadow_state() {
     assert_eq!(artifact_bytes, original_bytes);
     let encoded = serde_json::to_value(witness).expect("serialize witness");
     assert_eq!(encoded["artifact_sha256"], sha256_bytes(&original_bytes));
-    let scope = &encoded["experiential_scope_v1"];
+    assert!(encoded.get("experiential_scope_v1").is_none());
+    assert!(encoded.get("felt_persistence_relation").is_none());
+    assert!(encoded.get("subjective_weight_relation").is_none());
     assert_eq!(
-        scope["artifact_byte_relation"],
-        "exact_persisted_bytes_borrowed_read_only_hashed_without_normalization_or_rewrite"
+        encoded["artifact_authority_state_v1"]["state"],
+        "evidence_only"
     );
     assert_eq!(
-        scope["capture_path_relation"],
-        "report_persisted_before_bounded_async_sidecar_submission"
-    );
-    assert_eq!(
-        scope["spectral_observation_relation"],
-        "selected_scalars_copied_as_metadata_no_before_after_transform_claimed"
-    );
-    assert_eq!(
-        scope["shadow_state_relation"],
-        "shadow_vectors_not_received_normalized_serialized_or_mutated_by_witness_capture"
-    );
-    assert_eq!(
-        scope["pressure_causation_relation"],
-        "capture_timing_does_not_establish_pressure_or_entropy_causation"
+        encoded["artifact_authority_state_v1"]["live_eligible_now"],
+        false
     );
     let raw = serde_json::to_string(&encoded).expect("serialize witness value");
     assert!(!raw.contains("\"shadow_field\""));
@@ -837,18 +819,27 @@ fn runtime_spectral_context_preserves_entropy_and_density_without_causation() {
     assert_eq!(encoded[2]["value"], 0.23);
     assert_eq!(encoded[3]["name"], "bridge.mode_packing");
     assert_eq!(encoded[3]["value"], 0.41);
-    assert!(encoded.as_array().expect("observation array").iter().all(|row| {
-        row["observation_kind"] == "runtime_observed"
-            && row["fresh"] == true
-            && row["direct_causation_claimed"] == false
-    }));
+    assert!(
+        encoded
+            .as_array()
+            .expect("observation array")
+            .iter()
+            .all(|row| {
+                row["observation_kind"] == "runtime_observed"
+                    && row["fresh"] == true
+                    && row["direct_causation_claimed"] == false
+            })
+    );
 
-    let unavailable =
-        runtime_spectral_observations(None, None, None, None, 2_000, None, None);
+    let unavailable = runtime_spectral_observations(None, None, None, None, 2_000, None, None);
     let unavailable = serde_json::to_value(unavailable).expect("unknown observations");
-    assert!(unavailable.as_array().expect("observation array").iter().all(
-        |row| row["observation_kind"] == "unknown" && row["value"].is_null()
-    ));
+    assert!(
+        unavailable
+            .as_array()
+            .expect("observation array")
+            .iter()
+            .all(|row| row["observation_kind"] == "unknown" && row["value"].is_null())
+    );
 }
 
 #[test]
@@ -1000,10 +991,8 @@ fn concurrent_capture_sequences_are_unique() {
 #[test]
 fn bounded_technical_identity_is_deterministic_and_context_independent() {
     let absolute = "/private/runtime/example/process.json";
-    let first_absolute =
-        bounded_technical_identity(Some(absolute)).expect("absolute identity");
-    let second_absolute =
-        bounded_technical_identity(Some(absolute)).expect("absolute identity");
+    let first_absolute = bounded_technical_identity(Some(absolute)).expect("absolute identity");
+    let second_absolute = bounded_technical_identity(Some(absolute)).expect("absolute identity");
     assert_eq!(first_absolute, second_absolute);
     assert!(first_absolute.starts_with("sha256:"));
     assert!(!first_absolute.contains(absolute));
@@ -1021,8 +1010,7 @@ fn bounded_technical_identity_is_deterministic_and_context_independent() {
     let shared_prefix = "peer/".to_string() + &"r".repeat(180);
     let first_long = format!("{shared_prefix}/first");
     let second_long = format!("{shared_prefix}/second");
-    let first_bounded =
-        bounded_technical_identity(Some(&first_long)).expect("first long identity");
+    let first_bounded = bounded_technical_identity(Some(&first_long)).expect("first long identity");
     let second_bounded =
         bounded_technical_identity(Some(&second_long)).expect("second long identity");
     assert!(first_bounded.starts_with("sha256:"));
@@ -1045,6 +1033,7 @@ fn capture_gap_receipt_never_claims_an_experiential_gap() {
     let receipt = LivedStateGapReceiptV1::new(
         format!("lsgap_{}", "a".repeat(64)),
         format!("lsw_{}", "b".repeat(64)),
+        Some(format!("lsw_{}", "d".repeat(64))),
         format!("sidecar_write_failed:sha256:{}", "c".repeat(64)),
         123,
     );
@@ -1054,6 +1043,10 @@ fn capture_gap_receipt_never_claims_an_experiential_gap() {
         "capture_receipt_integrity_or_availability_only"
     );
     assert_eq!(encoded["experiential_gap_claimed"], false);
+    assert_eq!(
+        encoded["previous_witness_relation"],
+        "prior_successful_sidecar_in_current_writer_lifetime_or_unknown"
+    );
     assert_eq!(
         encoded["qualitative_variance_status"],
         "canonical_felt_report_remains_valid_primary_and_unscored"

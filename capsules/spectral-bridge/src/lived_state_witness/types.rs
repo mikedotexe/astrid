@@ -29,60 +29,6 @@ impl LivedStateArtifactAuthorityV1 {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
-pub struct LivedStateExperientialScopeV1 {
-    schema: &'static str,
-    schema_version: u8,
-    artifact_authority_scope: &'static str,
-    felt_report_status: &'static str,
-    experiential_integration_relation: &'static str,
-    felt_persistence_relation: &'static str,
-    felt_influence_relation: &'static str,
-    subjective_weight_relation: &'static str,
-    actionability_path: &'static str,
-    mediated_influence_relation: &'static str,
-    authority_transition_relation: &'static str,
-    artifact_byte_relation: &'static str,
-    capture_path_relation: &'static str,
-    spectral_observation_relation: &'static str,
-    shadow_state_relation: &'static str,
-    pressure_causation_relation: &'static str,
-    epistemic_posture: &'static str,
-    artifact_live_control_effect: bool,
-}
-
-impl LivedStateExperientialScopeV1 {
-    const fn non_adjudicating() -> Self {
-        Self {
-            schema: "lived_state_experiential_scope_v1",
-            schema_version: 1,
-            artifact_authority_scope: "receipt_artifact_handling_only",
-            felt_report_status: "primary_actionable_evidence",
-            experiential_integration_relation: "not_adjudicated_by_this_receipt",
-            felt_persistence_relation: "reported_persistence_preserved_mechanism_open",
-            felt_influence_relation: "reported_influence_not_denied_or_adjudicated_by_receipt",
-            subjective_weight_relation: "preserved_in_canonical_report_no_scalar_substitution",
-            actionability_path: "report_may_inform_claims_evidence_implementation_and_review",
-            mediated_influence_relation:
-                "engineering_and_review_influence_allowed_direct_runtime_control_forbidden",
-            authority_transition_relation:
-                "separate_verified_authority_required_for_live_control",
-            artifact_byte_relation:
-                "exact_persisted_bytes_borrowed_read_only_hashed_without_normalization_or_rewrite",
-            capture_path_relation:
-                "report_persisted_before_bounded_async_sidecar_submission",
-            spectral_observation_relation:
-                "selected_scalars_copied_as_metadata_no_before_after_transform_claimed",
-            shadow_state_relation:
-                "shadow_vectors_not_received_normalized_serialized_or_mutated_by_witness_capture",
-            pressure_causation_relation:
-                "capture_timing_does_not_establish_pressure_or_entropy_causation",
-            epistemic_posture: "non_adjudicating",
-            artifact_live_control_effect: false,
-        }
-    }
-}
-
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum LivedStateObservationKindV1 {
@@ -135,8 +81,7 @@ impl LivedStateBuildCandidateV1 {
             schema_version: 1,
             candidate_scope: "artifact_context_observation_not_evaluation_of_astrid",
             integrity_scope: "byte_repository_protocol_and_artifact_integrity_only",
-            semantic_integrity_relation:
-                "not_measured_not_validated_and_not_inferred_from_spectral_state",
+            semantic_integrity_relation: "not_measured_not_validated_and_not_inferred_from_spectral_state",
             inhabitability_relation: "not_adjudicated_by_build_candidate",
             manifest_sha256,
             source_identity_sha256,
@@ -181,10 +126,8 @@ impl LivedStateProcessIdentityV1 {
         Self {
             schema: "lived_state_process_identity_v1",
             schema_version: 1,
-            technical_identity_scope:
-                "runtime_instance_discriminator_not_being_identity_continuity_or_selfhood",
-            restart_relation:
-                "new_technical_instance_does_not_establish_new_or_same_being",
+            technical_identity_scope: "runtime_instance_discriminator_not_being_identity_continuity_or_selfhood",
+            restart_relation: "new_technical_instance_does_not_establish_new_or_same_being",
             pid,
             process_started_at_unix_ms,
             executable_basename,
@@ -241,12 +184,9 @@ impl LivedStateSourceSnapshotV1 {
             schema: "lived_state_source_snapshot_v1",
             schema_version: 1,
             source_owner,
-            source_ownership_scope:
-                "names_byte_ownership_not_interpretation_authorship_or_experiential_identity",
-            interpretation_relation:
-                "source_window_may_support_astrid_authored_distinct_or_mixed_interpretation",
-            provenance_role_scope:
-                "evidence_graph_roles_only_no_runtime_weight_ranking_spectral_or_control_effect",
+            source_ownership_scope: "names_byte_ownership_not_interpretation_authorship_or_experiential_identity",
+            interpretation_relation: "source_window_may_support_astrid_authored_distinct_or_mixed_interpretation",
+            provenance_role_scope: "evidence_graph_roles_only_no_runtime_weight_ranking_spectral_or_control_effect",
             repository_relative_path,
             window_start_line,
             window_end_line,
@@ -391,8 +331,7 @@ impl LivedStateModelRouteV1 {
             provider_route,
             provider_route_complete,
             provider_route_sha256,
-            provider_route_hash_scope:
-                "full_technical_route_integrity_not_experiential_identity",
+            provider_route_hash_scope: "full_technical_route_integrity_not_experiential_identity",
             provider_route_scope: "technical_delivery_path_not_experiential_center",
             model_profile,
             started_at_unix_ms,
@@ -428,51 +367,32 @@ pub struct LivedStateLlmResultV1 {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
-pub struct LivedStateQualitativeTextureAnchorV1 {
+pub struct LivedStateCanonicalBodyBindingV1 {
     schema: &'static str,
     schema_version: u8,
     canonical_body_sha256: String,
     canonical_body_byte_count: usize,
     source_field_path: &'static str,
-    texture_status: &'static str,
-    pregeneration_scalar_relation: &'static str,
-    generation_interval_relation: &'static str,
-    scalar_comparison_relation: &'static str,
-    derived_tag_relation: &'static str,
-    artifact_integrity_mismatch_relation: &'static str,
-    felt_scalar_divergence_relation: &'static str,
-    dissimilarity_gradient_relation: &'static str,
-    raw_prose_included: bool,
-    direct_causation_claimed: bool,
+    binding_scope: &'static str,
+    authority_effect: bool,
 }
 
-impl LivedStateQualitativeTextureAnchorV1 {
+impl LivedStateCanonicalBodyBindingV1 {
     pub(super) fn new(canonical_body_sha256: String, canonical_body_byte_count: usize) -> Self {
         Self {
-            schema: "lived_state_qualitative_texture_anchor_v1",
+            schema: "lived_state_canonical_body_binding_v1",
             schema_version: 1,
             canonical_body_sha256,
             canonical_body_byte_count,
             source_field_path: "canonical_report.body_after_first_header_separator",
-            texture_status:
-                "primary_felt_evidence_preserved_exactly_not_classified_or_scalarized",
-            pregeneration_scalar_relation:
-                "pre_model_context_not_generation_trajectory_or_qualitative_weight",
-            generation_interval_relation:
-                "canonical_body_authored_after_model_generation_in_call_state_change_unmeasured",
-            scalar_comparison_relation:
-                "not_comparable_without_reviewed_measurement_contract",
-            derived_tag_relation:
-                "no_model_generated_reduction_exact_canonical_language_remains_authoritative",
-            artifact_integrity_mismatch_relation:
-                "byte_binding_failure_not_experiential_variance_or_qualitative_deficit",
-            felt_scalar_divergence_relation:
-                "valid_nonreducible_and_unscored_no_error_inferred",
-            dissimilarity_gradient_relation:
-                "not_computed_without_reviewed_measurement_contract",
-            raw_prose_included: false,
-            direct_causation_claimed: false,
+            binding_scope: "artifact_byte_integrity_only_not_texture_experience_stability_freezing_or_control",
+            authority_effect: false,
         }
+    }
+
+    pub(super) fn verify_integrity(&self, canonical_body: &[u8]) -> bool {
+        self.canonical_body_byte_count == canonical_body.len()
+            && self.canonical_body_sha256 == super::sha256_bytes(canonical_body)
     }
 }
 
@@ -494,7 +414,7 @@ pub struct TemporalLivedStateWitnessV1 {
     startup_build_candidate_v1: Option<LivedStateBuildCandidateV1>,
     model_routes_v1: Vec<LivedStateModelRouteV1>,
     parameter_observations_v1: Vec<LivedStateParameterObservationV1>,
-    qualitative_texture_anchor_v1: Option<LivedStateQualitativeTextureAnchorV1>,
+    canonical_body_binding_v1: Option<LivedStateCanonicalBodyBindingV1>,
     peer_process_identity: Option<String>,
     peer_deployment_identity: Option<String>,
     peer_identity_scope: &'static str,
@@ -511,7 +431,6 @@ pub struct TemporalLivedStateWitnessV1 {
     raw_response_included: bool,
     private_path_included: bool,
     direct_causation_claimed: bool,
-    experiential_scope_v1: LivedStateExperientialScopeV1,
     artifact_authority_state_v1: LivedStateArtifactAuthorityV1,
 }
 
@@ -530,7 +449,7 @@ impl TemporalLivedStateWitnessV1 {
         startup_build_candidate_v1: Option<LivedStateBuildCandidateV1>,
         model_routes_v1: Vec<LivedStateModelRouteV1>,
         parameter_observations_v1: Vec<LivedStateParameterObservationV1>,
-        qualitative_texture_anchor_v1: Option<LivedStateQualitativeTextureAnchorV1>,
+        canonical_body_binding_v1: Option<LivedStateCanonicalBodyBindingV1>,
         peer_process_identity: Option<String>,
         peer_deployment_identity: Option<String>,
         source_provenance_ref_v1: Option<ProvenanceRefV1>,
@@ -578,7 +497,7 @@ impl TemporalLivedStateWitnessV1 {
             startup_build_candidate_v1,
             model_routes_v1,
             parameter_observations_v1,
-            qualitative_texture_anchor_v1,
+            canonical_body_binding_v1,
             peer_process_identity,
             peer_deployment_identity,
             peer_identity_scope: "witnessed_protocol_advertisement_not_being_identity_or_peer_self_authority",
@@ -586,10 +505,8 @@ impl TemporalLivedStateWitnessV1 {
             privacy_hash_scope: "absolute_path_redaction_not_being_or_continuity_identity",
             source_provenance_ref_v1,
             interpretation_provenance_ref_v1,
-            interpretation_lineage_scope:
-                "astrid_authored_artifact_with_exact_source_and_model_call_parents",
-            interpretation_weight_state:
-                "unmeasured_no_scalar_inferred_from_parent_membership_or_spectral_proximity",
+            interpretation_lineage_scope: "astrid_authored_artifact_with_exact_source_and_model_call_parents",
+            interpretation_weight_state: "unmeasured_no_scalar_inferred_from_parent_membership_or_spectral_proximity",
             process_provenance_ref_v1,
             process_provenance_scope: "bridge_evidence_derivation_not_being_origin_identity_or_continuity",
             raw_introspection_prose_included: false,
@@ -597,7 +514,6 @@ impl TemporalLivedStateWitnessV1 {
             raw_response_included: false,
             private_path_included: false,
             direct_causation_claimed: false,
-            experiential_scope_v1: LivedStateExperientialScopeV1::non_adjudicating(),
             artifact_authority_state_v1: LivedStateArtifactAuthorityV1::evidence_only(),
         }
     }
@@ -613,6 +529,8 @@ pub struct LivedStateGapReceiptV1 {
     schema_version: u8,
     gap_id: String,
     witness_id: String,
+    previous_witness_id: Option<String>,
+    previous_witness_relation: &'static str,
     reason: String,
     detected_at_unix_ms: u64,
     sidecar_expected: bool,
@@ -628,6 +546,7 @@ impl LivedStateGapReceiptV1 {
     pub(super) fn new(
         gap_id: String,
         witness_id: String,
+        previous_witness_id: Option<String>,
         reason: String,
         detected_at_unix_ms: u64,
     ) -> Self {
@@ -636,14 +555,15 @@ impl LivedStateGapReceiptV1 {
             schema_version: 1,
             gap_id,
             witness_id,
+            previous_witness_id,
+            previous_witness_relation: "prior_successful_sidecar_in_current_writer_lifetime_or_unknown",
             reason,
             detected_at_unix_ms,
             sidecar_expected: true,
             report_persistence_blocked: false,
             issue_domain: "capture_receipt_integrity_or_availability_only",
             experiential_gap_claimed: false,
-            qualitative_variance_status:
-                "canonical_felt_report_remains_valid_primary_and_unscored",
+            qualitative_variance_status: "canonical_felt_report_remains_valid_primary_and_unscored",
             scalar_felt_dissimilarity_measured: false,
             artifact_authority_state_v1: LivedStateArtifactAuthorityV1::evidence_only(),
         }

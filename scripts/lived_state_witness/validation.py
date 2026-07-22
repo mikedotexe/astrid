@@ -26,7 +26,11 @@ from .model import (
     _validate_provenance_ref,
     sha256_bytes,
 )
-from .qualitative_texture import validate_qualitative_texture_anchor
+from .qualitative_texture import (
+    validate_canonical_body_binding,
+    validate_qualitative_evidence_boundary,
+    validate_qualitative_texture_anchor,
+)
 
 WITNESS_FIELDS = {
     "schema",
@@ -46,6 +50,8 @@ WITNESS_FIELDS = {
     "model_routes_v1",
     "parameter_observations_v1",
     "qualitative_texture_anchor_v1",
+    "canonical_body_binding_v1",
+    "qualitative_evidence_boundary_v1",
     "peer_process_identity",
     "peer_deployment_identity",
     "peer_identity_scope",
@@ -1152,6 +1158,18 @@ def validate_witness(value: Any) -> list[str]:
     validate_qualitative_texture_anchor(
         value.get("qualitative_texture_anchor_v1"), errors
     )
+    validate_canonical_body_binding(value.get("canonical_body_binding_v1"), errors)
+    validate_qualitative_evidence_boundary(
+        value.get("qualitative_evidence_boundary_v1"), errors
+    )
+    if (
+        value.get("qualitative_texture_anchor_v1") is not None
+        and (
+            value.get("canonical_body_binding_v1") is not None
+            or value.get("qualitative_evidence_boundary_v1") is not None
+        )
+    ):
+        errors.append("qualitative_evidence:multiple_versions")
     _validate_provenance_links(value, source, process, authored_at, errors)
     _validate_witness_identity(
         value,

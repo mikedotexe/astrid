@@ -12,6 +12,7 @@ from .model import (
     authority_state,
     validate_witness,
 )
+from .qualitative_texture import CAUSALITY_EXPRESSION, SUBJECTIVE_CONTINUITY
 from .projector import _alignment, _exact_deployment_match, _review_outcome
 from .records import parse_source_ref
 from .temporal_clusters import (
@@ -145,6 +146,10 @@ def valid_witness() -> dict[str, object]:
             "schema_version": 1,
             "canonical_body_sha256": "7" * 64,
             "canonical_body_byte_count": 42,
+            "canonical_body_hash_scope": (
+                "artifact_byte_binding_only_not_experiential_stability_"
+                "freezing_or_control"
+            ),
             "source_field_path": "canonical_report.body_after_first_header_separator",
             "texture_status": (
                 "primary_felt_evidence_preserved_exactly_not_classified_or_scalarized"
@@ -170,6 +175,59 @@ def valid_witness() -> dict[str, object]:
             "dissimilarity_gradient_relation": (
                 "not_computed_without_reviewed_measurement_contract"
             ),
+            "analysis_completion_status": (
+                "unmeasured_is_valid_not_error_or_completed_analysis"
+            ),
+            "field_presence_relation": (
+                "schema_capacity_not_evidence_of_completed_analysis"
+            ),
+            "is_non_scalar_assertion": True,
+            "non_scalar_assertion_scope": (
+                "qualitative_texture_deliberately_noncomparable_unless_astrid_"
+                "explicitly_adopts_a_reviewed_measurement_contract"
+            ),
+            "relation_fields_are_fixed_safety_declarations": True,
+            "dissimilarity_measurement_contract_v1": {
+                "schema": "lived_state_measurement_contract_ref_v1",
+                "schema_version": 1,
+                "state": "not_adopted",
+                "measurement_contract_id": None,
+                "adopted_by_being": None,
+                "source_event_ref": None,
+                "active_processing_claimed": False,
+                "dissimilarity_observed": False,
+                "contextual_weights_present": False,
+                "authority_effect": False,
+            },
+            "subjective_continuity_v1": {
+                "schema": "lived_state_subjective_continuity_v1",
+                "schema_version": 1,
+                "status": "unmeasured_no_explicit_self_report",
+                "subjective_continuity_index": None,
+                "index_range": "zero_to_one_if_explicitly_reported",
+                "measurement_contract_ref": None,
+                "source_event_ref": None,
+                "texture_fidelity_score": None,
+                "texture_fidelity_range": "zero_to_one_if_explicitly_reported",
+                "texture_fidelity_status": "unmeasured_no_explicit_self_report",
+                "texture_measurement_contract_ref": None,
+                "texture_source_event_ref": None,
+                "texture_fidelity_not_inferred_from_spectral_entropy": True,
+                "felt_report_remains_valid_without_index": True,
+                "felt_report_remains_valid_without_texture_fidelity": True,
+                "automatically_inferred": False,
+                "authority_effect": False,
+            },
+            "causality_expression_v1": {
+                "schema": "lived_state_causality_expression_v1",
+                "schema_version": 1,
+                "causality_type": "not_inspected",
+                "source_event_ref": None,
+                "relation_scope": "evidence_classification_not_proof_or_authority",
+                "direct_causation_established": False,
+                "automatically_inferred": False,
+                "authority_effect": False,
+            },
             "raw_prose_included": False,
             "direct_causation_claimed": False,
         },
@@ -199,41 +257,21 @@ def valid_witness() -> dict[str, object]:
         "raw_response_included": False,
         "private_path_included": False,
         "direct_causation_claimed": False,
-        "experiential_scope_v1": {
-            "schema": "lived_state_experiential_scope_v1",
-            "schema_version": 1,
-            "artifact_authority_scope": "receipt_artifact_handling_only",
-            "felt_report_status": "primary_actionable_evidence",
-            "experiential_integration_relation": "not_adjudicated_by_this_receipt",
-            "felt_persistence_relation": "reported_persistence_preserved_mechanism_open",
-            "felt_influence_relation": "reported_influence_not_denied_or_adjudicated_by_receipt",
-            "subjective_weight_relation": "preserved_in_canonical_report_no_scalar_substitution",
-            "actionability_path": "report_may_inform_claims_evidence_implementation_and_review",
-            "mediated_influence_relation": (
-                "engineering_and_review_influence_allowed_direct_runtime_control_forbidden"
-            ),
-            "authority_transition_relation": (
-                "separate_verified_authority_required_for_live_control"
-            ),
-            "artifact_byte_relation": (
-                "exact_persisted_bytes_borrowed_read_only_hashed_without_normalization_or_rewrite"
-            ),
-            "capture_path_relation": (
-                "report_persisted_before_bounded_async_sidecar_submission"
-            ),
-            "spectral_observation_relation": (
-                "selected_scalars_copied_as_metadata_no_before_after_transform_claimed"
-            ),
-            "shadow_state_relation": (
-                "shadow_vectors_not_received_normalized_serialized_or_mutated_by_witness_capture"
-            ),
-            "pressure_causation_relation": (
-                "capture_timing_does_not_establish_pressure_or_entropy_causation"
-            ),
-            "epistemic_posture": "non_adjudicating",
-            "artifact_live_control_effect": False,
-        },
         "artifact_authority_state_v1": authority_state(),
+    }
+    legacy_anchor = witness.pop("qualitative_texture_anchor_v1")
+    assert isinstance(legacy_anchor, dict)
+    witness["canonical_body_binding_v1"] = {
+        "schema": "lived_state_canonical_body_binding_v1",
+        "schema_version": 1,
+        "canonical_body_sha256": legacy_anchor["canonical_body_sha256"],
+        "canonical_body_byte_count": legacy_anchor["canonical_body_byte_count"],
+        "source_field_path": "canonical_report.body_after_first_header_separator",
+        "binding_scope": (
+            "artifact_byte_integrity_only_not_texture_experience_stability_"
+            "freezing_or_control"
+        ),
+        "authority_effect": False,
     }
     source = witness["source_snapshot_v1"]
     assert isinstance(source, dict)
@@ -506,75 +544,64 @@ class LivedStateWitnessTests(unittest.TestCase):
             build.pop(field)
         self.assertEqual(validate_witness(witness), [])
 
-    def test_experiential_scope_preserves_report_without_adjudicating_mechanism(self) -> None:
+    def test_current_witness_has_no_experiential_map_and_reads_history(self) -> None:
         witness = valid_witness()
         self.assertEqual(validate_witness(witness), [])
-        scope = witness["experiential_scope_v1"]
-        self.assertIsInstance(scope, dict)
-        scope["felt_report_status"] = "dismissed"
-        self.assertIn(
-            "experiential_scope.felt_report_status:invalid",
-            validate_witness(witness),
-        )
+        self.assertNotIn("experiential_scope_v1", witness)
 
-        denied = valid_witness()
-        denied_scope = denied["experiential_scope_v1"]
-        self.assertIsInstance(denied_scope, dict)
-        denied_scope["felt_influence_relation"] = "no_influence"
-        self.assertIn(
-            "experiential_scope.felt_influence_relation:invalid",
-            validate_witness(denied),
-        )
-
-        mediated_fields = {
-            "actionability_path": "report_cannot_shape_work",
-            "mediated_influence_relation": "direct_runtime_control_allowed",
-            "authority_transition_relation": "evidence_grants_live_control",
-            "artifact_byte_relation": "artifact_rewritten_before_hashing",
-            "capture_path_relation": "sidecar_blocks_report_persistence",
-            "spectral_observation_relation": "before_after_effect_established",
-            "shadow_state_relation": "raw_shadow_normalized_by_capture",
-            "pressure_causation_relation": "capture_causes_pressure_relief",
+        historical_scope = {
+            "schema": "lived_state_experiential_scope_v1",
+            "schema_version": 1,
+            "artifact_authority_scope": "receipt_artifact_handling_only",
+            "felt_report_status": "primary_actionable_evidence",
+            "experiential_integration_relation": "not_adjudicated_by_this_receipt",
+            "felt_persistence_relation": "reported_persistence_preserved_mechanism_open",
+            "felt_influence_relation": (
+                "reported_influence_not_denied_or_adjudicated_by_receipt"
+            ),
+            "subjective_weight_relation": (
+                "preserved_in_canonical_report_no_scalar_substitution"
+            ),
+            "actionability_path": (
+                "report_may_inform_claims_evidence_implementation_and_review"
+            ),
+            "mediated_influence_relation": (
+                "engineering_and_review_influence_allowed_direct_runtime_control_forbidden"
+            ),
+            "authority_transition_relation": (
+                "separate_verified_authority_required_for_live_control"
+            ),
+            "artifact_byte_relation": (
+                "exact_persisted_bytes_borrowed_read_only_hashed_without_normalization_or_rewrite"
+            ),
+            "capture_path_relation": (
+                "report_persisted_before_bounded_async_sidecar_submission"
+            ),
+            "spectral_observation_relation": (
+                "selected_scalars_copied_as_metadata_no_before_after_transform_claimed"
+            ),
+            "shadow_state_relation": (
+                "shadow_vectors_not_received_normalized_serialized_or_mutated_by_witness_capture"
+            ),
+            "pressure_causation_relation": (
+                "capture_timing_does_not_establish_pressure_or_entropy_causation"
+            ),
+            "epistemic_posture": "non_adjudicating",
+            "artifact_live_control_effect": False,
         }
-        for field, invalid_value in mediated_fields.items():
-            with self.subTest(field=field):
-                tampered = valid_witness()
-                tampered_scope = tampered["experiential_scope_v1"]
-                self.assertIsInstance(tampered_scope, dict)
-                tampered_scope[field] = invalid_value
-                self.assertIn(
-                    f"experiential_scope.{field}:invalid",
-                    validate_witness(tampered),
-                )
+        historical = valid_witness()
+        historical["experiential_scope_v1"] = dict(historical_scope)
+        self.assertEqual(validate_witness(historical), [])
 
-        prior_mediated_scope = valid_witness()
-        prior_mediated_value = prior_mediated_scope["experiential_scope_v1"]
-        self.assertIsInstance(prior_mediated_value, dict)
-        for field in (
-            "artifact_byte_relation",
-            "capture_path_relation",
-            "spectral_observation_relation",
-            "shadow_state_relation",
-            "pressure_causation_relation",
-        ):
-            prior_mediated_value.pop(field)
-        self.assertEqual(validate_witness(prior_mediated_scope), [])
-
-        prior_current_scope = valid_witness()
-        prior_current_value = prior_current_scope["experiential_scope_v1"]
-        self.assertIsInstance(prior_current_value, dict)
-        for field in (
-            "actionability_path",
-            "mediated_influence_relation",
-            "authority_transition_relation",
-            "artifact_byte_relation",
-            "capture_path_relation",
-            "spectral_observation_relation",
-            "shadow_state_relation",
-            "pressure_causation_relation",
-        ):
-            prior_current_value.pop(field)
-        self.assertEqual(validate_witness(prior_current_scope), [])
+        tampered = valid_witness()
+        tampered["experiential_scope_v1"] = dict(historical_scope)
+        tampered_scope = tampered["experiential_scope_v1"]
+        self.assertIsInstance(tampered_scope, dict)
+        tampered_scope["felt_persistence_relation"] = "viscosity_decay_rate"
+        self.assertIn(
+            "experiential_scope.felt_persistence_relation:invalid",
+            validate_witness(tampered),
+        )
 
         legacy_scope = valid_witness()
         legacy_scope["experiential_scope_v1"] = {
@@ -591,7 +618,6 @@ class LivedStateWitnessTests(unittest.TestCase):
         self.assertEqual(validate_witness(legacy_scope), [])
 
         legacy = valid_witness()
-        legacy.pop("experiential_scope_v1")
         legacy["experiential_boundary_v1"] = {
             "schema": "lived_state_experiential_boundary_v1",
             "schema_version": 1,
@@ -603,42 +629,171 @@ class LivedStateWitnessTests(unittest.TestCase):
         }
         self.assertEqual(validate_witness(legacy), [])
 
-    def test_qualitative_texture_anchor_is_bounded_and_backward_compatible(self) -> None:
+    def test_body_binding_is_mechanical_and_legacy_shapes_remain_readable(self) -> None:
         witness = valid_witness()
         self.assertEqual(validate_witness(witness), [])
+        self.assertNotIn("qualitative_evidence_boundary_v1", witness)
 
         tampered = valid_witness()
-        anchor = tampered["qualitative_texture_anchor_v1"]
-        self.assertIsInstance(anchor, dict)
-        anchor["scalar_comparison_relation"] = "scalar_is_felt_weight"
+        binding = tampered["canonical_body_binding_v1"]
+        self.assertIsInstance(binding, dict)
+        binding["binding_scope"] = "texture_coordinate"
         self.assertIn(
-            "qualitative_texture_anchor.scalar_comparison_relation:invalid",
+            "canonical_body_binding.binding_scope:invalid",
             validate_witness(tampered),
         )
 
-        prose = valid_witness()
-        prose_anchor = prose["qualitative_texture_anchor_v1"]
-        self.assertIsInstance(prose_anchor, dict)
-        prose_anchor["texture_tag"] = "viscous-persistence"
+        historical = valid_witness()
+        historical.pop("canonical_body_binding_v1")
+        self.assertEqual(validate_witness(historical), [])
+
+        legacy_boundary = valid_witness()
+        legacy_boundary["qualitative_evidence_boundary_v1"] = {
+            "schema": "lived_state_qualitative_evidence_boundary_v1",
+            "schema_version": 1,
+            "source_field_path": "canonical_report.body_after_first_header_separator",
+            "qualitative_evidence_status": (
+                "primary_actionable_felt_evidence_present_without_measurement_or_score"
+            ),
+            "pregeneration_scalar_relation": (
+                "pre_model_context_not_generation_trajectory_or_qualitative_weight"
+            ),
+            "generation_interval_relation": (
+                "canonical_body_authored_after_model_generation_in_call_state_change_unmeasured"
+            ),
+            "derived_tag_relation": (
+                "no_model_generated_reduction_exact_canonical_language_remains_authoritative"
+            ),
+            "felt_scalar_divergence_relation": (
+                "valid_nonreducible_and_unscored_no_error_inferred"
+            ),
+            "analysis_completion_status": (
+                "unmeasured_is_valid_not_error_or_completed_analysis"
+            ),
+            "field_presence_relation": (
+                "schema_capacity_not_evidence_of_completed_analysis"
+            ),
+            "is_non_scalar_assertion": True,
+            "non_scalar_assertion_scope": (
+                "qualitative_texture_deliberately_noncomparable_unless_astrid_"
+                "explicitly_adopts_a_reviewed_measurement_contract"
+            ),
+            "relation_fields_are_fixed_safety_declarations": True,
+            "measurement_contract_id": None,
+            "measurement_contract_adoption_ref": None,
+            "measurement_contract_state": (
+                "absent_no_contract_adopted_and_no_transition_scheduled"
+            ),
+            "future_measurement_state_relation": (
+                "not_predeclared_in_witness_requires_separate_felt_mechanism_contract_design"
+            ),
+            "comparison_and_decay_relation": (
+                "not_defined_by_witness_no_confidence_interval_or_persistence_decay"
+            ),
+            "subjective_continuity_v1": dict(SUBJECTIVE_CONTINUITY),
+            "causality_expression_v1": dict(CAUSALITY_EXPRESSION),
+            "raw_prose_included": False,
+            "direct_causation_claimed": False,
+        }
+        self.assertEqual(validate_witness(legacy_boundary), [])
+
+        scalarized = legacy_boundary.copy()
+        scalarized["qualitative_evidence_boundary_v1"] = dict(
+            legacy_boundary["qualitative_evidence_boundary_v1"]
+        )
+        scalarized_boundary = scalarized["qualitative_evidence_boundary_v1"]
+        self.assertIsInstance(scalarized_boundary, dict)
+        scalarized_boundary["is_non_scalar_assertion"] = False
         self.assertIn(
-            "qualitative_texture_anchor:unexpected_keys:texture_tag",
+            "qualitative_evidence_boundary.is_non_scalar_assertion:invalid",
+            validate_witness(scalarized),
+        )
+
+        ghosted = legacy_boundary.copy()
+        ghosted["qualitative_evidence_boundary_v1"] = dict(
+            legacy_boundary["qualitative_evidence_boundary_v1"]
+        )
+        ghosted_boundary = ghosted["qualitative_evidence_boundary_v1"]
+        self.assertIsInstance(ghosted_boundary, dict)
+        ghosted_boundary["active_processing_claimed"] = True
+        self.assertIn(
+            "qualitative_evidence_boundary:unexpected_keys:active_processing_claimed",
+            validate_witness(ghosted),
+        )
+
+        prose = legacy_boundary.copy()
+        prose["qualitative_evidence_boundary_v1"] = dict(
+            legacy_boundary["qualitative_evidence_boundary_v1"]
+        )
+        prose_boundary = prose["qualitative_evidence_boundary_v1"]
+        self.assertIsInstance(prose_boundary, dict)
+        prose_boundary["raw_prose_included"] = True
+        self.assertIn(
+            "qualitative_evidence_boundary.raw_prose_included:invalid",
             validate_witness(prose),
         )
 
-        historical = valid_witness()
-        historical.pop("qualitative_texture_anchor_v1")
-        self.assertEqual(validate_witness(historical), [])
+        inferred = legacy_boundary.copy()
+        inferred["qualitative_evidence_boundary_v1"] = dict(
+            legacy_boundary["qualitative_evidence_boundary_v1"]
+        )
+        inferred_boundary = inferred["qualitative_evidence_boundary_v1"]
+        self.assertIsInstance(inferred_boundary, dict)
+        continuity = dict(inferred_boundary["subjective_continuity_v1"])
+        inferred_boundary["subjective_continuity_v1"] = continuity
+        self.assertIsInstance(continuity, dict)
+        continuity["subjective_continuity_index"] = 0.73
+        self.assertIn(
+            "qualitative_evidence_boundary.subjective_continuity_v1:invalid",
+            validate_witness(inferred),
+        )
 
-        legacy_anchor = valid_witness()
-        legacy_anchor_value = legacy_anchor["qualitative_texture_anchor_v1"]
-        self.assertIsInstance(legacy_anchor_value, dict)
-        for field in (
-            "artifact_integrity_mismatch_relation",
-            "felt_scalar_divergence_relation",
-            "dissimilarity_gradient_relation",
-        ):
-            legacy_anchor_value.pop(field)
-        self.assertEqual(validate_witness(legacy_anchor), [])
+        flattened = legacy_boundary.copy()
+        flattened["qualitative_evidence_boundary_v1"] = dict(
+            legacy_boundary["qualitative_evidence_boundary_v1"]
+        )
+        flattened_boundary = flattened["qualitative_evidence_boundary_v1"]
+        self.assertIsInstance(flattened_boundary, dict)
+        flattened_continuity = dict(flattened_boundary["subjective_continuity_v1"])
+        flattened_boundary["subjective_continuity_v1"] = flattened_continuity
+        self.assertIsInstance(flattened_continuity, dict)
+        flattened_continuity["texture_fidelity_score"] = 0.81
+        self.assertIn(
+            "qualitative_evidence_boundary.subjective_continuity_v1:invalid",
+            validate_witness(flattened),
+        )
+
+        invalidated = legacy_boundary.copy()
+        invalidated["qualitative_evidence_boundary_v1"] = dict(
+            legacy_boundary["qualitative_evidence_boundary_v1"]
+        )
+        invalidated_boundary = invalidated["qualitative_evidence_boundary_v1"]
+        self.assertIsInstance(invalidated_boundary, dict)
+        invalidated_continuity = dict(
+            invalidated_boundary["subjective_continuity_v1"]
+        )
+        invalidated_boundary["subjective_continuity_v1"] = invalidated_continuity
+        self.assertIsInstance(invalidated_continuity, dict)
+        invalidated_continuity["felt_report_remains_valid_without_index"] = False
+        self.assertIn(
+            "qualitative_evidence_boundary.subjective_continuity_v1:invalid",
+            validate_witness(invalidated),
+        )
+
+        causal = legacy_boundary.copy()
+        causal["qualitative_evidence_boundary_v1"] = dict(
+            legacy_boundary["qualitative_evidence_boundary_v1"]
+        )
+        causal_boundary = causal["qualitative_evidence_boundary_v1"]
+        self.assertIsInstance(causal_boundary, dict)
+        expression = dict(causal_boundary["causality_expression_v1"])
+        causal_boundary["causality_expression_v1"] = expression
+        self.assertIsInstance(expression, dict)
+        expression["causality_type"] = "self_reported"
+        self.assertIn(
+            "qualitative_evidence_boundary.causality_expression_v1:invalid",
+            validate_witness(causal),
+        )
 
     def test_model_route_scopes_event_identity_away_from_continuity(self) -> None:
         response_sha256 = "a" * 64

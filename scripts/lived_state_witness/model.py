@@ -327,6 +327,8 @@ def validate_gap(value: Any) -> list[str]:
             "schema_version",
             "gap_id",
             "witness_id",
+            "previous_witness_id",
+            "previous_witness_relation",
             "reason",
             "detected_at_unix_ms",
             "sidecar_expected",
@@ -351,6 +353,12 @@ def validate_gap(value: Any) -> list[str]:
         or re.fullmatch(r"lsgap_[0-9a-f]{64}", value["gap_id"]) is None
     ):
         errors.append("gap:gap_id")
+    previous_witness_id = value.get("previous_witness_id")
+    if previous_witness_id is not None and (
+        not isinstance(previous_witness_id, str)
+        or WITNESS_ID_RE.fullmatch(previous_witness_id) is None
+    ):
+        errors.append("gap:previous_witness_id")
     _bounded_string(value.get("reason"), "gap.reason", errors, 160)
     _integer(value.get("detected_at_unix_ms"), "gap.detected_at_unix_ms", errors, minimum=1)
     if value.get("sidecar_expected") is not True:
@@ -369,6 +377,10 @@ def validate_gap(value: Any) -> list[str]:
         for field, expected in semantic_fields.items():
             if value.get(field) != expected:
                 errors.append(f"gap:{field}")
+    if "previous_witness_relation" in value and value.get(
+        "previous_witness_relation"
+    ) != "prior_successful_sidecar_in_current_writer_lifetime_or_unknown":
+        errors.append("gap:previous_witness_relation")
     if not _valid_authority(value.get("artifact_authority_state_v1")):
         errors.append("gap:authority")
     if (

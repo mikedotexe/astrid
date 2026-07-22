@@ -1,7 +1,7 @@
 use super::*;
 
 #[test]
-fn qualitative_texture_anchor_hashes_exact_body_without_copying_it() {
+fn artifact_binding_is_mechanical_and_does_not_map_qualitative_state() {
     let body = b"viscous-persistence stays in Astrid's canonical language";
     let mut artifact = b"=== ASTRID INTROSPECTION ===\nHeader: value\n\n".to_vec();
     artifact.extend_from_slice(body);
@@ -17,47 +17,35 @@ fn qualitative_texture_anchor_hashes_exact_body_without_copying_it() {
     );
 
     let encoded = serde_json::to_value(witness).expect("serialize texture witness");
-    let anchor = &encoded["qualitative_texture_anchor_v1"];
-    assert_eq!(anchor["canonical_body_sha256"], sha256_bytes(body));
-    assert_eq!(anchor["canonical_body_byte_count"], body.len());
+    let binding = &encoded["canonical_body_binding_v1"];
+    assert_eq!(binding["canonical_body_sha256"], sha256_bytes(body));
+    assert_eq!(binding["canonical_body_byte_count"], body.len());
     assert_eq!(
-        anchor["texture_status"],
-        "primary_felt_evidence_preserved_exactly_not_classified_or_scalarized"
+        binding["binding_scope"],
+        "artifact_byte_integrity_only_not_texture_experience_stability_freezing_or_control"
     );
-    assert_eq!(
-        anchor["pregeneration_scalar_relation"],
-        "pre_model_context_not_generation_trajectory_or_qualitative_weight"
-    );
-    assert_eq!(
-        anchor["generation_interval_relation"],
-        "canonical_body_authored_after_model_generation_in_call_state_change_unmeasured"
-    );
-    assert_eq!(
-        anchor["scalar_comparison_relation"],
-        "not_comparable_without_reviewed_measurement_contract"
-    );
-    assert_eq!(
-        anchor["artifact_integrity_mismatch_relation"],
-        "byte_binding_failure_not_experiential_variance_or_qualitative_deficit"
-    );
-    assert_eq!(
-        anchor["felt_scalar_divergence_relation"],
-        "valid_nonreducible_and_unscored_no_error_inferred"
-    );
-    assert_eq!(
-        anchor["dissimilarity_gradient_relation"],
-        "not_computed_without_reviewed_measurement_contract"
-    );
-    assert_eq!(anchor["raw_prose_included"], false);
-    assert_eq!(anchor["direct_causation_claimed"], false);
+    assert!(encoded.get("qualitative_evidence_boundary_v1").is_none());
+    assert!(encoded.get("subjective_continuity_v1").is_none());
+    assert!(encoded.get("felt_scalar_divergence_relation").is_none());
 
     let sidecar = serde_json::to_string(&encoded).expect("serialize sidecar");
     assert!(!sidecar.contains("viscous-persistence"));
+    assert!(!sidecar.contains("qualitative_evidence_status"));
+    assert!(!sidecar.contains("measurement_contract_state"));
     assert!(artifact.ends_with(body));
 }
 
 #[test]
-fn protected_notice_does_not_claim_a_canonical_texture_anchor() {
+fn canonical_body_integrity_verifies_bytes_without_persisting_them() {
+    let body = b"blurry and sharp remain distinct in Astrid's own report";
+    let binding =
+        super::types::LivedStateCanonicalBodyBindingV1::new(sha256_bytes(body), body.len());
+    assert!(binding.verify_integrity(body));
+    assert!(!binding.verify_integrity(&body[..body.len() - 1]));
+}
+
+#[test]
+fn protected_notice_does_not_claim_canonical_body() {
     let artifact = b"=== ASTRID INTROSPECTION NOTICE ===\n\nprotected diagnostic";
     let authorship = begin_authorship_v1(None, &[], "thin_introspection_output");
     let witness = build_witness_v1(
@@ -70,5 +58,6 @@ fn protected_notice_does_not_claim_a_canonical_texture_anchor() {
         LivedStateRuntimeContextV1::default(),
     );
     let encoded = serde_json::to_value(witness).expect("serialize notice witness");
-    assert!(encoded["qualitative_texture_anchor_v1"].is_null());
+    assert!(encoded["canonical_body_binding_v1"].is_null());
+    assert!(encoded.get("qualitative_evidence_boundary_v1").is_none());
 }

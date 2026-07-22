@@ -66,6 +66,7 @@ selection of the crate boundary is required before code is proposed.
 | Capture non-interference | Generic pure builder over immutable persisted bytes, with explicit absence of normalization, shadow-state input, and causal claims |
 | Association identity | Generic binding of a derived context record to an immutable source membership hash so later revisions cannot be mistaken for earlier evidence |
 | Measurement refusal | Generic minimum-sample, variance, and missing-contract gates that emit insufficiency instead of an invented score |
+| Qualitative/mechanical separation | Generic artifact-body binding covers bytes only; qualitative evidence stays in its source artifact and higher-level evidence graph rather than witness-side qualitative or experiential state schemas |
 | Capture-time freshness | Generic injected observation and capture clocks so slow downstream work cannot retroactively make a fresh context sample stale |
 | Validation tests | Tampering, privacy, permissions, deterministic hashes, startup immutability, and saturation |
 
@@ -101,6 +102,12 @@ The following belong to this fork unless separately requested:
 - Never infer experiential deficit from an artifact-binding mismatch, and do
   not manufacture a qualitative dissimilarity score without an agreed
   measurement contract.
+- Do not put subjective continuity, texture fidelity, causal-expression,
+  persistence, influence, subjective weight, viscosity, decay, or future
+  measurement states in the capture witness. A separately adopted higher-level
+  study may refer to the source artifact without changing it.
+- Let a content-free capture-integrity receipt cite a prior successfully
+  persisted receipt when known without implying experiential discontinuity.
 
 ## Acceptance
 
