@@ -212,22 +212,18 @@ fn parameter(
     let value_relation = match (kind, value, fresh) {
         (LivedStateObservationKindV1::PeerObserved, Some(_), Some(true)) => {
             "fresh_peer_scalar_observed"
-        }
+        },
         (LivedStateObservationKindV1::Unknown, None, Some(false)) => {
             "peer_scalar_withheld_as_stale_temporal_context_only"
-        }
-        (LivedStateObservationKindV1::Unknown, None, _) => {
-            "source_unavailable_or_value_unobserved"
-        }
+        },
+        (LivedStateObservationKindV1::Unknown, None, _) => "source_unavailable_or_value_unobserved",
         (LivedStateObservationKindV1::CompiledConstant, Some(_), _) => {
             "compiled_value_observed_in_running_binary"
-        }
-        (LivedStateObservationKindV1::RuntimeObserved, Some(_), _) => {
-            "runtime_scalar_observed"
-        }
+        },
+        (LivedStateObservationKindV1::RuntimeObserved, Some(_), _) => "runtime_scalar_observed",
         (LivedStateObservationKindV1::SourceDeclared, Some(_), _) => {
             "source_declared_not_runtime_activation_proof"
-        }
+        },
         _ => "bounded_observation_without_stronger_relation",
     };
     parameter_with_relation(
@@ -283,7 +279,9 @@ fn peer_scalar_observations_from_snapshot(
     fields
         .into_iter()
         .map(|(name, field, unit)| {
-            let observed_scalar = value.and_then(|value| value.get(field)).and_then(Value::as_f64);
+            let observed_scalar = value
+                .and_then(|value| value.get(field))
+                .and_then(Value::as_f64);
             let scalar = fresh.then_some(observed_scalar).flatten();
             let value_relation = if scalar.is_some() {
                 "fresh_peer_scalar_observed"
@@ -323,12 +321,7 @@ fn peer_scalar_observations(now_ms: u64) -> Vec<LivedStateParameterObservationV1
     let age_ms = snapshot
         .file_modified_unix_ms
         .map(|modified| now_ms.saturating_sub(modified));
-    peer_scalar_observations_from_snapshot(
-        snapshot.value.as_ref(),
-        age_ms,
-        now_ms,
-        snapshot.status,
-    )
+    peer_scalar_observations_from_snapshot(snapshot.value.as_ref(), age_ms, now_ms, snapshot.status)
 }
 
 pub(crate) fn runtime_context_v1(state: &BridgeState, fill_pct: f32) -> LivedStateRuntimeContextV1 {

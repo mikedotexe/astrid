@@ -36,6 +36,7 @@ WITNESS_FIELDS = {
     "artifact_sha256",
     "authored_at_unix_ms",
     "authored_monotonic_ns",
+    "authorship_clock_scope",
     "authored_process_sequence",
     "authored_process_sequence_scope",
     "source_snapshot_v1",
@@ -50,6 +51,7 @@ WITNESS_FIELDS = {
     "privacy_hash_scope",
     "source_provenance_ref_v1",
     "process_provenance_ref_v1",
+    "process_provenance_scope",
     "raw_introspection_prose_included",
     "raw_prompt_included",
     "raw_response_included",
@@ -91,6 +93,10 @@ def _validate_witness_fields(
         errors.append("authored_process_sequence_scope:without_sequence")
     for field, expected in (
         (
+            "authorship_clock_scope",
+            "wall_clock_and_process_monotonic_observations_not_experiential_time_or_internal_sequence",
+        ),
+        (
             "peer_identity_scope",
             "witnessed_protocol_advertisement_not_being_identity_or_peer_self_authority",
         ),
@@ -101,6 +107,10 @@ def _validate_witness_fields(
         (
             "peer_evidence_cache_scope",
             "sidecar_context_only_not_model_prompt_codec_controller_shadow_telemetry_or_dispatch_input",
+        ),
+        (
+            "process_provenance_scope",
+            "bridge_evidence_derivation_not_being_origin_identity_or_continuity",
         ),
     ):
         if value.get(field) is not None and value.get(field) != expected:
@@ -373,7 +383,9 @@ def _validate_build_candidate(
             "schema_version",
             "manifest_sha256",
             "source_identity_sha256",
+            "source_identity_scope",
             "dirty_state_sha256",
+            "dirty_state_scope",
             "artifact_sha256",
             "protocol_revision",
             "protocol_version",
@@ -409,6 +421,18 @@ def _validate_build_candidate(
         errors.append("startup_build_candidate.private_path_included:must_be_false")
     if candidate.get("relation_to_process") != "startup_observation_not_deployment_proof":
         errors.append("startup_build_candidate.relation_to_process:invalid")
+    for field, expected in (
+        (
+            "source_identity_scope",
+            "repository_source_snapshot_not_being_identity_or_continuity",
+        ),
+        (
+            "dirty_state_scope",
+            "process_start_repository_observation_not_live_workspace_or_being_state",
+        ),
+    ):
+        if candidate.get(field) is not None and candidate.get(field) != expected:
+            errors.append(f"startup_build_candidate.{field}:invalid")
     _integer(
         candidate.get("observed_at_process_start_unix_ms"),
         "startup_build_candidate.observed_at_process_start_unix_ms",

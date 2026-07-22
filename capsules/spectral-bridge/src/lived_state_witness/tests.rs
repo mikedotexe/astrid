@@ -68,6 +68,14 @@ fn startup_build_candidate_is_an_observation_not_deployment_proof() {
     let encoded = serde_json::to_value(&candidate).expect("serialize candidate");
     assert_eq!(encoded["deployment_established"], false);
     assert_eq!(
+        encoded["source_identity_scope"],
+        "repository_source_snapshot_not_being_identity_or_continuity"
+    );
+    assert_eq!(
+        encoded["dirty_state_scope"],
+        "process_start_repository_observation_not_live_workspace_or_being_state"
+    );
+    assert_eq!(
         encoded["relation_to_process"],
         "startup_observation_not_deployment_proof"
     );
@@ -90,6 +98,55 @@ fn startup_build_candidate_is_an_observation_not_deployment_proof() {
         encoded
     );
     let _ = fs::remove_dir_all(root);
+}
+
+#[test]
+fn bounded_protocol_text_cannot_collapse_build_candidate_identity() {
+    let root = temp_root("protocol_collision");
+    fs::create_dir_all(&root).expect("temp root");
+    let first_path = root.join("first.json");
+    let second_path = root.join("second.json");
+    let shared_prefix = "r".repeat(80);
+    let manifest = |suffix: &str| {
+        json!({
+            "repository": {"dirty": false},
+            "protocol": {"revision": format!("{shared_prefix}{suffix}"), "version": "1.1"}
+        })
+    };
+    fs::write(
+        &first_path,
+        serde_json::to_vec(&manifest("first")).expect("first manifest"),
+    )
+    .expect("first write");
+    fs::write(
+        &second_path,
+        serde_json::to_vec(&manifest("second")).expect("second manifest"),
+    )
+    .expect("second write");
+
+    let first = serde_json::to_value(
+        identity::build_candidate_from_path_for_test(&first_path, 123).expect("first candidate"),
+    )
+    .expect("first JSON");
+    let second = serde_json::to_value(
+        identity::build_candidate_from_path_for_test(&second_path, 123).expect("second candidate"),
+    )
+    .expect("second JSON");
+    assert_eq!(first["protocol_revision"], second["protocol_revision"]);
+    assert_ne!(first["manifest_sha256"], second["manifest_sha256"]);
+    assert_ne!(first, second);
+    let _ = fs::remove_dir_all(root);
+}
+
+#[test]
+fn runtime_instance_identity_is_stable_for_process_lifetime() {
+    let first = identity::initialize();
+    let second = identity::initialize();
+    assert!(std::ptr::eq(first, second));
+    assert_eq!(
+        first.process.runtime_instance_id(),
+        second.process.runtime_instance_id()
+    );
 }
 
 #[test]
@@ -189,7 +246,16 @@ fn owner_sidecars_are_write_once_and_idempotent() {
     let root = temp_root("write_once");
     let path = root.join("witnesses/immutable.json");
     writer::atomic_owner_write(&path, b"same\n").expect("first publish");
+    fs::set_permissions(&path, fs::Permissions::from_mode(0o640)).expect("change metadata");
     writer::atomic_owner_write(&path, b"same\n").expect("idempotent publish");
+    assert_eq!(
+        fs::metadata(&path)
+            .expect("sidecar metadata")
+            .permissions()
+            .mode()
+            & 0o777,
+        0o600
+    );
     let error = writer::atomic_owner_write(&path, b"changed\n")
         .expect_err("different bytes must not replace an immutable sidecar");
     assert_eq!(error.kind(), std::io::ErrorKind::AlreadyExists);
@@ -419,8 +485,7 @@ fn stale_or_absent_peer_state_is_unknown_not_active_inference() {
         row["observation_kind"] == "unknown"
             && row["value"].is_null()
             && row["fresh"] == false
-            && row["value_relation"]
-                == "peer_scalar_withheld_as_stale_temporal_context_only"
+            && row["value_relation"] == "peer_scalar_withheld_as_stale_temporal_context_only"
     }));
     let fresh = peer_scalar_observations_from_snapshot(
         Some(&value),
@@ -466,7 +531,10 @@ fn peer_snapshot_distinguishes_missing_unreadable_and_malformed_sources() {
     assert_eq!(missing.status, PeerEvidenceSourceStatusV1::FileMissing);
 
     let unreadable = peer_evidence_cache::load_for_test(&root);
-    assert_eq!(unreadable.status, PeerEvidenceSourceStatusV1::FileUnreadable);
+    assert_eq!(
+        unreadable.status,
+        PeerEvidenceSourceStatusV1::FileUnreadable
+    );
 
     let malformed_path = root.join("malformed.json");
     fs::write(&malformed_path, "{").expect("malformed fixture");
@@ -491,10 +559,7 @@ fn peer_snapshot_distinguishes_missing_unreadable_and_malformed_sources() {
     );
     fs::write(&observed_path, "{").expect("degraded fixture");
     let degraded = peer_evidence_cache::load_for_test(&observed_path);
-    assert_eq!(
-        degraded.status,
-        PeerEvidenceSourceStatusV1::JsonMalformed
-    );
+    assert_eq!(degraded.status, PeerEvidenceSourceStatusV1::JsonMalformed);
     assert!(
         degraded.value.is_none(),
         "evidence errors must not retain last-known scalars as current presence"
@@ -529,6 +594,10 @@ fn capture_sequence_and_identity_scopes_are_explicit() {
         "per_runtime_instance_capture_order_not_experiential_time_or_global_order"
     );
     assert_eq!(
+        encoded["authorship_clock_scope"],
+        "wall_clock_and_process_monotonic_observations_not_experiential_time_or_internal_sequence"
+    );
+    assert_eq!(
         encoded["peer_identity_scope"],
         "witnessed_protocol_advertisement_not_being_identity_or_peer_self_authority"
     );
@@ -536,6 +605,48 @@ fn capture_sequence_and_identity_scopes_are_explicit() {
         encoded["privacy_hash_scope"],
         "absolute_path_redaction_not_being_or_continuity_identity"
     );
+    assert_eq!(
+        encoded["process_provenance_scope"],
+        "bridge_evidence_derivation_not_being_origin_identity_or_continuity"
+    );
+}
+
+#[test]
+fn concurrent_capture_sequences_are_unique() {
+    const THREADS: usize = 16;
+    const CAPTURES_PER_THREAD: usize = 64;
+
+    let mut handles = Vec::with_capacity(THREADS);
+    for _ in 0..THREADS {
+        handles.push(std::thread::spawn(|| {
+            (0..CAPTURES_PER_THREAD)
+                .map(|_| begin_authorship_v1(None, &[], "introspection").authored_process_sequence)
+                .collect::<Vec<_>>()
+        }));
+    }
+
+    let mut sequences = handles
+        .into_iter()
+        .flat_map(|handle| handle.join().expect("capture thread"))
+        .collect::<Vec<_>>();
+    assert_eq!(sequences.len(), THREADS * CAPTURES_PER_THREAD);
+    sequences.sort_unstable();
+    sequences.dedup();
+    assert_eq!(sequences.len(), THREADS * CAPTURES_PER_THREAD);
+}
+
+#[test]
+fn bounded_identity_is_deterministic_and_context_independent() {
+    let absolute = "/private/runtime/example/process.json";
+    let first_absolute = bounded_identity(Some(absolute)).expect("absolute identity");
+    let second_absolute = bounded_identity(Some(absolute)).expect("absolute identity");
+    assert_eq!(first_absolute, second_absolute);
+    assert!(first_absolute.starts_with("sha256:"));
+    assert!(!first_absolute.contains(absolute));
+
+    let relative = "peer/runtime-instance-v1";
+    assert_eq!(bounded_identity(Some(relative)).as_deref(), Some(relative));
+    assert_eq!(bounded_identity(Some(relative)).as_deref(), Some(relative));
 }
 
 #[test]

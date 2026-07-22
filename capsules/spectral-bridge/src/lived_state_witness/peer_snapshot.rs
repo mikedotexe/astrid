@@ -116,9 +116,11 @@ pub(super) fn initialize(path: PathBuf) {
     REFRESHER.get_or_init(|| {
         let _ = std::thread::Builder::new()
             .name("lived-state-peer-evidence-cache".to_string())
-            .spawn(move || loop {
-                refresh(&path);
-                std::thread::sleep(EVIDENCE_REFRESH_INTERVAL);
+            .spawn(move || {
+                loop {
+                    refresh(&path);
+                    std::thread::sleep(EVIDENCE_REFRESH_INTERVAL);
+                }
             });
     });
 }

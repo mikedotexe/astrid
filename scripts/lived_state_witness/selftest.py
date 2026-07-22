@@ -51,6 +51,9 @@ def valid_witness() -> dict[str, object]:
         "artifact_sha256": "b" * 64,
         "authored_at_unix_ms": 123456789000,
         "authored_monotonic_ns": 10,
+        "authorship_clock_scope": (
+            "wall_clock_and_process_monotonic_observations_not_experiential_time_or_internal_sequence"
+        ),
         "authored_process_sequence": 1,
         "authored_process_sequence_scope": (
             "per_runtime_instance_capture_order_not_experiential_time_or_global_order"
@@ -85,7 +88,13 @@ def valid_witness() -> dict[str, object]:
             "schema_version": 1,
             "manifest_sha256": "f" * 64,
             "source_identity_sha256": "1" * 64,
+            "source_identity_scope": (
+                "repository_source_snapshot_not_being_identity_or_continuity"
+            ),
             "dirty_state_sha256": "2" * 64,
+            "dirty_state_scope": (
+                "process_start_repository_observation_not_live_workspace_or_being_state"
+            ),
             "artifact_sha256": "3" * 64,
             "protocol_revision": "revision",
             "protocol_version": "1.1",
@@ -107,6 +116,9 @@ def valid_witness() -> dict[str, object]:
         "privacy_hash_scope": "absolute_path_redaction_not_being_or_continuity_identity",
         "source_provenance_ref_v1": None,
         "process_provenance_ref_v1": provenance_ref(),
+        "process_provenance_scope": (
+            "bridge_evidence_derivation_not_being_origin_identity_or_continuity"
+        ),
         "raw_introspection_prose_included": False,
         "raw_prompt_included": False,
         "raw_response_included": False,
@@ -192,6 +204,33 @@ def valid_deployment_receipt(receipt_id: str = "deploy_one") -> dict[str, object
 
 
 class LivedStateWitnessTests(unittest.TestCase):
+    def test_technical_identity_and_clock_scopes_reject_experiential_overreach(self) -> None:
+        witness = valid_witness()
+        witness["authorship_clock_scope"] = "experiential_time"
+        self.assertIn("authorship_clock_scope:invalid", validate_witness(witness))
+
+        provenance = valid_witness()
+        provenance["process_provenance_scope"] = "being_origin"
+        self.assertIn("process_provenance_scope:invalid", validate_witness(provenance))
+
+        candidate = valid_witness()
+        build = candidate["startup_build_candidate_v1"]
+        self.assertIsInstance(build, dict)
+        build["source_identity_scope"] = "being_identity"
+        self.assertIn(
+            "startup_build_candidate.source_identity_scope:invalid",
+            validate_witness(candidate),
+        )
+
+        dirty = valid_witness()
+        dirty_build = dirty["startup_build_candidate_v1"]
+        self.assertIsInstance(dirty_build, dict)
+        dirty_build["dirty_state_scope"] = "live_experiential_state"
+        self.assertIn(
+            "startup_build_candidate.dirty_state_scope:invalid",
+            validate_witness(dirty),
+        )
+
     def test_experiential_scope_preserves_report_without_adjudicating_mechanism(self) -> None:
         witness = valid_witness()
         self.assertEqual(validate_witness(witness), [])
