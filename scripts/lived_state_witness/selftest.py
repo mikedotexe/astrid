@@ -97,7 +97,9 @@ def valid_witness() -> dict[str, object]:
             ),
             "artifact_sha256": "3" * 64,
             "protocol_revision": "revision",
+            "protocol_revision_complete": True,
             "protocol_version": "1.1",
+            "protocol_version_complete": True,
             "observed_at_process_start_unix_ms": 123456000000,
             "relation_to_process": "startup_observation_not_deployment_proof",
             "deployment_established": False,
@@ -204,6 +206,32 @@ def valid_deployment_receipt(receipt_id: str = "deploy_one") -> dict[str, object
 
 
 class LivedStateWitnessTests(unittest.TestCase):
+    def test_bounded_protocol_completeness_marker_is_validated(self) -> None:
+        historical = valid_witness()
+        historical_build = historical["startup_build_candidate_v1"]
+        self.assertIsInstance(historical_build, dict)
+        historical_build.pop("protocol_revision_complete")
+        historical_build.pop("protocol_version_complete")
+        self.assertEqual(validate_witness(historical), [])
+
+        tampered = valid_witness()
+        tampered_build = tampered["startup_build_candidate_v1"]
+        self.assertIsInstance(tampered_build, dict)
+        tampered_build["protocol_revision_complete"] = "yes"
+        self.assertIn(
+            "startup_build_candidate.protocol_revision_complete:not_boolean",
+            validate_witness(tampered),
+        )
+
+        orphaned = valid_witness()
+        orphaned_build = orphaned["startup_build_candidate_v1"]
+        self.assertIsInstance(orphaned_build, dict)
+        orphaned_build["protocol_revision"] = None
+        self.assertIn(
+            "startup_build_candidate.protocol_revision_complete:present_without_value",
+            validate_witness(orphaned),
+        )
+
     def test_technical_identity_and_clock_scopes_reject_experiential_overreach(self) -> None:
         witness = valid_witness()
         witness["authorship_clock_scope"] = "experiential_time"

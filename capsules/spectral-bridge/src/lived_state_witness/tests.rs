@@ -133,6 +133,10 @@ fn bounded_protocol_text_cannot_collapse_build_candidate_identity() {
     )
     .expect("second JSON");
     assert_eq!(first["protocol_revision"], second["protocol_revision"]);
+    assert_eq!(first["protocol_revision_complete"], false);
+    assert_eq!(second["protocol_revision_complete"], false);
+    assert_eq!(first["protocol_version_complete"], true);
+    assert_eq!(second["protocol_version_complete"], true);
     assert_ne!(first["manifest_sha256"], second["manifest_sha256"]);
     assert_ne!(first, second);
     let _ = fs::remove_dir_all(root);
@@ -158,6 +162,20 @@ fn source_snapshot_redacts_absolute_paths_and_hashes_exact_window() {
     assert_eq!(encoded["window_sha256"], sha256_bytes(b"viewed window"));
     assert!(!encoded.to_string().contains("/Users/"));
     assert_eq!(encoded["private_path_included"], false);
+}
+
+#[test]
+fn source_ownership_distinguishes_sibling_repository_roots() {
+    let paths = bridge_paths();
+    let (astrid_owner, astrid_relative) =
+        source_owner_and_relative_path(&paths.astrid_root().join("crates/astrid-types/src/lib.rs"));
+    assert_eq!(astrid_owner, "astrid");
+    assert_eq!(astrid_relative, "crates/astrid-types/src/lib.rs");
+
+    let (minime_owner, minime_relative) =
+        source_owner_and_relative_path(&paths.minime_root().join("minime/src/lib.rs"));
+    assert_eq!(minime_owner, "minime");
+    assert_eq!(minime_relative, "minime/src/lib.rs");
 }
 
 #[test]
@@ -260,6 +278,30 @@ fn owner_sidecars_are_write_once_and_idempotent() {
         .expect_err("different bytes must not replace an immutable sidecar");
     assert_eq!(error.kind(), std::io::ErrorKind::AlreadyExists);
     assert_eq!(fs::read(&path).expect("published bytes"), b"same\n");
+    let _ = fs::remove_dir_all(root);
+}
+
+#[test]
+fn temporal_progression_creates_a_new_immutable_sidecar() {
+    let root = temp_root("temporal_progression");
+    let first = test_witness(b"same report bytes");
+    let second = test_witness(b"same report bytes");
+    assert_ne!(first.witness_id(), second.witness_id());
+
+    writer::write_witness_for_test(&root, first.clone()).expect("first temporal witness");
+    writer::write_witness_for_test(&root, second.clone()).expect("second temporal witness");
+
+    let first_bytes = fs::read(
+        root.join("witnesses")
+            .join(format!("{}.json", first.witness_id())),
+    )
+    .expect("first sidecar");
+    let second_bytes = fs::read(
+        root.join("witnesses")
+            .join(format!("{}.json", second.witness_id())),
+    )
+    .expect("second sidecar");
+    assert_ne!(first_bytes, second_bytes);
     let _ = fs::remove_dir_all(root);
 }
 
@@ -540,6 +582,13 @@ fn peer_snapshot_distinguishes_missing_unreadable_and_malformed_sources() {
     fs::write(&malformed_path, "{").expect("malformed fixture");
     let malformed = peer_evidence_cache::load_for_test(&malformed_path);
     assert_eq!(malformed.status, PeerEvidenceSourceStatusV1::JsonMalformed);
+    assert!(malformed.value.is_none());
+
+    let empty_path = root.join("empty.json");
+    fs::write(&empty_path, "").expect("empty fixture");
+    let empty = peer_evidence_cache::load_for_test(&empty_path);
+    assert_eq!(empty.status, PeerEvidenceSourceStatusV1::JsonMalformed);
+    assert!(empty.value.is_none());
 
     let observed_path = root.join("observed.json");
     fs::write(

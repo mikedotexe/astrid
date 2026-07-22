@@ -42,12 +42,16 @@ fn optional_hash(value: Option<&Value>) -> Option<String> {
     })
 }
 
-fn bounded_text(value: Option<&Value>, max_len: usize) -> Option<String> {
-    value
+fn bounded_text(value: Option<&Value>, max_len: usize) -> (Option<String>, Option<bool>) {
+    let Some(value) = value
         .and_then(Value::as_str)
         .map(str::trim)
         .filter(|value| !value.is_empty())
-        .map(|value| value.chars().take(max_len).collect())
+    else {
+        return (None, None);
+    };
+    let complete = value.chars().count() <= max_len;
+    (Some(value.chars().take(max_len).collect()), Some(complete))
 }
 
 fn read_build_candidate(
@@ -66,6 +70,10 @@ fn read_build_candidate(
             "dirty_paths": repository.get("dirty_paths").cloned().unwrap_or(Value::Null),
         }))
     });
+    let (protocol_revision, protocol_revision_complete) =
+        bounded_text(protocol.and_then(|value| value.get("revision")), 80);
+    let (protocol_version, protocol_version_complete) =
+        bounded_text(protocol.and_then(|value| value.get("version")), 24);
     Some(LivedStateBuildCandidateV1::new(
         manifest_sha256,
         optional_hash(repository.and_then(|value| value.get("source_identity_sha256"))),
@@ -75,8 +83,10 @@ fn read_build_candidate(
                 .and_then(|value| value.get("spectral-bridge"))
                 .and_then(|value| value.get("sha256")),
         ),
-        bounded_text(protocol.and_then(|value| value.get("revision")), 80),
-        bounded_text(protocol.and_then(|value| value.get("version")), 24),
+        protocol_revision,
+        protocol_revision_complete,
+        protocol_version,
+        protocol_version_complete,
         started_at_unix_ms,
     ))
 }

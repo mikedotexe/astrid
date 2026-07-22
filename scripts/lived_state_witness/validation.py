@@ -388,7 +388,9 @@ def _validate_build_candidate(
             "dirty_state_scope",
             "artifact_sha256",
             "protocol_revision",
+            "protocol_revision_complete",
             "protocol_version",
+            "protocol_version_complete",
             "observed_at_process_start_unix_ms",
             "relation_to_process",
             "deployment_established",
@@ -459,6 +461,15 @@ def _validate_build_candidate(
         24,
         optional=True,
     )
+    for field in ("protocol_revision", "protocol_version"):
+        complete_field = f"{field}_complete"
+        complete = candidate.get(complete_field)
+        if complete is not None and not isinstance(complete, bool):
+            errors.append(f"startup_build_candidate.{complete_field}:not_boolean")
+        if candidate.get(field) is None and complete is not None:
+            errors.append(
+                f"startup_build_candidate.{complete_field}:present_without_value"
+            )
 
 
 def _validate_model_route_identity_boundaries(
