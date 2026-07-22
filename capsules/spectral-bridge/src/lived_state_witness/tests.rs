@@ -229,6 +229,19 @@ fn source_ownership_distinguishes_sibling_repository_roots() {
         source_owner_and_relative_path(&paths.minime_root().join("minime/src/lib.rs"));
     assert_eq!(minime_owner, "minime");
     assert_eq!(minime_relative, "minime/src/lib.rs");
+
+    let (astrid_workspace_owner, astrid_workspace_relative) =
+        source_owner_and_relative_path(&paths.bridge_workspace().join("diagnostics/status.json"));
+    assert_eq!(astrid_workspace_owner, "astrid_workspace");
+    assert_eq!(
+        astrid_workspace_relative,
+        "workspace/diagnostics/status.json"
+    );
+
+    let (minime_workspace_owner, minime_workspace_relative) =
+        source_owner_and_relative_path(&paths.minime_workspace().join("spectral_state.json"));
+    assert_eq!(minime_workspace_owner, "minime_workspace");
+    assert_eq!(minime_workspace_relative, "workspace/spectral_state.json");
 }
 
 #[test]
@@ -839,6 +852,16 @@ fn bounded_identity_is_deterministic_and_context_independent() {
     let relative = "peer/runtime-instance-v1";
     assert_eq!(bounded_identity(Some(relative)).as_deref(), Some(relative));
     assert_eq!(bounded_identity(Some(relative)).as_deref(), Some(relative));
+
+    let shared_prefix = "peer/".to_string() + &"r".repeat(180);
+    let first_long = format!("{shared_prefix}/first");
+    let second_long = format!("{shared_prefix}/second");
+    let first_bounded = bounded_identity(Some(&first_long)).expect("first long identity");
+    let second_bounded = bounded_identity(Some(&second_long)).expect("second long identity");
+    assert!(first_bounded.starts_with("sha256:"));
+    assert!(second_bounded.starts_with("sha256:"));
+    assert_ne!(first_bounded, second_bounded);
+    assert!(!first_bounded.contains(&shared_prefix));
 }
 
 #[test]

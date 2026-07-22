@@ -57,10 +57,10 @@ fn bounded_identity(value: Option<&str>) -> Option<String> {
         .map(str::trim)
         .filter(|value| !value.is_empty())
         .map(|value| {
-            if Path::new(value).is_absolute() {
+            if Path::new(value).is_absolute() || value.chars().count() > 160 {
                 format!("sha256:{}", sha256_bytes(value.as_bytes()))
             } else {
-                value.chars().take(160).collect()
+                value.to_string()
             }
         })
 }
@@ -89,24 +89,23 @@ pub(crate) fn clock_sample_v1() -> LivedStateClockSampleV1 {
 fn source_owner_and_relative_path(path: &Path) -> (String, String) {
     let paths = bridge_paths();
     for (owner, root) in [
+        ("astrid_workspace", paths.bridge_workspace()),
+        ("minime_workspace", paths.minime_workspace()),
+    ] {
+        if let Ok(relative) = path.strip_prefix(root) {
+            return (
+                owner.to_string(),
+                format!("workspace/{}", relative.to_string_lossy()),
+            );
+        }
+    }
+    for (owner, root) in [
         ("astrid", paths.astrid_root()),
         ("minime", paths.minime_root()),
     ] {
         if let Ok(relative) = path.strip_prefix(root) {
             return (owner.to_string(), relative.to_string_lossy().into_owned());
         }
-    }
-    if let Ok(relative) = path.strip_prefix(paths.bridge_workspace()) {
-        return (
-            "astrid_workspace".to_string(),
-            format!("workspace/{}", relative.to_string_lossy()),
-        );
-    }
-    if let Ok(relative) = path.strip_prefix(paths.minime_workspace()) {
-        return (
-            "minime_workspace".to_string(),
-            format!("workspace/{}", relative.to_string_lossy()),
-        );
     }
     ("unknown".to_string(), "redacted/unknown".to_string())
 }
