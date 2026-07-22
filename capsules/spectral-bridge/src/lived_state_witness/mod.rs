@@ -1,7 +1,8 @@
 //! Immutable evidence-only context for authored introspection reports.
 
 mod identity;
-mod peer_snapshot;
+#[path = "peer_snapshot.rs"]
+mod peer_evidence_cache;
 mod types;
 mod writer;
 
@@ -22,7 +23,7 @@ pub(crate) use writer::WitnessSubmitResultV1;
 use crate::paths::bridge_paths;
 use crate::witness::{ProvenanceInfluenceTypeV1, ProvenanceOriginV1, ProvenanceRefV1};
 use crate::ws::BridgeState;
-use peer_snapshot::PeerSnapshotStatusV1;
+use peer_evidence_cache::PeerEvidenceSourceStatusV1;
 
 const MAX_PEER_STATE_AGE_MS: u64 = 30_000;
 static WITNESS_SEQUENCE: AtomicU64 = AtomicU64::new(0);
@@ -74,7 +75,7 @@ fn next_witness_sequence() -> u64 {
 
 pub fn initialize_runtime_identity_v1() {
     let _ = identity::initialize();
-    peer_snapshot::initialize(
+    peer_evidence_cache::initialize(
         bridge_paths()
             .minime_workspace()
             .join("spectral_state.json"),
@@ -271,7 +272,7 @@ fn peer_scalar_observations_from_snapshot(
     value: Option<&Value>,
     age_ms: Option<u64>,
     now_ms: u64,
-    status: PeerSnapshotStatusV1,
+    status: PeerEvidenceSourceStatusV1,
 ) -> Vec<LivedStateParameterObservationV1> {
     let fresh = age_ms.is_some_and(|age| age <= MAX_PEER_STATE_AGE_MS);
     let fields = [
@@ -292,10 +293,10 @@ fn peer_scalar_observations_from_snapshot(
                 "source_timestamp_unavailable_scalar_withheld"
             } else {
                 match status {
-                    PeerSnapshotStatusV1::Observed => "source_value_missing_or_non_scalar",
-                    PeerSnapshotStatusV1::FileMissing => "source_file_missing",
-                    PeerSnapshotStatusV1::FileUnreadable => "source_file_unreadable",
-                    PeerSnapshotStatusV1::JsonMalformed => "source_json_malformed",
+                    PeerEvidenceSourceStatusV1::Observed => "source_value_missing_or_non_scalar",
+                    PeerEvidenceSourceStatusV1::FileMissing => "source_file_missing",
+                    PeerEvidenceSourceStatusV1::FileUnreadable => "source_file_unreadable",
+                    PeerEvidenceSourceStatusV1::JsonMalformed => "source_json_malformed",
                 }
             };
             parameter_with_relation(
@@ -318,7 +319,7 @@ fn peer_scalar_observations_from_snapshot(
 }
 
 fn peer_scalar_observations(now_ms: u64) -> Vec<LivedStateParameterObservationV1> {
-    let snapshot = peer_snapshot::snapshot();
+    let snapshot = peer_evidence_cache::snapshot();
     let age_ms = snapshot
         .file_modified_unix_ms
         .map(|modified| now_ms.saturating_sub(modified));

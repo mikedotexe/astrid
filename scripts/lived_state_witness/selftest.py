@@ -101,6 +101,9 @@ def valid_witness() -> dict[str, object]:
         "peer_identity_scope": (
             "witnessed_protocol_advertisement_not_being_identity_or_peer_self_authority"
         ),
+        "peer_evidence_cache_scope": (
+            "sidecar_context_only_not_model_prompt_codec_controller_shadow_telemetry_or_dispatch_input"
+        ),
         "privacy_hash_scope": "absolute_path_redaction_not_being_or_continuity_identity",
         "source_provenance_ref_v1": None,
         "process_provenance_ref_v1": provenance_ref(),

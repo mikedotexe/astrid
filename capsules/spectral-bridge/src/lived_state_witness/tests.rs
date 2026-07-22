@@ -412,7 +412,7 @@ fn stale_or_absent_peer_state_is_unknown_not_active_inference() {
         Some(&value),
         Some(MAX_PEER_STATE_AGE_MS + 1),
         100,
-        PeerSnapshotStatusV1::Observed,
+        PeerEvidenceSourceStatusV1::Observed,
     );
     let stale_json = serde_json::to_value(stale).expect("stale observations");
     assert!(stale_json.as_array().expect("array").iter().all(|row| {
@@ -426,7 +426,7 @@ fn stale_or_absent_peer_state_is_unknown_not_active_inference() {
         Some(&value),
         Some(MAX_PEER_STATE_AGE_MS),
         101,
-        PeerSnapshotStatusV1::Observed,
+        PeerEvidenceSourceStatusV1::Observed,
     );
     let fresh_json = serde_json::to_value(fresh).expect("fresh observations");
     assert!(fresh_json.as_array().expect("array").iter().all(|row| {
@@ -439,7 +439,7 @@ fn stale_or_absent_peer_state_is_unknown_not_active_inference() {
         None,
         None,
         100,
-        PeerSnapshotStatusV1::FileMissing,
+        PeerEvidenceSourceStatusV1::FileMissing,
     );
     let absent_json = serde_json::to_value(absent).expect("absent observations");
     assert!(
@@ -462,16 +462,16 @@ fn stale_or_absent_peer_state_is_unknown_not_active_inference() {
 fn peer_snapshot_distinguishes_missing_unreadable_and_malformed_sources() {
     let root = temp_root("peer_snapshot_status");
     fs::create_dir_all(&root).expect("temp root");
-    let missing = peer_snapshot::load_for_test(&root.join("missing.json"));
-    assert_eq!(missing.status, PeerSnapshotStatusV1::FileMissing);
+    let missing = peer_evidence_cache::load_for_test(&root.join("missing.json"));
+    assert_eq!(missing.status, PeerEvidenceSourceStatusV1::FileMissing);
 
-    let unreadable = peer_snapshot::load_for_test(&root);
-    assert_eq!(unreadable.status, PeerSnapshotStatusV1::FileUnreadable);
+    let unreadable = peer_evidence_cache::load_for_test(&root);
+    assert_eq!(unreadable.status, PeerEvidenceSourceStatusV1::FileUnreadable);
 
     let malformed_path = root.join("malformed.json");
     fs::write(&malformed_path, "{").expect("malformed fixture");
-    let malformed = peer_snapshot::load_for_test(&malformed_path);
-    assert_eq!(malformed.status, PeerSnapshotStatusV1::JsonMalformed);
+    let malformed = peer_evidence_cache::load_for_test(&malformed_path);
+    assert_eq!(malformed.status, PeerEvidenceSourceStatusV1::JsonMalformed);
 
     let observed_path = root.join("observed.json");
     fs::write(
@@ -479,8 +479,8 @@ fn peer_snapshot_distinguishes_missing_unreadable_and_malformed_sources() {
         r#"{"fill_pct":68.0,"spectral_entropy":0.8,"structural_entropy":0.7}"#,
     )
     .expect("observed fixture");
-    let observed = peer_snapshot::load_for_test(&observed_path);
-    assert_eq!(observed.status, PeerSnapshotStatusV1::Observed);
+    let observed = peer_evidence_cache::load_for_test(&observed_path);
+    assert_eq!(observed.status, PeerEvidenceSourceStatusV1::Observed);
     assert_eq!(
         observed
             .value
@@ -488,6 +488,16 @@ fn peer_snapshot_distinguishes_missing_unreadable_and_malformed_sources() {
             .and_then(|value| value.get("fill_pct"))
             .and_then(serde_json::Value::as_f64),
         Some(68.0)
+    );
+    fs::write(&observed_path, "{").expect("degraded fixture");
+    let degraded = peer_evidence_cache::load_for_test(&observed_path);
+    assert_eq!(
+        degraded.status,
+        PeerEvidenceSourceStatusV1::JsonMalformed
+    );
+    assert!(
+        degraded.value.is_none(),
+        "evidence errors must not retain last-known scalars as current presence"
     );
     let _ = fs::remove_dir_all(root);
 }
@@ -497,7 +507,7 @@ fn cached_peer_snapshot_read_is_below_one_millisecond_p95() {
     let mut elapsed = (0..1_000)
         .map(|_| {
             let started = std::time::Instant::now();
-            let _ = peer_snapshot::snapshot();
+            let _ = peer_evidence_cache::snapshot();
             started.elapsed().as_nanos()
         })
         .collect::<Vec<_>>();

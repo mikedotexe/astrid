@@ -46,6 +46,7 @@ WITNESS_FIELDS = {
     "peer_process_identity",
     "peer_deployment_identity",
     "peer_identity_scope",
+    "peer_evidence_cache_scope",
     "privacy_hash_scope",
     "source_provenance_ref_v1",
     "process_provenance_ref_v1",
@@ -96,6 +97,10 @@ def _validate_witness_fields(
         (
             "privacy_hash_scope",
             "absolute_path_redaction_not_being_or_continuity_identity",
+        ),
+        (
+            "peer_evidence_cache_scope",
+            "sidecar_context_only_not_model_prompt_codec_controller_shadow_telemetry_or_dispatch_input",
         ),
     ):
         if value.get(field) is not None and value.get(field) != expected:

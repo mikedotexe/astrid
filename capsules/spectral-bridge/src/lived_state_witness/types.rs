@@ -381,6 +381,7 @@ pub struct TemporalLivedStateWitnessV1 {
     peer_process_identity: Option<String>,
     peer_deployment_identity: Option<String>,
     peer_identity_scope: &'static str,
+    peer_evidence_cache_scope: &'static str,
     privacy_hash_scope: &'static str,
     source_provenance_ref_v1: Option<ProvenanceRefV1>,
     process_provenance_ref_v1: ProvenanceRefV1,
@@ -434,6 +435,8 @@ impl TemporalLivedStateWitnessV1 {
             peer_deployment_identity,
             peer_identity_scope:
                 "witnessed_protocol_advertisement_not_being_identity_or_peer_self_authority",
+            peer_evidence_cache_scope:
+                "sidecar_context_only_not_model_prompt_codec_controller_shadow_telemetry_or_dispatch_input",
             privacy_hash_scope:
                 "absolute_path_redaction_not_being_or_continuity_identity",
             source_provenance_ref_v1,
