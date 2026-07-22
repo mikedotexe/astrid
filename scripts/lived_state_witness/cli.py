@@ -80,6 +80,8 @@ def main(argv: list[str] | None = None) -> int:
                 {
                     "status.json": root / "status.json",
                     "witnesses.jsonl": root / "witnesses.jsonl",
+                    "auxiliary_artifacts.jsonl": root
+                    / "auxiliary_artifacts.jsonl",
                     "context_index.jsonl": root / "context_index.jsonl",
                     "report.md": root / "report.md",
                     "migration_receipt.json": root / "migration_receipt.json",

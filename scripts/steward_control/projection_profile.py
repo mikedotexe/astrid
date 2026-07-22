@@ -133,6 +133,7 @@ def source_first_steps() -> tuple[ProjectionStep, ...]:
             (
                 "diagnostics/lived_state_witness_v1/status.json",
                 "diagnostics/lived_state_witness_v1/witnesses.jsonl",
+                "diagnostics/lived_state_witness_v1/auxiliary_artifacts.jsonl",
                 "diagnostics/lived_state_witness_v1/gaps.jsonl",
                 "diagnostics/lived_state_witness_v1/context_index.jsonl",
                 "diagnostics/lived_state_witness_v1/report.md",

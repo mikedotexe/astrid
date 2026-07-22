@@ -385,6 +385,53 @@ class LivedStateWitnessProjectionTests(unittest.TestCase):
             verification["output_errors"],
         )
 
+    def test_intact_noncanonical_artifact_is_auxiliary_not_orphan(self) -> None:
+        witness_id, canonical_name = self._write_exact_fixture()
+        canonical_path = self.introspections / canonical_name
+        auxiliary_path = self.introspections / canonical_name.replace(
+            "introspection_", "self_study_carriage_notice_", 1
+        )
+        canonical_path.rename(auxiliary_path)
+        sidecar_path = (
+            self.introspections
+            / "lived_state_witnesses/witnesses"
+            / f"{witness_id}.json"
+        )
+        sidecar = json.loads(sidecar_path.read_text(encoding="utf-8"))
+        sidecar["artifact_relative_path"] = auxiliary_path.name
+        sidecar_path.write_text(
+            json.dumps(sidecar, sort_keys=True) + "\n", encoding="utf-8"
+        )
+
+        status = project(self.workspace, write=True)
+
+        self.assertEqual(status["migration_counters"]["canonical"], 0)
+        self.assertEqual(status["migration_counters"]["auxiliary"], 1)
+        self.assertEqual(status["migration_counters"]["orphan"], 0)
+        self.assertEqual(status["witness_count"], 0)
+        self.assertEqual(status["auxiliary_artifact_count"], 1)
+        auxiliary = status["auxiliary_artifacts"][witness_id]
+        self.assertFalse(auxiliary["artifact_ref"]["canonical_queue_member"])
+        self.assertFalse(auxiliary["felt_contract_ingestion_eligible"])
+        self.assertEqual(
+            show(self.workspace, witness_id)["canonical_queue_member"], False
+        )
+
+    def test_missing_noncanonical_artifact_remains_true_orphan(self) -> None:
+        witness_id, canonical_name = self._write_exact_fixture()
+        (self.introspections / canonical_name).unlink()
+
+        status = project(self.workspace, write=True)
+
+        self.assertEqual(status["migration_counters"]["auxiliary"], 0)
+        self.assertEqual(status["migration_counters"]["orphan"], 1)
+        self.assertEqual(status["auxiliary_artifact_count"], 0)
+        self.assertEqual(status["orphan_count"], 1)
+        self.assertIn(
+            "artifact_missing",
+            status["orphans"][witness_id]["validation_errors"],
+        )
+
     def test_invalid_writer_gap_never_copies_untrusted_payload(self) -> None:
         gap_root = self.introspections / "lived_state_witnesses/gaps"
         gap_root.mkdir(parents=True)

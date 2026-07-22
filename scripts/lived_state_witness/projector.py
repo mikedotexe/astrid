@@ -42,7 +42,7 @@ from .deployments import (
 )
 from .records import event_record, parse_source_ref
 
-PROJECTOR_VERSION = 1
+PROJECTOR_VERSION = 2
 STREAM = "lived_state_witness"
 
 
@@ -243,15 +243,65 @@ def _migrate_report(
     )
 
 
-def _orphan_events(
+def _unreferenced_sidecar_events(
     workspace: Path,
     sidecars: dict[str, tuple[Path, dict[str, Any], list[str]]],
     referenced: set[str],
+    deployments: list[dict[str, Any]],
     counters: Counter[str],
 ) -> list[dict[str, Any]]:
     events: list[dict[str, Any]] = []
     for witness_id, (path, value, errors) in sorted(sidecars.items()):
         if witness_id in referenced:
+            continue
+        errors = list(errors)
+        relative = value.get("artifact_relative_path")
+        artifact_path = (
+            workspace / "introspections" / relative
+            if isinstance(relative, str)
+            and relative
+            and not Path(relative).is_absolute()
+            and ".." not in Path(relative).parts
+            else None
+        )
+        if artifact_path is None or not artifact_path.is_file():
+            errors.append("artifact_missing")
+        else:
+            artifact_sha256 = sha256_file(artifact_path)
+            if artifact_sha256 != value.get("artifact_sha256"):
+                errors.append("artifact_sha256_mismatch")
+            if witness_pointer(artifact_path) != witness_id:
+                errors.append("artifact_witness_pointer_mismatch")
+        if not errors and artifact_path is not None:
+            counters["auxiliary"] += 1
+            alignment = _alignment(
+                value,
+                int(value.get("authored_at_unix_ms") or 0),
+                deployments,
+                historical=False,
+            )
+            events.append(
+                event_record(
+                    "lived_state_auxiliary_artifact_witness_recorded",
+                    witness_id,
+                    (
+                        f"lived-state-auxiliary:{witness_id}:"
+                        f"{sha256_file(path)}:{value['artifact_sha256']}"
+                    ),
+                    artifact_ref={
+                        "kind": "noncanonical_lived_state_artifact",
+                        "relative_path": artifact_path.relative_to(workspace).as_posix(),
+                        "sha256": value["artifact_sha256"],
+                        "canonical_queue_member": False,
+                        "raw_prose_included": False,
+                    },
+                    artifact_kind=value.get("artifact_kind"),
+                    witness=value,
+                    alignment=alignment,
+                    evidence_completeness="exact_auxiliary_sidecar",
+                    felt_contract_ingestion_eligible=False,
+                )
+            )
             continue
         counters["orphan"] += 1
         counters["privacy_rejection"] += int(
@@ -352,7 +402,11 @@ def migration_events(workspace: Path) -> tuple[list[dict[str, Any]], dict[str, A
         )
         for path in reports
     ]
-    events.extend(_orphan_events(workspace, sidecars, referenced, counters))
+    events.extend(
+        _unreferenced_sidecar_events(
+            workspace, sidecars, referenced, deployments, counters
+        )
+    )
     events.extend(_writer_gap_events(workspace, writer_gaps, counters))
     source_watermarks = _migration_watermarks(
         workspace,
@@ -369,6 +423,7 @@ def migration_events(workspace: Path) -> tuple[list[dict[str, Any]], dict[str, A
             "temporal_only": counters["temporal_only"],
             "unknown": counters["unknown"],
             "gap": counters["gap"],
+            "auxiliary": counters["auxiliary"],
             "orphan": counters["orphan"],
             "privacy_rejection": counters["privacy_rejection"],
         },
@@ -385,6 +440,7 @@ def _parse_fill(value: Any) -> float | None:
 
 def _materialize(events: list[dict[str, Any]]) -> dict[str, Any]:
     witnesses: dict[str, dict[str, Any]] = {}
+    auxiliary_artifacts: dict[str, dict[str, Any]] = {}
     gaps: dict[str, dict[str, Any]] = {}
     orphans: dict[str, dict[str, Any]] = {}
     reconciliations: dict[str, dict[str, Any]] = {}
@@ -399,6 +455,8 @@ def _materialize(events: list[dict[str, Any]]) -> dict[str, Any]:
         }:
             witness_event_count += 1
             witnesses[witness_id] = event
+        elif event_type == "lived_state_auxiliary_artifact_witness_recorded":
+            auxiliary_artifacts[witness_id] = event
         elif "gap" in event_type:
             gaps[str(event.get("idempotency_key") or witness_id)] = event
         elif event_type == "lived_state_witness_orphan_detected":
@@ -410,6 +468,10 @@ def _materialize(events: list[dict[str, Any]]) -> dict[str, Any]:
     alignment_counts = Counter(
         str(event.get("alignment", {}).get("outcome") or "unknown")
         for event in witnesses.values()
+    )
+    auxiliary_alignment_counts = Counter(
+        str(event.get("alignment", {}).get("outcome") or "unknown")
+        for event in auxiliary_artifacts.values()
     )
     checks = {
         "witness_ids_unique": len(witnesses) == witness_event_count,
@@ -452,15 +514,20 @@ def _materialize(events: list[dict[str, Any]]) -> dict[str, Any]:
         "schema_version": 1,
         "valid": all(checks.values()),
         "witness_count": len(witnesses),
+        "auxiliary_artifact_count": len(auxiliary_artifacts),
         "gap_count": len(gaps),
         "orphan_count": len(orphans),
         "reconciliation_count": len(reconciliations),
         "alignment_counts": dict(sorted(alignment_counts.items())),
+        "auxiliary_alignment_counts": dict(
+            sorted(auxiliary_alignment_counts.items())
+        ),
         "counter_audit": {
             "status": "consistent" if all(checks.values()) else "inconsistent",
             "checks": checks,
         },
         "witnesses": dict(sorted(witnesses.items())),
+        "auxiliary_artifacts": dict(sorted(auxiliary_artifacts.items())),
         "gaps": dict(sorted(gaps.items())),
         "orphans": dict(sorted(orphans.items())),
         "reconciliations": dict(sorted(reconciliations.items())),
@@ -476,9 +543,10 @@ def _render_report(status: dict[str, Any]) -> str:
         "Evidence-only context for the conditions in which canonical introspections were authored.",
         "",
         f"- Valid: `{str(status['valid']).lower()}`",
-        f"- Witnesses: {status['witness_count']}",
+        f"- Canonical witnesses: {status['witness_count']}",
+        f"- Auxiliary artifact witnesses: {status['auxiliary_artifact_count']}",
         f"- Gaps: {status['gap_count']}",
-        f"- Orphans: {status['orphan_count']}",
+        f"- True orphans: {status['orphan_count']}",
         f"- Reconciliations: {status['reconciliation_count']}",
         "- Exact deployment links require matching source, artifact, and process evidence.",
         "- Historical deployment proximity remains temporal association only.",
@@ -558,6 +626,13 @@ def _write_outputs(workspace: Path, status: dict[str, Any], migration: dict[str,
         for _, event in sorted(status["witnesses"].items())
     ]
     witness_payload = "\n".join(witness_rows) + ("\n" if witness_rows else "")
+    auxiliary_rows = [
+        canonical_json(event)
+        for _, event in sorted(status["auxiliary_artifacts"].items())
+    ]
+    auxiliary_payload = "\n".join(auxiliary_rows) + (
+        "\n" if auxiliary_rows else ""
+    )
     gap_rows = [
         canonical_json(event) for _, event in sorted(status["gaps"].items())
     ]
@@ -566,6 +641,7 @@ def _write_outputs(workspace: Path, status: dict[str, Any], migration: dict[str,
     context_index_payload = _context_index_payload(status)
     base_hashes = {
         "witnesses.jsonl": sha256_bytes(witness_payload.encode()),
+        "auxiliary_artifacts.jsonl": sha256_bytes(auxiliary_payload.encode()),
         "gaps.jsonl": sha256_bytes(gap_payload.encode()),
         "context_index.jsonl": sha256_bytes(context_index_payload.encode()),
         "report.md": sha256_bytes(report_payload.encode()),
@@ -583,7 +659,14 @@ def _write_outputs(workspace: Path, status: dict[str, Any], migration: dict[str,
     public_status = {
         key: value
         for key, value in status.items()
-        if key not in {"witnesses", "gaps", "orphans", "reconciliations"}
+        if key
+        not in {
+            "witnesses",
+            "auxiliary_artifacts",
+            "gaps",
+            "orphans",
+            "reconciliations",
+        }
     }
     public_status["projection_hashes"] = {
         **base_hashes,
@@ -595,6 +678,7 @@ def _write_outputs(workspace: Path, status: dict[str, Any], migration: dict[str,
     payloads = {
         "status.json": status_payload,
         "witnesses.jsonl": witness_payload,
+        "auxiliary_artifacts.jsonl": auxiliary_payload,
         "gaps.jsonl": gap_payload,
         "context_index.jsonl": context_index_payload,
         "report.md": report_payload,
@@ -894,13 +978,20 @@ def show(workspace: Path, witness_id: str) -> dict[str, Any]:
         raise RuntimeError("lived-state witness stream is corrupt")
     state = _materialize(events)
     witness = state["witnesses"].get(witness_id)
+    auxiliary = False
+    if witness is None:
+        witness = state["auxiliary_artifacts"].get(witness_id)
+        auxiliary = witness is not None
     if witness is None:
         raise KeyError(f"unknown witness: {witness_id}")
     return {
         "schema": "lived_state_witness_show_v1",
         "schema_version": 1,
         "witness": witness,
-        "reconciliation": state["reconciliations"].get(witness_id),
+        "reconciliation": (
+            None if auxiliary else state["reconciliations"].get(witness_id)
+        ),
+        "canonical_queue_member": not auxiliary,
         "artifact_authority_state_v1": authority_state(),
     }
 
