@@ -829,11 +829,31 @@ def route_history(
         )
         routed_source_ids.add(envelope.event_id)
 
+    witness_contracts: dict[str, set[str]] = {}
+    for envelope in source_by_stream["lived_state_witness"]:
+        witness_id = str(envelope.payload.get("witness_id") or "")
+        introspection_id = str(envelope.payload.get("introspection_id") or "")
+        if not witness_id or not introspection_id:
+            continue
+        contracts = {
+            membership[claim.claim_id]
+            for claim in claims_by_introspection.get(introspection_id, [])
+            if claim.claim_id in membership
+        }
+        if contracts:
+            witness_contracts.setdefault(witness_id, set()).update(contracts)
+
+    concordance_contracts: dict[str, set[str]] = {}
+    concordance_latest_nodes: dict[tuple[str, str], str] = {}
     for stream in (
         "corridor_v1",
         "corridor_v2",
         "signal_spine",
         "claim_families",
+        "reciprocal_uptake",
+        "representation_contracts",
+        "felt_mechanism_concordance",
+        "agency_commons",
     ):
         for envelope in source_by_stream[stream]:
             event_type = str(envelope.payload.get("event_type") or "")
@@ -855,6 +875,14 @@ def route_history(
                 for claim_id in claim_refs
                 if claim_id in membership
             )
+            record = envelope.payload.get("record")
+            record = record if isinstance(record, dict) else {}
+            study_id = str(record.get("study_id") or "")
+            if stream == "representation_contracts" and not exact_contracts:
+                witness_id = str(record.get("source_witness_id") or "")
+                exact_contracts.update(witness_contracts.get(witness_id, set()))
+            if stream == "felt_mechanism_concordance" and study_id:
+                exact_contracts.update(concordance_contracts.get(study_id, set()))
             if (
                 stream == "claim_families"
                 and event_type.startswith("felt_review_")
@@ -868,6 +896,10 @@ def route_history(
                 )
             if not exact_contracts:
                 continue
+            if stream == "felt_mechanism_concordance" and study_id:
+                concordance_contracts.setdefault(study_id, set()).update(
+                    exact_contracts
+                )
             occurred_at = _event_time(envelope)
             for contract_id in sorted(exact_contracts):
                 parents = sorted(
@@ -890,6 +922,10 @@ def route_history(
                         for claim_id, node in claim_nodes.items()
                         if membership.get(claim_id) == contract_id
                     )[:1]
+                if stream == "felt_mechanism_concordance" and study_id:
+                    prior = concordance_latest_nodes.get((study_id, contract_id))
+                    if prior:
+                        parents = [prior]
                 if not parents:
                     continue
                 kind = (
@@ -899,6 +935,17 @@ def route_history(
                     if event_type.startswith("felt_review_")
                     else "delivery_evidence"
                     if stream == "signal_spine"
+                    else "reciprocal_context"
+                    if stream == "reciprocal_uptake"
+                    and record.get("schema") == "reciprocal_context_receipt_v1"
+                    else "reciprocal_uptake"
+                    if stream == "reciprocal_uptake"
+                    else "representation_transition"
+                    if stream == "representation_contracts"
+                    else "felt_mechanism_concordance"
+                    if stream == "felt_mechanism_concordance"
+                    else "agency_commons"
+                    if stream == "agency_commons"
                     else "intervention_evidence"
                 )
                 authority_state = str(
@@ -915,7 +962,28 @@ def route_history(
                     ),
                     "exact_reference_count": len(work_refs) + len(claim_refs),
                     "private_content_copied": False,
+                    "closure_propagated": False,
+                    "evidence_sufficiency_propagated": False,
+                    "authority_propagated": False,
+                    "felt_resolution_propagated": False,
                 }
+                if stream == "representation_contracts":
+                    metadata["identity_relation"] = (
+                        "exact_lived_state_witness_context"
+                    )
+                    metadata["felt_effect_inferred"] = False
+                if stream == "reciprocal_uptake":
+                    metadata["presence_inferred"] = False
+                    metadata["uptake_inferred"] = False
+                    metadata["reply_intention_inferred"] = False
+                    metadata["technical_context_only"] = (
+                        record.get("schema")
+                        == "reciprocal_context_receipt_v1"
+                    )
+                if stream == "felt_mechanism_concordance":
+                    metadata["study_id"] = study_id
+                    metadata["numeric_pass_overwrites_felt_report"] = False
+                    metadata["causation_established"] = False
                 if event_type == "felt_review_response_recorded":
                     outcome = _review_outcome(
                         str(envelope.payload.get("classification") or "")
@@ -953,11 +1021,17 @@ def route_history(
                     metadata=metadata,
                     authority_state=authority_state,
                 ).to_dict()
-                relation = (
+                relation = {
+                    "reciprocal_uptake": "reciprocal_context_for",
+                    "representation_contracts": "representation_context_for",
+                    "felt_mechanism_concordance": "concordance_evidence_for",
+                    "agency_commons": "agency_context_for",
+                }.get(
+                    stream,
                     "related_to"
                     if stream
                     in {"corridor_v1", "corridor_v2", "signal_spine"}
-                    else "reviewed_by"
+                    else "reviewed_by",
                 )
                 events.append(
                     _node_event(
@@ -977,6 +1051,8 @@ def route_history(
                         authority_state=authority_state,
                     )
                 )
+                if stream == "felt_mechanism_concordance" and study_id:
+                    concordance_latest_nodes[(study_id, contract_id)] = child
                 routed_source_ids.add(envelope.event_id)
 
     return work_contracts, latest_node_by_work

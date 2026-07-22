@@ -50,8 +50,16 @@ def projection_paths(workspace: Path) -> dict[str, Path]:
         ("corridor_v2", diagnostics / "agency_corridor_v2"),
         ("signal_spine", diagnostics / "signal_spine_v1"),
         ("lived_state_witness", diagnostics / "lived_state_witness_v1"),
+        ("reciprocal_uptake", diagnostics / "reciprocal_uptake_v1"),
+        ("representation_contracts", diagnostics / "representation_contracts_v1"),
         ("claim_families", diagnostics / "claim_families_v1"),
         ("experiment_dossiers", diagnostics / "experiment_dossiers_v1"),
+        (
+            "felt_mechanism_concordance",
+            diagnostics / "felt_mechanism_concordance_v1",
+        ),
+        ("agency_commons", diagnostics / "agency_commons_v1"),
+        ("attention_portfolio", diagnostics / "attention_portfolio_v1"),
         ("model_qos", diagnostics / "model_qos_v1"),
     ):
         for filename in ("status.json", "queue.md", "queue.json", "report.md"):
@@ -71,8 +79,19 @@ def counter_audits(workspace: Path) -> dict[str, Any]:
         ("corridor_v2", diagnostics / "agency_corridor_v2/status.json"),
         ("signal_spine", diagnostics / "signal_spine_v1/projection_status.json"),
         ("lived_state_witness", diagnostics / "lived_state_witness_v1/status.json"),
+        ("reciprocal_uptake", diagnostics / "reciprocal_uptake_v1/status.json"),
+        (
+            "representation_contracts",
+            diagnostics / "representation_contracts_v1/status.json",
+        ),
         ("claim_families", diagnostics / "claim_families_v1/status.json"),
         ("experiment_dossiers", diagnostics / "experiment_dossiers_v1/status.json"),
+        (
+            "felt_mechanism_concordance",
+            diagnostics / "felt_mechanism_concordance_v1/status.json",
+        ),
+        ("agency_commons", diagnostics / "agency_commons_v1/status.json"),
+        ("attention_portfolio", diagnostics / "attention_portfolio_v1/status.json"),
         ("model_qos", diagnostics / "model_qos_v1/status.json"),
     ):
         if not path.is_file():

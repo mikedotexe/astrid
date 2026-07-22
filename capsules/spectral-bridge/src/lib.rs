@@ -54,6 +54,7 @@ pub mod memory;
 pub mod message_archive;
 pub mod paths;
 pub mod prompt_budget;
+pub mod reciprocal_experiential;
 pub mod reflective;
 pub mod rescue_policy;
 pub mod self_continuity;

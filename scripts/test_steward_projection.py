@@ -230,11 +230,16 @@ class StewardProjectionTests(unittest.TestCase):
                 "corridor",
                 "signal_spine",
                 "lived_state_witness",
+                "reciprocal_uptake",
+                "representation_contracts",
                 "claim_families",
                 "experiment_dossiers",
                 "authority_temporal",
                 "model_qos",
+                "felt_mechanism_concordance",
+                "agency_commons",
                 "felt_contracts",
+                "attention_portfolio",
             ],
         )
         steps = {step.step_id: step for step in source_first_steps()}
@@ -265,6 +270,34 @@ class StewardProjectionTests(unittest.TestCase):
         self.assertIn(
             "diagnostics/lived_state_witness_v1/context_index.jsonl",
             steps["experiment_dossiers"].source_globs,
+        )
+        self.assertEqual(
+            steps["felt_mechanism_concordance"].dependencies,
+            (
+                "experiment_dossiers",
+                "model_qos",
+                "reciprocal_uptake",
+                "representation_contracts",
+            ),
+        )
+        self.assertEqual(
+            steps["felt_contracts"].dependencies,
+            (
+                "experiment_dossiers",
+                "corridor",
+                "signal_spine",
+                "lived_state_witness",
+                "reciprocal_uptake",
+                "representation_contracts",
+                "authority_temporal",
+                "model_qos",
+                "felt_mechanism_concordance",
+                "agency_commons",
+            ),
+        )
+        self.assertEqual(
+            steps["attention_portfolio"].dependencies,
+            ("felt_contracts",),
         )
 
     def test_failure_preserves_previous_successful_manifest(self) -> None:

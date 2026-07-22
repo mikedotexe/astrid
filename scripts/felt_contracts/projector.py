@@ -43,7 +43,11 @@ GRAPH_INPUT_STREAMS = (
     "corridor_v2",
     "signal_spine",
     "lived_state_witness",
+    "reciprocal_uptake",
+    "representation_contracts",
     "claim_families",
+    "felt_mechanism_concordance",
+    "agency_commons",
     "felt_contracts",
 )
 
@@ -293,6 +297,12 @@ def project_graph(
                 node_to_claim[node_id] = claim_id
 
             kind = str(node.get("kind") or "")
+            if (
+                kind == "felt_signal"
+                and contract["activity"]
+                == ContractActivityV1.QUIET_ARCHIVED.value
+            ):
+                contract["activity"] = ContractActivityV1.OPEN.value
             if claim_id:
                 contract["technical_by_claim"].setdefault(
                     claim_id, TechnicalDispositionV1.UNASSESSED.value
@@ -367,6 +377,10 @@ def project_graph(
                 )
             review_events.add((contract_id, deployment_id))
             _apply_review(contracts[contract_id], outcome, authoritative=True)
+            if event.get("recorded_at"):
+                contracts[contract_id]["last_change_at"] = event.get(
+                    "recorded_at"
+                )
             continue
 
         if event_type == "felt_contract_migration_completed":

@@ -304,6 +304,72 @@ class FeltContractGraphTests(unittest.TestCase):
             ContractActivityV1.REOPENED.value,
         )
 
+    def test_new_felt_signal_wakes_quiet_archive_without_reopening_closure(self) -> None:
+        events, _ = self.base_events()
+        events.append(
+            self.event(
+                "felt_contract_review_outcome_recorded",
+                contract_id=self.contract_id,
+                deployment_receipt_id="deploy_one",
+                outcome=FeltReviewOutcomeV1.NO_RESPONSE.value,
+            )
+        )
+        new_signal_id = node_id(
+            "evt_signal_later", "felt_signal", self.contract_id
+        )
+        new_signal = build_node(
+            node_id=new_signal_id,
+            contract_id=self.contract_id,
+            kind="felt_signal",
+            source_event_id="evt_signal_later",
+            occurred_at="2026-07-18T00:05:00+00:00",
+            source_ref=build_signal_ref(
+                source_kind="canonical_introspection",
+                source_id="introspection_astrid_codec_1784301405",
+                canonical_sha256="c" * 64,
+                owner="astrid",
+                observed_at="2026-07-18T00:05:00+00:00",
+                field_paths=("claims.c001",),
+            ),
+            metadata={"private_content_copied": False},
+            authority_state="evidence_only",
+        ).to_dict()
+        events.append(
+            self.event(
+                "felt_contract_node_recorded",
+                contract_id=self.contract_id,
+                node=new_signal,
+                edges=[],
+            )
+        )
+        projection = self.project(events)
+        contract = projection["contracts"][0]
+        self.assertEqual(contract["activity"], ContractActivityV1.OPEN.value)
+        self.assertFalse(contract["felt_closed"])
+
+        closed_events, _ = self.base_events()
+        closed_events.append(
+            self.event(
+                "felt_contract_review_outcome_recorded",
+                contract_id=self.contract_id,
+                deployment_receipt_id="deploy_two",
+                outcome=FeltReviewOutcomeV1.FELT_CONFIRMED.value,
+            )
+        )
+        closed_events.append(
+            self.event(
+                "felt_contract_node_recorded",
+                contract_id=self.contract_id,
+                node=new_signal,
+                edges=[],
+            )
+        )
+        projection = self.project(closed_events)
+        self.assertEqual(
+            projection["contracts"][0]["activity"],
+            ContractActivityV1.FELT_CLOSED.value,
+        )
+
     def test_duplicate_assignment_requires_explicit_correction(self) -> None:
         events, _ = self.base_events()
         events.append(

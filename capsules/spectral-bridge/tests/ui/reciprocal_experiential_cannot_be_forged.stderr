@@ -1,0 +1,12 @@
+error: cannot construct `ReciprocalPresenceReceiptV1` with struct literal syntax due to private fields
+ --> tests/ui/reciprocal_experiential_cannot_be_forged.rs:4:19
+  |
+4 |     let _forged = ReciprocalPresenceReceiptV1 {};
+  |                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  |
+  = note: private fields that were not provided
+help: you might have meant to use the `new` associated function
+  |
+4 -     let _forged = ReciprocalPresenceReceiptV1 {};
+4 +     let _forged = ReciprocalPresenceReceiptV1::new(_, _, _, _, _, _, _, _);
+  |

@@ -104,8 +104,14 @@ def _aggregate_for_payload(payload: dict[str, Any]) -> dict[str, str]:
         ("artifact", "artifact_id"),
         ("causal_signal_journey", "journey_id"),
         ("temporal_lived_state_witness", "witness_id"),
+        ("reciprocal_receipt", "receipt_id"),
+        ("representation_contract", "contract_id"),
+        ("representation_transition", "transition_id"),
+        ("concordance_study", "study_id"),
+        ("agency_commons_record", "record_id"),
         ("claim_family", "family_id"),
         ("experiment_dossier", "dossier_id"),
+        ("attention_portfolio", "portfolio_id"),
     )
     for kind, key in candidates:
         if payload.get(key):
@@ -338,6 +344,7 @@ class EvidenceEventStore:
         actor: str = DEFAULT_ACTOR,
         source: ProvenanceSourceV1 | None = None,
         idempotency_keys: Iterable[str | None] | None = None,
+        include_existing_idempotent: bool = True,
     ) -> list[EvidenceEventV2]:
         payload_list = list(payloads)
         if not payload_list:
@@ -373,7 +380,8 @@ class EvidenceEventStore:
                     if idempotency_key:
                         existing = idempotency_index.get(idempotency_key)
                         if existing is not None:
-                            appended.append(existing)
+                            if include_existing_idempotent:
+                                appended.append(existing)
                             continue
                     normalized, authority = _normalized_payload(payload)
                     global_seq += 1

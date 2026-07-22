@@ -26,8 +26,13 @@ VALID_STREAMS = frozenset(
         "corridor_v2",
         "signal_spine",
         "lived_state_witness",
+        "reciprocal_uptake",
+        "representation_contracts",
         "claim_families",
+        "felt_mechanism_concordance",
+        "agency_commons",
         "felt_contracts",
+        "attention_portfolio",
         "model_qos",
         "steward_control",
     }

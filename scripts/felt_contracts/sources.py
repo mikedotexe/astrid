@@ -39,7 +39,11 @@ SOURCE_STREAMS = (
     "corridor_v2",
     "signal_spine",
     "lived_state_witness",
+    "reciprocal_uptake",
+    "representation_contracts",
     "claim_families",
+    "felt_mechanism_concordance",
+    "agency_commons",
 )
 _TIMESTAMP_RE = re.compile(r"_(\d{9,})$")
 _SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
