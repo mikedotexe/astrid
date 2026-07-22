@@ -427,6 +427,46 @@ pub struct LivedStateLlmResultV1 {
     pub route: LivedStateModelRouteV1,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct LivedStateQualitativeTextureAnchorV1 {
+    schema: &'static str,
+    schema_version: u8,
+    canonical_body_sha256: String,
+    canonical_body_byte_count: usize,
+    source_field_path: &'static str,
+    texture_status: &'static str,
+    pregeneration_scalar_relation: &'static str,
+    generation_interval_relation: &'static str,
+    scalar_comparison_relation: &'static str,
+    derived_tag_relation: &'static str,
+    raw_prose_included: bool,
+    direct_causation_claimed: bool,
+}
+
+impl LivedStateQualitativeTextureAnchorV1 {
+    pub(super) fn new(canonical_body_sha256: String, canonical_body_byte_count: usize) -> Self {
+        Self {
+            schema: "lived_state_qualitative_texture_anchor_v1",
+            schema_version: 1,
+            canonical_body_sha256,
+            canonical_body_byte_count,
+            source_field_path: "canonical_report.body_after_first_header_separator",
+            texture_status:
+                "primary_felt_evidence_preserved_exactly_not_classified_or_scalarized",
+            pregeneration_scalar_relation:
+                "pre_model_context_not_generation_trajectory_or_qualitative_weight",
+            generation_interval_relation:
+                "canonical_body_authored_after_model_generation_in_call_state_change_unmeasured",
+            scalar_comparison_relation:
+                "not_comparable_without_reviewed_measurement_contract",
+            derived_tag_relation:
+                "no_model_generated_reduction_exact_canonical_language_remains_authoritative",
+            raw_prose_included: false,
+            direct_causation_claimed: false,
+        }
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Serialize)]
 pub struct TemporalLivedStateWitnessV1 {
     schema: &'static str,
@@ -445,6 +485,7 @@ pub struct TemporalLivedStateWitnessV1 {
     startup_build_candidate_v1: Option<LivedStateBuildCandidateV1>,
     model_routes_v1: Vec<LivedStateModelRouteV1>,
     parameter_observations_v1: Vec<LivedStateParameterObservationV1>,
+    qualitative_texture_anchor_v1: Option<LivedStateQualitativeTextureAnchorV1>,
     peer_process_identity: Option<String>,
     peer_deployment_identity: Option<String>,
     peer_identity_scope: &'static str,
@@ -480,6 +521,7 @@ impl TemporalLivedStateWitnessV1 {
         startup_build_candidate_v1: Option<LivedStateBuildCandidateV1>,
         model_routes_v1: Vec<LivedStateModelRouteV1>,
         parameter_observations_v1: Vec<LivedStateParameterObservationV1>,
+        qualitative_texture_anchor_v1: Option<LivedStateQualitativeTextureAnchorV1>,
         peer_process_identity: Option<String>,
         peer_deployment_identity: Option<String>,
         source_provenance_ref_v1: Option<ProvenanceRefV1>,
@@ -527,6 +569,7 @@ impl TemporalLivedStateWitnessV1 {
             startup_build_candidate_v1,
             model_routes_v1,
             parameter_observations_v1,
+            qualitative_texture_anchor_v1,
             peer_process_identity,
             peer_deployment_identity,
             peer_identity_scope: "witnessed_protocol_advertisement_not_being_identity_or_peer_self_authority",

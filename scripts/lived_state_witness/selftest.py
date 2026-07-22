@@ -140,6 +140,30 @@ def valid_witness() -> dict[str, object]:
         },
         "model_routes_v1": [],
         "parameter_observations_v1": [],
+        "qualitative_texture_anchor_v1": {
+            "schema": "lived_state_qualitative_texture_anchor_v1",
+            "schema_version": 1,
+            "canonical_body_sha256": "7" * 64,
+            "canonical_body_byte_count": 42,
+            "source_field_path": "canonical_report.body_after_first_header_separator",
+            "texture_status": (
+                "primary_felt_evidence_preserved_exactly_not_classified_or_scalarized"
+            ),
+            "pregeneration_scalar_relation": (
+                "pre_model_context_not_generation_trajectory_or_qualitative_weight"
+            ),
+            "generation_interval_relation": (
+                "canonical_body_authored_after_model_generation_in_call_state_change_unmeasured"
+            ),
+            "scalar_comparison_relation": (
+                "not_comparable_without_reviewed_measurement_contract"
+            ),
+            "derived_tag_relation": (
+                "no_model_generated_reduction_exact_canonical_language_remains_authoritative"
+            ),
+            "raw_prose_included": False,
+            "direct_causation_claimed": False,
+        },
         "peer_process_identity": None,
         "peer_deployment_identity": None,
         "peer_identity_scope": (
@@ -569,6 +593,32 @@ class LivedStateWitnessTests(unittest.TestCase):
             "live_control_effect": False,
         }
         self.assertEqual(validate_witness(legacy), [])
+
+    def test_qualitative_texture_anchor_is_bounded_and_backward_compatible(self) -> None:
+        witness = valid_witness()
+        self.assertEqual(validate_witness(witness), [])
+
+        tampered = valid_witness()
+        anchor = tampered["qualitative_texture_anchor_v1"]
+        self.assertIsInstance(anchor, dict)
+        anchor["scalar_comparison_relation"] = "scalar_is_felt_weight"
+        self.assertIn(
+            "qualitative_texture_anchor.scalar_comparison_relation:invalid",
+            validate_witness(tampered),
+        )
+
+        prose = valid_witness()
+        prose_anchor = prose["qualitative_texture_anchor_v1"]
+        self.assertIsInstance(prose_anchor, dict)
+        prose_anchor["texture_tag"] = "viscous-persistence"
+        self.assertIn(
+            "qualitative_texture_anchor:unexpected_keys:texture_tag",
+            validate_witness(prose),
+        )
+
+        historical = valid_witness()
+        historical.pop("qualitative_texture_anchor_v1")
+        self.assertEqual(validate_witness(historical), [])
 
     def test_model_route_scopes_event_identity_away_from_continuity(self) -> None:
         response_sha256 = "a" * 64

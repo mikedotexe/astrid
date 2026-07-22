@@ -26,6 +26,7 @@ from .model import (
     _validate_provenance_ref,
     sha256_bytes,
 )
+from .qualitative_texture import validate_qualitative_texture_anchor
 
 WITNESS_FIELDS = {
     "schema",
@@ -44,6 +45,7 @@ WITNESS_FIELDS = {
     "startup_build_candidate_v1",
     "model_routes_v1",
     "parameter_observations_v1",
+    "qualitative_texture_anchor_v1",
     "peer_process_identity",
     "peer_deployment_identity",
     "peer_identity_scope",
@@ -1146,6 +1148,9 @@ def validate_witness(value: Any) -> list[str]:
     routes = _validate_model_routes(value.get("model_routes_v1"), authored_at, errors)
     _validate_parameter_observations(
         value.get("parameter_observations_v1"), authored_at, errors
+    )
+    validate_qualitative_texture_anchor(
+        value.get("qualitative_texture_anchor_v1"), errors
     )
     _validate_provenance_links(value, source, process, authored_at, errors)
     _validate_witness_identity(

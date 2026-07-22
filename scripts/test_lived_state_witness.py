@@ -26,6 +26,7 @@ from lived_state_witness.projector import (
     state_dir,
     verify,
 )
+from lived_state_witness.qualitative_texture import artifact_texture_anchor_errors
 from lived_state_witness.views import _materialize
 
 
@@ -325,6 +326,26 @@ class LivedStateWitnessProjectionTests(unittest.TestCase):
             self.store.checkpoint_current_for_inputs(
                 "lived_state_witness_v1", PROJECTOR_VERSION
             )
+        )
+
+    def test_qualitative_texture_anchor_matches_exact_canonical_body(self) -> None:
+        artifact = b"=== ASTRID INTROSPECTION ===\nHeader: value\n\nviscous texture\n"
+        body = artifact.split(b"\n\n", 1)[1]
+        witness = {
+            "artifact_kind": "introspection",
+            "qualitative_texture_anchor_v1": {
+                "canonical_body_sha256": hashlib.sha256(body).hexdigest(),
+                "canonical_body_byte_count": len(body),
+            },
+        }
+        self.assertEqual(artifact_texture_anchor_errors(witness, artifact), [])
+
+        anchor = witness["qualitative_texture_anchor_v1"]
+        self.assertIsInstance(anchor, dict)
+        anchor["canonical_body_sha256"] = "0" * 64
+        self.assertEqual(
+            artifact_texture_anchor_errors(witness, artifact),
+            ["qualitative_texture_anchor:body_sha256_mismatch"],
         )
 
     def test_exact_receipt_may_complete_after_authorship(self) -> None:

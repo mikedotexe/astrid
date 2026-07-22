@@ -37,6 +37,7 @@ from .deployments import (
     successful_deployments as _successful_deployments,
 )
 from .records import event_record, parse_source_ref
+from .qualitative_texture import artifact_texture_anchor_errors
 from .temporal_clusters import build_temporal_cluster_events
 from .concordance import build_concordance_events
 from .views import _materialize, _write_outputs
@@ -145,6 +146,7 @@ def _migrate_report(
             errors.append("artifact_sha256_mismatch")
         if candidate.get("artifact_relative_path") != path.name:
             errors.append("artifact_relative_path_mismatch")
+        errors.extend(artifact_texture_anchor_errors(candidate, path.read_bytes()))
         if not errors:
             witness = candidate
     if pointer and errors:
@@ -250,6 +252,9 @@ def _unreferenced_sidecar_events(
                 errors.append("artifact_sha256_mismatch")
             if witness_pointer(artifact_path) != witness_id:
                 errors.append("artifact_witness_pointer_mismatch")
+            errors.extend(
+                artifact_texture_anchor_errors(value, artifact_path.read_bytes())
+            )
         if not errors and artifact_path is not None:
             counters["auxiliary"] += 1
             alignment = _alignment(

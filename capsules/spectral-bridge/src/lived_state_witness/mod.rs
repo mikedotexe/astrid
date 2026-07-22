@@ -12,7 +12,10 @@ use std::sync::atomic::{AtomicU64, Ordering};
 use serde_json::Value;
 use sha2::{Digest, Sha256};
 
-use types::{LivedStateBuildCandidateV1, LivedStateObservationKindV1};
+use types::{
+    LivedStateBuildCandidateV1, LivedStateObservationKindV1,
+    LivedStateQualitativeTextureAnchorV1,
+};
 pub use types::{
     LivedStateGapReceiptV1, LivedStateLlmResultV1, LivedStateModelRouteV1,
     LivedStateParameterObservationV1, LivedStateProcessIdentityV1, LivedStateSourceSnapshotV1,
@@ -581,6 +584,18 @@ fn build_witness_v1(
         vec!["observed_process_v1".to_string()],
         vec![ProvenanceInfluenceTypeV1::Temporal],
     );
+    let qualitative_texture_anchor = (artifact_kind == "introspection")
+        .then(|| {
+            artifact_bytes
+                .windows(2)
+                .position(|window| window == b"\n\n")
+                .map(|separator| &artifact_bytes[separator.saturating_add(2)..])
+        })
+        .flatten()
+        .filter(|body| !body.is_empty())
+        .map(|body| {
+            LivedStateQualitativeTextureAnchorV1::new(sha256_bytes(body), body.len())
+        });
     TemporalLivedStateWitnessV1::new(
         authorship.witness_id.clone(),
         artifact_kind.chars().take(80).collect(),
@@ -594,6 +609,7 @@ fn build_witness_v1(
         startup.build_candidate,
         model_routes,
         runtime_context.parameter_observations,
+        qualitative_texture_anchor,
         runtime_context.peer_process_identity,
         runtime_context.peer_deployment_identity,
         source_provenance,
@@ -682,3 +698,5 @@ pub(crate) fn model_route_v1(
 
 #[cfg(test)]
 mod tests;
+#[cfg(test)]
+mod texture_tests;

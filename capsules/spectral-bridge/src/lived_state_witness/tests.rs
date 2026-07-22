@@ -41,6 +41,7 @@ fn test_witness(artifact_bytes: &[u8]) -> TemporalLivedStateWitnessV1 {
         None,
         None,
         None,
+        None,
         process_provenance,
     )
 }
@@ -321,6 +322,7 @@ fn owner_only_sidecar_contains_no_prose() {
         startup.build_candidate,
         Vec::new(),
         Vec::new(),
+        None,
         None,
         None,
         None,
