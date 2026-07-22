@@ -3224,7 +3224,7 @@ pub fn spawn_autonomous_loop(
                                             (
                                                 introspect::blocked_introspection_notice(
                                                     Some(&label),
-                                                    "Ollama returned no response or timed out",
+                                                    introspect::MODEL_NO_RESPONSE_REASON,
                                                 ),
                                                 format!("{label} ({})", source_path.display()),
                                             )

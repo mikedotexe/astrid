@@ -1396,6 +1396,9 @@ pub(super) fn self_study_carriage_notice(
     )
 }
 
+pub(super) const MODEL_NO_RESPONSE_REASON: &str =
+    "model provider returned no response or timed out";
+
 #[must_use]
 pub(super) fn blocked_introspection_notice(target: Option<&str>, reason: &str) -> String {
     if target.is_some_and(is_placeholder_introspect_target) {
@@ -1727,5 +1730,15 @@ mod tests {
         assert!(notice.contains("NEXT: INTROSPECT astrid:llm"));
         assert!(notice.contains("NEXT: INTROSPECT minime:regulator"));
         assert!(!notice.contains("target may be outside the approved source"));
+    }
+
+    #[test]
+    fn blocked_model_failure_notice_is_provider_neutral_and_causally_bounded() {
+        let notice = blocked_introspection_notice(Some("astrid:llm"), MODEL_NO_RESPONSE_REASON);
+
+        assert!(notice.contains("model provider returned no response or timed out"));
+        assert!(!notice.contains("Ollama"));
+        assert!(!notice.contains("mode_packing"));
+        assert!(!notice.contains("pressure_score"));
     }
 }

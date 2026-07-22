@@ -143,6 +143,59 @@ fn bounded_protocol_text_cannot_collapse_build_candidate_identity() {
 }
 
 #[test]
+fn missing_build_manifest_degrades_to_unknown_candidate() {
+    let root = temp_root("missing_build_manifest");
+    let candidate = identity::build_candidate_from_path_for_test(&root.join("missing.json"), 123);
+    assert!(candidate.is_none());
+    let process = identity::snapshot().process;
+    assert!(!process.runtime_instance_id().is_empty());
+}
+
+#[test]
+fn dirty_path_change_updates_candidate_and_dirty_state_hashes() {
+    let root = temp_root("dirty_path_drift");
+    fs::create_dir_all(&root).expect("temp root");
+    let path = root.join("manifest.json");
+    fs::write(
+        &path,
+        serde_json::to_vec(&json!({
+            "repository": {"dirty": false, "dirty_paths": []}
+        }))
+        .expect("first manifest"),
+    )
+    .expect("first manifest write");
+    let first = serde_json::to_value(
+        identity::build_candidate_from_path_for_test(&path, 123).expect("first candidate"),
+    )
+    .expect("first candidate JSON");
+
+    fs::write(
+        &path,
+        serde_json::to_vec(&json!({
+            "repository": {"dirty": true, "dirty_paths": ["docs/note.md"]}
+        }))
+        .expect("second manifest"),
+    )
+    .expect("second manifest write");
+    let second = serde_json::to_value(
+        identity::build_candidate_from_path_for_test(&path, 123).expect("second candidate"),
+    )
+    .expect("second candidate JSON");
+
+    assert_ne!(first["manifest_sha256"], second["manifest_sha256"]);
+    assert_ne!(first["dirty_state_sha256"], second["dirty_state_sha256"]);
+    assert_eq!(
+        first["relation_to_process"],
+        "startup_observation_not_deployment_proof"
+    );
+    assert_eq!(
+        second["relation_to_process"],
+        "startup_observation_not_deployment_proof"
+    );
+    let _ = fs::remove_dir_all(root);
+}
+
+#[test]
 fn runtime_instance_identity_is_stable_for_process_lifetime() {
     let first = identity::initialize();
     let second = identity::initialize();
