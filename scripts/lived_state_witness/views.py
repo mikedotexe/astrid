@@ -51,6 +51,7 @@ def _materialize(events: list[dict[str, Any]]) -> dict[str, Any]:
     witnesses: dict[str, dict[str, Any]] = {}
     auxiliary_artifacts: dict[str, dict[str, Any]] = {}
     gaps: dict[str, dict[str, Any]] = {}
+    resolved_gaps: dict[str, dict[str, Any]] = {}
     orphans: dict[str, dict[str, Any]] = {}
     reconciliations: dict[str, dict[str, Any]] = {}
     temporal_clusters: dict[str, dict[str, Any]] = {}
@@ -71,8 +72,18 @@ def _materialize(events: list[dict[str, Any]]) -> dict[str, Any]:
             witnesses[witness_id] = event
         elif event_type == "lived_state_auxiliary_artifact_witness_recorded":
             auxiliary_artifacts[witness_id] = event
-        elif "gap" in event_type:
+        elif event_type in {
+            "lived_state_witness_gap_detected",
+            "lived_state_writer_gap_recorded",
+        }:
             gaps[str(event.get("idempotency_key") or witness_id)] = event
+        elif event_type == "lived_state_witness_gap_resolved":
+            resolved_key = str(
+                event.get("resolved_gap_idempotency_key") or ""
+            )
+            if resolved_key:
+                gaps.pop(resolved_key, None)
+                resolved_gaps[resolved_key] = event
         elif event_type == "lived_state_witness_orphan_detected":
             orphans[witness_id] = event
         elif event_type == "lived_state_review_context_reconciled":
@@ -183,6 +194,7 @@ def _materialize(events: list[dict[str, Any]]) -> dict[str, Any]:
         "witness_count": len(witnesses),
         "auxiliary_artifact_count": len(auxiliary_artifacts),
         "gap_count": len(gaps),
+        "resolved_gap_count": len(resolved_gaps),
         "orphan_count": len(orphans),
         "reconciliation_count": len(reconciliations),
         "temporal_cluster_count": len(temporal_clusters),
@@ -211,6 +223,7 @@ def _materialize(events: list[dict[str, Any]]) -> dict[str, Any]:
         "witnesses": dict(sorted(witnesses.items())),
         "auxiliary_artifacts": dict(sorted(auxiliary_artifacts.items())),
         "gaps": dict(sorted(gaps.items())),
+        "resolved_gaps": dict(sorted(resolved_gaps.items())),
         "orphans": dict(sorted(orphans.items())),
         "reconciliations": dict(sorted(reconciliations.items())),
         "temporal_clusters": dict(sorted(temporal_clusters.items())),
@@ -237,6 +250,7 @@ def _render_report(status: dict[str, Any]) -> str:
         f"- Canonical witnesses: {status['witness_count']}",
         f"- Auxiliary artifact witnesses: {status['auxiliary_artifact_count']}",
         f"- Gaps: {status['gap_count']}",
+        f"- Resolved gap history: {status['resolved_gap_count']}",
         f"- True orphans: {status['orphan_count']}",
         f"- Reconciliations: {status['reconciliation_count']}",
         f"- Temporal density clusters: {status['temporal_cluster_count']}",
@@ -438,6 +452,7 @@ def _write_outputs(workspace: Path, status: dict[str, Any], migration: dict[str,
             "witnesses",
             "auxiliary_artifacts",
             "gaps",
+            "resolved_gaps",
             "orphans",
             "reconciliations",
             "temporal_clusters",

@@ -914,6 +914,7 @@ def _validate_parameter_observation(
         "runtime_pressure_scalar_observed_context_only_no_mechanism_claim",
         "runtime_mode_packing_scalar_observed_context_only_no_mechanism_claim",
         "astrid_shadow_scalar_observed_temporal_context_only_no_mechanism_claim",
+        "astrid_shadow_scalar_captured_before_model_call_temporal_context_only_no_mechanism_claim",
     }:
         errors.append(f"{prefix}.value_relation:invalid")
     scalar = observation.get("value")

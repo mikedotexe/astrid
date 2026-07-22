@@ -198,7 +198,25 @@ class LivedStateWitnessProjectionTests(unittest.TestCase):
                 "private_path_included": False,
             },
             "model_routes_v1": [],
-            "parameter_observations_v1": [],
+            "parameter_observations_v1": [
+                {
+                    "schema": "lived_state_parameter_observation_v1",
+                    "schema_version": 1,
+                    "name": "astrid_shadow.field_norm",
+                    "value": 0.5,
+                    "unit": "ratio",
+                    "observation_kind": "runtime_observed",
+                    "observed_at_unix_ms": timestamp * 1_000 - 15,
+                    "age_ms": 15,
+                    "fresh": True,
+                    "source_ref": "astrid_shadow.latest_snapshot.field_norm",
+                    "value_relation": (
+                        "astrid_shadow_scalar_captured_before_model_call_"
+                        "temporal_context_only_no_mechanism_claim"
+                    ),
+                    "direct_causation_claimed": False,
+                }
+            ],
             "peer_process_identity": None,
             "peer_deployment_identity": None,
             "source_provenance_ref_v1": None,
@@ -576,6 +594,61 @@ class LivedStateWitnessProjectionTests(unittest.TestCase):
         self.assertIn(
             "output_hash_mismatch:context_index.jsonl",
             verification["output_errors"],
+        )
+
+    def test_validated_sidecar_resolves_prior_false_gap_append_only(self) -> None:
+        witness_id, _ = self._write_exact_fixture()
+        sidecar_path = (
+            self.introspections
+            / "lived_state_witnesses/witnesses"
+            / f"{witness_id}.json"
+        )
+        valid_sidecar = json.loads(sidecar_path.read_text(encoding="utf-8"))
+        invalid_sidecar = json.loads(json.dumps(valid_sidecar))
+        invalid_sidecar["parameter_observations_v1"][0][
+            "value_relation"
+        ] = "unknown_future_relation"
+        sidecar_path.write_text(
+            json.dumps(invalid_sidecar, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
+
+        first = project(self.workspace, write=True)
+        self.assertEqual(first["gap_count"], 1)
+        self.assertEqual(first["resolved_gap_count"], 0)
+        sidecar_path.write_text(
+            json.dumps(valid_sidecar, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
+
+        second = project(self.workspace, write=True)
+        self.assertEqual(second["migration_counters"]["gap"], 0)
+        self.assertEqual(second["gap_count"], 0)
+        self.assertEqual(second["resolved_gap_count"], 1)
+        self.assertTrue(
+            second["counter_audit"]["checks"][
+                "unresolved_gap_count_matches_migration"
+            ]
+        )
+        self.assertEqual(
+            (state_dir(self.workspace) / "gaps.jsonl").read_text(
+                encoding="utf-8"
+            ),
+            "",
+        )
+        events, corrupt = self.store.payloads_for_stream(STREAM)
+        self.assertEqual(corrupt, 0)
+        self.assertTrue(
+            any(
+                event.get("event_type") == "lived_state_witness_gap_detected"
+                for event in events
+            )
+        )
+        self.assertTrue(
+            any(
+                event.get("event_type") == "lived_state_witness_gap_resolved"
+                for event in events
+            )
         )
 
     def test_intact_noncanonical_artifact_is_auxiliary_not_orphan(self) -> None:

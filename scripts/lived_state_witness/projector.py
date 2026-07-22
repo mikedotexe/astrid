@@ -472,6 +472,53 @@ def _source_hashes(workspace: Path, migration: dict[str, Any]) -> dict[str, str]
     }
 
 
+def _resolved_gap_events(
+    existing_events: list[dict[str, Any]],
+    candidates: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    unresolved: dict[str, dict[str, Any]] = {}
+    for event in existing_events:
+        event_type = str(event.get("event_type") or "")
+        if event_type == "lived_state_witness_gap_detected":
+            gap_key = str(event.get("idempotency_key") or "")
+            if gap_key:
+                unresolved[gap_key] = event
+        elif event_type == "lived_state_witness_gap_resolved":
+            unresolved.pop(
+                str(event.get("resolved_gap_idempotency_key") or ""), None
+            )
+
+    exact_by_witness = {
+        str(event.get("witness_id") or ""): event
+        for event in candidates
+        if event.get("event_type") == "temporal_lived_state_witness_recorded"
+    }
+    resolutions: list[dict[str, Any]] = []
+    for gap_key, gap in sorted(unresolved.items()):
+        witness_id = str(gap.get("witness_id") or "")
+        exact = exact_by_witness.get(witness_id)
+        if not witness_id or exact is None:
+            continue
+        exact_key = str(exact.get("idempotency_key") or "")
+        resolutions.append(
+            event_record(
+                "lived_state_witness_gap_resolved",
+                witness_id,
+                (
+                    "lived-state-gap-resolved:"
+                    f"{sha256_bytes(gap_key.encode())}:"
+                    f"{sha256_bytes(exact_key.encode())}"
+                ),
+                resolved_gap_idempotency_key=gap_key,
+                resolution_witness_event_idempotency_key=exact_key,
+                resolution_reason="validated_sidecar_now_projects_exactly",
+                historical_gap_preserved=True,
+                report_remains_primary=True,
+            )
+        )
+    return resolutions
+
+
 def project(workspace: Path, *, write: bool) -> dict[str, Any]:
     candidates, migration = migration_events(workspace)
     migration_identity = sha256_bytes(
@@ -500,6 +547,10 @@ def project(workspace: Path, *, write: bool) -> dict[str, Any]:
     )
     store = store_for(workspace)
     if write:
+        existing_events, corrupt = store.payloads_for_stream(STREAM)
+        if corrupt:
+            raise RuntimeError("lived-state witness stream is corrupt")
+        candidates.extend(_resolved_gap_events(existing_events, candidates))
         store.append_payloads(
             STREAM,
             candidates,
@@ -518,6 +569,16 @@ def project(workspace: Path, *, write: bool) -> dict[str, Any]:
     status["write"] = write
     status["migration_counters"] = migration["counts"]
     status["source_watermarks"] = migration["source_watermarks"]
+    gap_counter_matches = status["gap_count"] == migration["counts"]["gap"]
+    status["counter_audit"]["checks"][
+        "unresolved_gap_count_matches_migration"
+    ] = gap_counter_matches
+    status["counter_audit"]["status"] = (
+        "consistent"
+        if all(status["counter_audit"]["checks"].values())
+        else "inconsistent"
+    )
+    status["valid"] = status["valid"] and gap_counter_matches
     if write:
         hashes = _write_outputs(workspace, status, migration)
         store.write_checkpoint(
