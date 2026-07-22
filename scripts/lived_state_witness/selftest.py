@@ -126,6 +126,13 @@ def valid_witness() -> dict[str, object]:
         ),
         "privacy_hash_scope": "absolute_path_redaction_not_being_or_continuity_identity",
         "source_provenance_ref_v1": None,
+        "interpretation_provenance_ref_v1": None,
+        "interpretation_lineage_scope": (
+            "astrid_authored_artifact_with_exact_source_and_model_call_parents"
+        ),
+        "interpretation_weight_state": (
+            "unmeasured_no_scalar_inferred_from_parent_membership_or_spectral_proximity"
+        ),
         "process_provenance_ref_v1": provenance_ref(),
         "process_provenance_scope": (
             "bridge_evidence_derivation_not_being_origin_identity_or_continuity"
@@ -184,6 +191,20 @@ def valid_witness() -> dict[str, object]:
     witness_hasher.update(str(witness["artifact_kind"]).encode())
     witness_hasher.update(str(source["window_sha256"]).encode())
     witness["witness_id"] = f"lsw_{witness_hasher.hexdigest()}"
+    interpretation_provenance = provenance_ref("astrid_interpretation")
+    interpretation_provenance["source_id"] = f"artifact:{witness['witness_id']}"
+    interpretation_provenance["canonical_sha256"] = witness["artifact_sha256"]
+    interpretation_provenance["parent_ids"] = [source_provenance["source_id"]]
+    interpretation_provenance["timestamp_ms"] = witness["authored_at_unix_ms"]
+    interpretation_provenance["field_paths"] = [
+        "artifact_sha256",
+        "model_routes_v1.call_id",
+        "source_provenance_ref_v1",
+    ]
+    interpretation_anchor = interpretation_provenance["context_anchor_v1"]
+    assert isinstance(interpretation_anchor, dict)
+    interpretation_anchor["influence_types"] = ["interpretive", "authorship"]
+    witness["interpretation_provenance_ref_v1"] = interpretation_provenance
     return witness
 
 
@@ -268,6 +289,43 @@ class LivedStateWitnessTests(unittest.TestCase):
         historical_anchor = historical_provenance["context_anchor_v1"]
         self.assertIsInstance(historical_anchor, dict)
         historical_anchor["influence_types"] = ["structural", "authorship"]
+        self.assertEqual(validate_witness(historical), [])
+
+    def test_interpretation_lineage_is_exact_and_unweighted(self) -> None:
+        witness = valid_witness()
+        self.assertEqual(validate_witness(witness), [])
+
+        weighted = valid_witness()
+        weighted["interpretation_weight_state"] = "inferred_0.7_0.3"
+        self.assertIn(
+            "interpretation_weight_state:invalid",
+            validate_witness(weighted),
+        )
+
+        parent_tamper = valid_witness()
+        interpretation = parent_tamper["interpretation_provenance_ref_v1"]
+        self.assertIsInstance(interpretation, dict)
+        interpretation["parent_ids"] = ["invented_parent"]
+        self.assertIn(
+            "interpretation_provenance_ref_v1:parents_mismatch",
+            validate_witness(parent_tamper),
+        )
+
+        role_tamper = valid_witness()
+        role_interpretation = role_tamper["interpretation_provenance_ref_v1"]
+        self.assertIsInstance(role_interpretation, dict)
+        role_anchor = role_interpretation["context_anchor_v1"]
+        self.assertIsInstance(role_anchor, dict)
+        role_anchor["influence_types"] = ["structural", "regulatory_state_observed"]
+        self.assertIn(
+            "interpretation_provenance_ref_v1:roles_mismatch",
+            validate_witness(role_tamper),
+        )
+
+        historical = valid_witness()
+        historical.pop("interpretation_provenance_ref_v1")
+        historical.pop("interpretation_lineage_scope")
+        historical.pop("interpretation_weight_state")
         self.assertEqual(validate_witness(historical), [])
 
     def test_bounded_protocol_completeness_marker_is_validated(self) -> None:

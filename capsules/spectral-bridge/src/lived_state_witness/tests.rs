@@ -320,6 +320,15 @@ fn owner_only_sidecar_contains_no_prose() {
         "engineering_and_review_influence_allowed_direct_runtime_control_forbidden"
     ));
     assert!(raw.contains("separate_verified_authority_required_for_live_control"));
+    assert!(raw.contains("interpretation_provenance_ref_v1"));
+    assert!(raw.contains(
+        "astrid_authored_artifact_with_exact_source_and_model_call_parents"
+    ));
+    assert!(raw.contains(
+        "unmeasured_no_scalar_inferred_from_parent_membership_or_spectral_proximity"
+    ));
+    assert!(raw.contains("\"origin\": \"astrid_interpretation\""));
+    assert!(raw.contains("\"influence_types\": [\n        \"interpretive\",\n        \"authorship\""));
     assert!(raw.contains("\"epistemic_posture\": \"non_adjudicating\""));
     assert!(raw.contains("\"artifact_live_control_effect\": false"));
     assert!(!raw.contains("\"live_control_effect\": false"));

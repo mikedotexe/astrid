@@ -1,6 +1,6 @@
 use serde::Serialize;
 
-use crate::witness::ProvenanceRefV1;
+use crate::witness::{ProvenanceInfluenceTypeV1, ProvenanceOriginV1, ProvenanceRefV1};
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct LivedStateArtifactAuthorityV1 {
@@ -421,6 +421,9 @@ pub struct TemporalLivedStateWitnessV1 {
     peer_evidence_cache_scope: &'static str,
     privacy_hash_scope: &'static str,
     source_provenance_ref_v1: Option<ProvenanceRefV1>,
+    interpretation_provenance_ref_v1: ProvenanceRefV1,
+    interpretation_lineage_scope: &'static str,
+    interpretation_weight_state: &'static str,
     process_provenance_ref_v1: ProvenanceRefV1,
     process_provenance_scope: &'static str,
     raw_introspection_prose_included: bool,
@@ -452,6 +455,31 @@ impl TemporalLivedStateWitnessV1 {
         source_provenance_ref_v1: Option<ProvenanceRefV1>,
         process_provenance_ref_v1: ProvenanceRefV1,
     ) -> Self {
+        let mut interpretation_parent_ids = source_provenance_ref_v1
+            .iter()
+            .map(|reference| reference.source_id().to_string())
+            .collect::<Vec<_>>();
+        interpretation_parent_ids.extend(
+            model_routes_v1
+                .iter()
+                .map(|route| route.call_id().to_string()),
+        );
+        let interpretation_provenance_ref_v1 = ProvenanceRefV1::new(
+            ProvenanceOriginV1::AstridInterpretation,
+            format!("artifact:{witness_id}"),
+            artifact_sha256.clone(),
+            interpretation_parent_ids,
+            authored_at_unix_ms,
+            vec![
+                "artifact_sha256".to_string(),
+                "model_routes_v1.call_id".to_string(),
+                "source_provenance_ref_v1".to_string(),
+            ],
+            vec![
+                ProvenanceInfluenceTypeV1::Interpretive,
+                ProvenanceInfluenceTypeV1::Authorship,
+            ],
+        );
         Self {
             schema: "temporal_lived_state_witness_v1",
             schema_version: 1,
@@ -475,6 +503,11 @@ impl TemporalLivedStateWitnessV1 {
             peer_evidence_cache_scope: "sidecar_context_only_not_model_prompt_codec_controller_shadow_telemetry_or_dispatch_input",
             privacy_hash_scope: "absolute_path_redaction_not_being_or_continuity_identity",
             source_provenance_ref_v1,
+            interpretation_provenance_ref_v1,
+            interpretation_lineage_scope:
+                "astrid_authored_artifact_with_exact_source_and_model_call_parents",
+            interpretation_weight_state:
+                "unmeasured_no_scalar_inferred_from_parent_membership_or_spectral_proximity",
             process_provenance_ref_v1,
             process_provenance_scope: "bridge_evidence_derivation_not_being_origin_identity_or_continuity",
             raw_introspection_prose_included: false,

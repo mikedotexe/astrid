@@ -50,6 +50,9 @@ WITNESS_FIELDS = {
     "peer_evidence_cache_scope",
     "privacy_hash_scope",
     "source_provenance_ref_v1",
+    "interpretation_provenance_ref_v1",
+    "interpretation_lineage_scope",
+    "interpretation_weight_state",
     "process_provenance_ref_v1",
     "process_provenance_scope",
     "raw_introspection_prose_included",
@@ -926,6 +929,67 @@ def _validate_provenance_links(
             errors.append("source_provenance_ref_v1:window_hash_mismatch")
     elif source_provenance is not None:
         errors.append("source_provenance_ref_v1:without_source")
+    interpretation_fields = {
+        "interpretation_provenance_ref_v1",
+        "interpretation_lineage_scope",
+        "interpretation_weight_state",
+    }
+    present_interpretation = interpretation_fields.intersection(value)
+    if present_interpretation and len(present_interpretation) != len(interpretation_fields):
+        errors.append("interpretation_provenance:incomplete")
+    interpretation_provenance = value.get("interpretation_provenance_ref_v1")
+    _validate_provenance_ref(
+        interpretation_provenance,
+        "interpretation_provenance_ref_v1",
+        errors,
+        optional=True,
+    )
+    if present_interpretation:
+        if value.get("interpretation_lineage_scope") != (
+            "astrid_authored_artifact_with_exact_source_and_model_call_parents"
+        ):
+            errors.append("interpretation_lineage_scope:invalid")
+        if value.get("interpretation_weight_state") != (
+            "unmeasured_no_scalar_inferred_from_parent_membership_or_spectral_proximity"
+        ):
+            errors.append("interpretation_weight_state:invalid")
+        if isinstance(interpretation_provenance, dict):
+            if interpretation_provenance.get("origin") != "astrid_interpretation":
+                errors.append("interpretation_provenance_ref_v1:origin_mismatch")
+            if interpretation_provenance.get("canonical_sha256") != value.get(
+                "artifact_sha256"
+            ):
+                errors.append("interpretation_provenance_ref_v1:artifact_hash_mismatch")
+            if interpretation_provenance.get("source_id") != (
+                f"artifact:{value.get('witness_id')}"
+            ):
+                errors.append("interpretation_provenance_ref_v1:source_id_mismatch")
+            expected_parents = []
+            if isinstance(source_provenance, dict) and isinstance(
+                source_provenance.get("source_id"), str
+            ):
+                expected_parents.append(source_provenance["source_id"])
+            routes = value.get("model_routes_v1")
+            if isinstance(routes, list):
+                expected_parents.extend(
+                    route.get("call_id")
+                    for route in routes
+                    if isinstance(route, dict) and isinstance(route.get("call_id"), str)
+                )
+            if interpretation_provenance.get("parent_ids") != expected_parents:
+                errors.append("interpretation_provenance_ref_v1:parents_mismatch")
+            if interpretation_provenance.get("field_paths") != [
+                "artifact_sha256",
+                "model_routes_v1.call_id",
+                "source_provenance_ref_v1",
+            ]:
+                errors.append("interpretation_provenance_ref_v1:field_paths_mismatch")
+            anchor = interpretation_provenance.get("context_anchor_v1")
+            influence_types = (
+                anchor.get("influence_types") if isinstance(anchor, dict) else None
+            )
+            if influence_types != ["interpretive", "authorship"]:
+                errors.append("interpretation_provenance_ref_v1:roles_mismatch")
     process_provenance = value.get("process_provenance_ref_v1")
     if process is not None and isinstance(process_provenance, dict):
         if (
@@ -935,7 +999,11 @@ def _validate_provenance_links(
             errors.append("process_provenance_ref_v1:process_hash_mismatch")
         if process_provenance.get("origin") != "bridge_derived":
             errors.append("process_provenance_ref_v1:origin_mismatch")
-    for field in ("source_provenance_ref_v1", "process_provenance_ref_v1"):
+    for field in (
+        "source_provenance_ref_v1",
+        "interpretation_provenance_ref_v1",
+        "process_provenance_ref_v1",
+    ):
         provenance = value.get(field)
         if (
             isinstance(provenance, dict)
