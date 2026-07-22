@@ -768,7 +768,7 @@ fn stale_or_absent_peer_state_is_unknown_not_active_inference() {
     });
     let stale = peer_scalar_observations_from_snapshot(
         Some(&value),
-        Some(MAX_PEER_STATE_AGE_MS + 1),
+        Some(MAX_SIDECAR_PEER_SCALAR_AGE_MS + 1),
         100,
         PeerEvidenceSourceStatusV1::Observed,
     );
@@ -781,7 +781,7 @@ fn stale_or_absent_peer_state_is_unknown_not_active_inference() {
     }));
     let fresh = peer_scalar_observations_from_snapshot(
         Some(&value),
-        Some(MAX_PEER_STATE_AGE_MS),
+        Some(MAX_SIDECAR_PEER_SCALAR_AGE_MS),
         101,
         PeerEvidenceSourceStatusV1::Observed,
     );
@@ -962,23 +962,33 @@ fn concurrent_capture_sequences_are_unique() {
 }
 
 #[test]
-fn bounded_identity_is_deterministic_and_context_independent() {
+fn bounded_technical_identity_is_deterministic_and_context_independent() {
     let absolute = "/private/runtime/example/process.json";
-    let first_absolute = bounded_identity(Some(absolute)).expect("absolute identity");
-    let second_absolute = bounded_identity(Some(absolute)).expect("absolute identity");
+    let first_absolute =
+        bounded_technical_identity(Some(absolute)).expect("absolute identity");
+    let second_absolute =
+        bounded_technical_identity(Some(absolute)).expect("absolute identity");
     assert_eq!(first_absolute, second_absolute);
     assert!(first_absolute.starts_with("sha256:"));
     assert!(!first_absolute.contains(absolute));
 
     let relative = "peer/runtime-instance-v1";
-    assert_eq!(bounded_identity(Some(relative)).as_deref(), Some(relative));
-    assert_eq!(bounded_identity(Some(relative)).as_deref(), Some(relative));
+    assert_eq!(
+        bounded_technical_identity(Some(relative)).as_deref(),
+        Some(relative)
+    );
+    assert_eq!(
+        bounded_technical_identity(Some(relative)).as_deref(),
+        Some(relative)
+    );
 
     let shared_prefix = "peer/".to_string() + &"r".repeat(180);
     let first_long = format!("{shared_prefix}/first");
     let second_long = format!("{shared_prefix}/second");
-    let first_bounded = bounded_identity(Some(&first_long)).expect("first long identity");
-    let second_bounded = bounded_identity(Some(&second_long)).expect("second long identity");
+    let first_bounded =
+        bounded_technical_identity(Some(&first_long)).expect("first long identity");
+    let second_bounded =
+        bounded_technical_identity(Some(&second_long)).expect("second long identity");
     assert!(first_bounded.starts_with("sha256:"));
     assert!(second_bounded.starts_with("sha256:"));
     assert_ne!(first_bounded, second_bounded);

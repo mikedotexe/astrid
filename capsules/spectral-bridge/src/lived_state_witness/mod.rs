@@ -25,7 +25,9 @@ use crate::witness::{ProvenanceInfluenceTypeV1, ProvenanceOriginV1, ProvenanceRe
 use crate::ws::BridgeState;
 use peer_evidence_cache::PeerEvidenceSourceStatusV1;
 
-const MAX_PEER_STATE_AGE_MS: u64 = 30_000;
+// This only decides whether a peer scalar may be copied into an evidence sidecar.
+// It does not expire peer presence, slow dynamics, prompts, shadow state, or telemetry.
+const MAX_SIDECAR_PEER_SCALAR_AGE_MS: u64 = 30_000;
 static WITNESS_SEQUENCE: AtomicU64 = AtomicU64::new(0);
 
 #[derive(Debug, Clone, Copy)]
@@ -36,6 +38,7 @@ pub(crate) struct LivedStateClockSampleV1 {
 
 #[derive(Debug, Clone)]
 pub(crate) struct LivedStateAuthorshipV1 {
+    // Technical artifact-capture identity, never Astrid's being identity or felt-state weight.
     witness_id: String,
     authored_at: LivedStateClockSampleV1,
     authored_process_sequence: u64,
@@ -43,6 +46,7 @@ pub(crate) struct LivedStateAuthorshipV1 {
 
 #[derive(Debug, Clone, Default)]
 pub(crate) struct LivedStateRuntimeContextV1 {
+    // Sidecar-only observations. Canonical report prose remains the qualitative record.
     pub parameter_observations: Vec<LivedStateParameterObservationV1>,
     pub peer_process_identity: Option<String>,
     pub peer_deployment_identity: Option<String>,
@@ -52,7 +56,9 @@ fn sha256_bytes(bytes: &[u8]) -> String {
     format!("{:x}", Sha256::digest(bytes))
 }
 
-fn bounded_identity(value: Option<&str>) -> Option<String> {
+/// Bound a technical process, deployment, job, or model-profile identifier.
+/// Felt descriptors and being identity never pass through this function.
+fn bounded_technical_identity(value: Option<&str>) -> Option<String> {
     value
         .map(str::trim)
         .filter(|value| !value.is_empty())
@@ -269,7 +275,7 @@ fn peer_scalar_observations_from_snapshot(
     now_ms: u64,
     status: PeerEvidenceSourceStatusV1,
 ) -> Vec<LivedStateParameterObservationV1> {
-    let fresh = age_ms.is_some_and(|age| age <= MAX_PEER_STATE_AGE_MS);
+    let fresh = age_ms.is_some_and(|age| age <= MAX_SIDECAR_PEER_SCALAR_AGE_MS);
     let fields = [
         ("minime.fill_pct", "fill_pct", "percent"),
         ("minime.spectral_entropy", "spectral_entropy", "ratio"),
@@ -284,7 +290,7 @@ fn peer_scalar_observations_from_snapshot(
             let scalar = fresh.then_some(observed_scalar).flatten();
             let value_relation = if scalar.is_some() {
                 "fresh_peer_scalar_observed"
-            } else if age_ms.is_some_and(|age| age > MAX_PEER_STATE_AGE_MS) {
+            } else if age_ms.is_some_and(|age| age > MAX_SIDECAR_PEER_SCALAR_AGE_MS) {
                 "peer_scalar_withheld_as_stale_temporal_context_only"
             } else if observed_scalar.is_some() && age_ms.is_none() {
                 "source_timestamp_unavailable_scalar_withheld"
@@ -374,7 +380,8 @@ pub(crate) fn runtime_context_v1(state: &BridgeState, fill_pct: f32) -> LivedSta
         };
         now.unix_ms.saturating_sub(arrival_ms)
     });
-    let telemetry_fresh = telemetry_age_ms.map(|age| age <= MAX_PEER_STATE_AGE_MS);
+    let telemetry_fresh =
+        telemetry_age_ms.map(|age| age <= MAX_SIDECAR_PEER_SCALAR_AGE_MS);
     let spectral_entropy = state
         .latest_telemetry
         .as_ref()
@@ -440,13 +447,13 @@ pub(crate) fn runtime_context_v1(state: &BridgeState, fill_pct: f32) -> LivedSta
     observations.extend(peer_scalar_observations(now.unix_ms));
     LivedStateRuntimeContextV1 {
         parameter_observations: observations,
-        peer_process_identity: bounded_identity(
+        peer_process_identity: bounded_technical_identity(
             state
                 .sensory_delivery_protocol_v1
                 .server_process_identity
                 .as_deref(),
         ),
-        peer_deployment_identity: bounded_identity(
+        peer_deployment_identity: bounded_technical_identity(
             state
                 .sensory_delivery_protocol_v1
                 .server_deployment_identity
@@ -538,12 +545,12 @@ pub(crate) fn model_route_v1(
     repair_parent_call_id: Option<String>,
     response_text: &str,
 ) -> LivedStateModelRouteV1 {
-    let job_id = bounded_identity(job_id.as_deref());
+    let job_id = bounded_technical_identity(job_id.as_deref());
     let provider_route_complete = provider_route.chars().count() <= 40;
     let provider_route_sha256 = sha256_bytes(provider_route.as_bytes());
     let provider_route: String = provider_route.chars().take(40).collect();
     let model_profile =
-        bounded_identity(Some(model_profile)).unwrap_or_else(|| "unknown".to_string());
+        bounded_technical_identity(Some(model_profile)).unwrap_or_else(|| "unknown".to_string());
     let response_sha256 = sha256_bytes(response_text.as_bytes());
     let mut hasher = Sha256::new();
     hasher.update(b"astrid-lived-state-model-route-v1\0");
