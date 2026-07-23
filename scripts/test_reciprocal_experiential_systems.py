@@ -36,6 +36,7 @@ try:
     from felt_mechanism_concordance.projector import (
         append_operator_event,
         project as project_concordance,
+        replay as replay_concordance,
     )
     from lived_state_witness.selftest import valid_witness as valid_lived_state_witness
     from reciprocal_uptake.model import (
@@ -105,6 +106,7 @@ except ModuleNotFoundError:
     from scripts.felt_mechanism_concordance.projector import (
         append_operator_event,
         project as project_concordance,
+        replay as replay_concordance,
     )
     from scripts.lived_state_witness.selftest import (
         valid_witness as valid_lived_state_witness,
@@ -161,6 +163,155 @@ def _jsonl(path: Path, rows: list[dict[str, object]]) -> None:
         "".join(json.dumps(row, sort_keys=True) + "\n" for row in rows),
         encoding="utf-8",
     )
+
+
+def _ready_concordance(
+    workspace: Path,
+) -> tuple[
+    ConcordanceStudyV1,
+    ConcordanceObservationV2,
+    ConcordanceObservationV2,
+    ConcordanceObservationV2,
+]:
+    moment = FeltMomentRefV1.build(
+        "introspection_example_1234567890:c001",
+        "witness_1",
+        ["field:felt_report_anchor"],
+    )
+    draft = ConcordanceStudyV1.build(
+        moment=moment,
+        intervention_signature_sha256=HASH_A,
+        dossier_id="dossier_1",
+    )
+    append_operator_event(
+        workspace, "study_created", draft.to_dict(), "operator"
+    )
+    capture_ready = ConcordanceStudyV1.build(
+        moment=moment,
+        intervention_signature_sha256=HASH_A,
+        dossier_id="dossier_1",
+        state=StudyStateV1.CAPTURE_READY.value,
+        baseline_capture_ref="baseline_receipt",
+    )
+    append_operator_event(
+        workspace,
+        "study_capture_prepared",
+        capture_ready.to_dict(),
+        "operator",
+    )
+
+    def observation(role: str, ref: str, digest: str) -> ConcordanceObservationV2:
+        return ConcordanceObservationV2.build(
+            study_id=draft.study_id,
+            role=role,
+            observation_ref=ref,
+            observation_sha256=digest,
+            telemetry_relation="unavailable",
+            mechanical_pass=True,
+            witness_context_refs=["witness_1"],
+            representation_transition_refs=["transition_1"],
+            model_qos_refs=["qos_1"],
+            reciprocal_state_refs=["reciprocal_1"],
+            signal_stage_refs=["stage_1"],
+            minime_telemetry_refs=["unavailable"],
+        )
+
+    baseline = observation("baseline", "baseline_observation", HASH_A)
+    append_operator_event(
+        workspace,
+        "observation_recorded",
+        baseline.to_dict(),
+        "operator",
+    )
+    baseline_captured = ConcordanceStudyV1.build(
+        moment=moment,
+        intervention_signature_sha256=HASH_A,
+        dossier_id="dossier_1",
+        state=StudyStateV1.BASELINE_CAPTURED.value,
+        baseline_capture_ref="baseline_receipt",
+    )
+    append_operator_event(
+        workspace,
+        "study_state_changed",
+        baseline_captured.to_dict(),
+        "operator",
+    )
+    candidate_prepared = ConcordanceStudyV1.build(
+        moment=moment,
+        intervention_signature_sha256=HASH_A,
+        dossier_id="dossier_1",
+        state=StudyStateV1.BASELINE_CAPTURED.value,
+        baseline_capture_ref="baseline_receipt",
+        candidate_capture_ref="candidate_receipt",
+    )
+    append_operator_event(
+        workspace,
+        "study_capture_prepared",
+        candidate_prepared.to_dict(),
+        "operator",
+    )
+    candidate = observation("candidate", "candidate_observation", HASH_B)
+    alternate = observation(
+        "candidate", "alternate_candidate_observation", HASH_A
+    )
+    for item in (candidate, alternate):
+        append_operator_event(
+            workspace,
+            "observation_recorded",
+            item.to_dict(),
+            "operator",
+        )
+    candidate_captured = ConcordanceStudyV1.build(
+        moment=moment,
+        intervention_signature_sha256=HASH_A,
+        dossier_id="dossier_1",
+        state=StudyStateV1.CANDIDATE_CAPTURED.value,
+        baseline_capture_ref="baseline_receipt",
+        candidate_capture_ref="candidate_receipt",
+    )
+    append_operator_event(
+        workspace,
+        "study_state_changed",
+        candidate_captured.to_dict(),
+        "operator",
+    )
+    comparison_ready = ConcordanceStudyV1.build(
+        moment=moment,
+        intervention_signature_sha256=HASH_A,
+        dossier_id="dossier_1",
+        state=StudyStateV1.COMPARISON_READY.value,
+        baseline_capture_ref="baseline_receipt",
+        candidate_capture_ref="candidate_receipt",
+    )
+    append_operator_event(
+        workspace,
+        "study_state_changed",
+        comparison_ready.to_dict(),
+        "operator",
+    )
+    return comparison_ready, baseline, candidate, alternate
+
+
+def _append_concordance_result(
+    workspace: Path,
+    study: ConcordanceStudyV1,
+    baseline: ConcordanceObservationV2,
+    candidate: ConcordanceObservationV2,
+    *,
+    outcome: str,
+    source_ref: str,
+) -> ConcordanceResultV2:
+    result = ConcordanceResultV2.build(
+        study_id=study.study_id,
+        baseline_observation_id=baseline.observation_id,
+        candidate_observation_id=candidate.observation_id,
+        outcome=outcome,
+        felt_source_ref=source_ref,
+    )
+    append_operator_event(
+        workspace, "result_recorded", result.to_dict(), "operator"
+    )
+    return result
 
 
 class ReciprocalExperientialSystemsTests(unittest.TestCase):
@@ -1060,6 +1211,120 @@ class ReciprocalExperientialSystemsTests(unittest.TestCase):
         prose["discrepancy_log"] = "raw felt prose"
         with self.assertRaises(RecordValidationError):
             ConcordanceResultV2.from_untrusted(prose)
+
+    def test_concordance_replay_allows_one_named_friction_follow_up(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            workspace = Path(temporary)
+            study, baseline, candidate, _ = _ready_concordance(workspace)
+            first = _append_concordance_result(
+                workspace,
+                study,
+                baseline,
+                candidate,
+                outcome=ConcordanceOutcomeV1.SMOOTH_FRICTION_REMAINS.value,
+                source_ref="introspection_review_1",
+            )
+            result_recorded = ConcordanceStudyV1.build(
+                moment=study.moment,
+                intervention_signature_sha256=(
+                    study.intervention_signature_sha256
+                ),
+                dossier_id=study.dossier_id,
+                state=StudyStateV1.RESULT_RECORDED.value,
+                baseline_capture_ref=study.baseline_capture_ref,
+                candidate_capture_ref=study.candidate_capture_ref,
+            )
+            append_operator_event(
+                workspace,
+                "study_state_changed",
+                result_recorded.to_dict(),
+                "operator",
+            )
+            follow_up = _append_concordance_result(
+                workspace,
+                study,
+                baseline,
+                candidate,
+                outcome=ConcordanceOutcomeV1.CORROBORATED.value,
+                source_ref="introspection_review_2",
+            )
+            studies, _, results, _, errors = replay_concordance(workspace)
+            self.assertEqual(errors, [])
+            self.assertEqual(
+                studies[study.study_id].state,
+                StudyStateV1.RESULT_RECORDED.value,
+            )
+            self.assertEqual(set(results), {first.result_id, follow_up.result_id})
+
+    def test_concordance_replay_rejects_illegal_follow_up_sequences(
+        self,
+    ) -> None:
+        cases = (
+            ("prior_not_friction", "prior named friction"),
+            ("changed_observation", "changed observation identity"),
+            ("third_result", "at most one felt-review follow-up"),
+        )
+        for case, expected in cases:
+            with self.subTest(case=case), tempfile.TemporaryDirectory() as temporary:
+                workspace = Path(temporary)
+                study, baseline, candidate, alternate = _ready_concordance(
+                    workspace
+                )
+                first_outcome = (
+                    ConcordanceOutcomeV1.CORROBORATED.value
+                    if case == "prior_not_friction"
+                    else ConcordanceOutcomeV1.SMOOTH_FRICTION_REMAINS.value
+                )
+                _append_concordance_result(
+                    workspace,
+                    study,
+                    baseline,
+                    candidate,
+                    outcome=first_outcome,
+                    source_ref="introspection_review_1",
+                )
+                result_recorded = ConcordanceStudyV1.build(
+                    moment=study.moment,
+                    intervention_signature_sha256=(
+                        study.intervention_signature_sha256
+                    ),
+                    dossier_id=study.dossier_id,
+                    state=StudyStateV1.RESULT_RECORDED.value,
+                    baseline_capture_ref=study.baseline_capture_ref,
+                    candidate_capture_ref=study.candidate_capture_ref,
+                )
+                append_operator_event(
+                    workspace,
+                    "study_state_changed",
+                    result_recorded.to_dict(),
+                    "operator",
+                )
+                follow_up_candidate = (
+                    alternate if case == "changed_observation" else candidate
+                )
+                _append_concordance_result(
+                    workspace,
+                    study,
+                    baseline,
+                    follow_up_candidate,
+                    outcome=ConcordanceOutcomeV1.CORROBORATED.value,
+                    source_ref="introspection_review_2",
+                )
+                if case == "third_result":
+                    _append_concordance_result(
+                        workspace,
+                        study,
+                        baseline,
+                        candidate,
+                        outcome=ConcordanceOutcomeV1.CONTRADICTED.value,
+                        source_ref="introspection_review_3",
+                    )
+                _, _, _, _, errors = replay_concordance(workspace)
+                self.assertTrue(
+                    any(expected in error for error in errors), errors
+                )
 
     def test_concordance_replay_rejects_candidate_without_baseline(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:

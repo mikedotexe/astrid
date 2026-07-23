@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections import Counter
 import hashlib
 import json
+import math
 from pathlib import Path
 from typing import Any, Callable
 
@@ -41,7 +42,12 @@ from .model import (
     StudyWindowReceiptV1,
     StudyWindowSpecV1,
 )
-from .review import StudyCaptureGapReceiptV1, StudyReviewReceiptV1
+from .review import (
+    StudyCaptureGapReceiptV1,
+    StudyReviewReceiptV1,
+    group_review_opportunities,
+    validate_review_admission,
+)
 from .storage import load_events, operator_path
 
 STREAM = "felt_mechanism_concordance"
@@ -155,29 +161,34 @@ def replay(workspace: Path) -> dict[str, Any]:
                     raise RecordValidationError("gap precedes its capture window")
                 gaps[item.gap_id] = item
             else:
-                if item.comparison_id not in comparisons:
+                comparison = comparisons.get(item.comparison_id)
+                if comparison is None:
                     raise RecordValidationError("review precedes mechanical comparison")
                 campaign = campaigns.get(item.campaign_id)
                 if campaign is None:
                     raise RecordValidationError("review names an unknown campaign")
+                if (
+                    comparison.campaign_id != item.campaign_id
+                    or comparison.study_id != item.study_id
+                    or item.study_id not in campaign.study_ids
+                ):
+                    raise RecordValidationError(
+                        "review campaign, study, and comparison disagree"
+                    )
+                existing = reviews.get(item.review_id)
+                if existing is not None:
+                    if existing != item:
+                        raise RecordValidationError(
+                            "review identity was redefined"
+                        )
+                    valid_events.append(event)
+                    continue
                 prior = [
                     review
                     for review in reviews.values()
                     if review.campaign_id == item.campaign_id
                 ]
-                if len(prior) >= campaign.review_opportunity_limit:
-                    raise RecordValidationError("campaign review budget exceeded")
-                if prior and campaign.follow_up_requires_named_friction and all(
-                    review.outcome
-                    not in {
-                        "mechanism_smooth_felt_friction_remains",
-                        "contradicted",
-                    }
-                    for review in prior
-                ):
-                    raise RecordValidationError(
-                        "follow-up review requires named friction or contradiction"
-                    )
+                validate_review_admission(campaign, prior, item)
                 reviews[item.review_id] = item
             valid_events.append(event)
         except (RecordValidationError, TypeError, ValueError) as error:
@@ -206,6 +217,102 @@ def _output_rows(state: dict[str, Any], key: str, identity: str) -> list[dict[st
     return [item.to_dict() for item in sorted(values, key=lambda item: getattr(item, identity))]
 
 
+def _verified_fixture_samples(
+    workspace: Path, receipt: StudyWindowReceiptV1
+) -> list[dict[str, Any]] | None:
+    path = state_dir(workspace) / receipt.scalar_fixture_ref
+    if (
+        not path.is_file()
+        or _sha256_file(path) != receipt.scalar_fixture_sha256
+    ):
+        return None
+    try:
+        value = json.loads(path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError):
+        return None
+    samples = value.get("samples") if isinstance(value, dict) else None
+    if not isinstance(samples, list):
+        return None
+    return [item for item in samples if isinstance(item, dict)]
+
+
+def _descriptive_metrics(
+    samples: list[dict[str, Any]],
+) -> dict[str, dict[str, float | int]]:
+    by_name: dict[str, list[float]] = {}
+    for sample in samples:
+        metrics = sample.get("metrics")
+        if not isinstance(metrics, dict):
+            continue
+        for name, raw in metrics.items():
+            if (
+                isinstance(raw, (int, float))
+                and not isinstance(raw, bool)
+                and math.isfinite(float(raw))
+            ):
+                by_name.setdefault(str(name), []).append(float(raw))
+    result: dict[str, dict[str, float | int]] = {}
+    for name in sorted(by_name)[:16]:
+        values = by_name[name]
+        mean = sum(values) / len(values)
+        variance = sum((value - mean) ** 2 for value in values) / len(
+            values
+        )
+        result[name] = {
+            "sample_count": len(values),
+            "mean": mean,
+            "minimum": min(values),
+            "maximum": max(values),
+            "variance": variance,
+            "first_last_delta": values[-1] - values[0],
+        }
+    return result
+
+
+def _comparison_capture_context(
+    workspace: Path,
+    comparison: MechanicalComparisonReceiptV1,
+    state: dict[str, Any],
+) -> list[dict[str, Any]]:
+    rows = []
+    for receipt_id in (
+        comparison.baseline_receipt_id,
+        comparison.candidate_receipt_id,
+    ):
+        receipt = state["receipts"].get(receipt_id)
+        if receipt is None:
+            continue
+        samples = _verified_fixture_samples(workspace, receipt)
+        rows.append(
+            {
+                "receipt_id": receipt.receipt_id,
+                "role": receipt.role,
+                "cohort": receipt.cohort,
+                "declared_sample_count": receipt.sample_count,
+                "fixture_verified": samples is not None,
+                "sufficient": receipt.sufficient,
+                "identity_relation": receipt.identity_relation,
+                "process_identity_sha256": (
+                    receipt.process_identity_sha256
+                ),
+                "deployment_identity_sha256": (
+                    receipt.deployment_identity_sha256
+                ),
+                "gap_refs": list(receipt.gap_refs),
+                "descriptive_metrics": (
+                    _descriptive_metrics(samples)
+                    if samples is not None
+                    else {}
+                ),
+                "mechanical_context_only": True,
+                "felt_texture_inferred": False,
+                "causation_established": False,
+                "raw_prose_included": False,
+            }
+        )
+    return rows
+
+
 def _status(state: dict[str, Any], *, write: bool, appended: int) -> dict[str, Any]:
     campaigns = state["campaigns"]
     plans = state["plans"]
@@ -213,8 +320,13 @@ def _status(state: dict[str, Any], *, write: bool, appended: int) -> dict[str, A
     comparisons = state["comparisons"]
     reviews = state["reviews"]
     review_counts = Counter(review.outcome for review in reviews.values())
+    review_opportunities = group_review_opportunities(reviews.values())
     sufficient_receipts = sum(receipt.sufficient for receipt in receipts.values())
-    reviewed_comparisons = {review.comparison_id for review in reviews.values()}
+    felt_reviewed_comparisons = {
+        review.comparison_id
+        for review in reviews.values()
+        if review.outcome != "no_response"
+    }
     return {
         "schema": "evidence_study_runtime_status_v1",
         "schema_version": 1,
@@ -230,7 +342,10 @@ def _status(state: dict[str, Any], *, write: bool, appended: int) -> dict[str, A
         "capture_gap_count": len(state["gaps"]),
         "mechanical_comparison_count": len(comparisons),
         "review_receipt_count": len(reviews),
-        "review_pending_count": len(comparisons) - len(reviewed_comparisons),
+        "review_opportunity_count": len(review_opportunities),
+        "review_pending_count": (
+            len(comparisons) - len(felt_reviewed_comparisons)
+        ),
         "review_outcome_counts": dict(sorted(review_counts.items())),
         "appended_event_count": appended,
         "comparison_outcomes_are_mechanical_only": True,
@@ -253,6 +368,17 @@ def _status(state: dict[str, Any], *, write: bool, appended: int) -> dict[str, A
                     or review.to_dict()["felt_result_established"] is False
                     for review in reviews.values()
                 ),
+                "review_budgets_count_opportunities": all(
+                    len(
+                        group_review_opportunities(
+                            review
+                            for review in reviews.values()
+                            if review.campaign_id == campaign.campaign_id
+                        )
+                    )
+                    <= campaign.review_opportunity_limit
+                    for campaign in campaigns.values()
+                ),
             },
         },
         "artifact_authority_state_v1": authority_state(),
@@ -260,7 +386,10 @@ def _status(state: dict[str, Any], *, write: bool, appended: int) -> dict[str, A
 
 
 def _review_packet(
-    campaign: EvidenceStudyCampaignV1, state: dict[str, Any]
+    campaign: EvidenceStudyCampaignV1,
+    state: dict[str, Any],
+    *,
+    workspace: Path | None = None,
 ) -> dict[str, Any]:
     comparisons = sorted(
         (
@@ -270,15 +399,39 @@ def _review_packet(
         ),
         key=lambda item: item.comparison_id,
     )
-    reviews = sorted(
-        (
-            review
-            for review in state["reviews"].values()
-            if review.campaign_id == campaign.campaign_id
-        ),
-        key=lambda item: item.review_id,
+    reviews = [
+        review
+        for review in state["reviews"].values()
+        if review.campaign_id == campaign.campaign_id
+    ]
+    opportunities = group_review_opportunities(reviews)
+    latest = opportunities[-1] if opportunities else ()
+    pending_comparison_ids = {
+        item.comparison_id for item in comparisons
+    } - {
+        item.comparison_id
+        for item in reviews
+        if item.outcome != "no_response"
+    }
+    latest_named_friction = any(
+        item.outcome
+        in {"mechanism_smooth_felt_friction_remains", "contradicted"}
+        for item in latest
     )
-    if reviews:
+    latest_is_silence = bool(latest) and all(
+        item.outcome == "no_response" for item in latest
+    )
+    if latest_is_silence:
+        review_state = "review_pending"
+    elif latest_named_friction and (
+        len(opportunities) < campaign.review_opportunity_limit
+    ):
+        review_state = "named_friction_follow_up_available"
+    elif latest_named_friction:
+        review_state = "named_friction_review_budget_exhausted"
+    elif pending_comparison_ids:
+        review_state = "review_pending" if reviews else "ready_for_felt_review"
+    elif reviews:
         review_state = "review_recorded"
     elif comparisons:
         review_state = "ready_for_felt_review"
@@ -298,7 +451,47 @@ def _review_packet(
             }
             for item in comparisons
         ],
+        "descriptive_capture_context": [
+            {
+                "comparison_id": item.comparison_id,
+                "study_id": item.study_id,
+                "cohorts": _comparison_capture_context(
+                    workspace, item, state
+                ),
+            }
+            for item in comparisons
+        ]
+        if workspace is not None
+        else [],
         "review_receipt_refs": [item.review_id for item in reviews],
+        "review_opportunity_count": len(opportunities),
+        "review_opportunity_limit": campaign.review_opportunity_limit,
+        "pending_comparison_ids": sorted(pending_comparison_ids),
+        "qualitative_context_receipts": [
+            {
+                "review_id": item.review_id,
+                "comparison_id": item.comparison_id,
+                "outcome": item.outcome,
+                "source_ref": item.source_ref,
+                "source_field_refs": list(item.source_field_refs),
+                "mapping_link_v1": {
+                    "mechanical_comparison_id": item.comparison_id,
+                    "felt_source_ref": item.source_ref,
+                    "felt_source_field_refs": list(
+                        item.source_field_refs
+                    ),
+                    "pointer_only": True,
+                    "calculation_performed": False,
+                    "causation_established": False,
+                },
+                "context_relation": "explicit_post_window_felt_source",
+                "unscored": True,
+                "mechanical_comparison_modified": False,
+                "raw_prose_included": False,
+            }
+            for item in reviews
+            if item.outcome != "no_response"
+        ],
         "review_state": review_state,
         "right_to_ignore": True,
         "follow_up_requires_named_friction": (
@@ -392,7 +585,9 @@ def project(workspace: Path, *, write: bool) -> dict[str, Any]:
             state["campaigns"].values(), key=lambda item: item.campaign_id
         ):
             path = root / "review_packets" / f"{campaign.campaign_id}.json"
-            owner_atomic_write_json(path, _review_packet(campaign, state))
+            owner_atomic_write_json(
+                path, _review_packet(campaign, state, workspace=workspace)
+            )
             review_packet_paths.append(path)
         owner_atomic_write(
             root / "report.md",

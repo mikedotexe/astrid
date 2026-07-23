@@ -163,6 +163,28 @@ class ExperimentDossierIncrementalTests(unittest.TestCase):
             "sha256:" + "b" * 64,
             None,
         )
+        before_retry, corrupt = read_domain_events(
+            family_state_dir(self.workspace),
+            "claim_families",
+        )
+        self.assertEqual(corrupt, 0)
+        retried = transition(
+            self.workspace,
+            dossier_id,
+            "baseline-captured",
+            "sha256:" + "b" * 64,
+            None,
+        )
+        after_retry, corrupt = read_domain_events(
+            family_state_dir(self.workspace),
+            "claim_families",
+        )
+        self.assertEqual(corrupt, 0)
+        self.assertEqual(len(after_retry), len(before_retry))
+        self.assertEqual(
+            retried["idempotency_key"],
+            before_retry[-1]["idempotency_key"],
+        )
         context["alignment"] = {"outcome": "same_source_new_process"}
         context_path.write_text(
             json.dumps(context, sort_keys=True) + "\n", encoding="utf-8"

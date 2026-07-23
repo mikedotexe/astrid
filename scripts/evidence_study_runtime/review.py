@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, Iterable
 
 try:
     from experiential_systems.common import (
@@ -24,7 +24,12 @@ except ModuleNotFoundError:
         validate_timestamp,
     )
 
-from .model import ReviewOutcomeV1, _TRUSTED, _nonnegative_int
+from .model import (
+    EvidenceStudyCampaignV1,
+    ReviewOutcomeV1,
+    _TRUSTED,
+    _nonnegative_int,
+)
 
 
 @dataclass(frozen=True)
@@ -137,6 +142,7 @@ class StudyReviewReceiptV1:
     comparison_id: str
     outcome: str
     source_ref: str
+    source_field_refs: tuple[str, ...]
     opportunity_completed: bool
     _token: object = field(repr=False, compare=False)
 
@@ -153,6 +159,7 @@ class StudyReviewReceiptV1:
         comparison_id: str,
         outcome: str,
         source_ref: str,
+        source_field_refs: Iterable[str] = (),
         opportunity_completed: bool,
     ) -> StudyReviewReceiptV1:
         campaign = validate_bounded_identifier(campaign_id, "campaign_id") or ""
@@ -160,6 +167,22 @@ class StudyReviewReceiptV1:
         comparison = validate_bounded_identifier(comparison_id, "comparison_id") or ""
         resolved = ReviewOutcomeV1(outcome).value
         ref = validate_bounded_identifier(source_ref, "source_ref", limit=240) or ""
+        raw_field_refs = list(source_field_refs)
+        if len(raw_field_refs) > 16:
+            raise RecordValidationError(
+                "review source_field_refs exceeds the bounded maximum"
+            )
+        field_refs = tuple(
+            sorted(
+                {
+                    validate_bounded_identifier(
+                        item, "source_field_ref", limit=200
+                    )
+                    or ""
+                    for item in raw_field_refs
+                }
+            )
+        )
         if not isinstance(opportunity_completed, bool) or not opportunity_completed:
             raise RecordValidationError(
                 "review outcome requires an explicitly completed opportunity"
@@ -172,6 +195,8 @@ class StudyReviewReceiptV1:
             "source_ref": ref,
             "opportunity_completed": opportunity_completed,
         }
+        if field_refs:
+            core["source_field_refs"] = list(field_refs)
         return cls(
             deterministic_id("studyreview", core),
             campaign,
@@ -179,6 +204,7 @@ class StudyReviewReceiptV1:
             comparison,
             resolved,
             ref,
+            field_refs,
             opportunity_completed,
             _TRUSTED,
         )
@@ -194,6 +220,7 @@ class StudyReviewReceiptV1:
             "comparison_id": self.comparison_id,
             "outcome": self.outcome,
             "source_ref": self.source_ref,
+            "source_field_refs": list(self.source_field_refs),
             "opportunity_completed": self.opportunity_completed,
             "felt_result_established": not no_response,
             "review_pending": no_response,
@@ -208,12 +235,18 @@ class StudyReviewReceiptV1:
         if not isinstance(value, dict):
             raise RecordValidationError("review receipt must be an object")
         validate_evidence_record(value)
+        field_refs = value.get("source_field_refs", [])
+        if not isinstance(field_refs, list):
+            raise RecordValidationError(
+                "review source_field_refs must be a list"
+            )
         built = cls.build(
             campaign_id=value.get("campaign_id"),
             study_id=value.get("study_id"),
             comparison_id=value.get("comparison_id"),
             outcome=value.get("outcome"),
             source_ref=value.get("source_ref"),
+            source_field_refs=field_refs,
             opportunity_completed=value.get("opportunity_completed"),
         )
         no_response = built.outcome == ReviewOutcomeV1.NO_RESPONSE.value
@@ -228,3 +261,58 @@ class StudyReviewReceiptV1:
         ):
             raise RecordValidationError("review silence or closure boundary mismatch")
         return built
+
+
+def group_review_opportunities(
+    reviews: Iterable[StudyReviewReceiptV1],
+) -> tuple[tuple[StudyReviewReceiptV1, ...], ...]:
+    """Group independent study receipts from one delivered campaign review."""
+
+    grouped: dict[tuple[str, str], list[StudyReviewReceiptV1]] = {}
+    for review in reviews:
+        key = (review.campaign_id, review.source_ref)
+        grouped.setdefault(key, []).append(review)
+    return tuple(tuple(items) for items in grouped.values())
+
+
+def validate_review_admission(
+    campaign: EvidenceStudyCampaignV1,
+    prior_reviews: Iterable[StudyReviewReceiptV1],
+    review: StudyReviewReceiptV1,
+) -> None:
+    """Enforce a campaign opportunity budget without conflating its studies."""
+
+    if review.campaign_id != campaign.campaign_id:
+        raise RecordValidationError("review names a different campaign")
+    prior = [
+        item
+        for item in prior_reviews
+        if item.campaign_id == campaign.campaign_id
+    ]
+    same_opportunity = [
+        item for item in prior if item.source_ref == review.source_ref
+    ]
+    if any(item.study_id == review.study_id for item in same_opportunity):
+        raise RecordValidationError(
+            "one review opportunity may record each study only once"
+        )
+    if same_opportunity:
+        return
+    opportunities = group_review_opportunities(prior)
+    if len(opportunities) >= campaign.review_opportunity_limit:
+        raise RecordValidationError("campaign review budget exceeded")
+    if (
+        opportunities
+        and campaign.follow_up_requires_named_friction
+        and all(
+            item.outcome
+            not in {
+                ReviewOutcomeV1.SMOOTH_FRICTION_REMAINS.value,
+                ReviewOutcomeV1.CONTRADICTED.value,
+            }
+            for item in prior
+        )
+    ):
+        raise RecordValidationError(
+            "follow-up review requires named friction or contradiction"
+        )

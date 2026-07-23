@@ -40,9 +40,12 @@ from .model import (
     StudyWindowReceiptV1,
     StudyWindowSpecV1,
 )
-from .projector import replay
-from .projector import project
-from .review import StudyReviewReceiptV1
+from .projector import _descriptive_metrics, _review_packet, project, replay
+from .review import (
+    StudyReviewReceiptV1,
+    group_review_opportunities,
+    validate_review_admission,
+)
 from .storage import (
     active_windows,
     append_event,
@@ -51,131 +54,22 @@ from .storage import (
     load_events,
     samples_path,
 )
+from .service import (
+    _advance_concordance,
+    _reviewable_concordance_states,
+)
+from .selftest_support import HASH_A, HASH_B, records as _records
+from .selftest_support import sample as _sample
 
-HASH_A = "a" * 64
-HASH_B = "b" * 64
-
-
-def _records() -> tuple[
-    EvidenceStudyCampaignV1,
-    EvidenceStudyPlanV1,
-    StudyWindowSpecV1,
-    StudyWindowReceiptV1,
-    StudyWindowReceiptV1,
-]:
-    campaign = EvidenceStudyCampaignV1.build(
-        campaign_key="fixture",
-        comparison_domain="mechanical_fixture",
-        study_ids=["concordance_fixture"],
-        review_opportunity_limit=2,
-    )
-    plan = EvidenceStudyPlanV1.build(
-        plan_version=1,
-        frozen_prior_plan_sha256=None,
-        campaign_id=campaign.campaign_id,
-        concordance_study_id="concordance_fixture",
-        canonical_claim_id="introspection_fixture:c001",
-        dossier_id="dossier_fixture",
-        witness_id="lsw_fixture",
-        sample_kind="telemetry",
-        comparison_kind="observational_context",
-        baseline_cohort="clear",
-        candidate_cohort="delayed",
-        metric_names=["integration_us"],
-        thresholds={"wait_ms": 5.0},
-        minimum_total_samples=2,
-        minimum_baseline_samples=1,
-        minimum_candidate_samples=1,
-        duration_minutes=30,
-        sample_limit=32,
-        extension_limit=1,
-        intervention_signature_sha256=HASH_A,
-    )
-    spec = StudyWindowSpecV1.build(
-        campaign_id=campaign.campaign_id,
-        study_id=plan.concordance_study_id,
-        plan_id=plan.plan_id,
-        plan_sha256=plan.plan_sha256,
-        sample_kinds=["telemetry"],
-        started_at_unix_ms=1_000,
-        expires_at_unix_ms=2_000,
-        sample_limit=32,
-        actor="test",
-    )
-    baseline = StudyWindowReceiptV1.build(
-        window_id=spec.window_id,
-        campaign_id=campaign.campaign_id,
-        study_id=plan.concordance_study_id,
-        plan_id=plan.plan_id,
-        role="baseline",
-        comparison_kind=plan.comparison_kind,
-        cohort=plan.baseline_cohort,
-        sample_count=1,
-        qualifying_sample_count=1,
-        sample_set_sha256=HASH_A,
-        scalar_fixture_ref="scalar_fixtures/a.json",
-        scalar_fixture_sha256=HASH_A,
-        process_identity_sha256=HASH_A,
-        deployment_identity_sha256=HASH_B,
-        identity_relation="exact_identity",
-        gap_refs=[],
-        sufficient=True,
-    )
-    candidate = StudyWindowReceiptV1.build(
-        window_id=spec.window_id,
-        campaign_id=campaign.campaign_id,
-        study_id=plan.concordance_study_id,
-        plan_id=plan.plan_id,
-        role="candidate",
-        comparison_kind=plan.comparison_kind,
-        cohort=plan.candidate_cohort,
-        sample_count=1,
-        qualifying_sample_count=1,
-        sample_set_sha256=HASH_B,
-        scalar_fixture_ref="scalar_fixtures/b.json",
-        scalar_fixture_sha256=HASH_B,
-        process_identity_sha256=HASH_A,
-        deployment_identity_sha256=HASH_B,
-        identity_relation="exact_identity",
-        gap_refs=[],
-        sufficient=True,
-    )
-    return campaign, plan, spec, baseline, candidate
-
-
-def _sample(
-    window_id: str,
-    *,
-    sample_id: str,
-    classification: str,
-    process_hash: str = HASH_A,
-    deployment_hash: str = HASH_B,
-    observed_at_unix_ms: int = 1_500,
-) -> dict[str, object]:
-    return {
-        "schema": "telemetry_study_sample_v1",
-        "schema_version": 1,
-        "sample_id": sample_id,
-        "window_id": window_id,
-        "sample_kind": "telemetry",
-        "classification": classification,
-        "connection_id": 7,
-        "telemetry_t_ms": 42,
-        "observed_at_unix_ms": observed_at_unix_ms,
-        "monotonic_time_ns": 500,
-        "process_identity_sha256": process_hash,
-        "deployment_identity_sha256": deployment_hash,
-        "metrics": {
-            "integration_us": 10.0,
-            "prewrite_us": 2.0,
-            "write_lock_wait_us": 3.0,
-            "write_lock_hold_us": 5.0,
-        },
-        "timing_establishes_causation": False,
-        "raw_prose_included": False,
-        "artifact_authority_state_v1": authority_state(),
-    }
-
+from felt_mechanism_concordance.model import (
+    ConcordanceStudyV1,
+    FeltMomentRefV1,
+    StudyStateV1,
+)
+from felt_mechanism_concordance.projector import (
+    append_operator_event as append_concordance_event,
+    replay as replay_concordance,
+)
 
 class RuntimeTests(unittest.TestCase):
     def test_trusted_records_revalidate_and_reject_tampering(self) -> None:
@@ -318,6 +212,332 @@ class RuntimeTests(unittest.TestCase):
         self.assertTrue(review.to_dict()["review_pending"])
         self.assertFalse(review.to_dict()["closure_propagated"])
 
+    def test_named_friction_is_linked_as_unscored_qualitative_context(self) -> None:
+        campaign, plan, _, baseline, candidate = _records()
+        comparison = MechanicalComparisonReceiptV1.build(
+            campaign_id=campaign.campaign_id,
+            study_id=plan.concordance_study_id,
+            plan_id=plan.plan_id,
+            comparison_kind=plan.comparison_kind,
+            baseline_receipt_id=baseline.receipt_id,
+            candidate_receipt_id=candidate.receipt_id,
+            outcome="difference_observed",
+            metric_summary={"delta.integration_us": 1.0},
+        )
+        review = StudyReviewReceiptV1.build(
+            campaign_id=campaign.campaign_id,
+            study_id=plan.concordance_study_id,
+            comparison_id=comparison.comparison_id,
+            outcome="mechanism_smooth_felt_friction_remains",
+            source_ref="introspection_fixture_review",
+            source_field_refs=[
+                "canonical_report.sections.Observed",
+                "canonical_report.sections.Likely_Snags",
+            ],
+            opportunity_completed=True,
+        )
+        with tempfile.TemporaryDirectory() as temporary:
+            packet = _review_packet(
+                campaign,
+                {
+                    "comparisons": {
+                        comparison.comparison_id: comparison
+                    },
+                    "receipts": {
+                        baseline.receipt_id: baseline,
+                        candidate.receipt_id: candidate,
+                    },
+                    "reviews": {review.review_id: review},
+                },
+                workspace=Path(temporary),
+            )
+        self.assertEqual(
+            packet["review_state"], "named_friction_follow_up_available"
+        )
+        contexts = packet["qualitative_context_receipts"]
+        self.assertEqual(len(contexts), 1)
+        self.assertEqual(contexts[0]["source_ref"], review.source_ref)
+        self.assertTrue(contexts[0]["unscored"])
+        self.assertFalse(contexts[0]["mechanical_comparison_modified"])
+        self.assertFalse(contexts[0]["raw_prose_included"])
+        self.assertEqual(
+            contexts[0]["source_field_refs"],
+            [
+                "canonical_report.sections.Likely_Snags",
+                "canonical_report.sections.Observed",
+            ],
+        )
+        self.assertTrue(contexts[0]["mapping_link_v1"]["pointer_only"])
+        self.assertFalse(
+            contexts[0]["mapping_link_v1"]["calculation_performed"]
+        )
+        baseline_context = packet["descriptive_capture_context"][0][
+            "cohorts"
+        ][0]
+        self.assertEqual(
+            baseline_context["process_identity_sha256"],
+            baseline.process_identity_sha256,
+        )
+        self.assertEqual(
+            baseline_context["deployment_identity_sha256"],
+            baseline.deployment_identity_sha256,
+        )
+        follow_up = StudyReviewReceiptV1.build(
+            campaign_id=campaign.campaign_id,
+            study_id=plan.concordance_study_id,
+            comparison_id=comparison.comparison_id,
+            outcome="mechanism_smooth_felt_friction_remains",
+            source_ref="introspection_fixture_follow_up",
+            opportunity_completed=True,
+        )
+        exhausted = _review_packet(
+            campaign,
+            {
+                "comparisons": {comparison.comparison_id: comparison},
+                "reviews": {
+                    review.review_id: review,
+                    follow_up.review_id: follow_up,
+                },
+            },
+        )
+        self.assertEqual(
+            exhausted["review_state"],
+            "named_friction_review_budget_exhausted",
+        )
+        self.assertEqual(exhausted["review_opportunity_count"], 2)
+
+    def test_named_friction_allows_one_result_recorded_follow_up(self) -> None:
+        campaign, plan, _, baseline, candidate = _records()
+        comparison = MechanicalComparisonReceiptV1.build(
+            campaign_id=campaign.campaign_id,
+            study_id=plan.concordance_study_id,
+            plan_id=plan.plan_id,
+            comparison_kind=plan.comparison_kind,
+            baseline_receipt_id=baseline.receipt_id,
+            candidate_receipt_id=candidate.receipt_id,
+            outcome="difference_observed",
+            metric_summary={"delta.integration_us": 1.0},
+        )
+        friction = StudyReviewReceiptV1.build(
+            campaign_id=campaign.campaign_id,
+            study_id=plan.concordance_study_id,
+            comparison_id=comparison.comparison_id,
+            outcome="mechanism_smooth_felt_friction_remains",
+            source_ref="introspection_fixture_review",
+            opportunity_completed=True,
+        )
+        self.assertEqual(
+            _reviewable_concordance_states([]),
+            {"comparison_ready"},
+        )
+        self.assertEqual(
+            _reviewable_concordance_states([friction]),
+            {"comparison_ready", "result_recorded"},
+        )
+
+    def test_campaign_budget_counts_review_opportunities_not_studies(self) -> None:
+        campaign = EvidenceStudyCampaignV1.build(
+            campaign_key="paired_fixture",
+            comparison_domain="mechanical_fixture",
+            study_ids=["concordance_a", "concordance_b"],
+            review_opportunity_limit=2,
+        )
+        first = StudyReviewReceiptV1.build(
+            campaign_id=campaign.campaign_id,
+            study_id="concordance_a",
+            comparison_id="comparison_a",
+            outcome="mechanism_smooth_felt_friction_remains",
+            source_ref="introspection_review_1",
+            opportunity_completed=True,
+        )
+        companion = StudyReviewReceiptV1.build(
+            campaign_id=campaign.campaign_id,
+            study_id="concordance_b",
+            comparison_id="comparison_b",
+            outcome="insufficient",
+            source_ref="introspection_review_1",
+            opportunity_completed=True,
+        )
+        validate_review_admission(campaign, [], first)
+        validate_review_admission(campaign, [first], companion)
+        self.assertEqual(
+            len(group_review_opportunities([first, companion])), 1
+        )
+        duplicate_study = StudyReviewReceiptV1.build(
+            campaign_id=campaign.campaign_id,
+            study_id="concordance_a",
+            comparison_id="comparison_a",
+            outcome="contradicted",
+            source_ref="introspection_review_1",
+            opportunity_completed=True,
+        )
+        with self.assertRaises(RecordValidationError):
+            validate_review_admission(
+                campaign, [first, companion], duplicate_study
+            )
+        follow_up = StudyReviewReceiptV1.build(
+            campaign_id=campaign.campaign_id,
+            study_id="concordance_a",
+            comparison_id="comparison_a",
+            outcome="mechanism_smooth_felt_friction_remains",
+            source_ref="introspection_review_2",
+            opportunity_completed=True,
+        )
+        validate_review_admission(campaign, [first, companion], follow_up)
+        self.assertEqual(
+            len(
+                group_review_opportunities(
+                    [first, companion, follow_up]
+                )
+            ),
+            2,
+        )
+        third = StudyReviewReceiptV1.build(
+            campaign_id=campaign.campaign_id,
+            study_id="concordance_a",
+            comparison_id="comparison_a",
+            outcome="corroborated",
+            source_ref="introspection_review_3",
+            opportunity_completed=True,
+        )
+        with self.assertRaises(RecordValidationError):
+            validate_review_admission(
+                campaign, [first, companion, follow_up], third
+            )
+
+    def test_descriptive_capture_context_retains_pressure_without_felt_label(
+        self,
+    ) -> None:
+        metrics = _descriptive_metrics(
+            [
+                {"metrics": {"pressure": 0.2, "entropy": 0.8}},
+                {"metrics": {"pressure": 0.3, "entropy": 0.9}},
+            ]
+        )
+        self.assertAlmostEqual(metrics["pressure"]["mean"], 0.25)
+        self.assertAlmostEqual(
+            metrics["pressure"]["first_last_delta"], 0.1
+        )
+        self.assertAlmostEqual(metrics["pressure"]["variance"], 0.0025)
+        self.assertNotIn("felt_texture", metrics)
+
+    def test_insufficient_capture_remains_reviewable_concordance_evidence(
+        self,
+    ) -> None:
+        campaign, plan, _, _, _ = _records()
+        moment = FeltMomentRefV1.build(
+            plan.canonical_claim_id,
+            plan.witness_id,
+            ["claims.c001"],
+        )
+        study = ConcordanceStudyV1.build(
+            moment=moment,
+            intervention_signature_sha256=(
+                plan.intervention_signature_sha256
+            ),
+            dossier_id=plan.dossier_id,
+        )
+        aligned_plan = EvidenceStudyPlanV1.build(
+            plan_version=plan.plan_version,
+            frozen_prior_plan_sha256=plan.frozen_prior_plan_sha256,
+            campaign_id=campaign.campaign_id,
+            concordance_study_id=study.study_id,
+            canonical_claim_id=plan.canonical_claim_id,
+            dossier_id=plan.dossier_id,
+            witness_id=plan.witness_id,
+            sample_kind=plan.sample_kind,
+            comparison_kind=plan.comparison_kind,
+            baseline_cohort=plan.baseline_cohort,
+            candidate_cohort=plan.candidate_cohort,
+            metric_names=list(plan.metric_names),
+            thresholds=dict(plan.thresholds),
+            minimum_total_samples=plan.minimum_total_samples,
+            minimum_baseline_samples=plan.minimum_baseline_samples,
+            minimum_candidate_samples=plan.minimum_candidate_samples,
+            duration_minutes=plan.duration_minutes,
+            sample_limit=plan.sample_limit,
+            extension_limit=plan.extension_limit,
+            intervention_signature_sha256=(
+                plan.intervention_signature_sha256
+            ),
+        )
+        spec = StudyWindowSpecV1.build(
+            campaign_id=campaign.campaign_id,
+            study_id=study.study_id,
+            plan_id=aligned_plan.plan_id,
+            plan_sha256=aligned_plan.plan_sha256,
+            sample_kinds=["telemetry"],
+            started_at_unix_ms=1_000,
+            expires_at_unix_ms=2_000,
+            sample_limit=32,
+            actor="test",
+        )
+
+        def receipt(
+            role: str,
+            cohort: str,
+            *,
+            sample_count: int,
+            sufficient: bool,
+        ) -> StudyWindowReceiptV1:
+            return StudyWindowReceiptV1.build(
+                window_id=spec.window_id,
+                campaign_id=campaign.campaign_id,
+                study_id=study.study_id,
+                plan_id=aligned_plan.plan_id,
+                role=role,
+                comparison_kind=aligned_plan.comparison_kind,
+                cohort=cohort,
+                sample_count=sample_count,
+                qualifying_sample_count=sample_count,
+                sample_set_sha256=HASH_A if role == "baseline" else HASH_B,
+                scalar_fixture_ref=f"scalar_fixtures/{role}.json",
+                scalar_fixture_sha256=(
+                    HASH_A if role == "baseline" else HASH_B
+                ),
+                process_identity_sha256=HASH_A,
+                deployment_identity_sha256=HASH_B,
+                identity_relation="exact_identity",
+                gap_refs=(
+                    [] if sufficient else ["studygap_missing_cohort"]
+                ),
+                sufficient=sufficient,
+            )
+
+        baseline = receipt(
+            "baseline", aligned_plan.baseline_cohort, sample_count=1, sufficient=True
+        )
+        insufficient_candidate = receipt(
+            "candidate",
+            aligned_plan.candidate_cohort,
+            sample_count=0,
+            sufficient=False,
+        )
+        with tempfile.TemporaryDirectory() as temporary:
+            workspace = Path(temporary)
+            append_concordance_event(
+                workspace, "study_created", study.to_dict(), "test"
+            )
+            _advance_concordance(
+                workspace,
+                aligned_plan,
+                spec,
+                [baseline, insufficient_candidate],
+                actor="test",
+            )
+            studies, observations, _, _, errors = replay_concordance(
+                workspace
+            )
+            self.assertEqual(errors, [])
+            self.assertEqual(
+                studies[study.study_id].state,
+                StudyStateV1.CANDIDATE_CAPTURED.value,
+            )
+            self.assertEqual(
+                sorted(item.mechanical_pass for item in observations.values()),
+                [False, True],
+            )
+
     def test_no_raw_vector_field_enters_scalar_identity(self) -> None:
         digest = sha256_bytes(b"fixture")
         self.assertEqual(len(digest), 64)
@@ -392,6 +612,32 @@ class RuntimeTests(unittest.TestCase):
             self.assertFalse(any(receipt.sufficient for receipt in receipts))
             self.assertIn("queue_exhausted", {gap.reason for gap in gaps})
             self.assertIn("identity_mismatch", {gap.reason for gap in gaps})
+
+    def test_missing_natural_cohort_preserves_exact_available_samples(self) -> None:
+        _, plan, spec, _, _ = _records()
+        with tempfile.TemporaryDirectory() as temporary:
+            workspace = Path(temporary)
+            owner_append_jsonl(
+                samples_path(workspace, spec.window_id),
+                _sample(
+                    spec.window_id,
+                    sample_id="clear",
+                    classification="clear_at_latest_sample",
+                ),
+            )
+            receipts, gaps = assemble_window(workspace, plan, spec)
+            by_role = {receipt.role: receipt for receipt in receipts}
+            self.assertEqual(by_role["baseline"].sample_count, 1)
+            self.assertEqual(by_role["candidate"].sample_count, 0)
+            self.assertTrue(
+                all(
+                    receipt.identity_relation == "exact_identity"
+                    for receipt in receipts
+                )
+            )
+            self.assertFalse(any(receipt.sufficient for receipt in receipts))
+            self.assertIn("required_cohort_missing", {gap.reason for gap in gaps})
+            self.assertNotIn("identity_mismatch", {gap.reason for gap in gaps})
 
     def test_capture_extension_combines_bounded_window_lineage(self) -> None:
         campaign, plan, parent, _, _ = _records()

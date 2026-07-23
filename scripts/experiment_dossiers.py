@@ -854,7 +854,19 @@ def transition(
     dossier = status["dossiers"].get(dossier_id)
     if not isinstance(dossier, dict):
         raise ValueError(f"unknown dossier: {dossier_id}")
-    validate_transition(dossier, target_state, evidence_ref, approval_receipt)
+    idempotency_key = (
+        f"dossier_transition:{dossier_id}:{target_state}:"
+        f"{digest([evidence_ref, approval_receipt])}"
+    )
+    for existing in reversed(events):
+        if (
+            existing.get("event_type") == "experiment_dossier_transitioned"
+            and existing.get("idempotency_key") == idempotency_key
+        ):
+            return existing
+    validate_transition(
+        dossier, target_state, evidence_ref, approval_receipt
+    )
     authority = dossier.get("artifact_authority_state_v1")
     authority = authority if isinstance(authority, dict) else authority_state("evidence_only")
     event = {
@@ -868,10 +880,7 @@ def transition(
         "target_state": target_state,
         "evidence_ref": evidence_ref,
         "approval_receipt": approval_receipt,
-        "idempotency_key": (
-            f"dossier_transition:{dossier_id}:{target_state}:"
-            f"{digest([evidence_ref, approval_receipt])}"
-        ),
+        "idempotency_key": idempotency_key,
         "artifact_authority_state_v1": authority,
     }
     append_domain_events(family_state_dir(workspace), "claim_families", [event])

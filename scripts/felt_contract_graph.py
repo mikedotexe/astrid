@@ -20,9 +20,9 @@ try:
     from felt_contracts.identity import digest, edge_id, node_id
     from felt_contracts.incremental_runtime import (
         GRAPH_STREAM,
-        _atomic_source_hash,
         _existing_projection,
         _output_source_hashes,
+        _source_file_hashes,
         generate,
     )
     from felt_contracts.model import (
@@ -57,9 +57,9 @@ except ModuleNotFoundError:
     from scripts.felt_contracts.identity import digest, edge_id, node_id
     from scripts.felt_contracts.incremental_runtime import (
         GRAPH_STREAM,
-        _atomic_source_hash,
         _existing_projection,
         _output_source_hashes,
+        _source_file_hashes,
         generate,
     )
     from scripts.felt_contracts.model import (
@@ -123,12 +123,7 @@ def verify(workspace: Path) -> dict[str, Any]:
         PROJECTOR_VERSION,
         input_streams=GRAPH_INPUT_STREAMS,
         source_hashes=_output_source_hashes(
-            workspace,
-            {
-                "claim_family_status": _atomic_source_hash(
-                    workspace / "diagnostics/claim_families_v1/status.json"
-                )
-            },
+            workspace, _source_file_hashes(workspace)
         ),
     )
     valid = bool(
@@ -162,16 +157,13 @@ def _append_and_project(
     projection, _ = _existing_projection(workspace)
     hashes = write_projection(workspace, projection)
     store = EvidenceEventStore(store_root(workspace))
-    family_hash = _atomic_source_hash(
-        workspace / "diagnostics/claim_families_v1/status.json"
-    )
     store.write_checkpoint(
         "felt_contract_graph_v1",
         PROJECTOR_VERSION,
         hashes,
         input_streams=GRAPH_INPUT_STREAMS,
         source_hashes=_output_source_hashes(
-            workspace, {"claim_family_status": family_hash}
+            workspace, _source_file_hashes(workspace)
         ),
     )
     return projection

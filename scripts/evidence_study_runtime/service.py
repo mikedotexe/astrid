@@ -48,7 +48,11 @@ from .model import (
     StudyWindowSpecV1,
 )
 from .projector import replay
-from .review import StudyCaptureGapReceiptV1, StudyReviewReceiptV1
+from .review import (
+    StudyCaptureGapReceiptV1,
+    StudyReviewReceiptV1,
+    validate_review_admission,
+)
 from .storage import (
     active_windows,
     append_event,
@@ -439,12 +443,12 @@ def _advance_concordance(
     *,
     actor: str,
 ) -> None:
-    if not all(receipt.sufficient for receipt in receipts):
-        return
     studies, _, _, _, errors = replay_concordance(workspace)
     if errors:
         raise RecordValidationError("Concordance history is invalid")
-    current = studies[plan.concordance_study_id]
+    current = studies.get(plan.concordance_study_id)
+    if current is None:
+        raise RecordValidationError("Concordance study is unavailable")
     baseline = next(item for item in receipts if item.role == "baseline")
     candidate = next(item for item in receipts if item.role == "candidate")
     if current.state == StudyStateV1.DRAFT.value:
@@ -502,6 +506,48 @@ def _advance_concordance(
         )
         append_concordance_event(
             workspace, "study_state_changed", candidate_state.to_dict(), actor
+        )
+
+
+def _advance_comparison_concordance(
+    workspace: Path,
+    state: dict[str, Any],
+    plan: EvidenceStudyPlanV1,
+    comparison: MechanicalComparisonReceiptV1,
+    *,
+    actor: str,
+) -> None:
+    baseline = state["receipts"].get(comparison.baseline_receipt_id)
+    candidate = state["receipts"].get(comparison.candidate_receipt_id)
+    if baseline is None or candidate is None:
+        raise RecordValidationError(
+            "mechanical comparison receipts are unavailable"
+        )
+    spec = state["windows"].get(baseline.window_id)
+    if spec is None or candidate.window_id != baseline.window_id:
+        raise RecordValidationError(
+            "mechanical comparison window lineage is unavailable"
+        )
+    _advance_concordance(
+        workspace, plan, spec, [baseline, candidate], actor=actor
+    )
+    studies, _, _, _, errors = replay_concordance(workspace)
+    current = studies.get(plan.concordance_study_id)
+    if errors or current is None:
+        raise RecordValidationError(
+            "Concordance comparison preparation is invalid"
+        )
+    if current.state == StudyStateV1.CANDIDATE_CAPTURED.value:
+        ready = ConcordanceStudyV1.build(
+            moment=current.moment,
+            intervention_signature_sha256=current.intervention_signature_sha256,
+            dossier_id=current.dossier_id,
+            state=StudyStateV1.COMPARISON_READY.value,
+            baseline_capture_ref=current.baseline_capture_ref,
+            candidate_capture_ref=current.candidate_capture_ref,
+        )
+        append_concordance_event(
+            workspace, "study_state_changed", ready.to_dict(), actor
         )
 
 
@@ -616,24 +662,16 @@ def compare(workspace: Path, plan_id: str, *, actor: str) -> MechanicalCompariso
         metric_summary=summary,
     )
     existing = state["comparisons"].get(comparison.comparison_id)
-    if existing is not None:
-        return existing
-    append_event(workspace, "comparison_recorded", comparison.to_dict(), actor)
+    if existing is None:
+        append_event(
+            workspace, "comparison_recorded", comparison.to_dict(), actor
+        )
+    else:
+        comparison = existing
+    _advance_comparison_concordance(
+        workspace, state, plan, comparison, actor=actor
+    )
     if outcome != "insufficient":
-        studies, _, _, _, errors = replay_concordance(workspace)
-        current = studies.get(plan.concordance_study_id)
-        if not errors and current and current.state == StudyStateV1.CANDIDATE_CAPTURED.value:
-            ready = ConcordanceStudyV1.build(
-                moment=current.moment,
-                intervention_signature_sha256=current.intervention_signature_sha256,
-                dossier_id=current.dossier_id,
-                state=StudyStateV1.COMPARISON_READY.value,
-                baseline_capture_ref=current.baseline_capture_ref,
-                candidate_capture_ref=current.candidate_capture_ref,
-            )
-            append_concordance_event(
-                workspace, "study_state_changed", ready.to_dict(), actor
-            )
         from experiment_dossiers import transition
 
         try:
@@ -650,6 +688,18 @@ def compare(workspace: Path, plan_id: str, *, actor: str) -> MechanicalCompariso
     return comparison
 
 
+def _reviewable_concordance_states(
+    prior: list[StudyReviewReceiptV1],
+) -> set[str]:
+    states = {StudyStateV1.COMPARISON_READY.value}
+    if prior and prior[-1].outcome in {
+        ReviewOutcomeV1.SMOOTH_FRICTION_REMAINS.value,
+        ReviewOutcomeV1.CONTRADICTED.value,
+    }:
+        states.add(StudyStateV1.RESULT_RECORDED.value)
+    return states
+
+
 def record_review(
     workspace: Path,
     *,
@@ -658,6 +708,7 @@ def record_review(
     comparison_id: str,
     outcome: str,
     source_ref: str,
+    source_field_refs: list[str] | None = None,
     actor: str,
 ) -> StudyReviewReceiptV1:
     state = replay(workspace)
@@ -676,67 +727,52 @@ def record_review(
         comparison_id=comparison_id,
         outcome=outcome,
         source_ref=source_ref,
+        source_field_refs=source_field_refs or [],
         opportunity_completed=True,
     )
     existing = state["reviews"].get(review.review_id)
-    if existing is not None:
-        return existing
-    prior = [
+    if existing is not None and existing != review:
+        raise RecordValidationError("review identity was redefined")
+    other_reviews = [
         item
         for item in state["reviews"].values()
         if item.campaign_id == campaign_id
+        and item.review_id != review.review_id
     ]
-    if len(prior) >= campaign.review_opportunity_limit:
-        raise RecordValidationError("campaign review budget exceeded")
-    if prior and campaign.follow_up_requires_named_friction and all(
-        item.outcome
-        not in {
-            ReviewOutcomeV1.SMOOTH_FRICTION_REMAINS.value,
-            ReviewOutcomeV1.CONTRADICTED.value,
-        }
-        for item in prior
-    ):
-        raise RecordValidationError(
-            "follow-up review requires named friction or contradiction"
-        )
-    if review.outcome != ReviewOutcomeV1.NO_RESPONSE.value:
-        studies, observations, _, _, errors = replay_concordance(workspace)
-        study = studies.get(study_id)
-        if (
-            errors
-            or study is None
-            or study.state != StudyStateV1.COMPARISON_READY.value
-        ):
-            raise RecordValidationError(
-                "felt review requires comparison-ready Concordance"
-            )
-        baseline_observations = [
-            item
-            for item in observations.values()
-            if item.study_id == study_id and item.role == "baseline"
-        ]
-        candidate_observations = [
-            item
-            for item in observations.values()
-            if item.study_id == study_id and item.role == "candidate"
-        ]
-        if not baseline_observations or not candidate_observations:
-            raise RecordValidationError(
-                "felt review requires baseline and candidate observations"
-            )
-    append_event(workspace, "review_recorded", review.to_dict(), actor)
+    validate_review_admission(campaign, other_reviews, review)
+    study_prior = [
+        item for item in other_reviews if item.study_id == study_id
+    ]
     if review.outcome == ReviewOutcomeV1.NO_RESPONSE.value:
-        return review
-    baseline = [
+        if existing is None:
+            append_event(
+                workspace, "review_recorded", review.to_dict(), actor
+            )
+        return existing or review
+
+    _advance_comparison_concordance(
+        workspace, state, plan, comparison, actor=actor
+    )
+    studies, observations, results, _, errors = replay_concordance(workspace)
+    study = studies.get(study_id)
+    baseline_observations = [
         item
-        for item in baseline_observations
+        for item in observations.values()
         if item.study_id == study_id and item.role == "baseline"
-    ][-1]
-    candidate = [
+    ]
+    candidate_observations = [
         item
-        for item in candidate_observations
+        for item in observations.values()
         if item.study_id == study_id and item.role == "candidate"
-    ][-1]
+    ]
+    if errors or study is None:
+        raise RecordValidationError("felt review requires valid Concordance")
+    if not baseline_observations or not candidate_observations:
+        raise RecordValidationError(
+            "felt review requires baseline and candidate observations"
+        )
+    baseline = baseline_observations[-1]
+    candidate = candidate_observations[-1]
     result = ConcordanceResultV2.build(
         study_id=study_id,
         baseline_observation_id=baseline.observation_id,
@@ -744,22 +780,50 @@ def record_review(
         outcome=review.outcome,
         felt_source_ref=review.source_ref,
     )
-    append_concordance_event(
-        workspace, "result_recorded", result.to_dict(), actor
-    )
-    result_state = ConcordanceStudyV1.build(
-        moment=study.moment,
-        intervention_signature_sha256=study.intervention_signature_sha256,
-        dossier_id=study.dossier_id,
-        state=StudyStateV1.RESULT_RECORDED.value,
-        baseline_capture_ref=study.baseline_capture_ref,
-        candidate_capture_ref=study.candidate_capture_ref,
-    )
-    append_concordance_event(
-        workspace, "study_state_changed", result_state.to_dict(), actor
-    )
-    from experiment_dossiers import transition
+    existing_result = results.get(result.result_id)
+    if (
+        study.state not in _reviewable_concordance_states(study_prior)
+        and existing_result is None
+    ):
+        raise RecordValidationError(
+            "felt review requires comparison-ready Concordance or an "
+            "explicit named-friction follow-up"
+        )
 
-    transition(workspace, plan.dossier_id, "result-recorded", result.result_id, None)
-    transition(workspace, plan.dossier_id, "review-pending", review.review_id, None)
-    return review
+    if existing is None:
+        append_event(workspace, "review_recorded", review.to_dict(), actor)
+    if existing_result is None:
+        append_concordance_event(
+            workspace, "result_recorded", result.to_dict(), actor
+        )
+    is_follow_up = bool(study_prior)
+    if not is_follow_up and study.state == StudyStateV1.COMPARISON_READY.value:
+        result_state = ConcordanceStudyV1.build(
+            moment=study.moment,
+            intervention_signature_sha256=study.intervention_signature_sha256,
+            dossier_id=study.dossier_id,
+            state=StudyStateV1.RESULT_RECORDED.value,
+            baseline_capture_ref=study.baseline_capture_ref,
+            candidate_capture_ref=study.candidate_capture_ref,
+        )
+        append_concordance_event(
+            workspace, "study_state_changed", result_state.to_dict(), actor
+        )
+    if not is_follow_up and comparison.outcome != "insufficient":
+        from experiment_dossiers import transition
+
+        transition(
+            workspace,
+            plan.dossier_id,
+            "result-recorded",
+            result.result_id,
+            None,
+        )
+        transition(
+            workspace,
+            plan.dossier_id,
+            "review-pending",
+            review.review_id,
+            None,
+        )
+    return existing or review

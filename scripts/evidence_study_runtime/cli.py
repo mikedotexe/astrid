@@ -89,6 +89,12 @@ def parser() -> argparse.ArgumentParser:
         ),
     )
     review.add_argument("--source-ref", required=True)
+    review.add_argument(
+        "--source-field-ref",
+        action="append",
+        default=[],
+        help="bounded field path within the canonical felt source",
+    )
     review.add_argument("--actor", default="interactive-operator")
 
     reconcile_parser = commands.add_parser("reconcile")
@@ -173,6 +179,7 @@ def main(argv: list[str] | None = None) -> int:
                 comparison_id=args.comparison_id,
                 outcome=args.outcome,
                 source_ref=args.source_ref,
+                source_field_refs=args.source_field_ref,
                 actor=args.actor,
             ).to_dict()
         elif args.command == "reconcile":

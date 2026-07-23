@@ -11,7 +11,7 @@ import unittest
 
 from evidence_store import EvidenceEventStore
 from evidence_store.model import ProvenanceSourceV1
-from felt_contract_graph import generate
+from felt_contract_graph import generate, verify
 from lived_state_witness.model import authority_state
 from felt_contracts.sources import (
     claim_family_semantic_sha256,
@@ -129,6 +129,9 @@ class FeltContractIncrementalTests(unittest.TestCase):
             stat.S_IMODE(index.path.stat().st_mode),
             0o600,
         )
+        verification = verify(self.workspace)
+        self.assertTrue(verification["checkpoint_current"])
+        self.assertTrue(verification["valid"])
 
     def test_lived_witness_edges_label_exact_and_temporal_without_propagation(
         self,

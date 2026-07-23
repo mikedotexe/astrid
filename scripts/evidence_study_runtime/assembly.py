@@ -306,6 +306,28 @@ def assemble(
             eligible, key=lambda item: (len(item[1]), item[0])
         )
         relation = "exact_identity"
+    elif grouped:
+        # Preserve the largest exact-identity cohort even when its natural
+        # comparison cohort did not occur. Missing exposure is insufficiency,
+        # not an identity failure.
+        identity, selected = max(
+            grouped.items(), key=lambda item: (len(item[1]), item[0])
+        )
+        relation = "exact_identity"
+        observed_cohorts = {
+            cohort for values in grouped.values() for _, cohort in values
+        }
+        if observed_cohorts == {
+            plan.baseline_cohort,
+            plan.candidate_cohort,
+        }:
+            gaps.append(
+                _gap(
+                    spec,
+                    "identity_mismatch",
+                    dropped=len(rows) - len(selected),
+                )
+            )
     else:
         identity = (None, None)
         selected = []

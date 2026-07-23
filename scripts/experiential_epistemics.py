@@ -104,7 +104,14 @@ def lint_value(value: Any, *, path: tuple[str, ...] = ()) -> list[dict[str, str]
             "felt" in normalized
             and any(
                 marker in normalized
-                for marker in ("score", "similarity", "dissimilarity", "probability")
+                for marker in (
+                    "score",
+                    "similarity",
+                    "dissimilarity",
+                    "probability",
+                    "intensity",
+                    "weight",
+                )
             )
             and item is not None
             and item is not False
@@ -114,6 +121,18 @@ def lint_value(value: Any, *, path: tuple[str, ...] = ()) -> list[dict[str, str]
                     "felt_scoring",
                     (*path, str(key)),
                     "numeric or categorical felt score is forbidden",
+                )
+            )
+        if (
+            normalized == "qualia_weighting"
+            and item is not None
+            and item is not False
+        ):
+            issues.append(
+                _issue(
+                    "felt_scoring",
+                    (*path, str(key)),
+                    "qualia weighting cannot enter mechanical evidence",
                 )
             )
         issues.extend(lint_value(item, path=(*path, str(key))))
@@ -262,6 +281,7 @@ class EpistemicTests(unittest.TestCase):
         fixtures = [
             ({"grants_approval": True}, "authority_escalation"),
             ({"felt_similarity_score": 0.9}, "felt_scoring"),
+            ({"qualia_weighting": 1.2}, "felt_scoring"),
             ({"causation_established": True}, "causal_overclaim"),
             (
                 {"classification": "source_declared", "active": True},

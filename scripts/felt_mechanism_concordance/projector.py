@@ -74,6 +74,7 @@ def replay(workspace: Path) -> tuple[dict[str, ConcordanceStudyV1], dict[str, Co
     studies: dict[str, ConcordanceStudyV1] = {}
     observations: dict[str, ConcordanceObservationV2] = {}
     results: dict[str, ConcordanceResultV2] = {}
+    results_by_study: dict[str, list[ConcordanceResultV2]] = {}
     valid_events: list[dict[str, Any]] = []
     allowed_transitions = {
         StudyStateV1.DRAFT.value: {StudyStateV1.CAPTURE_READY.value},
@@ -150,15 +151,59 @@ def replay(workspace: Path) -> tuple[dict[str, ConcordanceStudyV1], dict[str, Co
                 observations[item.observation_id] = item
             elif event_type == "result_recorded":
                 item = ConcordanceResultV2.from_untrusted(record)
+                existing = results.get(item.result_id)
+                if existing is not None:
+                    if existing != item:
+                        raise RecordValidationError(
+                            "result identity was redefined"
+                        )
+                    valid_events.append(event)
+                    continue
                 study = studies.get(item.study_id)
-                if (
-                    study is None
-                    or study.state != StudyStateV1.COMPARISON_READY.value
+                if study is None:
+                    raise RecordValidationError(
+                        "result precedes study creation"
+                    )
+                prior = results_by_study.setdefault(item.study_id, [])
+                if not prior and (
+                    study.state != StudyStateV1.COMPARISON_READY.value
                 ):
                     raise RecordValidationError(
                         "result requires a comparison-ready study"
                     )
+                if prior:
+                    first = prior[0]
+                    if len(prior) >= 2:
+                        raise RecordValidationError(
+                            "a study permits at most one felt-review follow-up"
+                        )
+                    if study.state != StudyStateV1.RESULT_RECORDED.value:
+                        raise RecordValidationError(
+                            "follow-up result requires result-recorded state"
+                        )
+                    if first.outcome not in {
+                        "mechanism_smooth_felt_friction_remains",
+                        "contradicted",
+                    }:
+                        raise RecordValidationError(
+                            "follow-up result requires prior named friction "
+                            "or contradiction"
+                        )
+                    if (
+                        first.baseline_observation_id
+                        != item.baseline_observation_id
+                        or first.candidate_observation_id
+                        != item.candidate_observation_id
+                    ):
+                        raise RecordValidationError(
+                            "follow-up result changed observation identity"
+                        )
+                    if first.felt_source_ref == item.felt_source_ref:
+                        raise RecordValidationError(
+                            "follow-up result requires a distinct felt source"
+                        )
                 results[item.result_id] = item
+                prior.append(item)
             valid_events.append(event)
         except (RecordValidationError, ValueError, TypeError) as error:
             errors.append(f"event_{index}:{error}")
