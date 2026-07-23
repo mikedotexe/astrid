@@ -94,6 +94,13 @@ pub(crate) fn clock_sample_v1() -> LivedStateClockSampleV1 {
     identity::clock_sample()
 }
 
+pub(crate) fn runtime_process_identity_sha256_v1() -> String {
+    identity::snapshot()
+        .process
+        .process_identity_sha256()
+        .to_string()
+}
+
 fn source_owner_and_relative_path(path: &Path) -> (String, String) {
     let paths = bridge_paths();
     for (owner, root) in [

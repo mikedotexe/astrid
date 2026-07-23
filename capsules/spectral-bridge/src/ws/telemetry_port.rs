@@ -396,6 +396,7 @@ async fn handle_telemetry_message_at(
     let prewrite_pipeline_ms = telemetry_duration_ms(pipeline_started.elapsed());
     let write_lock_wait_started = Instant::now();
     let cadence_content_snapshot;
+    let study_capture_snapshot;
     {
         let mut s = state.write().await;
         let write_lock_wait_ms = telemetry_duration_ms(write_lock_wait_started.elapsed());
@@ -509,9 +510,15 @@ async fn handle_telemetry_message_at(
             write_lock_wait_ms,
             write_lock_hold_ms,
         );
+        study_capture_snapshot = (integration_health.clone(), heartbeat);
         s.telemetry_integration_health_v1 = Some(integration_health);
         cadence_content_snapshot = s.cadence_content_distinction_v1();
     }
+    crate::evidence_study_capture::record_telemetry_sample_v1(
+        &study_capture_snapshot.0,
+        &study_capture_snapshot.1,
+        telemetry.t_ms,
+    );
     if let Some(distinction) = cadence_content_snapshot.as_ref() {
         write_cadence_content_distinction_snapshot(distinction);
     }

@@ -2793,6 +2793,48 @@ mod tests {
         );
     }
 
+    #[test]
+    fn study_gate_ablation_preserves_live_path_and_changes_only_offline_copy() {
+        let spectral = telemetry_with_typed_entropy(0.96);
+        let mut live_reference = vec![0.0; SEMANTIC_DIM];
+        live_reference[17] = 0.7;
+        live_reference[26] = 0.9;
+        live_reference[27] = -0.4;
+        live_reference[31] = 0.6;
+        let mut explicitly_enabled = live_reference.clone();
+        let mut gate_disabled = live_reference.clone();
+
+        apply_spectral_feedback_inner(
+            &mut live_reference,
+            Some(&spectral),
+            1.0,
+            1.0,
+        );
+        apply_spectral_feedback_inner_with_gate(
+            &mut explicitly_enabled,
+            Some(&spectral),
+            1.0,
+            1.0,
+            true,
+        );
+        apply_spectral_feedback_inner_with_gate(
+            &mut gate_disabled,
+            Some(&spectral),
+            1.0,
+            1.0,
+            false,
+        );
+
+        assert_eq!(
+            live_reference, explicitly_enabled,
+            "the enabled study path must be bit-for-bit identical to live feedback"
+        );
+        assert_ne!(
+            live_reference[26], gate_disabled[26],
+            "the offline gate-disabled copy should retain a measurable mechanical delta"
+        );
+    }
+
     // Spiky spectrum -> entropy ~0.14 (below the 0.85 gate). The tail-vibrancy
     // term is fully OFF, so every dim must still respect the default ceiling and
     // no tail dim is lifted by the high-entropy term.

@@ -40,6 +40,7 @@ pub mod codec_time_domain;
 pub mod condition_metrics;
 pub mod continuity_control_plane;
 pub mod db;
+pub mod evidence_study_capture;
 pub mod experiment_conveyor;
 pub mod journal;
 pub mod lambda_edge;

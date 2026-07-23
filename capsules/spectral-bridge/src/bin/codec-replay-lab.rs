@@ -21,7 +21,6 @@ use spectral_bridge_server::codec_lambda_analysis::lambda_spectrum;
 const FEATURE_ABS_MAX: f32 = 5.0;
 const TAIL_VIBRANCY_ENTROPY_GATE: f32 = 0.85;
 const TAIL_VIBRANCY_MAX: f32 = 6.0;
-const DEFAULT_ASTRID_WORKSPACE: &str = "/Users/v/other/astrid/capsules/spectral-bridge/workspace";
 const EMBED_URL: &str = "http://127.0.0.1:11434/api/embeddings";
 const EMBED_MODEL: &str = "nomic-embed-text";
 const OLLAMA_EMBEDDING_INPUT_DIM: usize = 768;
@@ -45,11 +44,8 @@ enum EmbeddingMode {
     about = "Read-only Astrid codec replay lab for semantic-density, narrative-arc, and afterimage diagnostics"
 )]
 struct Cli {
-    #[arg(
-        long,
-        default_value = "/Users/v/other/astrid/capsules/spectral-bridge/workspace/diagnostics/codec_replay_labs"
-    )]
-    output_root: PathBuf,
+    #[arg(long)]
+    output_root: Option<PathBuf>,
 
     #[arg(long)]
     run_id: Option<String>,
@@ -63,8 +59,8 @@ struct Cli {
     #[arg(long, value_enum, default_value_t = EmbeddingMode::LiveIfAvailable)]
     embedding_mode: EmbeddingMode,
 
-    #[arg(long, default_value = DEFAULT_ASTRID_WORKSPACE)]
-    astrid_workspace: PathBuf,
+    #[arg(long)]
+    astrid_workspace: Option<PathBuf>,
 }
 
 #[derive(Debug, Clone)]
@@ -125,17 +121,21 @@ struct NarrativeArcCandidate {
 
 fn main() -> Result<()> {
     let cli = Cli::parse();
+    let astrid_workspace = portable_astrid_workspace(cli.astrid_workspace)?;
+    let output_root = cli
+        .output_root
+        .unwrap_or_else(|| astrid_workspace.join("diagnostics/codec_replay_labs"));
     let run_id = cli
         .run_id
         .unwrap_or_else(|| Utc::now().format("%Y%m%dT%H%M%SZ").to_string());
-    let output_dir = cli.output_root.join(run_id);
+    let output_dir = output_root.join(run_id);
     let record = build_record_with_options(
         &output_dir,
         cli.fill_pct,
         true,
         cli.corpus,
         cli.embedding_mode,
-        &cli.astrid_workspace,
+        &astrid_workspace,
     )?;
     write_record(&output_dir, &record)?;
     println!(
@@ -145,6 +145,25 @@ fn main() -> Result<()> {
     println!("wrote {}", output_dir.join("codec_replay_lab.md").display());
     println!("status={}", record["status"].as_str().unwrap_or("unknown"));
     Ok(())
+}
+
+fn portable_astrid_workspace(explicit: Option<PathBuf>) -> Result<PathBuf> {
+    if let Some(path) = explicit {
+        return Ok(path);
+    }
+    if let Some(path) = std::env::var_os("ASTRID_WORKSPACE") {
+        return Ok(PathBuf::from(path));
+    }
+    let current = std::env::current_dir().context("resolve current directory")?;
+    for candidate in [
+        current.join("capsules/spectral-bridge/workspace"),
+        current.join("workspace"),
+    ] {
+        if candidate.is_dir() {
+            return Ok(candidate);
+        }
+    }
+    anyhow::bail!("cannot locate Astrid workspace; pass --astrid-workspace or set ASTRID_WORKSPACE")
 }
 
 fn fixture_sample(
@@ -258,7 +277,7 @@ fn build_record(
         write_explorer,
         CorpusMode::Fixture,
         EmbeddingMode::Fixture,
-        Path::new(DEFAULT_ASTRID_WORKSPACE),
+        output_dir,
     )
 }
 

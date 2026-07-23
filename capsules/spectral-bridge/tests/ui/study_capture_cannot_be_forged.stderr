@@ -1,0 +1,53 @@
+warning: unreachable expression
+  --> tests/ui/study_capture_cannot_be_forged.rs:4:19
+   |
+ 4 |       let _forged = StudyCaptureWindowV1 {
+   |  ___________________^
+ 5 | |         schema: "study_capture_window_v1",
+ 6 | |         schema_version: 1,
+ 7 | |         window_id: "studywindow_forged".to_string(),
+...  |
+17 | |         artifact_authority_state_v1: unreachable!(),
+   | |                                      -------------- any code following this expression is unreachable
+18 | |     };
+   | |_____^ unreachable expression
+   |
+   = note: `#[warn(unreachable_code)]` (part of `#[warn(unused)]`) on by default
+
+error[E0451]: fields `schema`, `schema_version`, `window_id`, `campaign_id`, `study_id`, `plan_id`, `plan_sha256`, `sample_kind`, `started_at_unix_ms`, `expires_at_unix_ms`, `sample_limit`, `actor` and `artifact_authority_state_v1` of struct `StudyCaptureWindowV1` are private
+  --> tests/ui/study_capture_cannot_be_forged.rs:5:9
+   |
+ 4 |     let _forged = StudyCaptureWindowV1 {
+   |                   -------------------- in this type
+ 5 |         schema: "study_capture_window_v1",
+   |         ^^^^^^ private field
+ 6 |         schema_version: 1,
+   |         ^^^^^^^^^^^^^^ private field
+ 7 |         window_id: "studywindow_forged".to_string(),
+   |         ^^^^^^^^^ private field
+ 8 |         campaign_id: "campaign_forged".to_string(),
+   |         ^^^^^^^^^^^ private field
+ 9 |         study_id: "concordance_forged".to_string(),
+   |         ^^^^^^^^ private field
+10 |         plan_id: "studyplan_forged".to_string(),
+   |         ^^^^^^^ private field
+11 |         plan_sha256: "a".repeat(64),
+   |         ^^^^^^^^^^^ private field
+12 |         sample_kind: "telemetry".to_string(),
+   |         ^^^^^^^^^^^ private field
+13 |         started_at_unix_ms: 1,
+   |         ^^^^^^^^^^^^^^^^^^ private field
+14 |         expires_at_unix_ms: 2,
+   |         ^^^^^^^^^^^^^^^^^^ private field
+15 |         sample_limit: 1,
+   |         ^^^^^^^^^^^^ private field
+16 |         actor: "forged".to_string(),
+   |         ^^^^^ private field
+17 |         artifact_authority_state_v1: unreachable!(),
+   |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^ private field
+
+error: type `evidence_study_capture::EvidenceOnlyAuthorityV1` is private
+  --> tests/ui/study_capture_cannot_be_forged.rs:17:38
+   |
+17 |         artifact_authority_state_v1: unreachable!(),
+   |                                      ^^^^^^^^^^^^^^ private type

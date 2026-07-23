@@ -181,36 +181,57 @@ pub(crate) struct SemanticHeartbeatEnqueueProbeV1 {
     source: &'static str,
     configured_interval_secs: u64,
     admitted_at: Instant,
+    study_capture: Option<crate::evidence_study_capture::HeartbeatCaptureAttemptV1>,
 }
 
 impl SemanticHeartbeatEnqueueProbeV1 {
-    fn new(status_path: PathBuf, source: &'static str, configured_interval_secs: u64) -> Self {
+    fn new(
+        status_path: PathBuf,
+        source: &'static str,
+        configured_interval_secs: u64,
+        study_capture: Option<crate::evidence_study_capture::HeartbeatCaptureAttemptV1>,
+    ) -> Self {
         Self {
             status_path,
             source,
             configured_interval_secs,
             admitted_at: Instant::now(),
+            study_capture,
         }
     }
 
     pub(crate) fn record_enqueued(self) {
+        let queue_wait = self.admitted_at.elapsed();
         record_semantic_heartbeat_enqueue_outcome(
             &self.status_path,
             self.source,
             self.configured_interval_secs,
-            self.admitted_at.elapsed(),
+            queue_wait,
             "enqueued",
         );
+        if let Some(study_capture) = self.study_capture {
+            study_capture.record_enqueued(queue_wait);
+        }
     }
 
     pub(crate) fn record_channel_closed(self) {
+        let queue_wait = self.admitted_at.elapsed();
         record_semantic_heartbeat_enqueue_outcome(
             &self.status_path,
             self.source,
             self.configured_interval_secs,
-            self.admitted_at.elapsed(),
+            queue_wait,
             "channel_closed",
         );
+        if let Some(study_capture) = self.study_capture {
+            study_capture.record_channel_closed(queue_wait);
+        }
+    }
+
+    fn record_blocked(self) {
+        if let Some(study_capture) = self.study_capture {
+            study_capture.record_blocked();
+        }
     }
 }
 
@@ -271,6 +292,23 @@ impl SemanticHeartbeatObservationV1 {
     ) -> Self {
         self.texture_context = telemetry.map(SemanticHeartbeatTextureContextV1::from_telemetry);
         self
+    }
+
+    fn evidence_study_capture_attempt_v1(
+        &self,
+    ) -> Option<crate::evidence_study_capture::HeartbeatCaptureAttemptV1> {
+        crate::evidence_study_capture::begin_heartbeat_attempt_v1(
+            self.phase,
+            self.interval_secs,
+            self.configured_intensity,
+            self.signal_evidence.map(|value| value.generated.rms),
+            self.texture_context
+                .as_ref()
+                .and_then(|value| value.pressure_risk),
+            self.texture_context
+                .as_ref()
+                .and_then(|value| value.spectral_entropy),
+        )
     }
 }
 
@@ -2443,10 +2481,12 @@ fn prepare_semantic_heartbeat_for_path_with_enqueue_probe(
     observation: SemanticHeartbeatObservationV1,
 ) -> Result<SemanticHeartbeatEnqueueProbeV1, String> {
     let status_path = semantic_heartbeat_status_path_for_profile(path);
+    let study_capture = observation.evidence_study_capture_attempt_v1();
     let enqueue_probe = SemanticHeartbeatEnqueueProbeV1::new(
         status_path.clone(),
         observation.source,
         observation.interval_secs,
+        study_capture,
     );
     if !matches!(msg, SensoryMsg::Semantic { .. }) {
         return Ok(enqueue_probe);
@@ -2467,6 +2507,7 @@ fn prepare_semantic_heartbeat_for_path_with_enqueue_probe(
             observation,
             health.as_ref(),
         );
+        enqueue_probe.record_blocked();
         return Err(reason);
     }
     let delivered_signal = if let SensoryMsg::Semantic { features, .. } = msg {

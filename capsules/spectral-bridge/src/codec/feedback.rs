@@ -96,17 +96,35 @@ pub fn apply_spectral_feedback_with_report(
     features: &mut [f32],
     telemetry: Option<&SpectralTelemetry>,
 ) -> Option<CodecOverflowReportV1> {
+    let capture_source =
+        crate::evidence_study_capture::codec_gate_capture_active_v1()
+            .then(|| features.to_vec());
+    let tail_participation = crate::llm::astrid_tail_participation();
+    let vibrancy_aperture = crate::llm::astrid_vibrancy_aperture();
+    let pressure_depth = crate::llm::astrid_pressure_attenuation_depth();
     let report = apply_spectral_feedback_inner(
         features,
         telemetry,
-        crate::llm::astrid_tail_participation(),
-        crate::llm::astrid_vibrancy_aperture(),
+        tail_participation,
+        vibrancy_aperture,
     );
-    apply_pressure_attenuation(
-        features,
-        telemetry,
-        crate::llm::astrid_pressure_attenuation_depth(),
-    );
+    apply_pressure_attenuation(features, telemetry, pressure_depth);
+    if let Some(source) = capture_source {
+        let mut gate_disabled = source.clone();
+        let _ = apply_spectral_feedback_inner_with_gate(
+            &mut gate_disabled,
+            telemetry,
+            tail_participation,
+            vibrancy_aperture,
+            false,
+        );
+        apply_pressure_attenuation(&mut gate_disabled, telemetry, pressure_depth);
+        crate::evidence_study_capture::record_codec_gate_pair_v1(
+            &source,
+            features,
+            &gate_disabled,
+        );
+    }
     report
 }
 
@@ -150,6 +168,22 @@ fn apply_spectral_feedback_inner(
     tail_participation: f32,
     vibrancy_aperture: f32,
 ) -> Option<CodecOverflowReportV1> {
+    apply_spectral_feedback_inner_with_gate(
+        features,
+        telemetry,
+        tail_participation,
+        vibrancy_aperture,
+        true,
+    )
+}
+
+fn apply_spectral_feedback_inner_with_gate(
+    features: &mut [f32],
+    telemetry: Option<&SpectralTelemetry>,
+    tail_participation: f32,
+    vibrancy_aperture: f32,
+    entropy_gate_enabled: bool,
+) -> Option<CodecOverflowReportV1> {
     let metrics = telemetry.and_then(SpectralCascadeMetrics::from_telemetry)?;
 
     if features.len() < SEMANTIC_DIM {
@@ -187,10 +221,14 @@ fn apply_spectral_feedback_inner(
     // the ceiling. Endpoints are preserved exactly: smoothstep(0)=0 keeps the
     // term OFF below the gate (byte-identical), smoothstep(1)=1 keeps the full
     // headroom at entropy=1.0.
-    let vibrancy = vibrancy_from_entropy_and_density_gradient(
-        metrics.spectral_entropy,
-        metrics.density_gradient,
-    );
+    let vibrancy = if entropy_gate_enabled {
+        vibrancy_from_entropy_and_density_gradient(
+            metrics.spectral_entropy,
+            metrics.density_gradient,
+        )
+    } else {
+        0.0
+    };
     let tail_vibrancy_before_dampening = (vibrancy * tail_texture).clamp(0.0, 1.0);
     let tail_vibrancy =
         codec_vibrancy_noise_dampening_v1(metrics.spectral_entropy, tail_vibrancy_before_dampening)
