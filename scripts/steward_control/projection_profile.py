@@ -437,11 +437,12 @@ def source_first_steps() -> tuple[ProjectionStep, ...]:
             (
                 "diagnostics/felt_contract_graph_v1/contracts.jsonl",
                 "diagnostics/attention_portfolio_v1/pin_events.jsonl",
+                "diagnostics/attention_portfolio_v2/pin_events.jsonl",
             ),
             (
-                "diagnostics/attention_portfolio_v1/status.json",
-                "diagnostics/attention_portfolio_v1/active.json",
-                "diagnostics/attention_portfolio_v1/report.md",
+                "diagnostics/attention_portfolio_v2/status.json",
+                "diagnostics/attention_portfolio_v2/active.json",
+                "diagnostics/attention_portfolio_v2/report.md",
             ),
         ),
     )

@@ -13,9 +13,15 @@ from pathlib import Path
 try:
     from agency_commons.model import AgencyCommonsProposalV1, AgencyCommonsResponseV1
     from agency_commons.projector import project as project_commons
-    from attention_portfolio.model import AttentionPortfolioV1, BeingImportancePinV1
+    from attention_portfolio.model import (
+        AttentionPortfolioEntryV1,
+        AttentionPortfolioV1,
+        AttentionPortfolioV2,
+        BeingImportancePinV1,
+    )
     from attention_portfolio.projector import (
         append_pin,
+        project as project_attention,
         select_portfolio,
     )
     from experiential_systems.common import (
@@ -62,10 +68,16 @@ except ModuleNotFoundError:
     )
     from scripts.agency_commons.projector import project as project_commons
     from scripts.attention_portfolio.model import (
+        AttentionPortfolioEntryV1,
         AttentionPortfolioV1,
+        AttentionPortfolioV2,
         BeingImportancePinV1,
     )
-    from scripts.attention_portfolio.projector import append_pin, select_portfolio
+    from scripts.attention_portfolio.projector import (
+        append_pin,
+        project as project_attention,
+        select_portfolio,
+    )
     from scripts.experiential_systems.common import (
         RecordValidationError,
         event_payload,
@@ -728,7 +740,7 @@ class ReciprocalExperientialSystemsTests(unittest.TestCase):
             self.assertEqual(status["legacy_agency_request_count"], 1)
             self.assertEqual(status["record_count"], 3)
 
-    def test_portfolio_caps_urgent_and_keeps_overflow_out_of_active_work(self) -> None:
+    def test_portfolio_bounds_steward_work_and_keeps_urgent_alerts_visible(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             workspace = Path(temporary)
             contracts_path = (
@@ -763,19 +775,99 @@ class ReciprocalExperientialSystemsTests(unittest.TestCase):
             self.assertFalse(errors)
             self.assertFalse(second_errors)
             self.assertEqual(first.portfolio_id, second.portfolio_id)
-            self.assertEqual(len(first.entries), 16)
-            self.assertEqual(sum(item.slot_class == "urgent" for item in first.entries), 4)
-            self.assertEqual(len(first.overflow_contract_ids), 3)
-            active = {item.contract_id for item in first.entries}
-            self.assertFalse(active.intersection(first.overflow_contract_ids))
-            self.assertIn("contract_10", active)
-            self.assertIn("contract_11", active)
-            self.assertNotIn("contract_24", active)
+            self.assertEqual(len(first.selected_entries), 16)
+            self.assertEqual(
+                sum(
+                    item.steward_slot_class == "urgent"
+                    for item in first.selected_entries
+                ),
+                4,
+            )
+            self.assertEqual(len(first.visible_urgent_alert_contract_ids), 3)
+            selected = {item.contract_id for item in first.selected_entries}
+            self.assertFalse(
+                selected.intersection(first.visible_urgent_alert_contract_ids)
+            )
+            self.assertIn("contract_10", selected)
+            self.assertIn("contract_11", selected)
+            self.assertNotIn("contract_24", selected)
             record = first.to_dict()
+            self.assertEqual(record["schema"], "attention_portfolio_v2")
+            self.assertEqual(
+                record["selection_scope"],
+                "steward_work_view_not_being_attention",
+            )
+            self.assertEqual(
+                record["runtime_relation"],
+                "not_consumed_by_bridge_minime_model_or_control_runtime",
+            )
+            for entry in record["selected_entries"]:
+                self.assertNotIn("felt_severity", entry)
+                self.assertNotIn("unattended_duration_ms", entry)
+                self.assertNotIn("freshness", entry)
             tampered = copy.deepcopy(record)
-            tampered["membership_propagates_closure"] = True
+            tampered["authority_relation"] = "may_grant_authority"
             with self.assertRaises(RecordValidationError):
-                AttentionPortfolioV1.from_untrusted(tampered)
+                AttentionPortfolioV2.from_untrusted(tampered)
+
+            first_status = project_attention(workspace, write=True)
+            second_status = project_attention(workspace, write=True)
+            self.assertTrue(first_status["valid"])
+            self.assertTrue(second_status["valid"])
+            self.assertEqual(first_status["appended_event_count"], 4)
+            self.assertEqual(second_status["appended_event_count"], 0)
+            events_path = (
+                workspace / "diagnostics/evidence_event_store_v2/events.jsonl"
+            )
+            records = [
+                json.loads(line)["payload"]["record"]
+                for line in events_path.read_text().splitlines()
+            ]
+            schemas = [record["schema"] for record in records]
+            self.assertEqual(schemas.count("being_importance_pin_v1"), 2)
+            self.assertEqual(schemas.count("attention_portfolio_v2"), 1)
+            self.assertEqual(schemas.count("attention_selection_receipt_v2"), 1)
+
+    def test_portfolio_v1_reader_canonicalizes_to_steward_work_view_v2(self) -> None:
+        entry = AttentionPortfolioEntryV1.build(
+            contract_id="contract_1",
+            slot_class="urgent",
+            rank=1,
+            felt_severity=5,
+            recurrence=3,
+            freshness=0,
+            unattended_duration_ms=2_000_000,
+            durable_queue_position=7,
+            pinned_by=(),
+        )
+        legacy = AttentionPortfolioV1.build(
+            source_contracts_sha256=HASH_A,
+            entries=[entry],
+            overflow_contract_ids=["contract_2"],
+        )
+        canonical = AttentionPortfolioV2.from_legacy_v1(legacy.to_dict()).to_dict()
+        self.assertEqual(canonical["schema"], "attention_portfolio_v2")
+        self.assertEqual(
+            canonical["selected_entries"][0]["contract_review_state_class"],
+            "reopened_or_still_friction",
+        )
+        self.assertNotIn("felt_severity", canonical["selected_entries"][0])
+
+    def test_portfolio_artifacts_have_no_bridge_runtime_consumer(self) -> None:
+        source_root = Path(__file__).resolve().parents[1] / "capsules/spectral-bridge/src"
+        prohibited = (
+            "diagnostics/attention_portfolio_v1",
+            "diagnostics/attention_portfolio_v2",
+            "attention_portfolio_status_v2",
+        )
+        consumers = []
+        for path in source_root.rglob("*.rs"):
+            if path.name == "reciprocal_experiential.rs" or "reciprocal_experiential" in path.parts:
+                continue
+            text = path.read_text(errors="replace")
+            if any(marker in text for marker in prohibited):
+                consumers.append(str(path.relative_to(source_root)))
+        self.assertEqual(consumers, [])
 
     def test_v3_dag_orders_new_projectors_and_declares_selective_streams(self) -> None:
         steps = source_first_steps()

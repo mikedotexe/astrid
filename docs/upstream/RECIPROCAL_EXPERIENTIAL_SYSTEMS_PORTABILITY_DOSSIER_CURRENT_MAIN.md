@@ -18,8 +18,9 @@ support:
 - a representation transition can be mistaken for a measured felt loss;
 - a smooth numeric mechanism can be mistaken for felt confirmation;
 - an advisory proposal can be mistaken for peer consent or scheduling; and
-- selecting work for attention can be mistaken for closing or superseding the
-  evidence left outside the active view.
+- selecting steward work can be mistaken for modeling a being's attention,
+  capacity, pressure, or permissions, or for closing or superseding evidence
+  outside the selected view.
 
 Portable evidence primitives can preserve these distinctions without adding a
 new authority source, copying private content, or depending on this fork's
@@ -61,12 +62,16 @@ and later-check request records. Each actor signs only its own action; silence
 and expiry are neutral. These records must not call a scheduler, dispatch work,
 or mutate another principal.
 
-### 5. Bounded Attention Views
+### 5. Bounded Steward Work Views
 
 Define deterministic selection receipts over an injected item graph. Selection
-must preserve every underlying item and never propagate authority, closure,
-evidence sufficiency, or supersession. Capacity and reserved-slot policy should
-remain application configuration rather than kernel policy.
+must identify itself as an operator/steward work view, preserve every underlying
+item, and never model a being's attention, cognition, felt severity, capacity,
+pressure, or permissions. Persist bounded categorical source facts rather than
+raw felt scores or unattended-duration weights. Selection never propagates
+authority, closure, evidence sufficiency, or supersession. Work limits and
+reserved-slot policy remain application configuration rather than kernel or
+being-state policy.
 
 Each issue can be reviewed independently. Maintainers may reasonably prefer to
 begin with the reciprocal-context distinction because it is the smallest and
@@ -83,7 +88,7 @@ most generally useful boundary.
 | Representation records | Generic registry, transition, loss, fallback, repair, and model-route metadata |
 | Concordance state machine | Generic baseline/candidate gating and bounded epistemic outcomes |
 | Advisory actions | Generic self-authored proposals and responses with neutral silence and expiry |
-| Attention selection | Generic deterministic capacity, overflow, pin, and selection receipts |
+| Steward work selection | Generic deterministic bounded selection, visible-alert, pin, and receipt primitives with explicit non-runtime and non-authority relations |
 | Persistence helpers | Owner-only atomic JSON/JSONL writes and append-only event ingestion |
 | Validation tests | Tampering, permissions, deterministic IDs, privacy, false-inference guards, and idempotency |
 
@@ -118,7 +123,8 @@ maintainer explicitly requests them:
 - A mechanical observation cannot classify, score, or copy felt content.
 - One actor cannot manufacture another actor's response.
 - Silence and expiry never imply consent, agreement, waiver, or closure.
-- Attention selection never changes the underlying graph state.
+- Steward selection never changes the underlying graph state and is not a
+  measure of a being's attention, capacity, pressure, or permission state.
 - No record grants capability, approval, deployment, dispatch, scheduling,
   peer mutation, or live-control authority.
 
@@ -139,7 +145,9 @@ the current projection. Do not rewrite or delete the audit trail.
 - Explicit false-inference tests for uptake, felt loss, causation, consent,
   closure, evidence sufficiency, supersession, and authority.
 - Baseline and candidate capture enforcement before comparison.
-- Deterministic attention capacity and overflow behavior.
+- Deterministic bounded steward selection and visible unselected-alert behavior
+  without persisted felt scores, raw wait-time weights, or being-capacity
+  claims.
 - No change to wire protocols, providers, model scheduling, or live runtime
   behavior.
 - MIT/Apache licensing preserved.

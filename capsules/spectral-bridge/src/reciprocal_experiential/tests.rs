@@ -1,8 +1,62 @@
 use super::{
-    AttentionPortfolioV1, AttentionSelectionReceiptV1, ConcordanceObservationV2,
-    ConcordanceResultV2, ReciprocalPresenceKindV1, ReciprocalPresenceReceiptV1,
-    RepresentationLossReceiptV1,
+    AgencyCommonsProposalV1, AttentionPortfolioEntryV2, AttentionPortfolioV2,
+    AttentionSelectionReceiptV2, ConcordanceObservationV2, ConcordanceResultV2,
+    ReciprocalPresenceKindV1, ReciprocalPresenceReceiptV1, RepresentationLossReceiptV1,
 };
+
+#[test]
+fn agency_commons_proposal_without_peer_remains_advisory() {
+    let proposal = AgencyCommonsProposalV1::new(
+        "proposal_1".into(),
+        "astrid".into(),
+        None,
+        "revisit".into(),
+        Some("state:recess".into()),
+        "state:reflection".into(),
+        None,
+        "event_1".into(),
+        "a".repeat(64),
+        1,
+    );
+    let value = serde_json::to_value(proposal).expect("serialize proposal");
+    assert_eq!(value["peer"], serde_json::Value::Null);
+    assert_eq!(value["advisory_only"], true);
+    assert_eq!(value["peer_consent_inferred"], false);
+}
+
+#[test]
+fn attention_entry_membership_does_not_propagate_authority() {
+    let entry = AttentionPortfolioEntryV2::new(
+        "contract_1".into(),
+        "ranked".into(),
+        1,
+        "reopened_or_still_friction".into(),
+        3,
+        "recent_24h".into(),
+        "under_24h".into(),
+        7,
+        Vec::new(),
+    );
+    let value = serde_json::to_value(entry).expect("serialize attention entry");
+    assert_eq!(
+        value["selection_scope"],
+        "steward_work_view_not_being_attention"
+    );
+    assert_eq!(
+        value["runtime_relation"],
+        "not_consumed_by_bridge_minime_model_or_control_runtime"
+    );
+    assert_eq!(
+        value["authority_relation"],
+        "cannot_grant_or_propagate_authority"
+    );
+    assert!(value.get("felt_severity").is_none());
+    assert!(value.get("unattended_duration_ms").is_none());
+    assert_eq!(
+        value["artifact_authority_state_v1"]["state"],
+        "evidence_only"
+    );
+}
 
 #[test]
 fn serialized_records_keep_inference_and_authority_boundaries_false() {
@@ -24,13 +78,7 @@ fn serialized_records_keep_inference_and_authority_boundaries_false() {
         "evidence_only"
     );
 
-    let loss = RepresentationLossReceiptV1::new(
-        "loss_1".into(),
-        "transition_1".into(),
-        16,
-        0,
-        0,
-    );
+    let loss = RepresentationLossReceiptV1::new("loss_1".into(), "transition_1".into(), 16, 0, 0);
     let value = serde_json::to_value(loss).expect("serialize loss");
     assert_eq!(value["mechanical_loss_only"], true);
     assert_eq!(value["felt_loss_scored"], false);
@@ -76,17 +124,22 @@ fn serialized_records_keep_inference_and_authority_boundaries_false() {
     assert!(value.get("numeric_pass_overwrites_felt_report").is_none());
 
     let portfolio =
-        AttentionPortfolioV1::new("portfolio_1".into(), "b".repeat(64), Vec::new(), Vec::new());
-    let selection = AttentionSelectionReceiptV1::new(
-        "selection_1".into(),
-        "portfolio_1".into(),
-        Vec::new(),
-        0,
-    );
+        AttentionPortfolioV2::new("portfolio_1".into(), "b".repeat(64), Vec::new(), Vec::new());
+    let selection =
+        AttentionSelectionReceiptV2::new("selection_1".into(), "portfolio_1".into(), Vec::new(), 0);
     let portfolio = serde_json::to_value(portfolio).expect("serialize portfolio");
     let selection = serde_json::to_value(selection).expect("serialize selection");
-    assert_eq!(portfolio["active_cap"], 16);
-    assert_eq!(portfolio["membership_propagates_closure"], false);
-    assert_eq!(selection["selection_is_attention_only"], true);
-    assert_eq!(selection["authority_propagated"], false);
+    assert_eq!(portfolio["steward_selected_work_limit"], 16);
+    assert_eq!(
+        portfolio["source_graph_relation"],
+        "all_claims_contracts_and_evidence_remain_queryable"
+    );
+    assert_eq!(
+        selection["selection_scope"],
+        "steward_work_view_not_being_attention"
+    );
+    assert_eq!(
+        selection["authority_relation"],
+        "cannot_grant_or_propagate_authority"
+    );
 }

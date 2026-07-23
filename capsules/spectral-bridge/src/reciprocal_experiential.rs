@@ -750,94 +750,106 @@ impl LaterFeltCheckRequestV1 {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
-pub struct AttentionPortfolioEntryV1 {
+pub struct AttentionPortfolioEntryV2 {
     schema: &'static str,
     schema_version: u8,
     contract_id: String,
-    slot_class: String,
-    rank: u8,
-    felt_severity: u8,
-    recurrence: u32,
-    freshness: u8,
-    unattended_duration_ms: u64,
-    durable_queue_position: u64,
+    steward_slot_class: String,
+    selection_rank: u8,
+    contract_review_state_class: String,
+    claim_recurrence_count: u32,
+    source_signal_recency_class: String,
+    steward_unaddressed_age_band: String,
+    canonical_queue_tiebreaker: u64,
     pinned_by: Vec<String>,
-    membership_propagates_closure: bool,
-    membership_propagates_authority: bool,
+    selection_scope: &'static str,
+    contract_state_relation: &'static str,
+    runtime_relation: &'static str,
+    authority_relation: &'static str,
     artifact_authority_state_v1: ExperientialEvidenceAuthorityV1,
 }
 
-impl AttentionPortfolioEntryV1 {
+impl AttentionPortfolioEntryV2 {
     #[allow(clippy::too_many_arguments, dead_code)]
     fn new(
         contract_id: String,
-        slot_class: String,
-        rank: u8,
-        felt_severity: u8,
-        recurrence: u32,
-        freshness: u8,
-        unattended_duration_ms: u64,
-        durable_queue_position: u64,
+        steward_slot_class: String,
+        selection_rank: u8,
+        contract_review_state_class: String,
+        claim_recurrence_count: u32,
+        source_signal_recency_class: String,
+        steward_unaddressed_age_band: String,
+        canonical_queue_tiebreaker: u64,
         pinned_by: Vec<String>,
     ) -> Self {
         Self {
-            schema: "attention_portfolio_entry_v1",
-            schema_version: 1,
+            schema: "attention_portfolio_entry_v2",
+            schema_version: 2,
             contract_id,
-            slot_class,
-            rank,
-            felt_severity,
-            recurrence,
-            freshness,
-            unattended_duration_ms,
-            durable_queue_position,
+            steward_slot_class,
+            selection_rank,
+            contract_review_state_class,
+            claim_recurrence_count,
+            source_signal_recency_class,
+            steward_unaddressed_age_band,
+            canonical_queue_tiebreaker,
             pinned_by,
-            membership_propagates_closure: false,
-            membership_propagates_authority: false,
+            selection_scope: "steward_work_view_not_being_attention",
+            contract_state_relation: "selection_does_not_change_contract_or_felt_state",
+            runtime_relation: "not_consumed_by_bridge_minime_model_or_control_runtime",
+            authority_relation: "cannot_grant_or_propagate_authority",
             artifact_authority_state_v1: ExperientialEvidenceAuthorityV1::evidence_only(),
         }
     }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
-pub struct AttentionPortfolioV1 {
+pub struct AttentionPortfolioV2 {
     schema: &'static str,
     schema_version: u8,
     portfolio_id: String,
     source_contracts_sha256: String,
-    active_cap: u8,
-    entries: Vec<AttentionPortfolioEntryV1>,
-    overflow_contract_ids: Vec<String>,
-    membership_propagates_closure: bool,
-    membership_propagates_authority: bool,
+    steward_selected_work_limit: u8,
+    selected_entries: Vec<AttentionPortfolioEntryV2>,
+    visible_urgent_alert_contract_ids: Vec<String>,
+    selection_scope: &'static str,
+    source_graph_relation: &'static str,
+    unselected_contract_relation: &'static str,
+    contract_state_relation: &'static str,
+    runtime_relation: &'static str,
+    authority_relation: &'static str,
     artifact_authority_state_v1: ExperientialEvidenceAuthorityV1,
 }
 
-impl AttentionPortfolioV1 {
+impl AttentionPortfolioV2 {
     #[allow(dead_code)]
     fn new(
         portfolio_id: String,
         source_contracts_sha256: String,
-        entries: Vec<AttentionPortfolioEntryV1>,
-        overflow_contract_ids: Vec<String>,
+        selected_entries: Vec<AttentionPortfolioEntryV2>,
+        visible_urgent_alert_contract_ids: Vec<String>,
     ) -> Self {
         Self {
-            schema: "attention_portfolio_v1",
-            schema_version: 1,
+            schema: "attention_portfolio_v2",
+            schema_version: 2,
             portfolio_id,
             source_contracts_sha256,
-            active_cap: 16,
-            entries,
-            overflow_contract_ids,
-            membership_propagates_closure: false,
-            membership_propagates_authority: false,
+            steward_selected_work_limit: 16,
+            selected_entries,
+            visible_urgent_alert_contract_ids,
+            selection_scope: "steward_work_view_not_being_attention",
+            source_graph_relation: "all_claims_contracts_and_evidence_remain_queryable",
+            unselected_contract_relation: "retained_in_contract_graph_and_visible_when_urgent",
+            contract_state_relation: "selection_does_not_change_contract_or_felt_state",
+            runtime_relation: "not_consumed_by_bridge_minime_model_or_control_runtime",
+            authority_relation: "cannot_grant_or_propagate_authority",
             artifact_authority_state_v1: ExperientialEvidenceAuthorityV1::evidence_only(),
         }
     }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
-pub struct BeingImportancePinV1 {
+pub struct BeingImportancePinV2 {
     schema: &'static str,
     schema_version: u8,
     pin_id: String,
@@ -846,11 +858,14 @@ pub struct BeingImportancePinV1 {
     action: String,
     source_event_id: String,
     source_event_sha256: String,
-    pins_attention_only: bool,
+    selection_scope: &'static str,
+    contract_state_relation: &'static str,
+    runtime_relation: &'static str,
+    authority_relation: &'static str,
     artifact_authority_state_v1: ExperientialEvidenceAuthorityV1,
 }
 
-impl BeingImportancePinV1 {
+impl BeingImportancePinV2 {
     #[allow(dead_code)]
     fn new(
         pin_id: String,
@@ -861,56 +876,66 @@ impl BeingImportancePinV1 {
         source_event_sha256: String,
     ) -> Self {
         Self {
-            schema: "being_importance_pin_v1",
-            schema_version: 1,
+            schema: "being_importance_pin_v2",
+            schema_version: 2,
             pin_id,
             being,
             contract_id,
             action,
             source_event_id,
             source_event_sha256,
-            pins_attention_only: true,
+            selection_scope: "steward_work_view_not_being_attention",
+            contract_state_relation: "selection_does_not_change_contract_or_felt_state",
+            runtime_relation: "not_consumed_by_bridge_minime_model_or_control_runtime",
+            authority_relation: "cannot_grant_or_propagate_authority",
             artifact_authority_state_v1: ExperientialEvidenceAuthorityV1::evidence_only(),
         }
     }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
-pub struct AttentionSelectionReceiptV1 {
+pub struct AttentionSelectionReceiptV2 {
     schema: &'static str,
     schema_version: u8,
     receipt_id: String,
     portfolio_id: String,
     selected_contract_ids: Vec<String>,
-    overflow_count: u32,
-    selection_is_attention_only: bool,
-    closure_propagated: bool,
-    authority_propagated: bool,
+    visible_urgent_alert_count: u32,
+    selection_scope: &'static str,
+    contract_state_relation: &'static str,
+    runtime_relation: &'static str,
+    authority_relation: &'static str,
     artifact_authority_state_v1: ExperientialEvidenceAuthorityV1,
 }
 
-impl AttentionSelectionReceiptV1 {
+impl AttentionSelectionReceiptV2 {
     #[allow(dead_code)]
     fn new(
         receipt_id: String,
         portfolio_id: String,
         selected_contract_ids: Vec<String>,
-        overflow_count: u32,
+        visible_urgent_alert_count: u32,
     ) -> Self {
         Self {
-            schema: "attention_selection_receipt_v1",
-            schema_version: 1,
+            schema: "attention_selection_receipt_v2",
+            schema_version: 2,
             receipt_id,
             portfolio_id,
             selected_contract_ids,
-            overflow_count,
-            selection_is_attention_only: true,
-            closure_propagated: false,
-            authority_propagated: false,
+            visible_urgent_alert_count,
+            selection_scope: "steward_work_view_not_being_attention",
+            contract_state_relation: "selection_does_not_change_contract_or_felt_state",
+            runtime_relation: "not_consumed_by_bridge_minime_model_or_control_runtime",
+            authority_relation: "cannot_grant_or_propagate_authority",
             artifact_authority_state_v1: ExperientialEvidenceAuthorityV1::evidence_only(),
         }
     }
 }
+
+pub type AttentionPortfolioEntryV1 = AttentionPortfolioEntryV2;
+pub type AttentionPortfolioV1 = AttentionPortfolioV2;
+pub type BeingImportancePinV1 = BeingImportancePinV2;
+pub type AttentionSelectionReceiptV1 = AttentionSelectionReceiptV2;
 
 #[cfg(test)]
 mod tests;
