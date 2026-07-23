@@ -420,12 +420,12 @@ def source_first_steps() -> tuple[ProjectionStep, ...]:
             ),
         ),
         ProjectionStep(
-            "attention_portfolio",
+            "steward_work_selection",
             ("felt_contracts",),
             (
                 command(
                     python,
-                    "scripts/attention_portfolio.py",
+                    "scripts/steward_work_selection.py",
                     "--workspace",
                     "{workspace}",
                     "project",
@@ -433,16 +433,17 @@ def source_first_steps() -> tuple[ProjectionStep, ...]:
                     "--receipt-json",
                 ),
             ),
-            ("felt_contracts", "attention_portfolio"),
+            ("felt_contracts", "steward_work_selection"),
             (
                 "diagnostics/felt_contract_graph_v1/contracts.jsonl",
                 "diagnostics/attention_portfolio_v1/pin_events.jsonl",
                 "diagnostics/attention_portfolio_v2/pin_events.jsonl",
+                "diagnostics/steward_work_selection_v1/priority_events.jsonl",
             ),
             (
-                "diagnostics/attention_portfolio_v2/status.json",
-                "diagnostics/attention_portfolio_v2/active.json",
-                "diagnostics/attention_portfolio_v2/report.md",
+                "diagnostics/steward_work_selection_v1/status.json",
+                "diagnostics/steward_work_selection_v1/selection.json",
+                "diagnostics/steward_work_selection_v1/report.md",
             ),
         ),
     )

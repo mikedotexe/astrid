@@ -112,6 +112,7 @@ def _aggregate_for_payload(payload: dict[str, Any]) -> dict[str, str]:
         ("claim_family", "family_id"),
         ("experiment_dossier", "dossier_id"),
         ("attention_portfolio", "portfolio_id"),
+        ("steward_work_selection", "selection_id"),
     )
     for kind, key in candidates:
         if payload.get(key):

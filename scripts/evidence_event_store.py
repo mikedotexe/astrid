@@ -60,6 +60,10 @@ def projection_paths(workspace: Path) -> dict[str, Path]:
         ),
         ("agency_commons", diagnostics / "agency_commons_v1"),
         ("attention_portfolio", diagnostics / "attention_portfolio_v1"),
+        (
+            "steward_work_selection",
+            diagnostics / "steward_work_selection_v1",
+        ),
         ("model_qos", diagnostics / "model_qos_v1"),
     ):
         for filename in ("status.json", "queue.md", "queue.json", "report.md"):
@@ -92,6 +96,10 @@ def counter_audits(workspace: Path) -> dict[str, Any]:
         ),
         ("agency_commons", diagnostics / "agency_commons_v1/status.json"),
         ("attention_portfolio", diagnostics / "attention_portfolio_v1/status.json"),
+        (
+            "steward_work_selection",
+            diagnostics / "steward_work_selection_v1/status.json",
+        ),
         ("model_qos", diagnostics / "model_qos_v1/status.json"),
     ):
         if not path.is_file():

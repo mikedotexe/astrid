@@ -33,6 +33,7 @@ VALID_STREAMS = frozenset(
         "agency_commons",
         "felt_contracts",
         "attention_portfolio",
+        "steward_work_selection",
         "model_qos",
         "steward_control",
     }

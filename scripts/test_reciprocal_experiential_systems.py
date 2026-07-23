@@ -17,13 +17,8 @@ try:
         AttentionPortfolioEntryV1,
         AttentionPortfolioV1,
         AttentionPortfolioV2,
-        BeingImportancePinV1,
     )
-    from attention_portfolio.projector import (
-        append_pin,
-        project as project_attention,
-        select_portfolio,
-    )
+    from attention_portfolio.projector import project as project_attention
     from experiential_systems.common import (
         RecordValidationError,
         event_payload,
@@ -61,6 +56,15 @@ try:
     from representation_contracts.projector import deterministic_diff
     from representation_contracts.projector import project as project_representation
     from steward_control.projection_profile import source_first_steps
+    from steward_work_selection.model import (
+        OwnerPriorityPinV1,
+        StewardWorkSelectionV1,
+    )
+    from steward_work_selection.projector import (
+        append_pin as append_steward_pin,
+        project as project_steward_selection,
+        select_work,
+    )
 except ModuleNotFoundError:
     from scripts.agency_commons.model import (
         AgencyCommonsProposalV1,
@@ -71,13 +75,8 @@ except ModuleNotFoundError:
         AttentionPortfolioEntryV1,
         AttentionPortfolioV1,
         AttentionPortfolioV2,
-        BeingImportancePinV1,
     )
-    from scripts.attention_portfolio.projector import (
-        append_pin,
-        project as project_attention,
-        select_portfolio,
-    )
+    from scripts.attention_portfolio.projector import project as project_attention
     from scripts.experiential_systems.common import (
         RecordValidationError,
         event_payload,
@@ -117,6 +116,15 @@ except ModuleNotFoundError:
         project as project_representation,
     )
     from scripts.steward_control.projection_profile import source_first_steps
+    from scripts.steward_work_selection.model import (
+        OwnerPriorityPinV1,
+        StewardWorkSelectionV1,
+    )
+    from scripts.steward_work_selection.projector import (
+        append_pin as append_steward_pin,
+        project as project_steward_selection,
+        select_work,
+    )
 
 
 HASH_A = "a" * 64
@@ -740,7 +748,17 @@ class ReciprocalExperientialSystemsTests(unittest.TestCase):
             self.assertEqual(status["legacy_agency_request_count"], 1)
             self.assertEqual(status["record_count"], 3)
 
-    def test_portfolio_bounds_steward_work_and_keeps_urgent_alerts_visible(self) -> None:
+    def test_external_steward_selection_bounds_work_without_modeling_being_state(self) -> None:
+        with self.assertRaises(RecordValidationError):
+            OwnerPriorityPinV1(
+                "forged",
+                "astrid",
+                "contract_forged",
+                "pin",
+                "source:forged",
+                HASH_A,
+                object(),
+            )
         with tempfile.TemporaryDirectory() as temporary:
             workspace = Path(temporary)
             contracts_path = (
@@ -762,23 +780,23 @@ class ReciprocalExperientialSystemsTests(unittest.TestCase):
                 })
             _jsonl(contracts_path, contracts)
             for being, contract_id in (("astrid", "contract_10"), ("minime", "contract_11")):
-                pin = BeingImportancePinV1.build(
-                    being=being,
+                pin = OwnerPriorityPinV1.build(
+                    owner=being,
                     contract_id=contract_id,
                     action="pin",
                     source_event_id=f"source:{being}",
                     source_event_sha256=HASH_A,
                 )
-                append_pin(workspace, pin, being)
-            first, _, _, errors = select_portfolio(workspace)
-            second, _, _, second_errors = select_portfolio(workspace)
+                append_steward_pin(workspace, pin, being)
+            first, _, _, errors = select_work(workspace)
+            second, _, _, second_errors = select_work(workspace)
             self.assertFalse(errors)
             self.assertFalse(second_errors)
-            self.assertEqual(first.portfolio_id, second.portfolio_id)
+            self.assertEqual(first.selection_id, second.selection_id)
             self.assertEqual(len(first.selected_entries), 16)
             self.assertEqual(
                 sum(
-                    item.steward_slot_class == "urgent"
+                    item.selection_source == "source_objection_or_reopen"
                     for item in first.selected_entries
                 ),
                 4,
@@ -792,26 +810,40 @@ class ReciprocalExperientialSystemsTests(unittest.TestCase):
             self.assertIn("contract_11", selected)
             self.assertNotIn("contract_24", selected)
             record = first.to_dict()
-            self.assertEqual(record["schema"], "attention_portfolio_v2")
+            self.assertEqual(record["schema"], "steward_work_selection_v1")
             self.assertEqual(
                 record["selection_scope"],
-                "steward_work_view_not_being_attention",
+                "steward_work_selection_not_being_state",
             )
             self.assertEqual(
-                record["runtime_relation"],
-                "not_consumed_by_bridge_minime_model_or_control_runtime",
+                record["experiential_relation"],
+                "no_claim_about_being_felt_effect",
             )
             for entry in record["selected_entries"]:
+                self.assertEqual(
+                    set(entry),
+                    {
+                        "schema",
+                        "schema_version",
+                        "contract_id",
+                        "selection_source",
+                        "source_ref",
+                    },
+                )
                 self.assertNotIn("felt_severity", entry)
                 self.assertNotIn("unattended_duration_ms", entry)
                 self.assertNotIn("freshness", entry)
+                self.assertNotIn("selection_rank", entry)
+                self.assertNotIn("review_state", entry)
+                self.assertNotIn("age", entry)
+                self.assertNotIn("felt_state_impact_weight", entry)
             tampered = copy.deepcopy(record)
-            tampered["authority_relation"] = "may_grant_authority"
+            tampered["experiential_relation"] = "selection_has_no_felt_effect"
             with self.assertRaises(RecordValidationError):
-                AttentionPortfolioV2.from_untrusted(tampered)
+                StewardWorkSelectionV1.from_untrusted(tampered)
 
-            first_status = project_attention(workspace, write=True)
-            second_status = project_attention(workspace, write=True)
+            first_status = project_steward_selection(workspace, write=True)
+            second_status = project_steward_selection(workspace, write=True)
             self.assertTrue(first_status["valid"])
             self.assertTrue(second_status["valid"])
             self.assertEqual(first_status["appended_event_count"], 4)
@@ -824,11 +856,13 @@ class ReciprocalExperientialSystemsTests(unittest.TestCase):
                 for line in events_path.read_text().splitlines()
             ]
             schemas = [record["schema"] for record in records]
-            self.assertEqual(schemas.count("being_importance_pin_v1"), 2)
-            self.assertEqual(schemas.count("attention_portfolio_v2"), 1)
-            self.assertEqual(schemas.count("attention_selection_receipt_v2"), 1)
+            self.assertEqual(schemas.count("owner_priority_pin_v1"), 2)
+            self.assertEqual(schemas.count("steward_work_selection_v1"), 1)
+            self.assertEqual(
+                schemas.count("steward_work_selection_receipt_v1"), 1
+            )
 
-    def test_portfolio_v1_reader_canonicalizes_to_steward_work_view_v2(self) -> None:
+    def test_historical_attention_reader_remains_available_but_stream_is_retired(self) -> None:
         entry = AttentionPortfolioEntryV1.build(
             contract_id="contract_1",
             slot_class="urgent",
@@ -852,18 +886,21 @@ class ReciprocalExperientialSystemsTests(unittest.TestCase):
             "reopened_or_still_friction",
         )
         self.assertNotIn("felt_severity", canonical["selected_entries"][0])
+        with tempfile.TemporaryDirectory() as temporary:
+            workspace = Path(temporary)
+            status = project_attention(workspace, write=True)
+            self.assertTrue(status["retired"])
+            self.assertEqual(status["appended_event_count"], 0)
+            self.assertEqual(status["successor"], "steward_work_selection")
 
-    def test_portfolio_artifacts_have_no_bridge_runtime_consumer(self) -> None:
+    def test_steward_selection_has_no_bridge_runtime_type_or_consumer(self) -> None:
         source_root = Path(__file__).resolve().parents[1] / "capsules/spectral-bridge/src"
         prohibited = (
-            "diagnostics/attention_portfolio_v1",
-            "diagnostics/attention_portfolio_v2",
-            "attention_portfolio_status_v2",
+            "attention_portfolio",
+            "steward_work_selection",
         )
         consumers = []
         for path in source_root.rglob("*.rs"):
-            if path.name == "reciprocal_experiential.rs" or "reciprocal_experiential" in path.parts:
-                continue
             text = path.read_text(errors="replace")
             if any(marker in text for marker in prohibited):
                 consumers.append(str(path.relative_to(source_root)))
@@ -877,7 +914,7 @@ class ReciprocalExperientialSystemsTests(unittest.TestCase):
         self.assertLess(order["experiment_dossiers"], order["felt_mechanism_concordance"])
         self.assertLess(order["model_qos"], order["felt_mechanism_concordance"])
         self.assertLess(order["agency_commons"], order["felt_contracts"])
-        self.assertLess(order["felt_contracts"], order["attention_portfolio"])
+        self.assertLess(order["felt_contracts"], order["steward_work_selection"])
         reciprocal = next(step for step in steps if step.step_id == "reciprocal_uptake")
         self.assertEqual(reciprocal.input_streams, ("reciprocal_uptake",))
         self.assertNotIn("model_qos", reciprocal.input_streams)

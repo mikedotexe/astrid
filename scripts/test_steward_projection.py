@@ -239,7 +239,7 @@ class StewardProjectionTests(unittest.TestCase):
                 "felt_mechanism_concordance",
                 "agency_commons",
                 "felt_contracts",
-                "attention_portfolio",
+                "steward_work_selection",
             ],
         )
         steps = {step.step_id: step for step in source_first_steps()}
@@ -296,7 +296,7 @@ class StewardProjectionTests(unittest.TestCase):
             ),
         )
         self.assertEqual(
-            steps["attention_portfolio"].dependencies,
+            steps["steward_work_selection"].dependencies,
             ("felt_contracts",),
         )
 

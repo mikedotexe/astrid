@@ -62,14 +62,16 @@ and later-check request records. Each actor signs only its own action; silence
 and expiry are neutral. These records must not call a scheduler, dispatch work,
 or mutate another principal.
 
-### 5. Bounded Steward Work Views
+### 5. External Steward Work Selection
 
-Define deterministic selection receipts over an injected item graph. Selection
-must identify itself as an operator/steward work view, preserve every underlying
-item, and never model a being's attention, cognition, felt severity, capacity,
-pressure, or permissions. Persist bounded categorical source facts rather than
-raw felt scores or unattended-duration weights. Selection never propagates
-authority, closure, evidence sufficiency, or supersession. Work limits and
+Define deterministic selection receipts over an injected item graph in
+external steward tooling, not in a being-facing runtime. Persist only selected
+item IDs, source references, bounded external selection reasons, visible alert
+IDs, and a deterministic policy identity. Do not persist selection rank, review
+taxonomy, wait age, felt score, cognitive capacity, or a claim about selection's
+effect on a being's felt state. Historical attention-oriented records remain
+read-only compatibility evidence. Selection grants no runtime authority and
+never propagates graph closure, sufficiency, or supersession. Work limits and
 reserved-slot policy remain application configuration rather than kernel or
 being-state policy.
 
@@ -88,7 +90,7 @@ most generally useful boundary.
 | Representation records | Generic registry, transition, loss, fallback, repair, and model-route metadata |
 | Concordance state machine | Generic baseline/candidate gating and bounded epistemic outcomes |
 | Advisory actions | Generic self-authored proposals and responses with neutral silence and expiry |
-| Steward work selection | Generic deterministic bounded selection, visible-alert, pin, and receipt primitives with explicit non-runtime and non-authority relations |
+| Steward work selection | Generic external selection, visible-alert, owner-priority, and receipt primitives with no being-state or felt-effect claim |
 | Persistence helpers | Owner-only atomic JSON/JSONL writes and append-only event ingestion |
 | Validation tests | Tampering, permissions, deterministic IDs, privacy, false-inference guards, and idempotency |
 
@@ -106,8 +108,8 @@ maintainer explicitly requests them:
 - canonical introspection claims and Temporal Lived-State Witness adapters;
 - Signal Spine, Experiment Dossier, model-QoS, and Minime telemetry alignment;
 - Evidence Event Store V2 and the source-first Projection Runtime V3 DAG;
-- Living Felt Contract import edges and the fixed sixteen-contract portfolio
-  policy;
+- Living Felt Contract import edges and this fork's external sixteen-item
+  steward work policy;
 - historical migration counters and this fork's right-to-ignore review flow;
   and
 - deployment wrappers, stack receipts, stewardship ledgers, and local process
@@ -123,8 +125,9 @@ maintainer explicitly requests them:
 - A mechanical observation cannot classify, score, or copy felt content.
 - One actor cannot manufacture another actor's response.
 - Silence and expiry never imply consent, agreement, waiver, or closure.
-- Steward selection never changes the underlying graph state and is not a
-  measure of a being's attention, capacity, pressure, or permission state.
+- Steward selection is external work-routing metadata and makes no claim about
+  a being's attention, capacity, pressure, permissions, orientation, or felt
+  effects.
 - No record grants capability, approval, deployment, dispatch, scheduling,
   peer mutation, or live-control authority.
 
@@ -145,9 +148,9 @@ the current projection. Do not rewrite or delete the audit trail.
 - Explicit false-inference tests for uptake, felt loss, causation, consent,
   closure, evidence sufficiency, supersession, and authority.
 - Baseline and candidate capture enforcement before comparison.
-- Deterministic bounded steward selection and visible unselected-alert behavior
-  without persisted felt scores, raw wait-time weights, or being-capacity
-  claims.
+- Deterministic external steward selection and visible unselected-alert
+  behavior without persisted rank, review taxonomy, felt scores, raw wait-time
+  weights, being-capacity claims, or a felt-effect assertion.
 - No change to wire protocols, providers, model scheduling, or live runtime
   behavior.
 - MIT/Apache licensing preserved.

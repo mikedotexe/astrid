@@ -1,4 +1,4 @@
-"""Select a bounded steward work view over Felt Contracts."""
+"""Read-only compatibility support for historical attention artifacts."""
 
 from __future__ import annotations
 
@@ -11,24 +11,19 @@ from typing import Any
 
 try:
     from experiential_systems.common import (
-        RecordValidationError, authority_state, canonical_json, deterministic_id,
-        event_payload, load_jsonl, owner_append_jsonl, owner_atomic_write,
-        owner_atomic_write_json, project_events, sha256_bytes, stream_payloads,
-        utc_now,
+        RecordValidationError, authority_state, load_jsonl, sha256_bytes,
+        stream_payloads,
     )
 except ModuleNotFoundError:
     from scripts.experiential_systems.common import (
-        RecordValidationError, authority_state, canonical_json, deterministic_id,
-        event_payload, load_jsonl, owner_append_jsonl, owner_atomic_write,
-        owner_atomic_write_json, project_events, sha256_bytes, stream_payloads,
-        utc_now,
+        RecordValidationError, authority_state, load_jsonl, sha256_bytes,
+        stream_payloads,
     )
 
 from .model import (
     AttentionPortfolioEntryV2,
     AttentionPortfolioV1,
     AttentionPortfolioV2,
-    AttentionSelectionReceiptV2,
     BeingImportancePinV1,
     steward_unaddressed_age_band,
 )
@@ -51,14 +46,10 @@ def pin_path(workspace: Path) -> Path:
 
 
 def append_pin(workspace: Path, pin: BeingImportancePinV1, actor: str) -> dict[str, Any]:
-    if actor != pin.being: raise RecordValidationError("a being may pin only for itself")
-    core = {"pin": pin.to_dict(), "actor": actor}
-    event = {"schema": "attention_pin_event_v1", "schema_version": 1,
-             "event_id": deterministic_id("attentionpinevent", core),
-             "actor": actor, "recorded_at": utc_now(), "pin": pin.to_dict(),
-             "artifact_authority_state_v1": authority_state()}
-    owner_append_jsonl(pin_path(workspace), event)
-    return event
+    del workspace, pin, actor
+    raise RecordValidationError(
+        "attention portfolio mutation is retired; use steward_work_selection"
+    )
 
 
 def replay_pins(workspace: Path) -> tuple[dict[str, set[str]], list[dict[str, Any]], list[str]]:
@@ -180,76 +171,23 @@ def select_portfolio(workspace: Path) -> tuple[AttentionPortfolioV2, list[dict[s
 
 
 def project(workspace: Path, *, write: bool) -> dict[str, Any]:
-    portfolio, pin_events, contracts, errors = select_portfolio(workspace)
-    selection = AttentionSelectionReceiptV2.from_portfolio(portfolio)
-    records = [event.get("pin") for event in pin_events] + [portfolio.to_dict(), selection.to_dict()]
-    payloads = []
-    for record in records:
-        if not isinstance(record, dict): continue
-        identifier = str(
-            record.get("pin_id")
-            or record.get("receipt_id")
-            or record.get("portfolio_id")
-        )
-        payloads.append(event_payload(
-            schema=SCHEMA, event_type=f"{record['schema']}_recorded",
-            aggregate_type="attention_portfolio", aggregate_id=portfolio.portfolio_id,
-            idempotency_key=f"{STREAM}:{identifier}", record=record,
-        ))
-    appended = project_events(workspace, STREAM, payloads,
-                              actor="attention-portfolio-projector",
-                              source_kind="felt_contract_bounded_view",
-                              source_locator_value="diagnostics/felt_contract_graph_v1/contracts.jsonl") if write and not errors else 0
-    active = portfolio.to_dict()
-    contracts_by_id = {
-        str(contract.get("contract_id") or ""): contract for contract in contracts
+    events_path = workspace / "diagnostics/evidence_event_store_v2/events.jsonl"
+    payloads, corrupt = (
+        stream_payloads(workspace, STREAM) if events_path.is_file() else ([], 0)
+    )
+    return {
+        "schema": "attention_portfolio_compatibility_status_v1",
+        "schema_version": 1,
+        "valid": corrupt == 0,
+        "retired": True,
+        "requested_write": write,
+        "appended_event_count": 0,
+        "historical_event_count": len(payloads),
+        "corrupt_event_lines": corrupt,
+        "successor": "steward_work_selection",
+        "historical_records_rewritten": False,
+        "artifact_authority_state_v1": authority_state(),
     }
-    status = {"schema": "attention_portfolio_status_v2", "schema_version": 2,
-              "valid": not errors, "write": write, "contract_count": len(contracts),
-              "steward_selected_count": len(portfolio.selected_entries),
-              "steward_selected_work_limit": 16,
-              "urgent_selected_count": sum(item.steward_slot_class == "urgent" for item in portfolio.selected_entries),
-              "astrid_pin_selected_count": sum(item.steward_slot_class == "astrid_pin" for item in portfolio.selected_entries),
-              "minime_pin_selected_count": sum(item.steward_slot_class == "minime_pin" for item in portfolio.selected_entries),
-              "visible_urgent_alert_count": len(portfolio.visible_urgent_alert_contract_ids),
-              "visible_urgent_alert": bool(portfolio.visible_urgent_alert_contract_ids),
-              "appended_event_count": appended,
-              "selection_scope": "steward_work_view_not_being_attention",
-              "contract_state_relation": "selection_does_not_change_contract_or_felt_state",
-              "runtime_relation": "not_consumed_by_bridge_minime_model_or_control_runtime",
-              "authority_relation": "cannot_grant_or_propagate_authority",
-              "errors": errors,
-              "counter_audit": {"status": "consistent" if not errors else "inconsistent",
-                                "checks": {"steward_work_limit_respected": len(portfolio.selected_entries) <= 16,
-                                           "selected_ids_unique": len({item.contract_id for item in portfolio.selected_entries}) == len(portfolio.selected_entries),
-                                           "urgent_selection_limit_respected": sum(item.steward_slot_class == "urgent" for item in portfolio.selected_entries) <= 4,
-                                           "closed_not_selected": all(
-                                               not contracts_by_id[item.contract_id].get("felt_closed")
-                                               or contracts_by_id[item.contract_id].get("activity") == "reopened"
-                                               for item in portfolio.selected_entries
-                                           ),
-                                           "visible_urgent_alert_not_selected": not set(portfolio.visible_urgent_alert_contract_ids).intersection(
-                                               item.contract_id for item in portfolio.selected_entries
-                                           )}},
-              "artifact_authority_state_v1": authority_state()}
-    if write and status["valid"]:
-        output = state_dir(workspace)
-        owner_atomic_write_json(output / "active.json", active)
-        owner_atomic_write_json(output / "status.json", status)
-        owner_atomic_write(
-            output / "report.md",
-            "# Contract-Centered Steward Work View\n\n"
-            "This selects at most 16 contracts for steward work. It is not a model of "
-            "Astrid's or Minime's attention, felt state, capacity, pressure, permissions, "
-            "or runtime behavior. Every unselected contract remains queryable; urgent "
-            "unselected contracts remain visible in the alert list.\n\n"
-            + "\n".join(
-                f"- {item.selection_rank}. {item.contract_id} ({item.steward_slot_class})"
-                for item in portfolio.selected_entries
-            )
-            + "\n",
-        )
-    return status
 
 
 def query(workspace: Path, contract_id: str | None) -> dict[str, Any]:

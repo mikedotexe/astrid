@@ -1,18 +1,15 @@
-"""CLI for the contract-centered attention portfolio."""
+"""Warning-only CLI for historical attention portfolio evidence."""
 
 from __future__ import annotations
 
 import argparse
 import json
-import time
 from pathlib import Path
 
 try:
     from experiential_systems.common import RecordValidationError
-    from projection_receipt import projector_receipt
 except ModuleNotFoundError:
     from scripts.experiential_systems.common import RecordValidationError
-    from scripts.projection_receipt import projector_receipt
 
 from .model import BeingImportancePinV1
 from .projector import append_pin, project, query, state_dir
@@ -35,7 +32,6 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--source-event-sha256")
     args = parser.parse_args(argv)
     workspace = args.workspace.resolve()
-    started = time.monotonic()
     try:
         if args.command in {"pin", "unpin"}:
             pin = BeingImportancePinV1.build(being=args.being, contract_id=args.contract_id,
@@ -44,11 +40,7 @@ def main(argv: list[str] | None = None) -> int:
             value = append_pin(workspace, pin, args.actor or "")
         elif args.command in {"project", "verify"}:
             status = project(workspace, write=args.write and args.command == "project")
-            value = projector_receipt("attention_portfolio", status,
-                                      {"status.json": state_dir(workspace) / "status.json",
-                                       "active.json": state_dir(workspace) / "active.json",
-                                       "report.md": state_dir(workspace) / "report.md"},
-                                      started_monotonic=started) if args.receipt_json else status
+            value = status
         elif args.command == "report":
             path = state_dir(workspace) / "status.json"
             value = json.loads(path.read_text()) if path.is_file() else {"valid": False, "error": "status_missing"}
