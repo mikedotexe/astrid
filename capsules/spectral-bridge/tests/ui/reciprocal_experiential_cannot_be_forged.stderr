@@ -1,7 +1,7 @@
 error[E0624]: associated function `new` is private
  --> tests/ui/reciprocal_experiential_cannot_be_forged.rs:6:48
   |
-6 |       let _forged = ReciprocalPresenceReceiptV1::new(
+6 |       let _forged = ReciprocalPresenceReceiptV2::new(
   |                                                  ^^^ private associated function
   |
  ::: src/reciprocal_experiential.rs

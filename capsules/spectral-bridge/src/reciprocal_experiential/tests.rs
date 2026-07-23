@@ -1,6 +1,8 @@
 use super::{
     AgencyCommonsProposalV1, ConcordanceObservationV2, ConcordanceResultV2,
-    ReciprocalPresenceKindV1, ReciprocalPresenceReceiptV1, RepresentationLossReceiptV1,
+    ReciprocalContextKindV1, ReciprocalContextReceiptV2, ReciprocalPresenceKindV1,
+    ReciprocalPresenceReceiptV2, ReciprocalUptakeKindV1, ReciprocalUptakeReceiptV2,
+    RepresentationLossReceiptV1,
 };
 
 #[test]
@@ -24,24 +26,64 @@ fn agency_commons_proposal_without_peer_remains_advisory() {
 }
 
 #[test]
-fn serialized_records_keep_inference_and_authority_boundaries_false() {
-    let presence = ReciprocalPresenceReceiptV1::new(
+fn serialized_records_keep_sparse_evidence_and_authority_boundaries() {
+    let presence = ReciprocalPresenceReceiptV2::new(
         "presence_1".into(),
         ReciprocalPresenceKindV1::Offered,
         "astrid".into(),
         "minime".into(),
         "thread_1".into(),
+        Some("message_1".into()),
         "event_1".into(),
         "a".repeat(64),
+        Some("b".repeat(64)),
         1,
     );
     let value = serde_json::to_value(presence).expect("serialize presence");
-    assert_eq!(value["uptake_inferred"], false);
-    assert_eq!(value["presence_is_acknowledgement"], false);
+    assert_eq!(value["schema"], "reciprocal_presence_receipt_v2");
+    assert!(value.get("uptake_inferred").is_none());
+    assert!(value.get("presence_is_acknowledgement").is_none());
     assert_eq!(
         value["artifact_authority_state_v1"]["state"],
         "evidence_only"
     );
+
+    let uptake = ReciprocalUptakeReceiptV2::new(
+        "uptake_1".into(),
+        ReciprocalUptakeKindV1::AmbientPersistence,
+        "astrid".into(),
+        "minime".into(),
+        "thread_1".into(),
+        Some("message_1".into()),
+        "event_2".into(),
+        "c".repeat(64),
+        None,
+        2,
+        None,
+    );
+    let value = serde_json::to_value(uptake).expect("serialize uptake");
+    assert_eq!(value["uptake_kind"], "ambient_persistence");
+    assert!(value.get("elapsed_time_inferred").is_none());
+    assert!(value.get("intention_is_nonbinding").is_none());
+    assert!(value.get("confidence_score").is_none());
+
+    let context = ReciprocalContextReceiptV2::new(
+        "context_1".into(),
+        ReciprocalContextKindV1::ReadReceipt,
+        "minime".into(),
+        "astrid".into(),
+        "thread_1".into(),
+        Some("message_1".into()),
+        "event_3".into(),
+        "d".repeat(64),
+        None,
+        3,
+        None,
+    );
+    let value = serde_json::to_value(context).expect("serialize context");
+    assert_eq!(value["schema"], "reciprocal_context_receipt_v2");
+    assert!(value.get("uptake_inferred").is_none());
+    assert!(value.get("reply_intention_inferred").is_none());
 
     let loss = RepresentationLossReceiptV1::new("loss_1".into(), "transition_1".into(), 16, 0, 0);
     let value = serde_json::to_value(loss).expect("serialize loss");

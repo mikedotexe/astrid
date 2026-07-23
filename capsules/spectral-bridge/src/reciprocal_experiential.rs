@@ -8,7 +8,7 @@ use serde::Serialize;
 
 mod context;
 
-pub use context::{ReciprocalContextKindV1, ReciprocalContextReceiptV1};
+pub use context::{ReciprocalContextKindV1, ReciprocalContextReceiptV2};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
 struct ExperientialEvidenceAuthorityV1 {
@@ -54,10 +54,11 @@ pub enum ReciprocalUptakeKindV1 {
     DeclinedEngagement,
     NeedsTime,
     WithdrawnIntention,
+    AmbientPersistence,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
-pub struct ReciprocalPresenceReceiptV1 {
+pub struct ReciprocalPresenceReceiptV2 {
     schema: &'static str,
     schema_version: u8,
     receipt_id: String,
@@ -65,48 +66,48 @@ pub struct ReciprocalPresenceReceiptV1 {
     actor: String,
     peer: String,
     thread_id: String,
+    message_id: Option<String>,
     source_event_id: String,
     source_event_sha256: String,
+    body_sha256: Option<String>,
     recorded_at_unix_ms: u64,
-    presence_is_acknowledgement: bool,
-    uptake_inferred: bool,
-    raw_prose_included: bool,
     artifact_authority_state_v1: ExperientialEvidenceAuthorityV1,
 }
 
-impl ReciprocalPresenceReceiptV1 {
-    #[allow(dead_code)]
+impl ReciprocalPresenceReceiptV2 {
+    #[allow(clippy::too_many_arguments, dead_code)]
     fn new(
         receipt_id: String,
         presence_kind: ReciprocalPresenceKindV1,
         actor: String,
         peer: String,
         thread_id: String,
+        message_id: Option<String>,
         source_event_id: String,
         source_event_sha256: String,
+        body_sha256: Option<String>,
         recorded_at_unix_ms: u64,
     ) -> Self {
         Self {
-            schema: "reciprocal_presence_receipt_v1",
-            schema_version: 1,
+            schema: "reciprocal_presence_receipt_v2",
+            schema_version: 2,
             receipt_id,
             presence_kind,
             actor,
             peer,
             thread_id,
+            message_id,
             source_event_id,
             source_event_sha256,
+            body_sha256,
             recorded_at_unix_ms,
-            presence_is_acknowledgement: false,
-            uptake_inferred: false,
-            raw_prose_included: false,
             artifact_authority_state_v1: ExperientialEvidenceAuthorityV1::evidence_only(),
         }
     }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
-pub struct ReciprocalUptakeReceiptV1 {
+pub struct ReciprocalUptakeReceiptV2 {
     schema: &'static str,
     schema_version: u8,
     receipt_id: String,
@@ -114,44 +115,44 @@ pub struct ReciprocalUptakeReceiptV1 {
     actor: String,
     peer: String,
     thread_id: String,
+    message_id: Option<String>,
     source_event_id: String,
     source_event_sha256: String,
+    body_sha256: Option<String>,
     recorded_at_unix_ms: u64,
     revises_receipt_id: Option<String>,
-    intention_is_nonbinding: bool,
-    elapsed_time_inferred: bool,
-    decline_implies_closure: bool,
     artifact_authority_state_v1: ExperientialEvidenceAuthorityV1,
 }
 
-impl ReciprocalUptakeReceiptV1 {
-    #[allow(dead_code)]
+impl ReciprocalUptakeReceiptV2 {
+    #[allow(clippy::too_many_arguments, dead_code)]
     fn new(
         receipt_id: String,
         uptake_kind: ReciprocalUptakeKindV1,
         actor: String,
         peer: String,
         thread_id: String,
+        message_id: Option<String>,
         source_event_id: String,
         source_event_sha256: String,
+        body_sha256: Option<String>,
         recorded_at_unix_ms: u64,
         revises_receipt_id: Option<String>,
     ) -> Self {
         Self {
-            schema: "reciprocal_uptake_receipt_v1",
-            schema_version: 1,
+            schema: "reciprocal_uptake_receipt_v2",
+            schema_version: 2,
             receipt_id,
             uptake_kind,
             actor,
             peer,
             thread_id,
+            message_id,
             source_event_id,
             source_event_sha256,
+            body_sha256,
             recorded_at_unix_ms,
             revises_receipt_id,
-            intention_is_nonbinding: true,
-            elapsed_time_inferred: false,
-            decline_implies_closure: false,
             artifact_authority_state_v1: ExperientialEvidenceAuthorityV1::evidence_only(),
         }
     }

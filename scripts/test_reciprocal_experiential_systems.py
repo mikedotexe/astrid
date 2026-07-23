@@ -38,9 +38,12 @@ try:
         project as project_concordance,
     )
     from reciprocal_uptake.model import (
-        ReciprocalContextReceiptV1,
-        ReciprocalPresenceReceiptV1,
+        ReciprocalContextKindV1,
+        ReciprocalContextReceiptV2,
+        ReciprocalPresenceReceiptV2,
+        ReciprocalUptakeReceiptV2,
         UptakeKindV1,
+        build_context_receipt,
         build_uptake_receipt,
     )
     from reciprocal_uptake.projector import (
@@ -96,9 +99,12 @@ except ModuleNotFoundError:
         project as project_concordance,
     )
     from scripts.reciprocal_uptake.model import (
-        ReciprocalContextReceiptV1,
-        ReciprocalPresenceReceiptV1,
+        ReciprocalContextKindV1,
+        ReciprocalContextReceiptV2,
+        ReciprocalPresenceReceiptV2,
+        ReciprocalUptakeReceiptV2,
         UptakeKindV1,
+        build_context_receipt,
         build_uptake_receipt,
     )
     from scripts.reciprocal_uptake.projector import (
@@ -142,7 +148,7 @@ def _jsonl(path: Path, rows: list[dict[str, object]]) -> None:
 class ReciprocalExperientialSystemsTests(unittest.TestCase):
     def test_private_python_constructor_and_presence_inference_guard(self) -> None:
         with self.assertRaises(RecordValidationError):
-            ReciprocalPresenceReceiptV1(
+            ReciprocalPresenceReceiptV2(
                 "presence_forged",
                 "presence_offered",
                 "astrid",
@@ -190,17 +196,70 @@ class ReciprocalExperientialSystemsTests(unittest.TestCase):
             self.assertEqual(second["appended_event_count"], 0)
             self.assertEqual(second["source_delta_line_count"], 0)
             self.assertEqual(second["delta_receipt_count"], 0)
+            self.assertTrue(second["reused_projection"])
             receipt_path = (
                 workspace / "diagnostics/reciprocal_uptake_v1/receipts.jsonl"
             )
             self.assertEqual(receipt_path.stat().st_mode & 0o777, 0o600)
             receipt = json.loads(receipt_path.read_text(encoding="utf-8"))
+            self.assertEqual(receipt["schema"], "reciprocal_context_receipt_v2")
             self.assertEqual(receipt["context_kind"], "read_receipt")
             self.assertEqual(receipt["actor"], "minime")
             self.assertEqual(receipt["peer"], "astrid")
-            self.assertFalse(receipt["uptake_inferred"])
-            self.assertFalse(receipt["reply_intention_inferred"])
-            self.assertFalse(receipt["elapsed_time_inferred"])
+            self.assertNotIn("uptake_inferred", receipt)
+            self.assertNotIn("reply_intention_inferred", receipt)
+            self.assertNotIn("elapsed_time_inferred", receipt)
+            self.assertNotIn("confidence_score", receipt)
+            receipt_path.write_text(
+                receipt_path.read_text(encoding="utf-8") + "\n",
+                encoding="utf-8",
+            )
+            repaired = project_reciprocal(workspace, ledger, write=True)
+            self.assertTrue(repaired["valid"])
+            self.assertFalse(repaired["reused_projection"])
+
+    def test_ambient_persistence_requires_explicit_actor_state_and_is_unscored(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            workspace = root / "workspace"
+            ledger = root / "correspondence.jsonl"
+            _jsonl(
+                ledger,
+                [
+                    {
+                        "record_type": "attention_canary_outcome",
+                        "thread_id": "thread_ambient",
+                        "message_id": "message_ambient",
+                        "from_being": "astrid",
+                        "to_being": "minime",
+                        "held_as": "ambient_echo",
+                        "recorded_at_unix_ms": 3,
+                    }
+                ],
+            )
+            status = project_reciprocal(workspace, ledger, write=True)
+            self.assertTrue(status["valid"])
+            current = [
+                json.loads(line)
+                for line in (
+                    workspace
+                    / "diagnostics/reciprocal_uptake_v1/current_receipts.jsonl"
+                ).read_text(encoding="utf-8").splitlines()
+            ]
+            self.assertEqual(len(current), 1)
+            self.assertEqual(current[0]["uptake_kind"], "ambient_persistence")
+            self.assertEqual(current[0]["actor"], "astrid")
+            self.assertNotIn("confidence_score", current[0])
+            self.assertFalse(
+                {
+                    "uptake_inferred",
+                    "elapsed_time_inferred",
+                    "intention_is_nonbinding",
+                }.intersection(current[0])
+            )
+            tampered = dict(current[0], confidence_score=0.5)
+            with self.assertRaises(RecordValidationError):
+                ReciprocalUptakeReceiptV2.from_untrusted(tampered)
 
     def test_technical_receipt_corrects_legacy_inferred_uptake_append_only(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
@@ -248,6 +307,19 @@ class ReciprocalExperientialSystemsTests(unittest.TestCase):
                 body_sha256=None,
                 recorded_at_unix_ms=2,
             )
+            legacy_record = legacy.to_dict()
+            legacy_record.update(
+                {
+                    "schema": "reciprocal_uptake_receipt_v1",
+                    "schema_version": 1,
+                    "intention_is_nonbinding": True,
+                    "decline_implies_closure": False,
+                    "decline_implies_disagreement": False,
+                    "decline_implies_negative_felt_state": False,
+                    "elapsed_time_inferred": False,
+                    "raw_prose_included": False,
+                }
+            )
             project_events(
                 workspace,
                 "reciprocal_uptake",
@@ -258,7 +330,7 @@ class ReciprocalExperientialSystemsTests(unittest.TestCase):
                         aggregate_type="reciprocal_thread",
                         aggregate_id="thread_1",
                         idempotency_key=f"reciprocal_uptake:{legacy.receipt_id}",
-                        record=legacy.to_dict(),
+                        record=legacy_record,
                     )
                 ],
                 actor="legacy-test",
@@ -276,15 +348,101 @@ class ReciprocalExperientialSystemsTests(unittest.TestCase):
             ]
             self.assertNotIn(legacy.receipt_id, {row["receipt_id"] for row in current})
             contexts = [
-                ReciprocalContextReceiptV1.from_untrusted(row)
+                ReciprocalContextReceiptV2.from_untrusted(row)
                 for row in current
-                if row.get("schema") == "reciprocal_context_receipt_v1"
+                if row.get("schema") == "reciprocal_context_receipt_v2"
             ]
             self.assertEqual(len(contexts), 1)
             self.assertEqual(
                 contexts[0].corrects_inferred_uptake_receipt_id,
                 legacy.receipt_id,
             )
+
+    def test_context_identity_reconciliation_keeps_restatements_historical(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            workspace = Path(temporary)
+            common = {
+                "actor": "minime",
+                "peer": "astrid",
+                "thread_id": "thread_1",
+                "message_id": "message_1",
+                "source_event_id": "source:read_receipt",
+                "source_event_sha256": HASH_A,
+                "body_sha256": None,
+                "recorded_at_unix_ms": 2,
+            }
+            legacy = build_uptake_receipt(UptakeKindV1.ATTENDED_MESSAGE, **common)
+            legacy_record = legacy.to_dict()
+            legacy_record.update(
+                {
+                    "schema": "reciprocal_uptake_receipt_v1",
+                    "schema_version": 1,
+                    "intention_is_nonbinding": True,
+                    "decline_implies_closure": False,
+                    "decline_implies_disagreement": False,
+                    "decline_implies_negative_felt_state": False,
+                    "elapsed_time_inferred": False,
+                    "raw_prose_included": False,
+                }
+            )
+            corrected = build_context_receipt(
+                ReciprocalContextKindV1.READ_RECEIPT,
+                corrects_legacy_receipt_id=legacy.receipt_id,
+                **common,
+            )
+            restatement = build_context_receipt(
+                ReciprocalContextKindV1.READ_RECEIPT,
+                **common,
+            )
+            records = (legacy_record, corrected.to_dict(), restatement.to_dict())
+            project_events(
+                workspace,
+                "reciprocal_uptake",
+                [
+                    event_payload(
+                        schema="reciprocal_uptake_domain_event_v2",
+                        event_type="reciprocal_context_recorded",
+                        aggregate_type="reciprocal_thread",
+                        aggregate_id="thread_1",
+                        idempotency_key=f"reconcile:{record['receipt_id']}",
+                        record=record,
+                    )
+                    for record in records
+                ],
+                actor="test",
+                source_kind="migration_fixture",
+                source_locator_value="fixture:context_restatement",
+            )
+            ledger = workspace / "correspondence.jsonl"
+            _jsonl(ledger, [])
+            status = project_reciprocal(workspace, ledger, write=True)
+            self.assertTrue(status["valid"])
+            self.assertEqual(status["logical_context_restatement_count"], 1)
+            current = [
+                json.loads(line)
+                for line in (
+                    workspace
+                    / "diagnostics/reciprocal_uptake_v1/current_receipts.jsonl"
+                ).read_text(encoding="utf-8").splitlines()
+            ]
+            self.assertEqual(
+                {item["receipt_id"] for item in current},
+                {corrected.receipt_id},
+            )
+            preserved = {
+                json.loads(line)["receipt_id"]
+                for line in (
+                    workspace
+                    / "diagnostics/reciprocal_uptake_v1/receipts.jsonl"
+                ).read_text(encoding="utf-8").splitlines()
+            }
+            self.assertEqual(
+                preserved,
+                {legacy.receipt_id, corrected.receipt_id, restatement.receipt_id},
+            )
+            history = trace_records(workspace, corrected.receipt_id)
+            self.assertIn(corrected.receipt_id, {item["receipt_id"] for item in history})
+            self.assertNotEqual(corrected.receipt_id, restatement.receipt_id)
 
     def test_reciprocal_trace_follows_explicit_revision_history(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
@@ -339,7 +497,78 @@ class ReciprocalExperientialSystemsTests(unittest.TestCase):
                 {item["receipt_id"] for item in traced},
                 {first.receipt_id, revised.receipt_id},
             )
-            self.assertFalse(any(item["elapsed_time_inferred"] for item in traced))
+            self.assertTrue(
+                all(item["schema"] == "reciprocal_uptake_receipt_v2" for item in traced)
+            )
+            self.assertTrue(all("elapsed_time_inferred" not in item for item in traced))
+            ledger = workspace / "correspondence.jsonl"
+            _jsonl(ledger, [])
+            status = project_reciprocal(workspace, ledger, write=True)
+            self.assertTrue(status["valid"])
+            current = [
+                json.loads(line)
+                for line in (
+                    workspace
+                    / "diagnostics/reciprocal_uptake_v1/current_receipts.jsonl"
+                ).read_text(encoding="utf-8").splitlines()
+            ]
+            self.assertNotIn(first.receipt_id, {item["receipt_id"] for item in current})
+            self.assertIn(revised.receipt_id, {item["receipt_id"] for item in current})
+
+    def test_reciprocal_revision_cannot_speak_for_the_peer(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            workspace = Path(temporary)
+            first = build_uptake_receipt(
+                UptakeKindV1.AMBIENT_PERSISTENCE,
+                actor="astrid",
+                peer="minime",
+                thread_id="thread_1",
+                message_id="message_1",
+                source_event_id="source:ambient",
+                source_event_sha256=HASH_A,
+                body_sha256=None,
+                recorded_at_unix_ms=1,
+            )
+            forged_revision = build_uptake_receipt(
+                UptakeKindV1.ATTENDED_MESSAGE,
+                actor="minime",
+                peer="astrid",
+                thread_id="thread_1",
+                message_id="message_1",
+                source_event_id="source:forged_revision",
+                source_event_sha256=HASH_B,
+                body_sha256=None,
+                recorded_at_unix_ms=2,
+                revises_receipt_id=first.receipt_id,
+            )
+            project_events(
+                workspace,
+                "reciprocal_uptake",
+                [
+                    event_payload(
+                        schema="reciprocal_uptake_domain_event_v2",
+                        event_type="reciprocal_uptake_recorded",
+                        aggregate_type="reciprocal_thread",
+                        aggregate_id="thread_1",
+                        idempotency_key=f"uptake:{record.receipt_id}",
+                        record=record.to_dict(),
+                    )
+                    for record in (first, forged_revision)
+                ],
+                actor="test",
+                source_kind="test_fixture",
+                source_locator_value="fixture:cross_actor_revision",
+            )
+            ledger = workspace / "correspondence.jsonl"
+            _jsonl(ledger, [])
+            status = project_reciprocal(workspace, ledger, write=False)
+            self.assertFalse(status["valid"])
+            self.assertTrue(
+                any(
+                    error.startswith("revision_not_self_authored:")
+                    for error in status["errors"]
+                )
+            )
 
     def test_private_content_is_rejected(self) -> None:
         with self.assertRaises(RecordValidationError):

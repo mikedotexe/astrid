@@ -1,4 +1,4 @@
-//! Technical reciprocal context that must not be promoted into uptake.
+//! Technical reciprocal context that remains distinct from self-authored uptake.
 
 use serde::Serialize;
 
@@ -14,7 +14,7 @@ pub enum ReciprocalContextKindV1 {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
-pub struct ReciprocalContextReceiptV1 {
+pub struct ReciprocalContextReceiptV2 {
     schema: &'static str,
     schema_version: u8,
     receipt_id: String,
@@ -22,48 +22,44 @@ pub struct ReciprocalContextReceiptV1 {
     actor: String,
     peer: String,
     thread_id: String,
+    message_id: Option<String>,
     source_event_id: String,
     source_event_sha256: String,
+    body_sha256: Option<String>,
     recorded_at_unix_ms: u64,
-    corrects_inferred_uptake_receipt_id: Option<String>,
-    presence_inferred: bool,
-    acknowledgement_inferred: bool,
-    uptake_inferred: bool,
-    reply_intention_inferred: bool,
-    raw_prose_included: bool,
+    corrects_legacy_receipt_id: Option<String>,
     artifact_authority_state_v1: ExperientialEvidenceAuthorityV1,
 }
 
-impl ReciprocalContextReceiptV1 {
+impl ReciprocalContextReceiptV2 {
     #[allow(clippy::too_many_arguments, dead_code)]
-    fn new(
+    pub(super) fn new(
         receipt_id: String,
         context_kind: ReciprocalContextKindV1,
         actor: String,
         peer: String,
         thread_id: String,
+        message_id: Option<String>,
         source_event_id: String,
         source_event_sha256: String,
+        body_sha256: Option<String>,
         recorded_at_unix_ms: u64,
-        corrects_inferred_uptake_receipt_id: Option<String>,
+        corrects_legacy_receipt_id: Option<String>,
     ) -> Self {
         Self {
-            schema: "reciprocal_context_receipt_v1",
-            schema_version: 1,
+            schema: "reciprocal_context_receipt_v2",
+            schema_version: 2,
             receipt_id,
             context_kind,
             actor,
             peer,
             thread_id,
+            message_id,
             source_event_id,
             source_event_sha256,
+            body_sha256,
             recorded_at_unix_ms,
-            corrects_inferred_uptake_receipt_id,
-            presence_inferred: false,
-            acknowledgement_inferred: false,
-            uptake_inferred: false,
-            reply_intention_inferred: false,
-            raw_prose_included: false,
+            corrects_legacy_receipt_id,
             artifact_authority_state_v1: ExperientialEvidenceAuthorityV1::evidence_only(),
         }
     }

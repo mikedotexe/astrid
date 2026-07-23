@@ -165,6 +165,8 @@ def source_first_steps() -> tuple[ProjectionStep, ...]:
                 "diagnostics/reciprocal_uptake_v1/receipts.jsonl",
                 "diagnostics/reciprocal_uptake_v1/current_receipts.jsonl",
                 "diagnostics/reciprocal_uptake_v1/technical_context_migration_v1.json",
+                "diagnostics/reciprocal_uptake_v1/current_view_migration_v2.json",
+                "diagnostics/reciprocal_uptake_v1/context_identity_reconciliation_v2.json",
                 "diagnostics/reciprocal_uptake_v1/report.md",
             ),
         ),

@@ -1,10 +1,10 @@
-error[E0277]: the trait bound `ReciprocalUptakeReceiptV1: serde::Deserialize<'de>` is not satisfied
+error[E0277]: the trait bound `ReciprocalUptakeReceiptV2: serde::Deserialize<'de>` is not satisfied
  --> tests/ui/reciprocal_experiential_cannot_deserialize.rs:4:40
   |
-4 |     let _: ReciprocalUptakeReceiptV1 = serde_json::from_str("{}").unwrap();
-  |                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `serde_core::de::Deserialize<'_>` is not implemented for `ReciprocalUptakeReceiptV1`
+4 |     let _: ReciprocalUptakeReceiptV2 = serde_json::from_str("{}").unwrap();
+  |                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `serde_core::de::Deserialize<'_>` is not implemented for `ReciprocalUptakeReceiptV2`
   |
-  = note: for local types consider adding `#[derive(serde::Deserialize)]` to your `ReciprocalUptakeReceiptV1` type
+  = note: for local types consider adding `#[derive(serde::Deserialize)]` to your `ReciprocalUptakeReceiptV2` type
   = note: for types from other crates check whether the crate offers a `serde` feature flag
   = help: the following other types implement trait `serde_core::de::Deserialize<'de>`:
             &'a Path

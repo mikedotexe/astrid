@@ -937,7 +937,11 @@ def route_history(
                     if stream == "signal_spine"
                     else "reciprocal_context"
                     if stream == "reciprocal_uptake"
-                    and record.get("schema") == "reciprocal_context_receipt_v1"
+                    and record.get("schema")
+                    in {
+                        "reciprocal_context_receipt_v1",
+                        "reciprocal_context_receipt_v2",
+                    }
                     else "reciprocal_uptake"
                     if stream == "reciprocal_uptake"
                     else "representation_transition"
@@ -973,12 +977,14 @@ def route_history(
                     )
                     metadata["felt_effect_inferred"] = False
                 if stream == "reciprocal_uptake":
-                    metadata["presence_inferred"] = False
-                    metadata["uptake_inferred"] = False
-                    metadata["reply_intention_inferred"] = False
-                    metadata["technical_context_only"] = (
-                        record.get("schema")
-                        == "reciprocal_context_receipt_v1"
+                    metadata["reciprocal_record_scope"] = (
+                        "technical_context"
+                        if record.get("schema")
+                        in {
+                            "reciprocal_context_receipt_v1",
+                            "reciprocal_context_receipt_v2",
+                        }
+                        else "explicit_actor_state"
                     )
                 if stream == "felt_mechanism_concordance":
                     metadata["study_id"] = study_id

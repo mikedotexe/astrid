@@ -33,8 +33,14 @@ experiential runtime.
 Define bounded metadata receipts that keep technical context, declared
 presence, and explicit uptake separate. Delivery, read receipts, reply links,
 heartbeats, and elapsed time must never infer attention, reply intention,
-agreement, felt state, or consent. Intentions remain revisable and nonbinding;
-decline creates no closure or negative-felt-state claim.
+agreement, felt state, or consent. Canonical receipts should be sparse: omit
+negative `*_inferred`, nonbinding, and decline-effect switches rather than
+predeclaring experiential slots whose false value can itself look like a
+classification. Intentions remain append-only and revisable by the same actor;
+the current view may supersede a prior state without erasing history. An
+ambiguous or ambient-persistence state is valid only when the actor explicitly
+records it, never from elapsed time or technical delivery. Decline creates no
+closure or negative-felt-state claim.
 
 ### 2. Representation Transition Receipts
 
@@ -86,7 +92,7 @@ most generally useful boundary.
 | Trusted record construction | Private builders for trusted in-memory forms; persisted JSON is always revalidated |
 | Deterministic identity | Canonical hash over bounded semantic fields, independent of wall-clock projection order |
 | Authority envelope | Evidence-only or approval-pending metadata with no path to capability, approval, or dispatch |
-| Reciprocal records | Generic context, presence, uptake, revision, and correction lineage without prose |
+| Reciprocal records | Sparse generic context, presence, uptake, same-actor revision, and legacy-correction lineage without prose or confidence scores |
 | Representation records | Generic registry, transition, loss, fallback, repair, and model-route metadata |
 | Concordance state machine | Generic baseline/candidate gating and bounded epistemic outcomes |
 | Advisory actions | Generic self-authored proposals and responses with neutral silence and expiry |
@@ -136,7 +142,14 @@ maintainer explicitly requests them:
 If an existing system has inferred uptake from technical read or reply
 metadata, preserve those historical events. Append a context receipt that
 links to the earlier inference and exclude the corrected inference only from
-the current projection. Do not rewrite or delete the audit trail.
+the current projection. A V2 reader may validate and canonicalize legacy
+false-valued fields into a sparse view while leaving the source event bytes
+untouched. Any legacy-correction reference must participate in stable receipt
+identity during replay; otherwise a schema migration can restate the same
+technical fact under a second ID. If that has already happened, retain both
+events, publish an explicit reconciliation receipt, and exclude only the
+redundant exact-source restatement from the current view. Do not rewrite or
+delete the audit trail.
 
 ## Acceptance
 
@@ -145,8 +158,10 @@ the current projection. Do not rewrite or delete the audit trail.
 - Trusted construction barriers and strict untrusted-input validation.
 - Deterministic identities, idempotent ingestion, and append-only corrections.
 - Owner-only local artifacts and no absolute machine paths or private prose.
-- Explicit false-inference tests for uptake, felt loss, causation, consent,
-  closure, evidence sufficiency, supersession, and authority.
+- Tests proving absent evidence creates no receipt, sparse reciprocal records
+  contain no latent inference or confidence fields, one actor cannot revise a
+  peer's state, and no downstream view propagates felt loss, causation,
+  consent, closure, evidence sufficiency, supersession, or authority.
 - Baseline and candidate capture enforcement before comparison.
 - Deterministic external steward selection and visible unselected-alert
   behavior without persisted rank, review taxonomy, felt scores, raw wait-time
@@ -159,8 +174,8 @@ the current projection. Do not rewrite or delete the audit trail.
 
 1. Should the first issue target generic audit schemas, `astrid-core`, or a
    small non-authoritative support crate?
-2. Does upstream want a distinct technical-context receipt, or a generic audit
-   relation with a required `does_not_infer` scope?
+2. Does upstream want a distinct sparse technical-context receipt, or a generic
+   audit relation whose schema makes inference fields structurally unavailable?
 3. Should representation contracts remain application-owned while only the
    transition receipt is shared upstream?
 4. Would maintainers prefer the comparison state machine and advisory action

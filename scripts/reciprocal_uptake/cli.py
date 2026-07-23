@@ -62,6 +62,8 @@ def main(argv: list[str] | None = None) -> int:
                     "receipts.jsonl": state_dir(workspace) / "receipts.jsonl",
                     "current_receipts.jsonl": state_dir(workspace) / "current_receipts.jsonl",
                     "technical_context_migration_v1.json": state_dir(workspace) / "technical_context_migration_v1.json",
+                    "current_view_migration_v2.json": state_dir(workspace) / "current_view_migration_v2.json",
+                    "context_identity_reconciliation_v2.json": state_dir(workspace) / "context_identity_reconciliation_v2.json",
                     "report.md": state_dir(workspace) / "report.md",
                 },
                 started_monotonic=started,
