@@ -1,0 +1,145 @@
+{
+  "schema": "study_seed_manifest_v1",
+  "schema_version": 1,
+  "campaigns": [
+    {
+      "campaign_key": "telemetry_integration_context_v1",
+      "comparison_domain": "telemetry_integration_delay_and_entropy",
+      "studies": [
+        {
+          "study_key": "telemetry_context",
+          "canonical_claim_id": "introspection_astrid_ws_1784816468:c003",
+          "dossier_id": "dossier_5cb0de21429805832072",
+          "witness_id": "lsw_7c648d967c85cca79e2af38e53da6628c7b56795e9571c4788d2cf560b78cfec",
+          "field_refs": [
+            "claims.c003"
+          ],
+          "sample_kind": "telemetry",
+          "comparison_kind": "observational_context",
+          "baseline_cohort": "clear_at_latest_sample",
+          "candidate_cohort": "threshold_crossing",
+          "metric_names": [
+            "integration_us",
+            "prewrite_us",
+            "write_lock_wait_us",
+            "write_lock_hold_us",
+            "entropy_peak",
+            "entropy_variance",
+            "entropy_trend"
+          ],
+          "thresholds": {
+            "write_lock_wait_ms": 5.0,
+            "write_lock_hold_ms": 20.0,
+            "prewrite_pipeline_ms": 100.0
+          },
+          "minimum_total_samples": 23,
+          "minimum_baseline_samples": 20,
+          "minimum_candidate_samples": 3,
+          "duration_minutes": 30,
+          "sample_limit": 2048,
+          "extension_limit": 1
+        }
+      ]
+    },
+    {
+      "campaign_key": "heartbeat_continuity_context_v1",
+      "comparison_domain": "heartbeat_admission_and_continuity",
+      "studies": [
+        {
+          "study_key": "heartbeat_context",
+          "canonical_claim_id": "introspection_astrid_autonomous_1784816197:c003",
+          "dossier_id": "dossier_4726cbd84ba4e5511c02",
+          "witness_id": "lsw_fc63099029376bc6ed38c41b46b55c89f5dcde653dff87692817d077fc5fb5e1",
+          "field_refs": [
+            "claims.c003"
+          ],
+          "sample_kind": "heartbeat",
+          "comparison_kind": "observational_context",
+          "baseline_cohort": "admitted_and_enqueued",
+          "candidate_cohort": "blocked_or_enqueue_rejected",
+          "metric_names": [
+            "cadence_seconds",
+            "intensity",
+            "pressure",
+            "entropy",
+            "phase_code",
+            "signal_norm"
+          ],
+          "thresholds": {
+            "fixed_cadence_seconds": 7.0,
+            "fixed_intensity": 0.3
+          },
+          "minimum_total_samples": 20,
+          "minimum_baseline_samples": 3,
+          "minimum_candidate_samples": 3,
+          "duration_minutes": 30,
+          "sample_limit": 2048,
+          "extension_limit": 0
+        }
+      ]
+    },
+    {
+      "campaign_key": "codec_texture_mechanics_v1",
+      "comparison_domain": "codec_lane_and_entropy_gate_mechanics",
+      "studies": [
+        {
+          "study_key": "codec_narrative_lane",
+          "canonical_claim_id": "introspection_astrid_codec_1784815812:c002",
+          "dossier_id": "dossier_9b0c81d85e3ca1d5e919",
+          "witness_id": "lsw_325b47a709529ed49f5b721df5889516f17f86c652844766498073372e217bd2",
+          "field_refs": [
+            "claims.c002"
+          ],
+          "sample_kind": "codec_lane",
+          "comparison_kind": "offline_counterfactual",
+          "baseline_cohort": "current_codec",
+          "candidate_cohort": "leave_narrative_lane_40_44_out",
+          "metric_names": [
+            "lane_energy",
+            "total_energy",
+            "headroom",
+            "clamp_occupancy",
+            "dropped_dimension_count",
+            "representation_loss"
+          ],
+          "thresholds": {},
+          "minimum_total_samples": 40,
+          "minimum_baseline_samples": 20,
+          "minimum_candidate_samples": 20,
+          "duration_minutes": 30,
+          "sample_limit": 256,
+          "extension_limit": 0
+        },
+        {
+          "study_key": "codec_entropy_gate",
+          "canonical_claim_id": "introspection_astrid_codec_1784815812:c003",
+          "dossier_id": "dossier_f0fb2549ad63f12607ec",
+          "witness_id": "lsw_325b47a709529ed49f5b721df5889516f17f86c652844766498073372e217bd2",
+          "field_refs": [
+            "claims.c003"
+          ],
+          "sample_kind": "codec_gate",
+          "comparison_kind": "offline_counterfactual",
+          "baseline_cohort": "current_entropy_gate",
+          "candidate_cohort": "gate_disabled_offline",
+          "metric_names": [
+            "lane_energy",
+            "total_energy",
+            "headroom",
+            "clamp_occupancy",
+            "representation_loss"
+          ],
+          "thresholds": {},
+          "minimum_total_samples": 40,
+          "minimum_baseline_samples": 20,
+          "minimum_candidate_samples": 20,
+          "duration_minutes": 30,
+          "sample_limit": 256,
+          "extension_limit": 0
+        }
+      ]
+    }
+  ],
+  "raw_prose_included": false,
+  "live_behavior_changed": false
+}

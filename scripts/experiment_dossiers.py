@@ -32,7 +32,10 @@ except ModuleNotFoundError:
     from scripts.projection_receipt import projector_receipt
     from scripts.projection_cursors import ProjectionInputCursor
 
-DEFAULT_WORKSPACE = Path("/Users/v/other/astrid/capsules/spectral-bridge/workspace")
+DEFAULT_WORKSPACE = (
+    Path(__file__).resolve().parent.parent
+    / "capsules/spectral-bridge/workspace"
+)
 PROJECTOR_VERSION = 2
 DOSSIER_STATES = (
     "draft",

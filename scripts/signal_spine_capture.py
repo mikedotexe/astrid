@@ -15,7 +15,10 @@ import time
 import unittest
 from typing import Any
 
-DEFAULT_WORKSPACE = Path("/Users/v/other/astrid/capsules/spectral-bridge/workspace")
+DEFAULT_WORKSPACE = (
+    Path(__file__).resolve().parent.parent
+    / "capsules/spectral-bridge/workspace"
+)
 DEFAULT_DURATION_MINUTES = 30
 DEFAULT_JOURNEY_LIMIT = 32
 MAX_DURATION_MINUTES = 120
