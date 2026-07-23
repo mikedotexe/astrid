@@ -21,6 +21,7 @@ from .temporal_clusters import (
 )
 from .concordance import (
     build_concordance_events,
+    validate_concordance_cluster,
     validate_concordance_preflight,
 )
 from .validation import _validate_model_route
@@ -1083,6 +1084,47 @@ class LivedStateWitnessTests(unittest.TestCase):
         self.assertFalse(preflight["mechanism_established"])
         self.assertFalse(preflight["causation_established"])
         self.assertEqual(validate_concordance_preflight(preflight), [])
+
+    def test_concordance_accepts_exact_legacy_v1_measure_set(self) -> None:
+        witness_events = [
+            {
+                "witness_id": "lsw_" + f"{index:x}" * 64,
+                "introspection_id": f"introspection_legacy_concordance_{index}",
+                "witness": {
+                    "schema": "historical_lived_state_witness_v1",
+                    "authored_at_unix_ms": 7_200_000 + index,
+                },
+                "alignment": {
+                    "outcome": "temporal_association_only",
+                    "deployment_receipt_id": "deployment_fixture",
+                },
+            }
+            for index in range(1, 4)
+        ]
+        events = build_concordance_events(
+            witness_events,
+            build_temporal_cluster_events(witness_events),
+        )
+        current_cluster = events[0]["concordance"]
+        current_preflight = events[-1]["preflight"]
+        self.assertIn(
+            "bridge.lambda1_lambda2_gap",
+            current_cluster["measurements"],
+        )
+
+        legacy_cluster = json.loads(json.dumps(current_cluster))
+        legacy_cluster["measurements"].pop("bridge.lambda1_lambda2_gap")
+        legacy_preflight = json.loads(json.dumps(current_preflight))
+        legacy_preflight["correlations"].pop("bridge.lambda1_lambda2_gap")
+        self.assertEqual(validate_concordance_cluster(legacy_cluster), [])
+        self.assertEqual(validate_concordance_preflight(legacy_preflight), [])
+
+        unknown_shape = json.loads(json.dumps(current_cluster))
+        unknown_shape["measurements"].pop("bridge.mode_packing")
+        self.assertIn(
+            "concordance_cluster:measurements",
+            validate_concordance_cluster(unknown_shape),
+        )
 
     def test_historical_source_paths_are_redacted(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

@@ -26,6 +26,22 @@ MEASURES = {
     "astrid_shadow.field_norm_delta": "shadow_trajectory_context",
     "astrid_shadow.dispersal_potential": "shadow_dispersal_context",
 }
+LEGACY_MEASURE_KEYS_V1 = frozenset(
+    {
+        "bridge.pressure_risk",
+        "bridge.mode_packing",
+        "bridge.spectral_density_gradient",
+        "astrid_shadow.field_norm",
+        "astrid_shadow.field_norm_delta",
+        "astrid_shadow.dispersal_potential",
+    }
+)
+ACCEPTED_MEASURE_KEYSETS_V1 = frozenset(
+    {
+        frozenset(MEASURES),
+        LEGACY_MEASURE_KEYS_V1,
+    }
+)
 
 
 def _evidence_only(value: Any) -> bool:
@@ -321,7 +337,10 @@ def validate_concordance_cluster(value: Any) -> list[str]:
     ):
         errors.append("concordance_cluster:exact_fresh_context_member_count")
     measurements = value.get("measurements")
-    if not isinstance(measurements, dict) or set(measurements) != set(MEASURES):
+    if (
+        not isinstance(measurements, dict)
+        or frozenset(measurements) not in ACCEPTED_MEASURE_KEYSETS_V1
+    ):
         errors.append("concordance_cluster:measurements")
     else:
         for name, row in measurements.items():
@@ -399,7 +418,10 @@ def validate_concordance_preflight(value: Any) -> list[str]:
     }:
         errors.append("concordance_preflight:density_gradient_authority")
     correlations = value.get("correlations")
-    if not isinstance(correlations, dict) or set(correlations) != set(MEASURES):
+    if (
+        not isinstance(correlations, dict)
+        or frozenset(correlations) not in ACCEPTED_MEASURE_KEYSETS_V1
+    ):
         errors.append("concordance_preflight:correlations")
     else:
         for name, row in correlations.items():
