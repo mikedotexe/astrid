@@ -56,6 +56,22 @@ class StudyStateV1(StrEnum):
     CLOSED = "closed"
 
 
+OBSERVATION_SCOPE_V2 = "mechanical_context_only"
+FELT_REPORT_RELATION_V2 = "external_primary_evidence_not_inferred_or_scored"
+NUMERIC_RELATION_V2 = "cannot_overwrite_suppress_or_score"
+DISCREPANCY_RECORDING_V2 = "bounded_outcome_and_felt_source_ref_only"
+
+
+def _require_exact_keys(
+    value: dict[str, Any], allowed: frozenset[str], record_name: str
+) -> None:
+    unexpected = sorted(set(value) - allowed)
+    if unexpected:
+        raise RecordValidationError(
+            f"{record_name} contains unsupported fields: {', '.join(unexpected)}"
+        )
+
+
 @dataclass(frozen=True)
 class FeltMomentRefV1:
     moment_id: str
@@ -174,7 +190,7 @@ class ConcordanceStudyV1:
 
 
 @dataclass(frozen=True)
-class ConcordanceObservationV1:
+class ConcordanceObservationV2:
     observation_id: str
     study_id: str
     role: str
@@ -194,7 +210,7 @@ class ConcordanceObservationV1:
         if self._token is not _TRUSTED: raise RecordValidationError("observations require the internal builder")
 
     def to_dict(self) -> dict[str, Any]:
-        return {"schema": "concordance_observation_v1", "schema_version": 1,
+        return {"schema": "concordance_observation_v2", "schema_version": 2,
                 "observation_id": self.observation_id, "study_id": self.study_id,
                 "role": self.role, "observation_ref": self.observation_ref,
                 "observation_sha256": self.observation_sha256,
@@ -206,7 +222,9 @@ class ConcordanceObservationV1:
                 "reciprocal_state_refs": list(self.reciprocal_state_refs),
                 "signal_stage_refs": list(self.signal_stage_refs),
                 "minime_telemetry_refs": list(self.minime_telemetry_refs),
-                "felt_outcome_inferred": False, "causation_established": False,
+                "observation_scope": OBSERVATION_SCOPE_V2,
+                "felt_report_relation": FELT_REPORT_RELATION_V2,
+                "causation_established": False,
                 "artifact_authority_state_v1": authority_state()}
 
     @classmethod
@@ -217,7 +235,7 @@ class ConcordanceObservationV1:
               representation_transition_refs: list[str],
               model_qos_refs: list[str], reciprocal_state_refs: list[str],
               signal_stage_refs: list[str],
-              minime_telemetry_refs: list[str]) -> ConcordanceObservationV1:
+              minime_telemetry_refs: list[str]) -> ConcordanceObservationV2:
         study = validate_bounded_identifier(study_id, "study_id") or ""
         if role not in {"baseline", "candidate"}: raise RecordValidationError("invalid observation role")
         ref = validate_bounded_identifier(observation_ref, "observation_ref") or ""
@@ -260,10 +278,46 @@ class ConcordanceObservationV1:
                    minime_refs, _TRUSTED)
 
     @classmethod
-    def from_untrusted(cls, value: Any) -> ConcordanceObservationV1:
+    def from_untrusted(cls, value: Any) -> ConcordanceObservationV2:
         if not isinstance(value, dict):
             raise RecordValidationError("concordance observation must be an object")
         validate_evidence_record(value)
+        schema = value.get("schema")
+        version = value.get("schema_version")
+        common_keys = frozenset({
+            "schema", "schema_version", "observation_id", "study_id", "role",
+            "observation_ref", "observation_sha256", "telemetry_relation",
+            "mechanical_pass", "witness_context_refs",
+            "representation_transition_refs", "model_qos_refs",
+            "reciprocal_state_refs", "signal_stage_refs", "minime_telemetry_refs",
+            "causation_established", "artifact_authority_state_v1",
+        })
+        if schema == "concordance_observation_v1" and version == 1:
+            _require_exact_keys(
+                value,
+                common_keys | frozenset({"felt_outcome_inferred"}),
+                "legacy concordance observation",
+            )
+            if value.get("felt_outcome_inferred") is not False:
+                raise RecordValidationError(
+                    "legacy observation cannot infer a felt outcome"
+                )
+        elif schema == "concordance_observation_v2" and version == 2:
+            _require_exact_keys(
+                value,
+                common_keys
+                | frozenset({"observation_scope", "felt_report_relation"}),
+                "concordance observation",
+            )
+            if (
+                value.get("observation_scope") != OBSERVATION_SCOPE_V2
+                or value.get("felt_report_relation") != FELT_REPORT_RELATION_V2
+            ):
+                raise RecordValidationError(
+                    "observation may contain mechanical context only and cannot classify felt content"
+                )
+        else:
+            raise RecordValidationError("unsupported concordance observation schema")
         built = cls.build(
             study_id=value.get("study_id"),
             role=value.get("role"),
@@ -282,7 +336,6 @@ class ConcordanceObservationV1:
         )
         if (
             value.get("observation_id") != built.observation_id
-            or value.get("felt_outcome_inferred") is not False
             or value.get("causation_established") is not False
         ):
             raise RecordValidationError("observation identity or inference scope mismatch")
@@ -290,7 +343,7 @@ class ConcordanceObservationV1:
 
 
 @dataclass(frozen=True)
-class ConcordanceResultV1:
+class ConcordanceResultV2:
     result_id: str
     study_id: str
     baseline_observation_id: str
@@ -303,19 +356,21 @@ class ConcordanceResultV1:
         if self._token is not _TRUSTED: raise RecordValidationError("results require the internal builder")
 
     def to_dict(self) -> dict[str, Any]:
-        return {"schema": "concordance_result_v1", "schema_version": 1,
+        return {"schema": "concordance_result_v2", "schema_version": 2,
                 "result_id": self.result_id, "study_id": self.study_id,
                 "baseline_observation_id": self.baseline_observation_id,
                 "candidate_observation_id": self.candidate_observation_id,
                 "outcome": self.outcome, "felt_source_ref": self.felt_source_ref,
-                "numeric_pass_overwrites_felt_report": False,
+                "numeric_relation_to_felt_report": NUMERIC_RELATION_V2,
+                "discrepancy_recording": DISCREPANCY_RECORDING_V2,
+                "raw_discrepancy_prose_included": False,
                 "closure_propagated": False, "causation_established": False,
                 "artifact_authority_state_v1": authority_state()}
 
     @classmethod
     def build(cls, *, study_id: str, baseline_observation_id: str,
               candidate_observation_id: str, outcome: str,
-              felt_source_ref: str | None) -> ConcordanceResultV1:
+              felt_source_ref: str | None) -> ConcordanceResultV2:
         study = validate_bounded_identifier(study_id, "study_id") or ""
         baseline = validate_bounded_identifier(baseline_observation_id, "baseline_observation_id") or ""
         candidate = validate_bounded_identifier(candidate_observation_id, "candidate_observation_id") or ""
@@ -330,10 +385,49 @@ class ConcordanceResultV1:
                    candidate, resolved, felt_ref, _TRUSTED)
 
     @classmethod
-    def from_untrusted(cls, value: Any) -> ConcordanceResultV1:
+    def from_untrusted(cls, value: Any) -> ConcordanceResultV2:
         if not isinstance(value, dict):
             raise RecordValidationError("concordance result must be an object")
         validate_evidence_record(value)
+        schema = value.get("schema")
+        version = value.get("schema_version")
+        common_keys = frozenset({
+            "schema", "schema_version", "result_id", "study_id",
+            "baseline_observation_id", "candidate_observation_id", "outcome",
+            "felt_source_ref", "closure_propagated", "causation_established",
+            "artifact_authority_state_v1",
+        })
+        if schema == "concordance_result_v1" and version == 1:
+            _require_exact_keys(
+                value,
+                common_keys | frozenset({"numeric_pass_overwrites_felt_report"}),
+                "legacy concordance result",
+            )
+            if value.get("numeric_pass_overwrites_felt_report") is not False:
+                raise RecordValidationError(
+                    "legacy numeric evidence cannot overwrite a felt report"
+                )
+        elif schema == "concordance_result_v2" and version == 2:
+            _require_exact_keys(
+                value,
+                common_keys
+                | frozenset({
+                    "numeric_relation_to_felt_report",
+                    "discrepancy_recording",
+                    "raw_discrepancy_prose_included",
+                }),
+                "concordance result",
+            )
+            if (
+                value.get("numeric_relation_to_felt_report") != NUMERIC_RELATION_V2
+                or value.get("discrepancy_recording") != DISCREPANCY_RECORDING_V2
+                or value.get("raw_discrepancy_prose_included") is not False
+            ):
+                raise RecordValidationError(
+                    "result cannot overwrite, suppress, score, or copy felt-report prose"
+                )
+        else:
+            raise RecordValidationError("unsupported concordance result schema")
         built = cls.build(
             study_id=value.get("study_id"),
             baseline_observation_id=value.get("baseline_observation_id"),
@@ -343,9 +437,14 @@ class ConcordanceResultV1:
         )
         if (
             value.get("result_id") != built.result_id
-            or value.get("numeric_pass_overwrites_felt_report") is not False
             or value.get("closure_propagated") is not False
             or value.get("causation_established") is not False
         ):
             raise RecordValidationError("result identity or inference scope mismatch")
         return built
+
+
+# Compatibility names retain V1 import paths while parsing both historical V1
+# and canonical V2 records. New serialization always emits the V2 contract.
+ConcordanceObservationV1 = ConcordanceObservationV2
+ConcordanceResultV1 = ConcordanceResultV2

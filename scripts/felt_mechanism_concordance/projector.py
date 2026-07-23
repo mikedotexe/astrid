@@ -23,7 +23,7 @@ except ModuleNotFoundError:
     )
 
 from .model import (
-    ConcordanceObservationV1, ConcordanceResultV1, ConcordanceStudyV1,
+    ConcordanceObservationV2, ConcordanceResultV2, ConcordanceStudyV1,
     FeltMomentRefV1, StudyStateV1,
 )
 
@@ -63,17 +63,17 @@ def _validated_record(event_type: str, record: Any) -> dict[str, Any]:
     if event_type in {"study_created", "study_capture_prepared", "study_state_changed"}:
         return ConcordanceStudyV1.from_untrusted(record).to_dict()
     if event_type == "observation_recorded":
-        return ConcordanceObservationV1.from_untrusted(record).to_dict()
+        return ConcordanceObservationV2.from_untrusted(record).to_dict()
     if event_type == "result_recorded":
-        return ConcordanceResultV1.from_untrusted(record).to_dict()
+        return ConcordanceResultV2.from_untrusted(record).to_dict()
     raise RecordValidationError("unknown concordance operator event")
 
 
-def replay(workspace: Path) -> tuple[dict[str, ConcordanceStudyV1], dict[str, ConcordanceObservationV1], dict[str, ConcordanceResultV1], list[dict[str, Any]], list[str]]:
+def replay(workspace: Path) -> tuple[dict[str, ConcordanceStudyV1], dict[str, ConcordanceObservationV2], dict[str, ConcordanceResultV2], list[dict[str, Any]], list[str]]:
     rows, errors = load_jsonl(operator_path(workspace))
     studies: dict[str, ConcordanceStudyV1] = {}
-    observations: dict[str, ConcordanceObservationV1] = {}
-    results: dict[str, ConcordanceResultV1] = {}
+    observations: dict[str, ConcordanceObservationV2] = {}
+    results: dict[str, ConcordanceResultV2] = {}
     valid_events: list[dict[str, Any]] = []
     allowed_transitions = {
         StudyStateV1.DRAFT.value: {StudyStateV1.CAPTURE_READY.value},
@@ -128,7 +128,7 @@ def replay(workspace: Path) -> tuple[dict[str, ConcordanceStudyV1], dict[str, Co
                     raise RecordValidationError("candidate capture reference changed")
                 studies[item.study_id] = item
             elif event_type == "observation_recorded":
-                item = ConcordanceObservationV1.from_untrusted(record)
+                item = ConcordanceObservationV2.from_untrusted(record)
                 study = studies.get(item.study_id)
                 if study is None:
                     raise RecordValidationError("observation precedes study creation")
@@ -149,7 +149,7 @@ def replay(workspace: Path) -> tuple[dict[str, ConcordanceStudyV1], dict[str, Co
                     )
                 observations[item.observation_id] = item
             elif event_type == "result_recorded":
-                item = ConcordanceResultV1.from_untrusted(record)
+                item = ConcordanceResultV2.from_untrusted(record)
                 study = studies.get(item.study_id)
                 if (
                     study is None
@@ -240,7 +240,9 @@ def project(workspace: Path, *, write: bool) -> dict[str, Any]:
               "observation_count": len(observations), "result_count": len(results),
               "state_counts": dict(sorted(counts.items())), "appended_event_count": appended,
               "baseline_missing_violation_count": sum(1 for result in results.values() if not any(obs.study_id == result.study_id and obs.role == "baseline" for obs in observations.values())),
-              "numeric_pass_overwrites_felt_report": False, "causation_established": False,
+              "numeric_relation_to_felt_report": "cannot_overwrite_suppress_or_score",
+              "felt_report_relation": "external_primary_evidence_not_inferred_or_scored",
+              "causation_established": False,
               "closure_propagated": False, "errors": errors,
               "counter_audit": {"status": "consistent" if not errors else "inconsistent",
                                 "checks": {"all_results_have_baseline": all(any(obs.study_id == result.study_id and obs.role == "baseline" for obs in observations.values()) for result in results.values()),

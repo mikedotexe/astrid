@@ -15,7 +15,7 @@ except ModuleNotFoundError:
     from scripts.projection_receipt import projector_receipt
 
 from .model import (
-    ConcordanceObservationV1, ConcordanceResultV1, ConcordanceStudyV1,
+    ConcordanceObservationV2, ConcordanceResultV2, ConcordanceStudyV1,
     FeltMomentRefV1, StudyStateV1,
 )
 from .projector import (
@@ -111,7 +111,7 @@ def main(argv: list[str] | None = None) -> int:
                     "candidate observation requires valid baseline and candidate capture"
                 )
             mechanical = None if args.mechanical_pass == "unknown" else args.mechanical_pass == "true"
-            observation = ConcordanceObservationV1.build(study_id=args.study_id, role=args.role,
+            observation = ConcordanceObservationV2.build(study_id=args.study_id, role=args.role,
                                                          observation_ref=args.observation_ref,
                                                          observation_sha256=args.observation_sha256,
                                                          telemetry_relation=args.telemetry_relation,
@@ -156,7 +156,7 @@ def main(argv: list[str] | None = None) -> int:
                 comparison_ready.to_dict(),
                 args.actor,
             )
-            result = ConcordanceResultV1.build(study_id=args.study_id,
+            result = ConcordanceResultV2.build(study_id=args.study_id,
                                                baseline_observation_id=baseline[-1].observation_id,
                                                candidate_observation_id=candidate[-1].observation_id,
                                                outcome=args.outcome, felt_source_ref=args.felt_source_ref)

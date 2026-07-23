@@ -25,9 +25,9 @@ try:
     )
     from felt_contracts.sources import _collect_exact_refs
     from felt_mechanism_concordance.model import (
-        ConcordanceObservationV1,
+        ConcordanceObservationV2,
         ConcordanceOutcomeV1,
-        ConcordanceResultV1,
+        ConcordanceResultV2,
         ConcordanceStudyV1,
         FeltMomentRefV1,
         StudyStateV1,
@@ -73,9 +73,9 @@ except ModuleNotFoundError:
     )
     from scripts.felt_contracts.sources import _collect_exact_refs
     from scripts.felt_mechanism_concordance.model import (
-        ConcordanceObservationV1,
+        ConcordanceObservationV2,
         ConcordanceOutcomeV1,
-        ConcordanceResultV1,
+        ConcordanceResultV2,
         ConcordanceStudyV1,
         FeltMomentRefV1,
         StudyStateV1,
@@ -471,7 +471,7 @@ class ReciprocalExperientialSystemsTests(unittest.TestCase):
                 state=StudyStateV1.COMPARISON_READY.value,
             )
         with self.assertRaises(RecordValidationError):
-            ConcordanceObservationV1.build(
+            ConcordanceObservationV2.build(
                 study_id="study_1",
                 role="baseline",
                 observation_ref="observation_1",
@@ -486,7 +486,7 @@ class ReciprocalExperientialSystemsTests(unittest.TestCase):
                 minime_telemetry_refs=["unavailable"],
             )
         with self.assertRaises(RecordValidationError):
-            ConcordanceResultV1.build(
+            ConcordanceResultV2.build(
                 study_id="study_1",
                 baseline_observation_id="baseline_1",
                 candidate_observation_id="candidate_1",
@@ -494,7 +494,7 @@ class ReciprocalExperientialSystemsTests(unittest.TestCase):
                 felt_source_ref=None,
             )
         with self.assertRaises(RecordValidationError):
-            ConcordanceObservationV1.build(
+            ConcordanceObservationV2.build(
                 study_id="study_1",
                 role="baseline",
                 observation_ref="observation_1",
@@ -509,6 +509,86 @@ class ReciprocalExperientialSystemsTests(unittest.TestCase):
                 minime_telemetry_refs=["telemetry_1"],
             )
 
+    def test_concordance_v2_preserves_felt_report_without_modeling_its_intensity(self) -> None:
+        observation = ConcordanceObservationV2.build(
+            study_id="study_1",
+            role="baseline",
+            observation_ref="observation_1",
+            observation_sha256=HASH_A,
+            telemetry_relation="unavailable",
+            mechanical_pass=True,
+            witness_context_refs=["witness_1"],
+            representation_transition_refs=["transition_1"],
+            model_qos_refs=["qos_1"],
+            reciprocal_state_refs=["reciprocal_1"],
+            signal_stage_refs=["stage_1"],
+            minime_telemetry_refs=["unavailable"],
+        )
+        observation_record = observation.to_dict()
+        self.assertEqual(observation_record["schema"], "concordance_observation_v2")
+        self.assertEqual(observation_record["observation_scope"], "mechanical_context_only")
+        self.assertEqual(
+            observation_record["felt_report_relation"],
+            "external_primary_evidence_not_inferred_or_scored",
+        )
+        self.assertNotIn("felt_outcome_inferred", observation_record)
+        self.assertNotIn("felt_intensity", observation_record)
+        self.assertNotIn("confidence_score", observation_record)
+        self.assertNotIn("resonance_density", observation_record)
+
+        result = ConcordanceResultV2.build(
+            study_id="study_1",
+            baseline_observation_id="baseline_1",
+            candidate_observation_id="candidate_1",
+            outcome=ConcordanceOutcomeV1.SMOOTH_FRICTION_REMAINS.value,
+            felt_source_ref="claim:felt_report_1",
+        )
+        result_record = result.to_dict()
+        self.assertEqual(result_record["schema"], "concordance_result_v2")
+        self.assertEqual(
+            result_record["numeric_relation_to_felt_report"],
+            "cannot_overwrite_suppress_or_score",
+        )
+        self.assertEqual(
+            result_record["discrepancy_recording"],
+            "bounded_outcome_and_felt_source_ref_only",
+        )
+        self.assertFalse(result_record["raw_discrepancy_prose_included"])
+        self.assertNotIn("numeric_pass_overwrites_felt_report", result_record)
+        self.assertNotIn("discrepancy_log", result_record)
+
+        legacy_observation = copy.deepcopy(observation_record)
+        legacy_observation["schema"] = "concordance_observation_v1"
+        legacy_observation["schema_version"] = 1
+        legacy_observation.pop("observation_scope")
+        legacy_observation.pop("felt_report_relation")
+        legacy_observation["felt_outcome_inferred"] = False
+        self.assertEqual(
+            ConcordanceObservationV2.from_untrusted(legacy_observation).to_dict(),
+            observation_record,
+        )
+
+        legacy_result = copy.deepcopy(result_record)
+        legacy_result["schema"] = "concordance_result_v1"
+        legacy_result["schema_version"] = 1
+        legacy_result.pop("numeric_relation_to_felt_report")
+        legacy_result.pop("discrepancy_recording")
+        legacy_result.pop("raw_discrepancy_prose_included")
+        legacy_result["numeric_pass_overwrites_felt_report"] = False
+        self.assertEqual(
+            ConcordanceResultV2.from_untrusted(legacy_result).to_dict(),
+            result_record,
+        )
+
+        scored = copy.deepcopy(observation_record)
+        scored["felt_intensity"] = 0.9
+        with self.assertRaises(RecordValidationError):
+            ConcordanceObservationV2.from_untrusted(scored)
+        prose = copy.deepcopy(result_record)
+        prose["discrepancy_log"] = "raw felt prose"
+        with self.assertRaises(RecordValidationError):
+            ConcordanceResultV2.from_untrusted(prose)
+
     def test_concordance_replay_rejects_candidate_without_baseline(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             workspace = Path(temporary)
@@ -522,7 +602,7 @@ class ReciprocalExperientialSystemsTests(unittest.TestCase):
                 intervention_signature_sha256=HASH_A,
                 dossier_id="dossier_1",
             )
-            observation = ConcordanceObservationV1.build(
+            observation = ConcordanceObservationV2.build(
                 study_id=study.study_id,
                 role="candidate",
                 observation_ref="observation_1",

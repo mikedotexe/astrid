@@ -48,7 +48,11 @@ payload.
 Define a small preregistration and observation state machine that refuses a
 candidate comparison without explicit baseline and candidate capture evidence.
 Numeric outcomes must not overwrite source reports, imply causation, or close a
-review concern.
+review concern. Observation records should describe mechanical context without
+an inferred-felt boolean or felt intensity/confidence score. Result records
+should state that numeric evidence cannot overwrite, suppress, or score the
+cited report and should preserve discrepancy history through bounded outcomes
+and source references rather than copied report prose.
 
 ### 4. Self-Authored Advisory Actions
 
@@ -111,6 +115,7 @@ maintainer explicitly requests them:
 - A technical context receipt cannot become an uptake receipt.
 - A representation loss receipt cannot become a felt-loss measurement.
 - A numeric comparison cannot overwrite or close a source report.
+- A mechanical observation cannot classify, score, or copy felt content.
 - One actor cannot manufacture another actor's response.
 - Silence and expiry never imply consent, agreement, waiver, or closure.
 - Attention selection never changes the underlying graph state.

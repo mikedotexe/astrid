@@ -982,7 +982,12 @@ def route_history(
                     )
                 if stream == "felt_mechanism_concordance":
                     metadata["study_id"] = study_id
-                    metadata["numeric_pass_overwrites_felt_report"] = False
+                    metadata["numeric_relation_to_felt_report"] = (
+                        "cannot_overwrite_suppress_or_score"
+                    )
+                    metadata["felt_report_relation"] = (
+                        "external_primary_evidence_not_inferred_or_scored"
+                    )
                     metadata["causation_established"] = False
                 if event_type == "felt_review_response_recorded":
                     outcome = _review_outcome(

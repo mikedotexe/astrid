@@ -418,7 +418,7 @@ impl ConcordanceStudyV1 {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
-pub struct ConcordanceObservationV1 {
+pub struct ConcordanceObservationV2 {
     schema: &'static str,
     schema_version: u8,
     observation_id: String,
@@ -428,11 +428,12 @@ pub struct ConcordanceObservationV1 {
     observation_sha256: String,
     telemetry_relation: String,
     mechanical_pass: Option<bool>,
-    felt_outcome_inferred: bool,
+    observation_scope: &'static str,
+    felt_report_relation: &'static str,
     artifact_authority_state_v1: ExperientialEvidenceAuthorityV1,
 }
 
-impl ConcordanceObservationV1 {
+impl ConcordanceObservationV2 {
     #[allow(clippy::too_many_arguments, dead_code)]
     fn new(
         observation_id: String,
@@ -444,8 +445,8 @@ impl ConcordanceObservationV1 {
         mechanical_pass: Option<bool>,
     ) -> Self {
         Self {
-            schema: "concordance_observation_v1",
-            schema_version: 1,
+            schema: "concordance_observation_v2",
+            schema_version: 2,
             observation_id,
             study_id,
             role,
@@ -453,14 +454,15 @@ impl ConcordanceObservationV1 {
             observation_sha256,
             telemetry_relation,
             mechanical_pass,
-            felt_outcome_inferred: false,
+            observation_scope: "mechanical_context_only",
+            felt_report_relation: "external_primary_evidence_not_inferred_or_scored",
             artifact_authority_state_v1: ExperientialEvidenceAuthorityV1::evidence_only(),
         }
     }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
-pub struct ConcordanceResultV1 {
+pub struct ConcordanceResultV2 {
     schema: &'static str,
     schema_version: u8,
     result_id: String,
@@ -469,13 +471,15 @@ pub struct ConcordanceResultV1 {
     candidate_observation_id: String,
     outcome: String,
     felt_source_ref: Option<String>,
-    numeric_pass_overwrites_felt_report: bool,
+    numeric_relation_to_felt_report: &'static str,
+    discrepancy_recording: &'static str,
+    raw_discrepancy_prose_included: bool,
     closure_propagated: bool,
     causation_established: bool,
     artifact_authority_state_v1: ExperientialEvidenceAuthorityV1,
 }
 
-impl ConcordanceResultV1 {
+impl ConcordanceResultV2 {
     #[allow(clippy::too_many_arguments, dead_code)]
     fn new(
         result_id: String,
@@ -486,15 +490,17 @@ impl ConcordanceResultV1 {
         felt_source_ref: Option<String>,
     ) -> Self {
         Self {
-            schema: "concordance_result_v1",
-            schema_version: 1,
+            schema: "concordance_result_v2",
+            schema_version: 2,
             result_id,
             study_id,
             baseline_observation_id,
             candidate_observation_id,
             outcome,
             felt_source_ref,
-            numeric_pass_overwrites_felt_report: false,
+            numeric_relation_to_felt_report: "cannot_overwrite_suppress_or_score",
+            discrepancy_recording: "bounded_outcome_and_felt_source_ref_only",
+            raw_discrepancy_prose_included: false,
             closure_propagated: false,
             causation_established: false,
             artifact_authority_state_v1: ExperientialEvidenceAuthorityV1::evidence_only(),
@@ -907,52 +913,4 @@ impl AttentionSelectionReceiptV1 {
 }
 
 #[cfg(test)]
-mod tests {
-    use super::{
-        AttentionPortfolioV1, AttentionSelectionReceiptV1, ReciprocalPresenceKindV1,
-        ReciprocalPresenceReceiptV1, RepresentationLossReceiptV1,
-    };
-
-    #[test]
-    fn serialized_records_keep_inference_and_authority_boundaries_false() {
-        let presence = ReciprocalPresenceReceiptV1::new(
-            "presence_1".into(),
-            ReciprocalPresenceKindV1::Offered,
-            "astrid".into(),
-            "minime".into(),
-            "thread_1".into(),
-            "event_1".into(),
-            "a".repeat(64),
-            1,
-        );
-        let value = serde_json::to_value(presence).expect("serialize presence");
-        assert_eq!(value["uptake_inferred"], false);
-        assert_eq!(value["presence_is_acknowledgement"], false);
-        assert_eq!(
-            value["artifact_authority_state_v1"]["state"],
-            "evidence_only"
-        );
-
-        let loss =
-            RepresentationLossReceiptV1::new("loss_1".into(), "transition_1".into(), 16, 0, 0);
-        let value = serde_json::to_value(loss).expect("serialize loss");
-        assert_eq!(value["mechanical_loss_only"], true);
-        assert_eq!(value["felt_loss_scored"], false);
-        assert_eq!(value["contradiction_inferred"], false);
-
-        let portfolio =
-            AttentionPortfolioV1::new("portfolio_1".into(), "b".repeat(64), Vec::new(), Vec::new());
-        let selection = AttentionSelectionReceiptV1::new(
-            "selection_1".into(),
-            "portfolio_1".into(),
-            Vec::new(),
-            0,
-        );
-        let portfolio = serde_json::to_value(portfolio).expect("serialize portfolio");
-        let selection = serde_json::to_value(selection).expect("serialize selection");
-        assert_eq!(portfolio["active_cap"], 16);
-        assert_eq!(portfolio["membership_propagates_closure"], false);
-        assert_eq!(selection["selection_is_attention_only"], true);
-        assert_eq!(selection["authority_propagated"], false);
-    }
-}
+mod tests;

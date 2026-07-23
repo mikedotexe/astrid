@@ -37,6 +37,7 @@ FORBIDDEN_PROSE_KEYS = frozenset(
         "body",
         "body_preview",
         "content",
+        "discrepancy_log",
         "journal",
         "message",
         "phenomenology",
