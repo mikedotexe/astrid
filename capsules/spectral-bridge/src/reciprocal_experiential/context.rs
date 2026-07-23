@@ -36,7 +36,7 @@ pub struct ReciprocalContextReceiptV1 {
 
 impl ReciprocalContextReceiptV1 {
     #[allow(clippy::too_many_arguments, dead_code)]
-    pub(crate) fn new(
+    fn new(
         receipt_id: String,
         context_kind: ReciprocalContextKindV1,
         actor: String,

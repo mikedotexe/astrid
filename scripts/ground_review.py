@@ -520,11 +520,10 @@ class GroundReviewTests(unittest.TestCase):
         return ground_review(text, being, None, self.NOW)
 
     def test_real_backticked_symbol_verified(self):
-        card = self._card("I feel the weight of `INHABITABLE_FLUCTUATION_POLICY` in regulator.rs.")
+        card = self._card("I feel the weight of `STABLE_CORE_PROFILE` in stable_core.rs.")
         vals = {v["value"]: v for v in card["verified"]}
-        self.assertIn("INHABITABLE_FLUCTUATION_POLICY", vals)
-        self.assertTrue(vals["INHABITABLE_FLUCTUATION_POLICY"]["real_location"].endswith(".rs:21")
-                        or "regulator.rs" in vals["INHABITABLE_FLUCTUATION_POLICY"]["real_location"])
+        self.assertIn("STABLE_CORE_PROFILE", vals)
+        self.assertIn("stable_core.rs", vals["STABLE_CORE_PROFILE"]["real_location"])
 
     def test_fabricated_symbol_not_found(self):
         card = self._card("Governed by `SAFETY_GATE`, the flow constricts.")

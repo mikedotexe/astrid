@@ -248,6 +248,29 @@ class NoLetterCloseTests(unittest.TestCase):
         self.assertEqual(rc, 0)
         self.assertEqual(len(list(self._inbox.glob("mike_feedback_review_*"))), 1)
 
+    def test_grounding_card_with_same_topic_cannot_shadow_review_record(self):
+        self._seed("grounded_topic")
+        grounding = {
+            "schema": "ground_review/v1",
+            "being": "minime",
+            "topic": "grounded_topic",
+            "source_file": "introspection.txt",
+        }
+        (self._review / "minime_grounded_topic_9_grounding.json").write_text(
+            json.dumps(grounding)
+        )
+
+        rc = request_review.cmd_close(
+            self._close_args(False, "grounded_topic"), now=10
+        )
+
+        self.assertEqual(rc, 0)
+        closed = list((self._review / "closed").glob("minime_grounded_topic_1.json"))
+        self.assertEqual(len(closed), 1)
+        self.assertTrue(
+            (self._review / "minime_grounded_topic_9_grounding.json").is_file()
+        )
+
 
 class SlotDisplacementGuardTests(unittest.TestCase):
     """The pre-issue warning that stops a new review invitation from silently

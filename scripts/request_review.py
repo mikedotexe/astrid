@@ -420,8 +420,17 @@ def _find_record(being: str, topic: str) -> Path | None:
         if not d.is_dir():
             continue
         hits = sorted(d.glob(f"{being}_{topic}_*.json"))
-        if hits:
-            return hits[-1]
+        for path in reversed(hits):
+            try:
+                record = json.loads(path.read_text())
+            except (json.JSONDecodeError, OSError):
+                continue
+            if (
+                record.get("being") == being
+                and record.get("topic") == topic
+                and isinstance(record.get("target"), str)
+            ):
+                return path
     return None
 
 
@@ -610,6 +619,8 @@ def cmd_list() -> int:
             continue
         for rec in sorted(base.glob("*.json")):
             d = json.loads(rec.read_text())
+            if not isinstance(d.get("target"), str):
+                continue
             age_h = (int(time.time()) - d.get("issued_ts", 0)) / 3600
             tag = " (post-change)" if d.get("kind") == "post_change_qa" else ""
             print(f"  [{being}]{tag} {d.get('topic')}: review of {d.get('target')} "

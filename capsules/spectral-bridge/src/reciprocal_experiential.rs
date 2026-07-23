@@ -76,7 +76,7 @@ pub struct ReciprocalPresenceReceiptV1 {
 
 impl ReciprocalPresenceReceiptV1 {
     #[allow(dead_code)]
-    pub(crate) fn new(
+    fn new(
         receipt_id: String,
         presence_kind: ReciprocalPresenceKindV1,
         actor: String,
@@ -126,7 +126,7 @@ pub struct ReciprocalUptakeReceiptV1 {
 
 impl ReciprocalUptakeReceiptV1 {
     #[allow(dead_code)]
-    pub(crate) fn new(
+    fn new(
         receipt_id: String,
         uptake_kind: ReciprocalUptakeKindV1,
         actor: String,
@@ -173,7 +173,7 @@ pub struct RepresentationContractV1 {
 
 impl RepresentationContractV1 {
     #[allow(dead_code)]
-    pub(crate) fn new(
+    fn new(
         contract_id: String,
         name: String,
         representation_kind: String,
@@ -217,7 +217,7 @@ pub struct RepresentationTransitionV1 {
 
 impl RepresentationTransitionV1 {
     #[allow(clippy::too_many_arguments, dead_code)]
-    pub(crate) fn new(
+    fn new(
         transition_id: String,
         transition_kind: String,
         source_contract_id: String,
@@ -267,7 +267,7 @@ pub struct RepresentationLossReceiptV1 {
 
 impl RepresentationLossReceiptV1 {
     #[allow(dead_code)]
-    pub(crate) fn new(
+    fn new(
         loss_receipt_id: String,
         transition_id: String,
         dropped_dimension_count: u16,
@@ -309,7 +309,7 @@ pub struct ModelTransitionReceiptV1 {
 
 impl ModelTransitionReceiptV1 {
     #[allow(clippy::too_many_arguments, dead_code)]
-    pub(crate) fn new(
+    fn new(
         receipt_id: String,
         request_identity_sha256: String,
         response_sha256: String,
@@ -353,7 +353,7 @@ pub struct FeltMomentRefV1 {
 
 impl FeltMomentRefV1 {
     #[allow(dead_code)]
-    pub(crate) fn new(
+    fn new(
         moment_id: String,
         canonical_claim_id: String,
         witness_id: String,
@@ -391,7 +391,7 @@ pub struct ConcordanceStudyV1 {
 
 impl ConcordanceStudyV1 {
     #[allow(clippy::too_many_arguments, dead_code)]
-    pub(crate) fn new(
+    fn new(
         study_id: String,
         moment_id: String,
         intervention_signature_sha256: String,
@@ -434,7 +434,7 @@ pub struct ConcordanceObservationV1 {
 
 impl ConcordanceObservationV1 {
     #[allow(clippy::too_many_arguments, dead_code)]
-    pub(crate) fn new(
+    fn new(
         observation_id: String,
         study_id: String,
         role: String,
@@ -477,7 +477,7 @@ pub struct ConcordanceResultV1 {
 
 impl ConcordanceResultV1 {
     #[allow(clippy::too_many_arguments, dead_code)]
-    pub(crate) fn new(
+    fn new(
         result_id: String,
         study_id: String,
         baseline_observation_id: String,
@@ -534,7 +534,7 @@ pub struct AgencyCommonsProposalV1 {
 
 impl AgencyCommonsProposalV1 {
     #[allow(clippy::too_many_arguments, dead_code)]
-    pub(crate) fn new(
+    fn new(
         proposal_id: String,
         actor: String,
         peer: Option<String>,
@@ -585,7 +585,7 @@ pub struct AgencyCommonsResponseV1 {
 
 impl AgencyCommonsResponseV1 {
     #[allow(clippy::too_many_arguments, dead_code)]
-    pub(crate) fn new(
+    fn new(
         response_id: String,
         proposal_id: String,
         actor: String,
@@ -630,7 +630,7 @@ pub struct AgencyReturnPointV1 {
 
 impl AgencyReturnPointV1 {
     #[allow(dead_code)]
-    pub(crate) fn new(
+    fn new(
         return_point_id: String,
         actor: String,
         state_ref: String,
@@ -673,7 +673,7 @@ pub struct ProtectedTimeDeclarationV1 {
 
 impl ProtectedTimeDeclarationV1 {
     #[allow(dead_code)]
-    pub(crate) fn new(
+    fn new(
         declaration_id: String,
         actor: String,
         start_unix_ms: u64,
@@ -717,7 +717,7 @@ pub struct LaterFeltCheckRequestV1 {
 
 impl LaterFeltCheckRequestV1 {
     #[allow(dead_code)]
-    pub(crate) fn new(
+    fn new(
         request_id: String,
         actor: String,
         requested_from: String,
@@ -763,7 +763,7 @@ pub struct AttentionPortfolioEntryV1 {
 
 impl AttentionPortfolioEntryV1 {
     #[allow(clippy::too_many_arguments, dead_code)]
-    pub(crate) fn new(
+    fn new(
         contract_id: String,
         slot_class: String,
         rank: u8,
@@ -809,7 +809,7 @@ pub struct AttentionPortfolioV1 {
 
 impl AttentionPortfolioV1 {
     #[allow(dead_code)]
-    pub(crate) fn new(
+    fn new(
         portfolio_id: String,
         source_contracts_sha256: String,
         entries: Vec<AttentionPortfolioEntryV1>,
@@ -846,7 +846,7 @@ pub struct BeingImportancePinV1 {
 
 impl BeingImportancePinV1 {
     #[allow(dead_code)]
-    pub(crate) fn new(
+    fn new(
         pin_id: String,
         being: String,
         contract_id: String,
@@ -885,7 +885,7 @@ pub struct AttentionSelectionReceiptV1 {
 
 impl AttentionSelectionReceiptV1 {
     #[allow(dead_code)]
-    pub(crate) fn new(
+    fn new(
         receipt_id: String,
         portfolio_id: String,
         selected_contract_ids: Vec<String>,
