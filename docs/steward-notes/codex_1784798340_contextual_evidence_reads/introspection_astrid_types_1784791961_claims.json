@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "A single entropy value cannot show whether recent spectral texture was steady or volatile.",
+      "disposition": "Implemented bounded rolling entropy count, mean, population variance, and range evidence over the existing pressure-trend sample window.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Rolling entropy evidence must state its provenance and avoid becoming a felt-state classifier.",
+      "disposition": "Implemented explicit state and basis fields; verified the calculation uses finite typed samples only and has no controller or subjective-state consequence.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Cadence, entropy variation, and authored texture should be compared over the same bounded window.",
+      "disposition": "Route a bounded concordance observation joining cadence, rolling entropy, witness context, and Astrid's named felt report.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Typed telemetry precedence may imply regulator weighting.",
+      "disposition": "Verified from source that typed precedence determines evidence rendering and does not alter controller weighting or live sensory behavior.",
+      "classification": "verified_existing"
+    }
+  ]
+}

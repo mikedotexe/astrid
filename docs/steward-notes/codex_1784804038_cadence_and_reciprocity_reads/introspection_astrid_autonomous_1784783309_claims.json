@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Fixed autonomous heartbeat timing and intensity may interrupt or flatten texture.",
+      "disposition": "Verified fixed current parameters while preserving the felt texture claim for a bounded heartbeat comparison.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Heartbeat admission and continuity need evidence beyond generated content.",
+      "disposition": "Verified enqueue outcomes, prior-feature delta and cosine, and texture context are recorded separately.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Pressure- or entropy-responsive heartbeat intensity would change cadence or autonomous control.",
+      "disposition": "Preserve an exact Tier 5 operator-approval wait for heartbeat cadence, intensity, admission, rescue, or scheduling changes.",
+      "classification": "authority_gated"
+    }
+  ]
+}

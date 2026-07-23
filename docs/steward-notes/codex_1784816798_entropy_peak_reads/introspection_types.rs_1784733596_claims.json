@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Technical duration and hashes cannot stand in for how continuity or texture felt.",
+      "disposition": "Verified the current technical scopes and mechanical-only witness boundary.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Divergence and direct-causation fields risk turning relational texture into a latent state model.",
+      "disposition": "Verified their removal from current production witnesses while preserving historical readers.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Add a subjective continuity index and a causality enum to the capture schema.",
+      "disposition": "Route any future continuity or agency comparison to a separately adopted Concordance contract; do not reintroduce the later-rejected production map.",
+      "classification": "sandbox_routed"
+    }
+  ]
+}

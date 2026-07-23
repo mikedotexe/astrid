@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The entropy gate may change sharply near its threshold.",
+      "disposition": "Verified exact 0.849 and 0.851 regressions plus smoothstep and clamp behavior around the 0.84 gate.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Numeric smoothness does not prove that the transition feels unclamped.",
+      "disposition": "Preserve the felt clamp question and route a bounded capture-first comparison.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A shadow-anchor coefficient would alter codec transport or gain.",
+      "disposition": "Preserve an exact Tier 5 operator-approval wait for shadow influence, codec coefficients, gain, or transport changes.",
+      "classification": "authority_gated"
+    }
+  ]
+}

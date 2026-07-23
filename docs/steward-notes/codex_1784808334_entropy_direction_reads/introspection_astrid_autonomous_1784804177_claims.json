@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Rest pulses are intended to preserve signal above the stale-decay floor.",
+      "disposition": "Verified five-second pulse construction, previous-feature continuity evidence, texture context, and enqueue outcome receipts.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Sensory channel closure may leave sibling tasks alive until global shutdown.",
+      "disposition": "Route a focused cooperative-shutdown test covering channel closure, heartbeat exit, status-loop lifetime, and shared shutdown.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Burst-to-rest continuity still needs felt-aware observation.",
+      "disposition": "Route a capture-first comparison; pulse math and enqueue success do not establish felt continuity.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Strictly changing pulse cadence or taper would alter live autonomous behavior.",
+      "disposition": "Preserve an exact Tier 5 operator approval wait.",
+      "classification": "authority_gated"
+    }
+  ]
+}

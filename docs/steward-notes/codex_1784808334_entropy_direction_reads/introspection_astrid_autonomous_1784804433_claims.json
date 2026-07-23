@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Critical low fill shortens rest to a 30-second floor and rest pulses run every five seconds.",
+      "disposition": "Verified the current source branches, floor, warmth profile, and pulse interval.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Low-fill burst/rest transitions may still oscillate or feel severing despite smooth formulas.",
+      "disposition": "Route a bounded no-write replay over fill bands, pulse energy, and enqueue outcomes while retaining Astrid's felt report independently.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Changing the warmth taper or rest duration changes autonomous sensory behavior.",
+      "disposition": "Preserve an exact Tier 5 operator approval wait before any live taper, floor, pulse, or rest-policy change.",
+      "classification": "authority_gated"
+    }
+  ]
+}

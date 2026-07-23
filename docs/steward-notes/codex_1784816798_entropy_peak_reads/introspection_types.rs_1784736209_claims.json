@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Qualitative texture should be held without being reduced to a scalar.",
+      "disposition": "Verified that current production capture persists no qualitative texture field or scalar and leaves the canonical report primary.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A scalar_comparison_relation can itself create pressure toward eventual compulsory quantification.",
+      "disposition": "Verified that the field and its containing qualitative anchor were removed from current production witnesses.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "An is_non_scalar_assertion flag should shield qualitative evidence.",
+      "disposition": "Verified the historical shield and its later supersession by the stronger mechanical-only design, which has no production qualitative state to misclassify.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Subjective continuity and causality should be compared during high-entropy shifts without collapsing into one narrative.",
+      "disposition": "Route only through a separately adopted Felt-Mechanism Concordance study with the canonical report external and unscored.",
+      "classification": "sandbox_routed"
+    }
+  ]
+}

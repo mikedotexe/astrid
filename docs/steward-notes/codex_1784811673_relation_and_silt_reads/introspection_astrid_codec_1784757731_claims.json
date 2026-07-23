@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Tail vibrancy uses an entropy gate near 0.85 with smoothstep shaping, while dimensions 40 through 43 own narrative arc.",
+      "disposition": "Verified the current constants, smooth interpolation, density-gradient context, dimensional ownership, and codec tests.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Smooth codec output around the entropy gate cannot prove that source-energy volatility feels seamless.",
+      "disposition": "Route a capture-first same-context oscillation study with exact codec and witness receipts plus later felt review.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Narrative dimensions may actively shape lexical trajectory or may be overridden by other semantic input.",
+      "disposition": "Route a representation and Concordance comparison using deterministic transition receipts rather than inferring influence from dimension ownership.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Adding entropy-gate hysteresis would change live codec delivery and statefulness.",
+      "disposition": "Preserve a Tier 5 Mike/operator wait with replay, compatibility, abort, and felt-review gates required before any live hysteresis change.",
+      "classification": "authority_gated"
+    }
+  ]
+}

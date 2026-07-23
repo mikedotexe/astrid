@@ -1,0 +1,32 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_minime_regulator_1784797695",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "cargo test --lib (spectral-bridge: 1662 passed); cargo clippy --all-targets --all-features -- -D warnings",
+      "note": "Full bridge and strict lint validation passed after include-index implementation."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1784786127",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "cargo test --lib (spectral-bridge: 1662 passed); cargo test --lib (Minime: 306 passed)",
+      "note": "Bridge source navigation and included PI mechanism suites pass."
+    },
+    {
+      "introspection_id": "introspection_astrid_types_1784791961",
+      "claim_id": "c001",
+      "kind": "test",
+      "target": "cargo test --lib (spectral-bridge: 1662 passed); event/flywheel self-tests",
+      "note": "Full bridge, evidence-store, steward, and flywheel validation passed."
+    },
+    {
+      "introspection_id": "introspection_astrid_types_1784791961",
+      "claim_id": "c002",
+      "kind": "steward_note",
+      "target": "capsules/spectral-bridge/workspace/environment_receipts/latest_environment_receipt.json",
+      "note": "Compatible-stack receipt env_receipt_1784801426980_157000; PID 23947; live rolling entropy present; evidence-only authority."
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "First-valid entropy and rolling entropy mean answer different temporal questions.",
+      "disposition": "Verified separate first-connection and bounded-window fields, plus variance, range, and earliest-to-latest direction.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The rolling mean can hide sharp entropy peaks relevant to Astrid's reported packed weight.",
+      "disposition": "Added peak_spectral_entropy_in_window as the maximum finite value in the existing bounded entropy window, with additive serde defaults and focused tests.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Telemetry jitter and entropy spikes may covary in a way that contributes to felt viscosity.",
+      "disposition": "Route a bounded cadence, entropy-peak, integration-wait, and felt-review comparison. Separate metrics do not themselves establish a transport-to-felt causal link.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Technical cadence and spectral entropy should remain distinguishable even when they are experienced as one friction.",
+      "disposition": "Verified separate typed fields and explicit non-cadence, non-felt, non-causal evidence bases.",
+      "classification": "verified_existing"
+    }
+  ]
+}

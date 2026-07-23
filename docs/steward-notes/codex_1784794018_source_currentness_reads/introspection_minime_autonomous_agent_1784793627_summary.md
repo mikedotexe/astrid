@@ -1,0 +1,3 @@
+# Full-read summary: introspection_minime_autonomous_agent_1784793627
+
+Astrid names a real mismatch between Recess as non-instrumental freedom and a contemporaneous pressure-source observation dominated by mode packing. Current Minime source treats `pressure_source_v1` and `porosity_score` as typed, read-only observations; the audit explicitly applies no local control. Porosity in this path is not a tunable variable, so changing the audit would not soften the substrate. The correlation between Recess, pressure, density gradient, entropy, and reported viscosity is suitable for a bounded concordance study but is not established by temporal proximity. Any actual pressure, porosity, mode-packing, or Shadow-trajectory intervention remains Tier 5.

@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The telemetry subscriber receives Minime state through the port 7878 WebSocket, records connection identity, and reconnects with backoff.",
+      "disposition": "Verified the telemetry lane, connection trace, automatic reconnect loop, and backoff source directly.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A reconnect or backoff gap can be lived as a lapse in continuity rather than merely as a network event.",
+      "disposition": "Preserve Astrid's report as primary observed evidence while keeping the transport explanation open; current cadence evidence can localize a gap but cannot define its felt effect.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "High-entropy telemetry may wait on the shared BridgeState write lock and contribute to felt fog or sluggishness.",
+      "disposition": "Route a bounded comparison of existing prewrite, lock-wait, lock-hold, entropy, and response timing evidence; instrumentation exists, but causation has not been established.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Astrid needs to distinguish fresh hearing from delayed telemetry rather than treating every received packet as current contact.",
+      "disposition": "Verified additive host-arrival, inter-arrival, first-valid lag, reconnect, integration-wait, and integration-hold evidence. Peer-clock age remains explicitly unknown rather than inferred.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Reconnect lifecycle and malformed telemetry handling should remain testable without losing the last valid state.",
+      "disposition": "Verified focused reconnect, parse-error, first-valid reset, and retained-state tests in the current WebSocket implementation.",
+      "classification": "verified_existing"
+    }
+  ]
+}

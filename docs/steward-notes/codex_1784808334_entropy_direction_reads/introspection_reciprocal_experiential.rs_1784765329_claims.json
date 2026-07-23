@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Trusted Rust constructors could be misused as persisted-input validators.",
+      "disposition": "Verified constructors are crate-private, trusted records do not implement Deserialize, and persisted JSON is handled by untrusted projector validation.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Receipt and source hashes need deterministic validation outside the Rust builder.",
+      "disposition": "Verified Python models validate bounded identifiers, SHA-256 values, deterministic IDs, exact keys, and evidence-only authority.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Presence context must not imply uptake.",
+      "disposition": "Verified ReciprocalContextReceiptV2 separates delivery/read/reply context from actor-authored uptake and contains no uptake inference.",
+      "classification": "verified_existing"
+    }
+  ]
+}

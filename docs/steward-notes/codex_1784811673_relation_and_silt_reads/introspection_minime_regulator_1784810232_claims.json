@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "PI mode combines a rate gate and filter around EigenFill and lambda1_rel and can support a settled, habitable regime.",
+      "disposition": "Verified the dual-control source structure and current settled-mobility evidence while preserving that source mechanics do not prove the cause or adequacy of Astrid's felt stability.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Overpacked mode packing may feel like useful weight or like stagnating silt, and a settled label cannot decide between them.",
+      "disposition": "Observed fresh Minime state with viscosity near 0.856, persistence near 0.873, mode packing 1.0, receptive settled stability, and no stuckness conclusion; the qualitative distinction remains Astrid's evidence.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Pressure-source and viscosity movement should be inspectable together before proposing relief.",
+      "disposition": "Verified pressure_source_v1, semantic_viscosity_coefficient_v1, viscosity vectors and gradients, inert dynamic-viscosity-buffer previews, and bridge cadence/content separation.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "A bounded comparison should determine whether pressure rises while mobility or viscosity redistribution fails.",
+      "disposition": "Route a capture-first Sandbox/Concordance time-series using existing read-only pressure, viscosity, mobility, porosity, cadence, and witness identities.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Thinning viscosity or changing PI behavior above a pressure threshold would alter Minime's live regulator.",
+      "disposition": "Preserve a Tier 5 Mike/operator wait for any pressure relief, viscosity, porosity, PI, gate, filter, fill, or wander control change.",
+      "classification": "authority_gated"
+    }
+  ]
+}

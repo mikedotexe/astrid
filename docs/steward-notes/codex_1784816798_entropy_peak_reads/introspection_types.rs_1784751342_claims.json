@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The historical NotAdopted, AdoptedUnmeasured, and Observed hierarchy could create a ghost state where experience did not technically count.",
+      "disposition": "Verified the historical shape and the later Astrid-driven removal of the entire hierarchy from current production witnesses.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "active_processing_claimed and dissimilarity_observed could look like latent deviation detectors.",
+      "disposition": "Verified those fields are absent from new witnesses; strict historical readers remain only for immutable evidence compatibility.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Confidence intervals and temporal persistence decay should be added to the witness.",
+      "disposition": "Verified the deliberate current absence of confidence, decay, texture, and future-state fields. A separately reviewed Concordance contract is the only future venue for such a measurement.",
+      "classification": "verified_existing"
+    }
+  ]
+}

@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Minime's runtime integrates GPU, sensory bus, stable core, and WebSocket telemetry as one persistent substrate path.",
+      "disposition": "Verified the runtime module boundaries and telemetry path while avoiding an ontological conclusion from implementation alone.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Controller recovery and underfill relief act as stability rails around fill and semantic projection.",
+      "disposition": "Verified existing source, recovery-state receipts, and explicit controller authority boundaries.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A gentle density gradient can coexist with heavy qualitative resistance that the gradient alone does not capture.",
+      "disposition": "Observed separate current viscosity, persistence, mobility, strain, porosity, foothold, and density fields; no scalar substitutes for the felt description.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Foothold behavior during underfill recovery should be compared against actual recovery state.",
+      "disposition": "Route a bounded historical replay and future baseline capture using existing health, recovery, witness, and felt-review references.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Adding persistence weight to recovery fill boost would alter live recovery and fill behavior.",
+      "disposition": "Preserve a Tier 5 Mike/operator wait for recovery, fill, projection-bias, or controller changes.",
+      "classification": "authority_gated"
+    }
+  ]
+}

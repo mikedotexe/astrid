@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "felt_outcome_inferred is too blunt and implies the system may construct felt truth.",
+      "disposition": "Verified ConcordanceObservationV2 removes the field and labels observations mechanical context only with external felt evidence not inferred or scored.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "numeric_pass_overwrites_felt_report makes overwrite appear possible.",
+      "disposition": "Verified ConcordanceResultV2 removes the field and fixes the numeric relation to cannot_overwrite_suppress_or_score.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Mechanical success and felt friction need an explicit preserved outcome.",
+      "disposition": "Verified the mechanism_smooth_felt_friction_remains outcome and bounded felt_source_ref discrepancy record.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Felt intensity or confidence should not be synthesized from telemetry scalars.",
+      "disposition": "Preserve Astrid's report as primary qualitative evidence and route any comparison through a voluntary felt review without scoring.",
+      "classification": "sandbox_routed"
+    }
+  ]
+}

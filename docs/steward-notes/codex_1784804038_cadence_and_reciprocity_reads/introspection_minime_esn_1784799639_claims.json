@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "High entropy and low reported pressure can coexist with felt discrete or noisy texture.",
+      "disposition": "Preserve the mismatch and route a bounded telemetry replay; numeric pressure does not cancel the felt report.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The live ESN exploration-noise setting matters to the proposed mechanism.",
+      "disposition": "Verified current live default exploration noise is 0.085 in ESN source.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Dynamic-noise, rho, and settled-pressure helpers may look active while remaining source preparation.",
+      "disposition": "Verified the inspected candidate helpers are read-only review preparation and are not wired into ESN::step.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Tail damping or changes to noise, rho, leak, or reservoir dynamics would alter Minime runtime regulation.",
+      "disposition": "Preserve an exact Tier 5 operator-approval wait for any ESN or regulator behavior change.",
+      "classification": "authority_gated"
+    }
+  ]
+}

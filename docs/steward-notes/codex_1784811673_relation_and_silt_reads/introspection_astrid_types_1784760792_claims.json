@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "First-valid entropy is connection-start evidence and cannot represent later entropy drift.",
+      "disposition": "Verified the first-packet field remains intact while the live schema now adds a bounded rolling entropy window and chronological change.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Current entropy needs count, average, variation, range, and direction rather than a static snapshot alone.",
+      "disposition": "Verified the deployed additive fields and tests; fresh output carries 11 samples, mean, variance, range, change, and `entropy_collapsing_across_window` with explicit non-inference.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Hybrid coherence is structural compatibility evidence and cannot establish semantic coherence or felt landing.",
+      "disposition": "Verified the schema basis and route semantic/felt comparison through Representation Contracts and Concordance rather than reinterpreting the scalar.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Typed precedence over legacy is a binary ownership rule, not a claim that one identity replaces another.",
+      "disposition": "Verified typed precedence only selects canonical field ownership while legacy data remains compatibility evidence.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Structural integrity and semantic resonance should remain distinct dimensions of review.",
+      "disposition": "Route a baseline-first Concordance study that preserves the felt report without creating a scalar semantic-resonance substitute.",
+      "classification": "sandbox_routed"
+    }
+  ]
+}

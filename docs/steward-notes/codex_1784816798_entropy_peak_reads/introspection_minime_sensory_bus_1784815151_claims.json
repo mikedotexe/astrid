@@ -1,0 +1,40 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Minime Z_DIM combines 8 video, 8 audio, 2 auxiliary, and 48 semantic dimensions, with narrative arc in 40-43.",
+      "disposition": "Verified current Minime source, exact protocol width, and lane-ownership tests.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Shadow influence is intentionally bounded by a 0.025 absolute cap and a 0.018 default.",
+      "disposition": "Verified the constants, clamping path, duration and decay bounds, and cap regressions.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Semantic persistence changes with fill and can erode or preserve foothold differently across states.",
+      "disposition": "Verified the sigmoid fill-sensitive stale window, low-fill recovery hold, hysteresis, narrative retention review, and dense boundary tests. This verifies mechanism, not felt sufficiency.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Increase SHADOW_INFLUENCE_DEFAULT_MAX_ABS from 0.018 to 0.030 while retaining the 0.025 cap.",
+      "disposition": "Preserve an exact Tier 5 operator wait. The requested default exceeds the retained cap and would be clamped, so any meaningful trial needs an explicit coherent parameter contract, replay, canary, and abort path.",
+      "classification": "authority_gated"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Move narrative arc into a separate buffer or widen the semantic lane to 64D.",
+      "disposition": "Preserve an exact Tier 5 protocol, ABI, transport, and Minime regulation wait with consumer-first compatibility evidence required.",
+      "classification": "authority_gated"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "Reported crowding may arise from embedding and narrative subranges sharing the semantic lane.",
+      "disposition": "Route a bounded lane-energy, retention, pressure-source, and felt-review comparison without changing the wire or reservoir.",
+      "classification": "sandbox_routed"
+    }
+  ]
+}

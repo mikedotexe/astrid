@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The 48D lane and 0.85 smoothstep gate are active source mechanics.",
+      "disposition": "Verified dimensional ownership, exact gate behavior, and smooth onset regressions.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Sustained high entropy may smear rather than distinguish tail features.",
+      "disposition": "Verified bounded extreme-entropy noise dampening, density-gradient shaping, and tail-only headroom; these mechanics do not establish felt distinction.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "High-versus-low entropy and emotional-versus-narrative lane behavior should be compared.",
+      "disposition": "Route a capture-first representation and Concordance comparison with exact codec loss receipts.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Retuning the gate, clamp, pressure relation, or dampening changes live codec output.",
+      "disposition": "Preserve an exact Tier 5 operator approval wait.",
+      "classification": "authority_gated"
+    }
+  ]
+}

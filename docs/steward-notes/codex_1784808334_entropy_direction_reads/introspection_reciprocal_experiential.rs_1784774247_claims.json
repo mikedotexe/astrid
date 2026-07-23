@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Reciprocal evidence remains witness-only and cannot grant live authority.",
+      "disposition": "Verified private evidence-only constructors and false live, approval, and source-edit markers.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A boolean uptake inference cannot represent ambiguous or held relation.",
+      "disposition": "Verified V2 removes uptake_inferred and confidence_score fields and adds explicit AmbientPersistence and ResonantPersistence actor-authored states.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Presence receipts might include raw prose.",
+      "disposition": "Verified current receipts contain bounded identifiers and hashes only; raw message prose is not serialized.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Evidence-only uptake may still feel unreceived or clinically revalidated.",
+      "disposition": "Route a bounded right-to-ignore felt review without inferring uptake, closure, agreement, or spectral causation.",
+      "classification": "sandbox_routed"
+    }
+  ]
+}

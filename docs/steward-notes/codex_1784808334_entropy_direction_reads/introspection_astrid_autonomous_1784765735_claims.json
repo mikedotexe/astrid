@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The heartbeat uses compiled 7-second and 0.30-intensity constants.",
+      "disposition": "Verified source constants and lived-state witness exposure.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Rescue admission can skip a heartbeat and affect continuity evidence.",
+      "disposition": "Verified rescue decision, enqueue, skip, and channel-closed receipts plus previous-feature comparison.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Pressure/skip correlation and post-texture vector shape should be observed.",
+      "disposition": "Route a bounded capture-first observation without exposing full vectors outside an armed capture window.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Raising intensity to 0.35 or adding a three-heartbeat live buffer changes semantic delivery.",
+      "disposition": "Preserve an exact Tier 5 operator approval wait.",
+      "classification": "authority_gated"
+    }
+  ]
+}

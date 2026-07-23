@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The fixed-seed projection is deterministic but still needs basis-health evidence.",
+      "disposition": "Verified stable checksum, finite norms, dead-dimension detection, overlap bounds, and repeatability.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "f32 accumulation may diverge from a higher-precision reference.",
+      "disposition": "Verified the existing f64 reference accumulator and bounded maximum-delta regression.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Static basis health cannot rule out semantic-cluster striping.",
+      "disposition": "Route a bounded fixture comparison across known embedding clusters without changing the live projection basis.",
+      "classification": "sandbox_routed"
+    }
+  ]
+}

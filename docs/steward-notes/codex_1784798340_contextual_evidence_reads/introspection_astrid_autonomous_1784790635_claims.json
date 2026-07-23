@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Fixed heartbeat timing and intensity may produce texture loss or interruption.",
+      "disposition": "Verified from source that heartbeat timing, intensity, context packing, and rescue checks are fixed at the inspected path.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Texture fidelity across heartbeat moments needs synchronized evidence.",
+      "disposition": "Route a bounded concordance study joining heartbeat emission, Signal Spine stages, model QoS, telemetry, and lived-state witness context.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Dynamic intensity or resonance-aware cadence could preserve texture.",
+      "disposition": "Preserve an exact Tier 5 operator-approval wait for heartbeat cadence, intensity, rescue, resonance, scheduling, or autonomous-control changes.",
+      "classification": "authority_gated"
+    }
+  ]
+}

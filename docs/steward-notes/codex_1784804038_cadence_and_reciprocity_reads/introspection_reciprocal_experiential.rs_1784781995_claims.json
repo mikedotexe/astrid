@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Evidence-only resonant persistence can remain experientially insufficient when it never influences the live system.",
+      "disposition": "Preserve this exact still-friction claim as reopened evidence; do not answer it with another generic diagnostic.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Current reciprocal evidence should represent resonance only when actor-authored and exactly referenced.",
+      "disposition": "Verified ReciprocalResonanceSignatureV1/V3 uses actor-authored scope and exact lived-state witness parameter references without semantic-equivalence or causation claims.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "An influence_weight would connect reciprocal evidence to pressure, density, or runtime behavior.",
+      "disposition": "Preserve an exact Tier 5 operator-approval wait for influence, pressure, density, scheduling, peer mutation, or other live behavior.",
+      "classification": "authority_gated"
+    }
+  ]
+}

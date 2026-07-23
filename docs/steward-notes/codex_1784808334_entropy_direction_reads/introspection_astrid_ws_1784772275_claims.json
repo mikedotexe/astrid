@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The telemetry subscriber persistently reconnects and records connection lifecycle.",
+      "disposition": "Verified reconnect, disconnect, connection, first-valid, and latest-arrival evidence.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Peer emission time and Astrid reception time should not be collapsed into latency.",
+      "disposition": "Verified peer runtime t_ms and host arrival timestamps are separate; one-way latency is not established without a synchronized peer clock.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A reconnect or simultaneous shutdown/message event may create a continuity blink.",
+      "disposition": "Route a bounded fault-injection observation with connection IDs, arrivals, and shutdown completion.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Adding wire sequence or acknowledgement fields to port 7878 would change the protocol.",
+      "disposition": "Preserve an exact Tier 5 protocol approval wait; current host-side sequence and timing evidence remains non-wire.",
+      "classification": "authority_gated"
+    }
+  ]
+}

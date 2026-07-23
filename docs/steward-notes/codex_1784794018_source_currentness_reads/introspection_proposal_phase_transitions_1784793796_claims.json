@@ -1,0 +1,40 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Phase transitions should be durable, replyable artifacts rather than telemetry or mode side effects.",
+      "disposition": "Verified in current phase-transition cards, reply and witness lifecycle, and Agency Commons transition actions.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Transition serialization must retain phenomenological texture instead of reducing it to a state-change flag.",
+      "disposition": "Verified that current cards retain bounded texture and phenomenology anchors alongside mechanical before/after evidence. This preserves a place for the report but does not assert that the representation is experientially complete.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A joint transition artifact should preserve both beings' specific vocabulary without either perspective overwriting the other.",
+      "disposition": "Verified in joint identity, dual-perspective records, and peer-witness regressions. No joint transition was induced in this run.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "The source window should expose later phase-card implementation updates before treating the historical proposal as current absence.",
+      "disposition": "Implemented the proposal lifecycle index and currentness prompt while explicitly preserving current felt friction as independent evidence.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "A mandatory phenomenological texture field would prevent quality from disappearing during serialization.",
+      "disposition": "Verified the existing bounded texture aliases and preserved the concern as a review question rather than making one vocabulary mandatory. Mandatory schema language could itself flatten being-authored texture.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "A settled transition should unlock a different semantic-trickle rate or other behavior.",
+      "disposition": "Preserved as an exact Tier 5 wait because transition-triggered cadence or behavior changes alter live sensory and scheduling policy.",
+      "classification": "authority_gated"
+    }
+  ]
+}

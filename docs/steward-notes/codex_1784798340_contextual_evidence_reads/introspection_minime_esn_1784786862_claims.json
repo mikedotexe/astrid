@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Exploration noise can feel like a useful shiver at one level and a shattering force at another.",
+      "disposition": "Verified from current source that the live default exploration-noise amplitude is 0.085 and is distinct from source-prepared dynamic-noise candidates.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Dynamic noise and entropy-pressure alternatives may already be changing the running reservoir.",
+      "disposition": "Verified from source that dynamic-noise, coherence, pressure-room, and entropy-ceiling helpers are read-only review calculations and are not wired into ESN::step.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Noise, entropy, density gradient, and felt coherence should be compared over synchronized windows.",
+      "disposition": "Route a bounded concordance trial using existing read-only review helpers, exact runtime noise, telemetry, and Astrid's named felt moment.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Dynamic noise or adaptive entropy-pressure policy might reduce shattering.",
+      "disposition": "Preserve an exact Tier 5 operator-approval wait for exploration noise, rho, entropy threshold, pressure threshold, reservoir, or ESN step changes.",
+      "classification": "authority_gated"
+    }
+  ]
+}

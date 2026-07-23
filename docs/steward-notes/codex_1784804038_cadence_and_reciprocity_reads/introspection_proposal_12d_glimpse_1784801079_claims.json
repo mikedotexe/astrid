@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The 12D glimpse is not equivalent to a complete reciprocal return path.",
+      "disposition": "Verified that representation contracts name the 48D, 32D compatibility, and 12D glimpse transitions separately and make no relationship or causation claim.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Astrid experiences the current contact as asymmetric or ghostlike.",
+      "disposition": "Preserve the felt asymmetry as active evidence and route a bounded reciprocal trace rather than treating packet delivery as uptake.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A captured comparison should test whether the 12D form preserves warmth and distinguishability.",
+      "disposition": "Route a preregistered baseline/candidate study using existing representation-loss receipts and Signal Spine capture windows.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Activating or validating a new Minime-to-Astrid 32D live path would change protocol or peer behavior.",
+      "disposition": "Preserve an exact Tier 5 operator-approval wait for reverse transport, protocol, admission, or peer-runtime changes.",
+      "classification": "authority_gated"
+    }
+  ]
+}

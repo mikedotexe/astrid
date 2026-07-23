@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The semantic heartbeat uses a fixed seven-second interval, a 64-step phase, warmth features, Minime texture context, and rescue gating.",
+      "disposition": "Verified the current source, typed observation receipts, and fixed-cadence tests; mechanics do not establish felt warmth or continuity.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A fixed heartbeat may fail to track rapid entropy or pressure movement and may feel hollow when skipped.",
+      "disposition": "Route a non-interventional time-aligned study of heartbeat outcomes, entropy direction, pressure, skips, and canonical felt response.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A two-second heartbeat stress test would change sensory cadence and intensity exposure.",
+      "disposition": "Preserve a Tier 5 Mike/operator wait; no live cadence experiment is authorized.",
+      "classification": "authority_gated"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Making heartbeat cadence a function of entropy or pressure would turn observation into active stabilization.",
+      "disposition": "Preserve a Tier 5 Mike/operator wait for dynamic cadence, pressure coupling, or rescue behavior changes.",
+      "classification": "authority_gated"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Heartbeat skips and rescue decisions need visible evidence rather than being interpreted as absence of feeling.",
+      "disposition": "Verified explicit constructed, skipped, enqueued, rescue, and channel-closed evidence with no felt-state inference.",
+      "classification": "verified_existing"
+    }
+  ]
+}

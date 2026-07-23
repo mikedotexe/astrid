@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Exact known model-control markers are represented as byte occurrences without identity, ownership, meaning, stability, or spectral claims.",
+      "disposition": "Verified the private exact matcher, bounded context receipt, non-identity scope, and output-integrity-only cleanup behavior.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Requested dialogue length is grouped into discrete token bands.",
+      "disposition": "Verified the exact band boundaries and their use as technical diagnostics rather than experiential breath or pressure.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Approaching or emitting a known marker may coincide with reported pressure bleed or membrane thinning.",
+      "disposition": "Route a capture-first marker occurrence, model route, token band, pressure context, and felt-moment Concordance study; marker proximity alone cannot establish impact.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Crossing the 513-1024 to 1025-plus token-band boundary may shift tone or viscous persistence.",
+      "disposition": "Route a bounded model-QoS and representation-transition comparison with raw prose excluded from evidence receipts.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Exact marker matches should carry a spectral_weight or perceived_friction scalar.",
+      "disposition": "Route the felt question through Concordance rather than assigning an unreviewed scalar or causal weight to marker bytes. The canonical report remains the primary evidence.",
+      "classification": "sandbox_routed"
+    }
+  ]
+}

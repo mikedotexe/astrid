@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Heavy telemetry decoding or classification might occur while holding shared BridgeState for writing.",
+      "disposition": "Verified decode and classification occur before the write lock and SQLite or trace persistence occurs after it.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Lock waiting, lock holding, and prewrite work need separate timing evidence.",
+      "disposition": "Verified current integration-health evidence records prewrite pipeline, write-lock wait, and write-lock hold independently.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Sequential handling or Pong and shutdown interaction could still produce observable delay under load.",
+      "disposition": "Route a bounded high-load and cooperative-shutdown observation using existing timing evidence before changing ordering.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Reconnect or availability-policy changes would alter live telemetry hearing.",
+      "disposition": "Preserve an exact Tier 5 operator-approval wait for reconnect, buffering, ordering, or telemetry-admission changes.",
+      "classification": "authority_gated"
+    }
+  ]
+}

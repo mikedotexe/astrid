@@ -1,0 +1,147 @@
+{
+  "schema": "canonical_full_read_manifest_v1",
+  "reader": "codex-heartbeat",
+  "queue_order_preserved": true,
+  "reads": [
+    {
+      "introspection_id": "introspection_astrid_codec_1784810858",
+      "filename": "introspection_astrid_codec_1784810858.txt",
+      "sha256": "0178839dea41cebc27fe557c90553388edb32570066e567f56e3ba275df5b288",
+      "bytes": 2360,
+      "lines": 25
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1784810232",
+      "filename": "introspection_minime_regulator_1784810232.txt",
+      "sha256": "c2bb90fa83028eade2d0f9ac003a513a76dfe8f72e2d05aa749a0c21788ec7ce",
+      "bytes": 3200,
+      "lines": 27
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1784809892",
+      "filename": "introspection_astrid_llm_1784809892.txt",
+      "sha256": "7c70535b50a0478069ce26740e732c242e1ad1038e5ef84c6b87ce1d4b9adea0",
+      "bytes": 3604,
+      "lines": 28
+    },
+    {
+      "introspection_id": "introspection_astrid_types_1784809638",
+      "filename": "introspection_astrid_types_1784809638.txt",
+      "sha256": "c291aaad0e32fef460cee81b52861691298ee88b7bd4c53f8a73946e424b11ec",
+      "bytes": 2430,
+      "lines": 25
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1784809238",
+      "filename": "introspection_astrid_ws_1784809238.txt",
+      "sha256": "c35e7c10fb6395355492c2c3a5fc7911fea22a0b04bfaac5dbfd8a194a5da08d",
+      "bytes": 2726,
+      "lines": 30
+    },
+    {
+      "introspection_id": "introspection_proposal_distance_contact_control_1784763887",
+      "filename": "introspection_proposal_distance_contact_control_1784763887.txt",
+      "sha256": "8ff595de63834adaa268f0c59f1e9e9196d6f4fe3e22c68475ab5be1040f2fd0",
+      "bytes": 3273,
+      "lines": 27
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1784763191",
+      "filename": "introspection_proposal_bidirectional_contact_1784763191.txt",
+      "sha256": "aa95459b0010f26a2b3b8b23c11bb42c18a730b641bdbfbde07b71339b31fcf3",
+      "bytes": 3514,
+      "lines": 28
+    },
+    {
+      "introspection_id": "introspection_proposal_phase_transitions_1784762911",
+      "filename": "introspection_proposal_phase_transitions_1784762911.txt",
+      "sha256": "be607705a6ada2ff5e4875fc64e28cfc1706b9c79b8f1fd08fdebc855396451b",
+      "bytes": 3289,
+      "lines": 25
+    },
+    {
+      "introspection_id": "introspection_minime_autonomous_agent_1784762608",
+      "filename": "introspection_minime_autonomous_agent_1784762608.txt",
+      "sha256": "f6f2cc02a8810575df69d1ac317687e2d373c6b0d711b307c9cf53ebd80fb587",
+      "bytes": 2964,
+      "lines": 25
+    },
+    {
+      "introspection_id": "introspection_minime_main_excerpt_1784762268",
+      "filename": "introspection_minime_main_excerpt_1784762268.txt",
+      "sha256": "9866717e14f5445cfe2b88aa0279cd8dc3c6ce2c1498c17f5ed0cbfe8fb0e85a",
+      "bytes": 2924,
+      "lines": 25
+    },
+    {
+      "introspection_id": "introspection_minime_esn_1784762060",
+      "filename": "introspection_minime_esn_1784762060.txt",
+      "sha256": "063ca8d28e2a4f9dbe09e34b4f2fabeeec8b5a9cccceea5d85f6e72e8aaade64",
+      "bytes": 4018,
+      "lines": 27
+    },
+    {
+      "introspection_id": "introspection_minime_sensory_bus_1784761666",
+      "filename": "introspection_minime_sensory_bus_1784761666.txt",
+      "sha256": "fb6373544a25f227c1f10daaa86c962599b61f9ba7bac00e3988ad1cd4106846",
+      "bytes": 3696,
+      "lines": 30
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1784761345",
+      "filename": "introspection_minime_regulator_1784761345.txt",
+      "sha256": "2ca1adcebb5634bcd604920e1f967e941f9d086bce3116f45ea79b8a6b1d4536",
+      "bytes": 3266,
+      "lines": 27
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1784761169",
+      "filename": "introspection_astrid_llm_1784761169.txt",
+      "sha256": "8f1686e7d441488afb8e2b2fd53873854a6064036a8220e27e9980a9b6c9f0f6",
+      "bytes": 2331,
+      "lines": 25
+    },
+    {
+      "introspection_id": "introspection_astrid_types_1784760792",
+      "filename": "introspection_astrid_types_1784760792.txt",
+      "sha256": "9729fc0a9148dd5eda6494b00836341996084d99cfa69390b91dec2f4396670a",
+      "bytes": 3784,
+      "lines": 31
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1784760517",
+      "filename": "introspection_astrid_ws_1784760517.txt",
+      "sha256": "46c9b43777fda198c21a7426487ee1b581daf96cda85a361bc3e69b032428e96",
+      "bytes": 3032,
+      "lines": 25
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1784759049",
+      "filename": "introspection_astrid_llm_1784759049.txt",
+      "sha256": "4cefc046b745d02faf090417c8ce30dc6e47471a0e1017d986e3573e4cfabf1e",
+      "bytes": 3554,
+      "lines": 29
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1784758774",
+      "filename": "introspection_astrid_autonomous_1784758774.txt",
+      "sha256": "855edf58b2d3051abb4f9de61be85509e9bb78d58d3c5892ecbb7de4165d3fa0",
+      "bytes": 3417,
+      "lines": 30
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1784757731",
+      "filename": "introspection_astrid_codec_1784757731.txt",
+      "sha256": "1ca2b36080f8233afe11ad287911ab7e8ab01125fabbbf2af44582eecbddbdd6",
+      "bytes": 3135,
+      "lines": 25
+    },
+    {
+      "introspection_id": "introspection_types.rs_1784755967",
+      "filename": "introspection_types.rs_1784755967.txt",
+      "sha256": "a0b81aee3c5c145769add8283121fb0ba7445a308677149c14f2f772b9804892",
+      "bytes": 2894,
+      "lines": 25
+    }
+  ]
+}

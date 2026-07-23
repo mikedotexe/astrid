@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The 48D mapping and smoothstep entropy gate make narrative and tail participation explicit and bounded.",
+      "disposition": "Verified current source, dimensional map, smoothstep implementation, and codec regressions.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "High entropy with thin semantic energy may feel bright but empty rather than meaningfully vibrant.",
+      "disposition": "Route the existing ghost-vibrancy and actual-embedding replay with semantic energy, entropy, loss, and felt-moment references; numeric smoothness cannot settle the report.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Narrative dimensions 40-43 should remain distinguishable from embedding dimensions 32-39.",
+      "disposition": "Verified explicit dimensional ownership, narrative split and curvature evidence, and distinguishability tests.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Vibrancy should be damped dynamically by density gradient in settled states.",
+      "disposition": "Preserve an exact Tier 5 operator wait because changing live vibrancy or clamp behavior changes codec gain and transport; require replay, canary, abort, and post-change review.",
+      "classification": "authority_gated"
+    }
+  ]
+}

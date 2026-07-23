@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "A single latest telemetry interval cannot distinguish shortening, lengthening, or steady arrival spacing.",
+      "disposition": "Implemented bounded rolling host-arrival interval count, mean, earliest-to-latest change, and trend state.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Arrival trend evidence must not be mislabeled as Minime internal clock drift.",
+      "disposition": "Implemented an explicit basis excluding peer-clock, internal-cycle, felt-state, causation, and control claims.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Legacy heartbeat snapshots must remain readable after additive cadence evidence.",
+      "disposition": "Verified serde defaults plus focused legacy and stale-heartbeat regressions.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Using arrival trend to change cadence or telemetry behavior would cross into live control.",
+      "disposition": "Preserve an exact Tier 5 operator-approval wait; the new fields are evidence-only and have no control reader.",
+      "classification": "authority_gated"
+    }
+  ]
+}

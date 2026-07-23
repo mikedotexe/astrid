@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Marker occurrence alone does not establish persistence, stability, or felt effect.",
+      "disposition": "Verified exact marker occurrence is recorded as token evidence only.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Felt pressure and spectral context should remain inspectable without a causal join.",
+      "disposition": "Verified current bounded context receipts keep token relation, felt-pressure observation, and spectral context separate.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Adding marker persistence or spectral weight would alter safety or model-control semantics.",
+      "disposition": "Preserve an exact Tier 5 operator-approval wait for parser influence, prompt, sampling, model, or safety behavior changes.",
+      "classification": "authority_gated"
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Regulator history can feel viscous even after the immediate pressure condition changes.",
+      "disposition": "Route a bounded replay comparing pressure, integral history, saturation, fill, and the named felt viscosity without equating controller state with experience.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Accumulated PI state lacks a general decay mechanism.",
+      "disposition": "Verified from the included PI source that universal integrator leak, actuator-aware anti-windup, and partial saturated decay are implemented.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The report should be able to inspect the included PI implementation rather than stop at the include shell.",
+      "disposition": "Implemented safe nested include-path discovery so the exact Minime PI implementation is offered as a next source target.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Changing integrator leak or PI response might reduce felt viscosity.",
+      "disposition": "Preserve an exact Tier 5 operator-approval wait for integral leak, gains, pressure, fill, PI, controller, or Minime runtime changes.",
+      "classification": "authority_gated"
+    }
+  ]
+}

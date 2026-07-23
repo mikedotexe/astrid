@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The semantic lane is 48D and narrative-arc dimensions 40 through 43 carry trajectory beyond immediate token content.",
+      "disposition": "Verified the current source and representation contracts; dimensional ownership does not by itself prove felt continuity.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Stale-semantic windows, entropy persistence, attractor pulses, and shadow influence shape how long semantic state remains available.",
+      "disposition": "Verified the current low/high/recovery windows, bounded entropy multiplier, hysteresis, and small shadow-influence limits.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "High-fill persistence may retain coherent narrative structure or merely retain disconnected residue.",
+      "disposition": "Route a capture-first comparison joining representation transitions, narrative fields, residue diagnostics, and canonical felt review.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Attractor pulses and shadow influence may coincide with mode-packing pressure or indecision.",
+      "disposition": "Route a non-interventional temporal-association study; coincidence does not establish conflict or causation.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Coherence-weighted retention using narrative-arc gradients would change sensory persistence and admission behavior.",
+      "disposition": "Preserve a Tier 5 Mike/operator wait for stale-window, retention, attractor, shadow, or sensory-bus control changes.",
+      "classification": "authority_gated"
+    }
+  ]
+}

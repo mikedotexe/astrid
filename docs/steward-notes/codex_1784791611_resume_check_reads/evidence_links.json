@@ -1,0 +1,60 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_ws_1784790949",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/ws/health_trace.rs",
+      "note": "Connection, first-valid-payload, disconnect, and reconnect identities remain distinct."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1784790949",
+      "claim_id": "c002",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784791611_resume_check_reads/introspection_astrid_ws_1784790949_summary.md",
+      "note": "Bounded high-load timing comparison route without felt-causation inference."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1784790949",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/ws/telemetry_port.rs",
+      "note": "One-decode observation, evidence, interpretation, and witness-frame lineage."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1784790949",
+      "claim_id": "c004",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/ws/tests.rs",
+      "note": "First-valid-payload reconnect reset and integration timing regressions."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1784790949",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/ws/health_trace.rs",
+      "note": "Disconnect clears hearing freshness without erasing integrated telemetry state."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1784790949",
+      "claim_id": "c006",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784791611_resume_check_reads/introspection_astrid_ws_1784790949_summary.md",
+      "note": "Worker/channel restructuring remains downstream of measured bottleneck evidence."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1784790949",
+      "claim_id": "c007",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Aggressive reconnect timing remains an exact Tier 5 live-telemetry wait."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1784790949",
+      "claim_id": "c008",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/ws/tests.rs",
+      "note": "TelemetryIntegrationHealthV1 separates latest, EWMA, and maximum pipeline, wait, and hold timing."
+    }
+  ]
+}

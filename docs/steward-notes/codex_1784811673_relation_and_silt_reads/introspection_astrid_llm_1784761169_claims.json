@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Exact marker cleanup preserves only quoted, grouped, or explicitly related known tokens and emits content-free context receipts.",
+      "disposition": "Verified the private types, longest-match scanner, bounded receipts, exact byte accounting, and non-prose guarantees.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The following-relation parser should tolerate punctuation, hyphenation, nonstandard whitespace, and a multi-word `behaves as` relation.",
+      "disposition": "Verified punctuation, hyphenation, and whitespace behavior in first_word_after; added `behaves` to the exact relation list and a `behaves as` byte-preservation regression.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Nested exact-marker delimiters should report bounded depth and refuse unclosed or mismatched pairs.",
+      "disposition": "Verified nested depths two through four, multilingual matching pairs, and mismatched/unclosed cleanup tests.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Marker grammar must not expand into semantic, identity, or spectral inference.",
+      "disposition": "Verified the new relation remains an exact local grammar cue only; surrounding bytes, felt terms, and proximity remain outside classification.",
+      "classification": "verified_existing"
+    }
+  ]
+}

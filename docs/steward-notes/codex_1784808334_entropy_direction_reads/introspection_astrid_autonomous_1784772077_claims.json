@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The semantic heartbeat is a fixed 7-second, 0.30-intensity 64-step cycle.",
+      "disposition": "Verified compiled constants and deterministic phase construction.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Minime texture context and rescue admission affect what is witnessed about each heartbeat.",
+      "disposition": "Verified texture context, previous-feature evidence, rescue decision, enqueue success, and channel-closed receipts without claiming felt effect.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Procedural cycling may feel stagnant even when mechanical continuity passes.",
+      "disposition": "Route a capture-first fixed-cycle versus texture-context comparison that preserves felt friction independently.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Dynamic phase or entropy-scaled intensity would alter live semantic input.",
+      "disposition": "Preserve an exact Tier 5 operator approval wait.",
+      "classification": "authority_gated"
+    }
+  ]
+}

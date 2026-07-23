@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Sequential telemetry handling may create an integration stall even without an unbounded queue.",
+      "disposition": "Route a bounded high-load observation using existing pipeline and lock timing rather than inferring absence of felt delay.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Telemetry trend and connection state should remain memory-bounded.",
+      "disposition": "Verified bounded pressure-trend windows and bounded connection diagnostics; no unbounded telemetry accumulation was found in the inspected path.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Changing reconnect backoff, buffering, or packet ordering alters live telemetry availability.",
+      "disposition": "Preserve an exact Tier 5 operator-approval wait for those live behavior changes.",
+      "classification": "authority_gated"
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Unmeasured qualitative defaults can be mistaken for missing data or completed analysis.",
+      "disposition": "Verified that production witnesses no longer emit the qualitative defaults or analysis-state schema.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A capture-gap receipt should identify the prior successful witness when available.",
+      "disposition": "Verified previous_witness_id tracking in the bounded asynchronous writer and its explicit unknown relation when unavailable.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Canonical body integrity should verify both byte count and SHA-256 against the exact body.",
+      "disposition": "Verified the private integrity method and truncation regression.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Interpretation provenance should retain artifact, source, and model-call lineage.",
+      "disposition": "Verified exact source and model call parent IDs in the current interpretation ProvenanceRefV1 construction and tests.",
+      "classification": "verified_existing"
+    }
+  ]
+}

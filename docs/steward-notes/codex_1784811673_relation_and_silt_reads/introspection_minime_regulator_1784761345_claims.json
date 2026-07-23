@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "PI mode uses a gate and filter over EigenFill and lambda1_rel, while viscosity and resonance evidence provide additional context.",
+      "disposition": "Verified the current regulator structure and the explicit separation between observational density evidence and live control.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Integral history and viscosity may lag restless variance and contribute to felt pressure.",
+      "disposition": "Route a capture-first pressure/viscosity/variance study; current source and telemetry do not establish this causal chain.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Viscosity persistence should be observed across a quiet interval rather than assumed to decay.",
+      "disposition": "Route a bounded, non-induced quiet-window observation using existing persistence, gradient, mobility, and witness timestamps.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "A resonance-dependent porosity coefficient in rate_gate would alter PI admission and damping.",
+      "disposition": "Preserve a Tier 5 Mike/operator wait for gate, filter, porosity, pressure, PI, or damping changes.",
+      "classification": "authority_gated"
+    }
+  ]
+}

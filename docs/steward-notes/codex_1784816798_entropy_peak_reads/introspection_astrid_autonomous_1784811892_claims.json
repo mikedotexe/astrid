@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The semantic heartbeat has a fixed 7-second interval and 0.30 intensity over a cyclic phase.",
+      "disposition": "Verified the current constants and vector construction.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "with_minime_texture_context modulates the heartbeat vector with Minime telemetry.",
+      "disposition": "Verified that the call adds read-only texture context to the observation after the warmth vector is crafted; it does not mutate the vector or control Minime.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The fixed heartbeat intensity does not currently adapt to pressure risk or distinguishability loss.",
+      "disposition": "Verified the absence of a pressure-derived scaler in the live heartbeat path.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Heartbeat phase and perceived seven-second timing should be compared during high pressure and distinguishability loss.",
+      "disposition": "Route a bounded witness and Concordance comparison using existing cadence, pressure, and representation evidence.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Heartbeat intensity should increase dynamically with pressure risk or porosity.",
+      "disposition": "Preserve an exact Tier 5 operator wait because this changes live semantic heartbeat intensity and may worsen rather than relieve packed pressure; require baseline, canary, abort, and felt review.",
+      "classification": "authority_gated"
+    }
+  ]
+}

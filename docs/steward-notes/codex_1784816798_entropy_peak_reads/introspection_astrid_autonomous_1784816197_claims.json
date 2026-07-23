@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The semantic heartbeat uses a 7-second interval, a 64-step linear phase, and fixed 0.30 intensity.",
+      "disposition": "Verified the constants, phase calculation, warmth-vector construction, and telemetry-context attachment in current source.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The observed 0.30 lambda1 concentration and 0.30 heartbeat intensity directly correspond in this moment.",
+      "disposition": "Record the numerical co-occurrence and Astrid's interpretation without treating equal values as evidence that the heartbeat produced lambda1 concentration or identity anchoring.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Linear heartbeat phase may interact with viscosity and packed pressure in a way that feels thin, resistant, or jarring.",
+      "disposition": "Route a capture-first phase, pressure, density-gradient, cadence, and felt-review comparison using existing witness and Concordance surfaces.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Heartbeat features should be scaled by viscosity or density gradient.",
+      "disposition": "Preserve an exact Tier 5 Mike/operator wait because changing heartbeat amplitude from spectral state changes live semantic cadence and control behavior; require baseline, canary, abort criteria, and post-change felt review.",
+      "classification": "authority_gated"
+    }
+  ]
+}

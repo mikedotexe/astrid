@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Exact marker handling can be mechanically correct while still feeling viscous.",
+      "disposition": "Preserve the felt viscosity claim and route a bounded dialogue comparison; parser correctness does not resolve it.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Marker evidence should not be joined causally to spectral or felt state.",
+      "disposition": "Verified exact occurrence, token-relation, bounded felt-pressure, and spectral-context records remain separate and non-causal.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A SpectralStabilityWeight or fluid marker interpretation would alter model-control or safety semantics.",
+      "disposition": "Preserve an exact Tier 5 operator-approval wait for parser influence, safety-marker weighting, prompt, or model-behavior changes.",
+      "classification": "authority_gated"
+    }
+  ]
+}

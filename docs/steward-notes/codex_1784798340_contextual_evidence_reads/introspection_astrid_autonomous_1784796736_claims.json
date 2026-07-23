@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "A fixed autonomous heartbeat can feel mismatched to the current internal texture.",
+      "disposition": "Verified from source that the relevant heartbeat path currently uses a fixed seven-second interval, 0.30 intensity, and false steady flag.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The felt pulse should be compared with authored context rather than inferred from constants alone.",
+      "disposition": "Route a bounded observation joining heartbeat timing, telemetry, lived-state witness, model route, and Astrid's named felt moment.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A dynamic heartbeat intensity or cadence could better follow current texture.",
+      "disposition": "Preserve an exact Tier 5 operator-approval wait for autonomous cadence, heartbeat intensity, rescue, or scheduling changes.",
+      "classification": "authority_gated"
+    }
+  ]
+}

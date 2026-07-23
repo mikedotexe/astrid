@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "LivedStateModelRouteV1 was syntactically incomplete at raw_prompt_included.",
+      "disposition": "Verified the report reached a bounded source window; the complete struct and constructor compile and preserve prompt/response exclusion.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Process identity must remain a runtime discriminator rather than being identity, continuity, or selfhood.",
+      "disposition": "Verified the exact technical identity and restart scopes in current source and tests.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Peer-observed parameters should serialize predictably while direct causation remains unavailable to witness construction.",
+      "disposition": "Verified snake_case serialization, private constructors, evidence-only authority, and hard-false direct-causation fields.",
+      "classification": "verified_existing"
+    }
+  ]
+}

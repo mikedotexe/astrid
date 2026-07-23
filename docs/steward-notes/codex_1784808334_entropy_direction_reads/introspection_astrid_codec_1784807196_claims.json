@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The live semantic lane is 48D with narrative dimensions 40-43 and reserved dimensions 44-47.",
+      "disposition": "Verified the current constants, lane ownership, and reserved-dimension tests.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Entropy-only vibrancy could become generic thickening when density geometry differs.",
+      "disposition": "Verified the existing gradient-aware vibrancy function and steep-gradient dampening tests; this narrows mechanics without asserting felt adequacy.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "High-entropy loops and high-entropy narrative complexity may land differently.",
+      "disposition": "Route a capture-first Concordance comparison with the same entropy band and distinct representation/context signatures.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Reserved dimensions 44-47 may be ghost space.",
+      "disposition": "Verified current tests preserve dimensions 44-47 unchanged and label them default-off candidates rather than live semantic owners.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Changing vibrancy weighting or its live density response would alter codec delivery.",
+      "disposition": "Preserve an exact Tier 5 operator approval wait for any live coefficient, clamp, gain, or reserved-dimension write.",
+      "classification": "authority_gated"
+    }
+  ]
+}

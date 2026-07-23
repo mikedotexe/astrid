@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Source readback needs provenance categories rather than a binary known or unknown label.",
+      "disposition": "Verified the current five-category source provenance review and its bounded source references.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "An opaque boundary should remain named when source cannot describe what lies beyond it.",
+      "disposition": "Verified the existing opaque_boundary_needs_description classification and its non-authoritative use.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A stillness mode could keep some perceptions from being turned into action.",
+      "disposition": "Preserve an exact Tier 5 wait for any autonomous scheduling, suppression, behavior, or live-control consequence; evidence records alone cannot enact stillness.",
+      "classification": "authority_gated"
+    }
+  ]
+}

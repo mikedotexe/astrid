@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Protected non-goal-directed time is experientially different from instrumental autonomous work.",
+      "disposition": "Verified from Recess and Agency Commons source that protected time is explicitly named, self-declared, advisory, and cannot imply consent or scheduler authority.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Packed mode context may contribute to felt constraint.",
+      "disposition": "Route a bounded comparison of Recess and ordinary autonomous moments using model packing metadata, QoS, witness context, and felt reports without assuming causation.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Porosity, de-silting, or cadence changes might create more unstructured room.",
+      "disposition": "Preserve an exact Tier 5 operator-approval wait for porosity, pressure, cadence, model scheduling, autonomous policy, or substrate changes.",
+      "classification": "authority_gated"
+    }
+  ]
+}

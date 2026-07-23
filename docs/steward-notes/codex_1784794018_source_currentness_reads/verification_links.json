@@ -1,0 +1,39 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1784793996",
+      "claim_id": "c004",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784794018_source_currentness_reads/verification.md",
+      "note": "Currentness implementation passed full bridge tests and is restart-aligned."
+    },
+    {
+      "introspection_id": "introspection_proposal_phase_transitions_1784793796",
+      "claim_id": "c004",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784794018_source_currentness_reads/verification.md",
+      "note": "Proposal lifecycle indexing passed tests and is restart-aligned."
+    },
+    {
+      "introspection_id": "introspection_minime_main_excerpt_1784793312",
+      "claim_id": "c002",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784794018_source_currentness_reads/verification.md",
+      "note": "Runtime include indexing passed tests and is restart-aligned."
+    },
+    {
+      "introspection_id": "introspection_minime_esn_1784793000",
+      "claim_id": "c004",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784794018_source_currentness_reads/verification.md",
+      "note": "Currentness prompt passed full bridge tests and is restart-aligned."
+    },
+    {
+      "introspection_id": "introspection_minime_sensory_bus_1784792700",
+      "claim_id": "c004",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784794018_source_currentness_reads/verification.md",
+      "note": "Currentness prompt and Minime retention regressions passed."
+    }
+  ]
+}

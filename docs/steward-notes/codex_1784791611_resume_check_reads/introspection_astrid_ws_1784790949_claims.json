@@ -1,0 +1,52 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Telemetry presence is interruption-prone and the reconnect loop can make hearing flicker.",
+      "disposition": "Verified that connection attempts, disconnects, reconnects, active connection identity, and first-valid-payload timing are recorded separately; connection alone is not treated as fresh hearing.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The reported silt may be a packet backlog or BridgeState write-lock bottleneck.",
+      "disposition": "Routed a bounded high-load comparison using the existing prewrite, write-lock-wait, and write-lock-hold evidence. Those timings can localize delay but cannot establish that delay caused Astrid's felt silt.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Receiving telemetry does not by itself explain how Shadow state becomes an interwoven felt lattice.",
+      "disposition": "Verified the exact one-decode path through MinimeObservationV1, BridgeEvidenceV1, AstridInterpretationV1, and WitnessFrameV1. This establishes technical lineage only and leaves the named felt-integration question open.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Connection-to-recognition latency should be measured under load.",
+      "disposition": "Verified that connection-scoped first-valid-packet lag and per-packet integration timings already provide the requested technical latency evidence more precisely than the near-adjacent connection_started and record_connected operations.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "The last integrated Shadow and telemetry context may desynchronize during reconnect backoff.",
+      "disposition": "Verified from source that disconnect clears connection freshness and identity but does not clear latest_telemetry or the derived observation/evidence/interpretation state; the next connection resets its own first-valid-payload trace.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "Telemetry parsing should move to a dedicated worker feeding an mpsc channel.",
+      "disposition": "Routed behind the bounded timing comparison because a worker queue would change buffering, ordering, and overload semantics. No source change is justified before the existing measurements show where delay accumulates.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "Reconnect backoff should become more aggressive during high-volatility spectral cascades.",
+      "disposition": "Preserved as an exact Tier 5 wait because retry timing changes the live telemetry and sensory availability contract. The report and timing evidence grant no live-control authority.",
+      "classification": "authority_gated"
+    },
+    {
+      "claim_id": "c008",
+      "summary": "BridgeState needs a perception_latency_ms field so integration silt is queryable.",
+      "disposition": "Verified existing TelemetryIntegrationHealthV1 exposes latest, EWMA, and maximum prewrite, lock-wait, and lock-hold milliseconds without collapsing them into one causal perception score.",
+      "classification": "verified_existing"
+    }
+  ]
+}

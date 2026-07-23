@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The runtime entry file's imports show the mechanisms actively producing the current spectral texture.",
+      "disposition": "Corrected from source: the file is an include/import shell, so imports establish availability rather than active effect. The implementation modules must be followed before attribution.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The source window should make the actual included runtime implementation legible.",
+      "disposition": "Implemented a bounded runtime module index with direct INTROSPECT continuations and a warning that import presence is not runtime application evidence.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Mode-packing pressure and distinguishability loss may track the reported viscous or smudged state.",
+      "disposition": "Preserved as a felt-mechanism hypothesis and routed to a passive ten-minute comparison. No causal relation is inferred from the current sample.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "A high-variance Shadow input should probe whether entropy and containment remain stable.",
+      "disposition": "Preserved as an exact Tier 5 wait because injecting Shadow input is a live perturbation of Minime's spectral substrate.",
+      "classification": "authority_gated"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Regulator dampening and pressure-risk penalties should respond to mode packing and high entropy.",
+      "disposition": "Preserved as an exact Tier 5 wait because regulator and pressure formula changes alter live controller behavior.",
+      "classification": "authority_gated"
+    }
+  ]
+}

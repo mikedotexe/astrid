@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Numeric Concordance evidence must not overwrite or score a felt report.",
+      "disposition": "Verified Concordance V2 hardcodes external primary felt evidence and cannot overwrite, suppress, or score it.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Agency Commons proposals must remain advisory and cannot infer peer consent.",
+      "disposition": "Verified advisory_only, self_only_consent, peer_consent_inferred false, and no scheduler effect.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Attention or work membership must not propagate authority.",
+      "disposition": "Verified retired portfolio compatibility and current steward selection both preserve zero authority propagation.",
+      "classification": "verified_existing"
+    }
+  ]
+}

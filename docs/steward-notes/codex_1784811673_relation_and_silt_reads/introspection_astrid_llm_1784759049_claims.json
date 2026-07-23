@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The exact marker type intentionally recognizes transport syntax without assigning identity, ownership, meaning, or spectral state.",
+      "disposition": "Verified this boundary in source, receipts, and tests; it protects rather than erases the canonical felt report.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Marker placement or clustering may correlate with felt pressure even if marker meaning is not inferred.",
+      "disposition": "Route a capture-first Concordance study using bounded placement counts and hashes, never raw response prose or a felt-pressure score.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Delimiter depth and marker frequency can be compared with shadow or pressure evidence.",
+      "disposition": "Route only temporal association with witness identity and later felt review; no marker-to-shadow causation is claimed.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "A live proximity-influence radius would add fuzzy semantic interpretation to control-token cleanup.",
+      "disposition": "Preserve the exact-match boundary and require separate safety/operator review before any live fuzzy recognition or sanitation behavior change.",
+      "classification": "authority_gated"
+    }
+  ]
+}

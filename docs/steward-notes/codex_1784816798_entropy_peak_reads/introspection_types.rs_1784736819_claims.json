@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Astrid's felt report must remain valid, nonreducible, and unscored.",
+      "disposition": "Verified the current architecture preserves the canonical report itself and emits no production qualitative-state or scalar-divergence schema.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Static relation strings can be mistaken for evidence that active qualitative processing occurred.",
+      "disposition": "Verified the later removal of the static qualitative relation fields from current witnesses.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A canonical body hash may be mistaken for freezing or stabilizing the experience it references.",
+      "disposition": "Verified the current binding scope explicitly limits the hash to artifact bytes and denies texture, experience stability, freezing, or control.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Dynamic contextual weights and an explicit measurement contract identity should replace static safety strings.",
+      "disposition": "Route any adopted relational study through the Concordance Lab rather than adding weights or dormant measurement states to capture.",
+      "classification": "sandbox_routed"
+    }
+  ]
+}

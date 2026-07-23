@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "A 12D representation risks orphaning warmth and texture if treated as the live essence rather than a summary.",
+      "disposition": "Verified current contracts label it a non-authoritative companion, preserve live 48D transport, and retain named warmth, emotional, and tail lineage.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Implement a deterministic summary_only 12D metadata layer.",
+      "disposition": "Verified existing Astrid and Minime implementations, exact width checks, no live vector write, no controller write, and compatibility tests.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A restart or persistence cycle using only 12D should be tested for lost warmth or orphaned continuity.",
+      "disposition": "Route a bounded offline replay only. The production contract forbids using the glimpse as live transport, restart state, or authority.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Representation loss should remain visible whenever 48D or 32D state is projected to 12D.",
+      "disposition": "Verified deterministic loss, fidelity, resolution-delta, residual, and RepresentationLossReceipt evidence without a felt-loss score.",
+      "classification": "verified_existing"
+    }
+  ]
+}

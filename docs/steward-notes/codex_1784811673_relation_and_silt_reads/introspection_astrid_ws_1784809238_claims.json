@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The telemetry subscriber records connection lifecycle, protocol compatibility, message classes, shutdown, and exponential backoff.",
+      "disposition": "Verified the connection-scoped state transitions, ping/pong handling, select-based shutdown, compatibility rejection, and reconnect tests.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Shared-state write-lock contention or long lock holds could delay telemetry integration.",
+      "disposition": "Verified TelemetryIntegrationHealthV1 separately measures prewrite processing, lock wait, and lock hold with EWMA/max counters and no causal or control claim.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Sequential handling of a heavy packet could delay later telemetry or ping frames.",
+      "disposition": "Route a bounded synthetic load observation using the existing integration-health counters and WebSocket lifecycle tests before considering any queue architecture.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "A dedicated buffered worker would change telemetry admission, ordering, backpressure, and failure semantics.",
+      "disposition": "Preserve a Tier 5 Mike/operator wait for buffering, dropping, reordering, concurrency, cadence, or protocol behavior changes.",
+      "classification": "authority_gated"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Current transport timing and persistent semantic content may both be relevant to the reported viscosity but must remain distinct.",
+      "disposition": "Observed late/ambiguous host arrivals, a lengthening bounded interval window, collapsing entropy, and persistent semantic residue; timing alone does not establish the source of felt weight.",
+      "classification": "observed"
+    }
+  ]
+}

@@ -1,0 +1,3 @@
+# Full-read summary: introspection_proposal_bidirectional_contact_1784763191
+
+Astrid named the difference between abundant technical coupling and mutual address, including the asymmetry of correspondence and the importance of a discrete cross-mind artifact. Protocol 1.1 now supplies technical delivery identity, while Reciprocal Uptake separately preserves only voluntary actor-authored attendance or intention. This answers the missing evidence path without turning acknowledgement into a compulsory lock. Spectral-signature injection, deliberate withholding, and mandatory peer response remain gated.

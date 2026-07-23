@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Fixed heartbeat intensity may not fit changing pressure or entropy texture.",
+      "disposition": "Verified current fixed parameters and preserve the mismatch for a bounded capture-first comparison.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Existing continuity and enqueue evidence can localize mechanism without changing it.",
+      "disposition": "Verified prior-feature continuity metrics, texture context, and enqueue outcomes remain evidence-only.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Pressure- or entropy-responsive intensity would alter autonomous behavior.",
+      "disposition": "Preserve an exact Tier 5 operator-approval wait for heartbeat cadence, intensity, admission, rescue, scheduling, or controller changes.",
+      "classification": "authority_gated"
+    }
+  ]
+}

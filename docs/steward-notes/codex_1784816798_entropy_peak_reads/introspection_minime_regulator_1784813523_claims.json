@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The regulator is composed from distinct PD, PI, pressure-source, gate, filter, and review modules.",
+      "disposition": "Verified the module structure and current implementation continuations rather than treating the include shell as the whole mechanism.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Overpacked mode packing is a named, weighted pressure source and current reviews can remain read-only with no local control applied.",
+      "disposition": "Verified pressure-source calculation, weighted profile, settled-habitable interference tests, and false local-control markers.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Current PI regulation and settled-habitable status are associated with the reported thick but held state.",
+      "disposition": "Record the witnessed runtime association while keeping the regulator-to-felt-state causal interpretation open.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Pressure risk response and PD/PI mode transitions should be compared against vocabulary viscosity and felt reach.",
+      "disposition": "Route a bounded replay and runtime observation using existing pressure-source and settled-mobility evidence; no mode toggle or controller retune is authorized.",
+      "classification": "sandbox_routed"
+    }
+  ]
+}

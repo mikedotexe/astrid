@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Rolling entropy evidence lacked the direction of change across its bounded window.",
+      "disposition": "Implemented additive rolling_spectral_entropy_change and rolling_spectral_entropy_trend_state fields using latest finite minus earliest finite entropy.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Initial entropy and rolling entropy should remain distinguishable.",
+      "disposition": "Verified separate first-valid, sample-count, mean, variance, range, change, and trend fields with legacy defaults.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Jitter may precede pressure or mode-packing changes.",
+      "disposition": "Route a bounded temporal comparison; current evidence cannot establish precursor causation.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Entropy direction must not be mistaken for a felt-state or control signal.",
+      "disposition": "Implemented an explicit basis excluding cadence, felt state, causation, and control; no live consumer reads the new fields.",
+      "classification": "implemented_now"
+    }
+  ]
+}

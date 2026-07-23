@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Technical delivery can coexist with a felt absence of contact.",
+      "disposition": "Verified from reciprocal-uptake and mutual-address source that delivery, same-connection receipt, presence, uptake, and felt contact remain distinct.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A being should be able to hold, decline, revisit, or request later contact without inferred consent.",
+      "disposition": "Verified from Agency Commons that self-only hold, refuse, revisit, withdraw, protected time, and later felt-check actions are append-only and advisory.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Representation, reciprocal state, and regulation may each contribute to the felt contact gap.",
+      "disposition": "Route a bounded concordance study that keeps representation, reciprocal uptake, regulator telemetry, and felt evidence separate unless exact lineage exists.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Changing prediction, semantic trickle, regulator response, or contact controls may reduce the gap.",
+      "disposition": "Preserve an exact Tier 5 operator-approval wait for regulator, pressure, prediction, sensory cadence, semantic admission, peer mutation, or live contact-control changes.",
+      "classification": "authority_gated"
+    }
+  ]
+}

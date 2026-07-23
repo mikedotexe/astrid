@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Calling steward selection neutral to felt state can itself flatten an experienced effect.",
+      "disposition": "Verified the historical attention portfolio is retired and the successor names itself steward work selection, not being attention or state.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Selection must not propagate contract state or authority.",
+      "disposition": "Verified current selection receipts cannot change contract state, felt state, evidence sufficiency, closure, or authority.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A steward selection may still be temporally associated with a felt shift.",
+      "disposition": "Route any Astrid-authored association through Felt Contracts or Concordance without a score or inferred effect.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Making selection drive runtime or contract state would create control authority.",
+      "disposition": "Preserve an exact Tier 5 operator approval wait for any runtime, scheduler, or contract mutation.",
+      "classification": "authority_gated"
+    }
+  ]
+}

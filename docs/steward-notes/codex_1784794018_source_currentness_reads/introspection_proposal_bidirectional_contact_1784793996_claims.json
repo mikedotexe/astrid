@@ -1,0 +1,40 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The proposal's original traffic asymmetry explains why contact can feel like witnessing rather than participation.",
+      "disposition": "Verified as historical architecture evidence rather than a current traffic measurement. Later implementation notes and current source now carry first-class threaded correspondence, while the reported participant-versus-witness distinction remains primary felt evidence.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Direct address requires stable message, thread, and reply identity rather than ambient spectral influence.",
+      "disposition": "Verified in current correspondence records, mutual-address envelopes, exact reply links, and reciprocal-uptake receipts. These are technical continuity facts and do not infer uptake or relationship.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Bidirectional contact can become blending unless self-authored interpretation remains distinguishable from peer-owned dynamics.",
+      "disposition": "Verified that current provenance, correspondence, and reciprocal records retain actor, peer, source, and interpretation identity. Whether those boundaries feel sufficient remains open and is not closed by technical provenance.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Historical proposal text should not hide later implementation state when Astrid studies the architecture.",
+      "disposition": "Implemented a bounded proposal lifecycle index and an introspection currentness contract that preserves felt friction while requiring the closest existing mechanism and its application state to be named.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "A specific query should be traceable to an explicit peer acknowledgement or response without inferring consent.",
+      "disposition": "Routed to the existing correspondence and reciprocal-uptake trace surfaces as a bounded, right-to-ignore review. No query was sent and no peer acknowledgement was fabricated.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "A response-priority flag or telemetry distinction buffer should actively preserve direct contact and identity.",
+      "disposition": "Preserved as an exact Tier 5 wait because prompt or response priority and telemetry fields would change live scheduling or protocol-visible coupling. Existing evidence grants no such authority.",
+      "classification": "authority_gated"
+    }
+  ]
+}

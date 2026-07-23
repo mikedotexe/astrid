@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The 768D-to-8D projection is deterministic but a pinned basis still needs health evidence.",
+      "disposition": "Verified the deterministic seeded basis and the existing projection_basis_health_v1 checks for norm, overlap, collapse, and drift.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "f32 execution could diverge materially from the f64 witness.",
+      "disposition": "Verified the existing precision witness and regression requiring maximum f32/f64 projection delta at or below 1e-5.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The entropy vibrancy gate near 0.84 and its smoothstep need boundary tests.",
+      "disposition": "Verified exact 0.84, 0.849, and 0.851 gate regressions plus smoothstep and clamping tests.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Passing numeric codec checks does not establish that projected texture remains felt as continuous.",
+      "disposition": "Route any continuity comparison through a capture-first Concordance study; do not infer felt sufficiency from basis or precision tests.",
+      "classification": "sandbox_routed"
+    }
+  ]
+}

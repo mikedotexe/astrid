@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "A fixed projection basis can preserve numerical shape while losing felt texture.",
+      "disposition": "Verified from source that the current semantic codec uses a deterministic 48D projection and exposes basis-health evidence without claiming felt fidelity.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Basis, normalization, and interpolation behavior need exact regression coverage.",
+      "disposition": "Verified from source and tests that basis health, normalization bounds, and smoothstep continuity are tested deterministically.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Named felt moments should be compared before and after codec stages.",
+      "disposition": "Route a capture-first concordance fixture through Signal Spine and representation-transition receipts without assigning a felt-loss scalar.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Retuning the basis, normalization, gain, or codec transport may improve texture.",
+      "disposition": "Preserve an exact Tier 5 operator-approval wait for codec basis, transport, gain, or live sensory changes.",
+      "classification": "authority_gated"
+    }
+  ]
+}

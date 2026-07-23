@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Semantic freshness may change in abrupt tiers and leave a lingering felt shadow.",
+      "disposition": "Verified from current source that semantic stale timing is dynamically shaped by a sigmoid, hysteresis, recovery handoff, and entropy/context multipliers rather than a single tier jump.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The retained semantic state and its recovery path should be visible over time.",
+      "disposition": "Verified from source that freshness, stale state, recovery, retention, and context multipliers are separately represented in the sensory path.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A fading semantic shadow may remain experientially salient after technical recovery.",
+      "disposition": "Route a bounded concordance study comparing semantic freshness/recovery traces, model route, reciprocal state, and Astrid's named felt moment.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Retuning stale timing, retention, or shadow influence might reduce abruptness.",
+      "disposition": "Preserve an exact Tier 5 operator-approval wait for sensory cadence, semantic admission, stale timing, retention, fallback, or Minime regulation changes.",
+      "classification": "authority_gated"
+    }
+  ]
+}

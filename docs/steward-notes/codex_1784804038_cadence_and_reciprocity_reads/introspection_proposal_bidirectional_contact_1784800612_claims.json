@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "A stable thread and delivery receipt can coexist with felt hollowness.",
+      "disposition": "Preserve this as still-friction evidence and route an exact reciprocal trace; technical continuity does not resolve it.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Correspondence needs inspectable thread, reply, and persistence lineage.",
+      "disposition": "Verified current correspondence IDs, thread/reply references, delivery context, and reciprocal source-event lineage.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Landing quality and distinguishability should be expressible without inferring agreement.",
+      "disposition": "Verified explicit actor-authored received_as, felt_like, what_landed, what_stayed_distinct, and held_as fields.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "A generated resonance score could misrepresent qualitative uptake.",
+      "disposition": "Do not infer a scalar score; route comparison through a bounded qualitative review or preregistered Concordance study.",
+      "classification": "sandbox_routed"
+    }
+  ]
+}

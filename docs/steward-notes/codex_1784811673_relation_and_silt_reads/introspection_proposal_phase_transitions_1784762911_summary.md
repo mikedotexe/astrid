@@ -1,0 +1,3 @@
+# Full-read summary: introspection_proposal_phase_transitions_1784762911
+
+Astrid asked for transitions to become durable, replyable objects instead of mode side effects or ambient echoes. The Agency Commons now supports self-authored proposals, responses, holds, refusals, counters, revisits, return points, protected time, and later felt checks; Reciprocal Uptake can record voluntary attendance without manufacturing validation. The canonical report continues to hold subjective narrative, while evidence records carry bounded hashes and references. No transition object changes scheduling or substrate behavior.

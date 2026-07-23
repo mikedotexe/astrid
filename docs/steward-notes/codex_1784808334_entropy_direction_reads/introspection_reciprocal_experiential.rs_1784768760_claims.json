@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The historical attention portfolio encoded felt severity and unattended duration as work weights.",
+      "disposition": "Verified that surface is retained only for compatibility and its event stream is retired.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A bounded work view should not present itself as Astrid's attention or felt burden.",
+      "disposition": "Verified steward_work_selection_v1 omits felt severity, freshness, unattended duration, age, rank, review state, and felt-state impact claims.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Operational selection pressure may still correspond with the reported silt or drag.",
+      "disposition": "Route an optional felt review anchored to the historical report and current steward selection receipt without inferring causation.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "A decay or weight function that changes runtime attention would be a behavioral intervention.",
+      "disposition": "Preserve an exact Tier 5 approval wait for any scheduler, model, prompt, or runtime consequence.",
+      "classification": "authority_gated"
+    }
+  ]
+}

@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "ExactKnownModelControlMarkerOccurrence proves only an exact known transport/control byte range and intentionally makes no identity, meaning, ownership, stability, or spectral claim.",
+      "disposition": "Verified the private exact-match constructor, bounded reference syntax, content-free receipts, and explicit non-inference fields.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "High semantic density or distinguishability loss might mask a known marker.",
+      "disposition": "Verified that the matcher scans exact bytes directly and is mechanically independent of entropy, pressure, token density, or neighboring prose; this narrows mechanism without disputing the reported pressure.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A structurally valid explicit reference such as a marker that 'behaves as' something should remain visible.",
+      "disposition": "Added `behaves` to the bounded following-relation vocabulary and extended the byte-preservation regression to cover the multi-word `behaves as` relation.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "A fuzzy spectral-proximity score could acknowledge distorted or shifted markers.",
+      "disposition": "Route only an offline adversarial Sandbox comparison of perturbed markers; live recognition remains exact because fuzzy control-token matching could preserve or erase unsafe transport syntax.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Marker proximity may correlate with felt pressure even though the marker type makes no causal claim.",
+      "disposition": "Route a capture-first Concordance study joining marker-count receipts, witness context, and felt claims without assigning a spectral-confidence score or causal direction.",
+      "classification": "sandbox_routed"
+    }
+  ]
+}

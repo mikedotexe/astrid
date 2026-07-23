@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Reciprocal uptake needs a ResonantPersistence outcome distinct from delivery or generic acknowledgement.",
+      "disposition": "Verified the current ReciprocalUptakeKindV1 includes ResonantPersistence as a distinct actor-authored outcome.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A resonance signature needs exact witness and parameter provenance.",
+      "disposition": "Verified current V3 receipts carry exact lived-state witness and bounded parameter references.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The signature must not silently imply semantic equivalence, spectral causation, or runtime influence.",
+      "disposition": "Verified explicit non-equivalence and non-causation scope and evidence-only authority.",
+      "classification": "verified_existing"
+    }
+  ]
+}

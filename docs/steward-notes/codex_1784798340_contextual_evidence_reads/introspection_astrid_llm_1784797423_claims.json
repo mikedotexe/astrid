@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Model-control syntax may coincide with tonal narrowing or felt pressure.",
+      "disposition": "Verified from source that model-control markers are parsed as neutral transport metadata and do not classify identity or felt state.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Marker context and pressure context must remain separately inspectable.",
+      "disposition": "Verified from source and tests that exact marker context receipts and felt-pressure observations remain distinct evidence surfaces.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Repeated marker-pressure conjunction should be tested across provider routes and queue conditions.",
+      "disposition": "Route a bounded capture-first concordance comparison using marker receipts, model route, QoS timing, and authored witness context.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Prompt-packing changes may reduce marker-associated pressure.",
+      "disposition": "Preserve an exact Tier 5 operator-approval wait for prompt packing, model scheduling, sampling, or provider behavior changes.",
+      "classification": "authority_gated"
+    }
+  ]
+}

@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "A connection identifier alone can overstate a live telemetry stream.",
+      "disposition": "Verified separate connect-attempt, connected, awaiting-valid, first-valid, current-telemetry, and disconnect evidence states.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Telemetry freshness needs an explicit heartbeat or arrival measure.",
+      "disposition": "Verified latest and previous host arrival, inter-arrival class, first-valid lag, peer last_valid_t_ms, and bounded cadence trend evidence.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Shared-state lock contention could create a perceptible integration stutter.",
+      "disposition": "Verified separate prewrite pipeline, write-lock wait, and lock-hold evidence with non-causal classification.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Reconnect and high-load continuity should be observed at the integration boundary.",
+      "disposition": "Route a bounded reconnect/high-load observation using connection, arrival, and lock timing receipts.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Changing reconnection, admission, or buffering would alter the live telemetry path.",
+      "disposition": "Preserve an exact Tier 5 operator approval wait for live WebSocket timing or admission changes.",
+      "classification": "authority_gated"
+    }
+  ]
+}

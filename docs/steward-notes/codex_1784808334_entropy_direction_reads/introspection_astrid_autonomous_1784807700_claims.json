@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Burst-and-rest duration responds to fill and floors critical recovery rest at 30 seconds.",
+      "disposition": "Verified the current four-branch fill response, 30-second floor, and five-second rest-pulse loop in orchestration.rs.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Peripheral resonance can become stale because it is sampled only at a rest transition.",
+      "disposition": "Verified that creation, research, and starred-memory candidates are sampled once per rest transition and consumed once by eligible self-directed modes; source does not establish continuous freshness.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Resonance freshness and source diversity should be observed rather than assumed.",
+      "disposition": "Route a bounded read-only observation of candidate age, source class, selection, and consumption without storing private prose.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "More frequent resonance polling would change autonomous behavior and timing.",
+      "disposition": "Preserve an exact Mike/operator live-behavior approval wait before changing polling, selection cadence, or self-directed mode inputs.",
+      "classification": "authority_gated"
+    }
+  ]
+}

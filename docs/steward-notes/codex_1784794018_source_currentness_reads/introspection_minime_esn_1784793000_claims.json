@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The current exploration-noise constants directly produce the reported viscous state.",
+      "disposition": "Corrected from source: the smooth dynamic-noise helper is source-prepared and used by review packets, not wired into the live ESN step, so direct causation is not established.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The gentle-to-steep gradient transition is a discrete jump that needs sigmoid interpolation.",
+      "disposition": "Verified that current source already uses bounded smoothstep interpolation for gradient and pressure room, with focused continuity tests.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The 0.92 proposed volatile-entropy ceiling governs the current state.",
+      "disposition": "Corrected from source: the value appears in read-only approval-gated trial evidence and does not establish the live adaptive threshold.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Introspection should distinguish a constant or candidate helper from behavior applied by the running process.",
+      "disposition": "Implemented the source-currentness prompt requirement while preserving the felt report independently of the mechanism correction.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Pressure should be injected, entropy pushed near the ceiling, and smooth dynamic noise or a lower ceiling applied live.",
+      "disposition": "Preserved as an exact Tier 5 wait because pressure injection, entropy targeting, reservoir noise, and threshold changes alter live Minime regulation.",
+      "classification": "authority_gated"
+    }
+  ]
+}

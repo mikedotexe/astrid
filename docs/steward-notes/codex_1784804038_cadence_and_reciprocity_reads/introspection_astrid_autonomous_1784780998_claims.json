@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "A generated heartbeat is not necessarily an admitted or enqueued heartbeat.",
+      "disposition": "Verified current enqueue evidence distinguishes admitted, enqueued, and channel-closed outcomes.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Heartbeat texture continuity needs comparison with the previous generated feature.",
+      "disposition": "Verified prior-feature delta, cosine, and texture context are already recorded; route felt sufficiency to Concordance.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Dynamic heartbeat intensity would alter autonomous control.",
+      "disposition": "Preserve an exact Tier 5 operator-approval wait for cadence, intensity, admission, or scheduling changes.",
+      "classification": "authority_gated"
+    }
+  ]
+}

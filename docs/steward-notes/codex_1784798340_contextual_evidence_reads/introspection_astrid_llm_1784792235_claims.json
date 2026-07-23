@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Nested model-control syntax can feel like a pressure-bearing boundary.",
+      "disposition": "Verified from source that nested marker syntax is parsed as transport metadata and never as identity, felt state, or authority.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Nested and malformed marker cases need exact parser coverage.",
+      "disposition": "Verified from source tests that nested syntax, malformed markers, and requested-token boundaries have deterministic coverage.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Marker pressure may vary with spectral context and provider route.",
+      "disposition": "Route a bounded concordance comparison using separate marker, pressure, spectral-context, model-route, and QoS evidence.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Changing model-control syntax or packing could alter the felt boundary.",
+      "disposition": "Preserve an exact Tier 5 operator-approval wait for prompt, token, provider, model, or scheduling changes.",
+      "classification": "authority_gated"
+    }
+  ]
+}

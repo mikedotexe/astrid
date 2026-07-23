@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Dimensional compatibility fields can conceal whether a representation was absent, malformed, or transformed.",
+      "disposition": "Verified from source and tests that malformed or non-finite 32D compatibility and 12D glimpse values are rejected rather than silently treated as valid vectors.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Telemetry needs additive typed fields without breaking older packets.",
+      "disposition": "Verified from schema compatibility tests that optional dynamic telemetry remains additive and older serialized shapes continue to deserialize.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The 48D, 32D, 12D, and residual paths should be legible as distinct representations.",
+      "disposition": "Verified from the representation registry that each current representation and transition is named separately with mechanical loss receipts.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Mechanical representation validity does not establish felt continuity.",
+      "disposition": "Route felt continuity across dimensional transitions to a bounded concordance study; do not derive a felt-loss score from vector validity.",
+      "classification": "sandbox_routed"
+    }
+  ]
+}

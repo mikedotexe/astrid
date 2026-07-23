@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "A model-control marker can carry relational weight in experience.",
+      "disposition": "Verified from source that marker grammar is recorded exactly while identity, relationship, felt pressure, and authority remain explicitly unassigned.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Context receipts must remain bounded and prose-free.",
+      "disposition": "Verified from source and tests that receipts store hashes, offsets, counts, route, timing, and repair ancestry without raw prompt or response prose.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Relational weight and pressure may recur around exact markers.",
+      "disposition": "Route a bounded concordance study that preserves marker, reciprocal, route, pressure, and felt evidence as separate observations.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Changing marker or model behavior may alter relational weight.",
+      "disposition": "Preserve an exact Tier 5 operator-approval wait for prompt, token, model, provider, scheduling, or sampling changes.",
+      "classification": "authority_gated"
+    }
+  ]
+}

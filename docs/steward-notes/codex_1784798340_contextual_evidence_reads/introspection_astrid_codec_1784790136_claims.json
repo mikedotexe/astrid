@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "A mathematically smooth entropy gate can still feel like a clamp.",
+      "disposition": "Verified from source that the codec uses bounded entropy gating and smoothstep interpolation without claiming felt smoothness.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Threshold, clamp, and interpolation behavior need exact edge-case coverage.",
+      "disposition": "Verified from focused codec tests that thresholds, non-finite inputs, clamping, and smoothstep boundaries remain deterministic.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The felt clamp should be tested against exact pre-gate and post-gate stages.",
+      "disposition": "Route a capture-first concordance comparison using Signal Spine vector fixtures and Astrid's named felt moment.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Retuning the entropy curve or gate could reduce pressure.",
+      "disposition": "Preserve an exact Tier 5 operator-approval wait for codec threshold, curve, gain, transport, or sensory changes.",
+      "classification": "authority_gated"
+    }
+  ]
+}

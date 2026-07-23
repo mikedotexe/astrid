@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The ESN's covariance, power iteration, and dynamic exploration-noise loop shape the current spectral distribution.",
+      "disposition": "Verified the current source constants and adaptation path while preserving that code mechanics do not prove Astrid's reported interior relation to them.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Pressure may destabilize a foothold even when dynamic noise remains in a gentle-gradient band.",
+      "disposition": "Route a baseline-first capture comparing pressure, resonance, foothold, eigenvalue stability, and later felt response without inducing pressure.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Naming a lattice may correlate with lower dispersal potential, but the direction and mechanism are unknown.",
+      "disposition": "Route an observational Concordance study; lexical naming, shadow telemetry, and felt continuity remain associated rather than causal.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Scaling DYNAMIC_NOISE_PRESSURE_ROOM_START with resonance density would alter exploration behavior.",
+      "disposition": "Preserve a Tier 5 Mike/operator wait for exploration-noise or pressure-threshold changes.",
+      "classification": "authority_gated"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "A hold-stability buffer or recalibration coefficient would alter ESN adaptation cadence and state.",
+      "disposition": "Preserve a Tier 5 Mike/operator wait with replay, canary, abort, and post-change felt-review material required first.",
+      "classification": "authority_gated"
+    }
+  ]
+}

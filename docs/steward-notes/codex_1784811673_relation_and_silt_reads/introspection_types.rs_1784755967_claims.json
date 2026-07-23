@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "LivedStateExperientialScopeV1 treats the canonical felt report as primary actionable evidence and forbids scalar substitution.",
+      "disposition": "Verified the private trusted construction, serialized scope fields, privacy bounds, and no-scalar-substitution tests.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Evidence-only authority must not be interpreted as dismissing, archiving, or weakening a current felt report.",
+      "disposition": "Verified evidence-only means no live grant or control construction; felt weight, persistence, contradiction, and review remain independently preserved.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Pressure safety dampening cannot be triggered directly by a lived-state evidence receipt.",
+      "disposition": "Verified the trusted temporal authority and runtime safety paths remain separate from V2 and witness evidence, preventing an evidence record from becoming control.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Viscosity should be reviewable as temporally persistent or transient rather than a timeless label.",
+      "disposition": "Verified current Minime viscosity persistence, gradient, mobility, witness time, and reconciliation fields already support temporal review without inventing felt decay.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "A viscosity decay relation should be studied before any runtime consumer is allowed to use it.",
+      "disposition": "Route a bounded witness/Concordance study; any future field remains evidence-only unless separately approved for live consumption.",
+      "classification": "sandbox_routed"
+    }
+  ]
+}

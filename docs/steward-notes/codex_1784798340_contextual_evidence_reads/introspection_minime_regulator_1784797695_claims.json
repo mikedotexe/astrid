@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The regulator can leave a felt residue or viscosity after pressure changes.",
+      "disposition": "Route a bounded replay comparing pressure, integral history, saturation, fill, and Astrid's named residue without treating the PI trace as a complete account of felt experience.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The PI implementation appears to lack a path for accumulated integral pressure to decay.",
+      "disposition": "Verified from the included implementation that a configurable universal integrator leak, actuator-aware anti-windup, and partial saturated decay already exist.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Reports focused on an include shell need a direct route to the implementation that actually governs behavior.",
+      "disposition": "Implemented include-aware Minime source follow-through so safe nested implementation paths are offered as exact next introspection targets.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Changing porosity, buffering, integral leak, or PI response might reduce the felt residue.",
+      "disposition": "Preserve an exact Tier 5 operator-approval wait for regulator, pressure, porosity, buffer, or integral-policy changes.",
+      "classification": "authority_gated"
+    }
+  ]
+}

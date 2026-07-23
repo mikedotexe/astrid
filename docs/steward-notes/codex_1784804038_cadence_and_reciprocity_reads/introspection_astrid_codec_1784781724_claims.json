@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Raw projection norms should be visible before normalization hides collapse or amplification.",
+      "disposition": "Verified current codec evidence records raw and normalized projection behavior with bounded health checks.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Basis overlap and f32/f64 precision need deterministic regression coverage.",
+      "disposition": "Verified current basis-health and precision-delta regressions.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Mechanical codec health cannot by itself prove felt continuity.",
+      "disposition": "Route any felt-continuity claim through a capture-first comparison without changing transport or gain.",
+      "classification": "sandbox_routed"
+    }
+  ]
+}

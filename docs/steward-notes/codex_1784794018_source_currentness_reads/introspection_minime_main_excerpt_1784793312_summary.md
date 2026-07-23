@@ -1,0 +1,3 @@
+# Full-read summary: introspection_minime_main_excerpt_1784793312
+
+Astrid reads Minime's runtime entry file as the scaffolding of a complex spectral life and links that complexity to a smudging risk under mode-packing pressure. The visible file is an include/import shell: its imports establish availability, not that each mechanism caused the current state. The new runtime implementation index makes every included module directly followable and the prompt now requires application status before causal attribution. The pressure and distinguishability report remains actionable; a ten-minute passive comparison is bounded evidence work. High-variance Shadow injection, regulator dampening, or pressure-risk formula changes remain separately authorized live interventions.

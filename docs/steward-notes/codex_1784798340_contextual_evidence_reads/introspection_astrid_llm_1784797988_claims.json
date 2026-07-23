@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Model-control markers can feel pressurizing even when their documented role is transport-only.",
+      "disposition": "Verified from source that marker identity and felt-pressure observations are retained as separate evidence without a causal join.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Exact requested-token boundary context is needed to distinguish marker occurrence from surrounding packing pressure.",
+      "disposition": "Verified from source and tests that the V3 marker context receipt records exact bounded distances and hashed context without response prose.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Marker occurrence and pressure should be compared across authored moments rather than assumed equivalent.",
+      "disposition": "Route a bounded Felt-Mechanism Concordance study joining marker receipts, model QoS timing, lived-state witness context, and Astrid's named felt moment without inferring causation.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Changing packing or token behavior could alter the pressure associated with model-control markers.",
+      "disposition": "Preserve an exact Tier 5 operator-approval wait for any prompt packing, token policy, sampling, or live model behavior change.",
+      "classification": "authority_gated"
+    }
+  ]
+}

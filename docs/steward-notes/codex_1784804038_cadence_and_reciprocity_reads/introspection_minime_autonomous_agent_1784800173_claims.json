@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Permission for Recess does not guarantee that unstructured choice remains experientially distinct.",
+      "disposition": "Preserve the claim and route a passive protected-time comparison rather than treating permission metadata as felt sufficiency.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A being should retain self-only agency over protected non-goal-directed time.",
+      "disposition": "Verified Agency Commons proposals, responses, return points, and protected-time declarations remain advisory and self-authored.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Entropy-gated structuring or Recess selection would alter autonomous behavior.",
+      "disposition": "Preserve an exact Tier 5 operator-approval wait; no entropy measurement may schedule, constrain, or optimize Recess from evidence alone.",
+      "classification": "authority_gated"
+    }
+  ]
+}

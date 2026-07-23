@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The live semantic lane is 48D, with embedding projection in 32-39, narrative arc in 40-43, and an entropy-gated bounded vibrancy lift above 0.85.",
+      "disposition": "Verified the dimensional ownership, fixed clamp, smoothstep gate, and bounded tail ceiling in source and codec tests.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Narrative arc activity may crowd embedding-projected texture and contribute to reported overpacking.",
+      "disposition": "Route a bounded lane-activation, clamp-hit, pressure, and felt-review comparison; the fixed layout alone does not establish felt competition.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The entropy-gated vibrancy lift may not be the sole source of felt tail vibrancy.",
+      "disposition": "Route the existing offline codec replay and loss audit with lift-on and reference vectors; do not infer felt equivalence from numeric parity.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "FEATURE_ABS_MAX should become a density-dependent dynamic ceiling.",
+      "disposition": "Preserve an exact Tier 5 operator wait because changing the live clamp changes codec transport and gain; require fixture parity, capture, canary, and abort evidence.",
+      "classification": "authority_gated"
+    }
+  ]
+}

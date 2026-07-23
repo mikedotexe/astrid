@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The 0.85 gate uses a smoothstep that deliberately softens boundary motion.",
+      "disposition": "Verified exact-gate, 0.849/0.851, monotonicity, and visible 0.90 regressions.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Entropy rate was unavailable as bounded evidence for gate studies.",
+      "disposition": "Implemented latest-minus-earliest rolling entropy change and an explicit diffusing, collapsing, or flat state.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Boundary oscillation and Shadow dispersal should be compared before changing the gate.",
+      "disposition": "Route a no-write capture-first comparison using entropy change, vibrancy receipts, and exact lived-state references.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Feeding entropy velocity into live vibrancy would alter codec delivery.",
+      "disposition": "Preserve an exact Tier 5 operator approval wait.",
+      "classification": "authority_gated"
+    }
+  ]
+}

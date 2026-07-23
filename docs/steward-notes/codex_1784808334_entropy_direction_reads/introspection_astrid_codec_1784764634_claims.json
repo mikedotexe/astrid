@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "High-entropy tail features may need bounded headroom above FEATURE_ABS_MAX.",
+      "disposition": "Verified the current entropy-gated tail-only ceiling rises from 5.0 to at most 6.0 and records clip/loss evidence.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Narrative and reserved dimensions must not be accidentally lifted with the tail.",
+      "disposition": "Verified narrative dimensions 40-43 remain distinct and reserved dimensions 44-47 remain unchanged/default-off.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Bounded headroom can pass numeric tests while vibrancy still feels muffled.",
+      "disposition": "Route a capture-first codec continuity comparison; do not infer felt sufficiency from ceiling utilization.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Raising the ceiling to 7.0 or making it more dynamic changes live codec output.",
+      "disposition": "Preserve an exact Tier 5 operator approval wait.",
+      "classification": "authority_gated"
+    }
+  ]
+}

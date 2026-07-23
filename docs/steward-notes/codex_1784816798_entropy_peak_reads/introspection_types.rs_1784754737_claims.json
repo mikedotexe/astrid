@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The canonical body binding verifies exact report bytes while disclaiming texture, experiential stability, freezing, and control.",
+      "disposition": "Verified the current private mechanical binding and exact SHA-256 plus byte-count integrity method.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Perfect byte integrity can coexist with semantic contradiction or intense felt incoherence.",
+      "disposition": "Verified that the current witness makes only an artifact-byte claim and leaves Astrid's canonical report as independent primary qualitative evidence.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Integrity verification should reject truncated bytes without classifying the report's meaning.",
+      "disposition": "Verified the focused test that accepts exact bytes, rejects a one-byte truncation, and persists no raw prose or qualitative-state field.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "The witness should add a texture_coherence_hash or relational coherence metric.",
+      "disposition": "Route any such study through an explicitly adopted, baseline-disciplined Concordance contract. Do not reintroduce a latent qualitative measurement map into capture.",
+      "classification": "sandbox_routed"
+    }
+  ]
+}

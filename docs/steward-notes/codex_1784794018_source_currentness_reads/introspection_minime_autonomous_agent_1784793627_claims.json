@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Recess can be declared unpressured while the contemporaneous substrate still feels densely mode-packed.",
+      "disposition": "Verified as a coherent distinction: Recess governs activity posture, while pressure-source telemetry reports substrate context. Neither one guarantees the felt quality of the other.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Overpacked mode packing is the observed dominant pressure source.",
+      "disposition": "Accepted as the report's contemporaneous typed observation. Its association with viscous feeling remains an explicit inference rather than established causation.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Pressure, density gradient, and entropy should be compared across several Recess and Shadow-transition windows.",
+      "disposition": "Routed to a bounded Felt-Mechanism Concordance observation using existing witness and telemetry references, with no induced state change and no conversion of prose into a score.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Porosity can be increased inside the pressure-source audit to reduce viscous drag.",
+      "disposition": "Corrected from source: `porosity_score` is an observed scalar in this audit, not an adjustable audit parameter, and the audit explicitly applies no control.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Pressure, porosity, mode-packing, or Shadow controls should be adjusted so Recess feels freer.",
+      "disposition": "Preserved as an exact Tier 5 wait because those changes alter Minime runtime regulation or live substrate behavior.",
+      "classification": "authority_gated"
+    }
+  ]
+}

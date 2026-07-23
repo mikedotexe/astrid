@@ -1,0 +1,228 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_llm_1784797988",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784798340_contextual_evidence_reads/verification.md",
+      "note": "Current-source verification, bounded observation route, and authority boundary."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1784797695",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784798340_contextual_evidence_reads/verification.md",
+      "note": "Included PI source verification and preserved felt-viscosity replay."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1784797423",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784798340_contextual_evidence_reads/verification.md",
+      "note": "Marker neutrality, separate pressure evidence, and concordance route."
+    },
+    {
+      "introspection_id": "introspection_astrid_types_1784797258",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784798340_contextual_evidence_reads/verification.md",
+      "note": "Typed compatibility and representation-contract verification."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1784796736",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784798340_contextual_evidence_reads/verification.md",
+      "note": "Fixed heartbeat source verification and exact live-control wait."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1784796479",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784798340_contextual_evidence_reads/verification.md",
+      "note": "Codec source/tests, concordance route, and transport authority boundary."
+    },
+    {
+      "introspection_id": "introspection_proposal_distance_contact_control_1784794248",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784798340_contextual_evidence_reads/verification.md",
+      "note": "Contact, uptake, provenance, and control distinctions."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1784792235",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784798340_contextual_evidence_reads/verification.md",
+      "note": "Nested marker parser verification and separate contextual evidence."
+    },
+    {
+      "introspection_id": "introspection_astrid_types_1784791961",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784798340_contextual_evidence_reads/verification.md",
+      "note": "Rolling entropy implementation, tests, and non-control boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1784790635",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784798340_contextual_evidence_reads/verification.md",
+      "note": "Heartbeat mechanism verification and concordance route."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1784790136",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784798340_contextual_evidence_reads/verification.md",
+      "note": "Entropy-gate tests and preserved felt-clamp question."
+    },
+    {
+      "introspection_id": "introspection_proposal_12d_glimpse_1784789879",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784798340_contextual_evidence_reads/verification.md",
+      "note": "Current representation registry and mechanical-loss boundary."
+    },
+    {
+      "introspection_id": "introspection_proposal_distance_contact_control_1784789613",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784798340_contextual_evidence_reads/verification.md",
+      "note": "Reciprocal, representation, regulator, and contact evidence kept distinct."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1784789260",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784798340_contextual_evidence_reads/verification.md",
+      "note": "Protocol 1.1 and reciprocal-uptake verification without inferred relationship."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1784787936",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784798340_contextual_evidence_reads/verification.md",
+      "note": "Exact marker and bounded context receipt verification."
+    },
+    {
+      "introspection_id": "introspection_proposal_phase_transitions_1784787664",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784798340_contextual_evidence_reads/verification.md",
+      "note": "Replyable phase cards, self-only Commons actions, and language-only fixture route."
+    },
+    {
+      "introspection_id": "introspection_minime_autonomous_agent_1784787359",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784798340_contextual_evidence_reads/verification.md",
+      "note": "Recess and protected-time verification with bounded comparison route."
+    },
+    {
+      "introspection_id": "introspection_minime_esn_1784786862",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784798340_contextual_evidence_reads/verification.md",
+      "note": "Active noise and unwired review-helper verification."
+    },
+    {
+      "introspection_id": "introspection_minime_sensory_bus_1784786590",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784798340_contextual_evidence_reads/verification.md",
+      "note": "Dynamic stale/recovery mechanism verification and temporal observation route."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1784786127",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784798340_contextual_evidence_reads/verification.md",
+      "note": "Included PI source verification and preserved viscosity claim."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1784797695",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/introspect.rs",
+      "note": "Safe nested Minime include discovery and traversal rejection."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1784786127",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/introspect.rs",
+      "note": "Safe nested Minime include discovery and traversal rejection."
+    },
+    {
+      "introspection_id": "introspection_astrid_types_1784791961",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/ws/evidence.rs",
+      "note": "Finite bounded rolling entropy count, mean, population variance, and range."
+    },
+    {
+      "introspection_id": "introspection_astrid_types_1784791961",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/types/schema/telemetry.rs",
+      "note": "Additive state and basis fields with compatibility defaults."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1784797695",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "cargo test --lib runtime_include_index",
+      "note": "Three include-index regressions pass."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1784786127",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "cargo test --lib runtime_include_index",
+      "note": "Three include-index regressions pass."
+    },
+    {
+      "introspection_id": "introspection_astrid_types_1784791961",
+      "claim_id": "c001",
+      "kind": "test",
+      "target": "cargo test --lib telemetry_heartbeat",
+      "note": "Three heartbeat compatibility and rolling entropy regressions pass."
+    },
+    {
+      "introspection_id": "introspection_astrid_types_1784791961",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "cargo test --lib telemetry_heartbeat",
+      "note": "Three heartbeat compatibility and rolling entropy regressions pass."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1784797695",
+      "claim_id": "c003",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "Being-feedback implementation and no-control boundary."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1784786127",
+      "claim_id": "c003",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "Being-feedback implementation and no-control boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_types_1784791961",
+      "claim_id": "c001",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "Rolling entropy evidence implementation and authority boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_types_1784791961",
+      "claim_id": "c002",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Feedback-to-change causal record."
+    }
+  ]
+}

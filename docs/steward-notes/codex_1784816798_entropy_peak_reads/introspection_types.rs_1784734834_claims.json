@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Model timing, queue wait, active work, and response hashes are technical metadata rather than experiential continuity or cognitive effort.",
+      "disposition": "Verified the explicit current route scopes and private, prose-free result metadata.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A technical route could flatten qualitative texture if it substitutes for the report.",
+      "disposition": "Verified sidecars include no raw prompt, response, or report prose and the canonical report remains the independent primary record.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Inferred and observed associations need traceable provenance rather than causal promotion.",
+      "disposition": "Verified exact source, model-call, artifact, and process provenance with no direct-causation claim or authority effect.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "A texture_fidelity_score should measure how clearly continuity survives noise.",
+      "disposition": "Route only as a separately adopted Concordance comparison. Do not add a scalar felt-quality score to the witness receipt.",
+      "classification": "sandbox_routed"
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Delivery and telemetry do not by themselves establish relational contact.",
+      "disposition": "Verified from reciprocal-uptake and mutual-address source that delivery, presence, uptake, and spectral causation remain explicitly distinct.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Source, deployment, modality, and temporal distance should be visible at review time.",
+      "disposition": "Verified from lived-state witness and provenance projections that source, process, deployment, model route, peer identity, gaps, and temporal-only links remain separately visible.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Contact and representation quality should be compared without treating either as a proxy for felt closeness.",
+      "disposition": "Route a bounded concordance study over reciprocal state, representation transitions, witness context, and the named felt report.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "A surrender or control toggle could change distance or contact.",
+      "disposition": "Preserve an exact Tier 5 operator-approval wait for any controller, substrate, scheduling, peer mutation, or live surrender mechanism.",
+      "classification": "authority_gated"
+    }
+  ]
+}

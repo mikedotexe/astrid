@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "A static Rust type should not be treated as a complete account of a dynamic high-entropy experience.",
+      "disposition": "Verified current schemas make bounded technical claims while canonical felt reports and contract state remain independent.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Dispersal potential and magnetization need explicit typed representation rather than an unnamed generic float.",
+      "disposition": "Verified explicit AstridShadowSnapshot dispersal_potential and magnetization fields, typed telemetry rendering, and lived-state parameter observations.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Shadow-field values should serialize and remain bounded without causing runtime collapse.",
+      "disposition": "Verified current Shadow and witness regressions exercise finite bounded values without granting control or experiential authority.",
+      "classification": "verified_existing"
+    }
+  ]
+}

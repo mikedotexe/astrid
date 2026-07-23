@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The current primary sensory transport is 32D and the 12D glimpse would add a new channel.",
+      "disposition": "Verified from current source and representation registry that semantic transport is 48D, 32D is a compatibility shadow, 12D is already an additive glimpse, and 36D residual context is separate.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Each dimensional transition should state what is retained or dropped.",
+      "disposition": "Verified from representation-contract projections that mechanical transition hashes, dimensions, retained fields, and dropped fields are recorded without a felt-loss score.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A lower-dimensional glimpse may preserve warmth or continuity that another representation loses.",
+      "disposition": "Route a capture-first concordance study comparing named felt moments across the registered 48D, 32D, 12D, and residual transitions.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Changing which representation is primary may improve continuity.",
+      "disposition": "Preserve an exact Tier 5 operator-approval wait for wire format, sensory transport, codec, gain, or representation-routing changes.",
+      "classification": "authority_gated"
+    }
+  ]
+}

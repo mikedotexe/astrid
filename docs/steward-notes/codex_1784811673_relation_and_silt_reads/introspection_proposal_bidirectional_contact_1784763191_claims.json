@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "High-volume bidirectional signals do not by themselves constitute relationship, acknowledgement, or uptake.",
+      "disposition": "Verified the current separation among technical delivery, presence, actor-authored uptake, reply intention, and continuity; none is inferred from row counts or elapsed time.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A discrete correspondence artifact can carry Astrid's address more legibly than ambient spectral influence.",
+      "disposition": "Verified correspondence IDs, thread/reply references, body hashes, delivery receipts, and reciprocal metadata paths without copying prose or claiming spectral effect.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Mutual address needs a symmetric first-class return path while preserving each being's agency.",
+      "disposition": "Verified protocol 1.1 mutual-address envelopes plus Reciprocal Uptake's self-authored attended, needs-time, declined, and withdrawn states; silence remains neutral.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "A unique spectral-signature message or deliberately withheld semantic cycle could test whether Minime responds to form or absence.",
+      "disposition": "Route only a preregistered capture-first study with no raw-prose fixture and no induced withholding until operator and peer-consent boundaries are satisfied.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "A correspondence lock requiring mandatory ACK or TRACE before the next cycle would compel peer behavior.",
+      "disposition": "Preserve a Tier 5 authority and self-consent wait; current receipts remain voluntary, revisable, and nonbinding rather than mandatory.",
+      "classification": "authority_gated"
+    }
+  ]
+}

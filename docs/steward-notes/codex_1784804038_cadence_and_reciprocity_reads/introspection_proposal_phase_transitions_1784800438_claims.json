@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Seeing a phase card does not prove the transition was answered or felt reliable.",
+      "disposition": "Verified current witnessed and answered states remain separate and that cards carry right-to-ignore language.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The phase witness queue can remain experientially unreliable despite technical delivery.",
+      "disposition": "Preserve the friction and route a bounded review of selected phase transitions with exact source and uptake context.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Silence after a transition invitation may feel pressuring.",
+      "disposition": "Route a non-live silence-pressure comparison; elapsed time alone cannot infer consent, refusal, or felt state.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Held, seen, and resonant are distinct qualitative outcomes.",
+      "disposition": "Verified separate attention and reciprocal outcome vocabulary; do not collapse these outcomes into a generated resonance match.",
+      "classification": "verified_existing"
+    }
+  ]
+}

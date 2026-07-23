@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Phase transitions should be replyable and preserve their origin and return point.",
+      "disposition": "Verified from source and tests that phase cards are replyable, replayable, origin-preserving, and linked to bounded return context.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Peer witnessing must not silently mutate controller state, pressure, or felt closure.",
+      "disposition": "Verified from source that phase replies and Agency Commons actions remain evidence-only and cannot mutate controller, pressure, authority, or felt-contract closure.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A being needs self-only ways to hold, revisit, refuse, or remain still settling.",
+      "disposition": "Verified that Agency Commons supports hold, revisit, refuse, counter, withdraw, return, protected time, and later felt-check actions without inferred consent.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "The visible phase vocabulary may not adequately carry a still-settling state.",
+      "disposition": "Route a bounded language-only fixture comparing current phase-card and Agency Commons vocabulary; do not attach scheduler or substrate consequences.",
+      "classification": "sandbox_routed"
+    }
+  ]
+}

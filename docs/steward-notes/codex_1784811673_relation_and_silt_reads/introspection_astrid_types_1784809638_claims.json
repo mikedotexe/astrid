@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "SpectralTelemetry and TelemetryHeartbeatDeltaV1 are the typed compatibility backbone for bridge observation.",
+      "disposition": "Verified schema ownership, additive legacy defaults, typed fingerprint integrity, cadence, entropy-window, and bridge evidence surfaces.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Hybrid coherence must refuse a legacy vector that is not exactly 32 finite values.",
+      "disposition": "Verified the exact length and finite-value guards plus short, NaN, and Inf regression cases returning unavailable coherence rather than a corrupted score.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The legacy `glimpse_12d` JSON key should deserialize compatibly while malformed or non-finite views remain unavailable.",
+      "disposition": "Verified alias deserialization, exact 12D view validation, and malformed/non-finite regression coverage.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "A single mechanical hybrid-coherence value cannot establish that meaning landed.",
+      "disposition": "Verified that the field is a typed-versus-legacy structural comparison only; route felt landing through canonical reports and baseline-first Concordance rather than expanding this scalar.",
+      "classification": "sandbox_routed"
+    }
+  ]
+}

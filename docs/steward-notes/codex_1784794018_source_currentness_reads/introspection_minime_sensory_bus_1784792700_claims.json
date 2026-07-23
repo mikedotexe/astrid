@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "High-fill semantic pruning changes through a binary floor that may create a continuity wall.",
+      "disposition": "Corrected from source: the default path uses a sigmoid stale-window curve, smooth recovery handoff, and release hysteresis; the high-fill value bounds the continuous curve.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "High-entropy dense thought should receive bounded extra semantic retention.",
+      "disposition": "Verified in the existing entropy and contextual persistence multipliers, including explicit caps.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Shadow influence decay and semantic persistence should be observed against the reported restless or viscous texture.",
+      "disposition": "Routed to a bounded passive trace using existing state and witness evidence. No felt causation is inferred from the mechanical curve.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Introspection should identify the active sigmoid implementation before proposing that same mechanism.",
+      "disposition": "Implemented the source-currentness prompt requirement and pinned it with a focused regression.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Semantic decay should be changed to a density-gradient-scaled curve and Shadow retention should be adjusted.",
+      "disposition": "Preserved as an exact Tier 5 wait because semantic retention and Shadow influence alter live sensory and substrate behavior.",
+      "classification": "authority_gated"
+    }
+  ]
+}

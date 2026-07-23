@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The telemetry subscriber handles connection lifecycle, backoff, binary and text payloads, ping/pong, close frames, and persistence.",
+      "disposition": "Verified the complete source path and focused WebSocket trace tests.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "handle_telemetry_message_at is incomplete after a wire_p local and risks partial state updates.",
+      "disposition": "Verified that the report reached its source-window boundary, not the end of the function; current source continues through a complete accepted-packet integration path and compiles.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Close and network interruption should schedule reconnect without erasing prior connection evidence.",
+      "disposition": "Verified reconnect-count, disconnect-reason, first-valid reset, and retained-state regressions.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Malformed telemetry should record a parse error and leave the subscriber alive.",
+      "disposition": "Verified the current telemetry_parse_error_updates_ws_trace asynchronous regression and nonpanic handling path.",
+      "classification": "verified_existing"
+    }
+  ]
+}
