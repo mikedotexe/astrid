@@ -1365,8 +1365,15 @@ class ReciprocalExperientialSystemsTests(unittest.TestCase):
         self.assertLess(order["lived_state_witness"], order["representation_contracts"])
         self.assertLess(order["experiment_dossiers"], order["felt_mechanism_concordance"])
         self.assertLess(order["model_qos"], order["felt_mechanism_concordance"])
+        self.assertLess(
+            order["evidence_study_runtime"], order["felt_mechanism_concordance"]
+        )
         self.assertLess(order["agency_commons"], order["felt_contracts"])
+        self.assertLess(order["felt_contracts"], order["experiential_epistemics"])
         self.assertLess(order["felt_contracts"], order["steward_work_selection"])
+        self.assertLess(
+            order["steward_work_selection"], order["experiential_epistemics"]
+        )
         reciprocal = next(step for step in steps if step.step_id == "reciprocal_uptake")
         self.assertEqual(reciprocal.input_streams, ("reciprocal_uptake",))
         self.assertNotIn("model_qos", reciprocal.input_streams)

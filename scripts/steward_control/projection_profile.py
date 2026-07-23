@@ -293,12 +293,53 @@ def source_first_steps() -> tuple[ProjectionStep, ...]:
             ("diagnostics/model_qos_v1/status.json",),
         ),
         ProjectionStep(
+            "evidence_study_runtime",
+            (
+                "experiment_dossiers",
+                "model_qos",
+                "reciprocal_uptake",
+                "representation_contracts",
+            ),
+            (
+                command(
+                    python,
+                    "scripts/evidence_study.py",
+                    "--workspace",
+                    "{workspace}",
+                    "project",
+                    "--write",
+                    "--receipt-json",
+                ),
+            ),
+            (
+                "felt_mechanism_concordance",
+                "signal_spine",
+                "lived_state_witness",
+                "model_qos",
+                "reciprocal_uptake",
+                "representation_contracts",
+            ),
+            (
+                "diagnostics/evidence_study_runtime_v1/operator_events.jsonl",
+                "diagnostics/evidence_study_runtime_v1/samples/*.jsonl",
+                "../../../scripts/evidence_study_runtime/manifests/astrid_baseline_campaigns_v1.json",
+            ),
+            (
+                "diagnostics/evidence_study_runtime_v1/status.json",
+                "diagnostics/evidence_study_runtime_v1/campaigns.jsonl",
+                "diagnostics/evidence_study_runtime_v1/plans.jsonl",
+                "diagnostics/evidence_study_runtime_v1/comparisons.jsonl",
+                "diagnostics/evidence_study_runtime_v1/report.md",
+            ),
+        ),
+        ProjectionStep(
             "felt_mechanism_concordance",
             (
                 "experiment_dossiers",
                 "model_qos",
                 "reciprocal_uptake",
                 "representation_contracts",
+                "evidence_study_runtime",
             ),
             (
                 command(
@@ -447,5 +488,37 @@ def source_first_steps() -> tuple[ProjectionStep, ...]:
                 "diagnostics/steward_work_selection_v1/selection.json",
                 "diagnostics/steward_work_selection_v1/report.md",
             ),
+        ),
+        ProjectionStep(
+            "experiential_epistemics",
+            (
+                "felt_contracts",
+                "evidence_study_runtime",
+                "steward_work_selection",
+            ),
+            (
+                command(
+                    python,
+                    "scripts/experiential_epistemics.py",
+                    "--workspace",
+                    "{workspace}",
+                    "lint",
+                    "--write",
+                    "--receipt-json",
+                ),
+            ),
+            (
+                "felt_mechanism_concordance",
+                "felt_contracts",
+                "steward_work_selection",
+            ),
+            (
+                "diagnostics/evidence_study_runtime_v1/*.json",
+                "diagnostics/evidence_study_runtime_v1/*.jsonl",
+                "diagnostics/felt_mechanism_concordance_v1/*.jsonl",
+                "diagnostics/felt_contract_graph_v1/contracts.jsonl",
+                "diagnostics/steward_work_selection_v1/*.json",
+            ),
+            ("diagnostics/experiential_epistemics_v1/status.json",),
         ),
     )

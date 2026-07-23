@@ -236,10 +236,12 @@ class StewardProjectionTests(unittest.TestCase):
                 "experiment_dossiers",
                 "authority_temporal",
                 "model_qos",
+                "evidence_study_runtime",
                 "felt_mechanism_concordance",
                 "agency_commons",
                 "felt_contracts",
                 "steward_work_selection",
+                "experiential_epistemics",
             ],
         )
         steps = {step.step_id: step for step in source_first_steps()}
@@ -278,6 +280,7 @@ class StewardProjectionTests(unittest.TestCase):
                 "model_qos",
                 "reciprocal_uptake",
                 "representation_contracts",
+                "evidence_study_runtime",
             ),
         )
         self.assertEqual(
@@ -298,6 +301,14 @@ class StewardProjectionTests(unittest.TestCase):
         self.assertEqual(
             steps["steward_work_selection"].dependencies,
             ("felt_contracts",),
+        )
+        self.assertEqual(
+            steps["experiential_epistemics"].dependencies,
+            (
+                "felt_contracts",
+                "evidence_study_runtime",
+                "steward_work_selection",
+            ),
         )
 
     def test_failure_preserves_previous_successful_manifest(self) -> None:
