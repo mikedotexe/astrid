@@ -9,4 +9,6 @@ fn provenance_domains_cannot_be_forged_or_dispatched() {
     cases.compile_fail("tests/ui/lived_state_witness_cannot_deserialize.rs");
     cases.compile_fail("tests/ui/reciprocal_experiential_cannot_be_forged.rs");
     cases.compile_fail("tests/ui/reciprocal_experiential_cannot_deserialize.rs");
+    cases.compile_fail("tests/ui/reciprocal_resonance_cannot_be_forged.rs");
+    cases.compile_fail("tests/ui/reciprocal_resonance_cannot_deserialize.rs");
 }

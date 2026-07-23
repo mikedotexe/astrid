@@ -803,6 +803,9 @@ fn stale_or_absent_peer_state_is_unknown_not_active_inference() {
 fn runtime_spectral_context_preserves_entropy_and_density_without_causation() {
     let observations = runtime_spectral_observations(
         Some(0.90),
+        Some(4.74),
+        Some(3.21),
+        Some(1.53),
         Some(0.11),
         Some(0.23),
         Some(0.41),
@@ -813,12 +816,18 @@ fn runtime_spectral_context_preserves_entropy_and_density_without_causation() {
     let encoded = serde_json::to_value(observations).expect("runtime spectral observations");
     assert_eq!(encoded[0]["name"], "bridge.spectral_entropy");
     assert_eq!(encoded[0]["value"], 0.90);
-    assert_eq!(encoded[1]["name"], "bridge.spectral_density_gradient");
-    assert_eq!(encoded[1]["value"], 0.11);
-    assert_eq!(encoded[2]["name"], "bridge.pressure_risk");
-    assert_eq!(encoded[2]["value"], 0.23);
-    assert_eq!(encoded[3]["name"], "bridge.mode_packing");
-    assert_eq!(encoded[3]["value"], 0.41);
+    assert_eq!(encoded[1]["name"], "bridge.lambda1");
+    assert_eq!(encoded[1]["value"], 4.74);
+    assert_eq!(encoded[2]["name"], "bridge.lambda2");
+    assert_eq!(encoded[2]["value"], 3.21);
+    assert_eq!(encoded[3]["name"], "bridge.lambda1_lambda2_gap");
+    assert_eq!(encoded[3]["value"], 1.53);
+    assert_eq!(encoded[4]["name"], "bridge.spectral_density_gradient");
+    assert_eq!(encoded[4]["value"], 0.11);
+    assert_eq!(encoded[5]["name"], "bridge.pressure_risk");
+    assert_eq!(encoded[5]["value"], 0.23);
+    assert_eq!(encoded[6]["name"], "bridge.mode_packing");
+    assert_eq!(encoded[6]["value"], 0.41);
     assert!(
         encoded
             .as_array()
@@ -831,7 +840,8 @@ fn runtime_spectral_context_preserves_entropy_and_density_without_causation() {
             })
     );
 
-    let unavailable = runtime_spectral_observations(None, None, None, None, 2_000, None, None);
+    let unavailable =
+        runtime_spectral_observations(None, None, None, None, None, None, None, 2_000, None, None);
     let unavailable = serde_json::to_value(unavailable).expect("unknown observations");
     assert!(
         unavailable

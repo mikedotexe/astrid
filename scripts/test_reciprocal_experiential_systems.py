@@ -37,17 +37,25 @@ try:
         append_operator_event,
         project as project_concordance,
     )
+    from lived_state_witness.selftest import valid_witness as valid_lived_state_witness
     from reciprocal_uptake.model import (
         ReciprocalContextKindV1,
         ReciprocalContextReceiptV2,
         ReciprocalPresenceReceiptV2,
+        ReciprocalResonanceRelationV1,
+        ReciprocalResonanceSignatureV1,
         ReciprocalUptakeReceiptV2,
+        ReciprocalUptakeReceiptV3,
         UptakeKindV1,
         build_context_receipt,
+        build_resonance_signature,
+        build_resonant_uptake_receipt,
         build_uptake_receipt,
     )
     from reciprocal_uptake.projector import (
+        _validate_resonance_witness,
         project as project_reciprocal,
+        receipts_for_row,
         trace_records,
     )
     from representation_contracts.model import (
@@ -98,17 +106,27 @@ except ModuleNotFoundError:
         append_operator_event,
         project as project_concordance,
     )
+    from scripts.lived_state_witness.selftest import (
+        valid_witness as valid_lived_state_witness,
+    )
     from scripts.reciprocal_uptake.model import (
         ReciprocalContextKindV1,
         ReciprocalContextReceiptV2,
         ReciprocalPresenceReceiptV2,
+        ReciprocalResonanceRelationV1,
+        ReciprocalResonanceSignatureV1,
         ReciprocalUptakeReceiptV2,
+        ReciprocalUptakeReceiptV3,
         UptakeKindV1,
         build_context_receipt,
+        build_resonance_signature,
+        build_resonant_uptake_receipt,
         build_uptake_receipt,
     )
     from scripts.reciprocal_uptake.projector import (
+        _validate_resonance_witness,
         project as project_reciprocal,
+        receipts_for_row,
         trace_records,
     )
     from scripts.representation_contracts.model import (
@@ -260,6 +278,211 @@ class ReciprocalExperientialSystemsTests(unittest.TestCase):
             tampered = dict(current[0], confidence_score=0.5)
             with self.assertRaises(RecordValidationError):
                 ReciprocalUptakeReceiptV2.from_untrusted(tampered)
+
+    def test_resonant_persistence_is_explicit_witnessed_and_not_inferred(self) -> None:
+        witness_id = "lsw_" + "a" * 64
+        parameter_refs = [
+            "bridge.lambda1",
+            "bridge.lambda2",
+            "bridge.lambda1_lambda2_gap",
+            "bridge.spectral_entropy",
+        ]
+        signature = build_resonance_signature(
+            lived_state_witness_id=witness_id,
+            lived_state_witness_sha256=HASH_A,
+            parameter_refs=parameter_refs,
+            context_relation=(
+                ReciprocalResonanceRelationV1.TEMPORAL_ASSOCIATION_ONLY.value
+            ),
+        )
+        common = {
+            "actor": "astrid",
+            "peer": "minime",
+            "thread_id": "thread_resonant",
+            "message_id": "message_resonant",
+            "source_event_id": "source:resonant",
+            "source_event_sha256": HASH_A,
+            "body_sha256": HASH_B,
+            "recorded_at_unix_ms": 3,
+        }
+        first = build_resonant_uptake_receipt(
+            resonance_signature_v1=signature, **common
+        )
+        after_sixty_seconds = build_resonant_uptake_receipt(
+            resonance_signature_v1=signature, **common
+        )
+        self.assertEqual(first.receipt_id, after_sixty_seconds.receipt_id)
+        record = first.to_dict()
+        self.assertEqual(record["schema"], "reciprocal_uptake_receipt_v3")
+        self.assertEqual(record["uptake_kind"], "resonant_persistence")
+        self.assertEqual(
+            record["body_hash_scope"],
+            "exact_message_bytes_not_semantic_or_experiential_equivalence",
+        )
+        self.assertEqual(
+            record["resonance_signature_v1"]["lived_state_witness_id"],
+            witness_id,
+        )
+        self.assertNotIn("confidence_score", record)
+        self.assertNotIn("uptake_inferred", record)
+        self.assertNotIn("spectral_entropy", record)
+        self.assertEqual(ReciprocalUptakeReceiptV3.from_untrusted(record), first)
+
+        alternate_signature = build_resonance_signature(
+            lived_state_witness_id="lsw_" + "b" * 64,
+            lived_state_witness_sha256=HASH_A,
+            parameter_refs=parameter_refs,
+            context_relation=(
+                ReciprocalResonanceRelationV1.TEMPORAL_ASSOCIATION_ONLY.value
+            ),
+        )
+        alternate = build_resonant_uptake_receipt(
+            resonance_signature_v1=alternate_signature, **common
+        )
+        self.assertEqual(alternate.body_sha256, first.body_sha256)
+        self.assertNotEqual(alternate.receipt_id, first.receipt_id)
+
+        telemetry_only = {
+            "record_type": "message",
+            "thread_id": "thread_resonant",
+            "message_id": "message_resonant",
+            "from_being": "astrid",
+            "to_being": "minime",
+            "spectral_entropy": 0.90,
+            "lambda1": 4.74,
+            "lambda2": 3.21,
+            "recorded_at_unix_ms": 3,
+        }
+        raw = json.dumps(telemetry_only, sort_keys=True)
+        self.assertEqual(receipts_for_row(telemetry_only, raw), [])
+        with self.assertRaises(RecordValidationError):
+            receipts_for_row(
+                {**telemetry_only, "uptake_action": "resonant_persistence"}, raw
+            )
+
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            workspace = root / "workspace"
+            witness = valid_lived_state_witness()
+            witness["parameter_observations_v1"] = [
+                {
+                    "schema": "lived_state_parameter_observation_v1",
+                    "schema_version": 1,
+                    "name": name,
+                    "value": value,
+                    "unit": unit,
+                    "observation_kind": "runtime_observed",
+                    "observed_at_unix_ms": witness["authored_at_unix_ms"],
+                    "age_ms": 0,
+                    "fresh": True,
+                    "source_ref": f"fixture.{name}",
+                    "value_relation": (
+                        "runtime_spectral_shape_scalar_observed_context_only_"
+                        "no_uptake_or_mechanism_claim"
+                    ),
+                    "direct_causation_claimed": False,
+                }
+                for name, value, unit in (
+                    ("bridge.lambda1", 4.74, "eigenvalue"),
+                    ("bridge.lambda2", 3.21, "eigenvalue"),
+                    (
+                        "bridge.lambda1_lambda2_gap",
+                        1.53,
+                        "eigenvalue_delta",
+                    ),
+                )
+            ]
+            sidecar = (
+                workspace
+                / "introspections/lived_state_witnesses/witnesses"
+                / f"{witness['witness_id']}.json"
+            )
+            sidecar.parent.mkdir(parents=True)
+            sidecar.write_text(json.dumps(witness), encoding="utf-8")
+            sidecar.chmod(0o600)
+            projected_signature = build_resonance_signature(
+                lived_state_witness_id=witness["witness_id"],
+                lived_state_witness_sha256=hashlib.sha256(
+                    sidecar.read_bytes()
+                ).hexdigest(),
+                parameter_refs=parameter_refs[:3],
+                context_relation=(
+                    ReciprocalResonanceRelationV1.TEMPORAL_ASSOCIATION_ONLY.value
+                ),
+            )
+            ledger = root / "correspondence.jsonl"
+            _jsonl(
+                ledger,
+                [
+                    {
+                        "record_type": "reciprocal_uptake_action",
+                        "thread_id": "thread_resonant",
+                        "message_id": "message_resonant",
+                        "from_being": "astrid",
+                        "to_being": "minime",
+                        "uptake_action": "resonant_persistence",
+                        "resonance_signature_v1": projected_signature.to_dict(),
+                        "body_sha256": HASH_B,
+                        "recorded_at_unix_ms": 123456789000,
+                    }
+                ],
+            )
+            status = project_reciprocal(workspace, ledger, write=True)
+            self.assertTrue(status["valid"], status["errors"])
+            self.assertEqual(status["appended_event_count"], 1)
+            self.assertEqual(status["resonant_persistence_receipt_count"], 1)
+            projected = json.loads(
+                (
+                    workspace
+                    / "diagnostics/reciprocal_uptake_v1/current_receipts.jsonl"
+                ).read_text(encoding="utf-8")
+            )
+            self.assertEqual(projected["schema"], "reciprocal_uptake_receipt_v3")
+            self.assertEqual(
+                projected["resonance_signature_v1"], projected_signature.to_dict()
+            )
+            _validate_resonance_witness(workspace, projected)
+            sidecar.chmod(0o644)
+            with self.assertRaisesRegex(RecordValidationError, "owner-only"):
+                _validate_resonance_witness(workspace, projected)
+            sidecar.chmod(0o600)
+
+            exact_signature = build_resonance_signature(
+                lived_state_witness_id=witness["witness_id"],
+                lived_state_witness_sha256=hashlib.sha256(
+                    sidecar.read_bytes()
+                ).hexdigest(),
+                parameter_refs=parameter_refs[:3],
+                context_relation=(
+                    ReciprocalResonanceRelationV1.EXACT_AUTHORSHIP_WITNESS.value
+                ),
+            )
+            exact_receipt = build_resonant_uptake_receipt(
+                resonance_signature_v1=exact_signature,
+                **common,
+            ).to_dict()
+            with self.assertRaisesRegex(
+                RecordValidationError, "exact reciprocal-uptake source artifact"
+            ):
+                _validate_resonance_witness(workspace, exact_receipt)
+
+        tampered = copy.deepcopy(record)
+        tampered["resonance_signature_v1"]["parameter_refs"].append(
+            "bridge.mode_packing"
+        )
+        with self.assertRaises(RecordValidationError):
+            ReciprocalUptakeReceiptV3.from_untrusted(tampered)
+        with self.assertRaises(RecordValidationError):
+            ReciprocalResonanceSignatureV1(
+                signature_id=signature.signature_id,
+                lived_state_witness_id=witness_id,
+                lived_state_witness_sha256=HASH_A,
+                parameter_refs=tuple(parameter_refs),
+                context_relation=(
+                    ReciprocalResonanceRelationV1.TEMPORAL_ASSOCIATION_ONLY.value
+                ),
+                _token=object(),
+            )
 
     def test_technical_receipt_corrects_legacy_inferred_uptake_append_only(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:

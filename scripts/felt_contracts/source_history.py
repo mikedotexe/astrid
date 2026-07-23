@@ -977,15 +977,25 @@ def route_history(
                     )
                     metadata["felt_effect_inferred"] = False
                 if stream == "reciprocal_uptake":
-                    metadata["reciprocal_record_scope"] = (
-                        "technical_context"
-                        if record.get("schema")
-                        in {
-                            "reciprocal_context_receipt_v1",
-                            "reciprocal_context_receipt_v2",
-                        }
-                        else "explicit_actor_state"
-                    )
+                    if record.get("schema") in {
+                        "reciprocal_context_receipt_v1",
+                        "reciprocal_context_receipt_v2",
+                    }:
+                        metadata["reciprocal_record_scope"] = "technical_context"
+                    elif record.get("schema") == "reciprocal_uptake_receipt_v3":
+                        signature = record.get("resonance_signature_v1")
+                        signature = signature if isinstance(signature, dict) else {}
+                        metadata["reciprocal_record_scope"] = (
+                            "explicit_actor_state_with_spectral_context"
+                        )
+                        metadata["spectral_context_relation"] = str(
+                            signature.get("context_relation") or "unknown"
+                        )
+                        metadata["body_hash_scope"] = str(
+                            record.get("body_hash_scope") or "unknown"
+                        )
+                    else:
+                        metadata["reciprocal_record_scope"] = "explicit_actor_state"
                 if stream == "felt_mechanism_concordance":
                     metadata["study_id"] = study_id
                     metadata["numeric_relation_to_felt_report"] = (

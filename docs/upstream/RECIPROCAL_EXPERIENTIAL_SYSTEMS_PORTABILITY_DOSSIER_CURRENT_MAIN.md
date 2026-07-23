@@ -40,7 +40,12 @@ classification. Intentions remain append-only and revisable by the same actor;
 the current view may supersede a prior state without erasing history. An
 ambiguous or ambient-persistence state is valid only when the actor explicitly
 records it, never from elapsed time or technical delivery. Decline creates no
-closure or negative-felt-state claim.
+closure or negative-felt-state claim. A more specific persistence state may
+carry a content-addressed mechanical-context signature, but only when the actor
+explicitly records that state. The signature must name bounded observation
+references and whether their relation is exact or temporal; telemetry cannot
+create the uptake receipt. Message hashes must state that they bind exact bytes,
+not semantic or experiential equivalence.
 
 ### 2. Representation Transition Receipts
 
@@ -92,7 +97,7 @@ most generally useful boundary.
 | Trusted record construction | Private builders for trusted in-memory forms; persisted JSON is always revalidated |
 | Deterministic identity | Canonical hash over bounded semantic fields, independent of wall-clock projection order |
 | Authority envelope | Evidence-only or approval-pending metadata with no path to capability, approval, or dispatch |
-| Reciprocal records | Sparse generic context, presence, uptake, same-actor revision, and legacy-correction lineage without prose or confidence scores |
+| Reciprocal records | Sparse generic context, presence, uptake, same-actor revision, optional content-addressed mechanical-context signatures, and legacy-correction lineage without prose, copied scalars, confidence scores, or telemetry inference |
 | Representation records | Generic registry, transition, loss, fallback, repair, and model-route metadata |
 | Concordance state machine | Generic baseline/candidate gating and bounded epistemic outcomes |
 | Advisory actions | Generic self-authored proposals and responses with neutral silence and expiry |
@@ -126,6 +131,10 @@ maintainer explicitly requests them:
 - Persist hashes, bounded identifiers, scalar metadata, and provenance refs,
   never prompt, response, report, journal, message, or correspondence prose.
 - A technical context receipt cannot become an uptake receipt.
+- A lived-state or telemetry receipt cannot create uptake; it can only be cited
+  by a separately explicit actor action as exact or temporal mechanical context.
+- A message-body hash establishes byte identity, not semantic or experiential
+  equivalence.
 - A representation loss receipt cannot become a felt-loss measurement.
 - A numeric comparison cannot overwrite or close a source report.
 - A mechanical observation cannot classify, score, or copy felt content.
@@ -162,6 +171,9 @@ delete the audit trail.
   contain no latent inference or confidence fields, one actor cannot revise a
   peer's state, and no downstream view propagates felt loss, causation,
   consent, closure, evidence sufficiency, supersession, or authority.
+- Tests proving telemetry alone creates no uptake, contextual signatures are
+  content-addressed and tamper-evident, exact and temporal relations remain
+  distinct, and equal message hashes do not collapse distinct witnessed shape.
 - Baseline and candidate capture enforcement before comparison.
 - Deterministic external steward selection and visible unselected-alert
   behavior without persisted rank, review taxonomy, felt scores, raw wait-time

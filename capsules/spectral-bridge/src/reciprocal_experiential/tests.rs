@@ -1,7 +1,8 @@
 use super::{
     AgencyCommonsProposalV1, ConcordanceObservationV2, ConcordanceResultV2,
     ReciprocalContextKindV1, ReciprocalContextReceiptV2, ReciprocalPresenceKindV1,
-    ReciprocalPresenceReceiptV2, ReciprocalUptakeKindV1, ReciprocalUptakeReceiptV2,
+    ReciprocalPresenceReceiptV2, ReciprocalResonanceRelationV1, ReciprocalResonanceSignatureV1,
+    ReciprocalUptakeKindV1, ReciprocalUptakeReceiptV2, ReciprocalUptakeReceiptV3,
     RepresentationLossReceiptV1,
 };
 
@@ -66,6 +67,44 @@ fn serialized_records_keep_sparse_evidence_and_authority_boundaries() {
     assert!(value.get("elapsed_time_inferred").is_none());
     assert!(value.get("intention_is_nonbinding").is_none());
     assert!(value.get("confidence_score").is_none());
+
+    let resonance = ReciprocalResonanceSignatureV1::new(
+        format!("resonance_{}", "e".repeat(64)),
+        format!("lsw_{}", "f".repeat(64)),
+        "a".repeat(64),
+        vec![
+            "bridge.lambda1".into(),
+            "bridge.lambda2".into(),
+            "bridge.lambda1_lambda2_gap".into(),
+        ],
+        ReciprocalResonanceRelationV1::TemporalAssociationOnly,
+    );
+    let resonant = ReciprocalUptakeReceiptV3::new(
+        "uptake_3".into(),
+        "astrid".into(),
+        "minime".into(),
+        "thread_1".into(),
+        Some("message_1".into()),
+        "event_2".into(),
+        "c".repeat(64),
+        Some("d".repeat(64)),
+        3,
+        None,
+        resonance,
+    );
+    let value = serde_json::to_value(resonant).expect("serialize resonant uptake");
+    assert_eq!(value["schema"], "reciprocal_uptake_receipt_v3");
+    assert_eq!(value["uptake_kind"], "resonant_persistence");
+    assert_eq!(
+        value["body_hash_scope"],
+        "exact_message_bytes_not_semantic_or_experiential_equivalence"
+    );
+    assert_eq!(
+        value["resonance_signature_v1"]["spectral_shape_scope"],
+        "selected_mechanical_context_not_semantic_equivalence_uptake_inference_or_causation"
+    );
+    assert!(value.get("spectral_entropy").is_none());
+    assert!(value.get("uptake_inferred").is_none());
 
     let context = ReciprocalContextReceiptV2::new(
         "context_1".into(),

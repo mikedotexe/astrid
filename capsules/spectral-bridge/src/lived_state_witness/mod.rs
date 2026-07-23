@@ -333,14 +333,17 @@ fn peer_scalar_observations(now_ms: u64) -> Vec<LivedStateParameterObservationV1
 
 fn runtime_spectral_observations(
     spectral_entropy: Option<f64>,
+    lambda1: Option<f64>,
+    lambda2: Option<f64>,
+    lambda1_lambda2_gap: Option<f64>,
     density_gradient: Option<f64>,
     pressure_risk: Option<f64>,
     mode_packing: Option<f64>,
     now_ms: u64,
     telemetry_age_ms: Option<u64>,
     telemetry_fresh: Option<bool>,
-) -> [LivedStateParameterObservationV1; 4] {
-    [
+) -> Vec<LivedStateParameterObservationV1> {
+    vec![
         parameter(
             "bridge.spectral_entropy",
             spectral_entropy,
@@ -354,6 +357,51 @@ fn runtime_spectral_observations(
             telemetry_age_ms,
             telemetry_fresh,
             "bridge_state.latest_telemetry.spectral_fingerprint_v1.spectral_entropy",
+        ),
+        parameter_with_relation(
+            "bridge.lambda1",
+            lambda1,
+            "eigenvalue",
+            if lambda1.is_some() {
+                LivedStateObservationKindV1::RuntimeObserved
+            } else {
+                LivedStateObservationKindV1::Unknown
+            },
+            now_ms,
+            telemetry_age_ms,
+            telemetry_fresh,
+            "bridge_state.latest_telemetry.eigenvalues[0]",
+            "runtime_spectral_shape_scalar_observed_context_only_no_uptake_or_mechanism_claim",
+        ),
+        parameter_with_relation(
+            "bridge.lambda2",
+            lambda2,
+            "eigenvalue",
+            if lambda2.is_some() {
+                LivedStateObservationKindV1::RuntimeObserved
+            } else {
+                LivedStateObservationKindV1::Unknown
+            },
+            now_ms,
+            telemetry_age_ms,
+            telemetry_fresh,
+            "bridge_state.latest_telemetry.eigenvalues[1]",
+            "runtime_spectral_shape_scalar_observed_context_only_no_uptake_or_mechanism_claim",
+        ),
+        parameter_with_relation(
+            "bridge.lambda1_lambda2_gap",
+            lambda1_lambda2_gap,
+            "eigenvalue_delta",
+            if lambda1_lambda2_gap.is_some() {
+                LivedStateObservationKindV1::RuntimeObserved
+            } else {
+                LivedStateObservationKindV1::Unknown
+            },
+            now_ms,
+            telemetry_age_ms,
+            telemetry_fresh,
+            "bridge_state.latest_telemetry.eigenvalues[0]-eigenvalues[1]",
+            "runtime_spectral_shape_scalar_observed_context_only_no_uptake_or_mechanism_claim",
         ),
         parameter(
             "bridge.spectral_density_gradient",
@@ -471,6 +519,23 @@ pub(crate) fn runtime_context_v1(
         .as_ref()
         .and_then(|telemetry| telemetry.spectral_fingerprint_v1.as_ref())
         .map(|fingerprint| f64::from(fingerprint.spectral_entropy));
+    let lambda1 = state.latest_telemetry.as_ref().and_then(|telemetry| {
+        telemetry
+            .eigenvalues
+            .first()
+            .copied()
+            .filter(|value| value.is_finite())
+            .map(f64::from)
+    });
+    let lambda2 = state.latest_telemetry.as_ref().and_then(|telemetry| {
+        telemetry
+            .eigenvalues
+            .get(1)
+            .copied()
+            .filter(|value| value.is_finite())
+            .map(f64::from)
+    });
+    let lambda1_lambda2_gap = lambda1.zip(lambda2).map(|(head, shoulder)| head - shoulder);
     let density_gradient = state
         .latest_telemetry
         .as_ref()
@@ -532,6 +597,9 @@ pub(crate) fn runtime_context_v1(
         1..1,
         runtime_spectral_observations(
             spectral_entropy,
+            lambda1,
+            lambda2,
+            lambda1_lambda2_gap,
             density_gradient,
             pressure_risk,
             mode_packing,

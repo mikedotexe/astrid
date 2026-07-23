@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import math
 from collections import Counter
 from pathlib import Path
 from typing import Any, Iterable
@@ -23,6 +24,7 @@ try:
     )
     from evidence_store import EvidenceEventStore
     from projection_cursors import ProjectionInputCursor
+    from lived_state_witness.validation import validate_witness
 except ModuleNotFoundError:
     from scripts.experiential_systems.common import (
         RecordValidationError,
@@ -39,16 +41,21 @@ except ModuleNotFoundError:
     )
     from scripts.evidence_store import EvidenceEventStore
     from scripts.projection_cursors import ProjectionInputCursor
+    from scripts.lived_state_witness.validation import validate_witness
 
 from .model import (
     PresenceKindV1,
     ReciprocalContextKindV1,
     ReciprocalContextReceiptV2,
     ReciprocalPresenceReceiptV2,
+    ReciprocalResonanceRelationV1,
+    ReciprocalResonanceSignatureV1,
     ReciprocalUptakeReceiptV2,
+    ReciprocalUptakeReceiptV3,
     UptakeKindV1,
     build_context_receipt,
     build_presence_receipt,
+    build_resonant_uptake_receipt,
     build_uptake_receipt,
 )
 
@@ -186,6 +193,7 @@ def receipts_for_row(
         "needs_time": UptakeKindV1.NEEDS_TIME,
         "withdrawn_intention": UptakeKindV1.WITHDRAWN_INTENTION,
         "ambient_persistence": UptakeKindV1.AMBIENT_PERSISTENCE,
+        "resonant_persistence": UptakeKindV1.RESONANT_PERSISTENCE,
     }.get(explicit_value)
     if (
         explicit is None
@@ -194,12 +202,23 @@ def receipts_for_row(
     ):
         explicit = UptakeKindV1.AMBIENT_PERSISTENCE
     if explicit is not None:
-        result.append(
-            build_uptake_receipt(
-                explicit,
-                **_common(row, raw, actor=actor, peer=peer),
-            ).to_dict()
-        )
+        if explicit is UptakeKindV1.RESONANT_PERSISTENCE:
+            signature = ReciprocalResonanceSignatureV1.from_untrusted(
+                row.get("resonance_signature_v1")
+            )
+            result.append(
+                build_resonant_uptake_receipt(
+                    resonance_signature_v1=signature,
+                    **_common(row, raw, actor=actor, peer=peer),
+                ).to_dict()
+            )
+        else:
+            result.append(
+                build_uptake_receipt(
+                    explicit,
+                    **_common(row, raw, actor=actor, peer=peer),
+                ).to_dict()
+            )
     return result
 
 
@@ -231,7 +250,75 @@ def _canonical_record(value: dict[str, Any]) -> dict[str, Any]:
         "reciprocal_uptake_receipt_v2",
     }:
         return ReciprocalUptakeReceiptV2.from_untrusted(value).to_dict()
+    if schema == "reciprocal_uptake_receipt_v3":
+        return ReciprocalUptakeReceiptV3.from_untrusted(value).to_dict()
     raise RecordValidationError(f"unsupported reciprocal receipt schema: {schema!r}")
+
+
+def _validate_resonance_witness(
+    workspace: Path, receipt: dict[str, Any]
+) -> None:
+    signature = receipt.get("resonance_signature_v1")
+    if not isinstance(signature, dict):
+        raise RecordValidationError("resonant persistence lacks a resonance signature")
+    witness_id = str(signature.get("lived_state_witness_id") or "")
+    path = (
+        workspace
+        / "introspections/lived_state_witnesses/witnesses"
+        / f"{witness_id}.json"
+    )
+    if not path.is_file():
+        raise RecordValidationError(f"resonance witness missing:{witness_id}")
+    try:
+        if path.stat().st_mode & 0o077:
+            raise RecordValidationError(
+                f"resonance witness must be owner-only:{witness_id}"
+            )
+        witness_bytes = path.read_bytes()
+        witness = json.loads(witness_bytes.decode("utf-8"))
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError) as error:
+        raise RecordValidationError(f"resonance witness unreadable:{witness_id}") from error
+    if signature.get("lived_state_witness_sha256") != sha256_bytes(witness_bytes):
+        raise RecordValidationError("resonance witness content hash mismatch")
+    witness_errors = validate_witness(witness)
+    if witness_errors:
+        raise RecordValidationError(
+            f"resonance witness invalid:{witness_id}:{witness_errors[0]}"
+        )
+    if witness.get("witness_id") != witness_id:
+        raise RecordValidationError("resonance witness identity mismatch")
+    relation = str(signature.get("context_relation") or "")
+    if (
+        relation == ReciprocalResonanceRelationV1.EXACT_AUTHORSHIP_WITNESS.value
+        and (
+            witness.get("artifact_kind") != "reciprocal_uptake"
+            or witness.get("artifact_sha256") != receipt.get("source_event_sha256")
+        )
+    ):
+        raise RecordValidationError(
+            "exact reciprocal resonance requires the exact reciprocal-uptake source artifact"
+        )
+    observations = witness.get("parameter_observations_v1")
+    if not isinstance(observations, list):
+        raise RecordValidationError("resonance witness parameter observations missing")
+    by_name = {
+        str(item.get("name") or ""): item
+        for item in observations
+        if isinstance(item, dict)
+    }
+    for parameter_ref in signature.get("parameter_refs") or []:
+        observation = by_name.get(str(parameter_ref))
+        scalar = observation.get("value") if isinstance(observation, dict) else None
+        if (
+            not isinstance(scalar, (int, float))
+            or isinstance(scalar, bool)
+            or not math.isfinite(float(scalar))
+            or observation.get("observation_kind") != "runtime_observed"
+            or observation.get("fresh") is not True
+        ):
+            raise RecordValidationError(
+                f"resonance witness lacks fresh exact parameter:{parameter_ref}"
+            )
 
 
 def _stream_records(
@@ -539,6 +626,9 @@ def project(workspace: Path, ledger: Path, *, write: bool) -> dict[str, Any]:
                 message_index,
                 inferred_by_source if full_source_replay else None,
             )
+            for receipt in receipts:
+                if receipt.get("schema") == "reciprocal_uptake_receipt_v3":
+                    _validate_resonance_witness(workspace, receipt)
             generated.extend(receipts)
             if receipts:
                 source_types[str(value.get("record_type") or "unknown")] += 1
@@ -629,8 +719,8 @@ def project(workspace: Path, ledger: Path, *, write: bool) -> dict[str, Any]:
         for item in current_records
     )
     status = {
-        "schema": "reciprocal_uptake_projection_status_v2",
-        "schema_version": 2,
+        "schema": "reciprocal_uptake_projection_status_v3",
+        "schema_version": 3,
         "valid": not errors,
         "write": write,
         "source_present": ledger.is_file(),
@@ -645,6 +735,10 @@ def project(workspace: Path, ledger: Path, *, write: bool) -> dict[str, Any]:
         "current_receipt_counts": dict(sorted(current_counts.items())),
         "technical_context_receipt_count": sum(
             item.get("schema") == "reciprocal_context_receipt_v2"
+            for item in current_records
+        ),
+        "resonant_persistence_receipt_count": sum(
+            item.get("schema") == "reciprocal_uptake_receipt_v3"
             for item in current_records
         ),
         "historical_inferred_uptake_corrected_count": len(corrected_ids),
@@ -665,18 +759,24 @@ def project(workspace: Path, ledger: Path, *, write: bool) -> dict[str, Any]:
             "elapsed_time": "no_receipt",
             "private_content": "hashes_and_bounded_references_only",
             "revision": "same_actor_same_thread_append_only",
+            "body_hash": "exact_bytes_not_semantic_or_experiential_equivalence",
+            "resonant_persistence": (
+                "explicit_actor_state_with_content_addressed_lived_state_reference"
+            ),
+            "telemetry_alone": "cannot_construct_uptake",
         },
         "errors": errors,
         "counter_audit": {
             "status": "consistent" if not errors else "inconsistent",
             "checks": {
                 "records_unique": len({item["receipt_id"] for item in records}) == len(records),
-                "canonical_v2_receipts": all(
+                "canonical_sparse_or_witnessed_receipts": all(
                     item.get("schema")
                     in {
                         "reciprocal_presence_receipt_v2",
                         "reciprocal_context_receipt_v2",
                         "reciprocal_uptake_receipt_v2",
+                        "reciprocal_uptake_receipt_v3",
                     }
                     for item in records
                 ),
@@ -751,7 +851,7 @@ def project(workspace: Path, ledger: Path, *, write: bool) -> dict[str, Any]:
                     ),
                     "superseded_receipt_count": len(superseded_ids),
                     "history_policy": "append_only_unchanged",
-                    "current_view_policy": "sparse_v2_with_explicit_revisions",
+                    "current_view_policy": "sparse_v2_or_witnessed_v3_with_explicit_revisions",
                     "legacy_reader_policy": "validate_then_canonicalize",
                     "artifact_authority_state_v1": authority_state(),
                 },
@@ -799,6 +899,8 @@ def project(workspace: Path, ledger: Path, *, write: bool) -> dict[str, Any]:
             "",
             "Presence, delivery, acknowledgement, uptake, and elapsed time remain separate facts.",
             "Current uptake contains only explicit actor-authored states; silence and elapsed time create no receipt.",
+            "Resonant persistence additionally names a content-addressed lived-state shape; telemetry alone cannot create it.",
+            "Body hashes preserve exact bytes, not semantic or experiential equivalence.",
             "Revisions supersede the prior current state without erasing append-only history.",
             "",
             "## Counts",

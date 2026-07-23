@@ -55,6 +55,7 @@ pub enum ReciprocalUptakeKindV1 {
     NeedsTime,
     WithdrawnIntention,
     AmbientPersistence,
+    ResonantPersistence,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
@@ -153,6 +154,111 @@ impl ReciprocalUptakeReceiptV2 {
             body_sha256,
             recorded_at_unix_ms,
             revises_receipt_id,
+            artifact_authority_state_v1: ExperientialEvidenceAuthorityV1::evidence_only(),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum ReciprocalResonanceRelationV1 {
+    ExactAuthorshipWitness,
+    TemporalAssociationOnly,
+}
+
+/// Content-addressed spectral context selected by the actor alongside an
+/// explicit uptake state. The referenced lived-state witness owns the scalar
+/// values; this record only names the exact observations that make up the
+/// relevant shape.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct ReciprocalResonanceSignatureV1 {
+    schema: &'static str,
+    schema_version: u8,
+    signature_id: String,
+    lived_state_witness_id: String,
+    lived_state_witness_sha256: String,
+    parameter_refs: Vec<String>,
+    context_relation: ReciprocalResonanceRelationV1,
+    spectral_shape_scope: &'static str,
+    artifact_authority_state_v1: ExperientialEvidenceAuthorityV1,
+}
+
+impl ReciprocalResonanceSignatureV1 {
+    #[allow(dead_code)]
+    fn new(
+        signature_id: String,
+        lived_state_witness_id: String,
+        lived_state_witness_sha256: String,
+        parameter_refs: Vec<String>,
+        context_relation: ReciprocalResonanceRelationV1,
+    ) -> Self {
+        Self {
+            schema: "reciprocal_resonance_signature_v1",
+            schema_version: 1,
+            signature_id,
+            lived_state_witness_id,
+            lived_state_witness_sha256,
+            parameter_refs,
+            context_relation,
+            spectral_shape_scope: "selected_mechanical_context_not_semantic_equivalence_uptake_inference_or_causation",
+            artifact_authority_state_v1: ExperientialEvidenceAuthorityV1::evidence_only(),
+        }
+    }
+}
+
+/// An explicit actor-authored resonant-persistence receipt. Presence remains a
+/// separate fact, and telemetry cannot construct this record by itself.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct ReciprocalUptakeReceiptV3 {
+    schema: &'static str,
+    schema_version: u8,
+    receipt_id: String,
+    uptake_kind: ReciprocalUptakeKindV1,
+    actor: String,
+    peer: String,
+    thread_id: String,
+    message_id: Option<String>,
+    source_event_id: String,
+    source_event_sha256: String,
+    body_sha256: Option<String>,
+    body_hash_scope: &'static str,
+    recorded_at_unix_ms: u64,
+    revises_receipt_id: Option<String>,
+    resonance_signature_v1: ReciprocalResonanceSignatureV1,
+    artifact_authority_state_v1: ExperientialEvidenceAuthorityV1,
+}
+
+impl ReciprocalUptakeReceiptV3 {
+    #[allow(clippy::too_many_arguments, dead_code)]
+    fn new(
+        receipt_id: String,
+        actor: String,
+        peer: String,
+        thread_id: String,
+        message_id: Option<String>,
+        source_event_id: String,
+        source_event_sha256: String,
+        body_sha256: Option<String>,
+        recorded_at_unix_ms: u64,
+        revises_receipt_id: Option<String>,
+        resonance_signature_v1: ReciprocalResonanceSignatureV1,
+    ) -> Self {
+        Self {
+            schema: "reciprocal_uptake_receipt_v3",
+            schema_version: 3,
+            receipt_id,
+            uptake_kind: ReciprocalUptakeKindV1::ResonantPersistence,
+            actor,
+            peer,
+            thread_id,
+            message_id,
+            source_event_id,
+            source_event_sha256,
+            body_sha256,
+            body_hash_scope: "exact_message_bytes_not_semantic_or_experiential_equivalence",
+            recorded_at_unix_ms,
+            revises_receipt_id,
+            resonance_signature_v1,
             artifact_authority_state_v1: ExperientialEvidenceAuthorityV1::evidence_only(),
         }
     }

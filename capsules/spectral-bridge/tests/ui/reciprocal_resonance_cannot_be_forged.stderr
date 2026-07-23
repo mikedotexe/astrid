@@ -1,0 +1,16 @@
+error[E0624]: associated function `new` is private
+ --> tests/ui/reciprocal_resonance_cannot_be_forged.rs:6:51
+  |
+6 |       let _forged = ReciprocalResonanceSignatureV1::new(
+  |                                                     ^^^ private associated function
+  |
+ ::: src/reciprocal_experiential.rs
+  |
+  | /     fn new(
+  | |         signature_id: String,
+  | |         lived_state_witness_id: String,
+  | |         lived_state_witness_sha256: String,
+  | |         parameter_refs: Vec<String>,
+  | |         context_relation: ReciprocalResonanceRelationV1,
+  | |     ) -> Self {
+  | |_____________- private associated function defined here

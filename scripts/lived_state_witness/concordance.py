@@ -21,6 +21,7 @@ MEASURES = {
     "bridge.pressure_risk": "pressure_weight_context",
     "bridge.mode_packing": "mode_packing_context",
     "bridge.spectral_density_gradient": "density_gradient_context",
+    "bridge.lambda1_lambda2_gap": "head_shoulder_gap_context",
     "astrid_shadow.field_norm": "shadow_field_norm_context",
     "astrid_shadow.field_norm_delta": "shadow_trajectory_context",
     "astrid_shadow.dispersal_potential": "shadow_dispersal_context",

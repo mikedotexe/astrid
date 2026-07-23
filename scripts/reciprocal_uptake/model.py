@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from enum import StrEnum
+import re
 from typing import Any
 
 try:
@@ -42,6 +43,12 @@ class UptakeKindV1(StrEnum):
     NEEDS_TIME = "needs_time"
     WITHDRAWN_INTENTION = "withdrawn_intention"
     AMBIENT_PERSISTENCE = "ambient_persistence"
+    RESONANT_PERSISTENCE = "resonant_persistence"
+
+
+class ReciprocalResonanceRelationV1(StrEnum):
+    EXACT_AUTHORSHIP_WITNESS = "exact_authorship_witness"
+    TEMPORAL_ASSOCIATION_ONLY = "temporal_association_only"
 
 
 class ReciprocalContextKindV1(StrEnum):
@@ -52,6 +59,19 @@ class ReciprocalContextKindV1(StrEnum):
 
 
 _TRUSTED = object()
+_LIVED_STATE_WITNESS_ID_RE = re.compile(r"^lsw_[0-9a-f]{64}$")
+_PARAMETER_REF_RE = re.compile(r"^[a-z0-9_.]{1,160}$")
+_REQUIRED_RESONANCE_PARAMETER_REFS = frozenset(
+    {
+        "bridge.lambda1",
+        "bridge.lambda2",
+        "bridge.lambda1_lambda2_gap",
+    }
+)
+_BODY_HASH_SCOPE = "exact_message_bytes_not_semantic_or_experiential_equivalence"
+_SPECTRAL_SHAPE_SCOPE = (
+    "selected_mechanical_context_not_semantic_equivalence_uptake_inference_or_causation"
+)
 _COMMON_KEYS = frozenset(
     {
         "schema",
@@ -282,6 +302,10 @@ class ReciprocalUptakeReceiptV2:
         kind = UptakeKindV1(str(value.get("uptake_kind") or ""))
         if schema == "reciprocal_uptake_receipt_v1" and kind is UptakeKindV1.AMBIENT_PERSISTENCE:
             raise RecordValidationError("ambient persistence requires the V2 receipt contract")
+        if kind is UptakeKindV1.RESONANT_PERSISTENCE:
+            raise RecordValidationError(
+                "resonant persistence requires the V3 witnessed receipt contract"
+            )
         built = build_uptake_receipt(
             kind,
             revises_receipt_id=value.get("revises_receipt_id"),
@@ -301,6 +325,173 @@ class ReciprocalUptakeReceiptV2:
         )
         if value.get("receipt_id") != built.receipt_id:
             raise RecordValidationError("uptake receipt_id mismatch")
+        return built
+
+
+@dataclass(frozen=True)
+class ReciprocalResonanceSignatureV1:
+    signature_id: str
+    lived_state_witness_id: str
+    lived_state_witness_sha256: str
+    parameter_refs: tuple[str, ...]
+    context_relation: str
+    _token: object = field(repr=False, compare=False)
+
+    def __post_init__(self) -> None:
+        if self._token is not _TRUSTED:
+            raise RecordValidationError(
+                "trusted reciprocal resonance signatures require the internal builder"
+            )
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "schema": "reciprocal_resonance_signature_v1",
+            "schema_version": 1,
+            "signature_id": self.signature_id,
+            "lived_state_witness_id": self.lived_state_witness_id,
+            "lived_state_witness_sha256": self.lived_state_witness_sha256,
+            "parameter_refs": list(self.parameter_refs),
+            "context_relation": self.context_relation,
+            "spectral_shape_scope": _SPECTRAL_SHAPE_SCOPE,
+            "artifact_authority_state_v1": authority_state(),
+        }
+
+    @classmethod
+    def from_untrusted(cls, value: Any) -> ReciprocalResonanceSignatureV1:
+        if not isinstance(value, dict):
+            raise RecordValidationError("reciprocal resonance signature must be an object")
+        validate_evidence_record(value)
+        _require_exact_keys(
+            value,
+            frozenset(
+                {
+                    "schema",
+                    "schema_version",
+                    "signature_id",
+                    "lived_state_witness_id",
+                    "lived_state_witness_sha256",
+                    "parameter_refs",
+                    "context_relation",
+                    "spectral_shape_scope",
+                    "artifact_authority_state_v1",
+                    "authority_projection_v2",
+                    "auto_approved",
+                    "edits_source_now",
+                    "grants_approval",
+                    "live_eligible_now",
+                }
+            ),
+            "reciprocal resonance signature",
+        )
+        if (
+            value.get("schema") != "reciprocal_resonance_signature_v1"
+            or value.get("schema_version") != 1
+        ):
+            raise RecordValidationError("unsupported reciprocal resonance signature")
+        if value.get("spectral_shape_scope") != _SPECTRAL_SHAPE_SCOPE:
+            raise RecordValidationError("reciprocal resonance signature scope mismatch")
+        built = build_resonance_signature(
+            lived_state_witness_id=value.get("lived_state_witness_id"),
+            lived_state_witness_sha256=value.get("lived_state_witness_sha256"),
+            parameter_refs=value.get("parameter_refs"),
+            context_relation=value.get("context_relation"),
+        )
+        if value.get("signature_id") != built.signature_id:
+            raise RecordValidationError("reciprocal resonance signature_id mismatch")
+        return built
+
+
+@dataclass(frozen=True)
+class ReciprocalUptakeReceiptV3:
+    receipt_id: str
+    uptake_kind: str
+    actor: str
+    peer: str
+    thread_id: str
+    message_id: str | None
+    source_event_id: str
+    source_event_sha256: str
+    body_sha256: str | None
+    recorded_at_unix_ms: int
+    revises_receipt_id: str | None
+    resonance_signature_v1: ReciprocalResonanceSignatureV1
+    _token: object = field(repr=False, compare=False)
+
+    def __post_init__(self) -> None:
+        if self._token is not _TRUSTED:
+            raise RecordValidationError(
+                "trusted resonant uptake records require the internal builder"
+            )
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "schema": "reciprocal_uptake_receipt_v3",
+            "schema_version": 3,
+            "receipt_id": self.receipt_id,
+            "uptake_kind": self.uptake_kind,
+            "actor": self.actor,
+            "peer": self.peer,
+            "thread_id": self.thread_id,
+            "message_id": self.message_id,
+            "source_event_id": self.source_event_id,
+            "source_event_sha256": self.source_event_sha256,
+            "body_sha256": self.body_sha256,
+            "body_hash_scope": _BODY_HASH_SCOPE,
+            "recorded_at_unix_ms": self.recorded_at_unix_ms,
+            "revises_receipt_id": self.revises_receipt_id,
+            "resonance_signature_v1": self.resonance_signature_v1.to_dict(),
+            "artifact_authority_state_v1": authority_state(),
+        }
+
+    @classmethod
+    def from_untrusted(cls, value: Any) -> ReciprocalUptakeReceiptV3:
+        if not isinstance(value, dict):
+            raise RecordValidationError("resonant uptake receipt must be an object")
+        validate_evidence_record(value)
+        _require_exact_keys(
+            value,
+            _COMMON_KEYS
+            | frozenset(
+                {
+                    "uptake_kind",
+                    "body_hash_scope",
+                    "revises_receipt_id",
+                    "resonance_signature_v1",
+                }
+            ),
+            "resonant uptake receipt",
+        )
+        if (
+            value.get("schema") != "reciprocal_uptake_receipt_v3"
+            or value.get("schema_version") != 3
+        ):
+            raise RecordValidationError("unsupported resonant uptake receipt schema")
+        if value.get("uptake_kind") != UptakeKindV1.RESONANT_PERSISTENCE.value:
+            raise RecordValidationError("V3 uptake receipt must be resonant persistence")
+        if value.get("body_hash_scope") != _BODY_HASH_SCOPE:
+            raise RecordValidationError("resonant uptake body hash scope mismatch")
+        signature = ReciprocalResonanceSignatureV1.from_untrusted(
+            value.get("resonance_signature_v1")
+        )
+        built = build_resonant_uptake_receipt(
+            resonance_signature_v1=signature,
+            revises_receipt_id=value.get("revises_receipt_id"),
+            **{
+                key: value.get(key)
+                for key in (
+                    "actor",
+                    "peer",
+                    "thread_id",
+                    "message_id",
+                    "source_event_id",
+                    "source_event_sha256",
+                    "body_sha256",
+                    "recorded_at_unix_ms",
+                )
+            },
+        )
+        if value.get("receipt_id") != built.receipt_id:
+            raise RecordValidationError("resonant uptake receipt_id mismatch")
         return built
 
 
@@ -430,12 +621,67 @@ def build_presence_receipt(
     )
 
 
+def build_resonance_signature(
+    *,
+    lived_state_witness_id: Any,
+    lived_state_witness_sha256: Any,
+    parameter_refs: Any,
+    context_relation: Any,
+) -> ReciprocalResonanceSignatureV1:
+    witness_id = validate_bounded_identifier(
+        lived_state_witness_id, "lived_state_witness_id", limit=80
+    )
+    if not _LIVED_STATE_WITNESS_ID_RE.fullmatch(witness_id):
+        raise RecordValidationError("lived_state_witness_id format is invalid")
+    witness_sha256 = validate_sha256(
+        lived_state_witness_sha256, "lived_state_witness_sha256"
+    )
+    if not isinstance(parameter_refs, (list, tuple)):
+        raise RecordValidationError("resonance parameter_refs must be a list")
+    if not 1 <= len(parameter_refs) <= 16:
+        raise RecordValidationError("resonance parameter_refs must contain 1..16 entries")
+    refs: list[str] = []
+    for index, raw in enumerate(parameter_refs):
+        if not isinstance(raw, str) or not _PARAMETER_REF_RE.fullmatch(raw):
+            raise RecordValidationError(
+                f"resonance parameter_refs[{index}] is not a bounded field reference"
+            )
+        refs.append(raw)
+    normalized = tuple(sorted(set(refs)))
+    if len(normalized) != len(refs):
+        raise RecordValidationError("resonance parameter_refs must be unique")
+    if not _REQUIRED_RESONANCE_PARAMETER_REFS.issubset(normalized):
+        raise RecordValidationError(
+            "resonance signature requires lambda1, lambda2, and lambda1_lambda2_gap"
+        )
+    relation = ReciprocalResonanceRelationV1(str(context_relation or ""))
+    core = {
+        "lived_state_witness_id": witness_id,
+        "lived_state_witness_sha256": witness_sha256,
+        "parameter_refs": normalized,
+        "context_relation": relation.value,
+        "spectral_shape_scope": _SPECTRAL_SHAPE_SCOPE,
+    }
+    return ReciprocalResonanceSignatureV1(
+        deterministic_id("resonance", core),
+        witness_id,
+        witness_sha256,
+        normalized,
+        relation.value,
+        _token=_TRUSTED,
+    )
+
+
 def build_uptake_receipt(
     kind: UptakeKindV1,
     *,
     revises_receipt_id: str | None = None,
     **values: Any,
 ) -> ReciprocalUptakeReceiptV2:
+    if kind is UptakeKindV1.RESONANT_PERSISTENCE:
+        raise RecordValidationError(
+            "resonant persistence requires build_resonant_uptake_receipt"
+        )
     common = _common(**values)
     revises = validate_bounded_identifier(
         revises_receipt_id, "revises_receipt_id", optional=True
@@ -446,6 +692,37 @@ def build_uptake_receipt(
         kind.value,
         **common,
         revises_receipt_id=revises,
+        _token=_TRUSTED,
+    )
+
+
+def build_resonant_uptake_receipt(
+    *,
+    resonance_signature_v1: ReciprocalResonanceSignatureV1,
+    revises_receipt_id: str | None = None,
+    **values: Any,
+) -> ReciprocalUptakeReceiptV3:
+    if not isinstance(resonance_signature_v1, ReciprocalResonanceSignatureV1):
+        raise RecordValidationError(
+            "resonant persistence requires a validated resonance signature"
+        )
+    common = _common(**values)
+    revises = validate_bounded_identifier(
+        revises_receipt_id, "revises_receipt_id", optional=True
+    )
+    core = {
+        "uptake_kind": UptakeKindV1.RESONANT_PERSISTENCE.value,
+        **common,
+        "body_hash_scope": _BODY_HASH_SCOPE,
+        "revises_receipt_id": revises,
+        "resonance_signature_v1": resonance_signature_v1.to_dict(),
+    }
+    return ReciprocalUptakeReceiptV3(
+        deterministic_id("uptake", core),
+        UptakeKindV1.RESONANT_PERSISTENCE.value,
+        **common,
+        revises_receipt_id=revises,
+        resonance_signature_v1=resonance_signature_v1,
         _token=_TRUSTED,
     )
 
@@ -485,8 +762,8 @@ def build_context_receipt(
     )
 
 
-# Compatibility imports parse historical V1 and canonical V2 records. New
-# serialization always emits the sparse V2 contract.
+# Compatibility imports parse historical V1 and canonical V2 records. Only
+# explicit resonant persistence uses the witnessed V3 contract.
 ReciprocalPresenceReceiptV1 = ReciprocalPresenceReceiptV2
 ReciprocalUptakeReceiptV1 = ReciprocalUptakeReceiptV2
 ReciprocalContextReceiptV1 = ReciprocalContextReceiptV2
