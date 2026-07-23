@@ -303,6 +303,20 @@ mod tests {
             .unwrap();
         assert_eq!(legacy_heartbeat.first_valid_packet_lag_ms, None);
         assert_eq!(legacy_heartbeat.first_valid_spectral_entropy, None);
+        assert_eq!(legacy_heartbeat.rolling_spectral_entropy_sample_count, 0);
+        assert_eq!(legacy_heartbeat.peak_spectral_entropy_in_window, None);
+        assert_eq!(legacy_heartbeat.rolling_spectral_entropy_variance, None);
+        assert_eq!(legacy_heartbeat.rolling_spectral_entropy_change, None);
+        assert!(legacy_heartbeat.rolling_spectral_entropy_state.is_empty());
+        assert!(
+            legacy_heartbeat
+                .rolling_spectral_entropy_trend_state
+                .is_empty()
+        );
+        assert_eq!(legacy_heartbeat.rolling_inter_arrival_sample_count, 0);
+        assert_eq!(legacy_heartbeat.rolling_inter_arrival_mean_ms, None);
+        assert_eq!(legacy_heartbeat.rolling_inter_arrival_change_ms, None);
+        assert!(legacy_heartbeat.rolling_inter_arrival_state.is_empty());
         assert_eq!(legacy_heartbeat.cadence_clarity_score, None);
         assert!(legacy_heartbeat.connection_perception_state.is_empty());
     }
@@ -2635,6 +2649,24 @@ mod tests {
             first_valid_packet_at_unix_s: Some(100.0),
             first_valid_packet_lag_ms: Some(100.0),
             first_valid_spectral_entropy: None,
+            rolling_spectral_entropy_sample_count: 0,
+            rolling_spectral_entropy_mean: None,
+            peak_spectral_entropy_in_window: None,
+            rolling_spectral_entropy_variance: None,
+            rolling_spectral_entropy_range: None,
+            rolling_spectral_entropy_change: None,
+            rolling_spectral_entropy_state: "entropy_window_unavailable".to_string(),
+            rolling_spectral_entropy_trend_state: "entropy_trend_unavailable".to_string(),
+            rolling_spectral_entropy_basis:
+                "bounded_finite_telemetry_samples_latest_minus_earliest_diagnostic_only_not_cadence_felt_state_causation_or_control"
+                    .to_string(),
+            rolling_inter_arrival_sample_count: 0,
+            rolling_inter_arrival_mean_ms: None,
+            rolling_inter_arrival_change_ms: None,
+            rolling_inter_arrival_state: "arrival_window_unavailable".to_string(),
+            rolling_inter_arrival_basis:
+                "bounded_host_arrival_timestamps_diagnostic_only_not_peer_clock_internal_cycle_felt_state_causation_or_control"
+                    .to_string(),
             connection_perception_state: "connected_with_current_telemetry".to_string(),
             cadence_clarity_score: Some(0.0),
             cadence_clarity_basis:
@@ -3714,6 +3746,238 @@ mod tests {
         assert_eq!(stale.timing_reliability, "stale_hearing");
         assert_eq!(stale.cadence_clarity_score, Some(0.0));
         assert!(stale.field_vs_hearing.contains("do not mistake silence"));
+    }
+
+    #[test]
+    fn telemetry_heartbeat_carries_bounded_rolling_entropy_variation() {
+        let mut heartbeat = build_telemetry_heartbeat_delta_v1(
+            Some(100.0),
+            101.0,
+            &WebSocketLaneTrace::default(),
+        );
+        let mut samples = VecDeque::new();
+        for entropy in [0.80, 0.90] {
+            samples.push_back(PressureTrendSampleV1 {
+                pressure_risk: None,
+                pressure_velocity_delta: None,
+                spectral_drift_velocity: None,
+                mode_packing: None,
+                structural_density: None,
+                resonance_depth: None,
+                semantic_viscosity: None,
+                viscosity_gradient: None,
+                viscosity_gradient_trend: None,
+                complexity_density: None,
+                weight_density_index: None,
+                comfort_gate: None,
+                porosity_gradient: None,
+                semantic_friction: None,
+                semantic_trickle: None,
+                semantic_coherence_delta: None,
+                fill_pct: 70.0,
+                spectral_entropy: Some(entropy),
+                window_capacity: 20,
+                observed_at_unix_s: 100.0,
+            });
+        }
+
+        attach_rolling_spectral_entropy_v1(&mut heartbeat, &samples, Some(1.0), 20);
+
+        assert_eq!(heartbeat.rolling_spectral_entropy_sample_count, 3);
+        assert!(
+            (heartbeat.rolling_spectral_entropy_mean.unwrap_or_default() - 0.90).abs() < 1.0e-6
+        );
+        assert_eq!(heartbeat.peak_spectral_entropy_in_window, Some(1.0));
+        assert!(
+            (heartbeat
+                .rolling_spectral_entropy_variance
+                .unwrap_or_default()
+                - 0.006_666_667)
+                .abs()
+                < 1.0e-6
+        );
+        assert!(
+            (heartbeat.rolling_spectral_entropy_range.unwrap_or_default() - 0.20).abs() < 1.0e-6
+        );
+        assert!(
+            (heartbeat
+                .rolling_spectral_entropy_change
+                .unwrap_or_default()
+                - 0.20)
+                .abs()
+                < 1.0e-6
+        );
+        assert_eq!(
+            heartbeat.rolling_spectral_entropy_state,
+            "rolling_variation_available"
+        );
+        assert_eq!(
+            heartbeat.rolling_spectral_entropy_trend_state,
+            "entropy_diffusing_across_window"
+        );
+        assert!(heartbeat.rolling_spectral_entropy_basis.contains("diagnostic_only"));
+        assert!(
+            heartbeat
+                .rolling_spectral_entropy_basis
+                .contains("not_cadence_felt_state_causation_or_control")
+        );
+
+        let mut falling = build_telemetry_heartbeat_delta_v1(
+            Some(100.0),
+            101.0,
+            &WebSocketLaneTrace::default(),
+        );
+        attach_rolling_spectral_entropy_v1(&mut falling, &samples, Some(0.70), 20);
+        assert!(
+            (falling
+                .rolling_spectral_entropy_change
+                .unwrap_or_default()
+                + 0.10)
+                .abs()
+                < 1.0e-6
+        );
+        assert_eq!(
+            falling.rolling_spectral_entropy_trend_state,
+            "entropy_collapsing_across_window"
+        );
+
+        let mut flat = build_telemetry_heartbeat_delta_v1(
+            Some(100.0),
+            101.0,
+            &WebSocketLaneTrace::default(),
+        );
+        attach_rolling_spectral_entropy_v1(&mut flat, &samples, Some(0.802), 20);
+        assert_eq!(
+            flat.rolling_spectral_entropy_trend_state,
+            "entropy_flat_within_0_005"
+        );
+    }
+
+    #[test]
+    fn telemetry_heartbeat_entropy_window_honors_capacity_and_finite_values() {
+        let mut heartbeat = build_telemetry_heartbeat_delta_v1(
+            Some(100.0),
+            101.0,
+            &WebSocketLaneTrace::default(),
+        );
+        let mut samples = VecDeque::new();
+        for entropy in [Some(0.20), Some(f32::NAN), Some(0.40)] {
+            samples.push_back(PressureTrendSampleV1 {
+                pressure_risk: None,
+                pressure_velocity_delta: None,
+                spectral_drift_velocity: None,
+                mode_packing: None,
+                structural_density: None,
+                resonance_depth: None,
+                semantic_viscosity: None,
+                viscosity_gradient: None,
+                viscosity_gradient_trend: None,
+                complexity_density: None,
+                weight_density_index: None,
+                comfort_gate: None,
+                porosity_gradient: None,
+                semantic_friction: None,
+                semantic_trickle: None,
+                semantic_coherence_delta: None,
+                fill_pct: 70.0,
+                spectral_entropy: entropy,
+                window_capacity: 20,
+                observed_at_unix_s: 100.0,
+            });
+        }
+
+        attach_rolling_spectral_entropy_v1(&mut heartbeat, &samples, Some(0.60), 2);
+
+        assert_eq!(heartbeat.rolling_spectral_entropy_sample_count, 2);
+        assert!(
+            (heartbeat.rolling_spectral_entropy_mean.unwrap_or_default() - 0.50).abs() < 1.0e-6
+        );
+        assert_eq!(heartbeat.peak_spectral_entropy_in_window, Some(0.60));
+        assert!(
+            (heartbeat.rolling_spectral_entropy_range.unwrap_or_default() - 0.20).abs() < 1.0e-6
+        );
+        assert!(
+            (heartbeat
+                .rolling_spectral_entropy_change
+                .unwrap_or_default()
+                - 0.20)
+                .abs()
+                < 1.0e-6
+        );
+    }
+
+    #[test]
+    fn telemetry_heartbeat_carries_bounded_host_arrival_trend_without_clock_inference() {
+        let mut lengthening_state = BridgeState::new();
+        for observed_at_unix_s in [100.0, 101.0, 103.0] {
+            let sample = make_pressure_telemetry(0.70, 0.20, 0.40);
+            record_pressure_trend_sample_v1(
+                &mut lengthening_state,
+                &sample,
+                70.0,
+                observed_at_unix_s,
+            );
+        }
+        let mut lengthening = build_telemetry_heartbeat_delta_v1(
+            Some(103.0),
+            106.0,
+            &WebSocketLaneTrace::default(),
+        );
+        attach_rolling_arrival_cadence_v1(
+            &mut lengthening,
+            &lengthening_state.pressure_trend_samples_v1,
+            106.0,
+            4,
+        );
+
+        assert_eq!(lengthening.rolling_inter_arrival_sample_count, 3);
+        assert_eq!(lengthening.rolling_inter_arrival_mean_ms, Some(2_000.0));
+        assert_eq!(
+            lengthening.rolling_inter_arrival_change_ms,
+            Some(2_000.0)
+        );
+        assert_eq!(
+            lengthening.rolling_inter_arrival_state,
+            "arrival_intervals_lengthening"
+        );
+        assert!(
+            lengthening
+                .rolling_inter_arrival_basis
+                .contains("not_peer_clock_internal_cycle")
+        );
+
+        let mut shortening_state = BridgeState::new();
+        for observed_at_unix_s in [100.0, 103.0, 105.0] {
+            let sample = make_pressure_telemetry(0.70, 0.20, 0.40);
+            record_pressure_trend_sample_v1(
+                &mut shortening_state,
+                &sample,
+                70.0,
+                observed_at_unix_s,
+            );
+        }
+        let mut shortening = build_telemetry_heartbeat_delta_v1(
+            Some(105.0),
+            106.0,
+            &WebSocketLaneTrace::default(),
+        );
+        attach_rolling_arrival_cadence_v1(
+            &mut shortening,
+            &shortening_state.pressure_trend_samples_v1,
+            106.0,
+            4,
+        );
+
+        assert_eq!(shortening.rolling_inter_arrival_sample_count, 3);
+        assert_eq!(shortening.rolling_inter_arrival_mean_ms, Some(2_000.0));
+        assert_eq!(
+            shortening.rolling_inter_arrival_change_ms,
+            Some(-2_000.0)
+        );
+        assert_eq!(
+            shortening.rolling_inter_arrival_state,
+            "arrival_intervals_shortening"
+        );
     }
 
     #[test]

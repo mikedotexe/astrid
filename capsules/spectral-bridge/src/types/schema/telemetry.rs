@@ -25,6 +25,43 @@ pub struct TelemetryHeartbeatDeltaV1 {
     /// connection. It is evidence about the initial field, not handshake data.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub first_valid_spectral_entropy: Option<f32>,
+    /// Number of finite entropy samples in the bounded current telemetry window.
+    #[serde(default)]
+    pub rolling_spectral_entropy_sample_count: usize,
+    /// Mean entropy over the bounded current telemetry window.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub rolling_spectral_entropy_mean: Option<f32>,
+    /// Highest finite entropy observed in the bounded current telemetry window.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub peak_spectral_entropy_in_window: Option<f32>,
+    /// Population variance over the bounded current telemetry window.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub rolling_spectral_entropy_variance: Option<f32>,
+    /// Maximum minus minimum entropy over the bounded current telemetry window.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub rolling_spectral_entropy_range: Option<f32>,
+    /// Latest finite entropy minus earliest finite entropy in the bounded window.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub rolling_spectral_entropy_change: Option<f32>,
+    #[serde(default)]
+    pub rolling_spectral_entropy_state: String,
+    #[serde(default)]
+    pub rolling_spectral_entropy_trend_state: String,
+    #[serde(default)]
+    pub rolling_spectral_entropy_basis: String,
+    /// Number of finite host-arrival intervals in the bounded cadence window.
+    #[serde(default)]
+    pub rolling_inter_arrival_sample_count: usize,
+    /// Mean host-arrival interval over the bounded cadence window.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub rolling_inter_arrival_mean_ms: Option<f32>,
+    /// Latest interval minus earliest interval in the bounded cadence window.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub rolling_inter_arrival_change_ms: Option<f32>,
+    #[serde(default)]
+    pub rolling_inter_arrival_state: String,
+    #[serde(default)]
+    pub rolling_inter_arrival_basis: String,
     #[serde(default)]
     pub connection_perception_state: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]

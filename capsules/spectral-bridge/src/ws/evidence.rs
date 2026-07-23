@@ -980,6 +980,24 @@ fn build_telemetry_heartbeat_delta_v1(
             .active_connection_first_valid_payload_at_unix_s,
         first_valid_packet_lag_ms,
         first_valid_spectral_entropy: trace.active_connection_first_valid_spectral_entropy,
+        rolling_spectral_entropy_sample_count: 0,
+        rolling_spectral_entropy_mean: None,
+        peak_spectral_entropy_in_window: None,
+        rolling_spectral_entropy_variance: None,
+        rolling_spectral_entropy_range: None,
+        rolling_spectral_entropy_change: None,
+        rolling_spectral_entropy_state: "entropy_window_unavailable".to_string(),
+        rolling_spectral_entropy_trend_state: "entropy_trend_unavailable".to_string(),
+        rolling_spectral_entropy_basis:
+            "bounded_finite_telemetry_samples_latest_minus_earliest_diagnostic_only_not_cadence_felt_state_causation_or_control"
+                .to_string(),
+        rolling_inter_arrival_sample_count: 0,
+        rolling_inter_arrival_mean_ms: None,
+        rolling_inter_arrival_change_ms: None,
+        rolling_inter_arrival_state: "arrival_window_unavailable".to_string(),
+        rolling_inter_arrival_basis:
+            "bounded_host_arrival_timestamps_diagnostic_only_not_peer_clock_internal_cycle_felt_state_causation_or_control"
+                .to_string(),
         connection_perception_state,
         cadence_clarity_score,
         cadence_clarity_basis:
@@ -987,4 +1005,134 @@ fn build_telemetry_heartbeat_delta_v1(
         last_disconnect_reason: trace.last_disconnect_reason.clone(),
         field_vs_hearing,
     }
+}
+
+fn attach_rolling_spectral_entropy_v1(
+    heartbeat: &mut TelemetryHeartbeatDeltaV1,
+    samples: &VecDeque<PressureTrendSampleV1>,
+    current_spectral_entropy: Option<f32>,
+    window_capacity: usize,
+) {
+    let prior_limit = window_capacity.saturating_sub(1);
+    let mut values = samples
+        .iter()
+        .rev()
+        .filter_map(|sample| sample.spectral_entropy)
+        .filter(|value| value.is_finite())
+        .take(prior_limit)
+        .map(|value| value.clamp(0.0, 1.0))
+        .collect::<Vec<_>>();
+    values.reverse();
+    if let Some(current) = current_spectral_entropy.filter(|value| value.is_finite()) {
+        values.push(current.clamp(0.0, 1.0));
+    }
+
+    heartbeat.rolling_spectral_entropy_sample_count = values.len();
+    if values.is_empty() {
+        heartbeat.rolling_spectral_entropy_state = "entropy_window_unavailable".to_string();
+        heartbeat.rolling_spectral_entropy_trend_state =
+            "entropy_trend_unavailable".to_string();
+        return;
+    }
+
+    let count = values.len() as f64;
+    let mean = values.iter().map(|value| f64::from(*value)).sum::<f64>() / count;
+    let variance = values
+        .iter()
+        .map(|value| {
+            let delta = f64::from(*value) - mean;
+            delta * delta
+        })
+        .sum::<f64>()
+        / count;
+    let (minimum, maximum) = values.iter().copied().fold(
+        (f32::INFINITY, f32::NEG_INFINITY),
+        |(minimum, maximum), value| (minimum.min(value), maximum.max(value)),
+    );
+
+    heartbeat.rolling_spectral_entropy_mean = Some(mean as f32);
+    heartbeat.peak_spectral_entropy_in_window = Some(maximum);
+    heartbeat.rolling_spectral_entropy_variance = Some(variance.max(0.0) as f32);
+    heartbeat.rolling_spectral_entropy_range = Some((maximum - minimum).max(0.0));
+    heartbeat.rolling_spectral_entropy_state = if values.len() >= 2 {
+        "rolling_variation_available"
+    } else {
+        "single_entropy_sample"
+    }
+    .to_string();
+    if values.len() >= 2 {
+        let change = values.last().copied().unwrap_or_default()
+            - values.first().copied().unwrap_or_default();
+        heartbeat.rolling_spectral_entropy_change = Some(change);
+        heartbeat.rolling_spectral_entropy_trend_state = if change > 0.005 {
+            "entropy_diffusing_across_window"
+        } else if change < -0.005 {
+            "entropy_collapsing_across_window"
+        } else {
+            "entropy_flat_within_0_005"
+        }
+        .to_string();
+    } else {
+        heartbeat.rolling_spectral_entropy_trend_state =
+            "single_entropy_sample".to_string();
+    }
+}
+
+fn attach_rolling_arrival_cadence_v1(
+    heartbeat: &mut TelemetryHeartbeatDeltaV1,
+    samples: &VecDeque<PressureTrendSampleV1>,
+    current_observed_at_unix_s: f64,
+    window_capacity: usize,
+) {
+    let prior_limit = window_capacity.saturating_sub(1);
+    let mut arrivals = samples
+        .iter()
+        .rev()
+        .filter_map(|sample| {
+            sample
+                .observed_at_unix_s
+                .is_finite()
+                .then_some(sample.observed_at_unix_s)
+        })
+        .take(prior_limit)
+        .collect::<Vec<_>>();
+    arrivals.reverse();
+    if current_observed_at_unix_s.is_finite() {
+        arrivals.push(current_observed_at_unix_s);
+    }
+
+    let intervals = arrivals
+        .windows(2)
+        .filter_map(|pair| {
+            let interval_s = pair[1] - pair[0];
+            (interval_s.is_finite() && interval_s >= 0.0).then(|| {
+                (interval_s * 1000.0).min(f64::from(f32::MAX)) as f32
+            })
+        })
+        .collect::<Vec<_>>();
+    heartbeat.rolling_inter_arrival_sample_count = intervals.len();
+    if intervals.is_empty() {
+        heartbeat.rolling_inter_arrival_state = "arrival_window_unavailable".to_string();
+        return;
+    }
+
+    let count = intervals.len() as f64;
+    let mean = intervals.iter().map(|value| f64::from(*value)).sum::<f64>() / count;
+    heartbeat.rolling_inter_arrival_mean_ms = Some(mean as f32);
+    if intervals.len() == 1 {
+        heartbeat.rolling_inter_arrival_state = "single_inter_arrival_sample".to_string();
+        return;
+    }
+
+    let change = intervals.last().copied().unwrap_or_default()
+        - intervals.first().copied().unwrap_or_default();
+    heartbeat.rolling_inter_arrival_change_ms = Some(change);
+    heartbeat.rolling_inter_arrival_state = if change > 1.0 {
+        "arrival_intervals_lengthening"
+    } else if change < -1.0 {
+        "arrival_intervals_shortening"
+    } else {
+        "arrival_intervals_flat_within_one_ms"
+    }
+    .to_string();
 }

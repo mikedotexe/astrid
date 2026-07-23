@@ -411,10 +411,23 @@ async fn handle_telemetry_message_at(
         );
         let previous_fill_pct = s.latest_telemetry.as_ref().map(|_| s.fill_pct);
         let previous_arrival = s.latest_telemetry_arrival_unix_s;
-        let heartbeat = build_telemetry_heartbeat_delta_v1(
+        let mut heartbeat = build_telemetry_heartbeat_delta_v1(
             previous_arrival,
             observed_at_unix_s,
             &s.telemetry_ws,
+        );
+        let entropy_window_capacity = pressure_trend_window_for_telemetry(&telemetry).0;
+        attach_rolling_arrival_cadence_v1(
+            &mut heartbeat,
+            &s.pressure_trend_samples_v1,
+            observed_at_unix_s,
+            PRESSURE_TREND_SMOOTHING_HIGH_ENTROPY_WINDOW,
+        );
+        attach_rolling_spectral_entropy_v1(
+            &mut heartbeat,
+            &s.pressure_trend_samples_v1,
+            first_valid_spectral_entropy,
+            entropy_window_capacity,
         );
         s.pressure_trend_v1 = Some(build_pressure_trend_v1(
             s.latest_telemetry.as_ref(),
