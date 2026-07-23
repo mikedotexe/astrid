@@ -80,6 +80,7 @@ impl ExactKnownModelControlMarkerOccurrence {
             first_word_after(text, self.end).as_str(),
             "appears"
                 | "as"
+                | "behaves"
                 | "corresponds"
                 | "denotes"
                 | "echoes"

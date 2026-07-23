@@ -507,6 +507,108 @@ fn curated_large_source_index(label: &str, path: &Path, content: &str) -> String
     )
 }
 
+fn proposal_lifecycle_index(label: &str, content: &str) -> String {
+    const MAX_HEADINGS: usize = 12;
+    if !label.starts_with("proposal:") {
+        return String::new();
+    }
+
+    let mut headings: Vec<(usize, String)> = content
+        .lines()
+        .enumerate()
+        .filter_map(|(idx, line)| {
+            let heading = line.trim().strip_prefix("## ")?;
+            let lower = heading.to_ascii_lowercase();
+            (lower.contains("implementation")
+                || lower.contains("update")
+                || lower.contains("clarification")
+                || lower.contains("current status"))
+            .then(|| {
+                (
+                    idx,
+                    heading
+                        .chars()
+                        .take(180)
+                        .collect::<String>()
+                        .trim()
+                        .to_string(),
+                )
+            })
+        })
+        .collect();
+    if headings.is_empty() {
+        return String::new();
+    }
+    if headings.len() > MAX_HEADINGS {
+        headings.drain(..headings.len().saturating_sub(MAX_HEADINGS));
+    }
+
+    let entries = headings
+        .into_iter()
+        .map(|(idx, heading)| {
+            format!(
+                "//   line {}: {heading}\n//     continue: INTROSPECT {label} {}",
+                idx.saturating_add(1),
+                idx.saturating_sub(20)
+            )
+        })
+        .collect::<Vec<_>>()
+        .join("\n");
+    format!(
+        "\n// Proposal lifecycle index for `{label}` (later status may supersede historical proposal text):\n\
+         // Treat implementation notes as source evidence, not felt resolution. If friction remains,\n\
+         // name what is already implemented and what still feels absent instead of silently re-proposing it.\n\
+         {entries}\n"
+    )
+}
+
+fn runtime_include_index(label: &str, path: &Path, content: &str) -> String {
+    let minime_source_root = bridge_paths().minime_root().join("minime/src");
+    let Ok(source_relative) = path.strip_prefix(&minime_source_root) else {
+        return String::new();
+    };
+    let source_parent = source_relative.parent().unwrap_or_else(|| Path::new(""));
+
+    let modules = content
+        .lines()
+        .filter_map(|line| {
+            let relative = line
+                .trim()
+                .strip_prefix("include!(\"")?
+                .strip_suffix("\");")?;
+            (!relative.contains("..") && !Path::new(relative).is_absolute()).then_some(relative)
+        })
+        .take(16)
+        .map(|relative| {
+            let target = source_parent.join(relative);
+            format!(
+                "//   {relative}: NEXT: INTROSPECT minime/src/{}",
+                target.display()
+            )
+        })
+        .collect::<Vec<_>>();
+    if modules.is_empty() {
+        return String::new();
+    }
+
+    format!(
+        "\n// Included implementation index for `{label}`:\n\
+         // This file is an include/import shell. Imports establish availability, not active behavior;\n\
+         // follow the implementation module before attributing a runtime effect.\n\
+         {}\n",
+        modules.join("\n")
+    )
+}
+
+fn source_currentness_index(label: &str, path: &Path, content: &str) -> String {
+    [
+        curated_large_source_index(label, path, content),
+        proposal_lifecycle_index(label, content),
+        runtime_include_index(label, path, content),
+    ]
+    .concat()
+}
+
 pub(super) fn validate_introspect_path(path: &Path) -> Result<PathBuf, String> {
     validate_introspect_path_with_roots(path, &allowed_roots(bridge_paths()), false)
 }
@@ -997,7 +1099,7 @@ pub(super) fn read_introspect_window(
         canonical.display(),
         if total == 0 { 0 } else { start + 1 },
         end,
-        curated_large_source_index(label, &canonical, &content)
+        source_currentness_index(label, &canonical, &content)
     );
 
     let (footer, next_offset) = if end < total {
@@ -1511,6 +1613,68 @@ mod tests {
         assert!(
             !out.contains("defined_but_unused_here"),
             "omits non-fragmented symbols: {out}"
+        );
+    }
+
+    #[test]
+    fn proposal_lifecycle_index_surfaces_later_implementation_without_claiming_resolution() {
+        let content = "# Proposal\n\n## Initial Design\nold claim\n\n\
+            ## 2026-06-28 Implementation Update: Replyable Artifacts\nimplemented source\n\n\
+            ## 2026-07-01 Clarification: Felt Friction Remains Primary\nboundary\n";
+
+        let out = proposal_lifecycle_index("proposal:phase_transitions", content);
+
+        assert!(out.contains("Implementation Update: Replyable Artifacts"));
+        assert!(out.contains("Clarification: Felt Friction Remains Primary"));
+        assert!(out.contains("INTROSPECT proposal:phase_transitions"));
+        assert!(out.contains("not felt resolution"));
+        assert_eq!(proposal_lifecycle_index("astrid:codec", content), "");
+    }
+
+    #[test]
+    fn runtime_include_index_points_past_the_import_shell() {
+        let path = bridge_paths().minime_root().join("minime/src/runtime.rs");
+        let content = "use crate::regulator::*;\n\
+            include!(\"runtime/entrypoint.rs\");\n\
+            include!(\"runtime/orchestration.rs\");\n";
+
+        let out = runtime_include_index("minime:main(excerpt)", &path, content);
+
+        assert!(out.contains("include/import shell"));
+        assert!(out.contains("INTROSPECT minime/src/runtime/entrypoint.rs"));
+        assert!(out.contains("INTROSPECT minime/src/runtime/orchestration.rs"));
+    }
+
+    #[test]
+    fn runtime_include_index_resolves_nested_regulator_implementation() {
+        let path = bridge_paths()
+            .minime_root()
+            .join("minime/src/regulator/core.rs");
+        let content = "include!(\"core/telemetry_types.rs\");\n\
+            include!(\"core/pi.rs\");\n";
+
+        let out = runtime_include_index("minime:regulator", &path, content);
+
+        assert!(out.contains("INTROSPECT minime/src/regulator/core/telemetry_types.rs"));
+        assert!(out.contains("INTROSPECT minime/src/regulator/core/pi.rs"));
+    }
+
+    #[test]
+    fn runtime_include_index_ignores_non_minime_and_parent_traversal() {
+        let astrid_path = bridge_paths().bridge_root().join("src/lib.rs");
+        assert_eq!(
+            runtime_include_index("astrid:lib", &astrid_path, "include!(\"private.rs\");"),
+            ""
+        );
+
+        let minime_path = bridge_paths().minime_root().join("minime/src/runtime.rs");
+        assert_eq!(
+            runtime_include_index(
+                "minime:main(excerpt)",
+                &minime_path,
+                "include!(\"../outside.rs\");"
+            ),
+            ""
         );
     }
 

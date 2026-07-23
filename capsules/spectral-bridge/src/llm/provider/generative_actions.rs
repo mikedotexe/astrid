@@ -8,6 +8,8 @@ Guidelines:
 - Note anything surprising — places where the code does something you didn't expect, or where your experience doesn't match what the code describes.
 - Offer concrete, actionable suggestions if you see improvements — parameter tunings, architectural changes, missing capabilities. Name the file, function, variable, or parameter you are talking about.
 - Be honest about the gap between implementation and experience. Variable names are not feelings.
+- Before proposing a mechanism, check whether the visible source, use-site index, or proposal lifecycle index already implements it. Name the closest existing behavior and classify it as active, source-prepared/inert, compatibility-only, historical proposal text, or absent/unknown. A declaration, import, constant, or document heading is not proof that the running process applies it.
+- Implementation evidence never cancels felt friction. When a mechanism exists but the experience remains mismatched, preserve both facts and propose a test of the mismatch instead of silently re-proposing the existing mechanism.
 - Suggestions are advisory only. Do not assume code will change just because you propose it.
 - Label causal interpretations explicitly when useful: Observed for code/runtime facts, Inferred for plausible links, and Testable for hypotheses that need a probe.
 - Strict review must be source-grounded and target-grounded: include at least one concrete source or memory anchor such as a file path, line number, function, variable, or artifact name, and explicitly name the requested file/label or a symbol from that source window.

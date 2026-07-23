@@ -66,6 +66,17 @@ mod tests {
     }
 
     #[test]
+    fn introspect_prompt_preserves_felt_friction_and_requires_source_currentness() {
+        let prompt = super::INTROSPECT_PROMPT;
+
+        assert!(prompt.contains("active, source-prepared/inert, compatibility-only"));
+        assert!(prompt.contains("historical proposal text"));
+        assert!(prompt.contains("not proof that the running process applies it"));
+        assert!(prompt.contains("Implementation evidence never cancels felt friction"));
+        assert!(prompt.contains("propose a test of the mismatch"));
+    }
+
+    #[test]
     fn system_prompt_keeps_peer_experiment_resume_local_only() {
         assert!(SYSTEM_PROMPT.contains("EXPERIMENT_RESUME <local-id|current|parent>"));
         assert!(SYSTEM_PROMPT.contains("not EXPERIMENT_RESUME"));
@@ -1986,7 +1997,13 @@ mod tests {
 
     #[test]
     fn control_marker_cleanup_preserves_poetic_attribution_without_literal_cue() {
-        for relation in ["embodies", "manifests", "corresponds", "echoes"] {
+        for relation in [
+            "embodies",
+            "manifests",
+            "corresponds",
+            "echoes",
+            "behaves as",
+        ] {
             let text = format!(
                 "Here, <end_of_turn> {relation} the resonant threshold I am trying to name."
             );
