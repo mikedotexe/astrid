@@ -196,6 +196,7 @@ struct PressureTrendSampleV1 {
     semantic_coherence_delta: Option<f32>,
     fill_pct: f32,
     spectral_entropy: Option<f32>,
+    spectral_density_gradient: Option<f32>,
     window_capacity: usize,
     observed_at_unix_s: f64,
 }

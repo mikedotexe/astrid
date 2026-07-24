@@ -313,6 +313,34 @@ mod tests {
                 .rolling_spectral_entropy_trend_state
                 .is_empty()
         );
+        assert_eq!(
+            legacy_heartbeat.rolling_spectral_density_gradient_sample_count,
+            0
+        );
+        assert_eq!(legacy_heartbeat.latest_spectral_density_gradient, None);
+        assert_eq!(
+            legacy_heartbeat.rolling_spectral_density_gradient_mean,
+            None
+        );
+        assert_eq!(
+            legacy_heartbeat.rolling_spectral_density_gradient_change,
+            None
+        );
+        assert!(
+            legacy_heartbeat
+                .rolling_spectral_density_gradient_state
+                .is_empty()
+        );
+        assert!(
+            legacy_heartbeat
+                .rolling_spectral_density_gradient_trend_state
+                .is_empty()
+        );
+        assert!(
+            legacy_heartbeat
+                .rolling_spectral_density_gradient_basis
+                .is_empty()
+        );
         assert_eq!(legacy_heartbeat.rolling_inter_arrival_sample_count, 0);
         assert_eq!(legacy_heartbeat.rolling_inter_arrival_mean_ms, None);
         assert_eq!(legacy_heartbeat.rolling_inter_arrival_change_ms, None);
@@ -1290,6 +1318,7 @@ mod tests {
                 semantic_coherence_delta: None,
                 fill_pct: 72.0,
                 spectral_entropy: Some(0.91),
+                spectral_density_gradient: None,
                 window_capacity: PRESSURE_TREND_SMOOTHING_HIGH_ENTROPY_WINDOW,
                 observed_at_unix_s: 100.0 + idx as f64,
             });
@@ -1581,6 +1610,7 @@ mod tests {
                 semantic_coherence_delta: None,
                 fill_pct: 70.0,
                 spectral_entropy: Some(0.95),
+                spectral_density_gradient: None,
                 window_capacity: PRESSURE_TREND_SMOOTHING_HIGH_ENTROPY_WINDOW,
                 observed_at_unix_s: 300.0 + idx as f64,
             });
@@ -1621,6 +1651,7 @@ mod tests {
                 semantic_coherence_delta: None,
                 fill_pct: 70.0,
                 spectral_entropy: Some(entropy),
+                spectral_density_gradient: None,
                 window_capacity: pressure_trend_dynamic_window_capacity_v1(
                     Some(entropy),
                     Some(0.66),
@@ -1678,6 +1709,7 @@ mod tests {
                 semantic_coherence_delta: None,
                 fill_pct: 70.0,
                 spectral_entropy: Some(0.90),
+                spectral_density_gradient: None,
                 window_capacity: PRESSURE_TREND_SMOOTHING_HIGH_ENTROPY_WINDOW,
                 observed_at_unix_s: 100.0 + idx as f64,
             });
@@ -1794,6 +1826,7 @@ mod tests {
             semantic_coherence_delta: None,
             fill_pct: 70.0,
             spectral_entropy: Some(0.91),
+            spectral_density_gradient: None,
             window_capacity: PRESSURE_TREND_SMOOTHING_HIGH_ENTROPY_WINDOW,
             observed_at_unix_s: 2.0,
         };
@@ -1816,6 +1849,7 @@ mod tests {
             semantic_coherence_delta: None,
             fill_pct: 70.0,
             spectral_entropy: Some(0.40),
+            spectral_density_gradient: None,
             window_capacity: 5,
             observed_at_unix_s: 1.0,
         };
@@ -1868,6 +1902,7 @@ mod tests {
             semantic_coherence_delta: None,
             fill_pct: 69.0,
             spectral_entropy: Some(0.95),
+            spectral_density_gradient: None,
             window_capacity: PRESSURE_TREND_SMOOTHING_HIGH_ENTROPY_WINDOW,
             observed_at_unix_s: 2.0,
         };
@@ -1890,6 +1925,7 @@ mod tests {
             semantic_coherence_delta: None,
             fill_pct: 69.0,
             spectral_entropy: Some(0.42),
+            spectral_density_gradient: None,
             window_capacity: 5,
             observed_at_unix_s: 1.0,
         };
@@ -2660,6 +2696,16 @@ mod tests {
             rolling_spectral_entropy_basis:
                 "bounded_finite_telemetry_samples_latest_minus_earliest_diagnostic_only_not_cadence_felt_state_causation_or_control"
                     .to_string(),
+            rolling_spectral_density_gradient_sample_count: 0,
+            latest_spectral_density_gradient: None,
+            rolling_spectral_density_gradient_mean: None,
+            rolling_spectral_density_gradient_change: None,
+            rolling_spectral_density_gradient_state:
+                "density_gradient_window_unavailable".to_string(),
+            rolling_spectral_density_gradient_trend_state:
+                "density_gradient_trend_unavailable".to_string(),
+            rolling_spectral_density_gradient_basis:
+                "bounded_bridge_derived_eigenvalue_shape_diagnostic_only".to_string(),
             rolling_inter_arrival_sample_count: 0,
             rolling_inter_arrival_mean_ms: None,
             rolling_inter_arrival_change_ms: None,
@@ -3523,6 +3569,7 @@ mod tests {
             semantic_coherence_delta: None,
             fill_pct: 70.0,
             spectral_entropy: Some(0.91),
+            spectral_density_gradient: None,
             window_capacity: PRESSURE_TREND_SMOOTHING_HIGH_ENTROPY_WINDOW,
             observed_at_unix_s: 1.0,
         });
@@ -3545,6 +3592,7 @@ mod tests {
             semantic_coherence_delta: None,
             fill_pct: 70.0,
             spectral_entropy: Some(0.91),
+            spectral_density_gradient: None,
             window_capacity: PRESSURE_TREND_SMOOTHING_HIGH_ENTROPY_WINDOW,
             observed_at_unix_s: 1.5,
         });
@@ -3594,6 +3642,7 @@ mod tests {
                 semantic_coherence_delta: None,
                 fill_pct: 68.0 + idx,
                 spectral_entropy: Some(0.82),
+                spectral_density_gradient: None,
                 window_capacity: PRESSURE_TREND_SMOOTHING_HIGH_ENTROPY_WINDOW,
                 observed_at_unix_s: f64::from(idx),
             });
@@ -3776,6 +3825,7 @@ mod tests {
                 semantic_coherence_delta: None,
                 fill_pct: 70.0,
                 spectral_entropy: Some(entropy),
+                spectral_density_gradient: None,
                 window_capacity: 20,
                 observed_at_unix_s: 100.0,
             });
@@ -3854,6 +3904,94 @@ mod tests {
     }
 
     #[test]
+    fn telemetry_heartbeat_carries_density_gradient_trend_without_felt_or_control_inference() {
+        let mut heartbeat = build_telemetry_heartbeat_delta_v1(
+            Some(100.0),
+            101.0,
+            &WebSocketLaneTrace::default(),
+        );
+        let mut samples = VecDeque::new();
+        for gradient in [0.10, 0.16] {
+            samples.push_back(PressureTrendSampleV1 {
+                pressure_risk: None,
+                pressure_velocity_delta: None,
+                spectral_drift_velocity: None,
+                mode_packing: None,
+                structural_density: None,
+                resonance_depth: None,
+                semantic_viscosity: None,
+                viscosity_gradient: None,
+                viscosity_gradient_trend: None,
+                complexity_density: None,
+                weight_density_index: None,
+                comfort_gate: None,
+                porosity_gradient: None,
+                semantic_friction: None,
+                semantic_trickle: None,
+                semantic_coherence_delta: None,
+                fill_pct: 70.0,
+                spectral_entropy: None,
+                spectral_density_gradient: Some(gradient),
+                window_capacity: 20,
+                observed_at_unix_s: 100.0,
+            });
+        }
+
+        attach_rolling_spectral_density_gradient_v1(
+            &mut heartbeat,
+            &samples,
+            Some(0.22),
+            20,
+        );
+
+        assert_eq!(
+            heartbeat.rolling_spectral_density_gradient_sample_count,
+            3
+        );
+        assert_eq!(heartbeat.latest_spectral_density_gradient, Some(0.22));
+        assert!(
+            (heartbeat
+                .rolling_spectral_density_gradient_mean
+                .unwrap_or_default()
+                - 0.16)
+                .abs()
+                < 1.0e-6
+        );
+        assert!(
+            (heartbeat
+                .rolling_spectral_density_gradient_change
+                .unwrap_or_default()
+                - 0.12)
+                .abs()
+                < 1.0e-6
+        );
+        assert_eq!(
+            heartbeat.rolling_spectral_density_gradient_state,
+            "rolling_density_gradient_available"
+        );
+        assert_eq!(
+            heartbeat.rolling_spectral_density_gradient_trend_state,
+            "density_gradient_steepening_across_window"
+        );
+        assert!(
+            heartbeat
+                .rolling_spectral_density_gradient_basis
+                .contains("not_felt_state_causation_or_regulator_control")
+        );
+
+        attach_rolling_spectral_density_gradient_v1(
+            &mut heartbeat,
+            &samples,
+            Some(0.04),
+            20,
+        );
+        assert_eq!(
+            heartbeat.rolling_spectral_density_gradient_trend_state,
+            "density_gradient_softening_across_window"
+        );
+    }
+
+    #[test]
     fn telemetry_heartbeat_entropy_window_honors_capacity_and_finite_values() {
         let mut heartbeat = build_telemetry_heartbeat_delta_v1(
             Some(100.0),
@@ -3881,6 +4019,7 @@ mod tests {
                 semantic_coherence_delta: None,
                 fill_pct: 70.0,
                 spectral_entropy: entropy,
+                spectral_density_gradient: None,
                 window_capacity: 20,
                 observed_at_unix_s: 100.0,
             });
@@ -4013,13 +4152,17 @@ mod tests {
         assert!(!handle_telemetry_message(b"{not-json", &state, &db).await);
 
         let s = state.read().await;
+        let expected_sha256 = format!("{:x}", Sha256::digest(b"{not-json"));
         assert_eq!(s.telemetry_ws.parse_errors, 1);
-        assert!(
-            s.telemetry_ws
-                .last_error
-                .as_deref()
-                .is_some_and(|error| error.starts_with("telemetry_parse_error:"))
-        );
+        let error = s
+            .telemetry_ws
+            .last_error
+            .as_deref()
+            .expect("parse failure should retain a bounded diagnostic identity");
+        assert!(error.starts_with("telemetry_parse_error:"));
+        assert!(error.contains("payload_bytes=9"));
+        assert!(error.contains(&format!("payload_sha256={expected_sha256}")));
+        assert!(!error.contains("{not-json"));
         assert_eq!(s.messages_relayed, 0);
     }
 

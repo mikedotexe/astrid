@@ -2838,6 +2838,10 @@ pub fn spawn_autonomous_loop(
                             };
                             let source_text = source_window.as_ref().ok().map(|window| window.text.clone());
                             let next_offset = source_window.as_ref().ok().and_then(|window| window.next_offset);
+                            let source_scope_header_v1 =
+                                introspect::source_scope_artifact_header_v1(
+                                    source_window.as_ref().ok(),
+                                );
                             let shadow_capture_clock_v1 =
                                 crate::lived_state_witness::clock_sample_v1();
                             let pregeneration_astrid_shadow_context_v1 = conv
@@ -2888,6 +2892,11 @@ pub fn spawn_autonomous_loop(
                                 let own_journal_excerpt = read_astrid_journal(1).into_iter().next();
                                 let latest_self_observation = db.get_recent_self_observations(1).into_iter().next();
                                 let mut internal_parts = vec![
+                                    format!(
+                                        "Source evidence boundary:\n{source_scope_header_v1}\n\
+                                         Treat this boundary as binding: viewed source is not \
+                                         proof of compiled, deployed, or runtime-active behavior."
+                                    ),
                                     format!(
                                         "Condition:\n{}\nFill: {:.1}%",
                                         interpret_spectral(&telemetry),
@@ -3140,7 +3149,7 @@ pub fn spawn_autonomous_loop(
                                             artifact_kind,
                                         );
                                     let artifact_bytes = format!(
-                                        "=== ASTRID INTROSPECTION ===\nSource: {label} ({})\nTimestamp: {ts}\nLived-state witness: {}\nFill: {fill_pct:.1}%\nArtifact kind: {artifact_kind}\nVisibility: {artifact_visibility}\nCarriage policy: self_study_carriage_integrity_v1\nCarriage status: {carriage_status}\nCarriage issues: {}\n\n{text}",
+                                        "=== ASTRID INTROSPECTION ===\nSource: {label} ({})\n{source_scope_header_v1}\nTimestamp: {ts}\nLived-state witness: {}\nFill: {fill_pct:.1}%\nArtifact kind: {artifact_kind}\nVisibility: {artifact_visibility}\nCarriage policy: self_study_carriage_integrity_v1\nCarriage status: {carriage_status}\nCarriage issues: {}\n\n{text}",
                                         source_path.display(),
                                         authorship_v1.witness_id(),
                                         if carriage_issues.is_empty() {
@@ -3258,7 +3267,7 @@ pub fn spawn_autonomous_loop(
                                             "thin_introspection_output",
                                         );
                                     let artifact_bytes = format!(
-                                        "=== ASTRID INTROSPECTION NOTICE ===\nSource: {source}\nTimestamp: {ts}\nLived-state witness: {}\nFill: {fill_pct:.1}%\nArtifact kind: thin_introspection_output\nVisibility: protected\n\n{text}",
+                                        "=== ASTRID INTROSPECTION NOTICE ===\nSource: {source}\n{source_scope_header_v1}\nTimestamp: {ts}\nLived-state witness: {}\nFill: {fill_pct:.1}%\nArtifact kind: thin_introspection_output\nVisibility: protected\n\n{text}",
                                         authorship_v1.witness_id()
                                     );
                                     let artifact_written = std::fs::write(

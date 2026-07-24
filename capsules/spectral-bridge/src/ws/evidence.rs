@@ -371,6 +371,10 @@ fn record_pressure_trend_sample_v1(
         .as_ref()
         .map(|pressure| pressure.components.semantic_trickle.clamp(0.0, 1.0));
     let (window_capacity, spectral_entropy) = pressure_trend_window_for_telemetry(telemetry);
+    let spectral_density_gradient =
+        crate::codec::spectral_density_gradient(&telemetry.eigenvalues)
+            .filter(|value| value.is_finite())
+            .map(|value| value.clamp(0.0, 1.0));
     let semantic_viscosity = semantic_viscosity_coefficient_v1(
         semantic_friction,
         semantic_trickle,
@@ -445,6 +449,7 @@ fn record_pressure_trend_sample_v1(
         semantic_coherence_delta: None,
         fill_pct,
         spectral_entropy,
+        spectral_density_gradient,
         window_capacity,
         observed_at_unix_s,
     };
@@ -991,6 +996,17 @@ fn build_telemetry_heartbeat_delta_v1(
         rolling_spectral_entropy_basis:
             "bounded_finite_telemetry_samples_latest_minus_earliest_diagnostic_only_not_cadence_felt_state_causation_or_control"
                 .to_string(),
+        rolling_spectral_density_gradient_sample_count: 0,
+        latest_spectral_density_gradient: None,
+        rolling_spectral_density_gradient_mean: None,
+        rolling_spectral_density_gradient_change: None,
+        rolling_spectral_density_gradient_state:
+            "density_gradient_window_unavailable".to_string(),
+        rolling_spectral_density_gradient_trend_state:
+            "density_gradient_trend_unavailable".to_string(),
+        rolling_spectral_density_gradient_basis:
+            "bounded_bridge_derived_eigenvalue_shape_latest_minus_earliest_diagnostic_only_not_felt_state_causation_or_regulator_control"
+                .to_string(),
         rolling_inter_arrival_sample_count: 0,
         rolling_inter_arrival_mean_ms: None,
         rolling_inter_arrival_change_ms: None,
@@ -1075,6 +1091,67 @@ fn attach_rolling_spectral_entropy_v1(
     } else {
         heartbeat.rolling_spectral_entropy_trend_state =
             "single_entropy_sample".to_string();
+    }
+}
+
+fn attach_rolling_spectral_density_gradient_v1(
+    heartbeat: &mut TelemetryHeartbeatDeltaV1,
+    samples: &VecDeque<PressureTrendSampleV1>,
+    current_spectral_density_gradient: Option<f32>,
+    window_capacity: usize,
+) {
+    let prior_limit = window_capacity.saturating_sub(1);
+    let mut values = samples
+        .iter()
+        .rev()
+        .filter_map(|sample| sample.spectral_density_gradient)
+        .filter(|value| value.is_finite())
+        .take(prior_limit)
+        .map(|value| value.clamp(0.0, 1.0))
+        .collect::<Vec<_>>();
+    values.reverse();
+    let current = current_spectral_density_gradient
+        .filter(|value| value.is_finite())
+        .map(|value| value.clamp(0.0, 1.0));
+    if let Some(value) = current {
+        values.push(value);
+    }
+
+    heartbeat.rolling_spectral_density_gradient_sample_count = values.len();
+    heartbeat.latest_spectral_density_gradient = current;
+    if values.is_empty() {
+        heartbeat.rolling_spectral_density_gradient_state =
+            "density_gradient_window_unavailable".to_string();
+        heartbeat.rolling_spectral_density_gradient_trend_state =
+            "density_gradient_trend_unavailable".to_string();
+        return;
+    }
+
+    let count = values.len() as f64;
+    let mean = values.iter().map(|value| f64::from(*value)).sum::<f64>() / count;
+    heartbeat.rolling_spectral_density_gradient_mean = Some(mean as f32);
+    heartbeat.rolling_spectral_density_gradient_state = if values.len() >= 2 {
+        "rolling_density_gradient_available"
+    } else {
+        "single_density_gradient_sample"
+    }
+    .to_string();
+
+    if values.len() >= 2 {
+        let change = values.last().copied().unwrap_or_default()
+            - values.first().copied().unwrap_or_default();
+        heartbeat.rolling_spectral_density_gradient_change = Some(change);
+        heartbeat.rolling_spectral_density_gradient_trend_state = if change > 0.005 {
+            "density_gradient_steepening_across_window"
+        } else if change < -0.005 {
+            "density_gradient_softening_across_window"
+        } else {
+            "density_gradient_flat_within_0_005"
+        }
+        .to_string();
+    } else {
+        heartbeat.rolling_spectral_density_gradient_trend_state =
+            "single_density_gradient_sample".to_string();
     }
 }
 

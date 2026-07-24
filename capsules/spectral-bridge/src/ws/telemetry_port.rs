@@ -1,3 +1,5 @@
+use sha2::{Digest as _, Sha256};
+
 /// Spawn the telemetry `WebSocket` subscriber task.
 ///
 /// Connects to Minime's eigenvalue broadcast on port 7878, parses
@@ -254,15 +256,21 @@ async fn handle_telemetry_message_at(
     let decoded = match decode_telemetry_v1(data) {
         Ok(decoded) => decoded,
         Err(e) => {
+            let payload_sha256 = format!("{:x}", Sha256::digest(data));
+            let bounded_error = format!(
+                "telemetry_parse_error:{e};payload_bytes={};payload_sha256={payload_sha256}",
+                data.len()
+            );
             {
                 let mut s = state.write().await;
-                record_ws_parse_error(
-                    &mut s,
-                    WsLane::Telemetry,
-                    format!("telemetry_parse_error:{e}"),
-                );
+                record_ws_parse_error(&mut s, WsLane::Telemetry, bounded_error);
             }
-            warn!(error = %e, "failed to parse telemetry message");
+            warn!(
+                error = %e,
+                payload_bytes = data.len(),
+                payload_sha256 = %payload_sha256,
+                "failed to parse telemetry message"
+            );
             return false;
         },
     };
@@ -428,6 +436,12 @@ async fn handle_telemetry_message_at(
             &mut heartbeat,
             &s.pressure_trend_samples_v1,
             first_valid_spectral_entropy,
+            entropy_window_capacity,
+        );
+        attach_rolling_spectral_density_gradient_v1(
+            &mut heartbeat,
+            &s.pressure_trend_samples_v1,
+            crate::codec::spectral_density_gradient(&telemetry.eigenvalues),
             entropy_window_capacity,
         );
         s.pressure_trend_v1 = Some(build_pressure_trend_v1(

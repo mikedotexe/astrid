@@ -46,6 +46,56 @@ pub(super) struct IntrospectWindow {
     pub text: String,
     pub next_offset: Option<usize>,
     pub source_snapshot_v1: crate::lived_state_witness::LivedStateSourceSnapshotV1,
+    source_scope_v1: IntrospectSourceScopeV1,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+struct IntrospectSourceScopeV1 {
+    start_line: usize,
+    end_line: usize,
+    total_lines: usize,
+}
+
+impl IntrospectSourceScopeV1 {
+    const fn new(start_line: usize, end_line: usize, total_lines: usize) -> Self {
+        Self {
+            start_line,
+            end_line,
+            total_lines,
+        }
+    }
+
+    fn artifact_header_v1(self) -> String {
+        let display_start = if self.total_lines == 0 {
+            0
+        } else {
+            self.start_line.saturating_add(1)
+        };
+        let evidence_scope =
+            if self.start_line == 0 && self.end_line == self.total_lines {
+                "complete_file"
+            } else {
+                "partial_window_unseen_source_not_assessed"
+            };
+        format!(
+            "Source window: lines {display_start}-{} of {}\n\
+             Source evidence scope: {evidence_scope}\n\
+             Source activation boundary: source_read_not_runtime_activation_proof",
+            self.end_line, self.total_lines
+        )
+    }
+}
+
+pub(super) fn source_scope_artifact_header_v1(window: Option<&IntrospectWindow>) -> String {
+    window.map_or_else(
+        || {
+            "Source window: unavailable\n\
+             Source evidence scope: source_unavailable_not_assessed\n\
+             Source activation boundary: source_unread_not_runtime_activation_proof"
+                .to_string()
+        },
+        |window| window.source_scope_v1.artifact_header_v1(),
+    )
 }
 
 fn minime_autonomy_implementation(minime_root: &Path) -> PathBuf {
@@ -522,7 +572,10 @@ fn proposal_lifecycle_index(label: &str, content: &str) -> String {
             (lower.contains("implementation")
                 || lower.contains("update")
                 || lower.contains("clarification")
-                || lower.contains("current status"))
+                || lower.contains("current status")
+                || lower.contains("current-state")
+                || lower.contains("introspection response")
+                || lower.contains("verification note"))
             .then(|| {
                 (
                     idx,
@@ -1134,10 +1187,12 @@ pub(super) fn read_introspect_window(
         total,
         source_read_at,
     );
+    let source_scope_v1 = IntrospectSourceScopeV1::new(start, end, total);
     Ok(IntrospectWindow {
         text,
         next_offset,
         source_snapshot_v1,
+        source_scope_v1,
     })
 }
 
@@ -1620,12 +1675,18 @@ mod tests {
     fn proposal_lifecycle_index_surfaces_later_implementation_without_claiming_resolution() {
         let content = "# Proposal\n\n## Initial Design\nold claim\n\n\
             ## 2026-06-28 Implementation Update: Replyable Artifacts\nimplemented source\n\n\
-            ## 2026-07-01 Clarification: Felt Friction Remains Primary\nboundary\n";
+            ## 2026-07-01 Clarification: Felt Friction Remains Primary\nboundary\n\n\
+            ## 2026-07-10 Current-State Addendum: Glimpse Remains Additive\ncurrent source\n\n\
+            ## 2026-07-12 Introspection Response: Receptivity Is Gated\nauthority boundary\n\n\
+            ## Verification Note\nverified source\n";
 
         let out = proposal_lifecycle_index("proposal:phase_transitions", content);
 
         assert!(out.contains("Implementation Update: Replyable Artifacts"));
         assert!(out.contains("Clarification: Felt Friction Remains Primary"));
+        assert!(out.contains("Current-State Addendum: Glimpse Remains Additive"));
+        assert!(out.contains("Introspection Response: Receptivity Is Gated"));
+        assert!(out.contains("Verification Note"));
         assert!(out.contains("INTROSPECT proposal:phase_transitions"));
         assert!(out.contains("not felt resolution"));
         assert_eq!(proposal_lifecycle_index("astrid:codec", content), "");
@@ -1869,6 +1930,38 @@ mod tests {
         assert_eq!(
             safe_artifact_label("astrid:autonomous/mod.rs"),
             "astrid_autonomous_mod.rs"
+        );
+    }
+
+    #[test]
+    fn source_scope_header_distinguishes_complete_and_partial_reads() {
+        let complete = IntrospectSourceScopeV1::new(0, 48, 48).artifact_header_v1();
+        assert!(complete.contains("Source window: lines 1-48 of 48"));
+        assert!(complete.contains("Source evidence scope: complete_file"));
+        assert!(
+            complete.contains(
+                "Source activation boundary: source_read_not_runtime_activation_proof"
+            )
+        );
+
+        let partial = IntrospectSourceScopeV1::new(400, 800, 1_204).artifact_header_v1();
+        assert!(partial.contains("Source window: lines 401-800 of 1204"));
+        assert!(
+            partial.contains(
+                "Source evidence scope: partial_window_unseen_source_not_assessed"
+            )
+        );
+    }
+
+    #[test]
+    fn unavailable_source_scope_never_claims_a_source_read() {
+        let header = source_scope_artifact_header_v1(None);
+        assert!(header.contains("Source window: unavailable"));
+        assert!(header.contains("Source evidence scope: source_unavailable_not_assessed"));
+        assert!(
+            header.contains(
+                "Source activation boundary: source_unread_not_runtime_activation_proof"
+            )
         );
     }
 

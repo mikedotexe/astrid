@@ -49,6 +49,25 @@ pub struct TelemetryHeartbeatDeltaV1 {
     pub rolling_spectral_entropy_trend_state: String,
     #[serde(default)]
     pub rolling_spectral_entropy_basis: String,
+    /// Number of finite bridge-derived density-gradient samples in the same
+    /// bounded telemetry window. This is shape evidence, not felt-state or
+    /// regulator authority.
+    #[serde(default)]
+    pub rolling_spectral_density_gradient_sample_count: usize,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub latest_spectral_density_gradient: Option<f32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub rolling_spectral_density_gradient_mean: Option<f32>,
+    /// Latest finite density gradient minus the earliest finite gradient in
+    /// the bounded window.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub rolling_spectral_density_gradient_change: Option<f32>,
+    #[serde(default)]
+    pub rolling_spectral_density_gradient_state: String,
+    #[serde(default)]
+    pub rolling_spectral_density_gradient_trend_state: String,
+    #[serde(default)]
+    pub rolling_spectral_density_gradient_basis: String,
     /// Number of finite host-arrival intervals in the bounded cadence window.
     #[serde(default)]
     pub rolling_inter_arrival_sample_count: usize,
