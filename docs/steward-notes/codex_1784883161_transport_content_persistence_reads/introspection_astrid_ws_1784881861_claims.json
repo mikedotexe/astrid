@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Telemetry state-lock wait and hold time should be visible independently.",
+      "disposition": "Verified TelemetryIntegrationHealthV1 records bounded prewrite, write-lock-wait, and write-lock-hold timing.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Database and trace logging should not remain inside the shared BridgeState write lock.",
+      "disposition": "Verified current source releases the write lock before SQLite and trace-lab persistence.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Ping, reconnect, and backoff behavior should remain regression-covered.",
+      "disposition": "Verified existing WebSocket lifecycle and backoff tests cover connection and heartbeat handling.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Telemetry processing must retain bounded payload and integration evidence without copying raw reports.",
+      "disposition": "Verified bounded parse hashes, integration metrics, and capture receipts remain metadata-only.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Decoding or artifact scanning should move to spawn_blocking if it measurably stalls intake.",
+      "disposition": "Routed to natural timing observation; no executor or pipeline change is justified without a threshold-crossing baseline.",
+      "classification": "needs_sandbox"
+    }
+  ]
+}

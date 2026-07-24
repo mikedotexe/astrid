@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The embedding projection basis must be deterministic across restarts.",
+      "disposition": "Verified fixed-seed generation, OnceLock reuse, and deterministic basis tests.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Every raw projection column should remain above the near-zero threshold.",
+      "disposition": "Verified current basis-health evidence reports no dead dimension and bounded minimum-margin metadata.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Normalized projection columns should remain approximately unit length.",
+      "disposition": "Verified existing normalization and finite-column regression coverage.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Exact raw column-health values should be inspectable without changing the codec.",
+      "disposition": "Routed to the existing read-only projection-basis health receipt and deterministic fixture.",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "The projection basis may eventually need dynamic rotation.",
+      "disposition": "Held for Tier 5 operator approval because basis rotation changes the live representation contract and transported features.",
+      "classification": "needs_operator_approval"
+    }
+  ]
+}

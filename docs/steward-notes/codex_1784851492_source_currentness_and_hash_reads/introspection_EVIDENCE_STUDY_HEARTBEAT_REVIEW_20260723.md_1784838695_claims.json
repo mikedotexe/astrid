@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The heartbeat campaign retained 31 admitted attempts but no naturally blocked or rejected comparison cohort.",
+      "disposition": "Verified the same-process/deployment capture counts and the resulting mechanical outcome insufficient.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Successful admission and enqueue establish felt continuity or absence of hollowness.",
+      "disposition": "Verified the campaign explicitly limits receipts to mechanics and leaves felt review independent and unclosed.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Pressure and entropy context should remain visible beside the insufficient result.",
+      "disposition": "Verified the completed follow-up now exposes bounded descriptive pressure and entropy distributions without changing the comparison.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "A blocked cohort should be induced by changing heartbeat admission or enqueue behavior.",
+      "disposition": "Preserve an exact Tier 5 wait because inducing rejection, changing rescue checks, or altering cadence/intensity changes live semantic behavior.",
+      "classification": "authority_gated"
+    }
+  ]
+}

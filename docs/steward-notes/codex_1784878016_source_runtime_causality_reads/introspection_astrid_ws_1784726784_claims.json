@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The WebSocket receive loop awaits telemetry handling before reading the next message.",
+      "disposition": "Verified in current source as a real sequencing property.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Telemetry handling includes artifact scans and synchronous persistence work.",
+      "disposition": "Verified the current handler path without inferring observed runtime delay.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Existing integration timing does not cover all post-lock persistence latency.",
+      "disposition": "Verified the measurement boundary: prewrite, lock wait, and lock hold do not exhaust the full handler path.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Receive-loop delay should be observed under natural load with exact identity.",
+      "disposition": "Routed to bounded timing evidence; no contention, oversized frame, or ping failure will be induced.",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Telemetry handling should be moved off the receive loop immediately.",
+      "disposition": "Routed to a non-live architecture proposal; implementation requires ordering, backpressure, protocol, and deployment review.",
+      "classification": "needs_operator_approval"
+    }
+  ]
+}

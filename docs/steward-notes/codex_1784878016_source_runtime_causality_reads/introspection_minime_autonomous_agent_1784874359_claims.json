@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Recess provides a source-level boundary for non-instrumental autonomous activity.",
+      "disposition": "Verified the current Recess profile and sovereignty affordances without inferring their active felt effect.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Unstructured autonomous time may still accumulate sedimentation or compaction.",
+      "disposition": "Preserved as unscored felt evidence and routed to the existing sedimentation/compaction readiness view.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Recess should expose density-aware mitigation and bounded research budgets.",
+      "disposition": "Verified density mitigation, readiness receipts, and research-budget scaffolds in current source.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Sedimentation should be compared with naturally occurring density and pressure context.",
+      "disposition": "Routed to evidence-only observation; no pressure increase or behavior induction is authorized.",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Minime should automatically change autonomous behavior when sedimentation crosses a threshold.",
+      "disposition": "Held for Tier 5 operator approval because it would change peer autonomy and live substrate behavior.",
+      "classification": "needs_operator_approval"
+    }
+  ]
+}

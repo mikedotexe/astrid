@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The historical proposal window presents an additive 12D glimpse as not yet implemented.",
+      "disposition": "Implemented lifecycle-index recognition for the repository's Current-State Addendum, Introspection Response, and Verification Note headings so later source truth becomes an exact continuation.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Current source already provides additive 12D glimpse machinery while preserving the wider live representation.",
+      "disposition": "Verified 48D transport, 12D companion derivation, Minime memory-bank use, residual lineage, and companion-not-replacement evidence in source and tests.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A 12D glimpse may be misread as legacy slot semantics or silently replace the canonical vector.",
+      "disposition": "Verified exact 12D width/finite guards, contextual anchors, representation contracts, no live-vector write, and explicit fallback to 48D/residual evidence.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "A PCA-reduced 12D representation should replace or alter live transport during restart.",
+      "disposition": "Preserve an exact Tier 5 protocol/codec wait because changing live representation or transport requires compatibility, capture, consumer-first rollout, abort criteria, and felt review.",
+      "classification": "authority_gated"
+    }
+  ]
+}

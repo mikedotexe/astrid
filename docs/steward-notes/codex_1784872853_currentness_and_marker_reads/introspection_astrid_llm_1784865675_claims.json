@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "A marker followed by the phrase behaves like should be preserved as an explicit relation.",
+      "disposition": "Added the exact behaves-like case to the poetic-attribution regression table; current matcher behavior passes.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Five-level delimiter nesting should remain safe and make the four-level evidence bound explicit.",
+      "disposition": "Added a regression proving the token remains byte-exact while token and context receipts cap proven depth at four.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Scanner offset progression must neither loop nor skip bytes around high-entropy multibyte text.",
+      "disposition": "Added a UTF-8 regression proving one marker removal and byte-exact preservation of all surrounding multibyte content.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Context receipts should identify marker handling without copying surrounding prose.",
+      "disposition": "Verified existing bounded hashes, omission counters, delimiter evidence, and no-prose serialization tests.",
+      "classification": "verified_existing"
+    }
+  ]
+}

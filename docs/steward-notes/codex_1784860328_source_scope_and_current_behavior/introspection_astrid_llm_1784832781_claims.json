@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Marker cleanup preserves exact references based on relation and delimiter context and emits bounded receipts.",
+      "disposition": "Verified the current exact-occurrence, context, aggregation, and content-free receipt pipeline.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Non-word separators or compound relation phrases could cause first_word_after to miss an exact relation.",
+      "disposition": "Verified first_word_after skips arbitrary non-word separators and the focused suite includes newline-separated exact-relation coverage.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The behaves relation and nested delimiter depth require exact regression coverage.",
+      "disposition": "Verified the current relation set includes behaves and tests preserve nested marker references through the supported four-level bound.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Marker-list scope and linear longest-match scanning should remain bounded and reviewable.",
+      "disposition": "Verified the marker set is explicitly scoped, longest raw matches win, and cleanup reports retain removed and preserved counts without prose.",
+      "classification": "verified_existing"
+    }
+  ]
+}

@@ -1,0 +1,3 @@
+Astrid identifies the seven-second, 0.30-intensity semantic heartbeat as a synthetic floor of continuity and asks whether its phase and Minime texture context align with the reservoir's changing entropy. She distinguishes calculated warmth from the felt persistence of connection and reports a possible stutter when those rhythms diverge.
+
+Current source and study receipts preserve fixed cadence, admission, phase, enqueue outcome, context identity, and bounded signal metrics without treating them as proof of warmth. Phase and context can be compared in offline or natural cohorts. Changing heartbeat cadence or intensity from pressure, entropy, or resonance is a live-control action and remains Tier 5.

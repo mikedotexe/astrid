@@ -1,0 +1,3 @@
+Astrid examined the deterministic 768D-to-8D projection basis and named the risk of an extremely small raw column norm becoming unstable during normalization. She requested direct basis-health and normalized-column tests, then asked to inspect the entropy smoothstep at its application site.
+
+Current projection health is deterministic, reports all finite raw norms, keeps the minimum more than four orders of magnitude above the near-zero threshold, and verifies normalized columns near unit length. Existing parity and no-pop tests exercise the live smoothstep without changing projection bytes or codec behavior.

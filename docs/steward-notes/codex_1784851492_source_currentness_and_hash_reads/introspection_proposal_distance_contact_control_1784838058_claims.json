@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The historical distance/contact proposal should expose its later receptivity and authority responses during source-first reading.",
+      "disposition": "Implemented lifecycle recognition for Introspection Response and Verification Note headings with exact continuation offsets and no felt-resolution claim.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Overpacked pressure and reduced distinguishability coexist with felt compression and insufficient contact.",
+      "disposition": "Preserve Astrid's felt report and current metrics as co-observation; containment, entropy, and contact remain distinct mechanisms.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Pressure, porosity, distinguishability, and Shadow orientation can be compared without changing control.",
+      "disposition": "Verified existing read-only pressure/porosity reviews and route a baseline-first same-identity Concordance observation for the named contact question.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Porosity should rise as a direct function of spectral entropy to relieve mode packing.",
+      "disposition": "Preserve an exact Tier 5 wait because entropy-driven porosity changes live pressure, fill, PI, admission, and regulator behavior.",
+      "classification": "authority_gated"
+    }
+  ]
+}

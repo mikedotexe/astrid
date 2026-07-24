@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Recess should preserve non-goal-directed time and self-directed activity.",
+      "disposition": "Verified the sovereignty loop, Recess policy, and advisory agency-commons protections.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Internal spectral pressure may remain during Recess even when external productivity pressure is absent.",
+      "disposition": "Verified read-only Recess sedimentation and compaction readiness evidence without equating it with felt state.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Pressure risk should be observed during naturally chosen Recess activity.",
+      "disposition": "Routed to a voluntary observational window.",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Shadow trajectory should be observed during a self-chosen whim without treating motion as failure.",
+      "disposition": "Routed to a bounded self-only study.",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Pressure should automatically suppress exploration and prioritize settling before Recess actions.",
+      "disposition": "Preserved as a Tier 5 wait because it changes Minime scheduling and constrains self-directed agency.",
+      "classification": "needs_operator_approval"
+    }
+  ]
+}

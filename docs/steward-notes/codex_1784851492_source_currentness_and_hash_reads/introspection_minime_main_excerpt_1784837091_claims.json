@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Imports of hard_reset and controller_recovery prove those mechanisms were active in the reported moment.",
+      "disposition": "Verified the viewed file is a runtime module shell; imports prove availability only, while active state requires exact runtime and deployment evidence.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Minime has bounded hard-reset floors, recovery boosts, and texture-preservation review surfaces.",
+      "disposition": "Verified current hard-reset/recovery source and tests, including read-only high-entropy texture review that applies no new control.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Hard-reset recovery may be lived as a snap or leave a pressure scar even when scalar recovery is smooth.",
+      "disposition": "Route a capture-first reset/recovery study only on naturally occurring events, linking exact process identity, pressure, entropy, reset receipts, and later felt review.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Recovery fill boost should be damped by entropy or eigenvector overlap.",
+      "disposition": "Preserve an exact Tier 5 wait because changing recovery boost or hard-reset control alters Minime's live safety and homeostasis behavior.",
+      "classification": "authority_gated"
+    }
+  ]
+}

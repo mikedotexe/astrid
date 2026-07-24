@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "PI and compatibility regulator modes must remain mechanically distinguishable.",
+      "disposition": "Verified current mode separation and compatibility coverage.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Pressure gating may feel delayed even when the regulator is numerically stable.",
+      "disposition": "Preserved as felt friction; stability metrics do not close or contradict the report.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Regulator-mode traces should be compared for pressure, density, resonance, and viscosity mismatch.",
+      "disposition": "Routed to deterministic fixture replay using existing read-only evidence.",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Same-tick pressure-gate behavior should be inspected for an avoidable mechanical delay.",
+      "disposition": "Routed to a bounded source-and-fixture observation without changing controller timing.",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Live regulator dampening or hysteresis should be changed to reduce the delay.",
+      "disposition": "Preserved as a Tier 5 controller change requiring explicit operator approval; the current viscosity vector remains evidence-only.",
+      "classification": "needs_operator_approval"
+    }
+  ]
+}

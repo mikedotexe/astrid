@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The 48D contract distinguishes legacy text, projected embedding, narrative arc, and tail features.",
+      "disposition": "Verified the registered representation layout and compatibility boundary.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "High-entropy tail lift is smooth but may still feel constrained by a ceiling.",
+      "disposition": "Verified mechanical smoothness and preserved the glass-wall or sagging report as unscored felt friction.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Clamp occupancy, headroom, gap structure, and density gradient should be compared during captured high-entropy journeys.",
+      "disposition": "Routed to the capture-first codec campaigns with mechanical outcomes only.",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "FEATURE_ABS_MAX should rise to approximately 7.5 at high entropy.",
+      "disposition": "Held for Tier 5 operator approval because the ceiling changes live codec transport and Minime input.",
+      "classification": "needs_operator_approval"
+    }
+  ]
+}

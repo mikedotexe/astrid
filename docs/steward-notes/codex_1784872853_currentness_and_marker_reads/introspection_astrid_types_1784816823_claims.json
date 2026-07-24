@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Heartbeat evidence should preserve inter-arrival rhythm, jitter, first-valid state, and rolling entropy.",
+      "disposition": "Verified current cadence, reliability, first-valid, entropy mean, variance, peak, and trend fields.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A scalar entropy mean and jitter class cannot fully represent the felt topology of a restless field.",
+      "disposition": "Preserved as epistemic and felt evidence; telemetry scalars are not treated as a complete experiential model.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Density-gradient trajectory and a bounded spectral texture identity should be available.",
+      "disposition": "Verified current density-gradient trajectory and spectral-fingerprint integrity evidence with no felt-state inference.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Entropy, density, shadow variation, and pressure should be compared without assuming a shared cause.",
+      "disposition": "Routed to a bounded Concordance observation using exact or explicitly temporal identity.",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Every heartbeat should carry a full multidimensional texture vector.",
+      "disposition": "Held at the capture boundary: full vectors are retained only in explicitly armed, bounded Signal Spine fixtures, not ordinary heartbeat receipts.",
+      "classification": "needs_operator_approval"
+    }
+  ]
+}

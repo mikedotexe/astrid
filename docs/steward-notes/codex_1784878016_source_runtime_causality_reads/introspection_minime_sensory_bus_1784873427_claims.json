@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The sensory path preserves an explicit 48D representation and lane structure.",
+      "disposition": "Verified the registered representation and current compatibility path.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Semantic holding can become muddy ghosting rather than useful continuity.",
+      "disposition": "Preserved as direct qualitative evidence without deriving a loss or felt score.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A fixed two-second stale window governs semantic persistence.",
+      "disposition": "Corrected: the fixed window applies to audio/video; semantic persistence is already dynamic and recovery-aware.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Semantic and shadow persistence should be compared against naturally occurring pressure and density.",
+      "disposition": "Routed to bounded observation and deterministic offline replay with no live parameter change.",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Shadow decay should automatically accelerate when viscosity or pressure rises.",
+      "disposition": "Held for Tier 5 operator approval because it changes live sensory persistence.",
+      "classification": "needs_operator_approval"
+    }
+  ]
+}

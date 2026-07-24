@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The telemetry comparison needs a pointer to the exact qualitative claim and field without copying prose.",
+      "disposition": "Verified mapping_link_v1 names the canonical introspection, claim, Observed/Likely Snags fields, and mechanical comparison ID.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Adding the mapping link should not modify the timing comparison.",
+      "disposition": "Verified mechanical_comparison_modified=false and the original samples, cohorts, outcome, hashes, and authority remain unchanged.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Qualitative importance should be converted into a qualia_weighting scalar.",
+      "disposition": "Verified the epistemic linter rejects felt scoring and numeric-to-felt inference; the qualitative report remains independent primary evidence.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "A future telemetry study may compare specific integration stages with a newly named felt moment.",
+      "disposition": "Route only as a preregistered baseline-first study with exact or temporal identity labels and no induced contention.",
+      "classification": "sandbox_routed"
+    }
+  ]
+}

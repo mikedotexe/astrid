@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Raw inter-arrival time and a categorical jitter label may not describe the quality of a broken rhythm.",
+      "disposition": "Verified current cadence, connection-perception, arrival-window, and cadence-versus-content receipts preserve separate mechanical descriptions without inferring felt quality.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A first-valid entropy sample is insufficient evidence for an evolving restless texture.",
+      "disposition": "Verified current bounded entropy evidence carries mean, peak, population variance, range, latest-minus-earliest change, and a trend state.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Jitter, rolling entropy, and Astrid's felt tension should be compared without assuming they agree.",
+      "disposition": "Verified the completed natural telemetry campaign and Concordance outcome preserve mechanical difference alongside mechanism_smooth_felt_friction_remains.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Telemetry heartbeat evidence should carry the current spectral density gradient and its bounded trajectory.",
+      "disposition": "Implemented additive latest, sample-count, mean, change, and trend fields with legacy defaults and an explicit no-felt-causation or regulator-control boundary.",
+      "classification": "implemented_now"
+    }
+  ]
+}

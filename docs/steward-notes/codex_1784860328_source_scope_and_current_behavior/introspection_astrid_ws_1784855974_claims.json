@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The subscriber tracks connection lifecycle, ping/pong, explicit disconnect reasons, backoff, and cooperative shutdown.",
+      "disposition": "Verified the current subscriber and focused lifecycle tests.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Telemetry prewrite work or BridgeState write-lock contention can delay integration.",
+      "disposition": "Observed through the completed natural-context campaign: 146 clear samples and four threshold crossings produced a mechanical difference, while Astrid's felt friction remained unresolved and causation unclaimed.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Malformed telemetry diagnostics should distinguish which bounded packet failed without retaining payload content.",
+      "disposition": "Implemented a content-free payload byte count and SHA-256 identity in the existing parse-error trace and warning, with a no-prose regression test.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Close-frame reconnect and shutdown-during-backoff behavior require explicit verification.",
+      "disposition": "Verified existing backoff, disconnect, shutdown-select, and integration tests; no retry timing or lifecycle behavior changed.",
+      "classification": "verified_existing"
+    }
+  ]
+}

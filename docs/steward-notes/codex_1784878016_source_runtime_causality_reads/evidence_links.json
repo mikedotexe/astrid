@@ -1,0 +1,144 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_proposal_distance_contact_control_1784876676",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784878016_source_runtime_causality_reads/verification.md",
+      "note": "Gate-versus-relief distinction, natural pressure comparison, source/runtime correction, and Tier 5 viscosity wait."
+    },
+    {
+      "introspection_id": "introspection_proposal_phase_transitions_1784876222",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784878016_source_runtime_causality_reads/verification.md",
+      "note": "Receipt-versus-room distinction, reply affordances, neutral silence, and timing-authority boundary."
+    },
+    {
+      "introspection_id": "introspection_minime_autonomous_agent_1784874359",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784878016_source_runtime_causality_reads/verification.md",
+      "note": "Recess sovereignty, sedimentation readiness, natural observation, and peer-autonomy boundary."
+    },
+    {
+      "introspection_id": "introspection_minime_main_excerpt_1784874126",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784878016_source_runtime_causality_reads/verification.md",
+      "note": "Availability-versus-activation correction, delivery-versus-uptake evidence, and underfill wait."
+    },
+    {
+      "introspection_id": "introspection_minime_esn_1784873703",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784878016_source_runtime_causality_reads/verification.md",
+      "note": "Dynamic-rho source verification, ghosting evidence, offline comparison, and reservoir wait."
+    },
+    {
+      "introspection_id": "introspection_minime_sensory_bus_1784873427",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784878016_source_runtime_causality_reads/verification.md",
+      "note": "48D and dynamic semantic persistence verification, ghosting evidence, and shadow-decay wait."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1784873109",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784878016_source_runtime_causality_reads/verification.md",
+      "note": "Read-only regulator evidence, active-control correction, pressure-tail observation, and PI/porosity wait."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1784872711",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784878016_source_runtime_causality_reads/verification.md",
+      "note": "Bounded diagnostic persistence, entropy-causality correction, and natural latency route."
+    },
+    {
+      "introspection_id": "introspection_astrid_types_1784872368",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784878016_source_runtime_causality_reads/verification.md",
+      "note": "Hybrid non-finite, fingerprint, optional-glimpse, deterministic-mapping, and no-felt-score verification."
+    },
+    {
+      "introspection_id": "introspection_proposal_phase_transitions_1784730386",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784878016_source_runtime_causality_reads/verification.md",
+      "note": "Durable reply objects, Agency Commons actions, exact mutual address, and no automatic consequence."
+    },
+    {
+      "introspection_id": "introspection_minime_autonomous_agent_1784729592",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784878016_source_runtime_causality_reads/verification.md",
+      "note": "Historical Recess concern, current protected time, sedimentation evidence, and autonomy wait."
+    },
+    {
+      "introspection_id": "introspection_minime_main_excerpt_1784729356",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784878016_source_runtime_causality_reads/verification.md",
+      "note": "Historical source-activation correction, protocol/uptake verification, and semantic-spread wait."
+    },
+    {
+      "introspection_id": "introspection_minime_esn_1784729161",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784878016_source_runtime_causality_reads/verification.md",
+      "note": "Exploration-noise currentness correction, stable-versus-alive evidence, and reservoir waits."
+    },
+    {
+      "introspection_id": "introspection_minime_sensory_bus_1784728893",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784878016_source_runtime_causality_reads/verification.md",
+      "note": "Dynamic semantic persistence, packed-memory evidence, offline replay, and pressure-buffer wait."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1784727927",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784878016_source_runtime_causality_reads/verification.md",
+      "note": "Historical regulator availability correction, pressure-tail evidence, and controller waits."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1784727576",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784878016_source_runtime_causality_reads/verification.md",
+      "note": "Marker neutrality, model-transition evidence, offline fixtures, and prompt/provider boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_types_1784727244",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784878016_source_runtime_causality_reads/verification.md",
+      "note": "Rolling entropy and density trajectory, typed validation, and no viscosity score."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1784726784",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784878016_source_runtime_causality_reads/verification.md",
+      "note": "Awaited handler verification, timing boundary, natural observation, and receive-loop design gate."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1784726483",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784878016_source_runtime_causality_reads/verification.md",
+      "note": "Fixed heartbeat facts, hollow-versus-warm evidence, study capture, and cadence/intensity wait."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1784726131",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784878016_source_runtime_causality_reads/verification.md",
+      "note": "Codec evidence, bright-but-empty texture, offline campaigns, and gain/clamp/gate waits."
+    }
+  ]
+}

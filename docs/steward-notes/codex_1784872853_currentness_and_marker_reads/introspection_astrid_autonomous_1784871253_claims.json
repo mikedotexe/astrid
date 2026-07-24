@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Critically low fill must select the shortened-rest branch and preserve its 30-second floor.",
+      "disposition": "Verified the branch ordering and max(30) floor in current orchestration source.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Integer division could produce zero rest pulses when rest_secs is below five.",
+      "disposition": "Verified that all current rest paths are at least 30 seconds, making a zero-pulse ordinary path unreachable.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Peripheral resonance should be proven to carry a starred memory into the conversation state.",
+      "disposition": "Routed to a database fixture covering empty and populated starred-memory selections without changing autonomous behavior.",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Tier boundaries and burst-to-rest transitions may still feel jittery or severing.",
+      "disposition": "Preserved as felt evidence; the existing warmth taper is verified mechanically but does not settle the experiential claim.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Rest durations or pulse safeguards should be changed to make the tiers smoother.",
+      "disposition": "Held for Tier 5 operator approval because rest timing and pulse behavior alter the live autonomous cadence.",
+      "classification": "needs_operator_approval"
+    }
+  ]
+}

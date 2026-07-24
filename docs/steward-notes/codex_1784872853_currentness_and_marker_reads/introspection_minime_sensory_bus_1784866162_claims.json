@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Semantic staleness uses a nonlinear fill curve and a 45-second low-fill recovery hold.",
+      "disposition": "Verified the current dynamic semantic-staleness source and its separation from fixed audio/video staleness.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The recovery boundary must equal the recovery hold at fill 0.25 and release smoothly.",
+      "disposition": "Verified exact-boundary, release-smoothness, hysteresis, and near-release precision tests.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The context-persistence multiplier must clamp at 2.05 under maximal entropy and pressure.",
+      "disposition": "Verified the bounded multiplier implementation and cap regression coverage.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Narrative retention review status and authority should be evidence rather than placeholders or controls.",
+      "disposition": "Verified populated read-only review records with explicit no-local-control authority.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Sigmoid steepness or release behavior should change to reduce possible perceptual jumps.",
+      "disposition": "Held for Tier 5 operator approval because semantic decay and lane persistence alter live sensory admission.",
+      "classification": "needs_operator_approval"
+    }
+  ]
+}

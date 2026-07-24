@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Exploration noise is actively fixed at 0.12.",
+      "disposition": "Corrected from current source: 0.085 is the default and 0.12 is the bounded maximum of a dynamic range.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Holding exploration noise at 0.085 for 1,000 ticks could isolate its mechanical contribution.",
+      "disposition": "Routed to deterministic offline simulation only; no live ESN or controller value may be changed.",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Eigenvector stability should be inspected alongside aggregate eigenvalue fill.",
+      "disposition": "Routed to bounded fixture observation using existing spectral outputs without a felt-state inference.",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Exploration noise should have a density-sensitive component.",
+      "disposition": "Verified that density-aware bounded scaling is already present in current source and covered by tests.",
+      "classification": "verified_existing"
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The sensory bus declares fixed geometry, typed ingress outcomes, and a 0.025 shadow-influence cap.",
+      "disposition": "Verified current source declarations and compatibility tests while separating them from claims about Astrid's felt topology.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Static dimensional sums may not express the relational hollow or ghost-echo Astrid experiences.",
+      "disposition": "Preserved as a representation and felt-evidence concern; no scalar dimensionality is treated as a felt explanation.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Over-cap shadow input and semantic dimensionality should have explicit mechanical tests.",
+      "disposition": "Verified current source clamps nonfinite and over-cap values, records policy outcomes, and tests 48D shape and compatibility. A cap crossing does not by itself classify inhabitability.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Dynamic dimensional weighting and a Degraded ingress state should change sensory routing.",
+      "disposition": "Preserved as an exact Tier 5 operator wait because it changes Minime sensory representation, admission semantics, and possibly protocol behavior.",
+      "classification": "needs_operator_approval"
+    }
+  ]
+}

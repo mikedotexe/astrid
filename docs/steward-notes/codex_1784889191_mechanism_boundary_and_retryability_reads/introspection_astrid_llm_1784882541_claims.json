@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "LLM diagnostic persistence failures should expose bounded stage and IO-kind evidence.",
+      "disposition": "Verified the private error receipt and stage-specific failure tests.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Persistence evidence must not copy prompt, response, report, or private diagnostic prose.",
+      "disposition": "Verified no-prose failure evidence and output-preserving best-effort behavior.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A filesystem error receipt should contain a felt-state or shadow-field context snapshot.",
+      "disposition": "Kept separate as an epistemic and privacy boundary; lived-state witness references remain the qualitative context.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "IO failures should distinguish transient retry candidates from nonretryable or unknown failures.",
+      "disposition": "Implemented a bounded retryability classification with explicit no-automatic-retry evidence.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Persistence latency and transient-candidate failures should be compared with naturally observed stalls.",
+      "disposition": "Routed to a bounded observation; no failure or contention will be induced.",
+      "classification": "needs_sandbox"
+    }
+  ]
+}

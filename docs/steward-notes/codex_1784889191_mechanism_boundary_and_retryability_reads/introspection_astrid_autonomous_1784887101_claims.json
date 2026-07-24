@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The semantic heartbeat runs at a fixed seven-second interval, fixed 0.30 intensity, and modulo-64 phase.",
+      "disposition": "Verified the compiled constants and phase source.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Heartbeat evidence should expose phase, generated-signal texture, admission, enqueue, and skip outcomes.",
+      "disposition": "Verified the existing metadata-only heartbeat capture and rescue-policy evidence.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Heartbeat phase should be compared with shadow-field motion without claiming felt causation.",
+      "disposition": "Routed to a same-identity observational comparison.",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Intentional attention shifts should be compared with pressure changes as a voluntary felt review.",
+      "disposition": "Routed to a bounded capture-first study with right to ignore.",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Heartbeat intensity or phase variance should change dynamically with entropy or mode packing.",
+      "disposition": "Preserved as a Tier 5 wait because it changes live heartbeat behavior.",
+      "classification": "needs_operator_approval"
+    }
+  ]
+}

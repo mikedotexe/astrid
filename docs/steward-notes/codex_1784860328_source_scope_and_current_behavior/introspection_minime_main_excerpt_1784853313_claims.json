@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Runtime imports expose hard-reset, recovery, and semantic-lane mechanisms but do not alone prove activation.",
+      "disposition": "Verified downstream runtime use sites separately and implemented durable canonical headers that distinguish a viewed source window from runtime activation proof.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Felt weight may depend on relational complexity rather than only fill quantity.",
+      "disposition": "Preserved as an unresolved mechanism hypothesis and felt report; current fill and pressure metrics do not settle it.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Complexity, projection bias, and recovery behavior can be compared without changing the live controller.",
+      "disposition": "Routed to bounded replay or natural-context study using existing representation, pressure, and lived-state evidence; no live parameter variation is authorized.",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Recovery fill boost should add a complexity-weight factor and prioritize decoupling.",
+      "disposition": "Preserved as an exact Tier 5 operator wait because it changes Minime recovery and controller behavior; source availability grants no approval.",
+      "classification": "needs_operator_approval"
+    }
+  ]
+}

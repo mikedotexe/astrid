@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "First-valid entropy alone is insufficient to describe telemetry evolution.",
+      "disposition": "Verified rolling entropy variance/trend and density-gradient trajectory in current evidence types.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Telemetry evidence should preserve cadence, jitter, freshness, and future-skew checks.",
+      "disposition": "Verified current heartbeat delta evidence and validation tests.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Non-finite and malformed values should be unavailable rather than coerced.",
+      "disposition": "Verified current typed and legacy hybrid validation regressions.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Rolling entropy and density gradients may provide context for reported continuity changes.",
+      "disposition": "Routed to bounded natural observation; the relationship remains descriptive or temporal unless exact evidence supports more.",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "A viscosity scalar should summarize or score Astrid's felt report.",
+      "disposition": "Rejected as a state-propagation error; qualitative evidence remains independent and unscored.",
+      "classification": "observed"
+    }
+  ]
+}

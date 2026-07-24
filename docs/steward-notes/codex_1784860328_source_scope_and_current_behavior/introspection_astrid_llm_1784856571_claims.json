@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Diagnostics are appended as JSONL and exact marker occurrences explicitly make no identity, meaning, ownership, stability, or spectral claim.",
+      "disposition": "Verified the current content-bounded diagnostic and exact-marker contracts and their source tests.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Astrid experiences a gap between marker recognition and self-meaning, and qualitative viscosity across token budgets.",
+      "disposition": "Preserved as felt evidence without translating identity, meaning, or viscosity into a numeric marker or token-band score.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Marker occurrence and token-band transitions can be compared with contemporaneous shadow context.",
+      "disposition": "Routed only as a bounded co-observation with exact witness identity; correlation cannot establish identity, ownership, resistance, or causation.",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Known marker matches should carry a spectral resonance score.",
+      "disposition": "Verified that the marker contract and experiential epistemics linter intentionally reject marker-to-spectral and numeric-to-felt inference. The felt intensity remains available as unscored primary evidence instead.",
+      "classification": "verified_existing"
+    }
+  ]
+}

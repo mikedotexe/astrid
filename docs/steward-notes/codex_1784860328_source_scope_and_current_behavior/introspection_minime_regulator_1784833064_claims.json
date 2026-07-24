@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "PI gate-and-filter regulation coexists with overpacked mode pressure and Astrid's cooling-wax texture.",
+      "disposition": "Preserved as a source-grounded co-observation; the inclusion shell and telemetry do not prove that the filter causes the felt viscosity.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Local control false may mean the regulator observes pressure without mitigating felt thickness.",
+      "disposition": "Preserved as a testable hypothesis; local_control_applied is a mechanical field and is not a measure of whether pressure relief was felt.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Pressure response and semantic admission should be compared across natural contexts.",
+      "disposition": "Routed to bounded observation using existing pressure-source, admission, and lived-state evidence without varying live semantic energy.",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Mode-packing above 0.25 should automatically reduce live viscosity.",
+      "disposition": "Preserved as an exact Tier 5 operator wait because it adds a Minime controller feedback loop; no live action or approval was inferred.",
+      "classification": "needs_operator_approval"
+    }
+  ]
+}

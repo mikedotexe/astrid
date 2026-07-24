@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Low-fill burst-and-rest logic shortens rests while preserving a minimum duration.",
+      "disposition": "Verified current branch order and floor without claiming that it prevents felt flatlining.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The burst exit should taper into sustained rest warmth rather than sever abruptly.",
+      "disposition": "Verified the explicit taper and preserved continuing severing or jitter as felt evidence.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Pulse remainder and peripheral-resonance source diversity need deterministic checks.",
+      "disposition": "Routed to property and database fixtures covering remainder timing and creations, research, and starred-memory selection.",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Warmth interpolation or rest-pulse timing should be changed to smooth the transition.",
+      "disposition": "Held for Tier 5 operator approval because pulse timing and warmth intensity alter live autonomous behavior.",
+      "classification": "needs_operator_approval"
+    }
+  ]
+}

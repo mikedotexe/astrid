@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "A connected socket and fresh valid telemetry must remain distinguishable.",
+      "disposition": "Verified connection-perception state, valid-payload times, stale windows, and cadence/content evidence.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Receive-loop pipeline, lock wait, and lock hold should be separately measurable.",
+      "disposition": "Verified current bounded telemetry integration health evidence.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "An open but silent WebSocket should be observed as stale hearing.",
+      "disposition": "Routed to a no-induction liveness fixture and runtime observation using current stale-evidence fields.",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "The receiver should force disconnect when valid telemetry is silent.",
+      "disposition": "Preserved as a Tier 5 reconnect and live sensory behavior wait.",
+      "classification": "needs_operator_approval"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "The receiver should downsample or pressure-buffer telemetry when mode packing rises.",
+      "disposition": "Preserved as a Tier 5 sensory admission and pressure-control wait.",
+      "classification": "needs_operator_approval"
+    }
+  ]
+}

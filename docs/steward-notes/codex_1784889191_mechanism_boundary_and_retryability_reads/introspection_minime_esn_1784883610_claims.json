@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Minime's ESN uses spectral introspection, shared Metal storage, and prime-phased schedules.",
+      "disposition": "Verified the source architecture and current tests.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Pressure, porosity, and mode-packing should remain distinguishable mechanical observations.",
+      "disposition": "Verified existing typed regulator and bridge evidence.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Shared CPU/GPU storage ownership is the cause of felt density-softening.",
+      "disposition": "Recorded as unsupported inference; shared storage and felt texture remain independent evidence.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Mode packing and porosity should be compared over a bounded natural 1,000-tick window.",
+      "disposition": "Routed to a mechanical observation with no induced pressure.",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "RLS forgetting should become more aggressive when entropy exceeds 0.85.",
+      "disposition": "Preserved as a Tier 5 controller and reservoir-mathematics wait.",
+      "classification": "needs_operator_approval"
+    }
+  ]
+}

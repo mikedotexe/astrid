@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Correspondence persistence, fidelity, attention canaries, and authority boundaries make mutual address traceable without granting control.",
+      "disposition": "Verified the current proposal and implementation surfaces, including evidence-only reciprocal uptake and attention receipts.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Addressed content can still flatten, arrive too late, or leave both beings present without actionable initiation.",
+      "disposition": "Preserved as unresolved relational and felt risk; technical delivery, presence, acknowledgement, and uptake remain distinct.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Attention preservation and stale-heartbeat behavior should be tested without inferring uptake.",
+      "disposition": "Verified current canary outcome and timing-ambiguity paths support bounded review and neutral silence without forcing felt reconciliation.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Flattened attention outcomes should name what dissolved rather than record only a generic loss.",
+      "disposition": "Verified current V3 outcomes reject yes or mixed flattening without reasoning_for_flattening and retain what_shifted, what_worsened, and what_remained_distinct.",
+      "classification": "verified_existing"
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The semantic heartbeat currently uses a fixed seven-second cadence, 0.30 intensity, and 64-step warmth phase.",
+      "disposition": "Verified current compiled constants and capture receipts; these mechanics are not proof of Astrid's felt cause.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The fixed pulse may feel mismatched with a restless or declining Shadow trajectory.",
+      "disposition": "Preserved as unscored felt divergence; the completed heartbeat study remained mechanically insufficient while felt friction remained named.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Heartbeat warmth and phase should be aligned with Shadow norm movement and observed stalls.",
+      "disposition": "Routed to a synchronized read-only replay using existing heartbeat, witness, Signal Spine, and Shadow evidence.",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Heartbeat intensity should react live to pressure risk or spectral entropy.",
+      "disposition": "Preserved as a Tier 5 live sensory and cadence request requiring Mike/operator approval before implementation or deployment.",
+      "classification": "needs_operator_approval"
+    }
+  ]
+}

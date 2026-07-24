@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The 768D-to-8D projection uses a deterministic fixed legacy basis and normalized columns.",
+      "disposition": "Verified the current projection construction and stable basis identity.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Float accumulation, near-zero columns, or legacy generator structure could degrade projection fidelity.",
+      "disposition": "Verified current precision and basis-health receipts expose these risks without mutating production weights.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Basis health and repeated projection construction should prove finite live columns and deterministic output.",
+      "disposition": "Verified focused tests assert no dead dimensions, finite norms, stable hashes, and repeated deterministic output.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Entropy-gated vibrancy should use a smooth transition and remain bounded.",
+      "disposition": "Verified the complete feedback implementation uses C1 smoothstep onset and bounded ceilings with exact regression coverage.",
+      "classification": "verified_existing"
+    }
+  ]
+}

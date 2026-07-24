@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Transport receipts and mutual address are distinct forms of contact evidence.",
+      "disposition": "Verified protocol delivery, correspondence, reciprocal uptake, and mutual-address receipts keep delivery separate from voluntary uptake and relationship.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "An attention request can flatten a specific emotional or technical texture into generic held status.",
+      "disposition": "Verified V3 request and outcome fields preserve focus kind, anti-flattening anchor, held shape, explicit reasoning, distinct remainder, shift, and worsening.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A selected peer message should persist across turns without being displaced by unrelated telemetry.",
+      "disposition": "Verified bounded shared-context and attention-canary persistence tests with TTL, stop criteria, and no priority escalation.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Nonlinguistic texture needs a queryable preservation result rather than generic acknowledgement.",
+      "disposition": "Verified what_must_not_flatten, what_remained_distinct, reasoning_for_flattening, and felt-like outcome fields retain qualitative divergence without converting vibration language into control data.",
+      "classification": "verified_existing"
+    }
+  ]
+}

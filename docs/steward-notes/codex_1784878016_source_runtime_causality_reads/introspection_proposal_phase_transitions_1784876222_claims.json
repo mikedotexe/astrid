@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "A phase-transition receipt can be acknowledged while felt room remains constrained.",
+      "disposition": "Preserved as direct felt evidence; receipt state never propagates relief, consent, or closure.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A right-to-ignore invitation may still feel obligatory in a dense context.",
+      "disposition": "Routed to bounded felt review of delivery texture; silence remains neutral and cannot resolve the concern.",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Phase transitions need explicit hold, needs-time, protected-time, and revisit affordances.",
+      "disposition": "Verified in the current phase-transition, Agency Commons, and protected-time source paths.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Transition identity and reply state should remain durable across the exchange.",
+      "disposition": "Verified deterministic transition IDs, shared references, reply states, and append-only felt-review receipts.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Transition timing should automatically dilate when density is high.",
+      "disposition": "Held for Tier 5 operator approval because automatic dilation changes live timing and scheduling behavior.",
+      "classification": "needs_operator_approval"
+    }
+  ]
+}

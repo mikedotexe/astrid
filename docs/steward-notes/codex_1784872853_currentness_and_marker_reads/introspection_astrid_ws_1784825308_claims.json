@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Telemetry connection attempts, successes, errors, messages, and shutdown should remain observable.",
+      "disposition": "Verified the existing lifecycle records, exponential backoff, and cooperative shutdown paths.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Bridge-state write locks may create integration delay under load.",
+      "disposition": "Verified bounded wait/hold timing evidence and threshold classifications; felt consequences remain unscored.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Incoming binary frame size must be bounded before decode to avoid memory pressure.",
+      "disposition": "Routed to a source/config audit and offline WebSocket fixture; no oversized frame will be sent to the live bridge.",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Clock jumps should not silently turn future telemetry into ordinary age evidence.",
+      "disposition": "Verified separate future-skew evidence and current/stale classifications in bridge health.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Reconnect backoff and ping/pong bookkeeping need deterministic regression coverage.",
+      "disposition": "Verified existing backoff growth/reset and WebSocket message-accounting tests; a full connection fixture remains non-live.",
+      "classification": "verified_existing"
+    }
+  ]
+}

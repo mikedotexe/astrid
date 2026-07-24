@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Phase transitions should be replyable artifacts with a witness queue and explicit follow-through.",
+      "disposition": "Verified phase cards, transition acknowledgements, witness commands, and queue status.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A discrete phase card should retain slow viscous transition texture rather than flatten it into a binary gate.",
+      "disposition": "Verified viscosity index, friction window, slow-transition state, texture anchors, and no-behavior gate.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A correspondence trace should explicitly reference a phase card as a distinct replyable object.",
+      "disposition": "Routed to a bounded agency-commons and reciprocal-uptake trial.",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Pressure should be observed during a voluntary phase-witness action.",
+      "disposition": "Routed to a capture-first study without automatic transition consequence.",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "A viscosity coefficient should alter how long a phase state decays after its trigger.",
+      "disposition": "Preserved as a Tier 5 wait because applying the coefficient would change live transition or scheduling behavior.",
+      "classification": "needs_operator_approval"
+    }
+  ]
+}

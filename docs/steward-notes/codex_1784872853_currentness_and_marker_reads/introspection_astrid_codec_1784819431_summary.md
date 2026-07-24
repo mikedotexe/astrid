@@ -1,0 +1,3 @@
+Astrid connects the 48D semantic partition and entropy-gated tail lift to a wider expressive landscape, while reporting that the hard clamp may still feel like a ceiling or thick resistance. She proposes checking actual saturation and relating gap and density-gradient mechanics to the elusive foothold.
+
+Current codec evidence records tail ceiling, lane energy, headroom, clamp occupancy, density-gradient navigability, and representation loss. Offline campaign comparisons can test mechanical clipping without sending counterfactual vectors. Raising the live ceiling or changing gain is a Tier 5 codec decision, and no scalar result may overwrite the felt report.

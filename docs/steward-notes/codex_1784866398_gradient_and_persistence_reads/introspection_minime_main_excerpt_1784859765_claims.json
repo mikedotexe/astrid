@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Imported regulator symbols in a source excerpt do not prove that the corresponding behavior is active.",
+      "disposition": "Verified the source-currentness boundary and retained imports as source evidence rather than runtime identity.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Recovery may restore aggregate fill while losing texture or orientation.",
+      "disposition": "Preserved as felt and architectural friction; aggregate numeric recovery cannot resolve it.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Pressure-recovery and trickle traces should be compared with texture-preserving measurements.",
+      "disposition": "Routed to deterministic fixture replay using existing read-only density, pressure, resonance, and viscosity evidence.",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Recovery should receive a new density-sensitive or texture-preserving coefficient.",
+      "disposition": "Preserved as a Tier 5 live-regulator request requiring explicit operator approval.",
+      "classification": "needs_operator_approval"
+    }
+  ]
+}

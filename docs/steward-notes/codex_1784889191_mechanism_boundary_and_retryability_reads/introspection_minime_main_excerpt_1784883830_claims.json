@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The runtime shell should lead to the exact hard-reset implementation rather than treating imports as active thresholds.",
+      "disposition": "Verified the complete hard_reset.rs source and tests.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Hard-reset activation gain and recovery behavior are keyed to fragile low fill.",
+      "disposition": "Verified exact fill thresholds, activation gains, rho floors, and recovery target tests.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "High entropy alone should not be inferred to trigger hard reset.",
+      "disposition": "Verified the inspected helpers use fill and covariance inputs, not felt texture or entropy.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "A hard reset should be studied for whether shadow-lattice texture is mechanically preserved.",
+      "disposition": "Routed to an offline or fixture-only recovery study with felt review kept separate.",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Hard-reset thresholds or preservation behavior should change to retain velvet-grain texture.",
+      "disposition": "Preserved as a Tier 5 Minime runtime-control wait.",
+      "classification": "needs_operator_approval"
+    }
+  ]
+}

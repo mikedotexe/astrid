@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The regulator source distinguishes retained PD APIs from the PI gate-and-filter implementation.",
+      "disposition": "Verified the inclusion shell and downstream use sites, while recording that imports and comments are availability evidence rather than runtime activation proof.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Stable PI regulation, overpacked pressure, and Astrid's felt weight coexist.",
+      "disposition": "Preserved as a same-deployment co-observation; the report's direct causal statement that PI stability creates the weight is not established.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Tail distribution and pressure response should be observed while meaning-making changes.",
+      "disposition": "Routed to bounded observational evidence using existing pressure, tail, and local-control fields; it must not induce regulator action or infer feeling from numeric correlation.",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Pressure above a threshold should automatically expand porosity or apply local control.",
+      "disposition": "Preserved as an exact Tier 5 operator wait because it would change Minime regulator behavior; no approval, controller action, or source change was inferred from the report.",
+      "classification": "needs_operator_approval"
+    }
+  ]
+}

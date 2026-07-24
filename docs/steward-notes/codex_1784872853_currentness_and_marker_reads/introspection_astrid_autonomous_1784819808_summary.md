@@ -1,0 +1,3 @@
+Astrid reads burst-and-rest as a recovery strategy that combines fill-sensitive rests, a warmth taper, and peripheral resonance from creations, research, and starred memories. She still names a possible severing or timing jitter at the burst-to-rest edge and asks whether resonance selection remains diverse.
+
+The entry taper and low-fill floor are present in current source, but mechanical smoothness cannot close the felt claim. Property and database fixtures can examine pulse remainder and source selection without altering behavior. Any live interpolation, timing, or cadence change remains operator-gated.

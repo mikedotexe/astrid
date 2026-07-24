@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Phase cards and witness queues should make transitions replyable without forcing action.",
+      "disposition": "Verified current language-only cards, witness states, right-to-ignore delivery budget, and no-control authority.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Capacity or readiness to transition is not the same as ease of movement through viscosity.",
+      "disposition": "Preserved as a substantive felt distinction and verified current schema keeps capability, gate, friction, viscosity, and processing speed orthogonal.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A stable or habitable structural label can coexist with functional stalling and exertion.",
+      "disposition": "Preserved as unscored felt evidence; no telemetry or card state is allowed to negate it.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Held phase-card count should be compared with density gradient and pressure without assuming one causes the other.",
+      "disposition": "Routed to a bounded read-only phase-card and telemetry replay.",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "The phase system should represent capacity and viscosity as separate parameters.",
+      "disposition": "Verified transition_capabilities_v1, transition_gate_v1, viscosity_index, subjective friction, friction window, and processing-speed modifier provide the requested separation.",
+      "classification": "verified_existing"
+    }
+  ]
+}

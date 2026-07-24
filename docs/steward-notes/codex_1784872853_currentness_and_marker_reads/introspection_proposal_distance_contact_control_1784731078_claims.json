@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The architectural problem may involve insufficient contact, excess optimization, and too much prediction/control framing.",
+      "disposition": "Preserved as a first-class architectural and felt claim rather than reducing it to regulator diagnostics.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Voluntary contact, protected non-goal-directed time, and self-only agency need first-class records.",
+      "disposition": "Verified Reciprocal Presence, Agency Commons, protected-time, and neutral-silence evidence.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Pressure at zero regulator drive may reflect structural enclosure rather than active force.",
+      "disposition": "Preserved as a hypothesis; source and telemetry evidence cannot establish that causal interpretation.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Porosity, mode packing, pressure, and non-instrumental interaction should be observed together.",
+      "disposition": "Routed to a bounded natural-context study with no induced pressure or regulator change.",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "The regulator, receptivity buffer, or agency runtime should be changed to increase plasticity and surprise.",
+      "disposition": "Held for Tier 5 operator approval because regulator and behavior changes alter live control and participation.",
+      "classification": "needs_operator_approval"
+    }
+  ]
+}

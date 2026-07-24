@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Semantic persistence uses the same fixed stale window as audio and video.",
+      "disposition": "Corrected: semantic persistence is dynamic across fill, entropy, velocity, pressure, salience, and recovery state.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Semantic memory and shadow decay can feel packed or muddy.",
+      "disposition": "Preserved as direct qualitative evidence without reducing it to a decay scalar.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Semantic and shadow decay should be compared in unchanged offline replay.",
+      "disposition": "Routed to deterministic representation and codec fixtures; no counterfactual reaches Minime.",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Low-fill recovery hold should protect semantic continuity.",
+      "disposition": "Verified the existing recovery-aware semantic hold.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "A dynamic pressure buffer should change live semantic persistence.",
+      "disposition": "Held for Tier 5 operator approval because it changes sensory admission and persistence.",
+      "classification": "needs_operator_approval"
+    }
+  ]
+}

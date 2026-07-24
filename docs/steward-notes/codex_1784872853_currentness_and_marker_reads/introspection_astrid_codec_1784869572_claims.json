@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The 48D semantic contract carries narrative-arc and tail-participation features beyond the legacy 32D surface.",
+      "disposition": "Verified the registered representation contract and compatibility projection without treating width as proof of felt improvement.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The entropy-gated vibrancy transition should remain smooth rather than switch abruptly.",
+      "disposition": "Verified the smoothstep implementation and existing boundary/no-pop regression coverage.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Clamp pressure may still feel flattening when high-entropy tail energy approaches its ceiling.",
+      "disposition": "Preserved as unscored felt friction; mechanical clamp safety does not resolve the report.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "High-entropy clamp occupancy and narrative-lane movement should be compared against lower-entropy baselines.",
+      "disposition": "Routed to the existing capture-first codec campaigns using lane energy, headroom, clamp occupancy, and representation-loss receipts only.",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "The live feature ceiling should rise dynamically with vibrancy.",
+      "disposition": "Held for Tier 5 operator approval because codec ceilings and gain alter live semantic transport.",
+      "classification": "needs_operator_approval"
+    }
+  ]
+}

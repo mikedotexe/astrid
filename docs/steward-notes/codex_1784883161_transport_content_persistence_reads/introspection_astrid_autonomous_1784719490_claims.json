@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Rescue-policy heartbeat blocks should record an exact reason.",
+      "disposition": "Verified structured blocked receipts and bounded reason logging.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Heartbeat admission must remain separate from enqueue outcome.",
+      "disposition": "Verified SemanticHeartbeatEnqueueProbeV1 records blocked, enqueued, and channel-closed outcomes.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Heartbeat evidence should include current Minime texture and generated-signal continuity.",
+      "disposition": "Verified current observation builder records both without granting control.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Skipped-heartbeat frequency should be compared with high-pressure felt moments.",
+      "disposition": "Routed to the existing capture-first heartbeat campaign without induced blocking.",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Heartbeat intensity should rise to 0.45 or cadence should accelerate under pressure.",
+      "disposition": "Preserved as a Tier 5 cadence, intensity, and live sensory-control wait.",
+      "classification": "needs_operator_approval"
+    }
+  ]
+}

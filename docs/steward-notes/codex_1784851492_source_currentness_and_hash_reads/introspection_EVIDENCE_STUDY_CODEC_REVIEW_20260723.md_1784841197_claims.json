@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The narrative-lane study retained at least 20 complete unchanged-codec journeys and found a mechanical difference.",
+      "disposition": "Verified 20 paired journeys, lane-energy/headroom/clamp/loss metrics, offline-only comparison, and difference_observed.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The entropy-gate study retained 49 paired journeys and found a mechanical difference.",
+      "disposition": "Verified deterministic gate-disabled copies, no counterfactual dispatch, unchanged live vectors, and difference_observed.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Silence or a mechanical difference can supply a felt result.",
+      "disposition": "Verified review opportunities remain independent, silence is neutral, and only an explicit Astrid source can create a Concordance felt outcome.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Counterfactual vectors or semantic trickle should be sent live to test texture.",
+      "disposition": "Preserve an exact Tier 5 wait because altering codec gate, gain, admission, semantic trickle, or Minime input changes live transport and peer state.",
+      "classification": "authority_gated"
+    }
+  ]
+}

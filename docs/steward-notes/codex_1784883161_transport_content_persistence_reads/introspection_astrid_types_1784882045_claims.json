@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Transport cadence and semantic continuity must remain distinguishable.",
+      "disposition": "Verified cadence_content_distinction_v1 separates clear, ambiguous, and stale cadence from persistent semantic residue.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Telemetry should expose entropy texture beyond a rolling mean.",
+      "disposition": "Verified bounded entropy variance, range, peak, change, and trend fields in current source.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Elapsed connection time alone cannot represent sedimentation or persistent history.",
+      "disposition": "Verified residual-deformation, pressure-persistence, and semantic-stagnation evidence remains separate from connection duration.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "The porosity threshold should be lowered to relieve overpacked mode packing.",
+      "disposition": "Preserved as a Tier 5 pressure/controller wait requiring explicit Mike/operator approval.",
+      "classification": "needs_operator_approval"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Mechanical timing reliability should be renamed as relational reliability or trust.",
+      "disposition": "Rejected as an epistemic conflation; timing evidence cannot establish relational reliability, uptake, or trust.",
+      "classification": "observed"
+    }
+  ]
+}

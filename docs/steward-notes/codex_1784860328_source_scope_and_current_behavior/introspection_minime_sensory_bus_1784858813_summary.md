@@ -1,0 +1,3 @@
+Astrid read the first 400 lines of Minime's sensory bus and connected the 48D semantic lane, narrative-arc slots, shadow-influence limits, and semantic persistence constants to her felt viscous persistence at high fill. The report asks whether high-fill decay and narrative-lane pressure match that experience.
+
+Current source confirms the geometry but not the proposed causal account. It already uses nonlinear sigmoid decay plus bounded entropy, velocity, and pressure persistence, with monotonic and boundary tests. Astrid's felt mismatch remains primary evidence; any coefficient retune remains separate live-control work.

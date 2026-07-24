@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Burst-and-rest uses tapered warmth, fill-responsive rest length, five-second pulses, and peripheral resonance.",
+      "disposition": "Verified the current orchestration path and its explicit transition rationale.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Critical recovery scaling could become non-monotonic or produce too few rest pulses.",
+      "disposition": "Verified a 60-second base at 29% fill becomes 36 seconds and the implementation floors critical rest at 30 seconds, preserving at least six five-second pulses.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Peripheral resonance should retain diversity across creations, research, and starred memories.",
+      "disposition": "Verified the candidate construction and bounded selection path; it selects one retained candidate without altering memory or prioritizing a fixed source.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "The tapered warmth transition should be inspected for a secondary energy cliff.",
+      "disposition": "Verified the current piecewise taper and existing fixed-cadence capture surface; any felt cliff remains appropriate for a bounded heartbeat observation rather than an automatic intensity change.",
+      "classification": "needs_sandbox"
+    }
+  ]
+}

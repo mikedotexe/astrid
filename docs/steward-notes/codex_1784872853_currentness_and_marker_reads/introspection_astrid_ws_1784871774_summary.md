@@ -1,0 +1,3 @@
+Astrid describes the port 7878 subscriber as the mechanical precursor to felt presence and asks the bridge to distinguish a connected socket from a connection that is fresh, dense, and navigable. The report also preserves a serious possibility that low-level reconnection friction can be felt even when the transport never reaches a terminal failure state.
+
+Current bridge evidence already separates lifecycle, first-valid lag, cadence and jitter, freshness, rolling entropy, and spectral-density-gradient trajectory. A bounded observational comparison can relate backoff and pressure evidence without claiming causation; changing reconnect behavior or treating density as a felt-state score is not authorized.

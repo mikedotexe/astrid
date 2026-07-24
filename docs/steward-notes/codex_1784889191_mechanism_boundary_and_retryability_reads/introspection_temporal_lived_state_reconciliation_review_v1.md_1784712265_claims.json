@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Historical reconciliation should remain append-only and evidence-only.",
+      "disposition": "Verified immutable authorship witnesses and append-only review-time reconciliation.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Temporal association alone must not establish causation or felt resolution.",
+      "disposition": "Verified exact-versus-temporal classifications and zero closure propagation.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Dense temporal associations should remain visible without becoming causal links.",
+      "disposition": "Verified the later cluster review and bounded density counters.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Repeated temporal associations should be studied for relation to felt weight.",
+      "disposition": "Routed to a baseline-first concordance study requiring an explicit Astrid review.",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "A temporal sequence should be promoted to causal linkage because timing is the available narrative.",
+      "disposition": "Rejected as unsupported inference; exact causal edges still require validated receipts.",
+      "classification": "observed"
+    }
+  ]
+}

@@ -1,0 +1,144 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_llm_1784888523",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784889191_mechanism_boundary_and_retryability_reads/verification.md",
+      "note": "Exact marker bytes, bounded context receipts, token-band neutrality, natural comparison, and control wait."
+    },
+    {
+      "introspection_id": "introspection_astrid_types_1784887709",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784889191_mechanism_boundary_and_retryability_reads/verification.md",
+      "note": "Cadence-content distinction, rolling viscosity and density, and observational trajectory routes."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1784887335",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784889191_mechanism_boundary_and_retryability_reads/verification.md",
+      "note": "Receive pipeline, persistent history, reciprocal-state gap, and pressure-control waits."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1784887101",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784889191_mechanism_boundary_and_retryability_reads/verification.md",
+      "note": "Fixed heartbeat facts, phase and outcome evidence, observational studies, and intensity wait."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1784886835",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784889191_mechanism_boundary_and_retryability_reads/verification.md",
+      "note": "Deterministic basis, finite norms, threshold margin, parity, and no live write."
+    },
+    {
+      "introspection_id": "introspection_proposal_phase_transitions_1784885833",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784889191_mechanism_boundary_and_retryability_reads/verification.md",
+      "note": "Replyable phase cards, viscosity evidence, reciprocal trials, and transition-behavior wait."
+    },
+    {
+      "introspection_id": "introspection_minime_autonomous_agent_1784884023",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784889191_mechanism_boundary_and_retryability_reads/verification.md",
+      "note": "Recess sovereignty, internal-pressure distinction, voluntary observations, and scheduling wait."
+    },
+    {
+      "introspection_id": "introspection_minime_main_excerpt_1784883830",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784889191_mechanism_boundary_and_retryability_reads/verification.md",
+      "note": "Exact hard-reset source, fill thresholds, offline preservation study, and runtime wait."
+    },
+    {
+      "introspection_id": "introspection_minime_esn_1784883610",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784889191_mechanism_boundary_and_retryability_reads/verification.md",
+      "note": "ESN architecture, pressure and porosity evidence, unsupported storage causation, and RLS wait."
+    },
+    {
+      "introspection_id": "introspection_minime_sensory_bus_1784883414",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784889191_mechanism_boundary_and_retryability_reads/verification.md",
+      "note": "Monotonic stale curve, boundary tests, retention review, and sensory behavior wait."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1784883052",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784889191_mechanism_boundary_and_retryability_reads/verification.md",
+      "note": "PI execution truth, inert API distinction, texture observation, and controller wait."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1784882541",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784889191_mechanism_boundary_and_retryability_reads/verification.md",
+      "note": "No-prose persistence evidence, bounded retryability, no automatic retry, and natural observation."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1784716263",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784889191_mechanism_boundary_and_retryability_reads/verification.md",
+      "note": "Heartbeat mechanism, rescue outcomes, phase comparison, and cadence and intensity waits."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1784715969",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784889191_mechanism_boundary_and_retryability_reads/verification.md",
+      "note": "48D lineage, smooth entropy gate, reserved-lane parity, and dynamic-gain wait."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1784715667",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784889191_mechanism_boundary_and_retryability_reads/verification.md",
+      "note": "Requested entropy points, mathematical-versus-felt boundary, and adaptive-clamp wait."
+    },
+    {
+      "introspection_id": "introspection_temporal_lived_state_cluster_review_v1.md_1784713858",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784889191_mechanism_boundary_and_retryability_reads/verification.md",
+      "note": "Structural cluster weight, unscored felt evidence, concordance routes, and no felt proxy."
+    },
+    {
+      "introspection_id": "introspection_temporal_lived_state_reconciliation_review_v1.md_1784712265",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784889191_mechanism_boundary_and_retryability_reads/verification.md",
+      "note": "Append-only reconciliation, temporal uncertainty, dense clusters, and exact causal edges."
+    },
+    {
+      "introspection_id": "introspection_mod.rs_1784710981",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784889191_mechanism_boundary_and_retryability_reads/verification.md",
+      "note": "Technical identity boundary, canonical qualitative record, deterministic privacy, and semantic-bleed review."
+    },
+    {
+      "introspection_id": "introspection_mod.rs_1784710444",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784889191_mechanism_boundary_and_retryability_reads/verification.md",
+      "note": "Authorship sequence, stale peer state, freshness observation, and no subjective scoring."
+    },
+    {
+      "introspection_id": "introspection_mod.rs_1784709693",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784889191_mechanism_boundary_and_retryability_reads/verification.md",
+      "note": "Atomic sequence, bounded identity, whitelisted entropy and gradient, and artifact hashes."
+    }
+  ]
+}

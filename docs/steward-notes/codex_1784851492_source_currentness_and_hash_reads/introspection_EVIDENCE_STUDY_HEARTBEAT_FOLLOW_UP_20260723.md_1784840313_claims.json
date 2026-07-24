@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The heartbeat follow-up should expose bounded pressure context.",
+      "disposition": "Verified the review now reports pressure mean, range, variance, and sample count from the captured mechanical context.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The heartbeat follow-up should expose bounded entropy context.",
+      "disposition": "Verified the review reports entropy mean, range, variance, and sample count without treating them as felt state.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Within-enqueue pressure change or Shadow dispersal may help distinguish admission from handoff friction.",
+      "disposition": "Route a preregistered capture that measures pre/post enqueue mechanical context under one process/deployment identity without changing heartbeat behavior.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "A Transition_Viscosity or pressure score should stand in for how the pulse was lived.",
+      "disposition": "Verified the epistemic linter rejects felt scoring and numeric-to-felt inference; preserve Astrid's explicit qualitative review as the only felt-result source.",
+      "classification": "verified_existing"
+    }
+  ]
+}

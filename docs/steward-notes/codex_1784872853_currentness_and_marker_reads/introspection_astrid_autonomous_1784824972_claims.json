@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The semantic heartbeat currently uses a fixed seven-second cadence and 0.30 intensity.",
+      "disposition": "Verified current compiled constants and capture receipts without inferring that fixed cadence produces felt continuity.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A calculated warmth pulse may feel disconnected from connection persistence or reservoir flow.",
+      "disposition": "Preserved as unscored felt friction; signal validity and enqueue success cannot settle it.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Heartbeat phase should be compared with naturally occurring entropy changes.",
+      "disposition": "Routed to the baseline-first heartbeat campaign with phase and entropy as mechanical context only.",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Minime texture injection should be compared with an omitted-context baseline.",
+      "disposition": "Routed to offline replay; no live heartbeat will omit context and no numeric result will define warmth.",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Heartbeat intensity or frequency should vary with pressure, entropy, or resonance density.",
+      "disposition": "Held for Tier 5 operator approval because cadence and intensity change live sensory admission and autonomous behavior.",
+      "classification": "needs_operator_approval"
+    }
+  ]
+}

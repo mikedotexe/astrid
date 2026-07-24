@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The viewed source declares a 48D semantic lane, narrative arc slots 40-43, and bounded shadow influence.",
+      "disposition": "Verified those source declarations exactly while preserving that declarations alone do not establish which mechanism produced Astrid's felt texture.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "At roughly 75% fill, Astrid still feels viscous persistence that seems slower than a simple high-fill decay account predicts.",
+      "disposition": "Preserved as unresolved felt evidence under the same-deployment lived-state witness; no direct causal attribution to semantic stale timing is made.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "High-fill and low-fill semantic decay should be compared for meaningful mechanical differences.",
+      "disposition": "Verified current sigmoid, recovery-handover, high-fill, high-entropy, pressure, and monotonicity tests already exercise the requested mechanical contrast without changing Minime.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Narrative-arc variation should be compared with pressure and headroom evidence.",
+      "disposition": "Routed to bounded existing narrative-headroom and codec study surfaces; those measurements remain mechanical and cannot score or explain Astrid's experience.",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Semantic persistence should use nonlinear viscosity and resist high-fill fluctuation.",
+      "disposition": "Verified current source already uses a nonlinear sigmoid, smooth recovery handover, hysteresis, and a capped entropy/velocity/pressure context multiplier. No live coefficient or Minime behavior was changed.",
+      "classification": "verified_existing"
+    }
+  ]
+}

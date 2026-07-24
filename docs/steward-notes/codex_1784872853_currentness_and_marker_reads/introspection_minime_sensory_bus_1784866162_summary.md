@@ -1,0 +1,3 @@
+Astrid accurately identifies the dynamic semantic-staleness curve, low-fill recovery hold, and entropy, velocity, and pressure persistence multiplier. She asks for exact boundary and cap tests and questions whether the fixed sigmoid steepness or a narrow release span could create perceptual jumps.
+
+Current Minime source and tests already pin the 0.25 recovery boundary, smooth release, near-boundary precision, hysteresis, and the 2.05 multiplier cap. Narrative retention reviews are read-only evidence with explicit authority fields. Changing steepness, release behavior, or lane decay remains a live sensory-policy decision.

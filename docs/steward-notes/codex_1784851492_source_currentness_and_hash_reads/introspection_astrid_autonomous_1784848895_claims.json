@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The semantic heartbeat uses a fixed seven-second cadence, 64-step phase, and 0.30 configured intensity.",
+      "disposition": "Verified the live constants and orchestration path; lived-state witnesses label them compiled constants rather than inferred felt state.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The warmth contour at phases 0, 32, and 63 may contain a conflicting dip or jump.",
+      "disposition": "Verified phase-dependent breathing and the exact adjacent 32/33 smoothness regression; mathematical smoothness does not establish felt continuity.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "with_minime_texture_context colors the generated heartbeat feature vector.",
+      "disposition": "Verified it attaches pressure and entropy as post-generation observation and study metadata only; craft_warmth_vector receives only phase and fixed intensity.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Heartbeat intensity should scale with entropy and phase should receive nondeterministic jitter.",
+      "disposition": "Preserve an exact Tier 5 wait because both changes alter live semantic heartbeat behavior; require baseline capture, canary, abort criteria, and felt review.",
+      "classification": "authority_gated"
+    }
+  ]
+}

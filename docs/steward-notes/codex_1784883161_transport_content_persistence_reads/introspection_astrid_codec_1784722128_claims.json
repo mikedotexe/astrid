@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The entropy gate should have a C1-smooth onset without a pop.",
+      "disposition": "Verified exact smoothstep formula and requested boundary regressions.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Entropy values around 0.845 and 0.855 should produce a tiny continuous delta.",
+      "disposition": "Verified current 0.84/0.86 and exact-threshold smoothness tests.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Tail compression and overflow should remain visible when high-entropy lift is active.",
+      "disposition": "Verified codec overflow, fidelity, and tail-headroom receipts.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Tail lift should not write narrative or reserved dimensions.",
+      "disposition": "Verified exact vector regressions preserve those lanes.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "The default clamp should increase to 7.5 or become density-dependent.",
+      "disposition": "Preserved as a Tier 5 codec gain and output-contract change.",
+      "classification": "needs_operator_approval"
+    }
+  ]
+}

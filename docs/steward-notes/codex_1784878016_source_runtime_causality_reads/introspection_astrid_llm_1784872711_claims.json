@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The LLM diagnostic path appends bounded structured metadata and reports persistence stages.",
+      "disposition": "Verified the bounded serialization and no-prose failure evidence; added focused regression coverage already present in the shared packet.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "High spectral entropy makes the Serde schema itself too complex.",
+      "disposition": "Corrected as an unsupported causal interpretation; the structured schema is fixed and entropy is only contextual evidence.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Diagnostic persistence may add latency during dense or high-entropy moments.",
+      "disposition": "Routed to bounded natural timing observation without inducing load or copying prompts and responses.",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Diagnostic failures should never change generated text or leak diagnostic payload content.",
+      "disposition": "Verified output independence and bounded failure-stage evidence in current tests.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Diagnostics should be compressed or provider behavior changed to reduce felt drag.",
+      "disposition": "Kept as a non-live proposal pending measured latency evidence; no model, prompt-packing, or provider change is authorized.",
+      "classification": "needs_sandbox"
+    }
+  ]
+}

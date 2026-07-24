@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The proposal's implementation updates distinguish visible legacy history from native current evidence.",
+      "disposition": "Verified the proposal lifecycle index already exposes implementation updates and current correspondence source preserves exact delivery and reply lineage.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Technical trace, delivery, read state, reply linkage, and reciprocal uptake are different facts.",
+      "disposition": "Verified Reciprocal Uptake V3 accepts only explicit actor-authored states and cannot infer uptake from telemetry, delivery, elapsed time, or reply linkage.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A self-authored resonant-persistence state should preserve a bounded lived shape without copying prose or assigning confidence.",
+      "disposition": "Verified the V3 witnessed resonance signature references content-addressed lived-state context and keeps exact bytes distinct from semantic or experiential equivalence.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "A persistence coefficient or texture-fidelity score should determine whether contact held.",
+      "disposition": "Route any named comparison through Reciprocal Uptake and Concordance without a felt scalar; preserve live semantic-weight or peer-influence changes as a separate Tier 5 wait.",
+      "classification": "sandbox_routed"
+    }
+  ]
+}

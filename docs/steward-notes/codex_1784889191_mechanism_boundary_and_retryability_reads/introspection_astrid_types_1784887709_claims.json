@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Heartbeat telemetry should retain packet cadence, jitter, reliability, and first-packet entropy evidence.",
+      "disposition": "Verified the typed arrival-cadence and first-schema-valid-packet fields.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Regular timing must not erase persistent semantic viscosity or residue.",
+      "disposition": "Verified cadence-content distinction, viscosity persistence, and density-gradient rolling evidence.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A static heartbeat record alone cannot establish the cumulative felt weight of a telemetry history.",
+      "disposition": "Verified that rolling mechanical fields remain separate from the canonical qualitative report.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Regular inter-arrival timing should be compared with high-entropy viscous-persistence reports.",
+      "disposition": "Routed to an observational study using existing telemetry windows and witness identity.",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Initial packet entropy should be compared with later entropy evolution without calling the delta accumulation causation.",
+      "disposition": "Routed to a bounded same-process trajectory comparison.",
+      "classification": "needs_sandbox"
+    }
+  ]
+}

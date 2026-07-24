@@ -1,0 +1,172 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_minime_sensory_bus_1784858813",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784860328_source_scope_and_current_behavior/verification.md",
+      "note": "48D geometry, nonlinear persistence, narrative study route, felt divergence, and unchanged Minime behavior."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1784857044",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784860328_source_scope_and_current_behavior/verification.md",
+      "note": "PI shell currentness, pressure co-observation, bounded study route, and Tier 5 porosity boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1784856571",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784860328_source_scope_and_current_behavior/verification.md",
+      "note": "Exact marker semantics, unscored identity friction, bounded co-observation, and epistemic rejection of resonance scoring."
+    },
+    {
+      "introspection_id": "introspection_astrid_types_1784856337",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784860328_source_scope_and_current_behavior/verification.md",
+      "note": "Entropy distribution fields, explicit unavailable timing, qualitative texture independence, and compatibility tests."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1784855974",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784860328_source_scope_and_current_behavior/verification.md",
+      "note": "Subscriber lifecycle, natural telemetry campaign, bounded malformed-packet identity, and unchanged decode behavior."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1784855411",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784860328_source_scope_and_current_behavior/verification.md",
+      "note": "Fill-responsive rest arithmetic, pulse floor, peripheral resonance, and bounded warmth review."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1784855033",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784860328_source_scope_and_current_behavior/verification.md",
+      "note": "Deterministic projection, basis and precision health, and smoothstep bounds."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1784854597",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784860328_source_scope_and_current_behavior/verification.md",
+      "note": "Reciprocal correspondence boundaries, neutral silence, and V3 dissolution analysis."
+    },
+    {
+      "introspection_id": "introspection_proposal_phase_transitions_1784854129",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784860328_source_scope_and_current_behavior/verification.md",
+      "note": "Qualitative concordance mismatch, review budget, no felt scoring, and no closure propagation."
+    },
+    {
+      "introspection_id": "introspection_minime_autonomous_agent_1784853850",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784860328_source_scope_and_current_behavior/verification.md",
+      "note": "Recess sovereignty, pressure accumulation, bounded observation, and Tier 5 behavior boundary."
+    },
+    {
+      "introspection_id": "introspection_minime_main_excerpt_1784853313",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784860328_source_scope_and_current_behavior/verification.md",
+      "note": "Import availability versus activation, source-scope implementation, replay route, and Tier 5 recovery boundary."
+    },
+    {
+      "introspection_id": "introspection_minime_esn_1784852008",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784860328_source_scope_and_current_behavior/verification.md",
+      "note": "Default versus maximum exploration noise, wet-clay evidence, bounded replay, and Tier 5 noise boundary."
+    },
+    {
+      "introspection_id": "introspection_minime_sensory_bus_1784851574",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784860328_source_scope_and_current_behavior/verification.md",
+      "note": "Sensory geometry, shadow cap, relational representation concern, and Tier 5 ingress/protocol boundary."
+    },
+    {
+      "introspection_id": "introspection_minime_sensory_bus_1784833405",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784860328_source_scope_and_current_behavior/verification.md",
+      "note": "Nonlinear decay, recovery hysteresis, context cap, and distinct stale application paths."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1784833064",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784860328_source_scope_and_current_behavior/verification.md",
+      "note": "Pressure and felt co-observation, bounded admission study, and Tier 5 viscosity feedback boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1784832781",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784860328_source_scope_and_current_behavior/verification.md",
+      "note": "Marker separators, behaves relation, delimiter depth, aggregation, and bounded scope tests."
+    },
+    {
+      "introspection_id": "introspection_astrid_types_1784831084",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784860328_source_scope_and_current_behavior/verification.md",
+      "note": "Entropy peak and variance, telemetry campaign, and independent felt shiver."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1784830865",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784860328_source_scope_and_current_behavior/verification.md",
+      "note": "Connection integration timing, campaign outcome, unresolved felt friction, and Tier 5 smoothing boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1784830681",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784860328_source_scope_and_current_behavior/verification.md",
+      "note": "Fixed heartbeat mechanics, insufficient natural blocked cohort, felt friction, and Tier 5 cadence/intensity boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1784830395",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784860328_source_scope_and_current_behavior/verification.md",
+      "note": "Correct 48D lane map, paired codec campaigns, unresolved felt flattening, and Tier 5 gain/clamp boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1784855974",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/ws/telemetry_port.rs",
+      "note": "Malformed telemetry now retains bounded payload_bytes and payload_sha256 without payload content."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1784855974",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/ws/tests.rs::telemetry_parse_error_updates_ws_trace",
+      "note": "Regression verifies stable packet identity and no raw malformed packet retention."
+    },
+    {
+      "introspection_id": "introspection_minime_main_excerpt_1784853313",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/introspect.rs;capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs",
+      "note": "Canonical reports retain exact source window, evidence scope, and source-read activation boundary."
+    },
+    {
+      "introspection_id": "introspection_minime_main_excerpt_1784853313",
+      "claim_id": "c001",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/introspect.rs::source_scope_header_distinguishes_complete_and_partial_reads;scripts/introspection_addressing_audit.py::test_lived_state_header_is_additive_and_body_compatible",
+      "note": "Regressions distinguish complete, partial, and unavailable source while preserving the body."
+    }
+  ]
+}

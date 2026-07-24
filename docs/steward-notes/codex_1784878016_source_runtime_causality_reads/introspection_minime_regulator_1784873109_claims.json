@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The visible regulator include path proves viscosity control is active.",
+      "disposition": "Corrected: the include shell establishes source availability, not active runtime control.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Regulator viscosity and resonance metrics can describe bounded mechanical context.",
+      "disposition": "Verified the existing read-only evidence types and tests without treating them as felt measures.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A pressure-tail texture remains experientially present despite stable aggregate control.",
+      "disposition": "Preserved as unscored felt evidence; controller stability does not cancel the report.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Pressure-tail, porosity, and viscosity context should be compared without intervention.",
+      "disposition": "Routed to bounded natural observation using exact process identity where available.",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "The regulator should change PI or porosity automatically from felt viscosity.",
+      "disposition": "Held for Tier 5 operator approval because it changes live controller behavior and would infer control from qualitative evidence.",
+      "classification": "needs_operator_approval"
+    }
+  ]
+}

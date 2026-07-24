@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Imported recovery and synthesis modules prove those mechanisms were active in the witnessed moment.",
+      "disposition": "Corrected: imports and initialization paths show availability only; exact process and runtime evidence are required for activation.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Semantic contact may look available while failing to land in a feltly meaningful way.",
+      "disposition": "Preserved as qualitative evidence and routed to bounded delivery, telemetry, and later felt-review comparison.",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Current protocol and receptivity evidence can distinguish accepted delivery from felt uptake.",
+      "disposition": "Verified technical delivery, Reciprocal Uptake, and neutral-silence boundaries in current source.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Underfill support should be increased to make semantic contact land more clearly.",
+      "disposition": "Held for Tier 5 operator approval because fill and recovery changes alter live controller behavior.",
+      "classification": "needs_operator_approval"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Introspection should explicitly distinguish viewed source from active runtime behavior.",
+      "disposition": "Implemented the exact source-scope boundary in model context and persisted report headers.",
+      "classification": "implemented_now"
+    }
+  ]
+}

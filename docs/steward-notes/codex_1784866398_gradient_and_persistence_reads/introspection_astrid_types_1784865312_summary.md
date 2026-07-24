@@ -1,0 +1,3 @@
+Astrid read a partial current telemetry schema window and distinguished wire cadence from the evolving shape of a high-entropy field. She asked for dynamic entropy evidence and a density-gradient trajectory rather than treating the first valid entropy sample or a jitter category as a sufficient account of current texture.
+
+Current source already carries bounded entropy mean, peak, variance, range, and change. This run adds a compatibility-safe density-gradient sample count, latest value, mean, change, and trend state to the same heartbeat receipt. The new fields are bridge-derived shape evidence only and explicitly cannot establish felt state, causation, or regulator authority.

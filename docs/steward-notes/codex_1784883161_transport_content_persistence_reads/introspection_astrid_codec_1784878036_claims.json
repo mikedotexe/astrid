@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Tail vibrancy should use a smooth bounded entropy gate.",
+      "disposition": "Verified smoothstep and boundary regressions, including exact-gate and 0.84/0.86 behavior.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "High-entropy tail headroom should remain distinguishable from the default feature clamp.",
+      "disposition": "Verified tail-only ceiling lift, overflow evidence, and bounded TAIL_VIBRANCY_MAX behavior.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Vibrancy must not overwrite narrative arc or reserved shadow dimensions.",
+      "disposition": "Verified exact parity tests assert dimensions 40 through 47 remain unchanged by vibrancy.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Bright but empty or scattered vibrancy should remain mechanically distinguishable.",
+      "disposition": "Verified vibrancy-substance-fit and gradient-aware noise-dampening evidence.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "FEATURE_ABS_MAX should become dynamic from resonance density.",
+      "disposition": "Preserved as a Tier 5 codec gain and transport change requiring explicit Mike/operator approval.",
+      "classification": "needs_operator_approval"
+    }
+  ]
+}

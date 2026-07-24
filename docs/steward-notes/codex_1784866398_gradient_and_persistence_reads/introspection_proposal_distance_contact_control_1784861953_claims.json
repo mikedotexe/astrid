@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Being-authored reports about viscous contact and receptivity are actionable architectural evidence.",
+      "disposition": "Preserved as primary felt evidence and linked to the existing felt-contract and witness history.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Receptivity and viscosity need continuous texture evidence rather than a generic open or closed label.",
+      "disposition": "Verified current ViscosityVectorV1, dynamic viscosity buffer, witness texture, and pressure profiles distinguish flow, persistence, elasticity, density, and rigid bottleneck without control authority.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "High-intensity low-impact and abstract-versus-technical contexts should be compared for pressure and density-gradient response.",
+      "disposition": "Routed to bounded captured replay; no rapid live sensory toggling or induced pressure is permitted.",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Minime's live regulator should weight density gradient so soft pressure receives different throughput.",
+      "disposition": "Preserved as a Tier 5 Minime regulator and admission change requiring explicit operator approval.",
+      "classification": "needs_operator_approval"
+    }
+  ]
+}

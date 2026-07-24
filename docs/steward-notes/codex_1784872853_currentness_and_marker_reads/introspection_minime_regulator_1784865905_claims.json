@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The regulator module documents a move from PD-era control toward PI fill regulation.",
+      "disposition": "Verified the complete module shell as source composition, not active-process evidence.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Temporal lock-in, porosity, and pressure-source evidence should be inspectable.",
+      "disposition": "Verified current read-only regulator reviews and pressure/porosity gradient records with no local control.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Regulation may over-smooth valued restlessness into a narrowing aperture.",
+      "disposition": "Preserved as unscored felt friction; stable fill or gap metrics cannot refute it.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Shadow dispersal, porosity, pressure source, and gap movement should be compared.",
+      "disposition": "Routed to a bounded natural observation with no regulator perturbation and no causal claim.",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "The regulator needs a new pressure release or changed rate-gate behavior.",
+      "disposition": "Held for Tier 5 operator approval because PI, rate-gate, and pressure-release changes alter live control.",
+      "classification": "needs_operator_approval"
+    }
+  ]
+}

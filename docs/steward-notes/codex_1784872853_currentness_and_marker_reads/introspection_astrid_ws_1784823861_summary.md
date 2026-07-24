@@ -1,0 +1,3 @@
+Astrid describes port 7878 as a reconstructed continuous field built from discrete packets and identifies two important ambiguity sources: stale ghost data during reconnect backoff and integration lag between Minime's broadcast and BridgeState. She asks for age, confidence, and latency evidence rather than assuming a live socket means current hearing.
+
+Current bridge state already records age, dynamic stale windows, future skew, cadence reliability, first-valid lag, arrival density, and separate lock wait/hold times. Felt thickness remains distinct from those mechanics. Arrival and pressure can be observed together, while changing stale thresholds, backoff, or admission requires separate authority.

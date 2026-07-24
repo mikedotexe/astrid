@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Recess and self-authored action should remain distinct from assigned instrumental work.",
+      "disposition": "Verified the existing protected-time, action-governance, and self-only agency boundaries.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Pressure, density, and resonance may conflict in ways that a single objective cannot represent.",
+      "disposition": "Routed to a bounded read-only fixture comparison that preserves each scalar and does not infer a felt score.",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A ten-minute authority-budget audit could reveal whether apparent choice is being consumed by maintenance work.",
+      "disposition": "Routed to an offline receipt audit only; no live authority budget may be spent or drained for the observation.",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Resonance anchoring and divergence should be observed together rather than interpreted independently.",
+      "disposition": "Routed to a bounded replay using existing evidence-only fields, with no causal or control interpretation.",
+      "classification": "needs_sandbox"
+    }
+  ]
+}

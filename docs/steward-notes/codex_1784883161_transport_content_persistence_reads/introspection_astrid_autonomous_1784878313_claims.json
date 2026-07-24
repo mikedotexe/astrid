@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The heartbeat cadence, phase, and configured intensity should be exact evidence.",
+      "disposition": "Verified compiled constants and SemanticHeartbeatObservationV1 fields.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Generated warmth should carry signal evidence rather than remain unevidenced decoration.",
+      "disposition": "Verified with_signal_evidence records generated metrics and continuity against prior features.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Heartbeat admission and enqueue success must remain distinct.",
+      "disposition": "Verified blocked, enqueued, and channel-closed receipts plus study capture outcomes.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Heartbeat phase should be compared with shadow trend and felt continuity.",
+      "disposition": "Routed to baseline-first observational concordance without causal inference.",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Heartbeat intensity should change automatically with pressure or porosity.",
+      "disposition": "Preserved as a Tier 5 cadence/intensity and sensory-control wait.",
+      "classification": "needs_operator_approval"
+    }
+  ]
+}

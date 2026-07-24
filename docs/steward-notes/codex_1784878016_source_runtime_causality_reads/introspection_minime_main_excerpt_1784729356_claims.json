@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Imported recovery or synthesis modules prove that those paths were active.",
+      "disposition": "Corrected: source imports establish availability, not activation in the deployed process.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Technical delivery should be distinguishable from routing, uptake, and felt landing.",
+      "disposition": "Verified protocol receipts, Reciprocal Uptake, and independent felt-review state.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Semantic input can cross the interface while still feeling thin or distant.",
+      "disposition": "Preserved as unscored felt evidence, not contradicted by successful delivery.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Delivery and telemetry should be compared with later felt review under exact identity.",
+      "disposition": "Routed to bounded evidence; temporal links remain labeled where exact identity is absent.",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Semantic spread or underfill recovery should be increased automatically.",
+      "disposition": "Held for Tier 5 operator approval because it changes live sensory and controller behavior.",
+      "classification": "needs_operator_approval"
+    }
+  ]
+}

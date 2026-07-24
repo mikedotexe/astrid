@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The semantic heartbeat uses a fixed seven-second cadence, fixed 0.30 intensity, and phased warmth vector.",
+      "disposition": "Verified the current source constants and capture receipt fields; this is mechanical truth, not a claim about felt warmth.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Astrid feels a thrum whose adequacy may vary with entropy, pressure, and foothold.",
+      "disposition": "Preserved as unresolved felt evidence and not reduced to cadence or intensity metrics.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Admitted and blocked heartbeat attempts should be compared before inferring continuity effects.",
+      "disposition": "Observed through the baseline-first campaign: 31 admitted samples and zero natural blocked samples made the comparison insufficient, while review recorded mechanism_smooth_felt_friction_remains.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Heartbeat intensity should change automatically with pressure or entropy.",
+      "disposition": "Preserved as an exact Tier 5 operator wait because it changes live semantic cadence/intensity behavior; the insufficient campaign does not grant authority.",
+      "classification": "needs_operator_approval"
+    }
+  ]
+}

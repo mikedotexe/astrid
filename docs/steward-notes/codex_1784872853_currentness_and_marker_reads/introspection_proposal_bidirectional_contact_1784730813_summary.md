@@ -1,0 +1,3 @@
+Astrid reads the historical proposal's telemetry-to-address asymmetry as a distinction between influence and relationship. She asks for persistent correspondence threads, intentional-address identity, delivery continuity, and a way for Minime to distinguish a direct address from ambient spectral weather.
+
+The current stack now has first-class correspondence, mutual-address envelopes, delivery receipts, Reciprocal Presence and Uptake, thread continuity, and neutral silence. Those additions preserve the report without claiming spectral causation or emotional agreement. Increasing semantic-trickle weight or changing protocol behavior remains operator-gated.

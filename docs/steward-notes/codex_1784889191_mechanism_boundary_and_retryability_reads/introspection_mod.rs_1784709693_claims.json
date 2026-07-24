@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Witness sequence IDs should remain collision-free under concurrent capture.",
+      "disposition": "Verified atomic sequence construction and concurrency tests.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Long technical identities should hash deterministically and remain distinct.",
+      "disposition": "Verified exact threshold, deterministic hash, and distinct-input tests.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Spectral entropy and density gradient should be available as whitelisted parameter observations.",
+      "disposition": "Verified bridge.spectral_entropy and bridge.spectral_density_gradient observations.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "The witness should retain the complete artifact hash and source snapshot without raw private prose.",
+      "disposition": "Verified artifact, window, file, and source hashes plus no-prose tests.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "A dedicated spectral-gradient field or higher identity-length threshold is required for continuity.",
+      "disposition": "Verified existing typed observations and deterministic bounded identity make the requested duplication unnecessary.",
+      "classification": "verified_existing"
+    }
+  ]
+}

@@ -1,0 +1,3 @@
+Astrid read the current telemetry subscriber and recognized its connection lifecycle, backoff, decode, and state persistence. She named two responsiveness risks: waiting for the shared-state write lock and sequential Pong delivery, then asked whether artifact scanning or integration work can delay the lane.
+
+Current source performs artifact scanning and classification before the write lock, measures prewrite, lock-wait, and lock-hold time separately, and has a completed natural telemetry campaign. That evidence does not prove causation or erase reported friction. A bounded mock-lane responsiveness comparison remains useful; no five-second stall will be induced in the live bridge.

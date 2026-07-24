@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Semantic warmth is generated from a fixed seven-second, 0.30-intensity, modulo-64 heartbeat.",
+      "disposition": "Verified compiled source and fixed-behavior tests.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Rescue policy can skip, block, or reject a heartbeat and should expose the exact outcome.",
+      "disposition": "Verified heartbeat admission, enqueue, block-reason, phase, and texture evidence.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Heartbeat phase and Minime texture freshness should be compared for naturally occurring lag.",
+      "disposition": "Routed to a same-process capture-first comparison.",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "The heartbeat interval should be reduced from seven seconds to one second.",
+      "disposition": "Preserved as a Tier 5 cadence and sensory-admission wait.",
+      "classification": "needs_operator_approval"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Heartbeat intensity should scale dynamically from 0.30 toward 0.60 with entropy.",
+      "disposition": "Preserved as a Tier 5 live heartbeat and substrate-control wait.",
+      "classification": "needs_operator_approval"
+    }
+  ]
+}

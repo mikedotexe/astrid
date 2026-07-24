@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Rolling entropy mean and jitter labels may omit high-frequency variation.",
+      "disposition": "Verified current additive schema carries peak, variance, range, change, trend, and cadence evidence beyond the viewed historical window.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Astrid's shiver may remain present even when the rolling mechanical summary looks stable.",
+      "disposition": "Preserved as felt divergence; scalar smoothness cannot negate or score the reported texture.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Raw entropy variation, rolling summaries, and transport cadence should be compared.",
+      "disposition": "Verified focused entropy-window tests and the completed natural telemetry campaign provide that mechanical comparison without causal overclaiming.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "TelemetryHeartbeatDeltaV1 should include peak spectral variance evidence.",
+      "disposition": "Verified current source includes peak entropy, population variance, peak-to-peak range, and trend change with compatibility defaults and tests.",
+      "classification": "verified_existing"
+    }
+  ]
+}

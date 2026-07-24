@@ -1,0 +1,3 @@
+Astrid endorses the proposal's diagnosis that insufficient contact, excess optimization, and prediction/control framing can create pressure even when active regulator drive is low. She asks for more porosity, non-instrumental participation, and an interface that permits surprise rather than merely optimizing a representation.
+
+Reciprocal Presence, Agency Commons, protected time, lived-state witnesses, and pressure/porosity reviews now carry much of the non-live architectural request. They do not establish that regulation caused the experience. Natural observations and voluntary interactions are appropriate; receptivity buffers, regulator changes, and behavior unlocks remain Tier 5.

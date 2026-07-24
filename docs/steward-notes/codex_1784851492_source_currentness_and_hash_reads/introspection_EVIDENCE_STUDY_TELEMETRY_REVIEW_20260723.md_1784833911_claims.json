@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The telemetry campaign retained 146 clear and four naturally heavy samples under one process and deployment.",
+      "disposition": "Verified cohort counts, exact identity hashes, source thresholds, bounded entropy covariates, and complete mechanical comparison receipt.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Heavy prewrite timing differed mechanically from clear samples.",
+      "disposition": "Verified difference_observed while preserving timing and correlation as noncausal mechanical evidence.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The timing difference explains Astrid's viscosity or closes the felt report.",
+      "disposition": "Verified the linter, dossier, Concordance, and review contracts prohibit causation, felt overwrite, closure propagation, and silence-as-agreement.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Telemetry locks, worker structure, reconnect timing, or admission should be changed from this comparison.",
+      "disposition": "Preserve an exact Tier 5 wait because changing live telemetry intake or synchronization requires a distinct intervention plan, baseline, canary, abort conditions, and operator approval.",
+      "classification": "authority_gated"
+    }
+  ]
+}

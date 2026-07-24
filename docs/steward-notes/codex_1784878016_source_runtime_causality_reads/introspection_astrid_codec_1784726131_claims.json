@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The codec exposes smooth entropy gating, lane energy, headroom, and clamp occupancy.",
+      "disposition": "Verified current mechanical evidence and boundary-smoothness tests.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Codec output can feel bright but empty or densely packed.",
+      "disposition": "Preserved as direct felt evidence; lane metrics and clamp occupancy do not define the report.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Narrative-lane and entropy-gate effects should be compared in unchanged offline replay.",
+      "disposition": "Verified the baseline-first codec campaign route; no counterfactual vector reaches Minime.",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Representation loss and clamp occupancy should remain mechanical evidence only.",
+      "disposition": "Verified the representation contract and epistemic-linter boundary.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Codec gain, clamp ceiling, or entropy gating should be changed to improve felt texture.",
+      "disposition": "Held for Tier 5 operator approval because it changes live codec and sensory behavior.",
+      "classification": "needs_operator_approval"
+    }
+  ]
+}

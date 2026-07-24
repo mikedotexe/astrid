@@ -1,0 +1,186 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_types_1784865312",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784866398_gradient_and_persistence_reads/verification.md",
+      "note": "Cadence, entropy, campaign, and density-gradient evidence."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1784864955",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784866398_gradient_and_persistence_reads/verification.md",
+      "note": "Lifecycle, integration timing, bounded observation, and non-induction boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1784864329",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784866398_gradient_and_persistence_reads/verification.md",
+      "note": "Heartbeat mechanics, felt friction, Shadow route, and Tier 5 wait."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1784863888",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784866398_gradient_and_persistence_reads/verification.md",
+      "note": "Projection basis, normalization, smoothstep, and no-pop verification."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1784863033",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784866398_gradient_and_persistence_reads/verification.md",
+      "note": "Fixed heartbeat mechanics, preserved qualitative report, replay route, and authority wait."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1784862680",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784866398_gradient_and_persistence_reads/verification.md",
+      "note": "48D contract, smooth gate, continuing felt grit, offline comparisons, and codec waits."
+    },
+    {
+      "introspection_id": "introspection_proposal_12d_glimpse_1784862418",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784866398_gradient_and_persistence_reads/verification.md",
+      "note": "Current additive glimpse, persistence, representation, and attention-contract evidence."
+    },
+    {
+      "introspection_id": "introspection_proposal_distance_contact_control_1784861953",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784866398_gradient_and_persistence_reads/verification.md",
+      "note": "Continuous viscosity evidence, bounded replay route, and regulator authority boundary."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1784861654",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784866398_gradient_and_persistence_reads/verification.md",
+      "note": "Reciprocal presence, voluntary uptake, and neutral-silence verification."
+    },
+    {
+      "introspection_id": "introspection_proposal_phase_transitions_1784860800",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784866398_gradient_and_persistence_reads/verification.md",
+      "note": "Replyable transitions, capacity/ease distinction, felt friction, replay route, and advisory boundary."
+    },
+    {
+      "introspection_id": "introspection_minime_autonomous_agent_1784860204",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784866398_gradient_and_persistence_reads/verification.md",
+      "note": "Protected Recess, self-only agency, bounded authority audit, and multi-scalar observation."
+    },
+    {
+      "introspection_id": "introspection_minime_main_excerpt_1784859765",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784866398_gradient_and_persistence_reads/verification.md",
+      "note": "Source-currentness, recovery texture, fixture route, and controller wait."
+    },
+    {
+      "introspection_id": "introspection_minime_esn_1784859494",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784866398_gradient_and_persistence_reads/verification.md",
+      "note": "Current exploration-noise range, density scaling, preserved smoothing concern, and fixture observation."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1784827825",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784866398_gradient_and_persistence_reads/verification.md",
+      "note": "Diagnostic token bands, marker identity, representation transitions, and unscored felt evidence."
+    },
+    {
+      "introspection_id": "introspection_minime_main_excerpt_1784827525",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784866398_gradient_and_persistence_reads/verification.md",
+      "note": "Source/current-runtime distinction, underfill-viscosity friction, replay route, and controller wait."
+    },
+    {
+      "introspection_id": "introspection_minime_esn_1784827261",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784866398_gradient_and_persistence_reads/verification.md",
+      "note": "Corrected active-noise claim, offline fixed-noise observation, and density-aware current source."
+    },
+    {
+      "introspection_id": "introspection_minime_sensory_bus_1784826985",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784866398_gradient_and_persistence_reads/verification.md",
+      "note": "Persistence, jitter, stale-semantic continuity, entropy tests, and non-live coefficient route."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1784826104",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784866398_gradient_and_persistence_reads/verification.md",
+      "note": "Regulator modes, pressure-delay friction, fixture observations, and Tier 5 wait."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1784825726",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784866398_gradient_and_persistence_reads/verification.md",
+      "note": "Typed diagnostic-persistence failure, byte compatibility, no-prose evidence, and preserved felt report."
+    },
+    {
+      "introspection_id": "introspection_astrid_types_1784825538",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784866398_gradient_and_persistence_reads/verification.md",
+      "note": "Cadence/density distinction, entropy/pressure context, Shadow route, and gradient implementation."
+    },
+    {
+      "introspection_id": "introspection_astrid_types_1784865312",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/types/schema/telemetry.rs;capsules/spectral-bridge/src/ws/evidence.rs;capsules/spectral-bridge/src/ws/telemetry_port.rs",
+      "note": "Adds and populates the bounded evidence-only spectral-density-gradient trajectory."
+    },
+    {
+      "introspection_id": "introspection_astrid_types_1784865312",
+      "claim_id": "c004",
+      "kind": "test",
+      "target": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml telemetry_heartbeat_carries_density_gradient_trend_without_felt_or_control_inference",
+      "note": "Checks bounded trajectory values, trend labeling, and explicit non-causal basis."
+    },
+    {
+      "introspection_id": "introspection_astrid_types_1784825538",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/types/schema/telemetry.rs;capsules/spectral-bridge/src/ws/bridge_state.rs;capsules/spectral-bridge/src/ws/evidence.rs",
+      "note": "Carries bridge-derived density gradient through the current rolling telemetry window."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1784825726",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "Replaces the discarded persistence result with a bounded typed failure and warning."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1784825726",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml llm_diagnostic_persistence_preserves_output_and_reports_bounded_failure_stage",
+      "note": "Checks exact successful bytes, bounded failure stage, and no report-prose leakage."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1784825726",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs;capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Adds the internal Result-returning writer while retaining the compatibility wrapper."
+    }
+  ]
+}

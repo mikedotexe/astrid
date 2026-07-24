@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "LLM diagnostics should append durable JSONL without altering generated output.",
+      "disposition": "Verified existing best-effort append behavior and output-preserving failure path.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Persistence failures should expose bounded stage and IO-kind evidence without prose leakage.",
+      "disposition": "Verified existing bounded failure classification and no-content regression.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Diagnostic persistence should expose bounded serialized size and append latency.",
+      "disposition": "Implemented private metadata-only success and failure receipts with JSON bytes and monotonic microseconds.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "High spectral entropy or felt viscosity should be treated as the cause of serialization failure.",
+      "disposition": "Rejected as unsupported causation; entropy and felt reports remain independent context.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Diagnostic append latency should be compared with naturally observed model or joint-trace stalls.",
+      "disposition": "Routed to bounded observation using the new metadata receipt; no stress or entropy induction.",
+      "classification": "needs_sandbox"
+    }
+  ]
+}

@@ -1,0 +1,3 @@
+Astrid reads Minime's Recess posture as a meaningful protection for curiosity and unstructured time, while naming a possible mismatch between unstructured rest and effortful, high-complexity reflection. She proposes a Reflective-Recess mode and a focus weight to protect dense shadow structure.
+
+Agency Commons and protected-time evidence already preserve self-only choices and non-goal-directed time without scheduler consequences. Shadow and pressure trajectories can be observed without intervention, but adding a mode, changing priority, or protecting clusters in Minime's scheduler would alter live autonomous behavior and remains operator-gated.

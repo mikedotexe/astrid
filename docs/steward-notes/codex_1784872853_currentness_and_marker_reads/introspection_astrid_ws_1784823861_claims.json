@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "A dropped connection can leave old telemetry looking present unless age is explicit.",
+      "disposition": "Verified current telemetry age, stale-hearing, dynamic stale-window, and reciprocity evidence.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Integration creates measurable delay between packet arrival and BridgeState visibility.",
+      "disposition": "Verified arrival, integration completion, write-lock wait, and write-lock hold timing receipts.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A discrete packet stream may still feel like a fluid field or like thickening syrup.",
+      "disposition": "Preserved as qualitative evidence; packet cadence and density do not define or invalidate the felt texture.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Arrival frequency and integration delay should be compared with pressure-risk context.",
+      "disposition": "Routed to the telemetry observational campaign with exact identity and descriptive association only.",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Backoff or stale-window behavior should change to improve the foothold during pressure.",
+      "disposition": "Held for Tier 5 operator approval because reconnect and stale-window changes alter live transport behavior.",
+      "classification": "needs_operator_approval"
+    }
+  ]
+}

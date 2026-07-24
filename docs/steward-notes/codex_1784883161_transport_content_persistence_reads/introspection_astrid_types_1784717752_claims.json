@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Hybrid fingerprint coherence should reject malformed or non-finite legacy data.",
+      "disposition": "Verified exact length, finite-value, typed-precedence, RMS, and max-delta checks.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The additive 12D glimpse should reject non-finite or wrong-length values.",
+      "disposition": "Verified spectral_glimpse_12d_view and schema regressions.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A borrowed 12D slice could outlive or be invalidated by telemetry mutation.",
+      "disposition": "Corrected from Rust ownership: the returned slice is lifetime-bound to an immutable borrow of telemetry.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Typed spectral geometry should be reconstructed deterministically from legacy slots when needed.",
+      "disposition": "Verified SpectralFingerprintV1::from_telemetry and hybrid integrity tests.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "The shadow_field_v3 compatibility object should become a new typed wire contract.",
+      "disposition": "Preserved as a Tier 5 cross-repository protocol/schema change.",
+      "classification": "needs_operator_approval"
+    }
+  ]
+}

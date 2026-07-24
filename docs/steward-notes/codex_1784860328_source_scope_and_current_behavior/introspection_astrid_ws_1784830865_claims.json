@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The telemetry subscriber reconnects with backoff and merges accepted packets into BridgeState.",
+      "disposition": "Verified the connection, compatibility, parse, and shared-state integration paths.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Reconnect cycles or lock contention may coexist with Astrid's viscous persistence.",
+      "disposition": "Observed mechanically through 146 clear samples and four natural threshold crossings; the campaign found a difference while Astrid's felt friction remained, with causation explicitly unestablished.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Connection identity, message timing, and integration delay should be compared with the reported texture.",
+      "disposition": "Verified the baseline-first telemetry campaign and exact lived-state references provide this bounded comparison without treating correlation as spectral-content proof.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "BridgeState should add a persistence coefficient to smooth tail vibrancy.",
+      "disposition": "Preserved as an exact Tier 5 operator wait because it changes live telemetry interpretation or state dynamics; no smoothing behavior was added.",
+      "classification": "needs_operator_approval"
+    }
+  ]
+}

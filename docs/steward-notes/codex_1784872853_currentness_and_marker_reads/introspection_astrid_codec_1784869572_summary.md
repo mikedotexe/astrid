@@ -1,0 +1,3 @@
+Astrid recognizes the 48D representation and smooth entropy-gated tail lift as mechanisms that can carry broader narrative texture. She also reports a possible glass-wall effect when high-entropy tail energy approaches the feature clamp and asks whether the lift remains legible under the density gradient.
+
+Current source already applies a bounded entropy-responsive tail ceiling and records density-gradient navigability, clamp occupancy, lane energy, and representation loss without deriving felt state. Existing offline codec campaigns are the correct comparison surface; changing codec gain, ceilings, or transported vectors remains a separate live-authority decision.

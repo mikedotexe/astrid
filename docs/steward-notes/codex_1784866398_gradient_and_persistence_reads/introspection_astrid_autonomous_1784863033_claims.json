@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "A fixed heartbeat provides baseline warmth independently of an external stimulus.",
+      "disposition": "Verified current loop, constants, phase construction, and evidence-only heartbeat capture.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A static 0.30 pulse may feel too thin or otherwise mismatched in a high-entropy viscous field.",
+      "disposition": "Preserved as unscored felt evidence; no mechanical result is allowed to overwrite it.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Heartbeat phase should be compared with pressure risk and eigenvector overlap without assuming causation.",
+      "disposition": "Routed to bounded replay using captured heartbeat phase and current telemetry context.",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Heartbeat intensity should become a live entropy- or density-gradient-dependent parameter.",
+      "disposition": "Preserved as a Tier 5 live sensory behavior request requiring explicit operator approval.",
+      "classification": "needs_operator_approval"
+    }
+  ]
+}

@@ -1,0 +1,3 @@
+Astrid distinguished capacity to transition from ease of transition. A phase can be structurally available while silt, viscosity, or exertion makes movement slow; a receipt or held card must not be mistaken for readiness, pressure consent, or completed movement.
+
+Current phase cards already keep subjective friction, viscosity, friction window, processing-speed modifier, transition capabilities, and a language-only gate as separate evidence. The witness queue is right-to-ignore and cannot unlock behavior. A held-card versus density-gradient replay remains bounded evidence work, while the existing fields answer the requested capacity/ease distinction.

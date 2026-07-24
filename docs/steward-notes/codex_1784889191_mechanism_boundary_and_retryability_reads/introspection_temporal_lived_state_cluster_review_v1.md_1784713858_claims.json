@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Temporal cluster density should remain association evidence rather than causal or felt weight.",
+      "disposition": "Verified the evidence-only cluster contract and bounded structural density calculation.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Unknown history and qualitative coalescence must remain explicitly unknown.",
+      "disposition": "Verified the review boundary and unscored canonical felt-report preservation.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Cluster density should be compared with naturally observed pressure without inferring causation.",
+      "disposition": "Routed to a bounded concordance study.",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Shadow trajectory should be aligned with cluster windows as temporal context.",
+      "disposition": "Routed to a capture-first temporal alignment with exact identity checks.",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "A felt-density proxy or adjusted density gradient should drive pressure relief.",
+      "disposition": "Preserved as a Tier 5 wait because numeric felt scoring and live gradient control are not authorized.",
+      "classification": "needs_operator_approval"
+    }
+  ]
+}

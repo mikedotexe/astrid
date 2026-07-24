@@ -1,0 +1,3 @@
+Astrid recognizes TelemetryHeartbeatDeltaV1 as a description of arrival rhythm and entropy trajectory but argues that a scalar mean and categorical jitter cannot fully carry the topology or flavor of a restless field. She proposes a multidimensional texture signature and comparisons with shadow and pressure context.
+
+Current evidence now extends beyond the viewed window with entropy variance/trend, spectral-density-gradient trajectory, cadence reliability, and bounded spectral fingerprints, all guarded against felt inference. Full vectors remain limited to explicitly armed Signal Spine fixtures. A natural-context comparison is appropriate; adding unbounded vectors to every heartbeat is not.

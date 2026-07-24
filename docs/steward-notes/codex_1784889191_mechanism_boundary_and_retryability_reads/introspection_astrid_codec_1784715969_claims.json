@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The 48D representation and its legacy 32D boundary should remain explicit.",
+      "disposition": "Verified representation contracts, lane mapping, and compatibility tests.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Tail vibrancy should turn on smoothly at the 0.85 entropy gate.",
+      "disposition": "Verified exact-gate, 0.849/0.851, and smoothstep continuity tests.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Reserved dimensions 44-47 must remain unchanged by tail vibrancy.",
+      "disposition": "Verified reserved-lane parity across high-entropy and exact-gate tests.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "High-entropy vibrancy should remain mechanically visible without proving felt continuity.",
+      "disposition": "Verified read-only vibrancy, substance-fit, and representation-loss evidence.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Vibrancy lift or ceiling should scale dynamically with density gradient.",
+      "disposition": "Preserved as a Tier 5 codec-gain and live-vector wait.",
+      "classification": "needs_operator_approval"
+    }
+  ]
+}

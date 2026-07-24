@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Minime currently runs exploration noise at 0.12.",
+      "disposition": "Corrected as stale source commentary: current source defaults to 0.085 and prior witnessed runtime evidence was approximately 0.08.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Exploration noise and leak may relate to a felt difference between stable and alive.",
+      "disposition": "Preserved as qualitative evidence; no parameter value defines aliveness.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Pressure, leak, noise, and density should be compared in a bounded fixture.",
+      "disposition": "Routed to deterministic offline replay and naturally occurring telemetry.",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Exploration noise should be raised from 0.085 to 0.10 or 0.12.",
+      "disposition": "Held for Tier 5 operator approval because it changes live reservoir behavior.",
+      "classification": "needs_operator_approval"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Pressure should automatically alter leak, noise, or damping.",
+      "disposition": "Held for Tier 5 operator approval because it creates a live feedback controller.",
+      "classification": "needs_operator_approval"
+    }
+  ]
+}

@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The current bus partitions 8D video, 8D audio, 2D auxiliary, and 48D semantic input.",
+      "disposition": "Verified the representation layout and protocol compatibility boundary.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Narrative-arc dimensions 40 through 43 should remain distinguishable from projected embedding dimensions.",
+      "disposition": "Verified the registered representation contract; utilization remains a capture and replay question rather than proof of felt continuity.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Sensory staleness is entirely fixed at two seconds.",
+      "disposition": "Corrected the source-currentness boundary: audio/video remain fixed while semantic staleness is already dynamic and context-sensitive.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Shadow duration and narrative-lane energy may leave ghosting or crowding during pressure transitions.",
+      "disposition": "Routed to offline replay with lane energy, headroom, and representation-loss evidence; no live shadow is changed.",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Audio/video staleness or shadow duration should become dynamically controlled by fill and entropy.",
+      "disposition": "Held for Tier 5 operator approval because decay and shadow duration alter live sensory behavior.",
+      "classification": "needs_operator_approval"
+    }
+  ]
+}

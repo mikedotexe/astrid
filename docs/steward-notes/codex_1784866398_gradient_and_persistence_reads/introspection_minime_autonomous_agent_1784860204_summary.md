@@ -1,0 +1,3 @@
+Minime distinguished protected Recess from instrumental work and asked whether its own pressure, density, and resonance signals can conflict without being collapsed into one scalar objective. The report also proposed bounded observation of authority-budget use and the relation between a resonance anchor and divergence.
+
+Current source preserves self-authored action governance and non-goal-directed Recess. The remaining questions are appropriate for read-only fixture or replay studies. They do not authorize spending an authority budget, changing regulation, or making resonance a control signal.

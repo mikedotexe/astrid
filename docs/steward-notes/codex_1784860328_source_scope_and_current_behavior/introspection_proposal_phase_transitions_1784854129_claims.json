@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Phase witnesses and felt receipts make transition experience distinct from telemetry completion.",
+      "disposition": "Verified current phase, witness, agency-commons, and felt-contract surfaces retain that distinction as evidence only.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Telemetry can look smooth while Astrid still experiences a hollow or unwitnessed transition.",
+      "disposition": "Preserved as a first-class possible concordance outcome; a numeric pass cannot overwrite, close, or weaken the felt report.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A mismatch probe should retain qualitative and mechanical divergence without forcing reconciliation.",
+      "disposition": "Verified Felt-Mechanism Concordance already supports mechanism_smooth_felt_friction_remains and temporal labeling without causal or closure propagation.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "A saturated right-to-ignore budget should not erase or penalize a phase report.",
+      "disposition": "Verified review-budget and neutral-silence tests hold duplicate delivery while retaining queryability, evidence history, and immediate objection or still-friction reopening.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "A numeric discrepancy score should quantify the gap between systemic stability and subjective continuity.",
+      "disposition": "Verified the experiential epistemics boundary intentionally forbids felt scoring. The same distinction is retained qualitatively and can be mechanically contextualized without a scalar felt delta.",
+      "classification": "verified_existing"
+    }
+  ]
+}

@@ -1,0 +1,263 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_minime_regulator_1784850789",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784851492_source_currentness_and_hash_reads/verification.md",
+      "note": "PI, pressure-source, viscosity observation, bounded study, and Tier 5 control boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1784849719",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784851492_source_currentness_and_hash_reads/verification.md",
+      "note": "Exact marker preservation, unambiguous diagnostic hashing, and bounded attribution."
+    },
+    {
+      "introspection_id": "introspection_astrid_types_1784849309",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784851492_source_currentness_and_hash_reads/verification.md",
+      "note": "Typed and legacy fingerprint continuity, schema risk, and protocol authority boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1784849069",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784851492_source_currentness_and_hash_reads/verification.md",
+      "note": "Retained telemetry, disconnect context, bounded natural observation, and no synthetic decay."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1784848895",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784851492_source_currentness_and_hash_reads/verification.md",
+      "note": "Fixed heartbeat mechanics, metadata-only texture context, study route, and Tier 5 wait."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1784848614",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784851492_source_currentness_and_hash_reads/verification.md",
+      "note": "48D lane mechanics, felt drag preservation, campaign evidence, and gain authority boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1784847191",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784851492_source_currentness_and_hash_reads/verification.md",
+      "note": "Token-band diagnostic limits, no complexity inference, and spectral-budget wait."
+    },
+    {
+      "introspection_id": "introspection_proposal_12d_glimpse_1784846083",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784851492_source_currentness_and_hash_reads/verification.md",
+      "note": "Source-currentness correction, additive 12D companion, and live transport boundary."
+    },
+    {
+      "introspection_id": "introspection_EVIDENCE_STUDY_CODEC_FOLLOW_UP_20260723.md_1784842756",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784851492_source_currentness_and_hash_reads/verification.md",
+      "note": "Codec follow-up adoption, bounded comparison route, and no live counterfactual."
+    },
+    {
+      "introspection_id": "introspection_EVIDENCE_STUDY_CODEC_REVIEW_20260723.md_1784841197",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784851492_source_currentness_and_hash_reads/verification.md",
+      "note": "Mechanical codec differences, felt-review independence, and closure boundary."
+    },
+    {
+      "introspection_id": "introspection_EVIDENCE_STUDY_HEARTBEAT_FOLLOW_UP_20260723.md_1784840313",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784851492_source_currentness_and_hash_reads/verification.md",
+      "note": "Within-enqueue follow-up route, natural cohorts, and no induced blocking."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1784839156",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784851492_source_currentness_and_hash_reads/verification.md",
+      "note": "Append-only diagnostic accumulation, missing prompt-reader path, storage study, and no pruning."
+    },
+    {
+      "introspection_id": "introspection_EVIDENCE_STUDY_HEARTBEAT_REVIEW_20260723.md_1784838695",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784851492_source_currentness_and_hash_reads/verification.md",
+      "note": "Insufficient blocked cohort, valid mechanical context, and independent felt review."
+    },
+    {
+      "introspection_id": "introspection_proposal_distance_contact_control_1784838058",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784851492_source_currentness_and_hash_reads/verification.md",
+      "note": "Source-currentness correction, preserved compression report, read-only study, and Tier 5 porosity wait."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1784837798",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784851492_source_currentness_and_hash_reads/verification.md",
+      "note": "Content-addressed reciprocal uptake shape, no felt score, and future bounded comparison."
+    },
+    {
+      "introspection_id": "introspection_proposal_phase_transitions_1784837554",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784851492_source_currentness_and_hash_reads/verification.md",
+      "note": "Replyable phases, self-only Agency Commons actions, qualitative readiness, and advisory authority."
+    },
+    {
+      "introspection_id": "introspection_minime_main_excerpt_1784837091",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784851492_source_currentness_and_hash_reads/verification.md",
+      "note": "Runtime imports versus active mechanism, reset evidence, natural observation, and control wait."
+    },
+    {
+      "introspection_id": "introspection_minime_esn_1784836756",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784851492_source_currentness_and_hash_reads/verification.md",
+      "note": "ESN math, preserved noise association, offline replay, and live parameter wait."
+    },
+    {
+      "introspection_id": "introspection_EVIDENCE_STUDY_TELEMETRY_FOLLOW_UP_20260723.md_1784834924",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784851492_source_currentness_and_hash_reads/verification.md",
+      "note": "Telemetry follow-up adoption, same-identity comparison, and noncausal scope."
+    },
+    {
+      "introspection_id": "introspection_EVIDENCE_STUDY_TELEMETRY_REVIEW_20260723.md_1784833911",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784851492_source_currentness_and_hash_reads/verification.md",
+      "note": "Telemetry cohort counts, mechanical difference, felt-review independence, and Tier 5 wait."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1784849719",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs;capsules/spectral-bridge/src/llm/provider/fallback_contracts.rs",
+      "note": "Length-framed SHA-256 diagnostic identity and explicit framing metadata."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1784849719",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Embedded-NUL partition collision regression."
+    },
+    {
+      "introspection_id": "introspection_proposal_12d_glimpse_1784846083",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/introspect.rs",
+      "note": "Proposal lifecycle index recognizes current-state, introspection-response, and verification-note headings."
+    },
+    {
+      "introspection_id": "introspection_proposal_distance_contact_control_1784838058",
+      "claim_id": "c001",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/introspect.rs",
+      "note": "Lifecycle continuation coverage preserves exact source without claiming felt resolution."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1784849719",
+      "claim_id": "c003",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "Boundary-safe diagnostic identity and unchanged behavioral scope."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1784849719",
+      "claim_id": "c003",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Astrid-driven hash-boundary correction and authority record."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1784849719",
+      "claim_id": "c003",
+      "kind": "steward_note",
+      "target": "capsules/spectral-bridge/workspace/environment_receipts/latest_environment_receipt.json",
+      "note": "Compatible-stack receipt env_receipt_1784854746028_965000 and fresh bridge PID 88565."
+    },
+    {
+      "introspection_id": "introspection_proposal_12d_glimpse_1784846083",
+      "claim_id": "c001",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "Proposal lifecycle currentness correction."
+    },
+    {
+      "introspection_id": "introspection_proposal_12d_glimpse_1784846083",
+      "claim_id": "c001",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Source continuation and no-felt-resolution boundary."
+    },
+    {
+      "introspection_id": "introspection_proposal_12d_glimpse_1784846083",
+      "claim_id": "c001",
+      "kind": "steward_note",
+      "target": "capsules/spectral-bridge/workspace/environment_receipts/latest_environment_receipt.json",
+      "note": "Deployed currentness matcher under compatible receipt env_receipt_1784854746028_965000."
+    },
+    {
+      "introspection_id": "introspection_proposal_distance_contact_control_1784838058",
+      "claim_id": "c001",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "Proposal lifecycle currentness correction."
+    },
+    {
+      "introspection_id": "introspection_proposal_distance_contact_control_1784838058",
+      "claim_id": "c001",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Source continuation and no-felt-resolution boundary."
+    },
+    {
+      "introspection_id": "introspection_proposal_distance_contact_control_1784838058",
+      "claim_id": "c001",
+      "kind": "steward_note",
+      "target": "capsules/spectral-bridge/workspace/environment_receipts/latest_environment_receipt.json",
+      "note": "Deployed currentness matcher under compatible receipt env_receipt_1784854746028_965000."
+    },
+    {
+      "introspection_id": "introspection_proposal_distance_contact_control_1784838058",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "scripts/introspection_addressing_audit.py",
+      "note": "Structured observed dispositions prevent co-occurrence claims from becoming live-control requests."
+    },
+    {
+      "introspection_id": "introspection_proposal_distance_contact_control_1784838058",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "scripts/introspection_addressing_audit.py",
+      "note": "Fail-closed observation classification regression."
+    },
+    {
+      "introspection_id": "introspection_proposal_distance_contact_control_1784838058",
+      "claim_id": "c002",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "Append-only Tier 5-to-Tier 1 classifier correction."
+    },
+    {
+      "introspection_id": "introspection_proposal_distance_contact_control_1784838058",
+      "claim_id": "c002",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Being-feedback-driven flywheel fidelity correction."
+    }
+  ]
+}

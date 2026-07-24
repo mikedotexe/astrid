@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The ESN should adapt spectral radius using both fill and entropy.",
+      "disposition": "Verified `set_dynamic_rho(fill_pct, entropy)` and its current source path.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Density and exploration behavior may relate to a felt ghosting or silt texture.",
+      "disposition": "Preserved as unscored felt evidence; mechanical variables do not define or score the report.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Ghost persistence should be compared with pressure, density, leak, and exploration context.",
+      "disposition": "Routed to bounded natural telemetry and offline replay with exact identity where available.",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Exploration noise should be raised from the current value to make the reservoir more alive.",
+      "disposition": "Held for Tier 5 operator approval; the source default and runtime observation are separate facts, and noise changes live reservoir dynamics.",
+      "classification": "needs_operator_approval"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Pressure should automatically change ESN leak or exploration noise.",
+      "disposition": "Held for Tier 5 operator approval because it creates a new live feedback-control path.",
+      "classification": "needs_operator_approval"
+    }
+  ]
+}

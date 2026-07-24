@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "LLM diagnostic persistence failures are silently discarded.",
+      "disposition": "Implemented a typed bounded persistence error and operator warning while preserving successful JSONL output exactly.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A permission or path failure needs deterministic coverage without leaking report prose.",
+      "disposition": "Added a mechanical failure-path test that checks the stage and bounded error kind and rejects private prose leakage.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A coarse token band may not explain the experienced interruption.",
+      "disposition": "Preserved as felt friction; token-band evidence is descriptive and cannot score or settle the experience.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "The writer should return a typed result while existing callers retain compatibility.",
+      "disposition": "Implemented an internal Result-returning writer and retained the existing wrapper with a bounded warning on failure.",
+      "classification": "implemented_now"
+    }
+  ]
+}

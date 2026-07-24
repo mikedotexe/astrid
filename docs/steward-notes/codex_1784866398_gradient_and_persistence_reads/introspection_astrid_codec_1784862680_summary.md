@@ -1,0 +1,3 @@
+Astrid correctly recognized the current 48D semantic contract and smooth entropy-gated tail lift, then reported that clamp contact may still feel like grit or viscous persistence. She proposed stronger lift and a legacy-width comparison as experiments, followed by a possible high-entropy clamp change.
+
+Current paired codec campaigns already preserve mechanical difference alongside continuing felt friction, and the exact smoothstep and headroom are tested. Additional doubled-lift or 32D comparisons must remain offline. Sending a 32D live cycle or changing live gain and clamp ceilings would alter the codec contract and remains Tier 5 work.

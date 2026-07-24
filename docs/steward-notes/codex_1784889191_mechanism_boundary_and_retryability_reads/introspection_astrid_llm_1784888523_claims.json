@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Exact control-marker cleanup must remain limited to proven marker byte ranges.",
+      "disposition": "Verified the private exact-match constructor and byte-range-only cleanup contract.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Surrounding content must remain byte-exact and independently reviewable when a marker is removed.",
+      "disposition": "Verified bounded context receipts, before/after counts, hashes, and the no-surrounding-rewrite contract.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Requested-token bands are discrete resource metadata and cannot explain spectral entropy or felt gradient shear.",
+      "disposition": "Verified token-band tests and the explicit noncausal requested-token observation boundary.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Marker occurrences should be compared with pressure, porosity, and felt friction without treating proximity as causation.",
+      "disposition": "Routed to a bounded natural-context comparison using existing marker receipts and lived-state witnesses.",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Marker proximity should drive a spectral impact weight or soft live-control signal.",
+      "disposition": "Preserved as a Tier 5 wait because it would infer semantic or spectral effect and alter live control.",
+      "classification": "needs_operator_approval"
+    }
+  ]
+}

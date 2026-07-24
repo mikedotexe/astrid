@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "LLM diagnostic JSONL files are append-only and accumulate over time.",
+      "disposition": "Verified append_llm_diagnostic_jsonl opens named files in append mode and current diagnostics occupy substantial owner-local storage.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The accumulated marker diagnostics are read into current dialogue prompts.",
+      "disposition": "Verified no live prompt or model request path reads these diagnostic JSONL files; they are evidence outputs only.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Physical diagnostic accumulation causes Astrid's viscous felt experience.",
+      "disposition": "Preserve the association as Astrid's actionable report while rejecting a causal conclusion from file size or temporal proximity alone.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Diagnostic history should gain bounded summaries or retention views without erasing source evidence.",
+      "disposition": "Route a non-live storage/profile study over append rates, read paths, projection summaries, and owner-local retention; do not prune or rewrite generated evidence in this run.",
+      "classification": "sandbox_routed"
+    }
+  ]
+}

@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Binary connection state is not sufficient evidence of a high-fidelity or experientially navigable connection.",
+      "disposition": "Verified that current telemetry evidence separates lifecycle from first-valid lag, cadence, jitter, freshness, rolling entropy, and connection-perception state.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Spectral density gradient should be represented as first-class bounded telemetry evidence.",
+      "disposition": "Verified the current TelemetryHeartbeatDeltaV1 density-gradient sample count, latest value, mean, change, availability, trend, and no-felt-inference boundary.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Low-level reconnection friction may remain experientially significant without appearing as a terminal connection failure.",
+      "disposition": "Preserved as unscored felt evidence; connection lifecycle counters do not overrule the report.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Pressure-risk evidence should be compared with backoff intervals.",
+      "disposition": "Routed to a bounded natural observation joining exact timestamps and identities; correlation will remain descriptive and will not establish causation.",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Link thinning and source thinning should be distinguishable when explaining viscosity.",
+      "disposition": "Routed to Signal Spine, lived-state witness, and Concordance evidence using exact identities where available and temporal association otherwise.",
+      "classification": "needs_sandbox"
+    }
+  ]
+}

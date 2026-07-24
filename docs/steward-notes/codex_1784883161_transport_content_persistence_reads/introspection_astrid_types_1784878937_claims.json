@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Telemetry should expose rolling entropy variance.",
+      "disposition": "Verified rolling_spectral_entropy_variance is present and populated from finite bounded samples.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Telemetry should expose entropy velocity or change across the current window.",
+      "disposition": "Verified change and trend-state fields preserve latest-minus-earliest movement.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Arrival cadence should retain bounded multi-sample context rather than only one f32 delta.",
+      "disposition": "Verified rolling arrival sample count, mean, change, state, and host-time basis.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Entropy statistics must remain mechanical evidence rather than a felt-state score.",
+      "disposition": "Verified schema basis and epistemic lint explicitly prohibit numeric-to-felt inference.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Jitter and entropy peaks should be compared for co-occurrence.",
+      "disposition": "Routed to bounded observational comparison with temporal, noncausal labeling.",
+      "classification": "needs_sandbox"
+    }
+  ]
+}

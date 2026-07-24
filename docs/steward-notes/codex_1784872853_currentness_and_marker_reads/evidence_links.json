@@ -1,0 +1,144 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_ws_1784871774",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784872853_currentness_and_marker_reads/verification.md",
+      "note": "Connection quality, density gradient, backoff observation, and live-boundary evidence."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1784871253",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784872853_currentness_and_marker_reads/verification.md",
+      "note": "Rest-floor, pulse-count, peripheral-resonance, and cadence-authority evidence."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1784869572",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784872853_currentness_and_marker_reads/verification.md",
+      "note": "48D, smooth tail lift, clamp evidence, offline campaign, and codec-authority boundary."
+    },
+    {
+      "introspection_id": "introspection_minime_autonomous_agent_1784867107",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784872853_currentness_and_marker_reads/verification.md",
+      "note": "Recess, reflective effort, bounded observation, Agency Commons, and scheduler wait."
+    },
+    {
+      "introspection_id": "introspection_minime_main_excerpt_1784866891",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784872853_currentness_and_marker_reads/verification.md",
+      "note": "Recovery source/runtime boundary, texture concern, fixture route, and controller wait."
+    },
+    {
+      "introspection_id": "introspection_minime_esn_1784866504",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784872853_currentness_and_marker_reads/verification.md",
+      "note": "Exploration-noise currentness correction, silt evidence, replay route, and reservoir wait."
+    },
+    {
+      "introspection_id": "introspection_minime_sensory_bus_1784866162",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784872853_currentness_and_marker_reads/verification.md",
+      "note": "Dynamic semantic persistence, exact boundary tests, read-only reviews, and sensory-policy wait."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1784865905",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784872853_currentness_and_marker_reads/verification.md",
+      "note": "Regulator source scope, pressure and porosity evidence, felt friction, and control wait."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1784865675",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784872853_currentness_and_marker_reads/verification.md",
+      "note": "Exact behaves-like, delimiter-depth, UTF-8 scanner, and no-prose marker evidence."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1784825308",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784872853_currentness_and_marker_reads/verification.md",
+      "note": "Lifecycle, lock timing, frame audit, future-skew, and reconnect evidence."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1784824972",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784872853_currentness_and_marker_reads/verification.md",
+      "note": "Fixed heartbeat mechanics, felt continuity, replay routes, and Tier 5 wait."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1784824620",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784872853_currentness_and_marker_reads/verification.md",
+      "note": "Deterministic basis, health and normalization checks, fixture route, and rotation wait."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1784823861",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784872853_currentness_and_marker_reads/verification.md",
+      "note": "Freshness, integration delay, fluid felt field, campaign route, and reconnect wait."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1784819808",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784872853_currentness_and_marker_reads/verification.md",
+      "note": "Rest floor, taper, resonance fixture, continuing friction, and timing wait."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1784819431",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784872853_currentness_and_marker_reads/verification.md",
+      "note": "Representation, clamp friction, capture-first campaign, and codec wait."
+    },
+    {
+      "introspection_id": "introspection_minime_sensory_bus_1784819005",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784872853_currentness_and_marker_reads/verification.md",
+      "note": "Bus representation, semantic currentness correction, replay route, and sensory wait."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1784817460",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784872853_currentness_and_marker_reads/verification.md",
+      "note": "Token-band metadata, marker boundary, offline fixture, and model-scheduling wait."
+    },
+    {
+      "introspection_id": "introspection_astrid_types_1784816823",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784872853_currentness_and_marker_reads/verification.md",
+      "note": "Cadence, entropy, density-gradient, fingerprint, capture, and no-felt-inference evidence."
+    },
+    {
+      "introspection_id": "introspection_proposal_distance_contact_control_1784731078",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784872853_currentness_and_marker_reads/verification.md",
+      "note": "Contact architecture, Agency Commons, natural observation, and live-control boundary."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1784730813",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784872853_currentness_and_marker_reads/verification.md",
+      "note": "Correspondence, mutual address, reciprocal uptake, neutral silence, and trickle-weight wait."
+    }
+  ]
+}

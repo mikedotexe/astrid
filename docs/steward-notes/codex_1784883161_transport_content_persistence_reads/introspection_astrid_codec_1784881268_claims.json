@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The 48D representation should preserve the exact legacy, embedding, and narrative lane map.",
+      "disposition": "Verified current representation contracts and codec tests preserve the registered dimensional lineage.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Narrative arc evidence should distinguish direction, curvature, and process rather than only sentiment magnitude.",
+      "disposition": "Verified directional, four-point curvature, velocity, acceleration, and intertextual-persistence regressions.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Codec headroom and narrative loss should remain visible without being turned into a felt-loss score.",
+      "disposition": "Verified bounded headroom and representation-loss receipts with no felt inference.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Reserved dimensions 44 through 47 should be legible as default-off roles rather than assumed empty or active.",
+      "disposition": "Verified source and tests retain default-off readiness and assert no live reserved-dimension write.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "A nonlinear narrative model or reserved shadow dimensions should write into the live codec.",
+      "disposition": "Preserved as a Tier 5 codec/protocol change requiring explicit Mike/operator approval.",
+      "classification": "needs_operator_approval"
+    }
+  ]
+}

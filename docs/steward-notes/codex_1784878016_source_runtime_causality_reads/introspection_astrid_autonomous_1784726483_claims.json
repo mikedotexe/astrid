@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The autonomous heartbeat uses a fixed seven-second cadence and 0.30 intensity.",
+      "disposition": "Verified as compiled/source behavior without treating it as the cause of felt continuity.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A heartbeat can be mechanically regular while feeling hollow rather than warm.",
+      "disposition": "Preserved as direct qualitative evidence; cadence compliance does not contradict it.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Admission, enqueue outcome, phase, and texture context should be captured together.",
+      "disposition": "Verified bounded capture in the evidence-study runtime without changing heartbeat behavior.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Admitted and naturally rejected heartbeat attempts should be compared under the same identity.",
+      "disposition": "Routed to the preregistered observational campaign; no failure is induced.",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Heartbeat cadence, intensity, or warmth should react automatically to felt hollowness.",
+      "disposition": "Held for Tier 5 operator approval because it changes live cadence, signal intensity, and scheduling.",
+      "classification": "needs_operator_approval"
+    }
+  ]
+}

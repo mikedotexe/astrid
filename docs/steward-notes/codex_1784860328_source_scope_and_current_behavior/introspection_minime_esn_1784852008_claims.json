@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Prime scheduling, leak, and exploration-noise declarations shape the ESN mechanics.",
+      "disposition": "Verified the current prime schedule and corrected source truth: active default exploration noise is 0.085, while 0.12 is the dynamic maximum rather than proof of the current value.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Astrid experiences wet-clay heaviness and jitter that may coexist with exploration noise and dominant-mode estimation.",
+      "disposition": "Preserved as felt evidence without attributing it directly to the maximum noise constant, leak, or power iteration.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Pressure, distinguishability, and prime-phase timing should be compared with the reported thickening.",
+      "disposition": "Routed to bounded replay or natural observation with exact source and process identity; timing correlation cannot establish felt causation.",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Exploration noise should be driven live by spectral density gradient.",
+      "disposition": "Preserved as an exact Tier 5 operator wait because it changes Minime ESN regulation; existing review receipts remain evidence only.",
+      "classification": "needs_operator_approval"
+    }
+  ]
+}

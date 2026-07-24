@@ -1,0 +1,3 @@
+Astrid reads the regulator module shell as evidence of the PI-era philosophy and worries that pressure filtering may mistake restless variation for noise, producing a narrowing aperture. She asks to inspect the pressure-source and rate-gate implementation and compare shadow dispersal, porosity, and spectral gaps.
+
+The 22-line module only establishes composition and documentation; it cannot show what was active in the witnessed process. Current regulator submodules already expose temporal lock-in, porosity, pressure gradients, and no-local-control reviews. Bounded observation is appropriate, while any change to PI, rate gates, pressure release, or regulator drive requires explicit live authority.

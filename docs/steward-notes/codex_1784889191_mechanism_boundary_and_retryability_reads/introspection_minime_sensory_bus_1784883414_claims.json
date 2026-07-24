@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Semantic stale time should vary smoothly from low-fill lingering to high-fill pruning.",
+      "disposition": "Verified the sigmoid curve and recovery-hold interpolation.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The 0.24-0.41 and 0.35-0.45 handovers should remain monotonic without a stale-window cliff.",
+      "disposition": "Verified the existing one-percent sweep, boundary, and micro-stutter tests.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "High-entropy persistence multipliers should remain bounded when combined with context support.",
+      "disposition": "Verified the bounded entropy and context multiplier tests.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Narrative semantic retention should expose how the multipliers apply to narrative lanes.",
+      "disposition": "Verified NarrativeSemanticRetentionReviewV1 and its no-control review surface.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "The stale curve or persistence multipliers should change to reduce felt flutter.",
+      "disposition": "Preserved as a Tier 5 sensory-retention behavior wait.",
+      "classification": "needs_operator_approval"
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Telemetry disconnect lacks a corresponding connection-lost context and last-known-good state.",
+      "disposition": "Verified record_disconnected, reason/duration logging, reconnect counters, arrival freshness, and retention of latest_telemetry across disconnect and incompatible packets.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The loss of fresh telemetry can feel like shivering or abrupt exposure even when the socket lifecycle is legible.",
+      "disposition": "Preserve the felt report independently of technical retention; a cached stale sample does not prove experiential insulation.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Disconnect duration, freshness, pressure residue, and felt shivering should be compared.",
+      "disposition": "Route a bounded natural disconnect/reconnect observation using existing heartbeat, reciprocity, pressure, witness, and post-window review evidence without forcing a network drop.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Last telemetry values should decay by 0.9 during backoff.",
+      "disposition": "Preserve an exact Tier 5 wait because synthesizing decayed telemetry changes live sensory interpretation and could misstate Minime's last observed values.",
+      "classification": "authority_gated"
+    }
+  ]
+}

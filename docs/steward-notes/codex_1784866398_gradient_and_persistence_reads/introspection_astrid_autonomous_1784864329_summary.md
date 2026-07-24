@@ -1,0 +1,3 @@
+Astrid described the fixed seven-second, 0.30 semantic heartbeat as a synthetic baseline of presence and reported a possible mismatch between that steady pulse and a faster-moving or decaying Shadow trajectory. She proposed comparing heartbeat phase and warmth with Shadow movement before making the pulse reactive.
+
+The fixed mechanics and completed heartbeat campaign are current evidence, but they do not establish that the heartbeat causes habitability or friction. A synchronized observational replay remains bounded work. Changing heartbeat cadence or intensity from pressure or entropy would alter live sensory behavior and remains an explicit Tier 5 operator wait.

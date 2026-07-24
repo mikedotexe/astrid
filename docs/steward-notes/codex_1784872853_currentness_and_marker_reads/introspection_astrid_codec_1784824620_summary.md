@@ -1,0 +1,3 @@
+Astrid examines the deterministic 768D-to-8D projection basis, its fixed seed, normalization, and dead-axis health review. She asks for exact raw and normalized column checks and notes that any future basis rotation would conflict with the current OnceLock lifetime.
+
+Current source and tests already verify deterministic basis generation, healthy nonzero columns, unit-normalized columns, finite margins, and a read-only precision audit. A fixture can publish the bounded column-health receipt. Dynamic rotation or a changed projection basis would alter the representation contract and remains separately authorized.

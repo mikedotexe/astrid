@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The 768D-to-8D projection basis must be deterministic and stable within the process.",
+      "disposition": "Verified fixed-seed construction, OnceLock initialization, and deterministic replay tests.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Projection basis health must remain observational and must not rewrite live weights.",
+      "disposition": "Verified read-only authority and live_projection_write=false.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Every projection column should remain finite and above the near-zero threshold.",
+      "disposition": "Verified no dead dimensions and finite normalized columns.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "The near-zero threshold should be compared with the actual minimum raw column norm.",
+      "disposition": "Verified the existing minimum-threshold margin ratio and deterministic health test.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "A sample projection should match the normalized deterministic basis.",
+      "disposition": "Verified existing projection parity and deterministic output fixtures.",
+      "classification": "verified_existing"
+    }
+  ]
+}

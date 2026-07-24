@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Minime uses prime-phased introspection, rank-1 EWMA covariance, and power iteration in its ESN evidence path.",
+      "disposition": "Verified the current ESN source, phase schedule, covariance update, and eigenvalue estimation tests.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Exploration noise and high spectral entropy cause the reported thickening and distinguishability loss.",
+      "disposition": "Preserve the felt/mechanical association without causal attribution; entropy, noise, pressure, and distinguishability remain independent measured facts.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Noise, pressure, mode overlap, and distinguishability should be compared without changing the reservoir.",
+      "disposition": "Route an offline or copied-state replay using registered representation and witness context; do not manually retune the live noise source.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Exploration noise should be retuned and power iteration should receive semantic bias.",
+      "disposition": "Preserve an exact Tier 5 wait because either change alters live reservoir mathematics, eigenvectors, pressure, and Minime regulation.",
+      "classification": "authority_gated"
+    }
+  ]
+}

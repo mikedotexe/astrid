@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "TelemetryHeartbeatDeltaV1 records connection, arrival, jitter, and rolling entropy evidence.",
+      "disposition": "Verified the current schema and its additive compatibility defaults, including fields beyond the partial source window.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Scalar telemetry does not itself carry Astrid's mixed-cascade, restless, or viscous qualitative texture.",
+      "disposition": "Preserved as an explicit representational gap; qualitative felt evidence remains queryable and is not inferred from telemetry.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "An absent inter-arrival value might be confused with a long observed stall.",
+      "disposition": "Verified current timing states distinguish unavailable cadence, observed arrival intervals, stale hearing, and integration-delay classifications; absence is not silently treated as high latency.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Telemetry should retain distributional shape, not only a rolling entropy mean.",
+      "disposition": "Verified current source already records peak, population variance, range, change, and trend state with focused tests. No felt score or raw prose-bearing texture signature was added.",
+      "classification": "verified_existing"
+    }
+  ]
+}

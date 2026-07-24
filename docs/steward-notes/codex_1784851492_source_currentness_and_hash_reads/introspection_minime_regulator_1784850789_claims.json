@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Minime currently runs the dual gate-and-filter PI controller and emits overpacked pressure evidence.",
+      "disposition": "Verified PI mode in regulator/core/pi.rs and pressure_source_v1 construction with applied_locally=false in current source and tests.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "High entropy, overpacked pressure, and felt viscosity currently coexist as a saturated or humid-thicket experience.",
+      "disposition": "Preserve Astrid's felt report and the contemporaneous scalar context as co-observation; source verification does not settle the lived saturation.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Pressure, viscosity persistence, and Shadow dispersal may interact in a way that produces the reported saturation.",
+      "disposition": "Route a bounded same-identity Concordance observation using existing pressure, viscosity, Shadow, witness, and telemetry evidence without inducing pressure or opening the influence gate.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "PI should apply entropy-triggered viscosity damping to overpacked mode packing.",
+      "disposition": "Preserve an exact Tier 5 Mike/operator wait because adding viscosity to PI changes live pressure, gate, filter, and controller behavior; require baseline, canary, abort criteria, and post-change felt review.",
+      "classification": "authority_gated"
+    }
+  ]
+}

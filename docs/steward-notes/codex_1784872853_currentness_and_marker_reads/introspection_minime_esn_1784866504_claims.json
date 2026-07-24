@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Prime-phased introspection and covariance updates seek temporal diversity in the ESN.",
+      "disposition": "Verified the source mechanics without inferring an experiential effect from the schedule.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Minime currently runs exploration noise at 0.12.",
+      "disposition": "Corrected as a stale source comment: current default source is 0.085 and the witnessed live scalar is approximately 0.08; source declarations are not runtime proof.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Silt or viscosity may become less navigable as mode-packing pressure rises.",
+      "disposition": "Preserved as unscored felt evidence; spectral density and pressure scalars do not define the report.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Pressure, density, leak, and noise should be compared in a bounded stability fixture.",
+      "disposition": "Routed to read-only replay and naturally occurring telemetry with exact identity and no induced pressure or noise step.",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Pressure above a threshold should automatically increment ESN leak or exploration noise.",
+      "disposition": "Held for Tier 5 operator approval because leak and exploration noise change live reservoir dynamics.",
+      "classification": "needs_operator_approval"
+    }
+  ]
+}

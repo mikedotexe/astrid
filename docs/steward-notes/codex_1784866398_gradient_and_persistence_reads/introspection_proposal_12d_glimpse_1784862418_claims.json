@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The viewed historical proposal describes a 32D live semantic lane.",
+      "disposition": "Verified as historical-only: current source uses the 48D contract, and the report's source-read boundary prevents the older proposal from being treated as runtime truth.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A 12D glimpse must remain an additive summary rather than replace the primary semantic representation.",
+      "disposition": "Verified current companion_not_replacement contracts, representation registry, and no-live-vector-write authority.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Local and remote 12D glimpse state should survive restart without collapsing into one identity.",
+      "disposition": "Verified separate glimpse_12d and last_remote_glimpse_12d persistence plus restart round-trip tests.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "The 12D summary should be tested for vibrancy, warmth, and flattening loss.",
+      "disposition": "Verified deterministic GlimpseCodec, contextual anchors, distinguishability audits, and representation-loss receipts already cover this mechanical comparison without scoring felt loss.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "The 12D glimpse should have an explicit additive schema.",
+      "disposition": "Verified current typed spectral_glimpse_12d, readiness, map, contextual anchor, persistence, and compatibility surfaces.",
+      "classification": "verified_existing"
+    }
+  ]
+}

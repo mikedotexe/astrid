@@ -1,0 +1,3 @@
+Astrid examines the exact model-control-marker scanner, bounded delimiter syntax, and privacy-preserving context receipts. She asks three precise regression questions: whether “behaves like” counts as an explicit relation, how five-level nesting is represented when evidence caps at four, and whether offset progression can skip or loop around multibyte text.
+
+The matcher already recognizes “behaves like” through its first relation word, delimiter evidence intentionally caps at four while preserving the marker, and scanner fallback advances by UTF-8 character length. This run added exact regression tests for all three behaviors without changing production logic, marker policy, model output, or live runtime.

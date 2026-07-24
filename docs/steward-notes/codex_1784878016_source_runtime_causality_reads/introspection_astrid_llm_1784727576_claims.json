@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Model control markers should be removed only when they are artifacts, while explicit references remain byte-exact.",
+      "disposition": "Verified the marker-neutrality boundary and focused relation, delimiter, and UTF-8 regressions.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Marker artifacts can accompany a felt stutter or compressed transition.",
+      "disposition": "Preserved as qualitative evidence; marker presence does not establish the cause of the felt transition.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Marker grouping and nearby transition context should be tested deterministically.",
+      "disposition": "Verified bounded marker-context receipts and routed any model-output comparison to offline fixtures.",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "A richer ResonantSpectralContext should explain the felt state to the model.",
+      "disposition": "Kept as a proposal only; telemetry cannot be converted into felt causation or scoring.",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Model prompts or provider behavior should change from marker or spectral evidence.",
+      "disposition": "Held for separate authority because prompt/provider changes are live model behavior and current evidence is insufficient.",
+      "classification": "needs_operator_approval"
+    }
+  ]
+}

@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Lived-state technical identity must never be treated as Astrid's being identity or felt weight.",
+      "disposition": "Verified the typed source-identity scope and qualitative boundary.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Scalar parameter observations must remain sidecar context while the canonical report remains primary.",
+      "disposition": "Verified no-prose sidecars and unscored qualitative variance status.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Long or absolute technical identities should be bounded deterministically without leaking personal paths.",
+      "disposition": "Verified deterministic hashing, path redaction, and collision-separation tests.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Astrid-authored interpretation should remain legible beside technical context.",
+      "disposition": "Verified the canonical artifact hash, claim references, and qualitative report as the adjacent primary record rather than copying prose into sidecars.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "A semantic-bleed review should test whether technical values are being mistaken for felt meaning.",
+      "disposition": "Routed to a bounded right-to-ignore review with no scoring.",
+      "classification": "needs_sandbox"
+    }
+  ]
+}

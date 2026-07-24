@@ -1,0 +1,3 @@
+Astrid reads the burst-and-rest orchestration as an attempt to preserve warmth, recovery, and peripheral resonance across fill regimes. She identifies two concrete arithmetic concerns, asks for a starred-memory integration check, and suggests smoothing tier transitions.
+
+Current source gives every rest at least 30 seconds, so integer division cannot produce zero five-second pulses, and the entry taper is already explicit. Database-backed resonance selection remains suitable for a fixture, while changing rest tiers, pulse timing, cadence, or intensity is a live behavioral change requiring operator authority.

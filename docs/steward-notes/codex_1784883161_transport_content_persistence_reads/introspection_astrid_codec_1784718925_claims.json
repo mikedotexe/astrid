@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Tail vibrancy should remain smooth across the entropy gate.",
+      "disposition": "Verified smoothstep continuity and exact boundary tests.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "High entropy without coherent content should remain visible as a separate mechanical state.",
+      "disposition": "Verified codec_vibrancy_substance_fit and gradient-aware smear evidence.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Narrative arc dimensions must remain unchanged by tail lift.",
+      "disposition": "Verified exact vector parity for dimensions 40 through 43.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Tail headroom and clamp loss should be recorded without changing gain.",
+      "disposition": "Verified overflow and representation-loss receipts.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Narrative coherence should multiply live tail vibrancy.",
+      "disposition": "Preserved as a Tier 5 codec gain and output change.",
+      "classification": "needs_operator_approval"
+    }
+  ]
+}

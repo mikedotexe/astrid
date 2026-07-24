@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Requested-token bands are coarse metadata and should not be treated as a hidden generation cap.",
+      "disposition": "Verified that bands describe requested num_predict while route, timeout, response shape, and actual result remain separate.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A known control-marker match must not imply identity, meaning, ownership, stability, or spectral state.",
+      "disposition": "Verified the typed marker boundary, bounded context receipts, and explicit no-spectral-claim tests.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "High-density short outputs should be compared with longer outputs without scoring felt quality.",
+      "disposition": "Routed to an offline fixture recording only bounded lengths, hashes, timing, and route metadata.",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Requested token bands should change with density gradient or spectral pressure.",
+      "disposition": "Held for Tier 5 operator approval because generation limits and route scheduling alter model behavior.",
+      "classification": "needs_operator_approval"
+    }
+  ]
+}

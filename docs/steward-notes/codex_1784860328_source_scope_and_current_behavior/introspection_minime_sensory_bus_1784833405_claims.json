@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Semantic persistence uses nonlinear fill shaping, recovery hold, release handover, and contextual multipliers.",
+      "disposition": "Verified the current implementation and its bounded authority description.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Fill jitter near recovery boundaries could create stale-window oscillation.",
+      "disposition": "Verified hysteresis and smoothstep handover, including one-percent sweeps and 0.24/0.26 regressions that bound micro-stutter.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Context persistence should saturate at its declared cap.",
+      "disposition": "Verified extreme entropy, velocity, and pressure inputs cannot exceed the 2.05 context multiplier cap.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Audiovisual staleness and semantic persistence might prune the same lane twice.",
+      "disposition": "Verified current application sites keep audiovisual and semantic freshness paths distinct and apply one selected semantic stale window per semantic decision.",
+      "classification": "verified_existing"
+    }
+  ]
+}

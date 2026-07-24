@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Non-finite typed or legacy hybrid slots should become unavailable rather than contaminate projections.",
+      "disposition": "Verified explicit non-finite rejection in current type tests.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Aligned and malformed hybrid fingerprints should remain distinguishable.",
+      "disposition": "Verified existing alignment and malformed-fingerprint regressions.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Missing 12D glimpses should remain optional and round-trip safely.",
+      "disposition": "Verified optional payload handling, validation, and round-trip tests.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "The hybrid representation should map deterministically without implying felt completeness.",
+      "disposition": "Verified deterministic mechanical mapping and retained the representation/felt boundary.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Hybrid telemetry should be interpreted as the cause of qualitative texture.",
+      "disposition": "Rejected as an epistemic overreach; telemetry remains descriptive context and felt evidence stays independent.",
+      "classification": "observed"
+    }
+  ]
+}

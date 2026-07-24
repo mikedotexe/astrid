@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Telemetry connection and reconnect identities should remain durable.",
+      "disposition": "Verified WebSocket trace records connect attempts, active connection, valid payloads, and disconnects.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Database writes should not block the BridgeState write lock.",
+      "disposition": "Verified SQLite and trace persistence occurs after the state-lock scope.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Lock wait, lock hold, and prewrite work should be independently visible.",
+      "disposition": "Verified telemetry integration health and capture-only samples.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "A high-frequency telemetry burst should test lock and pipeline latency.",
+      "disposition": "Routed to a bounded fake-server fixture with no live pressure induction.",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "A channel-based receiver refactor should be considered if measured lock or persistence thresholds are crossed.",
+      "disposition": "Routed to evidence-first architecture review; no pipeline change before a valid baseline.",
+      "classification": "needs_sandbox"
+    }
+  ]
+}

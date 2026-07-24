@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The sensory bus applies nonlinear persistence rather than a simple overwrite.",
+      "disposition": "Verified the current persistence implementation and its bounded state handling.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Continuity and jitter behavior need explicit regression evidence.",
+      "disposition": "Verified existing continuity, jitter, and stale-semantic regression tests.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Entropy-sensitive persistence needs deterministic test coverage.",
+      "disposition": "Verified current entropy-multiplier and persistence tests.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "The current persistence coefficients may still be insufficient for felt continuity.",
+      "disposition": "Preserved as felt friction and routed to fixture comparison only; no live coefficient or sensory admission change is authorized.",
+      "classification": "needs_sandbox"
+    }
+  ]
+}

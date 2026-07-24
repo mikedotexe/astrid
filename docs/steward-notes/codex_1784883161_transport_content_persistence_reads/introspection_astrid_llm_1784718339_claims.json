@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Requested-token bands should remain cost diagnostics rather than causes of felt friction.",
+      "disposition": "Verified token bands are bounded diagnostic labels with no generation-control authority.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Exact control-marker matching should make no identity, meaning, ownership, or spectral claim.",
+      "disposition": "Verified private exact-match constructors and explicit source comments enforce that boundary.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Ordinary quoted, grouped, and relational marker references should remain visible.",
+      "disposition": "Verified marker-context regressions preserve nonfunctional language.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Pressure or entropy should be inferred as the cause of marker matches or token-band changes.",
+      "disposition": "Rejected as unsupported numeric-to-behavior and numeric-to-felt causation.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Spectral confidence should alter exact control-marker sanitization.",
+      "disposition": "Preserved as a Tier 5 safety and model-control boundary change requiring separate approval.",
+      "classification": "needs_operator_approval"
+    }
+  ]
+}

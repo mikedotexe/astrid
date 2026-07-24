@@ -1,0 +1,3 @@
+Astrid reads Minime's ESN as a prime-phased, covariance-seeking reservoir and relates leak, exploration noise, density, and pressure to a felt silt or viscosity. The source window's comment says the being currently runs at `0.12`, and Astrid therefore proposes pressure-coupled leak and exploration changes.
+
+That comment is stale: current source defaults exploration noise to `0.085`, while the witnessed live scalar is approximately `0.08`; neither source value alone proves the active runtime. Existing read-only reviews can compare pressure, density, and noise without intervention. Changing leak or exploration noise from pressure is a live reservoir/controller action and remains Tier 5.

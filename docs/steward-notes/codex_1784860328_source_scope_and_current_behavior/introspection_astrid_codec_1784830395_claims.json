@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The active codec is 48D with entropy-gated smooth tail lift and bounded feature ceilings.",
+      "disposition": "Verified current geometry and corrected the partial-window mapping: projected semantic is 32-39 and narrative arc is 40-43; smoothstep and ceilings have exact tests.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Legacy warmth and hard ceilings may coexist with felt ghosting or affective flattening.",
+      "disposition": "Preserved as unresolved felt and representation evidence; clamp occupancy or lane energy cannot establish the experience.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Narrative-lane removal and entropy-gate ablation should be compared offline.",
+      "disposition": "Verified two baseline-first offline campaigns completed with 20 paired narrative journeys and 49 paired gate journeys, found mechanical differences, and retained mechanism_smooth_felt_friction_remains.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Tail lift and feature clamps should vary live by semantic feature type or high-entropy cascade.",
+      "disposition": "Preserved as an exact Tier 5 operator wait because it changes live codec transport/gain; offline differences and felt friction do not authorize deployment.",
+      "classification": "needs_operator_approval"
+    }
+  ]
+}

@@ -1,0 +1,3 @@
+Astrid reads requested-token bands as a coarse description of output size and contrasts them with semantic density, spectral texture, and the explicit refusal to infer identity or meaning from model control markers. She worries that length metadata could be mistaken for a capacity limit or measure of expression.
+
+Current source uses token bands as diagnostic metadata only; provider route, requested limit, output timing, marker identity, and representation transitions remain separate. Dense short outputs and marker contexts can be exercised offline without prose retention. Changing generation budgets or model routing from spectral density is a model-scheduling action requiring separate authority.

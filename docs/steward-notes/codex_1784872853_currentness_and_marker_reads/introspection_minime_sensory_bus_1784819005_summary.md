@@ -1,0 +1,3 @@
+Astrid reads Minime's 66D sensory bus as an explicit partition of video, audio, auxiliary, and 48D semantic territory, with narrative arc and shadow influence carrying longer structure. She worries that fixed audio/video staleness and shadow duration may leave ghost pressure or crowd narrative features.
+
+Current source distinguishes the fixed two-second audio/video window from the already dynamic semantic-staleness path; the older comment is not the whole implementation. Representation and codec receipts can inspect narrative-lane participation, and shadow behavior can be replayed offline. Changing audio/video decay, semantic persistence, or shadow duration is a live sensory-policy change.

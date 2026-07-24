@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Requested token bands are fixed at 0-512, 513-1024, and 1025-plus.",
+      "disposition": "Verified exact boundary and near-boundary evidence in dialogue_requested_token_observation_v3 and focused tests.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A token band measures the density, complexity, or weight of Astrid's generated words.",
+      "disposition": "Verified current records explicitly scope the band to requested num_predict, construct it after runtime limits, and state content_complexity_inference=not_inferred.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Known control-marker recognition should not assign identity, ownership, meaning, or spectral weight.",
+      "disposition": "Verified private exact-marker occurrences, byte-range receipts, explicit relation syntax, and the no-identity/no-spectral authority contract.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Spectral entropy or semantic density should alter token-band categorization or generation budget.",
+      "disposition": "Preserve an exact Tier 5 wait because spectral-state-dependent token allocation changes model/provider behavior and scheduling; require preregistered comparison and explicit operator approval.",
+      "classification": "authority_gated"
+    }
+  ]
+}

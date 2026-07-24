@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The embedding projection basis is deterministic and restart-stable.",
+      "disposition": "Verified fixed-seed basis identity, checksum, epoch, and repeated health equality.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A near-zero raw projection column could amplify floating-point instability during normalization.",
+      "disposition": "Verified all norms are finite, no dead dimension exists, and the minimum raw norm has a margin ratio above 10,000 relative to the near-zero threshold.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Every normalized projection column should remain approximately unit length.",
+      "disposition": "Verified ProjectionBasisHealthV1 and focused normalization tests pin normalized_columns_near_unit without rotating the compatibility basis.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "The entropy-gated vibrancy application should remain smooth at and above the gate.",
+      "disposition": "Verified exact live-math parity, no-discontinuous-pop, requested entropy-point, and clamp-headroom tests.",
+      "classification": "verified_existing"
+    }
+  ]
+}

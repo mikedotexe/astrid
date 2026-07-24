@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "A control marker followed by a relation across a newline may be missed.",
+      "disposition": "Verified first_word_after already skips arbitrary non-word separators, and added an exact newline-separated represents regression.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A four-level nested delimiter stack should preserve the marker and exact depth.",
+      "disposition": "Verified the bounded delimiter walker and added a regression asserting exact depth four in both aggregate and context receipt evidence.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "NUL-delimited multipart hashing can alias different byte partitions.",
+      "disposition": "Implemented deterministic u64 big-endian part-count and part-length framing, exposed the framing name in diagnostics, and added the concrete embedded-NUL collision regression.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Marker cleanup aggregation and the known-token scope need exact verification.",
+      "disposition": "Verified single-pass longest raw matching, bounded context receipts, removed/preserved aggregation, and the explicitly scoped known-marker list through the 26-test marker suite.",
+      "classification": "verified_existing"
+    }
+  ]
+}

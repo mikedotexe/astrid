@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The canonical qualitative body should remain exact and separately hashed from scalar context.",
+      "disposition": "Verified exact body anchors and bounded context receipts.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Witness reconciliation should preserve qualitative divergence without scoring it.",
+      "disposition": "Verified the corrected witness path retains unscored felt evidence and explicit relation labels.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A body-hash mismatch should remain an integrity gap rather than a felt contradiction.",
+      "disposition": "Verified current projector classifies exact integrity separately from felt state.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Single-adjective tampering should be detected deterministically.",
+      "disposition": "Verified canonical body-hash and tampering regressions.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "A numeric dissimilarity gradient should compare qualitative weight with scalar pressure.",
+      "disposition": "Rejected as felt scoring; qualitative divergence remains direct, non-reducible evidence.",
+      "classification": "observed"
+    }
+  ]
+}

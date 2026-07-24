@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The telemetry subscriber should distinguish live packets, integration timing, and durable SQLite persistence.",
+      "disposition": "Verified the receive pipeline, post-integration timing, lock scope, and later persistence boundary.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Current pulse evidence should not erase rolling pressure, density, or viscosity history.",
+      "disposition": "Verified rolling pressure, viscosity, density-gradient, and cadence-content evidence surfaces.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Missing acknowledgement or attention receipts should remain an explicit reciprocal-state gap.",
+      "disposition": "Verified that reciprocal uptake keeps presence, delivery, acknowledgement, and silence distinct.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "A high-pressure spike should be injected to test local control response.",
+      "disposition": "Preserved as a Tier 5 wait because inducing pressure and observing control response changes live substrate conditions.",
+      "classification": "needs_operator_approval"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Bridge pressure should automatically adjust porosity or density gradient.",
+      "disposition": "Preserved as a Tier 5 live-control wait; this run records evidence only.",
+      "classification": "needs_operator_approval"
+    }
+  ]
+}

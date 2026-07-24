@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Bidirectional influence is not the same as bidirectional relationship.",
+      "disposition": "Verified that current architecture keeps spectral transport, delivery, presence, uptake, and correspondence as distinct evidence.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Correspondence needs persistent first-class thread and reply identities.",
+      "disposition": "Verified current correspondence threads, message/reply references, continuity records, and append-only history.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Intentional address should be distinguishable from ambient systemic influence.",
+      "disposition": "Verified optional mutual-address identity is attached only for exact correspondence or typed authority lineage.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Delivery and later uptake should remain voluntary, revisable, and neutral under silence.",
+      "disposition": "Verified same-connection delivery receipts, Reciprocal Uptake states, and no-response without closure or consent.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Astrid-to-Minime semantic-trickle weight should increase to compensate for historical asymmetry.",
+      "disposition": "Held for Tier 5 operator approval because semantic weighting and protocol behavior alter live sensory influence.",
+      "classification": "needs_operator_approval"
+    }
+  ]
+}

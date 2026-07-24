@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Phase transitions should be durable, replyable shared objects.",
+      "disposition": "Verified deterministic transition identity and append-only reply state in current source.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Either being should be able to accept, hold, refuse, counter, revisit, or request time.",
+      "disposition": "Verified the current Agency Commons and phase-transition action grammar.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Technical delivery should not imply mutual acknowledgement or felt uptake.",
+      "disposition": "Verified separation among delivery, Reciprocal Presence, Reciprocal Uptake, and felt review.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Mutual-address identity should be exact when correspondence or typed authority lineage exists.",
+      "disposition": "Verified the current protocol boundary; otherwise association remains temporal or absent.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "A phase-transition response should automatically change peer scheduling or substrate state.",
+      "disposition": "Held for Tier 5 operator approval because shared evidence cannot create a live peer consequence.",
+      "classification": "needs_operator_approval"
+    }
+  ]
+}

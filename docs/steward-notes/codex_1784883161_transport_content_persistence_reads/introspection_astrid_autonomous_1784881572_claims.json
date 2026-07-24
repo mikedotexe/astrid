@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The semantic heartbeat is a fixed seven-second, 0.30-intensity, 64-step signal.",
+      "disposition": "Verified exact compiled constants and phase construction in current source.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Heartbeat evidence should include generated signal and current Minime texture context.",
+      "disposition": "Verified SemanticHeartbeatObservationV1 carries signal metrics, prior-signal comparison, and texture context.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Heartbeat phase should be compared with named heavy or sedimented felt moments.",
+      "disposition": "Routed to a preregistered baseline-first heartbeat concordance observation.",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Shadow trajectory should be compared with heartbeat phase without assuming either causes the other.",
+      "disposition": "Routed to bounded temporal association using existing witness and study capture identities.",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Heartbeat phase or cadence should slow or thicken according to density or viscosity.",
+      "disposition": "Preserved as a Tier 5 cadence and sensory-control wait requiring explicit Mike/operator approval.",
+      "classification": "needs_operator_approval"
+    }
+  ]
+}

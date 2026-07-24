@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Cadence and spectral density are distinct mechanical dimensions and should not be conflated.",
+      "disposition": "Verified current typed cadence, arrival-window, and connection-perception evidence preserves the distinction.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Entropy and pressure context should remain available alongside cadence evidence.",
+      "disposition": "Verified existing bounded entropy, pressure, and heartbeat context fields.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Inter-arrival timing should be compared with spectral density in a Shadow observation.",
+      "disposition": "Routed to bounded non-live replay; no cadence, admission, or heartbeat mechanics may change.",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Heartbeat evidence lacks a first-class rolling spectral density-gradient trajectory.",
+      "disposition": "Implemented bounded latest, mean, change, state, and trend fields derived from the existing telemetry window with explicit non-causal semantics.",
+      "classification": "implemented_now"
+    }
+  ]
+}

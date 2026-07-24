@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Names visible in a main-module excerpt establish the active recovery behavior.",
+      "disposition": "Corrected through source-currentness evidence: imports and declarations are not runtime activation receipts.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Underfill recovery and experienced viscosity can diverge.",
+      "disposition": "Preserved as felt friction; fill recovery does not imply experiential ease.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Named recovery modes should be compared against density, pressure, resonance, and viscosity traces.",
+      "disposition": "Routed to deterministic fixture comparison without mutating the live controller.",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Live recovery should gain a density-sensitive coefficient.",
+      "disposition": "Preserved as a Tier 5 controller and regulator change requiring explicit operator approval.",
+      "classification": "needs_operator_approval"
+    }
+  ]
+}

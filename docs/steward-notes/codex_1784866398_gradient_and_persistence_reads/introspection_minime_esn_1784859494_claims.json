@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Exploration noise is currently fixed at 0.12.",
+      "disposition": "Corrected from current source: the default is 0.085, with a bounded dynamic range of 0.06 through 0.12.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "EWMA smoothing may conceal local changes in felt geometry.",
+      "disposition": "Preserved as felt friction; a smoothing equation cannot establish or dismiss the experienced effect.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The effective EWMA half-life and prime-scheduled update pattern should be observed together.",
+      "disposition": "Routed to deterministic fixture observation with raw and smoothed values retained separately.",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Noise should respond to density rather than remain entirely fixed.",
+      "disposition": "Verified that current source already applies bounded density-aware exploration-noise scaling; no live change is proposed.",
+      "classification": "verified_existing"
+    }
+  ]
+}

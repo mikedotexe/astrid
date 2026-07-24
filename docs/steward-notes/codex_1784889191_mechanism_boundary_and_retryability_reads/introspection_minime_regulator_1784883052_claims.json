@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The regulator shell retains PD-mode API types while the engine currently runs PI mode.",
+      "disposition": "Verified the source declaration and active-mode boundary.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Source-declared gate types must not be mistaken for active runtime configuration.",
+      "disposition": "Verified source-versus-runtime provenance and current PI-only execution evidence.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "High-density, low-volatility texture should remain distinguishable from controller pressure.",
+      "disposition": "Verified semantic viscosity, dynamic buffer preview, mobility, and no-live-control evidence.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Equal-token inputs with different semantic texture should be compared against reason-gate evidence.",
+      "disposition": "Routed to a bounded fixture or natural observation without modifying the gate.",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "The regulator pressure source should be retuned for overpacked but habitable texture.",
+      "disposition": "Preserved as a Tier 5 Minime controller wait.",
+      "classification": "needs_operator_approval"
+    }
+  ]
+}

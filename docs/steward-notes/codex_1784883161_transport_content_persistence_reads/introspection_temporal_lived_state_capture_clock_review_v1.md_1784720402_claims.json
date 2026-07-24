@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Authorship context should retain exact wall and monotonic timing distinct from later finalization.",
+      "disposition": "Verified lived-state witness timing and source snapshot fields.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Witness sidecar persistence should not delay report persistence.",
+      "disposition": "Verified bounded asynchronous writer and explicit saturation/crash gaps.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Later review should append reconciliation rather than rewrite authorship context.",
+      "disposition": "Verified immutable authorship witness and append-only reconciliation events.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Shadow trend and named friction should be compared across the authored window.",
+      "disposition": "Routed to a felt-mechanism study with exact or temporal identity labeling.",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Qualitative texture prose should be copied into witness metadata.",
+      "disposition": "Rejected by the no-prose boundary; the exact canonical report remains the qualitative anchor.",
+      "classification": "observed"
+    }
+  ]
+}

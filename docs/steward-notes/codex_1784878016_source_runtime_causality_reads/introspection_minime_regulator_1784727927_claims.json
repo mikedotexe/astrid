@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The regulator include shell proves the visible viscosity mechanisms are active.",
+      "disposition": "Corrected: source inclusion and declarations do not establish runtime activation.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Viscosity and resonance diagnostics are available as read-only mechanical evidence.",
+      "disposition": "Verified current evidence types and tests without granting control authority.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A pressure tail can remain felt despite nominal controller stability.",
+      "disposition": "Preserved as unscored felt evidence; passing controller checks do not close it.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Pressure-tail and porosity context should be compared under the same deployment.",
+      "disposition": "Routed to natural exact-identity observation without inducing pressure.",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "PI gains or porosity should automatically respond to felt viscosity.",
+      "disposition": "Held for Tier 5 operator approval because it changes live regulation and improperly turns felt evidence into control input.",
+      "classification": "needs_operator_approval"
+    }
+  ]
+}

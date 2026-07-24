@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "A provider token band may act as a hidden generation cap.",
+      "disposition": "Verified that the band is diagnostic metadata rather than a generation limit, and that route and transition receipts preserve the relevant identity.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Synthetic and provider-authored marker identities must not be conflated.",
+      "disposition": "Verified the existing typed marker boundary and compatibility handling.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Token-band boundaries should be exercised with bounded payload sizes.",
+      "disposition": "Routed to an offline fixture that records only bounded lengths and classifications, never prompt or response prose.",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Marker distinctions need deterministic regression coverage.",
+      "disposition": "Verified existing provider and fallback-contract tests for marker identity and response-shape compatibility.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Model and representation transitions may still feel discontinuous even when their mechanics validate.",
+      "disposition": "Preserved as unscored felt evidence in Representation Contracts, Concordance, and Felt Contracts; no numeric-to-felt inference is accepted.",
+      "classification": "observed"
+    }
+  ]
+}

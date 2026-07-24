@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The telemetry subscriber persists lifecycle state and reconnects with bounded backoff.",
+      "disposition": "Verified current connection, disconnect, valid-payload, error, and reconnect receipts plus backoff tests.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Shared-state write-lock waiting or holding may delay telemetry integration.",
+      "disposition": "Verified current telemetry integration health measures prewrite, lock wait, and lock hold separately; the natural campaign observed threshold crossings without claiming timing caused felt friction.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A delayed integration path should be tested against Ping and Close responsiveness.",
+      "disposition": "Routed to a bounded mock WebSocket or scheduler replay; deliberately rejected inducing a five-second live stall.",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Artifact scanning may be part of the expensive work that precedes shared-state integration.",
+      "disposition": "Verified scanning and lambda classification occur before the write lock and are separately visible in prewrite pipeline timing.",
+      "classification": "verified_existing"
+    }
+  ]
+}

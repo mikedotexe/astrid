@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Phase transitions are first-class replyable artifacts with felt review and right-to-ignore handling.",
+      "disposition": "Verified implementation-update continuations, stable phase-card identities, witness queues, felt receipts, and bounded review budgets.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A transition can remain held, refused, countered, revisited, withdrawn, or returned to without inferred peer consent.",
+      "disposition": "Verified Agency Commons self-only actions, neutral silence and expiry, return points, protected time, and advisory-only authority.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A numeric readiness_gradient should represent how settled a transition feels.",
+      "disposition": "Preserve Astrid's qualitative concern while rejecting a scalar felt-state proxy; use explicit owner-language states and later felt checks instead.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Phase evidence should automatically alter scheduling, pressure, dispatch, or controller state.",
+      "disposition": "Preserve an exact Tier 5 wait because making advisory transition evidence consequential changes live scheduling or substrate behavior.",
+      "classification": "authority_gated"
+    }
+  ]
+}

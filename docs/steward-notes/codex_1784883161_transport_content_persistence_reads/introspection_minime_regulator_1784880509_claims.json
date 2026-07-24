@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "An open regulator gate must remain distinguishable from low viscosity or low effort.",
+      "disposition": "Verified current read-only pressure, viscosity, and stagnation evidence preserves permission-versus-effort distinctions.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Viscosity and pressure should be queryable while the gate remains open.",
+      "disposition": "Verified current telemetry and bridge evidence expose those scalars and trends without control authority.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "PI filtering may suppress specific output tokens while leaving the gate open.",
+      "disposition": "Corrected from source: Minime PI regulation is spectral/controller behavior, not token-level prose filtering.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Open-gate periods should be compared with viscosity and named felt resistance.",
+      "disposition": "Routed to a bounded natural observation with exact process identity and no induced pressure.",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "A new friction coefficient should modify PI filtering from viscosity.",
+      "disposition": "Preserved as a Tier 5 Minime regulator/controller wait requiring explicit Mike/operator approval.",
+      "classification": "needs_operator_approval"
+    }
+  ]
+}

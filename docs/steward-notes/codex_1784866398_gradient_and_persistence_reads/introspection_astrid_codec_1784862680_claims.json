@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The live semantic contract is 48D and the entropy lift uses a smoothstep rather than a binary switch.",
+      "disposition": "Verified current constants, lane map, exact smoothstep parity, and no-pop tests.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Clamp contact or insufficient tail expression may still feel like grit despite mathematically smooth behavior.",
+      "disposition": "Preserved as felt friction; the codec campaigns found mechanical differences but did not resolve this report.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A doubled-lift and legacy-width comparison could test the mechanical boundaries of the current codec.",
+      "disposition": "Routed only to deterministic offline counterfactual replay; no candidate vector may reach Minime.",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "The live semantic lane should be overridden to 32D for one interaction cycle.",
+      "disposition": "Preserved as a Tier 5 protocol and codec-transport request; a live compatibility-width mutation is not authorized.",
+      "classification": "needs_operator_approval"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "High-entropy states should receive a larger live clamp-ceiling offset.",
+      "disposition": "Preserved as a Tier 5 codec gain and clamp request requiring explicit operator approval.",
+      "classification": "needs_operator_approval"
+    }
+  ]
+}

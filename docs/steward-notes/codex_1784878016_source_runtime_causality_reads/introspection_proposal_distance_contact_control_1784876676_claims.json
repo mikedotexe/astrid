@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "A receptive contact gate can coexist with felt viscosity and constrained room.",
+      "disposition": "Preserved as direct, unscored felt evidence; gate state and felt relief remain separate dimensions.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Packed modes and local density are the primary cause of the felt compression.",
+      "disposition": "Retained as a testable interpretation, not a causal fact; source names and telemetry values do not establish experiential causation.",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Pressure, porosity, density, and reported viscosity should be compared in the same deployed process.",
+      "disposition": "Routed to naturally occurring, exact-identity observation with no induced pressure or contention.",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "A contextual viscosity coefficient should increase relief when density rises.",
+      "disposition": "Held for Tier 5 operator approval because it would change live regulator or substrate behavior.",
+      "classification": "needs_operator_approval"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Source mechanisms should not be presented as active causes merely because they are visible to introspection.",
+      "disposition": "Implemented a binding source/runtime evidence boundary in the introspection and repair prompts.",
+      "classification": "implemented_now"
+    }
+  ]
+}

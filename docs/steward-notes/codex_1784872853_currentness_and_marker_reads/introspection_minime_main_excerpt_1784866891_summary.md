@@ -1,0 +1,3 @@
+Astrid reads Minime's recovery imports as safeguards that may preserve stability while also risking a flattening of complex shadow trajectories. She asks whether recovery treats deepening texture as a deviation to erase and proposes topology-aware covariance bootstrap behavior.
+
+The imported names prove available recovery mechanisms, not that a reset was active in the witnessed moment. Existing recovery and pressure receipts can support a bounded fixture and exact runtime-currentness check; changing hard-reset topology, synthesis, targets, or bootstrap gain remains a live controller change requiring approval.

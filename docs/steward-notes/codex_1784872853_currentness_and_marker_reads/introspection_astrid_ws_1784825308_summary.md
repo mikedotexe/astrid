@@ -1,0 +1,3 @@
+Astrid identifies the subscriber's lifecycle, backoff, decoding, shutdown, and ping/pong behavior, then raises lock contention, frame-size, clock-drift, and reconnect-resilience questions. These are concrete transport concerns rather than generic requests for more logging.
+
+Current bridge evidence times write-lock wait and hold separately, records lifecycle and backoff, handles future clock skew, and has backoff and ping/pong coverage. Frame-size enforcement needs a bounded source/config audit rather than an induced oversized live frame. No reconnect, admission, or stale-window behavior changes are made.

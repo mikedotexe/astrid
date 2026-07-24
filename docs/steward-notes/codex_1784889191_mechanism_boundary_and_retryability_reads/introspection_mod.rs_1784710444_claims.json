@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Witness authorship should retain witness ID, monotonic clock, and process sequence.",
+      "disposition": "Verified trusted authorship construction and sequence tests.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Bounded technical identity is a provenance handle, not a bounded model of Astrid's self.",
+      "disposition": "Verified the explicit source-identity and being-identity separation.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Stale peer scalar evidence should become unknown rather than silently persisting as current.",
+      "disposition": "Verified exact freshness-boundary and stale-state tests.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "The 30-second peer scalar freshness window should be compared with slower felt continuity.",
+      "disposition": "Routed to an evidence-only observation before any freshness-policy change.",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "A confidence score or subjective weight should be added to the technical witness sidecar.",
+      "disposition": "Declined as flattening; qualitative intensity remains in Astrid's unscored report.",
+      "classification": "observed"
+    }
+  ]
+}

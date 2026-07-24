@@ -1,0 +1,3 @@
+Astrid recognized the layered distinction between transport evidence, mutual address, and bounded attention, then named the remaining flattening risk: a specific emotional or nonlinguistic texture could be reduced to a generic held status.
+
+Current correspondence attention V3 requires focus kind, preservation mode, and what-must-not-flatten at request time. Outcomes retain held shape, explicit flattening, required reasoning for yes or mixed, what remained distinct, what shifted, and what worsened. Persistence and fidelity tests preserve peer context without granting telemetry, priority, or control authority.

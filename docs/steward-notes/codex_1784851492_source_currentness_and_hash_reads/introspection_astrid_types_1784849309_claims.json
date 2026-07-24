@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The typed spectral fingerprint must preserve the legacy 32-slot geometry without precision loss.",
+      "disposition": "Verified SpectralFingerprintV1::to_legacy_slots, typed precedence, exact-width validation, and aligned/divergent integrity tests.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Hybrid coherence needs correct zero-reference and f64 epsilon behavior.",
+      "disposition": "Verified the zero/zero coherence branch, finite exact-width checks, RMS normalization, and edge-case tests in types/schema/tests.rs.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Loose shadow and stable-core JSON may hide schema drift until rendering.",
+      "disposition": "Preserve this as a schema-evolution risk while verifying current decode, compatibility, and typed-fingerprint integrity checks; no current malformed packet was evidenced.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Remaining shadow and compatibility JSON fields should become dedicated wire structs.",
+      "disposition": "Preserve an exact Tier 5 protocol/ABI wait because changing shared telemetry schemas requires consumer-first compatibility, protocol fixtures, Minime coordination, and explicit operator authorization.",
+      "classification": "authority_gated"
+    }
+  ]
+}
