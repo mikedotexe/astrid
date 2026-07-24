@@ -192,6 +192,7 @@ pub(crate) struct ControlMarkerCleanupReport {
     pub classification_scope: &'static str,
     pub excluded_meaning_scope: &'static str,
     pub accounting_basis: &'static str,
+    pub hash_framing: &'static str,
     pub original_output_sha256: String,
     pub sanitized_output_sha256: String,
     pub context_receipts: Vec<ControlMarkerContextReceiptV1>,

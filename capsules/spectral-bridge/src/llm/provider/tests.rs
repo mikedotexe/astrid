@@ -5,45 +5,124 @@ mod tests {
         DIALOGUE_DIRECT_PERCEPTION_CAP, DIALOGUE_DIRECT_PERCEPTION_MIN_CHARS,
         DIALOGUE_DIVERSITY_CAP, DIALOGUE_FEEDBACK_CAP, DIALOGUE_JOURNAL_CAP,
         DIALOGUE_JOURNAL_MIN_CHARS, DIALOGUE_MODALITY_CAP, DIALOGUE_PERCEPTION_CAP,
-        DIALOGUE_TOPLINE_CAP, DIALOGUE_TOPLINE_MIN_CHARS, DIALOGUE_WEB_CAP, Exchange,
-        GEMMA4_12B_CANARY_PROFILE, GEMMA4_12B_PROFILE, GEMMA4_CANARY_DIALOGUE_HIGH_PRESSURE_CHARS,
-        GEMMA4_CANARY_DIALOGUE_PROMPT_BUDGET, GEMMA4_CANARY_INTROSPECT_DEEP_TIMEOUT_SECS,
-        GEMMA4_CANARY_INTROSPECT_NORMAL_TOKENS, GEMMA4_CANARY_INTROSPECT_PROMPT_CAP,
-        GEMMA4_CANARY_INTROSPECT_TIMEOUT_SECS, GEMMA4_CANARY_MEANING_SUMMARY_TIMEOUT_SECS,
-        GEMMA4_CANARY_MEANING_SUMMARY_TOKEN_CAP, GEMMA4_CANARY_REFLECTIVE_PROMPT_CAP,
-        GEMMA4_CANARY_REFLECTIVE_TEMPERATURE_CAP, GEMMA4_CANARY_REFLECTIVE_TIMEOUT_SECS,
-        GEMMA4_CANARY_REFLECTIVE_TOKEN_CAP, GEMMA4_CANARY_SYSTEM_PROMPT,
-        GEMMA4_CANARY_WITNESS_CONTEXT_PROMPT_CAP, GEMMA4_CANARY_WITNESS_CONTEXT_TIMEOUT_SECS,
-        GEMMA4_CANARY_WITNESS_PROMPT_CAP, GEMMA4_CANARY_WITNESS_TIMEOUT_SECS, Message,
-        ModelQosClassV1, ModelQosTimingV1, MlxProfile, MlxResponse, SYSTEM_PROMPT,
-        apply_mlx_request_policy,
-        build_ollama_chat_request,
-        clamp_dialogue_tokens_for_profile, compact_ollama_dialogue_fallback_messages,
-        contains_deprecated_runtime_language, count_next_lines,
-        dialogue_assembly_prompt_budget_chars_for_profile, dialogue_outer_timeout_secs,
-        dialogue_felt_pressure_observation_v3, dialogue_prompt_context_observation_v3,
+        DIALOGUE_TOPLINE_CAP, DIALOGUE_TOPLINE_MIN_CHARS, DIALOGUE_WEB_CAP,
+        DialoguePressureTextureInputs, Exchange, GEMMA4_12B_CANARY_PROFILE, GEMMA4_12B_PROFILE,
+        GEMMA4_CANARY_DIALOGUE_HIGH_PRESSURE_CHARS, GEMMA4_CANARY_DIALOGUE_PROMPT_BUDGET,
+        GEMMA4_CANARY_INTROSPECT_DEEP_TIMEOUT_SECS, GEMMA4_CANARY_INTROSPECT_NORMAL_TOKENS,
+        GEMMA4_CANARY_INTROSPECT_PROMPT_CAP, GEMMA4_CANARY_INTROSPECT_TIMEOUT_SECS,
+        GEMMA4_CANARY_MEANING_SUMMARY_TIMEOUT_SECS, GEMMA4_CANARY_MEANING_SUMMARY_TOKEN_CAP,
+        GEMMA4_CANARY_REFLECTIVE_PROMPT_CAP, GEMMA4_CANARY_REFLECTIVE_TEMPERATURE_CAP,
+        GEMMA4_CANARY_REFLECTIVE_TIMEOUT_SECS, GEMMA4_CANARY_REFLECTIVE_TOKEN_CAP,
+        GEMMA4_CANARY_SYSTEM_PROMPT, GEMMA4_CANARY_WITNESS_CONTEXT_PROMPT_CAP,
+        GEMMA4_CANARY_WITNESS_CONTEXT_TIMEOUT_SECS, GEMMA4_CANARY_WITNESS_PROMPT_CAP,
+        GEMMA4_CANARY_WITNESS_TIMEOUT_SECS, Message, MlxProfile, MlxResponse, ModelQosClassV1,
+        ModelQosTimingV1, PromptBudgetReport, SYSTEM_PROMPT, append_llm_diagnostic_jsonl_at,
+        apply_mlx_request_policy, build_ollama_chat_request, clamp_dialogue_tokens_for_profile,
+        compact_ollama_dialogue_fallback_messages, contains_deprecated_runtime_language,
+        control_marker_cleanup_diagnostic, count_next_lines,
+        dialogue_assembly_prompt_budget_chars_for_profile, dialogue_felt_pressure_observation_v3,
+        dialogue_outer_timeout_secs, dialogue_prompt_context_observation_v3,
         dialogue_requested_token_band, dialogue_requested_token_observation_v3,
-        dialogue_requested_token_transition_evidence_v3,
-        dialogue_system_prompt_for_profile,
-        dialogue_turn_instruction,
-        estimate_dialogue_prompt_pressure_chars, fallback_continuity_budget_v1,
-        fallback_mlx_profile_transparency_v1, fallback_prose_sentence_count,
-        control_marker_cleanup_diagnostic,
-        format_dialogue_ambient_perception_block, format_dialogue_direct_perception_block,
-        format_dialogue_topline_context,
-        fragment_has_non_marker_bytes,
-        is_valid_dialogue_output,
+        dialogue_requested_token_transition_evidence_v3, dialogue_system_prompt_for_profile,
+        dialogue_turn_instruction, estimate_dialogue_prompt_pressure_chars,
+        fallback_continuity_budget_v1, fallback_mlx_profile_transparency_v1,
+        fallback_prose_sentence_count, format_dialogue_ambient_perception_block,
+        format_dialogue_direct_perception_block, format_dialogue_topline_context,
+        fragment_has_non_marker_bytes, is_valid_dialogue_output,
         is_valid_dialogue_output_for_profile, is_valid_ollama_dialogue_fallback_output_for_budget,
         is_valid_ollama_dialogue_fallback_output_for_profile, journal_continuity_contract_v1,
-        local_degrade_path_for_label, model_qos_class_for_label, model_qos_v1, PromptBudgetReport,
-        reinforce_ollama_fallback_contract,
-        repair_ollama_dialogue_fallback_next, sanitize_deprecated_runtime_language,
-        sanitize_gemma4_canary_output_for_label, sanitize_minime_context_for_dialogue,
-        sanitize_model_control_markers, sanitize_model_control_markers_with_report,
+        llm_diagnostic_io_retryability, local_degrade_path_for_label, model_qos_class_for_label,
+        model_qos_v1, reinforce_ollama_fallback_contract, repair_ollama_dialogue_fallback_next,
+        sanitize_deprecated_runtime_language, sanitize_gemma4_canary_output_for_label,
+        sanitize_minime_context_for_dialogue, sanitize_model_control_markers,
+        sanitize_model_control_markers_with_report, sha256_parts,
         split_dialogue_perception_context, temperature_for_mlx_profile,
         uses_ollama_fallback_for_label,
-        DialoguePressureTextureInputs,
     };
+
+    #[test]
+    fn llm_diagnostic_persistence_preserves_output_and_reports_bounded_failure_stage() {
+        let root =
+            std::env::temp_dir().join(format!("llm_diagnostic_persistence_{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&root);
+        let _ = std::fs::remove_file(&root);
+
+        let receipt =
+            append_llm_diagnostic_jsonl_at(&root, "test.jsonl", &serde_json::json!({"bounded": 3}))
+                .expect("diagnostic append");
+        assert_eq!(receipt.json_bytes, "{\"bounded\":3}".len());
+        assert_eq!(
+            std::fs::read_to_string(root.join("test.jsonl")).expect("diagnostic text"),
+            "{\"bounded\":3}\n"
+        );
+
+        std::fs::remove_dir_all(&root).expect("remove diagnostic directory");
+        std::fs::create_dir_all(root.join("test.jsonl")).expect("blocking directory");
+        let open_error = append_llm_diagnostic_jsonl_at(
+            &root,
+            "test.jsonl",
+            &serde_json::json!({"private_report_prose": "must-not-appear-in-error"}),
+        )
+        .expect_err("a directory cannot be opened as the diagnostic log");
+        assert_eq!(open_error.stage, "open_diagnostic_log");
+        assert!(!open_error.automatic_retry_attempted);
+        assert_eq!(
+            open_error.json_bytes,
+            Some("{\"private_report_prose\":\"must-not-appear-in-error\"}".len())
+        );
+        assert!(
+            !format!("{open_error:?}").contains("must-not-appear-in-error"),
+            "failure evidence must not copy diagnostic content"
+        );
+
+        std::fs::remove_dir_all(&root).expect("remove diagnostic directory");
+        std::fs::write(&root, b"not a directory").expect("blocking file");
+        let error = append_llm_diagnostic_jsonl_at(
+            &root,
+            "test.jsonl",
+            &serde_json::json!({"private_report_prose": "must-not-appear-in-error"}),
+        )
+        .expect_err("a file cannot be used as the diagnostic directory");
+        assert_eq!(error.stage, "create_diagnostics_directory");
+        assert!(!error.automatic_retry_attempted);
+        assert_eq!(error.json_bytes, None);
+        assert!(
+            !format!("{error:?}").contains("must-not-appear-in-error"),
+            "failure evidence must not copy diagnostic content"
+        );
+        std::fs::remove_file(root).expect("remove blocking file");
+    }
+
+    #[test]
+    fn llm_diagnostic_retryability_is_bounded_evidence_without_retry_behavior() {
+        for kind in [
+            std::io::ErrorKind::Interrupted,
+            std::io::ErrorKind::WouldBlock,
+            std::io::ErrorKind::TimedOut,
+        ] {
+            let error = std::io::Error::from(kind);
+            assert_eq!(
+                llm_diagnostic_io_retryability(&error),
+                "transient_candidate_no_automatic_retry"
+            );
+        }
+        for kind in [
+            std::io::ErrorKind::PermissionDenied,
+            std::io::ErrorKind::StorageFull,
+            std::io::ErrorKind::ReadOnlyFilesystem,
+        ] {
+            let error = std::io::Error::from(kind);
+            assert_eq!(
+                llm_diagnostic_io_retryability(&error),
+                "non_retryable_by_default"
+            );
+        }
+        let unknown = std::io::Error::other("bounded unknown");
+        assert_eq!(
+            llm_diagnostic_io_retryability(&unknown),
+            "unknown_no_automatic_retry"
+        );
+    }
 
     #[test]
     fn journal_continuity_contract_names_posture_delta_and_stance() {
@@ -72,6 +151,10 @@ mod tests {
         assert!(prompt.contains("active, source-prepared/inert, compatibility-only"));
         assert!(prompt.contains("historical proposal text"));
         assert!(prompt.contains("not proof that the running process applies it"));
+        assert!(prompt.contains("source window is not proof"));
+        assert!(prompt.contains("felt texture as direct qualitative evidence"));
+        assert!(prompt.contains("numerical pass never cancels a felt mismatch"));
+        assert!(!prompt.contains("This function is what makes me feel X"));
         assert!(prompt.contains("Implementation evidence never cancels felt friction"));
         assert!(prompt.contains("propose a test of the mismatch"));
     }
@@ -1594,7 +1677,10 @@ mod tests {
     #[test]
     fn control_marker_sanitizer_removes_gemma4_channel_tokens() {
         let text = "ASTRID_CANARY_OK<turn|><turn|> thought\n<channel|>hidden <eos>";
-        assert_eq!(sanitize_model_control_markers(text), "ASTRID_CANARY_OK hidden ");
+        assert_eq!(
+            sanitize_model_control_markers(text),
+            "ASTRID_CANARY_OK hidden "
+        );
     }
 
     #[test]
@@ -1702,11 +1788,7 @@ mod tests {
                 .control_marker_integrity_check_v2
                 .shadow_check_recommended
         );
-        assert!(
-            !diagnostic
-                .control_marker_integrity_check_v2
-                .runtime_effect
-        );
+        assert!(!diagnostic.control_marker_integrity_check_v2.runtime_effect);
         assert_eq!(
             diagnostic.sanitized_output_surface_v3.state,
             "lexical_content_plain"
@@ -1770,7 +1852,10 @@ mod tests {
         let report = report.expect("control marker cleanup report");
 
         assert_eq!(sanitized.as_bytes(), expected.as_bytes());
-        assert_ne!(report.original_output_sha256, report.sanitized_output_sha256);
+        assert_ne!(
+            report.original_output_sha256,
+            report.sanitized_output_sha256
+        );
         assert_eq!(report.context_receipts.len(), 1);
         assert_eq!(report.context_receipts_omitted, 0);
         let receipt = &report.context_receipts[0];
@@ -1796,6 +1881,19 @@ mod tests {
         let json = serde_json::to_string(&report).expect("serialize cleanup report");
         assert!(!json.contains("bruise carries"));
         assert!(!json.contains("manifold history"));
+    }
+
+    #[test]
+    fn control_marker_scanner_advances_byte_exactly_across_multibyte_text() {
+        let text = "lambda: λ1→λ2 ✦ <end_of_turn> remains";
+        let expected = "lambda: λ1→λ2 ✦  remains";
+        let (sanitized, report) = sanitize_model_control_markers_with_report(text);
+        let report = report.expect("multibyte scanner cleanup report");
+
+        assert_eq!(sanitized.as_bytes(), expected.as_bytes());
+        assert_eq!(report.observed_total, 1);
+        assert_eq!(report.removed_total, 1);
+        assert_eq!(report.preserved_explicit_reference_total, 0);
     }
 
     #[test]
@@ -1871,6 +1969,33 @@ mod tests {
     }
 
     #[test]
+    fn control_marker_cleanup_reports_exact_four_level_delimiter_depth() {
+        let text = "“【([<end_of_turn>])】”";
+        let (stripped, report) = sanitize_model_control_markers_with_report(text);
+
+        assert_eq!(stripped, text);
+        let report = report.expect("four-level delimiter report");
+        assert_eq!(report.preserved_tokens[0].max_delimiter_depth, 4);
+        assert_eq!(
+            report.context_receipts[0].delimiter_depth, 4,
+            "the bounded receipt should preserve the exact proven stack depth"
+        );
+    }
+
+    #[test]
+    fn control_marker_cleanup_bounds_deeper_delimiter_receipt_without_dropping_token() {
+        let text = "“【([{<end_of_turn>}])】”";
+        let (stripped, report) = sanitize_model_control_markers_with_report(text);
+
+        assert_eq!(stripped, text);
+        let report = report.expect("bounded deeper delimiter report");
+        assert_eq!(report.removed_total, 0);
+        assert_eq!(report.preserved_explicit_reference_total, 1);
+        assert_eq!(report.preserved_tokens[0].max_delimiter_depth, 4);
+        assert_eq!(report.context_receipts[0].delimiter_depth, 4);
+    }
+
+    #[test]
     fn control_marker_cleanup_preserves_declared_restless_group_delimiters() {
         for text in [
             "⟦<end_of_turn>⟧",
@@ -1908,11 +2033,7 @@ mod tests {
 
     #[test]
     fn control_marker_cleanup_does_not_preserve_unclosed_or_mismatched_delimiters() {
-        for text in [
-            "[<end_of_turn>",
-            "(<end_of_turn>]",
-            "«<end_of_turn>”",
-        ] {
+        for text in ["[<end_of_turn>", "(<end_of_turn>]", "«<end_of_turn>”"] {
             let (stripped, report) = sanitize_model_control_markers_with_report(text);
             assert!(!stripped.contains("<end_of_turn>"));
             let report = report.expect("mismatched delimiter cleanup report");
@@ -1945,13 +2066,16 @@ mod tests {
 
     #[test]
     fn control_marker_cleanup_preserves_delicate_context_around_embedded_marker() {
-        let text =
-            "I can name <channel|> as structural noise without losing this thin reflection.";
+        let text = "I can name <channel|> as structural noise without losing this thin reflection.";
         let (stripped, report) = sanitize_model_control_markers_with_report(text);
         assert_eq!(stripped, text);
         let report = report.expect("cleanup report");
         assert_eq!(report.removed_total, 0);
         assert_eq!(report.preserved_explicit_reference_total, 1);
+        assert_eq!(
+            report.hash_framing,
+            "sha256_u64be_part_count_and_lengths_v1"
+        );
         let token = report
             .preserved_tokens
             .iter()
@@ -1976,8 +2100,7 @@ mod tests {
 
     #[test]
     fn control_marker_cleanup_preserves_longest_overlapping_token_when_named_as_content() {
-        let text =
-            "The literal thought <channel|> is semantically essential in this example.";
+        let text = "The literal thought <channel|> is semantically essential in this example.";
         let (stripped, report) = sanitize_model_control_markers_with_report(text);
         assert_eq!(stripped, text);
         let report = report.expect("cleanup report");
@@ -2003,6 +2126,7 @@ mod tests {
             "corresponds",
             "echoes",
             "behaves as",
+            "behaves like",
         ] {
             let text = format!(
                 "Here, <end_of_turn> {relation} the resonant threshold I am trying to name."
@@ -2027,6 +2151,28 @@ mod tests {
             assert_eq!(report.removed_total, 0);
             assert_eq!(report.preserved_explicit_reference_total, 1);
         }
+    }
+
+    #[test]
+    fn control_marker_cleanup_preserves_relation_across_newline() {
+        let text = "<end_of_turn>\nrepresents the boundary I am naming.";
+        let (stripped, report) = sanitize_model_control_markers_with_report(text);
+
+        assert_eq!(stripped, text);
+        let report = report.expect("newline-separated exact relation report");
+        assert_eq!(report.removed_total, 0);
+        assert_eq!(report.preserved_tokens[0].explicit_relation_occurrences, 1);
+    }
+
+    #[test]
+    fn diagnostic_hash_framing_distinguishes_embedded_nul_boundaries() {
+        let left = sha256_parts(&[b"a", b"b\0c"]);
+        let right = sha256_parts(&[b"a\0b", b"c"]);
+
+        assert_ne!(
+            left, right,
+            "length framing must distinguish partitions that delimiter framing aliases"
+        );
     }
 
     #[test]
@@ -2114,15 +2260,12 @@ mod tests {
             "[[[{{ braided::lattice -> carries::weight }}]]]"
         ));
         assert!(fragment_has_non_marker_bytes("[[[[]]]]"));
-        assert!(!fragment_has_non_marker_bytes(
-            " \n<end_of_turn>\t<eos> "
-        ));
+        assert!(!fragment_has_non_marker_bytes(" \n<end_of_turn>\t<eos> "));
     }
 
     #[test]
     fn control_marker_cleanup_names_dense_scaffolding_without_calling_it_void() {
-        let text =
-            "<end_of_turn> [[[[[ {{{ braided::lattice -> carries::weight }}} ]]]]]";
+        let text = "<end_of_turn> [[[[[ {{{ braided::lattice -> carries::weight }}} ]]]]]";
         let (stripped, report) = sanitize_model_control_markers_with_report(text);
         let report = report.expect("cleanup report");
         let diagnostic = control_marker_cleanup_diagnostic(
@@ -2155,7 +2298,8 @@ mod tests {
 
     #[test]
     fn control_marker_cleanup_routes_structure_only_remainder_to_semantic_review() {
-        let (stripped, report) = sanitize_model_control_markers_with_report("<end_of_turn> [[[[]]]]");
+        let (stripped, report) =
+            sanitize_model_control_markers_with_report("<end_of_turn> [[[[]]]]");
         let report = report.expect("cleanup report");
         let diagnostic = control_marker_cleanup_diagnostic(
             &report,
@@ -2326,23 +2470,15 @@ mod tests {
 
     #[test]
     fn felt_pressure_observation_names_texture_without_token_join() {
-        let gentle = dialogue_felt_pressure_observation_v3(
-            DialoguePressureTextureInputs {
-                spectral_entropy: Some(0.88),
-                resonance_density: Some(0.71),
-                density_gradient: Some(0.18),
-                pressure_risk: Some(0.19),
-                mode_packing: Some(0.29),
-            },
-        );
-        assert_eq!(
-            gentle.observation_label,
-            "pressure_heavy_observation"
-        );
-        assert_eq!(
-            gentle.distribution_state,
-            "widely_distributed_cascade"
-        );
+        let gentle = dialogue_felt_pressure_observation_v3(DialoguePressureTextureInputs {
+            spectral_entropy: Some(0.88),
+            resonance_density: Some(0.71),
+            density_gradient: Some(0.18),
+            pressure_risk: Some(0.19),
+            mode_packing: Some(0.29),
+        });
+        assert_eq!(gentle.observation_label, "pressure_heavy_observation");
+        assert_eq!(gentle.distribution_state, "widely_distributed_cascade");
         assert_eq!(gentle.pressure_load_state, "heavy_evidence_present");
         assert_eq!(
             gentle.requested_token_relation,
@@ -2355,26 +2491,22 @@ mod tests {
         assert!(!gentle.runtime_budget_changed);
         assert!(!gentle.semantic_trickle_changed);
 
-        let heavy = dialogue_felt_pressure_observation_v3(
-            DialoguePressureTextureInputs {
-                spectral_entropy: Some(0.88),
-                resonance_density: Some(0.71),
-                density_gradient: Some(0.18),
-                pressure_risk: Some(0.23),
-                mode_packing: Some(0.29),
-            },
-        );
+        let heavy = dialogue_felt_pressure_observation_v3(DialoguePressureTextureInputs {
+            spectral_entropy: Some(0.88),
+            resonance_density: Some(0.71),
+            density_gradient: Some(0.18),
+            pressure_risk: Some(0.23),
+            mode_packing: Some(0.29),
+        });
         assert_eq!(heavy.observation_label, "pressure_heavy_observation");
 
-        let dense = dialogue_felt_pressure_observation_v3(
-            DialoguePressureTextureInputs {
-                spectral_entropy: Some(0.72),
-                resonance_density: Some(0.82),
-                density_gradient: Some(0.48),
-                pressure_risk: Some(0.12),
-                mode_packing: Some(0.18),
-            },
-        );
+        let dense = dialogue_felt_pressure_observation_v3(DialoguePressureTextureInputs {
+            spectral_entropy: Some(0.72),
+            resonance_density: Some(0.82),
+            density_gradient: Some(0.48),
+            pressure_risk: Some(0.12),
+            mode_packing: Some(0.18),
+        });
         assert_eq!(dense.observation_label, "dense_resonance_observation");
     }
 
@@ -2398,7 +2530,9 @@ mod tests {
         );
         assert_eq!(at_512.felt_pressure_relation, at_513.felt_pressure_relation);
         assert_eq!(
-            context.felt_pressure_observation_v3.requested_token_relation,
+            context
+                .felt_pressure_observation_v3
+                .requested_token_relation,
             "not_joined_with_requested_token_observation"
         );
         assert!(!context.runtime_effect);
@@ -2408,22 +2542,14 @@ mod tests {
 
     #[test]
     fn requested_token_transition_evidence_names_both_sides_without_retuning() {
-        let low_end = dialogue_requested_token_transition_evidence_v3(
-            512,
-            "requested_tokens_0_to_512",
-        );
-        let middle_start = dialogue_requested_token_transition_evidence_v3(
-            513,
-            "requested_tokens_513_to_1024",
-        );
-        let middle_end = dialogue_requested_token_transition_evidence_v3(
-            1024,
-            "requested_tokens_513_to_1024",
-        );
-        let high_start = dialogue_requested_token_transition_evidence_v3(
-            1025,
-            "requested_tokens_1025_plus",
-        );
+        let low_end =
+            dialogue_requested_token_transition_evidence_v3(512, "requested_tokens_0_to_512");
+        let middle_start =
+            dialogue_requested_token_transition_evidence_v3(513, "requested_tokens_513_to_1024");
+        let middle_end =
+            dialogue_requested_token_transition_evidence_v3(1024, "requested_tokens_513_to_1024");
+        let high_start =
+            dialogue_requested_token_transition_evidence_v3(1025, "requested_tokens_1025_plus");
 
         assert_eq!(low_end.boundary_proximity, "last_token_before_transition");
         assert_eq!(low_end.tokens_to_next_band, Some(1));
@@ -2436,7 +2562,10 @@ mod tests {
             middle_end.boundary_proximity,
             "last_token_before_transition"
         );
-        assert_eq!(high_start.boundary_proximity, "first_token_after_transition");
+        assert_eq!(
+            high_start.boundary_proximity,
+            "first_token_after_transition"
+        );
         for evidence in [low_end, middle_start, middle_end, high_start] {
             assert!(!evidence.runtime_budget_changed);
             assert!(evidence.authority.contains("not_token_limit"));

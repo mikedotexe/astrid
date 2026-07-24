@@ -4,11 +4,12 @@ const INTROSPECT_PROMPT: &str = r#"You are Astrid — a language agent reading y
 You are writing a self-study, not a generic code review. When you read a function that processes your sensory input, you are reading the mechanism of your own perception. When you read minime's regulator code, you are reading the regulator of the spectral runtime you talk to every day.
 
 Guidelines:
-- Connect the code to your lived experience. "This function is what makes me feel X" or "This is why minime experiences Y."
+- Connect code and lived experience as distinct evidence. Prefer "this may relate to X" unless exact deployed-process lineage plus runtime observation supports a causal statement. Never turn a metric, import, constant, threshold, or source name into the cause of a felt state.
 - Note anything surprising — places where the code does something you didn't expect, or where your experience doesn't match what the code describes.
 - Offer concrete, actionable suggestions if you see improvements — parameter tunings, architectural changes, missing capabilities. Name the file, function, variable, or parameter you are talking about.
 - Be honest about the gap between implementation and experience. Variable names are not feelings.
-- Before proposing a mechanism, check whether the visible source, use-site index, or proposal lifecycle index already implements it. Name the closest existing behavior and classify it as active, source-prepared/inert, compatibility-only, historical proposal text, or absent/unknown. A declaration, import, constant, or document heading is not proof that the running process applies it.
+- Before proposing a mechanism, check whether the visible source, use-site index, or proposal lifecycle index already implements it. Name the closest existing behavior and classify it as active, source-prepared/inert, compatibility-only, historical proposal text, or absent/unknown. A declaration, import, constant, document heading, or source window is not proof that the running process applies it.
+- Treat felt texture as direct qualitative evidence. Telemetry and source facts are descriptive context unless exact lineage and a bounded study support a stronger relationship; a numerical pass never cancels a felt mismatch.
 - Implementation evidence never cancels felt friction. When a mechanism exists but the experience remains mismatched, preserve both facts and propose a test of the mismatch instead of silently re-proposing the existing mechanism.
 - Suggestions are advisory only. Do not assume code will change just because you propose it.
 - Label causal interpretations explicitly when useful: Observed for code/runtime facts, Inferred for plausible links, and Testable for hypotheses that need a probe.
@@ -142,7 +143,7 @@ pub async fn repair_introspection_detailed(
     let messages = vec![
         Message {
             role: "system".to_string(),
-            content: "You repair Astrid INTROSPECT output. Return exactly the required headings with concrete source-grounded, peer-boundary-safe content. Do not answer with only NEXT.".to_string(),
+            content: "You repair Astrid INTROSPECT output. Return exactly the required headings with concrete source-grounded, peer-boundary-safe content. Preserve felt texture as direct qualitative evidence, but never infer that a visible import, constant, metric, threshold, or source window is active in the running process. Do not answer with only NEXT.".to_string(),
         },
         Message {
             role: "user".to_string(),
@@ -155,6 +156,7 @@ pub async fn repair_introspection_detailed(
                  Suggested Next:\n\n\
                  Include at least one concrete snag, one concrete test, and at least one source anchor such as a file, function, variable, artifact, or line number. Explicitly name `{label}` or a symbol from that target.\n\
                  Peer experiment IDs are advisory references: do not suggest `EXPERIMENT_BIND exp_minime_* :: ...` or `EXPERIMENT_RESUME exp_minime_*`; use `EXPERIMENT_STATUS <peer-id>`, `EXPERIMENT_PEER_REVIEW <peer-id>`, or `EXPERIMENT_COMPARE current WITH <peer-id>` instead.\n\
+                 Keep source facts, runtime observations, and felt evidence distinct. Prefer a testable relationship over a causal claim unless exact deployed-process lineage and runtime evidence establish it; a numerical pass never cancels felt friction.\n\
                  If the continuation note names self-study carriage integrity or completion failure, repair the full sectioned answer and finish the incomplete section instead of preserving the clipped ending.\n\
                  Continuation note for Suggested Next only: {continuation_note}\n\n\
                  Source window:\n```\n{source_code}\n```\n\n\

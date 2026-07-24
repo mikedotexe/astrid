@@ -28,6 +28,7 @@ include!("provider/fallback_evidence.rs");
 include!("provider/fallback_gradient.rs");
 include!("provider/fallback_rendering.rs");
 include!("provider/fallback_contracts.rs");
+include!("provider/diagnostic_persistence.rs");
 include!("provider/dialogue_runtime.rs");
 include!("provider/research.rs");
 include!("provider/embeddings.rs");

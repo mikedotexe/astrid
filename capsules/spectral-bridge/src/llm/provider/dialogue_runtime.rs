@@ -1,24 +1,3 @@
-fn append_llm_diagnostic_jsonl(file_name: &str, value: &impl Serialize) {
-    let dir = bridge_paths().bridge_workspace().join("diagnostics");
-    if std::fs::create_dir_all(&dir).is_err() {
-        return;
-    }
-    let path = dir.join(file_name);
-    let Ok(line) = serde_json::to_string(value) else {
-        return;
-    };
-    let mut file = match std::fs::OpenOptions::new()
-        .create(true)
-        .append(true)
-        .open(path)
-    {
-        Ok(file) => file,
-        Err(_) => return,
-    };
-    use std::io::Write as _;
-    let _ = writeln!(file, "{line}");
-}
-
 fn dialogue_requested_token_band(num_predict: u32) -> &'static str {
     if num_predict > 1024 {
         "requested_tokens_1025_plus"
@@ -257,9 +236,12 @@ const MAX_CONTROL_MARKER_CONTEXT_RECEIPTS: usize = 32;
 
 fn sha256_parts(parts: &[&[u8]]) -> String {
     let mut hasher = Sha256::new();
+    let part_count = u64::try_from(parts.len()).expect("hash part count fits in u64");
+    hasher.update(part_count.to_be_bytes());
     for part in parts {
+        let part_len = u64::try_from(part.len()).expect("hash part length fits in u64");
+        hasher.update(part_len.to_be_bytes());
         hasher.update(part);
-        hasher.update([0]);
     }
     format!("{:x}", hasher.finalize())
 }
@@ -500,6 +482,7 @@ pub(crate) fn sanitize_model_control_markers_with_report(
             excluded_meaning_scope:
                 "all_non_marker_bytes_are_outside_cleanup_classification_identity_ownership_meaning_and_spectral_weight",
             accounting_basis: "single_pass_longest_raw_control_marker_match_with_bounded_exact_reference_syntax_preservation_no_second_order_marker_creation",
+            hash_framing: "sha256_u64be_part_count_and_lengths_v1",
             original_output_sha256,
             sanitized_output_sha256,
             context_receipts,
