@@ -1280,10 +1280,19 @@ def _derive_status(record: dict[str, Any]) -> None:
     record["proof_missing_claims"] = []
 
 
+def _evidence_identity(evidence: dict[str, Any]) -> tuple[str, str, str]:
+    return (
+        str(evidence.get("kind") or ""),
+        str(evidence.get("target") or ""),
+        str(evidence.get("note") or ""),
+    )
+
+
 def replay_events(state_dir: Path) -> dict[str, Any]:
     events, corrupt = read_events(state_dir)
     artifacts: dict[str, dict[str, Any]] = {}
     work_items: dict[str, dict[str, Any]] = {}
+    evidence_identities: dict[tuple[str, str], set[tuple[str, str, str]]] = {}
     cutoff: dict[str, Any] = {}
     for event in events:
         event_type = event.get("event_type")
@@ -1311,6 +1320,11 @@ def replay_events(state_dir: Path) -> dict[str, Any]:
             if artifact_id not in artifacts:
                 artifacts[artifact_id] = {"introspection_id": artifact_id, **_empty_review_fields()}
             record = artifacts[artifact_id]
+            prior_claims = (
+                record.get("claims") if isinstance(record.get("claims"), dict) else {}
+            )
+            for prior_claim_id in prior_claims:
+                evidence_identities.pop((artifact_id, str(prior_claim_id)), None)
             record["full_read"] = True
             record["full_read_count"] = int(record.get("full_read_count") or 0) + 1
             record.setdefault("read_events", []).append(
@@ -1360,7 +1374,12 @@ def replay_events(state_dir: Path) -> dict[str, Any]:
             )
             evidence = event.get("evidence")
             if isinstance(evidence, dict):
-                claim.setdefault("evidence", []).append(evidence)
+                identity_key = (artifact_id, claim_id)
+                identity = _evidence_identity(evidence)
+                seen = evidence_identities.setdefault(identity_key, set())
+                if identity not in seen:
+                    claim.setdefault("evidence", []).append(evidence)
+                    seen.add(identity)
         elif event_type == "closed":
             artifact_id = str(event.get("introspection_id") or "")
             if artifact_id not in artifacts:
@@ -2621,6 +2640,43 @@ def link_evidence_batch(
             )
         expanded_rows.extend({**row, "claim_id": claim_id} for claim_id in claim_ids)
 
+    existing_identities = {
+        (
+            introspection_id,
+            claim_id,
+            *_evidence_identity(evidence),
+        )
+        for introspection_id, artifact in artifacts.items()
+        if isinstance(artifact, dict)
+        for claim_id, claim in (
+            artifact.get("claims").items()
+            if isinstance(artifact.get("claims"), dict)
+            else ()
+        )
+        if isinstance(claim, dict)
+        for evidence in (
+            claim.get("evidence")
+            if isinstance(claim.get("evidence"), list)
+            else ()
+        )
+        if isinstance(evidence, dict)
+    }
+    new_rows: list[dict[str, str]] = []
+    skipped_existing = 0
+    for row in expanded_rows:
+        identity = (
+            row["introspection_id"],
+            row["claim_id"],
+            row["kind"],
+            row["target"],
+            row["note"],
+        )
+        if identity in existing_identities:
+            skipped_existing += 1
+            continue
+        existing_identities.add(identity)
+        new_rows.append(row)
+
     events = [
         evidence_event(
             row["introspection_id"],
@@ -2629,10 +2685,10 @@ def link_evidence_batch(
             row["target"],
             row["note"],
         )
-        for row in expanded_rows
+        for row in new_rows
     ]
     materialized = status
-    if write:
+    if write and events:
         append_events(state_dir, events)
         materialized = replay_events(state_dir)
         write_materialized_status(state_dir, materialized)
@@ -2648,6 +2704,8 @@ def link_evidence_batch(
         "write": write,
         "events_appended": len(events) if write else 0,
         "link_count": len(expanded_rows),
+        "new_link_count": len(new_rows),
+        "existing_link_count": skipped_existing,
         "batch_row_count": len(rows),
         "introspection_count": len(touched_ids),
         "artifact_statuses": [
@@ -2762,7 +2820,7 @@ def work_item_from_claim(artifact: dict[str, Any], claim: dict[str, Any]) -> dic
     tier = agency_tier_for_claim(claim_summary)
     classification = str(claim.get("classification") or "").strip()
     claim_authority = str(claim.get("authority") or "").strip()
-    if classification == "tier_5_wait":
+    if classification in {"tier_5_wait", "needs_operator_approval"}:
         tier = 5
     elif classification == "authority_gated":
         # A structured approval disposition outranks heuristic wording. Honor
@@ -2772,14 +2830,13 @@ def work_item_from_claim(artifact: dict[str, Any], claim: dict[str, Any]) -> dic
         tier = disposition_tier if disposition_tier >= 4 else 5
     elif classification in {"needs_sandbox", "sandbox_routed"}:
         tier = 3
-    elif classification == "verified_existing" and _is_explicit_verification_claim(
+    elif classification in {"verified_existing", "observed"} and _is_explicit_verification_claim(
         claim_disposition
     ):
-        # Historical reports often phrase a desired property as "should
-        # change" even when the grounded disposition verifies that later
-        # source already implements it. Honor that explicit verification
-        # disposition without letting a bare/mislabeled verified claim mask a
-        # genuine live mutation request.
+        # Historical reports and observed co-occurrences can name live-control
+        # nouns without asking to change them. Honor an explicit grounded
+        # verification or observation disposition without letting a bare or
+        # mislabeled claim mask a genuine live mutation request.
         tier = agency_tier_for_claim(claim_disposition)
     created = now_s()
     title = bounded_text(claim_summary, limit=90) or f"{introspection_id}:{claim_id}"
@@ -3386,6 +3443,9 @@ class IntrospectionAddressingAuditTests(unittest.TestCase):
         body = "Observed:\n- exact body\n\nSuggested Next:\n- continue\n"
         text = (
             "=== ASTRID INTROSPECTION ===\n"
+            "Source window: lines 1-400 of 1204\n"
+            "Source evidence scope: partial_window_unseen_source_not_assessed\n"
+            "Source activation boundary: source_read_not_runtime_activation_proof\n"
             "Timestamp: 1234567890\n"
             f"Lived-state witness: lsw_{'a' * 64}\n"
             "Fill: 68.0%\n\n"
@@ -3393,6 +3453,15 @@ class IntrospectionAddressingAuditTests(unittest.TestCase):
         )
         metadata = header_metadata(text)
         self.assertEqual(metadata["lived_state_witness"], f"lsw_{'a' * 64}")
+        self.assertEqual(metadata["source_window"], "lines 1-400 of 1204")
+        self.assertEqual(
+            metadata["source_evidence_scope"],
+            "partial_window_unseen_source_not_assessed",
+        )
+        self.assertEqual(
+            metadata["source_activation_boundary"],
+            "source_read_not_runtime_activation_proof",
+        )
         self.assertEqual(text.split("\n\n", 1)[1], body)
         self.assertTrue(section_presence(text)["observed"])
 
@@ -3567,6 +3636,61 @@ class IntrospectionAddressingAuditTests(unittest.TestCase):
             )
             status = replay_events(state)
             self.assertTrue(status["artifacts"][artifact["introspection_id"]]["fully_addressed"])
+
+    def test_replay_preserves_duplicate_evidence_events_but_materializes_one_link(
+        self,
+    ) -> None:
+        import tempfile
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            state = root / "state"
+            summary = root / "summary.txt"
+            claims = root / "claims.json"
+            summary.write_text("read carefully")
+            claims.write_text(
+                json.dumps(
+                    {"claims": [{"claim_id": "c001", "summary": "observe thing"}]}
+                )
+            )
+            artifact = {
+                "introspection_id": "introspection_astrid_ws_2",
+                "filename": "introspection_astrid_ws_2.txt",
+                "timestamp": 2,
+                "artifact_kind": "canonical_introspection",
+                "source_family": "astrid_ws",
+                "path": "/tmp/introspection_astrid_ws_2.txt",
+                "sha256": "def",
+                "candidate_evidence": [],
+                "excerpt": "x",
+            }
+            duplicate_links = [
+                evidence_event(
+                    artifact["introspection_id"],
+                    "c001",
+                    "test",
+                    "test::telemetry",
+                    "bounded verification",
+                )
+                for _ in range(2)
+            ]
+            append_events(
+                state,
+                [
+                    event_inventory_artifact(artifact),
+                    record_read_event(
+                        artifact["introspection_id"], "codex", summary, claims
+                    ),
+                    *duplicate_links,
+                ],
+            )
+
+            events, corrupt = read_events(state)
+            replayed = replay_events(state)["artifacts"][artifact["introspection_id"]]
+
+        self.assertEqual(corrupt, 0)
+        self.assertEqual(len(events), 4)
+        self.assertEqual(len(replayed["claims"]["c001"]["evidence"]), 1)
 
     def test_candidate_evidence_does_not_auto_close(self) -> None:
         import tempfile
@@ -4306,6 +4430,21 @@ class IntrospectionAddressingAuditTests(unittest.TestCase):
                 "classification": "authority_gated",
             },
         )
+        explicit_operator_item = work_item_from_claim(
+            artifact,
+            {
+                "claim_id": "c004",
+                "summary": (
+                    "BridgeState should add a persistence coefficient to smooth "
+                    "tail vibrancy."
+                ),
+                "disposition": (
+                    "Preserved as an exact Tier 5 operator wait because it changes "
+                    "live telemetry interpretation or state dynamics."
+                ),
+                "classification": "needs_operator_approval",
+            },
+        )
 
         self.assertEqual(sandbox_item["agency_tier"], 3)
         self.assertEqual(sandbox_item["status"], "needs_sandbox")
@@ -4316,6 +4455,9 @@ class IntrospectionAddressingAuditTests(unittest.TestCase):
         self.assertEqual(steward_item["agency_tier"], 4)
         self.assertEqual(steward_item["status"], "needs_steward_grant")
         self.assertEqual(steward_item["blocked_by"], "steward_grant")
+        self.assertEqual(explicit_operator_item["agency_tier"], 5)
+        self.assertEqual(explicit_operator_item["status"], "needs_operator_approval")
+        self.assertEqual(explicit_operator_item["blocked_by"], "operator_approval")
 
     def test_verified_existing_disposition_prevents_historical_should_change_overclassification(
         self,
@@ -4357,6 +4499,44 @@ class IntrospectionAddressingAuditTests(unittest.TestCase):
             verified_item["claim_disposition"],
             "verify the current smoothstep taper and continuity tests without changing live sensory behavior",
         )
+        self.assertEqual(mislabeled_live_item["agency_tier"], 5)
+        self.assertEqual(mislabeled_live_item["status"], "needs_operator_approval")
+
+    def test_observed_disposition_prevents_cooccurrence_overclassification(self) -> None:
+        artifact = {
+            "introspection_id": "introspection_proposal_distance_contact_control_1",
+            "filename": "introspection_proposal_distance_contact_control_1.txt",
+            "source_family": "proposal_distance_contact_control",
+            "path": "/tmp/introspection_proposal_distance_contact_control_1.txt",
+        }
+        observed_item = work_item_from_claim(
+            artifact,
+            {
+                "claim_id": "c001",
+                "summary": (
+                    "Overpacked pressure and reduced distinguishability coexist "
+                    "with felt compression and insufficient contact."
+                ),
+                "disposition": (
+                    "Preserve Astrid's felt report and current metrics as "
+                    "co-observation; containment, entropy, and contact remain "
+                    "distinct mechanisms."
+                ),
+                "classification": "observed",
+            },
+        )
+        mislabeled_live_item = work_item_from_claim(
+            artifact,
+            {
+                "claim_id": "c002",
+                "summary": "Apply a live pressure control change.",
+                "disposition": "observe after applying the live pressure control change",
+                "classification": "observed",
+            },
+        )
+
+        self.assertEqual(observed_item["agency_tier"], 1)
+        self.assertEqual(observed_item["status"], "verified_existing")
         self.assertEqual(mislabeled_live_item["agency_tier"], 5)
         self.assertEqual(mislabeled_live_item["status"], "needs_operator_approval")
 
@@ -4711,6 +4891,79 @@ class IntrospectionAddressingAuditTests(unittest.TestCase):
         self.assertEqual(payload["introspection_count"], 1)
         self.assertTrue(payload["artifact_statuses"][0]["fully_addressed"])
         self.assertEqual(payload["artifact_statuses"][0]["proof_missing_claims"], [])
+
+    def test_evidence_batch_skips_existing_rows_when_manifest_grows(self) -> None:
+        import tempfile
+        from unittest import mock
+
+        existing = {
+            "kind": "test",
+            "target": "test::telemetry",
+            "note": "bounded verification",
+            "ts": 1.0,
+        }
+        status = {
+            "artifacts": {
+                "introspection_astrid_ws_1": {
+                    "status": "triaged_pending_action",
+                    "fully_addressed": False,
+                    "proof_missing_claims": [],
+                    "claims": {
+                        "c001": {"evidence": [existing]},
+                        "c002": {"evidence": [existing]},
+                    },
+                }
+            }
+        }
+        replayed = {
+            "artifacts": {
+                "introspection_astrid_ws_1": {
+                    "status": "addressed_change",
+                    "fully_addressed": True,
+                    "proof_missing_claims": [],
+                    "claims": {"c001": {}, "c002": {}},
+                }
+            }
+        }
+        links = {
+            "links": [
+                {
+                    "introspection_id": "introspection_astrid_ws_1",
+                    "claim_id": "*",
+                    "kind": "test",
+                    "target": "test::telemetry",
+                    "note": "bounded verification",
+                },
+                {
+                    "introspection_id": "introspection_astrid_ws_1",
+                    "claim_id": "c001",
+                    "kind": "code",
+                    "target": "src/ws.rs",
+                    "note": "new source evidence",
+                },
+            ]
+        }
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            state = Path(tmpdir) / "state"
+            links_file = Path(tmpdir) / "links.json"
+            links_file.write_text(json.dumps(links), encoding="utf-8")
+            with (
+                mock.patch(f"{__name__}.load_or_replay_status", return_value=status),
+                mock.patch(f"{__name__}.append_events") as append_mock,
+                mock.patch(f"{__name__}.replay_events", return_value=replayed) as replay_mock,
+                mock.patch(f"{__name__}.write_materialized_status") as write_status_mock,
+            ):
+                payload = link_evidence_batch(state, links_file, write=True)
+
+        append_mock.assert_called_once()
+        self.assertEqual(len(append_mock.call_args.args[1]), 1)
+        replay_mock.assert_called_once_with(state)
+        write_status_mock.assert_called_once_with(state, replayed)
+        self.assertEqual(payload["events_appended"], 1)
+        self.assertEqual(payload["link_count"], 3)
+        self.assertEqual(payload["new_link_count"], 1)
+        self.assertEqual(payload["existing_link_count"], 2)
 
     def test_close_batch_appends_and_materializes_once(self) -> None:
         import tempfile
