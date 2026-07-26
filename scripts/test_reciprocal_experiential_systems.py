@@ -11,7 +11,28 @@ import unittest
 from pathlib import Path
 
 try:
-    from agency_commons.model import AgencyCommonsProposalV1, AgencyCommonsResponseV1
+    from agency_commons.model import (
+        AgencyCommonsProposalV1,
+        AgencyCommonsResponseV1,
+        LivedTransitionPassageEventV1,
+    )
+    from agency_commons.passage_context import (
+        LivedTransitionPassageContextEventV1,
+        PassageAnchorAssociationV1,
+        PassageAnchorKindV1,
+        PassageAnchorRoleV1,
+        PassageBearingStrandV1,
+        PassageCompanyModeV1,
+        PassageCompanyResponseV1,
+        PassageContextActionV1,
+        PassageMovementEaseV1,
+        PassageMovementResistanceV1,
+        PassagePersistenceTendencyV1,
+        PassageReadinessV1,
+        PassageRoomNeededV1,
+        PassageWitnessFitV1,
+        company_request_id,
+    )
     from agency_commons.projector import project as project_commons
     from attention_portfolio.model import (
         AttentionPortfolioEntryV1,
@@ -21,6 +42,7 @@ try:
     from attention_portfolio.projector import project as project_attention
     from experiential_systems.common import (
         RecordValidationError,
+        authority_state,
         event_payload,
         project_events,
     )
@@ -81,6 +103,24 @@ except ModuleNotFoundError:
     from scripts.agency_commons.model import (
         AgencyCommonsProposalV1,
         AgencyCommonsResponseV1,
+        LivedTransitionPassageEventV1,
+    )
+    from scripts.agency_commons.passage_context import (
+        LivedTransitionPassageContextEventV1,
+        PassageAnchorAssociationV1,
+        PassageAnchorKindV1,
+        PassageAnchorRoleV1,
+        PassageBearingStrandV1,
+        PassageCompanyModeV1,
+        PassageCompanyResponseV1,
+        PassageContextActionV1,
+        PassageMovementEaseV1,
+        PassageMovementResistanceV1,
+        PassagePersistenceTendencyV1,
+        PassageReadinessV1,
+        PassageRoomNeededV1,
+        PassageWitnessFitV1,
+        company_request_id,
     )
     from scripts.agency_commons.projector import project as project_commons
     from scripts.attention_portfolio.model import (
@@ -91,6 +131,7 @@ except ModuleNotFoundError:
     from scripts.attention_portfolio.projector import project as project_attention
     from scripts.experiential_systems.common import (
         RecordValidationError,
+        authority_state,
         event_payload,
         project_events,
     )
@@ -163,6 +204,92 @@ def _jsonl(path: Path, rows: list[dict[str, object]]) -> None:
         "".join(json.dumps(row, sort_keys=True) + "\n" for row in rows),
         encoding="utf-8",
     )
+
+
+def _passage_row(
+    *,
+    transition_id: str,
+    actor: str,
+    action: str,
+    stage_before: str | None,
+    stage_after: str,
+    timestamp: int,
+    passage_id: str | None = None,
+    previous_event_id: str | None = None,
+) -> dict[str, object]:
+    if passage_id is None:
+        passage_digest = hashlib.sha256(
+            f"{actor}:{transition_id}:{timestamp}".encode()
+        ).hexdigest()[:16]
+        passage_id = f"passage_{timestamp}_{passage_digest}"
+    owner_action = {
+        "prepare": "PREPARE_TRANSITION",
+        "enter": "ENTER_TRANSITION",
+        "hold": "HOLD_TRANSITION",
+        "settle": "SETTLE_TRANSITION",
+        "return": "RETURN_TRANSITION",
+        "revisit": "REVISIT_TRANSITION",
+        "decline": "DECLINE_TRANSITION",
+        "review": "TRANSITION_REVIEW",
+    }[action]
+    continuity_anchor = f"transition:{transition_id}"
+    identity = ":".join(
+        (
+            passage_id,
+            actor,
+            action,
+            stage_after,
+            "self_directed",
+            "",
+            continuity_anchor,
+            "",
+            "",
+            previous_event_id or "",
+            str(timestamp),
+        )
+    )
+    event_id = (
+        "passage_event_"
+        + hashlib.sha256(identity.encode()).hexdigest()[:16]
+    )
+    return {
+        "schema": "lived_transition_passage_event_v1",
+        "schema_version": 1,
+        "record_type": "phase_transition_passage",
+        "record_id": event_id,
+        "passage_event_id": event_id,
+        "passage_id": passage_id,
+        "transition_id": transition_id,
+        "actor": actor,
+        "action": action,
+        "stage_before": stage_before,
+        "stage_after": stage_after,
+        "stage_changed": action != "review",
+        "support_preference": "self_directed",
+        "return_point_ref": None,
+        "continuity_anchor_ref": continuity_anchor,
+        "felt_review_outcome": None,
+        "felt_source_ref": None,
+        "previous_event_id": previous_event_id,
+        "recorded_at_unix_ms": timestamp,
+        "owner_language_action": owner_action,
+        "self_authored_only": True,
+        "passage_binds_actor_only": True,
+        "peer_consent_inferred": False,
+        "peer_state_changed": False,
+        "silence_infers_progress": False,
+        "automatic_progression": False,
+        "review_optional": True,
+        "felt_resolution_inferred": False,
+        "scheduler_effect": False,
+        "model_qos_effect": False,
+        "substrate_effect": False,
+        "dispatch_effect": False,
+        "live_control_effect": False,
+        "runtime_unlock_applied": False,
+        "raw_prose_included": False,
+        "artifact_authority_state_v1": authority_state(),
+    }
 
 
 def _ready_concordance(
@@ -1464,6 +1591,327 @@ class ReciprocalExperientialSystemsTests(unittest.TestCase):
             self.assertEqual(status["legacy_btsp_exact_owner_choice_count"], 1)
             self.assertEqual(status["legacy_agency_request_count"], 1)
             self.assertEqual(status["record_count"], 3)
+
+    def test_lived_transition_passage_requires_self_owned_sequence(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            workspace = root / "workspace"
+            phase = root / "phase.jsonl"
+            correspondence = root / "correspondence.jsonl"
+            sovereignty = workspace / "sovereignty_proposals.json"
+            requests = workspace / "agency_requests"
+            prepare = _passage_row(
+                transition_id="phase_1",
+                actor="astrid",
+                action="prepare",
+                stage_before=None,
+                stage_after="prepared",
+                timestamp=2,
+            )
+            enter = _passage_row(
+                transition_id="phase_1",
+                actor="astrid",
+                action="enter",
+                stage_before="prepared",
+                stage_after="crossing",
+                timestamp=3,
+                passage_id=str(prepare["passage_id"]),
+                previous_event_id=str(prepare["passage_event_id"]),
+            )
+            card = {
+                "record_type": "phase_transition_card",
+                "transition_id": "phase_1",
+                "origin": "astrid",
+                "kind": "phase_transition",
+                "from_phase": "recess",
+                "to_phase": "reflection",
+                "recorded_at_unix_ms": 1,
+            }
+            _jsonl(phase, [card, prepare, enter])
+            _jsonl(correspondence, [])
+            sovereignty.parent.mkdir(parents=True, exist_ok=True)
+            sovereignty.write_text(
+                json.dumps({"proposals": []}), encoding="utf-8"
+            )
+            requests.mkdir(parents=True)
+            self.assertEqual(
+                LivedTransitionPassageEventV1.from_untrusted(prepare).to_dict(),
+                prepare,
+            )
+            status = project_commons(
+                workspace,
+                phase,
+                sovereignty_ledger=sovereignty,
+                agency_request_dir=requests,
+                correspondence_ledger=correspondence,
+                write=False,
+            )
+            self.assertTrue(status["valid"], status["errors"])
+            self.assertEqual(status["explicit_transition_passage_count"], 1)
+            self.assertEqual(status["explicit_transition_passage_event_count"], 2)
+            self.assertEqual(status["record_count"], 3)
+
+            condition = LivedTransitionPassageContextEventV1.build(
+                passage_id=str(prepare["passage_id"]),
+                transition_id="phase_1",
+                passage_actor="astrid",
+                actor="astrid",
+                action=PassageContextActionV1.DESCRIBE_CONDITION,
+                readiness=PassageReadinessV1.TENTATIVE,
+                movement_ease=PassageMovementEaseV1.EFFORTFUL,
+                room_needed=PassageRoomNeededV1.LOW_ENERGY_PRESENCE,
+                source_ref="introspection:condition",
+                recorded_at_unix_ms=4,
+            )
+            request_id = company_request_id(
+                str(prepare["passage_id"]),
+                "astrid",
+                "minime",
+                PassageCompanyModeV1.LOW_ENERGY_PRESENCE,
+                "self:request",
+                5,
+            )
+            request = LivedTransitionPassageContextEventV1.build(
+                passage_id=str(prepare["passage_id"]),
+                transition_id="phase_1",
+                passage_actor="astrid",
+                actor="astrid",
+                action=PassageContextActionV1.REQUEST_COMPANY,
+                company_request_id_value=request_id,
+                requested_peer="minime",
+                company_mode=PassageCompanyModeV1.LOW_ENERGY_PRESENCE,
+                source_ref="self:request",
+                previous_context_event_id=condition.passage_context_event_id,
+                recorded_at_unix_ms=5,
+            )
+            response = LivedTransitionPassageContextEventV1.build(
+                passage_id=str(prepare["passage_id"]),
+                transition_id="phase_1",
+                passage_actor="astrid",
+                actor="minime",
+                action=PassageContextActionV1.RESPOND_COMPANY,
+                company_request_id_value=request_id,
+                requested_peer="minime",
+                company_mode=PassageCompanyModeV1.LOW_ENERGY_PRESENCE,
+                company_response=PassageCompanyResponseV1.ACCEPT,
+                source_ref="self:available",
+                previous_context_event_id=request.passage_context_event_id,
+                previous_company_event_id=request.passage_context_event_id,
+                recorded_at_unix_ms=6,
+            )
+            _jsonl(
+                phase,
+                [
+                    card,
+                    prepare,
+                    enter,
+                    condition.to_dict(),
+                    request.to_dict(),
+                    response.to_dict(),
+                ],
+            )
+            context_status = project_commons(
+                workspace,
+                phase,
+                sovereignty_ledger=sovereignty,
+                agency_request_dir=requests,
+                correspondence_ledger=correspondence,
+                write=False,
+            )
+            self.assertTrue(context_status["valid"], context_status["errors"])
+            self.assertEqual(
+                context_status[
+                    "explicit_transition_passage_context_event_count"
+                ],
+                3,
+            )
+            self.assertEqual(
+                context_status["explicit_transition_company_request_count"],
+                1,
+            )
+            self.assertEqual(context_status["record_count"], 6)
+
+            peer_advance = _passage_row(
+                transition_id="phase_1",
+                actor="minime",
+                action="hold",
+                stage_before="crossing",
+                stage_after="held",
+                timestamp=7,
+                passage_id=str(prepare["passage_id"]),
+                previous_event_id=str(enter["passage_event_id"]),
+            )
+            _jsonl(
+                phase,
+                [
+                    card,
+                    prepare,
+                    enter,
+                    condition.to_dict(),
+                    request.to_dict(),
+                    response.to_dict(),
+                    peer_advance,
+                ],
+            )
+            blocked = project_commons(
+                workspace,
+                phase,
+                sovereignty_ledger=sovereignty,
+                agency_request_dir=requests,
+                correspondence_ledger=correspondence,
+                write=False,
+            )
+            self.assertFalse(blocked["valid"])
+            self.assertTrue(
+                any(
+                    "self-owned sequence" in error
+                    for error in blocked["errors"]
+                )
+            )
+
+    def test_passage_context_identity_and_peer_response_are_exact(self) -> None:
+        passage_id = "passage_fixture"
+        transition_id = "transition_fixture"
+        condition = LivedTransitionPassageContextEventV1.build(
+            passage_id=passage_id,
+            transition_id=transition_id,
+            passage_actor="astrid",
+            actor="astrid",
+            action=PassageContextActionV1.DESCRIBE_CONDITION,
+            readiness=PassageReadinessV1.TENTATIVE,
+            movement_ease=PassageMovementEaseV1.EFFORTFUL,
+            room_needed=PassageRoomNeededV1.LOW_ENERGY_PRESENCE,
+            source_ref="fixture:condition",
+            recorded_at_unix_ms=1_700_000_000_000,
+        )
+        self.assertEqual(
+            condition.passage_context_event_id,
+            "passage_context_61ccca814e93f37e",
+        )
+        tampered = condition.to_dict()
+        tampered["artifact_authority_state_v1"]["state"] = "approved"
+        with self.assertRaises(RecordValidationError):
+            LivedTransitionPassageContextEventV1.from_untrusted(tampered)
+        anchor = LivedTransitionPassageContextEventV1.build(
+            passage_id=passage_id,
+            transition_id=transition_id,
+            passage_actor="astrid",
+            actor="astrid",
+            action=PassageContextActionV1.BIND_ANCHOR,
+            anchor_role=PassageAnchorRoleV1.PIVOT,
+            anchor_kind=PassageAnchorKindV1.SHADOW_TRAJECTORY,
+            anchor_association=PassageAnchorAssociationV1.TEMPORAL_CONTEXT,
+            anchor_ref="shadow-v3:astrid:1784951174",
+            source_ref=(
+                "introspection_proposal_phase_transitions_1784951174:c003"
+            ),
+            recorded_at_unix_ms=1_700_000_000_002,
+        )
+        self.assertEqual(
+            anchor.passage_context_event_id,
+            "passage_context_2fe152ff35ebcdbe",
+        )
+        rebound = LivedTransitionPassageContextEventV1.build(
+            passage_id=passage_id,
+            transition_id=transition_id,
+            passage_actor="astrid",
+            actor="astrid",
+            action=PassageContextActionV1.BIND_ANCHOR,
+            anchor_role=PassageAnchorRoleV1.PIVOT,
+            anchor_kind=PassageAnchorKindV1.LIVED_STATE_WITNESS,
+            anchor_association=PassageAnchorAssociationV1.RECEIPT_LINKED,
+            anchor_ref="lsw_fixture",
+            source_ref="self:continuity_rebind",
+            previous_anchor_event_id=anchor.passage_context_event_id,
+            previous_context_event_id=anchor.passage_context_event_id,
+            recorded_at_unix_ms=1_700_000_000_003,
+        )
+        rebound_dict = rebound.to_dict()
+        self.assertEqual(
+            rebound_dict["previous_anchor_event_id"],
+            anchor.passage_context_event_id,
+        )
+        self.assertFalse(rebound_dict["anchor_mechanical_truth_inferred"])
+        self.assertFalse(rebound_dict["anchor_changes_passage"])
+        self.assertFalse(rebound_dict["anchor_closes_transition"])
+        tampered_anchor = rebound.to_dict()
+        tampered_anchor["anchor_changes_passage"] = True
+        with self.assertRaises(RecordValidationError):
+            LivedTransitionPassageContextEventV1.from_untrusted(
+                tampered_anchor
+            )
+        bearing = LivedTransitionPassageContextEventV1.build(
+            passage_id=passage_id,
+            transition_id=transition_id,
+            passage_actor="astrid",
+            actor="astrid",
+            action=PassageContextActionV1.DESCRIBE_BEARING,
+            bearing_strand=PassageBearingStrandV1.SETTLING,
+            movement_resistance=PassageMovementResistanceV1.RESISTANT,
+            persistence_tendency=PassagePersistenceTendencyV1.LINGERING,
+            witness_fit=PassageWitnessFitV1.SEPARATE,
+            source_ref=(
+                "introspection_proposal_phase_transitions_1784978541:c002"
+            ),
+            previous_context_event_id=rebound.passage_context_event_id,
+            recorded_at_unix_ms=1_700_000_000_004,
+        )
+        bearing_dict = bearing.to_dict()
+        self.assertEqual(bearing_dict["bearing_strand"], "settling")
+        self.assertEqual(bearing_dict["movement_resistance"], "resistant")
+        self.assertFalse(bearing_dict["bearing_is_metric"])
+        self.assertFalse(bearing_dict["bearing_inferred_from_telemetry"])
+        self.assertFalse(bearing_dict["bearing_changes_passage"])
+        self.assertFalse(bearing_dict["bearing_closes_transition"])
+        self.assertEqual(
+            LivedTransitionPassageContextEventV1.from_untrusted(
+                bearing_dict
+            ),
+            bearing,
+        )
+        request_id = company_request_id(
+            passage_id,
+            "astrid",
+            "minime",
+            PassageCompanyModeV1.LOW_ENERGY_PRESENCE,
+            "fixture:request",
+            1_700_000_000_001,
+        )
+        self.assertEqual(
+            request_id,
+            "company_request_1700000000001_5841612e9caa7aad",
+        )
+        request = LivedTransitionPassageContextEventV1.build(
+            passage_id=passage_id,
+            transition_id=transition_id,
+            passage_actor="astrid",
+            actor="astrid",
+            action=PassageContextActionV1.REQUEST_COMPANY,
+            company_request_id_value=request_id,
+            requested_peer="minime",
+            company_mode=PassageCompanyModeV1.LOW_ENERGY_PRESENCE,
+            source_ref="fixture:request",
+            previous_context_event_id=condition.passage_context_event_id,
+            recorded_at_unix_ms=1_700_000_000_001,
+        )
+        response = LivedTransitionPassageContextEventV1.build(
+            passage_id=passage_id,
+            transition_id=transition_id,
+            passage_actor="astrid",
+            actor="minime",
+            action=PassageContextActionV1.RESPOND_COMPANY,
+            company_request_id_value=request_id,
+            requested_peer="minime",
+            company_mode=PassageCompanyModeV1.LOW_ENERGY_PRESENCE,
+            company_response=PassageCompanyResponseV1.ACCEPT,
+            source_ref="fixture:response",
+            previous_context_event_id=request.passage_context_event_id,
+            previous_company_event_id=request.passage_context_event_id,
+            recorded_at_unix_ms=1_700_000_000_002,
+        )
+        self.assertFalse(response.to_dict()["passage_stage_changed"])
+        self.assertFalse(response.to_dict()["peer_consent_inferred"])
+        self.assertFalse(response.to_dict()["live_control_effect"])
 
     def test_external_steward_selection_bounds_work_without_modeling_being_state(self) -> None:
         with self.assertRaises(RecordValidationError):

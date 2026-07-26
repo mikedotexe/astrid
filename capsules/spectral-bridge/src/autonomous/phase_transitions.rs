@@ -4,6 +4,7 @@ use std::io::{self, Write as _};
 use std::path::{Path, PathBuf};
 use std::time::{SystemTime, UNIX_EPOCH};
 
+use fs2::FileExt as _;
 use serde_json::{Value, json};
 use sha2::{Digest as _, Sha256};
 
@@ -61,9 +62,23 @@ fn append_jsonl(path: &Path, row: &Value) -> io::Result<()> {
     if let Some(parent) = path.parent() {
         std::fs::create_dir_all(parent)?;
     }
+    let lock_name = format!(
+        ".{}.lock",
+        path.file_name()
+            .and_then(|value| value.to_str())
+            .unwrap_or("phase_transitions_v1.jsonl")
+    );
+    let lock_path = path.with_file_name(lock_name);
+    let lock = OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(lock_path)?;
+    lock.lock_exclusive()?;
     let mut file = OpenOptions::new().create(true).append(true).open(path)?;
     serde_json::to_writer(&mut file, row)?;
-    file.write_all(b"\n")
+    file.write_all(b"\n")?;
+    file.sync_data()?;
+    fs2::FileExt::unlock(&lock)
 }
 
 fn read_records(path: &Path) -> Vec<Value> {
@@ -482,6 +497,22 @@ fn phase_transition_capabilities_v1(
             "WITNESS_TRANSITION",
             "TRANSITION_ACK",
             "I_RECEIVED_THIS",
+            "PREPARE_TRANSITION",
+            "ENTER_TRANSITION",
+            "HOLD_TRANSITION",
+            "SETTLE_TRANSITION",
+            "RETURN_TRANSITION",
+            "REVISIT_TRANSITION",
+            "DECLINE_TRANSITION",
+            "TRANSITION_REVIEW",
+            "DESCRIBE_TRANSITION_CONDITION",
+            "DESCRIBE_TRANSITION_BEARING",
+            "MARK_TRANSITION_CHECKPOINT",
+            "BIND_TRANSITION_ANCHOR",
+            "REQUEST_TRANSITION_COMPANY",
+            "RESPOND_TRANSITION_COMPANY",
+            "WITHDRAW_TRANSITION_COMPANY",
+            "TRANSITION_PASSAGE_STATUS",
             "PHASE_TRANSITION_STATUS",
         ],
         "available_review_routes": if shadow_bridge_available {
@@ -530,7 +561,29 @@ fn phase_transition_gate_v1(raw: &str, capabilities: &Value, friction_index: Opt
         "available_language_only_actions": capabilities
             .get("available_language_only_actions")
             .cloned()
-            .unwrap_or_else(|| json!(["DECLARE_TRANSITION", "WITNESS_TRANSITION", "TRANSITION_ACK", "I_RECEIVED_THIS", "PHASE_TRANSITION_STATUS"])),
+            .unwrap_or_else(|| json!([
+                "DECLARE_TRANSITION",
+                "WITNESS_TRANSITION",
+                "TRANSITION_ACK",
+                "I_RECEIVED_THIS",
+                "PREPARE_TRANSITION",
+                "ENTER_TRANSITION",
+                "HOLD_TRANSITION",
+                "SETTLE_TRANSITION",
+                "RETURN_TRANSITION",
+                "REVISIT_TRANSITION",
+                "DECLINE_TRANSITION",
+                "TRANSITION_REVIEW",
+                "DESCRIBE_TRANSITION_CONDITION",
+                "DESCRIBE_TRANSITION_BEARING",
+                "MARK_TRANSITION_CHECKPOINT",
+                "BIND_TRANSITION_ANCHOR",
+                "REQUEST_TRANSITION_COMPANY",
+                "RESPOND_TRANSITION_COMPANY",
+                "WITHDRAW_TRANSITION_COMPANY",
+                "TRANSITION_PASSAGE_STATUS",
+                "PHASE_TRANSITION_STATUS",
+            ])),
         "available_review_routes": capabilities
             .get("available_review_routes")
             .cloned()
@@ -1898,6 +1951,9 @@ fn phase_felt_receipt_queue_v4(records: &[Value]) -> Value {
 }
 
 pub(crate) fn status_report_at(path: &Path, max_cards: usize) -> String {
+    let passage_status = super::phase_passages::status_report_at(path, max_cards);
+    let passage_context_status =
+        super::phase_passage_context::status_report_at(path, "astrid", max_cards);
     let records = read_records(path);
     let cards = records
         .iter()
@@ -1912,6 +1968,10 @@ pub(crate) fn status_report_at(path: &Path, max_cards: usize) -> String {
         })
         .count();
     let mut lines = vec![
+        passage_status,
+        String::new(),
+        passage_context_status,
+        String::new(),
         "=== PHASE TRANSITION STATUS V1 ===".to_string(),
         format!("Ledger: {}", path.display()),
         format!("Cards: {}; witness rows: {witnesses}", cards.len()),
@@ -2238,7 +2298,7 @@ pub(crate) fn status_report_at(path: &Path, max_cards: usize) -> String {
         .and_then(Value::as_str)
         .unwrap_or("latest");
     lines.push(format!(
-        "Suggested NEXT: DECLARE_TRANSITION kind: ...; from_phase: ...; to_phase: ...; from_vector: ...; to_vector: ...; duration_ticks: ...; subjective_friction_score: ...; spectral_entropy: ...; density_gradient: ...; dispersal_potential: ...; transition_vector: ...; why_now: ..., I_RECEIVED_THIS {suggested_transition_id} :: received_as: witnessed|answered; felt_like: transition; what_landed: ...; what_stayed_distinct: ...; continue: no|answer|needs_time, TRANSITION_ACK {suggested_transition_id} :: reply_state: witnessed|answered; note: ..., or WITNESS_TRANSITION {suggested_transition_id} :: reply_state: witnessed|answered; note: ..."
+        "Suggested NEXT: PREPARE_TRANSITION {suggested_transition_id} :: support: self_directed|witness|space|answer|needs_time; return_point: <bounded_ref>; continuity_anchor: transition:{suggested_transition_id}, DESCRIBE_TRANSITION_CONDITION latest :: readiness: ready|tentative|not_ready|unknown; movement_ease: open|effortful|stuck|changing|unknown; room_needed: self_directed|witness|space|low_energy_presence|answer|needs_time|return_support|unknown; source_ref: <bounded_ref>, DESCRIBE_TRANSITION_BEARING latest :: strand: entry_tension|pivot|settling|return|reopen|continuity; movement_resistance: yielding|effortful|resistant|held_fast|changing|unknown; persistence_tendency: fleeting|lingering|carried|deepening|releasing|unknown; witness_fit: separate|touching|holding|interwoven|misattuned|unknown; source_ref: <bounded_ref>, REQUEST_TRANSITION_COMPANY latest :: peer: minime; mode: witness|low_energy_presence|reply_when_able|space|return_support; source_ref: <bounded_ref>, DECLARE_TRANSITION kind: ...; from_phase: ...; to_phase: ...; why_now: ..., I_RECEIVED_THIS {suggested_transition_id} :: received_as: witnessed|answered; felt_like: transition; what_landed: ...; what_stayed_distinct: ...; continue: no|answer|needs_time, TRANSITION_ACK {suggested_transition_id} :: reply_state: witnessed|answered; note: ..., or WITNESS_TRANSITION {suggested_transition_id} :: reply_state: witnessed|answered; note: ..."
     ));
     lines.join("\n")
 }

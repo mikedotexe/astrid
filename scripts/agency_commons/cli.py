@@ -25,6 +25,9 @@ ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_WORKSPACE = ROOT / "capsules/spectral-bridge/workspace"
 DEFAULT_PHASE_LEDGER = ROOT.parent / "shared/collaborations/phase_transitions_v1.jsonl"
 DEFAULT_CORRESPONDENCE_LEDGER = ROOT.parent / "shared/collaborations/correspondence_v1.jsonl"
+DEFAULT_DIVISION_CEREMONY_LEDGER = (
+    ROOT.parent / "minime/workspace/division/ceremony_v1.jsonl"
+)
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -34,6 +37,16 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--sovereignty-ledger", type=Path)
     parser.add_argument("--agency-request-dir", type=Path)
     parser.add_argument("--correspondence-ledger", type=Path, default=Path(os.environ.get("ASTRID_CORRESPONDENCE_LEDGER", DEFAULT_CORRESPONDENCE_LEDGER)))
+    parser.add_argument(
+        "--division-ceremony-ledger",
+        type=Path,
+        default=Path(
+            os.environ.get(
+                "ASTRID_DIVISION_CEREMONY_LEDGER",
+                DEFAULT_DIVISION_CEREMONY_LEDGER,
+            )
+        ),
+    )
     parser.add_argument("--json", action="store_true")
     parser.add_argument("command", choices=("project", "verify", "report", "show", "propose", "respond", "return", "protect", "request-check"))
     parser.add_argument("--write", action="store_true")
@@ -105,6 +118,7 @@ def main(argv: list[str] | None = None) -> int:
                     args.agency_request_dir or workspace / "agency_requests"
                 ).resolve(),
                 correspondence_ledger=args.correspondence_ledger.resolve(),
+                division_ceremony_ledger=args.division_ceremony_ledger.resolve(),
                 write=args.write and args.command == "project",
             )
             value = projector_receipt("agency_commons", status,

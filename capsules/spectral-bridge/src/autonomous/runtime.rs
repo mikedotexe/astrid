@@ -23,12 +23,18 @@
 pub(crate) mod btsp;
 #[path = "correspondence_v1.rs"]
 mod correspondence_v1;
+#[path = "division_ceremony.rs"]
+mod division_ceremony;
 #[path = "hebbian.rs"]
 mod hebbian;
 #[path = "introspect.rs"]
 mod introspect;
 #[path = "next_action/mod.rs"]
 pub(crate) mod next_action;
+#[path = "phase_passage_context.rs"]
+mod phase_passage_context;
+#[path = "phase_passages.rs"]
+mod phase_passages;
 #[path = "phase_transitions.rs"]
 mod phase_transitions;
 #[path = "readiness.rs"]

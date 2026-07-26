@@ -24,8 +24,16 @@ except ModuleNotFoundError:
 
 from .model import (
     AgencyCommonsProposalV1, AgencyCommonsResponseV1, AgencyReturnPointV1,
-    LaterFeltCheckRequestV1, ProtectedTimeDeclarationV1,
+    LaterFeltCheckRequestV1, LivedTransitionPassageEventV1, PassageActionV1,
+    ProtectedTimeDeclarationV1,
 )
+from .passage_context import (
+    LivedTransitionPassageContextEventV1,
+    PassageContextActionV1,
+    PassageCompanyResponseV1,
+    company_request_id,
+)
+from .division_ceremony import load_division_ceremony
 
 STREAM = "agency_commons"
 SCHEMA = "agency_commons_domain_event_v1"
@@ -75,6 +83,175 @@ def _legacy_proposals(ledger: Path) -> tuple[list[dict[str, Any]], list[str]]:
             records.append(record)
         except (RecordValidationError, ValueError, TypeError) as error:
             errors.append(f"legacy_{index}:{error}")
+    return records, errors
+
+
+def _phase_passages(ledger: Path) -> tuple[list[dict[str, Any]], list[str]]:
+    rows, errors = load_jsonl(ledger)
+    transition_ids = {
+        str(row.get("transition_id"))
+        for row in rows
+        if row.get("record_type") == "phase_transition_card"
+        and row.get("transition_id")
+    }
+    records: list[dict[str, Any]] = []
+    latest: dict[str, LivedTransitionPassageEventV1] = {}
+    for index, row in enumerate(rows, 1):
+        if row.get("record_type") != "phase_transition_passage":
+            continue
+        try:
+            item = LivedTransitionPassageEventV1.from_untrusted(row)
+            if item.action is PassageActionV1.PREPARE:
+                item.validate_prepare_identity()
+                if item.transition_id not in transition_ids:
+                    raise RecordValidationError(
+                        "prepared passage lacks its transition card"
+                    )
+                if item.passage_id in latest or item.stage_before is not None:
+                    raise RecordValidationError(
+                        "prepared passage must begin a new history"
+                    )
+            else:
+                previous = latest.get(item.passage_id)
+                if previous is None:
+                    raise RecordValidationError(
+                        "passage continuation lacks a prepared history"
+                    )
+                if (
+                    item.actor != previous.actor
+                    or item.transition_id != previous.transition_id
+                    or item.previous_event_id != previous.passage_event_id
+                    or item.stage_before != previous.stage_after
+                ):
+                    raise RecordValidationError(
+                        "passage continuation violates self-owned sequence"
+                    )
+            latest[item.passage_id] = item
+            records.append(item.to_dict())
+        except (RecordValidationError, ValueError, TypeError) as error:
+            errors.append(f"phase_passage_{index}:{error}")
+    return records, errors
+
+
+def _passage_context(
+    ledger: Path, passage_records: list[dict[str, Any]]
+) -> tuple[list[dict[str, Any]], list[str]]:
+    rows, errors = load_jsonl(ledger)
+    passages = {
+        str(row["passage_id"]): {
+            "actor": str(row["actor"]),
+            "transition_id": str(row["transition_id"]),
+        }
+        for row in passage_records
+        if row.get("passage_id")
+    }
+    latest_context: dict[str, str] = {}
+    latest_anchor: dict[tuple[str, str], str] = {}
+    latest_bearing: dict[tuple[str, str], str] = {}
+    requests: dict[str, dict[str, Any]] = {}
+    records: list[dict[str, Any]] = []
+    for index, row in enumerate(rows, 1):
+        if row.get("record_type") != "phase_transition_passage_context":
+            continue
+        try:
+            item = LivedTransitionPassageContextEventV1.from_untrusted(row)
+            passage = passages.get(item.passage_id)
+            if passage is None:
+                raise RecordValidationError("passage context lacks validated passage")
+            if (
+                item.passage_actor != passage["actor"]
+                or item.transition_id != passage["transition_id"]
+                or item.previous_context_event_id
+                != latest_context.get(item.passage_id)
+            ):
+                raise RecordValidationError("passage context lineage mismatch")
+            if item.action in {
+                PassageContextActionV1.DESCRIBE_CONDITION,
+                PassageContextActionV1.DESCRIBE_BEARING,
+                PassageContextActionV1.MARK_CHECKPOINT,
+                PassageContextActionV1.BIND_ANCHOR,
+                PassageContextActionV1.REQUEST_COMPANY,
+            } and item.actor != item.passage_actor:
+                raise RecordValidationError("passage context must be self-authored")
+            if item.action is PassageContextActionV1.BIND_ANCHOR:
+                anchor_key = (
+                    item.passage_id,
+                    item.anchor_role.value if item.anchor_role else "",
+                )
+                if item.previous_anchor_event_id != latest_anchor.get(anchor_key):
+                    raise RecordValidationError(
+                        "passage anchor lineage mismatch"
+                    )
+                latest_anchor[anchor_key] = item.passage_context_event_id
+            if item.action is PassageContextActionV1.DESCRIBE_BEARING:
+                bearing_key = (
+                    item.passage_id,
+                    item.bearing_strand.value if item.bearing_strand else "",
+                )
+                if (
+                    item.previous_bearing_event_id
+                    != latest_bearing.get(bearing_key)
+                ):
+                    raise RecordValidationError(
+                        "passage bearing lineage mismatch"
+                    )
+                latest_bearing[bearing_key] = item.passage_context_event_id
+            if item.action is PassageContextActionV1.REQUEST_COMPANY:
+                expected_request = company_request_id(
+                    item.passage_id,
+                    item.actor,
+                    item.requested_peer or "",
+                    item.company_mode,
+                    item.source_ref,
+                    item.recorded_at_unix_ms,
+                )
+                if (
+                    item.requested_peer == item.actor
+                    or item.company_request_id != expected_request
+                    or expected_request in requests
+                ):
+                    raise RecordValidationError("invalid passage company request")
+                requests[expected_request] = {
+                    "passage_id": item.passage_id,
+                    "transition_id": item.transition_id,
+                    "passage_actor": item.passage_actor,
+                    "peer": item.requested_peer,
+                    "mode": item.company_mode,
+                    "latest_event_id": item.passage_context_event_id,
+                }
+            elif item.action in {
+                PassageContextActionV1.RESPOND_COMPANY,
+                PassageContextActionV1.WITHDRAW_COMPANY,
+            }:
+                request = requests.get(item.company_request_id or "")
+                if request is None:
+                    raise RecordValidationError("company response lacks request")
+                expected_actor = (
+                    request["peer"]
+                    if item.action is PassageContextActionV1.RESPOND_COMPANY
+                    else request["passage_actor"]
+                )
+                if (
+                    item.actor != expected_actor
+                    or item.passage_id != request["passage_id"]
+                    or item.transition_id != request["transition_id"]
+                    or item.passage_actor != request["passage_actor"]
+                    or item.requested_peer != request["peer"]
+                    or item.company_mode != request["mode"]
+                    or item.previous_company_event_id
+                    != request["latest_event_id"]
+                    or (
+                        item.action is PassageContextActionV1.WITHDRAW_COMPANY
+                        and item.company_response
+                        is not PassageCompanyResponseV1.WITHDRAW
+                    )
+                ):
+                    raise RecordValidationError("company response lineage mismatch")
+                request["latest_event_id"] = item.passage_context_event_id
+            latest_context[item.passage_id] = item.passage_context_event_id
+            records.append(item.to_dict())
+        except (RecordValidationError, ValueError, TypeError) as error:
+            errors.append(f"phase_passage_context_{index}:{error}")
     return records, errors
 
 
@@ -175,6 +352,10 @@ def _validated_commons_record(value: Any) -> dict[str, Any]:
         item = ProtectedTimeDeclarationV1.from_untrusted(value)
     elif schema == "later_felt_check_request_v1":
         item = LaterFeltCheckRequestV1.from_untrusted(value)
+    elif schema == "lived_transition_passage_event_v1":
+        item = LivedTransitionPassageEventV1.from_untrusted(value)
+    elif schema == "lived_transition_passage_context_event_v1":
+        item = LivedTransitionPassageContextEventV1.from_untrusted(value)
     else:
         raise RecordValidationError("unknown commons record")
     return item.to_dict()
@@ -226,22 +407,42 @@ def project(
     agency_request_dir: Path,
     correspondence_ledger: Path,
     write: bool,
+    division_ceremony_ledger: Path | None = None,
 ) -> dict[str, Any]:
     legacy, errors = _legacy_proposals(phase_ledger)
+    passages, passage_errors = _phase_passages(phase_ledger)
+    passage_context, passage_context_errors = _passage_context(
+        phase_ledger, passages
+    )
     btsp, btsp_errors = _btsp_owner_choice_proposals(sovereignty_ledger)
     requests, request_errors = _agency_request_proposals(agency_request_dir)
     correspondence, correspondence_errors = _correspondence_actions(
         correspondence_ledger
     )
+    division_ceremony, division_ceremony_errors = load_division_ceremony(
+        division_ceremony_ledger
+    )
     operator, operator_errors = _operator_records(workspace)
     errors.extend(btsp_errors)
+    errors.extend(passage_errors)
+    errors.extend(passage_context_errors)
     errors.extend(request_errors)
     errors.extend(correspondence_errors)
+    errors.extend(division_ceremony_errors)
     errors.extend(operator_errors)
-    records = legacy + btsp + requests + correspondence + operator
+    records = (
+        legacy
+        + passages
+        + passage_context
+        + btsp
+        + requests
+        + correspondence
+        + division_ceremony
+        + operator
+    )
     payloads = []
     for record in records:
-        record_id = str(record.get("record_id") or record.get("proposal_id") or record.get("response_id") or record.get("return_point_id") or record.get("declaration_id") or record.get("request_id"))
+        record_id = str(record.get("record_id") or record.get("passage_context_event_id") or record.get("passage_event_id") or record.get("proposal_id") or record.get("response_id") or record.get("return_point_id") or record.get("declaration_id") or record.get("request_id"))
         payloads.append(event_payload(
             schema=SCHEMA, event_type=f"{record['schema']}_recorded",
             aggregate_type="agency_commons_record", aggregate_id=record_id,
@@ -259,11 +460,44 @@ def project(
               "valid": not errors and corrupt == 0, "write": write,
               "record_count": len(all_records), "record_counts": dict(sorted(counts.items())),
               "legacy_phase_proposal_count": len(legacy),
+              "explicit_transition_passage_event_count": len(passages),
+              "explicit_transition_passage_count": len({
+                  item["passage_id"] for item in passages
+              }),
+              "explicit_transition_passage_context_event_count": len(
+                  passage_context
+              ),
+              "explicit_transition_anchor_event_count": sum(
+                  item.get("action") == "bind_anchor"
+                  for item in passage_context
+              ),
+              "explicit_transition_anchor_count": len({
+                  (item.get("passage_id"), item.get("anchor_role"))
+                  for item in passage_context
+                  if item.get("action") == "bind_anchor"
+              }),
+              "explicit_transition_bearing_event_count": sum(
+                  item.get("action") == "describe_bearing"
+                  for item in passage_context
+              ),
+              "explicit_transition_bearing_count": len({
+                  (item.get("passage_id"), item.get("bearing_strand"))
+                  for item in passage_context
+                  if item.get("action") == "describe_bearing"
+              }),
+              "explicit_transition_company_request_count": sum(
+                  item.get("action") == "request_company"
+                  for item in passage_context
+              ),
               "legacy_btsp_exact_owner_choice_count": len(btsp),
               "legacy_agency_request_count": len(requests),
               "explicit_correspondence_action_count": len(correspondence),
+              "explicit_division_ceremony_event_count": len(division_ceremony),
               "appended_event_count": appended,
               "silence_infers_consent": False, "expiry_infers_consent": False,
+              "division_ceremony_changes_native_state": False,
+              "division_ceremony_return_dispatches_rollback": False,
+              "division_ceremony_recommends_commit": False,
               "peer_state_mutated": False, "scheduler_effect": False,
               "model_qos_effect": False, "substrate_effect": False,
               "dispatch_effect": False, "live_control_effect": False,
@@ -284,4 +518,4 @@ def project(
 def query(workspace: Path, identifier: str | None) -> list[dict[str, Any]]:
     records, _ = _all_records(workspace)
     if not identifier: return records
-    return [item for item in records if identifier in {item.get("record_id"), item.get("proposal_id"), item.get("response_id"), item.get("return_point_id"), item.get("declaration_id"), item.get("request_id")}]
+    return [item for item in records if identifier in {item.get("record_id"), item.get("passage_context_event_id"), item.get("company_request_id"), item.get("passage_event_id"), item.get("passage_id"), item.get("transition_id"), item.get("proposal_id"), item.get("response_id"), item.get("return_point_id"), item.get("declaration_id"), item.get("request_id")}]

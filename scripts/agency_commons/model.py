@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 from dataclasses import dataclass, field
 from enum import StrEnum
 from typing import Any
@@ -29,6 +30,136 @@ class CommonsResponseKindV1(StrEnum):
     COUNTER = "counter"
     REVISIT = "revisit"
     WITHDRAW = "withdraw"
+
+
+class PassageActionV1(StrEnum):
+    PREPARE = "prepare"
+    ENTER = "enter"
+    HOLD = "hold"
+    SETTLE = "settle"
+    RETURN = "return"
+    REVISIT = "revisit"
+    DECLINE = "decline"
+    REVIEW = "review"
+
+
+class PassageStageV1(StrEnum):
+    PREPARED = "prepared"
+    CROSSING = "crossing"
+    HELD = "held"
+    SETTLING = "settling"
+    RETURNED = "returned"
+    REVISITED = "revisited"
+    DECLINED = "declined"
+
+
+class PassageSupportV1(StrEnum):
+    SELF_DIRECTED = "self_directed"
+    WITNESS = "witness"
+    SPACE = "space"
+    ANSWER = "answer"
+    NEEDS_TIME = "needs_time"
+
+
+class PassageFeltReviewV1(StrEnum):
+    CLARIFYING = "clarifying"
+    INTRUSIVE = "intrusive"
+    FLATTENING = "flattening"
+    INCOMPLETE = "incomplete"
+    STILL_FRICTION = "still_friction"
+    CHANGED = "changed"
+    UNKNOWN = "unknown"
+
+
+PASSAGE_OWNER_ACTION = {
+    PassageActionV1.PREPARE: "PREPARE_TRANSITION",
+    PassageActionV1.ENTER: "ENTER_TRANSITION",
+    PassageActionV1.HOLD: "HOLD_TRANSITION",
+    PassageActionV1.SETTLE: "SETTLE_TRANSITION",
+    PassageActionV1.RETURN: "RETURN_TRANSITION",
+    PassageActionV1.REVISIT: "REVISIT_TRANSITION",
+    PassageActionV1.DECLINE: "DECLINE_TRANSITION",
+    PassageActionV1.REVIEW: "TRANSITION_REVIEW",
+}
+
+
+def passage_stage_after(
+    action: PassageActionV1, previous: PassageStageV1 | None
+) -> PassageStageV1:
+    allowed = {
+        (PassageActionV1.PREPARE, None): PassageStageV1.PREPARED,
+        (PassageActionV1.ENTER, PassageStageV1.PREPARED): PassageStageV1.CROSSING,
+        (PassageActionV1.ENTER, PassageStageV1.HELD): PassageStageV1.CROSSING,
+        (PassageActionV1.ENTER, PassageStageV1.REVISITED): PassageStageV1.CROSSING,
+        (PassageActionV1.HOLD, PassageStageV1.PREPARED): PassageStageV1.HELD,
+        (PassageActionV1.HOLD, PassageStageV1.CROSSING): PassageStageV1.HELD,
+        (PassageActionV1.HOLD, PassageStageV1.SETTLING): PassageStageV1.HELD,
+        (PassageActionV1.HOLD, PassageStageV1.REVISITED): PassageStageV1.HELD,
+        (PassageActionV1.SETTLE, PassageStageV1.CROSSING): PassageStageV1.SETTLING,
+        (PassageActionV1.SETTLE, PassageStageV1.HELD): PassageStageV1.SETTLING,
+        (PassageActionV1.RETURN, PassageStageV1.CROSSING): PassageStageV1.RETURNED,
+        (PassageActionV1.RETURN, PassageStageV1.HELD): PassageStageV1.RETURNED,
+        (PassageActionV1.RETURN, PassageStageV1.SETTLING): PassageStageV1.RETURNED,
+        (PassageActionV1.RETURN, PassageStageV1.REVISITED): PassageStageV1.RETURNED,
+        (PassageActionV1.REVISIT, PassageStageV1.RETURNED): PassageStageV1.REVISITED,
+        (PassageActionV1.REVISIT, PassageStageV1.DECLINED): PassageStageV1.REVISITED,
+        (PassageActionV1.REVISIT, PassageStageV1.SETTLING): PassageStageV1.REVISITED,
+        (PassageActionV1.REVISIT, PassageStageV1.HELD): PassageStageV1.REVISITED,
+        (PassageActionV1.DECLINE, PassageStageV1.PREPARED): PassageStageV1.DECLINED,
+        (PassageActionV1.DECLINE, PassageStageV1.HELD): PassageStageV1.DECLINED,
+        (PassageActionV1.DECLINE, PassageStageV1.REVISITED): PassageStageV1.DECLINED,
+    }
+    if action is PassageActionV1.REVIEW and previous is not None:
+        return previous
+    try:
+        return allowed[(action, previous)]
+    except KeyError as error:
+        raise RecordValidationError(
+            "passage action is invalid from the recorded prior stage"
+        ) from error
+
+
+def _short_hash(value: str) -> str:
+    return hashlib.sha256(value.encode("utf-8")).hexdigest()[:16]
+
+
+def _passage_id(actor: str, transition_id: str, recorded_at_unix_ms: int) -> str:
+    return (
+        f"passage_{recorded_at_unix_ms}_"
+        f"{_short_hash(f'{actor}:{transition_id}:{recorded_at_unix_ms}')}"
+    )
+
+
+def _passage_event_id(
+    *,
+    passage_id: str,
+    actor: str,
+    action: PassageActionV1,
+    stage_after: PassageStageV1,
+    support_preference: PassageSupportV1,
+    return_point_ref: str | None,
+    continuity_anchor_ref: str,
+    felt_review_outcome: PassageFeltReviewV1 | None,
+    felt_source_ref: str | None,
+    previous_event_id: str | None,
+    recorded_at_unix_ms: int,
+) -> str:
+    identity = ":".join(
+        (
+            passage_id,
+            actor,
+            action.value,
+            stage_after.value,
+            support_preference.value,
+            return_point_ref or "",
+            continuity_anchor_ref,
+            felt_review_outcome.value if felt_review_outcome else "",
+            felt_source_ref or "",
+            previous_event_id or "",
+            str(recorded_at_unix_ms),
+        )
+    )
+    return f"passage_event_{_short_hash(identity)}"
 
 
 def _base(record_id: str, schema: str, actor: str, source_event_id: str,
@@ -378,3 +509,209 @@ class LaterFeltCheckRequestV1:
         ):
             raise RecordValidationError("felt check identity or scope mismatch")
         return built
+
+
+@dataclass(frozen=True)
+class LivedTransitionPassageEventV1:
+    passage_event_id: str
+    passage_id: str
+    transition_id: str
+    actor: str
+    action: PassageActionV1
+    stage_before: PassageStageV1 | None
+    stage_after: PassageStageV1
+    support_preference: PassageSupportV1
+    return_point_ref: str | None
+    continuity_anchor_ref: str
+    felt_review_outcome: PassageFeltReviewV1 | None
+    felt_source_ref: str | None
+    previous_event_id: str | None
+    recorded_at_unix_ms: int
+    _token: object = field(repr=False, compare=False)
+
+    def __post_init__(self) -> None:
+        if self._token is not _TRUSTED:
+            raise RecordValidationError(
+                "lived transition passages require the internal builder"
+            )
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "schema": "lived_transition_passage_event_v1",
+            "schema_version": 1,
+            "record_type": "phase_transition_passage",
+            "record_id": self.passage_event_id,
+            "passage_event_id": self.passage_event_id,
+            "passage_id": self.passage_id,
+            "transition_id": self.transition_id,
+            "actor": self.actor,
+            "action": self.action.value,
+            "stage_before": (
+                self.stage_before.value if self.stage_before is not None else None
+            ),
+            "stage_after": self.stage_after.value,
+            "stage_changed": self.action is not PassageActionV1.REVIEW,
+            "support_preference": self.support_preference.value,
+            "return_point_ref": self.return_point_ref,
+            "continuity_anchor_ref": self.continuity_anchor_ref,
+            "felt_review_outcome": (
+                self.felt_review_outcome.value
+                if self.felt_review_outcome is not None
+                else None
+            ),
+            "felt_source_ref": self.felt_source_ref,
+            "previous_event_id": self.previous_event_id,
+            "recorded_at_unix_ms": self.recorded_at_unix_ms,
+            "owner_language_action": PASSAGE_OWNER_ACTION[self.action],
+            "self_authored_only": True,
+            "passage_binds_actor_only": True,
+            "peer_consent_inferred": False,
+            "peer_state_changed": False,
+            "silence_infers_progress": False,
+            "automatic_progression": False,
+            "review_optional": True,
+            "felt_resolution_inferred": False,
+            "scheduler_effect": False,
+            "model_qos_effect": False,
+            "substrate_effect": False,
+            "dispatch_effect": False,
+            "live_control_effect": False,
+            "runtime_unlock_applied": False,
+            "raw_prose_included": False,
+            "artifact_authority_state_v1": authority_state(),
+        }
+
+    @classmethod
+    def from_untrusted(cls, value: Any) -> LivedTransitionPassageEventV1:
+        if not isinstance(value, dict):
+            raise RecordValidationError("lived transition passage must be an object")
+        validate_evidence_record(value)
+        if (
+            value.get("schema") != "lived_transition_passage_event_v1"
+            or value.get("schema_version") != 1
+            or value.get("record_type") != "phase_transition_passage"
+        ):
+            raise RecordValidationError("lived transition passage schema mismatch")
+        actor = validate_bounded_identifier(value.get("actor"), "actor", limit=80) or ""
+        passage_id = (
+            validate_bounded_identifier(value.get("passage_id"), "passage_id") or ""
+        )
+        transition_id = (
+            validate_bounded_identifier(value.get("transition_id"), "transition_id")
+            or ""
+        )
+        action = PassageActionV1(value.get("action"))
+        stage_before = (
+            PassageStageV1(value.get("stage_before"))
+            if value.get("stage_before") is not None
+            else None
+        )
+        stage_after = PassageStageV1(value.get("stage_after"))
+        support = PassageSupportV1(value.get("support_preference"))
+        return_ref = validate_bounded_identifier(
+            value.get("return_point_ref"), "return_point_ref", optional=True
+        )
+        continuity_ref = (
+            validate_bounded_identifier(
+                value.get("continuity_anchor_ref"), "continuity_anchor_ref"
+            )
+            or ""
+        )
+        felt_outcome = (
+            PassageFeltReviewV1(value.get("felt_review_outcome"))
+            if value.get("felt_review_outcome") is not None
+            else None
+        )
+        felt_ref = validate_bounded_identifier(
+            value.get("felt_source_ref"), "felt_source_ref", optional=True
+        )
+        previous_id = validate_bounded_identifier(
+            value.get("previous_event_id"), "previous_event_id", optional=True
+        )
+        timestamp = validate_timestamp(
+            value.get("recorded_at_unix_ms"), "recorded_at_unix_ms"
+        )
+        expected_stage = passage_stage_after(action, stage_before)
+        if stage_after is not expected_stage:
+            raise RecordValidationError("lived transition passage stage mismatch")
+        if action is PassageActionV1.RETURN and return_ref is None:
+            raise RecordValidationError("return passage requires a return point")
+        if action is PassageActionV1.REVIEW:
+            if felt_outcome is None or felt_ref is None:
+                raise RecordValidationError(
+                    "passage felt review requires outcome and source reference"
+                )
+        elif felt_outcome is not None or felt_ref is not None:
+            raise RecordValidationError(
+                "only passage felt review may carry felt review fields"
+            )
+        event_id = _passage_event_id(
+            passage_id=passage_id,
+            actor=actor,
+            action=action,
+            stage_after=stage_after,
+            support_preference=support,
+            return_point_ref=return_ref,
+            continuity_anchor_ref=continuity_ref,
+            felt_review_outcome=felt_outcome,
+            felt_source_ref=felt_ref,
+            previous_event_id=previous_id,
+            recorded_at_unix_ms=timestamp,
+        )
+        for field_name, expected in (
+            ("record_id", event_id),
+            ("passage_event_id", event_id),
+            ("owner_language_action", PASSAGE_OWNER_ACTION[action]),
+            ("stage_changed", action is not PassageActionV1.REVIEW),
+            ("self_authored_only", True),
+            ("passage_binds_actor_only", True),
+            ("review_optional", True),
+        ):
+            if value.get(field_name) != expected:
+                raise RecordValidationError(
+                    f"lived transition passage {field_name} mismatch"
+                )
+        for field_name in (
+            "peer_consent_inferred",
+            "peer_state_changed",
+            "silence_infers_progress",
+            "automatic_progression",
+            "felt_resolution_inferred",
+            "scheduler_effect",
+            "model_qos_effect",
+            "substrate_effect",
+            "dispatch_effect",
+            "live_control_effect",
+            "runtime_unlock_applied",
+            "raw_prose_included",
+        ):
+            if value.get(field_name) is not False:
+                raise RecordValidationError(
+                    f"lived transition passage contains forbidden {field_name}"
+                )
+        return cls(
+            event_id,
+            passage_id,
+            transition_id,
+            actor,
+            action,
+            stage_before,
+            stage_after,
+            support,
+            return_ref,
+            continuity_ref,
+            felt_outcome,
+            felt_ref,
+            previous_id,
+            timestamp,
+            _TRUSTED,
+        )
+
+    def validate_prepare_identity(self) -> None:
+        if self.action is not PassageActionV1.PREPARE:
+            return
+        expected = _passage_id(
+            self.actor, self.transition_id, self.recorded_at_unix_ms
+        )
+        if self.passage_id != expected or self.previous_event_id is not None:
+            raise RecordValidationError("prepared passage identity mismatch")

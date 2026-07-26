@@ -427,8 +427,6 @@ impl DivisionStatusV1 {
             && !own_assent
         {
             DivisionActionV1::DivisionAssent
-        } else if self.can_request_commit() {
-            DivisionActionV1::DivisionCommit
         } else {
             DivisionActionV1::DivisionStatus
         };

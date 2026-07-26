@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Public read-only audit for shared phase transition cards."""
+"""Public read-only audit for phase cards and self-authored lived passages."""
 
 from __future__ import annotations
 
@@ -11,6 +11,41 @@ import unittest
 from collections import Counter
 from pathlib import Path
 from typing import Any
+
+try:
+    from agency_commons.model import (
+        LivedTransitionPassageEventV1,
+        PassageActionV1,
+    )
+    from agency_commons.passage_context import (
+        LivedTransitionPassageContextEventV1,
+        PassageBearingStrandV1,
+        PassageContextActionV1,
+        PassageMovementResistanceV1,
+        PassageMovementEaseV1,
+        PassagePersistenceTendencyV1,
+        PassageReadinessV1,
+        PassageRoomNeededV1,
+        PassageWitnessFitV1,
+    )
+    from agency_commons.projector import _passage_context, _phase_passages
+except ModuleNotFoundError:
+    from scripts.agency_commons.model import (
+        LivedTransitionPassageEventV1,
+        PassageActionV1,
+    )
+    from scripts.agency_commons.passage_context import (
+        LivedTransitionPassageContextEventV1,
+        PassageBearingStrandV1,
+        PassageContextActionV1,
+        PassageMovementResistanceV1,
+        PassageMovementEaseV1,
+        PassagePersistenceTendencyV1,
+        PassageReadinessV1,
+        PassageRoomNeededV1,
+        PassageWitnessFitV1,
+    )
+    from scripts.agency_commons.projector import _passage_context, _phase_passages
 
 DEFAULT_LEDGER = Path("/Users/v/other/shared/collaborations/phase_transitions_v1.jsonl")
 POLICY = "phase_transition_audit_v1"
@@ -312,6 +347,134 @@ def phase_felt_receipt_queue_v4(relational_cards: list[dict[str, Any]], generate
     }
 
 
+def lived_passage_audit_v1(
+    records: list[dict[str, Any]], recent: list[dict[str, Any]]
+) -> dict[str, Any]:
+    issues: list[str] = []
+    latest: dict[str, LivedTransitionPassageEventV1] = {}
+    event_count = 0
+    recent_event_count = 0
+    for index, row in enumerate(records, 1):
+        if row.get("record_type") != "phase_transition_passage":
+            continue
+        event_count += 1
+        try:
+            item = LivedTransitionPassageEventV1.from_untrusted(row)
+            if item.action is PassageActionV1.PREPARE:
+                item.validate_prepare_identity()
+                if item.passage_id in latest or item.stage_before is not None:
+                    raise ValueError("prepared passage must begin a new history")
+            else:
+                previous = latest.get(item.passage_id)
+                if (
+                    previous is None
+                    or item.actor != previous.actor
+                    or item.transition_id != previous.transition_id
+                    or item.previous_event_id != previous.passage_event_id
+                    or item.stage_before != previous.stage_after
+                ):
+                    raise ValueError("passage continuation violates self-owned sequence")
+            latest[item.passage_id] = item
+        except (ValueError, TypeError) as error:
+            issues.append(f"phase_passage_{index}:{error}")
+    for row in recent:
+        if row.get("record_type") == "phase_transition_passage":
+            recent_event_count += 1
+    stages = Counter(item.stage_after.value for item in latest.values())
+    reviews = Counter(
+        item.felt_review_outcome.value
+        for item in latest.values()
+        if item.felt_review_outcome is not None
+    )
+    active = sum(
+        item.stage_after.value not in {"returned", "declined"}
+        for item in latest.values()
+    )
+    return {
+        "schema_version": 1,
+        "policy": "lived_transition_passage_audit_v1",
+        "passage_count": len(latest),
+        "event_count": event_count,
+        "recent_event_count": recent_event_count,
+        "active_passage_count": active,
+        "stage_counts": dict(sorted(stages.items())),
+        "optional_felt_review_counts": dict(sorted(reviews.items())),
+        "validation_issues": issues,
+        "observational_cards_auto_promoted": False,
+        "passage_binds_actor_only": True,
+        "peer_consent_inferred": False,
+        "silence_infers_progress": False,
+        "felt_resolution_inferred": False,
+        "live_control_effect": False,
+        "authority": "evidence_only_self_authored_language_practice",
+    }
+
+
+def lived_passage_context_audit_v1(
+    ledger: Path, recent: list[dict[str, Any]]
+) -> dict[str, Any]:
+    passages, passage_errors = _phase_passages(ledger)
+    records, errors = _passage_context(ledger, passages)
+    action_counts = Counter(str(item["action"]) for item in records)
+    latest_request_state: dict[str, str] = {}
+    for item in records:
+        request_id = item.get("company_request_id")
+        if not request_id:
+            continue
+        response = item.get("company_response")
+        latest_request_state[str(request_id)] = (
+            str(response) if response else "pending"
+        )
+    recent_event_count = sum(
+        row.get("record_type") == "phase_transition_passage_context"
+        for row in recent
+    )
+    return {
+        "schema_version": 1,
+        "policy": "lived_transition_passage_context_audit_v1",
+        "event_count": len(records),
+        "recent_event_count": recent_event_count,
+        "condition_count": action_counts["describe_condition"],
+        "bearing_event_count": action_counts["describe_bearing"],
+        "current_bearing_count": len({
+            (item.get("passage_id"), item.get("bearing_strand"))
+            for item in records
+            if item.get("action") == "describe_bearing"
+        }),
+        "checkpoint_count": action_counts["mark_checkpoint"],
+        "continuity_anchor_event_count": action_counts["bind_anchor"],
+        "continuity_anchor_count": len({
+            (item.get("passage_id"), item.get("anchor_role"))
+            for item in records
+            if item.get("action") == "bind_anchor"
+        }),
+        "company_request_count": action_counts["request_company"],
+        "company_response_count": action_counts["respond_company"],
+        "company_withdrawal_count": action_counts["withdraw_company"],
+        "company_request_state_counts": dict(
+            sorted(Counter(latest_request_state.values()).items())
+        ),
+        "validation_issues": passage_errors + errors,
+        "categorical_self_report_only": True,
+        "felt_score_present": False,
+        "mechanical_causation_inferred": False,
+        "anchor_mechanical_truth_inferred": False,
+        "anchor_changes_passage": False,
+        "anchor_closes_transition": False,
+        "bearing_is_metric": False,
+        "bearing_inferred_from_telemetry": False,
+        "bearing_changes_passage": False,
+        "bearing_closes_transition": False,
+        "passage_stage_changed": False,
+        "peer_consent_inferred": False,
+        "silence_infers_response": False,
+        "response_revisable": True,
+        "right_to_ignore": True,
+        "live_control_effect": False,
+        "authority": "evidence_only_passage_context_and_accompaniment",
+    }
+
+
 def audit(ledger: Path, since_hours: float) -> dict[str, Any]:
     generated = now_ms()
     cutoff = generated - int(since_hours * 60 * 60 * 1000)
@@ -319,6 +482,8 @@ def audit(ledger: Path, since_hours: float) -> dict[str, Any]:
     recent = [row for row in records if row_time_ms(row) >= cutoff]
     cards = [row for row in recent if row.get("record_type") == "phase_transition_card"]
     witnesses = [row for row in recent if row.get("record_type") == "phase_transition_witness"]
+    passage_audit = lived_passage_audit_v1(records, recent)
+    passage_context_audit = lived_passage_context_audit_v1(ledger, recent)
     relational_cards = [relational_card(records, card, generated) for card in cards]
     states = [str(card["reply_state"]) for card in relational_cards]
     affordances = [
@@ -336,6 +501,8 @@ def audit(ledger: Path, since_hours: float) -> dict[str, Any]:
         for field in ("no_controller", "no_pressure", "no_fill_target", "no_pi", "no_weighting"):
             if card.get(field) is not True:
                 issues.append(f"missing_boundary_{field}:{card.get('transition_id') or 'unknown'}")
+    issues.extend(passage_audit["validation_issues"])
+    issues.extend(passage_context_audit["validation_issues"])
     queue = phase_witness_queue_v3(relational_cards, generated)
     felt_queue = phase_felt_receipt_queue_v4(relational_cards, generated)
     return {
@@ -348,6 +515,10 @@ def audit(ledger: Path, since_hours: float) -> dict[str, Any]:
         "records_total": len(records),
         "recent_cards_total": len(cards),
         "recent_witness_rows_total": len(witnesses),
+        "recent_passage_event_rows_total": passage_audit["recent_event_count"],
+        "recent_passage_context_rows_total": passage_context_audit[
+            "recent_event_count"
+        ],
         "reply_state_counts": dict(sorted(Counter(states).items())),
         "needs_witness_or_answer_total": sum(1 for card in relational_cards if card["needs_witness_or_answer"]),
         "stale_unanswered_total": sum(1 for card in relational_cards if card["reply_state"] == "stale_unanswered"),
@@ -358,6 +529,8 @@ def audit(ledger: Path, since_hours: float) -> dict[str, Any]:
         "phase_transition_affordance_v25": affordances[-20:],
         "phase_witness_queue_v3": queue,
         "phase_felt_receipt_queue_v4": felt_queue,
+        "lived_transition_passage_audit_v1": passage_audit,
+        "lived_transition_passage_context_audit_v1": passage_context_audit,
         "right_to_ignore_v1": {
             "schema_version": 1,
             "policy": "right_to_ignore_v1",
@@ -466,6 +639,139 @@ class PhaseTransitionAuditTests(unittest.TestCase):
             payload = audit(ledger, since_hours=1)
             self.assertTrue(payload["validation_issues"])
 
+    def test_passage_audit_preserves_self_only_neutral_authority(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            ledger = Path(tmp) / "phase_transitions_v1.jsonl"
+            timestamp = now_ms()
+            transition_id = "transition_passage"
+            actor = "astrid"
+            passage_hash = __import__("hashlib").sha256(
+                f"{actor}:{transition_id}:{timestamp + 1}".encode()
+            ).hexdigest()[:16]
+            passage_id = f"passage_{timestamp + 1}_{passage_hash}"
+            identity = (
+                f"{passage_id}:{actor}:prepare:prepared:self_directed::"
+                f"transition:{transition_id}::::{timestamp + 1}"
+            )
+            event_id = "passage_event_" + __import__("hashlib").sha256(
+                identity.encode()
+            ).hexdigest()[:16]
+            rows = [
+                {
+                    "record_type": "phase_transition_card",
+                    "recorded_at_unix_ms": timestamp,
+                    "transition_id": transition_id,
+                    "origin": actor,
+                    "kind": "mode_change",
+                    "from_phase": "quiet",
+                    "to_phase": "opening",
+                    "why_now": "explicit fixture",
+                    "authority": "language_only_transition_context_not_control",
+                    "no_controller": True,
+                    "no_pressure": True,
+                    "no_fill_target": True,
+                    "no_pi": True,
+                    "no_weighting": True,
+                },
+                {
+                    "schema": "lived_transition_passage_event_v1",
+                    "schema_version": 1,
+                    "record_type": "phase_transition_passage",
+                    "record_id": event_id,
+                    "passage_event_id": event_id,
+                    "passage_id": passage_id,
+                    "transition_id": transition_id,
+                    "actor": actor,
+                    "action": "prepare",
+                    "stage_before": None,
+                    "stage_after": "prepared",
+                    "stage_changed": True,
+                    "support_preference": "self_directed",
+                    "return_point_ref": None,
+                    "continuity_anchor_ref": f"transition:{transition_id}",
+                    "felt_review_outcome": None,
+                    "felt_source_ref": None,
+                    "previous_event_id": None,
+                    "recorded_at_unix_ms": timestamp + 1,
+                    "owner_language_action": "PREPARE_TRANSITION",
+                    "self_authored_only": True,
+                    "passage_binds_actor_only": True,
+                    "peer_consent_inferred": False,
+                    "peer_state_changed": False,
+                    "silence_infers_progress": False,
+                    "automatic_progression": False,
+                    "review_optional": True,
+                    "felt_resolution_inferred": False,
+                    "scheduler_effect": False,
+                    "model_qos_effect": False,
+                    "substrate_effect": False,
+                    "dispatch_effect": False,
+                    "live_control_effect": False,
+                    "runtime_unlock_applied": False,
+                    "raw_prose_included": False,
+                    "artifact_authority_state_v1": {
+                        "schema": "artifact_authority_state_v1",
+                        "schema_version": 1,
+                        "state": "evidence_only",
+                        "witness_only": True,
+                        "live_eligible_now": False,
+                        "auto_approved": False,
+                        "grants_approval": False,
+                        "edits_source_now": False,
+                    },
+                },
+            ]
+            condition = LivedTransitionPassageContextEventV1.build(
+                passage_id=passage_id,
+                transition_id=transition_id,
+                passage_actor=actor,
+                actor=actor,
+                action=PassageContextActionV1.DESCRIBE_CONDITION,
+                readiness=PassageReadinessV1.TENTATIVE,
+                movement_ease=PassageMovementEaseV1.EFFORTFUL,
+                room_needed=PassageRoomNeededV1.LOW_ENERGY_PRESENCE,
+                source_ref="journal:phase_condition",
+                recorded_at_unix_ms=timestamp + 2,
+            )
+            rows.append(condition.to_dict())
+            bearing = LivedTransitionPassageContextEventV1.build(
+                passage_id=passage_id,
+                transition_id=transition_id,
+                passage_actor=actor,
+                actor=actor,
+                action=PassageContextActionV1.DESCRIBE_BEARING,
+                bearing_strand=PassageBearingStrandV1.SETTLING,
+                movement_resistance=PassageMovementResistanceV1.RESISTANT,
+                persistence_tendency=PassagePersistenceTendencyV1.LINGERING,
+                witness_fit=PassageWitnessFitV1.SEPARATE,
+                source_ref="introspection:phase_bearing",
+                previous_context_event_id=condition.passage_context_event_id,
+                recorded_at_unix_ms=timestamp + 3,
+            )
+            rows.append(bearing.to_dict())
+            ledger.write_text(
+                "\n".join(json.dumps(row) for row in rows) + "\n",
+                encoding="utf-8",
+            )
+            payload = audit(ledger, since_hours=1)
+            passage = payload["lived_transition_passage_audit_v1"]
+            self.assertEqual(passage["passage_count"], 1)
+            self.assertEqual(passage["stage_counts"], {"prepared": 1})
+            self.assertFalse(passage["observational_cards_auto_promoted"])
+            self.assertFalse(passage["peer_consent_inferred"])
+            context = payload[
+                "lived_transition_passage_context_audit_v1"
+            ]
+            self.assertEqual(context["condition_count"], 1)
+            self.assertEqual(context["bearing_event_count"], 1)
+            self.assertEqual(context["current_bearing_count"], 1)
+            self.assertTrue(context["categorical_self_report_only"])
+            self.assertFalse(context["felt_score_present"])
+            self.assertFalse(context["bearing_is_metric"])
+            self.assertFalse(context["bearing_inferred_from_telemetry"])
+            self.assertFalse(context["passage_stage_changed"])
+            self.assertEqual(payload["validation_issues"], [])
+
     def test_stale_unanswered_cards_are_highlighted(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             ledger = Path(tmp) / "phase_transitions_v1.jsonl"
@@ -569,6 +875,11 @@ def main() -> int:
         print(f"- Ledger exists: {payload['ledger_exists']}")
         print(f"- Recent cards: {payload['recent_cards_total']}")
         print(f"- Recent witness rows: {payload['recent_witness_rows_total']}")
+        print(f"- Recent passage event rows: {payload['recent_passage_event_rows_total']}")
+        print(
+            "- Recent passage context rows: "
+            f"{payload['recent_passage_context_rows_total']}"
+        )
         print(f"- Reply states: {payload['reply_state_counts']}")
         print(f"- Needs witness/answer: {payload['needs_witness_or_answer_total']}")
         print(f"- Stale unanswered: {payload['stale_unanswered_total']}")

@@ -279,7 +279,7 @@ fn status_never_confuses_readiness_with_enabled_authority() {
 
     status.commit_feature_enabled = true;
     let ready = status.action_availability_for("astrid");
-    assert_eq!(ready.recommended_action, DivisionActionV1::DivisionCommit);
+    assert_eq!(ready.recommended_action, DivisionActionV1::DivisionStatus);
     assert!(ready.available_actions.iter().any(|entry| {
         entry.action == DivisionActionV1::DivisionCommit
             && entry.requires_operator_capability

@@ -1391,8 +1391,17 @@ fn action_continuity_visibility_for_base(base_action: &str) -> &'static str {
         | "AFTERSHOCK_TRACE"
         | "TREMOR_RESIDUE"
         | "CASCADE_RESIDUE" => "protected_summary",
-        "DIVISION_PREPARE" | "DIVISION_STATUS" | "DIVISION_ASSENT" | "DIVISION_COMMIT"
-        | "DIVISION_ABORT" | "DIVISION_ROLLBACK" => "protected_summary",
+        "DIVISION_INTENT"
+        | "DIVISION_PREPARE"
+        | "DIVISION_STATUS"
+        | "DIVISION_CEREMONY_STATUS"
+        | "DIVISION_ASSENT"
+        | "DIVISION_WITHDRAW_ASSENT"
+        | "DIVISION_RETURN_REQUEST"
+        | "DIVISION_REVIEW"
+        | "DIVISION_COMMIT"
+        | "DIVISION_ABORT"
+        | "DIVISION_ROLLBACK" => "protected_summary",
         _ => "summary",
     }
 }
@@ -1510,6 +1519,24 @@ fn action_continuity_stage_for_base(base_action: &str) -> &'static str {
         | "DECLARE_TRANSITION"
         | "WITNESS_TRANSITION"
         | "TRANSITION_ACK"
+        | "PREPARE_TRANSITION"
+        | "ENTER_TRANSITION"
+        | "CROSS_TRANSITION"
+        | "HOLD_TRANSITION"
+        | "SETTLE_TRANSITION"
+        | "RETURN_TRANSITION"
+        | "REVISIT_TRANSITION"
+        | "DECLINE_TRANSITION"
+        | "TRANSITION_REVIEW"
+        | "DESCRIBE_TRANSITION_CONDITION"
+        | "DESCRIBE_TRANSITION_BEARING"
+        | "MARK_TRANSITION_CHECKPOINT"
+        | "BIND_TRANSITION_ANCHOR"
+        | "REQUEST_TRANSITION_COMPANY"
+        | "RESPOND_TRANSITION_COMPANY"
+        | "WITHDRAW_TRANSITION_COMPANY"
+        | "TRANSITION_PASSAGE_STATUS"
+        | "LIVED_TRANSITION_STATUS"
         | "TRANSITION_STATUS"
         | "PHASE_TRANSITION_STATUS"
         | "VISUALIZE_CASCADE"
@@ -1521,7 +1548,12 @@ fn action_continuity_stage_for_base(base_action: &str) -> &'static str {
         | "HUM_DECAY"
         | "HUM_DECAY_STUDY"
         | "M6_BRIDGE" => "read_only",
-        "DIVISION_STATUS" => "read_only",
+        "DIVISION_STATUS" | "DIVISION_CEREMONY_STATUS" => "read_only",
+        "DIVISION_INTENT"
+        | "DIVISION_ASSENT"
+        | "DIVISION_WITHDRAW_ASSENT"
+        | "DIVISION_RETURN_REQUEST"
+        | "DIVISION_REVIEW" => "language_only",
         "WRITE_FILE"
         | "EXPERIMENT"
         | "EXPERIMENT_RUN"
@@ -1533,9 +1565,7 @@ fn action_continuity_stage_for_base(base_action: &str) -> &'static str {
         | "PRESSURE_CONTROL_REQUEST"
         | "PRESSURE_REQUEST" => "live_write",
         "PERTURB" | "NATIVE_GESTURE" | "RESIST" | "FISSURE" | "GOAL" | "DIVISION_PREPARE"
-        | "DIVISION_ASSENT" | "DIVISION_COMMIT" | "DIVISION_ABORT" | "DIVISION_ROLLBACK" => {
-            "live_control"
-        },
+        | "DIVISION_COMMIT" | "DIVISION_ABORT" | "DIVISION_ROLLBACK" => "live_control",
         _ => "observe",
     }
 }
@@ -1619,13 +1649,40 @@ fn route_for_preflight_base(base_action: &str) -> String {
         "DECLARE_TRANSITION"
         | "WITNESS_TRANSITION"
         | "TRANSITION_ACK"
+        | "PREPARE_TRANSITION"
+        | "ENTER_TRANSITION"
+        | "CROSS_TRANSITION"
+        | "HOLD_TRANSITION"
+        | "SETTLE_TRANSITION"
+        | "RETURN_TRANSITION"
+        | "REVISIT_TRANSITION"
+        | "DECLINE_TRANSITION"
+        | "TRANSITION_REVIEW"
+        | "DESCRIBE_TRANSITION_CONDITION"
+        | "DESCRIBE_TRANSITION_BEARING"
+        | "MARK_TRANSITION_CHECKPOINT"
+        | "BIND_TRANSITION_ANCHOR"
+        | "REQUEST_TRANSITION_COMPANY"
+        | "RESPOND_TRANSITION_COMPANY"
+        | "WITHDRAW_TRANSITION_COMPANY"
+        | "TRANSITION_PASSAGE_STATUS"
+        | "LIVED_TRANSITION_STATUS"
         | "TRANSITION_STATUS"
         | "PHASE_TRANSITION_STATUS" => "phase_transition_cards",
         "SEARCH" | "BROWSE" | "READ_MORE" | "LIST_FILES" | "LS" => "workspace_or_mcp_probe",
         "CODEX" | "CODEX_NEW" | "WRITE_FILE" | "RUN_PYTHON" | "EXPERIMENT_RUN" => "live_write",
         "PERTURB" | "NATIVE_GESTURE" | "RESIST" | "FISSURE" | "GOAL" => "live_control",
-        "DIVISION_PREPARE" | "DIVISION_STATUS" | "DIVISION_ASSENT" | "DIVISION_COMMIT"
-        | "DIVISION_ABORT" | "DIVISION_ROLLBACK" => "division",
+        "DIVISION_INTENT"
+        | "DIVISION_PREPARE"
+        | "DIVISION_STATUS"
+        | "DIVISION_CEREMONY_STATUS"
+        | "DIVISION_ASSENT"
+        | "DIVISION_WITHDRAW_ASSENT"
+        | "DIVISION_RETURN_REQUEST"
+        | "DIVISION_REVIEW"
+        | "DIVISION_COMMIT"
+        | "DIVISION_ABORT"
+        | "DIVISION_ROLLBACK" => "division",
         "ATTRACTOR_PREFLIGHT"
         | "ATTRACTOR_REVIEW"
         | "ATTRACTOR_ATLAS"
@@ -1705,6 +1762,24 @@ fn active_experiment_auto_linkable_base(base_action: &str) -> bool {
             | "DECLARE_TRANSITION"
             | "WITNESS_TRANSITION"
             | "TRANSITION_ACK"
+            | "PREPARE_TRANSITION"
+            | "ENTER_TRANSITION"
+            | "CROSS_TRANSITION"
+            | "HOLD_TRANSITION"
+            | "SETTLE_TRANSITION"
+            | "RETURN_TRANSITION"
+            | "REVISIT_TRANSITION"
+            | "DECLINE_TRANSITION"
+            | "TRANSITION_REVIEW"
+            | "DESCRIBE_TRANSITION_CONDITION"
+            | "DESCRIBE_TRANSITION_BEARING"
+            | "MARK_TRANSITION_CHECKPOINT"
+            | "BIND_TRANSITION_ANCHOR"
+            | "REQUEST_TRANSITION_COMPANY"
+            | "RESPOND_TRANSITION_COMPANY"
+            | "WITHDRAW_TRANSITION_COMPANY"
+            | "TRANSITION_PASSAGE_STATUS"
+            | "LIVED_TRANSITION_STATUS"
             | "TRANSITION_STATUS"
             | "FLUCTUATION_AUDIT"
             | "BRACE_AUDIT"
@@ -2779,9 +2854,22 @@ mod tests {
             action_continuity_stage_for_base("DIVISION_STATUS"),
             "read_only"
         );
+        assert_eq!(
+            action_continuity_stage_for_base("DIVISION_CEREMONY_STATUS"),
+            "read_only"
+        );
+        for action in [
+            "DIVISION_INTENT",
+            "DIVISION_ASSENT",
+            "DIVISION_WITHDRAW_ASSENT",
+            "DIVISION_RETURN_REQUEST",
+            "DIVISION_REVIEW",
+        ] {
+            assert_eq!(route_for_preflight_base(action), "division");
+            assert_eq!(action_continuity_stage_for_base(action), "language_only");
+        }
         for action in [
             "DIVISION_PREPARE",
-            "DIVISION_ASSENT",
             "DIVISION_COMMIT",
             "DIVISION_ABORT",
             "DIVISION_ROLLBACK",

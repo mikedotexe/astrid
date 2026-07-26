@@ -8,11 +8,17 @@ use astrid_minime_protocol::{
 };
 use chrono::Utc;
 
+use super::super::division_ceremony::{self, DivisionCeremonyActionV1};
 use super::{ConversationState, NextActionContext, bridge_paths, strip_action};
 const ACTIONS: &[&str] = &[
+    "DIVISION_INTENT",
     "DIVISION_PREPARE",
     "DIVISION_STATUS",
+    "DIVISION_CEREMONY_STATUS",
     "DIVISION_ASSENT",
+    "DIVISION_WITHDRAW_ASSENT",
+    "DIVISION_RETURN_REQUEST",
+    "DIVISION_REVIEW",
     "DIVISION_COMMIT",
     "DIVISION_ABORT",
     "DIVISION_ROLLBACK",
@@ -42,9 +48,61 @@ pub(super) fn handle_action(
     if !ACTIONS.contains(&base_action) {
         return None;
     }
+    if base_action == "DIVISION_CEREMONY_STATUS" {
+        let workspace = minime_workspace(ctx);
+        let now = Utc::now().timestamp_millis().max(0) as u64;
+        return Some(
+            division_ceremony::status_report_at(&workspace, "astrid", now)
+                .map(|report| {
+                    conv.pending_file_listing = Some(report.clone());
+                    conv.emphasis = Some(
+                        "Division ceremony status is attached. It shows the evidence and native rails separately, gives one optional next choice, and never recommends commit."
+                            .to_string(),
+                    );
+                })
+                .map_err(|message| {
+                    let rendered = format!("Division ceremony status blocked: {message}");
+                    conv.emphasis = Some(rendered.clone());
+                    rendered
+                }),
+        );
+    }
     if base_action == "DIVISION_STATUS" {
         render_status(conv, ctx);
         return Some(Ok(()));
+    }
+    let ceremony_action = match base_action {
+        "DIVISION_INTENT" => Some(DivisionCeremonyActionV1::Intent),
+        "DIVISION_ASSENT" => Some(DivisionCeremonyActionV1::Assent),
+        "DIVISION_WITHDRAW_ASSENT" => Some(DivisionCeremonyActionV1::WithdrawAssent),
+        "DIVISION_RETURN_REQUEST" => Some(DivisionCeremonyActionV1::ReturnRequest),
+        "DIVISION_REVIEW" => Some(DivisionCeremonyActionV1::Review),
+        _ => None,
+    };
+    if let Some(action) = ceremony_action {
+        let workspace = minime_workspace(ctx);
+        let now = Utc::now().timestamp_millis().max(0) as u64;
+        let raw = strip_action(original, base_action);
+        return Some(
+            division_ceremony::append_action_at(&workspace, "astrid", action, &raw, now)
+                .map(|receipt| {
+                    conv.emphasis = Some(receipt);
+                    conv.push_receipt(
+                        base_action,
+                        vec![
+                            "appended self-authored evidence-only division ceremony event"
+                                .to_string(),
+                            "no native command, assent, prepare, commit, rollback, or RETURN_TRANSITION dispatched"
+                                .to_string(),
+                        ],
+                    );
+                })
+                .map_err(|message| {
+                    let rendered = format!("Division ceremony ACTION blocked: {message}");
+                    conv.emphasis = Some(rendered.clone());
+                    rendered
+                }),
+        );
     }
 
     if !rehearsal_dispatch_enabled() {
@@ -56,8 +114,16 @@ pub(super) fn handle_action(
     }
 
     let raw = strip_action(original, base_action);
+    let workspace = minime_workspace(ctx);
+    let now = Utc::now().timestamp_millis().max(0) as u64;
     let result = load_command(&raw, ctx)
         .and_then(|command| validate_command(base_action, command))
+        .and_then(|command| {
+            if command.action == DivisionActionV1::DivisionPrepare {
+                division_ceremony::require_active_intent_at(&workspace, "astrid", &command, now)?;
+            }
+            Ok(command)
+        })
         .and_then(block_without_live_authority_adapter);
     Some(match result {
         Ok(never) => match never {},
@@ -85,7 +151,12 @@ fn render_status(conv: &mut ConversationState, ctx: &NextActionContext<'_>) {
                 );
             }
             let rendered = serde_json::to_string_pretty(&value).unwrap_or_default();
-            conv.pending_file_listing = Some(rendered.clone());
+            let now = Utc::now().timestamp_millis().max(0) as u64;
+            let ceremony = division_ceremony::status_report_at(&workspace, "astrid", now)
+                .unwrap_or_else(|error| format!("Ceremony status unavailable: {error}"));
+            conv.pending_file_listing = Some(format!(
+                "{rendered}\n\n=== DIVISION CEREMONY STATUS ===\n{ceremony}"
+            ));
             conv.push_receipt(
                 "DIVISION_STATUS",
                 vec![
@@ -147,7 +218,7 @@ fn render_action_summary(availability: &DivisionActionAvailabilityV1) -> String 
         .collect::<Vec<_>>()
         .join(", ");
     format!(
-        "Available now: {available}. Recommended: {}.",
+        "Operationally available now: {available}. Automatic choice: {}. Commit is never automatically recommended.",
         action_name(availability.recommended_action)
     )
 }
@@ -157,9 +228,6 @@ pub(super) fn prompt_note(workspace: Option<&Path>) -> Option<String> {
 }
 
 fn prompt_note_with_gate(workspace: Option<&Path>, dispatch_enabled: bool) -> Option<String> {
-    if !dispatch_enabled {
-        return None;
-    }
     let workspace = workspace.map_or_else(
         || bridge_paths().minime_workspace().to_path_buf(),
         Path::to_path_buf,
@@ -168,6 +236,15 @@ fn prompt_note_with_gate(workspace: Option<&Path>, dispatch_enabled: bool) -> Op
     if status.lifecycle == DivisionLifecycleV1::Idle {
         return None;
     }
+    let now = Utc::now().timestamp_millis().max(0) as u64;
+    let ceremony = division_ceremony::status_report_at(&workspace, "astrid", now)
+        .ok()
+        .and_then(|rendered| serde_json::from_str::<serde_json::Value>(&rendered).ok());
+    let next_choice = ceremony
+        .as_ref()
+        .and_then(|value| value.get("next_choice"))
+        .and_then(serde_json::Value::as_str)
+        .unwrap_or("DIVISION_CEREMONY_STATUS");
     let availability = status.action_availability_for("astrid");
     let commit_blockers = availability
         .blocked_actions
@@ -176,7 +253,7 @@ fn prompt_note_with_gate(workspace: Option<&Path>, dispatch_enabled: bool) -> Op
         .map(|entry| entry.reasons.join(", "))
         .unwrap_or_else(|| "none".to_string());
     Some(format!(
-        "DIVISION ACTION CARD (current native lifecycle; high priority): lifecycle={:?}; {} Commit blockers: {commit_blockers}. Mutations require ACTION_PREFLIGHT plus the exact command artifact; native safety and authority checks remain decisive.",
+        "DIVISION CEREMONY (evidence rail beside native lifecycle): lifecycle={:?}; one optional next choice={next_choice}; commit is never recommended. Intent, assent, withdrawal, return request, and review are self-authored evidence only. Native operations remain separately gated and require ACTION_PREFLIGHT (dispatch_enabled={dispatch_enabled}). {} Commit blockers: {commit_blockers}.",
         status.lifecycle,
         render_action_summary(&availability)
     ))
@@ -217,7 +294,6 @@ fn validate_command(
 ) -> Result<DivisionCommandV1, String> {
     let expected = match base_action {
         "DIVISION_PREPARE" => DivisionActionV1::DivisionPrepare,
-        "DIVISION_ASSENT" => DivisionActionV1::DivisionAssent,
         "DIVISION_COMMIT" => DivisionActionV1::DivisionCommit,
         "DIVISION_ABORT" => DivisionActionV1::DivisionAbort,
         "DIVISION_ROLLBACK" => DivisionActionV1::DivisionRollback,
@@ -241,9 +317,7 @@ fn validate_command(
     }
     if matches!(
         command.action,
-        DivisionActionV1::DivisionPrepare
-            | DivisionActionV1::DivisionAssent
-            | DivisionActionV1::DivisionAbort
+        DivisionActionV1::DivisionPrepare | DivisionActionV1::DivisionAbort
     ) && command.source.being != "astrid"
     {
         return Err("Astrid may only send her own prepare, assent, or abort command".to_string());
@@ -341,10 +415,13 @@ mod tests {
         )
         .unwrap();
 
-        assert!(prompt_note_with_gate(Some(root.path()), false).is_none());
+        let dormant = prompt_note_with_gate(Some(root.path()), false)
+            .expect("ceremony remains visible while native dispatch is disabled");
+        assert!(dormant.contains("dispatch_enabled=false"));
+        assert!(dormant.contains("commit is never recommended"));
         let note =
             prompt_note_with_gate(Some(root.path()), true).expect("active division prompt note");
-        assert!(note.contains("DIVISION_ASSENT"));
+        assert!(note.contains("DIVISION_INTENT"));
         assert!(note.contains("DIVISION_ABORT"));
         assert!(note.contains("commit_feature_disabled"));
         assert!(note.contains("ACTION_PREFLIGHT"));
