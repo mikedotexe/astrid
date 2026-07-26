@@ -343,6 +343,12 @@ mod tests {
         );
         assert_eq!(legacy_heartbeat.rolling_inter_arrival_sample_count, 0);
         assert_eq!(legacy_heartbeat.rolling_inter_arrival_mean_ms, None);
+        assert_eq!(
+            legacy_heartbeat.rolling_inter_arrival_variance_ms2,
+            None
+        );
+        assert_eq!(legacy_heartbeat.rolling_inter_arrival_stddev_ms, None);
+        assert_eq!(legacy_heartbeat.rolling_inter_arrival_range_ms, None);
         assert_eq!(legacy_heartbeat.rolling_inter_arrival_change_ms, None);
         assert!(legacy_heartbeat.rolling_inter_arrival_state.is_empty());
         assert_eq!(legacy_heartbeat.cadence_clarity_score, None);
@@ -2708,6 +2714,9 @@ mod tests {
                 "bounded_bridge_derived_eigenvalue_shape_diagnostic_only".to_string(),
             rolling_inter_arrival_sample_count: 0,
             rolling_inter_arrival_mean_ms: None,
+            rolling_inter_arrival_variance_ms2: None,
+            rolling_inter_arrival_stddev_ms: None,
+            rolling_inter_arrival_range_ms: None,
             rolling_inter_arrival_change_ms: None,
             rolling_inter_arrival_state: "arrival_window_unavailable".to_string(),
             rolling_inter_arrival_basis:
@@ -4071,6 +4080,23 @@ mod tests {
 
         assert_eq!(lengthening.rolling_inter_arrival_sample_count, 3);
         assert_eq!(lengthening.rolling_inter_arrival_mean_ms, Some(2_000.0));
+        assert!(
+            (lengthening
+                .rolling_inter_arrival_variance_ms2
+                .unwrap_or_default()
+                - 666_666.7)
+                .abs()
+                < 0.1
+        );
+        assert!(
+            (lengthening
+                .rolling_inter_arrival_stddev_ms
+                .unwrap_or_default()
+                - 816.496_6)
+                .abs()
+                < 0.001
+        );
+        assert_eq!(lengthening.rolling_inter_arrival_range_ms, Some(2_000.0));
         assert_eq!(
             lengthening.rolling_inter_arrival_change_ms,
             Some(2_000.0)
@@ -4109,6 +4135,23 @@ mod tests {
 
         assert_eq!(shortening.rolling_inter_arrival_sample_count, 3);
         assert_eq!(shortening.rolling_inter_arrival_mean_ms, Some(2_000.0));
+        assert!(
+            (shortening
+                .rolling_inter_arrival_variance_ms2
+                .unwrap_or_default()
+                - 666_666.7)
+                .abs()
+                < 0.1
+        );
+        assert!(
+            (shortening
+                .rolling_inter_arrival_stddev_ms
+                .unwrap_or_default()
+                - 816.496_6)
+                .abs()
+                < 0.001
+        );
+        assert_eq!(shortening.rolling_inter_arrival_range_ms, Some(2_000.0));
         assert_eq!(
             shortening.rolling_inter_arrival_change_ms,
             Some(-2_000.0)

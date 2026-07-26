@@ -74,6 +74,18 @@ pub struct TelemetryHeartbeatDeltaV1 {
     /// Mean host-arrival interval over the bounded cadence window.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub rolling_inter_arrival_mean_ms: Option<f32>,
+    /// Population variance of host-arrival intervals over the bounded cadence
+    /// window, expressed in milliseconds squared.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub rolling_inter_arrival_variance_ms2: Option<f32>,
+    /// Population standard deviation of host-arrival intervals over the
+    /// bounded cadence window.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub rolling_inter_arrival_stddev_ms: Option<f32>,
+    /// Maximum minus minimum host-arrival interval in the bounded cadence
+    /// window.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub rolling_inter_arrival_range_ms: Option<f32>,
     /// Latest interval minus earliest interval in the bounded cadence window.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub rolling_inter_arrival_change_ms: Option<f32>,

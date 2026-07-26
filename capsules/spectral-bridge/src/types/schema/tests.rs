@@ -3287,6 +3287,39 @@ mod tests {
     }
 
     #[test]
+    fn identical_near_zero_fingerprint_slots_remain_fully_coherent() {
+        let mut telemetry: SpectralTelemetry = serde_json::from_value(serde_json::json!({
+            "t_ms": 1000,
+            "eigenvalues": [1.0, 0.5],
+            "fill_ratio": 0.5,
+            "spectral_fingerprint_v1": {
+                "policy": "spectral_fingerprint_v1",
+                "schema_version": 1,
+                "eigenvalues": [1.0e-30, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                "eigenvector_concentration_top4": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                "inter_mode_cosine_top_abs": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                "spectral_entropy": 0.0,
+                "lambda1_lambda2_gap": 0.0,
+                "v1_rotation_similarity": 0.0,
+                "v1_rotation_delta": 0.0,
+                "geom_rel": 0.0,
+                "adjacent_gap_ratios": [0.0, 0.0, 0.0, 0.0]
+            }
+        }))
+        .unwrap();
+        telemetry.spectral_fingerprint = telemetry
+            .spectral_fingerprint_v1
+            .as_ref()
+            .map(SpectralFingerprintV1::to_legacy_slots);
+
+        let integrity = telemetry.spectral_fingerprint_integrity_v1();
+
+        assert_eq!(integrity.hybrid_coherence_index, Some(1.0));
+        assert_eq!(integrity.hybrid_max_abs_delta, Some(0.0));
+        assert_eq!(integrity.hybrid_coherence_state, "aligned");
+    }
+
+    #[test]
     fn typed_and_legacy_fingerprint_reject_non_finite_hybrid_slots() {
         let mut telemetry: SpectralTelemetry = serde_json::from_value(serde_json::json!({
             "t_ms": 1000,
@@ -3321,10 +3354,7 @@ mod tests {
             let integrity = telemetry.spectral_fingerprint_integrity_v1();
             assert_eq!(integrity.hybrid_coherence_index, None);
             assert_eq!(integrity.hybrid_max_abs_delta, None);
-            assert_eq!(
-                integrity.hybrid_coherence_state,
-                "unavailable_non_finite"
-            );
+            assert_eq!(integrity.hybrid_coherence_state, "unavailable_non_finite");
         }
     }
 

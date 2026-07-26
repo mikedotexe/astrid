@@ -19,11 +19,16 @@ from pathlib import Path
 from typing import Any, Iterable, Mapping
 
 try:
-    from authority_state import ArtifactAuthorityStateV1, assert_artifact_authority_tree
+    from authority_state import (
+        ArtifactAuthorityStateError,
+        ArtifactAuthorityStateV1,
+        assert_artifact_authority_tree,
+    )
     from evidence_store import EvidenceEventStore
     from evidence_store.model import ProvenanceSourceV1
 except ModuleNotFoundError:
     from scripts.authority_state import (
+        ArtifactAuthorityStateError,
         ArtifactAuthorityStateV1,
         assert_artifact_authority_tree,
     )
@@ -136,7 +141,10 @@ def reject_private_content(value: Any, *, path: tuple[str, ...] = ()) -> None:
 
 def validate_evidence_record(value: Mapping[str, Any]) -> None:
     reject_private_content(dict(value))
-    assert_artifact_authority_tree(dict(value))
+    try:
+        assert_artifact_authority_tree(dict(value))
+    except ArtifactAuthorityStateError as error:
+        raise RecordValidationError(str(error)) from error
     authority = value.get("artifact_authority_state_v1")
     if not isinstance(authority, dict) or authority.get("state") not in {
         "evidence_only",

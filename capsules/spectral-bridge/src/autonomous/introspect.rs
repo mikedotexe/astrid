@@ -66,17 +66,25 @@ impl IntrospectSourceScopeV1 {
     }
 
     fn artifact_header_v1(self) -> String {
+        if self.total_lines == 0
+            || self.start_line >= self.total_lines
+            || self.end_line <= self.start_line
+        {
+            return "Source window: unavailable\n\
+                    Source evidence scope: empty_window_no_source_read\n\
+                    Source activation boundary: source_unread_not_runtime_activation_proof"
+                .to_string();
+        }
         let display_start = if self.total_lines == 0 {
             0
         } else {
             self.start_line.saturating_add(1)
         };
-        let evidence_scope =
-            if self.start_line == 0 && self.end_line == self.total_lines {
-                "complete_file"
-            } else {
-                "partial_window_unseen_source_not_assessed"
-            };
+        let evidence_scope = if self.start_line == 0 && self.end_line == self.total_lines {
+            "complete_file"
+        } else {
+            "partial_window_unseen_source_not_assessed"
+        };
         format!(
             "Source window: lines {display_start}-{} of {}\n\
              Source evidence scope: {evidence_scope}\n\
@@ -96,6 +104,23 @@ pub(super) fn source_scope_artifact_header_v1(window: Option<&IntrospectWindow>)
         },
         |window| window.source_scope_v1.artifact_header_v1(),
     )
+}
+
+fn validated_introspect_window_start(
+    line_offset: usize,
+    total_lines: usize,
+) -> Result<usize, String> {
+    if total_lines == 0 {
+        return Err("target source is empty; no source lines were read".to_string());
+    }
+    if line_offset >= total_lines {
+        return Err(format!(
+            "requested offset {line_offset} is at or past the end of the source \
+             ({total_lines} lines); choose a concrete included implementation target \
+             or restart this source at offset 0"
+        ));
+    }
+    Ok(line_offset)
 }
 
 fn minime_autonomy_implementation(minime_root: &Path) -> PathBuf {
@@ -1138,7 +1163,7 @@ pub(super) fn read_introspect_window(
 
     let all_lines: Vec<&str> = content.lines().collect();
     let total = all_lines.len();
-    let start = line_offset.min(total);
+    let start = validated_introspect_window_start(line_offset, total)?;
     let end = start.saturating_add(INTROSPECT_WINDOW_LINES).min(total);
     let page: String = all_lines[start..end]
         .iter()
@@ -1939,18 +1964,37 @@ mod tests {
         assert!(complete.contains("Source window: lines 1-48 of 48"));
         assert!(complete.contains("Source evidence scope: complete_file"));
         assert!(
-            complete.contains(
-                "Source activation boundary: source_read_not_runtime_activation_proof"
-            )
+            complete
+                .contains("Source activation boundary: source_read_not_runtime_activation_proof")
         );
 
         let partial = IntrospectSourceScopeV1::new(400, 800, 1_204).artifact_header_v1();
         assert!(partial.contains("Source window: lines 401-800 of 1204"));
         assert!(
-            partial.contains(
-                "Source evidence scope: partial_window_unseen_source_not_assessed"
-            )
+            partial.contains("Source evidence scope: partial_window_unseen_source_not_assessed")
         );
+
+        let empty = IntrospectSourceScopeV1::new(22, 22, 22).artifact_header_v1();
+        assert!(empty.contains("Source window: unavailable"));
+        assert!(empty.contains("Source evidence scope: empty_window_no_source_read"));
+        assert!(
+            empty
+                .contains("Source activation boundary: source_unread_not_runtime_activation_proof")
+        );
+        assert!(!empty.contains("lines 23-22"));
+    }
+
+    #[test]
+    fn introspect_window_rejects_empty_and_past_eof_offsets() {
+        assert_eq!(
+            validated_introspect_window_start(0, 0),
+            Err("target source is empty; no source lines were read".to_string())
+        );
+        let error = validated_introspect_window_start(22, 22)
+            .expect_err("an offset at EOF must not produce an empty source read");
+        assert!(error.contains("at or past the end"));
+        assert!(error.contains("included implementation target"));
+        assert_eq!(validated_introspect_window_start(21, 22), Ok(21));
     }
 
     #[test]
@@ -1959,9 +2003,8 @@ mod tests {
         assert!(header.contains("Source window: unavailable"));
         assert!(header.contains("Source evidence scope: source_unavailable_not_assessed"));
         assert!(
-            header.contains(
-                "Source activation boundary: source_unread_not_runtime_activation_proof"
-            )
+            header
+                .contains("Source activation boundary: source_unread_not_runtime_activation_proof")
         );
     }
 

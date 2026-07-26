@@ -1009,10 +1009,13 @@ fn build_telemetry_heartbeat_delta_v1(
                 .to_string(),
         rolling_inter_arrival_sample_count: 0,
         rolling_inter_arrival_mean_ms: None,
+        rolling_inter_arrival_variance_ms2: None,
+        rolling_inter_arrival_stddev_ms: None,
+        rolling_inter_arrival_range_ms: None,
         rolling_inter_arrival_change_ms: None,
         rolling_inter_arrival_state: "arrival_window_unavailable".to_string(),
         rolling_inter_arrival_basis:
-            "bounded_host_arrival_timestamps_diagnostic_only_not_peer_clock_internal_cycle_felt_state_causation_or_control"
+            "bounded_host_arrival_timestamps_mean_variance_stddev_range_and_latest_minus_earliest_diagnostic_only_not_peer_clock_internal_cycle_felt_state_causation_or_control"
                 .to_string(),
         connection_perception_state,
         cadence_clarity_score,
@@ -1195,7 +1198,22 @@ fn attach_rolling_arrival_cadence_v1(
 
     let count = intervals.len() as f64;
     let mean = intervals.iter().map(|value| f64::from(*value)).sum::<f64>() / count;
+    let variance = intervals
+        .iter()
+        .map(|value| {
+            let delta = f64::from(*value) - mean;
+            delta * delta
+        })
+        .sum::<f64>()
+        / count;
+    let (minimum, maximum) = intervals.iter().copied().fold(
+        (f32::INFINITY, f32::NEG_INFINITY),
+        |(minimum, maximum), value| (minimum.min(value), maximum.max(value)),
+    );
     heartbeat.rolling_inter_arrival_mean_ms = Some(mean as f32);
+    heartbeat.rolling_inter_arrival_variance_ms2 = Some(variance as f32);
+    heartbeat.rolling_inter_arrival_stddev_ms = Some(variance.sqrt() as f32);
+    heartbeat.rolling_inter_arrival_range_ms = Some(maximum - minimum);
     if intervals.len() == 1 {
         heartbeat.rolling_inter_arrival_state = "single_inter_arrival_sample".to_string();
         return;

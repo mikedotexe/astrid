@@ -2125,6 +2125,8 @@ mod tests {
             "manifests",
             "corresponds",
             "echoes",
+            "indicates",
+            "signals",
             "behaves as",
             "behaves like",
         ] {

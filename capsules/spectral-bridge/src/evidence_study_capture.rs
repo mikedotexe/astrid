@@ -247,6 +247,9 @@ struct TelemetryStudyMetricsV1 {
     entropy_peak: Option<f32>,
     entropy_variance: Option<f32>,
     entropy_trend: Option<f32>,
+    cadence_interval_variance_ms2: Option<f32>,
+    cadence_interval_stddev_ms: Option<f32>,
+    cadence_interval_range_ms: Option<f32>,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -521,6 +524,9 @@ pub(crate) fn record_telemetry_sample_v1(
                 entropy_peak: heartbeat.peak_spectral_entropy_in_window,
                 entropy_variance: heartbeat.rolling_spectral_entropy_variance,
                 entropy_trend: heartbeat.rolling_spectral_entropy_change,
+                cadence_interval_variance_ms2: heartbeat.rolling_inter_arrival_variance_ms2,
+                cadence_interval_stddev_ms: heartbeat.rolling_inter_arrival_stddev_ms,
+                cadence_interval_range_ms: heartbeat.rolling_inter_arrival_range_ms,
             },
             timing_establishes_causation: false,
             raw_prose_included: false,

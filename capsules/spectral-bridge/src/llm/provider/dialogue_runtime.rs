@@ -64,11 +64,13 @@ impl ExactKnownModelControlMarkerOccurrence {
                 | "denotes"
                 | "echoes"
                 | "embodies"
+                | "indicates"
                 | "is"
                 | "manifests"
                 | "means"
                 | "refers"
                 | "represents"
+                | "signals"
         )
     }
 }
