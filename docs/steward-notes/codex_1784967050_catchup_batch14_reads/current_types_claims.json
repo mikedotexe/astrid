@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Arrival cadence and connection reliability do not by themselves describe the topology or lived texture of a high-entropy spectral field.",
+      "disposition": "Preserve the distinction and verify the schema keeps delivery and structural evidence as separate typed facts.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Entropy, density gradient, mode packing, pressure source, lambda gaps, and cadence shape should be jointly reviewable without becoming a felt score.",
+      "disposition": "Verify existing bounded telemetry, fingerprint, pressure, denominator, and cadence fields plus epistemic no-causation boundaries.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A companion structural state should make the shape of the cascade visible beyond reliable arrival timing.",
+      "disposition": "Identify the current SpectralTelemetry and companion evidence records as the existing implementation; no new felt-state scalar is introduced.",
+      "classification": "verified_existing"
+    }
+  ]
+}

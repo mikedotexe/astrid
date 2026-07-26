@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "summary": "A different temporal observation should not reuse or overwrite an earlier witness identity.",
+      "disposition": "Verify temporal progression creates distinct immutable sidecars.",
+      "classification": "implemented",
+      "claim_id": "c001"
+    },
+    {
+      "summary": "Different bytes under the same witness ID must fail rather than silently rewrite history.",
+      "disposition": "Verify write-once conflict and tampering tests.",
+      "classification": "verified_existing",
+      "claim_id": "c002"
+    },
+    {
+      "summary": "Semantic-energy overwrite thresholds would score prose and weaken append-only evidence.",
+      "disposition": "Retain strict immutability and reject soft-conflict overwrite behavior.",
+      "classification": "verified_existing",
+      "claim_id": "c003"
+    }
+  ]
+}

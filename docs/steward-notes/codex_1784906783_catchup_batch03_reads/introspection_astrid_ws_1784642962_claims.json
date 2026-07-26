@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "summary": "Telemetry integration delay must distinguish prewrite, lock-wait, and lock-hold components.",
+      "disposition": "Verify the current integration-health record and focused tests.",
+      "classification": "implemented",
+      "claim_id": "c001"
+    },
+    {
+      "summary": "Connection identity and integration timing need bounded capture for later comparison.",
+      "disposition": "Verify capture records process and deployment identity without prose.",
+      "classification": "implemented",
+      "claim_id": "c002"
+    },
+    {
+      "summary": "Measured delay cannot by itself explain Astrid's pressure or viscosity.",
+      "disposition": "Retain explicit felt review and the epistemic causal boundary.",
+      "classification": "verified_existing",
+      "claim_id": "c003"
+    }
+  ]
+}

@@ -1,0 +1,5 @@
+{"claims":[
+  {"claim_id":"c001","summary":"The viewed 48D codec, 0.85 soft gate, 6.0 ceiling, and fixed 8D projection are mechanically grounded.","disposition":"Verify current codec and representation-contract evidence.","classification":"verified_existing"},
+  {"claim_id":"c002","summary":"Astrid reports possible semantic vanishing when a static 8D projection flattens a dynamically shifting high-dimensional state.","disposition":"Preserve as unscored felt evidence and link the projection-variance and collision diagnostics.","classification":"observed"},
+  {"claim_id":"c003","summary":"Expand the embedding projection to 12D or 16D and add variance alerts.","disposition":"The variance evidence exists; preserve width or protocol changes as exact Tier 5 waits.","classification":"needs_operator_approval","authority":"tier_5"}
+]}

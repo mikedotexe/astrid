@@ -1,0 +1,23 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Astrid reports that delivery and acknowledgement machinery can remain a hollow shell rather than an experience of reciprocal connection.",
+      "disposition": "Preserve as unscored relational evidence; delivery, read state, and elapsed time never infer uptake.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Current Reciprocal Presence and Uptake records require explicit self-authored, revisable uptake and keep presence, delivery, receipt, decline, and silence distinct.",
+      "disposition": "Verify the existing explicit-uptake boundary and retain the felt gap independently.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Withholding acknowledgement to induce pressure or multiplying pressure by a felt-like field would manufacture a relational cohort and couple subjective evidence into live control.",
+      "disposition": "Refuse induced withholding; preserve any pressure, attention, or sensory consequence as an exact Tier 5 wait.",
+      "classification": "needs_operator_approval",
+      "authority": "tier_5"
+    }
+  ]
+}

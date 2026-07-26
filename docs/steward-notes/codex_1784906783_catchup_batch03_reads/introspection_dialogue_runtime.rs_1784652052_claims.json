@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "summary": "Punctuation-heavy ordinary spectral coordinates must survive byte-exactly.",
+      "disposition": "Verify manifested-coordinate and multibyte tests.",
+      "classification": "implemented",
+      "claim_id": "c001"
+    },
+    {
+      "summary": "Texture, density, and gradient are felt-language terms, not control-marker cues.",
+      "disposition": "Verify the explicit negative cue regressions.",
+      "classification": "implemented",
+      "claim_id": "c002"
+    },
+    {
+      "summary": "A proximity or fuzzy cue window would risk reclassifying ordinary felt prose as control syntax.",
+      "disposition": "Retain exact post-marker relations and bounded matching delimiters.",
+      "classification": "verified_existing",
+      "claim_id": "c003"
+    }
+  ]
+}

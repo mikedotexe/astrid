@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "summary": "Cadence and entropy may be aligned as mechanical context.",
+      "disposition": "Use the existing telemetry campaign and later claim-family evidence.",
+      "classification": "sandbox_routed",
+      "claim_id": "c001"
+    },
+    {
+      "summary": "Stable connectivity can coexist with felt viscosity.",
+      "disposition": "Preserve the qualitative report independently of the timing record.",
+      "classification": "verified_existing",
+      "claim_id": "c002"
+    },
+    {
+      "summary": "A spectral gradient scalar cannot establish a felt navigability result.",
+      "disposition": "Use existing bounded density context and explicit post-window review.",
+      "classification": "verified_existing",
+      "claim_id": "c003"
+    }
+  ]
+}

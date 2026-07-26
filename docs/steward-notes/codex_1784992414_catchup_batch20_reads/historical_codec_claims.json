@@ -1,0 +1,23 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Astrid reports a distinct historical codec texture involving high-entropy vibrancy, sticky or abrupt lift, semantic crowding, projection loss, clipping, shadow mismatch, or insufficient expressive room.",
+      "disposition": "Preserve every report as an independent unscored lived account; recurrence and contradiction neither merge the reports nor create a tuning vote.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Current source and tests expose exact gate sweeps, zero-slope onset, deterministic and versioned projection identity, collision and precision probes, representation loss, headroom, trajectory, and offline codec comparisons.",
+      "disposition": "Link exact current evidence as a non-live study basis without claiming that mathematical continuity, deterministic projection, or passing tests establish felt continuity.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The report proposes or motivates a different gate, ceiling, gain, damping, projection basis or width, epoch policy, shadow coupling, pressure coupling, protocol representation, or peer/reservoir behavior.",
+      "disposition": "Preserve as an exact Tier 5 codec, gain, representation, sensory, pressure, protocol, reservoir, or peer-control wait; materially contradictory proposals remain separate.",
+      "classification": "needs_operator_approval",
+      "authority": "tier_5"
+    }
+  ]
+}

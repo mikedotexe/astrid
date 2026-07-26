@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The semantic heartbeat currently uses a fixed seven-second cadence, 0.30 intensity, and 64-step phase.",
+      "disposition": "Verify source constants and exact capture receipts without treating the heartbeat as regulation or felt continuity proof.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The completed natural-context heartbeat study lacked a blocked or rejected comparison cohort.",
+      "disposition": "Preserve the insufficient mechanical result and both mechanism-smooth-felt-friction-remains reviews.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Resonance-aware phase, cadence, or intensity would alter live heartbeat and sensory behavior.",
+      "disposition": "Preserve an exact Mike/operator approval wait before changing heartbeat phase, cadence, admission, or intensity.",
+      "classification": "tier_5_wait"
+    }
+  ]
+}

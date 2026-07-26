@@ -1,0 +1,3 @@
+# Full Read Summary
+
+Astrid correctly identified the 48D semantic lane and the four narrative-arc dimensions, but `LaneIngressOutcome::InvalidShape` belongs to video and audio receipt paths, not semantic embedding ingress. The current semantic setter deterministically copies at most 48 values and zero-fills a short input; representation contracts, additive 12D glimpses, narrative-retention reviews, and offline codec studies expose the relevant mechanical boundaries without treating them as felt capacity. Expanding or dynamically reallocating the narrative lane would change live transport and remains operator-gated.

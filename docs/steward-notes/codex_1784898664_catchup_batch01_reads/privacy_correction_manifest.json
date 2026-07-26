@@ -1,0 +1,16 @@
+{
+  "reads": [
+    {
+      "introspection_id": "introspection_mod.rs_1784709029",
+      "reader": "codex-sol",
+      "summary_file": "introspection_mod.rs_1784709029_summary.md",
+      "claims_file": "introspection_mod.rs_1784709029_claims.json"
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1784693200",
+      "reader": "codex-sol",
+      "summary_file": "introspection_minime_regulator_1784693200_summary.md",
+      "claims_file": "introspection_minime_regulator_1784693200_claims.json"
+    }
+  ]
+}

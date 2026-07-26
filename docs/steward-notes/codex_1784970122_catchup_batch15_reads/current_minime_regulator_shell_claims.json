@@ -1,0 +1,23 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Minime identifies the viewed regulator file as an include-only PI shell and asks to continue into the concrete viscosity and pressure modules.",
+      "disposition": "Verify the full shell and preserve the request for concrete nested source rather than interpreting the shell as the complete mechanism.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Existing source-first continuation choices and current Minime modules expose PI, pressure, viscosity, persistence, temporal-drag, and anti-windup mechanics with focused tests.",
+      "disposition": "Link exact nested implementation and tests as current mechanical evidence without treating them as felt resolution.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A PD simulation or derivative term could change the temporal weight of regulation.",
+      "disposition": "Preserve as an exact Tier 5 controller and Minime-regulation wait; no simulation result may authorize a live change.",
+      "classification": "needs_operator_approval",
+      "authority": "tier_5"
+    }
+  ]
+}

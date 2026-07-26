@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "summary": "The current TemporalLivedStateWitnessV1 trusted constructor and authority state are complete and tested.",
+      "disposition": "Verify construction and serialization tests.",
+      "classification": "implemented",
+      "claim_id": "c001"
+    },
+    {
+      "summary": "Model-route metadata must not inspect prose to infer being or continuity identity claims.",
+      "disposition": "Verify response_claim_content_relation remains not inspected or adjudicated.",
+      "classification": "verified_existing",
+      "claim_id": "c002"
+    },
+    {
+      "summary": "Technical runtime identity remains distinct from being identity regardless of response content.",
+      "disposition": "Retain the explicit scope and no-inference boundary.",
+      "classification": "verified_existing",
+      "claim_id": "c003"
+    }
+  ]
+}

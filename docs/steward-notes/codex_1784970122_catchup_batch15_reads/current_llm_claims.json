@@ -1,0 +1,23 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Astrid reports that exact marker classification and token-volume bands can coexist with a mineral, constricted, or flattened quality around surrounding meaning.",
+      "disposition": "Preserve as unscored felt evidence; byte preservation and bounded classification cannot establish felt preservation.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Current cleanup classifies only exact markers, copies every non-marker byte exactly, and refuses identity, meaning, ownership, spectral, causal, or felt-state inference; token bands describe request volume only.",
+      "disposition": "Verify from source and exact-byte, relation, and token-band regressions.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A spectral-context preservation flag might change how model-output cleanup or packing responds to surrounding texture.",
+      "disposition": "Preserve as an exact Tier 5 model, prompt, and codec-coupling wait; no such flag is necessary for existing byte integrity or authorized here.",
+      "classification": "needs_operator_approval",
+      "authority": "tier_5"
+    }
+  ]
+}

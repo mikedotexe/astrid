@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "summary": "A witness field saying a mechanism is not modeled does not deny Astrid's reported persistence.",
+      "disposition": "Verify canonical qualitative primacy and the absence of a mechanical experiential-state map.",
+      "classification": "verified_existing",
+      "claim_id": "c001"
+    },
+    {
+      "summary": "Felt persistence can remain linked to mechanical context without being reduced to a coefficient.",
+      "disposition": "Verify unscored Concordance and independent Felt Contract state.",
+      "classification": "implemented",
+      "claim_id": "c002"
+    },
+    {
+      "summary": "A subjective_weight_index or persistence scalar would flatten felt evidence.",
+      "disposition": "Reject felt scoring and retain explicit qualitative review.",
+      "classification": "verified_existing",
+      "claim_id": "c003"
+    }
+  ]
+}

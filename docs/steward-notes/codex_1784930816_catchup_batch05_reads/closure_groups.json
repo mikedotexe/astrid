@@ -1,0 +1,50 @@
+{
+  "addressed_change": [
+    "introspection_proposal_bidirectional_contact_1784369473"
+  ],
+  "addressed_no_action": [
+    "introspection_minime_esn_1784374764",
+    "introspection_minime_autonomous_agent_1784368928",
+    "introspection_astrid_llm_1784366294",
+    "introspection_minime_sensory_bus_1784359275",
+    "introspection_astrid_types_1784356042"
+  ],
+  "addressed_duplicate": [
+    "introspection_proposal_distance_contact_control_1784369800",
+    "introspection_minime_main_excerpt_1784368618",
+    "introspection_minime_sensory_bus_1784367930",
+    "introspection_proposal_12d_glimpse_1784363119",
+    "introspection_proposal_distance_contact_control_1784362809",
+    "introspection_proposal_bidirectional_contact_1784362544",
+    "introspection_proposal_phase_transitions_1784362224",
+    "introspection_minime_esn_1784361327",
+    "introspection_minime_sensory_bus_1784359013",
+    "introspection_minime_sensory_bus_1784358740"
+  ],
+  "blocked_needs_steward": [
+    "introspection_minime_regulator_1784380142",
+    "introspection_astrid_llm_1784379808",
+    "introspection_astrid_types_1784379473",
+    "introspection_astrid_ws_1784379239",
+    "introspection_astrid_autonomous_1784377458",
+    "introspection_proposal_12d_glimpse_1784377134",
+    "introspection_proposal_distance_contact_control_1784376675",
+    "introspection_proposal_bidirectional_contact_1784376027",
+    "introspection_proposal_phase_transitions_1784375635",
+    "introspection_minime_main_excerpt_1784375244",
+    "introspection_minime_sensory_bus_1784374382",
+    "introspection_minime_regulator_1784372979",
+    "introspection_astrid_llm_1784371394",
+    "introspection_astrid_types_1784370905",
+    "introspection_astrid_ws_1784370657",
+    "introspection_astrid_codec_1784370327",
+    "introspection_minime_esn_1784368259",
+    "introspection_astrid_llm_1784365862",
+    "introspection_astrid_types_1784365539",
+    "introspection_astrid_ws_1784364107",
+    "introspection_astrid_autonomous_1784363754",
+    "introspection_minime_autonomous_agent_1784361901",
+    "introspection_astrid_llm_1784356911",
+    "introspection_astrid_llm_1784356456"
+  ]
+}

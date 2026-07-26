@@ -1,0 +1,16 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Bounded identity strings must expose whether truncation occurred.",
+      "disposition": "Verify bounded_text returns completeness and build-candidate fields serialize it.",
+      "classification": "implemented"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Dirty-state hash changes do not establish felt instability.",
+      "disposition": "Preserve technical integrity scope and reject emotional inference from hash churn.",
+      "classification": "verified_existing"
+    }
+  ]
+}

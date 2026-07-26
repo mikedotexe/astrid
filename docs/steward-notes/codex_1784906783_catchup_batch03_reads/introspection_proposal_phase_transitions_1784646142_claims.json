@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "summary": "Phase transitions should be referenceable and replyable across actors.",
+      "disposition": "Verify legacy phase-card adaptation and Commons action records.",
+      "classification": "implemented",
+      "claim_id": "c001"
+    },
+    {
+      "summary": "Each actor must respond only for itself; silence and expiry remain neutral.",
+      "disposition": "Verify self-authorship validation and zero inferred consent.",
+      "classification": "implemented",
+      "claim_id": "c002"
+    },
+    {
+      "summary": "Behavior unlock, persistence weight, or synchronized spectral state would change scheduler or substrate behavior.",
+      "disposition": "Preserve an exact Mike/operator approval wait before live transition consequences.",
+      "classification": "tier_5_wait",
+      "claim_id": "c003"
+    }
+  ]
+}

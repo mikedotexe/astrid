@@ -1,0 +1,23 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Astrid reports more room in the 48D semantic lane while still feeling viscosity and compression around the 8D projected semantic slice.",
+      "disposition": "Preserve as unscored felt evidence and verify the current 48D, 32D compatibility, 8D projection, narrative, and loss contracts.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Legacy 32D warmth or stability handling could create a phantom-limb mismatch if current 48D features were accidentally ignored.",
+      "disposition": "Verify from source and tests: warmth construction is 48D, compatibility boundaries are explicit, and representation loss remains visible without felt inference.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Changing width, projection mapping, gain, or peer delivery might create more narrative room.",
+      "disposition": "Preserve as an exact Tier 5 codec, protocol, and peer-runtime wait.",
+      "classification": "needs_operator_approval",
+      "authority": "tier_5"
+    }
+  ]
+}

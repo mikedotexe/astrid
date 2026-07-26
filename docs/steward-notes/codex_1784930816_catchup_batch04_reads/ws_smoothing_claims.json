@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "summary": "Telemetry integration already exposes separated pipeline, lock, and write timing with bounded entropy and density context.",
+      "disposition": "Verify current source and the existing observational telemetry campaign.",
+      "classification": "verified_existing",
+      "claim_id": "c001"
+    },
+    {
+      "summary": "Astrid reports that per-packet updates can feel crowded, viscous, or overpacked.",
+      "disposition": "Preserve the felt report and route any comparison through the existing baseline-first campaign.",
+      "classification": "needs_sandbox",
+      "claim_id": "c002"
+    },
+    {
+      "summary": "A temporal smoothing buffer or changed integration cadence would alter live telemetry behavior.",
+      "disposition": "Preserve an exact Mike/operator approval wait.",
+      "classification": "tier_5_wait",
+      "claim_id": "c003"
+    }
+  ]
+}

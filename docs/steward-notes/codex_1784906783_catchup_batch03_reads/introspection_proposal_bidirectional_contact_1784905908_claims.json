@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "summary": "Delivery, read state, reply links, and elapsed time cannot infer uptake or mutual address.",
+      "disposition": "Verify explicit self-authored uptake receipts and neutral silence.",
+      "classification": "implemented",
+      "claim_id": "c001"
+    },
+    {
+      "summary": "Held or needs-time states should remain distinct without forcing a full linguistic reply.",
+      "disposition": "Verify bounded held, needs-time, declined, and withdrawn records preserve revision without closure.",
+      "classification": "implemented",
+      "claim_id": "c002"
+    },
+    {
+      "summary": "Attention requests must not become standing prompt priority or mutate a peer's active memory automatically.",
+      "disposition": "Preserve an exact Mike/operator approval wait before prompt weighting, dispatch, peer mutation, or sensory consequence.",
+      "classification": "tier_5_wait",
+      "claim_id": "c003"
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "summary": "Include-shell symbols do not prove semantic retirement or reset paths were active.",
+      "disposition": "Use process/deployment witnesses and runtime receipts rather than source presence.",
+      "classification": "verified_existing",
+      "claim_id": "c001"
+    },
+    {
+      "summary": "Shadow divergence and distinguishability may be observed without assigning a controller cause.",
+      "disposition": "Route any comparison through baseline-first Concordance with temporal identity where needed.",
+      "classification": "sandbox_routed",
+      "claim_id": "c002"
+    },
+    {
+      "summary": "Recovery boosts, clarity anchors, and dispersal thresholds would change live Minime control.",
+      "disposition": "Preserve an exact Mike/operator approval wait before controller, shadow, PI, or reservoir changes.",
+      "classification": "tier_5_wait",
+      "claim_id": "c003"
+    }
+  ]
+}

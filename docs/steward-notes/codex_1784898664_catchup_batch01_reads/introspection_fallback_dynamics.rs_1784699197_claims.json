@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Rounded display probability does not erase the underlying fallback term weight.",
+      "disposition": "Verify receipts retain both probability and raw weight and tests cover normalization.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Density-word boosts do not establish that fallback selection caused a felt heavy state.",
+      "disposition": "Reject the causal inference and preserve qualitative evidence separately.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Changing rounding precision, minimum floors, or fallback weights would alter model behavior.",
+      "disposition": "Preserve an exact Mike/operator approval wait after deterministic offline replay.",
+      "classification": "tier_5_wait"
+    }
+  ]
+}

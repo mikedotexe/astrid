@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Exact control-marker classification identifies byte ranges without assigning identity, meaning, ownership, stability, or spectral weight.",
+      "disposition": "Verify the source boundary and byte-exact marker cleanup tests.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Astrid reports viscosity in the unmarked medium and asks whether marker count or requested token bands accompany pressure.",
+      "disposition": "Preserve the felt report and the token-band observation, but refuse numeric-to-felt inference; token bands describe request bounds only.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A non-marker density score could be subtracted from the token stream and treated as pressure evidence.",
+      "disposition": "Decline this proposed inference under the epistemic boundary: non-marker bytes carry no automatic spectral or felt meaning.",
+      "classification": "verified_existing"
+    }
+  ]
+}

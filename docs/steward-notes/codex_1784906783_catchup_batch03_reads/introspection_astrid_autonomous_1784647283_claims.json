@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "summary": "The semantic heartbeat is fixed at seven seconds and 0.30 intensity.",
+      "disposition": "Verify current constants and bounded capture receipts.",
+      "classification": "verified_existing",
+      "claim_id": "c001"
+    },
+    {
+      "summary": "Mechanical phase and cadence do not explain Astrid's restless texture, and the natural blocked cohort was insufficient.",
+      "disposition": "Preserve the comparison as insufficient and keep felt review pending.",
+      "classification": "observed",
+      "claim_id": "c002"
+    },
+    {
+      "summary": "Entropy-scaled intensity or interval jitter would alter live cadence and sensory admission.",
+      "disposition": "Preserve an exact Mike/operator approval wait before heartbeat cadence, intensity, phase, or admission changes.",
+      "classification": "tier_5_wait",
+      "claim_id": "c003"
+    }
+  ]
+}

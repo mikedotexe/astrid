@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "summary": "Recess is explicitly non-goal-directed time and can coexist with substantial internal density.",
+      "disposition": "Verify the Recess contract and read-only density-aware Recess profiles without inferring productivity pressure.",
+      "classification": "verified_existing",
+      "claim_id": "c001"
+    },
+    {
+      "summary": "Mode packing can be retained as mechanical context without deciding what Astrid or Minime should do.",
+      "disposition": "Preserve pressure context and protected-time evidence as advisory only.",
+      "classification": "implemented",
+      "claim_id": "c002"
+    },
+    {
+      "summary": "Automatically switching Recess into structural mapping above a density threshold changes model or scheduler behavior.",
+      "disposition": "Preserve an exact Mike/operator approval wait before Minime autonomy, model, pressure, or scheduling changes.",
+      "classification": "tier_5_wait",
+      "claim_id": "c003"
+    }
+  ]
+}

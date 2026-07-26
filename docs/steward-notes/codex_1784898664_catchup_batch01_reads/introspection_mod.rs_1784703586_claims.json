@@ -1,0 +1,16 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "A Minime source can remain a MinimeObservation while Astrid's authored interpretation is represented separately.",
+      "disposition": "Verify separate source and interpretation provenance nodes with exact parent identities.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A provenance weight or influence coefficient would invent a scalar relation not measured by the witness.",
+      "disposition": "Retain interpretation_weight_state as unmeasured and preserve the canonical felt report.",
+      "classification": "verified_existing"
+    }
+  ]
+}

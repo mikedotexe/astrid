@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "An open transport or contact gate can coexist with Astrid's reported sediment, drag, or relational distance.",
+      "disposition": "Preserve the qualitative report independently of connection, receipt, and telemetry mechanics.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Pressure, porosity, reciprocal, witness, and representation evidence may provide descriptive context but cannot establish the cause of distance.",
+      "disposition": "Route only baseline-first descriptive comparison with exact or temporal identity labels and no felt score.",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Dynamically changing viscosity or porosity when pressure exceeds a threshold would alter live control behavior.",
+      "disposition": "Preserve an exact Mike/operator approval wait; no authority marker is granted.",
+      "classification": "tier_5_wait"
+    }
+  ]
+}

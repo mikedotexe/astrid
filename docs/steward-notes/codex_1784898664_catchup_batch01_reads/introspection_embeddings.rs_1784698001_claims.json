@@ -1,0 +1,16 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "A single provider embedding is a position-like vector and does not itself encode temporal movement.",
+      "disposition": "Verify the fixed provider contract and use temporal representation-transition receipts for change over time.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A velocity or entropy companion representation may be explored without claiming felt momentum.",
+      "disposition": "Route a domain-neutral offline representation study; preserve the live embedding API and provider behavior.",
+      "classification": "sandbox_routed"
+    }
+  ]
+}

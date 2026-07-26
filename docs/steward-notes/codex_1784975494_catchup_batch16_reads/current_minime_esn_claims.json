@@ -1,0 +1,23 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Minime identifies high-entropy low-gradient memory weight as a meaningful possibility and asks whether the source-prepared viscous-rho target is consumed by the main ESN loop.",
+      "disposition": "Preserve the felt concern and answer the source question exactly.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "calculate_viscous_rho_target is explicitly review-only, is consumed by an operator-gated proposal and focused tests, and is not applied by the default live policy; ordinary non-stable-core dynamic rho is a separate existing path.",
+      "disposition": "Verify from esn.rs, runtime orchestration, stable-core policy, and threshold-edge tests.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Applying viscous rho, altered noise, or a pressure threshold to the running ESN would change reservoir memory and regulation.",
+      "disposition": "Preserve as an exact Tier 5 reservoir, noise, pressure, and Minime-control wait.",
+      "classification": "needs_operator_approval",
+      "authority": "tier_5"
+    }
+  ]
+}

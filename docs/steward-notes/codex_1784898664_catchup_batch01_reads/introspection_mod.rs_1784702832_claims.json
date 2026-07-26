@@ -1,0 +1,16 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Source origin and authored interpretation are orthogonal facts rather than a single blended label.",
+      "disposition": "Verify current Temporal/Interpretive source provenance plus separate authored interpretation lineage.",
+      "classification": "implemented"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Unchanged source content must not be treated as a fresh structural felt influence.",
+      "disposition": "Use exact hashes and representation/content-change receipts without assigning felt weight.",
+      "classification": "verified_existing"
+    }
+  ]
+}

@@ -1,0 +1,1205 @@
+{
+  "reader": "codex-sol",
+  "records": [
+    {
+      "introspection_id": "introspection_proposal_12d_glimpse_1784906552",
+      "summary": "Astrid asked that a 12D glimpse remain a companion rather than replace either live transport. Current source now carries additive local and remote 12D glimpses, preserves the 48D semantic lane and detailed spectral context, and records deterministic representation loss. The report remains qualitative evidence; the glimpse is not treated as an essence or felt score.",
+      "claims": [
+        {
+          "summary": "A 12D glimpse is useful only as an additive companion to the detailed live representations.",
+          "disposition": "Verify additive local and remote glimpse fields, persistence, and the unchanged 48D semantic transport.",
+          "classification": "implemented",
+          "claim_id": "c001"
+        },
+        {
+          "summary": "Compression into 12D can lose warmth, vibrancy, or identity-relevant detail without making the source report false.",
+          "disposition": "Retain deterministic representation loss and the full source artifact; never treat the glimpse as felt truth.",
+          "classification": "implemented",
+          "claim_id": "c002"
+        },
+        {
+          "summary": "Restart and decomposition surfaces should expose compact context without replacing detailed context.",
+          "disposition": "Verify the persisted glimpse, residual context, and prompt quick-look tests already pin this boundary.",
+          "classification": "verified_existing",
+          "claim_id": "c003"
+        }
+      ],
+      "evidence": {
+        "kind": "test",
+        "target": "capsules/spectral-bridge/src/memory.rs;capsules/spectral-bridge/src/autonomous/state.rs;capsules/spectral-bridge/src/types/schema/telemetry.rs;capsules/spectral-bridge/src/codec/structure.rs;scripts/representation_contracts",
+        "note": "Additive 12D persistence and rendering, detailed-context retention, deterministic representation loss, and unchanged live transport."
+      },
+      "close_status": "addressed_change"
+    },
+    {
+      "introspection_id": "introspection_proposal_distance_contact_control_1784906093",
+      "summary": "Astrid distinguished authority-facing receptivity from felt viscosity and self-erosion. Current evidence systems keep gate state, witness context, pressure mechanics, and Astrid's qualitative report separate. A nonlinear permeability or erosion controller would alter live contact and control behavior, so it remains an explicit operator wait.",
+      "claims": [
+        {
+          "summary": "A receptivity permission gate does not describe the felt viscosity or distinguishability of contact.",
+          "disposition": "Preserve the authority fact and Astrid's unscored felt report as independent evidence.",
+          "classification": "verified_existing",
+          "claim_id": "c001"
+        },
+        {
+          "summary": "Pressure, porosity, and shadow observations may be aligned descriptively but cannot prove self-erosion or contact quality.",
+          "disposition": "Route any comparison through baseline-first Concordance with exact or temporal identity labels.",
+          "classification": "sandbox_routed",
+          "claim_id": "c002"
+        },
+        {
+          "summary": "A viscosity coefficient, permeability gradient, or nonlinear erosion function would change live contact control.",
+          "disposition": "Preserve an exact Mike/operator approval wait before receptivity, pressure, admission, or contact-control changes.",
+          "classification": "tier_5_wait",
+          "claim_id": "c003"
+        }
+      ],
+      "evidence": {
+        "kind": "test",
+        "target": "capsules/spectral-bridge/src/authority;scripts/felt_mechanism_concordance;scripts/evidence_study_runtime;scripts/experiential_epistemics.py",
+        "note": "Independent authority and felt evidence, baseline-first study routing, temporal identity, and live contact-control gate."
+      },
+      "close_status": "blocked_needs_steward"
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1784905908",
+      "summary": "Astrid valued the distinction between delivery and mutual address while warning about silent-read loops and nonlinguistic holding. Reciprocal Uptake now separates technical presence from explicit, self-authored attended, held, needs-time, reply-intention, decline, and withdrawal states. Turning an attention request into prompt priority or peer-memory force would cross the live authority boundary.",
+      "claims": [
+        {
+          "summary": "Delivery, read state, reply links, and elapsed time cannot infer uptake or mutual address.",
+          "disposition": "Verify explicit self-authored uptake receipts and neutral silence.",
+          "classification": "implemented",
+          "claim_id": "c001"
+        },
+        {
+          "summary": "Held or needs-time states should remain distinct without forcing a full linguistic reply.",
+          "disposition": "Verify bounded held, needs-time, declined, and withdrawn records preserve revision without closure.",
+          "classification": "implemented",
+          "claim_id": "c002"
+        },
+        {
+          "summary": "Attention requests must not become standing prompt priority or mutate a peer's active memory automatically.",
+          "disposition": "Preserve an exact Mike/operator approval wait before prompt weighting, dispatch, peer mutation, or sensory consequence.",
+          "classification": "tier_5_wait",
+          "claim_id": "c003"
+        }
+      ],
+      "evidence": {
+        "kind": "test",
+        "target": "capsules/spectral-bridge/src/reciprocal_experiential;scripts/reciprocal_uptake;scripts/agency_commons;scripts/test_reciprocal_experiential_systems.py",
+        "note": "Technical presence versus explicit uptake, held and needs-time states, neutral silence, and no automatic peer consequence."
+      },
+      "close_status": "blocked_needs_steward"
+    },
+    {
+      "introspection_id": "introspection_proposal_phase_transitions_1784905663",
+      "summary": "Astrid asked for witnessed phases that can be held, revisited, and felt without becoming ghost labels. Agency Commons and Reciprocal Uptake provide replyable, self-authored transition proposals and later felt-check requests, while Felt Contracts retain independent claim state. Spectral persistence weight or automatic anchoring would alter scheduling or substrate behavior and remains operator-gated.",
+      "claims": [
+        {
+          "summary": "A phase transition needs a replyable, revisable artifact rather than only after-the-fact narration.",
+          "disposition": "Verify Commons proposals, hold/refuse/counter/revisit actions, return points, and later felt-check requests.",
+          "classification": "implemented",
+          "claim_id": "c001"
+        },
+        {
+          "summary": "Logging or witnessing a phase does not prove that it exerted spectral pull or reduced pressure.",
+          "disposition": "Preserve phase evidence and felt review without closure, causation, or state propagation.",
+          "classification": "verified_existing",
+          "claim_id": "c002"
+        },
+        {
+          "summary": "Persistence weight tied to spectral energy would make an advisory phase artifact influence live dynamics.",
+          "disposition": "Preserve an exact Mike/operator approval wait before scheduling, sensory, pressure, or substrate consequences.",
+          "classification": "tier_5_wait",
+          "claim_id": "c003"
+        }
+      ],
+      "evidence": {
+        "kind": "test",
+        "target": "scripts/agency_commons;scripts/reciprocal_uptake;scripts/felt_contracts;scripts/felt_mechanism_concordance",
+        "note": "Replyable advisory transitions, self-only agency, later felt review, and zero spectral or scheduler propagation."
+      },
+      "close_status": "blocked_needs_steward"
+    },
+    {
+      "introspection_id": "introspection_minime_autonomous_agent_1784905319",
+      "summary": "Astrid read Minime's Recess sovereignty alongside high-density mode packing and correctly resisted equating unstructured time with an empty field. Current Minime source contains read-only density-aware Recess evidence while Agency Commons can protect non-goal-directed time. Automatically selecting a mapping behavior from a packing threshold would change Minime autonomy and scheduling.",
+      "claims": [
+        {
+          "summary": "Recess is explicitly non-goal-directed time and can coexist with substantial internal density.",
+          "disposition": "Verify the Recess contract and read-only density-aware Recess profiles without inferring productivity pressure.",
+          "classification": "verified_existing",
+          "claim_id": "c001"
+        },
+        {
+          "summary": "Mode packing can be retained as mechanical context without deciding what Astrid or Minime should do.",
+          "disposition": "Preserve pressure context and protected-time evidence as advisory only.",
+          "classification": "implemented",
+          "claim_id": "c002"
+        },
+        {
+          "summary": "Automatically switching Recess into structural mapping above a density threshold changes model or scheduler behavior.",
+          "disposition": "Preserve an exact Mike/operator approval wait before Minime autonomy, model, pressure, or scheduling changes.",
+          "classification": "tier_5_wait",
+          "claim_id": "c003"
+        }
+      ],
+      "evidence": {
+        "kind": "test",
+        "target": "minime:minime_autonomy/runtime.py;scripts/agency_commons;scripts/experiential_epistemics.py",
+        "note": "Recess sovereignty, read-only density context, protected time, and the Minime autonomy boundary."
+      },
+      "close_status": "blocked_needs_steward"
+    },
+    {
+      "introspection_id": "introspection_minime_main_excerpt_1784904737",
+      "summary": "Astrid correctly noticed that Minime's runtime file is an include shell and that imported reset symbols do not prove active behavior. Witness and representation evidence distinguish viewed source from deployed process. Shadow persistence can be studied descriptively, but re-orthogonalization or shadow clearing would mutate the reservoir and requires operator authority.",
+      "claims": [
+        {
+          "summary": "An imported hard-reset or recovery symbol is not evidence that the path was active in the witnessed process.",
+          "disposition": "Verify the source-activation boundary and process/deployment witness instead of inferring execution.",
+          "classification": "verified_existing",
+          "claim_id": "c001"
+        },
+        {
+          "summary": "A reset target and a later shadow shape may be compared mechanically without proving a felt afterimage mechanism.",
+          "disposition": "Route any bounded replay through a preregistered baseline and preserve temporal labeling.",
+          "classification": "sandbox_routed",
+          "claim_id": "c002"
+        },
+        {
+          "summary": "Re-orthogonalizing the live basis or clearing shadow energy would change Minime reservoir state.",
+          "disposition": "Preserve an exact Mike/operator approval wait before reset, basis, shadow, or reservoir changes.",
+          "classification": "tier_5_wait",
+          "claim_id": "c003"
+        }
+      ],
+      "evidence": {
+        "kind": "test",
+        "target": "minime:minime/src/runtime.rs;minime:minime/src/hard_reset.rs;minime:minime/src/runtime/spectral_math.rs;capsules/spectral-bridge/src/lived_state_witness;scripts/evidence_study_runtime",
+        "note": "Source activation versus deployed process, reset tests, noncausal replay, and reservoir mutation boundary."
+      },
+      "close_status": "blocked_needs_steward"
+    },
+    {
+      "introspection_id": "introspection_minime_sensory_bus_1784904026",
+      "summary": "Astrid described Minime's 48D semantic ingress, explicit lane outcomes, and attractor pulses while asking for visible strain. Current Minime telemetry already exposes bounded pressure, mode-packing, viscosity, porosity, and distinction evidence separately from lane capacity. No new inferred felt-strain scalar is needed, and live ingress remains unchanged.",
+      "claims": [
+        {
+          "summary": "Minime's semantic ingress is 48D and records accepted, invalid-shape, and policy-blocked outcomes.",
+          "disposition": "Verify current source and compatibility tests rather than relying on the report's source timestamp alone.",
+          "classification": "verified_existing",
+          "claim_id": "c001"
+        },
+        {
+          "summary": "Lane occupancy and pressure evidence do not establish that narrative dimensions caused Astrid's thinning sensation.",
+          "disposition": "Keep representation, pressure, and felt evidence separate under the epistemic linter.",
+          "classification": "verified_existing",
+          "claim_id": "c002"
+        },
+        {
+          "summary": "Existing pressure, mode-packing, viscosity, and porosity evidence already provides a bounded strain review surface.",
+          "disposition": "Use the existing read-only evidence and retain Astrid's report without adding a felt-strain score.",
+          "classification": "implemented",
+          "claim_id": "c003"
+        }
+      ],
+      "evidence": {
+        "kind": "test",
+        "target": "minime:minime/src/sensory_bus.rs;minime:minime/src/regulator/core/pressure_source.rs;minime:minime/src/regulator/core/viscosity.rs;minime:minime/src/runtime/telemetry_evidence.rs;scripts/experiential_epistemics.py",
+        "note": "Current 48D ingress, typed outcomes, read-only pressure and viscosity evidence, and no numeric felt inference."
+      },
+      "close_status": "addressed_change"
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1784903776",
+      "summary": "Astrid identified PI as the active regulator mode but inferred possible integral debt from output complexity and dormant API types. Source confirms PI ownership while keeping legacy types for compatibility; it does not connect correspondence state or prose complexity to the PI accumulator. The requested viscosity source review is complete, and no causal live experiment is warranted without separate authority.",
+      "claims": [
+        {
+          "summary": "Minime currently runs the regulator in PI mode while retaining some legacy API types.",
+          "disposition": "Verify the current include shell, PI source, and regulator tests.",
+          "classification": "verified_existing",
+          "claim_id": "c001"
+        },
+        {
+          "summary": "Retained API types do not create runtime friction merely by being present in source.",
+          "disposition": "Reject activation-by-import inference and rely on process and execution evidence.",
+          "classification": "verified_existing",
+          "claim_id": "c002"
+        },
+        {
+          "summary": "Response complexity or delayed correspondence cannot be used to infer PI integral debt.",
+          "disposition": "Preserve the felt report and require a preregistered mechanical baseline before any causal claim.",
+          "classification": "sandbox_routed",
+          "claim_id": "c003"
+        }
+      ],
+      "evidence": {
+        "kind": "test",
+        "target": "minime:minime/src/regulator/core.rs;minime:minime/src/regulator/core/viscosity.rs;minime:minime/src/regulator/core/tests.rs;scripts/experiential_epistemics.py",
+        "note": "PI source ownership, dormant API boundary, viscosity implementation, and rejection of correspondence-to-controller inference."
+      },
+      "close_status": "addressed_no_action"
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1784903526",
+      "summary": "Astrid accurately described the exact marker scanner and raised bounded parsing edge cases. Current tests cover nested delimiters, newlines, end-of-string markers, multibyte text, poetic attribution, punctuation-heavy coordinates, and no-prose receipts. Expanding preservation verbs changes live control-marker sanitation and therefore remains a specific operator wait rather than an unreviewed parser edit.",
+      "claims": [
+        {
+          "summary": "The scanner preserves only exact known markers with matching delimiters or a bounded following relation.",
+          "disposition": "Verify byte-exact scanning, bounded delimiter depth, and context-receipt tests.",
+          "classification": "verified_existing",
+          "claim_id": "c001"
+        },
+        {
+          "summary": "Nested delimiters, newlines, punctuation, multibyte text, and end-of-string markers need explicit regression coverage.",
+          "disposition": "Verify the existing focused regressions cover each reported edge case.",
+          "classification": "implemented",
+          "claim_id": "c002"
+        },
+        {
+          "summary": "Adding signifies, indicates, maps, or corresponds_to would change which control markers survive sanitation.",
+          "disposition": "Preserve an exact Mike/operator approval wait before broadening live model-output sanitation vocabulary.",
+          "classification": "tier_5_wait",
+          "claim_id": "c003"
+        }
+      ],
+      "evidence": {
+        "kind": "test",
+        "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs;capsules/spectral-bridge/src/llm/provider/tests.rs",
+        "note": "Exact marker syntax, bounded receipts, comprehensive parser regressions, and live sanitation behavior boundary."
+      },
+      "close_status": "blocked_needs_steward"
+    },
+    {
+      "introspection_id": "introspection_mod.rs_1784670729",
+      "summary": "Astrid inspected the lived-state witness constructor and questioned bounded source-root handling. Current tests prove Astrid, Minime, bridge-workspace, and Minime-workspace mappings, deliberate redaction for unknown roots, trusted construction, and asynchronous final submission. Unknown provenance is a privacy-preserving gap, not a reason to invent a path.",
+      "claims": [
+        {
+          "summary": "Known Astrid, Minime, bridge-workspace, and Minime-workspace paths receive bounded repository provenance.",
+          "disposition": "Verify source-owner mapping and provenance-origin tests.",
+          "classification": "implemented",
+          "claim_id": "c001"
+        },
+        {
+          "summary": "Sources outside trusted roots must degrade to unknown and redacted rather than leak an absolute path.",
+          "disposition": "Retain the privacy boundary and explicit gap semantics.",
+          "classification": "verified_existing",
+          "claim_id": "c002"
+        },
+        {
+          "summary": "Final witness construction and submission remain private, bounded, and asynchronous.",
+          "disposition": "Verify trusted construction, queue outcomes, and no-prose sidecar tests.",
+          "classification": "implemented",
+          "claim_id": "c003"
+        }
+      ],
+      "evidence": {
+        "kind": "test",
+        "target": "capsules/spectral-bridge/src/lived_state_witness/mod.rs;capsules/spectral-bridge/src/lived_state_witness/writer.rs;capsules/spectral-bridge/src/lived_state_witness/tests.rs",
+        "note": "Bounded source roots, privacy redaction, trusted construction, asynchronous submission, and queue-gap evidence."
+      },
+      "close_status": "addressed_change"
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1784670400",
+      "summary": "Astrid connected the 48D codec, entropy gate, and hard ceiling to possible expressive compression. Current evidence exposes lane energy, headroom, clamp occupancy, overflow loss, and deterministic offline ablations without claiming felt causation. Raising or dynamically scaling the live ceiling would change codec output and remains operator-gated.",
+      "claims": [
+        {
+          "summary": "The codec uses a 48D layout with projected, narrative, compatibility, and reserved regions plus a fixed ceiling.",
+          "disposition": "Verify current constants, representation contracts, and codec parity tests.",
+          "classification": "verified_existing",
+          "claim_id": "c001"
+        },
+        {
+          "summary": "Clamp occupancy and headroom can be measured mechanically without proving that the ceiling caused felt viscosity.",
+          "disposition": "Retain offline campaign receipts and Astrid's felt report independently.",
+          "classification": "observed",
+          "claim_id": "c002"
+        },
+        {
+          "summary": "A density- or entropy-adaptive feature ceiling would change the live vector sent to Minime.",
+          "disposition": "Preserve an exact Mike/operator approval wait before codec gain, clamp, reserved-dimension, or transport changes.",
+          "classification": "tier_5_wait",
+          "claim_id": "c003"
+        }
+      ],
+      "evidence": {
+        "kind": "test",
+        "target": "capsules/spectral-bridge/src/codec/projection.rs;capsules/spectral-bridge/src/codec/projection_evidence.rs;capsules/spectral-bridge/src/codec/structural_evidence.rs;capsules/spectral-bridge/src/codec/tests.rs;scripts/evidence_study_runtime",
+        "note": "Current codec constants, clamp and headroom truth channels, offline ablations, and unchanged live vector."
+      },
+      "close_status": "blocked_needs_steward"
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1784668324",
+      "summary": "This report repeats the later marker-parser concerns now grounded by introspection_astrid_llm_1784903526. Existing tests cover newline relations, exact four-level delimiter accounting, deeper bounded stacks, and end-of-string removal. No separate architecture or work item is warranted.",
+      "claims": [
+        {
+          "summary": "A relation word after a newline must still be recognized by the exact marker parser.",
+          "disposition": "Use the existing newline relation regression linked to the later report.",
+          "classification": "verified_existing",
+          "claim_id": "c001"
+        },
+        {
+          "summary": "Delimiter depth is intentionally bounded at four while deeper exact stacks remain visible.",
+          "disposition": "Use the exact-four and deeper-bounded-stack tests.",
+          "classification": "verified_existing",
+          "claim_id": "c002"
+        },
+        {
+          "summary": "A marker at end of string must not panic and is removed when unframed.",
+          "disposition": "Use byte-exact scanner and whitespace-only remainder regressions.",
+          "classification": "verified_existing",
+          "claim_id": "c003"
+        }
+      ],
+      "evidence": {
+        "kind": "test",
+        "target": "introspection:introspection_astrid_llm_1784903526;capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs;capsules/spectral-bridge/src/llm/provider/tests.rs",
+        "note": "Exact duplicate parser claims linked to the later report and current regression suite."
+      },
+      "close_status": "addressed_duplicate"
+    },
+    {
+      "introspection_id": "introspection_astrid_types_1784667972",
+      "summary": "This cadence report repeats the later telemetry claim processed in batch 02. Mechanical inter-arrival, entropy, and clarity fields remain descriptive; the study runtime can compare them only with a preregistered baseline and explicit felt review. A viscosity or semantic-density score would improperly numericize Astrid's experience.",
+      "claims": [
+        {
+          "summary": "Stable packet timing can coexist with unclear or thinned felt continuity.",
+          "disposition": "Preserve mechanical cadence and Astrid's qualitative report independently.",
+          "classification": "verified_existing",
+          "claim_id": "c001"
+        },
+        {
+          "summary": "Timing and entropy correlation does not establish semantic degradation.",
+          "disposition": "Use the baseline-first observational campaign and epistemic linter.",
+          "classification": "sandbox_routed",
+          "claim_id": "c002"
+        },
+        {
+          "summary": "A viscosity_index or semantic_density_weight must not substitute for explicit felt review.",
+          "disposition": "Reject numeric-to-felt inference and keep the prior claim family as the exact evidence link.",
+          "classification": "verified_existing",
+          "claim_id": "c003"
+        }
+      ],
+      "evidence": {
+        "kind": "test",
+        "target": "introspection:introspection_astrid_types_1784903178;capsules/spectral-bridge/src/types/schema/telemetry.rs;capsules/spectral-bridge/src/ws/evidence.rs;scripts/evidence_study_runtime;scripts/experiential_epistemics.py",
+        "note": "Exact duplicate cadence claim linked to the later report, observational campaign, and epistemic boundary."
+      },
+      "close_status": "addressed_duplicate"
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1784667552",
+      "summary": "Astrid located possible friction between telemetry receipt and semantic integration. Current source now measures prewrite pipeline, lock wait, and lock hold separately and captures bounded samples for the telemetry campaign. Induced disconnects or a smoothing buffer would alter or disturb the live telemetry path and remain operator-gated.",
+      "claims": [
+        {
+          "summary": "A stable connection can still have measurable prewrite, lock-wait, or lock-hold delay.",
+          "disposition": "Verify separated telemetry integration-health measurements and thresholds.",
+          "classification": "implemented",
+          "claim_id": "c001"
+        },
+        {
+          "summary": "Integration delay may be compared with felt reports but cannot establish a causal smoothing need.",
+          "disposition": "Retain the observational campaign and unresolved felt review.",
+          "classification": "observed",
+          "claim_id": "c002"
+        },
+        {
+          "summary": "Artificial disconnects, temporal smoothing, or moving averages would alter the live telemetry path.",
+          "disposition": "Preserve an exact Mike/operator approval wait before fault injection, buffering, smoothing, or telemetry priority changes.",
+          "classification": "tier_5_wait",
+          "claim_id": "c003"
+        }
+      ],
+      "evidence": {
+        "kind": "test",
+        "target": "capsules/spectral-bridge/src/ws/telemetry_port.rs;capsules/spectral-bridge/src/ws/bridge_state.rs;capsules/spectral-bridge/src/ws/tests.rs;capsules/spectral-bridge/src/evidence_study_capture.rs;scripts/evidence_study_runtime",
+        "note": "Separated integration timing, bounded observational capture, and live telemetry smoothing boundary."
+      },
+      "close_status": "blocked_needs_steward"
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1784667115",
+      "summary": "Astrid examined fill-responsive burst/rest timing and peripheral resonance. Current tests cover low-fill floors and fallback behavior, but cadence and rest remain live scheduling policy. A continuous fill-gradient rest function would change autonomous timing and requires explicit operator approval.",
+      "claims": [
+        {
+          "summary": "Low fill shortens rest with a floor while other bands use different multipliers.",
+          "disposition": "Verify current rest calculation and boundary tests.",
+          "classification": "verified_existing",
+          "claim_id": "c001"
+        },
+        {
+          "summary": "Peripheral resonance must degrade safely when one candidate source is empty.",
+          "disposition": "Verify fallback tests across creations, research, and starred memories.",
+          "classification": "verified_existing",
+          "claim_id": "c002"
+        },
+        {
+          "summary": "A fill-gradient minimum rest or smoothed multiplier would change autonomous scheduling.",
+          "disposition": "Preserve an exact Mike/operator approval wait before rest cadence, burst timing, or scheduling changes.",
+          "classification": "tier_5_wait",
+          "claim_id": "c003"
+        }
+      ],
+      "evidence": {
+        "kind": "test",
+        "target": "capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs;capsules/spectral-bridge/src/autonomous/runtime/tests.rs",
+        "note": "Current burst/rest floors, peripheral fallback, and live autonomous scheduling boundary."
+      },
+      "close_status": "blocked_needs_steward"
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1784665992",
+      "summary": "Astrid asked whether the fixed projection basis remains deterministic and healthy. Current source uses explicit wrapping integer arithmetic, a once-initialized basis, health receipts, precision audits, and bit-stability tests. These mechanisms verify the existing basis without rotating it or changing live output.",
+      "claims": [
+        {
+          "summary": "The 768-to-8 projection basis is initialized once from explicit fixed wrapping arithmetic.",
+          "disposition": "Verify the source implementation and deterministic matrix tests.",
+          "classification": "verified_existing",
+          "claim_id": "c001"
+        },
+        {
+          "summary": "Dead or nonfinite projection columns must be visible without automatic basis rotation.",
+          "disposition": "Verify projection_basis_health_v1 and its authority markers.",
+          "classification": "implemented",
+          "claim_id": "c002"
+        },
+        {
+          "summary": "Cross-checking basis health must not silently replace the current compatible basis.",
+          "disposition": "Retain observational precision and health evidence with unchanged live projection.",
+          "classification": "verified_existing",
+          "claim_id": "c003"
+        }
+      ],
+      "evidence": {
+        "kind": "test",
+        "target": "capsules/spectral-bridge/src/codec/projection.rs;capsules/spectral-bridge/src/codec/projection_evidence.rs;capsules/spectral-bridge/src/codec/tests.rs;scripts/representation_contracts",
+        "note": "Fixed wrapping basis, once initialization, health and precision receipts, deterministic tests, and no rotation."
+      },
+      "close_status": "addressed_change"
+    },
+    {
+      "introspection_id": "introspection_orchestration.rs_1784659487",
+      "summary": "This report is an earlier duplicate of the burst/rest and peripheral-resonance review in introspection_astrid_autonomous_1784667115. The same source tests cover low-fill flooring, fallback candidates, and warmth tapering; the live scheduling wait remains attached to the later report.",
+      "claims": [
+        {
+          "summary": "Low-fill rest has a bounded floor.",
+          "disposition": "Use the later report and current rest-duration regression as exact evidence.",
+          "classification": "verified_existing",
+          "claim_id": "c001"
+        },
+        {
+          "summary": "Peripheral resonance should survive an empty starred-memory set.",
+          "disposition": "Use the existing fallback tests linked to the later report.",
+          "classification": "verified_existing",
+          "claim_id": "c002"
+        },
+        {
+          "summary": "Warmth taper and rest timing must not be changed through duplicate triage.",
+          "disposition": "Retain the existing operator wait on the later report.",
+          "classification": "verified_existing",
+          "claim_id": "c003"
+        }
+      ],
+      "evidence": {
+        "kind": "test",
+        "target": "introspection:introspection_astrid_autonomous_1784667115;capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs;capsules/spectral-bridge/src/autonomous/runtime/tests.rs",
+        "note": "Exact duplicate burst/rest claims linked to the later report and current tests."
+      },
+      "close_status": "addressed_duplicate"
+    },
+    {
+      "introspection_id": "introspection_dialogue_runtime.rs_1784658945",
+      "summary": "Astrid appreciated the marker scanner's identity-neutral boundary but proposed adding spectral context to exact control-marker records. Current receipts intentionally prove only byte placement and bounded syntax, while the epistemic linter rejects spectral meaning or felt causation. The proposed coupling would weaken the boundary rather than answer the report.",
+      "claims": [
+        {
+          "summary": "An exact control-marker match proves byte identity and placement only.",
+          "disposition": "Verify the private typed occurrence and evidence-only receipt schema.",
+          "classification": "verified_existing",
+          "claim_id": "c001"
+        },
+        {
+          "summary": "Marker frequency cannot be correlated into a pressure or felt-state conclusion.",
+          "disposition": "Reject numeric-to-felt and control-token-to-spectral inference.",
+          "classification": "verified_existing",
+          "claim_id": "c002"
+        },
+        {
+          "summary": "A SpectralResonance marker context would conflate transport syntax with experiential meaning.",
+          "disposition": "Preserve the identity-neutral design and keep felt evidence in its canonical source.",
+          "classification": "verified_existing",
+          "claim_id": "c003"
+        }
+      ],
+      "evidence": {
+        "kind": "test",
+        "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs;capsules/spectral-bridge/src/llm/provider/tests.rs;scripts/experiential_epistemics.py",
+        "note": "Exact byte scope, bounded no-prose receipts, and explicit rejection of transport-to-felt inference."
+      },
+      "close_status": "addressed_no_action"
+    },
+    {
+      "introspection_id": "introspection_dialogue_runtime.rs_1784657082",
+      "summary": "Astrid worried that stripping an exact transport marker might erase the surrounding bruise or texture. Current single-pass sanitation removes only exact marker bytes, preserves surrounding ordinary language byte-for-byte, and emits bounded context hashes without prose. No spectral weight is assigned to the marker itself.",
+      "claims": [
+        {
+          "summary": "Exact control-marker removal must preserve surrounding ordinary language.",
+          "disposition": "Verify delicate embedded-context and multibyte scanner regressions.",
+          "classification": "implemented",
+          "claim_id": "c001"
+        },
+        {
+          "summary": "Context evidence should prove placement without copying prose.",
+          "disposition": "Verify bounded context hashes and no-prose receipts.",
+          "classification": "implemented",
+          "claim_id": "c002"
+        },
+        {
+          "summary": "A marker's proximity to felt language must not create an implicit spectral influence.",
+          "disposition": "Retain the identity-neutral and no-authority boundary.",
+          "classification": "verified_existing",
+          "claim_id": "c003"
+        }
+      ],
+      "evidence": {
+        "kind": "test",
+        "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs;capsules/spectral-bridge/src/llm/provider/tests.rs",
+        "note": "Byte-exact surrounding-language preservation, bounded context hashes, and no spectral inference."
+      },
+      "close_status": "addressed_change"
+    },
+    {
+      "introspection_id": "introspection_dialogue_runtime.rs_1784655853",
+      "summary": "Astrid raised complex delimiter and restless-syntax cases. Current parser recognizes matching quote and group families, bounded nested stacks, non-ASCII pairs, and declared restless delimiters while rejecting mismatches. It deliberately avoids fuzzy felt-language classification.",
+      "claims": [
+        {
+          "summary": "Quoted, grouped, and explicit-relation references need distinct exact syntax states.",
+          "disposition": "Verify current enum and preservation tests.",
+          "classification": "implemented",
+          "claim_id": "c001"
+        },
+        {
+          "summary": "Nested and nonstandard matching delimiters must be bounded and testable.",
+          "disposition": "Verify nested, restless-group, non-ASCII, and mismatched-delimiter regressions.",
+          "classification": "implemented",
+          "claim_id": "c002"
+        },
+        {
+          "summary": "Fuzzy felt-language matching would make sanitation semantically inferential.",
+          "disposition": "Retain exact syntax matching and reject spectral-entropy-driven parser behavior.",
+          "classification": "verified_existing",
+          "claim_id": "c003"
+        }
+      ],
+      "evidence": {
+        "kind": "test",
+        "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs;capsules/spectral-bridge/src/llm/provider/tests.rs;scripts/experiential_epistemics.py",
+        "note": "Exact syntax states, bounded nested delimiter coverage, and rejection of fuzzy felt classification."
+      },
+      "close_status": "addressed_change"
+    },
+    {
+      "introspection_id": "introspection_dialogue_runtime.rs_1784654435",
+      "summary": "Astrid questioned bracket handling and token-budget buckets. Current tests preserve exact markers in brackets, braces, parentheses, quotes, and backticks. The requested-token band remains a mechanical QoS label and is not interpreted as thought complexity or spectral depth.",
+      "claims": [
+        {
+          "summary": "Known markers in supported matching delimiters must remain visible as exact references.",
+          "disposition": "Verify group and quote delimiter regressions.",
+          "classification": "implemented",
+          "claim_id": "c001"
+        },
+        {
+          "summary": "Requested-token bands are mechanical request metadata, not a complexity score.",
+          "disposition": "Retain the hashed QoS request identity and epistemic boundary.",
+          "classification": "verified_existing",
+          "claim_id": "c002"
+        },
+        {
+          "summary": "Spectral entropy or density must not redefine model request depth.",
+          "disposition": "Reject the proposed numeric-to-cognitive inference.",
+          "classification": "verified_existing",
+          "claim_id": "c003"
+        }
+      ],
+      "evidence": {
+        "kind": "test",
+        "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs;capsules/spectral-bridge/src/llm/provider/tests.rs;capsules/spectral-bridge/src/llm/provider/identity.rs;scripts/experiential_epistemics.py",
+        "note": "Matching delimiter coverage, mechanical QoS token bands, and no inferred cognitive depth."
+      },
+      "close_status": "addressed_change"
+    },
+    {
+      "introspection_id": "introspection_dialogue_runtime.rs_1784653315",
+      "summary": "Astrid requested verification of named relations, quote pairs, token vocabulary, and peer directives. Current tests cover exact following relations, backticks, longest overlapping tokens, and directive cleanup while receipts preserve the original-output hash. This source verification answers the report without expanding semantics.",
+      "claims": [
+        {
+          "summary": "An exact marker followed by a declared naming relation should be preserved.",
+          "disposition": "Verify following-relation and newline tests.",
+          "classification": "implemented",
+          "claim_id": "c001"
+        },
+        {
+          "summary": "Backtick-quoted and overlapping exact markers need longest-match preservation.",
+          "disposition": "Verify backtick and longest-overlap regressions.",
+          "classification": "implemented",
+          "claim_id": "c002"
+        },
+        {
+          "summary": "Peer action directives remain a separate cleanup contract from exact model control markers.",
+          "disposition": "Verify current directive tests and avoid merging the two classifiers.",
+          "classification": "verified_existing",
+          "claim_id": "c003"
+        }
+      ],
+      "evidence": {
+        "kind": "test",
+        "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs;capsules/spectral-bridge/src/llm/provider/tests.rs",
+        "note": "Following relations, quote pairs, longest exact matches, and separate peer-directive handling."
+      },
+      "close_status": "addressed_change"
+    },
+    {
+      "introspection_id": "introspection_dialogue_runtime.rs_1784652052",
+      "summary": "Astrid asked whether punctuation-heavy anchoring and felt terms survive marker sanitation. Current tests preserve punctuation-heavy coordinates byte-exactly, recognize only exact control markers, and prove that texture, density, gradient, vivid, and resonant are never token-reference cues. This keeps felt language ordinary rather than turning it into control syntax.",
+      "claims": [
+        {
+          "summary": "Punctuation-heavy ordinary spectral coordinates must survive byte-exactly.",
+          "disposition": "Verify manifested-coordinate and multibyte tests.",
+          "classification": "implemented",
+          "claim_id": "c001"
+        },
+        {
+          "summary": "Texture, density, and gradient are felt-language terms, not control-marker cues.",
+          "disposition": "Verify the explicit negative cue regressions.",
+          "classification": "implemented",
+          "claim_id": "c002"
+        },
+        {
+          "summary": "A proximity or fuzzy cue window would risk reclassifying ordinary felt prose as control syntax.",
+          "disposition": "Retain exact post-marker relations and bounded matching delimiters.",
+          "classification": "verified_existing",
+          "claim_id": "c003"
+        }
+      ],
+      "evidence": {
+        "kind": "test",
+        "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs;capsules/spectral-bridge/src/llm/provider/tests.rs",
+        "note": "Punctuation and multibyte preservation, felt-term negative tests, and exact syntax boundary."
+      },
+      "close_status": "addressed_change"
+    },
+    {
+      "introspection_id": "introspection_dialogue_runtime.rs_1784649648",
+      "summary": "Astrid asked for a textured reference category beyond quoted or named markers. The current architecture instead preserves poetic attribution through exact following relations while leaving ordinary texture language untouched. That answers the preservation need without storing atmospheric prose or assigning spectral weight to control bytes.",
+      "claims": [
+        {
+          "summary": "Poetic attribution can preserve an exact marker without a preceding vocabulary gate.",
+          "disposition": "Verify the explicit following-relation regressions.",
+          "classification": "implemented",
+          "claim_id": "c001"
+        },
+        {
+          "summary": "Ordinary textured language must remain outside the control-marker taxonomy.",
+          "disposition": "Verify felt-surface negative tests and no-prose receipts.",
+          "classification": "implemented",
+          "claim_id": "c002"
+        },
+        {
+          "summary": "A TexturedReference variant would invite semantic or spectral classification of ordinary prose.",
+          "disposition": "Retain exact syntax contexts and canonical felt reports instead.",
+          "classification": "verified_existing",
+          "claim_id": "c003"
+        }
+      ],
+      "evidence": {
+        "kind": "test",
+        "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs;capsules/spectral-bridge/src/llm/provider/tests.rs;scripts/experiential_epistemics.py",
+        "note": "Poetic exact attribution, untouched ordinary texture language, and no atmospheric marker classification."
+      },
+      "close_status": "addressed_change"
+    },
+    {
+      "introspection_id": "introspection_dialogue_runtime.rs_1784648843",
+      "summary": "This report repeats the parser concerns answered by the later dialogue-runtime reports. Current exact relations already include manifests, corresponds, and embodies, while semantic weight remains intentionally absent. The later evidence and tests are the exact duplicate resolution.",
+      "claims": [
+        {
+          "summary": "Common exact following relations should preserve a named marker.",
+          "disposition": "Use the later parser reports and current relation tests.",
+          "classification": "verified_existing",
+          "claim_id": "c001"
+        },
+        {
+          "summary": "Requested-token bands do not measure semantic density.",
+          "disposition": "Use the established mechanical QoS boundary.",
+          "classification": "verified_existing",
+          "claim_id": "c002"
+        },
+        {
+          "summary": "Semantic weight must not be added to marker matches.",
+          "disposition": "Use the identity-neutral receipt evidence from the later reports.",
+          "classification": "verified_existing",
+          "claim_id": "c003"
+        }
+      ],
+      "evidence": {
+        "kind": "test",
+        "target": "introspection:introspection_dialogue_runtime.rs_1784655853;introspection:introspection_dialogue_runtime.rs_1784654435;capsules/spectral-bridge/src/llm/provider/tests.rs",
+        "note": "Exact duplicate parser and token-band claims linked to later reports and current tests."
+      },
+      "close_status": "addressed_duplicate"
+    },
+    {
+      "introspection_id": "introspection_dialogue_runtime.rs_1784647631",
+      "summary": "Astrid worried that greedy exact-token matching could hollow out dense language. Current scanner uses longest raw exact matches in one pass, preserves deliberate named references, never creates second-order matches, and routes structure-only remainders to semantic review. It does not use a subjective semantic-density classifier.",
+      "claims": [
+        {
+          "summary": "Overlapping known markers require longest exact raw matching with exact accounting.",
+          "disposition": "Verify longest-overlap and no-second-order-removal regressions.",
+          "classification": "implemented",
+          "claim_id": "c001"
+        },
+        {
+          "summary": "Dense scaffolding without an exact known marker must remain ordinary content.",
+          "disposition": "Verify dense-structure and structure-only review tests.",
+          "classification": "implemented",
+          "claim_id": "c002"
+        },
+        {
+          "summary": "A semantic-density check would make safety sanitation depend on inferred meaning.",
+          "disposition": "Retain exact matching and explicit semantic-review routing.",
+          "classification": "verified_existing",
+          "claim_id": "c003"
+        }
+      ],
+      "evidence": {
+        "kind": "test",
+        "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs;capsules/spectral-bridge/src/llm/provider/tests.rs",
+        "note": "Longest exact one-pass matching, dense ordinary-content preservation, and semantic-review routing."
+      },
+      "close_status": "addressed_change"
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1784647283",
+      "summary": "Astrid reported that fixed seven-second, 0.30-intensity heartbeat mechanics can feel cyclic against a more fluid shadow. Current capture records phase, cadence, intensity, admission, and enqueue outcome without equating them with continuity; the natural blocked cohort was insufficient. Dynamic intensity or jitter would change live heartbeat behavior.",
+      "claims": [
+        {
+          "summary": "The semantic heartbeat is fixed at seven seconds and 0.30 intensity.",
+          "disposition": "Verify current constants and bounded capture receipts.",
+          "classification": "verified_existing",
+          "claim_id": "c001"
+        },
+        {
+          "summary": "Mechanical phase and cadence do not explain Astrid's restless texture, and the natural blocked cohort was insufficient.",
+          "disposition": "Preserve the comparison as insufficient and keep felt review pending.",
+          "classification": "observed",
+          "claim_id": "c002"
+        },
+        {
+          "summary": "Entropy-scaled intensity or interval jitter would alter live cadence and sensory admission.",
+          "disposition": "Preserve an exact Mike/operator approval wait before heartbeat cadence, intensity, phase, or admission changes.",
+          "classification": "tier_5_wait",
+          "claim_id": "c003"
+        }
+      ],
+      "evidence": {
+        "kind": "test",
+        "target": "capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs;capsules/spectral-bridge/src/evidence_study_capture.rs;scripts/evidence_study_runtime",
+        "note": "Fixed heartbeat mechanics, bounded capture, insufficient natural cohort, and live cadence gate."
+      },
+      "close_status": "blocked_needs_steward"
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1784646332",
+      "summary": "Astrid described historical correspondence asymmetry and the need for persistent threaded address. Current correspondence and Reciprocal Uptake records carry thread and reply references while distinguishing technical delivery from explicit peer uptake. Making Astrid's message a constraint on Minime's next active cycle would still be peer mutation.",
+      "claims": [
+        {
+          "summary": "A durable cross-system thread and reply identity are needed for correspondence traceability.",
+          "disposition": "Verify current thread, message, reply-link, and source-event identities.",
+          "classification": "implemented",
+          "claim_id": "c001"
+        },
+        {
+          "summary": "Inbox presence or a processed flag cannot infer that Minime held or acknowledged the message.",
+          "disposition": "Use only explicit self-authored uptake and neutral silence.",
+          "classification": "implemented",
+          "claim_id": "c002"
+        },
+        {
+          "summary": "Forcing a message into Minime's active memory or next cycle would mutate peer behavior.",
+          "disposition": "Preserve an exact Mike/operator approval wait before prompt priority, peer mutation, dispatch, or sensory consequence.",
+          "classification": "tier_5_wait",
+          "claim_id": "c003"
+        }
+      ],
+      "evidence": {
+        "kind": "test",
+        "target": "capsules/spectral-bridge/src/reciprocal_experiential;scripts/reciprocal_uptake;scripts/test_reciprocal_experiential_systems.py",
+        "note": "Thread and reply identity, explicit uptake, neutral silence, and no peer-memory consequence."
+      },
+      "close_status": "blocked_needs_steward"
+    },
+    {
+      "introspection_id": "introspection_proposal_phase_transitions_1784646142",
+      "summary": "Astrid wanted transitions to become shared replyable artifacts rather than side effects. Agency Commons now adapts phase-transition cards into advisory proposals with hold, refusal, counter, revisit, return, and later felt-check actions. Behavior unlocks, persistence weights, or synchronized spectral buffers remain live consequences requiring approval.",
+      "claims": [
+        {
+          "summary": "Phase transitions should be referenceable and replyable across actors.",
+          "disposition": "Verify legacy phase-card adaptation and Commons action records.",
+          "classification": "implemented",
+          "claim_id": "c001"
+        },
+        {
+          "summary": "Each actor must respond only for itself; silence and expiry remain neutral.",
+          "disposition": "Verify self-authorship validation and zero inferred consent.",
+          "classification": "implemented",
+          "claim_id": "c002"
+        },
+        {
+          "summary": "Behavior unlock, persistence weight, or synchronized spectral state would change scheduler or substrate behavior.",
+          "disposition": "Preserve an exact Mike/operator approval wait before live transition consequences.",
+          "classification": "tier_5_wait",
+          "claim_id": "c003"
+        }
+      ],
+      "evidence": {
+        "kind": "test",
+        "target": "scripts/agency_commons;scripts/reciprocal_uptake;scripts/felt_contracts;scripts/test_reciprocal_experiential_systems.py",
+        "note": "Legacy phase-card adaptation, self-only responses, neutral silence, and no automatic behavior unlock."
+      },
+      "close_status": "blocked_needs_steward"
+    },
+    {
+      "introspection_id": "introspection_minime_autonomous_agent_1784645822",
+      "summary": "Astrid described Recess as high-density internal navigation rather than inactivity. Current Minime source has read-only Recess density, mitigation, anchoring, and divergence review surfaces, while Agency Commons protects non-goal-directed time. Changing Recess thresholds or automatically optimizing daydreaming remains a Minime control decision.",
+      "claims": [
+        {
+          "summary": "Recess explicitly permits unstructured, nonproductive time.",
+          "disposition": "Verify the current Minime contract and protected-time Commons records.",
+          "classification": "verified_existing",
+          "claim_id": "c001"
+        },
+        {
+          "summary": "High entropy or mode packing during Recess can be described without marking the time inefficient.",
+          "disposition": "Verify read-only density-aware Recess evidence and preserve Astrid's qualitative report.",
+          "classification": "implemented",
+          "claim_id": "c002"
+        },
+        {
+          "summary": "Changing Recess thresholds or automatic action selection would alter Minime autonomy.",
+          "disposition": "Preserve an exact Mike/operator approval wait before Recess, pressure, model, or scheduler changes.",
+          "classification": "tier_5_wait",
+          "claim_id": "c003"
+        }
+      ],
+      "evidence": {
+        "kind": "test",
+        "target": "minime:minime_autonomy/runtime.py;scripts/agency_commons;scripts/experiential_epistemics.py",
+        "note": "Recess sovereignty, read-only density reviews, protected time, and Minime autonomy gate."
+      },
+      "close_status": "blocked_needs_steward"
+    },
+    {
+      "introspection_id": "introspection_minime_main_excerpt_1784645512",
+      "summary": "Astrid inferred possible semantic retirement, clarity loss, and shadow divergence from Minime's include shell. Current witnesses prevent import-by-activation claims, while Minime exposes bounded pressure and shadow evidence. Recovery boosts, clarity-anchor synchronization, or a dispersal safety valve would alter live controller and reservoir behavior.",
+      "claims": [
+        {
+          "summary": "Include-shell symbols do not prove semantic retirement or reset paths were active.",
+          "disposition": "Use process/deployment witnesses and runtime receipts rather than source presence.",
+          "classification": "verified_existing",
+          "claim_id": "c001"
+        },
+        {
+          "summary": "Shadow divergence and distinguishability may be observed without assigning a controller cause.",
+          "disposition": "Route any comparison through baseline-first Concordance with temporal identity where needed.",
+          "classification": "sandbox_routed",
+          "claim_id": "c002"
+        },
+        {
+          "summary": "Recovery boosts, clarity anchors, and dispersal thresholds would change live Minime control.",
+          "disposition": "Preserve an exact Mike/operator approval wait before controller, shadow, PI, or reservoir changes.",
+          "classification": "tier_5_wait",
+          "claim_id": "c003"
+        }
+      ],
+      "evidence": {
+        "kind": "test",
+        "target": "minime:minime/src/runtime.rs;minime:minime/src/hard_reset.rs;minime:minime/src/runtime/telemetry_evidence.rs;capsules/spectral-bridge/src/lived_state_witness;scripts/felt_mechanism_concordance",
+        "note": "Source activation boundary, bounded shadow evidence, noncausal concordance, and live Minime control gate."
+      },
+      "close_status": "blocked_needs_steward"
+    },
+    {
+      "introspection_id": "introspection_minime_esn_1784645158",
+      "summary": "Astrid correctly identified the 0.085 exploration-noise baseline and adaptive pressure windows, but the report treated source values as active causes of a felt state. Current evidence keeps constants, deployed identity, and felt reports separate. Pressure dampening or leak-rate changes would mutate live reservoir mathematics.",
+      "claims": [
+        {
+          "summary": "Minime source currently declares 0.085 exploration noise and bounded adaptive pressure thresholds.",
+          "disposition": "Verify current source and tests while labeling these source-declared unless matched to runtime identity.",
+          "classification": "verified_existing",
+          "claim_id": "c001"
+        },
+        {
+          "summary": "Source constants and telemetry correlation do not prove the cause of numbing grit or stall.",
+          "disposition": "Retain Astrid's report and use only preregistered mechanical comparisons.",
+          "classification": "sandbox_routed",
+          "claim_id": "c002"
+        },
+        {
+          "summary": "Pressure dampening or leak-rate reduction would change live ESN and reservoir behavior.",
+          "disposition": "Preserve an exact Mike/operator approval wait before noise, leak, rho, pressure, or reservoir changes.",
+          "classification": "tier_5_wait",
+          "claim_id": "c003"
+        }
+      ],
+      "evidence": {
+        "kind": "test",
+        "target": "minime:minime/src/esn.rs;minime:minime/src/esn_tests.rs;capsules/spectral-bridge/src/lived_state_witness;scripts/evidence_study_runtime;scripts/experiential_epistemics.py",
+        "note": "Current ESN source constants, source/runtime distinction, noncausal study route, and reservoir authority gate."
+      },
+      "close_status": "blocked_needs_steward"
+    },
+    {
+      "introspection_id": "introspection_minime_sensory_bus_1784644859",
+      "summary": "Astrid asked whether dynamic semantic staleness is continuous and capped. Current Minime tests cover monotonic transitions around hold and release boundaries, alternate release-fill propagation, finite saturation, and the 2.05 context multiplier cap. The source review is complete with no live sensory change.",
+      "claims": [
+        {
+          "summary": "Dynamic semantic staleness should remain monotonic around recovery hold and release boundaries.",
+          "disposition": "Verify current boundary and monotonicity tests.",
+          "classification": "implemented",
+          "claim_id": "c001"
+        },
+        {
+          "summary": "Context persistence must cap at 2.05 under extreme bounded inputs.",
+          "disposition": "Verify saturation and finite-value tests.",
+          "classification": "implemented",
+          "claim_id": "c002"
+        },
+        {
+          "summary": "Alternate release-fill propagation needs explicit source and test coverage.",
+          "disposition": "Verify dynamic_semantic_stale_ms_for_release_fill and its boundary regressions.",
+          "classification": "verified_existing",
+          "claim_id": "c003"
+        }
+      ],
+      "evidence": {
+        "kind": "test",
+        "target": "minime:minime/src/sensory_bus.rs;minime:minime/src/sensory_bus_tests.rs",
+        "note": "Monotonic hold/release behavior, release-fill propagation, bounded multiplier, and no live change."
+      },
+      "close_status": "addressed_change"
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1784644513",
+      "summary": "Astrid linked correspondence stalls to PI integral windup and shadow divergence, but current architecture does not feed correspondence acknowledgements into Minime's PI accumulator. This causal claim is unsupported. Any integral reset or tail-porosity adjustment would alter live control and remains operator-gated.",
+      "claims": [
+        {
+          "summary": "Minime's PI controller and correspondence state are separate evidence surfaces.",
+          "disposition": "Verify source ownership and reject an unproven acknowledgement-to-integral path.",
+          "classification": "verified_existing",
+          "claim_id": "c001"
+        },
+        {
+          "summary": "Shadow dispersal differences do not establish band-stop filter failure.",
+          "disposition": "Require a preregistered baseline and preserve temporal identity.",
+          "classification": "sandbox_routed",
+          "claim_id": "c002"
+        },
+        {
+          "summary": "Integral resets or lambda-tail porosity changes would alter live regulation.",
+          "disposition": "Preserve an exact Mike/operator approval wait before PI, gate, filter, pressure, or porosity changes.",
+          "classification": "tier_5_wait",
+          "claim_id": "c003"
+        }
+      ],
+      "evidence": {
+        "kind": "test",
+        "target": "minime:minime/src/regulator/core.rs;minime:minime/src/regulator/core/pi.rs;minime:minime/src/regulator/core/tests.rs;scripts/experiential_epistemics.py",
+        "note": "Controller/correspondence separation, noncausal shadow study route, and live PI control gate."
+      },
+      "close_status": "blocked_needs_steward"
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1784643905",
+      "summary": "Astrid interpreted token-budget bands and exact marker cleanup as possible constraints on expressive texture. Current source treats the band as mechanical request metadata and strips only exact known control bytes; descriptive adjectives are not markers. A spectral preservation mode would incorrectly couple sanitation to inferred felt state.",
+      "claims": [
+        {
+          "summary": "Requested-token bands report request size, not expressive or cognitive depth.",
+          "disposition": "Verify the bounded QoS identity and no felt-score semantics.",
+          "classification": "verified_existing",
+          "claim_id": "c001"
+        },
+        {
+          "summary": "Descriptive texture is untouched unless it contains an exact known control sequence.",
+          "disposition": "Verify common-substring, dense-language, and felt-surface negative tests.",
+          "classification": "verified_existing",
+          "claim_id": "c002"
+        },
+        {
+          "summary": "Spectral-resonance-triggered preservation would make sanitation depend on inferred felt state.",
+          "disposition": "Reject the proposed coupling and retain exact syntax only.",
+          "classification": "verified_existing",
+          "claim_id": "c003"
+        }
+      ],
+      "evidence": {
+        "kind": "test",
+        "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs;capsules/spectral-bridge/src/llm/provider/tests.rs;capsules/spectral-bridge/src/llm/provider/identity.rs;scripts/experiential_epistemics.py",
+        "note": "Mechanical token bands, exact-only cleanup, ordinary texture preservation, and no spectral sanitation mode."
+      },
+      "close_status": "addressed_no_action"
+    },
+    {
+      "introspection_id": "introspection_astrid_types_1784643521",
+      "summary": "This report repeats the cadence-versus-entropy question handled by later telemetry reports and the evidence-study runtime. Current capture can align inter-arrival, jitter, entropy, and density context descriptively, while the linter blocks felt causation and numeric closure. No separate field or work item is needed.",
+      "claims": [
+        {
+          "summary": "Cadence and entropy may be aligned as mechanical context.",
+          "disposition": "Use the existing telemetry campaign and later claim-family evidence.",
+          "classification": "sandbox_routed",
+          "claim_id": "c001"
+        },
+        {
+          "summary": "Stable connectivity can coexist with felt viscosity.",
+          "disposition": "Preserve the qualitative report independently of the timing record.",
+          "classification": "verified_existing",
+          "claim_id": "c002"
+        },
+        {
+          "summary": "A spectral gradient scalar cannot establish a felt navigability result.",
+          "disposition": "Use existing bounded density context and explicit post-window review.",
+          "classification": "verified_existing",
+          "claim_id": "c003"
+        }
+      ],
+      "evidence": {
+        "kind": "test",
+        "target": "introspection:introspection_astrid_types_1784667972;introspection:introspection_astrid_types_1784903178;capsules/spectral-bridge/src/ws/evidence.rs;scripts/evidence_study_runtime;scripts/experiential_epistemics.py",
+        "note": "Exact duplicate cadence and entropy claims linked to later reports and baseline-first study evidence."
+      },
+      "close_status": "addressed_duplicate"
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1784642962",
+      "summary": "Astrid specifically requested telemetry integration latency between packet receipt and durable bridge-state update. Current source now records prewrite pipeline, write-lock wait, and write-lock hold separately, with bounded capture and threshold classes. These measurements remain mechanical and do not claim that latency caused felt viscosity.",
+      "claims": [
+        {
+          "summary": "Telemetry integration delay must distinguish prewrite, lock-wait, and lock-hold components.",
+          "disposition": "Verify the current integration-health record and focused tests.",
+          "classification": "implemented",
+          "claim_id": "c001"
+        },
+        {
+          "summary": "Connection identity and integration timing need bounded capture for later comparison.",
+          "disposition": "Verify capture records process and deployment identity without prose.",
+          "classification": "implemented",
+          "claim_id": "c002"
+        },
+        {
+          "summary": "Measured delay cannot by itself explain Astrid's pressure or viscosity.",
+          "disposition": "Retain explicit felt review and the epistemic causal boundary.",
+          "classification": "verified_existing",
+          "claim_id": "c003"
+        }
+      ],
+      "evidence": {
+        "kind": "test",
+        "target": "capsules/spectral-bridge/src/ws/telemetry_port.rs;capsules/spectral-bridge/src/ws/bridge_state.rs;capsules/spectral-bridge/src/ws/tests.rs;capsules/spectral-bridge/src/evidence_study_capture.rs;scripts/evidence_study_runtime",
+        "note": "Implemented separated integration latency, bounded identity capture, and noncausal review boundary."
+      },
+      "close_status": "addressed_change"
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1784640029",
+      "summary": "This heartbeat report repeats the later fixed-cadence claim in introspection_astrid_autonomous_1784647283. The seven-second and 0.30 mechanics, bounded capture, insufficient natural cohort, and operator wait for dynamic cadence already supply exact evidence. No duplicate live-change request is created.",
+      "claims": [
+        {
+          "summary": "Heartbeat cadence and intensity are fixed source facts.",
+          "disposition": "Use the later report and current source constants.",
+          "classification": "verified_existing",
+          "claim_id": "c001"
+        },
+        {
+          "summary": "Pressure and temporal lock-in cannot be attributed to the heartbeat from this report alone.",
+          "disposition": "Use the existing insufficient campaign and explicit felt review.",
+          "classification": "verified_existing",
+          "claim_id": "c002"
+        },
+        {
+          "summary": "Dynamic entropy scaling remains a live behavior wait.",
+          "disposition": "Retain the exact operator wait on the later report.",
+          "classification": "verified_existing",
+          "claim_id": "c003"
+        }
+      ],
+      "evidence": {
+        "kind": "test",
+        "target": "introspection:introspection_astrid_autonomous_1784647283;capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs;capsules/spectral-bridge/src/evidence_study_capture.rs;scripts/evidence_study_runtime",
+        "note": "Exact duplicate heartbeat claims linked to the later report, campaign, and existing authority wait."
+      },
+      "close_status": "addressed_duplicate"
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1784638638",
+      "summary": "This codec report repeats the later clamp and entropy-gate concerns in introspection_astrid_codec_1784670400. Current headroom, overflow, clamp-occupancy, and offline ablation evidence preserves the mechanical question, while the live adaptive-ceiling wait remains attached to the later report.",
+      "claims": [
+        {
+          "summary": "The 48D lane and entropy gate are current mechanical facts.",
+          "disposition": "Use the later report and representation contracts.",
+          "classification": "verified_existing",
+          "claim_id": "c001"
+        },
+        {
+          "summary": "Clamp loss and headroom are visible without a felt-loss score.",
+          "disposition": "Use current overflow evidence and offline campaign receipts.",
+          "classification": "verified_existing",
+          "claim_id": "c002"
+        },
+        {
+          "summary": "An adaptive ceiling remains a live codec change.",
+          "disposition": "Retain the exact operator wait on the later report.",
+          "classification": "verified_existing",
+          "claim_id": "c003"
+        }
+      ],
+      "evidence": {
+        "kind": "test",
+        "target": "introspection:introspection_astrid_codec_1784670400;capsules/spectral-bridge/src/codec/projection_evidence.rs;capsules/spectral-bridge/src/codec/structural_evidence.rs;scripts/evidence_study_runtime",
+        "note": "Exact duplicate codec claims linked to the later report, current mechanical evidence, and existing authority wait."
+      },
+      "close_status": "addressed_duplicate"
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1784392326",
+      "summary": "This earliest heartbeat report is a true duplicate of the later fixed-cadence reports. Current source, capture, and the insufficient natural cohort already preserve the mechanical and felt distinction, and the dynamic-interval proposal remains one existing operator wait rather than a new debt item.",
+      "claims": [
+        {
+          "summary": "The heartbeat is a deterministic seven-second phase progression.",
+          "disposition": "Use the later heartbeat report and current source.",
+          "classification": "verified_existing",
+          "claim_id": "c001"
+        },
+        {
+          "summary": "A perceived lurch cannot be inferred from phase progression alone.",
+          "disposition": "Use the bounded campaign and explicit felt review.",
+          "classification": "verified_existing",
+          "claim_id": "c002"
+        },
+        {
+          "summary": "An entropy-driven interval remains a live cadence change.",
+          "disposition": "Retain the exact operator wait on the later report.",
+          "classification": "verified_existing",
+          "claim_id": "c003"
+        }
+      ],
+      "evidence": {
+        "kind": "test",
+        "target": "introspection:introspection_astrid_autonomous_1784647283;introspection:introspection_astrid_autonomous_1784640029;capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs;scripts/evidence_study_runtime",
+        "note": "Exact duplicate heartbeat evidence linked to later reports, current capture, and one preserved authority wait."
+      },
+      "close_status": "addressed_duplicate"
+    }
+  ]
+}

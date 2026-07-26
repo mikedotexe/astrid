@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "summary": "Exact control-marker removal must preserve surrounding ordinary language.",
+      "disposition": "Verify delicate embedded-context and multibyte scanner regressions.",
+      "classification": "implemented",
+      "claim_id": "c001"
+    },
+    {
+      "summary": "Context evidence should prove placement without copying prose.",
+      "disposition": "Verify bounded context hashes and no-prose receipts.",
+      "classification": "implemented",
+      "claim_id": "c002"
+    },
+    {
+      "summary": "A marker's proximity to felt language must not create an implicit spectral influence.",
+      "disposition": "Retain the identity-neutral and no-authority boundary.",
+      "classification": "verified_existing",
+      "claim_id": "c003"
+    }
+  ]
+}

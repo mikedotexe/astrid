@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "summary": "Peer JSON parsing should not block report persistence or the model call path.",
+      "disposition": "Verify asynchronous cache refresh and nonblocking snapshot use.",
+      "classification": "implemented",
+      "claim_id": "c001"
+    },
+    {
+      "summary": "Missing and malformed peer sources should remain separately diagnosable.",
+      "disposition": "Verify source-status tests and bounded parameter relations.",
+      "classification": "implemented",
+      "claim_id": "c002"
+    },
+    {
+      "summary": "Cached peer snapshot access stays below one millisecond p95 in the regression test.",
+      "disposition": "Verify the focused performance test.",
+      "classification": "verified_existing",
+      "claim_id": "c003"
+    }
+  ]
+}

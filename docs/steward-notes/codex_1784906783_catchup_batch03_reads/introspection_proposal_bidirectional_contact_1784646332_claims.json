@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "summary": "A durable cross-system thread and reply identity are needed for correspondence traceability.",
+      "disposition": "Verify current thread, message, reply-link, and source-event identities.",
+      "classification": "implemented",
+      "claim_id": "c001"
+    },
+    {
+      "summary": "Inbox presence or a processed flag cannot infer that Minime held or acknowledged the message.",
+      "disposition": "Use only explicit self-authored uptake and neutral silence.",
+      "classification": "implemented",
+      "claim_id": "c002"
+    },
+    {
+      "summary": "Forcing a message into Minime's active memory or next cycle would mutate peer behavior.",
+      "disposition": "Preserve an exact Mike/operator approval wait before prompt priority, peer mutation, dispatch, or sensory consequence.",
+      "classification": "tier_5_wait",
+      "claim_id": "c003"
+    }
+  ]
+}

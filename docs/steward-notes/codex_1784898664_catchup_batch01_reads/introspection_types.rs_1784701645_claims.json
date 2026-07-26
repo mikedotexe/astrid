@@ -1,0 +1,16 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Model-route timing must distinguish complete provider splits from queue-only, active-only, and aggregate-only metadata.",
+      "disposition": "Verify the four-way constructor match and focused route tests.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Missing active generation timing must not be interpreted as zero work or experiential incompleteness.",
+      "disposition": "Preserve technical metadata availability scopes and no-prose route receipts.",
+      "classification": "verified_existing"
+    }
+  ]
+}

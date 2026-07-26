@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "summary": "Source-prepared dynamic-noise and viscous-rho review calculations are bounded evidence paths, not proof of live ESN activation.",
+      "disposition": "Verify source activation markers, finite defaults, bounds, and deterministic review-status tests.",
+      "classification": "verified_existing",
+      "claim_id": "c001"
+    },
+    {
+      "summary": "Offline current-versus-candidate comparison can describe mechanical differences without changing the reservoir or scoring felt state.",
+      "disposition": "Route only through a preregistered baseline-first study if a new comparison is warranted.",
+      "classification": "needs_sandbox",
+      "claim_id": "c002"
+    },
+    {
+      "summary": "Wiring dynamic noise, viscous rho, adaptive thresholds, or review status into ESN::step would mutate live Minime behavior.",
+      "disposition": "Preserve an exact Mike/operator approval wait.",
+      "classification": "tier_5_wait",
+      "claim_id": "c003"
+    }
+  ]
+}

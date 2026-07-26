@@ -1,0 +1,16 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Missing, unreadable, and malformed peer evidence must clear scalar values rather than retain ghosts.",
+      "disposition": "Verify source-status transitions and no-stale-value tests.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Source relation should remain identifiable even when current scalar values are absent.",
+      "disposition": "Verify witness source refs and bounded provenance identity remain separate from current presence.",
+      "classification": "implemented"
+    }
+  ]
+}

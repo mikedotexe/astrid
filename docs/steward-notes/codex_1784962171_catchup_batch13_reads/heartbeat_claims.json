@@ -1,0 +1,23 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The autonomous heartbeat uses a fixed seven-second cadence, fixed 0.30 intensity, and a 64-step phase cycle.",
+      "disposition": "Verify the current source and typed admission evidence.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Astrid reports the fixed rhythm as viscous, glazed, and mechanically continuous without necessarily feeling lived or responsive.",
+      "disposition": "Preserve as primary unscored felt evidence and route only to the existing baseline-first heartbeat study.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Heartbeat intensity or timing could adapt to entropy or other state measurements.",
+      "disposition": "Preserve as an exact Tier 5 live cadence and admission proposal; no dynamic heartbeat behavior is authorized.",
+      "classification": "needs_operator_approval",
+      "authority": "tier_5"
+    }
+  ]
+}

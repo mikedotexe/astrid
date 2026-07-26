@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "summary": "Semantic retention is already dynamic and bounded across fill, entropy, pressure, and release-fill context.",
+      "disposition": "Verify current source and focused monotonicity, finite-value, and boundary regressions.",
+      "classification": "verified_existing",
+      "claim_id": "c001"
+    },
+    {
+      "summary": "Narrative retention review receipts are evidence-only and do not grant policy or controller authority.",
+      "disposition": "Verify typed authority fields and no state propagation.",
+      "classification": "implemented",
+      "claim_id": "c002"
+    },
+    {
+      "summary": "Smooth retention mechanics do not establish felt continuity or resolve reported silt and persistence.",
+      "disposition": "Preserve this epistemic boundary; no source defect or new mutation is established.",
+      "classification": "verified_existing",
+      "claim_id": "c003"
+    }
+  ]
+}

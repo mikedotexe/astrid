@@ -1,0 +1,11 @@
+{
+  "reads": [
+    {
+      "introspection_id": "introspection_proposal_phase_transitions_1784978541",
+      "reader": "codex-sol",
+      "summary_file": "current_source_findings.md",
+      "claims_file": "claims.json"
+    }
+  ]
+}
+

@@ -1,0 +1,70 @@
+{
+  "reads": [
+    {
+      "introspection_id": "introspection_astrid_autonomous_1784955694",
+      "reader": "codex-sol",
+      "summary_file": "heartbeat_summary.md",
+      "claims_file": "heartbeat_claims.json"
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1784952907",
+      "reader": "codex-sol",
+      "summary_file": "codec_dimensions_summary.md",
+      "claims_file": "codec_claims.json"
+    },
+    {
+      "introspection_id": "introspection_proposal_12d_glimpse_1784952617",
+      "reader": "codex-sol",
+      "summary_file": "codec_dimensions_summary.md",
+      "claims_file": "glimpse_claims.json"
+    },
+    {
+      "introspection_id": "introspection_proposal_distance_contact_control_1784951983",
+      "reader": "codex-sol",
+      "summary_file": "contact_summary.md",
+      "claims_file": "distance_contact_claims.json"
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1784951711",
+      "reader": "codex-sol",
+      "summary_file": "contact_summary.md",
+      "claims_file": "bidirectional_contact_claims.json"
+    },
+    {
+      "introspection_id": "introspection_proposal_phase_transitions_1784951174",
+      "reader": "codex-sol",
+      "summary_file": "phase_anchor_summary.md",
+      "claims_file": "phase_anchor_claims.json"
+    },
+    {
+      "introspection_id": "introspection_minime_autonomous_agent_1784950561",
+      "reader": "codex-sol",
+      "summary_file": "minime_mechanics_summary.md",
+      "claims_file": "minime_autonomy_claims.json"
+    },
+    {
+      "introspection_id": "introspection_minime_main_excerpt_1784950341",
+      "reader": "codex-sol",
+      "summary_file": "minime_mechanics_summary.md",
+      "claims_file": "minime_runtime_claims.json"
+    },
+    {
+      "introspection_id": "introspection_minime_esn_1784949659",
+      "reader": "codex-sol",
+      "summary_file": "minime_mechanics_summary.md",
+      "claims_file": "minime_esn_claims.json"
+    },
+    {
+      "introspection_id": "introspection_minime_sensory_bus_1784949289",
+      "reader": "codex-sol",
+      "summary_file": "minime_mechanics_summary.md",
+      "claims_file": "minime_sensory_claims.json"
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1784948873",
+      "reader": "codex-sol",
+      "summary_file": "minime_mechanics_summary.md",
+      "claims_file": "minime_regulator_claims.json"
+    }
+  ]
+}

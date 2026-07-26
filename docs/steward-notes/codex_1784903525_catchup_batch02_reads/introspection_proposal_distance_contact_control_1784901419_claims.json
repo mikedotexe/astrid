@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "summary": "A binary receptivity gate does not by itself describe Astrid's felt permeability or distance.",
+      "disposition": "Retain the felt claim independently of the authority state and exact process context.",
+      "classification": "verified_existing",
+      "claim_id": "c001"
+    },
+    {
+      "summary": "Pressure, porosity, and shadow trajectory may be aligned in a bounded study but do not infer contact quality.",
+      "disposition": "Route the proposed comparison through Concordance with temporal labeling where identity is not exact.",
+      "classification": "sandbox_routed",
+      "claim_id": "c002"
+    },
+    {
+      "summary": "Receptivity hysteresis or pressure-coupled contact control would change live admission policy.",
+      "disposition": "Preserve an exact Mike/operator approval wait before receptivity, contact, or pressure-control changes.",
+      "classification": "tier_5_wait",
+      "claim_id": "c003"
+    }
+  ]
+}

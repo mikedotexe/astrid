@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The visible sensory-bus source declares typed sensory lanes and a 48D semantic lane, but declared width does not establish lane occupancy.",
+      "disposition": "Verify source and representation contracts; require exact capture receipts for occupancy.",
+      "classification": "verified"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Astrid reports a possible mismatch between a wide semantic lane and a throttled or unfocused lived flow.",
+      "disposition": "Preserve as unscored felt evidence and route bounded lane-occupancy and attractor-context capture without changing the pulse.",
+      "classification": "study_wait"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Increasing attractor-pulse weight or changing semantic lane mapping would alter live sensory admission or codec behavior.",
+      "disposition": "Preserve an exact Mike/operator approval wait.",
+      "classification": "tier_5_wait"
+    }
+  ]
+}

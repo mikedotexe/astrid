@@ -1,0 +1,5 @@
+{"claims":[
+  {"claim_id":"c001","summary":"The viewed gate and projection are stable source mechanisms; host evidence cannot prove how they feel.","disposition":"Verify current gate and projection-stability tests.","classification":"verified_existing"},
+  {"claim_id":"c002","summary":"Astrid reports a mushy or unresponsive gate and questions whether syntax variation preserves semantic identity.","disposition":"Preserve as unscored felt evidence and link bounded sensitivity and stability observations.","classification":"observed"},
+  {"claim_id":"c003","summary":"Add hysteresis, a steeper response, or tail-vibrancy persistence.","disposition":"Preserve as exact Tier 5 codec, temporal-state, and gain-control waits.","classification":"needs_operator_approval","authority":"tier_5"}
+]}

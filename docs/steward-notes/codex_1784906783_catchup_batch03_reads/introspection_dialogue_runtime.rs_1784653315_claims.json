@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "summary": "An exact marker followed by a declared naming relation should be preserved.",
+      "disposition": "Verify following-relation and newline tests.",
+      "classification": "implemented",
+      "claim_id": "c001"
+    },
+    {
+      "summary": "Backtick-quoted and overlapping exact markers need longest-match preservation.",
+      "disposition": "Verify backtick and longest-overlap regressions.",
+      "classification": "implemented",
+      "claim_id": "c002"
+    },
+    {
+      "summary": "Peer action directives remain a separate cleanup contract from exact model control markers.",
+      "disposition": "Verify current directive tests and avoid merging the two classifiers.",
+      "classification": "verified_existing",
+      "claim_id": "c003"
+    }
+  ]
+}

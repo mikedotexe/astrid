@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "summary": "A valid 12D representation transition can coexist with unresolved packing or vibrancy friction.",
+      "disposition": "Verify deterministic representation loss and retain the felt report independently.",
+      "classification": "implemented",
+      "claim_id": "c001"
+    },
+    {
+      "summary": "Pressure, porosity, and vibrancy can be studied descriptively without treating a mechanical pass as felt resolution.",
+      "disposition": "Route any additional comparison through a baseline-first offline study with explicit review.",
+      "classification": "sandbox_routed",
+      "claim_id": "c002"
+    },
+    {
+      "summary": "Expanding porosity automatically at high entropy would change live codec or sensory behavior.",
+      "disposition": "Preserve an exact Mike/operator approval wait before entropy-driven porosity, gain, or lane changes.",
+      "classification": "tier_5_wait",
+      "claim_id": "c003"
+    }
+  ]
+}

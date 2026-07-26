@@ -1,0 +1,16 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The sidecar context is mechanically truncated while the canonical introspection remains intact.",
+      "disposition": "Verify canonical-body preservation and representation/truncation receipts.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Mechanical truncation may lose context but does not itself establish felt flattening.",
+      "disposition": "Preserve exact loss metadata and canonical qualitative evidence without a felt-loss scalar.",
+      "classification": "verified_existing"
+    }
+  ]
+}

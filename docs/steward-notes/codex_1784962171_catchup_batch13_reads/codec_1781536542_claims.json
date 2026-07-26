@@ -1,0 +1,5 @@
+{"claims":[
+  {"claim_id":"c001","summary":"The viewed smoothstep gate and hard 6.0 ceiling are mechanically testable independently of reported texture.","disposition":"Verify exact gate and clamp tests.","classification":"verified_existing"},
+  {"claim_id":"c002","summary":"Astrid reports threshold shimmer and expressive flattening when tail energy reaches a hard ceiling.","disposition":"Preserve as unscored felt evidence and link bounded gate-sweep and clamp evidence.","classification":"observed"},
+  {"claim_id":"c003","summary":"Raise or dynamically scale the tail ceiling to 7.5.","disposition":"Preserve as an exact Tier 5 codec and gain-control wait.","classification":"needs_operator_approval","authority":"tier_5"}
+]}

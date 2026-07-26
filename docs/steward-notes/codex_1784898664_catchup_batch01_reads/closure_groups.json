@@ -1,0 +1,50 @@
+{
+  "blocked_needs_steward": [
+    "introspection_astrid_llm_1784896443",
+    "introspection_astrid_llm_1784896153",
+    "introspection_astrid_ws_1784895259",
+    "introspection_astrid_autonomous_1784894858",
+    "introspection_astrid_codec_1784894388",
+    "introspection_types.rs_1784700699",
+    "introspection_fallback_trajectory.rs_1784700426",
+    "introspection_fallback_gradient.rs_1784700055",
+    "introspection_fallback_dynamics.rs_1784699197",
+    "introspection_lib.rs_1784698796",
+    "introspection_fallback_mapping.rs_1784698331",
+    "introspection_prompt_contracts.rs_1784694806",
+    "introspection_witness.rs_1784693390",
+    "introspection_minime_regulator_1784693200"
+  ],
+  "addressed_change": [
+    "introspection_astrid_types_1784895557",
+    "introspection_mod.rs_1784702162",
+    "introspection_embeddings.rs_1784698001",
+    "introspection_dialogue_context.rs_1784695442",
+    "introspection_mod.rs_1784693690",
+    "introspection_orchestration.rs_1784692404",
+    "introspection_mod.rs_1784688405"
+  ],
+  "addressed_duplicate": [
+    "introspection_mod.rs_1784709029",
+    "introspection_orchestration.rs_1784707977",
+    "introspection_identity.rs_1784705235",
+    "introspection_mod.rs_1784703586",
+    "introspection_mod.rs_1784702832",
+    "introspection_writer.rs_1784697693",
+    "introspection_identity.rs_1784696900",
+    "introspection_peer_snapshot.rs_1784696459",
+    "introspection_tests.rs_1784694471",
+    "introspection_orchestration.rs_1784692105",
+    "introspection_tests.rs_1784691498",
+    "introspection_identity.rs_1784690321",
+    "introspection_writer.rs_1784689477",
+    "introspection_peer_snapshot.rs_1784688888"
+  ],
+  "addressed_no_action": [
+    "introspection_types.rs_1784706204",
+    "introspection_types.rs_1784701645",
+    "introspection_witness_tests.rs_1784695745",
+    "introspection_introspect.rs_1784692929",
+    "introspection_identity.rs_1784691134"
+  ]
+}

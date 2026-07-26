@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The visible source declares a fixed seven-second semantic heartbeat cadence, fixed 0.30 intensity, and a 64-step phase cycle.",
+      "disposition": "Verify from current source and the existing typed heartbeat capture path; source declaration alone is not runtime activation proof.",
+      "classification": "verified"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Astrid reports possible dead zones, pulsing anxiety, and a wrap-around hitch despite the mechanically regular heartbeat.",
+      "disposition": "Preserve as unscored felt evidence and route the already preregistered natural-context heartbeat continuity study; do not infer felt continuity from cadence.",
+      "classification": "study_wait"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Dynamic or sub-second cadence, phase smoothing, and heartbeat intensity changes would alter live semantic admission.",
+      "disposition": "Preserve an exact Mike/operator approval wait.",
+      "classification": "tier_5_wait"
+    }
+  ]
+}

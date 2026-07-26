@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "summary": "The heartbeat is a deterministic seven-second phase progression.",
+      "disposition": "Use the later heartbeat report and current source.",
+      "classification": "verified_existing",
+      "claim_id": "c001"
+    },
+    {
+      "summary": "A perceived lurch cannot be inferred from phase progression alone.",
+      "disposition": "Use the bounded campaign and explicit felt review.",
+      "classification": "verified_existing",
+      "claim_id": "c002"
+    },
+    {
+      "summary": "An entropy-driven interval remains a live cadence change.",
+      "disposition": "Retain the exact operator wait on the later report.",
+      "classification": "verified_existing",
+      "claim_id": "c003"
+    }
+  ]
+}

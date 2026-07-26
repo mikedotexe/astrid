@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "summary": "Low fill shortens rest with a floor while other bands use different multipliers.",
+      "disposition": "Verify current rest calculation and boundary tests.",
+      "classification": "verified_existing",
+      "claim_id": "c001"
+    },
+    {
+      "summary": "Peripheral resonance must degrade safely when one candidate source is empty.",
+      "disposition": "Verify fallback tests across creations, research, and starred memories.",
+      "classification": "verified_existing",
+      "claim_id": "c002"
+    },
+    {
+      "summary": "A fill-gradient minimum rest or smoothed multiplier would change autonomous scheduling.",
+      "disposition": "Preserve an exact Mike/operator approval wait before rest cadence, burst timing, or scheduling changes.",
+      "classification": "tier_5_wait",
+      "claim_id": "c003"
+    }
+  ]
+}

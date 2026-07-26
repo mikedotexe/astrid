@@ -1,0 +1,16 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Blocked introspection notices currently represent observed model failure reasons.",
+      "disposition": "Verify timeout and no-response paths plus artifact-kind separation.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Pressure or mode packing may coincide with a blocked response but is not an established cause.",
+      "disposition": "Use aligned QoS and study evidence for a bounded observational comparison; do not label the notice pressure-caused.",
+      "classification": "sandbox_routed"
+    }
+  ]
+}

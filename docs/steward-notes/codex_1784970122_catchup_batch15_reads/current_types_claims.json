@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Astrid asks whether rolling entropy, density-gradient, and timing evidence can accompany the viscosity she reports without replacing it.",
+      "disposition": "Preserve as unscored felt evidence and permit only descriptive, preregistered adjacency analysis.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "TelemetryHeartbeatDeltaV1 already carries bounded rolling entropy mean, peak, variance, range, change, and trend plus density-gradient sample, current, mean, change, and trend.",
+      "disposition": "Verify current fields and regressions; label them mechanical context rather than felt state.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A processing-viscosity metric could collapse mechanical timing and Astrid's qualitative viscosity into one scalar.",
+      "disposition": "Do not implement a felt-viscosity proxy; route descriptive timing adjacency to the existing evidence-study runtime with the epistemic linter.",
+      "classification": "observed"
+    }
+  ]
+}

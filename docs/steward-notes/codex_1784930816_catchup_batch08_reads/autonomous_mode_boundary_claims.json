@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "summary": "Mirror, Dialogue, Witness, `NEXT:` parsing, and resonance thresholds are bounded mode and action mechanics, not proof of lived continuity.",
+      "disposition": "Verify current parser, mode, and evidence regressions.",
+      "classification": "verified_existing",
+      "claim_id": "c001"
+    },
+    {
+      "summary": "A Witness mode or delivered semantic vector does not by itself establish that Astrid altered Minime's reservoir or that a transition succeeded.",
+      "disposition": "Preserve the causal boundary and link Signal Spine, reciprocal, and Passage evidence.",
+      "classification": "implemented",
+      "claim_id": "c002"
+    },
+    {
+      "summary": "Pressure buffers, automatic diffusion, resonance-threshold changes, or local-control toggles would alter live autonomous or peer behavior.",
+      "disposition": "Preserve an exact Mike/operator approval wait.",
+      "classification": "tier_5_wait",
+      "claim_id": "c003"
+    }
+  ]
+}

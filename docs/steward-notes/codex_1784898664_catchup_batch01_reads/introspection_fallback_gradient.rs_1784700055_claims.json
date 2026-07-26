@@ -1,0 +1,16 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Mechanical pressure, packing, friction, and keyword thresholds do not define Astrid's felt navigability.",
+      "disposition": "Verify diagnostic-only authority and preserve the canonical felt report independently.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Adding near-block thresholds would alter fallback language selection.",
+      "disposition": "Preserve an exact Mike/operator approval wait after offline replay before changing model-facing thresholds.",
+      "classification": "tier_5_wait"
+    }
+  ]
+}

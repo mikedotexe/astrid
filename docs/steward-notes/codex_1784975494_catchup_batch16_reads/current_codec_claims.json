@@ -1,0 +1,23 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Astrid reports that the current 48D codec can feel smudged and viscous despite stable lane boundaries and asks whether projection fidelity or gap bleed accompanies that experience.",
+      "disposition": "Preserve as independent unscored felt evidence; mechanical parity cannot resolve reported smudging.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Current source and tests provide deterministic 8D projection identity, exact embedding and narrative bounds, reserved-dimension non-write, loss receipts, collision and basis-health probes, and offline codec comparisons.",
+      "disposition": "Verify exact source and focused tests; use as a study basis without felt inference.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Widening, rotating, learning, retuning, or pressure-coupling the live projection could alter semantic transport and peer input.",
+      "disposition": "Preserve as an exact Tier 5 codec, representation, sensory, and peer-runtime wait.",
+      "classification": "needs_operator_approval",
+      "authority": "tier_5"
+    }
+  ]
+}

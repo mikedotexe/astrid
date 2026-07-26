@@ -1,0 +1,24 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Astrid reports that the mechanics of witnessing a phase transition are not the same as the experience of being witnessed through it, and that a settled label can flatten the resistance or friction of settling.",
+      "disposition": "Implement now as independently revisable, self-authored qualitative transition-bearing strands while preserving the felt report as primary unscored evidence.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A Felt Receipt or Shadow trajectory can remain separate from the lived transition rather than becoming integrated merely because it was recorded.",
+      "disposition": "Implement an explicit witness-fit relation including separate and misattuned; never infer integration, agreement, closure, or felt resolution from record presence.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A persistence-friction scalar, entropy microdose, or directed Shadow-trajectory probe might expose how strongly a transition resists settling.",
+      "disposition": "Reject scalar felt scoring; preserve the entropy microdose and directed Shadow probe as exact Tier 5 sensory, substrate, and live-behavior waits pending separate operator approval.",
+      "classification": "needs_operator_approval",
+      "authority": "tier_5"
+    }
+  ]
+}
+

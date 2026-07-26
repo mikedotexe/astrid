@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "A first-packet entropy observation is insufficient to describe entropy drift over a connection.",
+      "disposition": "Verify the current bounded rolling entropy and density-gradient fields, retaining first-valid entropy only as initial-field evidence.",
+      "classification": "implemented"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Jitter, pressure, and felt atmospheric weight may co-occur but their relationship is not established by timing alone.",
+      "disposition": "Record the completed telemetry campaign difference and explicit mechanism-smooth-felt-friction-remains reviews without claiming causation.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A felt word such as viscosity must not be inferred as a telemetry jitter class.",
+      "disposition": "Preserve qualitative felt evidence in its canonical report and keep mechanical cadence classes descriptive only.",
+      "classification": "verified_existing"
+    }
+  ]
+}

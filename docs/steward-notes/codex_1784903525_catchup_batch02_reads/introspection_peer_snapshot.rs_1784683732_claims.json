@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "summary": "Missing, unreadable, malformed, stale, and observed peer evidence must remain distinguishable.",
+      "disposition": "Verify source status plus age and freshness fields.",
+      "classification": "implemented",
+      "claim_id": "c001"
+    },
+    {
+      "summary": "Last-known peer scalars must not be retained as current presence after a failed read.",
+      "disposition": "Preserve the no-stale-value invariant and explicit unknown relation.",
+      "classification": "verified_existing",
+      "claim_id": "c002"
+    },
+    {
+      "summary": "Pressure-driven refresh or a ghosting buffer used by runtime behavior would change peer or sensory semantics.",
+      "disposition": "Preserve an exact Mike/operator approval wait before adaptive refresh, stale retention, or peer coupling.",
+      "classification": "tier_5_wait",
+      "claim_id": "c003"
+    }
+  ]
+}

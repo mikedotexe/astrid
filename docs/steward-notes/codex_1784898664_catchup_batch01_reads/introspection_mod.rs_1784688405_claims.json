@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Witness path ownership must avoid repository-prefix collisions.",
+      "disposition": "Verify narrow workspace roots are checked first and all owner cases are tested.",
+      "classification": "implemented"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Peer scalar freshness must be explicit and fail closed across clock or file anomalies.",
+      "disposition": "Verify bounded age, fresh/stale labels, source status, and no direct-causation fields.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Runtime context should include whitelisted telemetry, entropy, dimensional, heartbeat, and peer observations without prose.",
+      "disposition": "Verify current parameter observation assembly and no-prose tests.",
+      "classification": "implemented"
+    }
+  ]
+}

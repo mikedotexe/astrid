@@ -1,0 +1,16 @@
+{
+  "claims": [
+    {
+      "summary": "Witness artifacts remain evidence-only and cannot grant approval or live eligibility.",
+      "disposition": "Verify serialized authority state and private-constructor tests.",
+      "classification": "verified_existing",
+      "claim_id": "c001"
+    },
+    {
+      "summary": "Model-route timing preserves queue-only, active-only, complete, and aggregate-only cases.",
+      "disposition": "Verify partial timing tests and technical metadata scope.",
+      "classification": "implemented",
+      "claim_id": "c002"
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "summary": "Queue-only and active-only provider timing should be represented explicitly.",
+      "disposition": "Verify current four-way timing completeness logic and tests.",
+      "classification": "implemented",
+      "claim_id": "c001"
+    },
+    {
+      "summary": "A weighted completeness score would risk treating metadata coverage as felt visibility.",
+      "disposition": "Retain categorical technical states and reject experiential scoring.",
+      "classification": "verified_existing",
+      "claim_id": "c002"
+    },
+    {
+      "summary": "Missing one provider phase does not discard the phase that was observed.",
+      "disposition": "Verify serialized partial measurements.",
+      "classification": "verified_existing",
+      "claim_id": "c003"
+    }
+  ]
+}

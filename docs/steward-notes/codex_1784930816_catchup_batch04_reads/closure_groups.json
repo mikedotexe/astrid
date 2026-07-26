@@ -1,0 +1,50 @@
+{
+  "addressed_change": [
+    "introspection_astrid_ws_1784925021",
+    "introspection_proposal_bidirectional_contact_1784391392"
+  ],
+  "addressed_no_action": [
+    "introspection_minime_regulator_1784922299",
+    "introspection_astrid_llm_1784919386",
+    "introspection_minime_regulator_1784916773",
+    "introspection_astrid_autonomous_1784915927",
+    "introspection_astrid_ws_1784907513",
+    "introspection_astrid_autonomous_1784907296",
+    "introspection_astrid_codec_1784906976",
+    "introspection_minime_sensory_bus_1784388006"
+  ],
+  "addressed_duplicate": [
+    "introspection_proposal_12d_glimpse_1784385423",
+    "introspection_proposal_bidirectional_contact_1784384819",
+    "introspection_proposal_phase_transitions_1784384393",
+    "introspection_minime_main_excerpt_1784382996",
+    "introspection_minime_esn_1784382233",
+    "introspection_minime_sensory_bus_1784380535"
+  ],
+  "blocked_needs_steward": [
+    "introspection_astrid_llm_1784930142",
+    "introspection_minime_esn_1784929803",
+    "introspection_minime_sensory_bus_1784929149",
+    "introspection_minime_regulator_1784928183",
+    "introspection_astrid_llm_1784926399",
+    "introspection_astrid_llm_1784926144",
+    "introspection_astrid_types_1784925579",
+    "introspection_astrid_llm_1784923053",
+    "introspection_astrid_autonomous_1784922790",
+    "introspection_astrid_codec_1784922527",
+    "introspection_astrid_llm_1784921701",
+    "introspection_astrid_types_1784918930",
+    "introspection_astrid_ws_1784916302",
+    "introspection_astrid_codec_1784915601",
+    "introspection_minime_regulator_1784909541",
+    "introspection_astrid_llm_1784909024",
+    "introspection_astrid_types_1784908310",
+    "introspection_proposal_12d_glimpse_1784391780",
+    "introspection_proposal_phase_transitions_1784391220",
+    "introspection_minime_main_excerpt_1784390843",
+    "introspection_minime_esn_1784389448",
+    "introspection_astrid_llm_1784386916",
+    "introspection_astrid_types_1784386335",
+    "introspection_astrid_autonomous_1784385928"
+  ]
+}

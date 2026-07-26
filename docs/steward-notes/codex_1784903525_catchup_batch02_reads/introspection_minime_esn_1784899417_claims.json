@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "summary": "Minime uses covariance accumulation and bounded power-iteration work to estimate spectral state.",
+      "disposition": "Verify current source and finite-value guards.",
+      "classification": "verified_existing",
+      "claim_id": "c001"
+    },
+    {
+      "summary": "Power-iteration or covariance behavior has not been shown to cause Astrid's or Minime's reported texture.",
+      "disposition": "Route a 500-tick decay or density-gradient comparison to an offline preregistered replay.",
+      "classification": "sandbox_routed",
+      "claim_id": "c002"
+    },
+    {
+      "summary": "Changing iteration count, covariance decay, exploration noise, or rho would alter reservoir behavior.",
+      "disposition": "Preserve an exact Mike/operator approval wait before ESN mathematics or controller changes.",
+      "classification": "tier_5_wait",
+      "claim_id": "c003"
+    }
+  ]
+}

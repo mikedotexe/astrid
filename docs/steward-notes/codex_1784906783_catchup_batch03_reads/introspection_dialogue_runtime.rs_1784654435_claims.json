@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "summary": "Known markers in supported matching delimiters must remain visible as exact references.",
+      "disposition": "Verify group and quote delimiter regressions.",
+      "classification": "implemented",
+      "claim_id": "c001"
+    },
+    {
+      "summary": "Requested-token bands are mechanical request metadata, not a complexity score.",
+      "disposition": "Retain the hashed QoS request identity and epistemic boundary.",
+      "classification": "verified_existing",
+      "claim_id": "c002"
+    },
+    {
+      "summary": "Spectral entropy or density must not redefine model request depth.",
+      "disposition": "Reject the proposed numeric-to-cognitive inference.",
+      "classification": "verified_existing",
+      "claim_id": "c003"
+    }
+  ]
+}

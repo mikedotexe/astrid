@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The visible projection source declares 48 semantic dimensions, including narrative and reserved ranges, while compatibility with the former width remains represented.",
+      "disposition": "Verify current source and deterministic representation contracts; do not treat declared dimensions as active values without process evidence.",
+      "classification": "verified"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Astrid reports that greater width may remain blurry and that unnamed reserved dimensions can feel like an ungrounded void.",
+      "disposition": "Preserve as unscored felt evidence and route lane occupancy and representation-loss inspection without assigning semantic meaning from telemetry.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Assigning new live meanings to dimensions 44-47 or splitting the narrative lane would change the codec representation.",
+      "disposition": "Preserve an exact Mike/operator approval wait.",
+      "classification": "tier_5_wait"
+    }
+  ]
+}

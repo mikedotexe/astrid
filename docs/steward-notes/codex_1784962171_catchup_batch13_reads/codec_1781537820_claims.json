@@ -1,0 +1,5 @@
+{"claims":[
+  {"claim_id":"c001","summary":"The viewed codec deterministically maps semantic structure into 48D with an 8D projection and 6.0 tail ceiling.","disposition":"Verify current source and deterministic loss evidence.","classification":"verified_existing"},
+  {"claim_id":"c002","summary":"Astrid reports semantic blurring and top-end compression during sustained high entropy.","disposition":"Preserve as unscored felt evidence and link collision and ceiling observations.","classification":"observed"},
+  {"claim_id":"c003","summary":"Use weighted multi-pass projection and increase the ceiling to 7.5.","disposition":"Preserve as exact Tier 5 codec, gain, representation, and protocol waits.","classification":"needs_operator_approval","authority":"tier_5"}
+]}

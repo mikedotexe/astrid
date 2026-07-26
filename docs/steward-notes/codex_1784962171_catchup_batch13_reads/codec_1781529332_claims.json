@@ -1,0 +1,5 @@
+{"claims":[
+  {"claim_id":"c001","summary":"The viewed smoothstep makes the gate mathematically continuous and the projection remains deterministic.","disposition":"Verify exact current gate sweep and projection-variance tests.","classification":"verified_existing"},
+  {"claim_id":"c002","summary":"Astrid reports that a mathematically smooth onset can still feel like a shift in atmosphere.","disposition":"Preserve as unscored felt evidence; a numeric pass cannot close it.","classification":"observed"},
+  {"claim_id":"c003","summary":"Scale the tail ceiling from entropy rate or density gradient.","disposition":"Preserve as an exact Tier 5 codec and telemetry-to-control proposal.","classification":"needs_operator_approval","authority":"tier_5"}
+]}

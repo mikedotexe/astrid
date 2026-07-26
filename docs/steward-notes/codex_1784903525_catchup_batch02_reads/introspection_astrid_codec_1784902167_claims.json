@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "summary": "The current 48D codec has registered projected, narrative, compatibility, and reserved representation regions.",
+      "disposition": "Verify current representation contracts and deterministic codec loss receipts.",
+      "classification": "implemented",
+      "claim_id": "c001"
+    },
+    {
+      "summary": "Mechanical lane occupancy or offline ablation differences do not prove narrative texture loss.",
+      "disposition": "Preserve campaign differences and explicit felt friction without scalarizing or closing the report.",
+      "classification": "observed",
+      "claim_id": "c002"
+    },
+    {
+      "summary": "Borrowing dynamically from reserved or projected lanes would change live codec and protocol-facing output.",
+      "disposition": "Preserve an exact Mike/operator approval wait before dynamic lane allocation, codec gain, clamp, or wire changes.",
+      "classification": "tier_5_wait",
+      "claim_id": "c003"
+    }
+  ]
+}

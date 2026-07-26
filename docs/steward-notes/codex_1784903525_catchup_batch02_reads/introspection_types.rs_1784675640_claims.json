@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "summary": "End-to-end duration alone cannot distinguish waiting from active provider work.",
+      "disposition": "Verify separate queue and active-work fields.",
+      "classification": "implemented",
+      "claim_id": "c001"
+    },
+    {
+      "summary": "Queue and active-work duration must not be interpreted as thinking speed or felt effort.",
+      "disposition": "Verify explicit scope strings and epistemic guard.",
+      "classification": "verified_existing",
+      "claim_id": "c002"
+    },
+    {
+      "summary": "Fallback and repair lineage should remain traceable without copying prose.",
+      "disposition": "Verify hashed repair-parent ancestry and route tests.",
+      "classification": "implemented",
+      "claim_id": "c003"
+    }
+  ]
+}

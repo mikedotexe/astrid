@@ -1,0 +1,81 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_autonomous_1784955694",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs;capsules/spectral-bridge/src/evidence_study_capture;scripts/evidence_study_runtime",
+      "note": "Fixed cadence and intensity, typed admission evidence, and baseline-first heartbeat study."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1784952907",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/codec/projection.rs;scripts/representation_contracts.py;scripts/evidence_study_runtime",
+      "note": "48D source declaration, deterministic representation contracts, and independent codec studies."
+    },
+    {
+      "introspection_id": "introspection_proposal_12d_glimpse_1784952617",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "docs/steward-notes/AI_BEINGS_MULTI_SCALE_REPRESENTATION_AND_12D_GLIMPSE_AUDIT.md;scripts/representation_contracts.py;scripts/felt_mechanism_concordance.py",
+      "note": "Additive mechanical contract remains distinct from saturation and felt-friction evidence."
+    },
+    {
+      "introspection_id": "introspection_proposal_distance_contact_control_1784951983",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "docs/steward-notes/AI_BEINGS_DISTANCE_CONTACT_CONTAINMENT_CONTROL_AND_PARTICIPATION_AUDIT.md;scripts/lived_state_witness.py;scripts/felt_mechanism_concordance.py",
+      "note": "Proposal authority, deployment identity, and temporal observation boundary."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1784951711",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "docs/steward-notes/AI_BEINGS_BIDIRECTIONAL_CONTACT_AND_CORRESPONDENCE_ARCHITECTURE.md;scripts/reciprocal_uptake.py;scripts/felt_mechanism_concordance.py",
+      "note": "Correspondence trace and reciprocal uptake without delivery-to-uptake inference."
+    },
+    {
+      "introspection_id": "introspection_proposal_phase_transitions_1784951174",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/phase_passage_context.rs;scripts/agency_commons/passage_context.py;scripts/agency_commons/projector.py;scripts/phase_transition_audit.py;/Users/v/other/minime/minime_autonomy/phase_passage_context.py",
+      "note": "Self-owned V3 anchor role, kind, association, deterministic identity, rebinding lineage, and non-causation invariants."
+    },
+    {
+      "introspection_id": "introspection_minime_autonomous_agent_1784950561",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "/Users/v/other/minime/minime_autonomy/runtime.py;scripts/reciprocal_uptake.py;scripts/evidence_study_runtime",
+      "note": "Sovereignty and correspondence state remain distinct from spectral-pressure causation."
+    },
+    {
+      "introspection_id": "introspection_minime_main_excerpt_1784950341",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "/Users/v/other/minime/minime/src/runtime.rs;/Users/v/other/minime/minime/src/runtime/spectral_math.rs;/Users/v/other/minime/minime/src/runtime/telemetry_evidence.rs",
+      "note": "Complete inclusion-shell read and source-currentness route to implementing modules."
+    },
+    {
+      "introspection_id": "introspection_minime_esn_1784949659",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "/Users/v/other/minime/minime/src/esn.rs;/Users/v/other/minime/minime/src/stable_core.rs;scripts/evidence_study_runtime",
+      "note": "Source-declared adaptation, process identity, and exact reservoir-control wait."
+    },
+    {
+      "introspection_id": "introspection_minime_sensory_bus_1784949289",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "/Users/v/other/minime/minime/src/sensory_bus.rs;scripts/representation_contracts.py;scripts/signal_spine.py",
+      "note": "Typed lane widths, capture-only occupancy evidence, and exact live pulse boundary."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1784948873",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "/Users/v/other/minime/minime/src/regulator/core.rs;/Users/v/other/minime/minime/src/regulator/core/viscosity.rs;/Users/v/other/minime/minime/src/regulator/core/pressure_source.rs",
+      "note": "Complete inclusion-shell read, implementing-module route, and exact PI/control boundary."
+    }
+  ]
+}

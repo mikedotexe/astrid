@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "summary": "Importing hard_reset exposes code availability but does not prove that a reset occurred during the witnessed moment.",
+      "disposition": "Verify current module and reset source without inferring runtime activation.",
+      "classification": "verified_existing",
+      "claim_id": "c001"
+    },
+    {
+      "summary": "Numeric fill recovery after reset cannot establish qualitative continuity or restoration.",
+      "disposition": "Route any reset comparison to an offline baseline-first study with explicit felt review.",
+      "classification": "sandbox_routed",
+      "claim_id": "c002"
+    },
+    {
+      "summary": "Changing hard-reset thresholds, keep caps, covariance bootstrap, or rho behavior would alter Minime live control.",
+      "disposition": "Preserve an exact Mike/operator approval wait before any hard-reset or regulator change.",
+      "classification": "tier_5_wait",
+      "claim_id": "c003"
+    }
+  ]
+}

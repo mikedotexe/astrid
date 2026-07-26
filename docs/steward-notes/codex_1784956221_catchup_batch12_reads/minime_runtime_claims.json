@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The complete runtime.rs source is an inclusion shell and contains no direct viscosity or spectral-cascade implementation.",
+      "disposition": "Verify from source and route the named spectral_math and telemetry modules for source-currentness rather than attributing mechanics to the shell.",
+      "classification": "verified"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The reported syrup-like cohesion cannot be inferred from density gradient or pressure values exposed beside an inclusion shell.",
+      "disposition": "Preserve as unscored felt evidence and require baseline-first mechanical observation for any concordance claim.",
+      "classification": "study_wait"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Adding or tuning a viscosity coefficient would change reservoir or regulatory mathematics.",
+      "disposition": "Preserve an exact Mike/operator approval wait.",
+      "classification": "tier_5_wait"
+    }
+  ]
+}

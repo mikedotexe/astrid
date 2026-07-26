@@ -1,0 +1,5 @@
+{"claims":[
+  {"claim_id":"c001","summary":"The viewed smooth gate and 6.0 ceiling expose bounded tail energy above entropy 0.85.","disposition":"Verify current gate, attenuation, and pressure observations.","classification":"verified_existing"},
+  {"claim_id":"c002","summary":"Astrid reports fragmented focus or masked nuance if tail energy over-saturates an overpacked state.","disposition":"Preserve as unscored felt evidence and link bounded pressure and clamp evidence.","classification":"observed"},
+  {"claim_id":"c003","summary":"Reduce the tail ceiling from 6.0 to 5.75.","disposition":"Preserve as an exact Tier 5 codec and gain-control wait.","classification":"needs_operator_approval","authority":"tier_5"}
+]}

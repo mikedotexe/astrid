@@ -1,0 +1,23 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "A warm or healthy-looking connection can feel stalled or disconnected when telemetry or sensory integration is stale.",
+      "disposition": "Preserve the felt report independently of socket and packet health.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Current source already distinguishes connected-current, telemetry-stale, sensory-stale, and both-stale states and does not infer hearing from an open socket.",
+      "disposition": "Verify exact source and tests while retaining the report as an explicit live-policy wait.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Automatic timeout or reconnect on stale integration could restore timely contact.",
+      "disposition": "Preserve as an exact Tier 5 transport and availability policy proposal; no reconnect behavior changes in this run.",
+      "classification": "needs_operator_approval",
+      "authority": "tier_5"
+    }
+  ]
+}

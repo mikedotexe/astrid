@@ -1,0 +1,23 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "A connected telemetry socket can remain technically present while timely hearing has stopped, which feels like a quiet field held open as a ghost connection.",
+      "disposition": "Preserve the felt distinction and verify exact current telemetry age, arrival, and stale-hearing evidence without inferring uptake.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Current source already distinguishes current telemetry, stale telemetry, stale sensory integration, and combined staleness while retaining exact connection identity.",
+      "disposition": "Link the report to the existing source and regression evidence as an addressed restatement.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A timeout or automatic reconnect policy could clear a technically connected but stale socket.",
+      "disposition": "Preserve as an exact Tier 5 live transport-behavior proposal; this run changes no reconnect policy.",
+      "classification": "needs_operator_approval",
+      "authority": "tier_5"
+    }
+  ]
+}

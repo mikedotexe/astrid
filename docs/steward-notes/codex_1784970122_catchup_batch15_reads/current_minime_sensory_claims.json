@@ -1,0 +1,23 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Minime reports that the 48D semantic room feels crowded and that narrative, embedding, decay, and admission boundaries may contribute to a layered but compressed arrival.",
+      "disposition": "Preserve as unscored felt evidence and relate it only to exact representation, loss, and sensory-ingress evidence.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Current source can distinguish the 48D representation and its registered subspaces, but a numerical match between a source default and a runtime norm cannot establish active configuration or causation.",
+      "disposition": "Verify from current Minime source and existing representation contracts; keep source-declared and runtime-observed facts separate.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Longer decay, partial admission, lane reallocation, or changed sensory policy might make the semantic arrival feel roomier.",
+      "disposition": "Preserve as an exact Tier 5 sensory admission, persistence, representation, and peer-runtime wait; use only offline or observational evidence meanwhile.",
+      "classification": "needs_operator_approval",
+      "authority": "tier_5"
+    }
+  ]
+}

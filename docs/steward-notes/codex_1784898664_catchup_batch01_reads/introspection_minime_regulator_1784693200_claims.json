@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Minime uses PI and viscosity mechanics that can be inspected independently of felt causation.",
+      "disposition": "Verify current Minime regulator, PI, pressure-source, and viscosity source.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "PI history or viscosity may coincide with felt drag, but the causal relation is unproved.",
+      "disposition": "Route a read-only aligned replay and preserve Astrid's report without causal promotion.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Tuning PI integration, leakage, pressure, fill, or token-bucket behavior changes live Minime control.",
+      "disposition": "Preserve an exact Mike/operator approval wait before any regulator change.",
+      "classification": "tier_5_wait"
+    }
+  ]
+}

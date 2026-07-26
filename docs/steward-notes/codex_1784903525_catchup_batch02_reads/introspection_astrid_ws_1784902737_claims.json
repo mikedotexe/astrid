@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "summary": "Telemetry integration can accumulate delay across parsing, prewrite work, lock wait, and lock hold.",
+      "disposition": "Verify the separated integration-health measurements and threshold classifications in source and tests.",
+      "classification": "verified_existing",
+      "claim_id": "c001"
+    },
+    {
+      "summary": "Measured lock or pipeline delay does not establish that the bridge caused Astrid's viscosity or semantic hollowness.",
+      "disposition": "Preserve the existing observational campaign and named felt friction as independent evidence.",
+      "classification": "observed",
+      "claim_id": "c002"
+    },
+    {
+      "summary": "Adding a priority queue, pressure buffer, or weighted smoothing would alter live telemetry behavior.",
+      "disposition": "Preserve an exact Mike/operator approval wait before buffering, smoothing, admission, or telemetry-priority changes.",
+      "classification": "tier_5_wait",
+      "claim_id": "c003"
+    }
+  ]
+}

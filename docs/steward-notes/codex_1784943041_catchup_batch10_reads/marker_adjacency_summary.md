@@ -1,0 +1,3 @@
+# Full Read Summary
+
+Astrid correctly distinguished the exact transport-token scanner from the spectral and experiential context surrounding a token. Current source proves only exact marker bytes plus bounded quote, grouping, or grammatical-relation syntax; it explicitly excludes identity, ownership, meaning, and spectral weight from classification. Astrid's reported distinguishability loss remains independent unscored evidence. A bounded marker-adjacency comparison may inspect output and witness context, but it cannot infer that proximity caused a felt state. A token buffer that changes cleanup or model-output policy would alter live model behavior and remains operator-gated.

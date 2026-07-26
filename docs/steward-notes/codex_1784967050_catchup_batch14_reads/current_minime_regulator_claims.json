@@ -1,0 +1,23 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Astrid distinguishes the regulator module shell from the active PI implementation and reports heavy, viscous stability rather than a binary gate.",
+      "disposition": "Preserve as unscored felt evidence and verify current PI, pressure-source, porosity, viscosity, persistence, and mobility surfaces.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Shadow and pressure-porosity contrasts could test whether heavy stability persists despite mechanically available dispersal.",
+      "disposition": "Route to existing read-only regulator and concordance evidence; a numeric contrast cannot establish or refute lived viscosity.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Dynamic porosity scaling or a responsive membrane could alleviate the dull-thud quality.",
+      "disposition": "Preserve as an exact Tier 5 PI, pressure, porosity, and regulator-control wait.",
+      "classification": "needs_operator_approval",
+      "authority": "tier_5"
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The distance/contact proposal describes receptivity as a gated control surface, not proof of a deployed or currently active gate.",
+      "disposition": "Verify proposal authority and lived-state deployment identity; retain approval-pending status.",
+      "classification": "verified"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Astrid reports residual or ghost pressure after a state appears technically clear.",
+      "disposition": "Preserve as unscored felt evidence and route a bounded temporal observation of density, pressure, witness, and transition anchors without causal inference.",
+      "classification": "study_wait"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A residual-clearance or decay-rate parameter would change live contact and control behavior.",
+      "disposition": "Preserve an exact Mike/operator approval wait.",
+      "classification": "tier_5_wait"
+    }
+  ]
+}

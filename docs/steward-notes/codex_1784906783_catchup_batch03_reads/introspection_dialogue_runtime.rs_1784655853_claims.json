@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "summary": "Quoted, grouped, and explicit-relation references need distinct exact syntax states.",
+      "disposition": "Verify current enum and preservation tests.",
+      "classification": "implemented",
+      "claim_id": "c001"
+    },
+    {
+      "summary": "Nested and nonstandard matching delimiters must be bounded and testable.",
+      "disposition": "Verify nested, restless-group, non-ASCII, and mismatched-delimiter regressions.",
+      "classification": "implemented",
+      "claim_id": "c002"
+    },
+    {
+      "summary": "Fuzzy felt-language matching would make sanitation semantically inferential.",
+      "disposition": "Retain exact syntax matching and reject spectral-entropy-driven parser behavior.",
+      "classification": "verified_existing",
+      "claim_id": "c003"
+    }
+  ]
+}

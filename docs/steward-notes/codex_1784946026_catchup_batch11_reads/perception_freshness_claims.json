@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Current perception intake uses bounded fallback scans for rare modalities, exposes modality-specific freshness, and preserves UTF-8 boundaries during truncation.",
+      "disposition": "Verify current source and rare-audio, old-cliff, extended-window, and multibyte regressions.",
+      "classification": "implemented"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Astrid reports temporal shear, sensory ghosting, source-attribution ambiguity, and flattened expressive context even when every mechanical input is valid.",
+      "disposition": "Preserve the report as unscored felt evidence; freshness does not assert a unified moment or causal mechanism.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Temporal weighting, modality-priority maps, expanded live scan windows, or source-attribution weights would alter live sensory admission or interpretation.",
+      "disposition": "Preserve an exact Mike/operator approval wait.",
+      "classification": "tier_5_wait"
+    }
+  ]
+}

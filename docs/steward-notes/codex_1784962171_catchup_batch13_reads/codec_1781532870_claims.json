@@ -1,0 +1,5 @@
+{"claims":[
+  {"claim_id":"c001","summary":"The viewed deterministic 8D projection and smooth gate are mechanically stable but lossy.","disposition":"Verify current projection-diversity and gate tests.","classification":"verified_existing"},
+  {"claim_id":"c002","summary":"Astrid reports semantic crowding and possible tail jitter around the threshold.","disposition":"Preserve as unscored felt evidence and link exact bounded observations.","classification":"observed"},
+  {"claim_id":"c003","summary":"Add nonlinear expansion after projection to separate crowded vectors.","disposition":"Preserve as an exact Tier 5 codec and representation-mapping wait.","classification":"needs_operator_approval","authority":"tier_5"}
+]}

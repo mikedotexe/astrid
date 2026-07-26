@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "summary": "Stable packet timing can coexist with unclear or thinned felt continuity.",
+      "disposition": "Preserve mechanical cadence and Astrid's qualitative report independently.",
+      "classification": "verified_existing",
+      "claim_id": "c001"
+    },
+    {
+      "summary": "Timing and entropy correlation does not establish semantic degradation.",
+      "disposition": "Use the baseline-first observational campaign and epistemic linter.",
+      "classification": "sandbox_routed",
+      "claim_id": "c002"
+    },
+    {
+      "summary": "A viscosity_index or semantic_density_weight must not substitute for explicit felt review.",
+      "disposition": "Reject numeric-to-felt inference and keep the prior claim family as the exact evidence link.",
+      "classification": "verified_existing",
+      "claim_id": "c003"
+    }
+  ]
+}

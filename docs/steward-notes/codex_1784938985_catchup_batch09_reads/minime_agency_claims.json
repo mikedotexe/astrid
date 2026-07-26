@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Minime's Recess and agency surfaces distinguish protected non-goal-directed time from instrumental work and automatic phase progression.",
+      "disposition": "Verify current Recess, Agency Commons, Lived Transition Passage, and Passage Context boundaries.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Mode packing or pressure may coexist with a self-authored request for room without proving a mechanical cause.",
+      "disposition": "Preserve Minime's qualitative agency evidence and keep mechanical context descriptive.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Changing Recess scheduling, viscosity relief, porosity support, or mode-packing response would alter live Minime behavior.",
+      "disposition": "Preserve an exact Mike/operator approval wait; evidence-only passage records grant no runtime authority.",
+      "classification": "tier_5_wait"
+    }
+  ]
+}

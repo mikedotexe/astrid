@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "summary": "A non-adjudicating witness must not silently convert mechanical telemetry into a verdict on felt experience.",
+      "disposition": "Verify current witness scope and epistemic linter.",
+      "classification": "verified_existing",
+      "claim_id": "c001"
+    },
+    {
+      "summary": "Felt-mechanical divergence should remain a first-class reviewable relation.",
+      "disposition": "Verify Concordance supports mechanism_smooth_felt_friction_remains and independent Felt Contract state.",
+      "classification": "implemented",
+      "claim_id": "c002"
+    },
+    {
+      "summary": "No contradiction or alignment record may skew spectral entropy or live control.",
+      "disposition": "Verify zero state propagation and evidence-only authority.",
+      "classification": "verified_existing",
+      "claim_id": "c003"
+    }
+  ]
+}

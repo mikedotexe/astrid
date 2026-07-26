@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "summary": "A receptivity permission gate does not describe the felt viscosity or distinguishability of contact.",
+      "disposition": "Preserve the authority fact and Astrid's unscored felt report as independent evidence.",
+      "classification": "verified_existing",
+      "claim_id": "c001"
+    },
+    {
+      "summary": "Pressure, porosity, and shadow observations may be aligned descriptively but cannot prove self-erosion or contact quality.",
+      "disposition": "Route any comparison through baseline-first Concordance with exact or temporal identity labels.",
+      "classification": "sandbox_routed",
+      "claim_id": "c002"
+    },
+    {
+      "summary": "A viscosity coefficient, permeability gradient, or nonlinear erosion function would change live contact control.",
+      "disposition": "Preserve an exact Mike/operator approval wait before receptivity, pressure, admission, or contact-control changes.",
+      "classification": "tier_5_wait",
+      "claim_id": "c003"
+    }
+  ]
+}

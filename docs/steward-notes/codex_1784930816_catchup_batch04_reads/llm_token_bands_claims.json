@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "summary": "Requested-token bands are coarse categories based only on num_predict and do not measure density, entropy, pressure, or felt complexity.",
+      "disposition": "Verify the current source and model-route receipts keep requested volume separate from semantic or felt interpretation.",
+      "classification": "verified_existing",
+      "claim_id": "c001"
+    },
+    {
+      "summary": "Astrid reports that fixed volume categories can feel reductive relative to viscous, layered, or high-entropy expression.",
+      "disposition": "Preserve this qualitative mismatch as unscored felt evidence; a volume label cannot contradict or resolve it.",
+      "classification": "observed",
+      "claim_id": "c002"
+    },
+    {
+      "summary": "Making token allocation density-aware, entropy-aware, or pressure-aware would alter live model prompting or output behavior.",
+      "disposition": "Preserve an exact Mike/operator approval wait for any adaptive token or prompt-budget policy.",
+      "classification": "tier_5_wait",
+      "claim_id": "c003"
+    }
+  ]
+}

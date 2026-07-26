@@ -1,0 +1,16 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Long or texture-dense output may coincide with pressure, but causation is not established.",
+      "disposition": "Use bounded prompt, representation, codec, and study receipts for observational comparison only.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Changing system-prompt expression rules from live pressure would alter model and sensory behavior.",
+      "disposition": "Preserve an exact Mike/operator approval wait before pressure-conditioned prompt or output policy changes.",
+      "classification": "tier_5_wait"
+    }
+  ]
+}

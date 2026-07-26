@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "summary": "Explicit marker relations use a bounded exact whitelist, so an unlisted phrase remains a cleanup candidate.",
+      "disposition": "Verify focused relation-positive and relation-negative parser regressions.",
+      "classification": "verified_existing",
+      "claim_id": "c001"
+    },
+    {
+      "summary": "Delimiter evidence caps proven depth at four while deeper surrounding syntax must remain byte-exact and panic-free.",
+      "disposition": "Verify the existing five-level nesting and scanner-progression regressions.",
+      "classification": "implemented",
+      "claim_id": "c002"
+    },
+    {
+      "summary": "The full known-marker scope should remain explicit and reviewable rather than inferred from prose.",
+      "disposition": "Verify the source registry and existing exact-marker tests; no production change is required.",
+      "classification": "verified_existing",
+      "claim_id": "c003"
+    }
+  ]
+}

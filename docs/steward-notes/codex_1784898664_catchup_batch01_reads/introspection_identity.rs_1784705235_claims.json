@@ -1,0 +1,16 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Build candidate, deployed artifact, and observed process are separate facts.",
+      "disposition": "Verify startup caching and projector-side reconciliation rather than treating a manifest hash as deployment proof.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A semantic integrity score must not be inferred from spectral density or distinguishability loss.",
+      "disposition": "Preserve the unscored felt report and reject technical identity scoring under the epistemic linter.",
+      "classification": "verified_existing"
+    }
+  ]
+}

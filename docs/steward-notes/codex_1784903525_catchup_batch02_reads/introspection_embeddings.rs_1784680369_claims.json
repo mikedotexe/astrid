@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "summary": "Embedding output and witness prose are separate representations whose transitions should remain inspectable.",
+      "disposition": "Verify representation contracts and model-route receipts.",
+      "classification": "implemented",
+      "claim_id": "c001"
+    },
+    {
+      "summary": "Provider route, repair ancestry, pressure, and bounded shadow context are recorded without copying prompt or response prose.",
+      "disposition": "Verify lived-state route and runtime-context tests.",
+      "classification": "implemented",
+      "claim_id": "c002"
+    },
+    {
+      "summary": "Injecting pressure or shadow metrics into self_reflect would alter model behavior and risk numeric-to-felt inference.",
+      "disposition": "Preserve an exact Mike/operator approval wait before reflection prompt or provider changes.",
+      "classification": "tier_5_wait",
+      "claim_id": "c003"
+    }
+  ]
+}

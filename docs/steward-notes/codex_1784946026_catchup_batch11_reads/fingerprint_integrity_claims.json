@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Typed fingerprints flatten deterministically to 32 legacy slots, and hybrid coherence is available only for finite, correctly shaped inputs.",
+      "disposition": "Verify current source plus aligned, malformed, non-finite, and alias regressions.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Identical typed and legacy fingerprints whose values are nonzero but beneath the normalization floor must remain fully coherent.",
+      "disposition": "Implement a focused near-zero regression without changing the production calculation.",
+      "classification": "implemented"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Hybrid coherence is mechanical representation evidence and cannot establish that two representations feel equivalent.",
+      "disposition": "Preserve the epistemic boundary and zero felt-state propagation.",
+      "classification": "verified_existing"
+    }
+  ]
+}

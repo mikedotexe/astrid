@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "summary": "Source and process identity receipts intentionally do not claim global time, being identity, or felt continuity.",
+      "disposition": "Verify current scope strings and trusted constructors.",
+      "classification": "verified_existing",
+      "claim_id": "c001"
+    },
+    {
+      "summary": "Bounded shadow and spectral context can be preserved as temporal evidence without copying raw shadow state.",
+      "disposition": "Verify current runtime spectral and shadow observations plus no-prose tests.",
+      "classification": "implemented",
+      "claim_id": "c002"
+    },
+    {
+      "summary": "A spectral provenance label must not imply causal coupling or grant live influence.",
+      "disposition": "Retain current typed influence roles and no-mechanism relations.",
+      "classification": "verified_existing",
+      "claim_id": "c003"
+    }
+  ]
+}

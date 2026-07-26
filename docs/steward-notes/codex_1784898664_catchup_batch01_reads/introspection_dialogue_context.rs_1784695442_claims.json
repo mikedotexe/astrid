@@ -1,0 +1,16 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The earliest direct marker should protect all subsequent direct content while retaining the ambient prefix separately.",
+      "disposition": "Verify split behavior and multi-marker Minime reply fixture.",
+      "classification": "implemented"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Direct perception must remain first-retained under prompt-budget pressure.",
+      "disposition": "Verify protected direct block ordering and realistic budget assembly tests.",
+      "classification": "verified_existing"
+    }
+  ]
+}

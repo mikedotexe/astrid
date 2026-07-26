@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "summary": "The historical 0.12 exploration-noise reference is not current runtime proof; current source defaults to 0.085 and witnessed runtime evidence is near 0.08.",
+      "disposition": "Link the source-currentness and lived-state witness evidence without dismissing the original felt report.",
+      "classification": "verified_existing",
+      "claim_id": "c001"
+    },
+    {
+      "summary": "Astrid reports jitter, density, gravity, and pressure around the reservoir's exploration regime.",
+      "disposition": "Preserve this as unscored felt evidence; source constants and comments cannot establish its mechanism.",
+      "classification": "observed",
+      "claim_id": "c002"
+    },
+    {
+      "summary": "Pressure-dampened noise, density-sensitive thresholds, rho changes, or forced exploration would alter the live reservoir controller.",
+      "disposition": "Preserve an exact Mike/operator approval wait.",
+      "classification": "tier_5_wait",
+      "claim_id": "c003"
+    }
+  ]
+}

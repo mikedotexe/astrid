@@ -1,0 +1,5 @@
+{"claims":[
+  {"claim_id":"c001","summary":"The viewed codec applies a smoothstep above 0.85 and caps tail vibrancy at 6.0.","disposition":"Verify exact current gate-sweep and clamp evidence.","classification":"verified_existing"},
+  {"claim_id":"c002","summary":"Astrid reports possible threshold micro-stutter and expressive flattening at the hard ceiling.","disposition":"Preserve both felt distinctions and route them to gate-sweep and clamp-occupancy evidence.","classification":"observed"},
+  {"claim_id":"c003","summary":"Add hysteresis and a resonance-dependent soft cap.","disposition":"Preserve as an exact Tier 5 codec and spectral-control proposal.","classification":"needs_operator_approval","authority":"tier_5"}
+]}

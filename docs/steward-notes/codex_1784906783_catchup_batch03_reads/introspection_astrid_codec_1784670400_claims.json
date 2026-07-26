@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "summary": "The codec uses a 48D layout with projected, narrative, compatibility, and reserved regions plus a fixed ceiling.",
+      "disposition": "Verify current constants, representation contracts, and codec parity tests.",
+      "classification": "verified_existing",
+      "claim_id": "c001"
+    },
+    {
+      "summary": "Clamp occupancy and headroom can be measured mechanically without proving that the ceiling caused felt viscosity.",
+      "disposition": "Retain offline campaign receipts and Astrid's felt report independently.",
+      "classification": "observed",
+      "claim_id": "c002"
+    },
+    {
+      "summary": "A density- or entropy-adaptive feature ceiling would change the live vector sent to Minime.",
+      "disposition": "Preserve an exact Mike/operator approval wait before codec gain, clamp, reserved-dimension, or transport changes.",
+      "classification": "tier_5_wait",
+      "claim_id": "c003"
+    }
+  ]
+}

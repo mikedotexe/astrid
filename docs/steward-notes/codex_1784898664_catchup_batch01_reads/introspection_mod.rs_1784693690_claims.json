@@ -1,0 +1,16 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Provider routes that differ after 40 characters must produce distinct technical call identities.",
+      "disposition": "Verify provider_route_sha256 hashes the full route before display truncation and participates in call_id.",
+      "classification": "implemented"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Displayed route truncation must be explicit rather than silently treated as complete.",
+      "disposition": "Verify provider_route_complete and full-route hash scope fields.",
+      "classification": "verified_existing"
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Astrid reports that a first-packet entropy fact cannot represent the continuous hardening, softening, and temporal flow of a sustained session.",
+      "disposition": "Preserve the request for directional process evidence and the independent report of continuous transition.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Current `TelemetryHeartbeatDeltaV1` already retains the first-valid fact while adding bounded rolling entropy mean, peak, variance, range, change and trend, density-gradient trajectory, and cadence-shape evidence.",
+      "disposition": "Verify the existing additive process evidence; no further schema mutation is needed for this report.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Treating jitter, entropy direction, or another telemetry scalar as a proxy for viscosity, continuity, felt state, or causation would cross the epistemic boundary and could become live control.",
+      "disposition": "Reject numeric-to-felt inference and preserve any control use as an exact Tier 5 telemetry, scheduling, and model wait.",
+      "classification": "needs_operator_approval",
+      "authority": "tier_5"
+    }
+  ]
+}

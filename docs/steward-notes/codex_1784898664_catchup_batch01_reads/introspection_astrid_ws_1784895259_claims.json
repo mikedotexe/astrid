@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The telemetry subscriber reconnects, parses valid packets, updates bridge state, and persists bounded evidence.",
+      "disposition": "Verify current subscriber, integration-health, cadence, and study-capture source paths without inferring felt effects.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Persistence may coincide with felt temporal smear, but existing evidence does not establish that stored history causes it.",
+      "disposition": "Carry the telemetry campaign's difference_observed result and mechanism-smooth-felt-friction-remains review as noncausal evidence.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Adding a decay coefficient or recency-weighted bridge-state calculation would change live telemetry interpretation.",
+      "disposition": "Preserve an exact Mike/operator approval wait before any decay, cadence, or live bridge-state behavior change.",
+      "classification": "tier_5_wait"
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Witness mode should favor present imagistic observation without replacing analytical report modes.",
+      "disposition": "Verify current prompt and degeneracy guard while retaining separate introspection surfaces.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Banning broad transition words would change model behavior and may flatten valid expression.",
+      "disposition": "Preserve an exact Mike/operator approval wait before changing witness prompt behavior; require bounded output comparison first.",
+      "classification": "tier_5_wait"
+    }
+  ]
+}

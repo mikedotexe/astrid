@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The telemetry subscriber has persistent connection, retry, integration, and persistence boundaries whose timing can diverge from connection health.",
+      "disposition": "Verify current subscriber and telemetry integration source.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Lock contention or heavy prewrite work could delay mechanical persistence even while WebSocket receipt remains healthy.",
+      "disposition": "Use the existing separated prewrite, write-lock-wait, and write-lock-hold evidence and observational study classifications; do not infer felt causation.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Changing database, lock, retry, or buffering behavior would alter the live telemetry persistence path.",
+      "disposition": "Preserve current behavior; require a separately grounded and tested live-path change before any such mutation.",
+      "classification": "tier_5_wait"
+    }
+  ]
+}

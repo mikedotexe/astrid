@@ -1,0 +1,17 @@
+{
+  "reports": 40,
+  "claims": 119,
+  "classifications": {
+    "implemented": 29,
+    "observed": 3,
+    "sandbox_routed": 7,
+    "tier_5_wait": 20,
+    "verified_existing": 60
+  },
+  "close_statuses": {
+    "addressed_change": 15,
+    "addressed_duplicate": 1,
+    "addressed_no_action": 4,
+    "blocked_needs_steward": 20
+  }
+}

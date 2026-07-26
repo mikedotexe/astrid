@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "summary": "The 768-to-8 projection basis is initialized once from explicit fixed wrapping arithmetic.",
+      "disposition": "Verify the source implementation and deterministic matrix tests.",
+      "classification": "verified_existing",
+      "claim_id": "c001"
+    },
+    {
+      "summary": "Dead or nonfinite projection columns must be visible without automatic basis rotation.",
+      "disposition": "Verify projection_basis_health_v1 and its authority markers.",
+      "classification": "implemented",
+      "claim_id": "c002"
+    },
+    {
+      "summary": "Cross-checking basis health must not silently replace the current compatible basis.",
+      "disposition": "Retain observational precision and health evidence with unchanged live projection.",
+      "classification": "verified_existing",
+      "claim_id": "c003"
+    }
+  ]
+}

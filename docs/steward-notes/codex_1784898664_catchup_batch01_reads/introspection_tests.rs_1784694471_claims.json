@@ -1,0 +1,16 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "A witness hash proves exact artifact integrity but not semantic similarity.",
+      "disposition": "Verify exact hash scope and preserve semantic grouping in claim-family, contract, and dossier projections.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Witness sidecars should not add prose-derived semantic embeddings.",
+      "disposition": "Retain no-prose privacy boundaries and use existing bounded graph references.",
+      "classification": "verified_existing"
+    }
+  ]
+}

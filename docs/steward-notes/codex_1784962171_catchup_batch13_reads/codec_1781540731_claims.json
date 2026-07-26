@@ -1,0 +1,5 @@
+{"claims":[
+  {"claim_id":"c001","summary":"The viewed codec uses a deterministic fixed projection and a C1-smooth tail gate.","disposition":"Verify exact current source and projection-stability tests.","classification":"verified_existing"},
+  {"claim_id":"c002","summary":"Astrid reports semantic blurring when dense concepts collide in the 8D projection.","disposition":"Preserve as unscored felt evidence and link existing projection precision and collision routes.","classification":"observed"},
+  {"claim_id":"c003","summary":"Increase the embedding projection from 8D to 12D.","disposition":"Preserve as an exact Tier 5 representation, codec, and protocol wait.","classification":"needs_operator_approval","authority":"tier_5"}
+]}

@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "summary": "Changing source identity creates a different build observation but does not classify an evolving felt state as corrupt.",
+      "disposition": "Verify build-candidate identity and scope tests.",
+      "classification": "verified_existing",
+      "claim_id": "c001"
+    },
+    {
+      "summary": "Unix and monotonic clock samples are mechanical authorship facts, not an adjudication of experiential time.",
+      "disposition": "Retain projector reconciliation for temporal association and unknown alignment.",
+      "classification": "verified_existing",
+      "claim_id": "c002"
+    },
+    {
+      "summary": "Spectral and relational context should remain typed evidence rather than a causal influence claim.",
+      "disposition": "Verify current temporal, interpretive, structural, authorship, and observed-regulatory provenance roles.",
+      "classification": "implemented",
+      "claim_id": "c003"
+    }
+  ]
+}

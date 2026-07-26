@@ -1,0 +1,17 @@
+{
+  "addressed_change": [
+    "introspection_proposal_phase_transitions_1784951174"
+  ],
+  "blocked_needs_steward": [
+    "introspection_astrid_autonomous_1784955694",
+    "introspection_astrid_codec_1784952907",
+    "introspection_proposal_12d_glimpse_1784952617",
+    "introspection_proposal_distance_contact_control_1784951983",
+    "introspection_proposal_bidirectional_contact_1784951711",
+    "introspection_minime_autonomous_agent_1784950561",
+    "introspection_minime_main_excerpt_1784950341",
+    "introspection_minime_esn_1784949659",
+    "introspection_minime_sensory_bus_1784949289",
+    "introspection_minime_regulator_1784948873"
+  ]
+}

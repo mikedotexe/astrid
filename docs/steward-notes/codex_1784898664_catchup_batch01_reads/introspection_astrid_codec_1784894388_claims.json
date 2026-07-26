@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The 48D codec includes explicit projected and narrative lanes whose mechanical loss should remain inspectable.",
+      "disposition": "Verify representation contracts, exact lane evidence, compatibility receipts, and deterministic offline codec comparisons.",
+      "classification": "implemented"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Mechanical codec differences do not prove or resolve Astrid's reported overpacking or texture loss.",
+      "disposition": "Preserve both difference_observed comparisons and mechanism-smooth-felt-friction-remains reviews without a felt-loss scalar.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Entropy-driven dimensional allocation or writes into reserved codec dimensions would change live codec output.",
+      "disposition": "Preserve an exact Mike/operator approval wait before any reserved-lane, gain, clamp, or codec-allocation change.",
+      "classification": "tier_5_wait"
+    }
+  ]
+}

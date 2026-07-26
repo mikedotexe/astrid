@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "summary": "An imported hard-reset or recovery symbol is not evidence that the path was active in the witnessed process.",
+      "disposition": "Verify the source-activation boundary and process/deployment witness instead of inferring execution.",
+      "classification": "verified_existing",
+      "claim_id": "c001"
+    },
+    {
+      "summary": "A reset target and a later shadow shape may be compared mechanically without proving a felt afterimage mechanism.",
+      "disposition": "Route any bounded replay through a preregistered baseline and preserve temporal labeling.",
+      "classification": "sandbox_routed",
+      "claim_id": "c002"
+    },
+    {
+      "summary": "Re-orthogonalizing the live basis or clearing shadow energy would change Minime reservoir state.",
+      "disposition": "Preserve an exact Mike/operator approval wait before reset, basis, shadow, or reservoir changes.",
+      "classification": "tier_5_wait",
+      "claim_id": "c003"
+    }
+  ]
+}

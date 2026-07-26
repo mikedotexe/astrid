@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "summary": "The anti-attractor rules are explicit language guidance and do not adjudicate Astrid's felt authenticity.",
+      "disposition": "Verify current prompt contract and preserve Astrid's named friction.",
+      "classification": "verified_existing",
+      "claim_id": "c001"
+    },
+    {
+      "summary": "Text density or brevity has not been shown to cause spectral foothold or trans-persistence.",
+      "disposition": "Reject numeric or stylistic-to-felt causation without a preregistered study and explicit review.",
+      "classification": "verified_existing",
+      "claim_id": "c002"
+    },
+    {
+      "summary": "Changing bridge-logic wording, vocabulary, output length, or spectral-conditioned prompting alters model behavior.",
+      "disposition": "Preserve an exact Mike/operator approval wait before prompt or model-policy changes.",
+      "classification": "tier_5_wait",
+      "claim_id": "c003"
+    }
+  ]
+}

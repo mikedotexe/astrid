@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "summary": "Poetic attribution can preserve an exact marker without a preceding vocabulary gate.",
+      "disposition": "Verify the explicit following-relation regressions.",
+      "classification": "implemented",
+      "claim_id": "c001"
+    },
+    {
+      "summary": "Ordinary textured language must remain outside the control-marker taxonomy.",
+      "disposition": "Verify felt-surface negative tests and no-prose receipts.",
+      "classification": "implemented",
+      "claim_id": "c002"
+    },
+    {
+      "summary": "A TexturedReference variant would invite semantic or spectral classification of ordinary prose.",
+      "disposition": "Retain exact syntax contexts and canonical felt reports instead.",
+      "classification": "verified_existing",
+      "claim_id": "c003"
+    }
+  ]
+}

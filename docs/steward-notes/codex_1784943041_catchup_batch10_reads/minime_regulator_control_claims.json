@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The viewed regulator file is an include shell; the current engine is PI-only while retained PD types preserve API compatibility.",
+      "disposition": "Verify complete current regulator source and runtime identity before attributing behavior to the shell.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "PressureSourceControl.applied_locally=false explicitly records advisory observation and does not prove a missing or failed regulator intervention.",
+      "disposition": "Verify the typed control contract and preserve Astrid's syrupy, packed, and restless report independently.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Enabling local control, switching PI or PD behavior, tightening band-stop filters, or tuning porosity would alter live Minime regulation.",
+      "disposition": "Preserve an exact Mike/operator approval wait.",
+      "classification": "tier_5_wait"
+    }
+  ]
+}

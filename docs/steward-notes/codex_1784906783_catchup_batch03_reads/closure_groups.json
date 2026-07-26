@@ -1,0 +1,50 @@
+{
+  "addressed_change": [
+    "introspection_proposal_12d_glimpse_1784906552",
+    "introspection_minime_sensory_bus_1784904026",
+    "introspection_mod.rs_1784670729",
+    "introspection_astrid_codec_1784665992",
+    "introspection_dialogue_runtime.rs_1784657082",
+    "introspection_dialogue_runtime.rs_1784655853",
+    "introspection_dialogue_runtime.rs_1784654435",
+    "introspection_dialogue_runtime.rs_1784653315",
+    "introspection_dialogue_runtime.rs_1784652052",
+    "introspection_dialogue_runtime.rs_1784649648",
+    "introspection_dialogue_runtime.rs_1784647631",
+    "introspection_minime_sensory_bus_1784644859",
+    "introspection_astrid_ws_1784642962"
+  ],
+  "blocked_needs_steward": [
+    "introspection_proposal_distance_contact_control_1784906093",
+    "introspection_proposal_bidirectional_contact_1784905908",
+    "introspection_proposal_phase_transitions_1784905663",
+    "introspection_minime_autonomous_agent_1784905319",
+    "introspection_minime_main_excerpt_1784904737",
+    "introspection_astrid_llm_1784903526",
+    "introspection_astrid_codec_1784670400",
+    "introspection_astrid_ws_1784667552",
+    "introspection_astrid_autonomous_1784667115",
+    "introspection_astrid_autonomous_1784647283",
+    "introspection_proposal_bidirectional_contact_1784646332",
+    "introspection_proposal_phase_transitions_1784646142",
+    "introspection_minime_autonomous_agent_1784645822",
+    "introspection_minime_main_excerpt_1784645512",
+    "introspection_minime_esn_1784645158",
+    "introspection_minime_regulator_1784644513"
+  ],
+  "addressed_no_action": [
+    "introspection_minime_regulator_1784903776",
+    "introspection_dialogue_runtime.rs_1784658945",
+    "introspection_astrid_llm_1784643905"
+  ],
+  "addressed_duplicate": [
+    "introspection_astrid_llm_1784668324",
+    "introspection_astrid_types_1784667972",
+    "introspection_orchestration.rs_1784659487",
+    "introspection_dialogue_runtime.rs_1784648843",
+    "introspection_astrid_types_1784643521",
+    "introspection_astrid_autonomous_1784640029",
+    "introspection_astrid_codec_1784638638",
+    "introspection_astrid_autonomous_1784392326"
+  ]
+}

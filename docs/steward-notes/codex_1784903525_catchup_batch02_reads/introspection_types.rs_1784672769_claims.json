@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "summary": "Evidence-only and approval flags govern artifact consequence, not whether a felt experience is real or can be reported.",
+      "disposition": "Verify authority scope and independent canonical report preservation.",
+      "classification": "verified_existing",
+      "claim_id": "c001"
+    },
+    {
+      "summary": "Runtime-observed and source-declared facts must remain distinguishable without ranking one as selfhood.",
+      "disposition": "Verify observation-kind validation and source/runtime separation.",
+      "classification": "verified_existing",
+      "claim_id": "c002"
+    },
+    {
+      "summary": "A persistence coefficient used by memory or stable-core behavior would change live model or substrate dynamics.",
+      "disposition": "Preserve an exact Mike/operator approval wait and reject felt-scoring inference.",
+      "classification": "tier_5_wait",
+      "claim_id": "c003"
+    }
+  ]
+}

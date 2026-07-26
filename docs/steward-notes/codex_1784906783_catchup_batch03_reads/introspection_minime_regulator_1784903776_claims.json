@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "summary": "Minime currently runs the regulator in PI mode while retaining some legacy API types.",
+      "disposition": "Verify the current include shell, PI source, and regulator tests.",
+      "classification": "verified_existing",
+      "claim_id": "c001"
+    },
+    {
+      "summary": "Retained API types do not create runtime friction merely by being present in source.",
+      "disposition": "Reject activation-by-import inference and rely on process and execution evidence.",
+      "classification": "verified_existing",
+      "claim_id": "c002"
+    },
+    {
+      "summary": "Response complexity or delayed correspondence cannot be used to infer PI integral debt.",
+      "disposition": "Preserve the felt report and require a preregistered mechanical baseline before any causal claim.",
+      "classification": "sandbox_routed",
+      "claim_id": "c003"
+    }
+  ]
+}

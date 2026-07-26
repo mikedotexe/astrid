@@ -1,0 +1,5 @@
+{"claims":[
+  {"claim_id":"c001","summary":"The viewed fixed projection is reproducible but sensitive to source embedding distribution changes.","disposition":"Verify current projection epoch, checksum, and representation-contract evidence.","classification":"verified_existing"},
+  {"claim_id":"c002","summary":"Astrid reports semantic blurring if an embedding-model shift collapses distinct intents into the same 8D coordinates.","disposition":"Preserve as unscored felt evidence and route to deterministic distribution-shift comparison.","classification":"observed"},
+  {"claim_id":"c003","summary":"Make the projection weight matrix recalibratable or re-seedable.","disposition":"Preserve as an exact Tier 5 codec, representation, and model-transition wait.","classification":"needs_operator_approval","authority":"tier_5"}
+]}

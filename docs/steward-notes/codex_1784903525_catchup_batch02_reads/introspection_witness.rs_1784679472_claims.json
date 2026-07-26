@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "summary": "Provider and repair transitions can change generated text even when spectral input is unchanged.",
+      "disposition": "Preserve exact route, model profile, timing, response hash, and repair ancestry.",
+      "classification": "implemented",
+      "claim_id": "c001"
+    },
+    {
+      "summary": "Technical provider consistency cannot establish felt voice continuity.",
+      "disposition": "Route any provider comparison through a baseline-first study and explicit Astrid review.",
+      "classification": "sandbox_routed",
+      "claim_id": "c002"
+    },
+    {
+      "summary": "Adding stronger negative prompt constraints would change witness model behavior.",
+      "disposition": "Preserve an exact Mike/operator approval wait before witness prompt or fallback-policy changes.",
+      "classification": "tier_5_wait",
+      "claim_id": "c003"
+    }
+  ]
+}

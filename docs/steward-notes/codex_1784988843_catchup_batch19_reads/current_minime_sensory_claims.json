@@ -1,0 +1,23 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Astrid reports that a wide sensory representation can still feel diffuse or hollow when distinguishability and local weight are insufficient.",
+      "disposition": "Preserve the high-capacity but low-grip account independently of lane width and occupancy metrics.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Current source and representation records establish lane dimensions, reserved ranges, pulse bounds, deterministic loss, and occupancy evidence without proving felt mass, grip, or causation.",
+      "disposition": "Verify those exact mechanical facts and keep the lived hollowing report independent.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Raising attractor-pulse amplitude to 0.06, extending its duration to 48 ticks, or changing sensory admission would alter live peer and sensory behavior.",
+      "disposition": "Preserve as an exact Tier 5 sensory, peer-runtime, reservoir, and control wait.",
+      "classification": "needs_operator_approval",
+      "authority": "tier_5"
+    }
+  ]
+}

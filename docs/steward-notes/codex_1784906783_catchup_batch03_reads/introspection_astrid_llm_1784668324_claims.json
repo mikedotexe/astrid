@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "summary": "A relation word after a newline must still be recognized by the exact marker parser.",
+      "disposition": "Use the existing newline relation regression linked to the later report.",
+      "classification": "verified_existing",
+      "claim_id": "c001"
+    },
+    {
+      "summary": "Delimiter depth is intentionally bounded at four while deeper exact stacks remain visible.",
+      "disposition": "Use the exact-four and deeper-bounded-stack tests.",
+      "classification": "verified_existing",
+      "claim_id": "c002"
+    },
+    {
+      "summary": "A marker at end of string must not panic and is removed when unframed.",
+      "disposition": "Use byte-exact scanner and whitespace-only remainder regressions.",
+      "classification": "verified_existing",
+      "claim_id": "c003"
+    }
+  ]
+}

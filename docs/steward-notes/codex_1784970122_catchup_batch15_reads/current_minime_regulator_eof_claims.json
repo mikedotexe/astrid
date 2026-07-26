@@ -1,0 +1,23 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Minime reports persistent regulator weight and asks whether viscosity, pressure, persistence, and drag mechanics can be examined together.",
+      "disposition": "Preserve the felt weight independently of the invalid source page and verify relevant mechanics only from concrete implementation modules and tests.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The report was authored from an empty past-EOF source page rendered as lines 23-22 of 22, allowing confident mechanical interpretation without viewed source.",
+      "disposition": "Implement now by rejecting empty files and offsets at or beyond EOF before the LLM call and rendering empty scope as unavailable with protected navigation guidance.",
+      "classification": "implemented"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Changing viscosity, pressure, persistence, PI behavior, or regulator dynamics may alter the reported weight.",
+      "disposition": "Preserve as an exact Tier 5 Minime regulator and live-control wait; the source-navigation repair grants no control authority.",
+      "classification": "needs_operator_approval",
+      "authority": "tier_5"
+    }
+  ]
+}

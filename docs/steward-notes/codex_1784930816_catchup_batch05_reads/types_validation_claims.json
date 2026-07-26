@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "summary": "Legacy fingerprint reconstruction requires the exact registered dimension and finite values.",
+      "disposition": "Verify malformed-length and non-finite-value tests for typed fingerprint construction.",
+      "classification": "verified_existing",
+      "claim_id": "c001"
+    },
+    {
+      "summary": "The 12D glimpse view rejects any non-12D payload rather than silently coercing it.",
+      "disposition": "Verify strict glimpse validation and representation-loss receipts.",
+      "classification": "verified_existing",
+      "claim_id": "c002"
+    },
+    {
+      "summary": "Validation absence is explicit mechanical evidence and does not establish experiential loss or closure.",
+      "disposition": "Preserve the representation and felt-state boundary; no wire-contract change is required.",
+      "classification": "implemented",
+      "claim_id": "c003"
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "summary": "Witness degeneration checks are narrow structural guards, not a measure of experiential quality.",
+      "disposition": "Verify current positive and negative fixtures and preserve the canonical report independently.",
+      "classification": "verified_existing",
+      "claim_id": "c001"
+    },
+    {
+      "summary": "Imagistic complexity cannot be validated solely from formatting-marker ratios.",
+      "disposition": "Reject a contextual-density felt score; use explicit qualitative review for fidelity.",
+      "classification": "verified_existing",
+      "claim_id": "c002"
+    },
+    {
+      "summary": "Changing degeneration thresholds or repair prompting would change witness model behavior.",
+      "disposition": "Preserve an exact Mike/operator approval wait before repair-policy or prompt changes.",
+      "classification": "tier_5_wait",
+      "claim_id": "c003"
+    }
+  ]
+}

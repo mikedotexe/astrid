@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "summary": "The scanner preserves only exact known markers with matching delimiters or a bounded following relation.",
+      "disposition": "Verify byte-exact scanning, bounded delimiter depth, and context-receipt tests.",
+      "classification": "verified_existing",
+      "claim_id": "c001"
+    },
+    {
+      "summary": "Nested delimiters, newlines, punctuation, multibyte text, and end-of-string markers need explicit regression coverage.",
+      "disposition": "Verify the existing focused regressions cover each reported edge case.",
+      "classification": "implemented",
+      "claim_id": "c002"
+    },
+    {
+      "summary": "Adding signifies, indicates, maps, or corresponds_to would change which control markers survive sanitation.",
+      "disposition": "Preserve an exact Mike/operator approval wait before broadening live model-output sanitation vocabulary.",
+      "classification": "tier_5_wait",
+      "claim_id": "c003"
+    }
+  ]
+}

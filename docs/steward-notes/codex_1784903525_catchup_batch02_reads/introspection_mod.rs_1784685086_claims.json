@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "summary": "Relaxed atomic fetch-add does not produce duplicate sequence values under concurrent capture.",
+      "disposition": "Verify the concurrent sequence regression test; do not reinterpret the counter as felt-time ordering.",
+      "classification": "verified_existing",
+      "claim_id": "c001"
+    },
+    {
+      "summary": "Absolute private paths are hashed and repository-relative ownership is resolved deterministically.",
+      "disposition": "Verify bounded identity and sibling-root ownership tests.",
+      "classification": "verified_existing",
+      "claim_id": "c002"
+    },
+    {
+      "summary": "Peer and environment context already carries exact hashes and scoped provenance without becoming live identity.",
+      "disposition": "Verify current witness context and projector reconciliation.",
+      "classification": "implemented",
+      "claim_id": "c003"
+    }
+  ]
+}

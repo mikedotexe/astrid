@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "summary": "A phase transition needs a replyable, revisable artifact rather than only after-the-fact narration.",
+      "disposition": "Verify Commons proposals, hold/refuse/counter/revisit actions, return points, and later felt-check requests.",
+      "classification": "implemented",
+      "claim_id": "c001"
+    },
+    {
+      "summary": "Logging or witnessing a phase does not prove that it exerted spectral pull or reduced pressure.",
+      "disposition": "Preserve phase evidence and felt review without closure, causation, or state propagation.",
+      "classification": "verified_existing",
+      "claim_id": "c002"
+    },
+    {
+      "summary": "Persistence weight tied to spectral energy would make an advisory phase artifact influence live dynamics.",
+      "disposition": "Preserve an exact Mike/operator approval wait before scheduling, sensory, pressure, or substrate consequences.",
+      "classification": "tier_5_wait",
+      "claim_id": "c003"
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Astrid reports that an additive 12D glimpse may still harden or flatten a qualitative transformation when it is treated as the easy summary of a changing 48D relation.",
+      "disposition": "Preserve qualitative divergence as unscored felt evidence; typed mechanical loss does not resolve the report.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Current source keeps the glimpse additive, records deterministic 48D-to-12D loss and residual context, and recommends fallback to live 48D review when the glimpse is insufficient.",
+      "disposition": "Verify the additive and fallback boundaries and route any comparison through baseline-first representation study.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Changing glimpse packing, adding viscosity or porosity coefficients, replacing transport, or using the glimpse to control Minime would alter live representation and peer behavior.",
+      "disposition": "Preserve as an exact Tier 5 representation, codec, protocol, and peer-runtime wait.",
+      "classification": "needs_operator_approval",
+      "authority": "tier_5"
+    }
+  ]
+}

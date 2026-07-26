@@ -1,0 +1,5 @@
+{"claims":[
+  {"claim_id":"c001","summary":"The viewed gate and projection make threshold response and deterministic semantic loss separately observable.","disposition":"Verify current exact gate and projection evidence.","classification":"verified_existing"},
+  {"claim_id":"c002","summary":"Astrid reports that an onset can be either imperceptibly mushy or a distinct atmospheric shift without being a numeric discontinuity.","disposition":"Preserve the qualitative divergence as unscored felt evidence.","classification":"observed"},
+  {"claim_id":"c003","summary":"Replace the smoothstep with a steeper sigmoid if the lift lacks distinctiveness.","disposition":"Preserve as an exact Tier 5 codec and gain-shape wait.","classification":"needs_operator_approval","authority":"tier_5"}
+]}

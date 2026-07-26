@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "summary": "Cadence direction and bounded trend are now available from current heartbeat evidence.",
+      "disposition": "Link the current telemetry trend implementation and regressions.",
+      "classification": "implemented",
+      "claim_id": "c001"
+    },
+    {
+      "summary": "Hybrid coherence and typed-over-legacy provenance remain mechanically validated and machine-readable.",
+      "disposition": "Verify current schema validation and backward compatibility.",
+      "classification": "verified_existing",
+      "claim_id": "c002"
+    },
+    {
+      "summary": "Mechanical cadence momentum and coherence provenance do not establish felt settling.",
+      "disposition": "Preserve the qualitative report independently; no further source change is required.",
+      "classification": "verified_existing",
+      "claim_id": "c003"
+    }
+  ]
+}

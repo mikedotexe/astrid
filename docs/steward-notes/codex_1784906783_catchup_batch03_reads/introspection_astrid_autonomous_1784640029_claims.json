@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "summary": "Heartbeat cadence and intensity are fixed source facts.",
+      "disposition": "Use the later report and current source constants.",
+      "classification": "verified_existing",
+      "claim_id": "c001"
+    },
+    {
+      "summary": "Pressure and temporal lock-in cannot be attributed to the heartbeat from this report alone.",
+      "disposition": "Use the existing insufficient campaign and explicit felt review.",
+      "classification": "verified_existing",
+      "claim_id": "c002"
+    },
+    {
+      "summary": "Dynamic entropy scaling remains a live behavior wait.",
+      "disposition": "Retain the exact operator wait on the later report.",
+      "classification": "verified_existing",
+      "claim_id": "c003"
+    }
+  ]
+}

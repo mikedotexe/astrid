@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "summary": "Partial queue or active-work timing should remain visible rather than collapse into aggregate-only.",
+      "disposition": "Verify queue_wait_only and active_work_only constructor paths.",
+      "classification": "implemented",
+      "claim_id": "c001"
+    },
+    {
+      "summary": "Process identity must exclude private paths by construction.",
+      "disposition": "Verify constructor serialization and path-redaction tests.",
+      "classification": "verified_existing",
+      "claim_id": "c002"
+    },
+    {
+      "summary": "Timing completeness is metadata availability, not a continuity or wholeness score.",
+      "disposition": "Retain the current scope and epistemic lint boundary.",
+      "classification": "verified_existing",
+      "claim_id": "c003"
+    }
+  ]
+}

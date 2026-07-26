@@ -1,0 +1,16 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Fallback trajectory booleans are diagnostic vocabulary selectors rather than a model of felt continuity.",
+      "disposition": "Verify current diagnostic authority labels and separate mechanical evidence fields.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Weighted trajectory scoring could change fallback language and model behavior.",
+      "disposition": "Preserve an exact Mike/operator approval wait after an offline deterministic comparison before changing selector weights.",
+      "classification": "tier_5_wait"
+    }
+  ]
+}

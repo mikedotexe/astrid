@@ -1,0 +1,3 @@
+# Full Read Summary
+
+Twenty-nine historical LLM reports repeatedly distinguish compact fallback continuity from continuity of voice and texture. Current source now records exact provider route, model profile, fallback reason, timing, repair ancestry, and deterministic representation transitions; it also offers bounded fallback-continuity reviews without asserting route equivalence. A passing contract or required vocabulary cannot establish felt continuity. Forced telemetry-to-metaphor maps, model replacement, or pressure-driven prompt policy would change live model behavior and remain operator-gated.

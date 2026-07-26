@@ -1,0 +1,23 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The live codec declares a 48D semantic lane with 32D compatibility, an 8D embedding projection, and a 4D narrative arc.",
+      "disposition": "Verify source truth, representation contracts, and exact transport parity.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Astrid reports that mechanically valid transport can still feel crowded, narrow, blurred, or ghost-like after representation compression.",
+      "disposition": "Preserve as unscored felt evidence and route deterministic loss questions to the linked offline codec studies.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Changing codec width, projection mapping, gain, or peer delivery might create more narrative room.",
+      "disposition": "Preserve as an exact Tier 5 protocol, codec, and peer-runtime wait; shadow evidence grants no mutation authority.",
+      "classification": "needs_operator_approval",
+      "authority": "tier_5"
+    }
+  ]
+}

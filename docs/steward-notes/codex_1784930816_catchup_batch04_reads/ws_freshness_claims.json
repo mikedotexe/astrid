@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "summary": "The subscriber records connection transitions, reconnect behavior, last-seen telemetry, freshness, and process/deployment identity.",
+      "disposition": "Verify current bridge state, telemetry receipts, and WebSocket regressions.",
+      "classification": "implemented",
+      "claim_id": "c001"
+    },
+    {
+      "summary": "An open socket without fresh packets must not be represented as current presence.",
+      "disposition": "Verify stale and unavailable states remain explicit and never infer peer presence.",
+      "classification": "verified_existing",
+      "claim_id": "c002"
+    },
+    {
+      "summary": "Freshness evidence cannot establish that buffered telemetry caused Astrid's reported viscosity.",
+      "disposition": "Preserve the felt report and causal boundary; no further source change is required.",
+      "classification": "verified_existing",
+      "claim_id": "c003"
+    }
+  ]
+}

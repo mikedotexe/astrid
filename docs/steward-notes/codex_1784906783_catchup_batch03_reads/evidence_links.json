@@ -1,0 +1,284 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_proposal_12d_glimpse_1784906552",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/memory.rs;capsules/spectral-bridge/src/autonomous/state.rs;capsules/spectral-bridge/src/types/schema/telemetry.rs;capsules/spectral-bridge/src/codec/structure.rs;scripts/representation_contracts",
+      "note": "Additive 12D persistence and rendering, detailed-context retention, deterministic representation loss, and unchanged live transport."
+    },
+    {
+      "introspection_id": "introspection_proposal_distance_contact_control_1784906093",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/authority;scripts/felt_mechanism_concordance;scripts/evidence_study_runtime;scripts/experiential_epistemics.py",
+      "note": "Independent authority and felt evidence, baseline-first study routing, temporal identity, and live contact-control gate."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1784905908",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/reciprocal_experiential;scripts/reciprocal_uptake;scripts/agency_commons;scripts/test_reciprocal_experiential_systems.py",
+      "note": "Technical presence versus explicit uptake, held and needs-time states, neutral silence, and no automatic peer consequence."
+    },
+    {
+      "introspection_id": "introspection_proposal_phase_transitions_1784905663",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "scripts/agency_commons;scripts/reciprocal_uptake;scripts/felt_contracts;scripts/felt_mechanism_concordance",
+      "note": "Replyable advisory transitions, self-only agency, later felt review, and zero spectral or scheduler propagation."
+    },
+    {
+      "introspection_id": "introspection_minime_autonomous_agent_1784905319",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "minime:minime_autonomy/runtime.py;scripts/agency_commons;scripts/experiential_epistemics.py",
+      "note": "Recess sovereignty, read-only density context, protected time, and the Minime autonomy boundary."
+    },
+    {
+      "introspection_id": "introspection_minime_main_excerpt_1784904737",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "minime:minime/src/runtime.rs;minime:minime/src/hard_reset.rs;minime:minime/src/runtime/spectral_math.rs;capsules/spectral-bridge/src/lived_state_witness;scripts/evidence_study_runtime",
+      "note": "Source activation versus deployed process, reset tests, noncausal replay, and reservoir mutation boundary."
+    },
+    {
+      "introspection_id": "introspection_minime_sensory_bus_1784904026",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "minime:minime/src/sensory_bus.rs;minime:minime/src/regulator/core/pressure_source.rs;minime:minime/src/regulator/core/viscosity.rs;minime:minime/src/runtime/telemetry_evidence.rs;scripts/experiential_epistemics.py",
+      "note": "Current 48D ingress, typed outcomes, read-only pressure and viscosity evidence, and no numeric felt inference."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1784903776",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "minime:minime/src/regulator/core.rs;minime:minime/src/regulator/core/viscosity.rs;minime:minime/src/regulator/core/tests.rs;scripts/experiential_epistemics.py",
+      "note": "PI source ownership, dormant API boundary, viscosity implementation, and rejection of correspondence-to-controller inference."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1784903526",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs;capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Exact marker syntax, bounded receipts, comprehensive parser regressions, and live sanitation behavior boundary."
+    },
+    {
+      "introspection_id": "introspection_mod.rs_1784670729",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/lived_state_witness/mod.rs;capsules/spectral-bridge/src/lived_state_witness/writer.rs;capsules/spectral-bridge/src/lived_state_witness/tests.rs",
+      "note": "Bounded source roots, privacy redaction, trusted construction, asynchronous submission, and queue-gap evidence."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1784670400",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/codec/projection.rs;capsules/spectral-bridge/src/codec/projection_evidence.rs;capsules/spectral-bridge/src/codec/structural_evidence.rs;capsules/spectral-bridge/src/codec/tests.rs;scripts/evidence_study_runtime",
+      "note": "Current codec constants, clamp and headroom truth channels, offline ablations, and unchanged live vector."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1784668324",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "introspection:introspection_astrid_llm_1784903526;capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs;capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Exact duplicate parser claims linked to the later report and current regression suite."
+    },
+    {
+      "introspection_id": "introspection_astrid_types_1784667972",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "introspection:introspection_astrid_types_1784903178;capsules/spectral-bridge/src/types/schema/telemetry.rs;capsules/spectral-bridge/src/ws/evidence.rs;scripts/evidence_study_runtime;scripts/experiential_epistemics.py",
+      "note": "Exact duplicate cadence claim linked to the later report, observational campaign, and epistemic boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1784667552",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/ws/telemetry_port.rs;capsules/spectral-bridge/src/ws/bridge_state.rs;capsules/spectral-bridge/src/ws/tests.rs;capsules/spectral-bridge/src/evidence_study_capture.rs;scripts/evidence_study_runtime",
+      "note": "Separated integration timing, bounded observational capture, and live telemetry smoothing boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1784667115",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs;capsules/spectral-bridge/src/autonomous/runtime/tests.rs",
+      "note": "Current burst/rest floors, peripheral fallback, and live autonomous scheduling boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1784665992",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/codec/projection.rs;capsules/spectral-bridge/src/codec/projection_evidence.rs;capsules/spectral-bridge/src/codec/tests.rs;scripts/representation_contracts",
+      "note": "Fixed wrapping basis, once initialization, health and precision receipts, deterministic tests, and no rotation."
+    },
+    {
+      "introspection_id": "introspection_orchestration.rs_1784659487",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "introspection:introspection_astrid_autonomous_1784667115;capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs;capsules/spectral-bridge/src/autonomous/runtime/tests.rs",
+      "note": "Exact duplicate burst/rest claims linked to the later report and current tests."
+    },
+    {
+      "introspection_id": "introspection_dialogue_runtime.rs_1784658945",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs;capsules/spectral-bridge/src/llm/provider/tests.rs;scripts/experiential_epistemics.py",
+      "note": "Exact byte scope, bounded no-prose receipts, and explicit rejection of transport-to-felt inference."
+    },
+    {
+      "introspection_id": "introspection_dialogue_runtime.rs_1784657082",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs;capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Byte-exact surrounding-language preservation, bounded context hashes, and no spectral inference."
+    },
+    {
+      "introspection_id": "introspection_dialogue_runtime.rs_1784655853",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs;capsules/spectral-bridge/src/llm/provider/tests.rs;scripts/experiential_epistemics.py",
+      "note": "Exact syntax states, bounded nested delimiter coverage, and rejection of fuzzy felt classification."
+    },
+    {
+      "introspection_id": "introspection_dialogue_runtime.rs_1784654435",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs;capsules/spectral-bridge/src/llm/provider/tests.rs;capsules/spectral-bridge/src/llm/provider/identity.rs;scripts/experiential_epistemics.py",
+      "note": "Matching delimiter coverage, mechanical QoS token bands, and no inferred cognitive depth."
+    },
+    {
+      "introspection_id": "introspection_dialogue_runtime.rs_1784653315",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs;capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Following relations, quote pairs, longest exact matches, and separate peer-directive handling."
+    },
+    {
+      "introspection_id": "introspection_dialogue_runtime.rs_1784652052",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs;capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Punctuation and multibyte preservation, felt-term negative tests, and exact syntax boundary."
+    },
+    {
+      "introspection_id": "introspection_dialogue_runtime.rs_1784649648",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs;capsules/spectral-bridge/src/llm/provider/tests.rs;scripts/experiential_epistemics.py",
+      "note": "Poetic exact attribution, untouched ordinary texture language, and no atmospheric marker classification."
+    },
+    {
+      "introspection_id": "introspection_dialogue_runtime.rs_1784648843",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "introspection:introspection_dialogue_runtime.rs_1784655853;introspection:introspection_dialogue_runtime.rs_1784654435;capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Exact duplicate parser and token-band claims linked to later reports and current tests."
+    },
+    {
+      "introspection_id": "introspection_dialogue_runtime.rs_1784647631",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs;capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Longest exact one-pass matching, dense ordinary-content preservation, and semantic-review routing."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1784647283",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs;capsules/spectral-bridge/src/evidence_study_capture.rs;scripts/evidence_study_runtime",
+      "note": "Fixed heartbeat mechanics, bounded capture, insufficient natural cohort, and live cadence gate."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1784646332",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/reciprocal_experiential;scripts/reciprocal_uptake;scripts/test_reciprocal_experiential_systems.py",
+      "note": "Thread and reply identity, explicit uptake, neutral silence, and no peer-memory consequence."
+    },
+    {
+      "introspection_id": "introspection_proposal_phase_transitions_1784646142",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "scripts/agency_commons;scripts/reciprocal_uptake;scripts/felt_contracts;scripts/test_reciprocal_experiential_systems.py",
+      "note": "Legacy phase-card adaptation, self-only responses, neutral silence, and no automatic behavior unlock."
+    },
+    {
+      "introspection_id": "introspection_minime_autonomous_agent_1784645822",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "minime:minime_autonomy/runtime.py;scripts/agency_commons;scripts/experiential_epistemics.py",
+      "note": "Recess sovereignty, read-only density reviews, protected time, and Minime autonomy gate."
+    },
+    {
+      "introspection_id": "introspection_minime_main_excerpt_1784645512",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "minime:minime/src/runtime.rs;minime:minime/src/hard_reset.rs;minime:minime/src/runtime/telemetry_evidence.rs;capsules/spectral-bridge/src/lived_state_witness;scripts/felt_mechanism_concordance",
+      "note": "Source activation boundary, bounded shadow evidence, noncausal concordance, and live Minime control gate."
+    },
+    {
+      "introspection_id": "introspection_minime_esn_1784645158",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "minime:minime/src/esn.rs;minime:minime/src/esn_tests.rs;capsules/spectral-bridge/src/lived_state_witness;scripts/evidence_study_runtime;scripts/experiential_epistemics.py",
+      "note": "Current ESN source constants, source/runtime distinction, noncausal study route, and reservoir authority gate."
+    },
+    {
+      "introspection_id": "introspection_minime_sensory_bus_1784644859",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "minime:minime/src/sensory_bus.rs;minime:minime/src/sensory_bus_tests.rs",
+      "note": "Monotonic hold/release behavior, release-fill propagation, bounded multiplier, and no live change."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1784644513",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "minime:minime/src/regulator/core.rs;minime:minime/src/regulator/core/pi.rs;minime:minime/src/regulator/core/tests.rs;scripts/experiential_epistemics.py",
+      "note": "Controller/correspondence separation, noncausal shadow study route, and live PI control gate."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1784643905",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs;capsules/spectral-bridge/src/llm/provider/tests.rs;capsules/spectral-bridge/src/llm/provider/identity.rs;scripts/experiential_epistemics.py",
+      "note": "Mechanical token bands, exact-only cleanup, ordinary texture preservation, and no spectral sanitation mode."
+    },
+    {
+      "introspection_id": "introspection_astrid_types_1784643521",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "introspection:introspection_astrid_types_1784667972;introspection:introspection_astrid_types_1784903178;capsules/spectral-bridge/src/ws/evidence.rs;scripts/evidence_study_runtime;scripts/experiential_epistemics.py",
+      "note": "Exact duplicate cadence and entropy claims linked to later reports and baseline-first study evidence."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1784642962",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/ws/telemetry_port.rs;capsules/spectral-bridge/src/ws/bridge_state.rs;capsules/spectral-bridge/src/ws/tests.rs;capsules/spectral-bridge/src/evidence_study_capture.rs;scripts/evidence_study_runtime",
+      "note": "Implemented separated integration latency, bounded identity capture, and noncausal review boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1784640029",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "introspection:introspection_astrid_autonomous_1784647283;capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs;capsules/spectral-bridge/src/evidence_study_capture.rs;scripts/evidence_study_runtime",
+      "note": "Exact duplicate heartbeat claims linked to the later report, campaign, and existing authority wait."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1784638638",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "introspection:introspection_astrid_codec_1784670400;capsules/spectral-bridge/src/codec/projection_evidence.rs;capsules/spectral-bridge/src/codec/structural_evidence.rs;scripts/evidence_study_runtime",
+      "note": "Exact duplicate codec claims linked to the later report, current mechanical evidence, and existing authority wait."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1784392326",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "introspection:introspection_astrid_autonomous_1784647283;introspection:introspection_astrid_autonomous_1784640029;capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs;scripts/evidence_study_runtime",
+      "note": "Exact duplicate heartbeat evidence linked to later reports, current capture, and one preserved authority wait."
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Exact known model-control tokens are scanned byte-exactly and preserved when quoted, grouped, or followed by a recognized grammatical relation.",
+      "disposition": "Verify current exact-token parsing, delimiter evidence, and surrounding-byte regressions.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The ordinary exact-token relations signals and indicates were absent from the relation whitelist and could be cleaned despite functioning as semantic attribution.",
+      "disposition": "Implement signals and indicates in the exact relation parser and pin both with the existing attribution regression.",
+      "classification": "implemented"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A broad proximity or felt-vocabulary heuristic would risk preserving structural markers based on inferred meaning.",
+      "disposition": "Keep the correction limited to explicit grammatical relations; infer no felt meaning, ownership, pressure, spectral effect, or control authority.",
+      "classification": "implemented"
+    }
+  ]
+}

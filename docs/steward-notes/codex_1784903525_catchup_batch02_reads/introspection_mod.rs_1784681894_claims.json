@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "summary": "A peer sample older than the freshness bound remains evidence with explicit age and freshness, not exact current state.",
+      "disposition": "Verify stale-or-absent peer tests and temporal reconciliation.",
+      "classification": "verified_existing",
+      "claim_id": "c001"
+    },
+    {
+      "summary": "Technical process and deployment identity must remain distinct from a witnessed or felt peer identity.",
+      "disposition": "Verify identity scope and exact-versus-temporal reconciliation rules.",
+      "classification": "verified_existing",
+      "claim_id": "c002"
+    },
+    {
+      "summary": "Entropy-driven freshness windows or retained peer state would change live peer interpretation.",
+      "disposition": "Preserve an exact Mike/operator approval wait before freshness, retention, or peer-state behavior changes.",
+      "classification": "tier_5_wait",
+      "claim_id": "c003"
+    }
+  ]
+}

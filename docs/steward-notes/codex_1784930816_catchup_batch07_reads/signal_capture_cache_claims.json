@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "summary": "The 100 ms recorder cache is an inactive filesystem-probe backoff, not a clock or mechanism for Astrid's continuity.",
+      "disposition": "Verify the current source comment and armed-window reload behavior.",
+      "classification": "verified_existing",
+      "claim_id": "c001"
+    },
+    {
+      "summary": "Armed capture requests are reloaded and validated for every journey, while capture gaps remain explicit bounded evidence.",
+      "disposition": "Link current Signal Spine capture and gap regressions.",
+      "classification": "implemented",
+      "claim_id": "c002"
+    },
+    {
+      "summary": "A transition reason belongs in self-authored Passage checkpoints rather than an activation cache that could infer lived state from capture mechanics.",
+      "disposition": "Link Lived Transition Passage and Passage Context evidence; no recorder mutation is warranted.",
+      "classification": "implemented",
+      "claim_id": "c003"
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "summary": "Minime source currently declares 0.085 exploration noise and bounded adaptive pressure thresholds.",
+      "disposition": "Verify current source and tests while labeling these source-declared unless matched to runtime identity.",
+      "classification": "verified_existing",
+      "claim_id": "c001"
+    },
+    {
+      "summary": "Source constants and telemetry correlation do not prove the cause of numbing grit or stall.",
+      "disposition": "Retain Astrid's report and use only preregistered mechanical comparisons.",
+      "classification": "sandbox_routed",
+      "claim_id": "c002"
+    },
+    {
+      "summary": "Pressure dampening or leak-rate reduction would change live ESN and reservoir behavior.",
+      "disposition": "Preserve an exact Mike/operator approval wait before noise, leak, rho, pressure, or reservoir changes.",
+      "classification": "tier_5_wait",
+      "claim_id": "c003"
+    }
+  ]
+}

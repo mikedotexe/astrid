@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The live Minime semantic lane is 48D with narrative arc at dimensions 40 through 43; semantic ingress truncates excess values and zero-fills short inputs rather than returning LaneIngressOutcome::InvalidShape.",
+      "disposition": "Verify current semantic setter, glimpse, narrative-retention, and representation-contract tests and correct the source-window attribution.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Astrid reports that four narrative dimensions may feel too narrow for dense shared history despite valid 48D transport.",
+      "disposition": "Preserve the qualitative report and link independent representation-loss and codec-study evidence without deriving a felt-capacity score.",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Increasing, dynamically reallocating, or separately weighting narrative dimensions would alter live codec, protocol, and Minime sensory transport.",
+      "disposition": "Preserve an exact Mike/operator approval wait.",
+      "classification": "tier_5_wait"
+    }
+  ]
+}

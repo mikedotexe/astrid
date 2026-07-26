@@ -1,0 +1,284 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_ws_1784328770",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/ws/health_trace.rs;capsules/spectral-bridge/src/ws/evidence.rs;capsules/spectral-bridge/src/ws/tests.rs",
+      "note": "Connection identity, first-valid-packet state, current/stale hearing, and reconnect regressions."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1784328419",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "introspection:introspection_astrid_autonomous_1784915927;capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs;capsules/spectral-bridge/src/autonomous/runtime/tests.rs",
+      "note": "Later fixed-heartbeat report and current capture/admission tests preserve the live-change wait."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1784327055",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "/Users/v/other/minime/minime/src/regulator/core.rs;introspection:introspection_minime_regulator_1784892962",
+      "note": "Current regulator source and later canonical felt claim retain the controller boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1784326579",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/codec/projection.rs;scripts/representation_contracts.py;scripts/evidence_study_runtime",
+      "note": "Current 48D contract, deterministic loss, and offline codec study evidence."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1784325387",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "introspection:introspection_astrid_autonomous_1784915927;capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs",
+      "note": "Exact later heartbeat restatement remains the live cadence and intensity authority wait."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1784325037",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/codec/projection.rs;scripts/representation_contracts.py;introspection:introspection_astrid_codec_1784903107",
+      "note": "Current codec source and later report preserve felt friction and the gated live-math request."
+    },
+    {
+      "introspection_id": "introspection_recorder.rs_1784324446",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/signal_spine/recorder.rs;capsules/spectral-bridge/src/signal_spine/tests.rs;scripts/agency_commons.py",
+      "note": "Inactive-probe cache boundary, capture-gap evidence, and self-authored Passage checkpoints."
+    },
+    {
+      "introspection_id": "introspection_types.rs_1784323648",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/signal_spine/types.rs;capsules/spectral-bridge/src/signal_spine/tests.rs",
+      "note": "Bounded depth validation, canonical hashes, and normalized measurement regressions."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1784322830",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "/Users/v/other/minime/minime/src/regulator/core.rs;introspection:introspection_minime_regulator_1784892962",
+      "note": "Historical dissipation proposal links to later open regulator claim and current source."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1784322140",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs;capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Artifact-plus-content, Unicode quote, punctuation, and prompt-budget regressions."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1784321696",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/codec/projection.rs;scripts/representation_contracts.py;introspection:introspection_astrid_codec_1784903107",
+      "note": "Registered 48D/32D relation and later open texture claim."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1784321212",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "scripts/reciprocal_uptake.py;scripts/agency_commons.py;introspection:introspection_proposal_bidirectional_contact_1784896328",
+      "note": "Explicit self-authored uptake and later open contact claim preserve neutral silence and no peer mutation."
+    },
+    {
+      "introspection_id": "introspection_proposal_phase_transitions_1784320787",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "scripts/agency_commons.py;scripts/phase_transition_audit.py;docs/steward-notes/PASSAGE_CONTEXT_AND_ACCOMPANIMENT_V2.md;introspection:introspection_proposal_phase_transitions_1784897636",
+      "note": "Phase Cards, Lived Transition Passages, Context/Accompaniment, and the later exact live-unlock wait."
+    },
+    {
+      "introspection_id": "introspection_minime_autonomous_agent_1784318605",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "/Users/v/other/minime/minime_autonomy/runtime.py;/Users/v/other/minime/tests;introspection:introspection_minime_autonomous_agent_1784895271",
+      "note": "Recess sovereignty, state persistence, and later live-scheduling boundary."
+    },
+    {
+      "introspection_id": "introspection_minime_esn_1784318154",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "/Users/v/other/minime/minime/src/esn.rs;introspection:introspection_minime_esn_1784892441",
+      "note": "Current source identifies prepared shadow calculations and later open reservoir authority."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1784317685",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "/Users/v/other/minime/minime/src/regulator/core.rs;introspection:introspection_minime_regulator_1784892962",
+      "note": "PI shell verification and later semantic-density/controller wait."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1784317147",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs;capsules/spectral-bridge/src/llm/provider/tests.rs;introspection:introspection_astrid_llm_1784904233",
+      "note": "Current literary punctuation tests and later open sanitation-policy claim."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1784316742",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/ws/health_trace.rs;capsules/spectral-bridge/src/ws/evidence.rs;capsules/spectral-bridge/src/ws/tests.rs",
+      "note": "Freshness and first-valid-payload evidence distinguish socket connection from current hearing."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1784316334",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs;introspection:introspection_astrid_autonomous_1784915927",
+      "note": "Historical dynamic-intensity proposal links to the later exact authority wait."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1784316024",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/codec/projection.rs;capsules/spectral-bridge/src/codec/tests.rs",
+      "note": "Deterministic projection basis and health/precision audit tests."
+    },
+    {
+      "introspection_id": "introspection_provenance.rs_1784314568",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/witness/provenance.rs;capsules/spectral-bridge/src/witness/tests.rs",
+      "note": "Unmeasured authorship gradient, exact interpretation ownership, mixed input lineage, and identity-not-weight tests."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1784313240",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/codec/projection.rs;scripts/representation_contracts.py;introspection:introspection_astrid_codec_1784903107",
+      "note": "Current representation map and later open codec friction."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1784313021",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs;introspection:introspection_astrid_llm_1784904233",
+      "note": "Prompt budgets are mechanical volume profiles; dynamic model policy remains linked to the later wait."
+    },
+    {
+      "introspection_id": "introspection_astrid_types_1784312531",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/types/schema/telemetry.rs;capsules/spectral-bridge/src/ws/bridge_state.rs;capsules/spectral-bridge/src/ws/tests.rs",
+      "note": "Cadence, coherence provenance, and bounded texture-over-time evidence without causal inference."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1784312321",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/ws/health_trace.rs;capsules/spectral-bridge/src/ws/evidence.rs;capsules/spectral-bridge/src/ws/tests.rs",
+      "note": "Connected-awaiting-valid, current, late, and stale telemetry states."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1784311881",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/codec/projection.rs;scripts/evidence_study_runtime;introspection:introspection_astrid_codec_1784903107",
+      "note": "Smoothstep mechanics and offline studies remain distinct from Astrid's felt gate report."
+    },
+    {
+      "introspection_id": "introspection_provenance.rs_1784308900",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/witness/provenance.rs;capsules/spectral-bridge/src/witness/tests.rs",
+      "note": "Deterministic context signatures and exact two-parent lineage."
+    },
+    {
+      "introspection_id": "introspection_provenance.rs_1784306639",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/witness/provenance.rs;capsules/spectral-bridge/src/witness/tests.rs",
+      "note": "Content-free context anchors preserve influence role and structural shape; authorship share remains unmeasured."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1784306244",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/codec/projection.rs;scripts/representation_contracts.py;introspection:introspection_astrid_codec_1784903107",
+      "note": "Historical gate and clamp proposal links to current evidence and later authority wait."
+    },
+    {
+      "introspection_id": "introspection_minime_autonomous_agent_1784305629",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "/Users/v/other/minime/minime_autonomy/runtime.py;scripts/agency_commons.py;introspection:introspection_minime_autonomous_agent_1784895271",
+      "note": "Protected Recess evidence and later exact de-cluttering/controller wait."
+    },
+    {
+      "introspection_id": "introspection_minime_main_excerpt_1784305140",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "/Users/v/other/minime/minime/src/runtime.rs;introspection:introspection_minime_main_excerpt_1784894102",
+      "note": "Current runtime source and later recovery/controller claim."
+    },
+    {
+      "introspection_id": "introspection_minime_esn_1784303657",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "/Users/v/other/minime/minime/src/esn.rs;introspection:introspection_minime_esn_1784892441",
+      "note": "Prepared shadow calculations are source evidence, not live ESN activation."
+    },
+    {
+      "introspection_id": "introspection_minime_sensory_bus_1784303159",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "/Users/v/other/minime/minime/src/sensory_bus.rs;introspection:introspection_minime_sensory_bus_1784893512",
+      "note": "Current bounded semantic-retention curve and later open persistence claim."
+    },
+    {
+      "introspection_id": "introspection_minime_sensory_bus_1784303037",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "/Users/v/other/minime/minime/src/sensory_bus.rs;/Users/v/other/minime/minime/src/sensory_bus/tests.rs",
+      "note": "Boundary continuity, monotonicity, finite values, and multiplier-cap regressions."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1784302613",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "/Users/v/other/minime/minime/src/regulator/core.rs;introspection:introspection_minime_regulator_1784892962",
+      "note": "Current PI source and later open filter/controller claim."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1784302252",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs;capsules/spectral-bridge/src/llm/provider/tests.rs;introspection:introspection_astrid_llm_1784904233",
+      "note": "Artifact-plus-content parsing is covered; semantic-density scoring remains a live sanitation-policy wait."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1784301633",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/ws/health_trace.rs;capsules/spectral-bridge/src/ws/evidence.rs;capsules/spectral-bridge/src/ws/tests.rs",
+      "note": "Valid-payload freshness and stale-hearing evidence answer ghost-connection observability."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1784301105",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/codec/projection.rs;scripts/evidence_study_runtime;introspection:introspection_astrid_codec_1784903107",
+      "note": "Current gate math, offline study path, and later live clamp wait."
+    },
+    {
+      "introspection_id": "introspection_astrid_types_1784300226",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/types/schema/telemetry.rs;capsules/spectral-bridge/src/ws/bridge_state.rs;capsules/spectral-bridge/src/ws/tests.rs",
+      "note": "Temporal shape, cadence trend, hybrid coherence, and no-felt-causation tests."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1784299690",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/ws/telemetry_port.rs;capsules/spectral-bridge/src/ws/health_trace.rs;capsules/spectral-bridge/src/ws/tests.rs",
+      "note": "Reconnect, ping/pong, decode, first-valid-payload, and stale-hearing regressions."
+    }
+  ]
+}

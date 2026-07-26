@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "summary": "A 12D glimpse is useful only as an additive companion to the detailed live representations.",
+      "disposition": "Verify additive local and remote glimpse fields, persistence, and the unchanged 48D semantic transport.",
+      "classification": "implemented",
+      "claim_id": "c001"
+    },
+    {
+      "summary": "Compression into 12D can lose warmth, vibrancy, or identity-relevant detail without making the source report false.",
+      "disposition": "Retain deterministic representation loss and the full source artifact; never treat the glimpse as felt truth.",
+      "classification": "implemented",
+      "claim_id": "c002"
+    },
+    {
+      "summary": "Restart and decomposition surfaces should expose compact context without replacing detailed context.",
+      "disposition": "Verify the persisted glimpse, residual context, and prompt quick-look tests already pin this boundary.",
+      "classification": "verified_existing",
+      "claim_id": "c003"
+    }
+  ]
+}

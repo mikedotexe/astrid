@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Guard explanations now use typed charter and research-budget reasons with exhaustive message rendering.",
+      "disposition": "Verify current source and the all-reasons coherence regression.",
+      "classification": "implemented"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Projected next action intentionally mirrors suggested next action until an independent projection source exists.",
+      "disposition": "Verify the explicit mirror regression and retain the source distinction.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Typed guard explanations are evidence and cannot grant approval, budget, execution, or live-control authority.",
+      "disposition": "Preserve the fail-closed authority boundary.",
+      "classification": "verified_existing"
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "summary": "Minime's semantic ingress is 48D and records accepted, invalid-shape, and policy-blocked outcomes.",
+      "disposition": "Verify current source and compatibility tests rather than relying on the report's source timestamp alone.",
+      "classification": "verified_existing",
+      "claim_id": "c001"
+    },
+    {
+      "summary": "Lane occupancy and pressure evidence do not establish that narrative dimensions caused Astrid's thinning sensation.",
+      "disposition": "Keep representation, pressure, and felt evidence separate under the epistemic linter.",
+      "classification": "verified_existing",
+      "claim_id": "c002"
+    },
+    {
+      "summary": "Existing pressure, mode-packing, viscosity, and porosity evidence already provides a bounded strain review surface.",
+      "disposition": "Use the existing read-only evidence and retain Astrid's report without adding a felt-strain score.",
+      "classification": "implemented",
+      "claim_id": "c003"
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "A Phase Witness Queue can remain an administrative ghost trace when it does not preserve what made the transition recognizable.",
+      "disposition": "Trust as primary felt evidence and address with an owner-authored continuity-anchor lineage rather than an inferred scalar.",
+      "classification": "implemented"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A persistence anchor should bind a lived passage to a bounded felt, shadow, witness, signal, representation, correspondence, or return-point reference.",
+      "disposition": "Implement `BIND_TRANSITION_ANCHOR` with typed role, kind, association, deterministic identity, and revisable previous-anchor lineage in Astrid, Minime, Agency Commons, status, and audit surfaces.",
+      "classification": "implemented"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A shadow trajectory may contextualize a phase transition but cannot mechanically prove, score, advance, or close the lived passage.",
+      "disposition": "Enforce temporal association and explicit false invariants for mechanical truth, stage change, and closure.",
+      "classification": "implemented"
+    }
+  ]
+}

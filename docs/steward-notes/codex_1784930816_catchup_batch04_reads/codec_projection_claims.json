@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "summary": "The projection basis is deterministic across restarts and normalized without runtime mutation.",
+      "disposition": "Verify current deterministic-basis and restart-parity tests.",
+      "classification": "verified_existing",
+      "claim_id": "c001"
+    },
+    {
+      "summary": "Health and precision receipts expose dead dimensions, finite statistics, headroom, and bounded error without changing vectors.",
+      "disposition": "Verify current audit tests and no-authority fields.",
+      "classification": "implemented",
+      "claim_id": "c002"
+    },
+    {
+      "summary": "Narrative and projected-embedding regions remain separately registered and inspectable.",
+      "disposition": "Link deterministic representation diff evidence; no live basis change is required.",
+      "classification": "verified_existing",
+      "claim_id": "c003"
+    }
+  ]
+}

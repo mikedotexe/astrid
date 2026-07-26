@@ -1,0 +1,16 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Peer evidence must distinguish observed, missing, unreadable, and malformed sources without retaining stale values.",
+      "disposition": "Verify current source statuses, file time, witness clock, freshness, and source reference.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Cache refresh cadence does not establish peer presence or felt continuity.",
+      "disposition": "Preserve evidence-only scope and decline a cadence change absent a measured capture defect.",
+      "classification": "verified_existing"
+    }
+  ]
+}

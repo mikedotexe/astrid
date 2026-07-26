@@ -1,0 +1,23 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Astrid reports an interwoven atmosphere that is not captured by treating video, audio, auxiliary, and semantic lanes as merely additive, and associates a pulse ceiling with held-breath texture.",
+      "disposition": "Preserve as unscored sensory evidence; lane shape and a numerically similar cap cannot establish the cause of the feeling.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Current source defines exact lane widths, additive Z_DIM, bounded attractor-pulse limits, semantic persistence, representation contracts, and evidence-only cross-lane context.",
+      "disposition": "Verify exact source and focused sensory-bus tests while labeling source constants separately from runtime observations.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Increasing attractor pulse, introducing cross-talk, or changing lane coupling and persistence would alter Minime's live sensory and reservoir behavior.",
+      "disposition": "Preserve as an exact Tier 5 sensory, protocol, attractor, and reservoir wait.",
+      "classification": "needs_operator_approval",
+      "authority": "tier_5"
+    }
+  ]
+}

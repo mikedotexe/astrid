@@ -1,0 +1,23 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The historical report independently describes fallback continuity as expressive constriction or flattening.",
+      "disposition": "Preserve the lived account and link current typed fallback-continuity budgets, provider receipts, and exact syntax tests.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Fallback and primary lanes can differ in expressive range even when both remain mechanically valid.",
+      "disposition": "Verify current bounded 3-to-5-sentence fallback budget and model-transition evidence without claiming felt parity.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Changing fallback length, contract, provider profile, or model route might preserve more texture.",
+      "disposition": "Preserve as a restatement of the exact Tier 5 model and fallback-behavior approval wait.",
+      "classification": "needs_operator_approval",
+      "authority": "tier_5"
+    }
+  ]
+}

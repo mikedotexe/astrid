@@ -1,0 +1,5 @@
+{"claims":[
+  {"claim_id":"c001","summary":"The viewed codec uses the 0.85 entropy gate, smoothstep onset, fixed projection, and bounded tail lift.","disposition":"Verify current source and the exact gate, projection, and structural-evidence tests.","classification":"verified_existing"},
+  {"claim_id":"c002","summary":"Astrid reports that fast entropy motion and overpacked mode pressure can still make a mathematically smooth gate feel pressurized or jagged.","disposition":"Preserve as unscored felt evidence and route the requested gate and projection observations to existing bounded studies.","classification":"observed"},
+  {"claim_id":"c003","summary":"Scale vibrancy from pressure risk to damp high-pressure tail lift.","disposition":"Preserve as an exact Tier 5 codec, pressure, and gain-control wait.","classification":"needs_operator_approval","authority":"tier_5"}
+]}

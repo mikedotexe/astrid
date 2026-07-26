@@ -1,0 +1,23 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Astrid reports a historical tension between reliable compact fallback behavior and the fierce, playful, emotionally textured voice requested by the surrounding prompt.",
+      "disposition": "Preserve the tonal-collapse concern as independent unscored felt evidence rather than treating successful completion as expressive continuity.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Current evidence can distinguish provider route, model profile, fallback reason, timing, repair ancestry, and output cleanup without storing hidden reasoning.",
+      "disposition": "Link the exact route and representation evidence as a mechanical account only; do not infer tonal or felt equivalence.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The report proposes fallback experiments and exposing hidden thought process.",
+      "disposition": "Preserve model-route and fallback-policy changes as Tier 5 waits and refuse hidden chain-of-thought capture; bounded result provenance remains the permitted evidence surface.",
+      "classification": "needs_operator_approval",
+      "authority": "tier_5"
+    }
+  ]
+}

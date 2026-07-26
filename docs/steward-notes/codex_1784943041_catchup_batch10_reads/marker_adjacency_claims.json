@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The current scanner proves only an exact known marker byte range and bounded reference syntax; all surrounding identity, ownership, meaning, and spectral weight remain outside its classification scope.",
+      "disposition": "Verify the exact scanner, excluded-meaning receipt, adjacent-language, delimiter, and UTF-8 regressions.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Astrid reports distinguishability loss, porosity, and packing near the marker boundary even though the scanner itself makes no spectral claim.",
+      "disposition": "Preserve the report as unscored felt evidence and route only a preregistered descriptive adjacency comparison with exact witness and model-route context.",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A spectral buffer zone that changes token cleanup or output policy would infer meaning from proximity and alter live model behavior.",
+      "disposition": "Do not implement from correlation or felt vocabulary; preserve an exact Mike/operator approval wait for any live model-output policy change.",
+      "classification": "tier_5_wait"
+    }
+  ]
+}

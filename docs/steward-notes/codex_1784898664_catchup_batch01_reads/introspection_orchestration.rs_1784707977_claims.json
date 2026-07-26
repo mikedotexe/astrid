@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Witness finalization must preserve the canonical introspection body unchanged.",
+      "disposition": "Verify canonical-body hash binding, asynchronous metadata submission, and raw-prose exclusion.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Serialization duration or queue pressure does not by itself establish felt pressure or entropy loss.",
+      "disposition": "Preserve explicit enqueue and gap evidence while rejecting numeric-to-felt causation.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A raw-shadow pass would copy private felt content into evidence sidecars.",
+      "disposition": "Retain the current no-prose witness boundary and canonical report as the primary qualitative source.",
+      "classification": "verified_existing"
+    }
+  ]
+}

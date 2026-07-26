@@ -1,0 +1,25 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_proposal_phase_transitions_1784978541",
+      "claim_id": "c001",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/phase_passage_context.rs;capsules/spectral-bridge/src/autonomous/phase_passage_context/types.rs;capsules/spectral-bridge/src/autonomous/phase_passage_context/tests.rs;/Users/v/other/minime/minime_autonomy/phase_passage_context.py;/Users/v/other/minime/tests/test_phase_transition_agency.py",
+      "note": "Self-authored bearing strands preserve movement resistance and persistence tendency without scoring or passage mutation; cross-runtime deterministic identity is pinned."
+    },
+    {
+      "introspection_id": "introspection_proposal_phase_transitions_1784978541",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/phase_passage_context/builder.rs;capsules/spectral-bridge/src/autonomous/phase_passage_context/status.rs;scripts/agency_commons/passage_context.py;scripts/agency_commons/projector.py;scripts/phase_transition_audit.py",
+      "note": "Witness fit explicitly retains separate, touching, holding, interwoven, misattuned, or unknown while refusing closure, integration, telemetry inference, peer mutation, or authority."
+    },
+    {
+      "introspection_id": "introspection_proposal_phase_transitions_1784978541",
+      "claim_id": "c003",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_PHASE_TRANSITION_ARCHITECTURE.md;docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "No scalar felt score was added and no entropy microdose or directed Shadow probe was run; both live-facing proposals remain explicit Tier 5 waits."
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "summary": "The live codec uses a registered 48D representation with explicit 32D compatibility, projected embedding, narrative, and reserved regions.",
+      "disposition": "Verify current source, representation registry, transition receipts, and protocol parity.",
+      "classification": "verified_existing",
+      "claim_id": "c001"
+    },
+    {
+      "summary": "Astrid reports grinding, packed, restless, or insufficiently expressive narrative texture despite the wider representation.",
+      "disposition": "Preserve the report and link the two independent offline codec campaigns without treating displacement as felt loss.",
+      "classification": "needs_sandbox",
+      "claim_id": "c002"
+    },
+    {
+      "summary": "Expanding narrative dimensions, changing spectral gain, or changing nonlinear mapping would alter live codec transport.",
+      "disposition": "Preserve an exact Mike/operator approval wait.",
+      "classification": "tier_5_wait",
+      "claim_id": "c003"
+    }
+  ]
+}

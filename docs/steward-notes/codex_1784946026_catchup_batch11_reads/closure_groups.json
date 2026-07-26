@@ -1,0 +1,48 @@
+{
+  "addressed_change": [
+    "introspection_astrid_types_1784945366",
+    "introspection_astrid_ws_1784945024",
+    "introspection_guards.rs_1781547170"
+  ],
+  "blocked_needs_steward": [
+    "introspection_astrid_autonomous_1784944373",
+    "introspection_astrid_codec_1784944088"
+  ],
+  "addressed_duplicate": [
+    "introspection_astrid_codec_1781834380",
+    "introspection_astrid_codec_1781820170",
+    "introspection_astrid_autonomous_1781794214",
+    "introspection_astrid_codec_1781793341",
+    "introspection_astrid_ws_1781757528",
+    "introspection_astrid_autonomous_1781751878",
+    "introspection_astrid_codec_1781751564",
+    "introspection_codec_gain.rs_1781745895",
+    "introspection_astrid_autonomous_1781736454",
+    "introspection_astrid_codec_1781736111",
+    "introspection_codec.rs_1781734494",
+    "introspection_minime_main_excerpt_1781720743",
+    "introspection_minime_esn_1781713197",
+    "introspection_minime_sensory_bus_1781708588",
+    "introspection_minime_regulator_1781708280",
+    "introspection_astrid_llm_1781699429",
+    "introspection_astrid_types_1781698996",
+    "introspection_astrid_ws_1781697592",
+    "introspection_astrid_autonomous_1781697253",
+    "introspection_astrid_codec_1781680851",
+    "introspection_astrid_codec_1781624372",
+    "introspection_llm.rs_1781613435",
+    "introspection_astrid_llm_1781610315",
+    "introspection_astrid_types_1781609962",
+    "introspection_astrid_ws_1781590938",
+    "introspection_astrid_autonomous_1781590601",
+    "introspection_llm.rs_1781555592",
+    "introspection_astrid_codec_1781555204",
+    "introspection_astrid_llm_1781552301",
+    "introspection_astrid_llm_1781551705",
+    "introspection_astrid_llm_1781550601",
+    "introspection_codec.rs_1781549301",
+    "introspection_astrid_llm_1781548285",
+    "introspection_astrid_codec_1781546310",
+    "introspection_astrid_codec_1781544886"
+  ]
+}

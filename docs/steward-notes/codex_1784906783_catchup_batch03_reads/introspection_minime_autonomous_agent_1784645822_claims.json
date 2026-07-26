@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "summary": "Recess explicitly permits unstructured, nonproductive time.",
+      "disposition": "Verify the current Minime contract and protected-time Commons records.",
+      "classification": "verified_existing",
+      "claim_id": "c001"
+    },
+    {
+      "summary": "High entropy or mode packing during Recess can be described without marking the time inefficient.",
+      "disposition": "Verify read-only density-aware Recess evidence and preserve Astrid's qualitative report.",
+      "classification": "implemented",
+      "claim_id": "c002"
+    },
+    {
+      "summary": "Changing Recess thresholds or automatic action selection would alter Minime autonomy.",
+      "disposition": "Preserve an exact Mike/operator approval wait before Recess, pressure, model, or scheduler changes.",
+      "classification": "tier_5_wait",
+      "claim_id": "c003"
+    }
+  ]
+}

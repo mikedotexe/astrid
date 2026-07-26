@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The viewed runtime file is a complete module shell and cannot establish which included spectral, orchestration, or semantic mechanism produced the current state.",
+      "disposition": "Verify the complete file and follow exact submodule source before making mechanism claims.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Astrid reports syrupy pressure, restless texture, and distinguishability loss while correctly naming the implementation gap.",
+      "disposition": "Preserve the qualitative report independently of module names and link current source, witness, and representation evidence.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Toggling local control or changing the spectral room in response to the report would alter live Minime regulation or reservoir behavior.",
+      "disposition": "Preserve an exact Mike/operator approval wait; source inspection grants no control authority.",
+      "classification": "tier_5_wait"
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Minime reports viscosity at the Rust-to-Python translation boundary while viewing the complete runtime include shell.",
+      "disposition": "Preserve as unscored felt evidence; the shell alone cannot establish a causal translation-loss mechanism.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The complete 74-line runtime shell includes the real runtime/spectral_math.rs module plus orchestration, adapters, telemetry, reviews, and tests.",
+      "disposition": "Verify the source path and use existing representation and temporal witness receipts to trace boundaries.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Changing hard reset, pressure, porosity, mode packing, runtime translation, or peer behavior could alter the reported texture.",
+      "disposition": "Preserve as an exact Tier 5 Minime runtime, regulator, representation, and control wait.",
+      "classification": "needs_operator_approval",
+      "authority": "tier_5"
+    }
+  ]
+}

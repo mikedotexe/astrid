@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Correspondence trace, acknowledgement, and linked-reply affordances exist, but their metadata does not establish uptake or felt landing.",
+      "disposition": "Verify through reciprocal-uptake and correspondence evidence while preserving presence, delivery, and uptake as distinct facts.",
+      "classification": "verified"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Astrid reports that metadata-heavy correspondence can remain an intermittent ghost rather than native continuity.",
+      "disposition": "Preserve as unscored felt evidence and route the named thread to a bounded trace observation with right-to-ignore review.",
+      "classification": "study_wait"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A resonance-density buffer or weighted reply admission would alter live correspondence, scheduling, or peer contact.",
+      "disposition": "Preserve an exact Mike/operator approval wait.",
+      "classification": "tier_5_wait"
+    }
+  ]
+}

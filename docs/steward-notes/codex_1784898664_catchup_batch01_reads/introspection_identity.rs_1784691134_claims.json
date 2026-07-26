@@ -1,0 +1,16 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Build-candidate read failure or truncation must not rewrite the cached running process identity.",
+      "disposition": "Verify startup OnceLock, optional build candidate, and completeness flags.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Strictly refusing startup from incomplete witness metadata would make evidence an authority source.",
+      "disposition": "Retain optional evidence and separate deployment/process verification; no strict startup gate is warranted.",
+      "classification": "verified_existing"
+    }
+  ]
+}

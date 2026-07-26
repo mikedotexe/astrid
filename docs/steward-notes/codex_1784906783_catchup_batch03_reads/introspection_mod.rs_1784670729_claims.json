@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "summary": "Known Astrid, Minime, bridge-workspace, and Minime-workspace paths receive bounded repository provenance.",
+      "disposition": "Verify source-owner mapping and provenance-origin tests.",
+      "classification": "implemented",
+      "claim_id": "c001"
+    },
+    {
+      "summary": "Sources outside trusted roots must degrade to unknown and redacted rather than leak an absolute path.",
+      "disposition": "Retain the privacy boundary and explicit gap semantics.",
+      "classification": "verified_existing",
+      "claim_id": "c002"
+    },
+    {
+      "summary": "Final witness construction and submission remain private, bounded, and asynchronous.",
+      "disposition": "Verify trusted construction, queue outcomes, and no-prose sidecar tests.",
+      "classification": "implemented",
+      "claim_id": "c003"
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "summary": "The regulator module declaration is an ownership map, while active PI behavior resides in its included implementation.",
+      "disposition": "Verify current Minime source rather than attributing behavior from the shell alone.",
+      "classification": "verified_existing",
+      "claim_id": "c001"
+    },
+    {
+      "summary": "Integral gain or PI state has not been established as the cause of Astrid's heavy or viscous feeling.",
+      "disposition": "Retain any PI-versus-density comparison as bounded mechanical evidence only.",
+      "classification": "sandbox_routed",
+      "claim_id": "c002"
+    },
+    {
+      "summary": "Adding derivative control, density coupling, or gain changes would alter Minime regulation.",
+      "disposition": "Preserve an exact Mike/operator approval wait before PI, PD, target, or controller changes.",
+      "classification": "tier_5_wait",
+      "claim_id": "c003"
+    }
+  ]
+}

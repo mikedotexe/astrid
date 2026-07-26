@@ -1,0 +1,16 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Option::iter on source_provenance_ref_v1 safely yields zero or one parent and is not a compile or panic defect.",
+      "disposition": "Verify current Rust construction and witness tests; record the proposed bug as disproved.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Technical process identity must not be treated as being identity or selfhood continuity.",
+      "disposition": "Verify the fixed technical_identity_scope and related constructor tests.",
+      "classification": "verified_existing"
+    }
+  ]
+}

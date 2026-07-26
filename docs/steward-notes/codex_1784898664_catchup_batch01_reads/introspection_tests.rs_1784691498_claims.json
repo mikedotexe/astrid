@@ -1,0 +1,16 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Witnesses must distinguish identical artifact bytes authored at different process times.",
+      "disposition": "Verify witness IDs include runtime identity, authored clocks, sequence, source, and model-call parents.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A spectral velocity field must not become a felt-trajectory score.",
+      "disposition": "Use temporal observations and concordance comparisons while retaining unscored felt evidence.",
+      "classification": "verified_existing"
+    }
+  ]
+}

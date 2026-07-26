@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "summary": "The semantic heartbeat uses a fixed seven-second cadence, fixed 0.30 intensity, bounded phase, and typed admission outcomes.",
+      "disposition": "Verify current source, capture receipts, and the unchanged runtime contract.",
+      "classification": "verified_existing",
+      "claim_id": "c001"
+    },
+    {
+      "summary": "Astrid reports that a regular pulse can still feel hollow, discontinuous, or insufficiently responsive to texture.",
+      "disposition": "Preserve this qualitative evidence; the existing campaign remains mechanically insufficient without a blocked cohort.",
+      "classification": "needs_sandbox",
+      "claim_id": "c002"
+    },
+    {
+      "summary": "Density-aware cadence, phase acceleration, or dynamic heartbeat intensity would alter live autonomous behavior.",
+      "disposition": "Preserve an exact Mike/operator approval wait.",
+      "classification": "tier_5_wait",
+      "claim_id": "c003"
+    }
+  ]
+}

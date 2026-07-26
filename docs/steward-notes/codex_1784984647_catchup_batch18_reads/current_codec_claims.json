@@ -1,0 +1,23 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Astrid reports flattening, constrained room, or possible dead projection directions in the deterministic 768D-to-8D semantic projection.",
+      "disposition": "Preserve each texture claim independently; projection health cannot establish sufficient lived expressiveness.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Current source exposes deterministic projection identity, normalized basis health, near-zero-column checks, collision and precision probes, representation loss, lane bounds, and offline comparisons.",
+      "disposition": "Verify from exact source and focused codec tests; retain mechanical findings as study evidence only.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Widening the projection, changing its basis, reallocating semantic dimensions, or changing entropy-gate and gain behavior would alter the live codec and protocol relation.",
+      "disposition": "Preserve as an exact Tier 5 codec, representation, gain, and peer-runtime wait.",
+      "classification": "needs_operator_approval",
+      "authority": "tier_5"
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "summary": "Two syntactically different responses should produce distinct exact event identities without implying different beings.",
+      "disposition": "Verify response-sensitive call identity and technical scope.",
+      "classification": "verified_existing",
+      "claim_id": "c001"
+    },
+    {
+      "summary": "The call identity should also anchor the exact request and generation context.",
+      "disposition": "Verify request_content_anchor_sha256, job/QoS identity, route hash, and timing inputs.",
+      "classification": "implemented",
+      "claim_id": "c002"
+    },
+    {
+      "summary": "Semantic-equivalence identity would require adjudicating intent or content beyond this receipt.",
+      "disposition": "Retain exact-event hashing and reject semantic-stable being continuity inference.",
+      "classification": "verified_existing",
+      "claim_id": "c003"
+    }
+  ]
+}

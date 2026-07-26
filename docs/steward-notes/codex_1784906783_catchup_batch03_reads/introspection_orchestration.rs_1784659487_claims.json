@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "summary": "Low-fill rest has a bounded floor.",
+      "disposition": "Use the later report and current rest-duration regression as exact evidence.",
+      "classification": "verified_existing",
+      "claim_id": "c001"
+    },
+    {
+      "summary": "Peripheral resonance should survive an empty starred-memory set.",
+      "disposition": "Use the existing fallback tests linked to the later report.",
+      "classification": "verified_existing",
+      "claim_id": "c002"
+    },
+    {
+      "summary": "Warmth taper and rest timing must not be changed through duplicate triage.",
+      "disposition": "Retain the existing operator wait on the later report.",
+      "classification": "verified_existing",
+      "claim_id": "c003"
+    }
+  ]
+}

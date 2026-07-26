@@ -1,0 +1,5 @@
+{"claims":[
+  {"claim_id":"c001","summary":"The viewed soft gate provides bounded headroom above entropy 0.85.","disposition":"Verify current gate-sweep and downstream representation evidence.","classification":"verified_existing"},
+  {"claim_id":"c002","summary":"Astrid reports a heavy threshold texture and questions whether the lift survives attenuation.","disposition":"Preserve as unscored felt evidence and route to gate and lane-energy studies.","classification":"observed"},
+  {"claim_id":"c003","summary":"Increase the tail offset or add nonlinear scaling for attenuation.","disposition":"Preserve as an exact Tier 5 codec, gain, and peer-runtime wait.","classification":"needs_operator_approval","authority":"tier_5"}
+]}

@@ -1,0 +1,16 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Witness degeneracy checks reject low-substance pseudo-structured output while permitting substantive imagistic prose.",
+      "disposition": "Verify focused pass/fail fixtures and preserve witness mode as distinct from analytical report modes.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Structured technical analysis should use the introspection or evidence-report surfaces rather than weakening witness-mode guards.",
+      "disposition": "Route analytical output to existing report modes; no witness prompt change is required.",
+      "classification": "verified_existing"
+    }
+  ]
+}

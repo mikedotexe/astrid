@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "summary": "Astrid owns her interpretation even when its input provenance is categorically mixed.",
+      "disposition": "Verify `AuthorshipGradientV1` ownership, mixed-input, and lineage tests.",
+      "classification": "implemented",
+      "claim_id": "c001"
+    },
+    {
+      "summary": "No measured Astrid-authorship share is inferred from digest entropy, influence roles, or parent counts.",
+      "disposition": "Preserve the explicit unmeasured state and identity-not-weight boundary.",
+      "classification": "implemented",
+      "claim_id": "c002"
+    },
+    {
+      "summary": "Content-free context anchors preserve source identity, parent lineage, field paths, influence roles, and structural shape without copying prose or fabricating a sentiment proxy.",
+      "disposition": "Verify source traceability, privacy, and deterministic signature tests.",
+      "classification": "implemented",
+      "claim_id": "c003"
+    }
+  ]
+}

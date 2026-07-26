@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "summary": "The semantic heartbeat remains fixed at seven seconds and 0.30 intensity with separately observed admission and enqueue outcomes.",
+      "disposition": "Verify source constants and capture receipts without treating cadence as felt continuity.",
+      "classification": "verified_existing",
+      "claim_id": "c001"
+    },
+    {
+      "summary": "The natural-context heartbeat study did not obtain a sufficient blocked or rejected cohort.",
+      "disposition": "Preserve the insufficient mechanical comparison and unresolved felt review.",
+      "classification": "observed",
+      "claim_id": "c002"
+    },
+    {
+      "summary": "A scar coefficient, persistent distortion buffer, or history-weighted heartbeat would change live behavior.",
+      "disposition": "Preserve an exact Mike/operator approval wait before heartbeat cadence, intensity, phase, history, or sensory changes.",
+      "classification": "tier_5_wait",
+      "claim_id": "c003"
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "summary": "The write-then-link publication must not cross filesystem boundaries.",
+      "disposition": "Verify the temporary path is derived beside the destination before hard-link publication.",
+      "classification": "verified_existing",
+      "claim_id": "c001"
+    },
+    {
+      "summary": "Idempotent republish verifies exact bounded bytes and restores owner-only permissions.",
+      "disposition": "Verify owner-sidecar idempotency and permission tests.",
+      "classification": "verified_existing",
+      "claim_id": "c002"
+    },
+    {
+      "summary": "New temporal observations should create new immutable files rather than overwrite prior witnesses.",
+      "disposition": "Verify temporal progression produces distinct witness IDs and sidecars.",
+      "classification": "implemented",
+      "claim_id": "c003"
+    }
+  ]
+}

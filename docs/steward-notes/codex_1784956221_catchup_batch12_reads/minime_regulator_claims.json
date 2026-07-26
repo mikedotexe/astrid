@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The complete regulator core source is an include shell that declares PI-era modules but does not expose their active mechanics.",
+      "disposition": "Verify the shell and route viscosity, pressure_source, rate_gate, and PI modules for source-currentness and process evidence.",
+      "classification": "verified"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Pressure, viscosity, gate state, and shadow texture remain distinct evidence and cannot be collapsed into one causal explanation.",
+      "disposition": "Preserve Astrid's report and use bounded mechanical comparison only after a valid baseline.",
+      "classification": "study_wait"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Rate-gate, PI, viscosity, pressure, or fill changes would alter live regulation.",
+      "disposition": "Preserve an exact Mike/operator approval wait.",
+      "classification": "tier_5_wait"
+    }
+  ]
+}

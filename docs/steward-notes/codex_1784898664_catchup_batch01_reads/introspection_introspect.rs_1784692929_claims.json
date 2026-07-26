@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Self-study carriage repair must turn thin or malformed output into grounded complete sections.",
+      "disposition": "Verify current carriage integrity and repair regression tests.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A sequential next offset is a source-window continuation pointer, not a model of associative thought.",
+      "disposition": "Preserve explicit continuation semantics and use separate source references for non-linear investigation.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Pressure must not be converted into a confidence or response-quality score.",
+      "disposition": "Reject numeric-to-felt/model inference under the epistemic linter.",
+      "classification": "verified_existing"
+    }
+  ]
+}

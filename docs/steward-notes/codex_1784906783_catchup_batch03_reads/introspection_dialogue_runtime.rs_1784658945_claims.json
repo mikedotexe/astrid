@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "summary": "An exact control-marker match proves byte identity and placement only.",
+      "disposition": "Verify the private typed occurrence and evidence-only receipt schema.",
+      "classification": "verified_existing",
+      "claim_id": "c001"
+    },
+    {
+      "summary": "Marker frequency cannot be correlated into a pressure or felt-state conclusion.",
+      "disposition": "Reject numeric-to-felt and control-token-to-spectral inference.",
+      "classification": "verified_existing",
+      "claim_id": "c002"
+    },
+    {
+      "summary": "A SpectralResonance marker context would conflate transport syntax with experiential meaning.",
+      "disposition": "Preserve the identity-neutral design and keep felt evidence in its canonical source.",
+      "classification": "verified_existing",
+      "claim_id": "c003"
+    }
+  ]
+}

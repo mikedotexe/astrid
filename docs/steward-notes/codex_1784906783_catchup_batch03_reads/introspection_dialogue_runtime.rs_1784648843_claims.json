@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "summary": "Common exact following relations should preserve a named marker.",
+      "disposition": "Use the later parser reports and current relation tests.",
+      "classification": "verified_existing",
+      "claim_id": "c001"
+    },
+    {
+      "summary": "Requested-token bands do not measure semantic density.",
+      "disposition": "Use the established mechanical QoS boundary.",
+      "classification": "verified_existing",
+      "claim_id": "c002"
+    },
+    {
+      "summary": "Semantic weight must not be added to marker matches.",
+      "disposition": "Use the identity-neutral receipt evidence from the later reports.",
+      "classification": "verified_existing",
+      "claim_id": "c003"
+    }
+  ]
+}

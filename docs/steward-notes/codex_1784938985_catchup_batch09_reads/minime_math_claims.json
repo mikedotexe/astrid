@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The viewed Minime main excerpt is insufficient to establish which spectral-math or distinguishability-loss mechanics are active.",
+      "disposition": "Route attribution to complete current spectral_math, regulator, and process-identity evidence.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Current cartography exposes distinguishability, pressure, porosity, viscosity, and controller context for bounded replay without treating them as felt scores.",
+      "disposition": "Verify current source and retain replay-only authority.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Adding a nonlinear buffer or changing reservoir or regulator mathematics would alter the live Minime substrate.",
+      "disposition": "Preserve an exact Mike/operator approval wait pending a baseline, implementation plan, and runtime validation.",
+      "classification": "tier_5_wait"
+    }
+  ]
+}

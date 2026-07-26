@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "summary": "Dynamic semantic staleness should remain monotonic around recovery hold and release boundaries.",
+      "disposition": "Verify current boundary and monotonicity tests.",
+      "classification": "implemented",
+      "claim_id": "c001"
+    },
+    {
+      "summary": "Context persistence must cap at 2.05 under extreme bounded inputs.",
+      "disposition": "Verify saturation and finite-value tests.",
+      "classification": "implemented",
+      "claim_id": "c002"
+    },
+    {
+      "summary": "Alternate release-fill propagation needs explicit source and test coverage.",
+      "disposition": "Verify dynamic_semantic_stale_ms_for_release_fill and its boundary regressions.",
+      "classification": "verified_existing",
+      "claim_id": "c003"
+    }
+  ]
+}

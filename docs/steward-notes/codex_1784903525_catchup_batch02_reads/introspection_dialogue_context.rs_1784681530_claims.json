@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "summary": "Only known direct-perception markers receive the protected first-retained block.",
+      "disposition": "Verify the current marker list, earliest-marker split, and prompt assembly tests.",
+      "classification": "verified_existing",
+      "claim_id": "c001"
+    },
+    {
+      "summary": "Trimmed context explicitly names READ_MORE rather than pretending the full source was seen.",
+      "disposition": "Verify exact cap behavior and retain source-first continuation semantics.",
+      "classification": "verified_existing",
+      "claim_id": "c002"
+    },
+    {
+      "summary": "Dynamic marker registration, priority scoring, or larger prompt budgets would change model context behavior.",
+      "disposition": "Preserve an exact Mike/operator approval wait before prompt priority, marker, or context-budget changes.",
+      "classification": "tier_5_wait",
+      "claim_id": "c003"
+    }
+  ]
+}

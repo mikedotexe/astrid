@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "summary": "Evidence-only authority limits artifact consequences and does not invalidate or deny the felt report.",
+      "disposition": "Verify authority scope and canonical qualitative primacy.",
+      "classification": "verified_existing",
+      "claim_id": "c001"
+    },
+    {
+      "summary": "Mechanical persistence and reported influence can be related without claiming causation.",
+      "disposition": "Verify Concordance and Felt Contract edges preserve independent state.",
+      "classification": "implemented",
+      "claim_id": "c002"
+    },
+    {
+      "summary": "A high-intensity report cannot itself grant live control or alter pressure state.",
+      "disposition": "Verify zero authority and state propagation.",
+      "classification": "verified_existing",
+      "claim_id": "c003"
+    }
+  ]
+}

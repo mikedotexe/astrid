@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "summary": "Delivery, reply links, and elapsed time cannot infer attention, uptake, agreement, or relationship.",
+      "disposition": "Verify reciprocal receipts require explicit actor state and preserve neutral silence.",
+      "classification": "implemented",
+      "claim_id": "c001"
+    },
+    {
+      "summary": "Verbatim, affective, and logical material must not be copied into bounded reciprocal metadata.",
+      "disposition": "Retain hashes, typed references, and representation loss only; keep canonical prose in its source artifact.",
+      "classification": "verified_existing",
+      "claim_id": "c002"
+    },
+    {
+      "summary": "Automatically weighting preservation modes in prompt or sensory transport would change model or live behavior.",
+      "disposition": "Preserve an exact Mike/operator approval wait before semantic weighting, prompt priority, or sensory changes.",
+      "classification": "tier_5_wait",
+      "claim_id": "c003"
+    }
+  ]
+}

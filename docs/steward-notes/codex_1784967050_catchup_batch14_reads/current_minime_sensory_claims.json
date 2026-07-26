@@ -1,0 +1,23 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The sensory bus uses a low-fill recovery hold, shaped release, and entropy, velocity, and pressure context to bound semantic persistence.",
+      "disposition": "Verify from current Minime source and exact boundary tests.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A release fill below the recovery floor is clamped and could surprise a caller expecting a tighter release.",
+      "disposition": "Verify the intentional finite clamp and non-cliff handoff tests; retain the boundary as explicit evidence rather than changing decay.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The 48D, legacy, and narrative retention partition should be inspectable before changing persistence behavior.",
+      "disposition": "Route to the existing NarrativeSemanticRetentionReviewV1 and representation contracts; any sensory-decay change remains Tier 5.",
+      "classification": "verified_existing",
+      "authority": "tier_5"
+    }
+  ]
+}

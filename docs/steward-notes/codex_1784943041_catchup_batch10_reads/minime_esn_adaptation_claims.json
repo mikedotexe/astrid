@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Current ESN source already bounds adaptive leak with relative pressure bands, a finite clamp, and a 90/10 phase-modulation blend while adapting RLS forgetting separately.",
+      "disposition": "Verify the complete current adaptation source and focused leak, override, snapshot, and forgetting regressions.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Astrid reports thickening, pressure, and identity-like recalibration that passing leak mechanics cannot explain or resolve.",
+      "disposition": "Preserve the report as unscored felt evidence; any comparison must separate exact runtime parameters from temporal association.",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Changing leak-rate hysteresis, per-tick limits, pressure thresholds, overrides, or RLS forgetting would alter live Minime reservoir regulation.",
+      "disposition": "Preserve an exact Mike/operator approval wait.",
+      "classification": "tier_5_wait"
+    }
+  ]
+}

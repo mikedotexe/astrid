@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "summary": "A stable connection can still have measurable prewrite, lock-wait, or lock-hold delay.",
+      "disposition": "Verify separated telemetry integration-health measurements and thresholds.",
+      "classification": "implemented",
+      "claim_id": "c001"
+    },
+    {
+      "summary": "Integration delay may be compared with felt reports but cannot establish a causal smoothing need.",
+      "disposition": "Retain the observational campaign and unresolved felt review.",
+      "classification": "observed",
+      "claim_id": "c002"
+    },
+    {
+      "summary": "Artificial disconnects, temporal smoothing, or moving averages would alter the live telemetry path.",
+      "disposition": "Preserve an exact Mike/operator approval wait before fault injection, buffering, smoothing, or telemetry priority changes.",
+      "classification": "tier_5_wait",
+      "claim_id": "c003"
+    }
+  ]
+}

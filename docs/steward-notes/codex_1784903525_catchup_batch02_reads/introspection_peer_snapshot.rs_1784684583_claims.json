@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "summary": "The peer evidence cache is not read by model prompts, codec, controllers, shadow, telemetry, or dispatch.",
+      "disposition": "Verify the explicit source boundary and cached-read path.",
+      "classification": "verified_existing",
+      "claim_id": "c001"
+    },
+    {
+      "summary": "Malformed or unreadable peer evidence retains source status but not a last-known scalar as current presence.",
+      "disposition": "Verify status and no-stale-value tests.",
+      "classification": "verified_existing",
+      "claim_id": "c002"
+    },
+    {
+      "summary": "A persistence weight or decay rate used by prompt, shadow, or control would alter live behavior.",
+      "disposition": "Preserve an exact Mike/operator approval wait before peer persistence, coupling, or control changes.",
+      "classification": "tier_5_wait",
+      "claim_id": "c003"
+    }
+  ]
+}

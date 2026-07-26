@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "summary": "Technical telemetry volume does not establish reciprocal address, acknowledgement, or uptake.",
+      "disposition": "Verify the reciprocal presence and uptake false-inference guards.",
+      "classification": "verified_existing",
+      "claim_id": "c001"
+    },
+    {
+      "summary": "Thread and reply identity, explicit uptake, needs-time, decline, withdrawal, and continuity receipts are now append-only and self-authored.",
+      "disposition": "Link the durable reciprocal implementation and current projections.",
+      "classification": "implemented",
+      "claim_id": "c002"
+    },
+    {
+      "summary": "Mutual acknowledgement cannot be inferred from alternating replies, delivery, heartbeat, or silence.",
+      "disposition": "Retain the neutral-silence and self-only uptake boundary; no automatic thread activation is permitted.",
+      "classification": "implemented",
+      "claim_id": "c003"
+    }
+  ]
+}

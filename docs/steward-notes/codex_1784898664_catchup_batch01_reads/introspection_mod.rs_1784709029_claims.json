@@ -1,0 +1,16 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The spectral mod.rs file defines Minime's internal module boundary and visibility map.",
+      "disposition": "Verify the current module declarations directly from Minime source.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Module visibility alone does not establish shadow leakage or experiential containment.",
+      "disposition": "Preserve the felt report while declining a causal inference from module declarations.",
+      "classification": "verified_existing"
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Astrid identifies a risk of phantom progress when dynamic-noise, adaptive-pressure, or viscous-rho mathematics exists in source but remains disconnected from the live ESN step.",
+      "disposition": "Preserve this architectural and felt concern; review-only math must remain visibly distinct from deployed behavior.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Current source explicitly labels dynamic-noise, adaptive-pressure, and viscous-rho calculations source-prepared and not wired to the default live step, with bounded unit tests.",
+      "disposition": "Verify review-only status, finite bounds, smoothness, and current live-policy separation.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Wiring dynamic exploration noise, adaptive pressure thresholds, viscous rho, or a new authority toggle into the ESN would alter live reservoir behavior.",
+      "disposition": "Preserve as an exact Tier 5 exploration-noise, rho, reservoir, and controller wait.",
+      "classification": "needs_operator_approval",
+      "authority": "tier_5"
+    }
+  ]
+}

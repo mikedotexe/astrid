@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "summary": "Two long protocol strings can share a bounded display prefix.",
+      "disposition": "Verify completion flags expose truncation and that the full manifest hash remains part of candidate identity.",
+      "classification": "verified_existing",
+      "claim_id": "c001"
+    },
+    {
+      "summary": "Bounded protocol text cannot collapse two distinct build candidates into one technical identity.",
+      "disposition": "Verify the dedicated collision regression test.",
+      "classification": "implemented",
+      "claim_id": "c002"
+    },
+    {
+      "summary": "Runtime instance identity remains stable within a process and changes across fresh process initialization.",
+      "disposition": "Verify OnceLock caching and runtime identity tests.",
+      "classification": "verified_existing",
+      "claim_id": "c003"
+    }
+  ]
+}

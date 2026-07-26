@@ -1,0 +1,5 @@
+{"claims":[
+  {"claim_id":"c001","summary":"The viewed fixed ceiling and smooth gate can be measured through clamp occupancy and exact gate deltas.","disposition":"Verify current bounded evidence.","classification":"verified_existing"},
+  {"claim_id":"c002","summary":"Astrid reports restless thickness or a plateau when dense output approaches the ceiling.","disposition":"Preserve as unscored felt evidence and link clamp and gate observations.","classification":"observed"},
+  {"claim_id":"c003","summary":"Scale feature or tail limits dynamically from density gradient.","disposition":"Preserve as an exact Tier 5 codec and telemetry-to-control wait.","classification":"needs_operator_approval","authority":"tier_5"}
+]}

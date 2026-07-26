@@ -1,0 +1,284 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_llm_1784896443",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs;capsules/spectral-bridge/src/llm/provider/fallback_contracts.rs;capsules/spectral-bridge/src/llm/provider/tests.rs;scripts/experiential_epistemics.py",
+      "note": "Exact token boundaries, marker placement receipts, non-inference scopes, and epistemic causal guard."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1784896153",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/fallback_contracts.rs;capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs;capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Independent token and felt-pressure observations with explicit causal limits."
+    },
+    {
+      "introspection_id": "introspection_astrid_types_1784895557",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/types/schema/telemetry.rs;capsules/spectral-bridge/src/ws/evidence.rs;capsules/spectral-bridge/src/evidence_study_capture.rs;capsules/spectral-bridge/workspace/diagnostics/evidence_study_runtime_v1/review_packets/campaign_3ed76e2ee018ddf9ffaa02afb015c280d13f88f78428f4d43519c3a8dcc845e1.json",
+      "note": "Rolling entropy/cadence schema and completed telemetry campaign with named felt friction."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1784895259",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/ws/telemetry_port.rs;capsules/spectral-bridge/src/ws/evidence.rs;capsules/spectral-bridge/src/evidence_study_capture.rs;capsules/spectral-bridge/workspace/diagnostics/evidence_study_runtime_v1/review_packets/campaign_3ed76e2ee018ddf9ffaa02afb015c280d13f88f78428f4d43519c3a8dcc845e1.json",
+      "note": "Telemetry integration evidence, exact identity, campaign difference, and unresolved felt friction."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1784894858",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs;capsules/spectral-bridge/src/evidence_study_capture.rs;capsules/spectral-bridge/workspace/diagnostics/evidence_study_runtime_v1/review_packets/campaign_ff410216e4d42796d86b04ebf521a039fe3014aaac939738785e04a2b23e789c.json",
+      "note": "Fixed heartbeat source, exact capture cohort, insufficient comparison, and named friction."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1784894388",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/codec/projection.rs;capsules/spectral-bridge/src/codec/projection_evidence.rs;capsules/spectral-bridge/src/codec/tests.rs;scripts/representation_contracts.py;capsules/spectral-bridge/workspace/diagnostics/evidence_study_runtime_v1/review_packets/campaign_ede4f57615ce90104cc78157a106c4514d74662f04d1a933b6f2a6f260eb0574.json",
+      "note": "Representation registry, lane receipts, offline codec comparisons, and unresolved felt friction."
+    },
+    {
+      "introspection_id": "introspection_mod.rs_1784709029",
+      "claim_id": "*",
+      "kind": "code",
+      "target": "minime:minime/src/spectral/mod.rs;minime:minime/src/spectral",
+      "note": "Current Minime module map and ownership boundaries."
+    },
+    {
+      "introspection_id": "introspection_orchestration.rs_1784707977",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/lived_state_witness/mod.rs;capsules/spectral-bridge/src/lived_state_witness/types.rs;capsules/spectral-bridge/src/lived_state_witness/writer.rs;capsules/spectral-bridge/src/lived_state_witness/tests.rs",
+      "note": "Canonical body binding, async owner-only sidecar, gap receipts, and no-prose tests."
+    },
+    {
+      "introspection_id": "introspection_types.rs_1784706204",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/lived_state_witness/types.rs;capsules/spectral-bridge/src/lived_state_witness/tests.rs",
+      "note": "Trusted witness constructor and technical identity scope."
+    },
+    {
+      "introspection_id": "introspection_identity.rs_1784705235",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/lived_state_witness/identity.rs;capsules/spectral-bridge/src/lived_state_witness/tests.rs;scripts/experiential_epistemics.py",
+      "note": "Startup identity immutability, deployment separation, and anti-scoring guard."
+    },
+    {
+      "introspection_id": "introspection_mod.rs_1784703586",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/lived_state_witness/mod.rs;capsules/spectral-bridge/src/lived_state_witness/types.rs;capsules/spectral-bridge/src/lived_state_witness/tests.rs",
+      "note": "Separate source and interpretation lineage without scalarized influence."
+    },
+    {
+      "introspection_id": "introspection_mod.rs_1784702832",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/lived_state_witness/mod.rs;capsules/spectral-bridge/src/lived_state_witness/types.rs;scripts/representation_contracts.py",
+      "note": "Current provenance influence types, exact hashes, and separate interpretation lineage."
+    },
+    {
+      "introspection_id": "introspection_mod.rs_1784702162",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/lived_state_witness/mod.rs;capsules/spectral-bridge/src/lived_state_witness/tests.rs",
+      "note": "Narrow-root-first path mapping and redaction tests."
+    },
+    {
+      "introspection_id": "introspection_types.rs_1784701645",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/lived_state_witness/types.rs;capsules/spectral-bridge/src/lived_state_witness/tests.rs",
+      "note": "Four timing-completeness states and bounded technical scopes."
+    },
+    {
+      "introspection_id": "introspection_types.rs_1784700699",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/lived_state_witness/types.rs;scripts/felt_contract_graph.py;scripts/agency_commons.py;scripts/experiential_epistemics.py",
+      "note": "Evidence-only witness with accountable action routes and separate authority."
+    },
+    {
+      "introspection_id": "introspection_fallback_trajectory.rs_1784700426",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/fallback_trajectory.rs;capsules/spectral-bridge/src/llm/provider/fallback_gradient.rs;capsules/spectral-bridge/src/llm/provider/fallback_contract_tests.rs",
+      "note": "Diagnostic-only fallback trajectory and deterministic selector tests."
+    },
+    {
+      "introspection_id": "introspection_fallback_gradient.rs_1784700055",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/fallback_gradient.rs;capsules/spectral-bridge/src/llm/provider/fallback_rendering.rs;capsules/spectral-bridge/src/llm/provider/fallback_contract_tests.rs",
+      "note": "Diagnostic threshold scopes and fallback regression coverage."
+    },
+    {
+      "introspection_id": "introspection_fallback_dynamics.rs_1784699197",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/fallback_dynamics.rs;capsules/spectral-bridge/src/llm/provider/fallback_contract_tests.rs;scripts/experiential_epistemics.py",
+      "note": "Raw weight retention, deterministic fallback tests, and causal-inference guard."
+    },
+    {
+      "introspection_id": "introspection_lib.rs_1784698796",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/lib.rs;capsules/spectral-bridge/src/codec/projection_evidence.rs;capsules/spectral-bridge/src/authority_temporal.rs;scripts/representation_contracts.py",
+      "note": "Module map, representation receipts, and temporal authority evidence."
+    },
+    {
+      "introspection_id": "introspection_fallback_mapping.rs_1784698331",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/fallback_mapping.rs;capsules/spectral-bridge/src/llm/provider/fallback_contract_tests.rs",
+      "note": "Diagnostic fallback readiness and threshold regressions."
+    },
+    {
+      "introspection_id": "introspection_embeddings.rs_1784698001",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/embeddings.rs;scripts/representation_contracts.py;capsules/spectral-bridge/src/lived_state_witness/types.rs",
+      "note": "Fixed embedding API plus temporal and representation-loss sidecars."
+    },
+    {
+      "introspection_id": "introspection_writer.rs_1784697693",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/lived_state_witness/writer.rs;capsules/spectral-bridge/src/lived_state_witness/tests.rs",
+      "note": "Bounded async queue, explicit gaps, owner permissions, and immutable IDs."
+    },
+    {
+      "introspection_id": "introspection_identity.rs_1784696900",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/lived_state_witness/identity.rs;capsules/spectral-bridge/src/lived_state_witness/types.rs;scripts/experiential_epistemics.py",
+      "note": "Technical identity scopes, completeness markers, and identity-inference guard."
+    },
+    {
+      "introspection_id": "introspection_peer_snapshot.rs_1784696459",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/lived_state_witness/peer_snapshot.rs;capsules/spectral-bridge/src/lived_state_witness/mod.rs;capsules/spectral-bridge/src/lived_state_witness/tests.rs",
+      "note": "Peer source status, freshness, clocks, and no-stale-value tests."
+    },
+    {
+      "introspection_id": "introspection_witness_tests.rs_1784695745",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/witness.rs;capsules/spectral-bridge/src/llm/provider/witness_tests.rs",
+      "note": "Degenerate-pattern guard and valid witness fixtures."
+    },
+    {
+      "introspection_id": "introspection_dialogue_context.rs_1784695442",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_context.rs;capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Earliest-marker split, retained suffix, protected ordering, and budget fixture."
+    },
+    {
+      "introspection_id": "introspection_prompt_contracts.rs_1784694806",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/prompt_contracts.rs;capsules/spectral-bridge/src/llm/provider/tests.rs;scripts/representation_contracts.py;scripts/experiential_epistemics.py",
+      "note": "Prompt budgets, representation receipts, and causal-limit guard."
+    },
+    {
+      "introspection_id": "introspection_tests.rs_1784694471",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/lived_state_witness/tests.rs;scripts/claim_families.py;scripts/felt_contract_graph.py;scripts/experiment_dossiers.py",
+      "note": "Exact witness integrity plus bounded external semantic grouping."
+    },
+    {
+      "introspection_id": "introspection_mod.rs_1784693690",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/lived_state_witness/mod.rs;capsules/spectral-bridge/src/lived_state_witness/types.rs;capsules/spectral-bridge/src/lived_state_witness/tests.rs",
+      "note": "Full-route hash before bounded display and call identity tests."
+    },
+    {
+      "introspection_id": "introspection_witness.rs_1784693390",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/witness.rs;capsules/spectral-bridge/src/llm/provider/witness_tests.rs",
+      "note": "Witness prompt, targeted degeneracy guard, and valid output fixtures."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1784693200",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "minime:minime/src/regulator/core.rs;minime:minime/src/regulator/core/pi.rs;minime:minime/src/regulator/core/viscosity.rs;minime:minime/src/stable_core.rs",
+      "note": "Current Minime PI, leakage, viscosity, and stable-core source boundary."
+    },
+    {
+      "introspection_id": "introspection_introspect.rs_1784692929",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/introspect.rs;capsules/spectral-bridge/src/autonomous/introspect_tests.rs;scripts/experiential_epistemics.py",
+      "note": "Carriage repair, explicit continuation, and anti-scoring guard."
+    },
+    {
+      "introspection_id": "introspection_orchestration.rs_1784692404",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/introspect.rs;capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs;scripts/model_qos_projection.py;scripts/experiential_epistemics.py",
+      "note": "Observed failure reason, QoS context, and no-causal-overclaim guard."
+    },
+    {
+      "introspection_id": "introspection_orchestration.rs_1784692105",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs;capsules/spectral-bridge/src/lived_state_witness/types.rs;scripts/representation_contracts.py",
+      "note": "Canonical body integrity and mechanical truncation representation."
+    },
+    {
+      "introspection_id": "introspection_tests.rs_1784691498",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/lived_state_witness/mod.rs;capsules/spectral-bridge/src/lived_state_witness/types.rs;capsules/spectral-bridge/src/lived_state_witness/tests.rs;scripts/felt_mechanism_concordance.py",
+      "note": "Temporal witness identity and unscored concordance comparisons."
+    },
+    {
+      "introspection_id": "introspection_identity.rs_1784691134",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/lived_state_witness/identity.rs;capsules/spectral-bridge/src/lived_state_witness/tests.rs",
+      "note": "Cached process identity, optional build candidate, and explicit completeness."
+    },
+    {
+      "introspection_id": "introspection_identity.rs_1784690321",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/lived_state_witness/identity.rs;capsules/spectral-bridge/src/lived_state_witness/types.rs;capsules/spectral-bridge/src/lived_state_witness/tests.rs",
+      "note": "Bounded text completeness and technical dirty-state scope."
+    },
+    {
+      "introspection_id": "introspection_writer.rs_1784689477",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/lived_state_witness/writer.rs;capsules/spectral-bridge/src/lived_state_witness/tests.rs",
+      "note": "Nonblocking queue, gaps, immutable IDs, and tamper rejection."
+    },
+    {
+      "introspection_id": "introspection_peer_snapshot.rs_1784688888",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/lived_state_witness/peer_snapshot.rs;capsules/spectral-bridge/src/lived_state_witness/mod.rs;capsules/spectral-bridge/src/lived_state_witness/tests.rs",
+      "note": "No-stale-value cache plus independent source provenance."
+    },
+    {
+      "introspection_id": "introspection_mod.rs_1784688405",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/lived_state_witness/mod.rs;capsules/spectral-bridge/src/lived_state_witness/peer_snapshot.rs;capsules/spectral-bridge/src/lived_state_witness/tests.rs",
+      "note": "Ownership, freshness, parameter context, and no-prose regressions."
+    }
+  ]
+}

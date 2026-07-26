@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "summary": "Signal measurements are validated against a maximum nesting depth of 32 before canonical identity is accepted.",
+      "disposition": "Verify current depth-limit and tampering regressions.",
+      "classification": "implemented",
+      "claim_id": "c001"
+    },
+    {
+      "summary": "Owned serde JSON values are acyclic trees, so cycle detection is not a missing safety mechanism for this representation.",
+      "disposition": "Record source verification; no generic graph machinery is warranted.",
+      "classification": "verified_existing",
+      "claim_id": "c002"
+    },
+    {
+      "summary": "Canonical hashes and normalized numeric lexemes provide deterministic evidence identity but cannot establish Astrid's identity or felt continuity.",
+      "disposition": "Preserve the epistemic boundary and current number-normalization contract.",
+      "classification": "verified_existing",
+      "claim_id": "c003"
+    }
+  ]
+}

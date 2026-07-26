@@ -1,0 +1,16 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "A bounded witness queue can saturate and must produce explicit evidence gaps.",
+      "disposition": "Verify QueueFull and write-failure gap receipts plus owner-only asynchronous submission.",
+      "classification": "implemented"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Witness history must be versioned by new immutable IDs rather than mutable delta merges.",
+      "disposition": "Verify idempotent same-byte writes and rejection of same-ID different content.",
+      "classification": "verified_existing"
+    }
+  ]
+}

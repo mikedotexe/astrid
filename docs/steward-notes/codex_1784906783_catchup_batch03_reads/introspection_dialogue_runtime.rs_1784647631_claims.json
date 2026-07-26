@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "summary": "Overlapping known markers require longest exact raw matching with exact accounting.",
+      "disposition": "Verify longest-overlap and no-second-order-removal regressions.",
+      "classification": "implemented",
+      "claim_id": "c001"
+    },
+    {
+      "summary": "Dense scaffolding without an exact known marker must remain ordinary content.",
+      "disposition": "Verify dense-structure and structure-only review tests.",
+      "classification": "implemented",
+      "claim_id": "c002"
+    },
+    {
+      "summary": "A semantic-density check would make safety sanitation depend on inferred meaning.",
+      "disposition": "Retain exact matching and explicit semantic-review routing.",
+      "classification": "verified_existing",
+      "claim_id": "c003"
+    }
+  ]
+}

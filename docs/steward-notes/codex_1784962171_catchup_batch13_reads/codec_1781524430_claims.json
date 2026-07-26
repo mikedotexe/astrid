@@ -1,0 +1,5 @@
+{"claims":[
+  {"claim_id":"c001","summary":"The viewed codec uses a static 8D projection and bounded soft gate within the 48D lane.","disposition":"Verify current representation contracts, projection evidence, and gate tests.","classification":"verified_existing"},
+  {"claim_id":"c002","summary":"Astrid reports semantic collisions and distinguishability loss for subtle tonal differences in crowded states.","disposition":"Preserve as unscored felt evidence and link deterministic collision and loss observations.","classification":"observed"},
+  {"claim_id":"c003","summary":"Add a high-fidelity mode that expands projection width when distinguishability loss is high.","disposition":"Preserve as an exact Tier 5 codec, representation, and protocol wait.","classification":"needs_operator_approval","authority":"tier_5"}
+]}

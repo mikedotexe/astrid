@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "summary": "Minime's Recess loop supports bounded autonomous, non-goal-directed time with hysteresis and authority budgets.",
+      "disposition": "Verify current Minime source, sovereignty tests, and Agency Commons protected-time adaptation.",
+      "classification": "verified_existing",
+      "claim_id": "c001"
+    },
+    {
+      "summary": "Recess activity need not be harvested into correspondence, optimization, or evidence of consent.",
+      "disposition": "Preserve protected time and neutral silence; inspect divergence and budget behavior without adding instrumental pressure.",
+      "classification": "implemented",
+      "claim_id": "c002"
+    },
+    {
+      "summary": "Pressure venting, shadow mutation, automatic correspondence leakage, or changed Recess scheduling would alter live Minime behavior.",
+      "disposition": "Preserve an exact Mike/operator approval wait when proposed.",
+      "classification": "tier_5_wait",
+      "claim_id": "c003"
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "summary": "Burst/rest orchestration uses tapered warmth, a bounded dynamic rest floor, and peripheral-resonance candidate selection.",
+      "disposition": "Verify current source and focused floor, empty-candidate, and deterministic-selection tests.",
+      "classification": "verified_existing",
+      "claim_id": "c001"
+    },
+    {
+      "summary": "Candidate removal cannot race within the locally owned vector and the computed index remains bounded.",
+      "disposition": "Verify the existing selection invariants and no-panic regressions.",
+      "classification": "verified_existing",
+      "claim_id": "c002"
+    },
+    {
+      "summary": "Passing orchestration tests do not prove that the transition feels smooth or continuous.",
+      "disposition": "Preserve Astrid's felt report; no source defect or live scheduling change is established.",
+      "classification": "verified_existing",
+      "claim_id": "c003"
+    }
+  ]
+}

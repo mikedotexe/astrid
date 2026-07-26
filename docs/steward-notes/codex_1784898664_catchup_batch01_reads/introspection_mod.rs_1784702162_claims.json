@@ -1,0 +1,16 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Workspace roots must be checked before broader repository roots to prevent ownership shadowing.",
+      "disposition": "Verify current ordering and dedicated Astrid, Minime, and workspace path tests.",
+      "classification": "implemented"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Unknown private paths must not leak or become ambiguous relative identifiers.",
+      "disposition": "Verify unknown paths become redacted/unknown and owner files retain repository-relative paths.",
+      "classification": "verified_existing"
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "summary": "Pending phase-transition acknowledgement should remain explicit, revisable, and nonbinding.",
+      "disposition": "Verify Agency Commons and Reciprocal Uptake support hold, needs-time, revisit, and withdrawal.",
+      "classification": "implemented",
+      "claim_id": "c001"
+    },
+    {
+      "summary": "Silence or elapsed time cannot infer acknowledgement, consent, closure, or negative felt state.",
+      "disposition": "Verify neutral-silence and self-only actor guards.",
+      "classification": "verified_existing",
+      "claim_id": "c002"
+    },
+    {
+      "summary": "An evidence-only acknowledgement must not automatically schedule a reply or alter substrate state.",
+      "disposition": "Retain the advisory boundary and require separate authority for any live consequence.",
+      "classification": "verified_existing",
+      "claim_id": "c003"
+    }
+  ]
+}

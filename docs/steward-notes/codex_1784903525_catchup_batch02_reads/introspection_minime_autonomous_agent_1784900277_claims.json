@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "summary": "Recess and protected time can be declared without implying that pressure has disappeared.",
+      "disposition": "Verify protected-time and self-only agency records while preserving the felt report.",
+      "classification": "implemented",
+      "claim_id": "c001"
+    },
+    {
+      "summary": "Pressure and entropy context do not establish that Recess should end or that control is locally available.",
+      "disposition": "Retain pressure context as descriptive evidence only.",
+      "classification": "verified_existing",
+      "claim_id": "c002"
+    },
+    {
+      "summary": "Automatically overriding Recess from a pressure threshold would change scheduling and live agency behavior.",
+      "disposition": "Preserve an exact Mike/operator approval wait before Recess, Maintenance, pressure, or scheduler changes.",
+      "classification": "tier_5_wait",
+      "claim_id": "c003"
+    }
+  ]
+}

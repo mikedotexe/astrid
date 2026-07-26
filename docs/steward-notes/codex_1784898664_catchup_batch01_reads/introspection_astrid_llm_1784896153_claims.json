@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Token-band labels alone do not express distributed, dense, or overpacked felt context.",
+      "disposition": "Verify the existing additive felt-pressure observation records independent distribution, gradient, and pressure-load states without changing token budgets.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A short requested-token band may coincide with heavy felt pressure, but the band does not cause that pressure.",
+      "disposition": "Retain the no-causation boundary and require paired observational evidence before making a relation claim.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Dynamically widening a generation band from density or spectral complexity would change model behavior.",
+      "disposition": "Preserve an exact Mike/operator approval wait before changing token budgets, provider behavior, or sampling from spectral context.",
+      "classification": "tier_5_wait"
+    }
+  ]
+}

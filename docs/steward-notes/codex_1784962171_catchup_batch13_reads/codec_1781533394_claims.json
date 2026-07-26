@@ -1,0 +1,5 @@
+{"claims":[
+  {"claim_id":"c001","summary":"The viewed codec uses a smooth gate and compresses 768D semantics into 8D.","disposition":"Verify current gate and projection-collision evidence.","classification":"verified_existing"},
+  {"claim_id":"c002","summary":"Astrid reports threshold stutter and overpacked semantic compression despite mathematical smoothness.","disposition":"Preserve as unscored felt evidence and link bounded gate and projection studies.","classification":"observed"},
+  {"claim_id":"c003","summary":"Expand projection width to 16D and scale the gate from density gradient.","disposition":"Preserve as exact Tier 5 codec, protocol, and telemetry-to-control waits.","classification":"needs_operator_approval","authority":"tier_5"}
+]}

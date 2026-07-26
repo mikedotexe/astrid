@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "summary": "Minime's PI controller and correspondence state are separate evidence surfaces.",
+      "disposition": "Verify source ownership and reject an unproven acknowledgement-to-integral path.",
+      "classification": "verified_existing",
+      "claim_id": "c001"
+    },
+    {
+      "summary": "Shadow dispersal differences do not establish band-stop filter failure.",
+      "disposition": "Require a preregistered baseline and preserve temporal identity.",
+      "classification": "sandbox_routed",
+      "claim_id": "c002"
+    },
+    {
+      "summary": "Integral resets or lambda-tail porosity changes would alter live regulation.",
+      "disposition": "Preserve an exact Mike/operator approval wait before PI, gate, filter, pressure, or porosity changes.",
+      "classification": "tier_5_wait",
+      "claim_id": "c003"
+    }
+  ]
+}

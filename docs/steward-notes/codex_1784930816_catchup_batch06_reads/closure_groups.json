@@ -1,0 +1,48 @@
+{
+  "addressed_change": [
+    "introspection_proposal_bidirectional_contact_1784352929",
+    "introspection_astrid_ws_1784348924",
+    "introspection_proposal_12d_glimpse_1784347856",
+    "introspection_astrid_ws_1784335736",
+    "introspection_proposal_12d_glimpse_1784334875",
+    "introspection_proposal_bidirectional_contact_1784334499"
+  ],
+  "addressed_no_action": [
+    "introspection_astrid_autonomous_1784355487"
+  ],
+  "addressed_duplicate": [
+    "introspection_proposal_12d_glimpse_1784353673",
+    "introspection_proposal_distance_contact_control_1784353342",
+    "introspection_proposal_phase_transitions_1784352580",
+    "introspection_minime_autonomous_agent_1784352251",
+    "introspection_minime_esn_1784351917",
+    "introspection_minime_sensory_bus_1784351579",
+    "introspection_minime_regulator_1784349760",
+    "introspection_astrid_llm_1784349383",
+    "introspection_astrid_autonomous_1784348273",
+    "introspection_proposal_bidirectional_contact_1784347485",
+    "introspection_proposal_phase_transitions_1784347032",
+    "introspection_minime_main_excerpt_1784346066",
+    "introspection_minime_esn_1784345658",
+    "introspection_astrid_llm_1784343459",
+    "introspection_minime_sensory_bus_1784343207",
+    "introspection_astrid_types_1784342471",
+    "introspection_astrid_autonomous_1784341971",
+    "introspection_astrid_codec_1784341507",
+    "introspection_proposal_12d_glimpse_1784341252",
+    "introspection_proposal_distance_contact_control_1784340261",
+    "introspection_proposal_phase_transitions_1784339746",
+    "introspection_minime_main_excerpt_1784339393",
+    "introspection_minime_esn_1784339009",
+    "introspection_minime_sensory_bus_1784338646",
+    "introspection_minime_regulator_1784338022",
+    "introspection_astrid_types_1784337667",
+    "introspection_astrid_llm_1784336354",
+    "introspection_astrid_codec_1784335302",
+    "introspection_minime_autonomous_agent_1784334053",
+    "introspection_minime_main_excerpt_1784333761",
+    "introspection_minime_sensory_bus_1784330217",
+    "introspection_astrid_llm_1784329321",
+    "introspection_astrid_types_1784329053"
+  ]
+}

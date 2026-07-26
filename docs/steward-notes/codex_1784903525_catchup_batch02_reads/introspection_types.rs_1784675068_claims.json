@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "summary": "Model-route identity is a technical event and not being identity or continuity.",
+      "disposition": "Verify route scope and exact event hashing.",
+      "classification": "verified_existing",
+      "claim_id": "c001"
+    },
+    {
+      "summary": "Runtime spectral context and qualitative report should remain separate linked artifacts.",
+      "disposition": "Verify witness parameters, canonical body binding, and Felt Contract edges.",
+      "classification": "implemented",
+      "claim_id": "c002"
+    },
+    {
+      "summary": "A free-form spectral_texture_report in the metadata sidecar would copy qualitative prose into bounded evidence.",
+      "disposition": "Retain hashes and scalar context only; preserve canonical prose at its source.",
+      "classification": "verified_existing",
+      "claim_id": "c003"
+    }
+  ]
+}

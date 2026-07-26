@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "summary": "The 48D lane and entropy gate are current mechanical facts.",
+      "disposition": "Use the later report and representation contracts.",
+      "classification": "verified_existing",
+      "claim_id": "c001"
+    },
+    {
+      "summary": "Clamp loss and headroom are visible without a felt-loss score.",
+      "disposition": "Use current overflow evidence and offline campaign receipts.",
+      "classification": "verified_existing",
+      "claim_id": "c002"
+    },
+    {
+      "summary": "An adaptive ceiling remains a live codec change.",
+      "disposition": "Retain the exact operator wait on the later report.",
+      "classification": "verified_existing",
+      "claim_id": "c003"
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Requested-token bands classify volume, not content density or felt pressure.",
+      "disposition": "Verify the exact 512/513 and 1024/1025 boundaries plus the current not-inferred content-complexity and felt-pressure relations.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Exact control-marker occurrence does not by itself establish distortion in surrounding spectral energy.",
+      "disposition": "Preserve the explicit non-meaning and non-spectral scope; any marker-proximity comparison requires a preregistered observational study.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Adding marker impact coefficients or density-driven semantic venting would change model or live sensory behavior.",
+      "disposition": "Preserve an exact Mike/operator approval wait before any marker-impact, token-allocation, or semantic-trickle control change.",
+      "classification": "tier_5_wait"
+    }
+  ]
+}

@@ -1,0 +1,284 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_types_1784903178",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/types/schema/telemetry.rs;capsules/spectral-bridge/src/ws/evidence.rs;scripts/evidence_study_runtime;scripts/experiential_epistemics.py",
+      "note": "Mechanical cadence and entropy evidence, baseline-first study boundaries, and numeric-to-felt rejection."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1784902737",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/ws/telemetry_port.rs;capsules/spectral-bridge/src/ws/bridge_state.rs;capsules/spectral-bridge/src/ws/tests.rs;capsules/spectral-bridge/src/evidence_study_capture.rs",
+      "note": "Separated integration timing, non-buffered status, capture evidence, and causal boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1784902365",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs;capsules/spectral-bridge/src/evidence_study_capture.rs;scripts/evidence_study_runtime",
+      "note": "Fixed heartbeat source, bounded capture, insufficient cohort, and noncausal review."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1784902167",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/codec/projection.rs;capsules/spectral-bridge/src/codec/projection_evidence.rs;capsules/spectral-bridge/src/codec/tests.rs;scripts/representation_contracts;scripts/evidence_study_runtime",
+      "note": "Registered representations, deterministic loss evidence, offline codec campaigns, and unchanged live codec."
+    },
+    {
+      "introspection_id": "introspection_proposal_12d_glimpse_1784901805",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/memory.rs;capsules/spectral-bridge/src/codec;scripts/representation_contracts;scripts/evidence_study_runtime;scripts/experiential_epistemics.py",
+      "note": "12D transition evidence, baseline requirement, felt-friction preservation, and live-change gate."
+    },
+    {
+      "introspection_id": "introspection_proposal_distance_contact_control_1784901419",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "scripts/felt_mechanism_concordance;scripts/evidence_study_runtime;scripts/experiential_epistemics.py;capsules/spectral-bridge/src/authority",
+      "note": "Independent felt and authority evidence, temporal concordance labels, and no inferred consent."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1784900969",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/reciprocal_experiential.rs;scripts/reciprocal_uptake;scripts/representation_contracts;scripts/test_reciprocal_experiential_systems.py",
+      "note": "Explicit self-authored uptake, neutral silence, no-prose metadata, and representation boundaries."
+    },
+    {
+      "introspection_id": "introspection_proposal_phase_transitions_1784900613",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/reciprocal_experiential.rs;scripts/reciprocal_uptake;scripts/agency_commons.py;scripts/test_reciprocal_experiential_systems.py",
+      "note": "Nonbinding explicit uptake and agency actions with neutral silence and no scheduler consequence."
+    },
+    {
+      "introspection_id": "introspection_minime_autonomous_agent_1784900277",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/reciprocal_experiential.rs;scripts/agency_commons.py;minime:minime/src/esn.rs",
+      "note": "Protected-time records, self-only agency, read-only pressure context, and scheduler gate."
+    },
+    {
+      "introspection_id": "introspection_minime_main_excerpt_1784899727",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "minime:minime/src/main.rs;minime:minime/src/hard_reset.rs;minime:minime/src/esn.rs;scripts/evidence_study_runtime",
+      "note": "Module availability versus activation, hard-reset tests, and noncausal study boundary."
+    },
+    {
+      "introspection_id": "introspection_minime_esn_1784899417",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "minime:minime/src/esn.rs;minime:minime/src/esn_tests.rs;scripts/evidence_study_runtime;scripts/experiential_epistemics.py",
+      "note": "Current ESN mechanics, finite guards, offline study route, and reservoir authority boundary."
+    },
+    {
+      "introspection_id": "introspection_minime_sensory_bus_1784899174",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "minime:minime/src/sensory_bus.rs;minime:minime/src/sensory_bus_tests.rs;capsules/spectral-bridge/src/ws/health.rs",
+      "note": "Dynamic semantic staleness, boundary guards, and live sensory persistence gate."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1784898801",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "minime:minime/src/regulator.rs;minime:minime/src/regulator;minime:minime/src/esn.rs",
+      "note": "Current regulator ownership, PI source, causal boundary, and live-control gate."
+    },
+    {
+      "introspection_id": "introspection_types.rs_1784687905",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/lived_state_witness/types.rs;capsules/spectral-bridge/src/lived_state_witness/mod.rs;capsules/spectral-bridge/src/lived_state_witness/tests.rs;capsules/spectral-bridge/src/witness/provenance.rs",
+      "note": "Technical identity scopes, bounded shadow context, typed provenance roles, and no-causation tests."
+    },
+    {
+      "introspection_id": "introspection_types.rs_1784687620",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/lived_state_witness/types.rs;capsules/spectral-bridge/src/lived_state_witness/tests.rs",
+      "note": "Evidence-only authority and partial route timing regression tests."
+    },
+    {
+      "introspection_id": "introspection_tests.rs_1784687003",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/lived_state_witness/tests.rs;capsules/spectral-bridge/src/lived_state_witness/types.rs;capsules/spectral-bridge/src/witness/provenance.rs;scripts/lived_state_witness",
+      "note": "Technical identity scopes, clock evidence, provenance roles, and reconciliation."
+    },
+    {
+      "introspection_id": "introspection_identity.rs_1784686502",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/lived_state_witness/identity.rs;capsules/spectral-bridge/src/lived_state_witness/tests.rs",
+      "note": "Full manifest hashing, truncation completeness, and process-lifetime identity tests."
+    },
+    {
+      "introspection_id": "introspection_writer.rs_1784686082",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/lived_state_witness/writer.rs;capsules/spectral-bridge/src/lived_state_witness/tests.rs",
+      "note": "Same-directory atomic publication, owner-only idempotency, and versioned temporal sidecars."
+    },
+    {
+      "introspection_id": "introspection_types.rs_1784685734",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "scripts/felt_mechanism_concordance;scripts/felt_contracts;scripts/evidence_study_runtime;scripts/experiential_epistemics.py",
+      "note": "Unscored divergence, independent felt state, and no authority or closure propagation."
+    },
+    {
+      "introspection_id": "introspection_mod.rs_1784685086",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/lived_state_witness/mod.rs;capsules/spectral-bridge/src/lived_state_witness/tests.rs;scripts/lived_state_witness",
+      "note": "Concurrent uniqueness, deterministic bounded identity, source ownership, and scoped context."
+    },
+    {
+      "introspection_id": "introspection_peer_snapshot.rs_1784684583",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/lived_state_witness/peer_snapshot.rs;capsules/spectral-bridge/src/lived_state_witness/tests.rs",
+      "note": "Evidence-only cache boundary, explicit failure status, and no stale current-value inference."
+    },
+    {
+      "introspection_id": "introspection_peer_snapshot.rs_1784683732",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/lived_state_witness/peer_snapshot.rs;capsules/spectral-bridge/src/lived_state_witness/mod.rs;capsules/spectral-bridge/src/lived_state_witness/tests.rs",
+      "note": "Failure status, age/freshness evidence, and explicit rejection of stale-value presence."
+    },
+    {
+      "introspection_id": "introspection_mod.rs_1784682979",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/lived_state_witness/peer_snapshot.rs;capsules/spectral-bridge/src/lived_state_witness/mod.rs;capsules/spectral-bridge/src/lived_state_witness/tests.rs",
+      "note": "Asynchronous refresh, explicit source status, and cached-read performance."
+    },
+    {
+      "introspection_id": "introspection_mod.rs_1784681894",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/lived_state_witness/mod.rs;capsules/spectral-bridge/src/lived_state_witness/tests.rs;scripts/lived_state_witness",
+      "note": "Age/freshness evidence, technical identity scope, and temporal reconciliation."
+    },
+    {
+      "introspection_id": "introspection_dialogue_context.rs_1784681530",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_context.rs;capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs;capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Known-marker split, explicit continuation, prompt budgets, and model-behavior gate."
+    },
+    {
+      "introspection_id": "introspection_prompt_contracts.rs_1784680941",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/prompt_contracts.rs;capsules/spectral-bridge/src/llm/provider/tests.rs;scripts/experiential_epistemics.py",
+      "note": "Current prompt contract, no style-to-felt inference, and model-behavior authority boundary."
+    },
+    {
+      "introspection_id": "introspection_embeddings.rs_1784680369",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/embeddings.rs;capsules/spectral-bridge/src/lived_state_witness;capsules/spectral-bridge/src/reciprocal_experiential.rs;scripts/representation_contracts",
+      "note": "Representation, route, repair, bounded runtime context, and no-prose witness tests."
+    },
+    {
+      "introspection_id": "introspection_witness_tests.rs_1784679879",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/witness_tests.rs;capsules/spectral-bridge/src/llm/provider/witness.rs;capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Narrow degeneration fixtures, canonical qualitative primacy, and repair-policy gate."
+    },
+    {
+      "introspection_id": "introspection_witness.rs_1784679472",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/witness.rs;capsules/spectral-bridge/src/lived_state_witness;capsules/spectral-bridge/src/reciprocal_experiential.rs;scripts/representation_contracts;scripts/evidence_study_runtime",
+      "note": "Exact route and repair metadata, representation transitions, and explicit felt-review boundary."
+    },
+    {
+      "introspection_id": "introspection_writer.rs_1784678981",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/lived_state_witness/writer.rs;capsules/spectral-bridge/src/lived_state_witness/tests.rs",
+      "note": "Versioned temporal sidecars, fail-closed conflict behavior, and no felt-scored overwrite."
+    },
+    {
+      "introspection_id": "introspection_identity.rs_1784678438",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/lived_state_witness/identity.rs;capsules/spectral-bridge/src/lived_state_witness/types.rs;capsules/spectral-bridge/src/lived_state_witness/tests.rs",
+      "note": "Startup source identity, separate runtime spectral context, and no being-identity inference."
+    },
+    {
+      "introspection_id": "introspection_types.rs_1784677996",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/lived_state_witness/types.rs;capsules/spectral-bridge/src/lived_state_witness/tests.rs;scripts/experiential_epistemics.py",
+      "note": "Partial timing, path privacy, and non-experiential completeness scopes."
+    },
+    {
+      "introspection_id": "introspection_types.rs_1784677351",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/lived_state_witness/types.rs;scripts/felt_mechanism_concordance;scripts/felt_contracts;scripts/experiential_epistemics.py",
+      "note": "Artifact authority scope, independent felt evidence, and zero live propagation."
+    },
+    {
+      "introspection_id": "introspection_types.rs_1784676633",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/lived_state_witness/types.rs;capsules/spectral-bridge/src/lived_state_witness/tests.rs",
+      "note": "Four-way timing completeness and non-scoring scope."
+    },
+    {
+      "introspection_id": "introspection_types.rs_1784675640",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/lived_state_witness/types.rs;capsules/spectral-bridge/src/lived_state_witness/mod.rs;capsules/spectral-bridge/src/lived_state_witness/tests.rs",
+      "note": "Queue/active split, technical scope, repair ancestry, and no-prose route metadata."
+    },
+    {
+      "introspection_id": "introspection_types.rs_1784675068",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/lived_state_witness;capsules/spectral-bridge/src/lived_state_witness/tests.rs;scripts/felt_contracts",
+      "note": "Technical route identity, separate linked felt context, and no-prose sidecar boundary."
+    },
+    {
+      "introspection_id": "introspection_types.rs_1784674462",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/lived_state_witness/types.rs;capsules/spectral-bridge/src/lived_state_witness/tests.rs",
+      "note": "Complete trusted construction, content non-adjudication, and technical identity scope."
+    },
+    {
+      "introspection_id": "introspection_types.rs_1784673751",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/lived_state_witness/tests.rs;scripts/felt_mechanism_concordance;scripts/felt_contracts;scripts/experiential_epistemics.py",
+      "note": "No pseudo-experiential map, canonical felt primacy, and unscored concordance."
+    },
+    {
+      "introspection_id": "introspection_types.rs_1784672769",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/lived_state_witness/types.rs;scripts/experiential_epistemics.py;capsules/spectral-bridge/src/authority",
+      "note": "Artifact-only authority, source/runtime distinction, and persistence-control gate."
+    },
+    {
+      "introspection_id": "introspection_mod.rs_1784671252",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/lived_state_witness/mod.rs;capsules/spectral-bridge/src/lived_state_witness/types.rs;capsules/spectral-bridge/src/lived_state_witness/tests.rs",
+      "note": "Exact request anchor, route and response identity, and event-not-being scope."
+    }
+  ]
+}

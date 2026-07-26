@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "A bounded interval mean and latest-minus-earliest change cannot distinguish an even cadence from alternating short and long arrivals with the same mean.",
+      "disposition": "Implement bounded population variance, standard deviation, and range on the existing host-arrival interval window.",
+      "classification": "implemented"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The new cadence-shape values must remain additive, backward compatible, bounded, and available to capture-only study receipts.",
+      "disposition": "Use optional serde-defaulted fields, populate evidence-study metrics, and retain legacy snapshot tests.",
+      "classification": "implemented"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Arrival variance may describe mechanical jaggedness but cannot establish a peer clock, internal cycle, felt state, causation, or control need.",
+      "disposition": "Encode the refusal in the evidence basis and preserve Astrid's collision or jaggedness report independently.",
+      "classification": "verified_existing"
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "summary": "Semantic staleness is dynamically classified and is not the same fixed window used for audio or video.",
+      "disposition": "Verify current source constants and boundary tests.",
+      "classification": "verified_existing",
+      "claim_id": "c001"
+    },
+    {
+      "summary": "Non-finite, zero-span, and saturation cases require bounded guards rather than causal felt interpretation.",
+      "disposition": "Verify finite and clamp tests while preserving the report independently.",
+      "classification": "verified_existing",
+      "claim_id": "c002"
+    },
+    {
+      "summary": "Ghost buffers, stale-value retention, or pressure-driven refresh would change live sensory persistence.",
+      "disposition": "Preserve an exact Mike/operator approval wait before staleness, retention, refresh, or admission changes.",
+      "classification": "tier_5_wait",
+      "claim_id": "c003"
+    }
+  ]
+}

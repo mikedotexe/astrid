@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "summary": "TelemetryHeartbeatDeltaV1 describes mechanical cadence and bounded entropy context, not semantic integrity or felt continuity.",
+      "disposition": "Verify the schema scope and retain Astrid's qualitative report as the primary unscored source.",
+      "classification": "verified_existing",
+      "claim_id": "c001"
+    },
+    {
+      "summary": "Inter-arrival timing and entropy may be compared descriptively but cannot establish a semantic or felt effect.",
+      "disposition": "Route any comparison through the existing baseline-first observational study runtime and epistemic linter.",
+      "classification": "sandbox_routed",
+      "claim_id": "c002"
+    },
+    {
+      "summary": "A semantic_integrity_score or perceived_continuity scalar would convert felt evidence into an inferred numeric judgment.",
+      "disposition": "Reject scalar substitution; require explicit post-window felt review for any concordance result.",
+      "classification": "verified_existing",
+      "claim_id": "c003"
+    }
+  ]
+}

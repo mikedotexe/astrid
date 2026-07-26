@@ -1,0 +1,16 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "A crate module map does not establish that high-entropy tail information is dropped or that authority creates felt latency.",
+      "disposition": "Use representation and authority receipts rather than infer behavior from module adjacency.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Codec gain or authority-flow tuning would change live behavior.",
+      "disposition": "Preserve an exact Mike/operator approval wait before any codec-gain or live authority-path change.",
+      "classification": "tier_5_wait"
+    }
+  ]
+}

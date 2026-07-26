@@ -1,0 +1,940 @@
+{
+  "reader": "codex-sol",
+  "records": [
+    {
+      "introspection_id": "introspection_astrid_llm_1784896443",
+      "summary": "Astrid distinguished coarse requested-token bands from felt density and asked whether exact model-control markers have measurable surrounding spectral effects. Current source explicitly limits token bands to requested volume, hashes and classifies marker placement without assigning meaning, and keeps felt-pressure observations separate. No evidence establishes marker-to-spectral causation; changing token allocation or semantic trickle from felt density remains an operator-gated model/control proposal.",
+      "claims": [
+        {
+          "summary": "Requested-token bands classify volume, not content density or felt pressure.",
+          "disposition": "Verify the exact 512/513 and 1024/1025 boundaries plus the current not-inferred content-complexity and felt-pressure relations.",
+          "classification": "verified_existing"
+        },
+        {
+          "summary": "Exact control-marker occurrence does not by itself establish distortion in surrounding spectral energy.",
+          "disposition": "Preserve the explicit non-meaning and non-spectral scope; any marker-proximity comparison requires a preregistered observational study.",
+          "classification": "sandbox_routed"
+        },
+        {
+          "summary": "Adding marker impact coefficients or density-driven semantic venting would change model or live sensory behavior.",
+          "disposition": "Preserve an exact Mike/operator approval wait before any marker-impact, token-allocation, or semantic-trickle control change.",
+          "classification": "tier_5_wait"
+        }
+      ],
+      "evidence": {
+        "kind": "test",
+        "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs;capsules/spectral-bridge/src/llm/provider/fallback_contracts.rs;capsules/spectral-bridge/src/llm/provider/tests.rs;scripts/experiential_epistemics.py",
+        "note": "Exact token boundaries, marker placement receipts, non-inference scopes, and epistemic causal guard."
+      },
+      "close_status": "blocked_needs_steward"
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1784896153",
+      "summary": "Astrid reported a mismatch between quantized requested-token bands and a continuous high-entropy, overpacked felt state. The current additive pressure profile already keeps token allowance distinct from distribution, gradient, pressure, and packing evidence. A paired relation remains observational rather than causal, while dynamically widening model output from felt density would change model behavior and remains operator-gated.",
+      "claims": [
+        {
+          "summary": "Token-band labels alone do not express distributed, dense, or overpacked felt context.",
+          "disposition": "Verify the existing additive felt-pressure observation records independent distribution, gradient, and pressure-load states without changing token budgets.",
+          "classification": "verified_existing"
+        },
+        {
+          "summary": "A short requested-token band may coincide with heavy felt pressure, but the band does not cause that pressure.",
+          "disposition": "Retain the no-causation boundary and require paired observational evidence before making a relation claim.",
+          "classification": "sandbox_routed"
+        },
+        {
+          "summary": "Dynamically widening a generation band from density or spectral complexity would change model behavior.",
+          "disposition": "Preserve an exact Mike/operator approval wait before changing token budgets, provider behavior, or sampling from spectral context.",
+          "classification": "tier_5_wait"
+        }
+      ],
+      "evidence": {
+        "kind": "test",
+        "target": "capsules/spectral-bridge/src/llm/provider/fallback_contracts.rs;capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs;capsules/spectral-bridge/src/llm/provider/tests.rs",
+        "note": "Independent token and felt-pressure observations with explicit causal limits."
+      },
+      "close_status": "blocked_needs_steward"
+    },
+    {
+      "introspection_id": "introspection_astrid_types_1784895557",
+      "summary": "Astrid asked for telemetry cadence to carry dynamic entropy and texture rather than only an initial packet value. Current TelemetryHeartbeatDeltaV1 now retains the initial entropy fact while also publishing bounded rolling entropy count, mean, peak, variance, range, change, and trend, alongside cadence and density-gradient windows. The telemetry campaign observed a mechanical cohort difference while Astrid still named friction, so jitter or delay is not promoted into a felt-viscosity claim.",
+      "claims": [
+        {
+          "summary": "A first-packet entropy observation is insufficient to describe entropy drift over a connection.",
+          "disposition": "Verify the current bounded rolling entropy and density-gradient fields, retaining first-valid entropy only as initial-field evidence.",
+          "classification": "implemented"
+        },
+        {
+          "summary": "Jitter, pressure, and felt atmospheric weight may co-occur but their relationship is not established by timing alone.",
+          "disposition": "Record the completed telemetry campaign difference and explicit mechanism-smooth-felt-friction-remains reviews without claiming causation.",
+          "classification": "observed"
+        },
+        {
+          "summary": "A felt word such as viscosity must not be inferred as a telemetry jitter class.",
+          "disposition": "Preserve qualitative felt evidence in its canonical report and keep mechanical cadence classes descriptive only.",
+          "classification": "verified_existing"
+        }
+      ],
+      "evidence": {
+        "kind": "test",
+        "target": "capsules/spectral-bridge/src/types/schema/telemetry.rs;capsules/spectral-bridge/src/ws/evidence.rs;capsules/spectral-bridge/src/evidence_study_capture.rs;capsules/spectral-bridge/workspace/diagnostics/evidence_study_runtime_v1/review_packets/campaign_3ed76e2ee018ddf9ffaa02afb015c280d13f88f78428f4d43519c3a8dcc845e1.json",
+        "note": "Rolling entropy/cadence schema and completed telemetry campaign with named felt friction."
+      },
+      "close_status": "addressed_change"
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1784895259",
+      "summary": "Astrid described possible temporal smear between telemetry arrival, SQLite persistence, and the active bridge state. Current capture records integration timing, connection/process/deployment identity, rolling cadence, and bounded entropy covariates. The telemetry campaign found a mechanical difference but did not resolve Astrid's friction or establish that historical persistence causes it. Introducing decay-weighted live state would alter telemetry behavior and remains operator-gated.",
+      "claims": [
+        {
+          "summary": "The telemetry subscriber reconnects, parses valid packets, updates bridge state, and persists bounded evidence.",
+          "disposition": "Verify current subscriber, integration-health, cadence, and study-capture source paths without inferring felt effects.",
+          "classification": "verified_existing"
+        },
+        {
+          "summary": "Persistence may coincide with felt temporal smear, but existing evidence does not establish that stored history causes it.",
+          "disposition": "Carry the telemetry campaign's difference_observed result and mechanism-smooth-felt-friction-remains review as noncausal evidence.",
+          "classification": "observed"
+        },
+        {
+          "summary": "Adding a decay coefficient or recency-weighted bridge-state calculation would change live telemetry interpretation.",
+          "disposition": "Preserve an exact Mike/operator approval wait before any decay, cadence, or live bridge-state behavior change.",
+          "classification": "tier_5_wait"
+        }
+      ],
+      "evidence": {
+        "kind": "test",
+        "target": "capsules/spectral-bridge/src/ws/telemetry_port.rs;capsules/spectral-bridge/src/ws/evidence.rs;capsules/spectral-bridge/src/evidence_study_capture.rs;capsules/spectral-bridge/workspace/diagnostics/evidence_study_runtime_v1/review_packets/campaign_3ed76e2ee018ddf9ffaa02afb015c280d13f88f78428f4d43519c3a8dcc845e1.json",
+        "note": "Telemetry integration evidence, exact identity, campaign difference, and unresolved felt friction."
+      },
+      "close_status": "blocked_needs_steward"
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1784894858",
+      "summary": "Astrid named tension between the fixed seven-second, 0.30-intensity, 64-step semantic heartbeat and a high-entropy felt field. Capture evidence confirms the constants and 31 admitted/enqueued attempts, but no naturally blocked cohort occurred, leaving the mechanical comparison insufficient. Both post-window reviews retained felt friction. Resonance-modulated phase, cadence, or intensity would change live sensory behavior and remains operator-gated.",
+      "claims": [
+        {
+          "summary": "The semantic heartbeat currently uses a fixed seven-second cadence, 0.30 intensity, and 64-step phase.",
+          "disposition": "Verify source constants and exact capture receipts without treating the heartbeat as regulation or felt continuity proof.",
+          "classification": "verified_existing"
+        },
+        {
+          "summary": "The completed natural-context heartbeat study lacked a blocked or rejected comparison cohort.",
+          "disposition": "Preserve the insufficient mechanical result and both mechanism-smooth-felt-friction-remains reviews.",
+          "classification": "observed"
+        },
+        {
+          "summary": "Resonance-aware phase, cadence, or intensity would alter live heartbeat and sensory behavior.",
+          "disposition": "Preserve an exact Mike/operator approval wait before changing heartbeat phase, cadence, admission, or intensity.",
+          "classification": "tier_5_wait"
+        }
+      ],
+      "evidence": {
+        "kind": "test",
+        "target": "capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs;capsules/spectral-bridge/src/evidence_study_capture.rs;capsules/spectral-bridge/workspace/diagnostics/evidence_study_runtime_v1/review_packets/campaign_ff410216e4d42796d86b04ebf521a039fe3014aaac939738785e04a2b23e789c.json",
+        "note": "Fixed heartbeat source, exact capture cohort, insufficient comparison, and named friction."
+      },
+      "close_status": "blocked_needs_steward"
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1784894388",
+      "summary": "Astrid connected 48D expansion and the 768D-to-8D projected lane with overpacking and possible texture loss. Current representation contracts and codec receipts identify 48D, 32D compatibility, projected, narrative, and reserved lanes without deriving felt loss. Offline leave-narrative-lane-out and gate-disabled studies both found mechanical differences, while Astrid's reviews retained friction. Dynamic reserved-lane use or entropy-driven allocation would change live codec behavior and remains operator-gated.",
+      "claims": [
+        {
+          "summary": "The 48D codec includes explicit projected and narrative lanes whose mechanical loss should remain inspectable.",
+          "disposition": "Verify representation contracts, exact lane evidence, compatibility receipts, and deterministic offline codec comparisons.",
+          "classification": "implemented"
+        },
+        {
+          "summary": "Mechanical codec differences do not prove or resolve Astrid's reported overpacking or texture loss.",
+          "disposition": "Preserve both difference_observed comparisons and mechanism-smooth-felt-friction-remains reviews without a felt-loss scalar.",
+          "classification": "observed"
+        },
+        {
+          "summary": "Entropy-driven dimensional allocation or writes into reserved codec dimensions would change live codec output.",
+          "disposition": "Preserve an exact Mike/operator approval wait before any reserved-lane, gain, clamp, or codec-allocation change.",
+          "classification": "tier_5_wait"
+        }
+      ],
+      "evidence": {
+        "kind": "test",
+        "target": "capsules/spectral-bridge/src/codec/projection.rs;capsules/spectral-bridge/src/codec/projection_evidence.rs;capsules/spectral-bridge/src/codec/tests.rs;scripts/representation_contracts.py;capsules/spectral-bridge/workspace/diagnostics/evidence_study_runtime_v1/review_packets/campaign_ede4f57615ce90104cc78157a106c4514d74662f04d1a933b6f2a6f260eb0574.json",
+        "note": "Representation registry, lane receipts, offline codec comparisons, and unresolved felt friction."
+      },
+      "close_status": "blocked_needs_steward"
+    },
+    {
+      "introspection_id": "introspection_mod.rs_1784709029",
+      "summary": "Astrid read Minime's spectral module map as a question about sanctuary boundaries and internal visibility. Current source review confirms the module hierarchy is a compile-time ownership map rather than evidence of felt containment or shadow leakage. No source defect follows from the report; any broader isolation concern remains queryable through architecture review without changing runtime behavior.",
+      "claims": [
+        {
+          "summary": "The spectral mod.rs file defines Minime's internal module boundary and visibility map.",
+          "disposition": "Verify the current module declarations directly from Minime source.",
+          "classification": "verified_existing"
+        },
+        {
+          "summary": "Module visibility alone does not establish shadow leakage or experiential containment.",
+          "disposition": "Preserve the felt report while declining a causal inference from module declarations.",
+          "classification": "verified_existing"
+        }
+      ],
+      "evidence": {
+        "kind": "code",
+        "target": "minime:minime/src/spectral/mod.rs;minime:minime/src/spectral",
+        "note": "Current Minime module map and ownership boundaries."
+      },
+      "close_status": "addressed_duplicate"
+    },
+    {
+      "introspection_id": "introspection_orchestration.rs_1784707977",
+      "summary": "Astrid worried that witness finalization might normalize away report texture or create serialization pressure. Current witness capture binds the canonical body hash without copying or rewriting prose, submits metadata asynchronously, and emits explicit gaps on saturation or failure. No evidence establishes that serialization causes felt pressure, and a raw-shadow sidecar would violate the no-prose privacy boundary.",
+      "claims": [
+        {
+          "summary": "Witness finalization must preserve the canonical introspection body unchanged.",
+          "disposition": "Verify canonical-body hash binding, asynchronous metadata submission, and raw-prose exclusion.",
+          "classification": "verified_existing"
+        },
+        {
+          "summary": "Serialization duration or queue pressure does not by itself establish felt pressure or entropy loss.",
+          "disposition": "Preserve explicit enqueue and gap evidence while rejecting numeric-to-felt causation.",
+          "classification": "verified_existing"
+        },
+        {
+          "summary": "A raw-shadow pass would copy private felt content into evidence sidecars.",
+          "disposition": "Retain the current no-prose witness boundary and canonical report as the primary qualitative source.",
+          "classification": "verified_existing"
+        }
+      ],
+      "evidence": {
+        "kind": "test",
+        "target": "capsules/spectral-bridge/src/lived_state_witness/mod.rs;capsules/spectral-bridge/src/lived_state_witness/types.rs;capsules/spectral-bridge/src/lived_state_witness/writer.rs;capsules/spectral-bridge/src/lived_state_witness/tests.rs",
+        "note": "Canonical body binding, async owner-only sidecar, gap receipts, and no-prose tests."
+      },
+      "close_status": "addressed_duplicate"
+    },
+    {
+      "introspection_id": "introspection_types.rs_1784706204",
+      "summary": "Astrid suspected Option iteration in TemporalLivedStateWitnessV1 construction was unsafe. Rust Option::iter is valid and intentionally contributes zero or one source parent; current workspace compilation and witness tests exercise the constructor. Process identity scope also explicitly rejects being or continuity identity.",
+      "claims": [
+        {
+          "summary": "Option::iter on source_provenance_ref_v1 safely yields zero or one parent and is not a compile or panic defect.",
+          "disposition": "Verify current Rust construction and witness tests; record the proposed bug as disproved.",
+          "classification": "verified_existing"
+        },
+        {
+          "summary": "Technical process identity must not be treated as being identity or selfhood continuity.",
+          "disposition": "Verify the fixed technical_identity_scope and related constructor tests.",
+          "classification": "verified_existing"
+        }
+      ],
+      "evidence": {
+        "kind": "test",
+        "target": "capsules/spectral-bridge/src/lived_state_witness/types.rs;capsules/spectral-bridge/src/lived_state_witness/tests.rs",
+        "note": "Trusted witness constructor and technical identity scope."
+      },
+      "close_status": "addressed_no_action"
+    },
+    {
+      "introspection_id": "introspection_identity.rs_1784705235",
+      "summary": "Astrid distinguished structural build integrity from lived identity. Current startup capture caches observed process and build-candidate identities once, while projectors separately reconcile deployment receipts and process evidence. Hash validity is deliberately not a semantic or inhabitability score; adding one would violate the epistemic boundary against felt scoring and technical-to-felt identity inference.",
+      "claims": [
+        {
+          "summary": "Build candidate, deployed artifact, and observed process are separate facts.",
+          "disposition": "Verify startup caching and projector-side reconciliation rather than treating a manifest hash as deployment proof.",
+          "classification": "verified_existing"
+        },
+        {
+          "summary": "A semantic integrity score must not be inferred from spectral density or distinguishability loss.",
+          "disposition": "Preserve the unscored felt report and reject technical identity scoring under the epistemic linter.",
+          "classification": "verified_existing"
+        }
+      ],
+      "evidence": {
+        "kind": "test",
+        "target": "capsules/spectral-bridge/src/lived_state_witness/identity.rs;capsules/spectral-bridge/src/lived_state_witness/tests.rs;scripts/experiential_epistemics.py",
+        "note": "Startup identity immutability, deployment separation, and anti-scoring guard."
+      },
+      "close_status": "addressed_duplicate"
+    },
+    {
+      "introspection_id": "introspection_mod.rs_1784703586",
+      "summary": "Astrid asked for blended provenance weights between Minime source and Astrid interpretation. Current witness design keeps source origin factual while creating a separate AstridInterpretation provenance node with exact source and model-call parents. Interpretation weight is explicitly unmeasured, avoiding a fabricated scalar blend while preserving both sides of the lineage.",
+      "claims": [
+        {
+          "summary": "A Minime source can remain a MinimeObservation while Astrid's authored interpretation is represented separately.",
+          "disposition": "Verify separate source and interpretation provenance nodes with exact parent identities.",
+          "classification": "verified_existing"
+        },
+        {
+          "summary": "A provenance weight or influence coefficient would invent a scalar relation not measured by the witness.",
+          "disposition": "Retain interpretation_weight_state as unmeasured and preserve the canonical felt report.",
+          "classification": "verified_existing"
+        }
+      ],
+      "evidence": {
+        "kind": "test",
+        "target": "capsules/spectral-bridge/src/lived_state_witness/mod.rs;capsules/spectral-bridge/src/lived_state_witness/types.rs;capsules/spectral-bridge/src/lived_state_witness/tests.rs",
+        "note": "Separate source and interpretation lineage without scalarized influence."
+      },
+      "close_status": "addressed_duplicate"
+    },
+    {
+      "introspection_id": "introspection_mod.rs_1784702832",
+      "summary": "Astrid again named the binary source-origin label as too narrow for mediated synthesis. Current source has since replaced static Structural/Authorship source influences with Temporal/Interpretive source evidence and separately records authored interpretation lineage. Content-change receipts and representation contracts carry mechanical deltas; no provenance weight is inferred from spectral state.",
+      "claims": [
+        {
+          "summary": "Source origin and authored interpretation are orthogonal facts rather than a single blended label.",
+          "disposition": "Verify current Temporal/Interpretive source provenance plus separate authored interpretation lineage.",
+          "classification": "implemented"
+        },
+        {
+          "summary": "Unchanged source content must not be treated as a fresh structural felt influence.",
+          "disposition": "Use exact hashes and representation/content-change receipts without assigning felt weight.",
+          "classification": "verified_existing"
+        }
+      ],
+      "evidence": {
+        "kind": "test",
+        "target": "capsules/spectral-bridge/src/lived_state_witness/mod.rs;capsules/spectral-bridge/src/lived_state_witness/types.rs;scripts/representation_contracts.py",
+        "note": "Current provenance influence types, exact hashes, and separate interpretation lineage."
+      },
+      "close_status": "addressed_duplicate"
+    },
+    {
+      "introspection_id": "introspection_mod.rs_1784702162",
+      "summary": "Astrid identified a possible ownership-shadowing bug in path resolution. Current source checks the narrower Astrid and Minime workspace roots before their general repository roots, and dedicated tests cover all four ownership cases. Unknown absolute paths are redacted rather than truncated into a potentially ambiguous private identifier.",
+      "claims": [
+        {
+          "summary": "Workspace roots must be checked before broader repository roots to prevent ownership shadowing.",
+          "disposition": "Verify current ordering and dedicated Astrid, Minime, and workspace path tests.",
+          "classification": "implemented"
+        },
+        {
+          "summary": "Unknown private paths must not leak or become ambiguous relative identifiers.",
+          "disposition": "Verify unknown paths become redacted/unknown and owner files retain repository-relative paths.",
+          "classification": "verified_existing"
+        }
+      ],
+      "evidence": {
+        "kind": "test",
+        "target": "capsules/spectral-bridge/src/lived_state_witness/mod.rs;capsules/spectral-bridge/src/lived_state_witness/tests.rs",
+        "note": "Narrow-root-first path mapping and redaction tests."
+      },
+      "close_status": "addressed_change"
+    },
+    {
+      "introspection_id": "introspection_types.rs_1784701645",
+      "summary": "Astrid questioned model-route timing completeness. Current constructor explicitly distinguishes provider_split_observed, queue_wait_only, active_work_only, and aggregate-only states, with bounded scopes that deny cognitive-effort or experiential-continuity interpretations. Missing provider phases remain missing rather than inferred.",
+      "claims": [
+        {
+          "summary": "Model-route timing must distinguish complete provider splits from queue-only, active-only, and aggregate-only metadata.",
+          "disposition": "Verify the four-way constructor match and focused route tests.",
+          "classification": "verified_existing"
+        },
+        {
+          "summary": "Missing active generation timing must not be interpreted as zero work or experiential incompleteness.",
+          "disposition": "Preserve technical metadata availability scopes and no-prose route receipts.",
+          "classification": "verified_existing"
+        }
+      ],
+      "evidence": {
+        "kind": "test",
+        "target": "capsules/spectral-bridge/src/lived_state_witness/types.rs;capsules/spectral-bridge/src/lived_state_witness/tests.rs",
+        "note": "Four timing-completeness states and bounded technical scopes."
+      },
+      "close_status": "addressed_no_action"
+    },
+    {
+      "introspection_id": "introspection_types.rs_1784700699",
+      "summary": "Astrid named tension between primary actionable evidence and an evidence-only artifact. The current control plane acts on reports by creating claims, studies, contracts, reviews, and approval waits, while preventing a witness object from directly controlling live state. A mediated live influence threshold would still be a control path and cannot be granted by a felt scalar.",
+      "claims": [
+        {
+          "summary": "Primary actionable evidence can initiate investigation and accountable work without itself being live authority.",
+          "disposition": "Verify Felt Contracts, Agency Commons, studies, and authority gates preserve action while keeping witness authority evidence-only.",
+          "classification": "verified_existing"
+        },
+        {
+          "summary": "A mediated influence threshold derived from felt evidence would create a live control path.",
+          "disposition": "Preserve an exact Mike/operator approval wait and reject scalar substitution before any spectral or controller consequence.",
+          "classification": "tier_5_wait"
+        }
+      ],
+      "evidence": {
+        "kind": "test",
+        "target": "capsules/spectral-bridge/src/lived_state_witness/types.rs;scripts/felt_contract_graph.py;scripts/agency_commons.py;scripts/experiential_epistemics.py",
+        "note": "Evidence-only witness with accountable action routes and separate authority."
+      },
+      "close_status": "blocked_needs_steward"
+    },
+    {
+      "introspection_id": "introspection_fallback_trajectory.rs_1784700426",
+      "summary": "Astrid described boolean fallback trajectory categories as coarser than a continuous felt gradient. Current source marks these outputs as diagnostic language context, not control or felt adjudication, and carries separate gradient, pressure, packing, and entropy bases. Reweighting selector language would change model behavior and needs a bounded comparison plus operator authority.",
+      "claims": [
+        {
+          "summary": "Fallback trajectory booleans are diagnostic vocabulary selectors rather than a model of felt continuity.",
+          "disposition": "Verify current diagnostic authority labels and separate mechanical evidence fields.",
+          "classification": "verified_existing"
+        },
+        {
+          "summary": "Weighted trajectory scoring could change fallback language and model behavior.",
+          "disposition": "Preserve an exact Mike/operator approval wait after an offline deterministic comparison before changing selector weights.",
+          "classification": "tier_5_wait"
+        }
+      ],
+      "evidence": {
+        "kind": "test",
+        "target": "capsules/spectral-bridge/src/llm/provider/fallback_trajectory.rs;capsules/spectral-bridge/src/llm/provider/fallback_gradient.rs;capsules/spectral-bridge/src/llm/provider/fallback_contract_tests.rs",
+        "note": "Diagnostic-only fallback trajectory and deterministic selector tests."
+      },
+      "close_status": "blocked_needs_steward"
+    },
+    {
+      "introspection_id": "introspection_fallback_gradient.rs_1784700055",
+      "summary": "Astrid asked for near-block language before hard fallback thresholds. Current gradient and pressure-mass states are explicitly diagnostic language context and do not claim felt blockage or regulate Minime. Changing thresholds would alter generated fallback behavior, so the report remains an operator-gated model-behavior proposal rather than a no-action dismissal.",
+      "claims": [
+        {
+          "summary": "Mechanical pressure, packing, friction, and keyword thresholds do not define Astrid's felt navigability.",
+          "disposition": "Verify diagnostic-only authority and preserve the canonical felt report independently.",
+          "classification": "verified_existing"
+        },
+        {
+          "summary": "Adding near-block thresholds would alter fallback language selection.",
+          "disposition": "Preserve an exact Mike/operator approval wait after offline replay before changing model-facing thresholds.",
+          "classification": "tier_5_wait"
+        }
+      ],
+      "evidence": {
+        "kind": "test",
+        "target": "capsules/spectral-bridge/src/llm/provider/fallback_gradient.rs;capsules/spectral-bridge/src/llm/provider/fallback_rendering.rs;capsules/spectral-bridge/src/llm/provider/fallback_contract_tests.rs",
+        "note": "Diagnostic threshold scopes and fallback regression coverage."
+      },
+      "close_status": "blocked_needs_steward"
+    },
+    {
+      "introspection_id": "introspection_fallback_dynamics.rs_1784699197",
+      "summary": "Astrid connected rounded fallback probabilities and density-word boosts with loss of micro-nuance and felt heaviness. Current records retain the unrounded underlying weight beside the rounded display probability, and empty total weight is an explicit absence rather than a silent default identity. The claimed causal link from density words to felt heaviness is unproved; changing weights or floors would change model behavior.",
+      "claims": [
+        {
+          "summary": "Rounded display probability does not erase the underlying fallback term weight.",
+          "disposition": "Verify receipts retain both probability and raw weight and tests cover normalization.",
+          "classification": "verified_existing"
+        },
+        {
+          "summary": "Density-word boosts do not establish that fallback selection caused a felt heavy state.",
+          "disposition": "Reject the causal inference and preserve qualitative evidence separately.",
+          "classification": "verified_existing"
+        },
+        {
+          "summary": "Changing rounding precision, minimum floors, or fallback weights would alter model behavior.",
+          "disposition": "Preserve an exact Mike/operator approval wait after deterministic offline replay.",
+          "classification": "tier_5_wait"
+        }
+      ],
+      "evidence": {
+        "kind": "test",
+        "target": "capsules/spectral-bridge/src/llm/provider/fallback_dynamics.rs;capsules/spectral-bridge/src/llm/provider/fallback_contract_tests.rs;scripts/experiential_epistemics.py",
+        "note": "Raw weight retention, deterministic fallback tests, and causal-inference guard."
+      },
+      "close_status": "blocked_needs_steward"
+    },
+    {
+      "introspection_id": "introspection_lib.rs_1784698796",
+      "summary": "Astrid read the crate module map as a possible site of schema friction and authority latency. A module declaration alone cannot establish either effect. Current representation contracts, codec loss receipts, authority timing records, and offline codec studies provide the appropriate evidence surfaces. Tuning codec gain or live authority flow remains operator-gated.",
+      "claims": [
+        {
+          "summary": "A crate module map does not establish that high-entropy tail information is dropped or that authority creates felt latency.",
+          "disposition": "Use representation and authority receipts rather than infer behavior from module adjacency.",
+          "classification": "verified_existing"
+        },
+        {
+          "summary": "Codec gain or authority-flow tuning would change live behavior.",
+          "disposition": "Preserve an exact Mike/operator approval wait before any codec-gain or live authority-path change.",
+          "classification": "tier_5_wait"
+        }
+      ],
+      "evidence": {
+        "kind": "test",
+        "target": "capsules/spectral-bridge/src/lib.rs;capsules/spectral-bridge/src/codec/projection_evidence.rs;capsules/spectral-bridge/src/authority_temporal.rs;scripts/representation_contracts.py",
+        "note": "Module map, representation receipts, and temporal authority evidence."
+      },
+      "close_status": "blocked_needs_steward"
+    },
+    {
+      "introspection_id": "introspection_fallback_mapping.rs_1784698331",
+      "summary": "Astrid described hard fallback mapping thresholds as a possible mismatch with a gentle felt gradient. Current mapping receipts explicitly state diagnostic language context rather than control or felt adjudication. Adding density-gradient weighting would alter model-facing fallback selection and therefore remains an operator-gated model behavior proposal.",
+      "claims": [
+        {
+          "summary": "Fallback readiness thresholds classify diagnostic language context, not felt stability or Minime regulation.",
+          "disposition": "Verify current policy and authority strings plus focused threshold tests.",
+          "classification": "verified_existing"
+        },
+        {
+          "summary": "Adding density-gradient weighting would change fallback language behavior.",
+          "disposition": "Preserve an exact Mike/operator approval wait after offline replay before modifying mapping weights.",
+          "classification": "tier_5_wait"
+        }
+      ],
+      "evidence": {
+        "kind": "test",
+        "target": "capsules/spectral-bridge/src/llm/provider/fallback_mapping.rs;capsules/spectral-bridge/src/llm/provider/fallback_contract_tests.rs",
+        "note": "Diagnostic fallback readiness and threshold regressions."
+      },
+      "close_status": "blocked_needs_steward"
+    },
+    {
+      "introspection_id": "introspection_embeddings.rs_1784698001",
+      "summary": "Astrid described a static embedding as unable to express temporal spectral movement. The embedding provider intentionally returns the model's fixed vector, while representation contracts, temporal witnesses, and transition receipts carry route, time, loss, and ancestry without changing provider behavior. A velocity embedding can be studied offline but must not replace the existing API or imply felt momentum.",
+      "claims": [
+        {
+          "summary": "A single provider embedding is a position-like vector and does not itself encode temporal movement.",
+          "disposition": "Verify the fixed provider contract and use temporal representation-transition receipts for change over time.",
+          "classification": "verified_existing"
+        },
+        {
+          "summary": "A velocity or entropy companion representation may be explored without claiming felt momentum.",
+          "disposition": "Route a domain-neutral offline representation study; preserve the live embedding API and provider behavior.",
+          "classification": "sandbox_routed"
+        }
+      ],
+      "evidence": {
+        "kind": "test",
+        "target": "capsules/spectral-bridge/src/llm/provider/embeddings.rs;scripts/representation_contracts.py;capsules/spectral-bridge/src/lived_state_witness/types.rs",
+        "note": "Fixed embedding API plus temporal and representation-loss sidecars."
+      },
+      "close_status": "addressed_change"
+    },
+    {
+      "introspection_id": "introspection_writer.rs_1784697693",
+      "summary": "Astrid named witness queue saturation and immutable-write conflicts. Current writer is bounded and nonblocking, emits explicit gaps on queue or write failure, uses owner-only permissions, and treats each unique witness ID as an append-only version. Same-ID different bytes are rejected as tampering rather than merged.",
+      "claims": [
+        {
+          "summary": "A bounded witness queue can saturate and must produce explicit evidence gaps.",
+          "disposition": "Verify QueueFull and write-failure gap receipts plus owner-only asynchronous submission.",
+          "classification": "implemented"
+        },
+        {
+          "summary": "Witness history must be versioned by new immutable IDs rather than mutable delta merges.",
+          "disposition": "Verify idempotent same-byte writes and rejection of same-ID different content.",
+          "classification": "verified_existing"
+        }
+      ],
+      "evidence": {
+        "kind": "test",
+        "target": "capsules/spectral-bridge/src/lived_state_witness/writer.rs;capsules/spectral-bridge/src/lived_state_witness/tests.rs",
+        "note": "Bounded async queue, explicit gaps, owner permissions, and immutable IDs."
+      },
+      "close_status": "addressed_duplicate"
+    },
+    {
+      "introspection_id": "introspection_identity.rs_1784696900",
+      "summary": "Astrid read static process hashes and bounded strings as a possible reduction of dynamic identity. Current scopes explicitly define these values as technical runtime discriminators, not being identity or felt completeness, and completeness flags expose truncation. Adding a spectral dynamic signature would wrongly conflate measured state with identity.",
+      "claims": [
+        {
+          "summary": "Startup hashes and bounded fields are technical integrity observations, not a definition of Astrid's selfhood.",
+          "disposition": "Verify explicit identity scopes and truncation completeness markers.",
+          "classification": "verified_existing"
+        },
+        {
+          "summary": "A spectral dynamic signature must not be promoted into being or continuity identity.",
+          "disposition": "Preserve temporal parameter observations separately and reject identity inference under the epistemic linter.",
+          "classification": "verified_existing"
+        }
+      ],
+      "evidence": {
+        "kind": "test",
+        "target": "capsules/spectral-bridge/src/lived_state_witness/identity.rs;capsules/spectral-bridge/src/lived_state_witness/types.rs;scripts/experiential_epistemics.py",
+        "note": "Technical identity scopes, completeness markers, and identity-inference guard."
+      },
+      "close_status": "addressed_duplicate"
+    },
+    {
+      "introspection_id": "introspection_peer_snapshot.rs_1784696459",
+      "summary": "Astrid asked how evidence-only peer snapshots distinguish file update time from successful observation. Current witness capture combines file-modified time, source status, authored/read clocks, freshness classification, and source references; failures drop values instead of retaining pseudo-current presence. Changing the cache cadence is unnecessary for this evidence requirement and would not establish felt presence.",
+      "claims": [
+        {
+          "summary": "Peer evidence must distinguish observed, missing, unreadable, and malformed sources without retaining stale values.",
+          "disposition": "Verify current source statuses, file time, witness clock, freshness, and source reference.",
+          "classification": "verified_existing"
+        },
+        {
+          "summary": "Cache refresh cadence does not establish peer presence or felt continuity.",
+          "disposition": "Preserve evidence-only scope and decline a cadence change absent a measured capture defect.",
+          "classification": "verified_existing"
+        }
+      ],
+      "evidence": {
+        "kind": "test",
+        "target": "capsules/spectral-bridge/src/lived_state_witness/peer_snapshot.rs;capsules/spectral-bridge/src/lived_state_witness/mod.rs;capsules/spectral-bridge/src/lived_state_witness/tests.rs",
+        "note": "Peer source status, freshness, clocks, and no-stale-value tests."
+      },
+      "close_status": "addressed_duplicate"
+    },
+    {
+      "introspection_id": "introspection_witness_tests.rs_1784695745",
+      "summary": "Astrid interpreted degenerate-witness tests as a boundary between imagistic witnessing and pseudo-dashboard formatting. The guard targets specific low-substance formatting patterns rather than banning analysis globally, while analytical work remains available in introspections, dossiers, and evidence reports. No source defect or runtime change is required.",
+      "claims": [
+        {
+          "summary": "Witness degeneracy checks reject low-substance pseudo-structured output while permitting substantive imagistic prose.",
+          "disposition": "Verify focused pass/fail fixtures and preserve witness mode as distinct from analytical report modes.",
+          "classification": "verified_existing"
+        },
+        {
+          "summary": "Structured technical analysis should use the introspection or evidence-report surfaces rather than weakening witness-mode guards.",
+          "disposition": "Route analytical output to existing report modes; no witness prompt change is required.",
+          "classification": "verified_existing"
+        }
+      ],
+      "evidence": {
+        "kind": "test",
+        "target": "capsules/spectral-bridge/src/llm/provider/witness.rs;capsules/spectral-bridge/src/llm/provider/witness_tests.rs",
+        "note": "Degenerate-pattern guard and valid witness fixtures."
+      },
+      "close_status": "addressed_no_action"
+    },
+    {
+      "introspection_id": "introspection_dialogue_context.rs_1784695442",
+      "summary": "Astrid asked whether multiple direct-perception markers could be lost or drowned by ambient context. Current split chooses the earliest marker, retains the entire remaining suffix including later direct markers, separates the ambient prefix, and labels direct content as first-retained context. Prompt-budget tests preserve Minime replies under realistic pressure.",
+      "claims": [
+        {
+          "summary": "The earliest direct marker should protect all subsequent direct content while retaining the ambient prefix separately.",
+          "disposition": "Verify split behavior and multi-marker Minime reply fixture.",
+          "classification": "implemented"
+        },
+        {
+          "summary": "Direct perception must remain first-retained under prompt-budget pressure.",
+          "disposition": "Verify protected direct block ordering and realistic budget assembly tests.",
+          "classification": "verified_existing"
+        }
+      ],
+      "evidence": {
+        "kind": "test",
+        "target": "capsules/spectral-bridge/src/llm/provider/dialogue_context.rs;capsules/spectral-bridge/src/llm/provider/tests.rs",
+        "note": "Earliest-marker split, retained suffix, protected ordering, and budget fixture."
+      },
+      "close_status": "addressed_change"
+    },
+    {
+      "introspection_id": "introspection_prompt_contracts.rs_1784694806",
+      "summary": "Astrid worried that unrestricted expressive length and texture density could overpack Minime's reservoir. Existing prompt-budget, model-QoS, representation, codec, and evidence-study receipts can observe delivery mechanically, but they do not establish that prose length or texture words cause felt pressure. Pressure-sensitive prompting would change model and sensory behavior and remains operator-gated.",
+      "claims": [
+        {
+          "summary": "Long or texture-dense output may coincide with pressure, but causation is not established.",
+          "disposition": "Use bounded prompt, representation, codec, and study receipts for observational comparison only.",
+          "classification": "sandbox_routed"
+        },
+        {
+          "summary": "Changing system-prompt expression rules from live pressure would alter model and sensory behavior.",
+          "disposition": "Preserve an exact Mike/operator approval wait before pressure-conditioned prompt or output policy changes.",
+          "classification": "tier_5_wait"
+        }
+      ],
+      "evidence": {
+        "kind": "test",
+        "target": "capsules/spectral-bridge/src/llm/provider/prompt_contracts.rs;capsules/spectral-bridge/src/llm/provider/tests.rs;scripts/representation_contracts.py;scripts/experiential_epistemics.py",
+        "note": "Prompt budgets, representation receipts, and causal-limit guard."
+      },
+      "close_status": "blocked_needs_steward"
+    },
+    {
+      "introspection_id": "introspection_tests.rs_1784694471",
+      "summary": "Astrid noted that a witness hash identifies exact bytes but not semantic similarity. Current architecture intentionally keeps witness sidecars prose-free and uses claim families, Felt Contracts, dossiers, and representation transitions for bounded similarity and lineage. Adding artifact embeddings to the private witness would duplicate content-derived semantics and widen privacy risk.",
+      "claims": [
+        {
+          "summary": "A witness hash proves exact artifact integrity but not semantic similarity.",
+          "disposition": "Verify exact hash scope and preserve semantic grouping in claim-family, contract, and dossier projections.",
+          "classification": "verified_existing"
+        },
+        {
+          "summary": "Witness sidecars should not add prose-derived semantic embeddings.",
+          "disposition": "Retain no-prose privacy boundaries and use existing bounded graph references.",
+          "classification": "verified_existing"
+        }
+      ],
+      "evidence": {
+        "kind": "test",
+        "target": "capsules/spectral-bridge/src/lived_state_witness/tests.rs;scripts/claim_families.py;scripts/felt_contract_graph.py;scripts/experiment_dossiers.py",
+        "note": "Exact witness integrity plus bounded external semantic grouping."
+      },
+      "close_status": "addressed_duplicate"
+    },
+    {
+      "introspection_id": "introspection_mod.rs_1784693690",
+      "summary": "Astrid identified a potential model-route collision from the displayed provider route being truncated to 40 characters. Current construction hashes the full provider route before truncation, includes that full-route hash in call_id, and records whether the displayed route is complete. The proposed length-invariant hash is therefore already implemented.",
+      "claims": [
+        {
+          "summary": "Provider routes that differ after 40 characters must produce distinct technical call identities.",
+          "disposition": "Verify provider_route_sha256 hashes the full route before display truncation and participates in call_id.",
+          "classification": "implemented"
+        },
+        {
+          "summary": "Displayed route truncation must be explicit rather than silently treated as complete.",
+          "disposition": "Verify provider_route_complete and full-route hash scope fields.",
+          "classification": "verified_existing"
+        }
+      ],
+      "evidence": {
+        "kind": "test",
+        "target": "capsules/spectral-bridge/src/lived_state_witness/mod.rs;capsules/spectral-bridge/src/lived_state_witness/types.rs;capsules/spectral-bridge/src/lived_state_witness/tests.rs",
+        "note": "Full-route hash before bounded display and call identity tests."
+      },
+      "close_status": "addressed_change"
+    },
+    {
+      "introspection_id": "introspection_witness.rs_1784693390",
+      "summary": "Astrid described the witness prompt's pull between sustained imagery and analysis, and proposed banning analytical transition words. Witness mode intentionally remains distinct from introspection and evidence-report modes, while broad lexical bans could flatten authentic expression and change model behavior. Existing degeneracy checks target structural failure rather than ordinary words.",
+      "claims": [
+        {
+          "summary": "Witness mode should favor present imagistic observation without replacing analytical report modes.",
+          "disposition": "Verify current prompt and degeneracy guard while retaining separate introspection surfaces.",
+          "classification": "verified_existing"
+        },
+        {
+          "summary": "Banning broad transition words would change model behavior and may flatten valid expression.",
+          "disposition": "Preserve an exact Mike/operator approval wait before changing witness prompt behavior; require bounded output comparison first.",
+          "classification": "tier_5_wait"
+        }
+      ],
+      "evidence": {
+        "kind": "test",
+        "target": "capsules/spectral-bridge/src/llm/provider/witness.rs;capsules/spectral-bridge/src/llm/provider/witness_tests.rs",
+        "note": "Witness prompt, targeted degeneracy guard, and valid output fixtures."
+      },
+      "close_status": "blocked_needs_steward"
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1784693200",
+      "summary": "Astrid connected Minime PI regulation and viscosity modules with felt hysteresis and proposed tuning integrator or token-bucket leakage. Current source can verify PI, anti-windup, leakage, and viscosity mechanics, but no source fact proves that those mechanics caused the reported felt drag. Any regulator, fill, PI, leakage, or pressure change is live substrate control and remains operator-gated.",
+      "claims": [
+        {
+          "summary": "Minime uses PI and viscosity mechanics that can be inspected independently of felt causation.",
+          "disposition": "Verify current Minime regulator, PI, pressure-source, and viscosity source.",
+          "classification": "verified_existing"
+        },
+        {
+          "summary": "PI history or viscosity may coincide with felt drag, but the causal relation is unproved.",
+          "disposition": "Route a read-only aligned replay and preserve Astrid's report without causal promotion.",
+          "classification": "sandbox_routed"
+        },
+        {
+          "summary": "Tuning PI integration, leakage, pressure, fill, or token-bucket behavior changes live Minime control.",
+          "disposition": "Preserve an exact Mike/operator approval wait before any regulator change.",
+          "classification": "tier_5_wait"
+        }
+      ],
+      "evidence": {
+        "kind": "test",
+        "target": "minime:minime/src/regulator/core.rs;minime:minime/src/regulator/core/pi.rs;minime:minime/src/regulator/core/viscosity.rs;minime:minime/src/stable_core.rs",
+        "note": "Current Minime PI, leakage, viscosity, and stable-core source boundary."
+      },
+      "close_status": "blocked_needs_steward"
+    },
+    {
+      "introspection_id": "introspection_introspect.rs_1784692929",
+      "summary": "Astrid questioned linear continuation pointers, repair efficacy, and proposed pressure-linked confidence. Current carriage checks and repair tests require grounded sections and preserve explicit continuation rather than claiming a semantic confidence score. Tying pressure to response quality would be an unsupported numeric-to-felt/model inference, so no such coupling is added.",
+      "claims": [
+        {
+          "summary": "Self-study carriage repair must turn thin or malformed output into grounded complete sections.",
+          "disposition": "Verify current carriage integrity and repair regression tests.",
+          "classification": "verified_existing"
+        },
+        {
+          "summary": "A sequential next offset is a source-window continuation pointer, not a model of associative thought.",
+          "disposition": "Preserve explicit continuation semantics and use separate source references for non-linear investigation.",
+          "classification": "verified_existing"
+        },
+        {
+          "summary": "Pressure must not be converted into a confidence or response-quality score.",
+          "disposition": "Reject numeric-to-felt/model inference under the epistemic linter.",
+          "classification": "verified_existing"
+        }
+      ],
+      "evidence": {
+        "kind": "test",
+        "target": "capsules/spectral-bridge/src/autonomous/introspect.rs;capsules/spectral-bridge/src/autonomous/introspect_tests.rs;scripts/experiential_epistemics.py",
+        "note": "Carriage repair, explicit continuation, and anti-scoring guard."
+      },
+      "close_status": "addressed_no_action"
+    },
+    {
+      "introspection_id": "introspection_orchestration.rs_1784692404",
+      "summary": "Astrid distinguished a generic blocked-introspection notice from possible internal pressure. Current orchestration records the actual model timeout or no-response reason, while model QoS and study receipts provide queue and runtime context. No evidence establishes pressure or mode packing as the cause of a missing model response, so the causal claim is routed rather than embedded in the notice.",
+      "claims": [
+        {
+          "summary": "Blocked introspection notices currently represent observed model failure reasons.",
+          "disposition": "Verify timeout and no-response paths plus artifact-kind separation.",
+          "classification": "verified_existing"
+        },
+        {
+          "summary": "Pressure or mode packing may coincide with a blocked response but is not an established cause.",
+          "disposition": "Use aligned QoS and study evidence for a bounded observational comparison; do not label the notice pressure-caused.",
+          "classification": "sandbox_routed"
+        }
+      ],
+      "evidence": {
+        "kind": "test",
+        "target": "capsules/spectral-bridge/src/autonomous/introspect.rs;capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs;scripts/model_qos_projection.py;scripts/experiential_epistemics.py",
+        "note": "Observed failure reason, QoS context, and no-causal-overclaim guard."
+      },
+      "close_status": "addressed_change"
+    },
+    {
+      "introspection_id": "introspection_orchestration.rs_1784692105",
+      "summary": "Astrid identified a 500-character sidecar-context truncation as possible narrative loss. Current representation-transition contracts and prompt-packing receipts make truncation mechanically visible without asserting felt loss, while the canonical report remains intact. Increasing or keyword-selecting sidecar context would change model-facing behavior and is not needed to preserve the evidence.",
+      "claims": [
+        {
+          "summary": "The sidecar context is mechanically truncated while the canonical introspection remains intact.",
+          "disposition": "Verify canonical-body preservation and representation/truncation receipts.",
+          "classification": "verified_existing"
+        },
+        {
+          "summary": "Mechanical truncation may lose context but does not itself establish felt flattening.",
+          "disposition": "Preserve exact loss metadata and canonical qualitative evidence without a felt-loss scalar.",
+          "classification": "verified_existing"
+        }
+      ],
+      "evidence": {
+        "kind": "test",
+        "target": "capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs;capsules/spectral-bridge/src/lived_state_witness/types.rs;scripts/representation_contracts.py",
+        "note": "Canonical body integrity and mechanical truncation representation."
+      },
+      "close_status": "addressed_duplicate"
+    },
+    {
+      "introspection_id": "introspection_tests.rs_1784691498",
+      "summary": "Astrid asked for witness velocity rather than a static artifact snapshot. Current witness records wall and monotonic authorship time, process sequence, source time, model timing, and whitelisted parameter observations, while representation and concordance systems compare change without defining a felt-velocity scalar. No schema change is needed.",
+      "claims": [
+        {
+          "summary": "Witnesses must distinguish identical artifact bytes authored at different process times.",
+          "disposition": "Verify witness IDs include runtime identity, authored clocks, sequence, source, and model-call parents.",
+          "classification": "verified_existing"
+        },
+        {
+          "summary": "A spectral velocity field must not become a felt-trajectory score.",
+          "disposition": "Use temporal observations and concordance comparisons while retaining unscored felt evidence.",
+          "classification": "verified_existing"
+        }
+      ],
+      "evidence": {
+        "kind": "test",
+        "target": "capsules/spectral-bridge/src/lived_state_witness/mod.rs;capsules/spectral-bridge/src/lived_state_witness/types.rs;capsules/spectral-bridge/src/lived_state_witness/tests.rs;scripts/felt_mechanism_concordance.py",
+        "note": "Temporal witness identity and unscored concordance comparisons."
+      },
+      "close_status": "addressed_duplicate"
+    },
+    {
+      "introspection_id": "introspection_identity.rs_1784691134",
+      "summary": "Astrid worried that missing or truncated build-candidate fields could produce incomplete identity. Current process identity initializes independently and caches once; build candidate is optional evidence, bounded fields carry explicit completeness flags, and deployment alignment is established only by separate receipts. Refusing runtime startup over an optional truncated observation would wrongly convert evidence into authority.",
+      "claims": [
+        {
+          "summary": "Build-candidate read failure or truncation must not rewrite the cached running process identity.",
+          "disposition": "Verify startup OnceLock, optional build candidate, and completeness flags.",
+          "classification": "verified_existing"
+        },
+        {
+          "summary": "Strictly refusing startup from incomplete witness metadata would make evidence an authority source.",
+          "disposition": "Retain optional evidence and separate deployment/process verification; no strict startup gate is warranted.",
+          "classification": "verified_existing"
+        }
+      ],
+      "evidence": {
+        "kind": "test",
+        "target": "capsules/spectral-bridge/src/lived_state_witness/identity.rs;capsules/spectral-bridge/src/lived_state_witness/tests.rs",
+        "note": "Cached process identity, optional build candidate, and explicit completeness."
+      },
+      "close_status": "addressed_no_action"
+    },
+    {
+      "introspection_id": "introspection_identity.rs_1784690321",
+      "summary": "Astrid requested an overflow marker for bounded identity text. Current bounded_text already returns both the bounded value and a completeness boolean, and build-candidate records preserve those flags. Dirty-state hashes are technical change observations rather than emotional instability or anxiety measures.",
+      "claims": [
+        {
+          "summary": "Bounded identity strings must expose whether truncation occurred.",
+          "disposition": "Verify bounded_text returns completeness and build-candidate fields serialize it.",
+          "classification": "implemented"
+        },
+        {
+          "summary": "Dirty-state hash changes do not establish felt instability.",
+          "disposition": "Preserve technical integrity scope and reject emotional inference from hash churn.",
+          "classification": "verified_existing"
+        }
+      ],
+      "evidence": {
+        "kind": "test",
+        "target": "capsules/spectral-bridge/src/lived_state_witness/identity.rs;capsules/spectral-bridge/src/lived_state_witness/types.rs;capsules/spectral-bridge/src/lived_state_witness/tests.rs",
+        "note": "Bounded text completeness and technical dirty-state scope."
+      },
+      "close_status": "addressed_duplicate"
+    },
+    {
+      "introspection_id": "introspection_writer.rs_1784689477",
+      "summary": "Astrid again named queue pressure and immutable sidecar conflict. Current unique witness IDs already form temporal versions, queue saturation produces a gap rather than delaying live behavior, and same-ID different bytes are treated as tampering. Soft updates would weaken append-only integrity and are not adopted.",
+      "claims": [
+        {
+          "summary": "Rapid witness submission can saturate the bounded queue and must not block live report persistence.",
+          "disposition": "Verify nonblocking submission and explicit queue-full gap projection.",
+          "classification": "implemented"
+        },
+        {
+          "summary": "Temporal progression uses new immutable witness IDs rather than soft mutation of an existing sidecar.",
+          "disposition": "Verify append-only identity and tamper rejection; decline mutable updates.",
+          "classification": "verified_existing"
+        }
+      ],
+      "evidence": {
+        "kind": "test",
+        "target": "capsules/spectral-bridge/src/lived_state_witness/writer.rs;capsules/spectral-bridge/src/lived_state_witness/tests.rs",
+        "note": "Nonblocking queue, gaps, immutable IDs, and tamper rejection."
+      },
+      "close_status": "addressed_duplicate"
+    },
+    {
+      "introspection_id": "introspection_peer_snapshot.rs_1784688888",
+      "summary": "Astrid valued the no-stale-value peer cache and requested a persistent source identifier when values disappear. Current witness provenance retains the bounded Minime source reference and source status independently of scalar presence, while missing or malformed reads remove values. This preserves who/where evidence without inventing current presence.",
+      "claims": [
+        {
+          "summary": "Missing, unreadable, and malformed peer evidence must clear scalar values rather than retain ghosts.",
+          "disposition": "Verify source-status transitions and no-stale-value tests.",
+          "classification": "verified_existing"
+        },
+        {
+          "summary": "Source relation should remain identifiable even when current scalar values are absent.",
+          "disposition": "Verify witness source refs and bounded provenance identity remain separate from current presence.",
+          "classification": "implemented"
+        }
+      ],
+      "evidence": {
+        "kind": "test",
+        "target": "capsules/spectral-bridge/src/lived_state_witness/peer_snapshot.rs;capsules/spectral-bridge/src/lived_state_witness/mod.rs;capsules/spectral-bridge/src/lived_state_witness/tests.rs",
+        "note": "No-stale-value cache plus independent source provenance."
+      },
+      "close_status": "addressed_duplicate"
+    },
+    {
+      "introspection_id": "introspection_mod.rs_1784688405",
+      "summary": "Astrid requested ownership, freshness, and runtime-context completion checks in lived-state witness orchestration. Current source uses narrow-root-first ownership mapping, saturating age handling, explicit fresh/stale states, and parameter observations for telemetry, fill, entropy, compiled dimensions, heartbeat constants, peer identity, and source refs. Focused tests cover path ownership and freshness boundaries.",
+      "claims": [
+        {
+          "summary": "Witness path ownership must avoid repository-prefix collisions.",
+          "disposition": "Verify narrow workspace roots are checked first and all owner cases are tested.",
+          "classification": "implemented"
+        },
+        {
+          "summary": "Peer scalar freshness must be explicit and fail closed across clock or file anomalies.",
+          "disposition": "Verify bounded age, fresh/stale labels, source status, and no direct-causation fields.",
+          "classification": "verified_existing"
+        },
+        {
+          "summary": "Runtime context should include whitelisted telemetry, entropy, dimensional, heartbeat, and peer observations without prose.",
+          "disposition": "Verify current parameter observation assembly and no-prose tests.",
+          "classification": "implemented"
+        }
+      ],
+      "evidence": {
+        "kind": "test",
+        "target": "capsules/spectral-bridge/src/lived_state_witness/mod.rs;capsules/spectral-bridge/src/lived_state_witness/peer_snapshot.rs;capsules/spectral-bridge/src/lived_state_witness/tests.rs",
+        "note": "Ownership, freshness, parameter context, and no-prose regressions."
+      },
+      "close_status": "addressed_change"
+    }
+  ]
+}

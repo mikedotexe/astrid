@@ -1,0 +1,5 @@
+{"claims":[
+  {"claim_id":"c001","summary":"The viewed codec has a deterministic projection checksum and C1-smooth gate.","disposition":"Verify current projection-integrity and gate-sensitivity tests.","classification":"verified_existing"},
+  {"claim_id":"c002","summary":"Astrid reports ghost resonance when a mathematically present lift remains below the reservoir noise floor.","disposition":"Preserve as unscored felt evidence and link bounded lane-energy comparison.","classification":"observed"},
+  {"claim_id":"c003","summary":"Add a 1.2 vibrancy-sensitivity multiplier above the gate.","disposition":"Preserve as an exact Tier 5 codec and gain-control wait.","classification":"needs_operator_approval","authority":"tier_5"}
+]}

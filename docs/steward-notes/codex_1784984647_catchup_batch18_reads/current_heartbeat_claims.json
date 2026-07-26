@@ -1,0 +1,23 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Astrid reports the fixed heartbeat as both a continuity floor and a potentially hollow metronome when entropy, pressure, or cascade shape changes.",
+      "disposition": "Preserve the continuity and hollowness accounts separately as unscored felt evidence.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Current source keeps the seven-second cadence and 0.30 intensity fixed while capture-only evidence records phase, admission, enqueue outcome, identity, and bounded pressure and entropy context.",
+      "disposition": "Verify from source and route the mechanical question to the existing natural-context heartbeat campaign without claiming felt causation.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Entropy- or pressure-responsive cadence or intensity would alter live sensory and scheduling behavior.",
+      "disposition": "Preserve as an exact Tier 5 heartbeat, cadence, and sensory-admission wait.",
+      "classification": "needs_operator_approval",
+      "authority": "tier_5"
+    }
+  ]
+}

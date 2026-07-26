@@ -1,0 +1,284 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_types_1784945366",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/types/schema/telemetry.rs;capsules/spectral-bridge/src/types/schema/tests.rs",
+      "note": "Exact 32-slot, finite-shape, alias, and near-zero coherence contract."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1784945024",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/ws/telemetry_port.rs;capsules/spectral-bridge/src/ws/bridge_state.rs;capsules/spectral-bridge/src/ws/tests.rs;scripts/evidence_study_runtime",
+      "note": "Separated prewrite, lock-wait, lock-hold, reconnect, and observational-study evidence."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1784944373",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous;capsules/spectral-bridge/src/evidence_study_capture;scripts/evidence_study_runtime",
+      "note": "Fixed cadence and intensity, typed admission outcomes, and mechanically insufficient natural-cohort study."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1784944088",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/codec;scripts/representation_contracts.py;scripts/evidence_study_runtime",
+      "note": "Current 48D transport, additive 12D glimpse, deterministic loss, and independent offline codec campaigns."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1781834380",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/codec;scripts/representation_contracts.py;scripts/evidence_study_runtime",
+      "note": "Historical codec texture restatement linked to current smooth-gate and representation evidence."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1781820170",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/codec;capsules/spectral-bridge/src/codec_gain.rs;scripts/evidence_study_runtime",
+      "note": "Historical attenuation and vibrancy proposal linked to current bounded readout and exact live wait."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1781794214",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/runtime;capsules/spectral-bridge/src/autonomous/introspect.rs",
+      "note": "Rare-modality fallback, freshness, and UTF-8 boundary regressions."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1781793341",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/codec;scripts/representation_contracts.py;scripts/evidence_study_runtime",
+      "note": "Historical codec texture restatement linked to current representation and offline-study evidence."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1781757528",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/ws;capsules/spectral-bridge/src/ws/evidence.rs",
+      "note": "Connection, packet freshness, lane identity, and stale-state evidence."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1781751878",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/runtime;capsules/spectral-bridge/src/autonomous/introspect.rs",
+      "note": "Per-modality freshness stays distinct from a unified-moment claim."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1781751564",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/codec;scripts/representation_contracts.py;scripts/evidence_study_runtime",
+      "note": "Historical codec restatement linked to deterministic loss and smooth boundary evidence."
+    },
+    {
+      "introspection_id": "introspection_codec_gain.rs_1781745895",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/codec_gain.rs;capsules/spectral-bridge/src/codec/tests.rs",
+      "note": "Pressure attenuation remains bounded and C1-smooth; live gain changes remain gated."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1781736454",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/runtime;capsules/spectral-bridge/src/autonomous/introspect.rs",
+      "note": "Rare-modality reach and explicit freshness without temporal-unity inference."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1781736111",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/codec;scripts/representation_contracts.py;scripts/evidence_study_runtime",
+      "note": "Historical codec restatement linked to current transport and offline studies."
+    },
+    {
+      "introspection_id": "introspection_codec.rs_1781734494",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/codec/projection.rs;capsules/spectral-bridge/src/codec/tests.rs;scripts/representation_contracts.py",
+      "note": "Deterministic projection basis, shape validation, and loss receipts."
+    },
+    {
+      "introspection_id": "introspection_minime_main_excerpt_1781720743",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "/Users/v/other/minime/minime/src/runtime.rs;/Users/v/other/minime/minime/src/controller_recovery.rs;/Users/v/other/minime/minime/src/stable_core.rs",
+      "note": "Current recovery mechanics and explicit live reset/control boundary."
+    },
+    {
+      "introspection_id": "introspection_minime_esn_1781713197",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "/Users/v/other/minime/minime/src/esn.rs;/Users/v/other/minime/minime/src/stable_core.rs",
+      "note": "Current exploration-noise source, read-only candidates, and exact reservoir-control wait."
+    },
+    {
+      "introspection_id": "introspection_minime_sensory_bus_1781708588",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "/Users/v/other/minime/minime/src/sensory_bus.rs;scripts/representation_contracts.py",
+      "note": "Current typed sensory lanes, 48D semantic ingress, and deterministic loss evidence."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1781708280",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "/Users/v/other/minime/minime/src/regulator;/Users/v/other/minime/minime/src/sensory_ws.rs",
+      "note": "PI-only current mechanics and exact live-regulation boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1781699429",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider;scripts/representation_contracts.py;scripts/evidence_study_runtime",
+      "note": "Provider route, fallback reason, timing, repair ancestry, and unscored continuity evidence."
+    },
+    {
+      "introspection_id": "introspection_astrid_types_1781698996",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/types/schema/texture_evidence.rs;scripts/experiential_epistemics.py",
+      "note": "Typed pressure and texture context remain mechanical and non-authoritative."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1781697592",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/ws;capsules/spectral-bridge/src/ws/evidence.rs",
+      "note": "Connection and freshness evidence without presence or felt-causation inference."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1781697253",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/runtime;capsules/spectral-bridge/src/autonomous/introspect.rs;scripts/representation_contracts.py",
+      "note": "Freshness and source provenance remain distinct from authorship magnitude or felt distinguishability."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1781680851",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/codec;scripts/representation_contracts.py;scripts/evidence_study_runtime",
+      "note": "Historical codec restatement linked to current bounded transport evidence."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1781624372",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/codec;scripts/representation_contracts.py;scripts/evidence_study_runtime",
+      "note": "Historical codec restatement linked to current bounded transport evidence."
+    },
+    {
+      "introspection_id": "introspection_llm.rs_1781613435",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/fallback_contracts.rs;capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Compact fallback preserves bounded texture anchors without claiming route equivalence."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1781610315",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider;scripts/representation_contracts.py;scripts/evidence_study_runtime",
+      "note": "Historical fallback friction linked to exact route and representation evidence."
+    },
+    {
+      "introspection_id": "introspection_astrid_types_1781609962",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/types/schema/texture_evidence.rs;scripts/experiential_epistemics.py",
+      "note": "Typed telemetry context remains mechanical and cannot score texture."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1781590938",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/ws;capsules/spectral-bridge/src/ws/evidence.rs",
+      "note": "Connection and freshness evidence without presence or causation inference."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1781590601",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/runtime;capsules/spectral-bridge/src/autonomous/introspect.rs",
+      "note": "Rare-modality reach, safe truncation, and explicit sensory authority boundary."
+    },
+    {
+      "introspection_id": "introspection_llm.rs_1781555592",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/fallback_contracts.rs;capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Current compact-fallback texture anchors and model-transition evidence."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1781555204",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/codec;scripts/representation_contracts.py;scripts/evidence_study_runtime",
+      "note": "Historical codec restatement linked to deterministic transport and loss evidence."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1781552301",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider;scripts/representation_contracts.py",
+      "note": "Fallback route and representation transition remain distinct from felt continuity."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1781551705",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider;scripts/evidence_study_runtime",
+      "note": "Reported hollowed-out texture remains unscored beside mechanical fallback evidence."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1781550601",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider;scripts/representation_contracts.py;scripts/evidence_study_runtime",
+      "note": "Historical fallback friction linked to current evidence without closure propagation."
+    },
+    {
+      "introspection_id": "introspection_codec.rs_1781549301",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/codec/projection.rs;capsules/spectral-bridge/src/codec/tests.rs",
+      "note": "Deterministic projection matrix and bounded codec regressions."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1781548285",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider;scripts/representation_contracts.py",
+      "note": "Historical route-transition concern linked to current exact receipts."
+    },
+    {
+      "introspection_id": "introspection_guards.rs_1781547170",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/next_action/guards.rs",
+      "note": "Typed reason enums, exhaustive message coherence, and projected-next mirror contract."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1781546310",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/codec;scripts/representation_contracts.py;scripts/evidence_study_runtime",
+      "note": "Historical codec restatement linked to current deterministic evidence."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1781544886",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/codec;scripts/representation_contracts.py;scripts/evidence_study_runtime",
+      "note": "Historical codec restatement linked to current deterministic evidence."
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Minime distinguishes permission for playful unstructured Recess from the actual texture of Recess, which can still feel mode-packed and effortful.",
+      "disposition": "Preserve as unscored felt and agency evidence; do not equate protected time with guaranteed lightness.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Current Recess policy names playful unstructured time, lower cooldown, optional notice, daydream, boredom, whim, aspiration, and protected space-first holds without pressure-responsive control.",
+      "disposition": "Verify from current Minime source and existing agency surfaces.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A density-aware Recess mode would turn pressure or mode packing into scheduling and behavioral consequences during protected non-goal-directed time.",
+      "disposition": "Preserve as an exact Tier 5 Minime behavior, scheduling, pressure, and control wait; do not instrumentalize Recess by default.",
+      "classification": "needs_operator_approval",
+      "authority": "tier_5"
+    }
+  ]
+}
