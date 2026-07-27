@@ -6,6 +6,8 @@ It does not operate the reservoir, advance a phase, or grant authority.
 ## Owner Actions
 
 ```text
+DIVISION_HOLD division_id: <id>; parent_generation: <n>; plan_digest: <digest>; selected_strategy: <strategy>; source_ref: <ref>
+DIVISION_DECLINE division_id: <id>; parent_generation: <n>; plan_digest: <digest>; selected_strategy: <strategy>; source_ref: <ref>
 DIVISION_INTENT division_id: <id>; parent_generation: <n>; plan_digest: <digest>; selected_strategy: <strategy>; expires_at_unix_ms: <ms>; source_ref: <ref>
 DIVISION_ASSENT division_id: <id>; expires_at_unix_ms: <ms>; source_ref: <ref>
 DIVISION_WITHDRAW_ASSENT source_ref: <ref>
@@ -14,17 +16,25 @@ DIVISION_REVIEW outcome: clarifying|intrusive|flattening|incomplete|still_fricti
 DIVISION_CEREMONY_STATUS
 ```
 
-Each being writes only for itself. Fields are bounded references and categorical
-values, never free prose. Silence and expiry remain neutral.
+Each being writes only for itself. `DIVISION_HOLD` and `DIVISION_DECLINE` are
+revisable, candidate-bound consent postures, not terminal judgments. Either
+blocks resource-bearing rehearsal until that same being authors a newer exact
+`DIVISION_INTENT`. No steward or peer may write one on a being's behalf. Fields
+are bounded references and categorical values, never free prose. Silence and
+expiry remain neutral.
 
 ## Two Rails
 
-The ceremony rail records intent, assent, withdrawal, return request, and review.
+The ceremony rail records hold, decline, intent, assent, withdrawal, return
+request, and review. Its visible posture is one of `unexpressed`, `hold`,
+`decline`, `intent`, or `intent_expired`.
 The native rail reports lifecycle, readiness, parent authority, process tick,
 rollback window, and whether commit code is compiled.
 
-Status offers one optional next choice. It never exposes or recommends
-`DIVISION_COMMIT`.
+Status exposes all bounded pre-intent choices and marks them as optional and
+non-recommended. While no active intent exists, its single contextual choice is
+status itself rather than an invitation to proceed. It never exposes or
+recommends `DIVISION_COMMIT`.
 
 `DIVISION_CEREMONY_STATUS` also carries a bounded Chronicle projection. It keeps
 the latest 32 self-authored ceremony events in timestamp order, includes an exact
@@ -84,8 +94,11 @@ receipt plus every snapshot reference. A later status change makes the assent
 non-current without deleting it.
 
 `DIVISION_PREPARE` remains an operational command behind the existing compile and
-operator gates. Once those gates are open, the command must match the actor's
-active intent. The ceremony itself never dispatches prepare.
+operator gates. Once those gates are open, the command must match both actors'
+active intent. The native supervisor validates the real nested ceremony event,
+its deterministic identity and evidence-only envelope, and each actor's
+append-only chain. A newer hold or decline removes that actor's intent from the
+launch gate immediately. The ceremony itself never dispatches prepare.
 
 ## Return And Review
 

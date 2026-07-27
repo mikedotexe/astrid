@@ -26,7 +26,12 @@ command path.
 ## Rehearsal
 
 Only a candidate-bound manifest plus matching unexpired Astrid and Minime
-`DIVISION_INTENT` records can launch children. The parent sends the same
+`DIVISION_INTENT` records can launch children. A newer self-authored
+`DIVISION_HOLD` or `DIVISION_DECLINE` removes that being's intent from the launch
+gate; silence remains unexpressed and grants nothing. The supervisor validates
+the ceremony's nested candidate, deterministic event identity, evidence-only
+authority envelope, and per-being append chain before considering intent. The
+parent sends the same
 post-integration 512D field to each child in independently hash-linked frames.
 Each frame also carries the realized noise, effective leak, previous peer state,
 coupling level, and exact parent process/deployment identity.

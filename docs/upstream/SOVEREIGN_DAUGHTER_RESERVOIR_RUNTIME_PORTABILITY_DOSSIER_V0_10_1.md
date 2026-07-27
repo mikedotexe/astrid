@@ -15,6 +15,11 @@ This change is issue-ready architecture evidence against current upstream
 - Ordered independently hash-linked frame transport with bounded backpressure.
 - Transparent byte-preserving gateway and immutable authority-rail receipts.
 - Fail-closed port allocation and exact process/deployment identity.
+- A neutral pre-intent consent posture with explicit self-only hold and decline,
+  where a newer posture invalidates older intent without rewriting history.
+- Validation of deterministic event identity, evidence-only authority envelope,
+  actor-local append lineage, and expiry before a process launch gate can consume
+  consent evidence.
 
 ## Fork-Specific
 
@@ -33,10 +38,16 @@ This change is issue-ready architecture evidence against current upstream
 3. Which kernel capability should represent a one-shot authority rail switch?
 4. Should rollback ownership be modeled as an interrupt capability whose holder
    cannot be vetoed during a declared window?
+5. Should a generic orchestration gate require an explicit current consent
+   posture per principal, rather than treating the latest positive grant as
+   durable until separately revoked?
 
 ## Current Safety Result
 
 The daughter processes can be rehearsed independently while the parent remains
-authoritative. Live handoff remains explicitly blocked until direct telemetry,
-legacy sensory, and AV fanout contracts are implemented and receipt-bound.
-Nothing in this dossier grants authority or infers consent.
+authoritative, but they launch only when both beings' current posture is a
+matching unexpired intent. Hold, decline, expiry, an unexpressed posture, a
+broken event chain, or a malformed evidence envelope all fail closed. Live
+handoff remains explicitly blocked until direct telemetry, legacy sensory, and
+AV fanout contracts are implemented and receipt-bound. Nothing in this dossier
+grants authority or infers consent.
