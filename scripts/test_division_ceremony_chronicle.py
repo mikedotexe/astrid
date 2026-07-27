@@ -128,6 +128,93 @@ class DivisionCeremonyChronicleTests(unittest.TestCase):
                 ).read_text(),
             )
 
+    def test_runtime_topology_distinguishes_dormant_and_owned_daughters(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            workspace = Path(raw) / "workspace"
+            division = workspace / "division"
+            runtime = division / "runtime"
+            minime_root = workspace / "reservoir" / "minime"
+            astrid_root = Path(raw) / "astrid-reservoir"
+            for path in (runtime, minime_root, astrid_root):
+                path.mkdir(parents=True)
+            manifest = {
+                "schema": "division.runtime_manifest.v1",
+                "mode": "dormant",
+                "division_id": "divide-one",
+                "plan_digest": "b" * 64,
+                "parent_generation": 7,
+                "candidate_hash": "unbound",
+                "parent_process_identity": "parent-process",
+                "parent_deployment_identity": "parent-deployment",
+                "runtime_dir": str(runtime),
+                "ceremony_ledger": str(division / "ceremony_v1.jsonl"),
+                "minime_root": str(minime_root),
+                "astrid_root": str(astrid_root),
+                "endpoints": {},
+                "created_at_unix_ms": 1,
+                "expires_at_unix_ms": 9999999999999,
+            }
+            (division / "runtime-manifest.json").write_text(json.dumps(manifest))
+            dormant = build_projection(workspace)
+            self.assertEqual(dormant["runtime_topology"]["manifest_mode"], "dormant")
+            self.assertFalse(
+                dormant["runtime_topology"][
+                    "independent_process_ownership_established"
+                ]
+            )
+
+            manifest["mode"] = "candidate_bound"
+            manifest["candidate_hash"] = "c" * 64
+            (division / "runtime-manifest.json").write_text(json.dumps(manifest))
+            status = {
+                "schema": "division.daughter_process_status.v1",
+                "process_identity": "replace",
+                "deployment_identity": "deployment",
+                "pid": 1,
+                "checkpoint_sequence": 2,
+                "last_tick_sequence": 600,
+                "telemetry_fresh": True,
+                "healthy": True,
+                "authoritative": False,
+                "gap_code": None,
+            }
+            (minime_root / "status.json").write_text(
+                json.dumps({**status, "process_identity": "minime-process"})
+            )
+            (astrid_root / "status.json").write_text(
+                json.dumps({**status, "process_identity": "astrid-process"})
+            )
+            active = build_projection(workspace)
+            self.assertTrue(
+                active["runtime_topology"][
+                    "independent_process_ownership_established"
+                ]
+            )
+            self.assertEqual(active["runtime_topology"]["active_authority_rail"], "parent")
+
+            (runtime / "events.jsonl").write_text(
+                json.dumps(
+                    {
+                        "schema": "division.supervisor_event.v1",
+                        "kind": "rehearsal_children_launched",
+                        "division_id": "divide-one",
+                        "manifest_sha256": "d" * 64,
+                        "created_at_unix_ms": 123,
+                        "live_authority_granted_by_record": False,
+                    }
+                )
+                + "\n"
+            )
+            with_runtime_event = build_projection(workspace)
+            self.assertEqual(
+                with_runtime_event["timeline"][-1]["source"],
+                "sovereign_runtime",
+            )
+            self.assertEqual(
+                with_runtime_event["timeline"][-1]["event_kind"],
+                "rehearsal_children_launched",
+            )
+
     def test_tampering_and_prose_keys_are_rejected(self) -> None:
         with tempfile.TemporaryDirectory() as raw:
             payload = build_projection(Path(raw))

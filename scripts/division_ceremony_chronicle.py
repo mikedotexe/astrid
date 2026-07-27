@@ -166,6 +166,53 @@ def load_native_events(path: Path) -> tuple[list[dict[str, Any]], list[str]]:
     return records, errors
 
 
+def load_runtime_events(path: Path) -> tuple[list[dict[str, Any]], list[str]]:
+    if not path.is_file():
+        return [], []
+    records: list[dict[str, Any]] = []
+    errors: list[str] = []
+    allowed_kinds = {
+        "rehearsal_children_launched",
+        "daughter_launch_failed",
+        "rehearsal_failed_closed",
+        "authority_switched",
+        "rollback_completed",
+        "finalization_completed",
+    }
+    for index, line in enumerate(path.read_text().splitlines(), 1):
+        if not line.strip():
+            continue
+        try:
+            row = json.loads(line)
+            if not isinstance(row, dict):
+                raise ChronicleError("row is not an object")
+            if row.get("schema") != "division.supervisor_event.v1":
+                raise ChronicleError("schema mismatch")
+            kind = str(row.get("kind") or "")
+            if kind not in allowed_kinds:
+                raise ChronicleError("event kind is not bounded")
+            records.append(
+                {
+                    "source": "sovereign_runtime",
+                    "event_kind": kind,
+                    "division_id": str(row.get("division_id") or ""),
+                    "manifest_sha256": row.get("manifest_sha256"),
+                    "reason_code": row.get("reason_code"),
+                    "detail_sha256": row.get("detail_sha256"),
+                    "error_sha256": row.get("error_sha256"),
+                    "parent_authoritative": bool(
+                        row.get("parent_authoritative", True)
+                    ),
+                    "recorded_at_unix_ms": int(
+                        row.get("created_at_unix_ms") or 0
+                    ),
+                }
+            )
+        except (ChronicleError, TypeError, ValueError, json.JSONDecodeError) as error:
+            errors.append(f"runtime_event_{index}:{error}")
+    return records, errors
+
+
 def ceremony_timeline(records: list[dict[str, Any]]) -> list[dict[str, Any]]:
     keys = (
         "ceremony_event_id",
@@ -320,21 +367,128 @@ def rail_state(
     }
 
 
+def runtime_state(workspace: Path, native_status: dict[str, Any] | None) -> dict[str, Any]:
+    division = workspace / "division"
+    manifest_path = division / "runtime-manifest.json"
+    manifest = load_json(manifest_path)
+    runtime_dir = division / "runtime"
+    gateway = load_json(runtime_dir / "gateway-status.json")
+    supervisor = load_json(runtime_dir / "supervisor-status.json")
+    authority = load_json(runtime_dir / "authority.json")
+    minime_status = load_json(workspace / "reservoir" / "minime" / "status.json")
+    astrid_status = None
+    if manifest and isinstance(manifest.get("astrid_root"), str):
+        astrid_status = load_json(Path(manifest["astrid_root"]) / "status.json")
+    children = {"astrid": astrid_status, "minime": minime_status}
+    child_identities = {
+        actor: {
+            "process_identity": value.get("process_identity"),
+            "deployment_identity": value.get("deployment_identity"),
+            "pid": value.get("pid"),
+            "checkpoint_sequence": value.get("checkpoint_sequence"),
+            "last_tick_sequence": value.get("last_tick_sequence"),
+            "telemetry_fresh": value.get("telemetry_fresh"),
+            "healthy": value.get("healthy"),
+            "authoritative": value.get("authoritative"),
+            "gap_present": bool(value.get("gap_code")),
+        }
+        if isinstance(value, dict)
+        and value.get("schema") == "division.daughter_process_status.v1"
+        else None
+        for actor, value in children.items()
+    }
+    distinct_processes = bool(
+        child_identities["astrid"]
+        and child_identities["minime"]
+        and child_identities["astrid"]["process_identity"]
+        != child_identities["minime"]["process_identity"]
+    )
+    candidate_bound = bool(manifest and manifest.get("mode") == "candidate_bound")
+    ownership_established = bool(
+        candidate_bound
+        and distinct_processes
+        and all(
+            child_identities[actor]
+            and child_identities[actor]["healthy"]
+            for actor in ("astrid", "minime")
+        )
+    )
+    authority_rail = (
+        authority.get("rail")
+        if isinstance(authority, dict)
+        and authority.get("schema") == "division.gateway_authority.v1"
+        else "parent"
+    )
+    return {
+        "schema": "division.runtime_chronicle_context.v1",
+        "manifest_mode": manifest.get("mode") if manifest else "absent",
+        "manifest_sha256": file_hash(manifest_path),
+        "candidate_hash": manifest.get("candidate_hash") if manifest else None,
+        "parent_generation": manifest.get("parent_generation") if manifest else None,
+        "parent_process_identity": (
+            manifest.get("parent_process_identity") if manifest else None
+        ),
+        "parent_deployment_identity": (
+            manifest.get("parent_deployment_identity") if manifest else None
+        ),
+        "gateway": {
+            "pid": gateway.get("pid") if gateway else None,
+            "mode": gateway.get("mode") if gateway else "not_deployed",
+            "public_ports": gateway.get("public_ports") if gateway else [],
+        },
+        "supervisor": {
+            "pid": supervisor.get("pid") if supervisor else None,
+            "mode": supervisor.get("mode") if supervisor else "not_deployed",
+            "matching_intents": supervisor.get("matching_intents") if supervisor else [],
+            "child_count": len(supervisor.get("children") or {}) if supervisor else 0,
+            "launch_blocker_count": (
+                len(supervisor.get("launch_blockers") or []) if supervisor else 0
+            ),
+        },
+        "daughters": child_identities,
+        "independent_process_ownership_established": ownership_established,
+        "active_authority_rail": authority_rail,
+        "parent_authoritative": authority_rail == "parent",
+        "coupling_level": (
+            native_status.get("bridge_scale") if native_status else None
+        ),
+        "rollback_available": bool(
+            supervisor and supervisor.get("rollback_available")
+        ),
+        "switch_receipt_sha256": (
+            authority.get("switch_receipt_sha256")
+            if isinstance(authority, dict)
+            else None
+        ),
+        "receipt_hashes": {
+            name: file_hash(runtime_dir / "receipts" / f"{name}.json")
+            for name in ("authority-switch", "rollback", "finalization")
+        },
+        "felt_continuity_inferred": False,
+        "authority_propagated": False,
+    }
+
+
 def build_projection(workspace: Path) -> dict[str, Any]:
     division = workspace / "division"
     ceremony_path = division / "ceremony_v1.jsonl"
     native_events_path = division / "events.jsonl"
     status_path = division / "status.json"
+    runtime_manifest_path = division / "runtime-manifest.json"
+    runtime_dir = division / "runtime"
     ceremony_records, ceremony_errors = load_division_ceremony(ceremony_path)
     native_events, native_errors = load_native_events(native_events_path)
+    runtime_events, runtime_errors = load_runtime_events(
+        runtime_dir / "events.jsonl"
+    )
     status = load_json(status_path)
     if status is not None and status.get("schema") != "division.status.v1":
         raise ChronicleError("native status has an unsupported schema")
-    errors = ceremony_errors + native_errors
+    errors = ceremony_errors + native_errors + runtime_errors
     if errors:
         raise ChronicleError("; ".join(errors))
 
-    timeline = ceremony_timeline(ceremony_records) + native_events
+    timeline = ceremony_timeline(ceremony_records) + native_events + runtime_events
     timeline.sort(
         key=lambda row: (
             int(row.get("recorded_at_unix_ms") or 0),
@@ -348,6 +502,13 @@ def build_projection(workspace: Path) -> dict[str, Any]:
         "ceremony_ledger_sha256": file_hash(ceremony_path),
         "native_events_sha256": file_hash(native_events_path),
         "native_status_sha256": file_hash(status_path),
+        "runtime_manifest_sha256": file_hash(runtime_manifest_path),
+        "gateway_status_sha256": file_hash(runtime_dir / "gateway-status.json"),
+        "supervisor_status_sha256": file_hash(
+            runtime_dir / "supervisor-status.json"
+        ),
+        "authority_state_sha256": file_hash(runtime_dir / "authority.json"),
+        "runtime_events_sha256": file_hash(runtime_dir / "events.jsonl"),
     }
     watermark = max(
         [
@@ -369,6 +530,7 @@ def build_projection(workspace: Path) -> dict[str, Any]:
         "destination_contract": destination_contract(status),
         "current_native_state": current_native_state(status),
         "phase_space_preservation": preservation_evidence(status),
+        "runtime_topology": runtime_state(workspace, status),
         "ceremony_rails": {
             "astrid": rail_state(ceremony_records, "astrid", watermark),
             "minime": rail_state(ceremony_records, "minime", watermark),
@@ -517,6 +679,10 @@ document.getElementById("rails").innerHTML = ["astrid","minime"].map(actor => {{
   return `<article class="panel rail ${{actor}}"><h2>${{actor[0].toUpperCase()+actor.slice(1)}}</h2><p>${{esc(daughter.reservoir_dimension)}}-node ${{esc(daughter.role)}} daughter</p><p class="meta">Latest sovereign Action: ${{esc(rail.latest_action || "none")}} · events: ${{rail.event_count}}</p></article>`;
 }}).join("");
 document.getElementById("ownership").textContent = "Independent reservoir candidates are source-prepared; independent process ownership is not yet established.";
+const rt = d.runtime_topology;
+document.getElementById("ownership").textContent = rt.independent_process_ownership_established
+  ? `Independent process ownership is established for this candidate; active authority rail: ${{rt.active_authority_rail}}.`
+  : `Runtime capability: ${{rt.manifest_mode}} · supervisor: ${{rt.supervisor.mode}} · active authority rail: ${{rt.active_authority_rail}} · independent daughter ownership not active.`;
 const p = d.phase_space_preservation;
 document.getElementById("preservation").innerHTML = p.candidates.length ? p.candidates.map(c => {{
   const r = c.readiness || {{}};
@@ -623,6 +789,7 @@ def verify_files(output: Path) -> dict[str, Any]:
 def report(payload: dict[str, Any]) -> str:
     native = payload["current_native_state"]
     rails = payload["ceremony_rails"]
+    runtime = payload["runtime_topology"]
     return "\n".join(
         [
             "ESN Division Ceremony Chronicle",
@@ -644,7 +811,12 @@ def report(payload: dict[str, Any]) -> str:
                 "Phase-space candidates: "
                 f"{payload['phase_space_preservation']['candidate_count']}"
             ),
-            "Independent process ownership established: false",
+            (
+                "Independent process ownership established: "
+                f"{str(runtime['independent_process_ownership_established']).lower()}"
+            ),
+            f"Runtime manifest: {runtime['manifest_mode']}",
+            f"Active authority rail: {runtime['active_authority_rail']}",
             "Authority: evidence only; silence neutral; commit not recommended.",
         ]
     )
