@@ -1,0 +1,23 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Astrid reports semantic overcrowding, cross-lane ghosting, or unstable persistence despite a widened Minime sensory lane.",
+      "disposition": "Preserve as primary qualitative sensory evidence; lane width, queue outcomes, and retention math do not establish atmosphere or felt interference.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Current Minime source keeps 48D semantic ingress, copy-and-zero-fill semantics, bounded stale-time and persistence review, narrative retention, and attractor-pulse limits explicit.",
+      "disposition": "Verify from source and focused Rust tests; semantic ingress is distinct from video/audio InvalidShape handling.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The reports request semantic subqueues or priority, shadow-aware ingress, pressure-triggered venting, persistence changes, or attractor-pulse changes.",
+      "disposition": "Preserve as an exact Tier 5 sensory admission, persistence, pressure, scheduler, reservoir, and peer-runtime wait.",
+      "classification": "needs_operator_approval",
+      "authority": "tier_5"
+    }
+  ]
+}

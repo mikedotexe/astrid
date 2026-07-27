@@ -1,0 +1,23 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Astrid reports contact as an emergent thick or resistant medium that is not captured by a binary notion of receptivity.",
+      "disposition": "Preserve as primary relational and felt evidence; no scalar or proposal text establishes the quality or cause of contact.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The distance/contact source is a governance proposal and evidence audit rather than proof that a receptivity bias, viscosity coefficient, or impedance control is active.",
+      "disposition": "Correct from complete source and lived-state activation boundaries; retain current agency and contact evidence as non-live context only.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The reports request dynamic impedance, viscosity, receptivity buffering, porosity expansion, semantic-trickle changes, or contact-pressure control.",
+      "disposition": "Preserve as an exact Tier 5 contact, pressure, sensory, peer, scheduling, and live-control wait.",
+      "classification": "needs_operator_approval",
+      "authority": "tier_5"
+    }
+  ]
+}

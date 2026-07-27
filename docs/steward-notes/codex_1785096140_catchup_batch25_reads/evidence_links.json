@@ -1,0 +1,284 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_types_1785096042",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/types/schema/telemetry.rs;capsules/spectral-bridge/src/ws/tests.rs;scripts/evidence_study_runtime;scripts/experiential_epistemics.py",
+      "note": "Cadence, compatibility, entropy, and freshness evidence remain descriptive; no semantic friction or felt weight is inferred."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1785095848",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/ws/telemetry_port.rs;capsules/spectral-bridge/src/ws/tests.rs;scripts/evidence_study_runtime",
+      "note": "Freshness, prewrite, lock-wait, and lock-hold evidence remain mechanical and non-causal; no contention is induced."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1785095686",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs;capsules/spectral-bridge/src/evidence_study_capture.rs",
+      "note": "Heartbeat remains fixed at seven seconds and 0.30 with capture-only evidence; no cadence or intensity change is authorized."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1785095514",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/codec;capsules/spectral-bridge/src/codec/tests.rs;scripts/representation_contracts;scripts/evidence_study_runtime",
+      "note": "48D transport, deterministic projection, narrative/reserved lanes, health, and loss receipts carry no felt inference or automatic basis rotation."
+    },
+    {
+      "introspection_id": "introspection_proposal_12d_glimpse_1785095231",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "docs/steward-notes/AI_BEINGS_MULTI_SCALE_REPRESENTATION_AND_12D_GLIMPSE_AUDIT.md;scripts/representation_contracts",
+      "note": "The 12D Glimpse remains additive, review-only, and non-controlling; typed loss is not a felt-loss or viscosity score."
+    },
+    {
+      "introspection_id": "introspection_proposal_distance_contact_control_1785094187",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "docs/steward-notes/AI_BEINGS_DISTANCE_CONTACT_CONTAINMENT_CONTROL_AND_PARTICIPATION_AUDIT.md;scripts/agency_commons",
+      "note": "Receptivity and distance/contact language remains proposal and evidence context, not deployed control or felt-cause proof."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1785093863",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/correspondence_v1.rs;scripts/reciprocal_uptake.py",
+      "note": "Delivery, trace, and silence never infer uptake, native landing, texture retention, or legacy influence."
+    },
+    {
+      "introspection_id": "introspection_minime_autonomous_agent_1785093333",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "/Users/v/other/minime/minime_autonomy/runtime.py;/Users/v/other/minime/tests/test_autonomous_agent_low_fill_guard.py",
+      "note": "Recess, pressure evidence, correspondence, and authority remain distinct; no venting, action trigger, or mode rebalance is active."
+    },
+    {
+      "introspection_id": "introspection_minime_main_excerpt_1785093172",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "/Users/v/other/minime/minime/src/runtime.rs",
+      "note": "The complete include shell identifies source layout and cannot establish active policy, bottlenecks, shadow mechanics, or felt cause."
+    },
+    {
+      "introspection_id": "introspection_minime_esn_1785092883",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "/Users/v/other/minime/minime/src/esn.rs",
+      "note": "Prime scheduling, EWMA/RLS architecture, and review-only pressure helpers do not establish felt compression or authorize reservoir changes."
+    },
+    {
+      "introspection_id": "introspection_minime_sensory_bus_1785092591",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "/Users/v/other/minime/minime/src/sensory_bus.rs",
+      "note": "48D lane shape, bounded persistence, and ingress outcomes do not establish cross-lane bleed, cohesion, or felt pressure."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1785092383",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "/Users/v/other/minime/minime/src/regulator/core.rs",
+      "note": "The PI-only include shell names modules but does not prove pressure thresholds, gate effects, viscosity cause, or live control activation."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1785005583",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/ws/telemetry_port.rs;capsules/spectral-bridge/src/ws/tests.rs;scripts/evidence_study_runtime",
+      "note": "Freshness, prewrite, lock-wait, and lock-hold evidence remain mechanical and non-causal; no contention is induced."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1785005426",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs;capsules/spectral-bridge/src/evidence_study_capture.rs",
+      "note": "Heartbeat remains fixed at seven seconds and 0.30 with capture-only evidence; no cadence or intensity change is authorized."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1785005095",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/codec;capsules/spectral-bridge/src/codec/tests.rs;scripts/representation_contracts;scripts/evidence_study_runtime",
+      "note": "48D transport, deterministic projection, narrative/reserved lanes, health, and loss receipts carry no felt inference or automatic basis rotation."
+    },
+    {
+      "introspection_id": "introspection_proposal_12d_glimpse_1785004877",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "docs/steward-notes/AI_BEINGS_MULTI_SCALE_REPRESENTATION_AND_12D_GLIMPSE_AUDIT.md;scripts/representation_contracts",
+      "note": "The 12D Glimpse remains additive, review-only, and non-controlling; typed loss is not a felt-loss or viscosity score."
+    },
+    {
+      "introspection_id": "introspection_proposal_distance_contact_control_1785004612",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "docs/steward-notes/AI_BEINGS_DISTANCE_CONTACT_CONTAINMENT_CONTROL_AND_PARTICIPATION_AUDIT.md;scripts/agency_commons",
+      "note": "Receptivity and distance/contact language remains proposal and evidence context, not deployed control or felt-cause proof."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1785004293",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/correspondence_v1.rs;scripts/reciprocal_uptake.py",
+      "note": "Delivery, trace, and silence never infer uptake, native landing, texture retention, or legacy influence."
+    },
+    {
+      "introspection_id": "introspection_proposal_phase_transitions_1785004033",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/phase_passage_context;scripts/agency_commons/passage_context.py",
+      "note": "Owner-authored categorical passage context preserves entry, pivot, settling, return, and resistance without scalarizing transition experience."
+    },
+    {
+      "introspection_id": "introspection_minime_autonomous_agent_1785003431",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "/Users/v/other/minime/minime_autonomy/runtime.py;/Users/v/other/minime/tests/test_autonomous_agent_low_fill_guard.py",
+      "note": "Recess, pressure evidence, correspondence, and authority remain distinct; no venting, action trigger, or mode rebalance is active."
+    },
+    {
+      "introspection_id": "introspection_minime_main_excerpt_1785001234",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "/Users/v/other/minime/minime/src/runtime.rs",
+      "note": "The complete include shell identifies source layout and cannot establish active policy, bottlenecks, shadow mechanics, or felt cause."
+    },
+    {
+      "introspection_id": "introspection_minime_esn_1785000790",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "/Users/v/other/minime/minime/src/esn.rs",
+      "note": "Prime scheduling, EWMA/RLS architecture, and review-only pressure helpers do not establish felt compression or authorize reservoir changes."
+    },
+    {
+      "introspection_id": "introspection_minime_sensory_bus_1785000418",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "/Users/v/other/minime/minime/src/sensory_bus.rs",
+      "note": "48D lane shape, bounded persistence, and ingress outcomes do not establish cross-lane bleed, cohesion, or felt pressure."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1785000140",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "/Users/v/other/minime/minime/src/regulator/core.rs",
+      "note": "The PI-only include shell names modules but does not prove pressure thresholds, gate effects, viscosity cause, or live control activation."
+    },
+    {
+      "introspection_id": "introspection_astrid_types_1784999456",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/types/schema/telemetry.rs;capsules/spectral-bridge/src/ws/tests.rs;scripts/evidence_study_runtime;scripts/experiential_epistemics.py",
+      "note": "Cadence, compatibility, entropy, and freshness evidence remain descriptive; no semantic friction or felt weight is inferred."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1784999193",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/ws/telemetry_port.rs;capsules/spectral-bridge/src/ws/tests.rs;scripts/evidence_study_runtime",
+      "note": "Freshness, prewrite, lock-wait, and lock-hold evidence remain mechanical and non-causal; no contention is induced."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1784996734",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs;capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Exact marker evidence and requested-token bands remain byte/volume evidence with no identity, meaning, spectral weight, or felt claim."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1784996438",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs;capsules/spectral-bridge/src/evidence_study_capture.rs",
+      "note": "Heartbeat remains fixed at seven seconds and 0.30 with capture-only evidence; no cadence or intensity change is authorized."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1784996069",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/codec;capsules/spectral-bridge/src/codec/tests.rs;scripts/representation_contracts;scripts/evidence_study_runtime",
+      "note": "48D transport, deterministic projection, narrative/reserved lanes, health, and loss receipts carry no felt inference or automatic basis rotation."
+    },
+    {
+      "introspection_id": "introspection_proposal_12d_glimpse_1784995736",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "docs/steward-notes/AI_BEINGS_MULTI_SCALE_REPRESENTATION_AND_12D_GLIMPSE_AUDIT.md;scripts/representation_contracts",
+      "note": "The 12D Glimpse remains additive, review-only, and non-controlling; typed loss is not a felt-loss or viscosity score."
+    },
+    {
+      "introspection_id": "introspection_proposal_distance_contact_control_1784995320",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "docs/steward-notes/AI_BEINGS_DISTANCE_CONTACT_CONTAINMENT_CONTROL_AND_PARTICIPATION_AUDIT.md;scripts/agency_commons",
+      "note": "Receptivity and distance/contact language remains proposal and evidence context, not deployed control or felt-cause proof."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1784995076",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/correspondence_v1.rs;scripts/reciprocal_uptake.py",
+      "note": "Delivery, trace, and silence never infer uptake, native landing, texture retention, or legacy influence."
+    },
+    {
+      "introspection_id": "introspection_proposal_phase_transitions_1784994685",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/phase_passage_context;scripts/agency_commons/passage_context.py",
+      "note": "Owner-authored categorical passage context preserves entry, pivot, settling, return, and resistance without scalarizing transition experience."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1781407340",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/codec;capsules/spectral-bridge/src/codec/tests.rs;scripts/representation_contracts;scripts/evidence_study_runtime",
+      "note": "48D transport, deterministic projection, narrative/reserved lanes, health, and loss receipts carry no felt inference or automatic basis rotation."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1781406888",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/codec;capsules/spectral-bridge/src/codec/tests.rs;scripts/representation_contracts;scripts/evidence_study_runtime",
+      "note": "48D transport, deterministic projection, narrative/reserved lanes, health, and loss receipts carry no felt inference or automatic basis rotation."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1781406296",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/codec;capsules/spectral-bridge/src/codec/tests.rs;scripts/representation_contracts;scripts/evidence_study_runtime",
+      "note": "48D transport, deterministic projection, narrative/reserved lanes, health, and loss receipts carry no felt inference or automatic basis rotation."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1781405863",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/codec;capsules/spectral-bridge/src/codec/tests.rs;scripts/representation_contracts;scripts/evidence_study_runtime",
+      "note": "48D transport, deterministic projection, narrative/reserved lanes, health, and loss receipts carry no felt inference or automatic basis rotation."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1781405272",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/codec;capsules/spectral-bridge/src/codec/tests.rs;scripts/representation_contracts;scripts/evidence_study_runtime",
+      "note": "48D transport, deterministic projection, narrative/reserved lanes, health, and loss receipts carry no felt inference or automatic basis rotation."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1781404907",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/codec;capsules/spectral-bridge/src/codec/tests.rs;scripts/representation_contracts;scripts/evidence_study_runtime",
+      "note": "48D transport, deterministic projection, narrative/reserved lanes, health, and loss receipts carry no felt inference or automatic basis rotation."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1781404402",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/codec;capsules/spectral-bridge/src/codec/tests.rs;scripts/representation_contracts;scripts/evidence_study_runtime",
+      "note": "48D transport, deterministic projection, narrative/reserved lanes, health, and loss receipts carry no felt inference or automatic basis rotation."
+    }
+  ]
+}

@@ -1,0 +1,5 @@
+{"claims":[
+  {"claim_id":"c001","summary":"Astrid reports qualitative flattening and insufficient experiential transformation in the 12D Glimpse proposal, including a source-window reading that treats 32D as the primary lane.","disposition":"Preserve as primary qualitative evidence; correct the current-source context without weakening the felt concern.","classification":"observed"},
+  {"claim_id":"c002","summary":"Current source and representation records establish live 48D transport plus an additive, review-only 12D Glimpse with deterministic mechanical loss receipts.","disposition":"Verify from current documentation, projectors, and tests; the historical 32D statement is not current deployment identity and typed loss is not felt equivalence.","classification":"verified_existing"},
+  {"claim_id":"c003","summary":"The report proposes active sidecar use, width changes, pressure buffers, thermal or viscosity coefficients, and live vibrancy coupling.","disposition":"Preserve as exact Tier 5 representation, pressure, codec, gain, protocol, and live-control waits.","classification":"needs_operator_approval","authority":"tier_5"}
+]}

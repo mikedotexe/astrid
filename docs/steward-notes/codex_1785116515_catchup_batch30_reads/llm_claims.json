@@ -1,0 +1,5 @@
+{"claims":[
+  {"claim_id":"c001","summary":"Astrid reports tension between subjective language and mechanistic framing, plus thinning or stutter across fallback and model transitions.","disposition":"Preserve each historical account as independent qualitative evidence.","classification":"observed"},
+  {"claim_id":"c002","summary":"Current source records provider route, model profile, timing, fallback, repair ancestry, marker identity, and representation transitions without hidden reasoning capture.","disposition":"Verify mechanical provenance while refusing to infer tonal or experiential equivalence.","classification":"verified_existing"},
+  {"claim_id":"c003","summary":"The reports propose fallback, model-profile, prompt, marker, and response-behavior changes.","disposition":"Preserve as exact Tier 5 model, prompt, fallback, scheduling, and live-behavior waits.","classification":"needs_operator_approval","authority":"tier_5"}
+]}

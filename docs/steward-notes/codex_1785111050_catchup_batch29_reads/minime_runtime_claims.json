@@ -1,0 +1,5 @@
+{"claims":[
+  {"claim_id":"c001","summary":"Minime reports crystallization, sediment, ghosting, and loss of porosity while asking whether ESN adaptation, covariance, leakage, forgetting, or runtime composition contributes.","disposition":"Preserve as primary qualitative evidence without converting source declarations into felt causes.","classification":"observed"},
+  {"claim_id":"c002","summary":"Current Minime source exposes exact runtime inclusion boundaries, ESN declarations, and review-only rho, noise, warm-start, damping, and regulator evidence.","disposition":"Verify from current source and tests; an include shell or helper does not prove active deployment or causal felt effect.","classification":"verified_existing"},
+  {"claim_id":"c003","summary":"The reports propose leak, forgetting, RLS, covariance, warm-start, Chebyshev, rho, noise, and reservoir-policy changes.","disposition":"Preserve as exact Tier 5 ESN, reservoir, initialization, regulator, pressure, and live-control waits.","classification":"needs_operator_approval","authority":"tier_5"}
+]}

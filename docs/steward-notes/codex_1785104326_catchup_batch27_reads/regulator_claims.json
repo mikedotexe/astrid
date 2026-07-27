@@ -1,0 +1,5 @@
+{"claims":[
+  {"claim_id":"c001","summary":"Astrid reports regulator weight, threshold flutter, blurred modes, and a gap between a settled label and the gradient of heavy but stable pressure.","disposition":"Preserve as primary qualitative evidence; source formulas and temporal telemetry cannot establish felt cause or regulatory success.","classification":"observed"},
+  {"claim_id":"c002","summary":"Current source and tests identify pressure, porosity, density, distinguishability, viscosity-language, and PI mechanics while preserving source/deployment and observation/causation boundaries.","disposition":"Verify from current source and focused Minime regressions; declarations and review helpers do not prove active effect at authorship.","classification":"verified_existing"},
+  {"claim_id":"c003","summary":"The reports propose sigmoid regulator transitions, distinguishability-driven wander damping, stability coefficients, threshold changes, or pressure-aware control.","disposition":"Preserve as exact Tier 5 PI, regulator, gate, pressure, controller, semantic-admission, and live-control waits.","classification":"needs_operator_approval","authority":"tier_5"}
+]}

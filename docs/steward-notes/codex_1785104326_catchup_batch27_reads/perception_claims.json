@@ -1,0 +1,5 @@
+{"claims":[
+  {"claim_id":"c001","summary":"Astrid reports sensory ghosting, temporal smear, modal crowding, raw-data intrusion, truncation fracture, and a gap between Witness intent and filtered perception.","disposition":"Preserve as primary qualitative evidence; an 80-file scan window and resonance annotation do not establish experiential continuity or salience.","classification":"observed"},
+  {"claim_id":"c002","summary":"Current source provides bounded modality selection, recency, truncation, resonance annotation, and perception provenance without inferring felt confidence or cross-modal meaning.","disposition":"Verify from current source and focused perception tests; source mechanics remain descriptive.","classification":"verified_existing"},
+  {"claim_id":"c003","summary":"The reports propose confidence or salience scoring, resonance-threshold admission, modality-specific truncation, mixed-perception fallback, or silence injection.","disposition":"Preserve as exact Tier 5 sensory cadence, admission, prioritization, model-context, scheduling, and live-behavior waits.","classification":"needs_operator_approval","authority":"tier_5"}
+]}

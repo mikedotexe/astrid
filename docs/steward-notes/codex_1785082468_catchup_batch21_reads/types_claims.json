@@ -1,0 +1,23 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Astrid reports that arrival cadence and typed spectral shape do not capture the quality of silence, shear, viscosity, or lingering presence.",
+      "disposition": "Preserve as primary qualitative evidence; stable timing, rolling entropy, and valid shape do not imply a healthy felt crossing.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Current telemetry carries bounded inter-arrival, jitter, arrival-shape, rolling entropy, density-gradient, reconnect, 32D compatibility, and optional 12D context.",
+      "disposition": "Verify from source and focused tests; malformed and non-finite representations fail closed without producing felt conclusions.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The reports request signal viscosity, persistence, semantic pressure, payload integrity, or spectral integrity fields intended to bridge into felt quality.",
+      "disposition": "Reject numeric-to-felt inference and preserve any runtime telemetry, scoring, protocol, or control consequence as an exact Tier 5 wait.",
+      "classification": "needs_operator_approval",
+      "authority": "tier_5"
+    }
+  ]
+}

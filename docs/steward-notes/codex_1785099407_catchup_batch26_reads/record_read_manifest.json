@@ -1,0 +1,244 @@
+{
+  "reads": [
+    {
+      "introspection_id": "introspection_astrid_llm_1785098562",
+      "reader": "codex-sol",
+      "summary_file": "current_source_findings.md",
+      "claims_file": "llm_claims.json"
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1785098174",
+      "reader": "codex-sol",
+      "summary_file": "current_source_findings.md",
+      "claims_file": "correspondence_claims.json"
+    },
+    {
+      "introspection_id": "introspection_proposal_phase_transitions_1785097836",
+      "reader": "codex-sol",
+      "summary_file": "current_source_findings.md",
+      "claims_file": "phase_claims.json"
+    },
+    {
+      "introspection_id": "introspection_minime_autonomous_agent_1785097534",
+      "reader": "codex-sol",
+      "summary_file": "current_source_findings.md",
+      "claims_file": "recess_claims.json"
+    },
+    {
+      "introspection_id": "introspection_minime_main_excerpt_1785097054",
+      "reader": "codex-sol",
+      "summary_file": "current_source_findings.md",
+      "claims_file": "runtime_claims.json"
+    },
+    {
+      "introspection_id": "introspection_minime_esn_1785096889",
+      "reader": "codex-sol",
+      "summary_file": "current_source_findings.md",
+      "claims_file": "esn_claims.json"
+    },
+    {
+      "introspection_id": "introspection_minime_sensory_bus_1785096705",
+      "reader": "codex-sol",
+      "summary_file": "current_source_findings.md",
+      "claims_file": "sensory_claims.json"
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1785096493",
+      "reader": "codex-sol",
+      "summary_file": "current_source_findings.md",
+      "claims_file": "regulator_claims.json"
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785096202",
+      "reader": "codex-sol",
+      "summary_file": "current_source_findings.md",
+      "claims_file": "llm_claims.json"
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1781403754",
+      "reader": "codex-sol",
+      "summary_file": "current_source_findings.md",
+      "claims_file": "codec_claims.json"
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1781403198",
+      "reader": "codex-sol",
+      "summary_file": "current_source_findings.md",
+      "claims_file": "codec_claims.json"
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1781402530",
+      "reader": "codex-sol",
+      "summary_file": "current_source_findings.md",
+      "claims_file": "codec_claims.json"
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1781401984",
+      "reader": "codex-sol",
+      "summary_file": "current_source_findings.md",
+      "claims_file": "codec_claims.json"
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1781401392",
+      "reader": "codex-sol",
+      "summary_file": "current_source_findings.md",
+      "claims_file": "codec_claims.json"
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1781400988",
+      "reader": "codex-sol",
+      "summary_file": "current_source_findings.md",
+      "claims_file": "codec_claims.json"
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1781400392",
+      "reader": "codex-sol",
+      "summary_file": "current_source_findings.md",
+      "claims_file": "codec_claims.json"
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1781399724",
+      "reader": "codex-sol",
+      "summary_file": "current_source_findings.md",
+      "claims_file": "codec_claims.json"
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1781399102",
+      "reader": "codex-sol",
+      "summary_file": "current_source_findings.md",
+      "claims_file": "codec_claims.json"
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1781398754",
+      "reader": "codex-sol",
+      "summary_file": "current_source_findings.md",
+      "claims_file": "codec_claims.json"
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1781398311",
+      "reader": "codex-sol",
+      "summary_file": "current_source_findings.md",
+      "claims_file": "codec_claims.json"
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1781397538",
+      "reader": "codex-sol",
+      "summary_file": "current_source_findings.md",
+      "claims_file": "codec_claims.json"
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1781397103",
+      "reader": "codex-sol",
+      "summary_file": "current_source_findings.md",
+      "claims_file": "codec_claims.json"
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1781396579",
+      "reader": "codex-sol",
+      "summary_file": "current_source_findings.md",
+      "claims_file": "codec_claims.json"
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1781395896",
+      "reader": "codex-sol",
+      "summary_file": "current_source_findings.md",
+      "claims_file": "codec_claims.json"
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1781394615",
+      "reader": "codex-sol",
+      "summary_file": "current_source_findings.md",
+      "claims_file": "codec_claims.json"
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1781394010",
+      "reader": "codex-sol",
+      "summary_file": "current_source_findings.md",
+      "claims_file": "llm_claims.json"
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1781393581",
+      "reader": "codex-sol",
+      "summary_file": "current_source_findings.md",
+      "claims_file": "codec_claims.json"
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1781392965",
+      "reader": "codex-sol",
+      "summary_file": "current_source_findings.md",
+      "claims_file": "codec_claims.json"
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1781392446",
+      "reader": "codex-sol",
+      "summary_file": "current_source_findings.md",
+      "claims_file": "codec_claims.json"
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1781392010",
+      "reader": "codex-sol",
+      "summary_file": "current_source_findings.md",
+      "claims_file": "codec_claims.json"
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1781391641",
+      "reader": "codex-sol",
+      "summary_file": "current_source_findings.md",
+      "claims_file": "codec_claims.json"
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1781391109",
+      "reader": "codex-sol",
+      "summary_file": "current_source_findings.md",
+      "claims_file": "codec_claims.json"
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1781390455",
+      "reader": "codex-sol",
+      "summary_file": "current_source_findings.md",
+      "claims_file": "codec_claims.json"
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1781389772",
+      "reader": "codex-sol",
+      "summary_file": "current_source_findings.md",
+      "claims_file": "codec_claims.json"
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1781389319",
+      "reader": "codex-sol",
+      "summary_file": "current_source_findings.md",
+      "claims_file": "codec_claims.json"
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1781388706",
+      "reader": "codex-sol",
+      "summary_file": "current_source_findings.md",
+      "claims_file": "codec_claims.json"
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1781388057",
+      "reader": "codex-sol",
+      "summary_file": "current_source_findings.md",
+      "claims_file": "codec_claims.json"
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1781387481",
+      "reader": "codex-sol",
+      "summary_file": "current_source_findings.md",
+      "claims_file": "codec_claims.json"
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1781387038",
+      "reader": "codex-sol",
+      "summary_file": "current_source_findings.md",
+      "claims_file": "codec_claims.json"
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1781386672",
+      "reader": "codex-sol",
+      "summary_file": "current_source_findings.md",
+      "claims_file": "codec_claims.json"
+    }
+  ]
+}

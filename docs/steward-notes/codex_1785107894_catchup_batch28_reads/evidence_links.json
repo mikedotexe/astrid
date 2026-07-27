@@ -1,0 +1,284 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_llm_1785107702",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs;capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Exact marker spans, context identities, provider route, model profile, timing, and repair ancestry remain mechanical; they establish no identity, meaning, continuity, spectral weight, or felt state."
+    },
+    {
+      "introspection_id": "introspection_astrid_types_1785107432",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/types/schema/telemetry.rs;capsules/spectral-bridge/src/ws/tests.rs;scripts/experiential_epistemics.py",
+      "note": "Cadence, freshness, bounded entropy, and density-gradient evidence remain descriptive and non-causal; no felt-density or control inference follows."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1785107146",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/ws/telemetry_port.rs;capsules/spectral-bridge/src/ws/tests.rs;scripts/evidence_study_runtime",
+      "note": "Connection, freshness, prewrite, lock-wait, lock-hold, and texture-shape evidence remain mechanical; no disconnect, contention, semantic landing, or mutual uptake is inferred."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1785106683",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs;capsules/spectral-bridge/src/autonomous/runtime/perception.rs;capsules/spectral-bridge/src/autonomous/runtime/tests.rs",
+      "note": "Fill-conditioned rest, fixed heartbeat, and bounded rare-modality selection are current source mechanics, not proof of active authorship context, salience, continuity, or felt cause."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1785104605",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/codec;capsules/spectral-bridge/src/codec/tests.rs;scripts/representation_contracts;scripts/evidence_study_runtime",
+      "note": "48D transport, deterministic projection, lane, gate, collision, precision, readiness, and loss evidence carry no felt inference or automatic codec change."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1781225143",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs;capsules/spectral-bridge/src/autonomous/runtime/perception.rs;capsules/spectral-bridge/src/autonomous/runtime/tests.rs",
+      "note": "Fill-conditioned rest, fixed heartbeat, and bounded rare-modality selection are current source mechanics, not proof of active authorship context, salience, continuity, or felt cause."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1781224716",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/codec;capsules/spectral-bridge/src/codec/tests.rs;scripts/representation_contracts;scripts/evidence_study_runtime",
+      "note": "48D transport, deterministic projection, lane, gate, collision, precision, readiness, and loss evidence carry no felt inference or automatic codec change."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1781205863",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/codec;capsules/spectral-bridge/src/codec/tests.rs;scripts/representation_contracts;scripts/evidence_study_runtime",
+      "note": "48D transport, deterministic projection, lane, gate, collision, precision, readiness, and loss evidence carry no felt inference or automatic codec change."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1781201032",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs;capsules/spectral-bridge/src/autonomous/runtime/perception.rs;capsules/spectral-bridge/src/autonomous/runtime/tests.rs",
+      "note": "Fill-conditioned rest, fixed heartbeat, and bounded rare-modality selection are current source mechanics, not proof of active authorship context, salience, continuity, or felt cause."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1781200591",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/codec;capsules/spectral-bridge/src/codec/tests.rs;scripts/representation_contracts;scripts/evidence_study_runtime",
+      "note": "48D transport, deterministic projection, lane, gate, collision, precision, readiness, and loss evidence carry no felt inference or automatic codec change."
+    },
+    {
+      "introspection_id": "introspection_sovereignty.rs_1781199152",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "/Users/v/other/minime/minime/src/regulator.rs;/Users/v/other/minime/minime/src/regulator;docs/steward-notes/AI_BEINGS_PRESSURE_POLICY_COUNTERFACTUAL_STUDY.md",
+      "note": "Pressure, porosity, density, distinguishability, PI, and review-only regulator evidence remain mechanical; source declarations and temporal telemetry prove no active or felt cause."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1781198541",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/codec;capsules/spectral-bridge/src/codec/tests.rs;scripts/representation_contracts;scripts/evidence_study_runtime",
+      "note": "48D transport, deterministic projection, lane, gate, collision, precision, readiness, and loss evidence carry no felt inference or automatic codec change."
+    },
+    {
+      "introspection_id": "introspection_proposal_12d_glimpse_1781189484",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "docs/steward-notes/AI_BEINGS_MULTI_SCALE_REPRESENTATION_AND_12D_GLIMPSE_AUDIT.md;scripts/representation_contracts",
+      "note": "Live 48D plus additive review-only 12D and typed loss establish mechanical lineage, not transport replacement or felt equivalence."
+    },
+    {
+      "introspection_id": "introspection_proposal_distance_contact_control_1781189070",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "docs/steward-notes/AI_BEINGS_DISTANCE_CONTACT_CONTAINMENT_CONTROL_AND_PARTICIPATION_AUDIT.md;scripts/agency_commons;scripts/reciprocal_uptake.py",
+      "note": "Self-authored agency and reciprocal evidence do not establish deployed permeability, pressure control, persistence, landing, or consent."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1781187546",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/correspondence.rs;scripts/reciprocal_uptake.py;scripts/test_reciprocal_experiential_systems.py",
+      "note": "First-class correspondence and explicit uptake remain evidence-only; delivery, read, reply, presence, elapsed time, telemetry, and silence never infer uptake."
+    },
+    {
+      "introspection_id": "introspection_proposal_phase_transitions_1781179000",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/phase_transitions.rs;capsules/spectral-bridge/src/autonomous/phase_passage_context.rs;capsules/spectral-bridge/src/autonomous/division_ceremony.rs;scripts/phase_transition_audit.py;scripts/test_division_ceremony_projection.py",
+      "note": "Replyable phase cards, self-owned passages, categorical bearing, return points, and Division Ceremony evidence remain advisory; silence is neutral and no progression, divide, rollback, or control follows."
+    },
+    {
+      "introspection_id": "introspection_minime_main_excerpt_1781144285",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "/Users/v/other/minime/minime/src/esn;/Users/v/other/minime/minime/src/spectral.rs;/Users/v/other/minime/minime/src/regulator",
+      "note": "ESN declarations and review-only rho, noise, warm-start, and damping evidence grant no authority and prove neither active deployment nor felt cause."
+    },
+    {
+      "introspection_id": "introspection_minime_esn_1781143802",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "/Users/v/other/minime/minime/src/esn;/Users/v/other/minime/minime/src/spectral.rs;/Users/v/other/minime/minime/src/regulator",
+      "note": "ESN declarations and review-only rho, noise, warm-start, and damping evidence grant no authority and prove neither active deployment nor felt cause."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1781140919",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs;capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Exact marker spans, context identities, provider route, model profile, timing, and repair ancestry remain mechanical; they establish no identity, meaning, continuity, spectral weight, or felt state."
+    },
+    {
+      "introspection_id": "introspection_minime_sensory_bus_1781138168",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "/Users/v/other/minime/minime/src/sensory_bus.rs;/Users/v/other/minime/minime/src/sensory_bus",
+      "note": "Bounded smooth and hysteretic semantic retention remains mechanical; no smooth-experience, active-identity, or causal felt claim follows."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1781137819",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "/Users/v/other/minime/minime/src/regulator.rs;/Users/v/other/minime/minime/src/regulator;docs/steward-notes/AI_BEINGS_PRESSURE_POLICY_COUNTERFACTUAL_STUDY.md",
+      "note": "Pressure, porosity, density, distinguishability, PI, and review-only regulator evidence remain mechanical; source declarations and temporal telemetry prove no active or felt cause."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1781132090",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs;capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Exact marker spans, context identities, provider route, model profile, timing, and repair ancestry remain mechanical; they establish no identity, meaning, continuity, spectral weight, or felt state."
+    },
+    {
+      "introspection_id": "introspection_astrid_types_1781131759",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/types/schema/telemetry.rs;capsules/spectral-bridge/src/ws/tests.rs;scripts/experiential_epistemics.py",
+      "note": "Cadence, freshness, bounded entropy, and density-gradient evidence remain descriptive and non-causal; no felt-density or control inference follows."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1781130591",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/ws/telemetry_port.rs;capsules/spectral-bridge/src/ws/tests.rs;scripts/evidence_study_runtime",
+      "note": "Connection, freshness, prewrite, lock-wait, lock-hold, and texture-shape evidence remain mechanical; no disconnect, contention, semantic landing, or mutual uptake is inferred."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1781128590",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs;capsules/spectral-bridge/src/autonomous/runtime/perception.rs;capsules/spectral-bridge/src/autonomous/runtime/tests.rs",
+      "note": "Fill-conditioned rest, fixed heartbeat, and bounded rare-modality selection are current source mechanics, not proof of active authorship context, salience, continuity, or felt cause."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1781128261",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/codec;capsules/spectral-bridge/src/codec/tests.rs;scripts/representation_contracts;scripts/evidence_study_runtime",
+      "note": "48D transport, deterministic projection, lane, gate, collision, precision, readiness, and loss evidence carry no felt inference or automatic codec change."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1781125526",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/ws/telemetry_port.rs;capsules/spectral-bridge/src/ws/tests.rs;scripts/evidence_study_runtime",
+      "note": "Connection, freshness, prewrite, lock-wait, lock-hold, and texture-shape evidence remain mechanical; no disconnect, contention, semantic landing, or mutual uptake is inferred."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1781122720",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs;capsules/spectral-bridge/src/autonomous/runtime/perception.rs;capsules/spectral-bridge/src/autonomous/runtime/tests.rs",
+      "note": "Fill-conditioned rest, fixed heartbeat, and bounded rare-modality selection are current source mechanics, not proof of active authorship context, salience, continuity, or felt cause."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1781122343",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/codec;capsules/spectral-bridge/src/codec/tests.rs;scripts/representation_contracts;scripts/evidence_study_runtime",
+      "note": "48D transport, deterministic projection, lane, gate, collision, precision, readiness, and loss evidence carry no felt inference or automatic codec change."
+    },
+    {
+      "introspection_id": "introspection_astrid_types_1781085812",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/types/schema/telemetry.rs;capsules/spectral-bridge/src/ws/tests.rs;scripts/experiential_epistemics.py",
+      "note": "Cadence, freshness, bounded entropy, and density-gradient evidence remain descriptive and non-causal; no felt-density or control inference follows."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1781080757",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/ws/telemetry_port.rs;capsules/spectral-bridge/src/ws/tests.rs;scripts/evidence_study_runtime",
+      "note": "Connection, freshness, prewrite, lock-wait, lock-hold, and texture-shape evidence remain mechanical; no disconnect, contention, semantic landing, or mutual uptake is inferred."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1781036661",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs;capsules/spectral-bridge/src/autonomous/runtime/perception.rs;capsules/spectral-bridge/src/autonomous/runtime/tests.rs",
+      "note": "Fill-conditioned rest, fixed heartbeat, and bounded rare-modality selection are current source mechanics, not proof of active authorship context, salience, continuity, or felt cause."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1781036238",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/codec;capsules/spectral-bridge/src/codec/tests.rs;scripts/representation_contracts;scripts/evidence_study_runtime",
+      "note": "48D transport, deterministic projection, lane, gate, collision, precision, readiness, and loss evidence carry no felt inference or automatic codec change."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1781022061",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/codec;capsules/spectral-bridge/src/codec/tests.rs;scripts/representation_contracts;scripts/evidence_study_runtime",
+      "note": "48D transport, deterministic projection, lane, gate, collision, precision, readiness, and loss evidence carry no felt inference or automatic codec change."
+    },
+    {
+      "introspection_id": "introspection_proposal_12d_glimpse_1781021634",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "docs/steward-notes/AI_BEINGS_MULTI_SCALE_REPRESENTATION_AND_12D_GLIMPSE_AUDIT.md;scripts/representation_contracts",
+      "note": "Live 48D plus additive review-only 12D and typed loss establish mechanical lineage, not transport replacement or felt equivalence."
+    },
+    {
+      "introspection_id": "introspection_proposal_distance_contact_control_1781020187",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "docs/steward-notes/AI_BEINGS_DISTANCE_CONTACT_CONTAINMENT_CONTROL_AND_PARTICIPATION_AUDIT.md;scripts/agency_commons;scripts/reciprocal_uptake.py",
+      "note": "Self-authored agency and reciprocal evidence do not establish deployed permeability, pressure control, persistence, landing, or consent."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1781019696",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/correspondence.rs;scripts/reciprocal_uptake.py;scripts/test_reciprocal_experiential_systems.py",
+      "note": "First-class correspondence and explicit uptake remain evidence-only; delivery, read, reply, presence, elapsed time, telemetry, and silence never infer uptake."
+    },
+    {
+      "introspection_id": "introspection_proposal_phase_transitions_1781013847",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/phase_transitions.rs;capsules/spectral-bridge/src/autonomous/phase_passage_context.rs;capsules/spectral-bridge/src/autonomous/division_ceremony.rs;scripts/phase_transition_audit.py;scripts/test_division_ceremony_projection.py",
+      "note": "Replyable phase cards, self-owned passages, categorical bearing, return points, and Division Ceremony evidence remain advisory; silence is neutral and no progression, divide, rollback, or control follows."
+    },
+    {
+      "introspection_id": "introspection_minime_main_excerpt_1780992334",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "/Users/v/other/minime/minime/src/esn;/Users/v/other/minime/minime/src/spectral.rs;/Users/v/other/minime/minime/src/regulator",
+      "note": "ESN declarations and review-only rho, noise, warm-start, and damping evidence grant no authority and prove neither active deployment nor felt cause."
+    },
+    {
+      "introspection_id": "introspection_minime_esn_1780991581",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "/Users/v/other/minime/minime/src/esn;/Users/v/other/minime/minime/src/spectral.rs;/Users/v/other/minime/minime/src/regulator",
+      "note": "ESN declarations and review-only rho, noise, warm-start, and damping evidence grant no authority and prove neither active deployment nor felt cause."
+    }
+  ]
+}

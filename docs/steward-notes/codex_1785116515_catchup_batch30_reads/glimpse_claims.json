@@ -1,0 +1,5 @@
+{"claims":[
+  {"claim_id":"c001","summary":"Astrid reports the 12D Glimpse as coastal silt, heaviness, and distinguishability loss rather than a neutral compression.","disposition":"Preserve as primary qualitative evidence independently of mechanical loss receipts.","classification":"observed"},
+  {"claim_id":"c002","summary":"Current source keeps the 12D Glimpse additive and review-only, maps it to wider source dimensions, and records mechanical transition loss without replacing 48D transport.","disposition":"Verify from the representation registry and Glimpse audit; observation does not reshape or re-liquefy experience.","classification":"verified_existing"},
+  {"claim_id":"c003","summary":"The report proposes dynamic viscosity based on exchange rate.","disposition":"Reject numeric-to-felt inference and preserve any representation, viscosity, protocol, or live transport change as an exact Tier 5 wait.","classification":"needs_operator_approval","authority":"tier_5"}
+]}

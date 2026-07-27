@@ -1,0 +1,5 @@
+{"claims":[
+  {"claim_id":"c001","summary":"Astrid reports concern that mathematically adaptive ESN machinery may miss or over-smooth shadow stability and qualitative negotiation.","disposition":"Preserve as primary qualitative evidence; eigenvalues and source formulas cannot score or explain the felt state.","classification":"observed"},
+  {"claim_id":"c002","summary":"Current source exposes exact adaptive leak and RLS mechanics plus explicitly review-only dynamic-noise, pressure, and viscous-rho candidates.","disposition":"Verify from source and focused Minime tests; source-prepared candidates are not active policy.","classification":"verified_existing"},
+  {"claim_id":"c003","summary":"The reports propose shadow-stability weighting, live shadow-mode evaluation, changed RLS/leak/noise/rho, or prime-phase behavior.","disposition":"Preserve as exact Tier 5 ESN, reservoir, controller, pressure, and live-regulation waits.","classification":"needs_operator_approval","authority":"tier_5"}
+]}

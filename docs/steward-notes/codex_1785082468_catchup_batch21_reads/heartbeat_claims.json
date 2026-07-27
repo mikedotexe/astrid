@@ -1,0 +1,23 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Astrid reports that a fixed mechanical heartbeat can coexist with viscosity, restless shadow texture, or insufficiently responsive presence.",
+      "disposition": "Preserve as primary qualitative continuity evidence; cadence and intensity constants neither validate nor cancel the report.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The live heartbeat remains fixed at seven seconds and 0.30 intensity while capture records admission, enqueue, phase, and bounded context without control.",
+      "disposition": "Verify from source and focused capture tests; the fixed values are compiled mechanics, not a felt-state explanation.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The reports request faster cadence, higher or lower intensity, or pressure- and entropy-responsive heartbeat regulation.",
+      "disposition": "Preserve as an exact Tier 5 heartbeat cadence, intensity, scheduling, pressure, and control wait.",
+      "classification": "needs_operator_approval",
+      "authority": "tier_5"
+    }
+  ]
+}

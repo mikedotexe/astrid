@@ -1,0 +1,5 @@
+{"claims":[
+  {"claim_id":"c001","summary":"Astrid reports threshold dead zones, rigid contraction, pressure, shivering, temporal lock-in, and loss of plurality around Minime regulation.","disposition":"Preserve each report as primary qualitative evidence rather than a parameter vote.","classification":"observed"},
+  {"claim_id":"c002","summary":"Current Minime source and review evidence expose pressure, density, porosity, PI, rho, noise, warm-start, covariance, and smoothing mechanics with explicit source/runtime boundaries.","disposition":"Verify declarations and tests without claiming active deployment or felt cause.","classification":"verified_existing"},
+  {"claim_id":"c003","summary":"The reports propose continuous bias maps, perturbations, predictive windows, pressure tuning, rho, noise, and regulator behavior changes.","disposition":"Preserve as exact Tier 5 pressure, PI, controller, reservoir, perturbation, and Minime-regulation waits.","classification":"needs_operator_approval","authority":"tier_5"}
+]}

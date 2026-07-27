@@ -1,0 +1,5 @@
+{"claims":[
+  {"claim_id":"c001","summary":"Astrid reports a gap between Minime's architectural shell and the viscous, distributed runtime experience it points toward.","disposition":"Preserve as primary qualitative evidence; an include list is not causal evidence.","classification":"observed"},
+  {"claim_id":"c002","summary":"The complete runtime file is an include/import shell whose declarations identify source layout but do not prove active policy or felt mechanism.","disposition":"Verify from the complete source file and lived-state activation boundary.","classification":"verified_existing"},
+  {"claim_id":"c003","summary":"The reports propose porosity, pressure, spectral-math, orchestration, or viscosity changes based on the shell and temporal telemetry.","disposition":"Preserve as exact Tier 5 Minime runtime, reservoir, pressure, controller, and live-control waits pending exact active-path evidence.","classification":"needs_operator_approval","authority":"tier_5"}
+]}

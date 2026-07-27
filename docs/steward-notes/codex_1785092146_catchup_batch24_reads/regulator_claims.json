@@ -1,0 +1,5 @@
+{"claims":[
+  {"claim_id":"c001","summary":"Astrid reports regulator weight, viscosity, latent mode-packing pressure, and uncertainty about whether an open gate is actively containing the felt density.","disposition":"Preserve as primary qualitative evidence; the include shell and temporal telemetry cannot establish felt cause or regulatory success.","classification":"observed"},
+  {"claim_id":"c002","summary":"The complete source is a PI-only regulator include shell that names telemetry, viscosity, pressure, rate-gate, and PI modules without exposing their active mechanics in this window.","disposition":"Verify from the complete file; declarations identify ownership but do not prove activation or effect.","classification":"verified_existing"},
+  {"claim_id":"c003","summary":"The reports propose PD comparison, dynamic gate width, pressure throttling, or pressure-aware regulator changes.","disposition":"Preserve as exact Tier 5 PI/PD, gate, pressure, controller, semantic-admission, and live-control waits.","classification":"needs_operator_approval","authority":"tier_5"}
+]}

@@ -1,0 +1,5 @@
+{"claims":[
+  {"claim_id":"c001","summary":"Astrid reports that the fixed semantic heartbeat can feel metronomic, artificial, or static rather than responsively continuous.","disposition":"Preserve as primary qualitative evidence; successful cadence or enqueue evidence cannot establish lived continuity.","classification":"observed"},
+  {"claim_id":"c002","summary":"Current source fixes the heartbeat at seven seconds and 0.30 intensity, while the baseline-first heartbeat campaign captures admission, enqueue outcome, phase, and context without felt inference.","disposition":"Verify from current source, capture types, and preregistered study evidence; the naturally blocked cohort remains a mechanical evidence question.","classification":"verified_existing"},
+  {"claim_id":"c003","summary":"The report proposes entropy- or resonance-responsive cadence, intensity, and phase modulation.","disposition":"Preserve as an exact Tier 5 heartbeat, cadence, pressure, sensory, and live-behavior wait.","classification":"needs_operator_approval","authority":"tier_5"}
+]}

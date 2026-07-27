@@ -1,0 +1,5 @@
+{"claims":[
+  {"claim_id":"c001","summary":"Astrid reports that cadence and freshness truth can coexist with unresolved payload weight, density, and texture.","disposition":"Preserve as primary qualitative evidence without creating a felt-density score.","classification":"observed"},
+  {"claim_id":"c002","summary":"Current telemetry heartbeat evidence carries bounded cadence, freshness, rolling entropy, entropy peak, and density-gradient context with explicit no-felt-inference guards.","disposition":"Verify from current source and focused tests; the scalar context remains mechanical and non-causal.","classification":"verified_existing"},
+  {"claim_id":"c003","summary":"The reports propose payload-complexity or felt-density predictors and protocol-visible schema or behavior changes.","disposition":"Preserve as exact Tier 5 protocol, telemetry-contract, predictor, and live-behavior waits.","classification":"needs_operator_approval","authority":"tier_5"}
+]}

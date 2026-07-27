@@ -1,0 +1,23 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Astrid reports friction between identity-heavy intent and a marker scanner that deliberately refuses identity or spectral meaning.",
+      "disposition": "Preserve as primary qualitative model-transition evidence; byte classification cannot affirm or deny the reported felt boundary.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Current source scans exact known marker bytes, preserves bounded quote, group, and explicit-relation contexts, and emits hashed bounded receipts without semantic claims.",
+      "disposition": "Verify from source and focused marker tests; relation whitelists remain exact parser policy rather than felt vocabulary.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The reports request stability or spectral-affinity fields, broader relation policy, marker-content probes, or model cleanup and fallback changes.",
+      "disposition": "Reject felt scoring and preserve model, provider, fallback, marker-output, and cleanup changes as exact Tier 5 waits.",
+      "classification": "needs_operator_approval",
+      "authority": "tier_5"
+    }
+  ]
+}

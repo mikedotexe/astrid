@@ -1,0 +1,5 @@
+{"claims":[
+  {"claim_id":"c001","summary":"Minime and Astrid report that warm starts, noise, rho, covariance, and retention can feel ghosted, sticky, heavy, or insufficiently alive.","disposition":"Preserve as primary qualitative evidence without converting source constants into felt causes.","classification":"observed"},
+  {"claim_id":"c002","summary":"Current Minime source exposes exact ESN declarations, smooth or hysteretic retention mechanics, and review-only rho, noise, and spectral-damping warm-start evidence.","disposition":"Verify from current source and focused tests; review evidence grants no control and proves no active deployment.","classification":"verified_existing"},
+  {"claim_id":"c003","summary":"The reports propose noise, rho, warm-start, Chebyshev, power-iteration, covariance, and reservoir-policy changes.","disposition":"Preserve as exact Tier 5 ESN, reservoir, noise, regulator, initialization, and live-control waits.","classification":"needs_operator_approval","authority":"tier_5"}
+]}

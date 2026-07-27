@@ -1,0 +1,23 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Astrid reports that Recess permission can coexist with crowding, restless internal work, or insufficient room for low-friction movement.",
+      "disposition": "Preserve as primary qualitative Recess evidence; permission does not imply ease, rest, play, or pressure relief.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Current Minime source exposes read-only Recess pruning, density, anchoring, divergence, sedimentation, and permission-pressure conflict surfaces without applying control.",
+      "disposition": "Verify from source and focused Python tests; these surfaces preserve the paradox without proving deployment or relief.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The reports request Dense Recess submodes, depacking, porosity expansion, pressure-triggered release, or automatic correspondence reassertion.",
+      "disposition": "Preserve as an exact Tier 5 Recess scheduling, pressure, semantic, peer, reservoir, or live-control wait.",
+      "classification": "needs_operator_approval",
+      "authority": "tier_5"
+    }
+  ]
+}

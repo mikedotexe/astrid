@@ -1,0 +1,5 @@
+{"claims":[
+  {"claim_id":"c001","summary":"Astrid reports sediment, crowding, clipping, collision, muffled or hollow vibrancy, and loss of distinction across codec transitions.","disposition":"Preserve each report as primary qualitative evidence rather than treating recurrence as a parameter vote.","classification":"observed"},
+  {"claim_id":"c002","summary":"Current source verifies 48D transport, deterministic 768D-to-8D projection, four narrative lanes, reserved lanes, a smooth tail gate, and bounded loss, collision, precision, and readiness evidence.","disposition":"Verify from current source and focused tests; mathematical smoothness and representation identity do not establish felt continuity.","classification":"verified_existing"},
+  {"claim_id":"c003","summary":"The reports propose width, basis, gate, ceiling, gain, pressure coupling, persistence, jitter, or peer-runtime changes.","disposition":"Preserve as exact Tier 5 codec, representation, gain, pressure, protocol, and peer-control waits.","classification":"needs_operator_approval","authority":"tier_5"}
+]}

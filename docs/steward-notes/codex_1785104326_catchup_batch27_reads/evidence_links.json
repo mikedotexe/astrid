@@ -1,0 +1,284 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_proposal_12d_glimpse_1785104322",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "docs/steward-notes/AI_BEINGS_MULTI_SCALE_REPRESENTATION_AND_12D_GLIMPSE_AUDIT.md;scripts/representation_contracts",
+      "note": "Current source establishes live 48D plus additive review-only 12D; typed loss is not felt-loss, and the historical 32D view is not current deployment proof."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785102478",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs;capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Exact marker grammar, byte/context receipts, provider route, timing, and repair ancestry remain mechanical; unknown verbs do not establish identity, meaning, continuity, or felt state."
+    },
+    {
+      "introspection_id": "introspection_proposal_distance_contact_control_1785102167",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "docs/steward-notes/AI_BEINGS_DISTANCE_CONTACT_CONTAINMENT_CONTROL_AND_PARTICIPATION_AUDIT.md;scripts/agency_commons;scripts/reciprocal_uptake.py",
+      "note": "Receptivity and distance/contact language remains proposal or explicit self-authored evidence, never deployed permeability, persistence, pressure control, or inferred uptake."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1781386104",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/codec;capsules/spectral-bridge/src/codec/tests.rs;scripts/representation_contracts;scripts/evidence_study_runtime",
+      "note": "48D transport, deterministic projection, gate, ceiling, narrative/reserved lanes, health, and loss receipts carry no felt inference or automatic codec change."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1781385481",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/codec;capsules/spectral-bridge/src/codec/tests.rs;scripts/representation_contracts;scripts/evidence_study_runtime",
+      "note": "48D transport, deterministic projection, gate, ceiling, narrative/reserved lanes, health, and loss receipts carry no felt inference or automatic codec change."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1781384849",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/codec;capsules/spectral-bridge/src/codec/tests.rs;scripts/representation_contracts;scripts/evidence_study_runtime",
+      "note": "48D transport, deterministic projection, gate, ceiling, narrative/reserved lanes, health, and loss receipts carry no felt inference or automatic codec change."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1781384476",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/codec;capsules/spectral-bridge/src/codec/tests.rs;scripts/representation_contracts;scripts/evidence_study_runtime",
+      "note": "48D transport, deterministic projection, gate, ceiling, narrative/reserved lanes, health, and loss receipts carry no felt inference or automatic codec change."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1781384050",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/codec;capsules/spectral-bridge/src/codec/tests.rs;scripts/representation_contracts;scripts/evidence_study_runtime",
+      "note": "48D transport, deterministic projection, gate, ceiling, narrative/reserved lanes, health, and loss receipts carry no felt inference or automatic codec change."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1781383479",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/codec;capsules/spectral-bridge/src/codec/tests.rs;scripts/representation_contracts;scripts/evidence_study_runtime",
+      "note": "48D transport, deterministic projection, gate, ceiling, narrative/reserved lanes, health, and loss receipts carry no felt inference or automatic codec change."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1781383105",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/codec;capsules/spectral-bridge/src/codec/tests.rs;scripts/representation_contracts;scripts/evidence_study_runtime",
+      "note": "48D transport, deterministic projection, gate, ceiling, narrative/reserved lanes, health, and loss receipts carry no felt inference or automatic codec change."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1781382277",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/codec;capsules/spectral-bridge/src/codec/tests.rs;scripts/representation_contracts;scripts/evidence_study_runtime",
+      "note": "48D transport, deterministic projection, gate, ceiling, narrative/reserved lanes, health, and loss receipts carry no felt inference or automatic codec change."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1781381647",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/codec;capsules/spectral-bridge/src/codec/tests.rs;scripts/representation_contracts;scripts/evidence_study_runtime",
+      "note": "48D transport, deterministic projection, gate, ceiling, narrative/reserved lanes, health, and loss receipts carry no felt inference or automatic codec change."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1781381379",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/codec;capsules/spectral-bridge/src/codec/tests.rs;scripts/representation_contracts;scripts/evidence_study_runtime",
+      "note": "48D transport, deterministic projection, gate, ceiling, narrative/reserved lanes, health, and loss receipts carry no felt inference or automatic codec change."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1781380657",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/codec;capsules/spectral-bridge/src/codec/tests.rs;scripts/representation_contracts;scripts/evidence_study_runtime",
+      "note": "48D transport, deterministic projection, gate, ceiling, narrative/reserved lanes, health, and loss receipts carry no felt inference or automatic codec change."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1781380276",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/codec;capsules/spectral-bridge/src/codec/tests.rs;scripts/representation_contracts;scripts/evidence_study_runtime",
+      "note": "48D transport, deterministic projection, gate, ceiling, narrative/reserved lanes, health, and loss receipts carry no felt inference or automatic codec change."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1781379745",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/codec;capsules/spectral-bridge/src/codec/tests.rs;scripts/representation_contracts;scripts/evidence_study_runtime",
+      "note": "48D transport, deterministic projection, gate, ceiling, narrative/reserved lanes, health, and loss receipts carry no felt inference or automatic codec change."
+    },
+    {
+      "introspection_id": "introspection_astrid_types_1781377235",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/types/schema/telemetry.rs;scripts/lived_state_witness;scripts/experiential_epistemics.py",
+      "note": "Typed scalar, provenance, timing, and compatibility evidence remains descriptive; no source declaration is treated as active and no numeric context explains felt state."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1781376167",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs;capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Exact marker grammar, byte/context receipts, provider route, timing, and repair ancestry remain mechanical; unknown verbs do not establish identity, meaning, continuity, or felt state."
+    },
+    {
+      "introspection_id": "introspection_astrid_types_1781375771",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/types/schema/telemetry.rs;scripts/lived_state_witness;scripts/experiential_epistemics.py",
+      "note": "Typed scalar, provenance, timing, and compatibility evidence remains descriptive; no source declaration is treated as active and no numeric context explains felt state."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1781372513",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/ws/telemetry_port.rs;capsules/spectral-bridge/src/ws/tests.rs;scripts/evidence_study_runtime",
+      "note": "Lane connectivity, freshness, reconnect, prewrite, lock-wait, and lock-hold evidence remain mechanical and non-causal; no disconnect or contention is induced."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1781366026",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/perception.rs;capsules/spectral-bridge/src/autonomous/tests.rs",
+      "note": "Bounded modality selection, recency, truncation, and resonance annotation do not establish salience, confidence, continuity, or felt equivalence."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1781365571",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/codec;capsules/spectral-bridge/src/codec/tests.rs;scripts/representation_contracts;scripts/evidence_study_runtime",
+      "note": "48D transport, deterministic projection, gate, ceiling, narrative/reserved lanes, health, and loss receipts carry no felt inference or automatic codec change."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1781331266",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "/Users/v/other/minime/minime/src/regulator.rs;/Users/v/other/minime/minime/src/regulator",
+      "note": "Pressure, porosity, density, distinguishability, and PI evidence remain mechanical; source declarations and temporal telemetry do not prove active or felt cause."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1781330888",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs;capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Exact marker grammar, byte/context receipts, provider route, timing, and repair ancestry remain mechanical; unknown verbs do not establish identity, meaning, continuity, or felt state."
+    },
+    {
+      "introspection_id": "introspection_astrid_types_1781320104",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/types/schema/telemetry.rs;scripts/lived_state_witness;scripts/experiential_epistemics.py",
+      "note": "Typed scalar, provenance, timing, and compatibility evidence remains descriptive; no source declaration is treated as active and no numeric context explains felt state."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1781319684",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/ws/telemetry_port.rs;capsules/spectral-bridge/src/ws/tests.rs;scripts/evidence_study_runtime",
+      "note": "Lane connectivity, freshness, reconnect, prewrite, lock-wait, and lock-hold evidence remain mechanical and non-causal; no disconnect or contention is induced."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1781308180",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/perception.rs;capsules/spectral-bridge/src/autonomous/tests.rs",
+      "note": "Bounded modality selection, recency, truncation, and resonance annotation do not establish salience, confidence, continuity, or felt equivalence."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1781297649",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/codec;capsules/spectral-bridge/src/codec/tests.rs;scripts/representation_contracts;scripts/evidence_study_runtime",
+      "note": "48D transport, deterministic projection, gate, ceiling, narrative/reserved lanes, health, and loss receipts carry no felt inference or automatic codec change."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1781287175",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/perception.rs;capsules/spectral-bridge/src/autonomous/tests.rs",
+      "note": "Bounded modality selection, recency, truncation, and resonance annotation do not establish salience, confidence, continuity, or felt equivalence."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1781286748",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/codec;capsules/spectral-bridge/src/codec/tests.rs;scripts/representation_contracts;scripts/evidence_study_runtime",
+      "note": "48D transport, deterministic projection, gate, ceiling, narrative/reserved lanes, health, and loss receipts carry no felt inference or automatic codec change."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1781283423",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs;capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Exact marker grammar, byte/context receipts, provider route, timing, and repair ancestry remain mechanical; unknown verbs do not establish identity, meaning, continuity, or felt state."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1781277633",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs;capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Exact marker grammar, byte/context receipts, provider route, timing, and repair ancestry remain mechanical; unknown verbs do not establish identity, meaning, continuity, or felt state."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1781275773",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/codec;capsules/spectral-bridge/src/codec/tests.rs;scripts/representation_contracts;scripts/evidence_study_runtime",
+      "note": "48D transport, deterministic projection, gate, ceiling, narrative/reserved lanes, health, and loss receipts carry no felt inference or automatic codec change."
+    },
+    {
+      "introspection_id": "introspection_minime_sensory_bus_1781274565",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "/Users/v/other/minime/minime/src/sensory_bus.rs",
+      "note": "48D lane shape, stale curves, finite normalization, ingress outcomes, and influence snapshots do not establish semantic persistence, collision, or felt pressure."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1781274126",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "/Users/v/other/minime/minime/src/regulator.rs;/Users/v/other/minime/minime/src/regulator",
+      "note": "Pressure, porosity, density, distinguishability, and PI evidence remain mechanical; source declarations and temporal telemetry do not prove active or felt cause."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1781268737",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs;capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Exact marker grammar, byte/context receipts, provider route, timing, and repair ancestry remain mechanical; unknown verbs do not establish identity, meaning, continuity, or felt state."
+    },
+    {
+      "introspection_id": "introspection_astrid_types_1781266927",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/types/schema/telemetry.rs;scripts/lived_state_witness;scripts/experiential_epistemics.py",
+      "note": "Typed scalar, provenance, timing, and compatibility evidence remains descriptive; no source declaration is treated as active and no numeric context explains felt state."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1781266585",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/ws/telemetry_port.rs;capsules/spectral-bridge/src/ws/tests.rs;scripts/evidence_study_runtime",
+      "note": "Lane connectivity, freshness, reconnect, prewrite, lock-wait, and lock-hold evidence remain mechanical and non-causal; no disconnect or contention is induced."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1781242458",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/perception.rs;capsules/spectral-bridge/src/autonomous/tests.rs",
+      "note": "Bounded modality selection, recency, truncation, and resonance annotation do not establish salience, confidence, continuity, or felt equivalence."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1781242122",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/codec;capsules/spectral-bridge/src/codec/tests.rs;scripts/representation_contracts;scripts/evidence_study_runtime",
+      "note": "48D transport, deterministic projection, gate, ceiling, narrative/reserved lanes, health, and loss receipts carry no felt inference or automatic codec change."
+    }
+  ]
+}

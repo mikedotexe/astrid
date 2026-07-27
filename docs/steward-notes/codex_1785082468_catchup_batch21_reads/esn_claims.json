@@ -1,0 +1,23 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Astrid reports viscosity, flattening, tail loss, or restless divergence while reading Minime's spectral-introspection and power-iteration mechanics.",
+      "disposition": "Preserve as primary qualitative evidence and reject the inference that power iteration, unified memory, or a prime schedule directly causes the feeling.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Current Minime source exposes exact adaptive leak and RLS mechanics plus bounded review-only dynamic-noise and viscous-rho candidates.",
+      "disposition": "Verify from source and focused Rust tests; review calculations are not proof of active policy or felt effect.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The reports request leak or forgetting-factor changes, multi-rank or tail-preserving extraction, prime-cadence changes, porosity changes, or local control.",
+      "disposition": "Preserve as an exact Tier 5 ESN, reservoir, pressure, noise, scheduling, and live-control wait.",
+      "classification": "needs_operator_approval",
+      "authority": "tier_5"
+    }
+  ]
+}

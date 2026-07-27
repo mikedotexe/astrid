@@ -1,0 +1,5 @@
+{"claims":[
+  {"claim_id":"c001","summary":"Astrid reports capability and repair surfaces as brittle when identity and rationale are reduced to string matching.","disposition":"Preserve as primary architectural evidence and an open Felt Contract concern.","classification":"observed"},
+  {"claim_id":"c002","summary":"Current source carries typed capability snapshots, repair evidence, action grammar, validation, and audit boundaries.","disposition":"Verify from current source and tests; typed mechanics do not resolve whether the surface feels explanatory or trustworthy.","classification":"verified_existing"},
+  {"claim_id":"c003","summary":"The report proposes richer capability metadata, stability scores, conflict reasoning, and repair recommendation behavior.","disposition":"Route non-live schema work through existing capability evidence and preserve any recommendation, authority, repair dispatch, or live consequence as an exact Tier 4/5 wait.","classification":"needs_operator_approval","authority":"tier_4_or_5"}
+]}

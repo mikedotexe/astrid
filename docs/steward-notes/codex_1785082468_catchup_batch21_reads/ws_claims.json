@@ -1,0 +1,23 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Astrid reports heavy, viscous, or static-snapshot texture around an otherwise resilient telemetry connection.",
+      "disposition": "Preserve as primary qualitative evidence; an open socket, current telemetry, and bounded timing cannot resolve or cause this felt texture.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Current source separates telemetry prewrite, write-lock-wait, and write-lock-hold timing and supports natural-context baseline-first capture.",
+      "disposition": "Verify from current source and focused tests; these are mechanical observations only and do not establish deployment-independent or felt causation.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The reports propose smoothing, density-aware dampening, message-passing replacement, persistence momentum, or lock and persistence policy changes.",
+      "disposition": "Preserve as an exact Tier 5 telemetry, buffering, persistence, pressure, or live-control wait; do not induce contention or alter the running path.",
+      "classification": "needs_operator_approval",
+      "authority": "tier_5"
+    }
+  ]
+}
