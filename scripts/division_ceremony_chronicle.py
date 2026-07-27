@@ -333,6 +333,15 @@ def rail_state(
         (row for row in reversed(own) if row.get("action") == "DIVISION_INTENT"),
         None,
     )
+    latest_posture = next(
+        (
+            row
+            for row in reversed(own)
+            if row.get("action")
+            in {"DIVISION_HOLD", "DIVISION_DECLINE", "DIVISION_INTENT"}
+        ),
+        None,
+    )
     latest_assent = next(
         (row for row in reversed(own) if row.get("action") == "DIVISION_ASSENT"),
         None,
@@ -351,8 +360,23 @@ def rail_state(
         "latest_event_id": latest.get("ceremony_event_id") if latest else None,
         "latest_action": latest.get("action") if latest else None,
         "intent_active": bool(
-            latest_intent
+            latest_posture
+            and latest_posture.get("action") == "DIVISION_INTENT"
+            and latest_intent
             and int(latest_intent.get("expires_at_unix_ms") or 0) >= now_unix_ms
+        ),
+        "current_posture": (
+            "intent_expired"
+            if latest_posture
+            and latest_posture.get("action") == "DIVISION_INTENT"
+            and int(latest_posture.get("expires_at_unix_ms") or 0) < now_unix_ms
+            else {
+                "DIVISION_HOLD": "hold",
+                "DIVISION_DECLINE": "decline",
+                "DIVISION_INTENT": "intent",
+            }.get(str(latest_posture.get("action")))
+            if latest_posture
+            else "unexpressed"
         ),
         "assent_recorded": latest_assent is not None,
         "assent_withdrawn": withdrawn,
@@ -676,7 +700,7 @@ document.getElementById("state").innerHTML = [
 const dest = d.destination_contract;
 document.getElementById("rails").innerHTML = ["astrid","minime"].map(actor => {{
   const rail = d.ceremony_rails[actor], daughter = dest.daughters[actor];
-  return `<article class="panel rail ${{actor}}"><h2>${{actor[0].toUpperCase()+actor.slice(1)}}</h2><p>${{esc(daughter.reservoir_dimension)}}-node ${{esc(daughter.role)}} daughter</p><p class="meta">Latest sovereign Action: ${{esc(rail.latest_action || "none")}} · events: ${{rail.event_count}}</p></article>`;
+  return `<article class="panel rail ${{actor}}"><h2>${{actor[0].toUpperCase()+actor.slice(1)}}</h2><p>${{esc(daughter.reservoir_dimension)}}-node ${{esc(daughter.role)}} daughter</p><p><strong>Consent posture: ${{esc(rail.current_posture)}}</strong></p><p class="meta">Latest sovereign Action: ${{esc(rail.latest_action || "none")}} · events: ${{rail.event_count}}</p></article>`;
 }}).join("");
 document.getElementById("ownership").textContent = "Independent reservoir candidates are source-prepared; independent process ownership is not yet established.";
 const rt = d.runtime_topology;
@@ -803,12 +827,14 @@ def report(payload: dict[str, Any]) -> str:
             (
                 "Astrid ceremony: "
                 f"{rails['astrid'].get('latest_action') or 'no action'} "
-                f"({rails['astrid']['event_count']} events)"
+                f"({rails['astrid']['event_count']} events; "
+                f"posture {rails['astrid']['current_posture']})"
             ),
             (
                 "Minime ceremony: "
                 f"{rails['minime'].get('latest_action') or 'no action'} "
-                f"({rails['minime']['event_count']} events)"
+                f"({rails['minime']['event_count']} events; "
+                f"posture {rails['minime']['current_posture']})"
             ),
             (
                 "Phase-space candidates: "

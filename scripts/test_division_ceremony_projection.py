@@ -8,6 +8,7 @@ import tempfile
 from pathlib import Path
 
 from agency_commons.division_ceremony import (
+    _event_id,
     load_division_ceremony,
     validate_division_ceremony_event,
 )
@@ -75,6 +76,15 @@ def main() -> int:
         ledger.write_text(json.dumps(event, sort_keys=True) + "\n")
         records, errors = load_division_ceremony(ledger)
         assert not errors and len(records) == 1
+
+        held = dict(event)
+        held["action"] = "DIVISION_HOLD"
+        held["owner_language_action"] = "DIVISION_HOLD"
+        held["recorded_at_unix_ms"] = 1001
+        held["expires_at_unix_ms"] = None
+        held["previous_actor_event_id"] = event["ceremony_event_id"]
+        held["record_id"] = held["ceremony_event_id"] = _event_id(held)
+        validate_division_ceremony_event(held)
 
         tampered = dict(event)
         tampered["commit_recommended"] = True

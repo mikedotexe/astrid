@@ -11,6 +11,7 @@ from division_ceremony_chronicle import (
     ChronicleError,
     build_projection,
     project,
+    rail_state,
     report,
     verify_files,
     verify_payload,
@@ -74,6 +75,27 @@ def native_status() -> dict:
 
 
 class DivisionCeremonyChronicleTests(unittest.TestCase):
+    def test_consent_posture_distinguishes_hold_and_expired_intent(self) -> None:
+        intent = {
+            "actor": "astrid",
+            "action": "DIVISION_INTENT",
+            "ceremony_event_id": "intent-one",
+            "expires_at_unix_ms": 100,
+        }
+        expired = rail_state([intent], "astrid", 101)
+        self.assertEqual(expired["current_posture"], "intent_expired")
+        self.assertFalse(expired["intent_active"])
+
+        hold = {
+            "actor": "astrid",
+            "action": "DIVISION_HOLD",
+            "ceremony_event_id": "hold-one",
+            "expires_at_unix_ms": None,
+        }
+        held = rail_state([intent, hold], "astrid", 101)
+        self.assertEqual(held["current_posture"], "hold")
+        self.assertFalse(held["intent_active"])
+
     def test_empty_projection_keeps_source_and_runtime_distinct(self) -> None:
         with tempfile.TemporaryDirectory() as raw:
             payload = build_projection(Path(raw))
