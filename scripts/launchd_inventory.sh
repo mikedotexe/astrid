@@ -64,10 +64,13 @@ legacy_labels=(
 )
 
 opt_in_plists=(
-    "$MINIME_DIR/launchd/com.minime.division-child-minime.plist"
-    "$MINIME_DIR/launchd/com.minime.division-child-astrid.plist"
     "$MINIME_DIR/launchd/com.minime.engine-rescue.plist"
     "$MINIME_DIR/launchd/com.minime.engine-rescue-watchdog.plist"
+)
+
+dormant_plists=(
+    "$MINIME_DIR/launchd/com.minime.division-child-minime.plist"
+    "$MINIME_DIR/launchd/com.minime.division-child-astrid.plist"
 )
 
 ok() { echo "  OK $1"; }
@@ -164,6 +167,24 @@ if label_loaded com.astrid.calm-startup-greeting; then
 else
     warn "com.astrid.calm-startup-greeting not loaded in this session; it will run at next login if installed"
 fi
+
+echo ""
+echo "--- Dormant daughter labels ---"
+for src in "${dormant_plists[@]}"; do
+    label="$(label_for_plist "$src")"
+    installed="$LAUNCH_AGENTS/$(basename "$src")"
+    if [ ! -f "$installed" ]; then
+        fail "$label dormant plist is not installed"
+    elif ! cmp -s "$src" "$installed"; then
+        fail "$label dormant plist differs from repo"
+    elif label_loaded "$label"; then
+        state="$(label_state "$label")"
+        pid="$(label_pid "$label")"
+        fail "$label must remain unloaded without fresh intents; state=${state:-unknown} pid=${pid:-?}"
+    else
+        ok "$label installed, repo-aligned, and unloaded"
+    fi
+done
 
 echo ""
 echo "--- Opt-in rescue labels ---"
