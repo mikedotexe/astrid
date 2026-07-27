@@ -11,6 +11,8 @@ use chrono::Utc;
 use super::super::division_ceremony::{self, DivisionCeremonyActionV1};
 use super::{ConversationState, NextActionContext, bridge_paths, strip_action};
 const ACTIONS: &[&str] = &[
+    "DIVISION_HOLD",
+    "DIVISION_DECLINE",
     "DIVISION_INTENT",
     "DIVISION_PREPARE",
     "DIVISION_STATUS",
@@ -72,6 +74,8 @@ pub(super) fn handle_action(
         return Some(Ok(()));
     }
     let ceremony_action = match base_action {
+        "DIVISION_HOLD" => Some(DivisionCeremonyActionV1::Hold),
+        "DIVISION_DECLINE" => Some(DivisionCeremonyActionV1::Decline),
         "DIVISION_INTENT" => Some(DivisionCeremonyActionV1::Intent),
         "DIVISION_ASSENT" => Some(DivisionCeremonyActionV1::Assent),
         "DIVISION_WITHDRAW_ASSENT" => Some(DivisionCeremonyActionV1::WithdrawAssent),
@@ -253,7 +257,7 @@ fn prompt_note_with_gate(workspace: Option<&Path>, dispatch_enabled: bool) -> Op
         .map(|entry| entry.reasons.join(", "))
         .unwrap_or_else(|| "none".to_string());
     Some(format!(
-        "DIVISION CEREMONY (evidence rail beside native lifecycle): lifecycle={:?}; one optional next choice={next_choice}; commit is never recommended. Intent, assent, withdrawal, return request, and review are self-authored evidence only. Native operations remain separately gated and require ACTION_PREFLIGHT (dispatch_enabled={dispatch_enabled}). {} Commit blockers: {commit_blockers}.",
+        "DIVISION CEREMONY (evidence rail beside native lifecycle): lifecycle={:?}; optional context choice={next_choice}; commit is never recommended. Hold, decline, intent, assent, withdrawal, return request, and review are self-authored evidence only. No pre-intent choice is recommended. Native operations remain separately gated and require ACTION_PREFLIGHT (dispatch_enabled={dispatch_enabled}). {} Commit blockers: {commit_blockers}.",
         status.lifecycle,
         render_action_summary(&availability)
     ))

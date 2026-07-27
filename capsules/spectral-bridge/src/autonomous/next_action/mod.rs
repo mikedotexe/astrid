@@ -1391,7 +1391,9 @@ fn action_continuity_visibility_for_base(base_action: &str) -> &'static str {
         | "AFTERSHOCK_TRACE"
         | "TREMOR_RESIDUE"
         | "CASCADE_RESIDUE" => "protected_summary",
-        "DIVISION_INTENT"
+        "DIVISION_HOLD"
+        | "DIVISION_DECLINE"
+        | "DIVISION_INTENT"
         | "DIVISION_PREPARE"
         | "DIVISION_STATUS"
         | "DIVISION_CEREMONY_STATUS"
@@ -1549,7 +1551,9 @@ fn action_continuity_stage_for_base(base_action: &str) -> &'static str {
         | "HUM_DECAY_STUDY"
         | "M6_BRIDGE" => "read_only",
         "DIVISION_STATUS" | "DIVISION_CEREMONY_STATUS" => "read_only",
-        "DIVISION_INTENT"
+        "DIVISION_HOLD"
+        | "DIVISION_DECLINE"
+        | "DIVISION_INTENT"
         | "DIVISION_ASSENT"
         | "DIVISION_WITHDRAW_ASSENT"
         | "DIVISION_RETURN_REQUEST"
@@ -1672,7 +1676,9 @@ fn route_for_preflight_base(base_action: &str) -> String {
         "SEARCH" | "BROWSE" | "READ_MORE" | "LIST_FILES" | "LS" => "workspace_or_mcp_probe",
         "CODEX" | "CODEX_NEW" | "WRITE_FILE" | "RUN_PYTHON" | "EXPERIMENT_RUN" => "live_write",
         "PERTURB" | "NATIVE_GESTURE" | "RESIST" | "FISSURE" | "GOAL" => "live_control",
-        "DIVISION_INTENT"
+        "DIVISION_HOLD"
+        | "DIVISION_DECLINE"
+        | "DIVISION_INTENT"
         | "DIVISION_PREPARE"
         | "DIVISION_STATUS"
         | "DIVISION_CEREMONY_STATUS"
@@ -2859,6 +2865,8 @@ mod tests {
             "read_only"
         );
         for action in [
+            "DIVISION_HOLD",
+            "DIVISION_DECLINE",
             "DIVISION_INTENT",
             "DIVISION_ASSENT",
             "DIVISION_WITHDRAW_ASSENT",

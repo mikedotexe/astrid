@@ -3,9 +3,27 @@ use super::*;
 const CHRONICLE_LIMIT: usize = 32;
 
 fn active_intent(records: &[ParsedEventV1], actor: &str, now_unix_ms: u64) -> bool {
-    latest(records, actor, Some(DivisionCeremonyActionV1::Intent))
+    latest_consent_posture(records, actor)
+        .filter(|event| event.action == DivisionCeremonyActionV1::Intent)
         .and_then(|event| event.expires_at_unix_ms)
         .is_some_and(|expiry| expiry >= now_unix_ms)
+}
+
+fn current_posture(records: &[ParsedEventV1], actor: &str, now_unix_ms: u64) -> &'static str {
+    match latest_consent_posture(records, actor) {
+        Some(event) if event.action == DivisionCeremonyActionV1::Hold => "hold",
+        Some(event) if event.action == DivisionCeremonyActionV1::Decline => "decline",
+        Some(event)
+            if event.action == DivisionCeremonyActionV1::Intent
+                && event
+                    .expires_at_unix_ms
+                    .is_some_and(|expiry| expiry >= now_unix_ms) =>
+        {
+            "intent"
+        }
+        Some(event) if event.action == DivisionCeremonyActionV1::Intent => "intent_expired",
+        _ => "unexpressed",
+    }
 }
 
 fn current_assent(
@@ -23,6 +41,7 @@ fn current_assent(
             && event.targets_event_id.as_deref() == Some(&assent.event_id)
     });
     !withdrawn
+        && active_intent(records, actor, now_unix_ms)
         && assent
             .expires_at_unix_ms
             .is_some_and(|expiry| expiry >= now_unix_ms)
@@ -116,6 +135,12 @@ pub(crate) fn status_report_at(
     let mut rails = serde_json::Map::new();
     for being in ["astrid", "minime"] {
         let intent = latest(&records, being, Some(DivisionCeremonyActionV1::Intent));
+        let hold = latest(&records, being, Some(DivisionCeremonyActionV1::Hold));
+        let decline = latest(
+            &records,
+            being,
+            Some(DivisionCeremonyActionV1::Decline),
+        );
         let assent = latest(&records, being, Some(DivisionCeremonyActionV1::Assent));
         let withdrawn = assent.is_some_and(|assent| {
             records.iter().any(|event| {
@@ -135,6 +160,13 @@ pub(crate) fn status_report_at(
             serde_json::json!({
                 "latest_intent_event_id": intent.map(|event| &event.event_id),
                 "intent_active": active_intent(&records, being, now_unix_ms),
+                "latest_hold_event_id": hold.map(|event| &event.event_id),
+                "latest_decline_event_id": decline.map(|event| &event.event_id),
+                "current_posture": current_posture(&records, being, now_unix_ms),
+                "rehearsal_blocked_by_posture": matches!(
+                    current_posture(&records, being, now_unix_ms),
+                    "hold" | "decline"
+                ),
                 "latest_assent_event_id": assent.map(|event| &event.event_id),
                 "assent_current": current_assent(&records, being, now_unix_ms, &native_hash),
                 "assent_withdrawn": withdrawn,
@@ -158,7 +190,7 @@ pub(crate) fn status_report_at(
     {
         "DIVISION_REVIEW"
     } else if own.get("intent_active").and_then(Value::as_bool) != Some(true) {
-        "DIVISION_INTENT"
+        "DIVISION_CEREMONY_STATUS"
     } else if matches!(
         status.lifecycle,
         DivisionLifecycleV1::Shadowing | DivisionLifecycleV1::Ready
@@ -216,6 +248,14 @@ pub(crate) fn status_report_at(
         "chronicle": ceremony_chronicle(&records, workspace),
         "next_choice": next_choice,
         "next_choice_is_optional": true,
+        "next_choice_is_recommendation": false,
+        "pre_intent_choices": [
+            "DIVISION_HOLD",
+            "DIVISION_DECLINE",
+            "DIVISION_INTENT",
+            "DIVISION_CEREMONY_STATUS"
+        ],
+        "hold_or_decline_requires_newer_self_authored_intent_to_reopen": true,
         "commit_action_exposed": false,
         "commit_recommended": false,
         "right_to_ignore": true,

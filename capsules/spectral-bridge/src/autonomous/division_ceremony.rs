@@ -14,6 +14,10 @@ const RECORD_TYPE: &str = "division_ceremony_event";
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
 pub(crate) enum DivisionCeremonyActionV1 {
+    #[serde(rename = "DIVISION_HOLD")]
+    Hold,
+    #[serde(rename = "DIVISION_DECLINE")]
+    Decline,
     #[serde(rename = "DIVISION_INTENT")]
     Intent,
     #[serde(rename = "DIVISION_ASSENT")]
@@ -29,6 +33,8 @@ pub(crate) enum DivisionCeremonyActionV1 {
 impl DivisionCeremonyActionV1 {
     pub(crate) const fn as_str(self) -> &'static str {
         match self {
+            Self::Hold => "DIVISION_HOLD",
+            Self::Decline => "DIVISION_DECLINE",
             Self::Intent => "DIVISION_INTENT",
             Self::Assent => "DIVISION_ASSENT",
             Self::WithdrawAssent => "DIVISION_WITHDRAW_ASSENT",
@@ -39,6 +45,8 @@ impl DivisionCeremonyActionV1 {
 
     fn parse(value: &str) -> Option<Self> {
         match value {
+            "DIVISION_HOLD" => Some(Self::Hold),
+            "DIVISION_DECLINE" => Some(Self::Decline),
             "DIVISION_INTENT" => Some(Self::Intent),
             "DIVISION_ASSENT" => Some(Self::Assent),
             "DIVISION_WITHDRAW_ASSENT" => Some(Self::WithdrawAssent),
@@ -625,6 +633,21 @@ fn latest<'a>(
         .find(|event| event.actor == actor && action.is_none_or(|action| event.action == action))
 }
 
+fn latest_consent_posture<'a>(
+    records: &'a [ParsedEventV1],
+    actor: &str,
+) -> Option<&'a ParsedEventV1> {
+    records.iter().rev().find(|event| {
+        event.actor == actor
+            && matches!(
+                event.action,
+                DivisionCeremonyActionV1::Hold
+                    | DivisionCeremonyActionV1::Decline
+                    | DivisionCeremonyActionV1::Intent
+            )
+    })
+}
+
 fn valid_review_outcome(value: &str) -> bool {
     matches!(
         value,
@@ -734,9 +757,12 @@ pub(crate) fn require_active_intent_at(
     now_unix_ms: u64,
 ) -> Result<(), String> {
     let records = read_records(workspace)?;
-    let intent =
-        latest(&records, actor, Some(DivisionCeremonyActionV1::Intent)).ok_or_else(|| {
-            format!("{actor} must record DIVISION_INTENT before resource-bearing preparation")
+    let intent = latest_consent_posture(&records, actor)
+        .filter(|event| event.action == DivisionCeremonyActionV1::Intent)
+        .ok_or_else(|| {
+            format!(
+                "{actor} must have DIVISION_INTENT as the current consent posture before resource-bearing preparation"
+            )
         })?;
     let exact = intent.candidate.division_id == command.division_id
         && intent.candidate.parent_generation == command.expected_parent_generation
@@ -778,6 +804,12 @@ fn intent_draft(
         DivisionCeremonyActionV1::Intent,
     )?);
     Ok(draft)
+}
+
+fn pre_intent_posture_draft(
+    fields: &BTreeMap<String, String>,
+) -> Result<EventDraftV1, String> {
+    Ok(EventDraftV1::new(candidate_from_fields(fields)?))
 }
 
 fn assent_draft(
@@ -907,6 +939,9 @@ fn build_action_draft(
     now_unix_ms: u64,
 ) -> Result<EventDraftV1, String> {
     match action {
+        DivisionCeremonyActionV1::Hold | DivisionCeremonyActionV1::Decline => {
+            pre_intent_posture_draft(fields)
+        },
         DivisionCeremonyActionV1::Intent => intent_draft(fields, now_unix_ms),
         DivisionCeremonyActionV1::Assent => assent_draft(workspace, actor, fields, now_unix_ms),
         DivisionCeremonyActionV1::WithdrawAssent => withdrawal_draft(records, actor),

@@ -47,6 +47,17 @@ fn intent(root: &Path, actor: &str) {
     .unwrap();
 }
 
+fn posture(root: &Path, actor: &str, action: DivisionCeremonyActionV1, now: u64) {
+    append_action_at(
+        root,
+        actor,
+        action,
+        "division_id: divide-one; parent_generation: 7; plan_digest: bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb; selected_strategy: input_recurrence; source_ref: test:posture",
+        now,
+    )
+    .unwrap();
+}
+
 #[test]
 fn exact_intent_gates_resource_bearing_prepare() {
     let root = tempfile::tempdir().unwrap();
@@ -76,6 +87,56 @@ fn exact_intent_gates_resource_bearing_prepare() {
     assert_eq!(
         read_records(root.path()).unwrap()[0].event_id,
         "division_ceremony_12396f00a0031e2cb442b055"
+    );
+}
+
+#[test]
+fn hold_and_decline_block_rehearsal_until_a_newer_intent() {
+    let root = tempfile::tempdir().unwrap();
+    let command: DivisionCommandV1 = serde_json::from_value(serde_json::json!({
+        "schema": "division.command.v1",
+        "action": "DIVISION_PREPARE",
+        "division_id": "divide-one",
+        "idempotency_key": "prepare-posture",
+        "expected_parent_generation": 7,
+        "plan_digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "source": {
+            "being": "astrid",
+            "process_identity": "test",
+            "deployment_identity": "test"
+        },
+        "requested_at_unix_ms": 1000,
+        "expires_at_unix_ms": 9000
+    }))
+    .unwrap();
+
+    intent(root.path(), "astrid");
+    posture(
+        root.path(),
+        "astrid",
+        DivisionCeremonyActionV1::Hold,
+        1_100,
+    );
+    assert!(
+        require_active_intent_at(root.path(), "astrid", &command, 1_101)
+            .unwrap_err()
+            .contains("current consent posture")
+    );
+    let held = status_report_at(root.path(), "astrid", 1_101).unwrap();
+    assert!(held.contains("\"current_posture\": \"hold\""));
+    assert!(held.contains("\"rehearsal_blocked_by_posture\": true"));
+    assert!(held.contains("\"next_choice_is_recommendation\": false"));
+
+    intent(root.path(), "astrid");
+    require_active_intent_at(root.path(), "astrid", &command, 1_201).unwrap();
+    posture(
+        root.path(),
+        "astrid",
+        DivisionCeremonyActionV1::Decline,
+        1_300,
+    );
+    assert!(
+        require_active_intent_at(root.path(), "astrid", &command, 1_301).is_err()
     );
 }
 
