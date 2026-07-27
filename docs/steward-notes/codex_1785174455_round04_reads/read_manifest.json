@@ -1,0 +1,7 @@
+{"reads":[
+  {"introspection_id":"introspection_proposal_phase_transitions_1785173872","reader":"codex-heartbeat","summary_file":"summaries/proposal_phase_transitions.md","claims_file":"claims/proposal_phase_transitions.json"},
+  {"introspection_id":"introspection_minime_autonomous_agent_1785173616","reader":"codex-heartbeat","summary_file":"summaries/minime_autonomous_agent.md","claims_file":"claims/minime_autonomous_agent.json"},
+  {"introspection_id":"introspection_minime_main_excerpt_1785173295","reader":"codex-heartbeat","summary_file":"summaries/minime_main_excerpt.md","claims_file":"claims/minime_main_excerpt.json"},
+  {"introspection_id":"introspection_minime_esn_1785172997","reader":"codex-heartbeat","summary_file":"summaries/minime_esn.md","claims_file":"claims/minime_esn.json"},
+  {"introspection_id":"introspection_minime_sensory_bus_1785172523","reader":"codex-heartbeat","summary_file":"summaries/minime_sensory_bus.md","claims_file":"claims/minime_sensory_bus.json"}
+]}

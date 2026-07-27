@@ -239,6 +239,7 @@ class StewardProjectionTests(unittest.TestCase):
                 "evidence_study_runtime",
                 "felt_mechanism_concordance",
                 "agency_commons",
+                "passage_observatory",
                 "felt_contracts",
                 "steward_work_selection",
                 "experiential_epistemics",
@@ -284,6 +285,26 @@ class StewardProjectionTests(unittest.TestCase):
             ),
         )
         self.assertEqual(
+            steps["passage_observatory"].dependencies,
+            ("agency_commons",),
+        )
+        self.assertEqual(
+            steps["passage_observatory"].input_streams,
+            ("agency_commons",),
+        )
+        self.assertIn(
+            "../../../../minime/workspace/division/passage-observatory/observatory_v1.json",
+            steps["passage_observatory"].outputs,
+        )
+        self.assertIn(
+            "../../../../minime/workspace/division/passage-observatory/observatory_v2.json",
+            steps["passage_observatory"].outputs,
+        )
+        self.assertIn(
+            "../../../../shared/collaborations/phase_transitions_v1.jsonl",
+            steps["passage_observatory"].source_globs,
+        )
+        self.assertEqual(
             steps["felt_contracts"].dependencies,
             (
                 "experiment_dossiers",
@@ -307,6 +328,7 @@ class StewardProjectionTests(unittest.TestCase):
             (
                 "felt_contracts",
                 "evidence_study_runtime",
+                "passage_observatory",
                 "steward_work_selection",
             ),
         )

@@ -1,0 +1,7 @@
+{"links":[
+  {"introspection_id":"introspection_minime_regulator_1785171841","claim_id":"*","kind":"code","target":"/Users/v/other/minime/minime/src/regulator/core.rs","note":"Complete PI/PD include shell; presence is not runtime or felt-effect proof."},
+  {"introspection_id":"introspection_astrid_llm_1785171366","claim_id":"*","kind":"code","target":"capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs","note":"Exact marker and requested-token source with explicit non-semantic boundary."},
+  {"introspection_id":"introspection_astrid_types_1785171175","claim_id":"*","kind":"code","target":"capsules/spectral-bridge/src/types/schema/telemetry.rs","note":"Current bounded cadence, entropy, density-gradient, and connection context."},
+  {"introspection_id":"introspection_astrid_ws_1785170838","claim_id":"*","kind":"code","target":"capsules/spectral-bridge/src/ws/telemetry_port.rs","note":"Current asynchronous subscriber and separated integration timing evidence."},
+  {"introspection_id":"introspection_astrid_autonomous_1785170568","claim_id":"*","kind":"code","target":"capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs","note":"Current burst/rest taper and fill-conditioned rest source; no passage-effect proof."}
+]}

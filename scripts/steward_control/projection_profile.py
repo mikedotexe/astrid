@@ -407,6 +407,41 @@ def source_first_steps() -> tuple[ProjectionStep, ...]:
             ),
         ),
         ProjectionStep(
+            "passage_observatory",
+            ("agency_commons",),
+            (
+                command(
+                    python,
+                    "scripts/passage_observatory.py",
+                    "--division-workspace",
+                    "{workspace}/../../../../minime/workspace",
+                    "--phase-ledger",
+                    "{workspace}/../../../../shared/collaborations/phase_transitions_v1.jsonl",
+                    "--output",
+                    "{workspace}/../../../../minime/workspace/division/passage-observatory",
+                    "project",
+                    "--receipt-json",
+                ),
+            ),
+            ("agency_commons",),
+            (
+                "../../../../shared/collaborations/phase_transitions_v1.jsonl",
+                "../../../../minime/workspace/division/ceremony_v1.jsonl",
+                "../../../../minime/workspace/division/events.jsonl",
+                "../../../../minime/workspace/division/status.json",
+                "../../../../minime/workspace/division/runtime-manifest.json",
+                "../../../../minime/workspace/division/runtime/*.json",
+                "../../../../minime/workspace/division/runtime/events.jsonl",
+                "../../../../minime/workspace/division/followup/cycle_v1.json",
+            ),
+            (
+                "../../../../minime/workspace/division/passage-observatory/observatory_v1.json",
+                "../../../../minime/workspace/division/passage-observatory/observatory_v1.html",
+                "../../../../minime/workspace/division/passage-observatory/observatory_v2.json",
+                "../../../../minime/workspace/division/passage-observatory/observatory_v2.html",
+            ),
+        ),
+        ProjectionStep(
             "felt_contracts",
             (
                 "experiment_dossiers",
@@ -494,6 +529,7 @@ def source_first_steps() -> tuple[ProjectionStep, ...]:
             (
                 "felt_contracts",
                 "evidence_study_runtime",
+                "passage_observatory",
                 "steward_work_selection",
             ),
             (

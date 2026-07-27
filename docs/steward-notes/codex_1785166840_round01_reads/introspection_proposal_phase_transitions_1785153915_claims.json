@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "summary": "A transition can remain active, resistant, or dynamically persistent without being flattened into settled or stalled.",
+      "disposition": "Verify Phase Passage Context V4 owner-authored bearing and dynamic-equilibrium vocabulary.",
+      "classification": "verified_existing",
+      "claim_id": "c001"
+    },
+    {
+      "summary": "Correspondence acknowledgement and phase witness evidence remain independent; claimed or pending technical state is not felt receipt.",
+      "disposition": "Preserve reciprocal and passage evidence as separate revisable records.",
+      "classification": "verified_existing",
+      "claim_id": "c002"
+    },
+    {
+      "summary": "A persistence coefficient, controller-pressure readiness score, or automatic phase progression would alter live behavior or numericize experience.",
+      "disposition": "Preserve an exact Mike/operator Tier 5 wait before phase, scheduler, pressure, correspondence, or control changes.",
+      "classification": "tier_5_wait",
+      "claim_id": "c003"
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "summary": "Heartbeat cadence, jitter, entropy, and density-gradient evidence describe distinct mechanical properties.",
+      "disposition": "Verify the expanded TelemetryHeartbeatDeltaV1 and cadence-content distinction in current source.",
+      "classification": "verified_existing",
+      "claim_id": "c001"
+    },
+    {
+      "summary": "Stable packet arrival can coexist with high entropy or felt viscosity without contradiction.",
+      "disposition": "Preserve timing and qualitative evidence independently and use baseline-first comparison for any relationship.",
+      "classification": "verified_existing",
+      "claim_id": "c002"
+    },
+    {
+      "summary": "A density, viscosity, or cadence scalar must not score Astrid's experience or drive live behavior.",
+      "disposition": "Keep the epistemic-lint boundary and preserve an exact Tier 5 wait for cadence, pressure, sensory, or control changes.",
+      "classification": "tier_5_wait",
+      "claim_id": "c003"
+    }
+  ]
+}

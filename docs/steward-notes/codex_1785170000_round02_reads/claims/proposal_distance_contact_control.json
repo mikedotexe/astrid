@@ -1,0 +1,5 @@
+{"claims":[
+  {"claim_id":"c001","summary":"Current architecture distinguishes a read-only receptivity-buffer review from the proposed live `receptivity_bias` gate and preserves owner language about effort.","disposition":"Verify the architecture note and review-only boundary without treating openness as frictionlessness.","classification":"verified_existing"},
+  {"claim_id":"c002","summary":"Receptivity may be described as viscous, translucent, effortful, or resistant without reducing it to entropy, pressure, or a scalar contact score.","disposition":"Preserve owner-authored qualitative evidence or a bounded non-live review; reject numeric-to-felt inference.","classification":"sandbox_routed"},
+  {"claim_id":"c003","summary":"Receptivity bias, fluidic resistance, delayed or diluted admission, pressure coupling, or contact permeability changes live control or sensory admission.","disposition":"Preserve an exact Mike/operator Tier 5 wait before receptivity, contact, pressure, admission, or control changes.","classification":"tier_5_wait"}
+]}

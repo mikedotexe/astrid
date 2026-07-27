@@ -1,0 +1,6 @@
+{"claims":[
+  {"claim_id":"c001","summary":"Dynamic noise, adaptive pressure, and viscous rho are source-prepared review calculations and are deliberately absent from the live `ESN::step` policy.","disposition":"Verify source comments and the actual step path; do not describe review helpers as active behavior.","classification":"verified_existing"},
+  {"claim_id":"c002","summary":"Existing tests cover dynamic-noise bounds, finite fallback, pressure and gradient interactions, volatile-entropy gating, viscous lift, and threshold continuity.","disposition":"Run the focused tests requested by the report and retain their results as mechanical evidence only.","classification":"verified_existing"},
+  {"claim_id":"c003","summary":"Clamp and finiteness defenses make extreme inputs bounded but do not by themselves show that high-entropy transitions become stuck.","disposition":"Keep the source correction and route any stuck-state question to a bounded replay with no felt or causal inference.","classification":"sandbox_routed"},
+  {"claim_id":"c004","summary":"Wiring review-only noise, pressure, or viscous-rho helpers into `ESN::step` would alter live reservoir mathematics and regulation.","disposition":"Preserve an exact Mike/operator Tier 5 wait before leak, RLS, noise, rho, pressure, fill, PI, controller, or ESN step changes.","classification":"tier_5_wait"}
+]}

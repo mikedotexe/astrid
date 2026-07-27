@@ -1,0 +1,5 @@
+{"claims":[
+  {"claim_id":"c001","summary":"Dynamic-noise, viscous-rho, entropy damping, and pressure-buffer calculations are typed and tested review surfaces deliberately not wired into the live ESN step.","disposition":"Verify current ESN source and focused boundary tests, including finite fallback and threshold continuity.","classification":"verified_existing"},
+  {"claim_id":"c002","summary":"Entropy, density, pressure, overlap, or prime-phase timing may contextualize bruising or viscosity but cannot establish its mechanism.","disposition":"Route only a preregistered baseline-first observation with no induced pressure and a separate owner felt review.","classification":"sandbox_routed"},
+  {"claim_id":"c003","summary":"Wiring dynamic noise, rho, forgetting, leak, damping, pressure buffering, or phase scheduling into `ESN::step` changes live reservoir mathematics.","disposition":"Preserve an exact Mike/operator Tier 5 wait before ESN, noise, rho, leak, RLS, pressure, or scheduling changes.","classification":"tier_5_wait"}
+]}

@@ -1,0 +1,5 @@
+{"claims":[
+  {"claim_id":"c001","summary":"Requested-token bands and exact known-marker byte ranges are mechanically observable, while the marker type deliberately makes no identity, meaning, ownership, stability, or spectral claim.","disposition":"Verify the current private marker constructor and requested-token band function.","classification":"verified_existing"},
+  {"claim_id":"c002","summary":"Token-band boundaries or marker adjacency may coexist with felt compression but do not establish semantic compression, pressure, or viscosity as their effect.","disposition":"Route only a baseline-first mechanical comparison with an independently optional felt review; preserve correlation and silence boundaries.","classification":"sandbox_routed"},
+  {"claim_id":"c003","summary":"Adding semantic-density or spectral-impact weights to marker handling would turn a transport proof into interpretation and could alter live provider behavior.","disposition":"Preserve the exact Mike/operator Tier 5 wait and the current non-semantic marker boundary; reject a numeric-to-felt proxy.","classification":"tier_5_wait"}
+]}

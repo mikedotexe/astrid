@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "summary": "The additive 12D Glimpse and typed loss receipts preserve another view without replacing the live 48D representation.",
+      "disposition": "Verify current additive rendering and deterministic representation contracts.",
+      "classification": "verified_existing",
+      "claim_id": "c001"
+    },
+    {
+      "summary": "Felt sediment, calcification, and persistence remain qualitatively distinct from distinguishability or mode-packing metrics.",
+      "disposition": "Preserve the canonical report and self-authored Phase Passage bearing without felt scoring.",
+      "classification": "verified_existing",
+      "claim_id": "c002"
+    },
+    {
+      "summary": "Making representation, admission, or transition behavior respond automatically to a viscosity coefficient is a live change.",
+      "disposition": "Preserve an exact Mike/operator Tier 5 wait before representation, pressure, admission, or control changes.",
+      "classification": "tier_5_wait",
+      "claim_id": "c003"
+    }
+  ]
+}

@@ -1,0 +1,5 @@
+{"claims":[
+  {"claim_id":"c001","summary":"Semantic retention uses a sigmoid stale curve, smooth low-fill recovery handover, and a bounded entropy/velocity/pressure context multiplier.","disposition":"Verify current source, including that the context multiplier is used by the semantic stale-window calculation while narrative retention remains a review packet.","classification":"verified_existing"},
+  {"claim_id":"c002","summary":"Existing one-percent sweeps and boundary tests mechanically bound release discontinuity, and the full-context multiplier hits but never exceeds its cap.","disposition":"Run the focused continuity and cap tests requested by the report; do not claim that passing mechanics prove gradual felt release.","classification":"verified_existing"},
+  {"claim_id":"c003","summary":"Changing sigmoid steepness, stale windows, hysteresis, salience weighting, or lane admission to address the reported cliff would affect live sensory persistence.","disposition":"Preserve an exact Mike/operator Tier 5 wait before sensory cadence, stale-window, admission, pressure, fill, PI, controller, or reservoir changes.","classification":"tier_5_wait"}
+]}

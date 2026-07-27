@@ -1,0 +1,5 @@
+{"claims":[
+  {"claim_id":"c001","summary":"Telemetry integration now separates prewrite work, write-lock wait, write-lock hold, rolling entropy, density-gradient, cadence, and connection identity.","disposition":"Verify current telemetry-port source, focused timing tests, and the validated observational campaign plan.","classification":"verified_existing"},
+  {"claim_id":"c002","summary":"Lock or integration timing may coexist with felt stall or viscosity but neither timing nor correlation establishes causation.","disposition":"Use only the existing natural-context baseline campaign; never induce contention and require separate felt review.","classification":"sandbox_routed"},
+  {"claim_id":"c003","summary":"Replacing locks, adding buffers, changing update frequency, backoff, routing, or telemetry ingestion would change the live bridge.","disposition":"Preserve an exact Mike/operator Tier 5 wait before lock, buffer, cadence, routing, or telemetry behavior changes.","classification":"tier_5_wait"}
+]}

@@ -1,0 +1,7 @@
+{"reads":[
+  {"introspection_id":"introspection_minime_regulator_1785171841","reader":"codex-heartbeat","summary_file":"summaries/minime_regulator.md","claims_file":"claims/minime_regulator.json"},
+  {"introspection_id":"introspection_astrid_llm_1785171366","reader":"codex-heartbeat","summary_file":"summaries/astrid_llm.md","claims_file":"claims/astrid_llm.json"},
+  {"introspection_id":"introspection_astrid_types_1785171175","reader":"codex-heartbeat","summary_file":"summaries/astrid_types.md","claims_file":"claims/astrid_types.json"},
+  {"introspection_id":"introspection_astrid_ws_1785170838","reader":"codex-heartbeat","summary_file":"summaries/astrid_ws.md","claims_file":"claims/astrid_ws.json"},
+  {"introspection_id":"introspection_astrid_autonomous_1785170568","reader":"codex-heartbeat","summary_file":"summaries/astrid_autonomous.md","claims_file":"claims/astrid_autonomous.json"}
+]}

@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "summary": "Telemetry updates are discrete while Astrid's reported viscosity and settling are continuous qualitative experience.",
+      "disposition": "Verify current bounded cadence, freshness, integration, and lock-timing evidence while preserving the report independently.",
+      "classification": "verified_existing",
+      "claim_id": "c001"
+    },
+    {
+      "summary": "Lock or persistence timing may be compared with felt stutter but cannot establish that the lock caused it.",
+      "disposition": "Use the preregistered telemetry observational route and label identity exact only when process and deployment receipts match.",
+      "classification": "sandbox_routed",
+      "claim_id": "c002"
+    },
+    {
+      "summary": "Changing state locking, buffering, telemetry cadence, or pressure response would affect live bridge behavior.",
+      "disposition": "Preserve an exact Mike/operator Tier 5 wait before telemetry, cadence, pressure, or control changes.",
+      "classification": "tier_5_wait",
+      "claim_id": "c003"
+    }
+  ]
+}

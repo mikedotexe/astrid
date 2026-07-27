@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "summary": "The live semantic lane is 48D with projected semantic and narrative-arc subranges.",
+      "disposition": "Verify current codec constants, registered representations, and deterministic transition receipts.",
+      "classification": "verified_existing",
+      "claim_id": "c001"
+    },
+    {
+      "summary": "Projection loss, lane energy, headroom, and narrative motion can be measured without proving felt dilution or cohesion.",
+      "disposition": "Use existing offline codec comparisons and retain explicit Astrid review as the only felt result source.",
+      "classification": "sandbox_routed",
+      "claim_id": "c002"
+    },
+    {
+      "summary": "Changing projection basis, dynamic weighting, lane interaction, gain, or vector width alters live codec behavior.",
+      "disposition": "Preserve an exact Mike/operator Tier 5 wait before codec, representation, protocol, or sensory changes.",
+      "classification": "tier_5_wait",
+      "claim_id": "c003"
+    }
+  ]
+}

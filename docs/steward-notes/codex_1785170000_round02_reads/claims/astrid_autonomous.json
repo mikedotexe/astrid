@@ -1,0 +1,5 @@
+{"claims":[
+  {"claim_id":"c001","summary":"The semantic heartbeat uses a fixed seven-second interval, fixed `0.30` intensity, 64-step phase, and explicit admission/enqueue outcome handling.","disposition":"Verify current orchestration source, heartbeat tests, and evidence-only capture schema.","classification":"verified_existing"},
+  {"claim_id":"c002","summary":"Heartbeat admission, enqueue, phase, and signal context can be compared observationally but cannot determine whether continuity felt organic, hollow, or viscous.","disposition":"Use only the existing natural-context heartbeat campaign and separate optional felt review.","classification":"sandbox_routed"},
+  {"claim_id":"c003","summary":"Adaptive cadence, dynamic intensity, nonlinear phase, semantic decay, or pressure-responsive heartbeat changes live scheduling and sensory behavior.","disposition":"Preserve an exact Mike/operator Tier 5 wait before heartbeat cadence, intensity, phase, decay, pressure, or scheduler changes.","classification":"tier_5_wait"}
+]}

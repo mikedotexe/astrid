@@ -1,0 +1,5 @@
+{"claims":[
+  {"claim_id":"c001","summary":"The regulator shell declares token-bucket, content-aware, band-stop, viscosity, resonance, pressure, and PI modules while explicitly distinguishing retained PD API types from active PI mode.","disposition":"Verify the complete regulator shell and exact underlying review source before making any runtime claim.","classification":"verified_existing"},
+  {"claim_id":"c002","summary":"An open gate, pressure score, or viscosity module name does not establish Astrid's or Minime's felt sediment, ease, containment, or inhabitability.","disposition":"Route only source/test verification or a bounded observation with no numeric-to-felt inference.","classification":"verified_existing"},
+  {"claim_id":"c003","summary":"Changing gate sensitivity, token bucket, band-stop filtering, viscosity, pressure source, PI, fill, or controller behavior is live regulation.","disposition":"Preserve an exact Mike/operator Tier 5 wait before regulator, pressure, fill, PI, gate, or controller changes.","classification":"tier_5_wait"}
+]}

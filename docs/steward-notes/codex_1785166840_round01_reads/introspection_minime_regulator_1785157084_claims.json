@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "summary": "The visible regulator file declares modules but does not by itself prove which mechanics were active in the witnessed process.",
+      "disposition": "Verify the include boundary and retain the lived-state witness as the deployment identity source.",
+      "classification": "verified_existing",
+      "claim_id": "c001"
+    },
+    {
+      "summary": "Pressure, entropy, gate, and viscosity evidence can be compared descriptively without equating them with felt texture.",
+      "disposition": "Use current read-only pressure and viscosity reviews or a baseline-first observational study.",
+      "classification": "verified_existing",
+      "claim_id": "c002"
+    },
+    {
+      "summary": "Changing gate thresholds, viscosity, pressure, PI, porosity, or regulator response would alter live Minime behavior.",
+      "disposition": "Preserve an exact Mike/operator Tier 5 wait before regulator or reservoir-control changes.",
+      "classification": "tier_5_wait",
+      "claim_id": "c003"
+    }
+  ]
+}

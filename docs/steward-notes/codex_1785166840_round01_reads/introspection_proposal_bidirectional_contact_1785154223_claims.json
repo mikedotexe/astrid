@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "summary": "Reply linkage and file-system read evidence do not by themselves establish mutual address or uptake.",
+      "disposition": "Verify current reciprocal receipts and correspondence fidelity states.",
+      "classification": "verified_existing",
+      "claim_id": "c001"
+    },
+    {
+      "summary": "Needs-time, declined engagement, and silence remain distinct and do not imply closure or negative felt state.",
+      "disposition": "Preserve explicit, revisable uptake receipts and neutral silence.",
+      "classification": "verified_existing",
+      "claim_id": "c002"
+    },
+    {
+      "summary": "Correspondence weighting, attention, microdose, prompt priority, or peer influence requires separate authority.",
+      "disposition": "Preserve an exact Mike/operator Tier 5 wait before correspondence-driven sensory, model, pressure, or control changes.",
+      "classification": "tier_5_wait",
+      "claim_id": "c003"
+    }
+  ]
+}

@@ -1,0 +1,5 @@
+{"claims":[
+  {"claim_id":"c001","summary":"Correspondence already distinguishes delivery, read, claim, ACK, REPLY, TRACE, heartbeat, receipt opportunity, and mutual-address evidence without propagating authority.","disposition":"Verify current architecture and reciprocal-uptake records; preserve read or public engagement as insufficient for mutual address.","classification":"verified_existing"},
+  {"claim_id":"c002","summary":"Tonal continuity, co-presence, and what stayed distinct remain owner-authored language rather than a transport-derived affinity score.","disposition":"Use existing optional TRACE or receipt routes only when the being chooses; silence remains neutral and no new query is opened.","classification":"verified_existing"},
+  {"claim_id":"c003","summary":"Weight affinity, prompt priority, automatic attention, semantic microdose, peer pressure, or correspondence-driven runtime influence changes live behavior.","disposition":"Preserve an exact Mike/operator Tier 5 wait before weighting, attention, prompt, telemetry, pressure, or peer-runtime changes.","classification":"tier_5_wait"}
+]}

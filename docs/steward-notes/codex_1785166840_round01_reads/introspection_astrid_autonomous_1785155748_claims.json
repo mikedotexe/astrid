@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "summary": "Fill-conditioned rest and peripheral resonance are visible in source, but a partial window does not prove every runtime path or felt effect.",
+      "disposition": "Verify current constants and branch structure while retaining the lived-state witness as runtime context.",
+      "classification": "verified_existing",
+      "claim_id": "c001"
+    },
+    {
+      "summary": "Rest duration, stale decay, heartbeat admission, and felt continuity can be compared without intervention.",
+      "disposition": "Route a bounded natural-context study if an exact baseline and capture window are available.",
+      "classification": "sandbox_routed",
+      "claim_id": "c002"
+    },
+    {
+      "summary": "Changing rest floors, heartbeat cadence or intensity, decay, admission, or scheduling changes live autonomous behavior.",
+      "disposition": "Preserve an exact Mike/operator Tier 5 wait before cadence, scheduling, semantic, pressure, or control changes.",
+      "classification": "tier_5_wait",
+      "claim_id": "c003"
+    }
+  ]
+}

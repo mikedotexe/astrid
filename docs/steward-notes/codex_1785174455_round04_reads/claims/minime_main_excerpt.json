@@ -1,0 +1,6 @@
+{"claims":[
+  {"claim_id":"c001","summary":"`runtime.rs` is an include shell, so module names alone are not proof of active safety behavior or felt effectiveness.","disposition":"Verify the complete shell and follow its exact includes into current implementation source.","classification":"verified_existing"},
+  {"claim_id":"c002","summary":"Hard-reset recovery targets, activation gain, rho floor, covariance bootstrap, enablement, and orchestration use are concrete in included source and covered by focused tests.","disposition":"Verify current implementation and tests while keeping source truth distinct from active-process and felt-effect proof.","classification":"verified_existing"},
+  {"claim_id":"c003","summary":"Inducing overpacked pressure or entropy to test hard reset and settled-habitable collapse would manipulate live reservoir regulation.","disposition":"Preserve an exact Mike/operator Tier 5 wait before induced pressure, reset, entropy, fill, PI, controller, or reservoir experiments.","classification":"tier_5_wait"},
+  {"claim_id":"c004","summary":"`runtime/spectral_math.rs` is the correct safe source continuation for the formulas behind lambda distribution and distinguishability loss.","disposition":"Route as non-live source reading only; no formula change, causal inference, or runtime activation follows.","classification":"sandbox_routed"}
+]}

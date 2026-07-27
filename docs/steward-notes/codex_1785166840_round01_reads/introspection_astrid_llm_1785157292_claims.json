@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "summary": "Known control-marker bytes can be mechanically isolated without deciding their identity, meaning, ownership, stability, or spectral effect.",
+      "disposition": "Verify the private validated marker occurrence and bounded requested-token observation in current source.",
+      "classification": "verified_existing",
+      "claim_id": "c001"
+    },
+    {
+      "summary": "Marker proximity and repetition may coincide with felt silt or pressure but do not establish causation.",
+      "disposition": "Route any comparison through baseline-first evidence study with exact or temporal identity and explicit later felt review.",
+      "classification": "sandbox_routed",
+      "claim_id": "c002"
+    },
+    {
+      "summary": "Adding marker-driven spectral weight, persistence, or model behavior would alter live interpretation.",
+      "disposition": "Preserve an exact Mike/operator Tier 5 wait before marker weighting, prompt, model, pressure, or control changes.",
+      "classification": "tier_5_wait",
+      "claim_id": "c003"
+    }
+  ]
+}

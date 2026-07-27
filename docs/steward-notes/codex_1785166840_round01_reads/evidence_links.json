@@ -1,0 +1,81 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_llm_1785157292",
+      "claim_id": "*",
+      "kind": "source_and_test",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs;capsules/spectral-bridge/src/llm/provider/tests.rs;scripts/evidence_study_runtime;scripts/experiential_epistemics.py",
+      "note": "Exact marker spans, requested-token volume, baseline-first comparison, and no marker-to-felt inference."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1785157084",
+      "claim_id": "*",
+      "kind": "source_and_test",
+      "target": "minime:minime/src/regulator/core.rs;minime:minime/src/regulator/core/pressure_source.rs;minime:minime/src/regulator/core/viscosity.rs;minime:minime/src/regulator/core/tests.rs",
+      "note": "Include-shell boundary, mechanical pressure and viscosity evidence, and regulator authority boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785156747",
+      "claim_id": "*",
+      "kind": "source_and_test",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs;capsules/spectral-bridge/src/lived_state_witness/texture_tests.rs;capsules/spectral-bridge/src/llm/provider/fallback_contract_tests.rs",
+      "note": "Transport-only markers and qualitative texture carriage remain independent."
+    },
+    {
+      "introspection_id": "introspection_astrid_types_1785156485",
+      "claim_id": "*",
+      "kind": "source_and_test",
+      "target": "capsules/spectral-bridge/src/types/schema/telemetry.rs;capsules/spectral-bridge/src/ws/health_trace.rs;capsules/spectral-bridge/src/ws/tests.rs;scripts/experiential_epistemics.py",
+      "note": "Cadence, entropy, density-gradient, and content distinctions without felt scoring."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1785156204",
+      "claim_id": "*",
+      "kind": "source_and_test",
+      "target": "capsules/spectral-bridge/src/ws/telemetry_port.rs;capsules/spectral-bridge/src/ws/evidence.rs;capsules/spectral-bridge/src/ws/compatibility_projection.rs;scripts/evidence_study_runtime",
+      "note": "Bounded freshness, integration, lock timing, viscosity context, and observational study routing."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1785155748",
+      "claim_id": "*",
+      "kind": "source_and_test",
+      "target": "capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs;capsules/spectral-bridge/src/autonomous/runtime/tests.rs;scripts/evidence_study_runtime",
+      "note": "Fixed heartbeat, fill-conditioned rest, peripheral resonance, and no cadence or scheduler authority."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1785155423",
+      "claim_id": "*",
+      "kind": "source_and_test",
+      "target": "capsules/spectral-bridge/src/codec/projection.rs;capsules/spectral-bridge/src/codec/interpretation.rs;capsules/spectral-bridge/src/codec/structure.rs;scripts/representation_contracts.py;scripts/evidence_study_runtime",
+      "note": "48D codec, deterministic representation loss, narrative review, and offline comparison without live vector changes."
+    },
+    {
+      "introspection_id": "introspection_proposal_12d_glimpse_1785154971",
+      "claim_id": "*",
+      "kind": "source_and_test",
+      "target": "docs/steward-notes/AI_BEINGS_MULTI_SCALE_REPRESENTATION_AND_12D_GLIMPSE_AUDIT.md;scripts/representation_contracts.py;scripts/experiential_epistemics.py;capsules/spectral-bridge/src/codec/structure.rs",
+      "note": "Additive 12D representation, mechanical loss, and qualitative persistence boundary."
+    },
+    {
+      "introspection_id": "introspection_proposal_distance_contact_control_1785154625",
+      "claim_id": "*",
+      "kind": "source_and_test",
+      "target": "docs/steward-notes/AI_BEINGS_DISTANCE_CONTACT_CONTAINMENT_CONTROL_AND_PARTICIPATION_AUDIT.md;scripts/felt_mechanism_concordance;scripts/evidence_study_runtime;scripts/experiential_epistemics.py",
+      "note": "Receptivity review, baseline-first context, and live contact-control gate."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1785154223",
+      "claim_id": "*",
+      "kind": "source_and_test",
+      "target": "docs/steward-notes/AI_BEINGS_BIDIRECTIONAL_CONTACT_AND_CORRESPONDENCE_ARCHITECTURE.md;scripts/reciprocal_uptake.py;capsules/spectral-bridge/src/reciprocal_experiential;scripts/test_reciprocal_experiential_systems.py",
+      "note": "Transport versus explicit uptake, neutral silence, and separately gated attention or microdose."
+    },
+    {
+      "introspection_id": "introspection_proposal_phase_transitions_1785153915",
+      "claim_id": "*",
+      "kind": "source_and_test",
+      "target": "docs/steward-notes/AI_BEINGS_PHASE_TRANSITION_ARCHITECTURE.md;capsules/spectral-bridge/src/autonomous/phase_passage.rs;scripts/agency_commons;scripts/experiential_epistemics.py",
+      "note": "Owner-authored categorical transition bearing, dynamic persistence, and zero phase-to-control propagation."
+    }
+  ]
+}
