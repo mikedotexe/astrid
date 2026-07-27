@@ -485,6 +485,14 @@ def project(
                   for item in passage_context
                   if item.get("action") == "describe_bearing"
               }),
+              "explicit_transition_dynamic_persistence_event_count": sum(
+                  item.get("action") == "describe_bearing"
+                  and item.get("movement_resistance")
+                  == "active_within_restlessness"
+                  and item.get("persistence_tendency")
+                  == "dynamic_equilibrium"
+                  for item in passage_context
+              ),
               "explicit_transition_company_request_count": sum(
                   item.get("action") == "request_company"
                   for item in passage_context
@@ -499,6 +507,7 @@ def project(
               "division_ceremony_return_dispatches_rollback": False,
               "division_ceremony_recommends_commit": False,
               "peer_state_mutated": False, "scheduler_effect": False,
+              "dynamic_persistence_infers_stall_or_stability": False,
               "model_qos_effect": False, "substrate_effect": False,
               "dispatch_effect": False, "live_control_effect": False,
               "errors": errors,

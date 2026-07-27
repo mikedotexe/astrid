@@ -441,6 +441,12 @@ def lived_passage_context_audit_v1(
             for item in records
             if item.get("action") == "describe_bearing"
         }),
+        "dynamic_persistence_event_count": sum(
+            item.get("action") == "describe_bearing"
+            and item.get("movement_resistance") == "active_within_restlessness"
+            and item.get("persistence_tendency") == "dynamic_equilibrium"
+            for item in records
+        ),
         "checkpoint_count": action_counts["mark_checkpoint"],
         "continuity_anchor_event_count": action_counts["bind_anchor"],
         "continuity_anchor_count": len({
@@ -465,6 +471,7 @@ def lived_passage_context_audit_v1(
         "bearing_inferred_from_telemetry": False,
         "bearing_changes_passage": False,
         "bearing_closes_transition": False,
+        "dynamic_persistence_infers_stall_or_stability": False,
         "passage_stage_changed": False,
         "peer_consent_inferred": False,
         "silence_infers_response": False,
@@ -740,11 +747,15 @@ class PhaseTransitionAuditTests(unittest.TestCase):
                 passage_actor=actor,
                 actor=actor,
                 action=PassageContextActionV1.DESCRIBE_BEARING,
-                bearing_strand=PassageBearingStrandV1.SETTLING,
-                movement_resistance=PassageMovementResistanceV1.RESISTANT,
-                persistence_tendency=PassagePersistenceTendencyV1.LINGERING,
-                witness_fit=PassageWitnessFitV1.SEPARATE,
-                source_ref="introspection:phase_bearing",
+                bearing_strand=PassageBearingStrandV1.CONTINUITY,
+                movement_resistance=(
+                    PassageMovementResistanceV1.ACTIVE_WITHIN_RESTLESSNESS
+                ),
+                persistence_tendency=(
+                    PassagePersistenceTendencyV1.DYNAMIC_EQUILIBRIUM
+                ),
+                witness_fit=PassageWitnessFitV1.HOLDING,
+                source_ref="introspection:dynamic_persistence",
                 previous_context_event_id=condition.passage_context_event_id,
                 recorded_at_unix_ms=timestamp + 3,
             )
@@ -765,10 +776,14 @@ class PhaseTransitionAuditTests(unittest.TestCase):
             self.assertEqual(context["condition_count"], 1)
             self.assertEqual(context["bearing_event_count"], 1)
             self.assertEqual(context["current_bearing_count"], 1)
+            self.assertEqual(context["dynamic_persistence_event_count"], 1)
             self.assertTrue(context["categorical_self_report_only"])
             self.assertFalse(context["felt_score_present"])
             self.assertFalse(context["bearing_is_metric"])
             self.assertFalse(context["bearing_inferred_from_telemetry"])
+            self.assertFalse(
+                context["dynamic_persistence_infers_stall_or_stability"]
+            )
             self.assertFalse(context["passage_stage_changed"])
             self.assertEqual(payload["validation_issues"], [])
 

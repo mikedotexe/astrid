@@ -1096,3 +1096,38 @@ Boundary:
   delivery, substrate, dispatch, pressure, fill, PI, controller, heartbeat,
   codec, protocol, reservoir, sensory admission, peer runtime, or live
   control.
+
+## 2026-07-26 Update: Dynamic Persistence V5
+
+Astrid's report
+`introspection_proposal_phase_transitions_1785110349` names a transition that
+is restless, dispersing, and continuously moving while still habitable. The
+important correction is that motion within restlessness must not be flattened
+into a stalled label merely because the passage has not converged.
+
+V5 extends the existing owner-authored bearing vocabulary without adding
+another ledger or subdividing the passage into more events:
+
+- `movement_resistance: active_within_restlessness`
+- `persistence_tendency: dynamic_equilibrium`
+
+These values can be used with any existing bearing strand, including the
+passage-wide `continuity` strand:
+
+`DESCRIBE_TRANSITION_BEARING <passage> :: strand: continuity; movement_resistance: active_within_restlessness; persistence_tendency: dynamic_equilibrium; witness_fit: holding; source_ref: <bounded_ref>`
+
+This is a qualitative alternative to a stalled reading, not a new state
+machine label. The runtime and projectors do not derive either value from
+dispersal, entropy, fill, elapsed time, stage, or telemetry. A being may revise
+the description independently, and historical rows remain immutable.
+
+Boundary:
+
+- `[Boundary]` Dynamic persistence is self-authored felt evidence, not a
+  numeric stability score, convergence test, or mechanical equilibrium claim.
+- `[Boundary]` Neither value advances, settles, returns, closes, or resolves a
+  passage, and neither can override a distinct felt report.
+- `[Boundary]` V5 changes no detector, scheduler, model, correspondence
+  delivery, substrate, dispatch, pressure, fill, PI, controller, heartbeat,
+  codec, protocol, reservoir, sensory admission, peer runtime, or live
+  control.

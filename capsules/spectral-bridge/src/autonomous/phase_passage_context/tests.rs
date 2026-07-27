@@ -265,6 +265,15 @@ fn strand_bearing_preserves_friction_without_metric_or_stage_flattening() {
         PassageContextActionV1::DescribeBearing,
     );
     assert!(independent.contains("strand=entry_tension"));
+    let dynamic = append_context_action_at(
+        &path,
+        &passage_id,
+        "strand: continuity; movement_resistance: active_within_restlessness; persistence_tendency: dynamic_equilibrium; witness_fit: holding; source_ref: introspection_proposal_phase_transitions_1785110349:c002",
+        "astrid",
+        PassageContextActionV1::DescribeBearing,
+    );
+    assert!(dynamic.contains("movement_resistance=active_within_restlessness"));
+    assert!(dynamic.contains("persistence_tendency=dynamic_equilibrium"));
     let numeric = append_context_action_at(
         &path,
         &passage_id,
@@ -286,12 +295,13 @@ fn strand_bearing_preserves_friction_without_metric_or_stage_flattening() {
         .into_iter()
         .filter(|row| row.get("action").and_then(Value::as_str) == Some("describe_bearing"))
         .collect::<Vec<_>>();
-    assert_eq!(rows.len(), 3);
+    assert_eq!(rows.len(), 4);
     assert_eq!(
         rows[1].get("previous_bearing_event_id"),
         rows[0].get("passage_context_event_id"),
     );
     assert_eq!(rows[2].get("previous_bearing_event_id"), Some(&Value::Null));
+    assert_eq!(rows[3].get("previous_bearing_event_id"), Some(&Value::Null));
     assert!(rows.iter().all(|row| {
         row.get("bearing_is_metric").and_then(Value::as_bool) == Some(false)
             && row
@@ -308,9 +318,10 @@ fn strand_bearing_preserves_friction_without_metric_or_stage_flattening() {
             && row.get("raw_prose_included").and_then(Value::as_bool) == Some(false)
     }));
     let status = status_report_at(&path, "astrid", 5);
-    assert!(status.contains("own current strand bearings: 2"));
+    assert!(status.contains("own current strand bearings: 3"));
     assert!(status.contains("witness_fit=interwoven"));
     assert!(status.contains("not a viscosity metric"));
+    assert!(status.contains("owner-language alternatives to a stalled reading"));
 }
 
 #[test]

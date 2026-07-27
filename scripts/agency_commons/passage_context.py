@@ -115,6 +115,7 @@ class PassageMovementResistanceV1(StrEnum):
     RESISTANT = "resistant"
     HELD_FAST = "held_fast"
     CHANGING = "changing"
+    ACTIVE_WITHIN_RESTLESSNESS = "active_within_restlessness"
     UNKNOWN = "unknown"
 
 
@@ -124,6 +125,7 @@ class PassagePersistenceTendencyV1(StrEnum):
     CARRIED = "carried"
     DEEPENING = "deepening"
     RELEASING = "releasing"
+    DYNAMIC_EQUILIBRIUM = "dynamic_equilibrium"
     UNKNOWN = "unknown"
 
 

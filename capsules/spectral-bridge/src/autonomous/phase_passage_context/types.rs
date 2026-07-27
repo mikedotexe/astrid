@@ -154,6 +154,7 @@ bounded_enum!(PassageMovementResistanceV1 {
     Resistant => "resistant",
     HeldFast => "held_fast",
     Changing => "changing",
+    ActiveWithinRestlessness => "active_within_restlessness",
     Unknown => "unknown",
 });
 
@@ -163,6 +164,7 @@ bounded_enum!(PassagePersistenceTendencyV1 {
     Carried => "carried",
     Deepening => "deepening",
     Releasing => "releasing",
+    DynamicEquilibrium => "dynamic_equilibrium",
     Unknown => "unknown",
 });
 
