@@ -41,6 +41,13 @@ while [ $# -gt 0 ]; do
 done
 [ -n "$ACTOR" ] || { echo "deploy_minime: --actor cannot be empty" >&2; exit 64; }
 
+if /usr/libexec/PlistBuddy -c "Print :EnvironmentVariables:MINIME_DIVISION_GATEWAY_ENABLED" \
+  "$MINIME/launchd/com.minime.engine.plist" 2>/dev/null | grep -qx "true"; then
+  delegate=(--actor "$ACTOR")
+  [ -n "$ACK" ] && delegate+=(--ack "$ACK")
+  exec "$ASTRID/scripts/deploy_division_runtime.sh" "${delegate[@]}"
+fi
+
 label_pid() {
   local label="${1:-$LABEL}"
   launchctl print "$DOMAIN/$label" 2>/dev/null | awk -F' = ' '/^[[:space:]]*pid = / {print $2; exit}'

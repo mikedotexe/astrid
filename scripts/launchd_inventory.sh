@@ -22,6 +22,8 @@ WARNINGS=0
 
 prod_plists=(
     "$MINIME_DIR/launchd/com.minime.engine.plist"
+    "$MINIME_DIR/launchd/com.minime.division-gateway.plist"
+    "$MINIME_DIR/launchd/com.minime.division-supervisor.plist"
     "$MINIME_DIR/launchd/com.minime.host-sensory.plist"
     "$MINIME_DIR/launchd/com.minime.camera-client.plist"
     "$MINIME_DIR/launchd/com.minime.mic-to-sensory.plist"
@@ -40,6 +42,8 @@ prod_plists=(
 
 persistent_labels=(
     com.minime.engine
+    com.minime.division-gateway
+    com.minime.division-supervisor
     com.minime.host-sensory
     com.minime.camera-client
     com.minime.mic-to-sensory
@@ -60,6 +64,8 @@ legacy_labels=(
 )
 
 opt_in_plists=(
+    "$MINIME_DIR/launchd/com.minime.division-child-minime.plist"
+    "$MINIME_DIR/launchd/com.minime.division-child-astrid.plist"
     "$MINIME_DIR/launchd/com.minime.engine-rescue.plist"
     "$MINIME_DIR/launchd/com.minime.engine-rescue-watchdog.plist"
 )

@@ -12,6 +12,7 @@ ROOT = Path(__file__).resolve().parents[1]
 SCRIPTS = (
     ROOT / "scripts/build_bridge.sh",
     ROOT / "scripts/deploy_minime.sh",
+    ROOT / "scripts/deploy_division_runtime.sh",
     ROOT / "scripts/restart_coupled_model.sh",
     ROOT / "scripts/capture_stack_receipt.sh",
     ROOT / "scripts/start_all.sh",
@@ -29,7 +30,7 @@ class DeploymentWrapperTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
 
     def test_actor_default_is_neutral(self) -> None:
-        for path in SCRIPTS[:4]:
+        for path in SCRIPTS[:5]:
             text = path.read_text()
             self.assertIn("ASTRID_DEPLOY_ACTOR:-interactive-agent", text)
             self.assertNotIn('SOURCE="claude"', text)
@@ -41,19 +42,19 @@ class DeploymentWrapperTests(unittest.TestCase):
         self.assertNotIn('wait_port 8090 "coupled Astrid server"', text)
 
     def test_wrappers_emit_checked_receipts_and_manifests(self) -> None:
-        for path in SCRIPTS[:3]:
+        for path in SCRIPTS[:4]:
             text = path.read_text()
             self.assertIn("record-deploy", text)
             self.assertIn("environment_receipts.py", text)
             self.assertIn("--manifest", text)
-        stack = SCRIPTS[3].read_text()
+        stack = SCRIPTS[4].read_text()
         self.assertIn("coupled-stack", stack)
         self.assertIn("/readyz", stack)
         self.assertIn("--process", stack)
         self.assertIn('--context-manifest "$MODEL_MANIFEST"', stack)
 
     def test_help_paths_are_side_effect_free(self) -> None:
-        for path in SCRIPTS[:4]:
+        for path in SCRIPTS[:5]:
             result = subprocess.run(
                 [str(path), "--help"],
                 capture_output=True,
