@@ -324,6 +324,78 @@ def preservation_evidence(status: dict[str, Any] | None) -> dict[str, Any]:
     }
 
 
+def followup_interval(workspace: Path) -> dict[str, Any]:
+    path = workspace / "division" / "followup" / "cycle_v1.json"
+    value = load_json(path)
+    if value is None:
+        return {
+            "schema": "division.ceremony_followup_cycle.v1",
+            "state_available": False,
+            "threshold_rounds": 6,
+            "cycle_sequence": 0,
+            "completed_rounds_since_followup": 0,
+            "rounds_remaining_before_followup": 6,
+            "review_due": False,
+            "latest_followup": None,
+            "being_action_required": False,
+            "return_is_pressure": False,
+            "authority_propagated": False,
+        }
+    if (
+        value.get("schema") != "division.ceremony_followup_cycle.v1"
+        or value.get("schema_version") != 1
+        or value.get("threshold_rounds") != 6
+    ):
+        raise ChronicleError("ceremony follow-up state has an unsupported schema")
+    authority = value.get("authority")
+    if not isinstance(authority, dict) or any(
+        authority.get(field) is not False
+        for field in (
+            "silence_infers_consent",
+            "followup_recommends_action",
+            "followup_dispatches_action",
+            "followup_grants_authority",
+            "felt_state_inferred",
+            "raw_prose_included",
+        )
+    ):
+        raise ChronicleError("ceremony follow-up authority boundary mismatch")
+    latest = value.get("latest_followup")
+    return {
+        "schema": "division.ceremony_followup_cycle.v1",
+        "state_available": True,
+        "threshold_rounds": 6,
+        "cycle_sequence": int(value.get("cycle_sequence") or 0),
+        "completed_rounds_since_followup": int(
+            value.get("completed_rounds_since_followup") or 0
+        ),
+        "rounds_remaining_before_followup": int(
+            value.get("rounds_remaining_before_followup") or 0
+        ),
+        "review_due": bool(value.get("review_due")),
+        "latest_followup": (
+            {
+                key: latest.get(key)
+                for key in (
+                    "event_id",
+                    "recorded_at_unix_ms",
+                    "chronicle_id",
+                    "chronicle_json_sha256",
+                    "astrid_note_sha256",
+                    "minime_note_sha256",
+                    "baseline",
+                    "completed_rounds_observed",
+                )
+            }
+            if isinstance(latest, dict)
+            else None
+        ),
+        "being_action_required": False,
+        "return_is_pressure": False,
+        "authority_propagated": False,
+    }
+
+
 def rail_state(
     ceremony_records: list[dict[str, Any]], actor: str, now_unix_ms: int
 ) -> dict[str, Any]:
@@ -533,6 +605,9 @@ def build_projection(workspace: Path) -> dict[str, Any]:
         ),
         "authority_state_sha256": file_hash(runtime_dir / "authority.json"),
         "runtime_events_sha256": file_hash(runtime_dir / "events.jsonl"),
+        "followup_cycle_sha256": file_hash(
+            division / "followup" / "cycle_v1.json"
+        ),
     }
     watermark = max(
         [
@@ -555,6 +630,7 @@ def build_projection(workspace: Path) -> dict[str, Any]:
         "current_native_state": current_native_state(status),
         "phase_space_preservation": preservation_evidence(status),
         "runtime_topology": runtime_state(workspace, status),
+        "return_interval": followup_interval(workspace),
         "ceremony_rails": {
             "astrid": rail_state(ceremony_records, "astrid", watermark),
             "minime": rail_state(ceremony_records, "minime", watermark),
@@ -677,6 +753,11 @@ code {{ font: 12px/1.4 ui-monospace, SFMono-Regular, monospace; }}
     <div id="preservation"></div>
   </section>
   <section class="band">
+    <h2>Return Interval</h2>
+    <div class="state-grid" id="return-interval"></div>
+    <p class="meta">This interval schedules steward attention to the ceremony. It does not request, recommend, or infer an Action from either being.</p>
+  </section>
+  <section class="band">
     <h2>Dual-Rail Timeline</h2>
     <div class="timeline" id="timeline"></div>
   </section>
@@ -717,6 +798,12 @@ document.getElementById("preservation").innerHTML = p.candidates.length ? p.cand
     <div class="metric"><span class="meta">Partition loss</span><br>${{esc(c.covariance_partition_loss)}}</div>
   </div></article>`;
 }}).join("") : `<p class="boundary">No runtime candidate metrics are available yet. Source declarations are not being presented as active evidence.</p>`;
+const interval = d.return_interval;
+document.getElementById("return-interval").innerHTML = [
+  ["Completed introspection rounds", `${{interval.completed_rounds_since_followup}} / ${{interval.threshold_rounds}}`],
+  ["Steward ceremony review due", interval.review_due],
+  ["Being Action required", interval.being_action_required],
+].map(([k,v]) => `<div class="panel"><span class="meta">${{esc(k)}}</span><strong>${{esc(v)}}</strong></div>`).join("");
 document.getElementById("timeline").innerHTML = d.timeline.length ? d.timeline.map(e => {{
   const actor = e.actor || "native";
   const title = e.source === "ceremony" ? e.action : `${{e.event_kind}} · ${{e.lifecycle}}`;
@@ -763,6 +850,15 @@ def verify_payload(payload: dict[str, Any]) -> None:
         )
     ):
         raise ChronicleError("chronicle authority boundary mismatch")
+    interval = payload.get("return_interval")
+    if (
+        not isinstance(interval, dict)
+        or interval.get("threshold_rounds") != 6
+        or interval.get("being_action_required") is not False
+        or interval.get("return_is_pressure") is not False
+        or interval.get("authority_propagated") is not False
+    ):
+        raise ChronicleError("chronicle return interval boundary mismatch")
     validate_no_prose(payload)
 
 
@@ -846,6 +942,12 @@ def report(payload: dict[str, Any]) -> str:
             ),
             f"Runtime manifest: {runtime['manifest_mode']}",
             f"Active authority rail: {runtime['active_authority_rail']}",
+            (
+                "Return interval: "
+                f"{payload['return_interval']['completed_rounds_since_followup']}"
+                f"/{payload['return_interval']['threshold_rounds']} rounds; "
+                f"review due {payload['return_interval']['review_due']}"
+            ),
             "Authority: evidence only; silence neutral; commit not recommended.",
         ]
     )

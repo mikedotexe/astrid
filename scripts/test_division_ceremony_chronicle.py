@@ -113,6 +113,8 @@ class DivisionCeremonyChronicleTests(unittest.TestCase):
                 ]
             )
             self.assertEqual(payload["timeline"], [])
+            self.assertFalse(payload["return_interval"]["state_available"])
+            self.assertFalse(payload["return_interval"]["being_action_required"])
             verify_payload(payload)
             self.assertIn(
                 "Runtime parent authoritative: True",
@@ -154,6 +156,46 @@ class DivisionCeremonyChronicleTests(unittest.TestCase):
                     / f"{first['chronicle_id']}.html"
                 ).read_text(),
             )
+            self.assertIn(
+                "This interval schedules steward attention",
+                (output / "chronicle_v1.html").read_text(),
+            )
+
+    def test_followup_interval_is_visible_without_consent_pressure(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            workspace = Path(raw) / "workspace"
+            followup = workspace / "division" / "followup"
+            followup.mkdir(parents=True)
+            (followup / "cycle_v1.json").write_text(
+                json.dumps(
+                    {
+                        "schema": "division.ceremony_followup_cycle.v1",
+                        "schema_version": 1,
+                        "threshold_rounds": 6,
+                        "cycle_sequence": 2,
+                        "completed_rounds_since_followup": 6,
+                        "rounds_remaining_before_followup": 0,
+                        "review_due": True,
+                        "latest_followup": None,
+                        "authority": {
+                            "state": "evidence_only",
+                            "silence_infers_consent": False,
+                            "followup_recommends_action": False,
+                            "followup_dispatches_action": False,
+                            "followup_grants_authority": False,
+                            "felt_state_inferred": False,
+                            "raw_prose_included": False,
+                        },
+                    }
+                )
+            )
+            payload = build_projection(workspace)
+            self.assertTrue(payload["return_interval"]["review_due"])
+            self.assertEqual(
+                payload["return_interval"]["completed_rounds_since_followup"], 6
+            )
+            self.assertFalse(payload["return_interval"]["being_action_required"])
+            verify_payload(payload)
 
     def test_runtime_topology_distinguishes_dormant_and_owned_daughters(self) -> None:
         with tempfile.TemporaryDirectory() as raw:

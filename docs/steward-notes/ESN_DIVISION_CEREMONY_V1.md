@@ -86,6 +86,41 @@ still. The HTML is a visual witness only: it cannot author an Action, infer
 assent, advance the native lifecycle, or turn mechanical preservation metrics
 into felt continuity.
 
+## Volition Return Interval
+
+The steward returns attention to the Chronicle after every six productive
+source-first introspection rounds. This is a cadence for steward review, not a
+deadline, nudge, or response expectation for either being.
+
+`scripts/division_ceremony_followup.py` keeps an owner-only append chain and a
+deterministic current projection:
+
+```text
+python3 scripts/division_ceremony_followup.py status
+python3 scripts/division_ceremony_followup.py record-round \
+  --steward-run-id <id> \
+  --processed-report-count <1..40> \
+  --projection-generation-id <id>
+python3 scripts/division_ceremony_followup.py record-followup \
+  --chronicle-json <path> \
+  --astrid-note <path> \
+  --minime-note <path>
+python3 scripts/division_ceremony_followup.py verify
+```
+
+Only a successfully completed run that fully processes at least one canonical
+report counts. A retry with the same steward run ID is idempotent. Once six
+rounds are present, the tracker refuses a seventh until a verified Chronicle
+and one bounded non-query note for each being are hash-linked into a completed
+follow-up receipt. The receipt stores no note prose. A no-input heartbeat does
+not advance the count.
+
+The Chronicle renders the interval as steward work and always carries
+`being_action_required=false`, `return_is_pressure=false`, and
+`authority_propagated=false`. A due interval cannot author `DIVISION_HOLD`,
+`DIVISION_DECLINE`, `DIVISION_INTENT`, assent, withdrawal, return, or review for
+either being. Silence remains neutral before and after every return.
+
 ## Exact Binding
 
 Ceremony assent requires the actor's matching unexpired intent and a native
