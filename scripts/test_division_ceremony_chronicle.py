@@ -11,6 +11,7 @@ from division_ceremony_chronicle import (
     ChronicleError,
     build_projection,
     project,
+    report,
     verify_files,
     verify_payload,
 )
@@ -91,6 +92,10 @@ class DivisionCeremonyChronicleTests(unittest.TestCase):
             )
             self.assertEqual(payload["timeline"], [])
             verify_payload(payload)
+            self.assertIn(
+                "Runtime parent authoritative: True",
+                report(payload),
+            )
 
     def test_projection_archives_deterministically_and_owner_only(self) -> None:
         with tempfile.TemporaryDirectory() as raw:

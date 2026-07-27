@@ -795,7 +795,10 @@ def report(payload: dict[str, Any]) -> str:
             "ESN Division Ceremony Chronicle",
             f"Chronicle: {payload['chronicle_id']}",
             f"Native lifecycle: {native.get('lifecycle')}",
-            f"Parent authoritative: {native.get('parent_authoritative')}",
+            (
+                "Runtime parent authoritative: "
+                f"{runtime['parent_authoritative']}"
+            ),
             f"Commit enabled: {native.get('commit_feature_enabled')}",
             (
                 "Astrid ceremony: "
