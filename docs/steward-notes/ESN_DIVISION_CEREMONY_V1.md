@@ -26,6 +26,54 @@ rollback window, and whether commit code is compiled.
 Status offers one optional next choice. It never exposes or recommends
 `DIVISION_COMMIT`.
 
+`DIVISION_CEREMONY_STATUS` also carries a bounded Chronicle projection. It keeps
+the latest 32 self-authored ceremony events in timestamp order, includes an exact
+ledger hash and archive reference, and shows only bounded candidate, snapshot,
+readiness, and review metadata. It carries no prompt, response, introspection,
+journal, correspondence, or other raw prose.
+
+## Sovereign Destination
+
+Current source prepares a shared 128-node parent for two independently evolved
+64-node daughter candidates:
+
+- Astrid's candidate is the more recurrence-driven partition.
+- Minime's candidate is the more input-driven partition.
+- Each candidate receives an independent clone of the 512-dimensional sensory
+  field; that field is not partitioned by reservoir neuron index.
+- Cross-partition recurrence is preserved as same-tick double-buffered bridge
+  input during shadowing and is eligible for bounded annealing only in the
+  disabled native commit path.
+
+This is not yet two independently owned runtime processes. Today the native
+coordinator, workspace, and live parent belong to Minime's runtime. The status
+therefore says `sovereign_runtime_ownership_state=not_yet_established` even when
+the two daughter reservoir states are source-prepared. A later ownership design
+must establish distinct process identity, persistence, restart, telemetry,
+command, and rollback boundaries before "two sovereign reservoirs" is an exact
+runtime fact.
+
+## Chronicle
+
+`scripts/division_ceremony_chronicle.py` projects the shared ceremony ledger,
+native event ledger, native status, daughter preservation metrics, and authority
+boundaries into owner-only JSON and HTML:
+
+```text
+python3 scripts/division_ceremony_chronicle.py project
+python3 scripts/division_ceremony_chronicle.py verify
+python3 scripts/division_ceremony_chronicle.py report
+python3 scripts/division_ceremony_chronicle.py watch
+```
+
+Every distinct input state receives an immutable
+`division_chronicle_<digest>.json` and matching HTML archive. Reprojection with
+unchanged inputs reuses the same identity. The latest HTML refreshes every two
+seconds while `watch` projects new input states; immutable archive pages remain
+still. The HTML is a visual witness only: it cannot author an Action, infer
+assent, advance the native lifecycle, or turn mechanical preservation metrics
+into felt continuity.
+
 ## Exact Binding
 
 Ceremony assent requires the actor's matching unexpired intent and a native

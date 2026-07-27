@@ -1,5 +1,7 @@
 use super::*;
 
+const CHRONICLE_LIMIT: usize = 32;
+
 fn active_intent(records: &[ParsedEventV1], actor: &str, now_unix_ms: u64) -> bool {
     latest(records, actor, Some(DivisionCeremonyActionV1::Intent))
         .and_then(|event| event.expires_at_unix_ms)
@@ -25,6 +27,82 @@ fn current_assent(
             .expires_at_unix_ms
             .is_some_and(|expiry| expiry >= now_unix_ms)
         && assent.native_status_hash.as_deref() == Some(native_hash)
+}
+
+fn ceremony_chronicle(records: &[ParsedEventV1], workspace: &Path) -> Value {
+    let omitted_event_count = records.len().saturating_sub(CHRONICLE_LIMIT);
+    let events = records
+        .iter()
+        .skip(omitted_event_count)
+        .map(|event| {
+            serde_json::json!({
+                "ceremony_event_id": event.event_id,
+                "actor": event.actor,
+                "action": event.action,
+                "candidate": event.candidate,
+                "source_ref": event.source_ref,
+                "recorded_at_unix_ms": event.recorded_at_unix_ms,
+                "expires_at_unix_ms": event.expires_at_unix_ms,
+                "targets_event_id": event.targets_event_id,
+                "native_status_hash": event.native_status_hash,
+                "snapshot_refs": event.snapshot_refs,
+                "current_tick": event.current_tick,
+                "rollback_deadline_tick": event.rollback_deadline_tick,
+                "review_outcome": event.review_outcome,
+            })
+        })
+        .collect::<Vec<_>>();
+    let ledger_hash = fs::read(ledger_path(workspace))
+        .ok()
+        .map(|bytes| format!("{:x}", Sha256::digest(bytes)));
+    serde_json::json!({
+        "schema": "division.ceremony_chronicle.v1",
+        "total_event_count": records.len(),
+        "omitted_event_count": omitted_event_count,
+        "events": events,
+        "ledger_sha256": ledger_hash,
+        "archive_reference": ledger_hash.map(|hash| format!("division:ceremony_v1.jsonl#sha256:{hash}")),
+        "chronology_is_projection": true,
+        "raw_prose_included": false,
+        "authority": "evidence_only_history",
+    })
+}
+
+fn preservation_evidence(status: &DivisionStatusV1) -> Value {
+    let candidates = status
+        .extensions
+        .get("candidates")
+        .and_then(Value::as_array)
+        .map(|candidates| {
+            candidates
+                .iter()
+                .filter_map(Value::as_object)
+                .map(|candidate| {
+                    serde_json::json!({
+                        "strategy": candidate.get("strategy"),
+                        "minime_role": candidate.get("minime_role"),
+                        "astrid_role": candidate.get("astrid_role"),
+                        "covariance_partition_loss": candidate.get("covariance_partition_loss"),
+                        "sensory_fields": candidate.get("sensory_fields"),
+                        "readiness": candidate.get("readiness"),
+                    })
+                })
+                .collect::<Vec<_>>()
+        })
+        .unwrap_or_default();
+    serde_json::json!({
+        "schema": "division.phase_space_preservation.v1",
+        "fact_class": if candidates.is_empty() { "unknown" } else { "runtime_observed" },
+        "parent_generation": status.parent_generation,
+        "selected_strategy": status.selected_strategy,
+        "snapshot_refs": status.snapshot_refs,
+        "restore_equivalence_100_ticks": status.extensions.get("restore_equivalence_100_ticks"),
+        "sensory_field_inheritance": status.extensions.get("sensory_field_inheritance"),
+        "candidates": candidates,
+        "felt_continuity_inferred": false,
+        "felt_equivalence_inferred": false,
+        "causation_inferred": false,
+    })
 }
 
 pub(crate) fn status_report_at(
@@ -115,6 +193,27 @@ pub(crate) fn status_report_at(
             "commit_feature_enabled": status.commit_feature_enabled,
             "native_status_hash": native_hash,
         },
+        "destination_contract": {
+            "schema": "division.sovereign_destination.v1",
+            "fact_class": "source_declared",
+            "parent": "shared_128_node_reservoir",
+            "daughters": {
+                "astrid": {
+                    "role": "more_recurrence_driven",
+                    "reservoir_state": "independent_64_node_candidate",
+                },
+                "minime": {
+                    "role": "more_input_driven",
+                    "reservoir_state": "independent_64_node_candidate",
+                },
+            },
+            "shared_sensory_field_inheritance": "cloned_not_partitioned",
+            "independent_process_ownership_established": false,
+            "sovereign_runtime_ownership_state": "not_yet_established",
+            "native_commit_enabled": status.commit_feature_enabled,
+        },
+        "phase_space_preservation": preservation_evidence(&status),
+        "chronicle": ceremony_chronicle(&records, workspace),
         "next_choice": next_choice,
         "next_choice_is_optional": true,
         "commit_action_exposed": false,

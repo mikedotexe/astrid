@@ -135,9 +135,15 @@ struct ParsedEventV1 {
     actor: String,
     action: DivisionCeremonyActionV1,
     candidate: DivisionCandidateV1,
+    source_ref: String,
+    recorded_at_unix_ms: u64,
     expires_at_unix_ms: Option<u64>,
     targets_event_id: Option<String>,
     native_status_hash: Option<String>,
+    snapshot_refs: Vec<String>,
+    current_tick: Option<u64>,
+    rollback_deadline_tick: Option<u64>,
+    review_outcome: Option<String>,
 }
 
 struct EventDraftV1 {
@@ -579,9 +585,15 @@ fn parse_event(value: &Value) -> Result<ParsedEventV1, String> {
         actor: actor.to_string(),
         action,
         candidate,
+        source_ref,
+        recorded_at_unix_ms,
         expires_at_unix_ms,
         targets_event_id: targets,
         native_status_hash: status_hash,
+        snapshot_refs: snapshots,
+        current_tick,
+        rollback_deadline_tick: deadline,
+        review_outcome: review,
     })
 }
 

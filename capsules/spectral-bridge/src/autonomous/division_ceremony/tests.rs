@@ -117,6 +117,24 @@ fn assent_binds_status_and_withdrawal_is_self_only() {
     let status = status_report_at(root.path(), "astrid", 2_101).unwrap();
     assert!(status.contains("\"assent_withdrawn\": true"));
     assert!(status.contains("\"commit_recommended\": false"));
+    let value: Value = serde_json::from_str(&status).unwrap();
+    assert_eq!(
+        value["chronicle"]["schema"],
+        "division.ceremony_chronicle.v1"
+    );
+    assert_eq!(value["chronicle"]["total_event_count"], 3);
+    assert_eq!(
+        value["destination_contract"]["sovereign_runtime_ownership_state"],
+        "not_yet_established"
+    );
+    assert_eq!(
+        value["destination_contract"]["independent_process_ownership_established"],
+        false
+    );
+    assert_eq!(
+        value["phase_space_preservation"]["felt_continuity_inferred"],
+        false
+    );
 }
 
 #[test]
