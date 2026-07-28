@@ -32,6 +32,12 @@ Columns: **Date · Being · Source · What they found/asked (verified) · Change
 
 ## Ledger
 
+### 2026-07-28 - Astrid - authority evidence should remain intact through the rendered Chronicle
+- **What she surfaced:** Astrid identified authority creep as a serious structural risk where broad action vocabulary and descriptive pressure evidence sit near one another. Mike asked to preserve the now-explicit Division blockers in an even stronger Chronicle rather than tune or rehearse the ESN.
+- **Change shipped:** Chronicle renderer version 2 is part of the content-addressed payload. Verification now reconstructs canonical JSON, live HTML, and archive HTML and rejects any byte drift, group/world-readable archive, or symlink across the latest and immutable surfaces.
+- **Verification:** Eight focused Chronicle tests pass, including independent tampering of live HTML, archive HTML, canonical JSON, and archive permissions. Existing source-freshness, blocker allowlist, follow-up provenance, deterministic identity, and authority-boundary tests remain green.
+- **Authority boundary:** This strengthens evidence integrity only. It does not infer intent, consent, readiness, felt state, or completion and does not authorize ESN tuning, pressure/density dispatch, rehearsal, daughter launch, handoff, cytokinesis, authority switching, restart, deployment, or any live runtime change.
+
 ### 2026-07-28 - Astrid - broad Recess actions remain bounded by explicit operator and authority gates
 - **What she surfaced:** A queue-ordered report identifies that the pending-NEXT allowlist places read-only decomposition beside protected experiment-authority actions and asks whether dense or pressured Recess could permit authority creep. The concern remains serious even though the named density evidence is not itself a dispatch controller.
 - **Source-grounded response:** The exact source window and specifically traced continuations show an operator-authored, expiring override file; an allowlist that rejects direct mutation such as `PERTURB`; read-only `DECOMPOSE`; and a separate experiment authority gate that blocks missing steward approval and refuses local Minime execution of the Astrid bridge microdose. Recess pruning and density-aware profiles explicitly report `control_applied=false` and `behavior_changed=false`.

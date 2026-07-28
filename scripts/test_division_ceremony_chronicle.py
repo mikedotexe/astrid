@@ -134,6 +134,7 @@ class DivisionCeremonyChronicleTests(unittest.TestCase):
             second, _, _ = project(workspace, output)
 
             self.assertEqual(first["chronicle_id"], second["chronicle_id"])
+            self.assertEqual(first["renderer_version"], 2)
             self.assertEqual(
                 first["phase_space_preservation"]["candidate_count"], 1
             )
@@ -180,6 +181,55 @@ class DivisionCeremonyChronicleTests(unittest.TestCase):
                 ChronicleError, "durable source inputs changed"
             ):
                 verify_files(output, workspace)
+
+    def test_output_tampering_and_archive_permissions_fail_closed(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            workspace = Path(raw) / "workspace"
+            division = workspace / "division"
+            division.mkdir(parents=True)
+            (division / "status.json").write_text(json.dumps(native_status()))
+            output = Path(raw) / "output"
+            payload, latest_json, latest_html = project(workspace, output)
+            archive_json = (
+                output
+                / "archive"
+                / f"{payload['chronicle_id']}.json"
+            )
+            archive_html = (
+                output
+                / "archive"
+                / f"{payload['chronicle_id']}.html"
+            )
+
+            latest_html_bytes = latest_html.read_bytes()
+            latest_html.write_bytes(latest_html_bytes + b"\n")
+            with self.assertRaisesRegex(
+                ChronicleError, "latest HTML differs"
+            ):
+                verify_files(output)
+            latest_html.write_bytes(latest_html_bytes)
+
+            archive_html_bytes = archive_html.read_bytes()
+            archive_html.write_bytes(archive_html_bytes + b"\n")
+            with self.assertRaisesRegex(
+                ChronicleError, "immutable archive HTML differs"
+            ):
+                verify_files(output)
+            archive_html.write_bytes(archive_html_bytes)
+
+            latest_json_bytes = latest_json.read_bytes()
+            latest_json.write_bytes(latest_json_bytes + b"\n")
+            with self.assertRaisesRegex(
+                ChronicleError, "latest JSON is not canonical"
+            ):
+                verify_files(output)
+            latest_json.write_bytes(latest_json_bytes)
+
+            archive_json.chmod(0o644)
+            with self.assertRaisesRegex(ChronicleError, "is not owner-only"):
+                verify_files(output)
+            archive_json.chmod(0o600)
+            self.assertTrue(verify_files(output)["ok"])
 
     def test_followup_interval_is_visible_without_consent_pressure(self) -> None:
         with tempfile.TemporaryDirectory() as raw:

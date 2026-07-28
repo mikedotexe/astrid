@@ -30,6 +30,7 @@ except ModuleNotFoundError:
 
 
 SCHEMA = "division.ceremony_chronicle.v1"
+RENDERER_VERSION = 2
 MAX_TIMELINE_EVENTS = 4096
 FORBIDDEN_KEYS = {
     "body",
@@ -767,6 +768,7 @@ def build_projection(workspace: Path) -> dict[str, Any]:
     payload: dict[str, Any] = {
         "schema": SCHEMA,
         "schema_version": 1,
+        "renderer_version": RENDERER_VERSION,
         "source_watermark_unix_ms": watermark,
         "workspace_ref": "minime:workspace/division",
         "input_hashes": input_hashes,
@@ -985,6 +987,8 @@ def validate_no_prose(value: Any, path: str = "$") -> None:
 def verify_payload(payload: dict[str, Any]) -> None:
     if payload.get("schema") != SCHEMA:
         raise ChronicleError("chronicle schema mismatch")
+    if payload.get("renderer_version") != RENDERER_VERSION:
+        raise ChronicleError("chronicle renderer version mismatch")
     expected = dict(payload)
     chronicle_id = expected.pop("chronicle_id", None)
     expected_id = "division_chronicle_" + sha256_bytes(
@@ -1054,15 +1058,28 @@ def verify_files(
     if payload is None or not latest_html.is_file():
         raise ChronicleError("chronicle latest outputs are missing")
     verify_payload(payload)
-    for path in (latest_json, latest_html):
-        if path.stat().st_mode & 0o077:
-            raise ChronicleError(f"{path} is not owner-only")
     archive_json = output / "archive" / f"{payload['chronicle_id']}.json"
     archive_html = output / "archive" / f"{payload['chronicle_id']}.html"
     if not archive_json.is_file() or not archive_html.is_file():
         raise ChronicleError("immutable chronicle archive is missing")
-    if archive_json.read_bytes() != latest_json.read_bytes():
-        raise ChronicleError("latest JSON differs from immutable archive")
+    for path in (latest_json, latest_html, archive_json, archive_html):
+        if path.is_symlink():
+            raise ChronicleError(f"{path} must not be a symlink")
+        if path.stat().st_mode & 0o077:
+            raise ChronicleError(f"{path} is not owner-only")
+    expected_json = (
+        json.dumps(payload, indent=2, sort_keys=True) + "\n"
+    ).encode()
+    if latest_json.read_bytes() != expected_json:
+        raise ChronicleError("latest JSON is not canonical")
+    if archive_json.read_bytes() != expected_json:
+        raise ChronicleError("immutable archive JSON is not canonical")
+    if latest_html.read_bytes() != render_html(payload, live=True).encode():
+        raise ChronicleError("latest HTML differs from deterministic rendering")
+    if archive_html.read_bytes() != render_html(payload).encode():
+        raise ChronicleError(
+            "immutable archive HTML differs from deterministic rendering"
+        )
     source_inputs_current = None
     freshness = None
     if workspace is not None:
