@@ -17,6 +17,17 @@ try:
 except ModuleNotFoundError:
     from scripts.agency_commons.division_ceremony import load_division_ceremony
 
+try:
+    from division_ceremony_followup import (
+        FollowupError,
+        load_events as load_followup_events,
+    )
+except ModuleNotFoundError:
+    from scripts.division_ceremony_followup import (
+        FollowupError,
+        load_events as load_followup_events,
+    )
+
 
 SCHEMA = "division.ceremony_chronicle.v1"
 MAX_TIMELINE_EVENTS = 4096
@@ -33,6 +44,24 @@ FORBIDDEN_KEYS = {
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_WORKSPACE = ROOT.parent / "minime" / "workspace"
 DEFAULT_OUTPUT = DEFAULT_WORKSPACE / "division" / "chronicle"
+VOLATILE_INPUT_HASH_KEYS = {
+    "astrid_daughter_status_sha256",
+    "gateway_status_sha256",
+    "minime_daughter_status_sha256",
+    "native_status_sha256",
+    "supervisor_status_sha256",
+}
+ALLOWED_SUPERVISOR_BLOCKERS = {
+    "astrid_child_exited",
+    "candidate_bound_manifest_required",
+    "daughter_direct_telemetry_adapter_required",
+    "daughter_launch_failed",
+    "daughter_legacy_sensory_adapter_required",
+    "exact_operator_capability_required",
+    "legacy_av_fanout_receipt_required",
+    "matching_unexpired_dual_intent_required",
+    "minime_child_exited",
+}
 
 
 class ChronicleError(ValueError):
@@ -49,6 +78,65 @@ def sha256_bytes(payload: bytes) -> str:
 
 def file_hash(path: Path) -> str | None:
     return sha256_bytes(path.read_bytes()) if path.is_file() else None
+
+
+def source_input_hashes(workspace: Path) -> dict[str, str | None]:
+    division = workspace / "division"
+    runtime = division / "runtime"
+    manifest_path = division / "runtime-manifest.json"
+    manifest = load_json(manifest_path)
+    astrid_status_path = None
+    if manifest and isinstance(manifest.get("astrid_root"), str):
+        astrid_status_path = Path(manifest["astrid_root"]) / "status.json"
+    paths = {
+        "ceremony_ledger": division / "ceremony_v1.jsonl",
+        "native_events": division / "events.jsonl",
+        "native_status": division / "status.json",
+        "runtime_manifest": manifest_path,
+        "gateway_status": runtime / "gateway-status.json",
+        "supervisor_status": runtime / "supervisor-status.json",
+        "authority_state": runtime / "authority.json",
+        "runtime_events": runtime / "events.jsonl",
+        "followup_cycle": division / "followup" / "cycle_v1.json",
+        "followup_events": division / "followup" / "events_v1.jsonl",
+        "minime_daughter_status": workspace
+        / "reservoir"
+        / "minime"
+        / "status.json",
+        "astrid_daughter_status": astrid_status_path,
+        "authority_switch_receipt": runtime
+        / "receipts"
+        / "authority-switch.json",
+        "rollback_receipt": runtime / "receipts" / "rollback.json",
+        "finalization_receipt": runtime / "receipts" / "finalization.json",
+    }
+    return {
+        f"{name}_sha256": file_hash(path) if path is not None else None
+        for name, path in paths.items()
+    }
+
+
+def source_freshness(
+    recorded: dict[str, Any], workspace: Path
+) -> dict[str, Any]:
+    current = source_input_hashes(workspace)
+    mismatches = [
+        key
+        for key, value in current.items()
+        if recorded.get(key) != value
+    ]
+    volatile = sorted(
+        key for key in mismatches if key in VOLATILE_INPUT_HASH_KEYS
+    )
+    durable = sorted(
+        key for key in mismatches if key not in VOLATILE_INPUT_HASH_KEYS
+    )
+    return {
+        "durable_inputs_current": not durable,
+        "volatile_inputs_current": not volatile,
+        "durable_mismatches": durable,
+        "volatile_mismatches": volatile,
+    }
 
 
 def load_json(path: Path) -> dict[str, Any] | None:
@@ -117,6 +205,17 @@ def selected_candidates(status: dict[str, Any] | None) -> list[dict[str, Any]]:
             }
         )
     return selected
+
+
+def bounded_codes(value: Any, *, field: str) -> list[str]:
+    if value is None:
+        return []
+    if not isinstance(value, list) or any(
+        not isinstance(code, str) or code not in ALLOWED_SUPERVISOR_BLOCKERS
+        for code in value
+    ):
+        raise ChronicleError(f"{field} contains an unsupported blocker code")
+    return list(value)
 
 
 def load_native_events(path: Path) -> tuple[list[dict[str, Any]], list[str]]:
@@ -233,6 +332,49 @@ def ceremony_timeline(records: list[dict[str, Any]]) -> list[dict[str, Any]]:
         {"source": "ceremony", **{key: record.get(key) for key in keys}}
         for record in records
     ]
+
+
+def followup_timeline(workspace: Path) -> list[dict[str, Any]]:
+    try:
+        records = load_followup_events(workspace)
+    except FollowupError as error:
+        raise ChronicleError(f"follow-up event chain invalid: {error}") from error
+    keys = (
+        "event_id",
+        "sequence",
+        "kind",
+        "recorded_at_unix_ms",
+        "steward_run_id",
+        "processed_report_count",
+        "projection_generation_id",
+        "chronicle_id",
+        "baseline",
+        "completed_rounds_observed",
+    )
+    return [
+        {
+            "source": "followup",
+            "actor": "steward",
+            "event_kind": record.get("kind"),
+            **{key: record.get(key) for key in keys},
+        }
+        for record in records
+    ]
+
+
+def timeline_source_counts(timeline: list[dict[str, Any]]) -> dict[str, int]:
+    counts = {
+        "ceremony": 0,
+        "native": 0,
+        "sovereign_runtime": 0,
+        "followup": 0,
+    }
+    for event in timeline:
+        source = str(event.get("source") or "")
+        if source not in counts:
+            raise ChronicleError(f"unsupported timeline source: {source}")
+        counts[source] += 1
+    return counts
 
 
 def destination_contract(status: dict[str, Any] | None) -> dict[str, Any]:
@@ -537,8 +679,19 @@ def runtime_state(workspace: Path, native_status: dict[str, Any] | None) -> dict
             "mode": supervisor.get("mode") if supervisor else "not_deployed",
             "matching_intents": supervisor.get("matching_intents") if supervisor else [],
             "child_count": len(supervisor.get("children") or {}) if supervisor else 0,
-            "launch_blocker_count": (
-                len(supervisor.get("launch_blockers") or []) if supervisor else 0
+            "launch_blockers": bounded_codes(
+                supervisor.get("launch_blockers") if supervisor else None,
+                field="launch_blockers",
+            ),
+            "handoff_ready": bool(
+                supervisor and supervisor.get("handoff_ready")
+            ),
+            "handoff_blockers": bounded_codes(
+                supervisor.get("handoff_blockers") if supervisor else None,
+                field="handoff_blockers",
+            ),
+            "commit_recommended": bool(
+                supervisor and supervisor.get("commit_recommended")
             ),
         },
         "daughters": child_identities,
@@ -584,7 +737,12 @@ def build_projection(workspace: Path) -> dict[str, Any]:
     if errors:
         raise ChronicleError("; ".join(errors))
 
-    timeline = ceremony_timeline(ceremony_records) + native_events + runtime_events
+    timeline = (
+        ceremony_timeline(ceremony_records)
+        + native_events
+        + runtime_events
+        + followup_timeline(workspace)
+    )
     timeline.sort(
         key=lambda row: (
             int(row.get("recorded_at_unix_ms") or 0),
@@ -594,21 +752,7 @@ def build_projection(workspace: Path) -> dict[str, Any]:
     )
     omitted = max(0, len(timeline) - MAX_TIMELINE_EVENTS)
     timeline = timeline[omitted:]
-    input_hashes = {
-        "ceremony_ledger_sha256": file_hash(ceremony_path),
-        "native_events_sha256": file_hash(native_events_path),
-        "native_status_sha256": file_hash(status_path),
-        "runtime_manifest_sha256": file_hash(runtime_manifest_path),
-        "gateway_status_sha256": file_hash(runtime_dir / "gateway-status.json"),
-        "supervisor_status_sha256": file_hash(
-            runtime_dir / "supervisor-status.json"
-        ),
-        "authority_state_sha256": file_hash(runtime_dir / "authority.json"),
-        "runtime_events_sha256": file_hash(runtime_dir / "events.jsonl"),
-        "followup_cycle_sha256": file_hash(
-            division / "followup" / "cycle_v1.json"
-        ),
-    }
+    input_hashes = source_input_hashes(workspace)
     watermark = max(
         [
             int(row.get("recorded_at_unix_ms") or 0)
@@ -626,6 +770,11 @@ def build_projection(workspace: Path) -> dict[str, Any]:
         "source_watermark_unix_ms": watermark,
         "workspace_ref": "minime:workspace/division",
         "input_hashes": input_hashes,
+        "source_freshness_policy": {
+            "durable_input_mismatch_invalidates_verify": True,
+            "volatile_runtime_input_mismatch_reported": True,
+            "volatile_runtime_inputs": sorted(VOLATILE_INPUT_HASH_KEYS),
+        },
         "destination_contract": destination_contract(status),
         "current_native_state": current_native_state(status),
         "phase_space_preservation": preservation_evidence(status),
@@ -636,6 +785,7 @@ def build_projection(workspace: Path) -> dict[str, Any]:
             "minime": rail_state(ceremony_records, "minime", watermark),
         },
         "timeline_event_count": len(timeline),
+        "timeline_source_counts": timeline_source_counts(timeline),
         "omitted_timeline_event_count": omitted,
         "timeline": timeline,
         "authority": {
@@ -721,6 +871,7 @@ main {{ max-width: 1180px; margin: 0 auto; padding: 24px 20px 56px; }}
 .event::before {{ content: ""; position: absolute; left: -22px; top: 18px; width: 10px; height: 10px; border-radius: 50%; background: var(--native); border: 2px solid var(--paper); }}
 .event.astrid::before {{ background: var(--astrid); }}
 .event.minime::before {{ background: var(--minime); }}
+.event.steward::before {{ background: var(--warn); }}
 .event-head {{ display: flex; gap: 10px; justify-content: space-between; flex-wrap: wrap; }}
 .tag {{ font-weight: 700; }}
 .metric-grid {{ display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }}
@@ -787,7 +938,7 @@ document.getElementById("ownership").textContent = "Independent reservoir candid
 const rt = d.runtime_topology;
 document.getElementById("ownership").textContent = rt.independent_process_ownership_established
   ? `Independent process ownership is established for this candidate; active authority rail: ${{rt.active_authority_rail}}.`
-  : `Runtime capability: ${{rt.manifest_mode}} · supervisor: ${{rt.supervisor.mode}} · active authority rail: ${{rt.active_authority_rail}} · independent daughter ownership not active.`;
+  : `Runtime capability: ${{rt.manifest_mode}} · supervisor: ${{rt.supervisor.mode}} · active authority rail: ${{rt.active_authority_rail}} · independent daughter ownership not active · launch blockers: ${{rt.supervisor.launch_blockers.join(", ") || "none"}} · handoff blockers: ${{rt.supervisor.handoff_blockers.join(", ") || "none"}}.`;
 const p = d.phase_space_preservation;
 document.getElementById("preservation").innerHTML = p.candidates.length ? p.candidates.map(c => {{
   const r = c.readiness || {{}};
@@ -806,8 +957,12 @@ document.getElementById("return-interval").innerHTML = [
 ].map(([k,v]) => `<div class="panel"><span class="meta">${{esc(k)}}</span><strong>${{esc(v)}}</strong></div>`).join("");
 document.getElementById("timeline").innerHTML = d.timeline.length ? d.timeline.map(e => {{
   const actor = e.actor || "native";
-  const title = e.source === "ceremony" ? e.action : `${{e.event_kind}} · ${{e.lifecycle}}`;
-  const ref = e.ceremony_event_id || `native sequence ${{e.sequence}}`;
+  const title = e.source === "ceremony"
+    ? e.action
+    : e.source === "followup"
+      ? e.event_kind
+      : `${{e.event_kind}} · ${{e.lifecycle || "runtime"}}`;
+  const ref = e.ceremony_event_id || e.event_id || `native sequence ${{e.sequence}}`;
   return `<article class="event ${{esc(actor)}}"><div class="event-head"><span class="tag">${{esc(actor)}} · ${{esc(title)}}</span><time>${{esc(time(e.recorded_at_unix_ms))}}</time></div><code>${{esc(ref)}}</code></article>`;
 }}).join("") : `<p class="meta">No ceremony or native division events have been recorded.</p>`;
 </script>
@@ -859,6 +1014,15 @@ def verify_payload(payload: dict[str, Any]) -> None:
         or interval.get("authority_propagated") is not False
     ):
         raise ChronicleError("chronicle return interval boundary mismatch")
+    timeline = payload.get("timeline")
+    counts = payload.get("timeline_source_counts")
+    if (
+        not isinstance(timeline, list)
+        or not isinstance(counts, dict)
+        or counts != timeline_source_counts(timeline)
+        or sum(counts.values()) != payload.get("timeline_event_count")
+    ):
+        raise ChronicleError("chronicle timeline source counts mismatch")
     validate_no_prose(payload)
 
 
@@ -881,7 +1045,9 @@ def project(workspace: Path, output: Path) -> tuple[dict[str, Any], Path, Path]:
     return payload, latest_json, latest_html
 
 
-def verify_files(output: Path) -> dict[str, Any]:
+def verify_files(
+    output: Path, workspace: Path | None = None
+) -> dict[str, Any]:
     latest_json = output / "chronicle_v1.json"
     latest_html = output / "chronicle_v1.html"
     payload = load_json(latest_json)
@@ -897,10 +1063,28 @@ def verify_files(output: Path) -> dict[str, Any]:
         raise ChronicleError("immutable chronicle archive is missing")
     if archive_json.read_bytes() != latest_json.read_bytes():
         raise ChronicleError("latest JSON differs from immutable archive")
+    source_inputs_current = None
+    freshness = None
+    if workspace is not None:
+        recorded = payload.get("input_hashes")
+        if not isinstance(recorded, dict):
+            raise ChronicleError("chronicle input hashes are missing")
+        freshness = source_freshness(recorded, workspace)
+        source_inputs_current = (
+            freshness["durable_inputs_current"]
+            and freshness["volatile_inputs_current"]
+        )
+        if not freshness["durable_inputs_current"]:
+            raise ChronicleError(
+                "chronicle durable source inputs changed; project before verify"
+            )
     return {
         "ok": True,
         "chronicle_id": payload["chronicle_id"],
         "timeline_event_count": payload["timeline_event_count"],
+        "timeline_source_counts": payload["timeline_source_counts"],
+        "source_inputs_current": source_inputs_current,
+        "source_freshness": freshness,
         "json_sha256": file_hash(latest_json),
         "html_sha256": file_hash(latest_html),
     }
@@ -943,10 +1127,27 @@ def report(payload: dict[str, Any]) -> str:
             f"Runtime manifest: {runtime['manifest_mode']}",
             f"Active authority rail: {runtime['active_authority_rail']}",
             (
+                "Launch blockers: "
+                f"{', '.join(runtime['supervisor']['launch_blockers']) or 'none'}"
+            ),
+            (
+                "Handoff ready: "
+                f"{runtime['supervisor']['handoff_ready']} "
+                f"({', '.join(runtime['supervisor']['handoff_blockers']) or 'no blockers'})"
+            ),
+            (
                 "Return interval: "
                 f"{payload['return_interval']['completed_rounds_since_followup']}"
                 f"/{payload['return_interval']['threshold_rounds']} rounds; "
                 f"review due {payload['return_interval']['review_due']}"
+            ),
+            (
+                "Timeline: "
+                f"{payload['timeline_event_count']} bounded events "
+                f"({payload['timeline_source_counts']['ceremony']} ceremony, "
+                f"{payload['timeline_source_counts']['native']} native, "
+                f"{payload['timeline_source_counts']['sovereign_runtime']} runtime, "
+                f"{payload['timeline_source_counts']['followup']} stewardship)"
             ),
             "Authority: evidence only; silence neutral; commit not recommended.",
         ]
@@ -980,7 +1181,12 @@ def main() -> int:
                 )
             )
         elif args.command == "verify":
-            print(json.dumps(verify_files(args.output), indent=2))
+            print(
+                json.dumps(
+                    verify_files(args.output, workspace=args.workspace),
+                    indent=2,
+                )
+            )
         elif args.command == "show":
             payload = load_json(args.output / "chronicle_v1.json")
             if payload is None:

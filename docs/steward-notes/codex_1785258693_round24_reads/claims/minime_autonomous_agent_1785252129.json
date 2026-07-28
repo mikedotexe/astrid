@@ -1,0 +1,40 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The source presents a Sovereignty Loop with Recess as its default mode and describes autonomous journaling, experimentation, and adjustment.",
+      "disposition": "Verify the complete introspection and its exact 1-400 source window while preserving the activation boundary: source declarations do not prove that a particular action or live loop state occurred.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The runtime imports continuity-control authority budgets and decomposition helpers, so action variety and authority accounting share one large orchestration surface.",
+      "disposition": "Verify the imports and keep architectural adjacency distinct from proof that decomposition, authority use, or a structural mutation was dispatched.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The operator pending-NEXT allowlist contains DECOMPOSE and protected experiment-authority actions, creating a plausible authority-creep review concern.",
+      "disposition": "Trace the override source and focused regressions: overrides are operator-authored, expire after twelve hours, reject non-allowlisted mutation such as PERTURB, keep DECOMPOSE read-only, and route authority execution through separate fail-closed approval gates.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Recess pruning and density-aware profiles do not themselves block or authorize pending-NEXT actions.",
+      "disposition": "Verify source and focused tests showing control_applied=false and behavior_changed=false. Preserve Astrid's concern without misreporting these read-only profiles as dispatch controls.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "A density- or pressure-aware manual-review veto could constrain protected pending-NEXT actions during Recess.",
+      "disposition": "Do not add an automatic veto or scheduling gate. Pressure-, density-, Recess-, or pending-NEXT-dependent dispatch changes remain an exact Tier 5 Mike/operator approval wait.",
+      "classification": "tier_5_wait"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "cycle_count replaces an older time proxy and should persist across process restarts.",
+      "disposition": "Verify increment, both persistence paths, restore logic, and the existing focused restart regression; no new persistence implementation is needed.",
+      "classification": "verified_existing"
+    }
+  ]
+}

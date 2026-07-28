@@ -16,6 +16,7 @@ from division_ceremony_chronicle import (
     verify_files,
     verify_payload,
 )
+from division_ceremony_followup import record_round
 
 
 def native_status() -> dict:
@@ -141,6 +142,8 @@ class DivisionCeremonyChronicleTests(unittest.TestCase):
             )
             receipt = verify_files(output)
             self.assertTrue(receipt["ok"])
+            current_receipt = verify_files(output, workspace)
+            self.assertTrue(current_receipt["source_inputs_current"])
             self.assertEqual(
                 (output / "chronicle_v1.json").stat().st_mode & 0o077, 0
             )
@@ -160,6 +163,23 @@ class DivisionCeremonyChronicleTests(unittest.TestCase):
                 "This interval schedules steward attention",
                 (output / "chronicle_v1.html").read_text(),
             )
+
+            changed = native_status()
+            changed["current_tick"] = 13
+            (division / "status.json").write_text(json.dumps(changed))
+            moving_receipt = verify_files(output, workspace)
+            self.assertTrue(
+                moving_receipt["source_freshness"]["durable_inputs_current"]
+            )
+            self.assertFalse(
+                moving_receipt["source_freshness"]["volatile_inputs_current"]
+            )
+
+            (division / "ceremony_v1.jsonl").write_text("{}\n")
+            with self.assertRaisesRegex(
+                ChronicleError, "durable source inputs changed"
+            ):
+                verify_files(output, workspace)
 
     def test_followup_interval_is_visible_without_consent_pressure(self) -> None:
         with tempfile.TemporaryDirectory() as raw:
@@ -197,6 +217,32 @@ class DivisionCeremonyChronicleTests(unittest.TestCase):
             self.assertFalse(payload["return_interval"]["being_action_required"])
             verify_payload(payload)
 
+    def test_followup_chain_is_visible_as_stewardship_not_ceremony(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            workspace = Path(raw) / "workspace"
+            state = record_round(
+                workspace,
+                steward_run_id="run-one",
+                processed_report_count=3,
+                projection_generation_id="projection-one",
+            )
+            self.assertEqual(state["completed_rounds_since_followup"], 1)
+
+            payload = build_projection(workspace)
+            self.assertEqual(payload["timeline_event_count"], 1)
+            self.assertEqual(payload["timeline_source_counts"]["followup"], 1)
+            self.assertEqual(payload["timeline_source_counts"]["ceremony"], 0)
+            event = payload["timeline"][0]
+            self.assertEqual(event["source"], "followup")
+            self.assertEqual(event["actor"], "steward")
+            self.assertEqual(
+                event["event_kind"], "introspection_round_completed"
+            )
+            self.assertFalse(
+                payload["return_interval"]["being_action_required"]
+            )
+            verify_payload(payload)
+
     def test_runtime_topology_distinguishes_dormant_and_owned_daughters(self) -> None:
         with tempfile.TemporaryDirectory() as raw:
             workspace = Path(raw) / "workspace"
@@ -224,8 +270,39 @@ class DivisionCeremonyChronicleTests(unittest.TestCase):
                 "expires_at_unix_ms": 9999999999999,
             }
             (division / "runtime-manifest.json").write_text(json.dumps(manifest))
+            (runtime / "supervisor-status.json").write_text(
+                json.dumps(
+                    {
+                        "schema": "division.supervisor_status.v1",
+                        "pid": 1,
+                        "mode": "idle_parent_authoritative",
+                        "matching_intents": [],
+                        "children": {},
+                        "handoff_ready": False,
+                        "handoff_blockers": [
+                            "daughter_legacy_sensory_adapter_required",
+                            "exact_operator_capability_required",
+                        ],
+                        "commit_recommended": False,
+                        "launch_blockers": [
+                            "candidate_bound_manifest_required"
+                        ],
+                    }
+                )
+            )
             dormant = build_projection(workspace)
             self.assertEqual(dormant["runtime_topology"]["manifest_mode"], "dormant")
+            self.assertEqual(
+                dormant["runtime_topology"]["supervisor"]["launch_blockers"],
+                ["candidate_bound_manifest_required"],
+            )
+            self.assertEqual(
+                dormant["runtime_topology"]["supervisor"]["handoff_blockers"],
+                [
+                    "daughter_legacy_sensory_adapter_required",
+                    "exact_operator_capability_required",
+                ],
+            )
             self.assertFalse(
                 dormant["runtime_topology"][
                     "independent_process_ownership_established"
@@ -283,6 +360,18 @@ class DivisionCeremonyChronicleTests(unittest.TestCase):
                 with_runtime_event["timeline"][-1]["event_kind"],
                 "rehearsal_children_launched",
             )
+
+            supervisor = json.loads(
+                (runtime / "supervisor-status.json").read_text()
+            )
+            supervisor["launch_blockers"] = ["freeform prose"]
+            (runtime / "supervisor-status.json").write_text(
+                json.dumps(supervisor)
+            )
+            with self.assertRaisesRegex(
+                ChronicleError, "unsupported blocker code"
+            ):
+                build_projection(workspace)
 
     def test_tampering_and_prose_keys_are_rejected(self) -> None:
         with tempfile.TemporaryDirectory() as raw:

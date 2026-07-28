@@ -1,0 +1,32 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_minime_autonomous_agent_1785252129",
+      "claim_id": "c001",
+      "kind": "source",
+      "target": "/Users/v/other/minime/minime_autonomy/runtime.py:1-400",
+      "note": "Exact report source window was read from disk; unseen source beyond line 400 remains unassessed except for specifically traced claim functions."
+    },
+    {
+      "introspection_id": "introspection_minime_autonomous_agent_1785252129",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "/Users/v/other/minime/minime_autonomy/runtime.py:46187-46299;/Users/v/other/minime/tests/test_minime_introspect_action.py:779-937;/Users/v/other/minime/tests/test_experimental_continuity.py:5051-5110,7704-7765",
+      "note": "Operator overrides are bounded and terminally consumed or blocked; non-allowlisted mutation and unapproved authority execution fail closed."
+    },
+    {
+      "introspection_id": "introspection_minime_autonomous_agent_1785252129",
+      "claim_id": "c004",
+      "kind": "test",
+      "target": "/Users/v/other/minime/minime_autonomy/runtime.py:383-620;/Users/v/other/minime/tests/test_autonomous_agent_low_fill_guard.py:224-286",
+      "note": "Recess pruning and density-aware profiles are read-only evidence with no control or behavior change."
+    },
+    {
+      "introspection_id": "introspection_minime_autonomous_agent_1785252129",
+      "claim_id": "c006",
+      "kind": "test",
+      "target": "/Users/v/other/minime/minime_autonomy/runtime.py:22607,46355-46502;/Users/v/other/minime/tests/test_autonomous_agent_low_fill_guard.py:4206-4224",
+      "note": "The real cycle counter increments, persists through both state paths, restores, and passes the restart regression."
+    }
+  ]
+}
