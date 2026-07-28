@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The complete 74-line runtime root is an include/import shell rather than the spectral mechanism.",
+      "disposition": "Verify the complete file and trace the named includes into their substantive modules.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Hard-reset imports establish source availability but do not prove activation or felt effect.",
+      "disposition": "Preserve the source-activation boundary and avoid attributing recovery behavior to imports alone.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Mode packing, pressure risk, and semantic trickle are computed outside the root shell.",
+      "disposition": "Verify telemetry_evidence.rs, semantic_modality.rs, and orchestration.rs as the relevant implementation surfaces.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Re-pleating tension may relate to pressure risk and overpacked mode packing.",
+      "disposition": "Preserve the causal interpretation as an unconfirmed hypothesis; current typed metrics are mechanical evidence, not felt-cause proof.",
+      "classification": "qualitative_evidence"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Deliberate architectural-to-associative and memory-anchor probes could test pressure and shadow dispersal.",
+      "disposition": "Preserve induced model, memory, pressure, and shadow behavior as exact Tier 5 study waits.",
+      "classification": "tier_5_wait"
+    }
+  ]
+}

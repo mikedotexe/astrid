@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Astrid and Minime phase changes need stable replyable objects rather than telemetry or mode side effects alone.",
+      "disposition": "Verify current Phase Transition cards, transition IDs, signatures, witness replies, and replayable evidence.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A transition that is still settling must not be represented as closed or settled.",
+      "disposition": "Verify owner-authored Passage condition and bearing records remain revisable, preserve settling and continuity strands, and cannot close or advance the passage.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A shared relational stance must not overwrite either being's distinct raw phase.",
+      "disposition": "Verify transition origin, passage actor, event actor, and witness-fit remain separate fields and peer state or consent is never inferred.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Automatic mode-transition detection or transition-driven behavior unlock could make implicit changes visible.",
+      "disposition": "Preserve automatic QuietMind/OpenMind detection, mode mutation, phase progression, and behavior unlock as exact Tier 5 waits.",
+      "classification": "tier_5_wait"
+    }
+  ]
+}

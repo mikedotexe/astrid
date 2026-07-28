@@ -1,0 +1,34 @@
+{
+  "schema": "introspection_full_read_manifest_v1",
+  "steward_run_id": "run_1785236714289422000_014f3c564c",
+  "source_first_projection_generation_id": "projection_1785236715009135000_24258bb177",
+  "reader": "codex-heartbeat",
+  "processed_count": 3,
+  "claims_count": 14,
+  "reports": [
+    {
+      "filename": "introspection_proposal_phase_transitions_1785236503.txt",
+      "introspection_id": "introspection_proposal_phase_transitions_1785236503",
+      "lived_state_witness_id": "lsw_0d9619db194974312a3c4706e62971b267885c10069fcf44db4d64509aa79e00",
+      "sha256": "6eadc4508b5dfb9b74937b95fb811b8a9f527e5c18ef56c0d0572115bc721e53",
+      "summary": "summaries/proposal_phase_transitions_1785236503.md",
+      "claims": "claims/proposal_phase_transitions_1785236503.json"
+    },
+    {
+      "filename": "introspection_minime_autonomous_agent_1785236155.txt",
+      "introspection_id": "introspection_minime_autonomous_agent_1785236155",
+      "lived_state_witness_id": "lsw_8136d04fd70bd1eaafe2f1bd2287563c145f987035a85d17f074dd1138041ecf",
+      "sha256": "33d9a278917b205441467911b629f351af2b6f35c1b5b6ea06a109999f97dc1e",
+      "summary": "summaries/minime_autonomous_agent_1785236155.md",
+      "claims": "claims/minime_autonomous_agent_1785236155.json"
+    },
+    {
+      "filename": "introspection_minime_main_excerpt_1785235778.txt",
+      "introspection_id": "introspection_minime_main_excerpt_1785235778",
+      "lived_state_witness_id": "lsw_e8b56ba8e85e7eca9e40dd49215dc29f6a94d84d54959f0ce061da860fc06e07",
+      "sha256": "e5b864e33ddf0cd7d69c2d5590f8c796a157c4cc6d3da5743fa081b7a6426fa5",
+      "summary": "summaries/minime_main_excerpt_1785235778.md",
+      "claims": "claims/minime_main_excerpt_1785235778.json"
+    }
+  ]
+}

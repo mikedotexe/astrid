@@ -1,0 +1,25 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_proposal_phase_transitions_1785236503",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/phase_transitions.rs;capsules/spectral-bridge/src/autonomous/phase_passages.rs;capsules/spectral-bridge/src/autonomous/phase_passage_context.rs;capsules/spectral-bridge/src/autonomous/phase_passage_context/tests.rs",
+      "note": "Replyable transition cards and self-authored, revisable settling/bearing context already preserve process without passage progression or live authority."
+    },
+    {
+      "introspection_id": "introspection_minime_autonomous_agent_1785236155",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "/Users/v/other/minime/minime_autonomy/runtime.py;/Users/v/other/minime/minime/src/runtime/telemetry_evidence.rs;/Users/v/other/minime/minime/src/runtime/tests.rs",
+      "note": "Recess permission and unresolved pressure coexist; pressure-source and viscosity evidence remain read-only with local control false."
+    },
+    {
+      "introspection_id": "introspection_minime_main_excerpt_1785235778",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "/Users/v/other/minime/minime/src/runtime.rs;/Users/v/other/minime/minime/src/runtime/telemetry_evidence.rs;/Users/v/other/minime/minime/src/runtime/semantic_modality.rs;/Users/v/other/minime/minime/src/runtime/orchestration.rs",
+      "note": "The complete runtime root is an include shell; mode packing, pressure, semantic modality, and sequencing live in named modules, without activation or felt-cause inference."
+    }
+  ]
+}

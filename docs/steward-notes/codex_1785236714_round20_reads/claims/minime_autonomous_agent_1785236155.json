@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Recess is explicitly declared as unstructured time without productivity pressure.",
+      "disposition": "Verify the canonical source declaration while keeping declaration distinct from runtime activation or ease.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Syrupy weight can coexist with Recess and may relate to mode packing, entropy, distinguishability loss, or shadow divergence.",
+      "disposition": "Preserve the felt report as primary qualitative evidence and verify that current pressure-source decomposition keeps those candidate mechanisms distinct without claiming causation.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The current pressure audit reports that local control is not applied.",
+      "disposition": "Verify the read-only audit contract and focused pressure-source classifications with applied_locally=false.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Pressure/weight correlation and entropy/foothold tests could distinguish mode-packing friction from structural lattice persistence.",
+      "disposition": "Preserve induced pressure, entropy, shadow, and foothold observations as exact Tier 5 study waits.",
+      "classification": "tier_5_wait"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "A viscosity parameter could recognize active rest without treating weight as friction to suppress.",
+      "disposition": "Preserve viscosity control, Recess policy, shadow trajectory, and live substrate changes as exact Tier 5 waits.",
+      "classification": "tier_5_wait"
+    }
+  ]
+}
