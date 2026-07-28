@@ -1,0 +1,32 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_minime_main_excerpt_1785262918",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "/Users/v/other/minime/minime/src/runtime.rs:1-74",
+      "note": "The report and its complete source file were read from disk; Chronicle renderer 3 records the complete-file hash and source topology."
+    },
+    {
+      "introspection_id": "introspection_minime_main_excerpt_1785262918",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "/Users/v/other/minime/minime/src/runtime/spectral_math.rs:218-305",
+      "note": "Direct live-eigenvector capture, pairwise cosine evidence, and max_pairwise_overlap derivation."
+    },
+    {
+      "introspection_id": "introspection_minime_main_excerpt_1785262918",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "/Users/v/other/minime/minime/src/runtime/orchestration.rs:1213-1273;/Users/v/other/minime/minime/src/runtime/orchestration.rs:2489-2505;/Users/v/other/minime/minime/src/runtime/telemetry_evidence.rs:105-189",
+      "note": "Semantic trickle admission, prior-shadow influence, later shadow update, and bounded diagnostic derivations are kept distinct."
+    },
+    {
+      "introspection_id": "introspection_minime_main_excerpt_1785262918",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "/Users/v/other/astrid/scripts/test_division_ceremony_chronicle.py",
+      "note": "Nine tests cover deterministic identity, source drift, owner-only archives, runtime topology, and the non-activation witness boundary."
+    }
+  ]
+}

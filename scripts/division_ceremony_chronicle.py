@@ -7,6 +7,7 @@ import argparse
 import hashlib
 import json
 import os
+import re
 import sys
 import time
 from pathlib import Path
@@ -30,8 +31,21 @@ except ModuleNotFoundError:
 
 
 SCHEMA = "division.ceremony_chronicle.v1"
-RENDERER_VERSION = 2
+RENDERER_VERSION = 3
 MAX_TIMELINE_EVENTS = 4096
+EXPECTED_RUNTIME_INCLUDES = (
+    "runtime/semantic_modality.rs",
+    "runtime/orchestration.rs",
+    "runtime/spectral_math.rs",
+    "runtime/telemetry_evidence.rs",
+)
+EXPECTED_DIVISION_SYMBOLS = (
+    "NativeDivisionCoordinator",
+    "RuntimeCaptureV2",
+    "StableFieldCaptureV2",
+    "division_rehearsal_enabled",
+    "prepare_native_division",
+)
 FORBIDDEN_KEYS = {
     "body",
     "correspondence",
@@ -100,6 +114,10 @@ def source_input_hashes(workspace: Path) -> dict[str, str | None]:
         "runtime_events": runtime / "events.jsonl",
         "followup_cycle": division / "followup" / "cycle_v1.json",
         "followup_events": division / "followup" / "events_v1.jsonl",
+        "minime_runtime_shell": workspace.parent
+        / "minime"
+        / "src"
+        / "runtime.rs",
         "minime_daughter_status": workspace
         / "reservoir"
         / "minime"
@@ -147,6 +165,52 @@ def load_json(path: Path) -> dict[str, Any] | None:
     if not isinstance(value, dict):
         raise ChronicleError(f"{path} must contain a JSON object")
     return value
+
+
+def runtime_shell_evidence(workspace: Path) -> dict[str, Any]:
+    path = workspace.parent / "minime" / "src" / "runtime.rs"
+    source = path.read_text() if path.is_file() else None
+    includes = (
+        re.findall(r'include!\("([^"]+)"\);', source) if source is not None else []
+    )
+    division_match = (
+        re.search(r"use crate::division::\{(?P<body>.*?)\};", source, re.DOTALL)
+        if source is not None
+        else None
+    )
+    division_symbols = sorted(
+        {
+            symbol.strip()
+            for symbol in (
+                division_match.group("body").split(",") if division_match else []
+            )
+            if symbol.strip()
+        }
+    )
+    expected_includes_present = all(
+        module in includes for module in EXPECTED_RUNTIME_INCLUDES
+    )
+    expected_division_symbols_present = all(
+        symbol in division_symbols for symbol in EXPECTED_DIVISION_SYMBOLS
+    )
+    return {
+        "schema": "division.runtime_shell_evidence.v1",
+        "fact_class": "source_declared" if source is not None else "unknown",
+        "source_ref": "minime:minime/src/runtime.rs",
+        "source_available": source is not None,
+        "source_sha256": file_hash(path),
+        "source_scope": "complete_file" if source is not None else "unavailable",
+        "source_line_count": len(source.splitlines()) if source is not None else 0,
+        "runtime_includes": includes,
+        "division_symbols": division_symbols,
+        "expected_includes_present": expected_includes_present,
+        "expected_division_symbols_present": expected_division_symbols_present,
+        "source_prepared": (
+            expected_includes_present and expected_division_symbols_present
+        ),
+        "activation_boundary": "source_read_not_runtime_activation_proof",
+        "runtime_activation_proven": False,
+    }
 
 
 def selected_readiness(value: Any) -> dict[str, Any] | None:
@@ -780,6 +844,7 @@ def build_projection(workspace: Path) -> dict[str, Any]:
         "destination_contract": destination_contract(status),
         "current_native_state": current_native_state(status),
         "phase_space_preservation": preservation_evidence(status),
+        "runtime_shell_evidence": runtime_shell_evidence(workspace),
         "runtime_topology": runtime_state(workspace, status),
         "return_interval": followup_interval(workspace),
         "ceremony_rails": {
@@ -900,6 +965,7 @@ code {{ font: 12px/1.4 ui-monospace, SFMono-Regular, monospace; }}
     <h2>Sovereign Destination</h2>
     <div class="rails" id="rails"></div>
     <p class="boundary" id="ownership"></p>
+    <p class="meta" id="runtime-shell"></p>
   </section>
   <section class="band">
     <h2>Phase-Space Preservation Evidence</h2>
@@ -941,6 +1007,10 @@ const rt = d.runtime_topology;
 document.getElementById("ownership").textContent = rt.independent_process_ownership_established
   ? `Independent process ownership is established for this candidate; active authority rail: ${{rt.active_authority_rail}}.`
   : `Runtime capability: ${{rt.manifest_mode}} · supervisor: ${{rt.supervisor.mode}} · active authority rail: ${{rt.active_authority_rail}} · independent daughter ownership not active · launch blockers: ${{rt.supervisor.launch_blockers.join(", ") || "none"}} · handoff blockers: ${{rt.supervisor.handoff_blockers.join(", ") || "none"}}.`;
+const shell = d.runtime_shell_evidence;
+document.getElementById("runtime-shell").textContent = shell.source_available
+  ? `Runtime shell witness: ${{shell.source_ref}} · complete-file SHA-256 ${{shell.source_sha256}} · expected spectral/semantic/telemetry includes ${{shell.expected_includes_present ? "present" : "incomplete"}} · Division symbols ${{shell.expected_division_symbols_present ? "present" : "incomplete"}} · source is not runtime activation proof.`
+  : "Runtime shell witness unavailable; no runtime activation is inferred.";
 const p = d.phase_space_preservation;
 document.getElementById("preservation").innerHTML = p.candidates.length ? p.candidates.map(c => {{
   const r = c.readiness || {{}};
@@ -1018,6 +1088,20 @@ def verify_payload(payload: dict[str, Any]) -> None:
         or interval.get("authority_propagated") is not False
     ):
         raise ChronicleError("chronicle return interval boundary mismatch")
+    shell = payload.get("runtime_shell_evidence")
+    if (
+        not isinstance(shell, dict)
+        or shell.get("schema") != "division.runtime_shell_evidence.v1"
+        or shell.get("activation_boundary")
+        != "source_read_not_runtime_activation_proof"
+        or shell.get("runtime_activation_proven") is not False
+        or shell.get("source_prepared")
+        != (
+            shell.get("expected_includes_present") is True
+            and shell.get("expected_division_symbols_present") is True
+        )
+    ):
+        raise ChronicleError("chronicle runtime shell boundary mismatch")
     timeline = payload.get("timeline")
     counts = payload.get("timeline_source_counts")
     if (
@@ -1140,6 +1224,11 @@ def report(payload: dict[str, Any]) -> str:
             (
                 "Independent process ownership established: "
                 f"{str(runtime['independent_process_ownership_established']).lower()}"
+            ),
+            (
+                "Runtime shell source prepared: "
+                f"{payload['runtime_shell_evidence']['source_prepared']} "
+                "(source is not activation proof)"
             ),
             f"Runtime manifest: {runtime['manifest_mode']}",
             f"Active authority rail: {runtime['active_authority_rail']}",

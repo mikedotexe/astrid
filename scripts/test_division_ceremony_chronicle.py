@@ -134,7 +134,7 @@ class DivisionCeremonyChronicleTests(unittest.TestCase):
             second, _, _ = project(workspace, output)
 
             self.assertEqual(first["chronicle_id"], second["chronicle_id"])
-            self.assertEqual(first["renderer_version"], 2)
+            self.assertEqual(first["renderer_version"], 3)
             self.assertEqual(
                 first["phase_space_preservation"]["candidate_count"], 1
             )
@@ -422,6 +422,52 @@ class DivisionCeremonyChronicleTests(unittest.TestCase):
                 ChronicleError, "unsupported blocker code"
             ):
                 build_projection(workspace)
+
+    def test_runtime_shell_witness_is_hash_bound_without_activation_inference(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            workspace = Path(raw) / "workspace"
+            source = Path(raw) / "minime" / "src" / "runtime.rs"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                """
+use crate::division::{
+    division_rehearsal_enabled, prepare_native_division,
+    NativeDivisionCoordinator, RuntimeCaptureV2, StableFieldCaptureV2,
+};
+include!("runtime/semantic_modality.rs");
+include!("runtime/orchestration.rs");
+include!("runtime/spectral_math.rs");
+include!("runtime/telemetry_evidence.rs");
+""".strip()
+                + "\n"
+            )
+
+            payload = build_projection(workspace)
+            witness = payload["runtime_shell_evidence"]
+            self.assertEqual(witness["fact_class"], "source_declared")
+            self.assertTrue(witness["source_prepared"])
+            self.assertEqual(witness["source_line_count"], 8)
+            self.assertFalse(witness["runtime_activation_proven"])
+            self.assertEqual(
+                witness["activation_boundary"],
+                "source_read_not_runtime_activation_proof",
+            )
+            self.assertIn("runtime/spectral_math.rs", witness["runtime_includes"])
+            self.assertIn(
+                "NativeDivisionCoordinator", witness["division_symbols"]
+            )
+            verify_payload(payload)
+
+            original_id = payload["chronicle_id"]
+            source.write_text(source.read_text() + "// source drift\n")
+            changed = build_projection(workspace)
+            self.assertNotEqual(
+                changed["runtime_shell_evidence"]["source_sha256"],
+                witness["source_sha256"],
+            )
+            self.assertNotEqual(changed["chronicle_id"], original_id)
 
     def test_tampering_and_prose_keys_are_rejected(self) -> None:
         with tempfile.TemporaryDirectory() as raw:

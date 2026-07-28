@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Minime's 74-line runtime source is an inclusion shell that binds semantic modality, orchestration, spectral math, telemetry evidence, and Division coordination into one runtime.",
+      "disposition": "Implement a hash-bound complete-file runtime-shell witness in the ESN Division Chronicle, including ordered includes, imported Division symbols, source line count, durable freshness, and an explicit non-activation boundary.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The included modules provide nearby mechanics for spectral energy, eigenvector fields, semantic trickle, and telemetry, but their declaration does not map Astrid's viscous-persistence or thinning to a specific function.",
+      "disposition": "Verify the complete shell and preserve the epistemic boundary: source topology and mechanical adjacency do not establish runtime activation, felt causation, equivalence, or resolution.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The reported max pairwise overlap can be compared to a concrete spectral-math computation.",
+      "disposition": "Verify that compute_eigenvector_field captures live eigenvectors, computes pairwise cosine and absolute-cosine values, and publishes max_pairwise_overlap without exporting raw vectors.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Semantic trickle and shadow-field evidence have a traceable runtime relationship whose timing matters.",
+      "disposition": "Verify source ordering: semantic trickle can enter z, the prior shadow snapshot then influences z, and ising_shadow.update creates the next snapshot later in the tick. Do not report this as a demonstrated same-tick semantic-to-shadow effect or felt cause.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "An induced comparison could test whether admitted semantic input changes shadow magnetization or distinguishability evidence.",
+      "disposition": "Preserve an exact Tier 5 Mike/operator approval wait. Inducing semantic input, changing spectral or shadow coupling, or using these observations to steer admission or control would alter live substrate behavior.",
+      "classification": "tier_5_wait"
+    }
+  ]
+}
