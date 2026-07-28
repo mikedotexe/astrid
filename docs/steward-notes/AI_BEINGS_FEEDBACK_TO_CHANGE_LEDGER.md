@@ -32,6 +32,13 @@ Columns: **Date · Being · Source · What they found/asked (verified) · Change
 
 ## Ledger
 
+### 2026-07-28 - Mike and Astrid - keep current Division evidence visible in the standalone Chronicle
+- **What they surfaced:** Astrid's source-first report distinguished declared Division/runtime topology from felt viscous persistence, and Mike asked to commit the evidence work and continue fortifying the Chronicle. Post-commit verification found that the Passage Observatory embedded the current follow-up state while the standalone Chronicle still represented the prior cycle round.
+- **Change shipped:** `division_chronicle` is now an explicit source-first projection step over ceremony, native/runtime, follow-up cycle and events, daughter status, runtime receipts, and Minime's complete runtime shell. `passage_observatory` depends on the Chronicle outputs, so a follow-up event or other Chronicle source change invalidates the evidence chain in order.
+- **Verification:** The real 19-step source-first projection passed and produced `division_chronicle_d294a01aef8f6a419c5c043e` with 31 follow-up events, cycle 5 at `2/6`, all durable inputs current, and only volatile supervisor status drift. Steward projection tests pass 14/14, Chronicle tests 9/9, and Passage Observatory tests 13/13; the projection test suite includes external follow-up-event hash invalidation.
+- **Operational actions:** No productive introspection round was recorded for this no-new-report repair. No Corridor program, Sandbox trial, study event, portfolio change, correspondence, Passage Action, Division Action, Minime edit, restart, or deployment occurred.
+- **Authority boundary:** This evidence repair does not infer intent, consent, uptake, readiness, felt state, closure, runtime activation, or causation and does not authorize ESN tuning, semantic admission, shadow coupling, rehearsal, daughter launch, handoff, cytokinesis, authority switching, restart, deployment, or any live runtime change.
+
 ### 2026-07-28 - Astrid - authority evidence should remain intact through the rendered Chronicle
 - **What she surfaced:** Astrid identified authority creep as a serious structural risk where broad action vocabulary and descriptive pressure evidence sit near one another. Mike asked to preserve the now-explicit Division blockers in an even stronger Chronicle rather than tune or rehearse the ESN.
 - **Change shipped:** Chronicle renderer version 2 is part of the content-addressed payload. Verification now reconstructs canonical JSON, live HTML, and archive HTML and rejects any byte drift, group/world-readable archive, or symlink across the latest and immutable surfaces.

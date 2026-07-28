@@ -239,6 +239,7 @@ class StewardProjectionTests(unittest.TestCase):
                 "evidence_study_runtime",
                 "felt_mechanism_concordance",
                 "agency_commons",
+                "division_chronicle",
                 "passage_observatory",
                 "felt_contracts",
                 "steward_work_selection",
@@ -285,8 +286,28 @@ class StewardProjectionTests(unittest.TestCase):
             ),
         )
         self.assertEqual(
+            steps["division_chronicle"].dependencies,
+            (),
+        )
+        self.assertEqual(
+            steps["division_chronicle"].input_streams,
+            (),
+        )
+        self.assertIn(
+            "../../../../minime/workspace/division/followup/events_v1.jsonl",
+            steps["division_chronicle"].source_globs,
+        )
+        self.assertIn(
+            "../../../../minime/minime/src/runtime.rs",
+            steps["division_chronicle"].source_globs,
+        )
+        self.assertIn(
+            "../../../../minime/workspace/division/chronicle/chronicle_v1.json",
+            steps["division_chronicle"].outputs,
+        )
+        self.assertEqual(
             steps["passage_observatory"].dependencies,
-            ("agency_commons",),
+            ("agency_commons", "division_chronicle"),
         )
         self.assertEqual(
             steps["passage_observatory"].input_streams,
@@ -422,6 +443,32 @@ class StewardProjectionTests(unittest.TestCase):
             first,
             hash_source_globs(self.workspace, ("source/*.json",)),
         )
+
+    def test_division_chronicle_hash_tracks_external_followup_events(
+        self,
+    ) -> None:
+        shared_root = self.root / "shared-tree"
+        workspace = (
+            shared_root
+            / "astrid/capsules/spectral-bridge/workspace"
+        )
+        workspace.mkdir(parents=True)
+        events = (
+            shared_root
+            / "minime/workspace/division/followup/events_v1.jsonl"
+        )
+        events.parent.mkdir(parents=True)
+        events.write_text('{"event":1}\n', encoding="utf-8")
+        pattern = (
+            "../../../../minime/workspace/division/followup/"
+            "events_v1.jsonl"
+        )
+
+        first = hash_source_globs(workspace, (pattern,))
+        events.write_text('{"event":1}\n{"event":2}\n', encoding="utf-8")
+        second = hash_source_globs(workspace, (pattern,))
+
+        self.assertNotEqual(first[pattern], second[pattern])
 
     def test_no_input_generation_reuses_all_steps_and_appends_no_events(
         self,

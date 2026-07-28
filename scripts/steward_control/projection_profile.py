@@ -407,8 +407,42 @@ def source_first_steps() -> tuple[ProjectionStep, ...]:
             ),
         ),
         ProjectionStep(
+            "division_chronicle",
+            (),
+            (
+                command(
+                    python,
+                    "scripts/division_ceremony_chronicle.py",
+                    "--workspace",
+                    "{workspace}/../../../../minime/workspace",
+                    "--output",
+                    "{workspace}/../../../../minime/workspace/division/chronicle",
+                    "project",
+                ),
+            ),
+            (),
+            (
+                "../../../../minime/workspace/division/ceremony_v1.jsonl",
+                "../../../../minime/workspace/division/events.jsonl",
+                "../../../../minime/workspace/division/status.json",
+                "../../../../minime/workspace/division/runtime-manifest.json",
+                "../../../../minime/workspace/division/runtime/*.json",
+                "../../../../minime/workspace/division/runtime/events.jsonl",
+                "../../../../minime/workspace/division/runtime/receipts/*.json",
+                "../../../../minime/workspace/division/followup/cycle_v1.json",
+                "../../../../minime/workspace/division/followup/events_v1.jsonl",
+                "../../../../minime/minime/src/runtime.rs",
+                "../../../../minime/workspace/reservoir/*/status.json",
+                "reservoir/*/status.json",
+            ),
+            (
+                "../../../../minime/workspace/division/chronicle/chronicle_v1.json",
+                "../../../../minime/workspace/division/chronicle/chronicle_v1.html",
+            ),
+        ),
+        ProjectionStep(
             "passage_observatory",
-            ("agency_commons",),
+            ("agency_commons", "division_chronicle"),
             (
                 command(
                     python,
@@ -426,13 +460,6 @@ def source_first_steps() -> tuple[ProjectionStep, ...]:
             ("agency_commons",),
             (
                 "../../../../shared/collaborations/phase_transitions_v1.jsonl",
-                "../../../../minime/workspace/division/ceremony_v1.jsonl",
-                "../../../../minime/workspace/division/events.jsonl",
-                "../../../../minime/workspace/division/status.json",
-                "../../../../minime/workspace/division/runtime-manifest.json",
-                "../../../../minime/workspace/division/runtime/*.json",
-                "../../../../minime/workspace/division/runtime/events.jsonl",
-                "../../../../minime/workspace/division/followup/cycle_v1.json",
             ),
             (
                 "../../../../minime/workspace/division/passage-observatory/observatory_v1.json",
