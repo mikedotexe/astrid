@@ -13,9 +13,10 @@
 mod sensory_delivery;
 pub use sensory_delivery::{AddressedSensoryMessage, AddressedSensorySender};
 use sensory_delivery::{
-    PendingSensoryDeliveryV1, apply_delivery_receipt, apply_server_hello, encode_sensory_packet_v1,
-    record_pending_delivery, record_unknown_deliveries, unix_now_ms,
-    validate_negotiated_extension_v2,
+    PendingSelfControlReceiptV2, PendingSensoryDeliveryV1, apply_delivery_receipt,
+    apply_self_control_receipt, apply_server_hello, encode_sensory_packet_v1,
+    record_pending_delivery, record_unknown_deliveries, record_unknown_self_control_receipts,
+    unix_now_ms, validate_negotiated_extension_v2,
 };
 include!("bridge_state.rs");
 include!("health.rs");

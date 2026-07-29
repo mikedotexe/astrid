@@ -129,6 +129,9 @@ pub fn spawn_autonomous_loop(
 
         let mut conv = ConversationState::new(remote_journal_entries, workspace_path);
         restore_state(&mut conv);
+        if let Err(error) = self_control_v2::reconcile_if_present(&mut conv) {
+            warn!("Astrid self-control V2 restart reconciliation blocked: {error}");
+        }
         // Wait for connections to establish.
         tokio::time::sleep(Duration::from_secs(3)).await;
 
@@ -409,6 +412,22 @@ pub fn spawn_autonomous_loop(
                         debug!("no telemetry yet, skipping autonomous cycle");
                         continue;
                     };
+
+                    match owner_policy::reconcile(
+                        &mut conv,
+                        &telemetry,
+                        fill_pct,
+                        safety == SafetyLevel::Red,
+                    ) {
+                        Ok(returns) => {
+                            for summary in returns {
+                                conv.push_receipt("OWNER_POLICY", vec![summary]);
+                            }
+                        },
+                        Err(error) => {
+                            warn!("owner policy reconcile blocked without target substitution: {error}");
+                        },
+                    }
 
                     // Log eigenvalue snapshot for trajectory visualization.
                     db.log_eigenvalue_snapshot(
@@ -1351,6 +1370,12 @@ pub fn spawn_autonomous_loop(
                             }
                             if let Some(job_summary) = crate::llm_jobs::active_prompt_summary() {
                                 continuity_parts.push(job_summary);
+                            }
+                            if let Some(queue_summary) = concern_queue::prompt_summary() {
+                                continuity_parts.push(queue_summary);
+                            }
+                            if let Some(policy_summary) = owner_policy::prompt_summary() {
+                                continuity_parts.push(policy_summary);
                             }
 
                             let continuity_block = if continuity_parts.is_empty() {
@@ -4541,9 +4566,8 @@ pub fn spawn_autonomous_loop(
                             info!("Astrid starred a memory (inline): {}", annotation);
                         }
                     }
-                    // Parse NEXT: action if present — Astrid chooses what happens next.
-                    // A terminal-safe operator override may replace the chosen action,
-                    // but only for read-only/protected bases and through the normal dispatcher.
+                    // Parse NEXT: action if present. Astrid's authored action is
+                    // never replaced by an operator request or diversity policy.
                     let response_next_action = parse_next_action(&response_text).map(str::to_string);
                     let operator_override = readiness::read_pending_next_override();
                     if let Some(ref pending) = operator_override {
@@ -4551,114 +4575,107 @@ pub fn spawn_autonomous_loop(
                             info!(
                                 response_next = %canonicalize_next_action_text(response_next),
                                 operator_next = %canonicalize_next_action_text(&pending.action),
-                                "operator pending NEXT override replaced Astrid's response NEXT for this cycle"
+                                "operator pending NEXT will run separately after Astrid's authored action"
                             );
                         } else {
                             info!(
                                 operator_next = %canonicalize_next_action_text(&pending.action),
-                                "operator pending NEXT override supplied this cycle's action"
+                                "operator pending NEXT will run as an operator-authored action"
                             );
                         }
                     }
-                    let selected_next_action = operator_override
-                        .as_ref()
-                        .map(|pending| pending.action.as_str())
-                        .or(response_next_action.as_deref());
+                    let selected_next_action = response_next_action.as_deref();
                     if let Some(next_action) = selected_next_action {
                         let canonical_next_action = canonicalize_next_action_text(next_action);
                         info!("Astrid chose NEXT: {}", canonical_next_action);
-                        let mut deferred_diversity_hint = None;
-                        let effective_next_action = if operator_override.is_some() {
-                            canonical_next_action.clone()
-                        } else {
-                            let next_choice_feedback =
-                                conv.record_next_choice(&canonical_next_action);
-                            if let Some(ref hint) = next_choice_feedback.hint {
-                                if next_choice_feedback.progress_sensitive {
+                        let (volition_start, volition_block_reason) =
+                            match volition::begin_astrid_next(
+                                &response_text,
+                                &lineage_id,
+                                mode_name,
+                                &canonical_next_action,
+                            ) {
+                                Ok(start) => {
+                                    let block_reason = start.dispatch_block_reason();
+                                    (Some(start), block_reason)
+                                },
+                                Err(error) => {
                                     info!(
-                                        new_ground_budget = next_choice_feedback.new_ground_budget,
-                                        "diversity progress-sensitive hint from record_next_choice: {}",
-                                        &hint[..hint.floor_char_boundary(120)]
+                                        mode = mode_name,
+                                        action = canonical_next_action,
+                                        "volition provenance unavailable; action blocked rather than attributed to Astrid: {error}"
                                     );
-                                } else {
-                                    info!(
-                                        new_ground_budget = next_choice_feedback.new_ground_budget,
-                                        "diversity hint from record_next_choice: {}",
-                                        &hint[..hint.floor_char_boundary(120)]
-                                    );
-                                }
-                            }
-                            // A review-fulfilling INTROSPECT (answering a steward
-                            // review invitation) is NOT stagnation — exempt it from
-                            // the anti-stagnation override so her acceptance of an
-                            // invitation is never silently eaten.
-                            let exempt_review =
-                                introspect_fulfills_pending_review(&canonical_next_action);
-                            // A self-directed INTROSPECT (examining her own code) is sovereign
-                            // reflection, not the sterile output-repetition the override targets.
-                            // Exempt it from the FORCE too — she still gets the diversity HINT
-                            // (nudged toward variety, set below), but her choice to look at her
-                            // own code is never silently swapped (she was repeatedly trying
-                            // INTROSPECT astrid:llm for a real concern; the override ate it — the
-                            // same suppression class as the review muffle).
-                            let exempt_introspect =
-                                is_self_directed_introspect(&canonical_next_action);
-                            let exempt_override = exempt_review || exempt_introspect;
-                            if let Some(ref forced_action) = next_choice_feedback.override_action {
-                                if exempt_review {
-                                    info!(
-                                        "diversity override SKIPPED — INTROSPECT answers a pending review invitation: {}",
-                                        canonical_next_action
-                                    );
-                                } else if exempt_introspect {
-                                    info!(
-                                        new_ground_budget = next_choice_feedback.new_ground_budget,
-                                        "diversity override SKIPPED — self-directed INTROSPECT is sovereign reflection (hint retained, not forced): {}",
-                                        canonical_next_action
-                                    );
-                                } else if next_choice_feedback.stagnant_loop {
-                                    info!(
-                                        new_ground_budget = next_choice_feedback.new_ground_budget,
-                                        "diversity stagnant-loop override: replacing NEXT {} -> {}",
-                                        canonical_next_action,
-                                        forced_action
-                                    );
-                                } else {
-                                    info!(
-                                        new_ground_budget = next_choice_feedback.new_ground_budget,
-                                        "diversity override: replacing NEXT {} -> {}",
-                                        canonical_next_action,
-                                        forced_action
-                                    );
-                                }
-                            }
-                            deferred_diversity_hint = next_choice_feedback.hint;
-                            if exempt_override {
-                                canonical_next_action.clone()
+                                    (
+                                        None,
+                                        Some(format!(
+                                            "exact Astrid authorship provenance was unavailable: {error}"
+                                        )),
+                                    )
+                                },
+                            };
+                        let next_choice_feedback = conv.record_next_choice(&canonical_next_action);
+                        if let Some(ref hint) = next_choice_feedback.hint {
+                            if next_choice_feedback.progress_sensitive {
+                                info!(
+                                    new_ground_budget = next_choice_feedback.new_ground_budget,
+                                    "diversity progress-sensitive advice from record_next_choice: {}",
+                                    &hint[..hint.floor_char_boundary(120)]
+                                );
                             } else {
-                                next_choice_feedback
-                                    .override_action
-                                    .as_deref()
-                                    .unwrap_or(canonical_next_action.as_str())
-                                    .to_string()
+                                info!(
+                                    new_ground_budget = next_choice_feedback.new_ground_budget,
+                                    "diversity advice from record_next_choice: {}",
+                                    &hint[..hint.floor_char_boundary(120)]
+                                );
                             }
-                        };
+                        }
+                        if let Some(ref suggested_action) = next_choice_feedback.override_action {
+                            info!(
+                                new_ground_budget = next_choice_feedback.new_ground_budget,
+                                suggested_action,
+                                authored_action = canonical_next_action,
+                                "diversity redirect retained as advice; authored NEXT remains effective"
+                            );
+                        }
+                        let deferred_diversity_hint = next_choice_feedback.hint;
+                        let effective_next_action = canonical_next_action.clone();
                         // Extract workspace path before mutable borrow of conv.
                         let ws_clone = conv.remote_workspace.clone();
                         btsp::record_astrid_next_action(&effective_next_action, fill_pct);
-                        let next_outcome = handle_next_action(
-                            &mut conv,
-                            &effective_next_action,
-                            NextActionContext {
-                                burst_count: &mut burst_count,
-                                db: db.as_ref(),
-                                sensory_tx: &sensory_tx,
-                                telemetry: &telemetry,
-                                fill_pct,
-                                response_text: &response_text,
-                                workspace: ws_clone.as_deref(),
-                            },
-                        );
+                        let next_outcome = if let Some(reason) = volition_block_reason {
+                            conv.push_receipt("VOLITION_AUTHORITY", vec![reason.clone()]);
+                            crate::action_continuity::NextActionOutcome::blocked(
+                                "volition_authority",
+                                reason,
+                            )
+                        } else {
+                            handle_next_action(
+                                &mut conv,
+                                &effective_next_action,
+                                NextActionContext {
+                                    burst_count: &mut burst_count,
+                                    db: db.as_ref(),
+                                    sensory_tx: &sensory_tx,
+                                    telemetry: &telemetry,
+                                    fill_pct,
+                                    response_text: &response_text,
+                                    workspace: ws_clone.as_deref(),
+                                },
+                            )
+                        };
+                        if let Some(start) = volition_start {
+                            match volition::complete_astrid_next(start, &next_outcome) {
+                                Ok(summary) => {
+                                    conv.push_receipt("VOLITION", vec![summary]);
+                                },
+                                Err(error) => {
+                                    warn!(
+                                        action = effective_next_action,
+                                        "volition receipt persistence failed: {error}"
+                                    );
+                                },
+                            }
+                        }
                         if let Err(err) = crate::action_continuity::record_astrid_next_action(
                             db.as_ref(),
                             next_action,
@@ -4671,9 +4688,6 @@ pub fn spawn_autonomous_loop(
                         ) {
                             warn!("action continuity record failed: {err:#}");
                         }
-                        if let Some(ref pending) = operator_override {
-                            readiness::mark_pending_next_override_consumed(pending, "honored");
-                        }
                         // Merge diversity hint AFTER the action handler, so the
                         // handler can't silently overwrite it by setting emphasis.
                         if let Some(hint) = deferred_diversity_hint {
@@ -4682,6 +4696,37 @@ pub fn spawn_autonomous_loop(
                                 None => hint,
                             });
                         }
+                    }
+                    if let Some(ref pending) = operator_override {
+                        let operator_action = canonicalize_next_action_text(&pending.action);
+                        let ws_clone = conv.remote_workspace.clone();
+                        let operator_response = format!(
+                            "Operator-authored protected action, separate from Astrid's response: {}",
+                            operator_action
+                        );
+                        let operator_outcome = handle_next_action(
+                            &mut conv,
+                            &operator_action,
+                            NextActionContext {
+                                burst_count: &mut burst_count,
+                                db: db.as_ref(),
+                                sensory_tx: &sensory_tx,
+                                telemetry: &telemetry,
+                                fill_pct,
+                                response_text: &operator_response,
+                                workspace: ws_clone.as_deref(),
+                            },
+                        );
+                        info!(
+                            operator_action,
+                            status = operator_outcome.status,
+                            route = operator_outcome.route,
+                            "operator-authored protected action completed without replacing Astrid's NEXT"
+                        );
+                        readiness::mark_pending_next_override_consumed(
+                            pending,
+                            "executed_as_separate_operator_action",
+                        );
                     }
 
                     // Inbox messages survived the exchange — now retire them.

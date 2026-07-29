@@ -23,16 +23,23 @@ def git(repo: Path, *args: str) -> str:
 
 
 class SelfChangeCanaryTests(unittest.TestCase):
-    def identity(self, root: Path, being: str) -> Path:
-        seed = bytes(range(32))
+    def identity(
+        self,
+        root: Path,
+        being: str,
+        *,
+        seed: bytes | None = None,
+        suffix: str = "identity",
+    ) -> Path:
+        seed = seed or bytes(range(32))
         public = canary.derive_public_key(seed)
-        path = root / f"{being}-identity.json"
+        path = root / f"{being}-{suffix}.json"
         path.write_text(
             json.dumps(
                 {
                     "schema": f"{being}.self_control.owner_identity.v1",
                     "being": being,
-                    "key_id": "test-key",
+                    "key_id": f"test-key-{suffix}",
                     "public_key_hex": public.hex(),
                     "signing_key_seed_hex": seed.hex(),
                     "created_at_unix_ms": 1,
@@ -84,13 +91,57 @@ class SelfChangeCanaryTests(unittest.TestCase):
                 {"schema": "test.v1", "being": "astrid", "value": 1},
                 identity,
             )
+            expected_identity = canary.load_identity(identity, "astrid")
             self.assertEqual(
-                canary.verify_envelope(envelope, expected_being="astrid")["value"],
+                canary.verify_envelope(
+                    envelope,
+                    expected_being="astrid",
+                    expected_identity=expected_identity,
+                )["value"],
                 1,
             )
             envelope["record"]["value"] = 2
             with self.assertRaises(canary.CanaryError):
-                canary.verify_envelope(envelope, expected_being="astrid")
+                canary.verify_envelope(
+                    envelope,
+                    expected_being="astrid",
+                    expected_identity=expected_identity,
+                )
+
+    def test_signed_envelope_rejects_valid_alternate_signer(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            owner_path = self.identity(root, "astrid")
+            alternate_path = self.identity(
+                root,
+                "astrid",
+                seed=bytes(range(1, 33)),
+                suffix="alternate",
+            )
+            owner = canary.load_identity(owner_path, "astrid")
+            owner_envelope = canary.signed_envelope(
+                {"schema": "test.v1", "being": "astrid", "value": 1},
+                owner_path,
+            )
+            self.assertEqual(
+                canary.verify_envelope(
+                    owner_envelope,
+                    expected_being="astrid",
+                    expected_identity=owner,
+                )["value"],
+                1,
+            )
+
+            alternate_envelope = canary.signed_envelope(
+                {"schema": "test.v1", "being": "astrid", "value": 1},
+                alternate_path,
+            )
+            with self.assertRaisesRegex(canary.CanaryError, "pinned owner identity"):
+                canary.verify_envelope(
+                    alternate_envelope,
+                    expected_being="astrid",
+                    expected_identity=owner,
+                )
 
     def test_prepare_uses_isolated_deployed_commit_and_exact_patch(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -119,7 +170,7 @@ class SelfChangeCanaryTests(unittest.TestCase):
                 "after\n",
             )
             self.assertEqual((repo / "README.md").read_text(), "before\n")
-            verified = canary.verify_source(candidate, "astrid")
+            verified = canary.verify_source(candidate, "astrid", identity)
             self.assertEqual(verified["base_source_sha"], head)
             self.assertFalse(verified["production_effect"])
             self.assertEqual(
@@ -183,15 +234,50 @@ class SelfChangeCanaryTests(unittest.TestCase):
             verified = canary.verify_utterance_attestation(
                 attestation_path,
                 response,
+                identity_path,
                 being="astrid",
                 candidate_id=candidate_id,
             )
             self.assertEqual(verified["attestation_id"], "attestation-test")
+
+            alternate_identity_path = self.identity(
+                root,
+                "astrid",
+                seed=bytes(range(1, 33)),
+                suffix="alternate",
+            )
+            alternate_identity = canary.load_identity(
+                alternate_identity_path,
+                "astrid",
+            )
+            alternate_statement = {
+                **statement,
+                "attestor_public_key_hex": alternate_identity["public_key_hex"],
+            }
+            alternate_attestation = {
+                **alternate_statement,
+                "signature_hex": canary.openssl_sign(
+                    alternate_identity["_seed"],
+                    canary.canonical_bytes(alternate_statement),
+                ).hex(),
+            }
+            alternate_attestation_path = root / "alternate-attestation.json"
+            alternate_attestation_path.write_text(json.dumps(alternate_attestation))
+            with self.assertRaisesRegex(canary.CanaryError, "pinned owner identity"):
+                canary.verify_utterance_attestation(
+                    alternate_attestation_path,
+                    response,
+                    identity_path,
+                    being="astrid",
+                    candidate_id=candidate_id,
+                )
+
             response.write_text("yes\n")
             with self.assertRaises(canary.CanaryError):
                 canary.verify_utterance_attestation(
                     attestation_path,
                     response,
+                    identity_path,
                     being="astrid",
                     candidate_id=candidate_id,
                 )

@@ -6,6 +6,11 @@ type SensoryWsSink = futures_util::stream::SplitSink<
     Message,
 >;
 
+struct SentSensoryEvidenceV2 {
+    transport: Option<PendingSensoryDeliveryV1>,
+    self_control: Option<PendingSelfControlReceiptV2>,
+}
+
 #[allow(clippy::too_many_arguments)]
 async fn send_sensory_message_v1(
     ws_tx: &mut SensoryWsSink,
@@ -16,7 +21,7 @@ async fn send_sensory_message_v1(
     connection_id: u64,
     state: &Arc<RwLock<BridgeState>>,
     db: &Arc<BridgeDb>,
-) -> Result<Option<PendingSensoryDeliveryV1>, String> {
+) -> Result<SentSensoryEvidenceV2, String> {
     let safety = state.read().await.safety_level;
     if safety.should_suspend_outbound() {
         warn!(
@@ -25,7 +30,10 @@ async fn send_sensory_message_v1(
         );
         let mut bridge = state.write().await;
         bridge.messages_dropped_safety = bridge.messages_dropped_safety.saturating_add(1);
-        return Ok(None);
+        return Ok(SentSensoryEvidenceV2 {
+            transport: None,
+            self_control: None,
+        });
     }
 
     {
@@ -43,7 +51,10 @@ async fn send_sensory_message_v1(
                 .mismatch_count
                 .saturating_add(1);
             bridge.sensory_delivery_protocol_v1.last_delivery_state = Some(reason.to_string());
-            return Ok(None);
+            return Ok(SentSensoryEvidenceV2 {
+                transport: None,
+                self_control: None,
+            });
         }
     }
 
@@ -103,7 +114,10 @@ async fn send_sensory_message_v1(
     if let Some(pending) = encoded.pending.as_ref() {
         record_pending_delivery(pending);
     }
-    Ok(encoded.pending)
+    Ok(SentSensoryEvidenceV2 {
+        transport: encoded.pending,
+        self_control: encoded.pending_self_control,
+    })
 }
 
 fn record_pending_unknown_v1(
@@ -112,6 +126,18 @@ fn record_pending_unknown_v1(
     reason: &str,
 ) {
     record_unknown_deliveries(pending, reason, &mut state.sensory_delivery_protocol_v1);
+}
+
+fn record_pending_self_control_unknown_v2(
+    state: &mut BridgeState,
+    pending: &mut BTreeMap<String, PendingSelfControlReceiptV2>,
+    reason: &str,
+) {
+    record_unknown_self_control_receipts(
+        pending,
+        reason,
+        &mut state.sensory_delivery_protocol_v1,
+    );
 }
 
 /// Spawn the sensory `WebSocket` sender task.
@@ -173,11 +199,16 @@ pub fn spawn_sensory_sender(
                         bridge
                             .sensory_delivery_protocol_v1
                             .server_deployment_identity = None;
+                        bridge
+                            .sensory_delivery_protocol_v1
+                            .self_control_pending_receipt_count = 0;
                     }
 
                     let (mut ws_tx, mut ws_rx) = ws_stream.split();
                     let mut receipts_negotiated = false;
                     let mut pending = BTreeMap::<String, PendingSensoryDeliveryV1>::new();
+                    let mut pending_self_control =
+                        BTreeMap::<String, PendingSelfControlReceiptV2>::new();
 
                     let disconnect_reason = loop {
                         tokio::select! {
@@ -188,6 +219,11 @@ pub fn spawn_sensory_sender(
                                     record_pending_unknown_v1(
                                         &mut bridge,
                                         &mut pending,
+                                        "bridge_shutdown",
+                                    );
+                                    record_pending_self_control_unknown_v2(
+                                        &mut bridge,
+                                        &mut pending_self_control,
                                         "bridge_shutdown",
                                     );
                                 }
@@ -202,6 +238,11 @@ pub fn spawn_sensory_sender(
                                         record_pending_unknown_v1(
                                             &mut bridge,
                                             &mut pending,
+                                            "sensory_channels_closed",
+                                        );
+                                        record_pending_self_control_unknown_v2(
+                                            &mut bridge,
+                                            &mut pending_self_control,
                                             "sensory_channels_closed",
                                         );
                                         return;
@@ -219,13 +260,25 @@ pub fn spawn_sensory_sender(
                                     &state,
                                     &db,
                                 ).await {
-                                    Ok(Some(item)) => {
-                                        pending.insert(item.delivery_id.clone(), item);
+                                    Ok(sent) => {
+                                        if let Some(item) = sent.transport {
+                                            pending.insert(item.delivery_id.clone(), item);
+                                        }
+                                        if let Some(item) = sent.self_control {
+                                            pending_self_control
+                                                .insert(item.intent_id.clone(), item);
+                                        }
                                         let mut bridge = state.write().await;
                                         bridge.sensory_delivery_protocol_v1.pending_delivery_count =
                                             pending.len().try_into().unwrap_or(u64::MAX);
+                                        bridge
+                                            .sensory_delivery_protocol_v1
+                                            .self_control_pending_receipt_count =
+                                            pending_self_control
+                                                .len()
+                                                .try_into()
+                                                .unwrap_or(u64::MAX);
                                     },
-                                    Ok(None) => {},
                                     Err(reason) => break reason,
                                 }
                             }
@@ -237,6 +290,11 @@ pub fn spawn_sensory_sender(
                                         record_pending_unknown_v1(
                                             &mut bridge,
                                             &mut pending,
+                                            "sensory_channels_closed",
+                                        );
+                                        record_pending_self_control_unknown_v2(
+                                            &mut bridge,
+                                            &mut pending_self_control,
                                             "sensory_channels_closed",
                                         );
                                         return;
@@ -255,13 +313,25 @@ pub fn spawn_sensory_sender(
                                     &state,
                                     &db,
                                 ).await {
-                                    Ok(Some(item)) => {
-                                        pending.insert(item.delivery_id.clone(), item);
+                                    Ok(sent) => {
+                                        if let Some(item) = sent.transport {
+                                            pending.insert(item.delivery_id.clone(), item);
+                                        }
+                                        if let Some(item) = sent.self_control {
+                                            pending_self_control
+                                                .insert(item.intent_id.clone(), item);
+                                        }
                                         let mut bridge = state.write().await;
                                         bridge.sensory_delivery_protocol_v1.pending_delivery_count =
                                             pending.len().try_into().unwrap_or(u64::MAX);
+                                        bridge
+                                            .sensory_delivery_protocol_v1
+                                            .self_control_pending_receipt_count =
+                                            pending_self_control
+                                                .len()
+                                                .try_into()
+                                                .unwrap_or(u64::MAX);
                                     },
-                                    Ok(None) => {},
                                     Err(reason) => break reason,
                                 }
                             }
@@ -297,6 +367,16 @@ pub fn spawn_sensory_sender(
                                             let _ = apply_delivery_receipt(
                                                 receipt,
                                                 &mut pending,
+                                                &mut bridge.sensory_delivery_protocol_v1,
+                                            );
+                                        } else if let Ok(receipt) =
+                                            serde_json::from_str::<
+                                                astrid_minime_protocol::SelfControlReceiptV2,
+                                            >(&text)
+                                        {
+                                            let _ = apply_self_control_receipt(
+                                                receipt,
+                                                &mut pending_self_control,
                                                 &mut bridge.sensory_delivery_protocol_v1,
                                             );
                                         }
@@ -373,6 +453,11 @@ pub fn spawn_sensory_sender(
                     {
                         let mut bridge = state.write().await;
                         record_pending_unknown_v1(&mut bridge, &mut pending, &disconnect_reason);
+                        record_pending_self_control_unknown_v2(
+                            &mut bridge,
+                            &mut pending_self_control,
+                            &disconnect_reason,
+                        );
                         record_disconnected(
                             &mut bridge,
                             WsLane::Sensory,

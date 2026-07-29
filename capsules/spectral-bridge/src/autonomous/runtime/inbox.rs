@@ -375,52 +375,9 @@ fn clear_review_slot_after_successful_introspection(
 /// it. Her review-fulfilling INTROSPECTs were already exempt; this generalizes
 /// that grace to her self-directed inquiry, which the override was eating (e.g.
 /// repeated `INTROSPECT astrid:llm` to pursue a real fallback-contract concern).
+#[cfg(test)]
 fn is_self_directed_introspect(next_action: &str) -> bool {
     next_action.trim().to_uppercase().starts_with("INTROSPECT")
-}
-
-/// True if `next_action` is an INTROSPECT whose target matches a pending review
-/// invitation's `review_target`. The anti-stagnation diversity override must
-/// EXEMPT this — she is answering a steward review invitation, not stuck-repeating
-/// INTROSPECT (else her acceptance of an invitation gets silently eaten).
-fn introspect_fulfills_pending_review(next_action: &str) -> bool {
-    let trimmed = next_action.trim();
-    if !trimmed.to_uppercase().starts_with("INTROSPECT") {
-        return false;
-    }
-    let path = bridge_paths().open_steward_query_path();
-    let Ok(content) = std::fs::read_to_string(&path) else {
-        return false;
-    };
-    let Ok(slot) = serde_json::from_str::<Value>(&content) else {
-        return false;
-    };
-    let Some(rt) = slot
-        .get("review_target")
-        .and_then(Value::as_str)
-        .filter(|s| !s.is_empty())
-    else {
-        return false;
-    };
-    let arg = trimmed
-        .get("INTROSPECT".len()..)
-        .unwrap_or("")
-        .split_whitespace()
-        .next()
-        .unwrap_or("");
-    if arg.is_empty() {
-        return false;
-    }
-    let rt_basis = review_target_match_basis(rt);
-    let rt_canon = introspect::canonicalize_introspect_target_label(rt_basis);
-    let arg_canon = introspect::canonicalize_introspect_target_label(arg);
-    let rt_base = std::path::Path::new(rt_basis)
-        .file_name()
-        .and_then(|n| n.to_str());
-    let arg_base = std::path::Path::new(arg)
-        .file_name()
-        .and_then(|n| n.to_str());
-    rt_canon == arg_canon || (rt_base.is_some() && rt_base == arg_base)
 }
 
 /// Co-regulation: read what minime is reaching for (density/aperture/steady)

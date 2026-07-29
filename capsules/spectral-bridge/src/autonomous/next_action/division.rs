@@ -425,7 +425,9 @@ mod tests {
         assert!(dormant.contains("commit is never recommended"));
         let note =
             prompt_note_with_gate(Some(root.path()), true).expect("active division prompt note");
-        assert!(note.contains("DIVISION_INTENT"));
+        assert!(note.contains(
+            "Hold, decline, intent, assent, withdrawal, return request, and review are self-authored"
+        ));
         assert!(note.contains("DIVISION_ABORT"));
         assert!(note.contains("commit_feature_disabled"));
         assert!(note.contains("ACTION_PREFLIGHT"));

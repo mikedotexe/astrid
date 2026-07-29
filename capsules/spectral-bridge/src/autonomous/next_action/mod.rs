@@ -1550,6 +1550,7 @@ fn action_continuity_stage_for_base(base_action: &str) -> &'static str {
         | "HUM_DECAY"
         | "HUM_DECAY_STUDY"
         | "M6_BRIDGE" => "read_only",
+        "OWNER_POLICY_STATUS" | "CONCERN_STATUS" => "read_only",
         "DIVISION_STATUS" | "DIVISION_CEREMONY_STATUS" => "read_only",
         "DIVISION_HOLD"
         | "DIVISION_DECLINE"
@@ -1567,7 +1568,17 @@ fn action_continuity_stage_for_base(base_action: &str) -> &'static str {
         | "REPAIR_APPLY"
         | "PRESSURE_AGENCY_REQUEST"
         | "PRESSURE_CONTROL_REQUEST"
-        | "PRESSURE_REQUEST" => "live_write",
+        | "PRESSURE_REQUEST"
+        | "OWNER_POLICY_CREATE"
+        | "OWNER_POLICY_WITHDRAW"
+        | "OWNER_POLICY_HOLD"
+        | "OWNER_POLICY_RETURN"
+        | "CONCERN_ADD"
+        | "CONCERN_PAUSE"
+        | "CONCERN_CANCEL"
+        | "CONCERN_RETURN"
+        | "CONCERN_COMPLETE"
+        | "CONCERN_BLOCK" => "live_write",
         "PERTURB" | "NATIVE_GESTURE" | "RESIST" | "FISSURE" | "GOAL" | "DIVISION_PREPARE"
         | "DIVISION_COMMIT" | "DIVISION_ABORT" | "DIVISION_ROLLBACK" => "live_control",
         _ => "observe",
@@ -1698,6 +1709,13 @@ fn route_for_preflight_base(base_action: &str) -> String {
         | "RELEASE_ATTRACTOR" => "attractor",
         "SHADOW_PREFLIGHT" | "SHADOW_INFLUENCE" | "RELEASE_SHADOW" | "LEND_DENSITY" => "shadow",
         "INTROSPECT" | "SELF_STUDY" => "modes",
+        "OWNER_POLICY_CREATE"
+        | "OWNER_POLICY_STATUS"
+        | "OWNER_POLICY_WITHDRAW"
+        | "OWNER_POLICY_HOLD"
+        | "OWNER_POLICY_RETURN" => "owner_policy",
+        "CONCERN_ADD" | "CONCERN_STATUS" | "CONCERN_PAUSE" | "CONCERN_CANCEL"
+        | "CONCERN_RETURN" | "CONCERN_COMPLETE" | "CONCERN_BLOCK" => "concern_queue",
         "DECOMPOSE"
         | "SPECTRAL_EXPLORER"
         | "EXAMINE"
@@ -1976,6 +1994,7 @@ pub(super) fn handle_next_action(
         return dispatch_multi_action(conv, segments, ctx);
     }
     self_regulation::reconcile_active_lease(conv);
+    let _ = super::self_control_v2::reconcile_if_present(conv);
     let (base_action, original) = canonicalize_next_action_components(next_action);
     let stage = action_continuity_stage_for_base(base_action.as_str());
     let visibility = action_continuity_visibility_for_base(base_action.as_str());
@@ -2191,6 +2210,32 @@ pub(super) fn handle_next_action(
                 .with_stage_visibility("blocked", visibility);
             },
         }
+    }
+
+    if let Some(result) = super::owner_policy::handle_action(conv, base_action.as_str(), &original)
+    {
+        return match result {
+            Ok(message) => NextActionOutcome::handled("owner_policy", message)
+                .with_stage_visibility(stage, visibility),
+            Err(message) => {
+                conv.emphasis = Some(format!("Owner policy command blocked: {message}"));
+                NextActionOutcome::blocked("owner_policy", message)
+                    .with_stage_visibility("blocked", visibility)
+            },
+        };
+    }
+
+    if let Some(result) = super::concern_queue::handle_action(conv, base_action.as_str(), &original)
+    {
+        return match result {
+            Ok(message) => NextActionOutcome::handled("concern_queue", message)
+                .with_stage_visibility(stage, visibility),
+            Err(message) => {
+                conv.emphasis = Some(format!("Concern command blocked: {message}"));
+                NextActionOutcome::blocked("concern_queue", message)
+                    .with_stage_visibility("blocked", visibility)
+            },
+        };
     }
 
     if lived_term::handle_action(conv, base_action.as_str(), &original, &mut ctx) {

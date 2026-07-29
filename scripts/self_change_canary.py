@@ -289,6 +289,7 @@ def verify_envelope(
     *,
     expected_schema: str | None = None,
     expected_being: str | None = None,
+    expected_identity: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     if envelope.get("schema") != ENVELOPE_SCHEMA:
         raise CanaryError("signed envelope schema mismatch")
@@ -303,6 +304,11 @@ def verify_envelope(
     payload = canonical_bytes(record)
     if signature.get("signed_payload_sha256") != sha256_bytes(payload):
         raise CanaryError("signed record payload hash mismatch")
+    if expected_identity is not None and (
+        signature.get("key_id") != expected_identity.get("key_id")
+        or signature.get("public_key_hex") != expected_identity.get("public_key_hex")
+    ):
+        raise CanaryError("signed record signer does not match the pinned owner identity")
     try:
         public = bytes.fromhex(str(signature["public_key_hex"]))
         signed = bytes.fromhex(str(signature["signature_hex"]))
@@ -322,15 +328,22 @@ def owner_write_json(path: Path, payload: dict[str, Any]) -> None:
     os.replace(tmp, path)
 
 
-def load_envelope(path: Path, schema: str, being: str) -> dict[str, Any]:
+def load_envelope(
+    path: Path,
+    schema: str,
+    being: str,
+    identity_path: Path,
+) -> dict[str, Any]:
     try:
         envelope = json.loads(path.read_text())
     except (OSError, json.JSONDecodeError) as error:
         raise CanaryError(f"cannot read signed record {path}: {error}") from error
+    identity = load_identity(identity_path, being)
     return verify_envelope(
         envelope,
         expected_schema=schema,
         expected_being=being,
+        expected_identity=identity,
     )
 
 
@@ -505,8 +518,13 @@ def candidate_paths(root: Path, being: str, candidate_id: str) -> tuple[Path, Pa
     return candidate, candidate / "checkout"
 
 
-def verify_source(candidate: Path, being: str) -> dict[str, Any]:
-    record = load_envelope(candidate / "source_manifest.json", SOURCE_SCHEMA, being)
+def verify_source(candidate: Path, being: str, identity: Path) -> dict[str, Any]:
+    record = load_envelope(
+        candidate / "source_manifest.json",
+        SOURCE_SCHEMA,
+        being,
+        identity,
+    )
     entries = tree_entries(candidate / "checkout")
     if tree_sha256(entries) != record.get("source_tree_sha256"):
         raise CanaryError("candidate source tree no longer matches its signed manifest")
@@ -517,7 +535,7 @@ def execute_tests(args: argparse.Namespace) -> dict[str, Any]:
     profile = PROFILES[args.component]
     being = profile["being"]
     candidate, checkout = candidate_paths(args.root, being, args.candidate_id)
-    source = verify_source(candidate, being)
+    source = verify_source(candidate, being, args.identity.resolve())
     before_ports = live_port_snapshot()
     env = dict(os.environ)
     env.update(
@@ -613,15 +631,26 @@ def execute_tests(args: argparse.Namespace) -> dict[str, Any]:
 
 
 def verify_candidate(
-    root: Path, component: str, candidate_id: str
+    root: Path,
+    component: str,
+    candidate_id: str,
+    identity: Path,
 ) -> tuple[Path, dict[str, Any], dict[str, Any], dict[str, Any]]:
     profile = PROFILES[component]
     being = profile["being"]
     candidate, _ = candidate_paths(root, being, candidate_id)
-    source = verify_source(candidate, being)
-    test = load_envelope(candidate / "test_manifest.json", TEST_SCHEMA, being)
+    source = verify_source(candidate, being, identity)
+    test = load_envelope(
+        candidate / "test_manifest.json",
+        TEST_SCHEMA,
+        being,
+        identity,
+    )
     artifact = load_envelope(
-        candidate / "artifact_manifest.json", ARTIFACT_SCHEMA, being
+        candidate / "artifact_manifest.json",
+        ARTIFACT_SCHEMA,
+        being,
+        identity,
     )
     if not test.get("passed"):
         raise CanaryError("candidate tests are not passing")
@@ -699,8 +728,8 @@ def state_path(candidate: Path) -> Path:
     return candidate / "canary_state.json"
 
 
-def load_state(candidate: Path, being: str) -> dict[str, Any]:
-    return load_envelope(state_path(candidate), STATE_SCHEMA, being)
+def load_state(candidate: Path, being: str, identity: Path) -> dict[str, Any]:
+    return load_envelope(state_path(candidate), STATE_SCHEMA, being, identity)
 
 
 def write_state(
@@ -736,10 +765,13 @@ def start_canary(args: argparse.Namespace) -> dict[str, Any]:
     profile = PROFILES[args.component]
     being = profile["being"]
     candidate, _, _, artifact_record = verify_candidate(
-        args.root, args.component, args.candidate_id
+        args.root,
+        args.component,
+        args.candidate_id,
+        args.identity.resolve(),
     )
     if state_path(candidate).exists():
-        prior = load_state(candidate, being)
+        prior = load_state(candidate, being, args.identity.resolve())
         if prior.get("status") in {"active", "promotion_ready"}:
             raise CanaryError("candidate already has an active canary state")
     artifact = Path(artifact_record["artifact_path"])
@@ -834,8 +866,13 @@ def inspect_canary(
 ) -> dict[str, Any]:
     profile = PROFILES[component]
     being = profile["being"]
-    candidate, _, _, artifact = verify_candidate(root, component, candidate_id)
-    state = load_state(candidate, being)
+    candidate, _, _, artifact = verify_candidate(
+        root,
+        component,
+        candidate_id,
+        identity,
+    )
+    state = load_state(candidate, being, identity)
     if state.get("status") != "active":
         return state
     reason = None
@@ -871,6 +908,7 @@ def inspect_canary(
 def verify_utterance_attestation(
     attestation_path: Path,
     response_path: Path,
+    identity_path: Path,
     *,
     being: str,
     candidate_id: str,
@@ -884,6 +922,11 @@ def verify_utterance_attestation(
         raise CanaryError("promotion attestation schema mismatch")
     if attestation.get("being") != being:
         raise CanaryError("promotion attestation being mismatch")
+    identity = load_identity(identity_path, being)
+    if attestation.get("attestor_public_key_hex") != identity.get("public_key_hex"):
+        raise CanaryError(
+            "promotion attestation signer does not match the pinned owner identity"
+        )
     response = response_path.read_bytes()
     if (
         attestation.get("response_sha256") != sha256_bytes(response)
@@ -930,7 +973,10 @@ def promote(args: argparse.Namespace) -> dict[str, Any]:
     profile = PROFILES[args.component]
     being = profile["being"]
     candidate, source, test, artifact = verify_candidate(
-        args.root, args.component, args.candidate_id
+        args.root,
+        args.component,
+        args.candidate_id,
+        args.identity.resolve(),
     )
     state = inspect_canary(
         args.root,
@@ -945,6 +991,7 @@ def promote(args: argparse.Namespace) -> dict[str, Any]:
     attestation = verify_utterance_attestation(
         args.attestation.resolve(),
         args.response.resolve(),
+        args.identity.resolve(),
         being=being,
         candidate_id=args.candidate_id,
     )
@@ -993,7 +1040,7 @@ def rollback(args: argparse.Namespace) -> dict[str, Any]:
     profile = PROFILES[args.component]
     being = profile["being"]
     candidate, _ = candidate_paths(args.root, being, args.candidate_id)
-    state = load_state(candidate, being)
+    state = load_state(candidate, being, args.identity.resolve())
     stop_process_group(state)
     state.update(
         {
@@ -1011,12 +1058,18 @@ def verify_promotion(args: argparse.Namespace) -> dict[str, Any]:
     profile = PROFILES[args.component]
     being = profile["being"]
     candidate, _, _, artifact = verify_candidate(
-        args.root, args.component, args.candidate_id
+        args.root,
+        args.component,
+        args.candidate_id,
+        args.identity.resolve(),
     )
     handoff = load_envelope(
-        candidate / "promotion_handoff.json", PROMOTION_SCHEMA, being
+        candidate / "promotion_handoff.json",
+        PROMOTION_SCHEMA,
+        being,
+        args.identity.resolve(),
     )
-    state = load_state(candidate, being)
+    state = load_state(candidate, being, args.identity.resolve())
     if state.get("status") != "promotion_ready":
         raise CanaryError("candidate has no current promotion-ready state")
     if handoff.get("artifact_sha256") != artifact.get("artifact_sha256"):
@@ -1095,6 +1148,7 @@ def main(argv: list[str] | None = None) -> int:
                 / "source_manifest.json",
                 SOURCE_SCHEMA,
                 PROFILES[args.component]["being"],
+                args.identity.resolve(),
             )
             args.canary_secs = source["default_canary_secs"]
             args.confirmation_grace_secs = source["confirmation_grace_secs"]

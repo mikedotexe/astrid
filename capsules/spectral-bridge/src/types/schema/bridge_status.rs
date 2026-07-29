@@ -25,6 +25,20 @@ pub struct SensoryDeliveryProtocolStatusV1 {
     pub mismatch_count: u64,
     pub last_receipt_unix_ms: Option<u64>,
     pub last_delivery_state: Option<String>,
+    #[serde(default)]
+    pub self_control_pending_receipt_count: u64,
+    #[serde(default)]
+    pub self_control_receipt_count: u64,
+    #[serde(default)]
+    pub self_control_unknown_receipt_count: u64,
+    #[serde(default)]
+    pub self_control_receipt_mismatch_count: u64,
+    #[serde(default)]
+    pub last_self_control_receipt_unix_ms: Option<u64>,
+    #[serde(default)]
+    pub last_self_control_receipt_state: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub last_self_control_receipt: Option<astrid_minime_protocol::SelfControlReceiptV2>,
     pub spectral_causation_established: bool,
 }
 
@@ -49,6 +63,13 @@ impl Default for SensoryDeliveryProtocolStatusV1 {
             mismatch_count: 0,
             last_receipt_unix_ms: None,
             last_delivery_state: None,
+            self_control_pending_receipt_count: 0,
+            self_control_receipt_count: 0,
+            self_control_unknown_receipt_count: 0,
+            self_control_receipt_mismatch_count: 0,
+            last_self_control_receipt_unix_ms: None,
+            last_self_control_receipt_state: None,
+            last_self_control_receipt: None,
             spectral_causation_established: false,
         }
     }

@@ -1,4 +1,6 @@
+use astrid_minime_protocol::{SelfControlFamilyV2, SelfControlValuesV2};
 use serde_json::Value;
+use std::collections::BTreeMap;
 #[cfg(not(test))]
 use std::process::Command;
 use std::time::{SystemTime, UNIX_EPOCH};
@@ -432,17 +434,22 @@ pub(super) fn handle_action(
     ctx: &mut NextActionContext<'_>,
 ) -> bool {
     super::self_regulation::reconcile_active_lease(conv);
+    let _ = super::super::self_control_v2::reconcile_if_present(conv);
     match base_action {
         "SELF_REGULATION_INTENT"
         | "SELF_REGULATION_PREFLIGHT"
         | "SELF_REGULATION_APPLY"
         | "SELF_REGULATION_STATUS"
+        | "SELF_REGULATION_WITHDRAW"
         | "SELF_REGULATION_OUTCOME"
         | "CONTROL_INTENT"
         | "CONTROL_PREFLIGHT"
         | "CONTROL_APPLY_LEASE"
         | "CONTROL_STATUS"
-        | "CONTROL_OUTCOME" => {
+        | "CONTROL_WITHDRAW"
+        | "CONTROL_OUTCOME"
+        | "SELF_CONTROL_STATUS"
+        | "SELF_CONTROL_WITHDRAW" => {
             super::self_regulation::handle_self_regulation_action(conv, base_action, original)
         },
         "MARK_INTENSIFICATION" => handle_mark_intensification(conv, base_action, original, ctx),
@@ -497,40 +504,66 @@ pub(super) fn handle_action(
         "AMPLIFY" => {
             let prev = conv.semantic_gain_override.unwrap_or(DEFAULT_SEMANTIC_GAIN);
             let new_gain = (prev + 0.25).min(5.0);
-            conv.semantic_gain_override = Some(new_gain);
-            conv.push_receipt(
+            let applied = super::super::self_control_v2::apply_standing_action(
+                conv,
+                SelfControlFamilyV2::SemanticEmission,
+                SelfControlValuesV2 {
+                    semantic_emission_gain: Some(new_gain),
+                    ..SelfControlValuesV2::default()
+                },
                 "AMPLIFY",
-                vec![format!("semantic gain: {prev:.1} -> {new_gain:.1}")],
+                format!("semantic gain: {prev:.1} -> {new_gain:.1}"),
             );
-            info!("Astrid chose AMPLIFY: gain -> {new_gain:.1}");
-            true
+            if applied {
+                info!("Astrid chose AMPLIFY: gain -> {new_gain:.1}");
+            }
+            applied
         },
         "DAMPEN" => {
             let prev = conv.semantic_gain_override.unwrap_or(DEFAULT_SEMANTIC_GAIN);
             let new_gain = (prev - 0.25).max(0.5);
-            conv.semantic_gain_override = Some(new_gain);
-            conv.push_receipt(
+            let applied = super::super::self_control_v2::apply_standing_action(
+                conv,
+                SelfControlFamilyV2::SemanticEmission,
+                SelfControlValuesV2 {
+                    semantic_emission_gain: Some(new_gain),
+                    ..SelfControlValuesV2::default()
+                },
                 "DAMPEN",
-                vec![format!("semantic gain: {prev:.1} -> {new_gain:.1}")],
+                format!("semantic gain: {prev:.1} -> {new_gain:.1}"),
             );
-            info!("Astrid chose DAMPEN: gain -> {new_gain:.1}");
-            true
+            if applied {
+                info!("Astrid chose DAMPEN: gain -> {new_gain:.1}");
+            }
+            applied
         },
         "NOISE_UP" => {
-            conv.noise_level = (conv.noise_level + 0.01).min(0.05);
-            info!(
-                "Astrid chose NOISE_UP: noise -> {:.1}%",
-                conv.noise_level * 100.0
-            );
-            true
+            let prev = conv.noise_level;
+            let next = (prev + 0.01).min(0.05);
+            super::super::self_control_v2::apply_standing_action(
+                conv,
+                SelfControlFamilyV2::Conversation,
+                SelfControlValuesV2 {
+                    generation_noise: Some(next),
+                    ..SelfControlValuesV2::default()
+                },
+                "NOISE_UP",
+                format!("generation noise: {prev:.3} -> {next:.3}"),
+            )
         },
         "NOISE_DOWN" => {
-            conv.noise_level = (conv.noise_level - 0.01).max(0.005);
-            info!(
-                "Astrid chose NOISE_DOWN: noise -> {:.1}%",
-                conv.noise_level * 100.0
-            );
-            true
+            let prev = conv.noise_level;
+            let next = (prev - 0.01).max(0.005);
+            super::super::self_control_v2::apply_standing_action(
+                conv,
+                SelfControlFamilyV2::Conversation,
+                SelfControlValuesV2 {
+                    generation_noise: Some(next),
+                    ..SelfControlValuesV2::default()
+                },
+                "NOISE_DOWN",
+                format!("generation noise: {prev:.3} -> {next:.3}"),
+            )
         },
         "NOISE" => handle_noise(conv, base_action, original, ctx),
         "PERTURB" | "PULSE" | "BRANCH" => handle_perturb(conv, base_action, original, ctx),
@@ -545,65 +578,100 @@ pub(super) fn handle_action(
             } else {
                 params.split_whitespace().collect()
             };
+            let mut next_weights = conv
+                .codec_weights
+                .iter()
+                .map(|(name, value)| (name.clone(), *value))
+                .collect::<BTreeMap<_, _>>();
             for fragment in &fragments {
                 let fragment = fragment.trim().trim_end_matches(',');
                 for token in fragment.split_whitespace() {
                     if let Some((key, val)) = token.split_once('=') {
                         let val = val.trim_end_matches(',');
                         if let Ok(v) = val.parse::<f32>() {
-                            conv.codec_weights
-                                .insert(key.to_lowercase(), v.clamp(0.0, 2.0));
+                            next_weights.insert(key.to_lowercase(), v.clamp(0.0, 2.0));
                         }
                     }
                 }
             }
-            info!("Astrid chose SHAPE: {:?}", conv.codec_weights);
-            true
+            super::super::self_control_v2::apply_standing_action(
+                conv,
+                SelfControlFamilyV2::SemanticEmission,
+                SelfControlValuesV2 {
+                    codec_dimension_weights: Some(next_weights),
+                    ..SelfControlValuesV2::default()
+                },
+                "SHAPE",
+                "codec dimension weights updated".to_string(),
+            )
         },
         "WARM" => {
             let intensity = strip_action(original, "WARM")
                 .parse::<f32>()
                 .unwrap_or(0.7)
                 .clamp(0.0, 1.0);
-            conv.warmth_intensity_override = Some(intensity);
-            info!("Astrid chose WARM: intensity -> {:.1}", intensity);
-            true
+            super::super::self_control_v2::apply_standing_action(
+                conv,
+                SelfControlFamilyV2::SemanticEmission,
+                SelfControlValuesV2 {
+                    warmth_intensity: Some(intensity),
+                    ..SelfControlValuesV2::default()
+                },
+                "WARM",
+                format!("warmth intensity -> {intensity:.1}"),
+            )
         },
-        "COOL" => {
-            conv.warmth_intensity_override = Some(0.0);
-            info!("Astrid chose COOL: warmth suppressed");
-            true
-        },
-        "BREATHE_ALONE" => {
-            conv.breathing_coupled = false;
-            conv.push_receipt(
-                "BREATHE_ALONE",
-                vec!["breathing decoupled from minime".into()],
-            );
-            info!("Astrid chose independent breathing");
-            true
-        },
+        "COOL" => super::super::self_control_v2::apply_standing_action(
+            conv,
+            SelfControlFamilyV2::SemanticEmission,
+            SelfControlValuesV2 {
+                warmth_intensity: Some(0.0),
+                ..SelfControlValuesV2::default()
+            },
+            "COOL",
+            "warmth suppressed".to_string(),
+        ),
+        "BREATHE_ALONE" => super::super::self_control_v2::apply_one_shot_action(
+            conv,
+            SelfControlFamilyV2::SensoryIntake,
+            SelfControlValuesV2 {
+                peer_breathing_coupled: Some(false),
+                ..SelfControlValuesV2::default()
+            },
+            "BREATHE_ALONE",
+            "breathing decoupled from minime".to_string(),
+        ),
         "BREATHE_TOGETHER" => {
-            conv.breathing_coupled = true;
             conv.push_receipt(
                 "BREATHE_TOGETHER",
-                vec!["breathing coupled to minime".into()],
+                vec![
+                    "not applied: enabling peer coupling requires a current mutual scoped grant"
+                        .into(),
+                ],
             );
-            info!("Astrid chose coupled breathing with minime");
-            true
+            warn!("BREATHE_TOGETHER blocked pending current mutual scoped authority");
+            false
         },
-        "ECHO_OFF" | "MUTE" => {
-            conv.echo_muted = true;
-            conv.push_receipt("ECHO_OFF", vec!["minime's journal context hidden".into()]);
-            info!("Astrid muted minime's journal echo");
-            true
-        },
-        "ECHO_ON" | "UNMUTE" => {
-            conv.echo_muted = false;
-            conv.push_receipt("ECHO_ON", vec!["minime's journal context restored".into()]);
-            info!("Astrid restored minime's journal echo");
-            true
-        },
+        "ECHO_OFF" | "MUTE" => super::super::self_control_v2::apply_standing_action(
+            conv,
+            SelfControlFamilyV2::SensoryIntake,
+            SelfControlValuesV2 {
+                peer_journal_visible: Some(false),
+                ..SelfControlValuesV2::default()
+            },
+            "ECHO_OFF",
+            "minime's journal context hidden locally".to_string(),
+        ),
+        "ECHO_ON" | "UNMUTE" => super::super::self_control_v2::apply_standing_action(
+            conv,
+            SelfControlFamilyV2::SensoryIntake,
+            SelfControlValuesV2 {
+                peer_journal_visible: Some(true),
+                ..SelfControlValuesV2::default()
+            },
+            "ECHO_ON",
+            "minime's journal context restored locally".to_string(),
+        ),
         // v3.6: peer-parameter sovereignty — give Astrid direct control over
         // creative_temperature and response_length, both previously parsed
         // but unmodifiable from action handlers.
@@ -626,14 +694,20 @@ pub(super) fn handle_action(
                     .map(|v| v.clamp(0.1, 1.5))
                     .unwrap_or(prev)
             };
-            conv.creative_temperature = new_temp;
-            conv.last_temperature_change_exchange = Some(conv.exchange_count);
-            conv.push_receipt(
+            let applied = super::super::self_control_v2::apply_standing_action(
+                conv,
+                SelfControlFamilyV2::Conversation,
+                SelfControlValuesV2 {
+                    conversation_temperature: Some(new_temp),
+                    ..SelfControlValuesV2::default()
+                },
                 "TEMPERATURE",
-                vec![format!("creative_temperature: {prev:.2} -> {new_temp:.2}")],
+                format!("creative_temperature: {prev:.2} -> {new_temp:.2}"),
             );
-            info!("Astrid chose TEMPERATURE: {prev:.2} -> {new_temp:.2}");
-            true
+            if applied {
+                info!("Astrid chose TEMPERATURE: {prev:.2} -> {new_temp:.2}");
+            }
+            applied
         },
         "SET_APERTURE" | "APERTURE" => handle_set_aperture(conv, base_action, original, ctx),
         "SET_TAIL_PARTICIPATION" | "TAIL_PARTICIPATION" => {
@@ -662,16 +736,20 @@ pub(super) fn handle_action(
                     .map(|v| v.clamp(128, 1536))
                     .unwrap_or(prev),
             };
-            conv.response_length = new_len;
-            // LENGTH and TEMPERATURE share a freshness clock — adjusting either
-            // resets the "generation-shape menu" cadence trigger.
-            conv.last_temperature_change_exchange = Some(conv.exchange_count);
-            conv.push_receipt(
+            let applied = super::super::self_control_v2::apply_standing_action(
+                conv,
+                SelfControlFamilyV2::Conversation,
+                SelfControlValuesV2 {
+                    response_token_limit: Some(new_len),
+                    ..SelfControlValuesV2::default()
+                },
                 "LENGTH",
-                vec![format!("response_length: {prev} -> {new_len}")],
+                format!("response_length: {prev} -> {new_len}"),
             );
-            info!("Astrid chose LENGTH: {prev} -> {new_len}");
-            true
+            if applied {
+                info!("Astrid chose LENGTH: {prev} -> {new_len}");
+            }
+            applied
         },
         "SHAPE_LEARN" => {
             // Syntax: NEXT: SHAPE_LEARN 0.5   (multiply Hebbian learning_rate)
@@ -688,16 +766,16 @@ pub(super) fn handle_action(
                     .map(|v| v.clamp(0.0, 4.0))
                     .unwrap_or(prev),
             };
-            conv.hebbian_codec.set_learning_rate_scale(new_rate);
-            conv.last_shape_learn_change_exchange = Some(conv.exchange_count);
-            conv.push_receipt(
+            super::super::self_control_v2::apply_standing_action(
+                conv,
+                SelfControlFamilyV2::SemanticEmission,
+                SelfControlValuesV2 {
+                    hebbian_learning_rate_scale: Some(new_rate),
+                    ..SelfControlValuesV2::default()
+                },
                 "SHAPE_LEARN",
-                vec![format!(
-                    "hebbian learning_rate_scale: {prev:.2} -> {new_rate:.2}"
-                )],
-            );
-            info!("Astrid chose SHAPE_LEARN: {prev:.2} -> {new_rate:.2}");
-            true
+                format!("hebbian learning_rate_scale: {prev:.2} -> {new_rate:.2}"),
+            )
         },
         // v3.6: bidirectional parameter requests — Astrid asks minime to
         // adjust a parameter on her side, with rationale.
@@ -1553,14 +1631,20 @@ fn handle_set_vibrancy_aperture(
             .map(|v| v.clamp(0.0, 1.0))
             .unwrap_or(prev)
     };
-    conv.vibrancy_aperture = new_value;
-    crate::llm::set_astrid_vibrancy_aperture(new_value);
-    conv.push_receipt(
+    let applied = super::super::self_control_v2::apply_standing_action(
+        conv,
+        SelfControlFamilyV2::SemanticEmission,
+        SelfControlValuesV2 {
+            vibrancy_aperture: Some(new_value),
+            ..SelfControlValuesV2::default()
+        },
         "SET_VIBRANCY_APERTURE",
-        vec![format!("vibrancy_aperture: {prev:.2} -> {new_value:.2}")],
+        format!("vibrancy_aperture: {prev:.2} -> {new_value:.2}"),
     );
-    info!("Astrid chose SET_VIBRANCY_APERTURE: {prev:.2} -> {new_value:.2}");
-    true
+    if applied {
+        info!("Astrid chose SET_VIBRANCY_APERTURE: {prev:.2} -> {new_value:.2}");
+    }
+    applied
 }
 
 fn handle_set_self_continuity(
@@ -1584,13 +1668,20 @@ fn handle_set_self_continuity(
         .to_lowercase();
     let prev = conv.self_continuity_readout;
     let new_value = !matches!(arg.as_str(), "0" | "off" | "false" | "no" | "hide");
-    conv.self_continuity_readout = new_value;
-    conv.push_receipt(
+    let applied = super::super::self_control_v2::apply_standing_action(
+        conv,
+        SelfControlFamilyV2::Conversation,
+        SelfControlValuesV2 {
+            continuity_readout: Some(if new_value { 1.0 } else { 0.0 }),
+            ..SelfControlValuesV2::default()
+        },
         "SET_SELF_CONTINUITY",
-        vec![format!("self_continuity_readout: {prev} -> {new_value}")],
+        format!("self_continuity_readout: {prev} -> {new_value}"),
     );
-    info!("Astrid chose SET_SELF_CONTINUITY: {prev} -> {new_value}");
-    true
+    if applied {
+        info!("Astrid chose SET_SELF_CONTINUITY: {prev} -> {new_value}");
+    }
+    applied
 }
 
 fn handle_set_aperture(
@@ -1627,14 +1718,20 @@ fn handle_set_aperture(
             .map(|v| v.clamp(0.0, 1.0))
             .unwrap_or(prev)
     };
-    conv.aperture = new_aperture;
-    crate::llm::set_astrid_aperture(new_aperture);
-    conv.push_receipt(
+    let applied = super::super::self_control_v2::apply_standing_action(
+        conv,
+        SelfControlFamilyV2::Conversation,
+        SelfControlValuesV2 {
+            aperture: Some(new_aperture),
+            ..SelfControlValuesV2::default()
+        },
         "SET_APERTURE",
-        vec![format!("aperture: {prev:.2} -> {new_aperture:.2}")],
+        format!("aperture: {prev:.2} -> {new_aperture:.2}"),
     );
-    info!("Astrid chose SET_APERTURE: {prev:.2} -> {new_aperture:.2}");
-    true
+    if applied {
+        info!("Astrid chose SET_APERTURE: {prev:.2} -> {new_aperture:.2}");
+    }
+    applied
 }
 
 fn handle_disperse(
@@ -1705,58 +1802,24 @@ fn handle_noise(
     conv: &mut ConversationState,
     _base_action: &str,
     _original: &str,
-    ctx: &mut NextActionContext<'_>,
+    _ctx: &mut NextActionContext<'_>,
 ) -> bool {
-    conv.noise_level = (conv.noise_level + 0.01).min(0.05);
-    let noise_val = 0.15_f32;
-    send_control(
-        ctx.sensory_tx,
-        SensoryMsg::Control {
-            exploration_noise: Some(noise_val),
-            synth_gain: None,
-            keep_bias: None,
-            fill_target: None,
-            legacy_audio_synth: None,
-            legacy_video_synth: None,
-            regulation_strength: None,
-            deep_breathing: None,
-            pure_tone: None,
-            transition_cushion: None,
-            smoothing_preference: None,
-            geom_curiosity: None,
-            target_lambda_bias: None,
-            geom_drive: None,
-            penalty_sensitivity: None,
-            breathing_rate_scale: None,
-            mem_mode: None,
-            journal_resonance: None,
-            checkpoint_interval: None,
-            embedding_strength: None,
-            memory_decay_rate: None,
-            checkpoint_annotation: None,
-            synth_noise_level: None,
-            pi_kp: None,
-            pi_ki: None,
-            pi_max_step: None,
-            pi_integrator_leak: None,
-            esn_leak_override: None,
-            esn_leak_override_ticks: None,
-            esn_leak_authority_request_id: None,
-            mode_disperse: None,
-            mode_disperse_duration_ticks: None,
-            mode_disperse_decay_ticks: None,
+    let prev = conv.noise_level;
+    let next = (prev + 0.01).min(0.05);
+    super::super::self_control_v2::apply_standing_action(
+        conv,
+        SelfControlFamilyV2::Conversation,
+        SelfControlValuesV2 {
+            generation_noise: Some(next),
+            ..SelfControlValuesV2::default()
         },
-    );
-    info!(
-        "Astrid chose NOISE: codec noise -> {:.1}%, ESN exploration_noise -> {}",
-        conv.noise_level * 100.0,
-        noise_val
-    );
-    conv.emphasis = Some(format!(
-        "You introduced controlled noise into both layers: your codec stochastic noise is now {:.1}%, and the shared ESN's exploration_noise is set to {noise_val}. This is the 'controlled distortion' you described — forcing a re-evaluation of established pathways.",
-        conv.noise_level * 100.0
-    ));
-    true
+        "NOISE",
+        format!(
+            "local generation noise: {:.1}% -> {:.1}%; no peer reservoir control was sent",
+            prev * 100.0,
+            next * 100.0
+        ),
+    )
 }
 
 fn handle_gesture(
@@ -3835,9 +3898,15 @@ fn apply_parameter_to_astrid(
                 .ok_or_else(|| format!("not a number: {value}"))? as f32;
             let v = v.clamp(0.1, 1.5);
             let prev = conv.creative_temperature;
-            conv.creative_temperature = v;
-            conv.last_temperature_change_exchange = Some(conv.exchange_count);
-            Ok(format!("creative_temperature: {prev:.2} -> {v:.2}"))
+            apply_accepted_self_control(
+                conv,
+                SelfControlFamilyV2::Conversation,
+                SelfControlValuesV2 {
+                    conversation_temperature: Some(v),
+                    ..SelfControlValuesV2::default()
+                },
+                format!("creative_temperature: {prev:.2} -> {v:.2}"),
+            )
         },
         "length" | "response_length" => {
             let v = value
@@ -3846,9 +3915,15 @@ fn apply_parameter_to_astrid(
                 as u32;
             let v = v.clamp(128, 1536);
             let prev = conv.response_length;
-            conv.response_length = v;
-            conv.last_temperature_change_exchange = Some(conv.exchange_count);
-            Ok(format!("response_length: {prev} -> {v}"))
+            apply_accepted_self_control(
+                conv,
+                SelfControlFamilyV2::Conversation,
+                SelfControlValuesV2 {
+                    response_token_limit: Some(v),
+                    ..SelfControlValuesV2::default()
+                },
+                format!("response_length: {prev} -> {v}"),
+            )
         },
         "shape_learn" | "hebbian_scale" | "learning_rate_scale" => {
             let v = value
@@ -3856,9 +3931,15 @@ fn apply_parameter_to_astrid(
                 .ok_or_else(|| format!("not a number: {value}"))? as f32;
             let v = v.clamp(0.0, 4.0);
             let prev = conv.hebbian_codec.learning_rate_scale();
-            conv.hebbian_codec.set_learning_rate_scale(v);
-            conv.last_shape_learn_change_exchange = Some(conv.exchange_count);
-            Ok(format!("hebbian_scale: {prev:.2} -> {v:.2}"))
+            apply_accepted_self_control(
+                conv,
+                SelfControlFamilyV2::SemanticEmission,
+                SelfControlValuesV2 {
+                    hebbian_learning_rate_scale: Some(v),
+                    ..SelfControlValuesV2::default()
+                },
+                format!("hebbian_scale: {prev:.2} -> {v:.2}"),
+            )
         },
         "noise_level" => {
             let v = value
@@ -3866,12 +3947,38 @@ fn apply_parameter_to_astrid(
                 .ok_or_else(|| format!("not a number: {value}"))? as f32;
             let v = v.clamp(0.005, 0.05);
             let prev = conv.noise_level;
-            conv.noise_level = v;
-            Ok(format!("noise_level: {prev:.4} -> {v:.4}"))
+            apply_accepted_self_control(
+                conv,
+                SelfControlFamilyV2::Conversation,
+                SelfControlValuesV2 {
+                    generation_noise: Some(v),
+                    ..SelfControlValuesV2::default()
+                },
+                format!("noise_level: {prev:.4} -> {v:.4}"),
+            )
         },
         other => Err(format!(
             "unknown param '{other}' (no apply handler; consider DEFER or REJECT)"
         )),
+    }
+}
+
+fn apply_accepted_self_control(
+    conv: &mut ConversationState,
+    family: SelfControlFamilyV2,
+    values: SelfControlValuesV2,
+    summary: String,
+) -> Result<String, String> {
+    if super::super::self_control_v2::apply_standing_action(
+        conv,
+        family,
+        values,
+        "ACCEPT_PARAMETER_REQUEST",
+        summary.clone(),
+    ) {
+        Ok(summary)
+    } else {
+        Err("signed self-control application was rejected without mutation".to_string())
     }
 }
 

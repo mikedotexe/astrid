@@ -1,3 +1,4 @@
+use astrid_minime_protocol::{SelfControlFamilyV2, SelfControlValuesV2};
 use serde_json::json;
 use tracing::info;
 use tracing::warn;
@@ -53,37 +54,71 @@ pub(super) fn handle_action(
     match base_action {
         "FOCUS" => {
             let prev = conv.creative_temperature;
-            conv.creative_temperature = 0.5;
-            conv.push_receipt("FOCUS", vec![format!("temperature: {prev:.1} -> 0.5")]);
-            info!("Astrid chose FOCUS: temperature -> 0.5");
-            true
+            let applied = super::super::self_control_v2::apply_standing_action(
+                conv,
+                SelfControlFamilyV2::Conversation,
+                SelfControlValuesV2 {
+                    conversation_temperature: Some(0.5),
+                    ..SelfControlValuesV2::default()
+                },
+                "FOCUS",
+                format!("temperature: {prev:.1} -> 0.5"),
+            );
+            if applied {
+                info!("Astrid chose FOCUS: temperature -> 0.5");
+            }
+            applied
         },
         "DRIFT" => {
             let prev = conv.creative_temperature;
-            conv.creative_temperature = 1.0;
-            conv.push_receipt("DRIFT", vec![format!("temperature: {prev:.1} -> 1.0")]);
-            info!("Astrid chose DRIFT: temperature -> 1.0");
-            true
+            let applied = super::super::self_control_v2::apply_standing_action(
+                conv,
+                SelfControlFamilyV2::Conversation,
+                SelfControlValuesV2 {
+                    conversation_temperature: Some(1.0),
+                    ..SelfControlValuesV2::default()
+                },
+                "DRIFT",
+                format!("temperature: {prev:.1} -> 1.0"),
+            );
+            if applied {
+                info!("Astrid chose DRIFT: temperature -> 1.0");
+            }
+            applied
         },
         "PRECISE" => {
             let prev = conv.response_length;
-            conv.response_length = 128;
-            conv.push_receipt(
+            let applied = super::super::self_control_v2::apply_standing_action(
+                conv,
+                SelfControlFamilyV2::Conversation,
+                SelfControlValuesV2 {
+                    response_token_limit: Some(128),
+                    ..SelfControlValuesV2::default()
+                },
                 "PRECISE",
-                vec![format!("response length: {prev} -> 128 tokens")],
+                format!("response length: {prev} -> 128 tokens"),
             );
-            info!("Astrid chose PRECISE: tokens -> 128");
-            true
+            if applied {
+                info!("Astrid chose PRECISE: tokens -> 128");
+            }
+            applied
         },
         "EXPANSIVE" => {
             let prev = conv.response_length;
-            conv.response_length = 1024;
-            conv.push_receipt(
+            let applied = super::super::self_control_v2::apply_standing_action(
+                conv,
+                SelfControlFamilyV2::Conversation,
+                SelfControlValuesV2 {
+                    response_token_limit: Some(1_024),
+                    ..SelfControlValuesV2::default()
+                },
                 "EXPANSIVE",
-                vec![format!("response length: {prev} -> 1024 tokens")],
+                format!("response length: {prev} -> 1024 tokens"),
             );
-            info!("Astrid chose EXPANSIVE: tokens -> 1024");
-            true
+            if applied {
+                info!("Astrid chose EXPANSIVE: tokens -> 1024");
+            }
+            applied
         },
         "EMPHASIZE" => {
             let topic = strip_action(original, "EMPHASIZE");

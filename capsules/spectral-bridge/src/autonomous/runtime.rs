@@ -21,8 +21,12 @@
 
 #[path = "btsp/mod.rs"]
 pub(crate) mod btsp;
+#[path = "concern_queue.rs"]
+mod concern_queue;
 #[path = "correspondence_v1.rs"]
 mod correspondence_v1;
+#[path = "delegated_capability.rs"]
+mod delegated_capability;
 #[path = "division_ceremony.rs"]
 mod division_ceremony;
 #[path = "hebbian.rs"]
@@ -31,6 +35,8 @@ mod hebbian;
 mod introspect;
 #[path = "next_action/mod.rs"]
 pub(crate) mod next_action;
+#[path = "owner_policy.rs"]
+mod owner_policy;
 #[path = "phase_passage_context.rs"]
 mod phase_passage_context;
 #[path = "phase_passages.rs"]
@@ -41,8 +47,12 @@ mod phase_transitions;
 mod readiness;
 #[path = "reservoir.rs"]
 pub(crate) mod reservoir;
+#[path = "self_control_v2.rs"]
+pub(crate) mod self_control_v2;
 #[path = "state.rs"]
 pub(crate) mod state;
+#[path = "volition.rs"]
+mod volition;
 
 #[cfg(test)]
 static TEST_SUPPRESS_ASTRID_JOURNAL_SAVES: std::sync::atomic::AtomicBool =
