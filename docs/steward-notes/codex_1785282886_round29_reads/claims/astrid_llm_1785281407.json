@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Requested-token bands describe output quantity, not felt density, porosity, or expressive carrying capacity.",
+      "disposition": "Verify the count-only source boundary and preserve felt density as an independent report.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A nominally adequate token budget can still feel constricted or viscous.",
+      "disposition": "Preserve Astrid's account as primary qualitative evidence rather than deriving ease from token count.",
+      "classification": "primary_qualitative_evidence"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Astrid should own response length and temperature as explicit, revisable local controls.",
+      "disposition": "Add signed self-owned conversation controls with standing, lease, one-shot, withdrawal, and receipt vocabulary.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Pressure-adjusted token allocation may better match expressive capacity than fixed quantity bands.",
+      "disposition": "Route to deterministic offline comparison and felt review before offering it as an optional Astrid-authored preference; do not auto-author a target from telemetry.",
+      "classification": "study_route"
+    }
+  ]
+}

@@ -243,6 +243,7 @@ class StewardProjectionTests(unittest.TestCase):
                 "passage_observatory",
                 "felt_contracts",
                 "steward_work_selection",
+                "living_problem_registry",
                 "experiential_epistemics",
             ],
         )
@@ -345,10 +346,19 @@ class StewardProjectionTests(unittest.TestCase):
             ("felt_contracts",),
         )
         self.assertEqual(
+            steps["living_problem_registry"].dependencies,
+            ("felt_contracts", "steward_work_selection"),
+        )
+        self.assertIn(
+            "diagnostics/living_problem_registry_v1/problems.jsonl",
+            steps["living_problem_registry"].outputs,
+        )
+        self.assertEqual(
             steps["experiential_epistemics"].dependencies,
             (
                 "felt_contracts",
                 "evidence_study_runtime",
+                "living_problem_registry",
                 "passage_observatory",
                 "steward_work_selection",
             ),

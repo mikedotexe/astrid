@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Technical delivery and exact reply lineage do not establish uptake, felt effect, or continued consent.",
+      "disposition": "Retain these as separate typed states and keep felt effect false in machine receipts.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A control command needs exact actor, target, deployment, revision, expiry, and evidence lineage.",
+      "disposition": "Implement those fields in the signed intent and command contract.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Receipts must disclose clamping, applied values, previous values, and rollback lineage.",
+      "disposition": "Implement SelfControlReceiptV2 with requested, clamped, applied, previous, expiry, and rollback fields.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Peer-impacting semantic gain or sensory admission cannot inherit authority from correspondence or silence.",
+      "disposition": "Require two current scoped signatures and preserve silence as neutral.",
+      "classification": "deliberate_authority_boundary"
+    }
+  ]
+}

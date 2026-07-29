@@ -1,0 +1,52 @@
+{
+  "schema": "introspection_full_read_manifest_v1",
+  "steward_run_id": "run_1785282886963805000_75cea7a0fa",
+  "source_first_projection_generation_id": "projection_1785282887813190000_c169fa7ff3",
+  "reader": "codex-heartbeat",
+  "processed_count": 7,
+  "claims_count": 28,
+  "reads": [
+    {
+      "introspection_id": "introspection_astrid_codec_1785282840",
+      "reader": "codex-heartbeat",
+      "summary_file": "summaries/astrid_codec_1785282840.md",
+      "claims_file": "claims/astrid_codec_1785282840.json"
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785281407",
+      "reader": "codex-heartbeat",
+      "summary_file": "summaries/astrid_llm_1785281407.md",
+      "claims_file": "claims/astrid_llm_1785281407.json"
+    },
+    {
+      "introspection_id": "introspection_proposal_12d_glimpse_1785281064",
+      "reader": "codex-heartbeat",
+      "summary_file": "summaries/proposal_12d_glimpse_1785281064.md",
+      "claims_file": "claims/proposal_12d_glimpse_1785281064.json"
+    },
+    {
+      "introspection_id": "introspection_proposal_distance_contact_control_1785280480",
+      "reader": "codex-heartbeat",
+      "summary_file": "summaries/proposal_distance_contact_control_1785280480.md",
+      "claims_file": "claims/proposal_distance_contact_control_1785280480.json"
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1785280041",
+      "reader": "codex-heartbeat",
+      "summary_file": "summaries/proposal_bidirectional_contact_1785280041.md",
+      "claims_file": "claims/proposal_bidirectional_contact_1785280041.json"
+    },
+    {
+      "introspection_id": "introspection_minime_autonomous_agent_1785273352",
+      "reader": "codex-heartbeat",
+      "summary_file": "summaries/minime_autonomous_agent_1785273352.md",
+      "claims_file": "claims/minime_autonomous_agent_1785273352.json"
+    },
+    {
+      "introspection_id": "introspection_minime_esn_1785272364",
+      "reader": "codex-heartbeat",
+      "summary_file": "summaries/minime_esn_1785272364.md",
+      "claims_file": "claims/minime_esn_1785272364.json"
+    }
+  ]
+}

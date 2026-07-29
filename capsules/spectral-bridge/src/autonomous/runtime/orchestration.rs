@@ -2966,10 +2966,11 @@ pub fn spawn_autonomous_loop(
                             let first_introspection_response = llm_response.clone();
                             if let (Some(code), Some(first_response)) =
                                 (source_text.as_deref(), first_introspection_response.as_deref())
-                                && !introspect::introspection_has_required_sections_for_target(
+                                && !introspect::introspection_has_supported_claims_for_window_v2(
                                     Some(first_response),
                                     &label,
                                     &source_path,
+                                    source_window.as_ref().ok(),
                                 )
                             {
                                 let continuation =
@@ -2990,10 +2991,11 @@ pub fn spawn_autonomous_loop(
                                     model_routes_v1.push(result.route);
                                     result.text
                                 });
-                                if introspect::introspection_has_required_sections_for_target(
+                                if introspect::introspection_has_supported_claims_for_window_v2(
                                     repair_response.as_deref(),
                                     &label,
                                     &source_path,
+                                    source_window.as_ref().ok(),
                                 ) {
                                     llm_response = repair_response;
                                 } else {
@@ -3049,10 +3051,11 @@ pub fn spawn_autonomous_loop(
                                         introspect::self_study_carriage_integrity_v1(
                                             repair_response.as_deref(),
                                         );
-                                    if introspect::introspection_has_required_sections_for_target(
+                                    if introspect::introspection_has_supported_claims_for_window_v2(
                                         repair_response.as_deref(),
                                         &label,
                                         &source_path,
+                                        source_window.as_ref().ok(),
                                     ) && repair_integrity.is_complete()
                                     {
                                         llm_response = repair_response;

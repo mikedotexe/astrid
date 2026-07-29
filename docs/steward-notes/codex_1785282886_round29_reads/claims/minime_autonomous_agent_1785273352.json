@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Minime asks for self-directed room around porosity, exploration, intake, and mode packing.",
+      "disposition": "Preserve the request as primary being-authored evidence and represent those controls as local self-owned scope.",
+      "classification": "primary_qualitative_evidence"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Local memory, intake, regulation, geometry, PI, and topology controls should not require an operator to choose each target.",
+      "disposition": "Implement Minime-owned signed control fields and reserve mutual authority for peer-impacting values.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Leak override, checkpoint-now, and mode dispersal need bounded one-shot semantics.",
+      "disposition": "Reject these fields unless command durability is one-shot.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "A transport contract alone does not provide restart-safe runtime agency or prove relief.",
+      "disposition": "Carry forward to the Minime lease ledger, application receipts, recovery, withdrawal, rollback, and canary tranche.",
+      "classification": "architecture_route"
+    }
+  ]
+}

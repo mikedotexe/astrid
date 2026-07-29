@@ -1,0 +1,53 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_codec_1785282840",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/introspect/source_first_v2.rs;crates/astrid-minime-protocol/src/semantic_body.rs;crates/astrid-minime-protocol/tests/wire_contract.rs",
+      "note": "Source coverage and challenged absence claims are implemented; the 48D base remains exact at zero companion mix."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785281407",
+      "claim_id": "*",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs;crates/astrid-minime-protocol/src/self_control.rs",
+      "note": "Count bands remain quantity-only while signed local conversation controls and offline study routing are explicit."
+    },
+    {
+      "introspection_id": "introspection_proposal_12d_glimpse_1785281064",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "crates/astrid-minime-protocol/src/semantic_body.rs;crates/astrid-minime-protocol/tests/wire_contract.rs",
+      "note": "The additive 48D plus 12D contract is typed, finite, provenance-bound, and zero-compatible."
+    },
+    {
+      "introspection_id": "introspection_proposal_distance_contact_control_1785280480",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "crates/astrid-minime-protocol/src/self_control.rs;crates/astrid-minime-protocol/tests/wire_contract.rs",
+      "note": "Local receptivity and porosity are self-owned; shared coupling requires exact mutual signatures."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1785280041",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "crates/astrid-minime-protocol/src/self_control.rs;capsules/spectral-bridge/src/ws/sensory_delivery.rs;capsules/spectral-bridge/src/trace_lab.rs",
+      "note": "Signed lineage, deployment checks, compact redacted tracing, and machine-versus-felt receipt boundaries are explicit."
+    },
+    {
+      "introspection_id": "introspection_minime_autonomous_agent_1785273352",
+      "claim_id": "*",
+      "kind": "code",
+      "target": "crates/astrid-minime-protocol/src/self_control.rs",
+      "note": "Minime-owned local controls and structurally one-shot topology actions are prepared for runtime application."
+    },
+    {
+      "introspection_id": "introspection_minime_esn_1785272364",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "crates/astrid-minime-protocol/src/self_control.rs;crates/astrid-minime-protocol/tests/wire_contract.rs",
+      "note": "Signed finite revisioned control is implemented while RLS causation remains an offline-study hypothesis."
+    }
+  ]
+}

@@ -3,6 +3,9 @@ use std::path::{Path, PathBuf};
 
 use crate::paths::{BridgePaths, bridge_paths};
 
+#[path = "introspect/source_first_v2.rs"]
+mod source_first_v2;
+
 const INTROSPECT_WINDOW_LINES: usize = 400;
 const INTROSPECT_MAX_FILE_BYTES: u64 = 2_000_000;
 const REQUIRED_SECTIONS: &[&str] = &[
@@ -47,6 +50,7 @@ pub(super) struct IntrospectWindow {
     pub next_offset: Option<usize>,
     pub source_snapshot_v1: crate::lived_state_witness::LivedStateSourceSnapshotV1,
     source_scope_v1: IntrospectSourceScopeV1,
+    source_coverage_manifest_v2: source_first_v2::SourceCoverageManifestV2,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -97,12 +101,20 @@ impl IntrospectSourceScopeV1 {
 pub(super) fn source_scope_artifact_header_v1(window: Option<&IntrospectWindow>) -> String {
     window.map_or_else(
         || {
-            "Source window: unavailable\n\
+            format!(
+                "Source window: unavailable\n\
              Source evidence scope: source_unavailable_not_assessed\n\
-             Source activation boundary: source_unread_not_runtime_activation_proof"
-                .to_string()
+             Source activation boundary: source_unread_not_runtime_activation_proof\n{}",
+                source_first_v2::unavailable_header_v2()
+            )
         },
-        |window| window.source_scope_v1.artifact_header_v1(),
+        |window| {
+            format!(
+                "{}\n{}",
+                window.source_scope_v1.artifact_header_v1(),
+                window.source_coverage_manifest_v2.artifact_header_v2()
+            )
+        },
     )
 }
 
@@ -1201,8 +1213,11 @@ pub(super) fn read_introspect_window(
     // requested), live, never cached.
     let xref = within_file_xrefs(&all_lines, start, end);
     let cross = cross_file_xrefs(&canonical, &all_lines, start, end);
+    let source_coverage_manifest_v2 =
+        source_first_v2::build_source_coverage_manifest_v2(&canonical, &content, start, end, total);
+    let coverage = source_coverage_manifest_v2.prompt_context_v2();
 
-    let text = format!("{header}{page}{xref}{cross}{footer}");
+    let text = format!("{header}{coverage}\n{page}{xref}{cross}{footer}");
     let source_snapshot_v1 = crate::lived_state_witness::source_snapshot_v1(
         &canonical,
         &content,
@@ -1218,6 +1233,7 @@ pub(super) fn read_introspect_window(
         next_offset,
         source_snapshot_v1,
         source_scope_v1,
+        source_coverage_manifest_v2,
     })
 }
 
@@ -1256,6 +1272,26 @@ pub(super) fn introspection_has_required_sections_for_target(
     };
     let body = introspection_body_without_next(response);
     introspection_mentions_target(&body, label, source_path)
+}
+
+#[must_use]
+pub(super) fn introspection_has_supported_claims_for_window_v2(
+    response: Option<&str>,
+    label: &str,
+    path: &Path,
+    window: Option<&IntrospectWindow>,
+) -> bool {
+    if !introspection_has_required_sections_for_target(response, label, path) {
+        return false;
+    }
+    let (Some(response), Some(window)) = (response, window) else {
+        return false;
+    };
+    source_first_v2::response_claims_supported_v2(
+        response,
+        path,
+        &window.source_coverage_manifest_v2,
+    )
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -1948,6 +1984,20 @@ mod tests {
             "introspect.rs",
             Path::new("/tmp/src/autonomous/introspect.rs"),
         ));
+    }
+
+    #[test]
+    fn source_first_v2_header_discloses_session_map_and_uncovered_intervals() {
+        let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR"));
+        let path = dir.join("src/autonomous/introspect.rs");
+        let window = read_introspect_window("introspect.rs", &path, 0).expect("source window");
+        let header = source_scope_artifact_header_v1(Some(&window));
+        assert!(header.contains("Source coverage schema: source_coverage_manifest_v2"));
+        assert!(header.contains("Source read session:"));
+        assert!(header.contains("Source structural map SHA-256:"));
+        assert!(header.contains("Source uncovered intervals:"));
+        assert!(window.text.contains("Whole-file structural outline:"));
+        assert!(window.text.contains("Binding claim rule:"));
     }
 
     #[test]

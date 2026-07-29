@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Distance, receptivity, porosity, containment, and participation are distinct felt and architectural dimensions.",
+      "disposition": "Preserve the distinctions explicitly rather than flattening them into transport success or one gain scalar.",
+      "classification": "primary_qualitative_evidence"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Each being should own local receptivity, porosity, intake, aperture, and emission controls.",
+      "disposition": "Add these as named self-owned fields in SelfControlValuesV2.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Controls that alter shared admission or cross-being influence require current mutual scope.",
+      "disposition": "Require exact actor and target signatures for the SharedCoupling family.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Pressure or silence must not silently author a being's desired receptivity target.",
+      "disposition": "Keep safety limited to hold or revert and require an explicit signed being command for targets.",
+      "classification": "deliberate_authority_boundary"
+    }
+  ]
+}

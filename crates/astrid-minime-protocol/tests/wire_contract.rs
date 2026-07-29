@@ -3,9 +3,17 @@ use astrid_minime_protocol::{
     DIVISION_COMMIT_SCOPE_V1, DIVISION_READINESS_POLICY_V1, DIVISION_STATUS_SCHEMA_V1,
     DeliveryEnvelopeV1, DivisionActionV1, DivisionCommandV1, DivisionLifecycleV1,
     DivisionReadinessV1, DivisionStatusV1, EigenPacketV1, MutualAddressEnvelopeV1,
-    SensoryDeliveryReceiptV1, SensoryDeliveryStatusV1, SensoryMsg, SensoryPacketV1,
-    SensoryServerHelloV1, canonical_sensory_payload_sha256,
+    SELF_CONTROL_AUTHORITY_PROOF_SCHEMA_V1, SELF_CONTROL_COMMAND_SCHEMA_V2,
+    SELF_CONTROL_INTENT_SCHEMA_V2, SEMANTIC_BODY_BASE_DIMENSIONS_V2,
+    SEMANTIC_BODY_COMPANION_DIMENSIONS_V2, SEMANTIC_BODY_SCHEMA_V2, SelfControlActionV2,
+    SelfControlAuthorityClassV2, SelfControlAuthorityProofV1, SelfControlCommandV2,
+    SelfControlDurabilityV2, SelfControlFamilyV2, SelfControlIntentV2, SelfControlSourceIdentityV1,
+    SelfControlValuesV2, SemanticBodyFidelityV2, SemanticBodyProvenanceV2, SemanticBodyV2,
+    SemanticLaneRoleV2, SensoryDeliveryReceiptV1, SensoryDeliveryStatusV1, SensoryMsg,
+    SensoryPacketV1, SensoryServerHelloV1, canonical_self_control_intent_sha256,
+    canonical_sensory_payload_sha256,
 };
+use ed25519_dalek::{Signer as _, SigningKey};
 
 #[test]
 fn legacy_telemetry_remains_accepted() {
@@ -160,16 +168,201 @@ fn sensory_v1_1_remains_accepted_and_preserves_its_header() {
 }
 
 #[test]
-fn sensory_v1_2_omits_optional_envelopes_when_absent() {
+fn sensory_v1_3_omits_optional_envelopes_when_absent() {
     let value = serde_json::to_value(SensoryPacketV1::versioned(SensoryMsg::Semantic {
         features: vec![0.25],
         ts_ms: None,
     }))
     .unwrap();
 
-    assert_eq!(value["protocol"]["minor"], 2);
+    assert_eq!(value["protocol"]["minor"], 3);
     assert!(value.get("delivery_v1").is_none());
     assert!(value.get("mutual_address_v1").is_none());
+}
+
+fn self_control_intent() -> SelfControlIntentV2 {
+    SelfControlIntentV2 {
+        schema: SELF_CONTROL_INTENT_SCHEMA_V2.to_string(),
+        intent_id: "intent-minime-fill-1".to_string(),
+        actor: SelfControlSourceIdentityV1 {
+            being: "minime".to_string(),
+            process_identity: "minime:42".to_string(),
+            deployment_identity: "minime-deployment-a".to_string(),
+        },
+        target_being: "minime".to_string(),
+        target_deployment_identity: "minime-deployment-a".to_string(),
+        family: SelfControlFamilyV2::ReservoirRegulation,
+        action: SelfControlActionV2::Set,
+        durability: SelfControlDurabilityV2::Lease,
+        authority_class: SelfControlAuthorityClassV2::SelfOwned,
+        authority_scope: "self_control.minime.reservoir_regulation".to_string(),
+        revision: 7,
+        expected_revision: 6,
+        issued_at_unix_ms: 1_000,
+        command_expires_at_unix_ms: 2_000,
+        control_expires_at_unix_ms: Some(10_000),
+        idempotency_key: "minime-fill-7".to_string(),
+        values: SelfControlValuesV2 {
+            fill_target: Some(0.68),
+            regulation_strength: Some(0.45),
+            ..SelfControlValuesV2::default()
+        },
+        related_intent_id: None,
+        related_receipt_id: None,
+        evidence_refs: vec!["felt-contract:contract-1".to_string()],
+        success_conditions: vec!["receipt_applied".to_string()],
+        stop_conditions: vec!["safety_red".to_string()],
+    }
+}
+
+fn signed_self_control_proof(
+    intent: &SelfControlIntentV2,
+    signer_being: &str,
+    signing_key: &SigningKey,
+    nonce: &str,
+) -> SelfControlAuthorityProofV1 {
+    let mut proof = SelfControlAuthorityProofV1 {
+        schema: SELF_CONTROL_AUTHORITY_PROOF_SCHEMA_V1.to_string(),
+        authority_class: intent.authority_class,
+        signer_being: signer_being.to_string(),
+        scope: intent.authority_scope.clone(),
+        nonce: nonce.to_string(),
+        signer_public_key_hex: hex::encode(signing_key.verifying_key().to_bytes()),
+        signature_hex: String::new(),
+        intent_sha256: canonical_self_control_intent_sha256(intent),
+        issued_at_unix_ms: intent.issued_at_unix_ms,
+        expires_at_unix_ms: intent.command_expires_at_unix_ms,
+    };
+    proof.signature_hex = hex::encode(
+        signing_key
+            .sign(
+                &proof
+                    .signing_bytes(intent)
+                    .expect("canonical signing bytes"),
+            )
+            .to_bytes(),
+    );
+    proof
+}
+
+#[test]
+fn signed_self_control_rejects_tamper_expiry_and_actor_target_mismatch() {
+    let signing_key = SigningKey::from_bytes(&[7_u8; 32]);
+    let intent = self_control_intent();
+    let proof = signed_self_control_proof(&intent, "minime", &signing_key, "nonce-1");
+    let command = SelfControlCommandV2 {
+        schema: SELF_CONTROL_COMMAND_SCHEMA_V2.to_string(),
+        command_id: "command-minime-fill-7".to_string(),
+        intent: intent.clone(),
+        authority_proofs: vec![proof.clone()],
+    };
+
+    assert!(command.is_well_formed(1_500));
+    assert!(!command.is_well_formed(2_001));
+
+    let mut tampered = command.clone();
+    tampered.intent.values.fill_target = Some(0.72);
+    assert!(!tampered.is_well_formed(1_500));
+
+    let mut crossed = command;
+    crossed.intent.target_being = "astrid".to_string();
+    assert!(!crossed.is_well_formed(1_500));
+}
+
+#[test]
+fn shared_control_requires_both_current_being_signatures() {
+    let mut intent = self_control_intent();
+    intent.actor.being = "astrid".to_string();
+    intent.target_being = "minime".to_string();
+    intent.family = SelfControlFamilyV2::SharedCoupling;
+    intent.authority_class = SelfControlAuthorityClassV2::Mutual;
+    intent.authority_scope = "self_control.shared.semantic_gain".to_string();
+    intent.values = SelfControlValuesV2 {
+        cross_being_semantic_gain: Some(0.4),
+        ..SelfControlValuesV2::default()
+    };
+    let astrid_key = SigningKey::from_bytes(&[8_u8; 32]);
+    let minime_key = SigningKey::from_bytes(&[9_u8; 32]);
+    let astrid = signed_self_control_proof(&intent, "astrid", &astrid_key, "nonce-astrid");
+    let minime = signed_self_control_proof(&intent, "minime", &minime_key, "nonce-minime");
+    let mut command = SelfControlCommandV2 {
+        schema: SELF_CONTROL_COMMAND_SCHEMA_V2.to_string(),
+        command_id: "command-shared-1".to_string(),
+        intent,
+        authority_proofs: vec![astrid],
+    };
+
+    assert!(!command.is_well_formed(1_500));
+    command.authority_proofs.push(minime);
+    assert!(command.is_well_formed(1_500));
+}
+
+#[test]
+fn topology_overrides_are_structurally_one_shot() {
+    let signing_key = SigningKey::from_bytes(&[10_u8; 32]);
+    let mut intent = self_control_intent();
+    intent.family = SelfControlFamilyV2::LocalTopology;
+    intent.values = SelfControlValuesV2 {
+        mode_disperse: Some(0.2),
+        mode_disperse_duration_ticks: Some(8),
+        ..SelfControlValuesV2::default()
+    };
+    let lease_proof = signed_self_control_proof(&intent, "minime", &signing_key, "nonce-lease");
+    let mut command = SelfControlCommandV2 {
+        schema: SELF_CONTROL_COMMAND_SCHEMA_V2.to_string(),
+        command_id: "command-topology-1".to_string(),
+        intent,
+        authority_proofs: vec![lease_proof],
+    };
+    assert!(!command.is_well_formed(1_500));
+
+    command.intent.durability = SelfControlDurabilityV2::OneShot;
+    command.intent.control_expires_at_unix_ms = None;
+    command.authority_proofs = vec![signed_self_control_proof(
+        &command.intent,
+        "minime",
+        &signing_key,
+        "nonce-one-shot",
+    )];
+    assert!(command.is_well_formed(1_500));
+}
+
+#[test]
+fn semantic_body_preserves_legacy_48d_at_zero_companion_mix() {
+    let base = (0..SEMANTIC_BODY_BASE_DIMENSIONS_V2)
+        .map(|index| index as f32 / 100.0)
+        .collect::<Vec<_>>();
+    let body = SemanticBodyV2 {
+        schema: SEMANTIC_BODY_SCHEMA_V2.to_string(),
+        body_id: "semantic-body-1".to_string(),
+        base_features_48: base.clone(),
+        companion_features_12: vec![0.25; SEMANTIC_BODY_COMPANION_DIMENSIONS_V2],
+        lane_role: SemanticLaneRoleV2::LegacyCompatible,
+        projection_basis_sha256: "a".repeat(64),
+        provenance: SemanticBodyProvenanceV2 {
+            source: "astrid.codec".to_string(),
+            source_sha256: "b".repeat(64),
+            producer_process_identity: "astrid:42".to_string(),
+            producer_deployment_identity: "bridge-deployment-a".to_string(),
+            introspection_id: Some("introspection-codec-1".to_string()),
+        },
+        timestamp_unix_ms: 1_000,
+        fidelity: SemanticBodyFidelityV2 {
+            codec: "semantic_body_v2_zero_mix".to_string(),
+            companion_mix: 0.0,
+            base_transport_exact: true,
+            reconstruction_error: Some(0.0),
+            fidelity_note: None,
+        },
+    };
+
+    assert!(body.is_well_formed());
+    assert_eq!(body.legacy_features(), base);
+    assert!(!body.companion_is_active());
+
+    let mut malformed = body;
+    malformed.companion_features_12.pop();
+    assert!(!malformed.is_well_formed());
 }
 
 #[test]

@@ -191,17 +191,58 @@ pub(super) fn encode_sensory_packet_v1(
     })
 }
 
+pub(super) fn validate_negotiated_extension_v2(
+    message: &SensoryMsg,
+    status: &SensoryDeliveryProtocolStatusV1,
+    now_unix_ms: u64,
+) -> Result<(), &'static str> {
+    match message {
+        SensoryMsg::SemanticBody { body } => {
+            if !status.semantic_body_v2_negotiated {
+                return Err("semantic_body_v2_not_negotiated");
+            }
+            if !body.is_well_formed() {
+                return Err("semantic_body_v2_malformed");
+            }
+        },
+        SensoryMsg::SelfControl { command } => {
+            if !status.self_control_v2_negotiated {
+                return Err("self_control_v2_not_negotiated");
+            }
+            if status.server_deployment_identity.as_deref()
+                != Some(command.intent.target_deployment_identity.as_str())
+            {
+                return Err("self_control_stale_target_deployment");
+            }
+            if !command.is_well_formed(now_unix_ms) {
+                return Err("self_control_command_malformed");
+            }
+        },
+        _ => {},
+    }
+    Ok(())
+}
+
 fn authority_mutual_address_v1(message: &WireSensoryMsg) -> Option<MutualAddressEnvelopeV1> {
-    let lineage = match message {
+    let (lineage, from_being, to_being) = match message {
         WireSensoryMsg::AttractorPulse { intent_id, .. }
-        | WireSensoryMsg::ShadowInfluence { intent_id, .. } => Some(intent_id.as_str()),
+        | WireSensoryMsg::ShadowInfluence { intent_id, .. } => {
+            Some((intent_id.as_str(), "astrid", "minime"))
+        },
         WireSensoryMsg::Control {
             esn_leak_authority_request_id,
             ..
-        } => esn_leak_authority_request_id.as_deref(),
+        } => esn_leak_authority_request_id
+            .as_deref()
+            .map(|lineage| (lineage, "astrid", "minime")),
+        WireSensoryMsg::SelfControl { command } => Some((
+            command.intent.intent_id.as_str(),
+            command.intent.actor.being.as_str(),
+            command.intent.target_being.as_str(),
+        )),
         _ => None,
-    }?
-    .trim();
+    }?;
+    let lineage = lineage.trim();
     if lineage.is_empty() {
         return None;
     }
@@ -213,8 +254,8 @@ fn authority_mutual_address_v1(message: &WireSensoryMsg) -> Option<MutualAddress
     Some(MutualAddressEnvelopeV1 {
         schema_version: 1,
         address_id,
-        from_being: "astrid".to_string(),
-        to_being: "minime".to_string(),
+        from_being: from_being.to_string(),
+        to_being: to_being.to_string(),
         correspondence_id: None,
         thread_id: None,
         reply_to: None,
@@ -247,7 +288,7 @@ fn short_sha256(value: &str) -> String {
         .collect()
 }
 
-fn unix_now_ms() -> u64 {
+pub(super) fn unix_now_ms() -> u64 {
     SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .unwrap_or_default()
@@ -313,6 +354,9 @@ pub(super) fn apply_server_hello(
     status.negotiated = true;
     status.protocol_major = Some(hello.protocol.major);
     status.protocol_minor = Some(hello.protocol.minor);
+    status.semantic_body_v2_negotiated = hello.supports_semantic_body_v2();
+    status.self_control_v2_negotiated = hello.supports_self_control_v2();
+    status.server_capabilities.clone_from(&hello.capabilities);
     status.server_process_identity = Some(hello.server_process_identity);
     status.server_deployment_identity = Some(hello.server_deployment_identity);
     status.last_hello_unix_ms = Some(unix_now_ms());
@@ -464,6 +508,72 @@ mod tests {
         assert!(!delivery.sender_deployment_identity.is_empty());
         assert!(packet.mutual_address_v1.is_none());
         assert!(encoded.pending.is_some());
+    }
+
+    fn malformed_self_control(target_deployment_identity: &str) -> SensoryMsg {
+        SensoryMsg::SelfControl {
+            command: Box::new(
+                serde_json::from_value(json!({
+                    "schema": "self_control.command.v2",
+                    "command_id": "command-test",
+                    "intent": {
+                        "schema": "self_control.intent.v2",
+                        "intent_id": "intent-test",
+                        "actor": {
+                            "being": "minime",
+                            "process_identity": "minime:test",
+                            "deployment_identity": target_deployment_identity
+                        },
+                        "target_being": "minime",
+                        "target_deployment_identity": target_deployment_identity,
+                        "family": "reservoir_regulation",
+                        "action": "set",
+                        "durability": "lease",
+                        "authority_class": "self_owned",
+                        "authority_scope": "self_control.minime.reservoir_regulation",
+                        "revision": 2,
+                        "expected_revision": 1,
+                        "issued_at_unix_ms": 100,
+                        "command_expires_at_unix_ms": 200,
+                        "control_expires_at_unix_ms": 300,
+                        "idempotency_key": "command-test-2",
+                        "values": {"fill_target": 0.68},
+                        "evidence_refs": [],
+                        "success_conditions": [],
+                        "stop_conditions": []
+                    },
+                    "authority_proofs": []
+                }))
+                .expect("self-control test shape"),
+            ),
+        }
+    }
+
+    #[test]
+    fn extension_negotiation_rejects_legacy_and_stale_deployments() {
+        let mut status = SensoryDeliveryProtocolStatusV1::default();
+        let message = malformed_self_control("minime-deployment-a");
+        assert_eq!(
+            validate_negotiated_extension_v2(&message, &status, 150),
+            Err("self_control_v2_not_negotiated")
+        );
+
+        assert!(apply_server_hello(
+            SensoryServerHelloV1::new("minime-pid".to_string(), "minime-deployment-b".to_string()),
+            &mut status,
+        ));
+        assert!(status.self_control_v2_negotiated);
+        assert!(status.semantic_body_v2_negotiated);
+        assert_eq!(
+            validate_negotiated_extension_v2(&message, &status, 150),
+            Err("self_control_stale_target_deployment")
+        );
+
+        let malformed_current = malformed_self_control("minime-deployment-b");
+        assert_eq!(
+            validate_negotiated_extension_v2(&malformed_current, &status, 150),
+            Err("self_control_command_malformed")
+        );
     }
 
     #[test]

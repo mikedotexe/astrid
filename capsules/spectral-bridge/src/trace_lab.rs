@@ -451,6 +451,40 @@ fn compact_sensory_payload(sensory_msg: &SensoryMsg, fill_pct: f32, lambda1: Opt
         SensoryMsg::Semantic { features, ts_ms } => {
             compact_feature_payload("semantic", features.len(), *ts_ms, fill_pct, lambda1, None)
         },
+        SensoryMsg::SemanticBody { body } => compact_feature_payload(
+            "semantic_body",
+            body.base_features_48.len(),
+            Some(body.timestamp_unix_ms),
+            fill_pct,
+            lambda1,
+            Some(json!({
+                "body_id": body.body_id,
+                "companion_feature_len": body.companion_features_12.len(),
+                "companion_mix": body.fidelity.companion_mix,
+                "lane_role": body.lane_role,
+                "projection_basis_sha256": body.projection_basis_sha256,
+                "base_transport_exact": body.fidelity.base_transport_exact,
+            })),
+        ),
+        SensoryMsg::SelfControl { command } => json!({
+            "kind": "sensory_send_compact_v1",
+            "sensory_kind": "self_control",
+            "fill_pct_at_send": fill_pct,
+            "lambda1_at_send": lambda1,
+            "command_id": command.command_id,
+            "intent_id": command.intent.intent_id,
+            "actor": command.intent.actor.being,
+            "target_being": command.intent.target_being,
+            "family": command.intent.family,
+            "action": command.intent.action,
+            "durability": command.intent.durability,
+            "authority_class": command.intent.authority_class,
+            "revision": command.intent.revision,
+            "expected_revision": command.intent.expected_revision,
+            "control_field_count": command.intent.values.field_count(),
+            "authority_proof_count": command.authority_proofs.len(),
+            "authority_payload_redacted": true,
+        }),
         SensoryMsg::AttractorPulse {
             intent_id,
             label,
@@ -548,6 +582,18 @@ fn authority_class_for_sensory(sensory_msg: &SensoryMsg) -> &'static str {
             "sensory_observation"
         },
         SensoryMsg::Semantic { .. } => "semantic_observation",
+        SensoryMsg::SemanticBody { .. } => "semantic_body_v2_zero_compatible",
+        SensoryMsg::SelfControl { command } => match command.intent.authority_class {
+            astrid_minime_protocol::SelfControlAuthorityClassV2::SelfOwned => {
+                "self_control_signed_self_owned"
+            },
+            astrid_minime_protocol::SelfControlAuthorityClassV2::Mutual => {
+                "self_control_signed_mutual"
+            },
+            astrid_minime_protocol::SelfControlAuthorityClassV2::SafetySupervisor => {
+                "self_control_signed_safety_hold_or_revert"
+            },
+        },
         SensoryMsg::AttractorPulse { .. } | SensoryMsg::ShadowInfluence { .. } => {
             "gated_experimental_microdose"
         },

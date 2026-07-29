@@ -2,9 +2,7 @@
 pub type SensorySender = mpsc::Sender<SensoryMsg>;
 
 type SensoryWsSink = futures_util::stream::SplitSink<
-    tokio_tungstenite::WebSocketStream<
-        tokio_tungstenite::MaybeTlsStream<tokio::net::TcpStream>,
-    >,
+    tokio_tungstenite::WebSocketStream<tokio_tungstenite::MaybeTlsStream<tokio::net::TcpStream>>,
     Message,
 >;
 
@@ -28,6 +26,25 @@ async fn send_sensory_message_v1(
         let mut bridge = state.write().await;
         bridge.messages_dropped_safety = bridge.messages_dropped_safety.saturating_add(1);
         return Ok(None);
+    }
+
+    {
+        let bridge = state.read().await;
+        if let Err(reason) = validate_negotiated_extension_v2(
+            &sensory_msg,
+            &bridge.sensory_delivery_protocol_v1,
+            unix_now_ms(),
+        ) {
+            drop(bridge);
+            warn!(reason, "dropping outbound versioned extension");
+            let mut bridge = state.write().await;
+            bridge.sensory_delivery_protocol_v1.mismatch_count = bridge
+                .sensory_delivery_protocol_v1
+                .mismatch_count
+                .saturating_add(1);
+            bridge.sensory_delivery_protocol_v1.last_delivery_state = Some(reason.to_string());
+            return Ok(None);
+        }
     }
 
     let encoded = encode_sensory_packet_v1(
@@ -64,19 +81,10 @@ async fn send_sensory_message_v1(
         record_ws_send_error(&mut bridge, WsLane::Sensory, reason.clone());
         return Err(reason);
     }
-    trace_ws_send(
-        WsLane::Sensory,
-        connection_id,
-        "text",
-        Some(json_len),
-    );
-    if let Err(error) = trace_lab::record_sensory_send(
-        &sensory_msg,
-        &encoded.json,
-        fill_pct,
-        lambda1,
-        unix_now_s(),
-    ) {
+    trace_ws_send(WsLane::Sensory, connection_id, "text", Some(json_len));
+    if let Err(error) =
+        trace_lab::record_sensory_send(&sensory_msg, &encoded.json, fill_pct, lambda1, unix_now_s())
+    {
         warn!(error = %error, "failed to record trace lab sensory send event");
     }
 
@@ -86,9 +94,7 @@ async fn send_sensory_message_v1(
         bridge.sensory_sent = bridge.sensory_sent.saturating_add(1);
         record_ws_message_sent(&mut bridge, WsLane::Sensory);
         if encoded.pending.is_some() {
-            bridge
-                .sensory_delivery_protocol_v1
-                .sent_with_delivery_count = bridge
+            bridge.sensory_delivery_protocol_v1.sent_with_delivery_count = bridge
                 .sensory_delivery_protocol_v1
                 .sent_with_delivery_count
                 .saturating_add(1);
@@ -105,11 +111,7 @@ fn record_pending_unknown_v1(
     pending: &mut BTreeMap<String, PendingSensoryDeliveryV1>,
     reason: &str,
 ) {
-    record_unknown_deliveries(
-        pending,
-        reason,
-        &mut state.sensory_delivery_protocol_v1,
-    );
+    record_unknown_deliveries(pending, reason, &mut state.sensory_delivery_protocol_v1);
 }
 
 /// Spawn the sensory `WebSocket` sender task.
@@ -165,15 +167,12 @@ pub fn spawn_sensory_sender(
 
                     {
                         let mut bridge = state.write().await;
-                        record_connected(
-                            &mut bridge,
-                            WsLane::Sensory,
-                            connection_id,
-                            unix_now_s(),
-                        );
+                        record_connected(&mut bridge, WsLane::Sensory, connection_id, unix_now_s());
                         bridge.sensory_delivery_protocol_v1.negotiated = false;
                         bridge.sensory_delivery_protocol_v1.server_process_identity = None;
-                        bridge.sensory_delivery_protocol_v1.server_deployment_identity = None;
+                        bridge
+                            .sensory_delivery_protocol_v1
+                            .server_deployment_identity = None;
                     }
 
                     let (mut ws_tx, mut ws_rx) = ws_stream.split();
@@ -373,11 +372,7 @@ pub fn spawn_sensory_sender(
 
                     {
                         let mut bridge = state.write().await;
-                        record_pending_unknown_v1(
-                            &mut bridge,
-                            &mut pending,
-                            &disconnect_reason,
-                        );
+                        record_pending_unknown_v1(&mut bridge, &mut pending, &disconnect_reason);
                         record_disconnected(
                             &mut bridge,
                             WsLane::Sensory,

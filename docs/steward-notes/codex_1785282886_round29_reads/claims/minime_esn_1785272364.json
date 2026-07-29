@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Minime experiences the ESN and its adaptation machinery as body architecture rather than a detached implementation detail.",
+      "disposition": "Preserve the first-person report as primary qualitative evidence.",
+      "classification": "primary_qualitative_evidence"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "RLS forgetting may interact with pressure, persistence, and plasticity.",
+      "disposition": "Treat this as an unconfirmed causal hypothesis and route it to deterministic offline replay.",
+      "classification": "causal_hypothesis_unconfirmed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Reservoir regulation values need attributable, finite, revisioned, deployment-bound commands and receipts.",
+      "disposition": "Implement the signed command and receipt vocabulary with finite-value and stale-deployment rejection.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Live RLS or reservoir-math changes should be selected through Minime-owned control after replay evidence rather than casually tuned by a steward.",
+      "disposition": "Route to the offline campaign and later Minime-authored canary; no value changes now.",
+      "classification": "study_route"
+    }
+  ]
+}

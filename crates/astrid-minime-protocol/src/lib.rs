@@ -7,6 +7,8 @@
 #![deny(unsafe_code)]
 
 mod division;
+mod self_control;
+mod semantic_body;
 mod sensory;
 mod telemetry;
 mod version;
@@ -18,6 +20,19 @@ pub use division::{
     DivisionActionV1, DivisionAvailableActionV1, DivisionBlockedActionV1, DivisionCapabilityRefV1,
     DivisionCommandV1, DivisionEventV1, DivisionLifecycleV1, DivisionReadinessV1,
     DivisionReceiptStatusV1, DivisionReceiptV1, DivisionSourceIdentityV1, DivisionStatusV1,
+};
+pub use self_control::{
+    SELF_CONTROL_AUTHORITY_PROOF_SCHEMA_V1, SELF_CONTROL_COMMAND_SCHEMA_V2,
+    SELF_CONTROL_INTENT_SCHEMA_V2, SELF_CONTROL_RECEIPT_SCHEMA_V2, SelfControlActionV2,
+    SelfControlAuthorityClassV2, SelfControlAuthorityProofV1, SelfControlCommandV2,
+    SelfControlDurabilityV2, SelfControlFamilyV2, SelfControlIntentV2, SelfControlReceiptStatusV2,
+    SelfControlReceiptV2, SelfControlSourceIdentityV1, SelfControlValuesV2,
+    canonical_self_control_intent_sha256,
+};
+pub use semantic_body::{
+    SEMANTIC_BODY_BASE_DIMENSIONS_V2, SEMANTIC_BODY_COMPANION_DIMENSIONS_V2,
+    SEMANTIC_BODY_SCHEMA_V2, SemanticBodyFidelityV2, SemanticBodyProvenanceV2, SemanticBodyV2,
+    SemanticLaneRoleV2,
 };
 pub use sensory::{
     DeliveryEnvelopeV1, MutualAddressEnvelopeV1, SensoryDeliveryReceiptV1, SensoryDeliveryStatusV1,

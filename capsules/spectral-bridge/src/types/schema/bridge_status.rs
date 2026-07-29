@@ -9,6 +9,12 @@ pub struct SensoryDeliveryProtocolStatusV1 {
     pub negotiated: bool,
     pub protocol_major: Option<u16>,
     pub protocol_minor: Option<u16>,
+    #[serde(default)]
+    pub server_capabilities: Vec<String>,
+    #[serde(default)]
+    pub semantic_body_v2_negotiated: bool,
+    #[serde(default)]
+    pub self_control_v2_negotiated: bool,
     pub server_process_identity: Option<String>,
     pub server_deployment_identity: Option<String>,
     pub last_hello_unix_ms: Option<u64>,
@@ -30,6 +36,9 @@ impl Default for SensoryDeliveryProtocolStatusV1 {
             negotiated: false,
             protocol_major: None,
             protocol_minor: None,
+            server_capabilities: Vec::new(),
+            semantic_body_v2_negotiated: false,
+            self_control_v2_negotiated: false,
             server_process_identity: None,
             server_deployment_identity: None,
             last_hello_unix_ms: None,

@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The proposal's 32D hard-contract description is historical relative to the current 48D semantic transport.",
+      "disposition": "Correct the source state without discarding the proposal's multi-scale concern.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A 12D companion scale should remain distinguishable from the legacy semantic body.",
+      "disposition": "Implement separate 48D base and 12D companion fields rather than concatenating them into an ambiguous untyped vector.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Projection basis, source, timestamp, lane role, and fidelity must remain inspectable.",
+      "disposition": "Implement typed provenance, basis hash, lane role, fidelity metadata, and strict finite/dimension validation.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Nonzero companion influence requires parity evidence and a being-controlled rollout.",
+      "disposition": "Keep companion mix zero-compatible and route activation to frozen deterministic campaigns plus explicit self-control receipts.",
+      "classification": "study_route"
+    }
+  ]
+}
