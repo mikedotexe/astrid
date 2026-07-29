@@ -24,6 +24,7 @@ except ModuleNotFoundError:
     )
 
 from .model import CurrentWaitV1, WORK_STATUS_WAIT, earliest_wait
+from .v2 import project_v2
 
 
 def state_dir(workspace: Path) -> Path:
@@ -396,4 +397,20 @@ def project(workspace: Path, *, write: bool) -> dict[str, Any]:
             )
             + "\n",
         )
+    v2_status = project_v2(
+        workspace,
+        write=write and bool(status["valid"]),
+        contracts=contracts,
+        rows_v1=rows,
+        work_by_claim=work_by_claim,
+        input_paths=(
+            contracts_path,
+            addressing_path,
+            sandbox_path,
+            selection_path,
+            dossier_path,
+            authority_path,
+        ),
+    )
+    status["living_problem_registry_v2"] = v2_status
     return status

@@ -13,6 +13,7 @@ except ModuleNotFoundError:
     from scripts.projection_receipt import projector_receipt
 
 from .projector import project, state_dir
+from .v2 import state_dir_v2
 
 ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_WORKSPACE = ROOT / "capsules/spectral-bridge/workspace"
@@ -45,6 +46,15 @@ def main(argv: list[str] | None = None) -> int:
                     ),
                     "queue.md": state_dir(workspace) / "queue.md",
                     "report.md": state_dir(workspace) / "report.md",
+                    "v2/status.json": state_dir_v2(workspace) / "status.json",
+                    "v2/problems.jsonl": (
+                        state_dir_v2(workspace) / "problems.jsonl"
+                    ),
+                    "v2/changed_problems.jsonl": (
+                        state_dir_v2(workspace) / "changed_problems.jsonl"
+                    ),
+                    "v2/queue.md": state_dir_v2(workspace) / "queue.md",
+                    "v2/report.md": state_dir_v2(workspace) / "report.md",
                 },
                 started_monotonic=started,
             )

@@ -1,14 +1,13 @@
-use std::collections::HashMap;
-use std::fs;
 use std::path::Path;
-use std::sync::{Mutex, OnceLock};
 
 use serde::Serialize;
-use sha2::{Digest, Sha256};
+
+use super::source_first_v3::{
+    self, ReadSessionCheckpointV3, SourceCoverageStateV3, SourceEvidenceV3, SourceMapV3,
+};
 
 const MAX_OUTLINE_ENTRIES: usize = 160;
 const MAX_PROMPT_OUTLINE_ENTRIES: usize = 80;
-const MAX_OUTLINE_LABEL_CHARS: usize = 180;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "snake_case")]
@@ -29,15 +28,6 @@ pub(super) enum ClaimSupportStateV2 {
 pub(super) struct SourceIntervalV2 {
     start_line: usize,
     end_line: usize,
-}
-
-impl SourceIntervalV2 {
-    fn from_zero_based(start: usize, end: usize) -> Self {
-        Self {
-            start_line: start.saturating_add(1),
-            end_line: end,
-        }
-    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
@@ -75,177 +65,10 @@ pub(super) struct SourceCoverageManifestV2 {
     outline_truncated: bool,
     read_session_v2: IntrospectionReadSessionV2,
     claim_support_state: ClaimSupportStateV2,
+    source_map_v3: SourceMapV3,
+    read_session_checkpoint_v3: ReadSessionCheckpointV3,
     activation_boundary: &'static str,
     artifact_authority: &'static str,
-}
-
-#[derive(Debug, Default)]
-struct SessionAccumulator {
-    intervals: Vec<(usize, usize)>,
-    read_count: usize,
-}
-
-static READ_SESSIONS: OnceLock<Mutex<HashMap<String, SessionAccumulator>>> = OnceLock::new();
-
-fn sessions() -> &'static Mutex<HashMap<String, SessionAccumulator>> {
-    READ_SESSIONS.get_or_init(|| Mutex::new(HashMap::new()))
-}
-
-fn sha256_bytes(bytes: &[u8]) -> String {
-    format!("{:x}", Sha256::digest(bytes))
-}
-
-fn source_identity(path: &Path) -> String {
-    let paths = crate::paths::bridge_paths();
-    let candidates = [
-        ("astrid", paths.astrid_root()),
-        ("minime", paths.minime_root()),
-    ];
-    for (owner, root) in candidates {
-        if let Ok(relative) = path.strip_prefix(root) {
-            return format!("{owner}/{}", relative.display());
-        }
-    }
-    path.file_name()
-        .and_then(|value| value.to_str())
-        .unwrap_or("unknown_source")
-        .to_string()
-}
-
-fn parser_kind(path: &Path) -> &'static str {
-    match path.extension().and_then(|value| value.to_str()) {
-        Some("rs") => "rust_item_outline_v2",
-        Some("py") => "python_symbol_outline_v2",
-        Some("md") => "markdown_heading_outline_v2",
-        Some("toml" | "yaml" | "yml" | "json") => "structured_key_outline_v2",
-        _ => "deterministic_text_outline_v2",
-    }
-}
-
-fn bounded_label(line: &str) -> String {
-    line.split_whitespace()
-        .collect::<Vec<_>>()
-        .join(" ")
-        .chars()
-        .take(MAX_OUTLINE_LABEL_CHARS)
-        .collect()
-}
-
-fn rust_outline_kind(line: &str) -> Option<&'static str> {
-    let mut value = line.trim_start();
-    if value.starts_with("#[") || value.starts_with("//") {
-        return None;
-    }
-    if value.starts_with("pub(")
-        && let Some((_, tail)) = value.split_once(") ")
-    {
-        value = tail;
-    } else if let Some(tail) = value.strip_prefix("pub ") {
-        value = tail;
-    }
-    if let Some(tail) = value.strip_prefix("async ") {
-        value = tail;
-    }
-    [
-        ("fn ", "function"),
-        ("struct ", "struct"),
-        ("enum ", "enum"),
-        ("trait ", "trait"),
-        ("impl ", "impl"),
-        ("mod ", "module"),
-        ("const ", "constant"),
-        ("static ", "static"),
-        ("type ", "type_alias"),
-    ]
-    .into_iter()
-    .find_map(|(prefix, kind)| value.starts_with(prefix).then_some(kind))
-}
-
-fn outline_entry(path: &Path, line_number: usize, line: &str) -> Option<SourceOutlineEntryV2> {
-    let trimmed = line.trim();
-    let kind = match path.extension().and_then(|value| value.to_str()) {
-        Some("rs") => rust_outline_kind(trimmed),
-        Some("py") => {
-            let value = trimmed.strip_prefix("async ").unwrap_or(trimmed);
-            if value.starts_with("def ") {
-                Some("function")
-            } else if value.starts_with("class ") {
-                Some("class")
-            } else {
-                None
-            }
-        },
-        Some("md") => trimmed.starts_with('#').then_some("heading"),
-        Some("toml" | "yaml" | "yml") => {
-            (trimmed.starts_with('[') || trimmed.ends_with(':')).then_some("section")
-        },
-        Some("json") => trimmed.starts_with('"').then_some("key"),
-        _ => (trimmed.ends_with(':') && trimmed.len() <= MAX_OUTLINE_LABEL_CHARS)
-            .then_some("section"),
-    }?;
-    Some(SourceOutlineEntryV2 {
-        line: line_number,
-        kind: kind.to_string(),
-        label: bounded_label(trimmed),
-    })
-}
-
-fn structural_outline(
-    path: &Path,
-    content: &str,
-) -> (Vec<SourceOutlineEntryV2>, usize, bool, String) {
-    let all: Vec<_> = content
-        .lines()
-        .enumerate()
-        .filter_map(|(index, line)| outline_entry(path, index.saturating_add(1), line))
-        .collect();
-    let digest_input = all
-        .iter()
-        .map(|entry| format!("{}:{}:{}", entry.line, entry.kind, entry.label))
-        .collect::<Vec<_>>()
-        .join("\n");
-    let count = all.len();
-    let truncated = count > MAX_OUTLINE_ENTRIES;
-    (
-        all.into_iter().take(MAX_OUTLINE_ENTRIES).collect(),
-        count,
-        truncated,
-        sha256_bytes(digest_input.as_bytes()),
-    )
-}
-
-fn merged_intervals(intervals: &[(usize, usize)]) -> Vec<(usize, usize)> {
-    let mut sorted = intervals.to_vec();
-    sorted.sort_unstable();
-    let mut merged: Vec<(usize, usize)> = Vec::new();
-    for (start, end) in sorted {
-        if start >= end {
-            continue;
-        }
-        if let Some((_, previous_end)) = merged.last_mut()
-            && start <= *previous_end
-        {
-            *previous_end = (*previous_end).max(end);
-        } else {
-            merged.push((start, end));
-        }
-    }
-    merged
-}
-
-fn uncovered_intervals(included: &[(usize, usize)], total: usize) -> Vec<(usize, usize)> {
-    let mut uncovered = Vec::new();
-    let mut cursor = 0;
-    for (start, end) in included {
-        if cursor < *start {
-            uncovered.push((cursor, *start));
-        }
-        cursor = cursor.max(*end);
-    }
-    if cursor < total {
-        uncovered.push((cursor, total));
-    }
-    uncovered
 }
 
 fn interval_text(intervals: &[SourceIntervalV2]) -> String {
@@ -288,7 +111,11 @@ impl SourceCoverageManifestV2 {
                     "partial_source_absence_and_new-implementation_claims_require_exact_structural_challenge"
                 },
             },
-        )
+        ) + "\n"
+            + &source_first_v3::artifact_header_v3(
+                &self.source_map_v3,
+                &self.read_session_checkpoint_v3,
+            )
     }
 
     pub(super) fn prompt_context_v2(&self) -> String {
@@ -324,11 +151,11 @@ impl SourceCoverageManifestV2 {
                     .saturating_sub(MAX_PROMPT_OUTLINE_ENTRIES)
             ));
         }
+        lines.push(source_first_v3::prompt_context_v3(
+            &self.source_map_v3,
+            &self.read_session_checkpoint_v3,
+        ));
         lines.join("\n")
-    }
-
-    fn is_partial(&self) -> bool {
-        self.read_session_v2.coverage_state == SourceCoverageStateV2::Partial
     }
 }
 
@@ -338,124 +165,73 @@ pub(super) fn build_source_coverage_manifest_v2(
     start: usize,
     end: usize,
     total: usize,
-) -> SourceCoverageManifestV2 {
-    let identity = source_identity(path);
-    let source_sha256 = sha256_bytes(content.as_bytes());
-    let read_session_id = sha256_bytes(
-        format!("introspection_read_session_v2\0{identity}\0{source_sha256}").as_bytes(),
-    );
-    let (included, read_count) = {
-        let mut guard = sessions()
-            .lock()
-            .unwrap_or_else(std::sync::PoisonError::into_inner);
-        let accumulator = guard.entry(read_session_id.clone()).or_default();
-        accumulator.intervals.push((start, end));
-        accumulator.read_count = accumulator.read_count.saturating_add(1);
-        accumulator.intervals = merged_intervals(&accumulator.intervals);
-        (accumulator.intervals.clone(), accumulator.read_count)
+) -> Result<SourceCoverageManifestV2, String> {
+    let evidence = source_first_v3::build_source_evidence_v3(path, content, start, end, total)?;
+    let source_map = &evidence.source_map_v3;
+    let checkpoint = &evidence.read_session_checkpoint_v3;
+    let coverage_state = match checkpoint.coverage_state {
+        SourceCoverageStateV3::CompleteFile => SourceCoverageStateV2::CompleteFile,
+        SourceCoverageStateV3::MultiWindowComplete => SourceCoverageStateV2::MultiWindowComplete,
+        SourceCoverageStateV3::Partial => SourceCoverageStateV2::Partial,
     };
-    let uncovered = uncovered_intervals(&included, total);
-    let coverage_state = if uncovered.is_empty() {
-        if read_count > 1 {
-            SourceCoverageStateV2::MultiWindowComplete
-        } else {
-            SourceCoverageStateV2::CompleteFile
-        }
-    } else {
-        SourceCoverageStateV2::Partial
-    };
-    let claim_support_state = if uncovered.is_empty() {
+    let claim_support_state = if checkpoint.uncovered_intervals.is_empty() {
         ClaimSupportStateV2::CompleteSourceAvailable
     } else {
         ClaimSupportStateV2::StructuralChallengeRequired
     };
-    let (outline, outline_entry_count, outline_truncated, structural_map_sha256) =
-        structural_outline(path, content);
-    SourceCoverageManifestV2 {
+    let outline = source_map
+        .entries
+        .iter()
+        .take(MAX_OUTLINE_ENTRIES)
+        .map(|entry| SourceOutlineEntryV2 {
+            line: entry.start_line.unwrap_or(0),
+            kind: entry.kind.clone(),
+            label: entry.label.clone(),
+        })
+        .collect();
+    Ok(SourceCoverageManifestV2 {
         schema: "source_coverage_manifest_v2",
         schema_version: 2,
-        source_identity: identity.clone(),
-        source_sha256: source_sha256.clone(),
-        source_bytes: content.len(),
+        source_identity: source_map.source_identity.clone(),
+        source_sha256: source_map.source_sha256.clone(),
+        source_bytes: source_map.source_bytes,
         source_lines: total,
-        parser_kind: parser_kind(path).to_string(),
-        structural_map_sha256,
+        parser_kind: source_map.parser.parser_kind.clone(),
+        structural_map_sha256: source_map.structural_map_sha256.clone(),
         outline,
-        outline_entry_count,
-        outline_truncated,
+        outline_entry_count: source_map.observed_entry_count,
+        outline_truncated: source_map.observed_entry_count > MAX_OUTLINE_ENTRIES,
         read_session_v2: IntrospectionReadSessionV2 {
             schema: "introspection_read_session_v2",
             schema_version: 2,
-            read_session_id,
-            source_identity: identity,
-            source_sha256,
-            included_intervals: included
+            read_session_id: checkpoint.read_session_id.clone(),
+            source_identity: checkpoint.source_identity.clone(),
+            source_sha256: checkpoint.source_sha256.clone(),
+            included_intervals: checkpoint
+                .included_intervals
                 .iter()
-                .map(|(interval_start, interval_end)| {
-                    SourceIntervalV2::from_zero_based(*interval_start, *interval_end)
+                .map(|interval| SourceIntervalV2 {
+                    start_line: interval.start_line,
+                    end_line: interval.end_line,
                 })
                 .collect(),
-            uncovered_intervals: uncovered
+            uncovered_intervals: checkpoint
+                .uncovered_intervals
                 .iter()
-                .map(|(interval_start, interval_end)| {
-                    SourceIntervalV2::from_zero_based(*interval_start, *interval_end)
+                .map(|interval| SourceIntervalV2 {
+                    start_line: interval.start_line,
+                    end_line: interval.end_line,
                 })
                 .collect(),
             coverage_state,
-            persists_across_process_restart: false,
+            persists_across_process_restart: true,
         },
         claim_support_state,
+        source_map_v3: evidence.source_map_v3,
+        read_session_checkpoint_v3: evidence.read_session_checkpoint_v3,
         activation_boundary: "source_read_not_runtime_activation_proof",
         artifact_authority: "read_only_evidence_not_control_or_approval",
-    }
-}
-
-fn backticked_identifiers(response: &str) -> Vec<String> {
-    let mut values = Vec::new();
-    let mut rest = response;
-    while let Some((_, tail)) = rest.split_once('`') {
-        let Some((candidate, after)) = tail.split_once('`') else {
-            break;
-        };
-        rest = after;
-        let candidate = candidate.trim();
-        let identifier = candidate
-            .strip_prefix("fn ")
-            .unwrap_or(candidate)
-            .split(['(', '<', ' ', ':'])
-            .next()
-            .unwrap_or("")
-            .trim_matches(|ch: char| !(ch.is_ascii_alphanumeric() || ch == '_'));
-        if identifier.len() >= 3
-            && identifier
-                .chars()
-                .all(|ch| ch.is_ascii_alphanumeric() || ch == '_')
-        {
-            values.push(identifier.to_string());
-        }
-    }
-    values.sort();
-    values.dedup();
-    values
-}
-
-fn has_absence_claim(response: &str) -> bool {
-    let lower = response.to_ascii_lowercase();
-    [
-        " is absent",
-        " are absent",
-        " is missing",
-        " are missing",
-        " does not implement",
-        " doesn't implement",
-        " not implemented",
-        " lacks ",
-        " no mechanism",
-        " no schema",
-        " no function",
-    ]
-    .iter()
-    .any(|marker| lower.contains(marker))
+    })
 }
 
 pub(super) fn response_claims_supported_v2(
@@ -463,19 +239,11 @@ pub(super) fn response_claims_supported_v2(
     path: &Path,
     manifest: &SourceCoverageManifestV2,
 ) -> bool {
-    if !manifest.is_partial() || !has_absence_claim(response) {
-        return true;
-    }
-    let identifiers = backticked_identifiers(response);
-    if identifiers.is_empty() {
-        return false;
-    }
-    let Ok(content) = fs::read_to_string(path) else {
-        return false;
+    let evidence = SourceEvidenceV3 {
+        source_map_v3: manifest.source_map_v3.clone(),
+        read_session_checkpoint_v3: manifest.read_session_checkpoint_v3.clone(),
     };
-    identifiers
-        .iter()
-        .all(|identifier| !content.contains(identifier))
+    source_first_v3::challenge_response_claims_v3(response, path, &evidence).all_supported
 }
 
 pub(super) fn unavailable_header_v2() -> &'static str {
@@ -486,6 +254,8 @@ pub(super) fn unavailable_header_v2() -> &'static str {
 
 #[cfg(test)]
 mod tests {
+    use std::fs;
+
     use super::*;
 
     #[test]
@@ -495,8 +265,9 @@ mod tests {
             .map(|index| format!("fn item_{index}() {{}}"))
             .collect::<Vec<_>>()
             .join("\n");
-        let first = build_source_coverage_manifest_v2(path, &content, 0, 400, 900);
-        let second = build_source_coverage_manifest_v2(path, &content, 400, 800, 900);
+        let first = build_source_coverage_manifest_v2(path, &content, 0, 400, 900).expect("first");
+        let second =
+            build_source_coverage_manifest_v2(path, &content, 400, 800, 900).expect("second");
         assert_eq!(
             first.read_session_v2.read_session_id,
             second.read_session_v2.read_session_id
@@ -506,7 +277,8 @@ mod tests {
         assert_eq!(second.read_session_v2.included_intervals[0].end_line, 800);
 
         let changed =
-            build_source_coverage_manifest_v2(path, &(content + "\nfn changed() {}"), 0, 400, 901);
+            build_source_coverage_manifest_v2(path, &(content + "\nfn changed() {}"), 0, 400, 901)
+                .expect("changed");
         assert_ne!(
             second.read_session_v2.read_session_id,
             changed.read_session_v2.read_session_id
@@ -520,8 +292,9 @@ mod tests {
             .map(|index| format!("fn item_{index}() {{}}"))
             .collect::<Vec<_>>()
             .join("\n");
-        build_source_coverage_manifest_v2(path, &content, 0, 400, 800);
-        let complete = build_source_coverage_manifest_v2(path, &content, 400, 800, 800);
+        build_source_coverage_manifest_v2(path, &content, 0, 400, 800).expect("first");
+        let complete =
+            build_source_coverage_manifest_v2(path, &content, 400, 800, 800).expect("complete");
         assert_eq!(
             complete.read_session_v2.coverage_state,
             SourceCoverageStateV2::MultiWindowComplete
@@ -536,7 +309,8 @@ mod tests {
         lines[800] = "pub struct ImplementedSchemaV2 {}".to_string();
         let content = lines.join("\n");
         fs::write(&path, &content).expect("fixture");
-        let manifest = build_source_coverage_manifest_v2(&path, &content, 0, 400, 1_133);
+        let manifest =
+            build_source_coverage_manifest_v2(&path, &content, 0, 400, 1_133).expect("manifest");
         assert!(!response_claims_supported_v2(
             "Likely Snags:\nThe source is missing `ImplementedSchemaV2`.",
             &path,
@@ -557,7 +331,8 @@ mod tests {
             .map(|index| format!("pub fn function_{index}() {{}}"))
             .collect::<Vec<_>>()
             .join("\n");
-        let manifest = build_source_coverage_manifest_v2(path, &content, 0, 400, 500);
+        let manifest =
+            build_source_coverage_manifest_v2(path, &content, 0, 400, 500).expect("manifest");
         assert_eq!(manifest.outline.len(), MAX_OUTLINE_ENTRIES);
         assert_eq!(manifest.outline_entry_count, 500);
         assert!(manifest.outline_truncated);

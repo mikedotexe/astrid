@@ -353,6 +353,10 @@ class StewardProjectionTests(unittest.TestCase):
             "diagnostics/living_problem_registry_v1/problems.jsonl",
             steps["living_problem_registry"].outputs,
         )
+        self.assertIn(
+            "diagnostics/living_problem_registry_v2/problems.jsonl",
+            steps["living_problem_registry"].outputs,
+        )
         self.assertEqual(
             steps["experiential_epistemics"].dependencies,
             (

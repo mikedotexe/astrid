@@ -10,8 +10,10 @@ import unittest
 
 try:
     from living_problem_registry.projector import project, state_dir
+    from living_problem_registry.v2 import state_dir_v2
 except ModuleNotFoundError:
     from scripts.living_problem_registry.projector import project, state_dir
+    from scripts.living_problem_registry.v2 import state_dir_v2
 
 
 AUTHORITY = {
@@ -173,6 +175,37 @@ class LivingProblemRegistryTests(unittest.TestCase):
             "claim_disposition",
         )
         self.assertFalse(rows["contract_1000000004"]["felt_closed"])
+        rows_v2 = {
+            row["problem_id"]: row
+            for row in (
+                json.loads(line)
+                for line in (
+                    state_dir_v2(self.workspace) / "problems.jsonl"
+                ).read_text(encoding="utf-8").splitlines()
+            )
+        }
+        self.assertEqual(
+            rows_v2["contract_1000000001"]["current_wait"],
+            "source_read",
+        )
+        self.assertEqual(
+            rows_v2["contract_1000000003"]["current_wait"],
+            "closure",
+        )
+        self.assertEqual(
+            rows_v2["contract_1000000003"]["lifecycle_state"],
+            "closed",
+        )
+        self.assertFalse(
+            rows_v2["contract_1000000001"]["authority"][
+                "registry_schedules_work"
+            ]
+        )
+        self.assertFalse(
+            rows_v2["contract_1000000001"]["authority"][
+                "registry_grants_authority"
+            ]
+        )
 
     def test_second_identical_projection_has_no_changed_packets(self) -> None:
         self.seed()
@@ -181,6 +214,12 @@ class LivingProblemRegistryTests(unittest.TestCase):
         self.assertEqual(status["changed_problem_count"], 0)
         self.assertEqual(
             (state_dir(self.workspace) / "changed_problems.jsonl").read_text(),
+            "",
+        )
+        self.assertEqual(
+            (
+                state_dir_v2(self.workspace) / "changed_problems.jsonl"
+            ).read_text(),
             "",
         )
 

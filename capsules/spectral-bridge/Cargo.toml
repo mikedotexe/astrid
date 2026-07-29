@@ -23,11 +23,15 @@ path = "src/main.rs"
 
 [dependencies]
 anyhow = "1"
+astrid-capabilities = { path = "../../crates/astrid-capabilities" }
+astrid-core = { path = "../../crates/astrid-core" }
 astrid-minime-protocol = { path = "../../crates/astrid-minime-protocol" }
 chrono = { version = "0.4", features = ["clock"] }
 clap = { version = "4.5", features = ["derive", "env"] }
+ed25519-dalek = { version = "2.1", features = ["rand_core", "zeroize"] }
 futures-util = "0.3"
 fs2 = "0.4"
+hex = "0.4"
 hound = "3.5.1"
 nalgebra = "0.34.2"
 prime_esn_wasm = { path = "../../../prime_esn_wasm", default-features = false }
@@ -36,17 +40,23 @@ rusqlite = { version = "0.32", features = ["bundled"] }
 rustfft = "6.4.1"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
+serde_yaml = "0.9"
 tokio = { version = "1", features = ["rt-multi-thread", "macros", "sync", "time", "net", "signal", "io-util", "io-std"] }
 reqwest = { version = "0.12", default-features = false, features = ["blocking", "json", "rustls-tls"] }
 sha2 = "0.10"
 tokio-tungstenite = "0.21"
+toml = "0.8"
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+tree-sitter = "0.25"
+tree-sitter-python = "0.25"
+tree-sitter-rust = "0.24"
 rascii_art = { path = "../../../RASCII", default-features = false }
 image = "0.25.5"
 zstd = "0.13"
 
 [dev-dependencies]
+astrid-crypto = { path = "../../crates/astrid-crypto" }
 tempfile = "3"
 trybuild = "1"
 

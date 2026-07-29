@@ -5,6 +5,8 @@ use crate::paths::{BridgePaths, bridge_paths};
 
 #[path = "introspect/source_first_v2.rs"]
 mod source_first_v2;
+#[path = "introspect/source_first_v3/mod.rs"]
+mod source_first_v3;
 
 const INTROSPECT_WINDOW_LINES: usize = 400;
 const INTROSPECT_MAX_FILE_BYTES: u64 = 2_000_000;
@@ -1213,8 +1215,9 @@ pub(super) fn read_introspect_window(
     // requested), live, never cached.
     let xref = within_file_xrefs(&all_lines, start, end);
     let cross = cross_file_xrefs(&canonical, &all_lines, start, end);
-    let source_coverage_manifest_v2 =
-        source_first_v2::build_source_coverage_manifest_v2(&canonical, &content, start, end, total);
+    let source_coverage_manifest_v2 = source_first_v2::build_source_coverage_manifest_v2(
+        &canonical, &content, start, end, total,
+    )?;
     let coverage = source_coverage_manifest_v2.prompt_context_v2();
 
     let text = format!("{header}{coverage}\n{page}{xref}{cross}{footer}");
@@ -1996,7 +1999,10 @@ mod tests {
         assert!(header.contains("Source read session:"));
         assert!(header.contains("Source structural map SHA-256:"));
         assert!(header.contains("Source uncovered intervals:"));
+        assert!(header.contains("Source map schema: source_map_v3"));
+        assert!(header.contains("Source V3 persistence: owner_only_source_hash_bound"));
         assert!(window.text.contains("Whole-file structural outline:"));
+        assert!(window.text.contains("Persistent Source Map V3"));
         assert!(window.text.contains("Binding claim rule:"));
     }
 
