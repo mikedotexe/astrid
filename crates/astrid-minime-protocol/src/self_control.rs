@@ -1,3 +1,5 @@
+use std::collections::BTreeMap;
+
 use ed25519_dalek::{Signature, Verifier as _, VerifyingKey};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -82,7 +84,19 @@ pub struct SelfControlValuesV2 {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub semantic_companion_mix: Option<f32>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub generation_noise: Option<f32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub codec_dimension_weights: Option<BTreeMap<String, f32>>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub warmth_intensity: Option<f32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub hebbian_learning_rate_scale: Option<f32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub semantic_intake_gain: Option<f32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub peer_journal_visible: Option<bool>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub peer_breathing_coupled: Option<bool>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub receptivity: Option<f32>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -188,11 +202,19 @@ impl SelfControlValuesV2 {
                 .checkpoint_annotation
                 .as_deref()
                 .is_none_or(valid_bounded_text)
+            && self.codec_dimension_weights.as_ref().is_none_or(|weights| {
+                !weights.is_empty()
+                    && weights.len() <= 64
+                    && weights
+                        .iter()
+                        .all(|(name, value)| valid_identifier(name) && value.is_finite())
+            })
     }
 
     #[must_use]
     pub fn requires_one_shot(&self) -> bool {
-        self.esn_leak_override.is_some()
+        self.porosity.is_some()
+            || self.esn_leak_override.is_some()
             || self.esn_leak_override_ticks.is_some()
             || self.mode_disperse.is_some()
             || self.mode_disperse_duration_ticks.is_some()
@@ -205,6 +227,7 @@ impl SelfControlValuesV2 {
         self.shared_sensory_admission.is_some()
             || self.shadow_influence_gain.is_some()
             || self.cross_being_semantic_gain.is_some()
+            || self.peer_breathing_coupled == Some(true)
     }
 }
 
@@ -482,6 +505,8 @@ pub struct SelfControlReceiptV2 {
     pub clamped_values: SelfControlValuesV2,
     pub applied_values: SelfControlValuesV2,
     pub previous_values: SelfControlValuesV2,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub previous_automatic_fields: Vec<String>,
     pub received_at_unix_ms: u64,
     pub completed_at_unix_ms: u64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -512,6 +537,7 @@ impl SelfControlReceiptV2 {
             && self.clamped_values.is_well_formed()
             && self.applied_values.is_well_formed()
             && self.previous_values.is_well_formed()
+            && list_is_bounded(&self.previous_automatic_fields)
             && !self.felt_effect_established
     }
 }

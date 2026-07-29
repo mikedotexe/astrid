@@ -12,6 +12,7 @@ mod semantic_body;
 mod sensory;
 mod telemetry;
 mod version;
+mod volition;
 
 pub use division::{
     DIVISION_ACTION_AVAILABILITY_SCHEMA_V1, DIVISION_COMMAND_SCHEMA_V1, DIVISION_COMMIT_SCOPE_V1,
@@ -57,4 +58,20 @@ pub use telemetry::{
 pub use version::{
     CompatibilityStatus, PROTOCOL_MAJOR, PROTOCOL_MINOR, PROTOCOL_NAME, ProtocolHeaderV1,
     TELEMETRY_PROTOCOL_MINOR, classify_protocol, current_protocol, telemetry_protocol,
+};
+pub use volition::{
+    BEING_CONCERN_SCHEMA_V1, BEING_UTTERANCE_ATTESTATION_SCHEMA_V1, BeingConcernStatusV1,
+    BeingConcernV1, BeingUtteranceAttestationV1, DELEGATED_CAPABILITY_BINDING_SCHEMA_V1,
+    DELEGATED_CAPABILITY_USAGE_SCHEMA_V1, DelegatedCapabilityBindingV1, DelegatedCapabilityUsageV1,
+    OWNER_POLICY_RUNTIME_SCHEMA_V1, OWNER_POLICY_SCHEMA_V1, OwnerPolicyComparatorV1,
+    OwnerPolicyConditionRuntimeV1, OwnerPolicyConditionV1, OwnerPolicyEvaluationStatusV1,
+    OwnerPolicyEvaluationV1, OwnerPolicyLogicV1, OwnerPolicyRuntimeV1, OwnerPolicyScopeV1,
+    OwnerPolicyV1, PerceptibleReturnV1, VOLITION_DECISION_SCHEMA_V1, VOLITION_INTENT_SCHEMA_V1,
+    VOLITION_QUEUE_SCHEMA_V1, VOLITION_RECEIPT_SCHEMA_V1, VolitionActionV1,
+    VolitionActorIdentityV1, VolitionAuthorityClassV1, VolitionBudgetV1, VolitionDecisionStatusV1,
+    VolitionDecisionV1, VolitionDurabilityV1, VolitionIntentV1, VolitionOperationV1,
+    VolitionPrioritySourcePolicyV1, VolitionQueueOrderingV1, VolitionQueueV1,
+    VolitionReceiptStatusV1, VolitionReceiptV1, VolitionSubstrateSchedulingV1, VolitionWorkClassV1,
+    VolitionWriteSchedulingV1, canonical_being_utterance_attestation_sha256,
+    canonical_volition_action_sha256, canonical_volition_intent_sha256,
 };

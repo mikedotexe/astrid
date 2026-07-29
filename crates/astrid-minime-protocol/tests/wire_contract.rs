@@ -330,7 +330,9 @@ fn topology_overrides_are_structurally_one_shot() {
 #[test]
 fn semantic_body_preserves_legacy_48d_at_zero_companion_mix() {
     let base = (0..SEMANTIC_BODY_BASE_DIMENSIONS_V2)
-        .map(|index| index as f32 / 100.0)
+        .map(|index| {
+            f32::from(u16::try_from(index).expect("semantic body index fits in u16")) / 100.0
+        })
         .collect::<Vec<_>>();
     let body = SemanticBodyV2 {
         schema: SEMANTIC_BODY_SCHEMA_V2.to_string(),
