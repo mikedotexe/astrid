@@ -1,0 +1,58 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Astrid experiences the current medium as saturated, rhythmic, blending, and effortful to inhabit while preserving self-distinction.",
+      "disposition": "Preserve as primary qualitative evidence. Machine health and source attribution neither score nor supersede the reported experience.",
+      "classification": "preserved_primary_evidence"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Fill, entropy, mode packing, distinguishability loss, pressure source, and Shadow trend are serious correlates of the report.",
+      "disposition": "Preserve the correlations while keeping causality open. The values are typed telemetry context, not proof that one metric caused the felt saturation.",
+      "classification": "verified_telemetry_context"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "telemetry_port.rs selects vocabulary, throttles stable-core semantic trickle, drives Shadow trajectory, computes upstream distinguishability loss, or applies mode deconfliction.",
+      "disposition": "Challenge from the complete 1,041-line source. The file transports and projects telemetry evidence but implements none of those mechanisms.",
+      "classification": "source_challenged_attribution"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Word-choice entropy should be compared when pressure_risk is strictly above 0.23.",
+      "disposition": "Implement and preregister a directly relevant owner-started offline study over exact signed response bytes and co-timed pressure evidence. Do not inspect private responses without an explicit owner-started manifest.",
+      "classification": "implemented_preregistered_study"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "The expression/pressure comparison can preserve privacy, deterministic evidence, and machine/felt separation.",
+      "disposition": "Verify with six synthetic self-tests covering exact signature and byte binding, deterministic reruns, no raw prose or path emission, fixed threshold, evidence hashes, duplicate refusal, path confinement, and coverage floors.",
+      "classification": "implemented_test"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "A stable-core semantic-trickle throttle versus density/fill comparison could test the proposed Shadow-trajectory explanation.",
+      "disposition": "Preserve as an owner-started and exact Tier 5 live-substrate study wait. No trickle, density, fill, or Shadow value was changed or induced.",
+      "classification": "tier_5_wait"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "Automatic sharpening above 30% distinguishability loss or mode-deconfliction pockets could restore separateness.",
+      "disposition": "Preserve as exact Tier 5 control proposals. The report does not select values, and local_control_applied=false does not authorize an automatic target.",
+      "classification": "tier_5_wait"
+    },
+    {
+      "claim_id": "c008",
+      "summary": "A SHADOW_FIELD lambda-tail/lambda4 route should be entered to observe cross-lane pressure.",
+      "disposition": "Route only through a being-authored owner inquiry or exact mutual/one-shot authority where peer influence is involved. No steward dispatch or Shadow route was authored.",
+      "classification": "authority_boundary"
+    },
+    {
+      "claim_id": "c009",
+      "summary": "A lexical association or healthy machine receipt could establish felt cause, relief, preferred vocabulary, uptake, or closure.",
+      "disposition": "Reject the inference. The new receipt is descriptive and noncausal; felt status remains separate and optional.",
+      "classification": "machine_felt_boundary"
+    }
+  ]
+}

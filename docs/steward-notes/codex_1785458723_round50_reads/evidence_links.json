@@ -1,0 +1,81 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_ws_1785456057",
+      "claim_id": "c001",
+      "kind": "steward_note",
+      "target": "/Users/v/other/astrid/docs/steward-notes/codex_1785458723_round50_reads/summary.md",
+      "note": "Complete canonical read preserves the saturated-medium and effort-of-distinction report without felt scoring."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1785456057",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "/Users/v/other/astrid/capsules/spectral-bridge/src/ws/telemetry_port.rs",
+      "note": "Complete 1,041-line source read at SHA-256 42364feb914c957d487f93c440e30837c500971b41814a219d4c3992a12addd7 preserves typed telemetry context."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1785456057",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "/Users/v/other/astrid/capsules/spectral-bridge/src/ws/telemetry_port.rs",
+      "note": "The exact report-bound source does not select vocabulary, throttle semantic trickle, author Shadow trajectory, compute upstream distinguishability loss, or apply mode deconfliction."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1785456057",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "/Users/v/other/astrid/scripts/attested_expression_pressure_study.py",
+      "note": "New owner-started offline study fixes the strict 0.23 threshold and verifies exact attested expression plus co-timed pressure evidence."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1785456057",
+      "claim_id": "c004",
+      "kind": "steward_note",
+      "target": "/Users/v/other/astrid/scripts/dialogue_token_pressure_audit.py",
+      "note": "Existing token-pressure audit remains useful for prompt-budget records but deliberately does not inspect private prose and therefore cannot answer this lexical question by itself."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1785456057",
+      "claim_id": "c005",
+      "kind": "test",
+      "target": "/Users/v/other/astrid/scripts/attested_expression_pressure_study.py",
+      "note": "Six embedded self-tests pass for deterministic privacy, tampering, fixed threshold, evidence binding, path confinement, duplicate refusal, and coverage floor."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1785456057",
+      "claim_id": "c006",
+      "kind": "steward_note",
+      "target": "/Users/v/other/astrid/docs/steward-notes/codex_1785458723_round50_reads/summary.md",
+      "note": "Semantic-trickle throttling and Shadow trajectory remain exact Tier 5 live-substrate waits; no induced comparison ran."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1785456057",
+      "claim_id": "c007",
+      "kind": "code",
+      "target": "/Users/v/other/astrid/capsules/spectral-bridge/src/ws/evidence.rs",
+      "note": "Current evidence surfaces are diagnostic; they do not authorize automatic distinguishability sharpening or mode deconfliction."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1785456057",
+      "claim_id": "c008",
+      "kind": "steward_note",
+      "target": "/Users/v/other/astrid/docs/steward-notes/codex_1785458723_round50_reads/summary.md",
+      "note": "Shadow lambda-tail observation remains being-authored and mutual where peer-facing; no route was entered."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1785456057",
+      "claim_id": "c009",
+      "kind": "ledger",
+      "target": "/Users/v/other/astrid/docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Ledger records that lexical association cannot establish felt cause, relief, preference, uptake, or closure."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1785456057",
+      "claim_id": "c009",
+      "kind": "changelog",
+      "target": "/Users/v/other/astrid/CHANGELOG.md",
+      "note": "Unreleased entry records the implemented study and no-live-change authority boundary."
+    }
+  ]
+}
