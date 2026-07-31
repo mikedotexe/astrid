@@ -158,7 +158,9 @@ fn visit_tree(
         return;
     }
     let mut next_parent = parent_path.to_string();
-    if let Some((_, mapped_kind)) = recognized
+    if let Some(entry) = rust_include_edge(node, content, parent_path) {
+        accumulator.observe(entry);
+    } else if let Some((_, mapped_kind)) = recognized
         .iter()
         .find(|(syntax_kind, _)| *syntax_kind == node.kind())
     {
@@ -190,6 +192,38 @@ fn visit_tree(
             accumulator,
         );
     }
+}
+
+fn rust_include_edge(
+    node: Node<'_>,
+    content: &str,
+    parent_path: &str,
+) -> Option<SourceMapEntryV3> {
+    if node.kind() != "macro_invocation" {
+        return None;
+    }
+    let source = node.utf8_text(content.as_bytes()).ok()?.trim();
+    let bang = source.find('!')?;
+    if source[..bang].trim() != "include" {
+        return None;
+    }
+    let arguments = &source[bang.saturating_add(1)..];
+    let quote_start = arguments.find('"')?;
+    let target_tail = &arguments[quote_start.saturating_add(1)..];
+    let quote_end = target_tail.find('"')?;
+    let target = bounded_label(&target_tail[..quote_end]);
+    let structural_path = if parent_path.is_empty() {
+        format!("include::{target}")
+    } else {
+        format!("{parent_path}::include::{target}")
+    };
+    Some(SourceMapEntryV3 {
+        kind: "include_edge".to_string(),
+        label: target,
+        structural_path,
+        start_line: Some(node.start_position().row.saturating_add(1)),
+        end_line: Some(node.end_position().row.saturating_add(1)),
+    })
 }
 
 fn node_label(node: Node<'_>, content: &str) -> String {

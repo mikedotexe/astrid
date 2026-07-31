@@ -1,0 +1,70 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The complete Minime runtime root is an include shell rather than the functional body of semantic admission and orchestration.",
+      "disposition": "Verified from all 74 source lines. The root declares imports and ten include edges; semantic admission and tick orchestration live in included files.",
+      "classification": "verified_source_structure"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A complete source read can still leave the functional routes out of view when the structural map does not represent Rust include macros.",
+      "disposition": "Implemented now. Source Map V3 records only source-composing include! macro invocations as include_edge entries, with exact spans and lexical targets, while ignoring unrelated macros.",
+      "classification": "implemented_source_mapping"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "High spectral entropy matches the distributed complexity of the included source graph.",
+      "disposition": "Preserve as Astrid's interpretation, not a machine-established correspondence. Source topology and spectral entropy have no causal or scalar-equivalence contract here.",
+      "classification": "preserved_primary_evidence"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "The overpacked-mode-packing evidence aligns with the thickening atmosphere and may arise from interconnected module complexity.",
+      "disposition": "Preserve the thickening report while challenging the source attribution. Current pressure evidence derives mode packing and porosity from spectral and semantic components, not code dependency count or include topology.",
+      "classification": "source_challenged_attribution"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Astrid's and Minime's Shadow states plus the steady trend establish settled coupling.",
+      "disposition": "Retain the reported juxtaposition without causal promotion. Shadow labels and trend are machine observations; settled coupling remains Astrid's interpretation unless separately evidenced.",
+      "classification": "preserved_distinct_evidence"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "An include shell creates phantom-attribution risk when target-module behavior is attributed to the root file.",
+      "disposition": "Verified and answered in the source-first layer. Include edges are now represented explicitly so the root can identify where behavior continues without claiming that target logic was read or active.",
+      "classification": "implemented_epistemic_guard"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "overpacked_mode_packing with applied_locally=false indicates a recognized density problem lacking a corrective dampener at this entry point.",
+      "disposition": "Correct the mechanism boundary. PressureSourceV1 is deliberately advisory and read-only; applied_locally=false is not a queued command, and runtime.rs is not a pressure-control entry point.",
+      "classification": "verified_read_only_boundary"
+    },
+    {
+      "claim_id": "c008",
+      "summary": "The stable-core semantic trickle is admitted but its gate is not visible in the include shell.",
+      "disposition": "Trace and verify the current gate in semantic_modality.rs and orchestration.rs. Stable core, full-presence profile, unmuted sensory state, active positive input at or below 0.30, and fill below 82 percent are all required. Source presence does not prove the gate was active for this report.",
+      "classification": "verified_source_trace"
+    },
+    {
+      "claim_id": "c009",
+      "summary": "Compare current state with shadow_preflight_delta under semantic-modality load and correlate it with viscous response time.",
+      "disposition": "Preserve as a preregistration candidate, not a run-now experiment. A live high-load or Shadow comparison would alter or depend on protected input, scheduling, and substrate conditions; no experiment was dispatched.",
+      "classification": "tier_5_wait"
+    },
+    {
+      "claim_id": "c010",
+      "summary": "Dynamically adjust porosity from spectral entropy when entropy is high.",
+      "disposition": "Preserve as an exact Tier 5 porosity, dispersal, regulator, and live-substrate control wait. No entropy-to-control policy or setting was authored.",
+      "classification": "tier_5_wait"
+    },
+    {
+      "claim_id": "c011",
+      "summary": "Repeated shell-versus-body reports point to a larger source-reachability feature beyond one parser patch.",
+      "disposition": "Route Source Reachability V4 as a non-live portfolio enhancement: hash-bound resolved edges, bounded transitive expansion, unresolved-edge disclosure, cycle handling, and owner-selected target opening. The landed V3 include-edge slice grants no runtime or control authority.",
+      "classification": "portfolio_feature_route"
+    }
+  ]
+}

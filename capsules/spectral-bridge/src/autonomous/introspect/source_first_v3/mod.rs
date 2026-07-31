@@ -233,6 +233,38 @@ mod tests {
     }
 
     #[test]
+    fn rust_include_shell_maps_dependency_edges_only() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        let path = dir.path().join("runtime.rs");
+        let content = "include!(\"runtime/semantic_modality.rs\");\n\
+                       include!(\"runtime/orchestration.rs\");\n\
+                       unrelated_macro!(\"not/a/source/edge.rs\");\n";
+        let evidence = build_source_evidence_v3_at_root(dir.path(), &path, content, 0, 3, 3)
+            .expect("evidence");
+        let include_edges = evidence
+            .source_map_v3
+            .entries
+            .iter()
+            .filter(|entry| entry.kind == "include_edge")
+            .collect::<Vec<_>>();
+
+        assert_eq!(include_edges.len(), 2);
+        assert_eq!(include_edges[0].label, "runtime/semantic_modality.rs");
+        assert_eq!(
+            include_edges[0].structural_path,
+            "include::runtime/semantic_modality.rs"
+        );
+        assert_eq!(include_edges[1].label, "runtime/orchestration.rs");
+        assert!(
+            evidence
+                .source_map_v3
+                .entries
+                .iter()
+                .all(|entry| entry.label != "not/a/source/edge.rs")
+        );
+    }
+
+    #[test]
     fn structured_and_fallback_parsers_disclose_their_basis() {
         let dir = tempfile::tempdir().expect("tempdir");
         let json_path = dir.path().join("manifest.json");

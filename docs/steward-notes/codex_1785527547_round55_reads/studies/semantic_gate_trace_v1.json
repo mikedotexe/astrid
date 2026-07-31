@@ -1,0 +1,60 @@
+{
+  "schema": "semantic_gate_source_trace_v1",
+  "schema_version": 1,
+  "introspection_id": "introspection_minime_main_excerpt_1785527258",
+  "authority": "deterministic_current_source_trace_not_runtime_activation_cause_or_felt_effect",
+  "sources": [
+    {
+      "path": "/Users/v/other/minime/minime/src/runtime.rs",
+      "sha256": "f3d22a0d980385125f87dddfe1e06d0b00421a7577fe458fae7e1eb4b62fa8c5",
+      "role": "include_shell"
+    },
+    {
+      "path": "/Users/v/other/minime/minime/src/runtime/semantic_modality.rs",
+      "sha256": "60b88bf3e1018af5dfb5a8a4f13e4027c793205cb14eb843b10954f58cc26f62",
+      "role": "admission_label"
+    },
+    {
+      "path": "/Users/v/other/minime/minime/src/runtime/orchestration.rs",
+      "sha256": "fd66adbcc1e9fb30e866280168e2be458663d81b59031d0b3db84e96a2553744",
+      "role": "gate_and_application"
+    },
+    {
+      "path": "/Users/v/other/minime/minime/src/stable_core.rs",
+      "sha256": "53af3ff961e5e0d4e65095ab4e8a8bda3e6f5592d8020405acdca031dae0cbe6",
+      "role": "gate_constants"
+    },
+    {
+      "path": "/Users/v/other/minime/minime/src/regulator/core/pressure_source.rs",
+      "sha256": "9ecc4ca80629bd5519790b5a64bc5f5891bbbdc1c424d93d7d5e0bee611501d1",
+      "role": "pressure_porosity_read_only_boundary"
+    }
+  ],
+  "include_shell": {
+    "source_lines": 74,
+    "include_edge_count": 10,
+    "contains_semantic_gate": false,
+    "contains_pressure_control": false
+  },
+  "stable_core_semantic_gate": {
+    "required": [
+      "stable_core_enabled",
+      "full_presence_v1_profile",
+      "sensory_mute_inactive",
+      "semantic_input_active",
+      "semantic_input_energy_positive",
+      "semantic_input_energy_lte_0_30",
+      "prior_fill_pct_lt_82"
+    ],
+    "admitted_scale": 0.15,
+    "runtime_branch_observed_for_report": false
+  },
+  "pressure_porosity": {
+    "source_graph_complexity_is_an_input": false,
+    "producer_control_applied_locally": false,
+    "producer_control_role": "advisory_read_only_not_queued_command"
+  },
+  "machine_effect_established": false,
+  "felt_cause_established": false,
+  "felt_effect_established": false
+}
