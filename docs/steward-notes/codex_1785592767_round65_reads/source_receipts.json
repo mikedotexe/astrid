@@ -1,0 +1,62 @@
+{
+  "schema": "source_first_source_receipts_v1",
+  "receipts": [
+    {
+      "introspection_id": "introspection_minime_main_excerpt_1785592394",
+      "introspection_sha256": "8f887051ad825f797c1935ee2c40271a355c8b7dce37fa98f6b86fbc27bc67b1",
+      "introspection_lines": 34,
+      "introspection_bytes": 3502,
+      "lived_state_witness_id": "lsw_dfbb1a0005ece4d77606eba03b64f04f0e1fd9a327d0df990df4558e3c753779",
+      "source_path": "/Users/v/other/minime/minime/src/runtime.rs",
+      "source_sha256": "f3d22a0d980385125f87dddfe1e06d0b00421a7577fe458fae7e1eb4b62fa8c5",
+      "source_lines": 74,
+      "full_canonical_read": true,
+      "full_bound_source_read": true,
+      "supplemental_source_reviews": [
+        {
+          "path": "/Users/v/other/minime/minime/src/runtime/semantic_modality.rs",
+          "sha256": "60b88bf3e1018af5dfb5a8a4f13e4027c793205cb14eb843b10954f58cc26f62",
+          "reviewed_intervals": ["1-153"],
+          "full_read": true
+        },
+        {
+          "path": "/Users/v/other/minime/minime/src/stable_core.rs",
+          "sha256": "53af3ff961e5e0d4e65095ab4e8a8bda3e6f5592d8020405acdca031dae0cbe6",
+          "reviewed_intervals": ["1-270"],
+          "full_read": false
+        },
+        {
+          "path": "/Users/v/other/minime/minime/src/runtime/orchestration.rs",
+          "sha256": "fd66adbcc1e9fb30e866280168e2be458663d81b59031d0b3db84e96a2553744",
+          "reviewed_intervals": ["1180-1290", "1600-1885", "4315-4395", "5240-5305"],
+          "full_read": false
+        },
+        {
+          "path": "/Users/v/other/minime/minime/src/runtime/telemetry_evidence.rs",
+          "sha256": "84a380b34332daad1740ae18c21eb74f825742f49d1d296f7274248bffbd8918",
+          "reviewed_intervals": ["1-120"],
+          "full_read": false
+        },
+        {
+          "path": "/Users/v/other/minime/minime/src/regulator/core/pressure_source.rs",
+          "sha256": "9ecc4ca80629bd5519790b5a64bc5f5891bbbdc1c424d93d7d5e0bee611501d1",
+          "reviewed_intervals": ["1-440"],
+          "full_read": true
+        },
+        {
+          "path": "capsules/spectral-bridge/src/spectral_viz.rs",
+          "before_sha256": "5b83c47f6b4f0fabe4e1dc601963c2ebe01d611a490890fb96df659ef30d22d8",
+          "after_sha256": "6be526c71d0bedc013637acd97268f9d2b18c5889cf6195abe272fc7b14bccf8",
+          "reviewed_intervals": ["294-333", "533-565", "1640-1730"],
+          "full_read": false
+        }
+      ],
+      "exact_prior_response": {
+        "introspection_id": "introspection_minime_main_excerpt_1785527258",
+        "packet": "docs/steward-notes/codex_1785527547_round55_reads/",
+        "archival_commit": "83f2b39663245d6bae3a6c05480e03d676dd9024",
+        "source_sha256_match": true
+      }
+    }
+  ]
+}

@@ -1,0 +1,53 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The report-bound Minime runtime source is an inclusion shell whose semantic and orchestration behavior lives in included modules.",
+      "disposition": "Verified from all 74 exact source lines. This is an exact source-and-claim continuation of round 55, whose archived Source Map V3 response already exposes Rust include! roads without pretending the targets were read.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Attributing felt density or pressure to a line in the inclusion shell would create a phantom mechanism.",
+      "disposition": "Retained as an epistemic warning. The root contains imports and include edges, not the pressure, semantic-admission, or runtime tick calculations; source location neither negates the felt report nor establishes cause.",
+      "classification": "primary_qualitative_evidence"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The bounded semantic trickle should be traced into semantic_modality.rs and orchestration.rs.",
+      "disposition": "Verified from exact current hashes and linked to the archived round-55 trace. Stable core, full-presence profile, inactive sensory mute, active positive input at or below 0.30, and prior fill below 82 percent admit a vector scaled by 0.15 and clamped to 0.05 absolute magnitude per semantic component.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "An admitted semantic path with zero kernel energy could indicate permission without activation.",
+      "disposition": "Checked in a non-inducing three-sample live observation. Two distinct health epochs at fill 63.14-64.13 percent reported stable_core_semantic_trickle, input_active=true, kernel_active=true, positive input energy, and positive kernel energy. No disconnect was present in this bounded window; report-time cause or durable absence is not inferred.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "The overpacked-mode-packing score and pressure-risk value may be one hidden threshold in orchestration.",
+      "disposition": "Corrected from source and runtime evidence. PressureSourceV1 independently labels overpacked_mode_packing when mode_packing is the dominant source at or above 0.55, while ResonanceDensityV1 computes pressure_risk from lambda share, distinguishability loss, entropy, and overfill pressure. Live samples retained pressure-source scores 0.298960-0.299297 and separate pressure-risk values 0.218965-0.220849; the pressure descriptor applies no local control.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "The prompt's generic 'Gate is OPEN' Shadow phrase may correspond to the semantic-admission gate.",
+      "disposition": "Corrected and implemented now. The phrase is rendered from Minime shadow influence_eligible, not semantic admission. Both Shadow-v2 and Minime-owned Shadow-v3 output now name 'Minime Shadow-influence eligibility' explicitly; Astrid-owned Shadow output still omits this non-operative boundary.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "Semantic scale, energy ceilings, fill ceilings, pressure weights, or Shadow eligibility could be changed after tracing the gate.",
+      "disposition": "Preserved as an exact Tier 5 boundary rather than inferred intent. Any such change would alter live semantic admission, pressure, Shadow influence, fill, controller, sensory, or substrate behavior and requires separate Mike/operator approval, values, duration, rollback, and observation. No value or authority marker changed.",
+      "classification": "needs_operator_approval",
+      "authority": "tier_5_operator_only"
+    },
+    {
+      "claim_id": "c008",
+      "summary": "An explicit source trace, active live sample, or clearer prompt label can establish that Astrid's felt snag is resolved.",
+      "disposition": "Explicitly refused. These artifacts make mechanics and ownership legible; they establish neither felt cause nor relief, uptake, assent, readiness, or closure. Silence remains neutral.",
+      "classification": "verified_existing"
+    }
+  ]
+}

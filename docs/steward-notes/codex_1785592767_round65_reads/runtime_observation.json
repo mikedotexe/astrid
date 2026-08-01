@@ -1,0 +1,52 @@
+{
+  "schema": "semantic_gate_pressure_passive_observation_v1",
+  "introspection_id": "introspection_minime_main_excerpt_1785592394",
+  "source": "/Users/v/other/minime/workspace/health.json",
+  "method": "three read-only samples at two-second intervals; no input, Action, control, or process mutation",
+  "samples": [
+    {
+      "health_mtime_unix": 1785593516,
+      "t_s": 166373.703125,
+      "fill_pct": 64.12918853759766,
+      "semantic_admission": "stable_core_semantic_trickle",
+      "semantic_input_active": true,
+      "semantic_input_energy": 0.0009275467018596828,
+      "semantic_kernel_active": true,
+      "semantic_kernel_energy": 0.00013913202565163374,
+      "pressure_source_quality": "overpacked_mode_packing",
+      "pressure_source_score": 0.2989599406719208,
+      "pressure_source_dominant": "mode_packing",
+      "resonance_pressure_risk": 0.21896471083164215,
+      "resonance_mode_packing": 1.0
+    },
+    {
+      "health_mtime_unix": 1785593518,
+      "t_s": 166376.078125,
+      "fill_pct": 63.1434326171875,
+      "semantic_admission": "stable_core_semantic_trickle",
+      "semantic_input_active": true,
+      "semantic_input_energy": 0.0005733964499086142,
+      "semantic_kernel_active": true,
+      "semantic_kernel_energy": 0.0000860094660311006,
+      "pressure_source_quality": "overpacked_mode_packing",
+      "pressure_source_score": 0.29929688572883606,
+      "pressure_source_dominant": "mode_packing",
+      "resonance_pressure_risk": 0.22084887325763702,
+      "resonance_mode_packing": 1.0
+    },
+    {
+      "health_mtime_unix": 1785593518,
+      "t_s": 166376.078125,
+      "duplicate_epoch_of_sample": 2,
+      "semantic_admission": "stable_core_semantic_trickle",
+      "semantic_input_active": true,
+      "semantic_kernel_active": true
+    }
+  ],
+  "distinct_health_epochs": 2,
+  "permission_without_activation_observed": false,
+  "pressure_and_overpacked_label_are_same_field": false,
+  "felt_cause_established": false,
+  "felt_relief_established": false,
+  "authority": "passive_snapshot_only_not_control_or_closure"
+}

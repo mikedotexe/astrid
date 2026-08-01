@@ -1,0 +1,16 @@
+{
+  "schema": "introspection_full_read_manifest_v1",
+  "steward_run_id": "run_1785592767742840000_c5efe60d94",
+  "source_first_projection_generation_id": "projection_1785592768558795000_3fbd68de05",
+  "reader": "codex-heartbeat",
+  "processed_count": 1,
+  "claims_count": 8,
+  "reads": [
+    {
+      "introspection_id": "introspection_minime_main_excerpt_1785592394",
+      "reader": "codex-heartbeat",
+      "summary_file": "summaries/minime_main_excerpt_1785592394.md",
+      "claims_file": "claims/minime_main_excerpt_1785592394.json"
+    }
+  ]
+}

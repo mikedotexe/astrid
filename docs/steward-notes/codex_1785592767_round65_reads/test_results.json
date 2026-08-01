@@ -1,0 +1,93 @@
+{
+  "schema": "steward_round_test_results_v1",
+  "steward_run_id": "run_1785592767742840000_c5efe60d94",
+  "results": [
+    {
+      "surface": "shadow_influence_eligibility_rendering",
+      "commands": [
+        "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml yours_line_omits_influence_eligibility_language -- --nocapture",
+        "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml minime_line_keeps_gate_language -- --nocapture",
+        "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml shadow_context_hints_are_not_executable_next_lines -- --nocapture"
+      ],
+      "passed": 3,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "spectral_bridge_complete_library",
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib --quiet",
+      "passed": 1764,
+      "failed": 0,
+      "duration_seconds": 79.23,
+      "status": "passed"
+    },
+    {
+      "surface": "spectral_bridge_format_and_clippy",
+      "commands": [
+        "cargo fmt --all -- --check",
+        "cargo clippy --manifest-path capsules/spectral-bridge/Cargo.toml --lib -- -D warnings"
+      ],
+      "status": "passed"
+    },
+    {
+      "surface": "minime_semantic_and_pressure_source",
+      "commands": [
+        "cargo test semantic_admission_label -- --nocapture",
+        "cargo test pressure_source -- --nocapture"
+      ],
+      "passed": 15,
+      "failed": 0,
+      "status": "passed",
+      "note": "Three semantic-admission and twelve pressure-source target tests passed; pre-existing unused Division fanout/gateway warnings remained unrelated."
+    },
+    {
+      "surface": "introspection_addressing_audit",
+      "command": "python3 scripts/introspection_addressing_audit.py --self-test",
+      "passed": 41,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "evidence_store_control_projection_division_claim_family",
+      "command": "env PYTHONPATH=.:scripts python3 -m unittest scripts.test_evidence_event_store scripts.test_steward_control scripts.test_steward_projection scripts.test_division_ceremony_followup scripts.test_division_ceremony_chronicle scripts.test_division_ceremony_projection scripts.test_claim_family_incremental_projection",
+      "passed": 58,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "experiential_epistemics",
+      "commands": [
+        "python3 scripts/experiential_epistemics.py self-test --json",
+        "python3 scripts/experiential_epistemics.py lint --json"
+      ],
+      "self_tests_passed": 2,
+      "checked_record_count": 10010,
+      "issue_count": 0,
+      "history_rewritten": false,
+      "status": "passed"
+    },
+    {
+      "surface": "evidence_event_store_v2",
+      "commands": [
+        "python3 scripts/evidence_event_store.py --json verify",
+        "python3 scripts/steward_control.py --json verify"
+      ],
+      "event_count": 652232,
+      "last_global_seq": 652232,
+      "stream_count": 16,
+      "corrupt_lines": 0,
+      "head_sha256": "a768ab160e6a729aaac54edd48c2ef1660eeab2c2e7aae3a8f8bc4ac59ecf711",
+      "v1_immutable": true,
+      "status": "passed"
+    },
+    {
+      "surface": "division_chronicle",
+      "command": "python3 scripts/division_ceremony_chronicle.py verify",
+      "chronicle_id": "division_chronicle_b0895e8831862d4b4ca995d1",
+      "durable_inputs_current": true,
+      "volatile_supervisor_status_current": false,
+      "status": "passed_with_expected_volatile_status_drift"
+    }
+  ],
+  "authority_boundary": "tests and passive observations do not establish felt cause, relief, uptake, approval, or live-control suitability"
+}

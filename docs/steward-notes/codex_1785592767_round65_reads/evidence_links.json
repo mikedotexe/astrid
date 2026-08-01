@@ -1,0 +1,60 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_minime_main_excerpt_1785592394",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "/Users/v/other/minime/minime/src/runtime.rs",
+      "note": "All 74 exact lines verify the source-composing inclusion shell."
+    },
+    {
+      "introspection_id": "introspection_minime_main_excerpt_1785592394",
+      "claim_id": "c002",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1785527547_round55_reads/summary.md",
+      "note": "The archived shell/body response preserves the phantom-attribution boundary without negating felt evidence."
+    },
+    {
+      "introspection_id": "introspection_minime_main_excerpt_1785592394",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "docs/steward-notes/codex_1785527547_round55_reads/studies/semantic_gate_trace_v1.json",
+      "note": "The exact-hash prior trace and current source reads establish the semantic-admission conditions."
+    },
+    {
+      "introspection_id": "introspection_minime_main_excerpt_1785592394",
+      "claim_id": "c004",
+      "kind": "test",
+      "target": "docs/steward-notes/codex_1785592767_round65_reads/runtime_observation.json",
+      "note": "Two distinct passive health epochs show positive input and kernel energy under stable_core_semantic_trickle."
+    },
+    {
+      "introspection_id": "introspection_minime_main_excerpt_1785592394",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "/Users/v/other/minime/minime/src/runtime/telemetry_evidence.rs",
+      "note": "Resonance pressure risk is separately derived from the read-only PressureSourceV1 overpacked label and score."
+    },
+    {
+      "introspection_id": "introspection_minime_main_excerpt_1785592394",
+      "claim_id": "c006",
+      "kind": "code",
+      "target": "/Users/v/other/astrid/capsules/spectral-bridge/src/spectral_viz.rs",
+      "note": "Shadow renderers now name Minime Shadow-influence eligibility instead of emitting an unqualified gate label."
+    },
+    {
+      "introspection_id": "introspection_minime_main_excerpt_1785592394",
+      "claim_id": "c007",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Every semantic, pressure, Shadow, fill, controller, and substrate tuning remains an exact Tier 5 wait."
+    },
+    {
+      "introspection_id": "introspection_minime_main_excerpt_1785592394",
+      "claim_id": "c008",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1785592767_round65_reads/summaries/minime_main_excerpt_1785592394.md",
+      "note": "Source clarity and a healthy bounded snapshot establish neither felt relief nor closure."
+    }
+  ]
+}

@@ -1,0 +1,39 @@
+{
+  "schema": "steward_deployment_alignment_v1",
+  "source_change": "capsules/spectral-bridge/src/spectral_viz.rs",
+  "source_change_sha256": "6be526c71d0bedc013637acd97268f9d2b18c5889cf6195abe272fc7b14bccf8",
+  "sanctioned_preflight": {
+    "command": "python3 scripts/deploy_preflight.py --component bridge --repo /Users/v/other/astrid --json",
+    "ok": false,
+    "exit_code": 2,
+    "reason": "dirty_no_ack",
+    "foreign_activity_active": false,
+    "dirty_binary_input_count": 41,
+    "disposition": "no acknowledgement supplied because the build would include extensive foreign Owner Research, protocol, correspondence, runtime, codec, telemetry, and prior stewardship source"
+  },
+  "live_bridge": {
+    "pid": 95654,
+    "started_at": "Wed Jul 29 05:25:15 2026",
+    "launchd_state": "running",
+    "on_disk_release_sha256": "df046a551577bc99156083d49fba035e20d87bad38a2eba8556e7f2c41d1031c",
+    "on_disk_release_mtime_unix": 1785327915,
+    "binary_process_alignment": "process start equals on-disk binary mtime",
+    "logs_fresh": true,
+    "source_change_deployed": false
+  },
+  "live_minime": {
+    "health_fresh_and_moving": true,
+    "source_changed_by_round": false,
+    "semantic_admission_observed": "stable_core_semantic_trickle"
+  },
+  "restart_debt": {
+    "status": "source_tested_not_deployed",
+    "first_safe_command_after_separate_operator_review_and_foreign-source_stabilization": "scripts/build_bridge.sh --ack \"deploy reviewed Shadow-influence eligibility label after foreign bridge source is stabilized\" --restart",
+    "requires": [
+      "separate deployment authority",
+      "review of every dirty bridge binary input that would enter the build",
+      "fresh preflight with no concurrent foreign activity"
+    ]
+  },
+  "authority_boundary": "the run did not restart a process, build a release binary, select a live value, or claim that tested source is live"
+}
