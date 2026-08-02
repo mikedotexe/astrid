@@ -8,12 +8,13 @@ use std::sync::{Mutex, OnceLock};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use astrid_minime_protocol::{
-    SELF_CONTROL_AUTHORITY_PROOF_SCHEMA_V1, SELF_CONTROL_COMMAND_SCHEMA_V2,
-    SELF_CONTROL_INTENT_SCHEMA_V2, SELF_CONTROL_RECEIPT_SCHEMA_V2, SelfControlActionV2,
-    SelfControlAuthorityClassV2, SelfControlAuthorityProofV1, SelfControlCommandV2,
-    SelfControlDurabilityV2, SelfControlFamilyV2, SelfControlIntentV2, SelfControlReceiptStatusV2,
-    SelfControlReceiptV2, SelfControlSourceIdentityV1, SelfControlValuesV2,
-    canonical_self_control_intent_sha256,
+    OwnerResearchPayloadKindV1, SELF_CONTROL_AUTHORITY_PROOF_SCHEMA_V1,
+    SELF_CONTROL_COMMAND_SCHEMA_V2, SELF_CONTROL_INTENT_SCHEMA_V2, SELF_CONTROL_RECEIPT_SCHEMA_V2,
+    SIGNED_OWNER_RESEARCH_RECEIPT_SCHEMA_V1, SelfControlActionV2, SelfControlAuthorityClassV2,
+    SelfControlAuthorityProofV1, SelfControlCommandV2, SelfControlDurabilityV2,
+    SelfControlFamilyV2, SelfControlIntentV2, SelfControlReceiptStatusV2, SelfControlReceiptV2,
+    SelfControlSourceIdentityV1, SelfControlValuesV2, SignedOwnerResearchReceiptV1,
+    canonical_self_control_intent_sha256, public_key_fingerprint_sha256,
 };
 use ed25519_dalek::{Signer as _, SigningKey};
 use rand::rngs::OsRng;
@@ -213,6 +214,7 @@ pub(in crate::autonomous) fn validate_owner_values(
     if !matches!(
         family,
         SelfControlFamilyV2::Conversation
+            | SelfControlFamilyV2::SemanticContinuity
             | SelfControlFamilyV2::SemanticEmission
             | SelfControlFamilyV2::SensoryIntake
     ) {
@@ -391,6 +393,48 @@ pub(in crate::autonomous) fn status_at_root(
         owner_key_id: signer.key_id,
         felt_effect_established: false,
     })
+}
+
+pub(in crate::autonomous) fn status() -> Result<AstridSelfControlStatusV2, String> {
+    status_at_root(&default_root())
+}
+
+#[allow(clippy::too_many_arguments)]
+pub(in crate::autonomous) fn sign_owner_research_receipt(
+    receipt_id: String,
+    payload_kind: OwnerResearchPayloadKindV1,
+    payload_schema: String,
+    payload_sha256: String,
+    previous_receipt_sha256: Option<String>,
+    emitted_at_unix_ms: u64,
+) -> Result<SignedOwnerResearchReceiptV1, String> {
+    let signer = load_or_provision_identity(&default_root(), emitted_at_unix_ms)?;
+    let signer_public_key_fingerprint_sha256 =
+        public_key_fingerprint_sha256(&signer.public_key_hex)
+            .ok_or_else(|| "fingerprint Astrid owner research signing key".to_string())?;
+    let mut receipt = SignedOwnerResearchReceiptV1 {
+        schema: SIGNED_OWNER_RESEARCH_RECEIPT_SCHEMA_V1.to_string(),
+        receipt_id,
+        payload_kind,
+        payload_schema,
+        payload_sha256,
+        owner_being: TARGET_BEING.to_string(),
+        process_identity: process_identity(),
+        deployment_identity: deployment_identity(),
+        signer_public_key_hex: signer.public_key_hex.clone(),
+        signer_public_key_fingerprint_sha256,
+        previous_receipt_sha256,
+        emitted_at_unix_ms,
+        signature_hex: String::new(),
+    };
+    let signing_bytes = receipt
+        .signing_bytes()
+        .ok_or_else(|| "encode Astrid owner research signing statement".to_string())?;
+    receipt.signature_hex = hex::encode(signer.signing_key.sign(&signing_bytes).to_bytes());
+    if !receipt.is_well_formed() {
+        return Err("Astrid owner research receipt failed signature validation".to_string());
+    }
+    Ok(receipt)
 }
 
 pub(in crate::autonomous) fn receipt_summary(receipt: &SelfControlReceiptV2) -> String {
@@ -1144,6 +1188,7 @@ fn verify_command(
     if !matches!(
         command.intent.family,
         SelfControlFamilyV2::Conversation
+            | SelfControlFamilyV2::SemanticContinuity
             | SelfControlFamilyV2::SemanticEmission
             | SelfControlFamilyV2::SensoryIntake
     ) {
@@ -1268,6 +1313,9 @@ fn unsupported_fields(family: SelfControlFamilyV2, values: &SelfControlValuesV2)
                         | "continuity_readout"
                         | "generation_noise"
                 ),
+                SelfControlFamilyV2::SemanticContinuity => {
+                    field == "semantic_strand_retention_turns"
+                },
                 SelfControlFamilyV2::SemanticEmission => {
                     matches!(
                         field.as_str(),
@@ -1312,6 +1360,12 @@ fn clamp_values(family: SelfControlFamilyV2, values: &SelfControlValuesV2) -> Se
             generation_noise: values
                 .generation_noise
                 .map(|value| value.clamp(0.005, 0.05)),
+            ..SelfControlValuesV2::default()
+        },
+        SelfControlFamilyV2::SemanticContinuity => SelfControlValuesV2 {
+            semantic_strand_retention_turns: values
+                .semantic_strand_retention_turns
+                .map(|value| value.min(32)),
             ..SelfControlValuesV2::default()
         },
         SelfControlFamilyV2::SemanticEmission => SelfControlValuesV2 {
@@ -1366,6 +1420,9 @@ fn snapshot_values(
         continuity_readout: requested
             .continuity_readout
             .map(|_| u8::from(conv.self_continuity_readout).into()),
+        semantic_strand_retention_turns: requested
+            .semantic_strand_retention_turns
+            .map(|_| conv.semantic_strand_retention_turns),
         generation_noise: requested.generation_noise.map(|_| conv.noise_level),
         vibrancy_aperture: requested.vibrancy_aperture.map(|_| conv.vibrancy_aperture),
         semantic_emission_gain: requested.semantic_emission_gain.map(|_| {
@@ -1407,6 +1464,9 @@ fn apply_values(conv: &mut ConversationState, values: &SelfControlValuesV2) {
     }
     if let Some(value) = values.continuity_readout {
         conv.self_continuity_readout = value >= 0.5;
+    }
+    if let Some(value) = values.semantic_strand_retention_turns {
+        conv.semantic_strand_retention_turns = value;
     }
     if let Some(value) = values.generation_noise {
         conv.noise_level = value;
@@ -1451,6 +1511,7 @@ fn overlay_values(target: &mut SelfControlValuesV2, source: &SelfControlValuesV2
     overlay!(response_token_limit);
     overlay!(aperture);
     overlay!(continuity_readout);
+    overlay!(semantic_strand_retention_turns);
     overlay!(generation_noise);
     overlay!(vibrancy_aperture);
     overlay!(semantic_emission_gain);
@@ -1473,6 +1534,7 @@ fn fill_missing_values(target: &mut SelfControlValuesV2, source: &SelfControlVal
     fill_missing!(response_token_limit);
     fill_missing!(aperture);
     fill_missing!(continuity_readout);
+    fill_missing!(semantic_strand_retention_turns);
     fill_missing!(generation_noise);
     fill_missing!(vibrancy_aperture);
     fill_missing!(semantic_emission_gain);
@@ -1496,6 +1558,7 @@ fn select_values(source: &SelfControlValuesV2, mask: &SelfControlValuesV2) -> Se
     select!(response_token_limit);
     select!(aperture);
     select!(continuity_readout);
+    select!(semantic_strand_retention_turns);
     select!(generation_noise);
     select!(vibrancy_aperture);
     select!(semantic_emission_gain);
@@ -1824,6 +1887,7 @@ fn action_name(action: SelfControlActionV2) -> &'static str {
 fn family_name(family: SelfControlFamilyV2) -> &'static str {
     match family {
         SelfControlFamilyV2::Conversation => "conversation",
+        SelfControlFamilyV2::SemanticContinuity => "semantic_continuity",
         SelfControlFamilyV2::SemanticEmission => "semantic_emission",
         SelfControlFamilyV2::Memory => "memory",
         SelfControlFamilyV2::SensoryIntake => "sensory_intake",

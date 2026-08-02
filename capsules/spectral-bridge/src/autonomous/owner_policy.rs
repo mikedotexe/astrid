@@ -590,6 +590,7 @@ fn action_payload_optional<'a>(original: &'a str, base_action: &str) -> Option<&
 fn family_name(family: SelfControlFamilyV2) -> &'static str {
     match family {
         SelfControlFamilyV2::Conversation => "conversation",
+        SelfControlFamilyV2::SemanticContinuity => "semantic_continuity",
         SelfControlFamilyV2::SemanticEmission => "semantic_emission",
         SelfControlFamilyV2::Memory => "memory",
         SelfControlFamilyV2::SensoryIntake => "sensory_intake",

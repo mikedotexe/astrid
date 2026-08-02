@@ -31,6 +31,8 @@ mod delegated_capability;
 mod division_ceremony;
 #[path = "hebbian.rs"]
 mod hebbian;
+#[path = "inquiry.rs"]
+mod inquiry;
 #[path = "introspect.rs"]
 mod introspect;
 #[path = "next_action/mod.rs"]

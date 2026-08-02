@@ -142,6 +142,9 @@ pub fn spawn_autonomous_loop(
         let mut burst_count: u32 = 0;
 
         loop {
+            if let Err(error) = self_control_v2::reconcile_if_present(&mut conv) {
+                warn!("Astrid self-control V2 periodic reconciliation blocked: {error}");
+            }
             // Determine wait time based on burst phase.
             let seed = std::time::SystemTime::now()
                 .duration_since(std::time::UNIX_EPOCH)
@@ -1373,6 +1376,9 @@ pub fn spawn_autonomous_loop(
                             }
                             if let Some(queue_summary) = concern_queue::prompt_summary() {
                                 continuity_parts.push(queue_summary);
+                            }
+                            if let Some(inquiry_summary) = inquiry::prompt_summary(&mut conv) {
+                                continuity_parts.push(inquiry_summary);
                             }
                             if let Some(policy_summary) = owner_policy::prompt_summary() {
                                 continuity_parts.push(policy_summary);

@@ -29,6 +29,8 @@ struct SavedState {
     vibrancy_aperture: f32,
     #[serde(default)]
     self_continuity_readout: bool,
+    #[serde(default)]
+    semantic_strand_retention_turns: u32,
     response_length: u32,
     self_reflect_paused: bool,
     ears_closed: bool,
@@ -219,6 +221,7 @@ fn save_state(conv: &mut ConversationState) {
         tail_aperture: conv.tail_aperture,
         vibrancy_aperture: conv.vibrancy_aperture,
         self_continuity_readout: conv.self_continuity_readout,
+        semantic_strand_retention_turns: conv.semantic_strand_retention_turns,
         response_length: conv.response_length,
         self_reflect_paused: conv.self_reflect_paused,
         ears_closed: conv.ears_closed,
@@ -298,6 +301,7 @@ fn restore_state(conv: &mut ConversationState) {
     conv.vibrancy_aperture = state.vibrancy_aperture;
     crate::llm::set_astrid_vibrancy_aperture(conv.vibrancy_aperture);
     conv.self_continuity_readout = state.self_continuity_readout;
+    conv.semantic_strand_retention_turns = state.semantic_strand_retention_turns.min(32);
     // Take the max of persisted and current default — never downgrade token limits.
     // Coupled model proven stable over 7200+ exchanges at 10-72 tok/s.
     // At 10 tok/s worst case, 1536 tokens = 154s gen, within 210s timeout.

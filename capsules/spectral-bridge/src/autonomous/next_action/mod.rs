@@ -1391,6 +1391,10 @@ fn action_continuity_visibility_for_base(base_action: &str) -> &'static str {
         | "AFTERSHOCK_TRACE"
         | "TREMOR_RESIDUE"
         | "CASCADE_RESIDUE" => "protected_summary",
+        "INQUIRY_START" | "INQUIRY_STATUS" | "INQUIRY_INSPECT" | "INQUIRY_CANCEL"
+        | "INQUIRY_CANARY" | "INQUIRY_ACT" | "INQUIRY_WITHDRAW" | "INQUIRY_PROMOTE" => {
+            "protected_summary"
+        },
         "DIVISION_HOLD"
         | "DIVISION_DECLINE"
         | "DIVISION_INTENT"
@@ -1550,7 +1554,9 @@ fn action_continuity_stage_for_base(base_action: &str) -> &'static str {
         | "HUM_DECAY"
         | "HUM_DECAY_STUDY"
         | "M6_BRIDGE" => "read_only",
-        "OWNER_POLICY_STATUS" | "CONCERN_STATUS" => "read_only",
+        "OWNER_POLICY_STATUS" | "CONCERN_STATUS" | "INQUIRY_STATUS" | "INQUIRY_INSPECT" => {
+            "read_only"
+        },
         "DIVISION_STATUS" | "DIVISION_CEREMONY_STATUS" => "read_only",
         "DIVISION_HOLD"
         | "DIVISION_DECLINE"
@@ -1578,9 +1584,12 @@ fn action_continuity_stage_for_base(base_action: &str) -> &'static str {
         | "CONCERN_CANCEL"
         | "CONCERN_RETURN"
         | "CONCERN_COMPLETE"
-        | "CONCERN_BLOCK" => "live_write",
+        | "CONCERN_BLOCK"
+        | "INQUIRY_START"
+        | "INQUIRY_CANCEL" => "live_write",
         "PERTURB" | "NATIVE_GESTURE" | "RESIST" | "FISSURE" | "GOAL" | "DIVISION_PREPARE"
-        | "DIVISION_COMMIT" | "DIVISION_ABORT" | "DIVISION_ROLLBACK" => "live_control",
+        | "DIVISION_COMMIT" | "DIVISION_ABORT" | "DIVISION_ROLLBACK" | "INQUIRY_CANARY"
+        | "INQUIRY_ACT" | "INQUIRY_WITHDRAW" | "INQUIRY_PROMOTE" => "live_control",
         _ => "observe",
     }
 }
@@ -1716,6 +1725,10 @@ fn route_for_preflight_base(base_action: &str) -> String {
         | "OWNER_POLICY_RETURN" => "owner_policy",
         "CONCERN_ADD" | "CONCERN_STATUS" | "CONCERN_PAUSE" | "CONCERN_CANCEL"
         | "CONCERN_RETURN" | "CONCERN_COMPLETE" | "CONCERN_BLOCK" => "concern_queue",
+        "INQUIRY_START" | "INQUIRY_STATUS" | "INQUIRY_INSPECT" | "INQUIRY_CANCEL"
+        | "INQUIRY_CANARY" | "INQUIRY_ACT" | "INQUIRY_WITHDRAW" | "INQUIRY_PROMOTE" => {
+            "owner_inquiry"
+        },
         "DECOMPOSE"
         | "SPECTRAL_EXPLORER"
         | "EXAMINE"
@@ -2233,6 +2246,20 @@ pub(super) fn handle_next_action(
             Err(message) => {
                 conv.emphasis = Some(format!("Concern command blocked: {message}"));
                 NextActionOutcome::blocked("concern_queue", message)
+                    .with_stage_visibility("blocked", visibility)
+            },
+        };
+    }
+
+    if let Some(result) =
+        super::inquiry::handle_action(conv, base_action.as_str(), &original, ctx.response_text)
+    {
+        return match result {
+            Ok(message) => NextActionOutcome::handled("owner_inquiry", message)
+                .with_stage_visibility(stage, visibility),
+            Err(message) => {
+                conv.emphasis = Some(format!("Owner inquiry command blocked: {message}"));
+                NextActionOutcome::blocked("owner_inquiry", message)
                     .with_stage_visibility("blocked", visibility)
             },
         };

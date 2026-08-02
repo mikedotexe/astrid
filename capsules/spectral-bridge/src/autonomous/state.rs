@@ -1108,6 +1108,9 @@ pub(in crate::autonomous) struct ConversationState {
     /// — consent-with-evidence: shown to her offline first, then she opts the live readout on. A
     /// pure readout: changes nothing she emits and touches no shared substrate.
     pub self_continuity_readout: bool,
+    /// Number of completed turns that owner-only semantic strand sidecars may
+    /// remain available for self-inquiry. This never admits them to a live lane.
+    pub semantic_strand_retention_turns: u32,
     pub response_length: u32,
     pub emphasis: Option<String>,
     /// v3.6.1 cadence tracking — exchange at which Astrid last picked
@@ -1300,6 +1303,7 @@ impl ConversationState {
             tail_aperture: 0.0,
             vibrancy_aperture: 0.0,
             self_continuity_readout: false,
+            semantic_strand_retention_turns: 0,
             response_length: 768,
             emphasis: None,
             last_temperature_change_exchange: None,
