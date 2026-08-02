@@ -8,7 +8,7 @@ use crate::engine::wasm::host_state::HostState;
 use astrid_events::AstridEvent;
 use astrid_events::EventMetadata;
 use astrid_events::EventReceiver;
-use astrid_events::ipc::{IpcMessage, IpcPayload};
+use astrid_events::ipc::{IpcMessage, IpcPayload, IpcTraceContextV1};
 
 // ── Extracted testable core ─────────────────────────────────────────
 
@@ -137,6 +137,13 @@ pub(crate) fn remove_subscription(
     Ok(())
 }
 
+fn child_trace_context(caller: Option<&IpcMessage>) -> Option<IpcTraceContextV1> {
+    caller
+        .and_then(|message| message.trace.as_ref())
+        .filter(|trace| trace.is_supported())
+        .map(IpcTraceContextV1::child)
+}
+
 /// Maximum timeout for blocking IPC receive (60 seconds).
 const MAX_RECV_TIMEOUT_MS: u64 = 60_000;
 
@@ -217,13 +224,18 @@ impl ipc::Host for HostState {
             .as_ref()
             .and_then(|c| c.principal.clone())
             .unwrap_or_else(|| self.principal.to_string());
-        let message =
+        let trace = child_trace_context(self.caller_context.as_ref());
+        let mut message =
             IpcMessage::new(topic, ipc_payload, self.capsule_uuid).with_principal(principal_str);
+        if let Some(trace) = trace {
+            message = message.with_trace(trace);
+        }
 
-        let event = AstridEvent::Ipc {
-            metadata: EventMetadata::new("wasm_guest").with_session_id(self.capsule_uuid),
-            message,
-        };
+        let mut metadata = EventMetadata::new("wasm_guest").with_session_id(self.capsule_uuid);
+        if let Some(trace) = message.trace.as_ref() {
+            metadata = metadata.with_correlation_id(trace.trace_id);
+        }
+        let event = AstridEvent::Ipc { metadata, message };
 
         // Publish to the event bus
         self.event_bus.publish(event);

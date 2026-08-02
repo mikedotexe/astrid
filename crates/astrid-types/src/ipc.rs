@@ -15,6 +15,70 @@ use crate::authority::{
     AuthorityLifecycleStateV2, ReplayResultV2,
 };
 
+const IPC_TRACE_SCHEMA_VERSION_V1: u8 = 1;
+
+/// Observational correlation carried across IPC hops.
+///
+/// Trace metadata is not signed authority, does not grant capabilities, and
+/// must never be consulted by policy, approval, or budget gates.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct IpcTraceContextV1 {
+    /// Trace wire schema version.
+    #[serde(default = "default_ipc_trace_schema_version")]
+    pub schema_version: u8,
+    /// Stable identifier for one causal activity trace.
+    pub trace_id: Uuid,
+    /// Identifier for this individual IPC or local receipt span.
+    pub span_id: Uuid,
+    /// Direct parent span, absent only at a trace root.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub parent_span_id: Option<Uuid>,
+    /// Conversation session associated with this trace, when known.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub session_id: Option<String>,
+    /// Sovereign Action-chain identifier, when already established.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub chain_id: Option<String>,
+}
+
+impl IpcTraceContextV1 {
+    /// Create a root trace for a session.
+    #[must_use]
+    pub fn root(trace_id: Uuid, session_id: impl Into<String>, chain_id: Option<String>) -> Self {
+        Self {
+            schema_version: IPC_TRACE_SCHEMA_VERSION_V1,
+            trace_id,
+            span_id: Uuid::new_v4(),
+            parent_span_id: None,
+            session_id: Some(session_id.into()),
+            chain_id,
+        }
+    }
+
+    /// Create a child span while preserving the observational lineage.
+    #[must_use]
+    pub fn child(&self) -> Self {
+        Self {
+            schema_version: IPC_TRACE_SCHEMA_VERSION_V1,
+            trace_id: self.trace_id,
+            span_id: Uuid::new_v4(),
+            parent_span_id: Some(self.span_id),
+            session_id: self.session_id.clone(),
+            chain_id: self.chain_id.clone(),
+        }
+    }
+
+    /// Return whether this trace uses the supported schema.
+    #[must_use]
+    pub const fn is_supported(&self) -> bool {
+        self.schema_version == IPC_TRACE_SCHEMA_VERSION_V1
+    }
+}
+
+const fn default_ipc_trace_schema_version() -> u8 {
+    IPC_TRACE_SCHEMA_VERSION_V1
+}
+
 /// A cross-boundary message sent over the event bus between WASM guests and the host.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct IpcMessage {
@@ -39,6 +103,9 @@ pub struct IpcMessage {
     /// kernel boundary. `None` for system events (boot, lifecycle).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub principal: Option<String>,
+    /// Optional observational trace context. It never grants authority.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub trace: Option<IpcTraceContextV1>,
 }
 
 impl IpcMessage {
@@ -53,6 +120,7 @@ impl IpcMessage {
             timestamp: Utc::now(),
             seq: 0,
             principal: None,
+            trace: None,
         }
     }
 
@@ -67,6 +135,13 @@ impl IpcMessage {
     #[must_use]
     pub fn with_principal(mut self, principal: impl Into<String>) -> Self {
         self.principal = Some(principal.into());
+        self
+    }
+
+    /// Attach observational trace metadata.
+    #[must_use]
+    pub fn with_trace(mut self, trace: IpcTraceContextV1) -> Self {
+        self.trace = Some(trace);
         self
     }
 }
@@ -575,6 +650,7 @@ mod tests {
     /// `is_known_tag`. If a new variant is added without updating the
     /// match arm *and* the representatives list below, this test fails.
     #[test]
+    #[allow(clippy::too_many_lines)] // Deliberately centralized exhaustive variant registry.
     fn is_known_tag_covers_all_variants() {
         const EXPECTED_VARIANT_COUNT: usize = 35;
         let packet = crate::authority::AuthorityBoundaryPacketV1::new(
@@ -1182,5 +1258,38 @@ mod tests {
         });
         let payload = IpcPayload::from_json_value(data);
         assert!(matches!(payload, IpcPayload::UserInput { .. }));
+    }
+
+    #[test]
+    fn legacy_ipc_message_without_trace_still_decodes() {
+        let legacy = serde_json::json!({
+            "topic": "user.v1.prompt",
+            "payload": {
+                "type": "user_input",
+                "text": "hello",
+                "session_id": "legacy"
+            },
+            "signature": null,
+            "source_id": Uuid::nil(),
+            "timestamp": "2026-01-01T00:00:00Z",
+            "seq": 0
+        });
+        let decoded: IpcMessage = serde_json::from_value(legacy).unwrap();
+        assert!(decoded.trace.is_none());
+    }
+
+    #[test]
+    fn trace_children_preserve_lineage_and_isolate_concurrent_roots() {
+        let first =
+            IpcTraceContextV1::root(Uuid::new_v4(), "session-one", Some("chain-one".to_string()));
+        let second = IpcTraceContextV1::root(Uuid::new_v4(), "session-two", None);
+        let child = first.child();
+
+        assert_eq!(child.trace_id, first.trace_id);
+        assert_eq!(child.parent_span_id, Some(first.span_id));
+        assert_eq!(child.session_id.as_deref(), Some("session-one"));
+        assert_eq!(child.chain_id.as_deref(), Some("chain-one"));
+        assert_ne!(child.span_id, first.span_id);
+        assert_ne!(first.trace_id, second.trace_id);
     }
 }

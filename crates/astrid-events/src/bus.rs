@@ -1,15 +1,128 @@
 //! Event bus for broadcasting events to subscribers.
 
-use std::sync::Arc;
+use std::collections::BTreeMap;
 use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::{Arc, Mutex};
 use tokio::sync::broadcast;
 use tracing::{debug, trace, warn};
 
 use crate::event::AstridEvent;
+use crate::ipc::{IpcMessage, IpcPayload, IpcTraceContextV1};
 use crate::subscriber::SubscriberRegistry;
 
 /// Default channel capacity for the event bus.
 pub(crate) const DEFAULT_CHANNEL_CAPACITY: usize = 1024;
+
+const MAX_TRACE_CORRELATIONS: usize = 4096;
+
+/// Bounded, observational-only correlations used to repair context lost by
+/// asynchronous capsule boundaries. Keys are protocol identifiers, never
+/// timestamps, and none of this state participates in authorization.
+#[derive(Debug, Default)]
+struct IpcTraceRegistry {
+    sessions: BTreeMap<String, IpcTraceContextV1>,
+    llm_requests: BTreeMap<uuid::Uuid, IpcTraceContextV1>,
+    tool_calls: BTreeMap<String, IpcTraceContextV1>,
+}
+
+impl IpcTraceRegistry {
+    fn enrich(&mut self, message: &mut IpcMessage) {
+        if message
+            .trace
+            .as_ref()
+            .is_some_and(|trace| !trace.is_supported())
+        {
+            message.trace = None;
+        }
+
+        Self::normalize_user_input_root(message);
+        Self::reject_mismatched_session(message);
+
+        if message.trace.is_none() {
+            message.trace = self.exact_parent(message).map(IpcTraceContextV1::child);
+        }
+
+        let Some(trace) = message
+            .trace
+            .as_ref()
+            .filter(|trace| trace.is_supported())
+            .cloned()
+        else {
+            return;
+        };
+
+        match &message.payload {
+            IpcPayload::UserInput { session_id, .. } => {
+                insert_bounded(&mut self.sessions, session_id.clone(), trace);
+            },
+            IpcPayload::LlmRequest { request_id, .. } => {
+                insert_bounded(&mut self.llm_requests, *request_id, trace);
+            },
+            IpcPayload::ToolExecuteRequest { call_id, .. } => {
+                insert_bounded(&mut self.tool_calls, call_id.clone(), trace);
+            },
+            _ => {},
+        }
+    }
+
+    fn normalize_user_input_root(message: &mut IpcMessage) {
+        let IpcPayload::UserInput { session_id, .. } = &message.payload else {
+            return;
+        };
+        let trace_id = message
+            .trace
+            .as_ref()
+            .map_or_else(uuid::Uuid::new_v4, |trace| trace.trace_id);
+        let chain_id = message
+            .trace
+            .as_ref()
+            .and_then(|trace| trace.chain_id.clone());
+        let needs_root = message.trace.as_ref().is_none_or(|trace| {
+            trace.parent_span_id.is_some() || trace.session_id.as_deref() != Some(session_id)
+        });
+        if needs_root {
+            message.trace = Some(IpcTraceContextV1::root(
+                trace_id,
+                session_id.clone(),
+                chain_id,
+            ));
+        }
+    }
+
+    fn reject_mismatched_session(message: &mut IpcMessage) {
+        let IpcPayload::AgentResponse { session_id, .. } = &message.payload else {
+            return;
+        };
+        if message.trace.as_ref().is_some_and(|trace| {
+            trace
+                .session_id
+                .as_deref()
+                .is_some_and(|id| id != session_id)
+        }) {
+            message.trace = None;
+        }
+    }
+
+    fn exact_parent(&self, message: &IpcMessage) -> Option<&IpcTraceContextV1> {
+        match &message.payload {
+            IpcPayload::AgentResponse { session_id, .. } => self.sessions.get(session_id),
+            IpcPayload::LlmStreamEvent { request_id, .. }
+            | IpcPayload::LlmResponse { request_id, .. } => self.llm_requests.get(request_id),
+            IpcPayload::ToolExecuteResult { call_id, .. } => self.tool_calls.get(call_id),
+            _ => None,
+        }
+    }
+}
+
+fn insert_bounded<K: Ord + Clone, V>(map: &mut BTreeMap<K, V>, key: K, value: V) {
+    if map.len() >= MAX_TRACE_CORRELATIONS
+        && !map.contains_key(&key)
+        && let Some(oldest_key) = map.keys().next().cloned()
+    {
+        map.remove(&oldest_key);
+    }
+    map.insert(key, value);
+}
 
 /// Event bus for broadcasting events to all subscribers.
 ///
@@ -31,6 +144,8 @@ pub struct EventBus {
     capacity: usize,
     /// Monotonic sequence counter for IPC message ordering.
     ipc_seq: Arc<AtomicU64>,
+    /// Exact protocol-identifier trace correlations.
+    ipc_traces: Arc<Mutex<IpcTraceRegistry>>,
 }
 
 impl EventBus {
@@ -49,6 +164,7 @@ impl EventBus {
             registry: Arc::new(SubscriberRegistry::new()),
             capacity,
             ipc_seq: Arc::new(AtomicU64::new(1)),
+            ipc_traces: Arc::new(Mutex::new(IpcTraceRegistry::default())),
         }
     }
 
@@ -61,10 +177,24 @@ impl EventBus {
     pub fn publish(&self, mut event: AstridEvent) -> usize {
         // Stamp IPC messages with a monotonic sequence number for ordered delivery.
         if let AstridEvent::Ipc {
-            ref mut message, ..
+            ref mut metadata,
+            ref mut message,
         } = event
         {
+            self.ipc_traces
+                .lock()
+                .unwrap_or_else(std::sync::PoisonError::into_inner)
+                .enrich(message);
             message.seq = self.ipc_seq.fetch_add(1, Ordering::Relaxed);
+            if let Some(ipc_trace) = message.trace.as_ref() {
+                metadata.correlation_id = Some(ipc_trace.trace_id);
+                if metadata.session_id.is_none() {
+                    metadata.session_id = ipc_trace
+                        .session_id
+                        .as_deref()
+                        .and_then(|session_id| uuid::Uuid::parse_str(session_id).ok());
+                }
+            }
         }
         let event = Arc::new(event);
 
@@ -146,6 +276,7 @@ impl Clone for EventBus {
             registry: Arc::clone(&self.registry),
             capacity: self.capacity,
             ipc_seq: Arc::clone(&self.ipc_seq),
+            ipc_traces: Arc::clone(&self.ipc_traces),
         }
     }
 }
@@ -851,5 +982,199 @@ mod tests {
 
         // No more messages.
         assert!(receiver.try_recv().is_none());
+    }
+
+    #[tokio::test]
+    async fn ipc_bus_mints_root_and_repairs_async_agent_response() {
+        let bus = EventBus::new();
+        let mut receiver = bus.subscribe();
+        let session_id = uuid::Uuid::new_v4().to_string();
+        let input = crate::ipc::IpcMessage::new(
+            "user.v1.prompt",
+            crate::ipc::IpcPayload::UserInput {
+                text: "hello".into(),
+                session_id: session_id.clone(),
+                context: None,
+            },
+            uuid::Uuid::new_v4(),
+        )
+        .with_principal("operator");
+        bus.publish(AstridEvent::Ipc {
+            metadata: EventMetadata::new("socket"),
+            message: input,
+        });
+        let root_event = receiver.recv().await.unwrap();
+        let AstridEvent::Ipc {
+            metadata,
+            message: root_message,
+        } = &*root_event
+        else {
+            panic!("expected IPC event");
+        };
+        let root = root_message.trace.as_ref().unwrap().clone();
+        assert!(root.parent_span_id.is_none());
+        assert_eq!(root.session_id.as_deref(), Some(session_id.as_str()));
+        assert_eq!(metadata.correlation_id, Some(root.trace_id));
+        assert_eq!(
+            metadata.session_id.map(|id| id.to_string()),
+            Some(session_id.clone())
+        );
+        assert_eq!(root_message.principal.as_deref(), Some("operator"));
+
+        let response = crate::ipc::IpcMessage::new(
+            "agent.v1.response",
+            crate::ipc::IpcPayload::AgentResponse {
+                text: "hi".into(),
+                is_final: true,
+                session_id,
+            },
+            uuid::Uuid::new_v4(),
+        )
+        .with_principal("astrid");
+        bus.publish(AstridEvent::Ipc {
+            metadata: EventMetadata::new("react"),
+            message: response,
+        });
+        let response_event = receiver.recv().await.unwrap();
+        let AstridEvent::Ipc { metadata, message } = &*response_event else {
+            panic!("expected IPC event");
+        };
+        let child = message.trace.as_ref().unwrap();
+        assert_eq!(child.trace_id, root.trace_id);
+        assert_eq!(child.parent_span_id, Some(root.span_id));
+        assert_eq!(metadata.correlation_id, Some(root.trace_id));
+        assert_eq!(message.principal.as_deref(), Some("astrid"));
+    }
+
+    #[tokio::test]
+    async fn ipc_bus_keeps_concurrent_sessions_isolated() {
+        let bus = EventBus::new();
+        let mut receiver = bus.subscribe();
+        let sessions = ["session-one", "session-two"];
+        let mut roots = BTreeMap::new();
+
+        for session_id in sessions {
+            bus.publish(AstridEvent::Ipc {
+                metadata: EventMetadata::new("socket"),
+                message: crate::ipc::IpcMessage::new(
+                    "user.v1.prompt",
+                    crate::ipc::IpcPayload::UserInput {
+                        text: session_id.into(),
+                        session_id: session_id.into(),
+                        context: None,
+                    },
+                    uuid::Uuid::new_v4(),
+                ),
+            });
+            let event = receiver.recv().await.unwrap();
+            let AstridEvent::Ipc { message, .. } = &*event else {
+                panic!("expected IPC event");
+            };
+            roots.insert(session_id, message.trace.as_ref().unwrap().trace_id);
+        }
+
+        for session_id in sessions.into_iter().rev() {
+            bus.publish(AstridEvent::Ipc {
+                metadata: EventMetadata::new("react"),
+                message: crate::ipc::IpcMessage::new(
+                    "agent.v1.response",
+                    crate::ipc::IpcPayload::AgentResponse {
+                        text: session_id.into(),
+                        is_final: true,
+                        session_id: session_id.into(),
+                    },
+                    uuid::Uuid::new_v4(),
+                ),
+            });
+            let event = receiver.recv().await.unwrap();
+            let AstridEvent::Ipc { message, .. } = &*event else {
+                panic!("expected IPC event");
+            };
+            assert_eq!(message.trace.as_ref().unwrap().trace_id, roots[session_id]);
+        }
+    }
+
+    #[tokio::test]
+    async fn ipc_bus_correlates_tool_result_only_by_exact_call_id() {
+        let bus = EventBus::new();
+        let mut receiver = bus.subscribe();
+        let root = crate::ipc::IpcTraceContextV1::root(uuid::Uuid::new_v4(), "session", None);
+        bus.publish(AstridEvent::Ipc {
+            metadata: EventMetadata::new("react"),
+            message: crate::ipc::IpcMessage::new(
+                "tool.v1.execute",
+                crate::ipc::IpcPayload::ToolExecuteRequest {
+                    call_id: "call-one".into(),
+                    tool_name: "web_search".into(),
+                    arguments: serde_json::json!({"query": "echo state network"}),
+                },
+                uuid::Uuid::new_v4(),
+            )
+            .with_trace(root.clone()),
+        });
+        let _ = receiver.recv().await.unwrap();
+
+        bus.publish(AstridEvent::Ipc {
+            metadata: EventMetadata::new("web"),
+            message: crate::ipc::IpcMessage::new(
+                "tool.v1.result",
+                crate::ipc::IpcPayload::ToolExecuteResult {
+                    call_id: "call-other".into(),
+                    result: crate::llm::ToolCallResult::success("call-other", "unrelated"),
+                },
+                uuid::Uuid::new_v4(),
+            ),
+        });
+        let unrelated = receiver.recv().await.unwrap();
+        let AstridEvent::Ipc { message, .. } = &*unrelated else {
+            panic!("expected IPC event");
+        };
+        assert!(message.trace.is_none());
+
+        bus.publish(AstridEvent::Ipc {
+            metadata: EventMetadata::new("web"),
+            message: crate::ipc::IpcMessage::new(
+                "tool.v1.result",
+                crate::ipc::IpcPayload::ToolExecuteResult {
+                    call_id: "call-one".into(),
+                    result: crate::llm::ToolCallResult::success("call-one", "bounded result"),
+                },
+                uuid::Uuid::new_v4(),
+            ),
+        });
+        let correlated = receiver.recv().await.unwrap();
+        let AstridEvent::Ipc { message, .. } = &*correlated else {
+            panic!("expected IPC event");
+        };
+        let child = message.trace.as_ref().unwrap();
+        assert_eq!(child.trace_id, root.trace_id);
+        assert_eq!(child.parent_span_id, Some(root.span_id));
+    }
+
+    #[tokio::test]
+    async fn malformed_trace_is_not_propagated() {
+        let bus = EventBus::new();
+        let mut receiver = bus.subscribe();
+        let mut malformed =
+            crate::ipc::IpcTraceContextV1::root(uuid::Uuid::new_v4(), "session", None);
+        malformed.schema_version = 99;
+        bus.publish(AstridEvent::Ipc {
+            metadata: EventMetadata::new("unknown"),
+            message: crate::ipc::IpcMessage::new(
+                "agent.v1.response",
+                crate::ipc::IpcPayload::AgentResponse {
+                    text: "unattributed".into(),
+                    is_final: true,
+                    session_id: "session".into(),
+                },
+                uuid::Uuid::new_v4(),
+            )
+            .with_trace(malformed),
+        });
+        let event = receiver.recv().await.unwrap();
+        let AstridEvent::Ipc { message, .. } = &*event else {
+            panic!("expected IPC event");
+        };
+        assert!(message.trace.is_none());
     }
 }
