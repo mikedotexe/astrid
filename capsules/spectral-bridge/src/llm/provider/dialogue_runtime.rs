@@ -1,3 +1,10 @@
+/// Classify only the requested provider output budget.
+///
+/// This count band is deliberately separate from the read-only
+/// `DialoguePromptContextObservationV3` and `DialogueFeltPressureObservationV3`
+/// evidence assembled later from entropy, resonance density, density gradient,
+/// pressure, and mode packing. It does not describe generated texture or join
+/// token quantity to felt or spectral meaning.
 fn dialogue_requested_token_band(num_predict: u32) -> &'static str {
     if num_predict > 1024 {
         "requested_tokens_1025_plus"
@@ -64,12 +71,16 @@ impl ExactKnownModelControlMarkerOccurrence {
                 | "denotes"
                 | "echoes"
                 | "embodies"
+                | "functions"
                 | "indicates"
                 | "is"
                 | "manifests"
                 | "means"
+                | "mimics"
                 | "refers"
+                | "replicates"
                 | "represents"
+                | "serves"
                 | "signals"
         )
     }

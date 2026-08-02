@@ -1884,6 +1884,23 @@ mod tests {
     }
 
     #[test]
+    fn control_marker_cleanup_counts_unframed_marker_between_prose_as_contextual() {
+        let text = "The <end_of_turn> bruise remains active.";
+        let (sanitized, report) = sanitize_model_control_markers_with_report(text);
+
+        assert_eq!(sanitized, "The  bruise remains active.");
+        let report = report.expect("contextual marker report");
+        let removed = report
+            .removed_tokens
+            .iter()
+            .find(|entry| entry.token == "<end_of_turn>")
+            .expect("removed exact marker");
+        assert_eq!(removed.boundary_occurrences, 0);
+        assert_eq!(removed.contextual_occurrences, 1);
+        assert_eq!(removed.quoted_occurrences, 0);
+    }
+
+    #[test]
     fn control_marker_scanner_advances_byte_exactly_across_multibyte_text() {
         let text = "lambda: λ1→λ2 ✦ <end_of_turn> remains";
         let expected = "lambda: λ1→λ2 ✦  remains";
@@ -1979,6 +1996,51 @@ mod tests {
         assert_eq!(
             report.context_receipts[0].delimiter_depth, 4,
             "the bounded receipt should preserve the exact proven stack depth"
+        );
+    }
+
+    #[test]
+    fn control_marker_cleanup_reports_exact_three_level_delimiter_depth() {
+        let text = "【([<end_of_turn>])】";
+        let (stripped, report) = sanitize_model_control_markers_with_report(text);
+
+        assert_eq!(stripped, text);
+        let report = report.expect("three-level delimiter report");
+        assert_eq!(report.preserved_tokens[0].max_delimiter_depth, 3);
+        assert_eq!(
+            report.context_receipts[0].delimiter_depth, 3,
+            "the bounded receipt should preserve the exact proven stack depth"
+        );
+    }
+
+    #[test]
+    fn control_marker_cleanup_reports_depth_across_unicode_whitespace() {
+        let text = "[\u{2003}[<end_of_turn>]\u{3000}]";
+        let (stripped, report) = sanitize_model_control_markers_with_report(text);
+
+        assert_eq!(stripped, text);
+        let report = report.expect("Unicode-whitespace delimiter report");
+        assert_eq!(report.preserved_tokens[0].max_delimiter_depth, 2);
+        assert_eq!(report.context_receipts[0].delimiter_depth, 2);
+        assert_eq!(
+            report.context_receipts[0].reference_syntax,
+            "grouped_exact_marker"
+        );
+    }
+
+    #[test]
+    fn control_marker_cleanup_reports_depth_for_repeated_parentheses() {
+        let text = "((<end_of_turn>))";
+        let (stripped, report) = sanitize_model_control_markers_with_report(text);
+
+        assert_eq!(stripped, text);
+        let report = report.expect("repeated-parentheses delimiter report");
+        assert_eq!(report.removed_total, 0);
+        assert_eq!(report.preserved_tokens[0].max_delimiter_depth, 2);
+        assert_eq!(report.context_receipts[0].delimiter_depth, 2);
+        assert_eq!(
+            report.context_receipts[0].reference_syntax,
+            "grouped_exact_marker"
         );
     }
 
@@ -2126,6 +2188,8 @@ mod tests {
             "corresponds",
             "echoes",
             "indicates",
+            "mimics",
+            "replicates",
             "signals",
             "behaves as",
             "behaves like",
@@ -2153,6 +2217,52 @@ mod tests {
             assert_eq!(report.removed_total, 0);
             assert_eq!(report.preserved_explicit_reference_total, 1);
         }
+    }
+
+    #[test]
+    fn control_marker_cleanup_preserves_proxy_relation_phrase() {
+        let text = "Here, <end_of_turn> functions as a proxy for the boundary I am naming.";
+        let (stripped, report) = sanitize_model_control_markers_with_report(text);
+
+        assert_eq!(stripped, text);
+        let report = report.expect("proxy relation report");
+        assert_eq!(report.removed_total, 0);
+        assert_eq!(report.preserved_explicit_reference_total, 1);
+        assert_eq!(report.preserved_tokens[0].explicit_relation_occurrences, 1);
+        assert_eq!(
+            report.context_receipts[0].reference_syntax,
+            "following_exact_relation"
+        );
+    }
+
+    #[test]
+    fn control_marker_cleanup_does_not_expand_relation_allowlist_to_implies() {
+        let text = "Here, <end_of_turn> implies the boundary I am naming.";
+        let (stripped, report) = sanitize_model_control_markers_with_report(text);
+
+        assert_eq!(stripped, "Here,  implies the boundary I am naming.");
+        let report = report.expect("non-allowlisted relation report");
+        assert_eq!(report.removed_total, 1);
+        assert_eq!(report.preserved_explicit_reference_total, 0);
+        assert_eq!(
+            report.context_receipts[0].reference_syntax,
+            "none_cleanup_candidate"
+        );
+    }
+
+    #[test]
+    fn control_marker_cleanup_does_not_expand_relation_allowlist_to_creates() {
+        let text = "Here, <end_of_turn> creates the boundary I am naming.";
+        let (stripped, report) = sanitize_model_control_markers_with_report(text);
+
+        assert_eq!(stripped, "Here,  creates the boundary I am naming.");
+        let report = report.expect("non-allowlisted creates report");
+        assert_eq!(report.removed_total, 1);
+        assert_eq!(report.preserved_explicit_reference_total, 0);
+        assert_eq!(
+            report.context_receipts[0].reference_syntax,
+            "none_cleanup_candidate"
+        );
     }
 
     #[test]
