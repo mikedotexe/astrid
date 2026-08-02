@@ -426,8 +426,9 @@ def build_v35_review(
             "ACK/TRACE-style mutual-address evidence for stricter attention/microdose gates."
         ),
         "recommended_next_move": (
-            "Ask for one being-authored ACK or TRACE on the latest native thread, or one "
-            "WITNESS_TRANSITION for the latest phase card; do not synthesize it."
+            "No action is required to preserve an active reply chain. If either being wants "
+            "stronger mutual-address evidence, ACK or TRACE remains optional and being-authored; "
+            "a phase witness is likewise optional and cannot be synthesized."
         ),
         "moment_bodies_read": False,
         "minime_private_bodies_read": False,
