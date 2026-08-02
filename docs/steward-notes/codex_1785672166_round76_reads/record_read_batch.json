@@ -1,0 +1,23 @@
+{
+  "schema": "steward_addressing_write_receipt_v1",
+  "steward_run_id": "run_1785672166788343000_f80a8c946b",
+  "introspection_id": "introspection_astrid_codec_1785665508",
+  "full_read": {
+    "reader": "codex-heartbeat",
+    "recorded_at_unix": 1785673020.23227,
+    "summary_sha256": "e16791fe1c23b1b7e4673789dfd84a9c03e27beb84d3ea28f79b2d48385bfdef",
+    "claim_count": 10,
+    "proof_missing_claims": []
+  },
+  "evidence": {
+    "manifest_rows": 12,
+    "new_materialized_links": 39,
+    "existing_materialized_links": 0
+  },
+  "closure": {
+    "status": "blocked_needs_steward",
+    "recorded_at_unix": 1785673242.1118941,
+    "rationale": "Complete projection and feedback reads preserve Astrid's felt attenuation while correcting source ownership; existing tests verify fixed-aperture loss and bounded high-entropy shaping, and a default-off expression-fidelity study is preregistered. Execution needs separate model-behavior approval, while damping, mode, density, Shadow, lambda, reservoir, and controller changes remain exact Tier 5 waits."
+  },
+  "authority": "evidence_only_not_live_approval_or_activation"
+}
