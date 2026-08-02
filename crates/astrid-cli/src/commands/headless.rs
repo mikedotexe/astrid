@@ -62,6 +62,8 @@ pub(crate) async fn run_headless(
     auto_approve: bool,
     session_name: Option<String>,
     print_session: bool,
+    trace_id: Option<uuid::Uuid>,
+    trace_chain_id: Option<String>,
 ) -> Result<()> {
     use astrid_core::SessionId;
 
@@ -102,7 +104,14 @@ pub(crate) async fn run_headless(
     };
 
     // Send the prompt and collect the streaming response
-    client.send_input(full_prompt).await?;
+    let trace = trace_id.map(|trace_id| {
+        astrid_types::ipc::IpcTraceContextV1::root(
+            trace_id,
+            session_id.0.to_string(),
+            trace_chain_id,
+        )
+    });
+    client.send_input_with_trace(full_prompt, trace).await?;
     let (response_text, tool_calls) =
         collect_response(&mut client, &session_id, format, auto_approve).await?;
 
