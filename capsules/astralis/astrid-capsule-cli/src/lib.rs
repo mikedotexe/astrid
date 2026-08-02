@@ -12,11 +12,16 @@ impl astrid_guest::Guest for CliCapsule {
         sys::log_info(
             "astrid-capsule-cli is running as an optional compatibility uplink; native socket daemon management is canonical",
         );
-        let handle = ipc::subscribe("astrid.v1.capsules_loaded").ok();
+        let Ok(handle) = ipc::subscribe("astrid.v1.capsules_loaded") else {
+            sys::log_warn(
+                "astrid-capsule-cli could not subscribe to the capsule lifecycle topic; exiting",
+            );
+            return;
+        };
         sys::signal_ready();
         loop {
-            if let Some(handle_id) = handle {
-                let _ = ipc::recv(handle_id, 60_000);
+            if ipc::recv(handle, 60_000).is_err() {
+                break;
             }
         }
     }

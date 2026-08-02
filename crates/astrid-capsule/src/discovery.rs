@@ -3,13 +3,27 @@
 //! Scans well-known directories for `Capsule.toml` files, providing
 //! the entry point for the Manifest-First architecture.
 
-use std::collections::HashSet;
+use std::collections::{BTreeMap, HashSet};
 use std::path::{Component, Path, PathBuf};
 
 use tracing::{debug, info, warn};
 
 use crate::error::{CapsuleError, CapsuleResult};
-use crate::manifest::{CapsuleManifest, TopicDirection};
+use crate::manifest::{CapsuleManifest, InterceptorDef, TopicDirection};
+
+#[derive(Debug, Default, serde::Deserialize)]
+struct DeclarativeRoutes {
+    #[serde(default)]
+    publish: BTreeMap<String, DeclarativeRoute>,
+    #[serde(default)]
+    subscribe: BTreeMap<String, DeclarativeRoute>,
+}
+
+#[derive(Debug, serde::Deserialize)]
+struct DeclarativeRoute {
+    #[serde(default)]
+    handler: Option<String>,
+}
 
 /// Standard capsule manifest file name.
 pub(crate) const MANIFEST_FILE_NAME: &str = "Capsule.toml";
@@ -195,6 +209,8 @@ pub fn load_manifest(path: &Path) -> CapsuleResult<CapsuleManifest> {
             message: e.to_string(),
         })?;
 
+    merge_declarative_routes(path, &content, &mut manifest)?;
+
     // Merge component-level capabilities into the root capabilities.
     // [[component]].capabilities can declare fs_read, fs_write, host_process,
     // etc. These must be visible in the root `manifest.capabilities` because
@@ -246,18 +262,26 @@ pub fn load_manifest(path: &Path) -> CapsuleResult<CapsuleManifest> {
         });
     }
 
-    // Validate ipc_publish and interceptor patterns for empty segments.
-    let ipc_patterns = manifest
+    // Validate IPC ACL and interceptor patterns for empty segments.
+    let publish_patterns = manifest
         .capabilities
         .ipc_publish
         .iter()
         .map(|p| ("ipc_publish pattern", p.as_str()));
+    let subscribe_patterns = manifest
+        .capabilities
+        .ipc_subscribe
+        .iter()
+        .map(|p| ("ipc_subscribe pattern", p.as_str()));
     let interceptor_patterns = manifest
         .interceptors
         .iter()
         .map(|i| ("interceptor event pattern", i.event.as_str()));
 
-    for (kind, pattern) in ipc_patterns.chain(interceptor_patterns) {
+    for (kind, pattern) in publish_patterns
+        .chain(subscribe_patterns)
+        .chain(interceptor_patterns)
+    {
         if !crate::topic::has_valid_segments(pattern) {
             return Err(CapsuleError::ManifestParseError {
                 path: path.to_path_buf(),
@@ -374,6 +398,59 @@ pub fn load_manifest(path: &Path) -> CapsuleResult<CapsuleManifest> {
     }
 
     Ok(manifest)
+}
+
+/// Merge Cargo-like `[publish]` and `[subscribe]` route declarations into the
+/// runtime structures used by Astrid 0.5.
+///
+/// Astralis capsules briefly shipped both manifest dialects during the
+/// Component Model transition. The route tables are authoritative for IPC ACLs;
+/// a subscribe route with a `handler` also declares an interceptor.
+fn merge_declarative_routes(
+    path: &Path,
+    content: &str,
+    manifest: &mut CapsuleManifest,
+) -> CapsuleResult<()> {
+    let routes: DeclarativeRoutes =
+        toml::from_str(content).map_err(|e| CapsuleError::ManifestParseError {
+            path: path.to_path_buf(),
+            message: e.to_string(),
+        })?;
+
+    for topic in routes.publish.keys() {
+        if !manifest.capabilities.ipc_publish.contains(topic) {
+            manifest.capabilities.ipc_publish.push(topic.clone());
+        }
+    }
+
+    for (topic, route) in routes.subscribe {
+        if !manifest.capabilities.ipc_subscribe.contains(&topic) {
+            manifest.capabilities.ipc_subscribe.push(topic.clone());
+        }
+
+        let Some(handler) = route.handler else {
+            continue;
+        };
+        if handler.trim().is_empty() {
+            return Err(CapsuleError::ManifestParseError {
+                path: path.to_path_buf(),
+                message: format!("[subscribe].'{topic}' handler must not be empty"),
+            });
+        }
+        if !manifest
+            .interceptors
+            .iter()
+            .any(|existing| existing.event == topic && existing.action == handler)
+        {
+            manifest.interceptors.push(InterceptorDef {
+                event: topic,
+                action: handler,
+                priority: 100,
+            });
+        }
+    }
+
+    Ok(())
 }
 
 #[cfg(test)]
@@ -495,6 +572,36 @@ version = "0.1.0"
     }
 
     #[test]
+    fn load_manifest_parses_legacy_flat_imports_and_exports() {
+        let toml = format!(
+            "{VALID_HEADER}\n\
+             [imports]\n\
+             \"astrid:llm\" = \"^1.0\"\n\
+             \"astrid:session\" = {{ version = \"^1.0\", optional = true }}\n\n\
+             [exports]\n\
+             \"astrid:spark\" = \"1.0.0\"\n"
+        );
+        let m = load_from_toml(&toml).unwrap();
+
+        let astrid_imports = m.imports.get("astrid").unwrap();
+        assert_eq!(astrid_imports.len(), 2);
+        assert!(!astrid_imports["llm"].optional);
+        assert!(astrid_imports["session"].optional);
+
+        let astrid_exports = m.exports.get("astrid").unwrap();
+        assert_eq!(
+            astrid_exports["spark"].version,
+            semver::Version::new(1, 0, 0)
+        );
+    }
+
+    #[test]
+    fn load_manifest_rejects_flat_interface_without_namespace() {
+        let toml = format!("{VALID_HEADER}\n[exports]\nspark = \"1.0.0\"");
+        assert!(load_from_toml(&toml).is_err());
+    }
+
+    #[test]
     fn load_manifest_defaults_empty_imports_exports() {
         let m = load_from_toml(VALID_HEADER).unwrap();
         assert!(m.imports.is_empty());
@@ -575,6 +682,77 @@ version = "0.1.0"
         assert!(
             load_from_toml(&toml).is_ok(),
             "uplink without imports should be valid"
+        );
+    }
+
+    #[test]
+    fn load_manifest_merges_declarative_routes_into_runtime_acl_and_interceptors() {
+        let toml = format!(
+            "{VALID_HEADER}\n\
+             [capabilities]\n\
+             ipc_publish = [\"existing.v1.event\"]\n\
+             \n\
+             [[interceptor]]\n\
+             event = \"existing.v1.request\"\n\
+             action = \"handle_existing\"\n\
+             \n\
+             [publish]\n\
+             \"llm.v1.stream.provider\" = {{ wit = \"stream-event\" }}\n\
+             \"existing.v1.event\" = {{ wit = \"event\" }}\n\
+             \n\
+             [subscribe]\n\
+             \"llm.v1.request.generate.provider\" = {{ wit = \"request\", handler = \"handle_generate\" }}\n\
+             \"registry.v1.*\" = {{ wit = \"TODO\" }}\n\
+             \"existing.v1.request\" = {{ wit = \"request\", handler = \"handle_existing\" }}\n"
+        );
+
+        let manifest = load_from_toml(&toml).expect("declarative routes should load");
+        assert_eq!(
+            manifest.capabilities.ipc_publish,
+            ["existing.v1.event", "llm.v1.stream.provider"]
+        );
+        assert_eq!(
+            manifest.capabilities.ipc_subscribe,
+            [
+                "existing.v1.request",
+                "llm.v1.request.generate.provider",
+                "registry.v1.*",
+            ]
+        );
+        assert_eq!(
+            manifest
+                .interceptors
+                .iter()
+                .filter(|entry| entry.event == "existing.v1.request")
+                .count(),
+            1,
+            "an explicit interceptor and matching route must not duplicate"
+        );
+        assert!(manifest.interceptors.iter().any(|entry| {
+            entry.event == "llm.v1.request.generate.provider"
+                && entry.action == "handle_generate"
+                && entry.priority == 100
+        }));
+        assert!(
+            !manifest
+                .interceptors
+                .iter()
+                .any(|entry| entry.event == "registry.v1.*"),
+            "a handler-less subscription is an ACL declaration, not an interceptor"
+        );
+    }
+
+    #[test]
+    fn load_manifest_rejects_empty_declarative_route_handler() {
+        let toml = format!(
+            "{VALID_HEADER}\n\
+             [subscribe]\n\
+             \"llm.v1.request\" = {{ handler = \"\" }}\n"
+        );
+        let err = load_from_toml(&toml).unwrap_err();
+        assert!(
+            err.to_string().contains("handler must not be empty"),
+            "expected empty handler rejection, got: {err}"
         );
     }
 

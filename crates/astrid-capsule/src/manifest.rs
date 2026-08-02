@@ -27,12 +27,12 @@ pub struct CapsuleManifest {
     ///
     /// Outer key = namespace (e.g. `"astrid"`), inner key = interface name
     /// (e.g. `"session"`), value = version requirement and optional flag.
-    #[serde(default)]
+    #[serde(default, deserialize_with = "deserialize_imports_map")]
     pub imports: ImportsMap,
     /// Namespaced interface exports — what this capsule provides.
     ///
     /// Outer key = namespace, inner key = interface name, value = exact version.
-    #[serde(default)]
+    #[serde(default, deserialize_with = "deserialize_exports_map")]
     pub exports: ExportsMap,
     /// Capabilities requested by this capsule.
     #[serde(default)]
@@ -100,6 +100,58 @@ pub type ImportsMap = HashMap<String, HashMap<String, ImportDef>>;
 
 /// Namespaced interface exports. Outer key = namespace, inner key = interface name.
 pub type ExportsMap = HashMap<String, HashMap<String, ExportDef>>;
+
+fn deserialize_imports_map<'de, D>(deserializer: D) -> Result<ImportsMap, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    deserializer.deserialize_map(InterfacesVisitor::<ImportDef>(std::marker::PhantomData))
+}
+
+fn deserialize_exports_map<'de, D>(deserializer: D) -> Result<ExportsMap, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    deserializer.deserialize_map(InterfacesVisitor::<ExportDef>(std::marker::PhantomData))
+}
+
+struct InterfacesVisitor<T>(std::marker::PhantomData<T>);
+
+impl<'de, T> serde::de::Visitor<'de> for InterfacesVisitor<T>
+where
+    T: Deserialize<'de>,
+{
+    type Value = HashMap<String, HashMap<String, T>>;
+
+    fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter.write_str("a namespaced or legacy flat interface map")
+    }
+
+    fn visit_map<A>(self, mut map: A) -> Result<Self::Value, A::Error>
+    where
+        A: serde::de::MapAccess<'de>,
+    {
+        let mut namespaced = HashMap::<String, HashMap<String, T>>::new();
+        while let Some(key) = map.next_key::<String>()? {
+            if let Some((namespace, name)) = key.split_once(':') {
+                if namespace.is_empty() || name.is_empty() {
+                    return Err(serde::de::Error::custom(format!(
+                        "legacy interface key '{key}' must have a non-empty namespace and name"
+                    )));
+                }
+                let definition = map.next_value::<T>()?;
+                namespaced
+                    .entry(namespace.to_string())
+                    .or_default()
+                    .insert(name.to_string(), definition);
+            } else {
+                let definitions = map.next_value::<HashMap<String, T>>()?;
+                namespaced.insert(key, definitions);
+            }
+        }
+        Ok(namespaced)
+    }
+}
 
 /// An imported interface — version requirement with optional flag.
 ///

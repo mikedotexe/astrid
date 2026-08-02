@@ -35,7 +35,7 @@ fn extract_variable_refs(template: &str) -> Vec<&str> {
 /// - Schema version is supported
 /// - Distro ID format
 /// - Distro version is valid semver
-/// - astrid-version (if set) is valid semver requirement
+/// - astrid-version (if set) is valid and accepts this Astrid version
 /// - No duplicate capsule names
 /// - At least one capsule
 /// - At least one capsule with role = "uplink"
@@ -66,11 +66,20 @@ pub(crate) fn validate_manifest(manifest: &DistroManifest) -> anyhow::Result<()>
         );
     }
 
-    // astrid-version is valid semver requirement (if set).
-    if let Some(ref av) = manifest.distro.astrid_version
-        && semver::VersionReq::parse(av).is_err()
-    {
-        anyhow::bail!("distro.astrid-version '{av}' is not a valid semver requirement");
+    // astrid-version is a valid semver requirement and accepts this CLI.
+    if let Some(ref av) = manifest.distro.astrid_version {
+        let requirement = semver::VersionReq::parse(av).map_err(|_| {
+            anyhow::anyhow!("distro.astrid-version '{av}' is not a valid semver requirement")
+        })?;
+        let current = semver::Version::parse(env!("CARGO_PKG_VERSION"))
+            .expect("the package version must be valid semver");
+        if !requirement.matches(&current) {
+            anyhow::bail!(
+                "distro '{}' requires Astrid {requirement}, but this CLI is {current}; \
+                 use a compatible distro manifest or upgrade Astrid",
+                manifest.distro.id,
+            );
+        }
     }
 
     // Requires version strings are valid semver requirements.
@@ -159,5 +168,30 @@ mod tests {
     fn extract_refs_handles_whitespace() {
         assert_eq!(extract_variable_refs("{{  spaced  }}"), vec!["spaced"]);
         assert_eq!(extract_variable_refs("{{no_space}}"), vec!["no_space"]);
+    }
+
+    #[test]
+    fn rejects_distro_for_newer_astrid_runtime() {
+        let content = r#"
+schema-version = 1
+
+[distro]
+id = "future"
+name = "Future"
+version = "1.0.0"
+astrid-version = ">=999.0.0"
+
+[[capsule]]
+name = "frontend"
+source = "@example/frontend"
+version = "1.0.0"
+role = "uplink"
+"#;
+        let manifest: DistroManifest = toml::from_str(content).unwrap();
+        let error = validate_manifest(&manifest).unwrap_err().to_string();
+
+        assert!(error.contains("requires Astrid >=999.0.0"));
+        assert!(error.contains(env!("CARGO_PKG_VERSION")));
+        assert!(error.contains("compatible distro manifest or upgrade Astrid"));
     }
 }
