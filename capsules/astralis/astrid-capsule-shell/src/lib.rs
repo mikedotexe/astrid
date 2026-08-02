@@ -95,16 +95,61 @@ fn describe() -> astrid_guest::CapsuleResult {
     let payload = serde_json::json!({
         "capsule": "astrid-capsule-shell",
         "tools": [
-            {"name": "run_shell_command", "description": "Run a shell command in the workspace sandbox."},
-            {"name": "spawn_background_process", "description": "Start a background shell command."},
-            {"name": "read_process_logs", "description": "Read logs for a background process."},
-            {"name": "kill_process", "description": "Kill a background process."}
+            {
+                "name": "run_shell_command",
+                "description": "Run a shell command in the workspace sandbox.",
+                "input_schema": {
+                    "type": "object",
+                    "properties": {
+                        "command": {"type": "string", "description": "Shell command to run."}
+                    },
+                    "required": ["command"],
+                    "additionalProperties": false
+                }
+            },
+            {
+                "name": "spawn_background_process",
+                "description": "Start a background shell command.",
+                "input_schema": {
+                    "type": "object",
+                    "properties": {
+                        "command": {"type": "string", "description": "Shell command to start."}
+                    },
+                    "required": ["command"],
+                    "additionalProperties": false
+                }
+            },
+            {
+                "name": "read_process_logs",
+                "description": "Read logs for a background process.",
+                "input_schema": {
+                    "type": "object",
+                    "properties": {
+                        "process_id": {"type": "integer", "minimum": 0}
+                    },
+                    "required": ["process_id"],
+                    "additionalProperties": false
+                }
+            },
+            {
+                "name": "kill_process",
+                "description": "Kill a background process.",
+                "input_schema": {
+                    "type": "object",
+                    "properties": {
+                        "process_id": {"type": "integer", "minimum": 0}
+                    },
+                    "required": ["process_id"],
+                    "additionalProperties": false
+                }
+            }
         ]
     });
-    match ipc::publish_json("tool.v1.response.describe.astrid-capsule-shell", &payload) {
-        Ok(()) => capsule_result::continue_empty(),
-        Err(err) => capsule_result::deny(err),
+    if let Err(err) = ipc::publish_json("tool.v1.response.describe.astrid-capsule-shell", &payload)
+    {
+        return capsule_result::deny(err);
     }
+    capsule_result::continue_json(&payload)
 }
 
 astrid_guest::export!(ShellCapsule);

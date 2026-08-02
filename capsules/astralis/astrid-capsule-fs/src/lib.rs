@@ -177,20 +177,115 @@ fn describe() -> astrid_guest::CapsuleResult {
     let payload = serde_json::json!({
         "capsule": "astrid-capsule-fs",
         "tools": [
-            {"name": "read_file", "description": "Read a text file from the workspace or allowed home scope."},
-            {"name": "write_file", "description": "Write a text file inside the workspace."},
-            {"name": "replace_in_file", "description": "Replace text in a workspace file."},
-            {"name": "list_directory", "description": "List entries in a directory."},
-            {"name": "grep_search", "description": "Search text files for a literal pattern."},
-            {"name": "create_directory", "description": "Create a workspace directory."},
-            {"name": "delete_file", "description": "Delete a workspace file."},
-            {"name": "move_file", "description": "Move a workspace file."}
+            {
+                "name": "read_file",
+                "description": "Read a text file from the workspace or allowed home scope.",
+                "input_schema": {
+                    "type": "object",
+                    "properties": {
+                        "path": {"type": "string"},
+                        "start_line": {"type": "integer", "minimum": 1},
+                        "end_line": {"type": "integer", "minimum": 1}
+                    },
+                    "required": ["path"],
+                    "additionalProperties": false
+                }
+            },
+            {
+                "name": "write_file",
+                "description": "Write a text file inside the workspace.",
+                "input_schema": {
+                    "type": "object",
+                    "properties": {
+                        "path": {"type": "string"},
+                        "content": {"type": "string"}
+                    },
+                    "required": ["path", "content"],
+                    "additionalProperties": false
+                }
+            },
+            {
+                "name": "replace_in_file",
+                "description": "Replace text in a workspace file.",
+                "input_schema": {
+                    "type": "object",
+                    "properties": {
+                        "path": {"type": "string"},
+                        "old_text": {"type": "string"},
+                        "new_text": {"type": "string"}
+                    },
+                    "required": ["path", "old_text", "new_text"],
+                    "additionalProperties": false
+                }
+            },
+            {
+                "name": "list_directory",
+                "description": "List entries in a directory.",
+                "input_schema": {
+                    "type": "object",
+                    "properties": {
+                        "path": {"type": "string", "default": "."}
+                    },
+                    "additionalProperties": false
+                }
+            },
+            {
+                "name": "grep_search",
+                "description": "Search text files for a literal pattern.",
+                "input_schema": {
+                    "type": "object",
+                    "properties": {
+                        "pattern": {"type": "string"},
+                        "path": {"type": "string", "default": "."},
+                        "max_results": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "default": 50
+                        }
+                    },
+                    "required": ["pattern"],
+                    "additionalProperties": false
+                }
+            },
+            {
+                "name": "create_directory",
+                "description": "Create a workspace directory.",
+                "input_schema": {
+                    "type": "object",
+                    "properties": {"path": {"type": "string"}},
+                    "required": ["path"],
+                    "additionalProperties": false
+                }
+            },
+            {
+                "name": "delete_file",
+                "description": "Delete a workspace file.",
+                "input_schema": {
+                    "type": "object",
+                    "properties": {"path": {"type": "string"}},
+                    "required": ["path"],
+                    "additionalProperties": false
+                }
+            },
+            {
+                "name": "move_file",
+                "description": "Move a workspace file.",
+                "input_schema": {
+                    "type": "object",
+                    "properties": {
+                        "from": {"type": "string"},
+                        "to": {"type": "string"}
+                    },
+                    "required": ["from", "to"],
+                    "additionalProperties": false
+                }
+            }
         ]
     });
-    match ipc::publish_json("tool.v1.response.describe.astrid-capsule-fs", &payload) {
-        Ok(()) => capsule_result::continue_empty(),
-        Err(err) => capsule_result::deny(err),
+    if let Err(err) = ipc::publish_json("tool.v1.response.describe.astrid-capsule-fs", &payload) {
+        return capsule_result::deny(err);
     }
+    capsule_result::continue_json(&payload)
 }
 
 astrid_guest::export!(FsCapsule);

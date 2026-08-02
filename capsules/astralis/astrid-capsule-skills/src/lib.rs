@@ -104,14 +104,47 @@ fn describe() -> astrid_guest::CapsuleResult {
     let payload = serde_json::json!({
         "capsule": "astrid-capsule-skills",
         "tools": [
-            {"name": "list_skills", "description": "List discovered skill directories."},
-            {"name": "read_skill", "description": "Read a SKILL.md file by name or path."}
+            {
+                "name": "list_skills",
+                "description": "List discovered skill directories.",
+                "input_schema": {
+                    "type": "object",
+                    "properties": {
+                        "dir_path": {
+                            "type": "string",
+                            "default": ".codex/skills"
+                        }
+                    },
+                    "additionalProperties": false
+                }
+            },
+            {
+                "name": "read_skill",
+                "description": "Read a SKILL.md file by name or path.",
+                "input_schema": {
+                    "type": "object",
+                    "properties": {
+                        "name": {"type": "string"},
+                        "path": {"type": "string"},
+                        "dir_path": {
+                            "type": "string",
+                            "default": ".codex/skills"
+                        }
+                    },
+                    "anyOf": [
+                        {"required": ["name"]},
+                        {"required": ["path"]}
+                    ],
+                    "additionalProperties": false
+                }
+            }
         ]
     });
-    match ipc::publish_json("tool.v1.response.describe.astrid-capsule-skills", &payload) {
-        Ok(()) => capsule_result::continue_empty(),
-        Err(err) => capsule_result::deny(err),
+    if let Err(err) = ipc::publish_json("tool.v1.response.describe.astrid-capsule-skills", &payload)
+    {
+        return capsule_result::deny(err);
     }
+    capsule_result::continue_json(&payload)
 }
 
 astrid_guest::export!(SkillsCapsule);
