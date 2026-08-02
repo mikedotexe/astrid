@@ -1,0 +1,41 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The entropy gate above 0.85 applies a smoothstep tail-vibrancy lift with zero slope at the gate to avoid a state pop.",
+      "disposition": "Verified from the exact helper and existing continuity regressions at the gate and reported boundary points; all focused tests pass.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Overlap among emotional and tail dimension taxonomies could double-count dimension 26 or trigger the follow-up hook twice.",
+      "disposition": "Source trace shows one unique monitored record and one delta-bus iteration. A new regression now drives dimension 26 over its ceiling and pins one monitored record, one clipped entry, one clip delta, and the single default-off hook.",
+      "classification": "addressed_change"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The emotional and tail lane summaries both include dimensions 26, 27, and 31.",
+      "disposition": "Verified as intentional overlapping taxonomy readouts. Shared dimensions receive a combined lane label in the unique dimension record; summary overlap does not duplicate a control write or experience delta.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "MINIME_SEMANTIC_ATTENUATION at 0.24 is read-only transparency and would cause double attenuation if applied to the outbound wire.",
+      "disposition": "Verified. Current uses are confined to being-facing cascade transparency and tests; the feedback function does not multiply it into the outbound semantic vector. The caution remains a live-contract boundary.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "The report's partial window did not expose the complete apply_spectral_feedback_inner implementation.",
+      "disposition": "Resolved by exact full-source continuity from round 76 and current targeted reads of the complete feedback function, overflow evidence, helper, and tests.",
+      "classification": "verified_from_complete_source"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "A semantic aperture, attenuation, transport, or gain change might address delivery concerns.",
+      "disposition": "Preserved as an exact Tier 5 wait. The regression adds evidence only and grants no authority to change live codec delivery or Minime inbound scaling.",
+      "classification": "tier_5_wait",
+      "authority": "proposal_only_live_codec_transport_or_minime_change_not_authorized"
+    }
+  ]
+}

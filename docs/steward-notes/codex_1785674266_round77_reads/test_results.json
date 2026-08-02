@@ -1,0 +1,118 @@
+{
+  "schema": "steward_round_test_results_v1",
+  "steward_run_id": "run_1785674266671038000_9ed162141b",
+  "projection_generation_ids": [
+    "projection_1785674267495743000_1c75bb254d",
+    "projection_1785675872116690000_6be06a821e"
+  ],
+  "status": "passed",
+  "results": [
+    {
+      "surface": "fill_responsive_rest",
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib fill_responsive_rest_keeps_critical_floor_and_band_boundaries -- --nocapture",
+      "passed": 1,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "peripheral_resonance",
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib peripheral_resonance -- --nocapture",
+      "passed": 4,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "codec_overlap_collision",
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib codec_overflow_overlap_dim_emits_one_delta_and_one_followup_hook -- --nocapture",
+      "passed": 1,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "codec_gate_continuity",
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib tail_vibrancy_gate -- --nocapture; cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib tail_vibrancy_exact_gate_keeps_default_ceiling_and_reserved_dims -- --nocapture",
+      "passed": 4,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "codec_readout_only_attenuation",
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib codec_vibrancy_and_warmth_continuity_are_readout_only -- --nocapture",
+      "passed": 1,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "rust_format",
+      "command": "cargo fmt --all -- --check",
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "bridge_clippy",
+      "command": "cargo clippy --manifest-path capsules/spectral-bridge/Cargo.toml --lib --tests -- -D warnings",
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "introspection_addressing_audit",
+      "command": "PYTHONDONTWRITEBYTECODE=1 python3 scripts/introspection_addressing_audit.py --self-test",
+      "passed": 41,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "evidence_controller_projection_division_claim_family",
+      "command": "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=.:scripts python3 -m unittest scripts.test_evidence_event_store scripts.test_steward_control scripts.test_steward_projection scripts.test_division_ceremony_followup scripts.test_division_ceremony_chronicle scripts.test_division_ceremony_projection scripts.test_claim_family_incremental_projection",
+      "passed": 68,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "anti_drop_catalog",
+      "command": "PYTHONDONTWRITEBYTECODE=1 python3 scripts/anti_drop_catalog.py --self-test; PYTHONDONTWRITEBYTECODE=1 python3 scripts/anti_drop_catalog.py verify",
+      "passed": 5,
+      "guards_verified": 47,
+      "alarms": 0,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "experiential_epistemics",
+      "command": "PYTHONDONTWRITEBYTECODE=1 python3 scripts/experiential_epistemics.py self-test --json; PYTHONDONTWRITEBYTECODE=1 python3 scripts/experiential_epistemics.py lint --json",
+      "passed": 2,
+      "records_linted": 10202,
+      "issues": 0,
+      "history_rewritten": false,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "source_first_projection",
+      "command": "credential-confined session project",
+      "generation_id": "projection_1785675872116690000_6be06a821e",
+      "completed_steps": 20,
+      "counter_audit_valid": true,
+      "status": "passed"
+    },
+    {
+      "surface": "evidence_event_store_v2",
+      "command": "PYTHONDONTWRITEBYTECODE=1 python3 scripts/evidence_event_store.py --json verify",
+      "verified_global_seq": 665426,
+      "verified_head_sha256": "aeb839c7cd951e98a0a8bd00aadb4baf9ee2d686dd434f475c61826cb0ae7e1f",
+      "valid": true,
+      "corrupt_lines": 0,
+      "history_rewritten": false,
+      "status": "passed"
+    },
+    {
+      "surface": "division_return",
+      "command": "python3 scripts/division_ceremony_followup.py verify; python3 scripts/division_ceremony_chronicle.py project; python3 scripts/division_ceremony_chronicle.py verify",
+      "passed": true,
+      "failed": 0,
+      "status": "passed",
+      "detail": "Cycle 13 is at 4/6 with review_due false after division_followup_event_2cbc5b24ad8a22d89a8e13fee791947d. Chronicle division_chronicle_e4194906859347e0dad7d1f4 has 89 timeline events and current durable inputs; only the volatile supervisor-status hash is stale."
+    }
+  ],
+  "authority_boundary": "Passing deterministic tests establishes neither live rest oscillation nor felt relief and grants no authority to change cadence, scheduling, model context, codec delivery, attenuation, Minime, reservoir, or controller state."
+}

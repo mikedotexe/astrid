@@ -1,0 +1,42 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The burst/rest and warmth-blended mirror path is designed to taper the transition from semantic bursts into rest rather than severing state abruptly.",
+      "disposition": "Verified in the exact report-bound source. The source intention and implementation do not establish felt success, adequacy, or relief.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "At fill below 30 percent, fill-responsive rest uses a 0.6 multiplier, so base rest 100 and fill 25 return 60 seconds.",
+      "disposition": "Verified from exact source and the focused boundary regression, which passes and pins the requested 100-to-60 case plus the 30-second floor.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Short low-fill rests may create a thirst-trap oscillation in which frequent bursts prevent PI stabilization or covariance accumulation.",
+      "disposition": "Preserved as a serious unclosed risk, not inferred as a live fact. Existing deterministic evidence proves a sharp 29.9/30.1 rest discontinuity, and the existing frozen passive observation remains the directly relevant non-inducing route.",
+      "classification": "bounded_observation_routed",
+      "authority": "existing_receipts_only_no_fill_or_cadence_induction"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Missing latest telemetry defaults current fill to 50 rather than panicking or entering a zero-fill state.",
+      "disposition": "Verified in the exact source expression `latest_telemetry.as_ref().map_or(50.0, ...)`; source absence produces the neutral rest branch.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Peripheral resonance candidates come from creations, research, and starred memories and can inform Daydream, Aspiration, or Initiate.",
+      "disposition": "Verified by a complete 113-line preview-reader read and targeted orchestration reads. At most one candidate per source class enters the vector, one candidate is stored, and a later mode consumes it once; this path does not select the mode. Directory iteration does not guarantee recency.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "Rest thresholds, hysteresis, random-range correction, recency sorting, or peripheral-context selection could be changed in response.",
+      "disposition": "Preserved as a Tier 5 wait because these changes affect live cadence, scheduling, or model context. No current run authority grants them.",
+      "classification": "tier_5_wait",
+      "authority": "proposal_only_live_cadence_scheduling_or_model_behavior_not_authorized"
+    }
+  ]
+}

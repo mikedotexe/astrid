@@ -1,0 +1,102 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_autonomous_1785633267",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1785674266_round77_reads/summaries/astrid_autonomous_1785633267.md",
+      "note": "Complete canonical read, exact-hash full-source continuity, focused regressions, and authority boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1785633267",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs",
+      "note": "Exact rest multiplier, floor, telemetry fallback, and candidate population."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1785633267",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/runtime/tests.rs",
+      "note": "Boundary regression pins base rest 100 and fill 25 to 60 seconds."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1785633267",
+      "claim_id": "c003",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1785464702_round51_reads/studies/source_boundary_matrix.json",
+      "note": "Existing deterministic 29.9/30.1 source-bound discontinuity evidence; no live oscillation inferred."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1785633267",
+      "claim_id": "c003",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1785307259_round30_reads/studies/high_fill_rest_pressure_observation.md",
+      "note": "Existing frozen passive observation route forbids induced fill, pressure, semantic input, conversation, or rest."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1785633267",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/runtime/peripheral_resonance.rs",
+      "note": "Complete bounded UTF-8 preview reader."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1785632830",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1785674266_round77_reads/summaries/astrid_codec_1785632830.md",
+      "note": "Complete canonical read with exact projection continuity and focused feedback/evidence trace."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1785632830",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/codec/cascade.rs",
+      "note": "Exact C1 smoothstep helper used by live feedback."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1785632830",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/codec/projection_evidence.rs",
+      "note": "Unique monitored dimensions, combined overlap lane, and one delta-bus pass."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1785632830",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/codec/tests.rs",
+      "note": "New dimension-26 collision regression proves one record, clip, delta, and follow-up hook."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1785632830",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/codec/projection.rs",
+      "note": "Attenuation constant is documented and scoped to transparency, not wire output."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1785632830",
+      "claim_id": "c004",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/codec/tests.rs",
+      "note": "Readout-only continuity regression passes."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1785633267",
+      "claim_id": "*",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "Unreleased entry records source findings, existing observation route, and waits."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1785632830",
+      "claim_id": "*",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Ledger records the being-driven collision regression and non-live boundary."
+    }
+  ]
+}

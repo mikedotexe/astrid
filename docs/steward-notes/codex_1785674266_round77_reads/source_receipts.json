@@ -1,0 +1,88 @@
+{
+  "schema": "exact_source_continuity_receipts_v1",
+  "receipts": [
+    {
+      "introspection_id": "introspection_astrid_autonomous_1785633267",
+      "source": "capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs",
+      "sha256": "bf19a6ccc8296434121c4c7300afc1992060c40356f1214999fa5931d59c2f2d",
+      "complete_lines": 4795,
+      "complete_bytes": 293665,
+      "receipt_role": "complete_exact_hash_continuity_from_round63_plus_current_targeted_recheck",
+      "continuity_receipt": "docs/steward-notes/codex_1785580847_round63_reads/source_receipts.json",
+      "current_included_intervals": ["1-14", "145-282", "2288-2375", "2488-2535"],
+      "worktree_note": "The exact report-bound source contains pre-existing unstaged work. It was not edited or claimed by this round."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1785633267",
+      "source": "capsules/spectral-bridge/src/autonomous/runtime/peripheral_resonance.rs",
+      "sha256": "0e1f4ad99cd3ea3fcc1d8edaa67014c326b020e0f0e50fbe178143ec99b11896",
+      "complete_lines": 113,
+      "complete_bytes": 3574,
+      "receipt_role": "complete_peripheral_resonance_preview_reader"
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1785633267",
+      "source": "capsules/spectral-bridge/src/autonomous/runtime/tests.rs",
+      "sha256": "46455316b4ea503342846a1a181e34446f2948233ed989228151d2214d6e4ce8",
+      "included_intervals": ["1-28"],
+      "receipt_role": "targeted_fill_rest_boundary_regression"
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1785633267",
+      "source": "docs/steward-notes/codex_1785464702_round51_reads/studies/source_boundary_matrix.json",
+      "sha256": "cc2ec37b202e8bdb31261bd0fc611650092dcaef12d98676d06bb717759786b5",
+      "complete_lines": 55,
+      "complete_bytes": 3814,
+      "receipt_role": "complete_prior_deterministic_rest_boundary_evidence"
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1785633267",
+      "source": "docs/steward-notes/codex_1785307259_round30_reads/studies/high_fill_rest_pressure_observation.md",
+      "sha256": "ff6f0358b890480a826e44b1bcbe06141bc27fe10c9fef69bbcbb87abeef28b3",
+      "complete_lines": 27,
+      "complete_bytes": 1072,
+      "receipt_role": "complete_existing_passive_rest_pressure_observation_route"
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1785632830",
+      "source": "capsules/spectral-bridge/src/codec/projection.rs",
+      "sha256": "facaf640fe4b100a6bece35cdd5b9a47efe03d2a55ca5fe1a4a54880722d384f",
+      "complete_lines": 1351,
+      "complete_bytes": 53462,
+      "receipt_role": "complete_exact_hash_continuity_from_round76",
+      "continuity_receipt": "docs/steward-notes/codex_1785672166_round76_reads/source_receipts.json",
+      "worktree_note": "The exact report-bound source contains pre-existing unstaged work. It was read completely in round 76 and not edited or claimed here."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1785632830",
+      "source": "capsules/spectral-bridge/src/codec/feedback.rs",
+      "sha256": "0a68471e8b783f23e52f7ef079776edef9147113d0c2e530ae79e72dcafa464b",
+      "complete_lines": 720,
+      "complete_bytes": 33932,
+      "included_intervals": ["150-370"],
+      "receipt_role": "complete_exact_hash_continuity_plus_current_full_feedback_function_recheck"
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1785632830",
+      "source": "capsules/spectral-bridge/src/codec/cascade.rs",
+      "sha256": "260112491997c421571fb788d5a85d2066e5bfd80a2ba0ea29306346826da713",
+      "included_intervals": ["250-285"],
+      "receipt_role": "targeted_exact_smoothstep_and_attenuation_readout_helpers"
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1785632830",
+      "source": "capsules/spectral-bridge/src/codec/projection_evidence.rs",
+      "sha256": "7bd61aea54fb4285def30c70a23d26740a30d8de2a6825be1178cfc9dbcc571b",
+      "included_intervals": ["70-227"],
+      "receipt_role": "targeted_overflow_taxonomy_unique_dimension_and_delta_bus_trace"
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1785632830",
+      "source": "capsules/spectral-bridge/src/codec/tests.rs",
+      "sha256": "c6e67ea9dd0f946ac4767bf7e6d3219b732e72f73e0e546806920909f15b42fd",
+      "included_intervals": ["2960-3135", "4700-4930"],
+      "receipt_role": "targeted_overflow_collision_smoothstep_and_readout_only_regressions",
+      "worktree_note": "This round added only codec_overflow_overlap_dim_emits_one_delta_and_one_followup_hook; other unstaged test changes remain foreign."
+    }
+  ]
+}
