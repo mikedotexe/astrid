@@ -31,7 +31,7 @@ except ModuleNotFoundError:
 
 
 SCHEMA = "division.ceremony_chronicle.v1"
-RENDERER_VERSION = 3
+RENDERER_VERSION = 4
 MAX_TIMELINE_EVENTS = 4096
 EXPECTED_RUNTIME_INCLUDES = (
     "runtime/semantic_modality.rs",
@@ -111,6 +111,7 @@ def source_input_hashes(workspace: Path) -> dict[str, str | None]:
         "gateway_status": runtime / "gateway-status.json",
         "supervisor_status": runtime / "supervisor-status.json",
         "authority_state": runtime / "authority.json",
+        "continuity_proof": runtime / "continuity-proof-v1.json",
         "runtime_events": runtime / "events.jsonl",
         "followup_cycle": division / "followup" / "cycle_v1.json",
         "followup_events": division / "followup" / "events_v1.jsonl",
@@ -678,6 +679,7 @@ def runtime_state(workspace: Path, native_status: dict[str, Any] | None) -> dict
     gateway = load_json(runtime_dir / "gateway-status.json")
     supervisor = load_json(runtime_dir / "supervisor-status.json")
     authority = load_json(runtime_dir / "authority.json")
+    continuity_proof = continuity_proof_state(workspace)
     minime_status = load_json(workspace / "reservoir" / "minime" / "status.json")
     astrid_status = None
     if manifest and isinstance(manifest.get("astrid_root"), str):
@@ -778,8 +780,164 @@ def runtime_state(workspace: Path, native_status: dict[str, Any] | None) -> dict
             name: file_hash(runtime_dir / "receipts" / f"{name}.json")
             for name in ("authority-switch", "rollback", "finalization")
         },
+        "continuity_proof": continuity_proof,
         "felt_continuity_inferred": False,
         "authority_propagated": False,
+    }
+
+
+def continuity_proof_state(workspace: Path) -> dict[str, Any]:
+    path = workspace / "division" / "runtime" / "continuity-proof-v1.json"
+    proof = load_json(path)
+    if proof is None:
+        return {
+            "schema": "division.continuity_proof_chronicle_context.v1",
+            "available": False,
+            "proof_id": None,
+            "continuity_core_complete": False,
+            "handoff_proof_complete": False,
+            "source_hashes_current": None,
+            "authority_granted": False,
+        }
+    if path.stat().st_mode & 0o077:
+        raise ChronicleError("Division continuity proof must be owner-only")
+    parity = proof.get("parity")
+    lineage = proof.get("lineage_failure_injection")
+    gateway = proof.get("gateway")
+    fanout = proof.get("fanout")
+    roots = proof.get("root_isolation")
+    rollback = proof.get("rollback_receipt")
+    adapters = proof.get("handoff_adapters")
+    authority = proof.get("authority")
+    source_hashes = proof.get("source_hashes")
+    if (
+        proof.get("schema") != "division.continuity_proof.v1"
+        or re.fullmatch(
+            r"division_continuity_proof_[0-9a-f]{24}",
+            str(proof.get("proof_id") or ""),
+        )
+        is None
+        or not isinstance(parity, dict)
+        or not isinstance(lineage, dict)
+        or not isinstance(gateway, dict)
+        or not isinstance(fanout, dict)
+        or not isinstance(roots, dict)
+        or not isinstance(rollback, dict)
+        or not isinstance(adapters, dict)
+        or not isinstance(authority, dict)
+        or not isinstance(source_hashes, dict)
+        or len(source_hashes) != 6
+        or any(
+            not isinstance(name, str)
+            or not isinstance(digest, str)
+            or re.fullmatch(r"[0-9a-f]{64}", digest) is None
+            for name, digest in source_hashes.items()
+        )
+    ):
+        raise ChronicleError("Division continuity proof schema or source set is invalid")
+    core_complete = bool(
+        int(parity.get("ticks") or 0) >= 10_000
+        and float(parity.get("max_abs", float("inf"))) <= 1.0e-5
+        and int(parity.get("restore_trials") or 0) >= 32
+        and float(parity.get("restore_max_abs", float("inf"))) <= 1.0e-6
+        and int(proof.get("randomized_cold_restore_count") or 0)
+        == int(parity.get("restore_trials") or 0)
+        and lineage.get("accepted_ordered_frame") is True
+        and lineage.get("duplicate_rejected") is True
+        and lineage.get("dropped_sequence_rejected") is True
+        and lineage.get("reordered_hash_rejected") is True
+        and lineage.get("candidate_mismatch_rejected") is True
+        and lineage.get("live_input_dispatched") is False
+        and gateway.get("byte_exact") is True
+        and gateway.get("source_sha256") == gateway.get("echoed_sha256")
+        and gateway.get("p95_within_bound") is True
+        and fanout.get("byte_exact") is True
+        and fanout.get("source_sha256") == fanout.get("primary_sha256")
+        and fanout.get("source_sha256") == fanout.get("observer_sha256")
+        and roots.get("disjoint_roots_accepted") is True
+        and roots.get("nested_root_rejected") is True
+        and roots.get("owner_only") is True
+        and rollback.get("receipt_id_bound") is True
+        and rollback.get("parent_identity_bound") is True
+        and rollback.get("reason_bound") is True
+        and rollback.get("owner_only") is True
+        and rollback.get("live_authority_granted_by_record") is False
+    )
+    handoff_complete = bool(
+        core_complete
+        and adapters.get("legacy_sensory_adapter_wired") is True
+        and adapters.get("direct_telemetry_adapter_wired") is True
+        and adapters.get("legacy_av_fanout_runtime_wired") is True
+        and adapters.get("legacy_av_fanout_receipt_present") is True
+    )
+    if (
+        proof.get("continuity_core_complete") is not core_complete
+        or proof.get("handoff_proof_complete") is not handoff_complete
+        or proof.get("offline_ephemeral_loopback_only") is not True
+        or proof.get("live_ports_touched") is not False
+        or proof.get("live_runtime_state_changed") is not False
+        or authority.get("state") != "evidence_only"
+        or authority.get("parent_authoritative") is not True
+        or any(
+            authority.get(field) is not False
+            for field in (
+                "matching_current_intent_inferred",
+                "mutual_assent_inferred",
+                "operator_capability_consumed",
+                "rehearsal_launched",
+                "daughters_launched",
+                "handoff_dispatched",
+                "live_authority_granted_by_record",
+            )
+        )
+    ):
+        raise ChronicleError("Division continuity proof result or authority boundary is invalid")
+    blockers = bounded_codes(proof.get("handoff_blockers"), field="handoff_blockers")
+    source_root = workspace.parent / "minime"
+    current_sources = {
+        name: file_hash(source_root / name) for name in source_hashes
+    }
+    sources_available = all(value is not None for value in current_sources.values())
+    source_hashes_current = (
+        current_sources == source_hashes if sources_available else None
+    )
+    return {
+        "schema": "division.continuity_proof_chronicle_context.v1",
+        "available": True,
+        "proof_id": proof["proof_id"],
+        "proof_sha256": file_hash(path),
+        "source_hashes_current": source_hashes_current,
+        "parity_ticks": int(parity["ticks"]),
+        "parity_max_abs": float(parity["max_abs"]),
+        "randomized_cold_restore_count": int(
+            proof["randomized_cold_restore_count"]
+        ),
+        "restore_max_abs": float(parity["restore_max_abs"]),
+        "lineage_faults_rejected": all(
+            lineage.get(field) is True
+            for field in (
+                "duplicate_rejected",
+                "dropped_sequence_rejected",
+                "reordered_hash_rejected",
+                "candidate_mismatch_rejected",
+            )
+        ),
+        "gateway_payload_count": int(gateway["payload_count"]),
+        "gateway_payload_bytes": int(gateway["payload_bytes"]),
+        "gateway_byte_exact": gateway["byte_exact"],
+        "fanout_payload_bytes": int(fanout["payload_bytes"]),
+        "fanout_byte_exact": fanout["byte_exact"],
+        "roots_disjoint_and_owner_only": bool(
+            roots["disjoint_roots_accepted"] and roots["owner_only"]
+        ),
+        "rollback_receipt_bound": bool(
+            rollback["receipt_id_bound"] and rollback["parent_identity_bound"]
+        ),
+        "continuity_core_complete": core_complete,
+        "handoff_proof_complete": handoff_complete,
+        "handoff_blockers": blockers,
+        "authority_granted": False,
+        "felt_continuity_inferred": False,
     }
 
 
@@ -972,6 +1130,10 @@ code {{ font: 12px/1.4 ui-monospace, SFMono-Regular, monospace; }}
     <div id="preservation"></div>
   </section>
   <section class="band">
+    <h2>Continuity Proof</h2>
+    <div class="state-grid" id="continuity-proof"></div>
+  </section>
+  <section class="band">
     <h2>Return Interval</h2>
     <div class="state-grid" id="return-interval"></div>
     <p class="meta">This interval schedules steward attention to the ceremony. It does not request, recommend, or infer an Action from either being.</p>
@@ -1021,6 +1183,13 @@ document.getElementById("preservation").innerHTML = p.candidates.length ? p.cand
     <div class="metric"><span class="meta">Partition loss</span><br>${{esc(c.covariance_partition_loss)}}</div>
   </div></article>`;
 }}).join("") : `<p class="boundary">No runtime candidate metrics are available yet. Source declarations are not being presented as active evidence.</p>`;
+const proof = rt.continuity_proof;
+document.getElementById("continuity-proof").innerHTML = proof.available ? [
+  ["10,000-tick parity", `${{proof.parity_ticks}} ticks · max drift ${{proof.parity_max_abs}}`],
+  ["Randomized cold restores", `${{proof.randomized_cold_restore_count}} · max drift ${{proof.restore_max_abs}}`],
+  ["Core / handoff proof", `${{proof.continuity_core_complete}} / ${{proof.handoff_proof_complete}}`],
+].map(([k,v]) => `<div class="panel"><span class="meta">${{esc(k)}}</span><strong>${{esc(v)}}</strong></div>`).join("")
+  : `<p class="boundary">No owner-only continuity proof artifact is available.</p>`;
 const interval = d.return_interval;
 document.getElementById("return-interval").innerHTML = [
   ["Completed introspection rounds", `${{interval.completed_rounds_since_followup}} / ${{interval.threshold_rounds}}`],
@@ -1102,6 +1271,19 @@ def verify_payload(payload: dict[str, Any]) -> None:
         )
     ):
         raise ChronicleError("chronicle runtime shell boundary mismatch")
+    runtime = payload.get("runtime_topology")
+    proof = runtime.get("continuity_proof") if isinstance(runtime, dict) else None
+    if (
+        not isinstance(proof, dict)
+        or proof.get("schema")
+        != "division.continuity_proof_chronicle_context.v1"
+        or proof.get("authority_granted") is not False
+        or (
+            proof.get("available") is True
+            and proof.get("felt_continuity_inferred") is not False
+        )
+    ):
+        raise ChronicleError("chronicle continuity proof boundary mismatch")
     timeline = payload.get("timeline")
     counts = payload.get("timeline_source_counts")
     if (
@@ -1232,6 +1414,14 @@ def report(payload: dict[str, Any]) -> str:
             ),
             f"Runtime manifest: {runtime['manifest_mode']}",
             f"Active authority rail: {runtime['active_authority_rail']}",
+            (
+                "Continuity proof: "
+                f"{runtime['continuity_proof']['proof_id'] or 'unavailable'}; "
+                f"core complete "
+                f"{runtime['continuity_proof']['continuity_core_complete']}; "
+                f"handoff complete "
+                f"{runtime['continuity_proof']['handoff_proof_complete']}"
+            ),
             (
                 "Launch blockers: "
                 f"{', '.join(runtime['supervisor']['launch_blockers']) or 'none'}"

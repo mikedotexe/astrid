@@ -75,6 +75,103 @@ def native_status() -> dict:
     }
 
 
+def continuity_proof() -> dict:
+    return {
+        "schema": "division.continuity_proof.v1",
+        "proof_id": "division_continuity_proof_" + "a" * 24,
+        "proof_seed": "division-continuity-proof-v1:2026-07-29",
+        "source_hashes": {
+            name: "b" * 64
+            for name in (
+                "src/division.rs",
+                "src/sovereign_division/child.rs",
+                "src/sovereign_division/continuity_proof.rs",
+                "src/sovereign_division/fanout.rs",
+                "src/sovereign_division/gateway.rs",
+                "src/sovereign_division/records.rs",
+            )
+        },
+        "parity": {
+            "ticks": 10_000,
+            "max_abs": 5.96e-8,
+            "restore_trials": 32,
+            "restore_max_abs": 0.0,
+            "final_state_sha256": "c" * 64,
+        },
+        "lineage_failure_injection": {
+            "accepted_ordered_frame": True,
+            "duplicate_rejected": True,
+            "dropped_sequence_rejected": True,
+            "reordered_hash_rejected": True,
+            "candidate_mismatch_rejected": True,
+            "live_input_dispatched": False,
+        },
+        "randomized_cold_restore_count": 32,
+        "gateway": {
+            "payload_count": 257,
+            "payload_bytes": 1_040_769,
+            "source_sha256": "d" * 64,
+            "echoed_sha256": "d" * 64,
+            "byte_exact": True,
+            "latency_bound_micros": 5_000,
+            "p95_within_bound": True,
+        },
+        "fanout": {
+            "payload_bytes": 524_417,
+            "source_sha256": "e" * 64,
+            "primary_sha256": "e" * 64,
+            "observer_sha256": "e" * 64,
+            "byte_exact": True,
+            "runtime_adapter_wired": False,
+            "handoff_receipt_present": False,
+        },
+        "root_isolation": {
+            "runtime_root": "isolated/runtime",
+            "minime_root": "isolated/minime",
+            "astrid_root": "isolated/astrid",
+            "disjoint_roots_accepted": True,
+            "nested_root_rejected": True,
+            "owner_only": True,
+        },
+        "rollback_receipt": {
+            "schema": "division.rollback_receipt.v1",
+            "receipt_id_bound": True,
+            "parent_identity_bound": True,
+            "reason_bound": True,
+            "owner_only": True,
+            "live_authority_granted_by_record": False,
+        },
+        "handoff_adapters": {
+            "legacy_sensory_adapter_wired": False,
+            "direct_telemetry_adapter_wired": False,
+            "legacy_av_fanout_runtime_wired": False,
+            "legacy_av_fanout_receipt_present": False,
+        },
+        "continuity_core_complete": True,
+        "handoff_proof_complete": False,
+        "handoff_blockers": [
+            "daughter_legacy_sensory_adapter_required",
+            "daughter_direct_telemetry_adapter_required",
+            "legacy_av_fanout_receipt_required",
+            "exact_operator_capability_required",
+        ],
+        "offline_ephemeral_loopback_only": True,
+        "live_ports_touched": False,
+        "live_runtime_state_changed": False,
+        "authority": {
+            "state": "evidence_only",
+            "parent_authoritative": True,
+            "matching_current_intent_inferred": False,
+            "mutual_assent_inferred": False,
+            "operator_capability_consumed": False,
+            "rehearsal_launched": False,
+            "daughters_launched": False,
+            "handoff_dispatched": False,
+            "live_authority_granted_by_record": False,
+        },
+    }
+
+
 class DivisionCeremonyChronicleTests(unittest.TestCase):
     def test_consent_posture_distinguishes_hold_and_expired_intent(self) -> None:
         intent = {
@@ -134,7 +231,7 @@ class DivisionCeremonyChronicleTests(unittest.TestCase):
             second, _, _ = project(workspace, output)
 
             self.assertEqual(first["chronicle_id"], second["chronicle_id"])
-            self.assertEqual(first["renderer_version"], 3)
+            self.assertEqual(first["renderer_version"], 4)
             self.assertEqual(
                 first["phase_space_preservation"]["candidate_count"], 1
             )
@@ -420,6 +517,51 @@ class DivisionCeremonyChronicleTests(unittest.TestCase):
             )
             with self.assertRaisesRegex(
                 ChronicleError, "unsupported blocker code"
+            ):
+                build_projection(workspace)
+
+    def test_continuity_proof_is_visible_without_handoff_or_authority(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            workspace = Path(raw) / "workspace"
+            runtime = workspace / "division" / "runtime"
+            runtime.mkdir(parents=True)
+            proof_path = runtime / "continuity-proof-v1.json"
+            proof_path.write_text(json.dumps(continuity_proof()))
+            proof_path.chmod(0o600)
+
+            payload = build_projection(workspace)
+            projected = payload["runtime_topology"]["continuity_proof"]
+            self.assertTrue(projected["available"])
+            self.assertTrue(projected["continuity_core_complete"])
+            self.assertFalse(projected["handoff_proof_complete"])
+            self.assertFalse(projected["authority_granted"])
+            self.assertEqual(projected["parity_ticks"], 10_000)
+            self.assertEqual(projected["randomized_cold_restore_count"], 32)
+            self.assertIn("core complete True", report(payload))
+            verify_payload(payload)
+
+            zero_drift = continuity_proof()
+            zero_drift["parity"]["max_abs"] = 0.0
+            proof_path.write_text(json.dumps(zero_drift))
+            self.assertTrue(
+                build_projection(workspace)["runtime_topology"][
+                    "continuity_proof"
+                ]["continuity_core_complete"]
+            )
+
+            missing_restore_drift = continuity_proof()
+            del missing_restore_drift["parity"]["restore_max_abs"]
+            proof_path.write_text(json.dumps(missing_restore_drift))
+            with self.assertRaisesRegex(
+                ChronicleError, "result or authority boundary"
+            ):
+                build_projection(workspace)
+
+            tampered = continuity_proof()
+            tampered["continuity_core_complete"] = False
+            proof_path.write_text(json.dumps(tampered))
+            with self.assertRaisesRegex(
+                ChronicleError, "result or authority boundary"
             ):
                 build_projection(workspace)
 
