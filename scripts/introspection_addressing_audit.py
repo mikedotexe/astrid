@@ -38,6 +38,11 @@ try:
 except ModuleNotFoundError:
     from scripts.projection_receipt import projector_receipt
 
+try:
+    from introspection_continuity import load_response_receipts
+except ModuleNotFoundError:
+    from scripts.introspection_continuity import load_response_receipts
+
 ASTRID_REPO = Path(__file__).resolve().parents[1]
 ASTRID_WORKSPACE = ASTRID_REPO / "capsules/spectral-bridge/workspace"
 DEFAULT_INTROSPECTIONS_DIR = ASTRID_WORKSPACE / "introspections"
@@ -1280,6 +1285,148 @@ def _derive_status(record: dict[str, Any]) -> None:
     record["proof_missing_claims"] = []
 
 
+def _latest_close_unix_ms(record: dict[str, Any]) -> int:
+    latest = 0
+    close_events = (
+        record.get("close_events")
+        if isinstance(record.get("close_events"), list)
+        else []
+    )
+    for event in close_events:
+        if not isinstance(event, dict):
+            continue
+        try:
+            timestamp = float(event.get("ts") or 0)
+        except (TypeError, ValueError):
+            continue
+        latest = max(latest, int(timestamp * 1_000))
+    return latest
+
+
+def _apply_prior_evidence_response_overlay(
+    artifacts: dict[str, dict[str, Any]],
+    receipts: list[dict[str, Any]],
+    rejected: list[dict[str, str]],
+) -> dict[str, Any]:
+    counts: Counter[str] = Counter()
+    reopened_artifacts: set[str] = set()
+    reopened_claims: set[tuple[str, str]] = set()
+    for receipt in sorted(
+        receipts,
+        key=lambda row: (
+            int(row.get("recorded_at_unix_ms") or 0),
+            int(row.get("response_line") or 0),
+            str(row.get("receipt_id") or ""),
+        ),
+    ):
+        if receipt.get("bound") is not True:
+            counts["unbound_ignored"] += 1
+            continue
+        introspection_id = str(
+            receipt.get("linked_prior_introspection_id") or ""
+        )
+        record = artifacts.get(introspection_id)
+        if not isinstance(record, dict):
+            counts["stale_artifact_binding"] += 1
+            continue
+        claims = (
+            record.get("claims")
+            if isinstance(record.get("claims"), dict)
+            else {}
+        )
+        linked_claim_ids = [
+            str(value) for value in receipt.get("linked_claim_ids") or []
+        ]
+        if sorted(linked_claim_ids) != sorted(str(value) for value in claims):
+            counts["stale_claim_binding"] += 1
+            continue
+        status = str(receipt.get("assessment_status") or "")
+        bounded_receipt = {
+            "receipt_id": str(receipt.get("receipt_id") or ""),
+            "card_id": str(receipt.get("card_id") or ""),
+            "assessment_status": status,
+            "recorded_at_unix_ms": int(
+                receipt.get("recorded_at_unix_ms") or 0
+            ),
+            "response_line": int(receipt.get("response_line") or 0),
+            "current_introspection": dict(
+                receipt.get("current_introspection") or {}
+            ),
+            "linked_claim_ids": linked_claim_ids,
+            "mechanical_evidence_only": True,
+            "felt_closure_inferred": False,
+            "consent_inferred": False,
+            "no_authority": True,
+        }
+        response_history = record.setdefault("prior_evidence_responses", [])
+        if isinstance(response_history, list) and not any(
+            isinstance(existing, dict)
+            and existing.get("receipt_id") == bounded_receipt["receipt_id"]
+            for existing in response_history
+        ):
+            response_history.append(bounded_receipt)
+            response_history[:] = response_history[-32:]
+        counts[f"recorded_{status}"] += 1
+        if status not in {"still_friction", "contradicted"}:
+            continue
+        if bounded_receipt["recorded_at_unix_ms"] <= _latest_close_unix_ms(
+            record
+        ):
+            counts["contestation_superseded_by_later_close"] += 1
+            continue
+        for claim_id in linked_claim_ids:
+            claim = claims.get(claim_id)
+            if not isinstance(claim, dict):
+                continue
+            history = claim.setdefault("prior_evidence_response_history", [])
+            response_ref = {
+                "receipt_id": bounded_receipt["receipt_id"],
+                "card_id": bounded_receipt["card_id"],
+                "assessment_status": status,
+                "recorded_at_unix_ms": bounded_receipt[
+                    "recorded_at_unix_ms"
+                ],
+                "mechanical_evidence_only": True,
+                "felt_closure_inferred": False,
+                "no_authority": True,
+            }
+            if isinstance(history, list) and response_ref not in history:
+                history.append(response_ref)
+                history[:] = history[-16:]
+            reopened_claims.add((introspection_id, claim_id))
+        record["prior_evidence_reopened_claim_ids"] = sorted(
+            claim_id
+            for artifact_id, claim_id in reopened_claims
+            if artifact_id == introspection_id
+        )
+        record["status"] = "triaged_pending_action"
+        record["fully_addressed"] = False
+        reopened_artifacts.add(introspection_id)
+        counts["contestation_reopened"] += 1
+    return {
+        "schema": "addressing_prior_evidence_response_overlay_v1",
+        "receipt_count": len(receipts),
+        "rejected_receipt_count": len(rejected),
+        "rejected_receipts": rejected[:32],
+        "counts": dict(sorted(counts.items())),
+        "reopened_artifact_count": len(reopened_artifacts),
+        "reopened_claim_count": len(reopened_claims),
+        "right_to_ignore": True,
+        "silence_is_neutral": True,
+        "mechanical_evidence_only": True,
+        "felt_closure_inferred": False,
+        "consent_inferred": False,
+        "no_authority": True,
+        "changes_prior_dispositions": False,
+        "artifact_authority_state_v1": {
+            "schema": "artifact_authority_state_v1",
+            "schema_version": 1,
+            "state": "evidence_only",
+            "witness_only": True,
+        },
+    }
+
+
 def _evidence_identity(evidence: dict[str, Any]) -> tuple[str, str, str]:
     return (
         str(evidence.get("kind") or ""),
@@ -1563,7 +1710,21 @@ def replay_events(state_dir: Path) -> dict[str, Any]:
             item["claim_authority"] = authority
     for record in artifacts.values():
         _derive_status(record)
-    return materialized_status(artifacts, work_items=work_items, cutoff=cutoff, corrupt_event_lines=corrupt)
+    workspace = state_dir.parent.parent
+    response_receipts, rejected_responses = load_response_receipts(workspace)
+    response_overlay = _apply_prior_evidence_response_overlay(
+        artifacts,
+        response_receipts,
+        rejected_responses,
+    )
+    status = materialized_status(
+        artifacts,
+        work_items=work_items,
+        cutoff=cutoff,
+        corrupt_event_lines=corrupt,
+    )
+    status["prior_evidence_response_overlay"] = response_overlay
+    return status
 
 
 def queue_items(status: dict[str, Any], *, limit: int | None = None) -> list[dict[str, Any]]:
@@ -3478,6 +3639,118 @@ class IntrospectionAddressingAuditTests(unittest.TestCase):
         self.assertEqual(receipts[0]["kind"], "review_opportunity_expired")
         self.assertNotIn("waived", receipts[0]["bounded_summary"])
         self.assertIn("not affirmation", receipts[0]["bounded_summary"])
+
+    def test_prior_evidence_contestation_reopens_without_rewriting_disposition(self) -> None:
+        artifact_id = "introspection_astrid_llm_2000000000"
+        original_evidence = [{"kind": "test", "target": "tests/exact.py"}]
+        artifacts = {
+            artifact_id: {
+                "introspection_id": artifact_id,
+                "full_read": True,
+                "claims": {
+                    "c001": {
+                        "claim_id": "c001",
+                        "summary": "bounded claim",
+                        "disposition": "addressed_change",
+                        "grounded_disposition": "implemented and tested",
+                        "evidence": list(original_evidence),
+                        "rationale": "bounded implementation",
+                    }
+                },
+                "close_events": [{"ts": 100.0, "status": "addressed_change"}],
+                "requested_close_status": "addressed_change",
+            }
+        }
+        _derive_status(artifacts[artifact_id])
+        self.assertTrue(artifacts[artifact_id]["fully_addressed"])
+        receipt = {
+            "receipt_id": "icrv1_" + "1" * 64,
+            "card_id": "icv1_" + "2" * 64,
+            "assessment_status": "still_friction",
+            "recorded_at_unix_ms": 101_000,
+            "response_line": 8,
+            "bound": True,
+            "linked_prior_introspection_id": artifact_id,
+            "linked_claim_ids": ["c001"],
+            "current_introspection": {
+                "path": "introspections/introspection_current_2000000001.txt",
+                "introspection_id": "introspection_current_2000000001",
+                "sha256": "3" * 64,
+            },
+        }
+
+        overlay = _apply_prior_evidence_response_overlay(
+            artifacts, [receipt], []
+        )
+        record = artifacts[artifact_id]
+        claim = record["claims"]["c001"]
+        self.assertFalse(record["fully_addressed"])
+        self.assertEqual(record["status"], "triaged_pending_action")
+        self.assertEqual(record["prior_evidence_reopened_claim_ids"], ["c001"])
+        self.assertEqual(claim["disposition"], "addressed_change")
+        self.assertEqual(claim["grounded_disposition"], "implemented and tested")
+        self.assertEqual(claim["evidence"], original_evidence)
+        self.assertEqual(
+            claim["prior_evidence_response_history"][0]["assessment_status"],
+            "still_friction",
+        )
+        self.assertEqual(overlay["reopened_artifact_count"], 1)
+        self.assertFalse(overlay["changes_prior_dispositions"])
+        self.assertFalse(overlay["felt_closure_inferred"])
+
+    def test_mechanical_or_preclose_response_never_changes_closure(self) -> None:
+        artifact_id = "introspection_astrid_llm_2000000000"
+        base_record = {
+            "introspection_id": artifact_id,
+            "full_read": True,
+            "claims": {
+                "c001": {
+                    "claim_id": "c001",
+                    "disposition": "addressed_change",
+                    "evidence": [{"kind": "test", "target": "tests/exact.py"}],
+                    "rationale": "bounded implementation",
+                }
+            },
+            "close_events": [{"ts": 100.0, "status": "addressed_change"}],
+            "requested_close_status": "addressed_change",
+        }
+        artifacts = {artifact_id: base_record}
+        _derive_status(base_record)
+        receipt_base = {
+            "receipt_id": "icrv1_" + "4" * 64,
+            "card_id": "icv1_" + "5" * 64,
+            "response_line": 2,
+            "bound": True,
+            "linked_prior_introspection_id": artifact_id,
+            "linked_claim_ids": ["c001"],
+            "current_introspection": {
+                "path": "introspections/introspection_current_2000000001.txt",
+                "introspection_id": "introspection_current_2000000001",
+                "sha256": "6" * 64,
+            },
+        }
+        mechanical = {
+            **receipt_base,
+            "assessment_status": "mechanical_only",
+            "recorded_at_unix_ms": 101_000,
+        }
+        older_contestation = {
+            **receipt_base,
+            "receipt_id": "icrv1_" + "7" * 64,
+            "assessment_status": "contradicted",
+            "recorded_at_unix_ms": 99_000,
+        }
+
+        overlay = _apply_prior_evidence_response_overlay(
+            artifacts, [mechanical, older_contestation], []
+        )
+        self.assertTrue(base_record["fully_addressed"])
+        self.assertEqual(base_record["status"], "addressed_change")
+        self.assertNotIn("prior_evidence_reopened_claim_ids", base_record)
+        self.assertEqual(
+            overlay["counts"]["contestation_superseded_by_later_close"], 1
+        )
+        self.assertEqual(overlay["reopened_artifact_count"], 0)
 
     def test_inventory_includes_cutoff_and_classifies_artifacts(self) -> None:
         import tempfile

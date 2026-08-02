@@ -244,6 +244,7 @@ class StewardProjectionTests(unittest.TestCase):
                 "felt_contracts",
                 "steward_work_selection",
                 "living_problem_registry",
+                "introspection_continuity",
                 "experiential_epistemics",
             ],
         )
@@ -358,6 +359,19 @@ class StewardProjectionTests(unittest.TestCase):
             steps["living_problem_registry"].outputs,
         )
         self.assertEqual(
+            steps["introspection_continuity"].dependencies,
+            (
+                "addressing",
+                "claim_families",
+                "felt_contracts",
+                "steward_work_selection",
+            ),
+        )
+        self.assertIn(
+            "diagnostics/introspection_continuity_v1/index.json",
+            steps["introspection_continuity"].outputs,
+        )
+        self.assertEqual(
             steps["experiential_epistemics"].dependencies,
             (
                 "felt_contracts",
@@ -365,6 +379,7 @@ class StewardProjectionTests(unittest.TestCase):
                 "living_problem_registry",
                 "passage_observatory",
                 "steward_work_selection",
+                "introspection_continuity",
             ),
         )
 

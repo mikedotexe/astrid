@@ -4,6 +4,7 @@ use tracing::info;
 use tracing::warn;
 
 use super::{ConversationState, Mode, NextActionContext, bridge_paths, strip_action};
+use crate::autonomous::state::IntrospectTargetV2;
 
 #[cfg(not(test))]
 fn record_astrid_motif_cooldown_signal(event: serde_json::Value) -> std::io::Result<()> {
@@ -235,15 +236,27 @@ pub(super) fn handle_action(
         "INTROSPECT" | "SELF_STUDY" | "INVESTIGATE" => {
             conv.wants_introspect = true;
             conv.defer_inbox = true;
-            let parts: Vec<&str> = original.splitn(3, ' ').collect();
-            if parts.len() >= 2 {
-                let label = parts[1].to_lowercase();
-                let offset = parts
-                    .get(2)
-                    .and_then(|s| s.parse::<usize>().ok())
-                    .unwrap_or(0);
-                info!("Astrid requested introspection: {label} at line {offset}");
-                conv.introspect_target = Some((label, offset));
+            let argument = strip_action(original, base_action);
+            if !argument.is_empty() {
+                let mut parts = argument.split_whitespace().collect::<Vec<_>>();
+                let explicit_offset = parts
+                    .last()
+                    .and_then(|value| value.parse::<usize>().ok())
+                    .filter(|_| parts.len() > 1);
+                if explicit_offset.is_some() {
+                    parts.pop();
+                }
+                let label = parts.join(" ").to_lowercase();
+                conv.introspect_target = Some(match explicit_offset {
+                    Some(offset) => {
+                        info!("Astrid requested introspection: {label} at exact line {offset}");
+                        IntrospectTargetV2::exact(label, offset)
+                    },
+                    None => {
+                        info!("Astrid requested introspection: {label} at next unread window");
+                        IntrospectTargetV2::auto(label)
+                    },
+                });
             } else {
                 info!("Astrid requested introspection (next in rotation)");
                 conv.introspect_target = None;
@@ -270,7 +283,7 @@ pub(super) fn handle_action(
                 conv.introspect_target = None;
             } else {
                 info!("Astrid chose EXAMINE_CODE: label={:?}", label);
-                conv.introspect_target = Some((label.clone(), 0));
+                conv.introspect_target = Some(IntrospectTargetV2::auto(label.clone()));
                 // Surface the full argument so the LLM knows what sub-path she asked about.
                 conv.emphasis = Some(format!(
                     "You chose EXAMINE_CODE [{label}]. Reading source code for '{label}' — \
@@ -399,6 +412,7 @@ pub(super) fn handle_action(
 #[cfg(test)]
 mod tests {
     use super::{ConversationState, NextActionContext, handle_action};
+    use crate::autonomous::state::IntrospectTargetV2;
     use crate::db::BridgeDb;
     use crate::types::SpectralTelemetry;
     use tokio::sync::mpsc;
@@ -473,7 +487,9 @@ mod tests {
         assert!(conv.defer_inbox);
         assert_eq!(
             conv.introspect_target,
-            Some(("system-resources-demo/system_resources.py".to_string(), 0))
+            Some(IntrospectTargetV2::auto(
+                "system-resources-demo/system_resources.py".to_string()
+            ))
         );
         assert!(
             conv.emphasis
@@ -511,7 +527,50 @@ mod tests {
         assert!(conv.defer_inbox);
         assert_eq!(
             conv.introspect_target,
-            Some(("src/autonomous/introspect.rs".to_string(), 680))
+            Some(IntrospectTargetV2::exact(
+                "src/autonomous/introspect.rs".to_string(),
+                680
+            ))
+        );
+    }
+
+    #[test]
+    fn targeted_introspect_distinguishes_auto_from_explicit_zero() {
+        let mut conv = ConversationState::new(Vec::new(), None);
+        let db = BridgeDb::open(":memory:").expect("open in-memory db");
+        let (sensory_tx, _sensory_rx) = mpsc::channel(1);
+        let telemetry = telemetry();
+        let mut burst_count = 0;
+        let mut ctx = NextActionContext {
+            burst_count: &mut burst_count,
+            db: &db,
+            sensory_tx: &sensory_tx,
+            telemetry: &telemetry,
+            fill_pct: 50.0,
+            response_text: "",
+            workspace: None,
+        };
+
+        assert!(handle_action(
+            &mut conv,
+            "INTROSPECT",
+            "INTROSPECT astrid:llm",
+            &mut ctx,
+        ));
+        assert_eq!(
+            conv.introspect_target,
+            Some(IntrospectTargetV2::auto("astrid:llm".to_string()))
+        );
+
+        assert!(handle_action(
+            &mut conv,
+            "INTROSPECT",
+            "INTROSPECT astrid:llm 0",
+            &mut ctx,
+        ));
+        assert_eq!(
+            conv.introspect_target,
+            Some(IntrospectTargetV2::exact("astrid:llm".to_string(), 0))
         );
     }
 

@@ -1,0 +1,50 @@
+{
+  "schema": "exact_source_continuity_receipts_v1",
+  "receipts": [
+    {
+      "introspection_id": "introspection_astrid_llm_1785678082",
+      "source": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "sha256": "dfa9152c2861d2fbf86867fb3ccb506284fda3c9457bf676766878346d9c267c",
+      "complete_lines": 997,
+      "complete_bytes": 36801,
+      "receipt_role": "complete_report_bound_source_read",
+      "worktree_note": "The exact report-bound source contains pre-existing unstaged work. It was read completely and not edited or claimed by this round."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785678082",
+      "source": "capsules/spectral-bridge/src/llm/provider/transport.rs",
+      "sha256": "56316424a6910e26d8e7ece97389629ebd25dd929bacc985c14cafb28c11d726",
+      "complete_lines": 1322,
+      "complete_bytes": 42799,
+      "included_intervals": ["551-815", "849-1065", "1214-1305"],
+      "receipt_role": "targeted_mlx_and_ollama_normalization_validation_and_return_trace",
+      "worktree_note": "This pre-existing unstaged source was read only and remains foreign to this round."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785678082",
+      "source": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "sha256": "7ad9193ee8f84b29893a2973c130b52c883651b863fb98afa87081a052f91e33",
+      "complete_lines": 2810,
+      "complete_bytes": 114310,
+      "included_intervals": ["1883-2028", "2157-2191"],
+      "receipt_role": "focused_unicode_whitespace_depth_and_existing_behaves_regressions",
+      "worktree_note": "This round added only control_marker_cleanup_reports_depth_across_unicode_whitespace; all other unstaged test changes remain foreign or prior stewardship work."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785678082",
+      "source": "docs/steward-notes/codex_1785663738_round74_reads/PROVIDER_OUTPUT_NORMALIZATION_PROPOSAL.md",
+      "sha256": "064f0dc01669d0536a329e348dabbc423e9abf7496e36a239b5a89882a64317e",
+      "complete_lines": 65,
+      "complete_bytes": 3243,
+      "receipt_role": "existing_provider_neutral_normalization_implementation_proposal"
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785678082",
+      "source": "docs/steward-notes/codex_1785563937_round60_reads/summaries/astrid_llm_1785561434.md",
+      "sha256": "0c0582c0e0c14b7cc3ab200fba509266a0b1777ca1a18d00372294c58e81d7b1",
+      "complete_lines": 12,
+      "complete_bytes": 711,
+      "receipt_role": "prior_exact_nested_delimiter_and_behaves_evidence_continuity"
+    }
+  ]
+}

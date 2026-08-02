@@ -1,0 +1,109 @@
+{
+  "schema": "steward_round_test_results_v1",
+  "steward_run_id": "run_1785678318426831000_826dbc944b",
+  "projection_generation_ids": [
+    "projection_1785678319299714000_764faec07c",
+    "projection_1785680107571613000_2e0c23f453"
+  ],
+  "status": "passed",
+  "invocation_corrections": [
+    {
+      "command": "cargo test -p spectral-bridge control_marker_cleanup_reports_depth_across_unicode_whitespace -- --exact",
+      "exit_code": 101,
+      "reason": "The standalone bridge manifest is not a root-workspace package named spectral-bridge."
+    },
+    {
+      "command": "cargo test -p spectral-bridge-server control_marker_cleanup_reports_depth_across_unicode_whitespace",
+      "exit_code": 101,
+      "reason": "The standalone bridge manifest is not a member of the root workspace; the invocation was corrected to --manifest-path."
+    }
+  ],
+  "results": [
+    {
+      "surface": "unicode_whitespace_delimiter_depth",
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml control_marker_cleanup_reports_depth_across_unicode_whitespace",
+      "passed": 1,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "control_marker_cleanup",
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib control_marker_ -- --nocapture",
+      "passed": 38,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "rust_format",
+      "command": "cargo fmt --all -- --check",
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "bridge_clippy",
+      "command": "cargo clippy --manifest-path capsules/spectral-bridge/Cargo.toml --lib --tests -- -D warnings",
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "introspection_addressing_audit",
+      "command": "PYTHONDONTWRITEBYTECODE=1 python3 scripts/introspection_addressing_audit.py --self-test",
+      "passed": 41,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "evidence_controller_projection_division_claim_family",
+      "command": "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=.:scripts python3 -m unittest scripts.test_evidence_event_store scripts.test_steward_control scripts.test_steward_projection scripts.test_division_ceremony_followup scripts.test_division_ceremony_chronicle scripts.test_division_ceremony_projection scripts.test_claim_family_incremental_projection",
+      "passed": 68,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "anti_drop_catalog",
+      "command": "PYTHONDONTWRITEBYTECODE=1 python3 scripts/anti_drop_catalog.py --self-test; PYTHONDONTWRITEBYTECODE=1 python3 scripts/anti_drop_catalog.py verify",
+      "passed": 5,
+      "guards_verified": 47,
+      "alarms": 0,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "experiential_epistemics",
+      "command": "PYTHONDONTWRITEBYTECODE=1 python3 scripts/experiential_epistemics.py self-test --json; PYTHONDONTWRITEBYTECODE=1 python3 scripts/experiential_epistemics.py lint --json",
+      "passed": 2,
+      "records_linted": 10214,
+      "issues": 0,
+      "history_rewritten": false,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "source_first_projection",
+      "command": "credential-confined session project",
+      "generation_id": "projection_1785680107571613000_2e0c23f453",
+      "completed_steps": 20,
+      "counter_audit_valid": true,
+      "status": "passed"
+    },
+    {
+      "surface": "evidence_event_store_v2",
+      "command": "PYTHONDONTWRITEBYTECODE=1 python3 scripts/evidence_event_store.py --json verify",
+      "verified_global_seq": 666111,
+      "verified_head_sha256": "ef04b19fe0c2973c58631eb087448aba87cadf96d9dae1662588833b186fa0a0",
+      "valid": true,
+      "corrupt_lines": 0,
+      "history_rewritten": false,
+      "status": "passed"
+    },
+    {
+      "surface": "division_return",
+      "command": "python3 scripts/division_ceremony_followup.py verify; python3 scripts/division_ceremony_chronicle.py project; python3 scripts/division_ceremony_chronicle.py verify",
+      "passed": true,
+      "failed": 0,
+      "status": "passed",
+      "detail": "Cycle 13 is at 5/6 with review_due false after division_followup_event_c06773b8faf227efb5dec427ffc8e20b. Chronicle division_chronicle_3a28a87f17586facac8bfc67 contains 90 follow-up events; durable inputs are current and only the volatile supervisor-status hash is stale."
+    }
+  ],
+  "authority_boundary": "Passing parser and infrastructure tests establishes neither semantic intent nor felt effect and grants no authority to change provider normalization, prompt/model behavior, route hashes, persistence, services, peers, or live control."
+}

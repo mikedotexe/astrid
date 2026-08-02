@@ -18,8 +18,7 @@ mod tests {
     #[test]
     fn dialogue_distinction_line_is_first_and_read_only_when_frame_is_unknown() {
         let summary = "legacy spectral summary".to_string();
-        let rendered =
-            prepend_dialogue_witness_distinction_v1(summary, None, Mode::Dialogue);
+        let rendered = prepend_dialogue_witness_distinction_v1(summary, None, Mode::Dialogue);
 
         assert!(rendered.starts_with(UNKNOWN_WITNESS_SELF_OTHER_DISTINCTION_V1));
         assert!(rendered.ends_with("\nlegacy spectral summary"));
@@ -48,7 +47,9 @@ mod tests {
             Mode::Witness,
         );
 
-        assert!(mirror.contains("selected_role=reflect_minime_owned_expression_without_reauthoring"));
+        assert!(
+            mirror.contains("selected_role=reflect_minime_owned_expression_without_reauthoring")
+        );
         assert!(witness.contains("selected_role=astrid_authored_interpretation_of_composed_frame"));
         for rendered in [&mirror, &witness] {
             assert!(rendered.contains("mirror_role=minime_owned_expression_reflected_as_other"));
@@ -114,27 +115,30 @@ mod tests {
         )
         .expect("collision journal");
 
-        assert_eq!(first.file_name().and_then(|name| name.to_str()), Some("astrid_1784235174.txt"));
+        assert_eq!(
+            first.file_name().and_then(|name| name.to_str()),
+            Some("astrid_1784235174.txt")
+        );
         assert_eq!(
             second.file_name().and_then(|name| name.to_str()),
             Some("astrid_collision_1_1784235174.txt")
         );
-        assert_eq!(std::fs::read_to_string(first).expect("first body"), "first response\n");
-        assert_eq!(std::fs::read_to_string(second).expect("second body"), "action receipt\n");
+        assert_eq!(
+            std::fs::read_to_string(first).expect("first body"),
+            "first response\n"
+        );
+        assert_eq!(
+            std::fs::read_to_string(second).expect("second body"),
+            "action receipt\n"
+        );
     }
 
     #[test]
     fn mirror_journal_preserves_peer_body_and_names_minime_authorship() {
-        let provenance =
-            AstridJournalProvenanceV1::minime_mirror("moment_1784230000.txt");
+        let provenance = AstridJournalProvenanceV1::minime_mirror("moment_1784230000.txt");
         let peer_body = "The exact peer-authored body remains unchanged.";
-        let rendered = render_astrid_journal_document(
-            peer_body,
-            "mirror",
-            68.0,
-            "42",
-            Some(&provenance),
-        );
+        let rendered =
+            render_astrid_journal_document(peer_body, "mirror", 68.0, "42", Some(&provenance));
 
         assert!(rendered.contains("Provenance: minime_observed_expression"));
         assert!(rendered.contains("Source-ID: minime_journal:moment_1784230000.txt"));
@@ -3972,7 +3976,7 @@ NEXT: EXPLORE_RESONANCE_FORECAST (RESIDUE: silted λ4 shimmer)";
         assert!(!legacy.wants_introspect);
         assert_eq!(legacy.introspect_target, None);
 
-        let mut with_pending = base;
+        let mut with_pending = base.clone();
         with_pending["wants_introspect"] = serde_json::Value::Bool(true);
         with_pending["introspect_target"] = serde_json::json!(["astrid:llm", 120]);
         let restored: SavedState =
@@ -3981,7 +3985,23 @@ NEXT: EXPLORE_RESONANCE_FORECAST (RESIDUE: silted λ4 shimmer)";
         assert!(restored.wants_introspect);
         assert_eq!(
             restored.introspect_target,
-            Some(("astrid:llm".to_string(), 120))
+            Some(state::IntrospectTargetV2::exact(
+                "astrid:llm".to_string(),
+                120
+            ))
+        );
+
+        let mut with_auto = base;
+        with_auto["wants_introspect"] = serde_json::Value::Bool(true);
+        with_auto["introspect_target"] = serde_json::json!({
+            "label": "astrid:llm",
+            "offset": "auto"
+        });
+        let restored: SavedState =
+            serde_json::from_value(with_auto).expect("state with automatic introspection");
+        assert_eq!(
+            restored.introspect_target,
+            Some(state::IntrospectTargetV2::auto("astrid:llm".to_string()))
         );
     }
 

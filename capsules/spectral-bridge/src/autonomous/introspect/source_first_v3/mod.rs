@@ -169,6 +169,24 @@ pub(super) fn build_source_evidence_v3_at_root(
     })
 }
 
+pub(super) fn next_uncovered_offset_v3(
+    path: &Path,
+    content: &str,
+    total: usize,
+) -> Result<usize, String> {
+    next_uncovered_offset_v3_at_root(&default_root(), path, content, total)
+}
+
+pub(super) fn next_uncovered_offset_v3_at_root(
+    root: &Path,
+    path: &Path,
+    content: &str,
+    total: usize,
+) -> Result<usize, String> {
+    let cataloged = catalog::catalog_source(path, content, total);
+    session::next_uncovered_offset_v3(root, &cataloged)
+}
+
 pub(super) fn challenge_response_claims_v3(
     response: &str,
     path: &Path,
@@ -518,6 +536,75 @@ mod tests {
 
         assert!(report.all_supported);
         assert_eq!(report.challenged_claim_count, 0);
+    }
+
+    #[test]
+    fn next_uncovered_offset_advances_across_persisted_windows() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        let path = dir.path().join("continued.rs");
+        let content = fixture_lines(997);
+
+        assert_eq!(
+            next_uncovered_offset_v3_at_root(dir.path(), &path, &content, 997)
+                .expect("empty store"),
+            0
+        );
+        build_source_evidence_v3_at_root(dir.path(), &path, &content, 0, 400, 997)
+            .expect("first window");
+        assert_eq!(
+            next_uncovered_offset_v3_at_root(dir.path(), &path, &content, 997)
+                .expect("after first window"),
+            400
+        );
+        build_source_evidence_v3_at_root(dir.path(), &path, &content, 400, 800, 997)
+            .expect("second window");
+        assert_eq!(
+            next_uncovered_offset_v3_at_root(dir.path(), &path, &content, 997)
+                .expect("after second window"),
+            800
+        );
+        build_source_evidence_v3_at_root(dir.path(), &path, &content, 800, 997, 997)
+            .expect("final window");
+        assert_eq!(
+            next_uncovered_offset_v3_at_root(dir.path(), &path, &content, 997)
+                .expect("complete source"),
+            0
+        );
+    }
+
+    #[test]
+    fn next_uncovered_offset_restarts_when_source_hash_changes() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        let path = dir.path().join("changed.rs");
+        let content = fixture_lines(500);
+        build_source_evidence_v3_at_root(dir.path(), &path, &content, 0, 400, 500)
+            .expect("first window");
+        let changed = format!("// changed\n{content}");
+
+        assert_eq!(
+            next_uncovered_offset_v3_at_root(dir.path(), &path, &changed, 501)
+                .expect("changed source"),
+            0
+        );
+    }
+
+    #[test]
+    fn next_uncovered_offset_rejects_malformed_matching_checkpoint() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        let path = dir.path().join("malformed.rs");
+        let content = fixture_lines(500);
+        let evidence = build_source_evidence_v3_at_root(dir.path(), &path, &content, 0, 400, 500)
+            .expect("first window");
+        let checkpoint = dir.path().join("sessions").join(format!(
+            "{}.json",
+            evidence.read_session_checkpoint_v3.read_session_id
+        ));
+        fs::write(&checkpoint, b"{not-json\n").expect("corrupt checkpoint");
+
+        let error = next_uncovered_offset_v3_at_root(dir.path(), &path, &content, 500)
+            .expect_err("malformed checkpoint must fail closed");
+        assert!(error.contains("parse"), "{error}");
+        assert!(error.contains("sessions"), "{error}");
     }
 
     #[cfg(unix)]

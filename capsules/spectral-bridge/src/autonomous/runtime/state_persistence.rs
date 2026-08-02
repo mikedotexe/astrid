@@ -84,7 +84,7 @@ struct SavedState {
     #[serde(default)]
     wants_introspect: bool,
     #[serde(default)]
-    introspect_target: Option<(String, usize)>,
+    introspect_target: Option<state::IntrospectTargetV2>,
     /// Condition change receipts — persist across restarts so Astrid sees
     /// recent changes even after bridge restart.
     #[serde(default)]

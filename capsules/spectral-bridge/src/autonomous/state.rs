@@ -1000,6 +1000,59 @@ pub(in crate::autonomous) struct SpectralSample {
     pub ts: std::time::Instant,
 }
 
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub(in crate::autonomous) enum IntrospectOffsetV2 {
+    Auto,
+    Exact(usize),
+}
+
+#[derive(Debug, Clone, Serialize, PartialEq, Eq)]
+pub(in crate::autonomous) struct IntrospectTargetV2 {
+    pub label: String,
+    pub offset: IntrospectOffsetV2,
+}
+
+impl IntrospectTargetV2 {
+    #[must_use]
+    pub(in crate::autonomous) fn auto(label: String) -> Self {
+        Self {
+            label,
+            offset: IntrospectOffsetV2::Auto,
+        }
+    }
+
+    #[must_use]
+    pub(in crate::autonomous) fn exact(label: String, offset: usize) -> Self {
+        Self {
+            label,
+            offset: IntrospectOffsetV2::Exact(offset),
+        }
+    }
+}
+
+impl<'de> Deserialize<'de> for IntrospectTargetV2 {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        #[derive(Deserialize)]
+        #[serde(untagged)]
+        enum Representation {
+            V2 {
+                label: String,
+                offset: IntrospectOffsetV2,
+            },
+            Legacy((String, usize)),
+        }
+
+        match Representation::deserialize(deserializer)? {
+            Representation::V2 { label, offset } => Ok(Self { label, offset }),
+            Representation::Legacy((label, offset)) => Ok(Self::exact(label, offset)),
+        }
+    }
+}
+
 /// Tracks conversational context across iterations.
 pub(in crate::autonomous) struct ConversationState {
     pub prev_fill: f32,
@@ -1058,8 +1111,9 @@ pub(in crate::autonomous) struct ConversationState {
     pub last_read_meaning_summary: Option<String>,
     /// Astrid chose NEXT: INTROSPECT — force introspection mode next exchange.
     pub wants_introspect: bool,
-    /// Optional: specific source label and line offset for targeted introspection.
-    pub introspect_target: Option<(String, usize)>,
+    /// Optional source target. Omitted offsets continue the durable source session;
+    /// explicit offsets, including zero, preserve Astrid's exact request.
+    pub introspect_target: Option<IntrospectTargetV2>,
     /// Astrid chose NEXT: REVISE [keyword] — load a previous creation and iterate.
     pub revise_keyword: Option<String>,
     /// Astrid chose NEXT: COMPOSE or VOICE — generate WAV from spectral state.

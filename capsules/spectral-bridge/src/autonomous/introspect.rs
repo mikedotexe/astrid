@@ -1,12 +1,19 @@
 use std::fs;
 use std::path::{Path, PathBuf};
 
+use crate::autonomous::state::IntrospectOffsetV2;
 use crate::paths::{BridgePaths, bridge_paths};
 
+#[path = "introspect/continuity_v1.rs"]
+mod continuity_v1;
 #[path = "introspect/source_first_v2.rs"]
 mod source_first_v2;
 #[path = "introspect/source_first_v3/mod.rs"]
 mod source_first_v3;
+
+pub(super) use continuity_v1::{
+    PriorEvidenceContextV1, load_prior_evidence_v1, record_prior_evidence_responses_v1,
+};
 
 const INTROSPECT_WINDOW_LINES: usize = 400;
 const INTROSPECT_MAX_FILE_BYTES: u64 = 2_000_000;
@@ -49,6 +56,7 @@ pub(super) struct ResolvedIntrospectTarget {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct IntrospectWindow {
     pub text: String,
+    pub line_offset: usize,
     pub next_offset: Option<usize>,
     pub source_snapshot_v1: crate::lived_state_witness::LivedStateSourceSnapshotV1,
     source_scope_v1: IntrospectSourceScopeV1,
@@ -1162,10 +1170,23 @@ fn cross_file_xrefs(
 /// `line_offset`: start reading from this line (0 = beginning).
 /// Shows up to 400 lines from the offset. Includes a pagination hint
 /// so Astrid can request the next page: `INTROSPECT label next_offset`.
+#[cfg(test)]
 pub(super) fn read_introspect_window(
     label: &str,
     path: &Path,
     line_offset: usize,
+) -> Result<IntrospectWindow, String> {
+    read_introspect_window_for_offset(label, path, IntrospectOffsetV2::Exact(line_offset))
+}
+
+pub(super) fn source_sha256_v2(window: &IntrospectWindow) -> &str {
+    window.source_coverage_manifest_v2.source_sha256()
+}
+
+pub(super) fn read_introspect_window_for_offset(
+    label: &str,
+    path: &Path,
+    requested_offset: IntrospectOffsetV2,
 ) -> Result<IntrospectWindow, String> {
     let canonical = validate_introspect_source_path(label, path)?;
     let content =
@@ -1177,6 +1198,12 @@ pub(super) fn read_introspect_window(
 
     let all_lines: Vec<&str> = content.lines().collect();
     let total = all_lines.len();
+    let line_offset = match requested_offset {
+        IntrospectOffsetV2::Auto => {
+            source_first_v3::next_uncovered_offset_v3(&canonical, &content, total)?
+        },
+        IntrospectOffsetV2::Exact(offset) => offset,
+    };
     let start = validated_introspect_window_start(line_offset, total)?;
     let end = start.saturating_add(INTROSPECT_WINDOW_LINES).min(total);
     let page: String = all_lines[start..end]
@@ -1233,6 +1260,7 @@ pub(super) fn read_introspect_window(
     let source_scope_v1 = IntrospectSourceScopeV1::new(start, end, total);
     Ok(IntrospectWindow {
         text,
+        line_offset,
         next_offset,
         source_snapshot_v1,
         source_scope_v1,

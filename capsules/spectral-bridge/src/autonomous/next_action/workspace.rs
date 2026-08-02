@@ -704,6 +704,7 @@ mod tests {
             .as_nanos();
         let hint = format!("raw skip token {unique}");
         let research_dir = bridge_paths().research_dir();
+        fs::create_dir_all(&research_dir).expect("create research fixture directory");
         let raw_path = research_dir.join(format!("page_{unique}_raw.txt"));
         let text_path = research_dir.join(format!("page_{unique}_text.txt"));
 
