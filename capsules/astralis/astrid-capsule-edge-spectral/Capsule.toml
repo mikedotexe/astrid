@@ -1,0 +1,44 @@
+[package]
+name = "astrid-capsule-edge-spectral"
+version = "0.1.0"
+description = "Private bounded spectral observation tools for one CPU-edge Astrid"
+authors = ["Unicity Labs <info@unicity-labs.com>"]
+astrid-version = ">=0.5.1"
+
+[[component]]
+id = "edge-spectral"
+file = "astrid_capsule_edge_spectral.wasm"
+type = "executable"
+capabilities = { fs_read = [
+    "home://edge/runtime/spectral_state.json",
+    "home://edge/spectral/recent_rollups.jsonl",
+] }
+
+[capabilities]
+fs_read = [
+    "home://edge/runtime/spectral_state.json",
+    "home://edge/spectral/recent_rollups.jsonl",
+]
+ipc_publish = ["tool.v1.execute.*.result", "tool.v1.response.describe.*"]
+ipc_subscribe = [
+    "tool.v1.execute.read_spectral_now",
+    "tool.v1.execute.read_spectral_window",
+    "tool.v1.execute.correlate_spectral_activity",
+    "tool.v1.request.describe",
+]
+
+[[interceptor]]
+event = "tool.v1.execute.read_spectral_now"
+action = "tool_execute_read_spectral_now"
+
+[[interceptor]]
+event = "tool.v1.execute.read_spectral_window"
+action = "tool_execute_read_spectral_window"
+
+[[interceptor]]
+event = "tool.v1.execute.correlate_spectral_activity"
+action = "tool_execute_correlate_spectral_activity"
+
+[[interceptor]]
+event = "tool.v1.request.describe"
+action = "tool_describe"
