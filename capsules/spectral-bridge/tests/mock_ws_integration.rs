@@ -89,6 +89,30 @@ async fn start_mock_telemetry_server() -> (SocketAddr, tokio::sync::mpsc::Sender
     (addr, tx)
 }
 
+/// Start a telemetry server that closes the first connection and emits one
+/// binary packet after the subscriber reconnects.
+async fn start_reconnecting_mock_telemetry_server(payload: String) -> SocketAddr {
+    let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
+    let addr = listener.local_addr().unwrap();
+
+    tokio::spawn(async move {
+        let (first_stream, _) = listener.accept().await.unwrap();
+        let mut first_ws = accept_async(first_stream).await.unwrap();
+        first_ws.send(Message::Close(None)).await.unwrap();
+        drop(first_ws);
+
+        let (second_stream, _) = listener.accept().await.unwrap();
+        let mut second_ws = accept_async(second_stream).await.unwrap();
+        second_ws
+            .send(Message::Binary(payload.into_bytes()))
+            .await
+            .unwrap();
+        tokio::time::sleep(Duration::from_millis(100)).await;
+    });
+
+    addr
+}
+
 #[tokio::test]
 async fn bridge_receives_telemetry_from_mock_ws() {
     configure_test_paths();
@@ -177,6 +201,70 @@ async fn bridge_receives_telemetry_from_mock_ws() {
         );
         assert!(s.active_incident_id.is_none());
     }
+}
+
+#[tokio::test]
+async fn telemetry_subscriber_reconnects_after_close_and_routes_binary() {
+    configure_test_paths();
+
+    let addr = start_reconnecting_mock_telemetry_server(eigenpacket_json(0.56, 780.0, None)).await;
+    let db = Arc::new(spectral_bridge_server::db::BridgeDb::open(":memory:").unwrap());
+    let state = Arc::new(RwLock::new(spectral_bridge_server::ws::BridgeState::new()));
+    let (shutdown_tx, shutdown_rx) = tokio::sync::watch::channel(false);
+
+    let handle = spectral_bridge_server::ws::spawn_telemetry_subscriber(
+        format!("ws://{addr}"),
+        Arc::clone(&state),
+        Arc::clone(&db),
+        shutdown_rx,
+    );
+
+    tokio::time::timeout(Duration::from_secs(4), async {
+        loop {
+            let complete = {
+                let bridge = state.read().await;
+                bridge.telemetry_ws.connection_attempts >= 2
+                    && bridge.telemetry_ws.reconnects >= 1
+                    && bridge.telemetry_ws.disconnects >= 1
+                    && bridge.telemetry_ws.messages_received >= 1
+                    && bridge
+                        .telemetry_ws
+                        .active_connection_valid_payloads_received
+                        >= 1
+                    && bridge.messages_relayed >= 1
+            };
+            if complete {
+                break;
+            }
+            tokio::time::sleep(Duration::from_millis(25)).await;
+        }
+    })
+    .await
+    .expect("subscriber should reconnect and integrate binary telemetry");
+
+    {
+        let bridge = state.read().await;
+        assert!((bridge.fill_pct - 56.0).abs() < 0.5);
+        assert_eq!(
+            bridge.safety_level,
+            spectral_bridge_server::types::SafetyLevel::Green
+        );
+        assert!(bridge.telemetry_ws.connection_attempts >= 2);
+        assert!(bridge.telemetry_ws.reconnects >= 1);
+        assert!(bridge.telemetry_ws.disconnects >= 1);
+        assert_eq!(bridge.telemetry_ws.messages_received, 1);
+        assert_eq!(
+            bridge
+                .telemetry_ws
+                .active_connection_valid_payloads_received,
+            1
+        );
+        assert!(bridge.telemetry_connected);
+    }
+    assert!(db.message_count().unwrap() >= 1);
+
+    let _ = shutdown_tx.send(true);
+    handle.await.unwrap();
 }
 
 /// Start a mock minime sensory input server on a random port.
