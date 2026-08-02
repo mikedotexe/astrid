@@ -834,6 +834,19 @@ pub(crate) fn next_shadow_suggestion(label: &str) -> String {
 /// artifact. Astrid's `SHADOW_TRAJECTORY [label]` action: walk the last
 /// 32 snapshots in `shadow_field_v3.history`, emit a sparkline of
 /// field_norm and a class timeline so phase shifts are legible.
+fn shadow_trajectory_effect_contract() -> Value {
+    serde_json::json!({
+        "schema": "shadow_trajectory_effect_contract_v1",
+        "observational_only": true,
+        "requires_being_invocation": true,
+        "writes_cartography_artifact": true,
+        "initiates_distance_shift": false,
+        "changes_shadow_field": false,
+        "changes_pressure_or_mode_packing": false,
+        "authority": "being_invoked_cartography_only_not_shadow_influence_or_distance_control",
+    })
+}
+
 fn render_shadow_trajectory(ctx: &NextActionContext<'_>, label: &str) -> CartographyReport {
     let workspace = minime_workspace(ctx);
     let health = read_json(&workspace.join("health.json")).unwrap_or(Value::Null);
@@ -895,6 +908,7 @@ fn render_shadow_trajectory(ctx: &NextActionContext<'_>, label: &str) -> Cartogr
         "recent_phase_transitions": transitions,
         "sparkline_field_norm": sparkline,
         "class_timeline": class_timeline,
+        "effect_contract_v1": shadow_trajectory_effect_contract(),
     });
     let mut write_status = "ok".to_string();
     if let Err(err) = std::fs::create_dir_all(&dir) {
@@ -907,7 +921,7 @@ fn render_shadow_trajectory(ctx: &NextActionContext<'_>, label: &str) -> Cartogr
     }
 
     let summary = format!(
-        "Shadow trajectory ({label}):\n  field_norm sparkline: {sparkline}\n  classes:           {class_timeline}\n  current dwell: {dwell}t\n  recent transitions: {transitions_summary}\n  Artifact: {artifact_path} | status: {write_status}",
+        "Shadow trajectory ({label}):\n  field_norm sparkline: {sparkline}\n  classes:           {class_timeline}\n  current dwell: {dwell}t\n  recent transitions: {transitions_summary}\n  Effect: observational cartography only; does not initiate a distance shift or change the Shadow field, pressure, or mode packing.\n  Artifact: {artifact_path} | status: {write_status}",
         label = label_slug,
         artifact_path = artifact_path.display(),
     );
@@ -1229,5 +1243,20 @@ mod density_gift_tests {
         assert_eq!(max_abs, Some(0.025));
         assert_eq!(duration_ticks, Some(24));
         assert!(features.iter().all(|v| v.abs() <= 0.025 + 1e-6));
+    }
+
+    #[test]
+    fn shadow_trajectory_effect_contract_is_observational() {
+        let contract = shadow_trajectory_effect_contract();
+        assert_eq!(contract["observational_only"], true);
+        assert_eq!(contract["requires_being_invocation"], true);
+        assert_eq!(contract["writes_cartography_artifact"], true);
+        assert_eq!(contract["initiates_distance_shift"], false);
+        assert_eq!(contract["changes_shadow_field"], false);
+        assert_eq!(contract["changes_pressure_or_mode_packing"], false);
+        assert_eq!(
+            contract["authority"],
+            "being_invoked_cartography_only_not_shadow_influence_or_distance_control"
+        );
     }
 }
