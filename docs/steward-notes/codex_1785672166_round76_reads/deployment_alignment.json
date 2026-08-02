@@ -1,0 +1,24 @@
+{
+  "schema": "steward_deployment_alignment_v1",
+  "steward_run_id": "run_1785672166788343000_f80a8c946b",
+  "bridge": {
+    "source_changed": false,
+    "build_attempted": false,
+    "restart_attempted": false,
+    "deployment_changed": false,
+    "reason": "This round reads and verifies existing codec source and preregisters a default-off model-output study. Live codec, model, pressure, density, Shadow, lambda, reservoir, and controller changes remain unauthorized."
+  },
+  "controller_session": {
+    "credential_confined": true,
+    "pause_generation": 174,
+    "preprojection": "projection_1785672167668555000_776974ce70",
+    "credential_transport": "controller process memory",
+    "service_restart_required": false
+  },
+  "minime": {
+    "source_changed": false,
+    "restart_attempted": false,
+    "deployment_changed": false
+  },
+  "authority_boundary": "No bridge build, live restart, model call, entropy damping, mode resolver, density-gradient change, Shadow stabilization, lambda recentering, reservoir/controller change, peer mutation, or felt result is authorized by this packet."
+}

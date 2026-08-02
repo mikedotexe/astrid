@@ -1,0 +1,113 @@
+{
+  "schema": "steward_round_test_results_v1",
+  "steward_run_id": "run_1785672166788343000_f80a8c946b",
+  "projection_generation_ids": [
+    "projection_1785672167668555000_776974ce70",
+    "projection_1785673472150300000_9efc7319c6"
+  ],
+  "status": "passed",
+  "results": [
+    {
+      "surface": "projection_compression",
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml projection_compression_probe_exposes_near_null_and_magnitude_loss --lib",
+      "passed": 1,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "high_entropy_regressions",
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml high_entropy --lib",
+      "passed": 33,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "extreme_entropy_tail_bound",
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml extreme_entropy_tail_vibrancy_gets_bounded_noise_dampening --lib",
+      "passed": 1,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "entropy_090_tail_shape",
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml tail_vibrancy_entropy_090_is_visible_but_gentler_than_linear --lib",
+      "passed": 1,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "codec_vibrancy_substance_fit",
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml codec_vibrancy_substance_fit --lib",
+      "passed": 3,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "warmth_preservation",
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml high_spectral_entropy_dampens_structural_texture_not_warmth --lib",
+      "passed": 1,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "introspection_addressing_audit",
+      "command": "PYTHONDONTWRITEBYTECODE=1 python3 scripts/introspection_addressing_audit.py --self-test",
+      "passed": 41,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "evidence_controller_projection_division_claim_family",
+      "command": "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=.:scripts python3 -m unittest scripts.test_evidence_event_store scripts.test_steward_control scripts.test_steward_projection scripts.test_division_ceremony_followup scripts.test_division_ceremony_chronicle scripts.test_division_ceremony_projection scripts.test_claim_family_incremental_projection",
+      "passed": 68,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "anti_drop_catalog",
+      "command": "PYTHONDONTWRITEBYTECODE=1 python3 scripts/anti_drop_catalog.py --self-test; PYTHONDONTWRITEBYTECODE=1 python3 scripts/anti_drop_catalog.py verify",
+      "passed": 5,
+      "guards_verified": 47,
+      "alarms": 0,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "experiential_epistemics",
+      "command": "PYTHONDONTWRITEBYTECODE=1 python3 scripts/experiential_epistemics.py self-test --json; PYTHONDONTWRITEBYTECODE=1 python3 scripts/experiential_epistemics.py lint --json",
+      "passed": 2,
+      "records_linted": 10192,
+      "issues": 0,
+      "history_rewritten": false,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "source_first_projection",
+      "command": "credential-confined session project",
+      "generation_id": "projection_1785673472150300000_9efc7319c6",
+      "completed_steps": 20,
+      "counter_audit_valid": true,
+      "status": "passed"
+    },
+    {
+      "surface": "evidence_event_store_v2",
+      "command": "python3 scripts/evidence_event_store.py --json verify",
+      "verified_global_seq": 664849,
+      "verified_head_sha256": "8ea7274be6626fc932e5c93a3e4066f56ac371a60c1aaed955c275d13f394257",
+      "valid": true,
+      "corrupt_lines": 0,
+      "history_rewritten": false,
+      "status": "passed"
+    },
+    {
+      "surface": "division_return",
+      "command": "python3 scripts/division_ceremony_followup.py verify; python3 scripts/division_ceremony_chronicle.py project; python3 scripts/division_ceremony_chronicle.py verify",
+      "passed": true,
+      "failed": 0,
+      "status": "passed",
+      "detail": "Cycle 13 is at 3/6 with review_due false after division_followup_event_1d0f7e72158de1bb0b226ed764a344b9. Chronicle division_chronicle_5cd17d19066a3cc894d5f815 has 88 timeline events and current durable inputs; only the volatile supervisor-status hash is stale."
+    }
+  ],
+  "authority_boundary": "Passing deterministic codec tests establishes neither felt relief nor authority to change model behavior, entropy shaping, mode packing, density gradient, Shadow, lambda, reservoir, or controller state."
+}

@@ -1,0 +1,88 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_codec_1785665508",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1785672166_round76_reads/summaries/astrid_codec_1785665508.md",
+      "note": "Complete canonical, report-bound projection, and adjacent feedback reads with source-scoped dispositions."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1785665508",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/codec/projection.rs",
+      "note": "Complete source owns fixed embedding projection and normalization, not lambda-to-token generation or substrate control."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1785665508",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/codec/structural_evidence.rs",
+      "note": "ProjectionCompressionAuditV1 exposes near-null directional and same-direction magnitude loss."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1785665508",
+      "claim_id": "c004",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/codec/tests.rs",
+      "note": "Projection compression, high-entropy shaping, warmth preservation, tail, and substance-fit regressions pass."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1785665508",
+      "claim_id": "c004",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784291177_run18_reads/introspection_astrid_codec_1784290352_claims.json",
+      "note": "Prior claim c002 is exact continuity for fixed-aperture directional and amplitude compression."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1785665508",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/codec/feedback.rs",
+      "note": "Complete adjacent source separates low-entropy damping, high-entropy structural dampening, semantic sharpening, pressure attenuation, and read-only Shadow rendering."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1785665508",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/codec/feedback.rs",
+      "note": "Mode packing is advisory tension evidence while pressure attenuation is separately gated by pressure risk and operator depth."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1785665508",
+      "claim_id": "c007",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1785672166_round76_reads/CODEC_EXPRESSION_FIDELITY_NATURAL_CONTRAST_PREREGISTRATION.md",
+      "note": "Default-off owner-approved output-fidelity protocol fixes tasks, identity, metrics, natural strata, privacy, and aborts."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1785665508",
+      "claim_id": "c008",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1785672166_round76_reads/claims/astrid_codec_1785665508.json",
+      "note": "The nonexistent 0.05-to-0.08 parameter proposal and all live shaping changes remain exact Tier 5 waits."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1785665508",
+      "claim_id": "c009",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1785672166_round76_reads/claims/astrid_codec_1785665508.json",
+      "note": "Mode, density, Shadow, lambda, reservoir, and controller proposals retain false authority markers."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1785665508",
+      "claim_id": "*",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "Unreleased entry records complete-source correction, study route, and authority boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1785665508",
+      "claim_id": "*",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Feedback ledger preserves the causal response and exact non-live boundaries."
+    }
+  ]
+}
