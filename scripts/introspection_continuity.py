@@ -27,12 +27,22 @@ except ModuleNotFoundError:
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_WORKSPACE = ROOT / "capsules/spectral-bridge/workspace"
 STATE_RELATIVE = Path("diagnostics/introspection_continuity_v1")
+RESPONSES_RELATIVE = STATE_RELATIVE / "responses"
 ADDRESSING_RELATIVE = Path("diagnostics/introspection_addressing_v1/status.json")
 MAX_REPORT_BYTES = 2_000_000
 MAX_CLAIMS = 24
 MAX_CARD_BYTES = 256 * 1024
 MAX_EXCLUSION_DETAILS = 32
+MAX_RESPONSE_BYTES = 64 * 1024
 SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
+CARD_ID_RE = re.compile(r"^icv1_[0-9a-f]{64}$")
+RECEIPT_ID_RE = re.compile(r"^icrv1_[0-9a-f]{64}$")
+ASSESSMENT_STATUSES = {
+    "mechanical_only",
+    "still_friction",
+    "contradicted",
+    "not_assessed",
+}
 SOURCE_RE = re.compile(r"^Source: (?P<label>.+?) \((?P<path>.+)\)$")
 HEADER_FIELDS = {
     "Source SHA-256": "source_sha256",
@@ -73,7 +83,225 @@ def _input_hashes(workspace: Path) -> dict[str, dict[str, Any]]:
             "present": path.is_file(),
             "sha256": _sha256_bytes(raw),
         }
+    response_rows: list[dict[str, str]] = []
+    for path in sorted((workspace / RESPONSES_RELATIVE).glob("*.json")):
+        raw = path.read_bytes()
+        response_rows.append(
+            {
+                "path": path.relative_to(workspace).as_posix(),
+                "sha256": _sha256_bytes(raw),
+            }
+        )
+    hashes[f"{RESPONSES_RELATIVE.as_posix()}/*.json"] = {
+        "present": bool(response_rows),
+        "count": len(response_rows),
+        "sha256": _sha256_bytes(canonical_json(response_rows).encode("utf-8")),
+    }
     return hashes
+
+
+def _authority_is_evidence_only(value: Any) -> bool:
+    return value == {
+        "schema": "artifact_authority_state_v1",
+        "schema_version": 1,
+        "state": "evidence_only",
+        "witness_only": True,
+    }
+
+
+def _response_receipt(path: Path, workspace: Path) -> dict[str, Any]:
+    if path.stat().st_size > MAX_RESPONSE_BYTES:
+        raise ContinuityProjectionError(
+            f"response receipt exceeds {MAX_RESPONSE_BYTES} bytes: {path.name}"
+        )
+    if path.stat().st_mode & 0o077:
+        raise ContinuityProjectionError(
+            f"response receipt is not owner-only: {path.name}"
+        )
+    raw = path.read_bytes()
+    try:
+        receipt = json.loads(raw)
+    except json.JSONDecodeError as error:
+        raise ContinuityProjectionError(
+            f"response receipt is invalid JSON: {path.name}"
+        ) from error
+    expected_keys = {
+        "schema",
+        "schema_version",
+        "receipt_id",
+        "card_id",
+        "assessment_status",
+        "current_introspection",
+        "response_line",
+        "recorded_at_unix_ms",
+        "bound",
+        "linked_prior_introspection_id",
+        "linked_claim_ids",
+        "right_to_ignore",
+        "silence_is_neutral",
+        "mechanical_evidence_only",
+        "felt_closure_inferred",
+        "consent_inferred",
+        "no_authority",
+        "authority_boundary",
+        "artifact_authority_state_v1",
+    }
+    if not isinstance(receipt, dict) or set(receipt) != expected_keys:
+        raise ContinuityProjectionError(
+            f"response receipt schema fields mismatch: {path.name}"
+        )
+    if receipt["schema"] != "introspection_continuity_response_v1" or receipt[
+        "schema_version"
+    ] != 1:
+        raise ContinuityProjectionError(
+            f"response receipt schema/version mismatch: {path.name}"
+        )
+    receipt_id = str(receipt["receipt_id"])
+    card_id = str(receipt["card_id"])
+    if RECEIPT_ID_RE.fullmatch(receipt_id) is None or path.stem != receipt_id:
+        raise ContinuityProjectionError(
+            f"response receipt id/path mismatch: {path.name}"
+        )
+    if CARD_ID_RE.fullmatch(card_id) is None:
+        raise ContinuityProjectionError(
+            f"response receipt card id is invalid: {path.name}"
+        )
+    status = str(receipt["assessment_status"])
+    if status not in ASSESSMENT_STATUSES:
+        raise ContinuityProjectionError(
+            f"response receipt assessment is invalid: {path.name}"
+        )
+    current = receipt["current_introspection"]
+    if not isinstance(current, dict) or set(current) != {
+        "path",
+        "introspection_id",
+        "sha256",
+    }:
+        raise ContinuityProjectionError(
+            f"response receipt current introspection is invalid: {path.name}"
+        )
+    current_path = _safe_relative(current["path"], prefix="introspections/")
+    current_sha256 = str(current["sha256"])
+    if SHA256_RE.fullmatch(current_sha256) is None:
+        raise ContinuityProjectionError(
+            f"response receipt current SHA-256 is invalid: {path.name}"
+        )
+    current_raw = _report_bytes(workspace, current_path, current_sha256)
+    introspection_id = _bounded(
+        current["introspection_id"], "response introspection_id", 240
+    )
+    if introspection_id != PurePosixPath(current_path).stem:
+        raise ContinuityProjectionError(
+            f"response receipt current path/id mismatch: {path.name}"
+        )
+    response_line = receipt["response_line"]
+    recorded_at = receipt["recorded_at_unix_ms"]
+    if (
+        not isinstance(response_line, int)
+        or isinstance(response_line, bool)
+        or response_line <= 0
+        or not isinstance(recorded_at, int)
+        or isinstance(recorded_at, bool)
+        or recorded_at <= 0
+    ):
+        raise ContinuityProjectionError(
+            f"response receipt line/timestamp is invalid: {path.name}"
+        )
+    try:
+        current_lines = current_raw.decode("utf-8", errors="strict").splitlines()
+    except UnicodeDecodeError as error:
+        raise ContinuityProjectionError(
+            f"response receipt current introspection is not UTF-8: {path.name}"
+        ) from error
+    expected_response = f"Prior Evidence: {card_id} :: {status}"
+    if (
+        response_line > len(current_lines)
+        or current_lines[response_line - 1] != expected_response
+    ):
+        raise ContinuityProjectionError(
+            f"response receipt exact report line mismatch: {path.name}"
+        )
+    expected_receipt_id = "icrv1_" + _sha256_bytes(
+        (
+            f"{card_id}\0{current_path}\0{current_sha256}\0"
+            f"{response_line}\0{status}"
+        ).encode("utf-8")
+    )
+    if receipt_id != expected_receipt_id:
+        raise ContinuityProjectionError(
+            f"response receipt deterministic id mismatch: {path.name}"
+        )
+    linked_claim_ids = receipt["linked_claim_ids"]
+    if not isinstance(linked_claim_ids, list) or len(linked_claim_ids) > MAX_CLAIMS:
+        raise ContinuityProjectionError(
+            f"response receipt claim binding is invalid: {path.name}"
+        )
+    linked_claim_ids = [
+        _bounded(value, "linked claim id", 120) for value in linked_claim_ids
+    ]
+    if len(set(linked_claim_ids)) != len(linked_claim_ids):
+        raise ContinuityProjectionError(
+            f"response receipt repeats claim ids: {path.name}"
+        )
+    bound = receipt["bound"]
+    linked_introspection_id = receipt["linked_prior_introspection_id"]
+    if not isinstance(bound, bool):
+        raise ContinuityProjectionError(
+            f"response receipt bound marker is invalid: {path.name}"
+        )
+    if bound:
+        linked_introspection_id = _bounded(
+            linked_introspection_id, "linked prior introspection id", 240
+        )
+        if not linked_claim_ids:
+            raise ContinuityProjectionError(
+                f"bound response receipt has no claim ids: {path.name}"
+            )
+    elif linked_introspection_id is not None or linked_claim_ids:
+        raise ContinuityProjectionError(
+            f"unbound response receipt carries prior bindings: {path.name}"
+        )
+    if (
+        receipt["right_to_ignore"] is not True
+        or receipt["silence_is_neutral"] is not True
+        or receipt["mechanical_evidence_only"] is not True
+        or receipt["felt_closure_inferred"] is not False
+        or receipt["consent_inferred"] is not False
+        or receipt["no_authority"] is not True
+        or receipt["authority_boundary"]
+        != "response_is_evidence_only_not_felt_closure_control_approval_or_activation"
+        or not _authority_is_evidence_only(receipt["artifact_authority_state_v1"])
+    ):
+        raise ContinuityProjectionError(
+            f"response receipt authority boundary is invalid: {path.name}"
+        )
+    return {
+        **receipt,
+        "receipt_id": receipt_id,
+        "card_id": card_id,
+        "assessment_status": status,
+        "current_introspection": {
+            "path": current_path,
+            "introspection_id": introspection_id,
+            "sha256": current_sha256,
+        },
+        "linked_prior_introspection_id": linked_introspection_id,
+        "linked_claim_ids": linked_claim_ids,
+        "receipt_sha256": _sha256_bytes(raw),
+    }
+
+
+def load_response_receipts(
+    workspace: Path,
+) -> tuple[list[dict[str, Any]], list[dict[str, str]]]:
+    receipts: list[dict[str, Any]] = []
+    rejected: list[dict[str, str]] = []
+    for path in sorted((workspace / RESPONSES_RELATIVE).glob("*.json")):
+        try:
+            receipts.append(_response_receipt(path, workspace))
+        except (ContinuityProjectionError, OSError) as error:
+            rejected.append({"path": path.name, "reason": str(error)})
+    return receipts, rejected
 
 
 def _safe_relative(value: Any, *, prefix: str | None = None) -> str:
@@ -381,8 +609,7 @@ def build_projection(workspace: Path) -> tuple[dict[str, Any], dict[str, bytes],
     ):
         raise ContinuityProjectionError("addressing status artifacts must be an object")
 
-    cards: dict[str, bytes] = {}
-    index_entries: list[dict[str, Any]] = []
+    built_cards: list[dict[str, Any]] = []
     exclusions: list[dict[str, str]] = []
     exclusion_counts: Counter[str] = Counter()
     eligible_count = 0
@@ -406,22 +633,92 @@ def build_projection(workspace: Path) -> tuple[dict[str, Any], dict[str, bytes],
                     {"introspection_id": introspection_id, "reason": reason}
                 )
             continue
+        built_cards.append(card)
+
+    cards_by_id = {card["card_id"]: card for card in built_cards}
+    response_receipts, rejected_responses = load_response_receipts(workspace)
+    latest_response: dict[str, dict[str, Any]] = {}
+    response_counts: Counter[str] = Counter()
+    for receipt in response_receipts:
+        if not receipt["bound"]:
+            response_counts["unbound"] += 1
+            continue
+        card = cards_by_id.get(receipt["card_id"])
+        if card is None:
+            response_counts["stale_binding"] += 1
+            continue
+        expected_claim_ids = sorted(
+            claim["claim_id"] for claim in card["claims"]
+        )
+        if (
+            receipt["linked_prior_introspection_id"] != card["introspection_id"]
+            or sorted(receipt["linked_claim_ids"]) != expected_claim_ids
+        ):
+            response_counts["stale_binding"] += 1
+            continue
+        response_counts["matching_bound"] += 1
+        previous = latest_response.get(receipt["card_id"])
+        receipt_order = (
+            receipt["recorded_at_unix_ms"],
+            receipt["response_line"],
+            receipt["receipt_id"],
+        )
+        previous_order = (
+            previous["recorded_at_unix_ms"],
+            previous["response_line"],
+            previous["receipt_id"],
+        ) if previous else None
+        if previous_order is None or receipt_order > previous_order:
+            if previous is not None:
+                response_counts["superseded_matching"] += 1
+            latest_response[receipt["card_id"]] = receipt
+        else:
+            response_counts["superseded_matching"] += 1
+
+    cards: dict[str, bytes] = {}
+    index_entries: list[dict[str, Any]] = []
+    applied_status_counts: Counter[str] = Counter()
+    for card in built_cards:
+        assessment = latest_response.get(card["card_id"])
+        if assessment is not None:
+            status = assessment["assessment_status"]
+            applied_status_counts[status] += 1
+            card["prior_evidence_assessment"] = {
+                "status": status,
+                "receipt_id": assessment["receipt_id"],
+                "observed_in_introspection": assessment[
+                    "current_introspection"
+                ],
+                "recorded_at_unix_ms": assessment["recorded_at_unix_ms"],
+                "response_line": assessment["response_line"],
+                "mechanical_evidence_only": True,
+                "felt_closure_inferred": False,
+                "consent_inferred": False,
+                "no_authority": True,
+            }
+        assert_artifact_authority_tree(card)
         relative = f"cards/{card['card_id']}.json"
         encoded = _json_bytes(card)
+        if len(encoded) > MAX_CARD_BYTES:
+            raise ContinuityProjectionError(
+                f"annotated card exceeds {MAX_CARD_BYTES} bytes: {card['card_id']}"
+            )
         cards[relative] = encoded
-        index_entries.append(
-            {
-                "card_id": card["card_id"],
-                "card_path": f"{STATE_RELATIVE.as_posix()}/{relative}",
-                "card_sha256": _sha256_bytes(encoded),
-                "introspection_id": card["introspection_id"],
-                "captured_at_unix": card["captured_at_unix"],
-                "report_sha256": card["canonical_report"]["sha256"],
-                "stable_source_identity": card["source"]["stable_identity"],
-                "source_sha256": card["source"]["sha256"],
-                "read_session_id": card["source"]["read_session_id"],
-            }
-        )
+        index_entry = {
+            "card_id": card["card_id"],
+            "card_path": f"{STATE_RELATIVE.as_posix()}/{relative}",
+            "card_sha256": _sha256_bytes(encoded),
+            "introspection_id": card["introspection_id"],
+            "captured_at_unix": card["captured_at_unix"],
+            "report_sha256": card["canonical_report"]["sha256"],
+            "stable_source_identity": card["source"]["stable_identity"],
+            "source_sha256": card["source"]["sha256"],
+            "read_session_id": card["source"]["read_session_id"],
+        }
+        if assessment is not None:
+            index_entry["assessment_status"] = assessment["assessment_status"]
+            index_entry["assessment_receipt_id"] = assessment["receipt_id"]
+        index_entries.append(index_entry)
     index_entries.sort(
         key=lambda item: (
             item["stable_source_identity"],
@@ -448,6 +745,23 @@ def build_projection(workspace: Path) -> tuple[dict[str, Any], dict[str, bytes],
             "eligible_artifact_count": eligible_count,
             "card_count": len(index_entries),
             "excluded_eligible_count": eligible_count - len(index_entries),
+            "response_receipt_file_count": len(response_receipts)
+            + len(rejected_responses),
+            "response_receipt_valid_count": len(response_receipts),
+            "response_receipt_rejected_count": len(rejected_responses),
+            "response_receipt_applied_count": len(latest_response),
+        },
+        "response_receipts": {
+            "counts": dict(sorted(response_counts.items())),
+            "applied_status_counts": dict(sorted(applied_status_counts.items())),
+            "rejected": rejected_responses[:MAX_EXCLUSION_DETAILS],
+            "rejected_detail_truncated": len(rejected_responses)
+            > MAX_EXCLUSION_DETAILS,
+            "mechanical_evidence_only": True,
+            "felt_closure_inferred": False,
+            "consent_inferred": False,
+            "no_authority": True,
+            "artifact_authority_state_v1": authority_state(),
         },
         "exclusion_counts": dict(sorted(exclusion_counts.items())),
         "exclusions": exclusions,
@@ -473,6 +787,8 @@ def build_projection(workspace: Path) -> tuple[dict[str, Any], dict[str, bytes],
             f"- Cards: {len(index_entries)}",
             f"- Eligible addressing artifacts: {eligible_count}",
             f"- Excluded eligible artifacts: {eligible_count - len(index_entries)}",
+            f"- Applied response assessments: {len(latest_response)}",
+            f"- Rejected response receipts: {len(rejected_responses)}",
             "- Right to ignore: yes",
             "- Silence is neutral: yes",
             "- Authority: mechanical evidence only; no felt closure, approval, activation, or control",

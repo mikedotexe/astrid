@@ -2761,21 +2761,26 @@ pub fn spawn_autonomous_loop(
                             let n = sources.len();
                             let mut resolved_research_label: Option<String> = None;
                             let mut introspect_notice: Option<(String, String)> = None;
-                            let selection = if let Some((ref target_label, offset)) =
-                                conv.introspect_target.take()
-                            {
+                            let selection = if let Some(requested_target) = conv.introspect_target.take() {
+                                let target_label = requested_target.label;
+                                let requested_offset = requested_target.offset;
                                 let resolved =
-                                    introspect::resolve_introspect_target_result(target_label, &sources);
+                                    introspect::resolve_introspect_target_result(&target_label, &sources);
                                 match resolved {
-                                    Ok(target) => {
+                                    Ok(resolved_target) => {
                                         info!(
                                             "introspect: resolved '{}' -> '{}' ({})",
                                             target_label,
-                                            target.label,
-                                            target.path.display()
+                                            resolved_target.label,
+                                            resolved_target.path.display()
                                         );
-                                        resolved_research_label = Some(target.label.clone());
-                                        Ok((target.label, target.path, offset, Some(target_label.clone())))
+                                        resolved_research_label = Some(resolved_target.label.clone());
+                                        Ok((
+                                            resolved_target.label,
+                                            resolved_target.path,
+                                            requested_offset,
+                                            Some(target_label),
+                                        ))
                                     },
                                     Err(reason) => {
                                         warn!(
@@ -2783,19 +2788,24 @@ pub fn spawn_autonomous_loop(
                                             reason = %reason,
                                             "introspect: target blocked or unresolved"
                                         );
-                                        Err((Some(target_label.clone()), reason))
+                                        Err((Some(target_label), reason))
                                     },
                                 }
                             } else {
                                 let src = &sources[conv.introspect_cursor % n];
                                 conv.introspect_cursor = (conv.introspect_cursor + 1) % n;
                                 match introspect::validate_introspect_source_path(src.label, &src.path) {
-                                    Ok(path) => Ok((src.label.to_string(), path, 0, None)),
+                                    Ok(path) => Ok((
+                                        src.label.to_string(),
+                                        path,
+                                        crate::autonomous::state::IntrospectOffsetV2::Exact(0),
+                                        None,
+                                    )),
                                     Err(reason) => Err((Some(src.label.to_string()), reason)),
                                 }
                             };
 
-                            let (label, source_path, line_offset, _requested_target) = match selection {
+                            let (label, source_path, requested_offset, _requested_target) = match selection {
                                 Ok(selection) => selection,
                                 Err((target, reason)) => {
                                     let text = introspect::blocked_introspection_notice(
@@ -2807,7 +2817,7 @@ pub fn spawn_autonomous_loop(
                                     (
                                         source,
                                         PathBuf::new(),
-                                        0,
+                                        crate::autonomous::state::IntrospectOffsetV2::Exact(0),
                                         None,
                                     )
                                 },
@@ -2834,9 +2844,41 @@ pub fn spawn_autonomous_loop(
                             let source_window = if introspect_notice.is_some() {
                                 Err("INTROSPECT target was blocked before reading".to_string())
                             } else {
-                                introspect::read_introspect_window(&label, &source_path, line_offset)
+                                introspect::read_introspect_window_for_offset(
+                                    &label,
+                                    &source_path,
+                                    requested_offset,
+                                )
                             };
-                            let source_text = source_window.as_ref().ok().map(|window| window.text.clone());
+                            let line_offset = source_window.as_ref().ok().map_or_else(
+                                || match requested_offset {
+                                    crate::autonomous::state::IntrospectOffsetV2::Auto => 0,
+                                    crate::autonomous::state::IntrospectOffsetV2::Exact(offset) => offset,
+                                },
+                                |window| window.line_offset,
+                            );
+                            let source_text = source_window
+                                .as_ref()
+                                .ok()
+                                .map(|window| window.text.clone());
+                            let prior_evidence_v1 = source_window.as_ref().ok().and_then(|window| {
+                                match introspect::load_prior_evidence_v1(
+                                    bridge_paths().bridge_workspace(),
+                                    &label,
+                                    &source_path,
+                                    introspect::source_sha256_v2(window),
+                                ) {
+                                    Ok(context) => context,
+                                    Err(error) => {
+                                        warn!(
+                                            label = %label,
+                                            error = %error,
+                                            "introspect: rejected malformed prior-evidence context"
+                                        );
+                                        None
+                                    },
+                                }
+                            });
                             let next_offset = source_window.as_ref().ok().and_then(|window| window.next_offset);
                             let source_scope_header_v1 =
                                 introspect::source_scope_artifact_header_v1(
@@ -2942,6 +2984,9 @@ pub fn spawn_autonomous_loop(
                                         fill_pct,
                                         Some(&internal_state_context),
                                         web_prompt_body.as_deref(),
+                                        prior_evidence_v1
+                                            .as_ref()
+                                            .map(introspect::PriorEvidenceContextV1::prompt_context),
                                         num_predict,
                                     )
                                 ).await {
@@ -2983,6 +3028,9 @@ pub fn spawn_autonomous_loop(
                                     code,
                                     first_response,
                                     &continuation,
+                                    prior_evidence_v1
+                                        .as_ref()
+                                        .map(introspect::PriorEvidenceContextV1::prompt_context),
                                     1536,
                                     repair_parent_call_id,
                                 )
@@ -3039,6 +3087,9 @@ pub fn spawn_autonomous_loop(
                                         code,
                                         current_response,
                                         &repair_note,
+                                        prior_evidence_v1
+                                            .as_ref()
+                                            .map(introspect::PriorEvidenceContextV1::prompt_context),
                                         1536,
                                         repair_parent_call_id,
                                     )
@@ -3183,6 +3234,22 @@ pub fn spawn_autonomous_loop(
                                         }
                                     };
                                     if artifact_written {
+                                        if artifact_kind == "introspection"
+                                            && let Some(context) = prior_evidence_v1.as_ref()
+                                            && let Err(error) =
+                                                introspect::record_prior_evidence_responses_v1(
+                                                    bridge_paths().bridge_workspace(),
+                                                    &artifact_path,
+                                                    &text,
+                                                    context,
+                                                )
+                                        {
+                                            warn!(
+                                                label = %label,
+                                                error = %error,
+                                                "introspect: response receipt persistence failed after canonical artifact write"
+                                            );
+                                        }
                                         match crate::lived_state_witness::finalize_and_submit_v1(
                                             &authorship_v1,
                                             artifact_kind,

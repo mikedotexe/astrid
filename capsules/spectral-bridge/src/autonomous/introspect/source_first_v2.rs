@@ -83,6 +83,10 @@ fn interval_text(intervals: &[SourceIntervalV2]) -> String {
 }
 
 impl SourceCoverageManifestV2 {
+    pub(super) fn source_sha256(&self) -> &str {
+        &self.source_sha256
+    }
+
     pub(super) fn artifact_header_v2(&self) -> String {
         format!(
             "Source coverage schema: source_coverage_manifest_v2\n\

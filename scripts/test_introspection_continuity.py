@@ -194,6 +194,119 @@ class IntrospectionContinuityTests(unittest.TestCase):
             (state_dir(self.workspace) / "status.json").read_text(encoding="utf-8"),
         )
 
+    def test_bound_response_annotates_stable_card_without_inferring_closure(self) -> None:
+        first = project(self.workspace, write=True)
+        card_path = self._card_paths()[0]
+        card_id = card_path.stem
+        first_input_hash = first["input_hashes"][
+            "diagnostics/introspection_continuity_v1/responses/*.json"
+        ]["sha256"]
+        current = self.introspections / "introspection_astrid_llm_2000000001.txt"
+        response_status = "still_friction"
+        response_line = 9
+        current_relative = f"introspections/{current.name}"
+        exact_response = f"Prior Evidence: {card_id} :: {response_status}"
+        current_bytes = (
+            "canonical current report without copied receipt prose\n"
+            "source header two\n"
+            "source header three\n"
+            "source header four\n"
+            "Observed:\n"
+            "bounded current report line\n"
+            "Likely Snags:\n"
+            "bounded snag\n"
+            f"{exact_response}\n"
+        ).encode()
+        current.write_bytes(current_bytes)
+        current_sha = sha256(current_bytes)
+        receipt_id = "icrv1_" + sha256(
+            (
+                f"{card_id}\0{current_relative}\0{current_sha}\0"
+                f"{response_line}\0{response_status}"
+            ).encode()
+        )
+        receipt = {
+            "schema": "introspection_continuity_response_v1",
+            "schema_version": 1,
+            "receipt_id": receipt_id,
+            "card_id": card_id,
+            "assessment_status": response_status,
+            "current_introspection": {
+                "path": current_relative,
+                "introspection_id": current.stem,
+                "sha256": current_sha,
+            },
+            "response_line": response_line,
+            "recorded_at_unix_ms": 2_000_000_001_000,
+            "bound": True,
+            "linked_prior_introspection_id": self.report.stem,
+            "linked_claim_ids": ["c001"],
+            "right_to_ignore": True,
+            "silence_is_neutral": True,
+            "mechanical_evidence_only": True,
+            "felt_closure_inferred": False,
+            "consent_inferred": False,
+            "no_authority": True,
+            "authority_boundary": (
+                "response_is_evidence_only_not_felt_closure_control_approval_or_activation"
+            ),
+            "artifact_authority_state_v1": {
+                "schema": "artifact_authority_state_v1",
+                "schema_version": 1,
+                "state": "evidence_only",
+                "witness_only": True,
+            },
+        }
+        response_path = (
+            state_dir(self.workspace) / "responses" / f"{receipt_id}.json"
+        )
+        response_path.parent.mkdir(parents=True)
+        response_path.write_text(json.dumps(receipt), encoding="utf-8")
+        os.chmod(response_path.parent, 0o700)
+        os.chmod(response_path, 0o600)
+
+        second = project(self.workspace, write=True)
+        current_cards = self._card_paths()
+        self.assertEqual(len(current_cards), 1)
+        self.assertEqual(current_cards[0].stem, card_id)
+        card = json.loads(current_cards[0].read_text(encoding="utf-8"))
+        assessment = card["prior_evidence_assessment"]
+        self.assertEqual(assessment["status"], "still_friction")
+        self.assertFalse(assessment["felt_closure_inferred"])
+        self.assertFalse(assessment["consent_inferred"])
+        self.assertTrue(assessment["no_authority"])
+        index = json.loads(
+            (state_dir(self.workspace) / "index.json").read_text(encoding="utf-8")
+        )
+        self.assertEqual(index["cards"][0]["assessment_status"], "still_friction")
+        self.assertEqual(second["summary"]["response_receipt_applied_count"], 1)
+        self.assertNotEqual(
+            first_input_hash,
+            second["input_hashes"][
+                "diagnostics/introspection_continuity_v1/responses/*.json"
+            ]["sha256"],
+        )
+
+        response_path.unlink()
+        receipt["response_line"] = 8
+        mismatched_id = "icrv1_" + sha256(
+            (
+                f"{card_id}\0{current_relative}\0{current_sha}\0"
+                f"8\0{response_status}"
+            ).encode()
+        )
+        receipt["receipt_id"] = mismatched_id
+        mismatched_path = response_path.with_name(f"{mismatched_id}.json")
+        mismatched_path.write_text(json.dumps(receipt), encoding="utf-8")
+        os.chmod(mismatched_path, 0o600)
+
+        third = project(self.workspace, write=True)
+        self.assertEqual(third["summary"]["response_receipt_applied_count"], 0)
+        self.assertEqual(third["summary"]["response_receipt_rejected_count"], 1)
+        stable_card = json.loads(self._card_paths()[0].read_text(encoding="utf-8"))
+        self.assertEqual(stable_card["card_id"], card_id)
+        self.assertNotIn("prior_evidence_assessment", stable_card)
+
 
 if __name__ == "__main__":
     unittest.main()

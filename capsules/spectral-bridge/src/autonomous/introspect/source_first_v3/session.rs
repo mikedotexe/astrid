@@ -20,6 +20,56 @@ struct SourceSessionIndexV3 {
     invalidated_session_ids: Vec<String>,
 }
 
+pub(super) fn next_uncovered_offset_v3(
+    root: &Path,
+    cataloged: &CatalogedSourceV3,
+) -> Result<usize, String> {
+    let identity_id = sha256_bytes(cataloged.source_identity.as_bytes());
+    let index_path = root.join("sources").join(format!("{identity_id}.json"));
+    let Some(index) = load_optional::<SourceSessionIndexV3>(&index_path)? else {
+        return Ok(0);
+    };
+    if index.schema != "source_session_index_v3" {
+        return Err(format!(
+            "parse {}: expected source_session_index_v3 schema",
+            index_path.display()
+        ));
+    }
+    if index.source_identity != cataloged.source_identity {
+        return Err(format!(
+            "parse {}: source identity does not match its index key",
+            index_path.display()
+        ));
+    }
+    if index.active_source_sha256 != cataloged.source_sha256 {
+        return Ok(0);
+    }
+
+    let checkpoint_path = checkpoint_path(root, &index.active_session_id);
+    let checkpoint = load_optional::<ReadSessionCheckpointV3>(&checkpoint_path)?.ok_or_else(|| {
+        format!(
+            "source-first V3 index references missing checkpoint {}",
+            checkpoint_path.display()
+        )
+    })?;
+    if checkpoint.schema != "read_session_checkpoint_v3"
+        || checkpoint.schema_version != 3
+        || checkpoint.read_session_id != index.active_session_id
+        || checkpoint.source_identity != cataloged.source_identity
+        || checkpoint.source_sha256 != cataloged.source_sha256
+        || !checkpoint.active_for_source_identity
+    {
+        return Err(format!(
+            "parse {}: active checkpoint binding is inconsistent",
+            checkpoint_path.display()
+        ));
+    }
+    Ok(checkpoint
+        .uncovered_intervals
+        .first()
+        .map_or(0, |interval| interval.start_line.saturating_sub(1)))
+}
+
 pub(super) fn update_read_session_v3(
     root: &Path,
     cataloged: &CatalogedSourceV3,

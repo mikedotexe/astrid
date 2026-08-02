@@ -27,7 +27,10 @@ def source_first_steps() -> tuple[ProjectionStep, ...]:
                 ),
             ),
             ("addressing",),
-            ("introspections/introspection_*.txt",),
+            (
+                "introspections/introspection_*.txt",
+                "diagnostics/introspection_continuity_v1/responses/*.json",
+            ),
             (
                 "diagnostics/introspection_addressing_v1/status.json",
                 "diagnostics/introspection_addressing_v1/queue.md",

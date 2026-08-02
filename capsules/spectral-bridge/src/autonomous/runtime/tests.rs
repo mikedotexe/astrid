@@ -3972,7 +3972,7 @@ NEXT: EXPLORE_RESONANCE_FORECAST (RESIDUE: silted λ4 shimmer)";
         assert!(!legacy.wants_introspect);
         assert_eq!(legacy.introspect_target, None);
 
-        let mut with_pending = base;
+        let mut with_pending = base.clone();
         with_pending["wants_introspect"] = serde_json::Value::Bool(true);
         with_pending["introspect_target"] = serde_json::json!(["astrid:llm", 120]);
         let restored: SavedState =
@@ -3981,7 +3981,23 @@ NEXT: EXPLORE_RESONANCE_FORECAST (RESIDUE: silted λ4 shimmer)";
         assert!(restored.wants_introspect);
         assert_eq!(
             restored.introspect_target,
-            Some(("astrid:llm".to_string(), 120))
+            Some(state::IntrospectTargetV2::exact(
+                "astrid:llm".to_string(),
+                120
+            ))
+        );
+
+        let mut with_auto = base;
+        with_auto["wants_introspect"] = serde_json::Value::Bool(true);
+        with_auto["introspect_target"] = serde_json::json!({
+            "label": "astrid:llm",
+            "offset": "auto"
+        });
+        let restored: SavedState =
+            serde_json::from_value(with_auto).expect("state with automatic introspection");
+        assert_eq!(
+            restored.introspect_target,
+            Some(state::IntrospectTargetV2::auto("astrid:llm".to_string()))
         );
     }
 

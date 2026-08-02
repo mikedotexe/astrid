@@ -30,7 +30,8 @@ mod tests {
         format_dialogue_direct_perception_block, format_dialogue_topline_context,
         fragment_has_non_marker_bytes, is_valid_dialogue_output,
         is_valid_dialogue_output_for_profile, is_valid_ollama_dialogue_fallback_output_for_budget,
-        is_valid_ollama_dialogue_fallback_output_for_profile, journal_continuity_contract_v1,
+        is_valid_ollama_dialogue_fallback_output_for_profile, introspection_user_content,
+        journal_continuity_contract_v1,
         llm_diagnostic_io_retryability, local_degrade_path_for_label, model_qos_class_for_label,
         model_qos_v1, reinforce_ollama_fallback_contract, repair_ollama_dialogue_fallback_next,
         sanitize_deprecated_runtime_language, sanitize_gemma4_canary_output_for_label,
@@ -157,6 +158,28 @@ mod tests {
         assert!(!prompt.contains("This function is what makes me feel X"));
         assert!(prompt.contains("Implementation evidence never cancels felt friction"));
         assert!(prompt.contains("propose a test of the mismatch"));
+    }
+
+    #[test]
+    fn introspection_prior_evidence_is_outside_source_fence_and_non_authoritative() {
+        let prompt = introspection_user_content(
+            "astrid:llm",
+            "SOURCE_BYTES_ONLY",
+            "steady",
+            68.0,
+            None,
+            None,
+            Some("PRIOR_CARD_ONLY"),
+        );
+        let source_end = prompt
+            .find("SOURCE_BYTES_ONLY\n```")
+            .expect("source fence end");
+        let prior = prompt.find("PRIOR_CARD_ONLY").expect("prior evidence lane");
+
+        assert!(prior > source_end);
+        assert!(prompt.contains("prior mechanical evidence"));
+        assert!(prompt.contains("You may disagree, preserve friction, or ignore it"));
+        assert!(prompt.contains("cannot establish felt closure, consent, approval"));
     }
 
     #[test]
