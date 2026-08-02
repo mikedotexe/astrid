@@ -44,7 +44,9 @@ Start a credential-confined cooperative session:
 python3 scripts/steward_control.py --json session --actor interactive-agent
 ```
 
-The command speaks newline-delimited JSON over stdin/stdout. Its first `ready`
+The command speaks newline-delimited JSON over stdin/stdout. Pipes, terminals,
+and regular NDJSON files are accepted as stdin while automatic lease renewal
+continues. Its first `ready`
 record includes the run ID, pre-projection generation ID, heartbeat interval,
 and `lease_token_included=false`. The controller owns the lease credential and
 renews it automatically while idle. Clients never receive or submit the token.
