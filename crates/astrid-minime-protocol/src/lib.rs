@@ -33,11 +33,12 @@ pub use telemetry::{
     PressureSourceControl, PressureSourceProfileEntry, PressureSourceV1,
     ResonanceDensityComponents, ResonanceDensityControl, ResonanceDensityV1,
     ResonanceInterventionType, ResonanceTextureComponentAlignmentV1, ResonanceTextureSignatureV1,
-    SemanticEnergyV1, SemanticViscosityCoefficientV1, SettledMobilityReviewV1, ShadowClassV3,
-    ShadowFieldModeV2, ShadowFieldV2, ShadowFieldV3, ShadowInfluenceResponseV3,
-    ShadowPhaseTransitionV3, ShadowPreservationModeV1, ShadowSnapshotV3, SiltGranularityV1,
-    SpectralDampingWarmStartReviewV1, SpectralDenominatorV1, SpectralFingerprintV1,
-    ViscosityVector,
+    SPECTRAL_SUBSTRATE_POLICY_V1, SemanticEnergyV1, SemanticViscosityCoefficientV1,
+    SettledMobilityReviewV1, ShadowClassV3, ShadowFieldModeV2, ShadowFieldV2, ShadowFieldV3,
+    ShadowInfluenceResponseV3, ShadowPhaseTransitionV3, ShadowPreservationModeV1, ShadowSnapshotV3,
+    SiltGranularityV1, SpectralDampingWarmStartReviewV1, SpectralDenominatorV1,
+    SpectralFillSemanticsV1, SpectralFingerprintV1, SpectralSubstrateKindV1, SpectralSubstrateV1,
+    SpectrumCoverageV1, ViscosityVector,
 };
 pub use version::{
     CompatibilityStatus, PROTOCOL_MAJOR, PROTOCOL_MINOR, PROTOCOL_NAME, ProtocolHeaderV1,

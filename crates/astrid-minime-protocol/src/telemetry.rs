@@ -311,6 +311,137 @@ pub struct SpectralFingerprintV1 {
     pub adjacent_gap_ratios: [f32; 4],
 }
 
+/// Identifies the spectral substrate that produced an [`EigenPacketV1`].
+///
+/// `fill_ratio` predates this discriminator. Consumers must not compare fill
+/// values across substrate kinds as though they represented the same metric.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum SpectralSubstrateKindV1 {
+    /// No substrate metadata was available (including legacy packets).
+    #[default]
+    LegacyUnknown,
+    /// Minime's thresholded eigenvalue-occupancy substrate.
+    MinimeThresholdedEigenfill,
+    /// The CPU-edge covariance effective-rank ESN substrate.
+    CpuEdgeCovarianceEffectiveRank,
+}
+
+/// Defines what the wire-compatible `fill_ratio` field measures.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum SpectralFillSemanticsV1 {
+    /// The packet predates an explicit fill definition.
+    #[default]
+    UnspecifiedLegacy,
+    /// Fraction of eigenmodes above Minime's `EigenFill` threshold.
+    ThresholdedEigenvalueOccupancy,
+    /// Effective rank of a covariance spectrum divided by reservoir width.
+    NormalizedCovarianceEffectiveRank,
+}
+
+pub const SPECTRAL_SUBSTRATE_POLICY_V1: &str = "spectral_substrate_v1";
+
+/// Additive metadata that makes otherwise ambiguous spectral values explicit.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct SpectralSubstrateV1 {
+    pub policy: String,
+    pub schema_version: u8,
+    pub substrate_kind: SpectralSubstrateKindV1,
+    pub fill_semantics: SpectralFillSemanticsV1,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub reservoir_dimensions: Option<usize>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub covariance_window_samples: Option<usize>,
+}
+
+impl SpectralSubstrateV1 {
+    #[must_use]
+    pub fn minime_thresholded_eigenfill(reservoir_dimensions: Option<usize>) -> Self {
+        Self {
+            policy: SPECTRAL_SUBSTRATE_POLICY_V1.to_string(),
+            schema_version: 1,
+            substrate_kind: SpectralSubstrateKindV1::MinimeThresholdedEigenfill,
+            fill_semantics: SpectralFillSemanticsV1::ThresholdedEigenvalueOccupancy,
+            reservoir_dimensions,
+            covariance_window_samples: None,
+        }
+    }
+
+    #[must_use]
+    pub fn cpu_edge_covariance_effective_rank(
+        reservoir_dimensions: usize,
+        covariance_window_samples: usize,
+    ) -> Self {
+        Self {
+            policy: SPECTRAL_SUBSTRATE_POLICY_V1.to_string(),
+            schema_version: 1,
+            substrate_kind: SpectralSubstrateKindV1::CpuEdgeCovarianceEffectiveRank,
+            fill_semantics: SpectralFillSemanticsV1::NormalizedCovarianceEffectiveRank,
+            reservoir_dimensions: Some(reservoir_dimensions),
+            covariance_window_samples: Some(covariance_window_samples),
+        }
+    }
+
+    /// Returns true only for internally coherent, current-v1 metadata.
+    #[must_use]
+    pub fn is_well_formed(&self) -> bool {
+        if self.policy != SPECTRAL_SUBSTRATE_POLICY_V1 || self.schema_version != 1 {
+            return false;
+        }
+        match (self.substrate_kind, self.fill_semantics) {
+            (
+                SpectralSubstrateKindV1::LegacyUnknown,
+                SpectralFillSemanticsV1::UnspecifiedLegacy,
+            ) => true,
+            (
+                SpectralSubstrateKindV1::MinimeThresholdedEigenfill,
+                SpectralFillSemanticsV1::ThresholdedEigenvalueOccupancy,
+            ) => self
+                .reservoir_dimensions
+                .is_none_or(|dimensions| dimensions > 0),
+            (
+                SpectralSubstrateKindV1::CpuEdgeCovarianceEffectiveRank,
+                SpectralFillSemanticsV1::NormalizedCovarianceEffectiveRank,
+            ) => {
+                self.reservoir_dimensions
+                    .is_some_and(|dimensions| dimensions > 0)
+                    && self
+                        .covariance_window_samples
+                        .is_some_and(|samples| samples > 0)
+            },
+            _ => false,
+        }
+    }
+}
+
+/// Declares which portion of the spectrum was serialized and which portion was
+/// used to derive denominator metrics such as entropy and effective rank.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct SpectrumCoverageV1 {
+    pub full_spectrum_mode_count: usize,
+    pub exported_spectrum_mode_count: usize,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub exported_spectrum_energy_ratio: Option<f32>,
+    pub denominator_uses_full_spectrum: bool,
+}
+
+impl SpectrumCoverageV1 {
+    #[must_use]
+    pub fn is_well_formed(&self) -> bool {
+        self.full_spectrum_mode_count > 0
+            && self.exported_spectrum_mode_count <= self.full_spectrum_mode_count
+            && self
+                .exported_spectrum_energy_ratio
+                .is_none_or(|ratio| ratio.is_finite() && (0.0..=1.0).contains(&ratio))
+    }
+
+    #[must_use]
+    pub fn exports_full_spectrum(&self) -> bool {
+        self.full_spectrum_mode_count == self.exported_spectrum_mode_count
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct SpectralDenominatorV1 {
     pub policy: String,
@@ -320,6 +451,8 @@ pub struct SpectralDenominatorV1 {
     pub distinguishability_loss: f32,
     pub lambda1_energy_share: f32,
     pub spectral_entropy: f32,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub spectrum_coverage_v1: Option<SpectrumCoverageV1>,
 }
 
 #[derive(Debug, Clone, Copy, Default, Serialize, Deserialize)]
@@ -675,6 +808,8 @@ pub struct EigenPacketV1 {
     pub t_ms: u64,
     pub eigenvalues: Vec<f32>,
     pub fill_ratio: f32,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub spectral_substrate_v1: Option<SpectralSubstrateV1>,
     #[serde(default)]
     pub active_mode_count: usize,
     #[serde(default)]
