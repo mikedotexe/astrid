@@ -1,6 +1,6 @@
 use super::*;
 use astrid_events::EventBus;
-use astrid_events::ipc::IpcPayload;
+use astrid_events::ipc::{IpcMessage, IpcPayload, IpcTraceContextV1};
 
 /// Publish N IPC messages to a bus and return a receiver subscribed to them.
 fn publish_ipc_messages(bus: &EventBus, topic: &str, count: usize) {
@@ -244,6 +244,27 @@ fn publish_known_tag_with_malformed_fields_falls_to_custom() {
         },
         other => panic!("expected Custom (malformed known tag), got {other:?}"),
     }
+}
+
+#[test]
+fn capsule_publish_creates_a_child_span_without_changing_authority_fields() {
+    let trace = IpcTraceContextV1::root(uuid::Uuid::new_v4(), "session", Some("chain".to_string()));
+    let caller = IpcMessage::new(
+        "react.v1.request",
+        IpcPayload::Custom {
+            data: serde_json::json!({"authority": "unchanged"}),
+        },
+        uuid::Uuid::new_v4(),
+    )
+    .with_principal("operator")
+    .with_trace(trace.clone());
+    let child = child_trace_context(Some(&caller)).unwrap();
+
+    assert_eq!(child.trace_id, trace.trace_id);
+    assert_eq!(child.parent_span_id, Some(trace.span_id));
+    assert_eq!(child.session_id, trace.session_id);
+    assert_eq!(child.chain_id, trace.chain_id);
+    assert_eq!(caller.principal.as_deref(), Some("operator"));
 }
 
 #[test]
