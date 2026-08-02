@@ -1,0 +1,28 @@
+diff --git a/Capsule.toml b/Capsule.toml
+--- a/Capsule.toml
++++ b/Capsule.toml
+@@ -25,6 +25,7 @@ model = { type = "string", request = "Enter the default model ID", default =
+ context_window = { type = "integer", request = "Enter the model's context window size (tokens)", default = "128000", placeholder = "128000" }
+ max_output_tokens = { type = "integer", request = "Enter the max output tokens (applied to HTTP request)", default = "8192", placeholder = "8192" }
+ temperature = { type = "string", request = "Enter the default temperature (0.0-2.0, blank = provider default)", placeholder = "0.7" }
++reasoning_effort = { type = "string", request = "Enter reasoning effort (high, medium, low, none; blank = provider default)", placeholder = "none" }
+ 
+ [[interceptor]]
+ event = "llm.v1.request.describe"
+diff --git a/src/lib.rs b/src/lib.rs
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -153,6 +153,14 @@ impl OpenAICompatProvider {
+         {
+             request_body["temperature"] = serde_json::json!(t);
+         }
++        if let Ok(reasoning_effort) = env::var("reasoning_effort") {
++            let reasoning_effort = reasoning_effort.trim().trim_matches('"');
++            if matches!(reasoning_effort, "high" | "medium" | "low" | "none") {
++                request_body["reasoning_effort"] =
++                    serde_json::Value::String(reasoning_effort.to_string());
++            }
++        }
+ 
+         if !tools.is_empty() {
+             let api_tools: Vec<Value> = tools

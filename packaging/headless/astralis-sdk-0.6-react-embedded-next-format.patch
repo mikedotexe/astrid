@@ -1,0 +1,110 @@
+diff --git a/src/lib.rs b/src/lib.rs
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -83,6 +83,8 @@ const COMPACTION_TARGET_DENOM: u64 = 10;
+ /// The only synthetic action is LISTEN, which cannot mutate the workspace.
+ const SAFE_NEXT_REPAIR_MARKER: &str =
+     "[Local contract repair: no valid final action was emitted; defaulting safely to LISTEN.]";
++const FORMAT_NEXT_REPAIR_MARKER: &str =
++    "[Local contract formatting repair: preserved one unambiguous model-authored terminal action.]";
+ 
+ /// Return whether the final non-empty line is a complete sovereign NEXT action.
+ fn has_valid_sovereign_next(text: &str) -> bool {
+@@ -121,6 +123,38 @@ fn has_valid_sovereign_next(text: &str) -> bool {
+         })
+ }
+ 
++/// Repair only the layout of one unambiguous terminal action authored at the
++/// end of the model's final line. The action bytes themselves are unchanged.
++fn canonicalize_embedded_terminal_next(text: &str) -> Option<String> {
++    let trimmed = text.trim_end();
++    if trimmed.matches("NEXT:").count() != 1 {
++        return None;
++    }
++    let line_start = trimmed
++        .rfind('\n')
++        .map_or(0, |position| position.saturating_add(1));
++    let final_line = trimmed.get(line_start..)?;
++    let marker = final_line.rfind("NEXT:")?;
++    if marker == 0
++        || !final_line
++            .get(..marker)?
++            .chars()
++            .next_back()
++            .is_some_and(char::is_whitespace)
++    {
++        return None;
++    }
++    let declaration = final_line.get(marker..)?.trim();
++    if !has_valid_sovereign_next(declaration) {
++        return None;
++    }
++    let prefix_end = line_start.saturating_add(marker);
++    let prefix = trimmed.get(..prefix_end)?.trim_end();
++    Some(format!(
++        "{prefix}\n\n{FORMAT_NEXT_REPAIR_MARKER}\n{declaration}"
++    ))
++}
++
+ /// Preserve a valid model-authored declaration or append a transparent,
+ /// non-writing LISTEN fallback.
+ fn ensure_sovereign_next(text: &str) -> String {
+@@ -128,6 +162,9 @@ fn ensure_sovereign_next(text: &str) -> String {
+     if has_valid_sovereign_next(trimmed) {
+         return trimmed.to_owned();
+     }
++    if let Some(repaired) = canonicalize_embedded_terminal_next(trimmed) {
++        return repaired;
++    }
+     if trimmed.is_empty() {
+         format!("{SAFE_NEXT_REPAIR_MARKER}\nNEXT: LISTEN")
+     } else {
+@@ -1634,7 +1671,10 @@ fn parse_json_array_field<T: serde::de::DeserializeOwned>(
+ 
+ #[cfg(test)]
+ mod sovereign_next_tests {
+-    use super::{SAFE_NEXT_REPAIR_MARKER, ensure_sovereign_next, has_valid_sovereign_next};
++    use super::{
++        FORMAT_NEXT_REPAIR_MARKER, SAFE_NEXT_REPAIR_MARKER,
++        canonicalize_embedded_terminal_next, ensure_sovereign_next, has_valid_sovereign_next,
++    };
+ 
+     #[test]
+     fn accepts_only_complete_supported_final_actions() {
+@@ -1664,6 +1701,36 @@ mod sovereign_next_tests {
+         );
+     }
+ 
++    #[test]
++    fn repairs_only_the_layout_of_one_terminal_model_action() {
++        let repaired = canonicalize_embedded_terminal_next(
++            "A bounded observation. NEXT: NOTICE one unambiguous observation",
++        )
++        .unwrap();
++        assert_eq!(
++            repaired,
++            format!(
++                "A bounded observation.\n\n{FORMAT_NEXT_REPAIR_MARKER}\n\
++                 NEXT: NOTICE one unambiguous observation"
++            )
++        );
++        assert!(
++            canonicalize_embedded_terminal_next(
++                "I considered NEXT: REST but chose NEXT: NOTICE something"
++            )
++            .is_none()
++        );
++        assert!(
++            canonicalize_embedded_terminal_next(
++                "A response.\nNEXT: NOTICE already canonical"
++            )
++            .is_none()
++        );
++        assert!(
++            canonicalize_embedded_terminal_next("prefixNEXT: NOTICE lacks a boundary").is_none()
++        );
++    }
++
+     #[test]
+     fn repairs_only_to_a_transparent_non_writing_listen() {
+         assert_eq!(

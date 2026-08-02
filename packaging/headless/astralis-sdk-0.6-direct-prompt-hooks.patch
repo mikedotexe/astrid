@@ -1,0 +1,141 @@
+diff --git a/src/lib.rs b/src/lib.rs
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -280,90 +280,66 @@
+ 
+ /// Fire the `prompt_builder.v1.hook.before_build` interceptor and collect plugin responses.
+ ///
+-/// Publishes the hook event on the `prompt_builder.v1.hook.before_build` IPC topic and polls
+-/// a dedicated response topic for plugin contributions. Returns all collected
+-/// responses within the timeout window, filtered by permission gating.
+-fn fire_before_prompt_build(request: &AssembleRequest, config: &Config) -> Vec<HookResponse> {
+-    let response_topic = format!("prompt_builder.v1.hook_response.{}", request.request_id);
+-
+-    // Subscribe BEFORE publishing to avoid missing fast responses.
+-    let sub = match ipc::subscribe(&response_topic) {
+-        Ok(h) => h,
+-        Err(e) => {
+-            log::error(format!("Failed to subscribe to hook response topic: {e}"));
+-            return Vec::new();
+-        }
+-    };
+-
++/// Uses the kernel hook fan-out so executable interceptor capsules are invoked
++/// directly. The kernel gates this hook on `allow_prompt_injection` before it
++/// invokes a target capsule.
++fn fire_before_prompt_build(request: &AssembleRequest, _config: &Config) -> Vec<HookResponse> {
+     let payload = BeforePromptBuildPayload {
+         messages: request.messages.clone(),
+         system_prompt: request.system_prompt.clone(),
+         request_id: request.request_id.clone(),
+         model: request.model.clone(),
+         provider: request.provider.clone(),
+-        response_topic: response_topic.clone(),
++        response_topic: format!("prompt_builder.v1.hook_response.{}", request.request_id),
+     };
+ 
+-    if let Err(e) = ipc::publish_json("prompt_builder.v1.hook.before_build", &payload) {
+-        log::error(format!(
+-            "Failed to publish prompt_builder.v1.hook.before_build event: {e}"
+-        ));
+-        let _ = ipc::unsubscribe(&sub);
+-        return Vec::new();
+-    }
+-
+-    // Block-wait for hook responses within the configured timeout.
+-    let mut sourced_responses = Vec::new();
+-    let deadline =
+-        std::time::Instant::now() + std::time::Duration::from_millis(config.hook_timeout_ms);
+-
+-    while std::time::Instant::now() < deadline && sourced_responses.len() < MAX_HOOK_RESPONSES {
+-        let remaining_ms = deadline
+-            .saturating_duration_since(std::time::Instant::now())
+-            .as_millis();
+-        if remaining_ms == 0 {
+-            break;
++    let trigger = serde_json::json!({
++        "hook": "prompt_builder.v1.hook.before_build",
++        "payload": payload,
++    });
++    let request_json = match serde_json::to_string(&trigger) {
++        Ok(value) => value,
++        Err(error) => {
++            log::error(format!("Failed to serialize before-build hook: {error}"));
++            return Vec::new();
+         }
+-        let timeout = u64::try_from(remaining_ms).unwrap_or(u64::MAX);
+-
+-        match ipc::recv(&sub, timeout) {
+-            Ok(result) => {
+-                if result.messages.is_empty() {
+-                    break;
+-                }
+-                for msg in &result.messages {
+-                    if let Some(new_responses) = parse_hook_message(msg) {
+-                        sourced_responses.extend(new_responses);
+-                    }
+-                }
+-            }
+-            _ => break,
++    };
++    let response_json = match hooks::trigger(&request_json) {
++        Ok(value) => value,
++        Err(error) => {
++            log::error(format!("Before-build hook fan-out failed: {error}"));
++            return Vec::new();
+         }
+-    }
++    };
++    let responses: Vec<serde_json::Value> = match serde_json::from_str(&response_json) {
++        Ok(value) => value,
++        Err(error) => {
++            log::warn(format!(
++                "Failed to parse before-build hook responses: {error}"
++            ));
++            return Vec::new();
++        }
++    };
+ 
+-    let _ = ipc::unsubscribe(&sub);
++    let parsed = responses
++        .into_iter()
++        .filter_map(|value| {
++            serde_json::from_value::<HookResponse>(value.clone())
++                .ok()
++                .filter(HookResponse::has_any_field)
++                .or_else(|| {
++                    value
++                        .get("data")
++                        .and_then(|data| serde_json::from_value(data.clone()).ok())
++                        .filter(HookResponse::has_any_field)
++                })
++        })
++        .collect::<Vec<_>>();
+ 
+     log::info(format!(
+-        "Collected {} hook responses for request {}",
+-        sourced_responses.len(),
++        "Collected {} direct hook responses for request {}",
++        parsed.len(),
+         request.request_id
+     ));
+-
+-    // Cache capability results per-UUID to avoid redundant host function calls.
+-    // Multiple hook responses can come from the same capsule.
+-    let mut cache = std::collections::HashMap::<String, bool>::new();
+-    filter_by_permission(sourced_responses, |source_id| {
+-        let Some(uuid) = source_id else {
+-            return false;
+-        };
+-        *cache.entry(uuid.to_owned()).or_insert_with(|| {
+-            capabilities::check(uuid, "allow_prompt_injection")
+-                .inspect_err(|e| {
+-                    log::warn(format!("capability check failed for {uuid}: {e}, denying"));
+-                })
+-                .unwrap_or(false)
+-        })
+-    })
++    parsed
+ }
+ 
+ /// Parse a single IPC message and extract hook responses with source capsule IDs.

@@ -1,0 +1,114 @@
+schema-version = 1
+
+[distro]
+id = "astralis-headless-icp"
+version = "0.1.0"
+resolved-at = "2026-07-29T05:34:00Z"
+
+[[capsule]]
+name = "astrid-capsule-agents"
+version = "0.1.0"
+source = "local-headless-bootstrap"
+hash = "blake3:e6c21981972bde7547294bfa5ab4d42169ad4e0fda8ccaa5a72f6d4c60c04cf9"
+
+[[capsule]]
+name = "astrid-capsule-cli"
+version = "0.1.0"
+source = "local-headless-bootstrap"
+hash = "blake3:9fdc436145b2cf4c71cfa20506abb81536812c8b6787a01c3e110aa54d948e48"
+
+[[capsule]]
+name = "astrid-capsule-context-engine"
+version = "0.1.0"
+source = "local-headless-bootstrap"
+hash = "blake3:a60a824e3e5627ba7389377985b9d189fbe247c0d99f0a844a9446b04b42563f"
+
+[[capsule]]
+name = "astrid-capsule-edge-context"
+version = "0.1.0"
+source = "local-headless-bootstrap"
+hash = "blake3:ad3536284284dbc7c322091e50719226565d19a64adc2d6169bdc8d2b34765d3"
+
+[[capsule]]
+name = "astrid-capsule-fs"
+version = "0.1.0"
+source = "local-headless-bootstrap"
+hash = "blake3:c0ed07766307507ae28784efea867b3aedae19ff2d61755bac68780735752f02"
+
+[[capsule]]
+name = "astrid-capsule-hook-bridge"
+version = "0.1.0"
+source = "local-headless-bootstrap"
+hash = "blake3:38151e1c264f16f5f7cb49638e6819a1a532f79519a4fbd91c2ee104f0ba4d87"
+
+[[capsule]]
+name = "astrid-capsule-http"
+version = "0.1.0"
+source = "local-headless-bootstrap"
+hash = "blake3:88cf55d57b27b73557b52dfa061b6197e664e3707d3ff598be70ae88ea56b196"
+
+[[capsule]]
+name = "astrid-capsule-identity"
+version = "0.2.0"
+source = "local-headless-bootstrap"
+hash = "blake3:a6f7837e1694d17061714119001dbf6563a24b58897e72d09a4601b15871be66"
+
+[[capsule]]
+name = "astrid-capsule-memory"
+version = "0.1.0"
+source = "local-headless-bootstrap"
+hash = "blake3:d1d1dc946e25d6a3905ae810cbc4205ed77ff798e24f454dae8f54aa714868d7"
+
+[[capsule]]
+name = "astrid-capsule-openai-compat"
+version = "0.1.0"
+source = "local-headless-bootstrap"
+hash = "blake3:7141b9e8018f9d90ddaa927ed0c6b19d5735cbd2a0f6f3c47e240bdd5c17c6aa"
+
+[[capsule]]
+name = "astrid-capsule-prompt-builder"
+version = "0.1.0"
+source = "local-headless-bootstrap"
+hash = "blake3:89e2b1880c7794fc3e49decb87e1ccfe40ec23740b2f5e9b62ff01e630f142d6"
+
+[[capsule]]
+name = "astrid-capsule-react"
+version = "0.1.0"
+source = "local-headless-bootstrap"
+hash = "blake3:4c9b920c4a59925235b4f97959bfa00a7c58ea96c31b7a924cfded722f0ba071"
+
+[[capsule]]
+name = "astrid-capsule-registry"
+version = "0.1.0"
+source = "local-headless-bootstrap"
+hash = "blake3:6692af78428c1923240e91165a00b68782fef61c5e0398c334e073999e52d67f"
+
+[[capsule]]
+name = "astrid-capsule-router"
+version = "0.1.0"
+source = "local-headless-bootstrap"
+hash = "blake3:9632e240f2b6c4fda46eabf366dcff475258ecfa30d4166444c77e96d5279020"
+
+[[capsule]]
+name = "astrid-capsule-session"
+version = "0.1.0"
+source = "local-headless-bootstrap"
+hash = "blake3:11b0de44dc21389d51e9f003e858983fa4b05ad71e6c6bca6b025ab24df896eb"
+
+[[capsule]]
+name = "astrid-capsule-shell"
+version = "0.1.0"
+source = "local-headless-bootstrap"
+hash = "blake3:d568e779a519569e47a4008a38a4484e583f5e6d2a4738dfe1f695325c8a2c8b"
+
+[[capsule]]
+name = "astrid-capsule-skills"
+version = "0.1.0"
+source = "local-headless-bootstrap"
+hash = "blake3:3eebdd986933d5893b2ce3c43584e80bfbd4a219ee6775856b0b6cad28dc562e"
+
+[[capsule]]
+name = "astrid-capsule-system"
+version = "0.1.0"
+source = "local-headless-bootstrap"
+hash = "blake3:4ac27221ef42579048e97c41f23332b327aa43fb2396e3565f3d4c905b7ec72f"

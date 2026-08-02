@@ -1,0 +1,69 @@
+diff --git a/src/lib.rs b/src/lib.rs
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -459,31 +459,21 @@ fn fire_after_prompt_build(system_prompt: &str, user_context_prefix: &str, reque
+     let _ = ipc::publish_json("prompt_builder.v1.hook.after_build", &payload);
+ }
+ 
+-/// KV key for cached tool schemas. First call populates it via IPC broadcast;
+-/// subsequent calls read directly from KV until invalidated.
++/// Legacy KV key retained so explicit invalidation also removes caches written
++/// by older prompt-builder builds.
+ const TOOL_SCHEMA_CACHE_KEY: &str = "__tool_schema_cache";
+ 
+ /// Timeout (ms) for fetching session messages from the session capsule.
+ const SESSION_FETCH_TIMEOUT_MS: u64 = 5000;
+ 
+ /// Collect tool schemas from all capsules via `trigger_hook`.
+ ///
+-/// Checks `__tool_schema_cache` in KV first. On cache miss, it uses the
+-/// kernel's `trigger_hook` host function to fan out a `tool.v1.request.describe`
+-/// request to all capsules with matching interceptors. This works for both WASM
+-/// and MCP capsules.
+-///
+-/// The collected tool schemas are deduplicated by name and cached in KV for
+-/// subsequent calls.
++/// Tool discovery is intentionally fresh on every assembled turn. Capsule
++/// upgrades can change schemas without changing a version string or emitting a
++/// prompt-builder-specific invalidation event. The fan-out is cheap compared
++/// with local inference and avoids silently serving a stale authority surface.
++/// Collected schemas are deduplicated by name.
+ fn collect_tool_schemas() -> Vec<serde_json::Value> {
+-    // Check KV cache first.
+-    if let Ok(cached) = kv::get_json::<Vec<serde_json::Value>>(TOOL_SCHEMA_CACHE_KEY)
+-        && !cached.is_empty()
+-    {
+-        log::debug(format!("Returning {} cached tool schemas", cached.len()));
+-        return cached;
+-    }
+-
+     // Use trigger_hook to fan out to all capsules with matching interceptors.
+     // trigger_hook calls invoke_interceptor on each capsule and collects
+     // the JSON responses into an array.
+@@ -536,11 +526,6 @@ fn collect_tool_schemas() -> Vec<serde_json::Value> {
+         all_tools.len()
+     ));
+ 
+-    // Cache the result for subsequent calls.
+-    if let Err(e) = kv::set_json(TOOL_SCHEMA_CACHE_KEY, &all_tools) {
+-        log::warn(format!("Failed to cache tool schemas in KV: {e}"));
+-    }
+-
+     all_tools
+ }
+ 
+@@ -635,11 +620,10 @@ fn fetch_session_messages(session_id: &str) -> Vec<serde_json::Value> {
+     result
+ }
+ 
+-/// Invalidate the cached tool schemas in KV.
++/// Remove tool-schema caches written by older prompt-builder builds.
+ ///
+-/// Called when capsules are loaded or unloaded to ensure the next
+-/// `collect_tool_schemas()` call fetches fresh data from all capsules.
++/// Current builds discover tools on every turn and do not write this key.
+ fn invalidate_tool_cache() {
+     let _ = kv::delete(TOOL_SCHEMA_CACHE_KEY);
+-    log::info("Tool schema cache invalidated");
++    log::info("Legacy tool schema cache invalidated");
+ }

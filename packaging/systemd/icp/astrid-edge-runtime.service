@@ -1,0 +1,22 @@
+[Unit]
+Description=ICP Astrid CPU reservoir and sovereign NEXT executor
+Wants=astrid.service
+After=astrid.service
+
+[Service]
+Type=simple
+WorkingDirectory=%h/.astrid-icp
+Environment=RUST_BACKTRACE=1
+Environment=ASTRID_HOME=%h/.astrid-icp/state
+EnvironmentFile=-%h/.config/astrid/edge-appliance.env
+ExecStart=%h/.astrid-icp/state/bin/astrid-edge-runtime
+Restart=on-failure
+RestartSec=3
+TimeoutStopSec=30
+KillSignal=SIGTERM
+UMask=0077
+LimitNOFILE=65536
+TasksMax=1024
+
+[Install]
+WantedBy=default.target

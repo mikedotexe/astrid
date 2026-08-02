@@ -1,0 +1,165 @@
+diff --git a/Capsule.toml b/Capsule.toml
+--- a/Capsule.toml
++++ b/Capsule.toml
+@@ -17,6 +17,7 @@ type = "daemon"
+ 
+ [env]
+ tool_allowlist = { type = "string", default = "fetch_url", request = "Comma-separated tool names exposed to the model; blank exposes every discovered tool" }
++web_tools_on_explicit_request_only = { type = "string", default = "false", request = "Expose allowlisted web schemas only when the latest user message explicitly requests web/search/fetch" }
+ 
+ [publish]
+ "prompt_builder.v1.response.*" = { wit = "@unicity-astrid/wit/prompt/assemble-response" }
+diff --git a/src/lib.rs b/src/lib.rs
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -32,6 +32,8 @@ struct Config {
+     hook_timeout_ms: u64,
+     /// Tool names exposed to the model. Empty means all discovered tools.
+     tool_allowlist: std::collections::HashSet<String>,
++    /// Whether ordinary turns omit web schemas until the latest user asks.
++    web_tools_on_explicit_request_only: bool,
+ }
+ 
+ impl Config {
+@@ -49,9 +51,18 @@ impl Config {
+             .map(str::to_string)
+             .collect();
+ 
++        let web_tools_on_explicit_request_only =
++            env::var("web_tools_on_explicit_request_only").is_ok_and(|value| {
++                matches!(
++                    value.trim().to_ascii_lowercase().as_str(),
++                    "1" | "true" | "yes" | "on"
++                )
++            });
++
+         Self {
+             hook_timeout_ms,
+             tool_allowlist,
++            web_tools_on_explicit_request_only,
+         }
+     }
+ }
+@@ -459,6 +470,38 @@ const TOOL_SCHEMA_CACHE_KEY: &str = "__tool_schema_cache";
+ /// Timeout (ms) for fetching session messages from the session capsule.
+ const SESSION_FETCH_TIMEOUT_MS: u64 = 5000;
+ 
++/// Whether the latest untouched user message explicitly needs the read-only
++/// web surface. Prior assistant text and system context cannot activate it.
++fn latest_user_explicitly_needs_web_tools(messages: &serde_json::Value) -> bool {
++    let Some(messages) = messages.as_array() else {
++        return false;
++    };
++    let Some(text) = messages.iter().rev().find_map(|message| {
++        (message.get("role").and_then(serde_json::Value::as_str) == Some("user"))
++            .then(|| message.get("content").and_then(serde_json::Value::as_str))
++            .flatten()
++    }) else {
++        return false;
++    };
++    let normalized = text.to_ascii_lowercase();
++    [
++        "search_web",
++        "fetch_url",
++        "search the web",
++        "search web",
++        "web search",
++        "http://",
++        "https://",
++    ]
++    .iter()
++    .any(|marker| normalized.contains(marker))
++}
++
++fn should_expose_tools(request: &AssembleRequest, config: &Config) -> bool {
++    !config.web_tools_on_explicit_request_only
++        || latest_user_explicitly_needs_web_tools(&request.messages)
++}
++
+ /// Collect tool schemas from all capsules via `trigger_hook`.
+ ///
+ /// Tool discovery is intentionally fresh on every assembled turn. Capsule
+@@ -666,7 +709,12 @@ fn handle_assemble(payload: &serde_json::Value, config: &Config) {
+     let merged = merge_hook_responses(&request.system_prompt, &hook_responses);
+ 
+     // Discover current tool schemas and apply the configured model-facing profile.
+-    let tools = collect_tool_schemas(&config.tool_allowlist);
++    let tools = if should_expose_tools(&request, config) {
++        collect_tool_schemas(&config.tool_allowlist)
++    } else {
++        log::info("Omitted web tool schemas: latest user message made no explicit web request");
++        Vec::new()
++    };
+ 
+     // Fetch session messages if a session_id was provided.
+     let messages = request
+diff --git a/src/tests.rs b/src/tests.rs
+--- a/src/tests.rs
++++ b/src/tests.rs
+@@ -224,5 +224,66 @@ fn assemble_request_deserializes() {
+     assert_eq!(req.model, "claude-sonnet-4-20250514");
+ }
+ 
++fn test_config(explicit_only: bool) -> Config {
++    Config {
++        hook_timeout_ms: 100,
++        tool_allowlist: ["search_web".to_string(), "fetch_url".to_string()]
++            .into_iter()
++            .collect(),
++        web_tools_on_explicit_request_only: explicit_only,
++    }
++}
++
++#[test]
++fn explicit_web_tool_activation_uses_only_the_latest_user_message() {
++    let ordinary = serde_json::json!([
++        {"role": "user", "content": "Earlier, use search_web for a question."},
++        {"role": "assistant", "content": "Earlier answer."},
++        {"role": "user", "content": "Reflect only on the local reservoir."}
++    ]);
++    assert!(!latest_user_explicitly_needs_web_tools(&ordinary));
++
++    for content in [
++        "Call search_web now for public evidence.",
++        "Please use fetch_url for https://example.com.",
++        "Search the web for the current release.",
++        "Run a web search for this exact phrase.",
++        "Read https://example.com.",
++    ] {
++        let messages = serde_json::json!([{"role": "user", "content": content}]);
++        assert!(latest_user_explicitly_needs_web_tools(&messages));
++    }
++
++    let discussion = serde_json::json!([
++        {"role": "user", "content": "Discuss public research without browsing."}
++    ]);
++    assert!(!latest_user_explicitly_needs_web_tools(&discussion));
++}
++
++#[test]
++fn explicit_only_profile_omits_ordinary_tools_but_not_requested_tools() {
++    let ordinary = AssembleRequest {
++        messages: serde_json::json!([
++            {"role": "user", "content": "Reflect on local state."}
++        ]),
++        system_prompt: String::new(),
++        request_id: "ordinary".to_string(),
++        model: String::new(),
++        provider: String::new(),
++        session_id: None,
++    };
++    assert!(!should_expose_tools(&ordinary, &test_config(true)));
++    assert!(should_expose_tools(&ordinary, &test_config(false)));
++
++    let research = AssembleRequest {
++        messages: serde_json::json!([
++            {"role": "user", "content": "Research continuation: Call search_web now."}
++        ]),
++        request_id: "research".to_string(),
++        ..ordinary
++    };
++    assert!(should_expose_tools(&research, &test_config(true)));
++}
++
+ #[test]
+ fn parse_hook_responses_from_ipc_envelope() {
