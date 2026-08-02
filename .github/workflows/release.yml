@@ -27,10 +27,11 @@ jobs:
             os: macos-latest
             archive: tar.gz
           - target: x86_64-unknown-linux-gnu
-            os: ubuntu-latest
+            # Keep the published GNU libc baseline stable for appliance hosts.
+            os: ubuntu-22.04
             archive: tar.gz
           - target: aarch64-unknown-linux-gnu
-            os: ubuntu-latest
+            os: ubuntu-22.04
             archive: tar.gz
     steps:
       - uses: actions/checkout@v4
@@ -65,6 +66,18 @@ jobs:
           cp "target/${{ matrix.target }}/release/astrid-daemon" "$DIR/"
           cp "target/${{ matrix.target }}/release/astrid-build" "$DIR/"
           cp LICENSE* README.md "$DIR/" 2>/dev/null || true
+          mkdir -p "$DIR/scripts" "$DIR/packaging/systemd" "$DIR/docs"
+          cp scripts/install_headless_linux.sh scripts/probe_headless_linux.sh "$DIR/scripts/"
+          cp packaging/systemd/astrid.service "$DIR/packaging/systemd/"
+          cp docs/headless-linux.md "$DIR/docs/"
+          (
+            cd "$DIR"
+            shasum -a 256 \
+              astrid astrid-daemon astrid-build \
+              scripts/install_headless_linux.sh scripts/probe_headless_linux.sh \
+              packaging/systemd/astrid.service docs/headless-linux.md \
+              > SHA256SUMS
+          )
           tar czf "${DIR}.tar.gz" "$DIR"
           echo "ASSET=${DIR}.tar.gz" >> "$GITHUB_ENV"
 
@@ -74,10 +87,88 @@ jobs:
           name: binary-${{ matrix.target }}
           path: ${{ env.ASSET }}
 
+  edge-appliance:
+    name: CPU edge appliance (${{ matrix.target }})
+    runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - x86_64-unknown-linux-gnu
+          - aarch64-unknown-linux-gnu
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: "1.94"
+          targets: ${{ matrix.target }},wasm32-wasip2
+
+      - name: Install Linux ARM linker
+        if: matrix.target == 'aarch64-unknown-linux-gnu'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-aarch64-linux-gnu
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: edge-${{ matrix.target }}
+
+      - name: Build host capsule packager and target binaries
+        env:
+          CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER: aarch64-linux-gnu-gcc
+        run: |
+          cargo build --release -p astrid
+          cargo build --release --target "${{ matrix.target }}" -p astrid
+          cargo build \
+            --release \
+            --target "${{ matrix.target }}" \
+            --manifest-path services/astrid-edge-runtime/Cargo.toml
+
+      - name: Build version-matched essential capsules
+        run: |
+          mkdir -p dist/essential
+          for capsule in \
+            astrid-capsule-cli \
+            astrid-capsule-fs \
+            astrid-capsule-http \
+            astrid-capsule-shell \
+            astrid-capsule-skills \
+            astrid-capsule-agents \
+            astrid-capsule-memory \
+            astrid-capsule-edge-context \
+            astrid-capsule-edge-introspector \
+            astrid-capsule-edge-spectral; do
+            target/release/astrid build \
+              --type rust-component \
+              --output dist/essential \
+              "capsules/astralis/$capsule"
+          done
+
+      - name: Assemble CPU-edge archive
+        run: |
+          scripts/package_edge_appliance.sh \
+            --version "${GITHUB_REF_NAME#v}" \
+            --target "${{ matrix.target }}" \
+            --core-binary-dir "target/${{ matrix.target }}/release" \
+            --edge-binary "services/astrid-edge-runtime/target/${{ matrix.target }}/release/astrid-edge-runtime" \
+            --capsule-dir dist/essential \
+            --output-dir dist
+          echo "ASSET=$(find dist -maxdepth 1 -name 'astrid-cpu-edge-*.tar.gz' -print -quit)" >> "$GITHUB_ENV"
+
+      - name: Upload CPU-edge archive
+        uses: actions/upload-artifact@v4
+        with:
+          name: edge-${{ matrix.target }}
+          path: |
+            ${{ env.ASSET }}
+            ${{ env.ASSET }}.sha256
+
   # ── Create the GitHub release with all binaries ───────────────────
   github-release:
     name: GitHub Release
-    needs: build
+    needs: [build, edge-appliance]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -88,7 +179,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           path: artifacts
-          pattern: binary-*
+          pattern: '*'
           merge-multiple: true
 
       - name: Extract changelog for this version

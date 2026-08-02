@@ -1,0 +1,18 @@
+diff --git a/Capsule.toml b/Capsule.toml
+--- a/Capsule.toml
++++ b/Capsule.toml
+@@ -15,6 +15,13 @@ type = "executable"
+ "astrid:spark" = "^1.0"
+ "astrid:context" = "^1.0"
+ 
++[env]
++identity_timeout_secs = { type = "string", default = "120", request = "Identity and prompt-build timeout in seconds" }
++max_iterations = { type = "string", default = "3", request = "Maximum ReAct tool iterations" }
++sovereign_next_repair = { type = "string", default = "false", request = "Append a transparent safe LISTEN fallback when the final NEXT contract is missing or malformed" }
++streaming_timeout_secs = { type = "string", default = "600", request = "LLM streaming timeout in seconds" }
++tool_timeout_secs = { type = "string", default = "120", request = "Tool execution timeout in seconds" }
++user_prompt_suffix = { type = "string", default = "", request = "Ephemeral text appended to the final user message" }
++
+ [publish]
+ "spark.v1.request.build" = { wit = "@unicity-astrid/wit/spark/build-request" }
+ "prompt_builder.v1.assemble" = { wit = "@unicity-astrid/wit/prompt/assemble-request" }

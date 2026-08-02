@@ -1,0 +1,27 @@
+[Unit]
+Description=ICP Astrid agent runtime
+Wants=network-online.target astrid-model-warmup.service
+After=network-online.target astrid-model-warmup.service
+StartLimitIntervalSec=60
+StartLimitBurst=5
+
+[Service]
+Type=simple
+WorkingDirectory=%h/.astrid-icp/workspace
+Environment=ASTRID_HOME=%h/.astrid-icp/state
+Environment=TMPDIR=%h/.astrid-icp/tmp
+Environment=PATH=%h/.astrid-icp/state/bin:%h/.astrid-icp/ollama/runtime/bin:/usr/local/bin:/usr/bin:/bin
+Environment=TOKIO_WORKER_THREADS=4
+EnvironmentFile=-%h/.config/astrid/edge-appliance.env
+Environment=ASTRID_LOCAL_HTTP_ALLOWLIST=astrid-capsule-openai-compat@127.0.0.1:11434
+ExecStart=%h/.astrid-icp/state/bin/astrid-daemon --workspace %h/.astrid-icp/workspace
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=45
+KillSignal=SIGTERM
+UMask=0077
+LimitNOFILE=65536
+TasksMax=1024
+
+[Install]
+WantedBy=default.target

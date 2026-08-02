@@ -1,0 +1,15 @@
+diff --git a/Capsule.toml b/Capsule.toml
+--- a/Capsule.toml
++++ b/Capsule.toml
+@@ -8,7 +8,10 @@ astrid-version = ">=0.1.0"
+ [[component]]
+ id = "context-engine"
+ file = "astrid_capsule_context_engine.wasm"
+-type = "executable"
++type = "daemon"
++
++[capabilities]
++ipc_subscribe = ["context_engine.v1.*"]
+ 
+ [exports]
+ "astrid:context" = "1.0.0"

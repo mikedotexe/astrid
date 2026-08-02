@@ -1,0 +1,41 @@
+diff --git a/src/lib.rs b/src/lib.rs
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -169,11 +169,13 @@ const DEFAULT_HOOK_POLL_TIMEOUT_MS: u64 = 2000;
+ 
+ /// Maximum number of hook responses to collect before proceeding.
++#[cfg(test)]
+ const MAX_HOOK_RESPONSES: usize = 50;
+ 
+ /// A hook response paired with its source capsule identifier.
+ ///
+ /// Used for permission gating: plugins with `allowPromptInjection: false`
+ /// should have their prompt-mutating fields discarded.
++#[cfg(test)]
+ struct SourcedHookResponse {
+     /// The capsule/session ID that sent this response.
+     source_id: Option<String>,
+@@ -191,6 +193,7 @@ struct SourcedHookResponse {
+ /// returns whether the source capsule is allowed to mutate the system
+ /// prompt. This closure is parameterized for testability - the production
+ /// call site queries the kernel via `capabilities::check`.
++#[cfg(test)]
+ fn filter_by_permission(
+     sourced: Vec<SourcedHookResponse>,
+     mut has_permission: impl FnMut(Option<&str>) -> bool,
+@@ -207,6 +210,7 @@ fn filter_by_permission(
+                     || s.response.prepend_system_context.is_some()
+                     || s.response.append_system_context.is_some()
+                 {
++                    #[cfg(not(test))]
+                     log::warn(format!(
+                         "Stripped prompt-mutating fields from capsule {:?} \
+                          (missing allow_prompt_injection capability)",
+@@ -356,6 +360,7 @@ fn fire_before_prompt_build(request: &AssembleRequest, config: &Config) -> Vec<H
+ }
+ 
+ /// Parse a single IPC message and extract hook responses with source capsule IDs.
++#[cfg(test)]
+ fn parse_hook_message(msg: &ipc::Message) -> Option<Vec<SourcedHookResponse>> {
+     let payload: serde_json::Value = match serde_json::from_str(&msg.payload) {
+         Ok(v) => v,

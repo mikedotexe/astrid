@@ -1,0 +1,21 @@
+[Unit]
+Description=Checkpoint ICP Astrid edge activity for owner-only hindsight
+After=astrid-edge-runtime.service
+ConditionPathIsMountPoint=/media/data
+ConditionPathIsDirectory=%h/.astrid-icp/state/home/default/edge
+
+[Service]
+Type=oneshot
+WorkingDirectory=%h/.astrid-icp
+ExecStart=%h/.astrid-icp/state/bin/edge-hindsight record --workspace %h/.astrid-icp/state/home/default/edge --state-root %h/.astrid-icp/state
+UMask=0077
+Nice=10
+IOSchedulingClass=idle
+NoNewPrivileges=yes
+# Debian's older unprivileged user manager on this appliance cannot establish
+# the mount namespace required by ProtectHome/ProtectSystem. The collector has
+# no socket, subprocess, model, or mutation surface beyond its explicit
+# owner-only operator directory; NoNewPrivileges remains enforced.
+
+[Install]
+WantedBy=default.target

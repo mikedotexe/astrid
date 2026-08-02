@@ -1,0 +1,22 @@
+[Unit]
+Description=Astrid CPU edge reservoir and sovereign NEXT executor
+Documentation=https://github.com/unicity-astrid/astrid
+Wants=astrid.service
+After=astrid.service
+
+[Service]
+Type=simple
+WorkingDirectory=%h
+Environment=RUST_BACKTRACE=1
+EnvironmentFile=-%h/.config/astrid/edge-appliance.env
+ExecStart=%h/.astrid/bin/astrid-edge-runtime
+Restart=on-failure
+RestartSec=3
+TimeoutStopSec=30
+KillSignal=SIGTERM
+UMask=0077
+LimitNOFILE=65536
+TasksMax=1024
+
+[Install]
+WantedBy=default.target

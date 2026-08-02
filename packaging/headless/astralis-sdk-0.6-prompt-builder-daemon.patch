@@ -1,0 +1,28 @@
+diff --git a/Capsule.toml b/Capsule.toml
+--- a/Capsule.toml
++++ b/Capsule.toml
+@@ -8,6 +8,7 @@ astrid-version = ">=0.1.0"
+ [[component]]
+ id = "prompt-builder"
+ file = "astrid_capsule_prompt_builder.wasm"
++type = "daemon"
+ 
+ [exports]
+ "astrid:prompt" = "1.0.0"
+diff --git a/src/lib.rs b/src/lib.rs
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -606,10 +606,9 @@ fn fetch_session_messages(session_id: &str) -> Vec<serde_json::Value> {
+                 Err(_) => continue,
+             };
+ 
+-            let data = match payload.get("data") {
+-                Some(d) => d,
+-                None => continue,
+-            };
++            // Astrid 0.5 delivers custom IPC as raw JSON. Older hosts
++            // wrapped the same payload in {"type":"custom","data":...}.
++            let data = payload.get("data").unwrap_or(&payload);
+ 
+             if let Some(messages) = data.get("messages") {
+                 match serde_json::from_value::<Vec<serde_json::Value>>(messages.clone()) {
