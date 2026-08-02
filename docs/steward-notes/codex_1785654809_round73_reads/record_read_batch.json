@@ -1,0 +1,10 @@
+{
+  "reads": [
+    {
+      "introspection_id": "introspection_astrid_llm_1785653483",
+      "reader": "codex-heartbeat",
+      "summary_file": "summaries/astrid_llm_1785653483.md",
+      "claims_file": "claims/astrid_llm_1785653483.json"
+    }
+  ]
+}

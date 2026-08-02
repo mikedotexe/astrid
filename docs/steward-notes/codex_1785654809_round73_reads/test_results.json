@@ -1,0 +1,58 @@
+{
+  "schema": "steward_round_test_results_v1",
+  "steward_run_id": "run_1785654809028985000_256111423c",
+  "status": "passed",
+  "results": [
+    {
+      "surface": "control_marker",
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml control_marker --lib",
+      "passed": 38,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "dialogue",
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml dialogue --lib",
+      "passed": 28,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "introspection_addressing_audit",
+      "command": "env PYTHONDONTWRITEBYTECODE=1 python3 scripts/introspection_addressing_audit.py --self-test",
+      "passed": 41,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "steward_evidence_division_projection",
+      "command": "env PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=.:scripts python3 -m unittest scripts.test_evidence_event_store scripts.test_steward_control scripts.test_steward_projection scripts.test_division_ceremony_followup scripts.test_division_ceremony_chronicle scripts.test_division_ceremony_projection scripts.test_claim_family_incremental_projection",
+      "passed": 67,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "experiential_epistemics_self_test",
+      "command": "env PYTHONDONTWRITEBYTECODE=1 python3 scripts/experiential_epistemics.py self-test --json",
+      "passed": 2,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "experiential_epistemics_lint",
+      "command": "env PYTHONDONTWRITEBYTECODE=1 python3 scripts/experiential_epistemics.py lint --json",
+      "passed": true,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "division_return",
+      "command": "python3 scripts/division_ceremony_followup.py verify && python3 scripts/division_ceremony_chronicle.py verify",
+      "passed": true,
+      "failed": 0,
+      "status": "passed",
+      "detail": "Cycle 13 is at 0/6 with review_due false; Chronicle durable inputs verify across 85 timeline events."
+    }
+  ],
+  "authority_boundary": "Passing tests establish deterministic source behavior, not semantic intent, felt state, uptake, runtime deployment, or authority to widen cleanup grammar."
+}

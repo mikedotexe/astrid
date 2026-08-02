@@ -1,0 +1,39 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_llm_1785653483",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1785654809_round73_reads/summaries/astrid_llm_1785653483.md",
+      "note": "Complete canonical and report-bound source read with grounded parser and transport dispositions."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785653483",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1785371196_round32_reads/RUN_REPORT.md",
+      "note": "Exact prior implementation and verification for relation and delimiter concerns."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785653483",
+      "claim_id": "*",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "Complete report-bound parser, sanitizer, validation, and generate_dialogue source."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785653483",
+      "claim_id": "*",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/transport.rs",
+      "note": "Exact raw-output cleanup call site replacing provider text with the sanitized remainder."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785653483",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Existing exact delimiter, relation, longest-match, context, and dialogue regressions; 38 marker and 28 dialogue tests passed."
+    }
+  ]
+}

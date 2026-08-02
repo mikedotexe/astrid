@@ -1,0 +1,14 @@
+{
+  "schema": "steward_round_deployment_alignment_v1",
+  "steward_run_id": "run_1785654809028985000_256111423c",
+  "source_changed_by_this_run": false,
+  "live_consumed_surface_changed_by_this_run": false,
+  "restart_required": false,
+  "deployment_required": false,
+  "minime_changed": false,
+  "foreign_source_preserved": [
+    "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+    "capsules/spectral-bridge/src/llm/provider/tests.rs"
+  ],
+  "authority_boundary": "Source verification and existing tests only. No prompt, provider, model, cleanup grammar, process, restart, deployment, peer, Minime, or live-control surface changed."
+}

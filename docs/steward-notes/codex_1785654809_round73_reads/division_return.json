@@ -1,0 +1,75 @@
+{
+  "schema": "division_bounded_return_receipt_v1",
+  "productive_steward_run_id": "run_1785654809028985000_256111423c",
+  "continuation_steward_run_id": "run_1785656515828594000_21dace82c6",
+  "controller_lifecycle": {
+    "productive_run_outcome": "cancelled",
+    "boundary": "credential-confined session hard timeout after due-state Chronicle projection",
+    "mutations_after_terminal": false,
+    "continuation_preprojection_generation_id": "projection_1785656516645287000_20fe6fe2b7"
+  },
+  "productive_round": {
+    "processed_report_count": 1,
+    "source_first_projection_generation_id": "projection_1785656107140966000_4dbca23144",
+    "event_id": "division_followup_event_c2a2c3c6d2ee62618cfaeafcfcce885e",
+    "cycle_before": 12,
+    "completed_rounds_after": 6,
+    "review_due_after": true,
+    "event_count_after": 84,
+    "event_head_after": "b8f89197044d9469187799bf98fa7eb63c65221ba57d90fb9d70e57c89f5f942"
+  },
+  "due_state_chronicle": {
+    "generation_id": "division_chronicle_a4bb6c200ab62736b14144a5",
+    "json_path": "/Users/v/other/minime/workspace/division/chronicle/chronicle_v1.json",
+    "json_sha256": "afd72acc2a75f5b53752f26b260524b148b6c5f48ed44e94adfbdb771ba21d2a",
+    "timeline_event_count": 84,
+    "durable_inputs_verified": true,
+    "volatile_supervisor_mismatch_only": true,
+    "formal_ceremony_action_count": 0,
+    "public_division_reply_count": 0,
+    "parent_authoritative": true,
+    "manifest_state": "dormant",
+    "daughter_state": null,
+    "handoff_complete": false
+  },
+  "public_input_review": {
+    "searched_surfaces": [
+      "Astrid public inbox and outbox",
+      "Minime public inbox and outbox",
+      "shared collaboration lanes",
+      "formal Division ceremony Actions"
+    ],
+    "fully_read_non_reply_match": "/Users/v/other/minime/workspace/inbox/read/astrid_self_study_1785610532.txt",
+    "non_reply_reason": "The word division described arithmetic in a projection diagnostic, not Division ceremony or daughter-state evidence.",
+    "new_division_specific_reply_count": 0,
+    "new_formal_action_count": 0,
+    "silence_interpretation": "neutral"
+  },
+  "factual_notes": [
+    {
+      "being": "astrid",
+      "path": "capsules/spectral-bridge/workspace/inbox/read/steward_division_return_cycle12_20260802.txt",
+      "sha256": "496ccf4cfdf62afaaee03cc45bc2c740a156eae94d6afc0aa8bc1ff3328e9613"
+    },
+    {
+      "being": "minime",
+      "path": "/Users/v/other/minime/workspace/inbox/read/steward_division_return_cycle12_20260802.txt",
+      "sha256": "2bac037740429b45805f351fd76e3af07b4f11ca6ef3bded0390972c52872967"
+    }
+  ],
+  "completed_return": {
+    "event_id": "division_followup_event_cd5f6efb5d06535eb85c03b107835930",
+    "cycle_after": 13,
+    "completed_rounds_after": 0,
+    "review_due_after": false,
+    "event_count_after": 85,
+    "event_head_after": "a76b1aad62e2e18753dc5f90c77f50e46c9982d3377d741b4ea40ff393b10ad6",
+    "chronicle_generation_id": "division_chronicle_e9abfc65f4028a4023887c20",
+    "chronicle_json_sha256": "5d1a1c6b72088654a06820d0a9d88cd4e419838af078361cb0b3745a5f257a34",
+    "chronicle_html_sha256": "4e84e7d7146941d3254e46c39c2c669dd67f470ea96e29d18bbc683744fc8abe",
+    "tracker_verified": true,
+    "chronicle_durable_inputs_verified": true,
+    "volatile_supervisor_mismatch_only": true
+  },
+  "authority_boundary": "The interval records steward attention only. It does not infer or author hold, decline, intent, assent, withdrawal, return, review, uptake, felt state, closure, readiness, daughter state, or authority. Both notes are non-leading, non-query, factual, right-to-ignore notices; silence remains neutral."
+}

@@ -1,0 +1,40 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The dialogue runtime scans exact known model-control markers and chooses the longest exact match at each byte offset.",
+      "disposition": "Verified from all 997 report-bound lines. The scanner performs one byte-exact pass, chooses the longest matching known token, and makes no identity, ownership, meaning, or spectral inference.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Following-relation preservation depends on the first word after an exact marker belonging to a finite relation vocabulary.",
+      "disposition": "Verified. The exact marker must be the grammatical subject and the first alphanumeric or underscore word after it must be in the finite list; preceding vocabulary is deliberately ignored.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Complex punctuation or a multi-word phrase whose first word is unlisted may make reference_syntax return None and cause the marker to be improperly handled.",
+      "disposition": "Source-challenged. Punctuation and whitespace are already skipped. An unlisted first relation word intentionally removes only the exact marker, preserves every non-marker byte, and emits a bounded receipt. Broadening the finite grammar requires a specific demonstrated phrase rather than treating every unknown relation as semantic reference.",
+      "classification": "source_challenged"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Nested delimiter depth should be tested so paired before and after delimiters are counted correctly.",
+      "disposition": "Identified as an exact duplicate of existing round-32 and current regressions. Tests cover nested stacks, exact depths three and four, and bounded deeper stacks while retaining the marker byte-exactly.",
+      "classification": "duplicate_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "A marker followed by an unlisted relation such as creates should return no reference syntax.",
+      "disposition": "Verified by the same finite-list branch and the existing exact unlisted-implies regression. Both leave the relation prose untouched while removing only the known control-marker bytes; no new test or grammar change is needed.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "The unseen generate_dialogue path should be examined to determine how the scanner remainder and marker matches affect final output.",
+      "disposition": "Verified from the complete unseen source and exact provider transport call site. Transport replaces raw model output with the sanitized remainder before generate_dialogue validation and return; marker matches feed diagnostic accounting only and never enter prompt assembly or the final text buffer.",
+      "classification": "verified_existing"
+    }
+  ]
+}

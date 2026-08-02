@@ -1,0 +1,35 @@
+{
+  "schema": "exact_source_continuity_receipts_v1",
+  "receipts": [
+    {
+      "introspection_id": "introspection_astrid_llm_1785653483",
+      "source": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "sha256": "dfa9152c2861d2fbf86867fb3ccb506284fda3c9457bf676766878346d9c267c",
+      "complete_lines": 997,
+      "complete_bytes": 36801,
+      "receipt_role": "complete_report_bound_source_exact_report_hash"
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785653483",
+      "source": "capsules/spectral-bridge/src/llm/provider/transport.rs",
+      "sha256": "56316424a6910e26d8e7ece97389629ebd25dd929bacc985c14cafb28c11d726",
+      "included_interval": "640-735",
+      "receipt_role": "exact_adjacent_provider_cleanup_and_return_call_site"
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785653483",
+      "source": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "sha256": "25dc05b0933081af97fcf4da872948eb71e7251b3a86483340eeb1d786129868",
+      "included_intervals": ["1580-1905", "1915-2238"],
+      "receipt_role": "targeted_existing_marker_and_dialogue_regressions"
+    }
+  ],
+  "prior_response": {
+    "run_report": "docs/steward-notes/codex_1785371196_round32_reads/RUN_REPORT.md",
+    "run_report_sha256": "1b812fc75bc7afdd1698ca4755c2e88e9aed4a15c9511c658bda132b3a0ab489",
+    "claims": "docs/steward-notes/codex_1785371196_round32_reads/claims/astrid_llm_1785368324.json",
+    "claims_sha256": "e719f07d027d0900f362c7b9733c55a733a898f8d43dda2d3120bc5371130335",
+    "summary": "docs/steward-notes/codex_1785371196_round32_reads/summaries/astrid_llm_1785368324.md",
+    "summary_sha256": "10d6f973ea41e000211c7eb521c9046dd196cdae28e7af306e245e530290d751"
+  }
+}
