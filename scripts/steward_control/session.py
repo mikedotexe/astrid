@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import errno
 import json
 import os
+import select
 import selectors
 import signal
 import sys
@@ -478,7 +480,16 @@ def run_session(
         next_heartbeat = started + heartbeat_period
         input_fd = source.fileno()
         selector = selectors.DefaultSelector()
-        selector.register(input_fd, selectors.EVENT_READ)
+        try:
+            selector.register(input_fd, selectors.EVENT_READ)
+        except OSError as error:
+            if error.errno not in {errno.EINVAL, errno.EPERM}:
+                raise
+            # kqueue and epoll reject regular files (including /dev/null).
+            # select() can still poll the single inherited descriptor without
+            # blocking automatic lease renewal.
+            selector.close()
+            selector = None
         pending = bytearray()
         discarding_oversized = False
 
@@ -505,8 +516,12 @@ def run_session(
                 0.0,
                 min(next_heartbeat - now, limit - (now - started)),
             )
-            events = selector.select(timeout)
-            if not events:
+            input_ready = (
+                bool(selector.select(timeout))
+                if selector is not None
+                else bool(select.select([input_fd], [], [], timeout)[0])
+            )
+            if not input_ready:
                 continue
 
             chunk = os.read(input_fd, READ_CHUNK_BYTES)
