@@ -1,0 +1,32 @@
+{
+  "schema": "steward_addressing_write_receipt_v1",
+  "steward_run_id": "run_1785674266671038000_9ed162141b",
+  "reads": [
+    {
+      "introspection_id": "introspection_astrid_autonomous_1785633267",
+      "reader": "codex-heartbeat",
+      "recorded_at_unix": 1785675084.70434,
+      "summary_sha256": "c89946042d0252fe3db725459d71b5270f0b4aa0f50c40b1a2f103add3fe9b24",
+      "claim_count": 6,
+      "proof_missing_claims": [],
+      "closure_status": "addressed_duplicate",
+      "closure_recorded_at_unix": 1785675340.055755
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1785632830",
+      "reader": "codex-heartbeat",
+      "recorded_at_unix": 1785675084.7045171,
+      "summary_sha256": "f6eebb4d12127242fde25ac5c1f536ff2a53eefabd79b54e37a0b6e0c43ce3b0",
+      "claim_count": 6,
+      "proof_missing_claims": [],
+      "closure_status": "addressed_change",
+      "closure_recorded_at_unix": 1785675446.9850152
+    }
+  ],
+  "evidence": {
+    "manifest_rows": 14,
+    "new_materialized_links": 34,
+    "existing_materialized_links": 0
+  },
+  "authority": "evidence_only_not_live_approval_or_activation"
+}

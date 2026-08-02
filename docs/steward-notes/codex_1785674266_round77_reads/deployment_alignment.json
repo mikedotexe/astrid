@@ -1,0 +1,26 @@
+{
+  "schema": "steward_deployment_alignment_v1",
+  "steward_run_id": "run_1785674266671038000_9ed162141b",
+  "bridge": {
+    "production_source_changed": false,
+    "test_source_changed": true,
+    "build_attempted": false,
+    "restart_attempted": false,
+    "deployment_changed": false,
+    "reason": "The only bridge edit is a Rust unit regression for duplicate overflow carriage. It does not change the compiled production path, wire protocol, prompt, model behavior, or runtime configuration."
+  },
+  "controller_session": {
+    "credential_confined": true,
+    "pause_generation": 174,
+    "preprojection": "projection_1785674267495743000_1c75bb254d",
+    "manual_projection": "projection_1785675872116690000_6be06a821e",
+    "credential_transport": "controller process memory",
+    "service_restart_required": false
+  },
+  "minime": {
+    "source_changed": false,
+    "restart_attempted": false,
+    "deployment_changed": false
+  },
+  "authority_boundary": "No cadence, scheduling, rest threshold, candidate selection, model context, semantic aperture, attenuation, transport, gain, Minime, controller, peer, or live deployment change is authorized by this packet."
+}

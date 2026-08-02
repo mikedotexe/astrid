@@ -3059,6 +3059,53 @@ mod tests {
     }
 
     #[test]
+    fn codec_overflow_overlap_dim_emits_one_delta_and_one_followup_hook() {
+        let flat = vec![
+            100.0, 98.0, 96.0, 95.0, 94.0, 93.0, 92.0, 91.0, 90.0, 89.0, 88.0, 87.0,
+        ];
+        let mut features = vec![0.0; SEMANTIC_DIM];
+        features[26] = 30.0;
+
+        let report =
+            apply_spectral_feedback_inner(&mut features, Some(&telemetry(flat, 0.55)), 1.0, 1.0)
+                .expect("overflow report");
+
+        assert_eq!(
+            report
+                .dimensions
+                .iter()
+                .filter(|entry| entry.dim == 26)
+                .count(),
+            1,
+            "the emotional/tail overlap must keep one monitored dimension"
+        );
+        assert_eq!(
+            report.clipped_dims.iter().filter(|&&dim| dim == 26).count(),
+            1,
+            "the overlap must record one clipped dimension"
+        );
+        assert_eq!(
+            report
+                .experience_delta_bus_v1
+                .deltas
+                .iter()
+                .filter(|delta| delta.dimension == Some(26))
+                .count(),
+            1,
+            "the overlap must emit one truth-channel clip delta"
+        );
+        assert_eq!(report.experience_delta_bus_v1.delta_count, 1);
+        assert_eq!(
+            report.default_off_followup_hook,
+            CODEC_OVERFLOW_FOLLOWUP_HOOK
+        );
+        assert_eq!(
+            report.dim(26).expect("dimension 26 report").lane,
+            "emotional_tail_vibrancy"
+        );
+    }
+
+    #[test]
     fn codec_overflow_report_stays_quiet_without_clipping() {
         let mut features = vec![0.0; SEMANTIC_DIM];
         features[24] = 0.55;

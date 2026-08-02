@@ -1,0 +1,43 @@
+{
+  "schema": "introspection_full_read_manifest_v1",
+  "reader": "codex-heartbeat",
+  "steward_run_id": "run_1785674266671038000_9ed162141b",
+  "reports": [
+    {
+      "filename": "introspection_astrid_autonomous_1785633267.txt",
+      "introspection_id": "introspection_astrid_autonomous_1785633267",
+      "sha256": "465a3a456554ff10acfb78b3aa66e48cb931d50e300a67721bb1904b1cd9cfec",
+      "newline_terminated_lines": 36,
+      "logical_lines": 37,
+      "bytes": 3276,
+      "witness_id": "lsw_ac6cde7893d4f57ff59c2789163bc6716bc9859191aa665c6020db95f88084a7",
+      "summary_file": "summaries/astrid_autonomous_1785633267.md",
+      "claims_file": "claims/astrid_autonomous_1785633267.json"
+    },
+    {
+      "filename": "introspection_astrid_codec_1785632830.txt",
+      "introspection_id": "introspection_astrid_codec_1785632830",
+      "sha256": "dd1ea00c2fb994c83161712468fa82c2cd1f9d7d0bfd276e057c903cdf63c3cb",
+      "newline_terminated_lines": 36,
+      "logical_lines": 37,
+      "bytes": 3252,
+      "witness_id": "lsw_6a78d420348a97a19fda46addc00e58b1bb799a002ae84e90fd6da3cd16808ea",
+      "summary_file": "summaries/astrid_codec_1785632830.md",
+      "claims_file": "claims/astrid_codec_1785632830.json"
+    }
+  ],
+  "reads": [
+    {
+      "introspection_id": "introspection_astrid_autonomous_1785633267",
+      "reader": "codex-heartbeat",
+      "summary_file": "summaries/astrid_autonomous_1785633267.md",
+      "claims_file": "claims/astrid_autonomous_1785633267.json"
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1785632830",
+      "reader": "codex-heartbeat",
+      "summary_file": "summaries/astrid_codec_1785632830.md",
+      "claims_file": "claims/astrid_codec_1785632830.json"
+    }
+  ]
+}
