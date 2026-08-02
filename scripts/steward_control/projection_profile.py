@@ -490,11 +490,51 @@ def source_first_steps() -> tuple[ProjectionStep, ...]:
             ),
         ),
         ProjectionStep(
+            "introspection_continuity",
+            (
+                "addressing",
+                "claim_families",
+                "felt_contracts",
+                "steward_work_selection",
+            ),
+            (
+                command(
+                    python,
+                    "scripts/introspection_continuity.py",
+                    "--workspace",
+                    "{workspace}",
+                    "project",
+                    "--write",
+                    "--receipt-json",
+                ),
+            ),
+            (
+                "addressing",
+                "claim_families",
+                "felt_contracts",
+                "steward_work_selection",
+            ),
+            (
+                "introspections/introspection_*.txt",
+                "diagnostics/introspection_addressing_v1/status.json",
+                "diagnostics/claim_families_v1/status.json",
+                "diagnostics/felt_contract_graph_v1/contracts.jsonl",
+                "diagnostics/steward_work_selection_v1/selection.json",
+                "diagnostics/introspection_continuity_v1/responses/*.json",
+            ),
+            (
+                "diagnostics/introspection_continuity_v1/status.json",
+                "diagnostics/introspection_continuity_v1/index.json",
+                "diagnostics/introspection_continuity_v1/report.md",
+            ),
+        ),
+        ProjectionStep(
             "experiential_epistemics",
             (
                 "felt_contracts",
                 "evidence_study_runtime",
                 "steward_work_selection",
+                "introspection_continuity",
             ),
             (
                 command(
@@ -518,6 +558,7 @@ def source_first_steps() -> tuple[ProjectionStep, ...]:
                 "diagnostics/felt_mechanism_concordance_v1/*.jsonl",
                 "diagnostics/felt_contract_graph_v1/contracts.jsonl",
                 "diagnostics/steward_work_selection_v1/*.json",
+                "diagnostics/introspection_continuity_v1/**/*.json",
             ),
             ("diagnostics/experiential_epistemics_v1/status.json",),
         ),
