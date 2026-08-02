@@ -1,0 +1,29 @@
+{
+  "schema": "steward_deployment_alignment_v1",
+  "steward_run_id": "run_1785668065597835000_d12ad28aa3",
+  "completion_steward_run_id": "run_1785670704531192000_a6a370b14a",
+  "bridge": {
+    "source_changed": false,
+    "build_attempted": false,
+    "restart_attempted": false,
+    "deployment_changed": false,
+    "reason": "This round verifies existing source and preregisters an offline pure-function study. Live Shadow, regulator-drive, model, prompt, provider, and peer changes remain unauthorized."
+  },
+  "controller_session": {
+    "credential_confined": true,
+    "pause_generation": 174,
+    "initial_outcome": "cancelled after the configured hard timeout, with the lease released exactly once",
+    "initial_manual_projection": "projection_1785669989599158000_c6d34cc223",
+    "initial_manual_projection_status": "passed",
+    "recovery_preprojection": "projection_1785670705401843000_be7945823e",
+    "chronicle_projection": "division_chronicle_9b48d58ba2d008961ee3f38a",
+    "credential_transport": "controller process memory",
+    "service_restart_required": false
+  },
+  "minime": {
+    "source_changed": false,
+    "restart_attempted": false,
+    "deployment_changed": false
+  },
+  "authority_boundary": "No bridge build, live restart, magnetization change, regulator-drive change, recursive model induction, SHADOW_TRAJECTORY dispatch, peer mutation, or felt result is authorized by this packet."
+}
