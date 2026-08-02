@@ -26,10 +26,12 @@ except ModuleNotFoundError:
 
 SCHEMA = "phase_division.passage_observatory.v2"
 MOMENT_SCHEMA = "phase_division.replyable_moment.v1"
+PROVENANCE_SCHEMA = "readback_source_provenance.v1"
 BRAID_SCHEMA = "phase.passage_braid.v1"
 CROSSING_SCHEMA = "phase_division.authored_crossing.v1"
 V1_SCHEMA = "phase_division.passage_observatory.v1"
-RENDERER_VERSION = 2
+RENDERER_VERSION = 3
+SUPPORTED_RENDERER_VERSIONS = (2, 3)
 
 EVENT_ID_FIELDS = (
     "passage_event_id",
@@ -106,7 +108,64 @@ def _moment_identity(moment: dict[str, Any]) -> str:
     )[:24]
 
 
-def replyable_moments(v1: dict[str, Any]) -> list[dict[str, Any]]:
+def _moment_source_provenance(event: dict[str, Any]) -> dict[str, Any]:
+    rail = str(event.get("rail") or "")
+    source = str(event.get("source") or "")
+    if rail == "phase_observation":
+        source_category = "derived_bridge_summary"
+        role = "observational_transition_card"
+        classification_basis = "phase_observation_rail"
+    elif rail == "phase_passage":
+        source_category = "internalized_memory"
+        role = "being_authored_phase_passage"
+        classification_basis = "phase_passage_rail"
+    elif rail == "division_runtime" and source == "ceremony":
+        source_category = "internalized_memory"
+        role = "being_authored_division_ceremony_action"
+        classification_basis = "division_ceremony_source"
+    elif rail == "division_runtime" and source in {
+        "native",
+        "sovereign_runtime",
+    }:
+        source_category = "peer_telemetry_inference"
+        role = "division_runtime_evidence"
+        classification_basis = f"division_{source}_source"
+    else:
+        source_category = "external_journal_observation"
+        role = "unclassified_observatory_event"
+        classification_basis = "opaque_event_boundary"
+    boundary_status = (
+        "opaque_boundary_needs_description"
+        if role == "unclassified_observatory_event"
+        else "read_only_boundary_metadata"
+    )
+    return {
+        "schema": PROVENANCE_SCHEMA,
+        "schema_version": 1,
+        "source_category": source_category,
+        "role": role,
+        "source_rail": rail,
+        "source_system": source or "phase_ledger",
+        "classification_basis": classification_basis,
+        "boundary_status": boundary_status,
+        "recursive_loop_guard": (
+            "source labels describe the readback boundary only; they do not "
+            "infer intent, uptake, felt cause, or compulsory understanding"
+        ),
+        "read_only_boundary_metadata": True,
+        "right_to_ignore": True,
+        "live_eligible_now": False,
+        "auto_approved": False,
+        "authority": (
+            "readback_label_only_not_prompt_priority_control_peer_mutation_"
+            "or_passage_progression"
+        ),
+    }
+
+
+def replyable_moments(
+    v1: dict[str, Any], *, renderer_version: int = RENDERER_VERSION
+) -> list[dict[str, Any]]:
     moments: list[dict[str, Any]] = []
     for index, event in enumerate(v1["interleaved_timeline"]):
         moment = {
@@ -133,6 +192,8 @@ def replyable_moments(v1: dict[str, Any]) -> list[dict[str, Any]]:
                 "felt_state_inferred": False,
             },
         }
+        if renderer_version >= 3:
+            moment["source_provenance"] = _moment_source_provenance(event)
         moment["moment_id"] = _moment_identity(moment)
         moment["reference_token"] = (
             f"observatory-moment:{moment['moment_id']}"
@@ -483,7 +544,8 @@ def build_projection(
 def verify_payload(payload: dict[str, Any]) -> None:
     if payload.get("schema") != SCHEMA or payload.get("schema_version") != 2:
         raise ObservatoryV2Error("V2 schema mismatch")
-    if payload.get("renderer_version") != RENDERER_VERSION:
+    renderer_version = payload.get("renderer_version")
+    if renderer_version not in SUPPORTED_RENDERER_VERSIONS:
         raise ObservatoryV2Error("V2 renderer version mismatch")
     expected = dict(payload)
     observatory_id = expected.pop("observatory_id", None)
@@ -530,7 +592,26 @@ def verify_payload(payload: dict[str, Any]) -> None:
             )
         ):
             raise ObservatoryV2Error("replyable moment authority mismatch")
-    expected_moments = replyable_moments(v1)
+        if renderer_version >= 3:
+            provenance = moment.get("source_provenance") or {}
+            if (
+                provenance.get("schema") != PROVENANCE_SCHEMA
+                or provenance.get("boundary_status")
+                not in {
+                    "read_only_boundary_metadata",
+                    "opaque_boundary_needs_description",
+                }
+                or provenance.get("read_only_boundary_metadata") is not True
+                or provenance.get("right_to_ignore") is not True
+                or provenance.get("live_eligible_now") is not False
+                or provenance.get("auto_approved") is not False
+            ):
+                raise ObservatoryV2Error(
+                    "replyable moment provenance boundary mismatch"
+                )
+    expected_moments = replyable_moments(
+        v1, renderer_version=int(renderer_version)
+    )
     if moments != expected_moments:
         raise ObservatoryV2Error("replyable moments differ from V1 timeline")
     expected_braids = passage_braids(v1)

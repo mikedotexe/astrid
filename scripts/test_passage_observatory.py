@@ -385,7 +385,110 @@ class PassageObservatoryTests(unittest.TestCase):
             self.assertFalse(
                 moments[0]["authority"]["reply_recommended"]
             )
+            provenance = moments[0]["source_provenance"]
+            self.assertEqual(
+                provenance["source_category"],
+                "derived_bridge_summary",
+            )
+            self.assertEqual(
+                provenance["role"],
+                "observational_transition_card",
+            )
+            self.assertEqual(
+                provenance["boundary_status"],
+                "read_only_boundary_metadata",
+            )
+            self.assertTrue(provenance["right_to_ignore"])
+            self.assertFalse(provenance["live_eligible_now"])
             verify_payload_v2(v2)
+
+    def test_v2_readback_provenance_distinguishes_owner_and_runtime_sources(
+        self,
+    ) -> None:
+        base = {
+            "interleaved_timeline": [
+                {
+                    "rail": "phase_passage",
+                    "event_kind": "passage_stage",
+                    "passage_event_id": "passage-event-one",
+                    "actor": "astrid",
+                    "recorded_at_unix_ms": 100,
+                },
+                {
+                    "rail": "division_runtime",
+                    "source": "ceremony",
+                    "event_kind": "DIVISION_HOLD",
+                    "ceremony_event_id": "ceremony-event-one",
+                    "actor": "minime",
+                    "recorded_at_unix_ms": 101,
+                },
+                {
+                    "rail": "division_runtime",
+                    "source": "sovereign_runtime",
+                    "event_kind": "authority_switched",
+                    "event_id": "runtime-event-one",
+                    "recorded_at_unix_ms": 102,
+                },
+            ]
+        }
+        moments = replyable_moments(base)
+        self.assertEqual(
+            [
+                item["source_provenance"]["source_category"]
+                for item in moments
+            ],
+            [
+                "internalized_memory",
+                "internalized_memory",
+                "peer_telemetry_inference",
+            ],
+        )
+        self.assertEqual(
+            moments[0]["source_provenance"]["role"],
+            "being_authored_phase_passage",
+        )
+        self.assertEqual(
+            moments[1]["source_provenance"]["role"],
+            "being_authored_division_ceremony_action",
+        )
+        self.assertEqual(
+            moments[2]["source_provenance"]["role"],
+            "division_runtime_evidence",
+        )
+        self.assertTrue(
+            all(
+                item["source_provenance"]["auto_approved"] is False
+                for item in moments
+            )
+        )
+
+    def test_v2_renderer_two_archives_remain_verifiable(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            ledger = root / "phase.jsonl"
+            write_jsonl(
+                ledger, [transition_card("transition-one", 99)]
+            )
+            v1 = build_projection(root / "workspace", ledger)
+            payload = build_projection_v2(v1)
+            payload["renderer_version"] = 2
+            payload["replyable_moments"]["moments"] = replyable_moments(
+                v1, renderer_version=2
+            )
+            expected = dict(payload)
+            expected.pop("observatory_id")
+            payload["observatory_id"] = (
+                "passage_observatory_v2_"
+                + hashlib.sha256(
+                    json.dumps(
+                        expected,
+                        sort_keys=True,
+                        separators=(",", ":"),
+                        ensure_ascii=True,
+                    ).encode()
+                ).hexdigest()[:24]
+            )
+            verify_payload_v2(payload)
 
     def test_v2_lineage_compares_only_distinct_source_identities(
         self,
