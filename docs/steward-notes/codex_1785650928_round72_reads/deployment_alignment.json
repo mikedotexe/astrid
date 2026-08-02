@@ -1,0 +1,14 @@
+{
+  "schema": "steward_round_deployment_alignment_v1",
+  "steward_run_id": "run_1785650928723488000_3fc1fdce6e",
+  "source_changed": true,
+  "live_consumed_surface_changed": false,
+  "restart_required": false,
+  "deployment_required": false,
+  "minime_changelog_changed": false,
+  "source_use_evidence": "spectral_fingerprint_integrity_v1 is referenced only by its definition and tests under capsules/spectral-bridge/src; no production caller consumes the additive fields",
+  "actions_dispatched": [],
+  "cards_emitted": [],
+  "notes_delivered": [],
+  "authority_boundary": "The source change is an additive read-only evidence schema with no production caller. No bridge or Minime protocol, prompt, report renderer, summary, capture, correspondence, semantic input, cadence, admission, threshold, pressure, fill, PI, controller, reservoir, Shadow, codec transport, peer, process, or Division live surface changed."
+}

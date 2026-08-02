@@ -1,0 +1,86 @@
+{
+  "schema": "steward_round_test_results_v1",
+  "steward_run_id": "run_1785650928723488000_3fc1fdce6e",
+  "status": "passed",
+  "results": [
+    {
+      "surface": "spectral_modal_distinction_focused",
+      "commands": [
+        "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml telemetry_distinction_tests --lib",
+        "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml fingerprint --lib"
+      ],
+      "focused_passed": 2,
+      "fingerprint_passed": 20,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "spectral_bridge_full_library",
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib",
+      "passed": 1774,
+      "failed": 0,
+      "ignored": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "spectral_bridge_strict_clippy",
+      "command": "cargo clippy --manifest-path capsules/spectral-bridge/Cargo.toml --all-targets -- -D warnings",
+      "status": "passed"
+    },
+    {
+      "surface": "workspace_format",
+      "command": "cargo fmt --all -- --check",
+      "status": "passed"
+    },
+    {
+      "surface": "introspection_addressing_audit",
+      "command": "env PYTHONDONTWRITEBYTECODE=1 python3 scripts/introspection_addressing_audit.py --self-test",
+      "passed": 41,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "evidence_store_control_projection_division_claim_family",
+      "command": "env PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=.:scripts python3 -m unittest scripts.test_evidence_event_store scripts.test_steward_control scripts.test_steward_projection scripts.test_division_ceremony_followup scripts.test_division_ceremony_chronicle scripts.test_division_ceremony_projection scripts.test_claim_family_incremental_projection",
+      "passed": 67,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "felt_mechanism_concordance",
+      "command": "focused unittest selection for baseline requirements, unscored felt preservation, one named-friction follow-up, and candidate-without-baseline rejection",
+      "passed": 4,
+      "failed": 0,
+      "studies": 4,
+      "observations": 8,
+      "results": 8,
+      "missing_baselines": 0,
+      "felt_state_scored": false,
+      "causation_claimed": false,
+      "closure_claimed": false,
+      "status": "passed"
+    },
+    {
+      "surface": "experiential_epistemics",
+      "commands": [
+        "env PYTHONDONTWRITEBYTECODE=1 python3 scripts/experiential_epistemics.py self-test --json",
+        "env PYTHONDONTWRITEBYTECODE=1 python3 scripts/experiential_epistemics.py lint --json"
+      ],
+      "self_tests_passed": 2,
+      "lint_checked_records": 10155,
+      "lint_issues": 0,
+      "history_rewritten": false,
+      "status": "passed"
+    },
+    {
+      "surface": "packet_invariants",
+      "command": "structured JSON validation, canonical byte/hash checks, source-use search, git diff check, claim/link/queue counts, and authority-boundary review",
+      "claims": 16,
+      "packet_evidence_links": 4,
+      "recorded_addressing_links": 32,
+      "unprocessed_filenames": 38,
+      "status": "passed"
+    }
+  ],
+  "authority_boundary": "Passing tests establish source mechanics and deterministic evidence behavior, not felt cause, fusion, relief, report-time activation, accessible agency, preferred control, consent, uptake, or live deployment."
+}

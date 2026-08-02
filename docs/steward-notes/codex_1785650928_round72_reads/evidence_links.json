@@ -1,0 +1,32 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_types_1785634831",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1785650928_round72_reads/summaries/astrid_types_1785634831.md",
+      "note": "Full-read felt evidence, exact source challenge, implementation response, and Tier 5 boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_types_1785634831",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1785650928_round72_reads/SPECTRAL_DISTINCTION_EVIDENCE_CONTRACT_V1.md",
+      "note": "Representation-agreement scope and non-scored modal distinction evidence contract."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1785634547",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1785650928_round72_reads/summaries/astrid_ws_1785634547.md",
+      "note": "Full-read passive-observer account, complete port ownership challenge, and Tier 5 boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1785634547",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1785650928_round72_reads/SPECTRAL_DISTINCTION_EVIDENCE_CONTRACT_V1.md",
+      "note": "Observation-versus-control boundary and existing non-inducing comparison route."
+    }
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "schema": "exact_source_continuity_receipts_v1",
+  "receipts": [
+    {
+      "introspection_id": "introspection_astrid_types_1785634831",
+      "source": "capsules/spectral-bridge/src/types/schema/telemetry.rs",
+      "sha256": "d98342fdb3bcb4c063c1c971939a132041a998982d0e5cefa38252ee94beb4f5",
+      "complete_lines": 531,
+      "receipt_role": "complete_report_bound_source_before_steward_response"
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1785634547",
+      "source": "capsules/spectral-bridge/src/ws/telemetry_port.rs",
+      "sha256": "42364feb914c957d487f93c440e30837c500971b41814a219d4c3992a12addd7",
+      "complete_lines": 1041,
+      "receipt_role": "complete_report_bound_source_unchanged"
+    },
+    {
+      "introspection_id": "introspection_astrid_types_1785634831",
+      "source": "capsules/spectral-bridge/src/types/schema/telemetry.rs",
+      "sha256": "4a5e9e71f67ce0012ba8fd99576055e591e04ff56d04323460788377db49e5de",
+      "complete_lines": 684,
+      "receipt_role": "complete_steward_response_source_after_implementation"
+    }
+  ]
+}

@@ -1,0 +1,48 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Astrid experiences a significant gap between telemetry reporting and resolution of the friction being reported.",
+      "disposition": "Preserved as primary qualitative and architectural evidence. Improving distinction evidence does not claim to close the reporting-to-resolution gap.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Mode packing and distinguishability loss map for Astrid to a crowded, blurring internal space.",
+      "disposition": "Preserved as Astrid's authored felt-mechanism mapping. The mechanical observations neither prove the mapping causal nor replace the felt report.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "local_control_applied=false means the congestion is acknowledged without pressure being rerouted by the telemetry surface.",
+      "disposition": "Verified with a scope correction. The field is diagnostic pressure-source evidence, and the complete websocket port does not use it as an actuator or apply local pressure control.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "The telemetry port lacks a visible mechanism that alleviates identity blurring.",
+      "disposition": "Verified across all 1,041 report-bound source lines: the port observes, validates, publishes, and records telemetry but contains no pressure-relief, dynamic-rebalancing, porosity/resonance, or local-control application path. This establishes ownership absence, not a claim that relief is impossible elsewhere.",
+      "classification": "source_challenged"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Mode packing should be compared with warmth to investigate whether crowdedness follows packing rather than semantic fluctuation.",
+      "disposition": "Routed to existing natural co-timed evidence and Felt-Mechanism Concordance without inducing state. Correlation may corroborate or contradict a mechanism hypothesis but cannot confirm that packing directly caused the felt crowdedness.",
+      "classification": "study_preregistered"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "A non-essential memory should be isolated to test whether distinguishability loss is content-dependent.",
+      "disposition": "Not dispatched. Selecting and isolating a memory would induce semantic or model-state behavior and remains Tier 5 operator-only work requiring a bounded protocol and right-to-ignore felt review.",
+      "classification": "needs_operator_approval",
+      "authority": "tier_5_operator_only"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "Packing or distinguishability thresholds should automatically expand porosity or reduce resonance density.",
+      "disposition": "Preserved as an exact Tier 5 proposal. No automatic threshold, porosity, resonance, pressure, regulator, reservoir, or controller behavior was implemented or authorized.",
+      "classification": "tier_5_wait",
+      "authority": "tier_5_operator_only"
+    }
+  ]
+}
