@@ -2,18 +2,26 @@ use astrid_minime_protocol::{
     CompatibilityStatus, DIVISION_ACTION_AVAILABILITY_SCHEMA_V1, DIVISION_COMMAND_SCHEMA_V1,
     DIVISION_COMMIT_SCOPE_V1, DIVISION_READINESS_POLICY_V1, DIVISION_STATUS_SCHEMA_V1,
     DeliveryEnvelopeV1, DivisionActionV1, DivisionCommandV1, DivisionLifecycleV1,
-    DivisionReadinessV1, DivisionStatusV1, EigenPacketV1, MutualAddressEnvelopeV1,
-    SELF_CONTROL_AUTHORITY_PROOF_SCHEMA_V1, SELF_CONTROL_COMMAND_SCHEMA_V2,
+    DivisionReadinessV1, DivisionStatusV1, EigenPacketV1, MutualAddressEnvelopeV1, OwnerInquiryV1,
+    OwnerInquiryV2, SELF_CONTROL_AUTHORITY_PROOF_SCHEMA_V1, SELF_CONTROL_COMMAND_SCHEMA_V2,
     SELF_CONTROL_INTENT_SCHEMA_V2, SEMANTIC_BODY_BASE_DIMENSIONS_V2,
     SEMANTIC_BODY_COMPANION_DIMENSIONS_V2, SEMANTIC_BODY_SCHEMA_V2, SelfControlActionV2,
     SelfControlAuthorityClassV2, SelfControlAuthorityProofV1, SelfControlCommandV2,
     SelfControlDurabilityV2, SelfControlFamilyV2, SelfControlIntentV2, SelfControlSourceIdentityV1,
     SelfControlValuesV2, SemanticBodyFidelityV2, SemanticBodyProvenanceV2, SemanticBodyV2,
     SemanticLaneRoleV2, SensoryDeliveryReceiptV1, SensoryDeliveryStatusV1, SensoryMsg,
-    SensoryPacketV1, SensoryServerHelloV1, canonical_self_control_intent_sha256,
-    canonical_sensory_payload_sha256,
+    SensoryPacketV1, SensoryServerHelloV1, canonical_owner_inquiry_sha256_v2,
+    canonical_self_control_intent_sha256, canonical_sensory_payload_sha256,
 };
 use ed25519_dalek::{Signer as _, SigningKey};
+use sha2::{Digest as _, Sha256};
+
+const OWNER_INQUIRY_FIXTURE_SHA256: &str =
+    "f8645cd12c9a8c0f405e0d6dd7884feb497a2bad45f20ef55be052f040d01752";
+const OWNER_INQUIRY_V2_FIXTURE_SHA256: &str =
+    "17302b92b7d68eec9019ce7f2fb97731f22f4cba3c4ab53d762726cfd161e8c9";
+const OWNER_INQUIRY_V2_CANONICAL_SHA256: &str =
+    "55fb17ce4c29bdb3c24bb087788e7bef75442a2ab3ef3c53d933baaafcf10dc1";
 
 #[test]
 fn legacy_telemetry_remains_accepted() {
@@ -54,6 +62,46 @@ fn current_telemetry_is_typed_and_preserves_additive_fields() {
     assert!(encoded.get("neural").is_some());
     assert!(encoded["neural"].is_null());
     assert_eq!(encoded["future_additive_packet"]["preserved"], true);
+}
+
+#[test]
+fn owner_inquiry_fixture_round_trips_without_wire_drift() {
+    let fixture = include_bytes!("fixtures/owner_inquiry_v1.json");
+    assert_eq!(
+        format!("{:x}", Sha256::digest(fixture)),
+        OWNER_INQUIRY_FIXTURE_SHA256
+    );
+    let source: serde_json::Value = serde_json::from_slice(fixture).unwrap();
+    let inquiry: OwnerInquiryV1 = serde_json::from_value(source.clone()).unwrap();
+
+    assert_eq!(inquiry.strands.len(), 2);
+    assert!(
+        inquiry
+            .strands
+            .iter()
+            .all(|strand| strand.projection_48d.len() == 48)
+    );
+    assert_eq!(serde_json::to_value(inquiry).unwrap(), source);
+}
+
+#[test]
+fn owner_inquiry_v2_fixture_is_valid_and_byte_pinned() {
+    let fixture = include_bytes!("fixtures/owner_inquiry_v2.json");
+    assert_eq!(
+        format!("{:x}", Sha256::digest(fixture)),
+        OWNER_INQUIRY_V2_FIXTURE_SHA256
+    );
+    let source: serde_json::Value = serde_json::from_slice(fixture).unwrap();
+    let inquiry: OwnerInquiryV2 = serde_json::from_value(source.clone()).unwrap();
+
+    assert!(inquiry.is_well_formed());
+    assert!(inquiry.preserve_all_strands_without_merge);
+    assert_eq!(inquiry.analysis_plan.len(), 3);
+    assert_eq!(
+        canonical_owner_inquiry_sha256_v2(&inquiry),
+        OWNER_INQUIRY_V2_CANONICAL_SHA256
+    );
+    assert_eq!(serde_json::to_value(inquiry).unwrap(), source);
 }
 
 #[test]

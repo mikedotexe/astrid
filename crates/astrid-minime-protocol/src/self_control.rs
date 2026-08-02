@@ -31,6 +31,7 @@ pub enum SelfControlDurabilityV2 {
 #[serde(rename_all = "snake_case")]
 pub enum SelfControlFamilyV2 {
     Conversation,
+    SemanticContinuity,
     SemanticEmission,
     Memory,
     SensoryIntake,
@@ -77,6 +78,8 @@ pub struct SelfControlValuesV2 {
     pub aperture: Option<f32>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub continuity_readout: Option<f32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub semantic_strand_retention_turns: Option<u32>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub vibrancy_aperture: Option<f32>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -193,6 +196,17 @@ impl SelfControlValuesV2 {
     }
 
     #[must_use]
+    pub fn field_names(&self) -> Vec<String> {
+        let Ok(Value::Object(fields)) = serde_json::to_value(self) else {
+            return Vec::new();
+        };
+        fields
+            .into_iter()
+            .filter_map(|(name, value)| (!value.is_null()).then_some(name))
+            .collect()
+    }
+
+    #[must_use]
     pub fn is_well_formed(&self) -> bool {
         let Ok(Value::Object(fields)) = serde_json::to_value(self) else {
             return false;
@@ -228,6 +242,15 @@ impl SelfControlValuesV2 {
             || self.shadow_influence_gain.is_some()
             || self.cross_being_semantic_gain.is_some()
             || self.peer_breathing_coupled == Some(true)
+    }
+
+    #[must_use]
+    pub fn matches_family(&self, family: SelfControlFamilyV2) -> bool {
+        let fields = self.field_names();
+        !fields.is_empty()
+            && fields
+                .iter()
+                .all(|field| self_control_field_allowed(family, field))
     }
 }
 
@@ -312,6 +335,7 @@ impl SelfControlIntentV2 {
             && durability_shape_valid
             && (!self.values.requires_one_shot()
                 || self.durability == SelfControlDurabilityV2::OneShot)
+            && (self.action != SelfControlActionV2::Set || self.values.matches_family(self.family))
             && (self.action != SelfControlActionV2::Set
                 || (self.family == SelfControlFamilyV2::SharedCoupling)
                     == self.values.includes_shared_coupling())
@@ -583,6 +607,92 @@ fn value_is_finite(value: &Value) -> bool {
         Value::Array(values) => values.iter().all(value_is_finite),
         Value::Object(fields) => fields.values().all(value_is_finite),
         _ => true,
+    }
+}
+
+fn self_control_field_allowed(family: SelfControlFamilyV2, field: &str) -> bool {
+    match family {
+        SelfControlFamilyV2::Conversation => matches!(
+            field,
+            "conversation_temperature"
+                | "response_token_limit"
+                | "aperture"
+                | "continuity_readout"
+                | "generation_noise"
+        ),
+        SelfControlFamilyV2::SemanticContinuity => field == "semantic_strand_retention_turns",
+        SelfControlFamilyV2::SemanticEmission => matches!(
+            field,
+            "semantic_emission_gain"
+                | "vibrancy_aperture"
+                | "codec_dimension_weights"
+                | "warmth_intensity"
+                | "hebbian_learning_rate_scale"
+        ),
+        SelfControlFamilyV2::Memory => matches!(
+            field,
+            "memory_mode"
+                | "journal_resonance"
+                | "checkpoint_interval"
+                | "embedding_strength"
+                | "memory_decay_rate"
+                | "transition_cushion"
+                | "checkpoint_annotation"
+                | "checkpoint_now"
+        ),
+        SelfControlFamilyV2::SensoryIntake => matches!(
+            field,
+            "semantic_companion_mix"
+                | "semantic_intake_gain"
+                | "peer_journal_visible"
+                | "peer_breathing_coupled"
+                | "receptivity"
+                | "local_sensory_admission"
+                | "live_audio_enabled"
+                | "live_video_enabled"
+        ),
+        SelfControlFamilyV2::ReservoirRegulation => matches!(
+            field,
+            "synth_gain"
+                | "keep_bias"
+                | "exploration_noise"
+                | "fill_target"
+                | "regulation_strength"
+                | "smoothing_preference"
+                | "penalty_sensitivity"
+                | "breathing_rate_scale"
+                | "deep_breathing"
+                | "synth_noise_level"
+                | "pure_tone"
+                | "legacy_audio_synth"
+                | "legacy_video_synth"
+        ),
+        SelfControlFamilyV2::ReservoirGeometry => {
+            matches!(
+                field,
+                "geom_curiosity" | "target_lambda_bias" | "geom_drive"
+            )
+        },
+        SelfControlFamilyV2::PiController => matches!(
+            field,
+            "pi_kp" | "pi_ki" | "pi_max_step" | "pi_geom_weight" | "pi_integrator_leak"
+        ),
+        SelfControlFamilyV2::LocalTopology => matches!(
+            field,
+            "porosity"
+                | "esn_leak_override"
+                | "esn_leak_override_ticks"
+                | "mode_disperse"
+                | "mode_disperse_duration_ticks"
+                | "mode_disperse_decay_ticks"
+        ),
+        SelfControlFamilyV2::SharedCoupling => matches!(
+            field,
+            "peer_breathing_coupled"
+                | "shared_sensory_admission"
+                | "shadow_influence_gain"
+                | "cross_being_semantic_gain"
+        ),
     }
 }
 

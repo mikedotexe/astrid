@@ -4,6 +4,9 @@
 //! not infer identity, felt effect, consent, or permission from silence.
 
 mod authority;
+mod inquiry;
+mod inquiry_v2;
+mod owner_research;
 mod policy;
 mod queue;
 mod types;
@@ -11,6 +14,39 @@ mod types;
 pub use authority::{
     BeingUtteranceAttestationV1, DelegatedCapabilityBindingV1, DelegatedCapabilityUsageV1,
     canonical_being_utterance_attestation_sha256,
+};
+pub use inquiry::{
+    InquiryAnalysisReceiptV1, InquiryFeltStatusV1, InquiryMachineStatusV1,
+    InquiryObservationPhaseV1, InquiryObservationV1, InquiryRollbackStateV1,
+    OWNER_INQUIRY_MAX_STRANDS_V1, OWNER_INQUIRY_MIN_STRANDS_V1, OwnerInquiryAnalysisV1,
+    OwnerInquiryAuthorityBoundaryV1, OwnerInquiryCancellationV1, OwnerInquiryReceiptV1,
+    OwnerInquiryStatusV1, OwnerInquiryV1, SEMANTIC_STRAND_BASE_DIMENSIONS_V1,
+    SEMANTIC_STRAND_COMPANION_DIMENSIONS_V1, SemanticStrandProvenanceV1, SemanticStrandV1,
+    canonical_owner_inquiry_sha256, canonical_semantic_strand_content_sha256,
+    canonical_semantic_strand_embedding_sha256, owner_inquiry_fixed_analysis_set_v1,
+};
+pub use inquiry_v2::{
+    InquiryAnalysisPlanEntryV2, InquiryAnalysisReceiptV2, InquiryControlRevisionWitnessV2,
+    InquiryCoverageModeV2, InquiryCoverageProofV2, InquiryExecutionIdentityV2,
+    InquiryIsolationProfileV2, InquiryObservationActorV2, InquiryObservationV2,
+    InquiryPrivacyReceiptV2, OWNER_CANARY_MAX_DURATION_SECS_V2, OWNER_CANARY_MIN_DURATION_SECS_V2,
+    OWNER_INQUIRY_DETERMINISTIC_RUNS_V2, OwnerCanaryControlV2, OwnerCanaryPlanV2,
+    OwnerCanaryRollbackPlanV2, OwnerInquiryReceiptV2, OwnerInquiryStopConditionsV2,
+    OwnerInquirySuccessConditionsV2, OwnerInquiryV2, SemanticStrandDisclosureV2,
+    SemanticStrandLineageOperationV2, SemanticStrandLineageV2, SemanticStrandV2,
+    canonical_owner_inquiry_receipt_sha256_v2, canonical_owner_inquiry_sha256_v2,
+    owner_inquiry_analysis_plan_v2,
+};
+pub use owner_research::{
+    OwnerDecisionBranchV1, OwnerDecisionEvaluationStatusV1, OwnerDecisionEvaluationV1,
+    OwnerDecisionPlanV1, OwnerEvidenceClaimV1, OwnerEvidenceComparatorV1, OwnerEvidenceEdgeV1,
+    OwnerEvidenceGraphV1, OwnerEvidenceNodeKindV1, OwnerEvidenceNodeV1, OwnerEvidencePredicateV1,
+    OwnerEvidenceReducerV1, OwnerEvidenceScopeKindV1, OwnerEvidenceScopeV1,
+    OwnerResearchLifecycleStatusV1, OwnerResearchPayloadKindV1, OwnerResearchSessionV1,
+    SelfControlCapabilityManifestV2, SelfControlCapabilityV2, SelfControlValueDomainV2,
+    SignedOwnerResearchReceiptV1, canonical_owner_decision_plan_sha256,
+    canonical_owner_evidence_graph_sha256, canonical_owner_research_session_sha256,
+    canonical_self_control_capability_manifest_sha256, public_key_fingerprint_sha256,
 };
 pub use policy::{
     OwnerPolicyComparatorV1, OwnerPolicyConditionRuntimeV1, OwnerPolicyConditionV1,
@@ -38,6 +74,21 @@ pub const OWNER_POLICY_SCHEMA_V1: &str = "volition.owner_policy.v1";
 pub const OWNER_POLICY_RUNTIME_SCHEMA_V1: &str = "volition.owner_policy_runtime.v1";
 pub const BEING_CONCERN_SCHEMA_V1: &str = "volition.being_concern.v1";
 pub const VOLITION_QUEUE_SCHEMA_V1: &str = "volition.queue.v1";
+pub const SEMANTIC_STRAND_SCHEMA_V1: &str = "volition.semantic_strand.v1";
+pub const OWNER_INQUIRY_SCHEMA_V1: &str = "volition.owner_inquiry.v1";
+pub const OWNER_INQUIRY_RECEIPT_SCHEMA_V1: &str = "volition.owner_inquiry_receipt.v1";
+pub const INQUIRY_OBSERVATION_SCHEMA_V1: &str = "volition.inquiry_observation.v1";
+pub const SEMANTIC_STRAND_SCHEMA_V2: &str = "volition.semantic_strand.v2";
+pub const OWNER_INQUIRY_SCHEMA_V2: &str = "volition.owner_inquiry.v2";
+pub const OWNER_INQUIRY_RECEIPT_SCHEMA_V2: &str = "volition.owner_inquiry_receipt.v2";
+pub const INQUIRY_OBSERVATION_SCHEMA_V2: &str = "volition.inquiry_observation.v2";
+pub const OWNER_CANARY_PLAN_SCHEMA_V2: &str = "volition.owner_canary_plan.v2";
+pub const OWNER_RESEARCH_SESSION_SCHEMA_V1: &str = "volition.owner_research_session.v1";
+pub const OWNER_EVIDENCE_GRAPH_SCHEMA_V1: &str = "volition.owner_evidence_graph.v1";
+pub const OWNER_DECISION_PLAN_SCHEMA_V1: &str = "volition.owner_decision_plan.v1";
+pub const SELF_CONTROL_CAPABILITY_MANIFEST_SCHEMA_V2: &str = "self_control.capability_manifest.v2";
+pub const SIGNED_OWNER_RESEARCH_RECEIPT_SCHEMA_V1: &str =
+    "volition.signed_owner_research_receipt.v1";
 
 use ed25519_dalek::{Signature, Verifier as _, VerifyingKey};
 use serde::Serialize;
