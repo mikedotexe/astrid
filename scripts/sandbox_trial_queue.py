@@ -43,6 +43,15 @@ ASTRID_DIAGNOSTICS = ASTRID_WORKSPACE / "diagnostics"
 ASTRID_JOURNAL = ASTRID_WORKSPACE / "journal"
 ASTRID_CONTEXT_OVERFLOW = ASTRID_WORKSPACE / "context_overflow"
 ASTRID_LLM_RS = ASTRID_REPO / "capsules/spectral-bridge/src/llm.rs"
+FALLBACK_SOURCE_PATHS = (
+    ASTRID_REPO / "capsules/spectral-bridge/src/llm/provider/configuration.rs",
+    ASTRID_REPO / "capsules/spectral-bridge/src/llm/provider/fallback_budget.rs",
+    ASTRID_REPO / "capsules/spectral-bridge/src/llm/provider/fallback_contracts.rs",
+    ASTRID_REPO / "capsules/spectral-bridge/src/llm/provider/fallback_dynamics.rs",
+    ASTRID_REPO / "capsules/spectral-bridge/src/llm/provider/fallback_rendering.rs",
+    ASTRID_REPO / "capsules/spectral-bridge/src/llm/provider/fallback_trajectory.rs",
+    ASTRID_REPO / "capsules/spectral-bridge/src/llm/provider/fallback_weights.rs",
+)
 DEFAULT_STATE_DIR = ASTRID_DIAGNOSTICS / "sandbox_trial_queue_v1"
 INTROSPECTION_ADDRESSING_STATE_DIR = ASTRID_DIAGNOSTICS / "introspection_addressing_v1"
 AGENCY_CORRIDOR_STATE_DIR = ASTRID_DIAGNOSTICS / "agency_corridor_v1"
@@ -1961,20 +1970,39 @@ def term_context_windows(texts: list[tuple[Path, str]]) -> list[dict[str, Any]]:
     return windows[:12]
 
 
-def fallback_distinguishability_v1() -> dict[str, Any]:
-    llm = read_text(ASTRID_LLM_RS)
+def fallback_distinguishability_v1(
+    *,
+    texts: list[tuple[Path, str]] | None = None,
+    fallback_source_text: str | None = None,
+    fire_drills: list[Path] | None = None,
+    generated_at: str | None = None,
+) -> dict[str, Any]:
+    if fallback_source_text is None:
+        source_paths = [path for path in FALLBACK_SOURCE_PATHS if path.is_file()]
+        if not source_paths and ASTRID_LLM_RS.is_file():
+            source_paths = [ASTRID_LLM_RS]
+        fallback_source_text = "\n".join(read_text(path) for path in source_paths)
+    llm = fallback_source_text
     dynamic_present = (
         "fallback_dynamic_texture_weight_v1" in llm
         and "dynamic_texture_weight" in llm
         and "texture_trajectory_v1" in llm
     )
-    since = now_s() - 48 * 3600
-    texts = [(path, read_text(path, limit=18_000)) for path in public_text_paths(since_s=since)]
+    if texts is None:
+        since = now_s() - 48 * 3600
+        texts = [(path, read_text(path, limit=18_000)) for path in public_text_paths(since_s=since)]
     counts = term_counts(texts, TEXTURE_TERMS)
     windows = term_context_windows(texts)
     repeated = [term for term, count in counts.items() if count >= 3]
     context_supported = [window for window in windows if window.get("context_terms")]
-    fire_drills = recent_paths(FALLBACK_FIRE_DRILLS, ("*.json", "*.md", "*.txt"), since_s=since, limit=12)
+    if fire_drills is None:
+        since = now_s() - 48 * 3600
+        fire_drills = recent_paths(
+            FALLBACK_FIRE_DRILLS,
+            ("*.json", "*.md", "*.txt"),
+            since_s=since,
+            limit=12,
+        )
     if not counts and not fire_drills:
         classification = "insufficient_output"
     elif dynamic_present and context_supported:
@@ -1987,7 +2015,7 @@ def fallback_distinguishability_v1() -> dict[str, Any]:
         "schema": "sandbox_trial_result_v1",
         "adapter": "fallback_distinguishability_v1",
         "classification": classification,
-        "generated_at": iso(),
+        "generated_at": generated_at or iso(),
         "dynamic_texture_weight_present": dynamic_present,
         "texture_term_counts": dict(sorted(counts.items(), key=lambda kv: (-kv[1], kv[0]))[:12]),
         "repeated_terms": repeated[:12],
@@ -2003,9 +2031,14 @@ def fallback_distinguishability_v1() -> dict[str, Any]:
     }
 
 
-def shadow_loss_lattice_v1() -> dict[str, Any]:
-    since = now_s() - 48 * 3600
-    texts = [(path, read_text(path, limit=24_000)) for path in public_text_paths(since_s=since)]
+def shadow_loss_lattice_v1(
+    *,
+    texts: list[tuple[Path, str]] | None = None,
+    generated_at: str | None = None,
+) -> dict[str, Any]:
+    if texts is None:
+        since = now_s() - 48 * 3600
+        texts = [(path, read_text(path, limit=24_000)) for path in public_text_paths(since_s=since)]
     shadow_samples: list[dict[str, Any]] = []
     max_dispersal = 0.0
     norm_deltas: list[float] = []
@@ -2050,7 +2083,7 @@ def shadow_loss_lattice_v1() -> dict[str, Any]:
         "schema": "sandbox_trial_result_v1",
         "adapter": "shadow_loss_lattice_v1",
         "classification": classification,
-        "generated_at": iso(),
+        "generated_at": generated_at or iso(),
         "sample_count": len(shadow_samples),
         "lattice_language_hits": lattice_hits,
         "loss_language_hits": loss_hits,
@@ -2075,8 +2108,13 @@ def requested_shadow_multiplier(text: str) -> float:
     return 1.0
 
 
-def shadow_influence_replay_v1(trial: dict[str, Any]) -> dict[str, Any]:
-    base = shadow_loss_lattice_v1()
+def shadow_influence_replay_v1(
+    trial: dict[str, Any],
+    *,
+    texts: list[tuple[Path, str]] | None = None,
+    generated_at: str | None = None,
+) -> dict[str, Any]:
+    base = shadow_loss_lattice_v1(texts=texts, generated_at=generated_at)
     samples = base.get("samples") if isinstance(base.get("samples"), list) else []
     requested = requested_shadow_multiplier(
         " ".join(str(trial.get(key) or "") for key in ("hypothesis", "felt_report_anchor", "proposed_intervention"))
@@ -2114,8 +2152,11 @@ def shadow_influence_replay_v1(trial: dict[str, Any]) -> dict[str, Any]:
             }
         )
     requested_row = min(replay_rows, key=lambda row: abs(float(row["multiplier"]) - requested)) if replay_rows else {}
+    quantified_samples_present = bool(norm_deltas or dispersal_deltas or dispersal_currents)
     if not samples:
         classification = "ambiguous_needs_more_samples"
+    elif not quantified_samples_present:
+        classification = "qualitative_lattice_signal_needs_quantified_samples"
     elif base.get("classification") in {"fragmentation_risk", "loss_like"} or requested_row.get("fragmentation_review_flag"):
         classification = "replay_warns_fragmentation_risk"
     elif base.get("classification") == "lattice_transition_like":
@@ -2126,12 +2167,13 @@ def shadow_influence_replay_v1(trial: dict[str, Any]) -> dict[str, Any]:
         "schema": "sandbox_trial_result_v1",
         "adapter": "shadow_influence_replay_v1",
         "classification": classification,
-        "generated_at": iso(),
+        "generated_at": generated_at or iso(),
         "requested_multiplier": round(requested, 3),
         "base_shadow_classification": base.get("classification"),
         "base_sample_count": base.get("sample_count"),
         "base_lattice_language_hits": base.get("lattice_language_hits"),
         "base_loss_language_hits": base.get("loss_language_hits"),
+        "quantified_samples_present": quantified_samples_present,
         "avg_norm_delta": round(avg_norm_delta, 6),
         "avg_dispersal_delta": round(avg_dispersal_delta, 6),
         "current_max_dispersal": round(current_dispersal, 6),
@@ -3298,6 +3340,26 @@ class SandboxTrialQueueTests(unittest.TestCase):
         self.assertEqual(result["requested_multiplier"], 2.0)
         self.assertIn(result["classification"], {"replay_supports_bounded_shadow_gain", "replay_warns_fragmentation_risk"})
         self.assertLess(len(json.dumps(result)), 12000)
+
+    def test_shadow_influence_replay_does_not_infer_gain_support_from_words_alone(self) -> None:
+        result = shadow_influence_replay_v1(
+            {
+                "hypothesis": "increase shadow influence",
+                "felt_report_anchor": "interwoven lattice settled coupling",
+            },
+            texts=[
+                (
+                    Path("/bounded/public.txt"),
+                    "Shadow-v3 interwoven lattice settled coupling",
+                )
+            ],
+            generated_at="2026-07-29T00:00:00Z",
+        )
+        self.assertFalse(result["quantified_samples_present"])
+        self.assertEqual(
+            result["classification"],
+            "qualitative_lattice_signal_needs_quantified_samples",
+        )
 
     def test_run_next_records_result_card_and_skips_live_candidates(self) -> None:
         import tempfile
