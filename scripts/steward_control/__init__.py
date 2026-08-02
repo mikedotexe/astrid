@@ -12,11 +12,13 @@ from .errors import (
     ProjectionError,
     StewardControlError,
 )
+from .session import CredentialSafeSession, read_lease_token, run_session
 
 __all__ = [
     "BusyError",
     "ConfigurationError",
     "ControlConfig",
+    "CredentialSafeSession",
     "EvidenceInvalidError",
     "LeaseError",
     "PausedError",
@@ -25,4 +27,6 @@ __all__ = [
     "StewardControlError",
     "StewardController",
     "load_config",
+    "read_lease_token",
+    "run_session",
 ]
