@@ -1,0 +1,29 @@
+{
+  "schema": "steward_deployment_alignment_v1",
+  "steward_run_id": "run_1785663738879214000_4f52f8339a",
+  "bridge": {
+    "source_changed": false,
+    "build_attempted": false,
+    "restart_attempted": false,
+    "deployment_changed": false,
+    "reason": "Provider-normalization work remains a non-live proposal; the shared bridge tree has concurrent foreign edits and no operator deployment authority was inferred."
+  },
+  "controller_session": {
+    "source_changed": true,
+    "paths": [
+      "scripts/steward_control/session.py",
+      "scripts/test_steward_control.py"
+    ],
+    "behavior": "Regular-file and /dev/null descriptors rejected by kqueue or epoll fall back to one-descriptor select polling.",
+    "current_process_alignment": "The initial session began before the source edit and cancelled cleanly at its hard timeout. The recovery session loaded the patched implementation and finished successfully with post-run projection projection_1785666912104203000_2aefa7e738.",
+    "local_main_commit": "ca3c01db254bba850ea5d678281623ac1e0f167e",
+    "pushed": false,
+    "service_restart_required": false
+  },
+  "minime": {
+    "source_changed": false,
+    "restart_attempted": false,
+    "deployment_changed": false
+  },
+  "authority_boundary": "No bridge build, live restart, provider mutation, prompt change, model call, Minime change, or peer mutation is authorized by this packet."
+}

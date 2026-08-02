@@ -1,0 +1,70 @@
+{
+  "schema": "steward_round_test_results_v1",
+  "steward_run_id": "run_1785663738879214000_4f52f8339a",
+  "status": "passed",
+  "results": [
+    {
+      "surface": "control_marker_cleanup",
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml control_marker_cleanup_ --lib",
+      "passed": 31,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "credential_safe_steward_control",
+      "command": "python3 scripts/test_steward_control.py",
+      "passed": 27,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "introspection_addressing_audit",
+      "command": "PYTHONDONTWRITEBYTECODE=1 python3 scripts/introspection_addressing_audit.py --self-test",
+      "passed": 41,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "evidence_controller_projection_division_claim_family",
+      "command": "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=.:scripts python3 -m unittest scripts.test_evidence_event_store scripts.test_steward_control scripts.test_steward_projection scripts.test_division_ceremony_followup scripts.test_division_ceremony_chronicle scripts.test_division_ceremony_projection scripts.test_claim_family_incremental_projection",
+      "passed": 68,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "anti_drop_catalog",
+      "command": "PYTHONDONTWRITEBYTECODE=1 python3 scripts/anti_drop_catalog.py --self-test && python3 scripts/anti_drop_catalog.py verify",
+      "passed": 5,
+      "guards_verified": 47,
+      "alarms": 0,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "experiential_epistemics",
+      "command": "PYTHONDONTWRITEBYTECODE=1 python3 scripts/experiential_epistemics.py self-test --json; PYTHONDONTWRITEBYTECODE=1 python3 scripts/experiential_epistemics.py lint --json",
+      "passed": 2,
+      "records_linted": 10184,
+      "issues": 0,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "evidence_event_store_v2",
+      "command": "python3 scripts/evidence_event_store.py --json verify",
+      "valid": true,
+      "corrupt_lines": 0,
+      "history_rewritten": false,
+      "status": "passed"
+    },
+    {
+      "surface": "division_return",
+      "command": "python3 scripts/division_ceremony_followup.py verify; python3 scripts/division_ceremony_chronicle.py verify",
+      "passed": true,
+      "failed": 0,
+      "status": "passed",
+      "detail": "Cycle 13 is at 1/6 with review_due false after division_followup_event_97bb8cff4911b7da13af28b43d9f8eca. Durable Chronicle inputs verify; one volatile supervisor-status hash is stale and grants no authority."
+    }
+  ],
+  "authority_boundary": "Passing tests establish deterministic source behavior, not felt state, uptake, live deployment, or authority to mutate provider output."
+}

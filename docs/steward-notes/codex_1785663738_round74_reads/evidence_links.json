@@ -1,0 +1,74 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_llm_1785656997",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1785663738_round74_reads/summaries/astrid_llm_1785656997.md",
+      "note": "Complete canonical, report-bound source, and adjacent provider transport read with corrected route-specific dispositions."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785656997",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "Complete marker grammar, validator, and direct dialogue fallback source."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785656997",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "Exact first_word_after separator handling in the complete report-bound source."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785656997",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Exact depth-three delimiter regression passed."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785656997",
+      "claim_id": "c004",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Finite behaves and newline relation regressions passed."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785656997",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/transport.rs",
+      "note": "Complete MLX parsing and normalized-remainder return source."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785656997",
+      "claim_id": "c006",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "Direct dialogue Ollama fallback repairs and validates raw response text."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785656997",
+      "claim_id": "c006",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/transport.rs",
+      "note": "Complete shared Ollama validation, job receipt, route hash, and raw-text return source."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785656997",
+      "claim_id": "c006",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1785654809_round73_reads/claims/astrid_llm_1785653483.json",
+      "note": "Historical overbroad provider claim retained and explicitly corrected rather than erased."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785656997",
+      "claim_id": "c007",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1785663738_round74_reads/PROVIDER_OUTPUT_NORMALIZATION_PROPOSAL.md",
+      "note": "Complete non-live provider-neutral implementation and rollout proposal."
+    }
+  ]
+}

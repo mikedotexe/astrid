@@ -1,0 +1,18 @@
+{
+  "reads": [
+    {
+      "introspection_id": "introspection_astrid_llm_1785656997",
+      "reader": "codex-heartbeat",
+      "summary_file": "summaries/astrid_llm_1785656997.md",
+      "claims_file": "claims/astrid_llm_1785656997.json"
+    }
+  ],
+  "evidence_link_batch": {
+    "manifest": "evidence_links.json",
+    "rows": 10,
+    "events_appended": 16,
+    "new_links": 16,
+    "authority_state": "evidence_only",
+    "live_eligible_now": false
+  }
+}

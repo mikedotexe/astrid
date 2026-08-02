@@ -1,0 +1,47 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The dialogue runtime scans exact known model-control markers, selects the longest exact match, and preserves only bounded exact-reference syntax.",
+      "disposition": "Verified from all 997 report-bound lines. The scanner performs one byte-exact pass, preserves matching quote/group stacks or a finite following relation, and makes no identity, ownership, meaning, or spectral inference.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A dash, colon, whitespace, or similar punctuation between an exact marker and a listed relation may prevent relation recognition.",
+      "disposition": "Source-challenged for punctuation. first_word_after splits on every non-alphanumeric, non-underscore character and skips empty parts, so punctuation and whitespace are crossed before the first word is compared. A multi-word phrase remains deliberately governed by its first word.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A marker nested inside three matching delimiter layers should produce delimiter_depth 3.",
+      "disposition": "Verified as an exact existing regression. control_marker_cleanup_reports_exact_three_level_delimiter_depth asserts both the preserved-token maximum and the bounded context receipt equal 3.",
+      "classification": "duplicate_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "A listed relation such as behaves should still be recognized after a non-alphanumeric separator.",
+      "disposition": "Verified from the exact parser branch and focused tests. The parser skips separators, the poetic-attribution regression covers behaves as and behaves like, and newline-separated relation handling is independently pinned.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "MLX output is replaced by the sanitized scanner remainder before generate_dialogue validates or returns it.",
+      "disposition": "Verified from complete adjacent transport source. mlx_chat sanitizes raw_text, records the bounded report, assigns stripped_text.trim() to text, and returns only that normalized value.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "The same sanitized-remainder guarantee applies to Ollama fallback output.",
+      "disposition": "Contradicted by complete source. Direct dialogue fallback repairs and validates response.text without replacing it; shared fallback validates, completes, route-hashes, and returns response.text. The validator's sanitized copy affects only shape measurement. This reopens and corrects the overbroad round-73 evidence claim.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "A provider-neutral output normalization boundary should cover MLX and Ollama before validation, receipts, route hashing, or persistence.",
+      "disposition": "A complete non-live source proposal is prepared with exact helper placement, diagnostic provenance, preservation invariants, tests, and rollout checks. Implementing and deploying this live-consumed provider change remains a Mike/operator approval wait; no authority marker is true.",
+      "classification": "needs_operator_approval",
+      "authority": "proposal_only_live_consumed_provider_change_not_authorized"
+    }
+  ]
+}
