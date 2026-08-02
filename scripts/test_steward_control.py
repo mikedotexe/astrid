@@ -5,9 +5,11 @@ from __future__ import annotations
 
 from dataclasses import replace
 import hashlib
+import io
 import json
 import os
 from pathlib import Path
+import signal
 import stat
 import subprocess
 import sys
@@ -25,6 +27,7 @@ try:
     from steward_control.executor import run_subprocess
     from steward_control.git_state import repository_identity
     from steward_control.lease import token_hash
+    from steward_control.session import CredentialSafeSession, read_lease_token
 except ModuleNotFoundError:
     from scripts.evidence_store import EvidenceEventStore
     from scripts.steward_control.config import ControlConfig, load_config
@@ -33,6 +36,10 @@ except ModuleNotFoundError:
     from scripts.steward_control.executor import run_subprocess
     from scripts.steward_control.git_state import repository_identity
     from scripts.steward_control.lease import token_hash
+    from scripts.steward_control.session import (
+        CredentialSafeSession,
+        read_lease_token,
+    )
 
 
 def run_git(repo: Path, *args: str) -> None:
@@ -107,6 +114,51 @@ class StewardControlTests(unittest.TestCase):
 
     def resume(self) -> dict:
         return self.controller.resume(actor="test", acknowledgement="test resume")
+
+    def write_cli_config(self, *, max_run_secs: int = 6) -> Path:
+        config_path = self.root / "steward.toml"
+        config_path.write_text(
+            "\n".join(
+                [
+                    "[control]",
+                    f"repo_root = {json.dumps(str(self.repo))}",
+                    f"workspace = {json.dumps(str(self.workspace))}",
+                    f"state_root = {json.dumps(str(self.state_root))}",
+                    f"store_root = {json.dumps(str(self.store_root))}",
+                    'profile = "none"',
+                    "lease_ttl_secs = 3",
+                    "heartbeat_interval_secs = 1",
+                    f"max_run_secs = {max_run_secs}",
+                    "projector_timeout_secs = 2",
+                    "pause_grace_secs = 1",
+                ]
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+        return config_path
+
+    def session_cli_command(self, *, max_run_secs: int = 6) -> list[str]:
+        return [
+            sys.executable,
+            str(Path(__file__).with_name("steward_control.py")),
+            "--config",
+            str(self.write_cli_config(max_run_secs=max_run_secs)),
+            "--json",
+            "session",
+            "--actor",
+            "test",
+        ]
+
+    def start_session_cli(self, *, max_run_secs: int = 6) -> subprocess.Popen[str]:
+        return subprocess.Popen(
+            self.session_cli_command(max_run_secs=max_run_secs),
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            bufsize=1,
+        )
 
     def test_config_precedence_and_portable_relative_paths(self) -> None:
         config_path = self.root / "config/steward.toml"
@@ -320,6 +372,225 @@ class StewardControlTests(unittest.TestCase):
         self.assertEqual(return_code, 7)
         self.assertEqual(result["receipt"]["outcome"], "failed")
         self.assertIsNone(self.controller.leases.lease())
+
+    def test_credential_safe_session_never_returns_raw_token(self) -> None:
+        self.resume()
+        captured: dict[str, str] = {}
+        original_begin = self.controller.begin
+
+        def capture_begin(**kwargs):
+            result = original_begin(**kwargs)
+            captured["token"] = result["lease_token"]
+            return result
+
+        with patch.object(self.controller, "begin", side_effect=capture_begin):
+            session = CredentialSafeSession(self.controller, actor="test")
+            ready = session.begin()
+
+        heartbeat, terminal = session.dispatch(
+            {"op": "heartbeat", "request_id": "heartbeat-1"}
+        )
+        finished, terminal_finish = session.dispatch(
+            {
+                "op": "finish",
+                "request_id": "finish-1",
+                "outcome": "success",
+            }
+        )
+        serialized = json.dumps([ready, heartbeat, finished])
+        self.assertNotIn(captured["token"], serialized)
+        self.assertFalse(ready["lease_token_included"])
+        self.assertFalse(terminal)
+        self.assertTrue(terminal_finish)
+        self.assertEqual(finished["result"]["receipt"]["outcome"], "success")
+        self.assertIsNone(self.controller.leases.lease())
+
+    def test_credential_safe_session_rejects_credential_requests(self) -> None:
+        self.resume()
+        session = CredentialSafeSession(self.controller, actor="test")
+        session.begin()
+        response, terminal = session.dispatch(
+            {
+                "op": "heartbeat",
+                "request_id": "unsafe",
+                "lease_token": "must-not-be-accepted",
+            }
+        )
+        self.assertFalse(response["ok"])
+        self.assertIn("must not carry", response["message"])
+        self.assertFalse(terminal)
+        session.finish(outcome="cancelled")
+
+    def test_lease_token_can_be_read_from_stdin_without_argv(self) -> None:
+        self.assertEqual(
+            read_lease_token(io.StringIO("opaque-value\n")),
+            "opaque-value",
+        )
+        with self.assertRaisesRegex(ValueError, "EOF"):
+            read_lease_token(io.StringIO(""))
+        with self.assertRaisesRegex(ValueError, "empty"):
+            read_lease_token(io.StringIO("\n"))
+
+    def test_session_cli_owns_and_finishes_lease_without_token_output(self) -> None:
+        self.resume()
+        result = subprocess.run(
+            self.session_cli_command(),
+            input=json.dumps(
+                {
+                    "op": "finish",
+                    "request_id": "finish-1",
+                    "outcome": "success",
+                }
+            )
+            + "\n",
+            text=True,
+            capture_output=True,
+            timeout=10,
+            check=False,
+        )
+        responses = [json.loads(line) for line in result.stdout.splitlines()]
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual([item["type"] for item in responses], ["ready", "response"])
+        self.assertFalse(
+            any(
+                "\"lease_token\":" in line
+                for line in result.stdout.splitlines()
+            )
+        )
+        self.assertEqual(
+            responses[-1]["result"]["receipt"]["outcome"],
+            "success",
+        )
+        self.assertIsNone(self.controller.leases.lease())
+
+    def test_session_cli_renews_while_request_line_is_partial(self) -> None:
+        self.resume()
+        process = self.start_session_cli(max_run_secs=8)
+        assert process.stdin is not None
+        assert process.stdout is not None
+        ready = json.loads(process.stdout.readline())
+        self.assertEqual(ready["type"], "ready")
+
+        process.stdin.write('{"op":"finish"')
+        process.stdin.flush()
+        time.sleep(3.4)
+        process.stdin.write(',"request_id":"done","outcome":"success"}\n')
+        process.stdin.flush()
+        stdout, stderr = process.communicate(timeout=10)
+        responses = [json.loads(line) for line in stdout.splitlines()]
+
+        self.assertEqual(process.returncode, 0, stderr)
+        self.assertIn("heartbeat", [item["type"] for item in responses])
+        self.assertEqual(responses[-1]["type"], "response")
+        self.assertEqual(
+            responses[-1]["result"]["receipt"]["outcome"],
+            "success",
+        )
+        self.assertIsNone(self.controller.leases.lease())
+
+    @unittest.skipUnless(hasattr(signal, "SIGTERM"), "SIGTERM unavailable")
+    def test_session_cli_sigterm_cancels_and_releases_lease(self) -> None:
+        self.resume()
+        process = self.start_session_cli()
+        assert process.stdout is not None
+        ready = json.loads(process.stdout.readline())
+        self.assertEqual(ready["type"], "ready")
+
+        process.send_signal(signal.SIGTERM)
+        stdout, stderr = process.communicate(timeout=10)
+        responses = [json.loads(line) for line in stdout.splitlines()]
+
+        self.assertEqual(process.returncode, 128 + signal.SIGTERM, stderr)
+        self.assertEqual(responses[-1]["type"], "terminal")
+        self.assertEqual(responses[-1]["reason"], "sigterm")
+        self.assertEqual(
+            responses[-1]["result"]["receipt"]["outcome"],
+            "cancelled",
+        )
+        self.assertIsNone(self.controller.leases.lease())
+
+    def test_session_cli_eof_cancels_and_releases_lease(self) -> None:
+        self.resume()
+        process = self.start_session_cli()
+        assert process.stdin is not None
+        assert process.stdout is not None
+        ready = json.loads(process.stdout.readline())
+        self.assertEqual(ready["type"], "ready")
+
+        process.stdin.close()
+        process.stdin = None
+        stdout, stderr = process.communicate(timeout=10)
+        responses = [json.loads(line) for line in stdout.splitlines()]
+
+        self.assertEqual(process.returncode, 3, stderr)
+        self.assertEqual(responses[-1]["type"], "terminal")
+        self.assertEqual(responses[-1]["reason"], "eof")
+        self.assertEqual(
+            responses[-1]["result"]["receipt"]["outcome"],
+            "cancelled",
+        )
+        self.assertIsNone(self.controller.leases.lease())
+
+    def test_session_cli_pause_request_cancels_and_releases_lease(self) -> None:
+        self.resume()
+        process = self.start_session_cli()
+        assert process.stdin is not None
+        assert process.stdout is not None
+        ready = json.loads(process.stdout.readline())
+        self.assertEqual(ready["type"], "ready")
+
+        self.controller.pause(actor="test", reason="fixture stop")
+        process.stdin.write('{"op":"status","request_id":"paused"}\n')
+        process.stdin.flush()
+        stdout, stderr = process.communicate(timeout=10)
+        responses = [json.loads(line) for line in stdout.splitlines()]
+
+        self.assertEqual(process.returncode, 3, stderr)
+        self.assertEqual(responses[-1]["type"], "response")
+        self.assertTrue(responses[-1]["terminal"])
+        self.assertEqual(
+            responses[-1]["terminal_reason"],
+            "pause_requested",
+        )
+        self.assertEqual(
+            responses[-1]["result"]["receipt"]["outcome"],
+            "cancelled",
+        )
+        self.assertTrue(self.controller.status()["state"]["paused"])
+        self.assertIsNone(self.controller.leases.lease())
+
+    def test_one_shot_heartbeat_accepts_token_on_stdin(self) -> None:
+        self.resume()
+        begun = self.controller.begin(actor="test")
+        command = [
+            sys.executable,
+            str(Path(__file__).with_name("steward_control.py")),
+            "--config",
+            str(self.write_cli_config()),
+            "--json",
+            "heartbeat",
+            "--run-id",
+            begun["run_id"],
+            "--lease-token-stdin",
+        ]
+        result = subprocess.run(
+            command,
+            input=begun["lease_token"] + "\n",
+            text=True,
+            capture_output=True,
+            timeout=10,
+            check=False,
+        )
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertNotIn(begun["lease_token"], json.dumps(command))
+        self.assertNotIn(begun["lease_token"], result.stdout)
+        self.assertNotIn(begun["lease_token"], result.stderr)
+        self.controller.finish(
+            run_id=begun["run_id"],
+            lease_token=begun["lease_token"],
+            outcome="success",
+        )
 
     def test_subprocess_watchdog_requests_graceful_interrupt(self) -> None:
         self.resume()

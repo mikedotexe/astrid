@@ -9,6 +9,9 @@ Python standard library and supports Python 3.12 or newer.
 - New installations start paused.
 - One opaque 256-bit token owns one live lease. Only its SHA-256 digest is
   persisted.
+- The preferred session adapter retains that token inside one controller
+  process. The token never enters argv, environment variables, NDJSON requests,
+  stdout, or stderr.
 - A pause atomically blocks new leases and causes the next heartbeat to return
   `stop_requested=true`.
 - A live lease is never overwritten or force-killed. Expired or dead-process
@@ -35,32 +38,59 @@ or executable command strings.
 
 ## Session Lifecycle
 
-Begin a cooperative session:
+Start a credential-confined cooperative session:
 
 ```bash
-python3 scripts/steward_control.py --json begin --actor interactive-agent
+python3 scripts/steward_control.py --json session --actor interactive-agent
 ```
 
-Keep the returned token in process memory and renew the lease:
+The command speaks newline-delimited JSON over stdin/stdout. Its first `ready`
+record includes the run ID, pre-projection generation ID, heartbeat interval,
+and `lease_token_included=false`. The controller owns the lease credential and
+renews it automatically while idle. Clients never receive or submit the token.
+
+Send explicit operations as one JSON object per line:
+
+```json
+{"op":"status","request_id":"status-1"}
+{"op":"heartbeat","request_id":"heartbeat-1"}
+{"op":"project","request_id":"project-1","full_rebuild":false}
+{"op":"finish","request_id":"finish-1","outcome":"success"}
+```
+
+Requests are bounded to 64 KiB. `status` is session-local and renews the lease;
+`project` runs a manually requested source-first generation under the same
+lease. `finish` is terminal and preserves the controller's normal post-run
+projection and git-policy checks. The session cancels and releases its lease on
+pause, clean EOF, timeout, `SIGINT`, `SIGTERM`, or `SIGHUP`. A hard kill remains
+recoverable through TTL expiry and `reconcile`.
+
+`run --actor NAME --max-secs N -- ARGV...` remains the shell-free adapter for
+one child process. It also retains the token inside the controller process.
+
+### Compatibility Credential Transport
+
+`begin`, `heartbeat`, `project`, and `finish` remain available for older
+clients. They are a compatibility path, not the preferred interactive
+lifecycle. A client that already holds a token in private process memory should
+send it as one line on stdin:
 
 ```bash
 python3 scripts/steward_control.py --json heartbeat \
   --run-id RUN_ID \
-  --lease-token TOKEN
+  --lease-token-stdin
 ```
 
-Finish exactly once:
+The legacy `--lease-token TOKEN` form is retained for compatibility but emits a
+warning because process arguments can be observed by process listings and
+execution transcripts. `begin` still returns a token for those clients, so it
+must not be used on a surface that records command output. New interactive
+clients should use `session` instead.
 
-```bash
-python3 scripts/steward_control.py --json finish \
-  --run-id RUN_ID \
-  --lease-token TOKEN \
-  --outcome success
-```
-
-`begin` and a successful `finish` run pre/post source-first projection
-generations. `run --actor NAME --max-secs N -- ARGV...` provides the same
-lifecycle around a subprocess without shell interpolation.
+The session protocol cannot execute commands, edit files, stage git changes,
+deploy services, grant approvals, or expand live-control authority. It only
+confines lifecycle authentication and exposes the controller operations already
+available to the lease owner.
 
 ## Pause And Recovery
 

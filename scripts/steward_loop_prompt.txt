@@ -1,5 +1,7 @@
 This legacy prompt entry point is retired and intentionally inert.
 
-Use scripts/steward_control.py begin, heartbeat, and finish for cooperative
+Use scripts/steward_control.py session for credential-confined cooperative
 sessions, or project for an explicitly leased source-first projection
-generation. Scheduling remains external to the controller.
+generation. The legacy begin/heartbeat/finish path is compatibility-only and
+must use stdin rather than argv for any held credential. Scheduling remains
+external to the controller.

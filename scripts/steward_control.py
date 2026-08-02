@@ -17,6 +17,7 @@ try:
         load_config,
     )
     from steward_control.executor import run_subprocess
+    from steward_control.session import read_lease_token, run_session
 except ModuleNotFoundError:
     from scripts.steward_control import (
         StewardController,
@@ -25,6 +26,39 @@ except ModuleNotFoundError:
     )
     from scripts.steward_control.errors import ProjectionCancelledError
     from scripts.steward_control.executor import run_subprocess
+    from scripts.steward_control.session import read_lease_token, run_session
+
+
+def add_lease_token_source(
+    command: argparse.ArgumentParser,
+    *,
+    required: bool,
+) -> None:
+    sources = command.add_mutually_exclusive_group(required=required)
+    sources.add_argument(
+        "--lease-token",
+        help="legacy argv transport; prefer --lease-token-stdin or session",
+    )
+    sources.add_argument(
+        "--lease-token-stdin",
+        action="store_true",
+        help="read one lease token line from stdin",
+    )
+
+
+def resolve_lease_token(args: argparse.Namespace) -> str | None:
+    if getattr(args, "lease_token_stdin", False):
+        return read_lease_token(sys.stdin)
+    token = getattr(args, "lease_token", None)
+    if token is not None and not token:
+        raise ValueError("lease token cannot be empty")
+    if token is not None:
+        print(
+            "warning: --lease-token exposes the lease credential in process "
+            "arguments; use session or --lease-token-stdin",
+            file=sys.stderr,
+        )
+    return token
 
 
 def emit(value: Any, as_json: bool) -> None:
@@ -68,11 +102,11 @@ def parser() -> argparse.ArgumentParser:
 
     heartbeat = commands.add_parser("heartbeat")
     heartbeat.add_argument("--run-id", required=True)
-    heartbeat.add_argument("--lease-token", required=True)
+    add_lease_token_source(heartbeat, required=True)
 
     finish = commands.add_parser("finish")
     finish.add_argument("--run-id", required=True)
-    finish.add_argument("--lease-token", required=True)
+    add_lease_token_source(finish, required=True)
     finish.add_argument(
         "--outcome",
         choices=("success", "failed", "cancelled", "policy_violation"),
@@ -86,7 +120,7 @@ def parser() -> argparse.ArgumentParser:
     project = commands.add_parser("project")
     project.add_argument("--actor", default="interactive-agent")
     project.add_argument("--run-id")
-    project.add_argument("--lease-token")
+    add_lease_token_source(project, required=False)
     project.add_argument(
         "--phase",
         choices=("pre", "post", "manual"),
@@ -101,6 +135,13 @@ def parser() -> argparse.ArgumentParser:
     run.add_argument("--actor", default="interactive-agent")
     run.add_argument("--max-secs", type=int)
     run.add_argument("argv", nargs=argparse.REMAINDER)
+
+    session = commands.add_parser(
+        "session",
+        help="run a credential-confined NDJSON stewardship session",
+    )
+    session.add_argument("--actor", default="interactive-agent")
+    session.add_argument("--max-secs", type=int)
     return result
 
 
@@ -164,12 +205,12 @@ def main(argv: list[str] | None = None) -> int:
         elif args.command == "heartbeat":
             value = controller.heartbeat(
                 run_id=args.run_id,
-                lease_token=args.lease_token,
+                lease_token=str(resolve_lease_token(args)),
             )
         elif args.command == "finish":
             value = controller.finish(
                 run_id=args.run_id,
-                lease_token=args.lease_token,
+                lease_token=str(resolve_lease_token(args)),
                 outcome=args.outcome,
                 exit_code=args.exit_code,
                 summary_ref=args.summary_ref,
@@ -184,54 +225,57 @@ def main(argv: list[str] | None = None) -> int:
                 )
             elif args.dry_run:
                 value = controller.projections.plan()
-            elif bool(args.run_id) != bool(args.lease_token):
-                raise ValueError(
-                    "--run-id and --lease-token must be supplied together"
-                )
-            elif args.run_id:
-                value = controller.project(
-                    run_id=args.run_id,
-                    lease_token=args.lease_token,
-                    actor=args.actor,
-                    phase=args.phase,
-                    full_rebuild=args.full_rebuild,
-                    resume_generation=args.resume_generation,
-                )
             else:
-                begun = controller.begin(
-                    actor=args.actor,
-                    adapter_kind="session",
-                    project_before=False,
-                )
-                try:
+                lease_token = resolve_lease_token(args)
+                if bool(args.run_id) != bool(lease_token):
+                    raise ValueError(
+                        "--run-id and a lease-token source must be supplied "
+                        "together"
+                    )
+                if args.run_id:
                     value = controller.project(
-                        run_id=begun["run_id"],
-                        lease_token=begun["lease_token"],
+                        run_id=args.run_id,
+                        lease_token=str(lease_token),
                         actor=args.actor,
                         phase=args.phase,
                         full_rebuild=args.full_rebuild,
                         resume_generation=args.resume_generation,
                     )
-                except BaseException as error:
+                else:
+                    begun = controller.begin(
+                        actor=args.actor,
+                        adapter_kind="session",
+                        project_before=False,
+                    )
+                    try:
+                        value = controller.project(
+                            run_id=begun["run_id"],
+                            lease_token=begun["lease_token"],
+                            actor=args.actor,
+                            phase=args.phase,
+                            full_rebuild=args.full_rebuild,
+                            resume_generation=args.resume_generation,
+                        )
+                    except BaseException as error:
+                        controller.finish(
+                            run_id=begun["run_id"],
+                            lease_token=begun["lease_token"],
+                            outcome=(
+                                "cancelled"
+                                if isinstance(error, ProjectionCancelledError)
+                                else "failed"
+                            ),
+                            summary_ref="manual_projection_failed",
+                            project_after=False,
+                        )
+                        raise
                     controller.finish(
                         run_id=begun["run_id"],
                         lease_token=begun["lease_token"],
-                        outcome=(
-                            "cancelled"
-                            if isinstance(error, ProjectionCancelledError)
-                            else "failed"
-                        ),
-                        summary_ref="manual_projection_failed",
+                        outcome="success",
+                        summary_ref="manual_projection",
                         project_after=False,
                     )
-                    raise
-                controller.finish(
-                    run_id=begun["run_id"],
-                    lease_token=begun["lease_token"],
-                    outcome="success",
-                    summary_ref="manual_projection",
-                    project_after=False,
-                )
         elif args.command == "run":
             command = list(args.argv)
             if command and command[0] == "--":
@@ -244,6 +288,12 @@ def main(argv: list[str] | None = None) -> int:
             )
             emit(value, args.json)
             return return_code
+        elif args.command == "session":
+            return run_session(
+                controller,
+                actor=args.actor,
+                max_secs=args.max_secs,
+            )
         else:  # pragma: no cover - argparse owns command validation
             raise AssertionError(args.command)
     except StewardControlError as error:
