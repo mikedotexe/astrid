@@ -141,6 +141,18 @@ const WASM_CAPSULE_TIMEOUT_SECS: u64 = 5 * 60;
 /// granularity is `EPOCH_TICK_INTERVAL * epoch_deadline`.
 const EPOCH_TICK_INTERVAL: std::time::Duration = std::time::Duration::from_millis(100);
 
+/// A practically unbounded deadline delta that remains safe when Wasmtime
+/// adds it to a non-zero current epoch.
+const IDLE_EPOCH_DEADLINE_TICKS: u64 = u64::MAX / 2;
+
+fn wasm_capsule_timeout_ticks() -> u64 {
+    let tick_ms = u64::try_from(EPOCH_TICK_INTERVAL.as_millis()).unwrap_or(u64::MAX);
+    WASM_CAPSULE_TIMEOUT_SECS
+        .saturating_mul(1000)
+        .checked_div(tick_ms)
+        .unwrap_or(u64::MAX)
+}
+
 /// Executes WASM Components via the wasmtime Component Model.
 ///
 /// This engine sandboxes execution in wasmtime and wires the
@@ -593,23 +605,12 @@ impl ExecutionEngine for WasmEngine {
                 // Memory limit: 64 MB per capsule (matches old Extism setting).
                 store.limiter(|state| &mut state.store_limits);
 
-                // Epoch-based timeout for non-daemon capsules.
-                // Long-lived capsules (uplinks, run-loop daemons) must not
-                // have a wall-clock timeout. Other capsules get a safety
-                // timeout — generous enough for interceptors that do streaming HTTP
-                // (e.g. LLM providers) while still catching runaways.
-                if !starts_run_loop {
-                    // Each epoch tick is EPOCH_TICK_INTERVAL (100ms). Set the
-                    // deadline so total timeout ≈ WASM_CAPSULE_TIMEOUT_SECS.
-                    let deadline =
-                        WASM_CAPSULE_TIMEOUT_SECS * 1000 / EPOCH_TICK_INTERVAL.as_millis() as u64;
-                    store.set_epoch_deadline(deadline);
-                } else {
-                    // Long-lived capsules: set deadline to u64::MAX so the epoch
-                    // ticker doesn't trap them. Without this, the default deadline
-                    // of 0 would cause an immediate trap on the first tick.
-                    store.set_epoch_deadline(u64::MAX);
-                }
+                // Keep persistent stores unbounded while idle. Direct
+                // interceptor calls install a scoped deadline immediately
+                // before entering the guest and restore this idle value after
+                // returning. Run-loop capsules remain unbounded for their
+                // lifetime.
+                store.set_epoch_deadline(IDLE_EPOCH_DEADLINE_TICKS);
 
                 let mut linker: Linker<HostState> = Linker::new(&wt_engine);
 
@@ -939,6 +940,11 @@ impl ExecutionEngine for WasmEngine {
             let mut s = store
                 .lock()
                 .map_err(|e| CapsuleError::WasmError(format!("store lock poisoned: {e}")))?;
+            // `set_epoch_deadline` is relative to the engine's current epoch.
+            // The direct instance path is used only by short-lived capsules;
+            // run-loop capsules keep their instance inside the background
+            // task and cannot reach this call.
+            s.set_epoch_deadline(wasm_capsule_timeout_ticks());
             instance
                 .call_astrid_hook_trigger(&mut *s, action, payload)
                 .map_err(|e| CapsuleError::WasmError(format!("astrid_hook_trigger failed: {e:?}")))
@@ -959,6 +965,10 @@ impl ExecutionEngine for WasmEngine {
                     poisoned.into_inner()
                 },
             };
+            // An invocation deadline must not become a process-age deadline
+            // after the guest returns. Restore the unbounded idle state before
+            // any future call can enter this store.
+            s.set_epoch_deadline(IDLE_EPOCH_DEADLINE_TICKS);
             let state = s.data_mut();
             state.caller_context = None;
             state.invocation_kv = None;
@@ -1264,6 +1274,13 @@ fn wasm_exports_contain(name: &str, wasm_bytes: &[u8]) -> bool {
 mod tests {
     use super::*;
     use std::sync::{Arc, Mutex};
+
+    #[test]
+    fn short_lived_timeout_is_expressed_in_epoch_ticks() {
+        assert_eq!(wasm_capsule_timeout_ticks(), 3000);
+        assert!(IDLE_EPOCH_DEADLINE_TICKS > wasm_capsule_timeout_ticks());
+        assert!(IDLE_EPOCH_DEADLINE_TICKS < u64::MAX);
+    }
 
     /// Poisons a mutex by panicking while holding the lock.
     fn poison_mutex<T: Send + 'static>(mutex: &Arc<Mutex<T>>) {

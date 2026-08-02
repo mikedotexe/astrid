@@ -77,6 +77,16 @@ impl sys::Host for HostState {
                             if !matches!(capsule.state(), crate::capsule::CapsuleState::Ready) {
                                 continue;
                             }
+                            if request.hook == "prompt_builder.v1.hook.before_build"
+                                && !capsule.manifest().capabilities.allow_prompt_injection
+                            {
+                                tracing::warn!(
+                                    capsule_id = %capsule.id(),
+                                    hook = %request.hook,
+                                    "Skipping prompt hook target without allow_prompt_injection"
+                                );
+                                continue;
+                            }
                             for interceptor in &capsule.manifest().interceptors {
                                 if crate::topic::topic_matches(&request.hook, &interceptor.event) {
                                     matches.push((

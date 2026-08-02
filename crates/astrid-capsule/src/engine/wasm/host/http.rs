@@ -1,6 +1,6 @@
-use reqwest::header::{HeaderMap, HeaderName, HeaderValue};
+use reqwest::header::{CONNECTION, HeaderMap, HeaderName, HeaderValue};
 use std::sync::Arc;
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
 use crate::engine::wasm::bindings::astrid::capsule::http;
 use crate::engine::wasm::bindings::astrid::capsule::types::{
@@ -14,11 +14,16 @@ use crate::engine::wasm::host_state::HostState;
 /// A DNS resolver that prevents SSRF by blocking resolution to local,
 /// private, or multicast IP addresses.
 #[derive(Clone)]
-struct SafeDnsResolver;
+struct SafeDnsResolver {
+    /// Permit private resolution only for an explicitly allowlisted request
+    /// origin. This is scoped per client/request rather than process-wide.
+    allow_local_origin: bool,
+}
 
 impl reqwest::dns::Resolve for SafeDnsResolver {
     fn resolve(&self, name: reqwest::dns::Name) -> reqwest::dns::Resolving {
         let name_str = name.as_str().to_string();
+        let allow_local_origin = self.allow_local_origin;
         Box::pin(async move {
             let addrs = tokio::net::lookup_host((name_str.as_str(), 0))
                 .await
@@ -26,7 +31,7 @@ impl reqwest::dns::Resolve for SafeDnsResolver {
 
             let mut safe_addrs = Vec::new();
             for addr in addrs {
-                if is_safe_ip(addr.ip()) {
+                if allow_local_origin || is_safe_ip(addr.ip()) {
                     safe_addrs.push(addr);
                 }
             }
@@ -64,6 +69,76 @@ static SSRF_BYPASS: std::sync::LazyLock<bool> = std::sync::LazyLock::new(|| {
     }
     false
 });
+
+/// Exact `capsule@host:port` bindings that may resolve to private addresses.
+///
+/// Unlike `ASTRID_ALLOW_LOCAL_IPS`, this does not weaken unrelated capsules
+/// or public-web requests. A typical local-provider deployment sets only
+/// `astrid-capsule-openai-compat@127.0.0.1:11434`.
+static LOCAL_HTTP_ALLOWLIST: std::sync::LazyLock<Vec<String>> = std::sync::LazyLock::new(|| {
+    let entries = std::env::var("ASTRID_LOCAL_HTTP_ALLOWLIST")
+        .unwrap_or_default()
+        .split(',')
+        .map(str::trim)
+        .filter(|entry| !entry.is_empty())
+        .map(str::to_ascii_lowercase)
+        .collect::<Vec<_>>();
+    if !entries.is_empty() {
+        tracing::info!(
+            origins = ?entries,
+            "private HTTP access enabled for exact local origins"
+        );
+    }
+    entries
+});
+
+fn local_origin_allowed(capsule_id: &str, url: &reqwest::Url) -> bool {
+    origin_allowed_by(capsule_id, url, &LOCAL_HTTP_ALLOWLIST)
+}
+
+fn origin_allowed_by(capsule_id: &str, url: &reqwest::Url, allowlist: &[String]) -> bool {
+    let Some(host) = url.host_str() else {
+        return false;
+    };
+    let Some(port) = url.port_or_known_default() else {
+        return false;
+    };
+    let binding = format!(
+        "{}@{}:{port}",
+        capsule_id.to_ascii_lowercase(),
+        host.to_ascii_lowercase()
+    );
+    allowlist.iter().any(|entry| entry == &binding)
+}
+
+fn validate_direct_ip(url: &reqwest::Url, allow_local_origin: bool) -> Result<(), String> {
+    if allow_local_origin {
+        return Ok(());
+    }
+    let ip = url
+        .host_str()
+        .and_then(|host| host.parse::<std::net::IpAddr>().ok());
+    if ip.is_some_and(|ip| !is_safe_ip(ip)) {
+        return Err("HTTP request targets an unauthorized private or local IP address".to_string());
+    }
+    Ok(())
+}
+
+fn redirect_policy(allow_local_origin: bool) -> reqwest::redirect::Policy {
+    if allow_local_origin {
+        return reqwest::redirect::Policy::none();
+    }
+
+    reqwest::redirect::Policy::custom(|attempt| {
+        if attempt.previous().len() >= 10 {
+            return attempt.error("HTTP redirect limit exceeded");
+        }
+        if let Err(reason) = validate_direct_ip(attempt.url(), false) {
+            return attempt.error(reason);
+        }
+        attempt.follow()
+    })
+}
 
 fn is_safe_ip(mut ip: std::net::IpAddr) -> bool {
     if *SSRF_BYPASS {
@@ -167,10 +242,56 @@ fn check_http_security(
 
 /// Maximum concurrent HTTP streaming responses per capsule.
 const MAX_ACTIVE_HTTP_STREAMS: usize = 4;
-/// Connect timeout for streaming HTTP requests (time to first byte).
+/// Connect timeout for streaming HTTP requests.
 const HTTP_STREAM_CONNECT_TIMEOUT: Duration = Duration::from_secs(30);
+/// Maximum time to wait for streaming response headers.
+const HTTP_STREAM_START_TIMEOUT: Duration = Duration::from_secs(300);
 /// Per-chunk read timeout for streaming HTTP responses.
 const HTTP_STREAM_READ_TIMEOUT: Duration = Duration::from_secs(120);
+
+/// Loopback provider header deadline. Public requests always retain the fixed
+/// deadline above; this setting applies only after an exact
+/// capsule@host:port allowlist match.
+static LOCAL_HTTP_STREAM_START_TIMEOUT: std::sync::LazyLock<Duration> =
+    std::sync::LazyLock::new(|| {
+        let raw = std::env::var("ASTRID_LOCAL_HTTP_RESPONSE_HEADER_TIMEOUT_SECONDS").ok();
+        let seconds = local_header_timeout_seconds(raw.as_deref());
+        if raw.is_some() {
+            tracing::info!(
+                seconds,
+                "configured response-header deadline for exact local HTTP origins"
+            );
+        }
+        Duration::from_secs(seconds)
+    });
+
+fn local_header_timeout_seconds(raw: Option<&str>) -> u64 {
+    raw.and_then(|value| value.trim().parse::<u64>().ok())
+        .filter(|seconds| (60..=600).contains(seconds))
+        .unwrap_or(HTTP_STREAM_START_TIMEOUT.as_secs())
+}
+
+fn response_header_timeout(allow_local_origin: bool) -> Duration {
+    if allow_local_origin {
+        *LOCAL_HTTP_STREAM_START_TIMEOUT
+    } else {
+        HTTP_STREAM_START_TIMEOUT
+    }
+}
+
+async fn send_stream_request(
+    request: reqwest::RequestBuilder,
+    start_timeout: Duration,
+) -> Result<reqwest::Response, String> {
+    match tokio::time::timeout(start_timeout, request.send()).await {
+        Ok(Ok(response)) => Ok(response),
+        Ok(Err(error)) => Err(format!("HTTP stream request failed: {error}")),
+        Err(_) => Err(format!(
+            "HTTP stream response headers timed out after {}s",
+            start_timeout.as_secs()
+        )),
+    }
+}
 
 impl http::Host for HostState {
     fn http_request(&mut self, request: HttpRequestData) -> Result<HttpResponseData, String> {
@@ -181,16 +302,21 @@ impl http::Host for HostState {
 
         check_http_security(
             &security,
-            capsule_id,
+            capsule_id.clone(),
             &request.url,
             &request.method,
             &runtime_handle,
             &host_semaphore,
         )?;
 
+        let parsed_url =
+            reqwest::Url::parse(&request.url).map_err(|e| format!("invalid url: {e}"))?;
+        let allow_local_origin = local_origin_allowed(&capsule_id, &parsed_url);
+        validate_direct_ip(&parsed_url, allow_local_origin)?;
         let client = reqwest::Client::builder()
             .timeout(Duration::from_secs(30))
-            .dns_resolver(Arc::new(SafeDnsResolver))
+            .redirect(redirect_policy(allow_local_origin))
+            .dns_resolver(Arc::new(SafeDnsResolver { allow_local_origin }))
             .build()
             .map_err(|e| format!("failed to build http client: {e}"))?;
 
@@ -264,32 +390,61 @@ impl http::Host for HostState {
 
         check_http_security(
             &security,
-            capsule_id,
+            capsule_id.clone(),
             &request.url,
             &request.method,
             &runtime_handle,
             &host_semaphore,
         )?;
 
-        let client = reqwest::Client::builder()
+        let parsed_url =
+            reqwest::Url::parse(&request.url).map_err(|e| format!("invalid url: {e}"))?;
+        let allow_local_origin = local_origin_allowed(&capsule_id, &parsed_url);
+        validate_direct_ip(&parsed_url, allow_local_origin)?;
+        let mut client_builder = reqwest::Client::builder()
             .connect_timeout(HTTP_STREAM_CONNECT_TIMEOUT)
-            .dns_resolver(Arc::new(SafeDnsResolver))
+            .redirect(redirect_policy(allow_local_origin))
+            .dns_resolver(Arc::new(SafeDnsResolver { allow_local_origin }));
+        if allow_local_origin {
+            // Local inference providers are long-lived while their individual
+            // generations are not. Do not let a half-open loopback response
+            // become the transport inherited by a later model turn.
+            client_builder = client_builder.pool_max_idle_per_host(0);
+        }
+        let client = client_builder
             .build()
             .map_err(|e| format!("failed to build http client: {e}"))?;
 
         let method = parse_method(&request.method)?;
-        let headers = build_headers(&request.headers)?;
+        let mut headers = build_headers(&request.headers)?;
+        if allow_local_origin {
+            headers.insert(CONNECTION, HeaderValue::from_static("close"));
+        }
 
         let mut request_builder = client.request(method, &request.url).headers(headers);
         if let Some(body) = request.body {
             request_builder = request_builder.body(body);
         }
 
-        // Send request and wait for headers (not body).
-        let response = util::bounded_block_on(&runtime_handle, &host_semaphore, async move {
-            request_builder.send().await
-        })
-        .map_err(|e| format!("http stream request failed: {e}"))?;
+        // Sending includes waiting for response headers. It must be both
+        // bounded and cancellable: otherwise one provider request can pin the
+        // capsule run loop after its caller has already timed out.
+        let cancel_token = self.cancel_token.clone();
+        let started_at = Instant::now();
+        let result = util::bounded_block_on_cancellable(
+            &runtime_handle,
+            &host_semaphore,
+            &cancel_token,
+            send_stream_request(request_builder, response_header_timeout(allow_local_origin)),
+        );
+        let response = result
+            .ok_or_else(|| "HTTP stream request cancelled during capsule shutdown".to_string())??;
+        tracing::info!(
+            capsule_id = %capsule_id,
+            origin = %parsed_url.origin().ascii_serialization(),
+            elapsed_ms = started_at.elapsed().as_millis(),
+            "HTTP stream response headers received"
+        );
 
         let status = response.status().as_u16();
 
@@ -376,6 +531,94 @@ mod tests {
     use super::*;
     use std::net::IpAddr;
     use std::str::FromStr;
+    use tokio::io::{AsyncReadExt as _, AsyncWriteExt as _};
+
+    #[test]
+    fn local_origin_allowlist_requires_exact_capsule_host_and_port() {
+        let allowlist = vec!["astrid-capsule-openai-compat@127.0.0.1:11434".to_string()];
+        assert!(origin_allowed_by(
+            "astrid-capsule-openai-compat",
+            &reqwest::Url::parse("http://127.0.0.1:11434/v1/chat/completions").unwrap(),
+            &allowlist
+        ));
+        assert!(!origin_allowed_by(
+            "astrid-capsule-http",
+            &reqwest::Url::parse("http://127.0.0.1:11434/api/tags").unwrap(),
+            &allowlist
+        ));
+        assert!(!origin_allowed_by(
+            "astrid-capsule-openai-compat",
+            &reqwest::Url::parse("http://127.0.0.1:8080/admin").unwrap(),
+            &allowlist
+        ));
+        assert!(!origin_allowed_by(
+            "astrid-capsule-openai-compat",
+            &reqwest::Url::parse("http://192.168.2.1:11434/").unwrap(),
+            &allowlist
+        ));
+    }
+
+    #[test]
+    fn direct_private_ip_requires_allowlisted_origin() {
+        let url = reqwest::Url::parse("http://127.0.0.1:11434/").unwrap();
+        assert!(validate_direct_ip(&url, false).is_err());
+        assert!(validate_direct_ip(&url, true).is_ok());
+    }
+
+    #[test]
+    fn local_header_deadline_is_bounded_and_public_deadline_is_fixed() {
+        assert_eq!(local_header_timeout_seconds(None), 300);
+        assert_eq!(local_header_timeout_seconds(Some("420")), 420);
+        assert_eq!(local_header_timeout_seconds(Some("59")), 300);
+        assert_eq!(local_header_timeout_seconds(Some("601")), 300);
+        assert_eq!(local_header_timeout_seconds(Some("not-a-number")), 300);
+        assert_eq!(response_header_timeout(false), Duration::from_secs(300));
+    }
+
+    #[tokio::test]
+    async fn stalled_response_headers_time_out_without_poisoning_next_request() {
+        let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let address = listener.local_addr().unwrap();
+        let server = tokio::spawn(async move {
+            let (mut stalled, _) = listener.accept().await.unwrap();
+            let mut request = [0_u8; 1_024];
+            let _ = stalled.read(&mut request).await.unwrap();
+
+            let (mut healthy, _) = listener.accept().await.unwrap();
+            let _ = healthy.read(&mut request).await.unwrap();
+            healthy
+                .write_all(b"HTTP/1.1 200 OK\r\nContent-Length: 2\r\nConnection: close\r\n\r\nok")
+                .await
+                .unwrap();
+        });
+        let url = format!("http://{address}/stream");
+
+        let stalled_client = reqwest::Client::builder()
+            .pool_max_idle_per_host(0)
+            .build()
+            .unwrap();
+        let error = send_stream_request(
+            stalled_client.get(&url).header(CONNECTION, "close"),
+            Duration::from_millis(50),
+        )
+        .await
+        .unwrap_err();
+        assert!(error.contains("response headers timed out"));
+
+        let healthy_client = reqwest::Client::builder()
+            .pool_max_idle_per_host(0)
+            .build()
+            .unwrap();
+        let response = send_stream_request(
+            healthy_client.get(&url).header(CONNECTION, "close"),
+            Duration::from_secs(1),
+        )
+        .await
+        .unwrap();
+        assert_eq!(response.status(), reqwest::StatusCode::OK);
+        assert_eq!(response.text().await.unwrap(), "ok");
+        server.await.unwrap();
+    }
 
     #[test]
     fn safe_public_ips() {
