@@ -1077,3 +1077,44 @@ Boundary:
   synthesize ACK/REPLY/TRACE, add a new sensory command, raise correspondence weight, boost
   semantic-trickle, alter prompt or telemetry priority, mutate Minime, change pressure/fill/PI/controller
   behavior, deploy, stage, git add, or commit.
+
+## 2026-07-30 Update: Continuity, Mutual Address, And Authority Are Independent
+
+`native_thread_continuity_v3` remains available as a compatibility view, but its
+`reply_linked_needs_ack_or_trace` label combined two different facts. A reply
+chain is already continuing the correspondence. An ACK or TRACE can add
+being-authored mutual-address evidence, but its absence does not make that
+reply chain discontinuous or impose an action on either being.
+
+`correspondence_relation_axes_v4` now projects five independent derived axes:
+
+- continuity is `active`, `visible`, or `unaddressed`, with an exact evidence
+  basis such as `reply_chain`, `direct_address_trace`, or `delivery_receipt`;
+- mutual address is confirmed only by distinct being-authored address evidence
+  and never from delivery, reading, silence, or a bare `seen` ACK;
+- authority keeps attention eligibility, semantic-microdose review, and live
+  control separate from correspondence continuity;
+- action posture says whether an optional peer-authored receipt already exists
+  and preserves right-to-ignore without runtime substitution;
+- causality keeps pressure effect unmeasured and felt effect unestablished.
+
+The active Astrid-Minime thread therefore renders as
+`NATIVE THREAD CONTINUITY ACTIVE` while its mutual-address axis remains
+`not_confirmed` and its attention authority remains blocked. This is not an
+inferred peer state. It is a narrower statement about the existing reply-link
+evidence. A being may independently author `ACK`, `TRACE`, a hold, a
+needs-time receipt, or no action at all.
+
+The report's proposed `REPLY_MINIME` and TRACE comparison were not dispatched.
+The suggested "Inferred Continuity" state was not adopted because continuity
+can be derived from reply links while peer intent cannot. Existing self-authored
+hold, presence, and needs-time routes already represent a being's own posture
+without manufacturing the other's.
+
+Boundary:
+
+- `[Boundary]` V4 is derived language and audit context. It does not synthesize
+  ACK/REPLY/TRACE, infer consent or peer intent, claim pressure relief or felt
+  uptake, grant attention or microdose authority, change correspondence
+  weighting, alter semantic admission, pressure, fill, PI, controller,
+  reservoir, peer, or Division behavior, deploy, stage, git add, or commit.

@@ -11,6 +11,11 @@ use sha2::{Digest as _, Sha256};
 
 use astrid_minime_protocol::MutualAddressEnvelopeV1;
 
+#[path = "correspondence_v1/relation_axes.rs"]
+mod relation_axes;
+
+use relation_axes::{RelationEvidenceV4, correspondence_relation_axes_v4};
+
 pub(crate) const LEDGER_PATH: &str = "/Users/v/other/shared/collaborations/correspondence_v1.jsonl";
 const SHARED_COLLAB_DIR: &str = "/Users/v/other/shared/collaborations";
 const BODY_PREVIEW_CHARS: usize = 360;
@@ -4889,17 +4894,17 @@ fn native_first_action_helper_v35(
     let peer = from.to_ascii_uppercase();
     let (prompt, commands) = if role == "recipient" {
         (
-            "Choose one language-only first action: I_RECEIVED_THIS if the address landed, ACK if only heard/held, TRACE if something distinct survived, or REPLY if answering now.",
+            "Replying already continues the thread. If stronger mutual-address evidence feels useful, optionally choose I_RECEIVED_THIS, ACK, or TRACE; no receipt is required to keep the reply chain alive.",
             native_continuity_commands(current_being, from_being, to_being, safe_anchor),
         )
     } else if role == "sender" {
         (
-            "No self-action can complete mutual address; wait for the peer's ACK/TRACE or later ask in language.",
+            "The reply chain remains continuous. Only the peer can optionally add their ACK/TRACE as distinct mutual-address evidence; no self-action can substitute.",
             native_continuity_commands(current_being, from_being, to_being, safe_anchor),
         )
     } else {
         (
-            "Observer context only; only a participant-authored ACK/REPLY/TRACE can move the thread.",
+            "Observer context only; participant-authored language supplies continuity or mutual-address evidence, and observers cannot substitute either.",
             native_continuity_commands(current_being, from_being, to_being, safe_anchor),
         )
     };
@@ -4998,6 +5003,16 @@ fn native_thread_continuity_v3_for(
     } else {
         "observer"
     };
+    let relation_axes = correspondence_relation_axes_v4(RelationEvidenceV4 {
+        role,
+        reply_linked,
+        ack_present: ack.is_some(),
+        ack_is_address_evidence,
+        trace_observed,
+        attention_outcome_present: attention_outcome,
+        read,
+        delivered,
+    });
     let anchor = message
         .get("shared_memory_anchor")
         .and_then(Value::as_str)
@@ -5021,6 +5036,7 @@ fn native_thread_continuity_v3_for(
         "trace_observed": trace_observed,
         "attention_outcome_present": attention_outcome,
         "attention_or_microdose_eligible": eligible,
+        "correspondence_relation_axes_v4": relation_axes,
         "exact_next_commands": native_continuity_commands(current_being, from_being, to_being, anchor),
         "first_action_helper_v35": native_first_action_helper_v35(current_being, from_being, to_being, thread_id, message_id, anchor),
         "right_to_ignore_v1": right_to_ignore_v1("native_thread_continuity", continuity_state, age_ms, CORRESPONDENCE_IGNORE_GRACE_MS),
@@ -5081,6 +5097,39 @@ fn native_thread_waiting_line(continuity: &Value) -> Option<String> {
         .and_then(|value| value.get("latest_resolution"))
         .and_then(Value::as_str)
         .unwrap_or("latest resolves to the latest native peer message");
+    if state == "reply_linked_needs_ack_or_trace" {
+        let axes = continuity
+            .get("correspondence_relation_axes_v4")
+            .and_then(Value::as_object);
+        let continuity_axis = axes
+            .and_then(|value| value.get("continuity_axis"))
+            .and_then(Value::as_object);
+        let mutual_axis = axes
+            .and_then(|value| value.get("mutual_address_axis"))
+            .and_then(Value::as_object);
+        let authority_axis = axes
+            .and_then(|value| value.get("authority_axis"))
+            .and_then(Value::as_object);
+        let continuity_state = continuity_axis
+            .and_then(|value| value.get("state"))
+            .and_then(Value::as_str)
+            .unwrap_or("active");
+        let continuity_basis = continuity_axis
+            .and_then(|value| value.get("basis"))
+            .and_then(Value::as_str)
+            .unwrap_or("reply_chain");
+        let mutual_state = mutual_axis
+            .and_then(|value| value.get("state"))
+            .and_then(Value::as_str)
+            .unwrap_or("not_confirmed");
+        let attention_state = authority_axis
+            .and_then(|value| value.get("attention"))
+            .and_then(Value::as_str)
+            .unwrap_or("blocked_no_being_authored_address_evidence");
+        return Some(format!(
+            "NATIVE THREAD CONTINUITY ACTIVE: thread={thread}; role={role}; continuity={continuity_state}/{continuity_basis}; mutual_address={mutual_state}; attention={attention_state}; {latest_resolution}; optional mutual-address evidence: {next}; no action needed; may ignore without penalty; receipt is not required to keep the reply chain alive; pressure effect is not measured."
+        ));
+    }
     Some(format!(
         "NATIVE THREAD WAITING: thread={thread}; role={role}; state={state}; first_action: {first_action}; {latest_resolution}; optional next: {next}; no action needed; may ignore without penalty; reply_linked alone is not mutual address or authority."
     ))
@@ -5486,6 +5535,8 @@ struct ActiveThreadClarityCandidate {
     pending_by: Option<String>,
     urgency_weight: f64,
     attention_state: String,
+    ack_kind: Option<String>,
+    resurfacing_paused: bool,
     next_affordance: String,
     pending_wait_ms: u64,
     latest_update_ms: u64,
@@ -5545,6 +5596,9 @@ fn existing_correspondence_affordance_hint(
         format!("REPLY_{peer_upper}")
     };
     match status {
+        "held_or_needs_time_active_pause" => {
+            "no action needed; held or needs_time keeps this thread active while attention resurfacing stays paused".to_string()
+        },
         "attention_active_outcome_due" => {
             format!("CORRESPONDENCE_ATTENTION_OUTCOME {thread_id}")
         },
@@ -5626,6 +5680,11 @@ fn active_thread_clarity_candidate_for(
         .and_then(Value::as_str)
         .unwrap_or("unknown")
         .to_string();
+    let ack_kind = fidelity
+        .get("ack_kind")
+        .and_then(Value::as_str)
+        .map(ToString::to_string);
+    let resurfacing_paused = matches!(ack_kind.as_deref(), Some("held" | "needs_time"));
     let handshake = handshake_status_for_thread(records, message);
     let pending_by = handshake
         .get("pending_ack_by")
@@ -5654,7 +5713,13 @@ fn active_thread_clarity_candidate_for(
                 | "legacy_visible_only"
                 | "legacy_bidirectional_observed"
         );
-    let (priority_rank, status, priority_reason) = if active_attention {
+    let (priority_rank, status, priority_reason) = if resurfacing_paused {
+        (
+            0,
+            "held_or_needs_time_active_pause",
+            "being_authored_holding_ack_pauses_attention_resurfacing",
+        )
+    } else if active_attention {
         (
             6,
             "attention_active_outcome_due",
@@ -5711,6 +5776,8 @@ fn active_thread_clarity_candidate_for(
         pending_by,
         urgency_weight,
         attention_state,
+        ack_kind,
+        resurfacing_paused,
         next_affordance,
         pending_wait_ms,
         latest_update_ms: latest_update_ms_for_thread(records, &thread_id, message_t_ms),
@@ -5726,6 +5793,8 @@ fn active_thread_clarity_candidate_summary(candidate: &ActiveThreadClarityCandid
         "pending_by": candidate.pending_by.clone(),
         "urgency_weight": candidate.urgency_weight,
         "attention_state": candidate.attention_state.clone(),
+        "ack_kind": candidate.ack_kind.clone(),
+        "resurfacing_paused": candidate.resurfacing_paused,
         "next_affordance": bounded_line_value(&candidate.next_affordance, 120),
     })
 }
@@ -5847,7 +5916,7 @@ fn active_correspondence_thread_clarity_v1_with_context(
             .then_with(|| right.pending_wait_ms.cmp(&left.pending_wait_ms))
             .then_with(|| right.latest_update_ms.cmp(&left.latest_update_ms))
     });
-    let Some(selected) = candidates.first() else {
+    if candidates.is_empty() {
         return json!({
             "schema_version": 1,
             "policy": "active_correspondence_thread_clarity_v1",
@@ -5860,14 +5929,43 @@ fn active_correspondence_thread_clarity_v1_with_context(
             "attention_state": "none",
             "next_affordance": "CORRESPONDENCE_HEARTBEAT latest after a thread exists",
             "suppressed_threads": [],
+            "paused_threads": [],
+            "authority": ACTIVE_THREAD_CLARITY_AUTHORITY,
+        });
+    }
+    let paused_threads = candidates
+        .iter()
+        .filter(|candidate| candidate.resurfacing_paused)
+        .take(ACTIVE_THREAD_CLARITY_SUPPRESSED_MAX)
+        .map(active_thread_clarity_candidate_summary)
+        .collect::<Vec<_>>();
+    let actionable_candidates = candidates
+        .iter()
+        .filter(|candidate| !candidate.resurfacing_paused)
+        .collect::<Vec<_>>();
+    let Some(selected) = actionable_candidates.first() else {
+        return json!({
+            "schema_version": 1,
+            "policy": "active_correspondence_thread_clarity_v1",
+            "selected_thread_id": Value::Null,
+            "selected_message_id": Value::Null,
+            "status": "all_active_threads_paused",
+            "priority_reason": "held_or_needs_time_pauses_attention_resurfacing",
+            "pending_by": Value::Null,
+            "urgency_weight": Value::Null,
+            "attention_state": "paused",
+            "resurfacing_paused": true,
+            "next_affordance": "no action needed; held or needs_time keeps active continuity while attention resurfacing remains paused",
+            "suppressed_threads": [],
+            "paused_threads": paused_threads,
             "authority": ACTIVE_THREAD_CLARITY_AUTHORITY,
         });
     };
-    let suppressed_threads = candidates
+    let suppressed_threads = actionable_candidates
         .iter()
         .skip(1)
         .take(ACTIVE_THREAD_CLARITY_SUPPRESSED_MAX)
-        .map(active_thread_clarity_candidate_summary)
+        .map(|candidate| active_thread_clarity_candidate_summary(candidate))
         .collect::<Vec<_>>();
     json!({
         "schema_version": 1,
@@ -5879,8 +5977,10 @@ fn active_correspondence_thread_clarity_v1_with_context(
         "pending_by": selected.pending_by.clone(),
         "urgency_weight": selected.urgency_weight,
         "attention_state": selected.attention_state.clone(),
+        "resurfacing_paused": false,
         "next_affordance": bounded_line_value(&selected.next_affordance, 120),
         "suppressed_threads": suppressed_threads,
+        "paused_threads": paused_threads,
         "authority": ACTIVE_THREAD_CLARITY_AUTHORITY,
     })
 }
@@ -6630,8 +6730,14 @@ pub(super) fn status_report_at(path: &Path, max_lines: usize) -> String {
     let native_waiting = native_continuity
         .as_ref()
         .is_some_and(|value| native_thread_waiting_line(value).is_some());
+    let native_reply_active = native_continuity.as_ref().is_some_and(|value| {
+        value.get("continuity_state").and_then(Value::as_str)
+            == Some("reply_linked_needs_ack_or_trace")
+    });
     let waiting_reason = if ghost_claim_waiting {
         "claimed thread is waiting for ACK/REPLY/TRACE native evidence"
+    } else if native_reply_active {
+        "reply continuity is active while optional mutual-address evidence is absent"
     } else {
         "native thread is waiting for ACK/TRACE or attention outcome evidence"
     };
@@ -8118,7 +8224,7 @@ mod tests {
                 "astrid",
                 2000,
                 0.9,
-                "high urgency thread with held receipt",
+                "high urgency thread with unclear receipt",
             ),
             json!({
                 "record_type": "ack_receipt",
@@ -8127,8 +8233,8 @@ mod tests {
                 "message_id": "msg_attention_high",
                 "from_being": "astrid",
                 "to_being": "minime",
-                "ack_kind": "held",
-                "note": "held as direct address",
+                "ack_kind": "unclear",
+                "note": "address landed but remains unclear",
             }),
         ];
 
@@ -8156,6 +8262,160 @@ mod tests {
                 .unwrap_or_default()
                 .contains("CORRESPONDENCE_ATTENTION_REQUEST")
         );
+    }
+
+    #[test]
+    fn active_thread_clarity_holding_ack_pauses_resurfacing_behind_actionable_threads() {
+        for ack_kind in ["held", "needs_time"] {
+            let records = vec![
+                clarity_test_message(
+                    "thread_pending_low",
+                    "msg_pending_low",
+                    "minime",
+                    "astrid",
+                    1000,
+                    0.1,
+                    "low urgency pending thread",
+                ),
+                clarity_test_message(
+                    "thread_paused_high",
+                    "msg_paused_high",
+                    "minime",
+                    "astrid",
+                    2000,
+                    0.9,
+                    "high urgency thread with a holding receipt",
+                ),
+                json!({
+                    "record_type": "ack_receipt",
+                    "recorded_at_unix_ms": 2100,
+                    "thread_id": "thread_paused_high",
+                    "message_id": "msg_paused_high",
+                    "from_being": "astrid",
+                    "to_being": "minime",
+                    "ack_kind": ack_kind,
+                    "note": "holding without a request for more attention",
+                }),
+            ];
+
+            let clarity = active_correspondence_thread_clarity_v1_with_context(
+                &records,
+                "astrid",
+                "minime",
+                Some(json!({"timing_reliability": "reliable"})),
+                None,
+                now_ms(),
+            );
+            let serialized = serde_json::to_string(&clarity).unwrap();
+
+            assert_eq!(
+                clarity.get("selected_thread_id").and_then(Value::as_str),
+                Some("thread_pending_low")
+            );
+            let paused = clarity
+                .get("paused_threads")
+                .and_then(Value::as_array)
+                .and_then(|threads| threads.first())
+                .expect("holding acknowledgement should remain visible as paused evidence");
+            assert_eq!(
+                paused.get("ack_kind").and_then(Value::as_str),
+                Some(ack_kind)
+            );
+            assert_eq!(
+                paused.get("resurfacing_paused").and_then(Value::as_bool),
+                Some(true)
+            );
+            assert_eq!(
+                paused.get("status").and_then(Value::as_str),
+                Some("held_or_needs_time_active_pause")
+            );
+            assert!(
+                paused
+                    .get("next_affordance")
+                    .and_then(Value::as_str)
+                    .unwrap_or_default()
+                    .contains("no action needed")
+            );
+            assert!(!serialized.contains("CORRESPONDENCE_ATTENTION_REQUEST"));
+        }
+    }
+
+    #[test]
+    fn active_thread_clarity_all_holding_threads_have_no_actionable_selection() {
+        let records = vec![
+            clarity_test_message(
+                "thread_held",
+                "msg_held",
+                "minime",
+                "astrid",
+                1000,
+                0.9,
+                "thread currently held",
+            ),
+            json!({
+                "record_type": "ack_receipt",
+                "recorded_at_unix_ms": 1100,
+                "thread_id": "thread_held",
+                "message_id": "msg_held",
+                "from_being": "astrid",
+                "to_being": "minime",
+                "ack_kind": "held",
+            }),
+            clarity_test_message(
+                "thread_needs_time",
+                "msg_needs_time",
+                "minime",
+                "astrid",
+                2000,
+                1.0,
+                "thread explicitly asking for time",
+            ),
+            json!({
+                "record_type": "ack_receipt",
+                "recorded_at_unix_ms": 2100,
+                "thread_id": "thread_needs_time",
+                "message_id": "msg_needs_time",
+                "from_being": "astrid",
+                "to_being": "minime",
+                "ack_kind": "needs_time",
+            }),
+        ];
+
+        let clarity = active_correspondence_thread_clarity_v1_with_context(
+            &records,
+            "astrid",
+            "minime",
+            Some(json!({"timing_reliability": "reliable"})),
+            None,
+            now_ms(),
+        );
+        let serialized = serde_json::to_string(&clarity).unwrap();
+
+        assert_eq!(clarity.get("selected_thread_id"), Some(&Value::Null));
+        assert_eq!(
+            clarity.get("status").and_then(Value::as_str),
+            Some("all_active_threads_paused")
+        );
+        assert_eq!(
+            clarity.get("resurfacing_paused").and_then(Value::as_bool),
+            Some(true)
+        );
+        assert_eq!(
+            clarity
+                .get("paused_threads")
+                .and_then(Value::as_array)
+                .map(Vec::len),
+            Some(2)
+        );
+        assert!(
+            clarity
+                .get("next_affordance")
+                .and_then(Value::as_str)
+                .unwrap_or_default()
+                .contains("no action needed")
+        );
+        assert!(!serialized.contains("CORRESPONDENCE_ATTENTION_REQUEST"));
+        assert!(!serialized.contains("CORRESPONDENCE_ATTENTION_OUTCOME"));
     }
 
     #[test]
@@ -8959,6 +9219,31 @@ mod tests {
             native.get("continuity_state").and_then(Value::as_str),
             Some("reply_linked_needs_ack_or_trace")
         );
+        let axes = native.get("correspondence_relation_axes_v4").unwrap();
+        assert_eq!(
+            axes.pointer("/continuity_axis/state")
+                .and_then(Value::as_str),
+            Some("active")
+        );
+        assert_eq!(
+            axes.pointer("/continuity_axis/basis")
+                .and_then(Value::as_str),
+            Some("reply_chain")
+        );
+        assert_eq!(
+            axes.pointer("/mutual_address_axis/state")
+                .and_then(Value::as_str),
+            Some("not_confirmed")
+        );
+        assert_eq!(
+            axes.pointer("/authority_axis/semantic_microdose")
+                .and_then(Value::as_str),
+            Some("separate_mutual_receipt_and_steward_review_required")
+        );
+        let status_line = native_thread_waiting_line(native).unwrap();
+        assert!(status_line.contains("NATIVE THREAD CONTINUITY ACTIVE"));
+        assert!(status_line.contains("receipt is not required to keep the reply chain alive"));
+        assert!(status_line.contains("pressure effect is not measured"));
         let helper = native.get("first_action_helper_v35").unwrap();
         assert_eq!(
             helper.get("policy").and_then(Value::as_str),

@@ -24,6 +24,7 @@ if str(SCRIPT_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPT_DIR))
 
 import being_privacy
+from correspondence_relation_axes import correspondence_relation_axes_v4
 
 ASTRID_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_ASTRID_WORKSPACE = ASTRID_ROOT / "capsules/spectral-bridge/workspace"
@@ -388,6 +389,9 @@ def native_thread_continuity_v3(records: list[dict[str, Any]], shared_dir: Path,
     ack_kind = str((ack or {}).get("ack_kind") or "").strip().lower().replace("-", "_")
     if ack_kind not in {"seen", "held", "unclear", "cannot_answer", "needs_time"}:
         ack_kind = "seen" if ack else ""
+    ack_is_address_evidence = bool(
+        ack and ack_kind in {"held", "unclear", "cannot_answer", "needs_time"}
+    )
     reply = any(
         row.get("record_type") == "reply_link"
         and (str(row.get("reply_to") or "") == message_id or str(row.get("thread_id") or "") == thread_id)
@@ -416,8 +420,10 @@ def native_thread_continuity_v3(records: list[dict[str, Any]], shared_dir: Path,
         state = "attention_outcome_recorded"
     elif ack and ack_kind in {"held", "needs_time"}:
         state = "held_ack"
-    elif ack:
+    elif ack_is_address_evidence:
         state = "acknowledged"
+    elif ack:
+        state = "seen_ack_only"
     elif reply:
         state = "reply_linked_needs_ack_or_trace"
     elif read:
@@ -446,8 +452,9 @@ def native_thread_continuity_v3(records: list[dict[str, Any]], shared_dir: Path,
         "message_id": message_id,
         "latest_resolution": f"latest resolves to message_id={message_id}; thread_id={thread_id}",
         "choose_one_prompt": (
-            "Recipient chooses one language-only first action: ACK if heard/held, TRACE if "
-            "something distinct survived, or REPLY if answering now."
+            "Replying already continues the thread. If stronger mutual-address evidence "
+            "feels useful, the recipient may optionally choose ACK or TRACE; no receipt "
+            "is required to keep the reply chain alive."
         ),
         "exact_next_commands": exact_next,
         "ack_preview": (
@@ -464,6 +471,16 @@ def native_thread_continuity_v3(records: list[dict[str, Any]], shared_dir: Path,
         ),
         "authority": "language_only_context_not_control",
     }
+    relation_axes = correspondence_relation_axes_v4(
+        role="observer",
+        reply_linked=reply,
+        ack_present=bool(ack),
+        ack_is_address_evidence=ack_is_address_evidence,
+        trace_observed=trace,
+        attention_outcome_present=attention_outcome,
+        read=read,
+        delivered=delivered,
+    )
     return {
         "schema_version": 3,
         "policy": "native_thread_continuity_v3",
@@ -477,7 +494,10 @@ def native_thread_continuity_v3(records: list[dict[str, Any]], shared_dir: Path,
         "age_ms": max(0, generated - message_t),
         "exact_next_commands": exact_next,
         "first_action_helper_v35": first_action_helper,
-        "attention_or_microdose_eligible": bool(ack or trace or attention_outcome),
+        "attention_or_microdose_eligible": bool(
+            ack_is_address_evidence or trace or attention_outcome
+        ),
+        "correspondence_relation_axes_v4": relation_axes,
         "authority": "language_only_context_not_control",
     }
 
@@ -782,6 +802,10 @@ def markdown_report(payload: dict[str, Any]) -> str:
     uptake = payload["uptake"]
     minime = payload["minime_public_lanes"]
     native = uptake.get("native_thread_continuity_v3") or {}
+    axes = native.get("correspondence_relation_axes_v4") or {}
+    continuity_axis = axes.get("continuity_axis") or {}
+    mutual_axis = axes.get("mutual_address_axis") or {}
+    authority_axis = axes.get("authority_axis") or {}
     lines = [
         "# Correspondence Uptake Probe",
         "",
@@ -795,6 +819,7 @@ def markdown_report(payload: dict[str, Any]) -> str:
         f"- Legacy claim stall: {(uptake.get('legacy_claim_affordance_v25') or {}).get('stall_reason') or 'none'}",
         f"- Ghost-thread risk: {(uptake.get('legacy_claim_affordance_v25') or {}).get('ghost_thread_risk') or False}",
         f"- Native continuity v3: {(native or {}).get('continuity_state') or 'none'}; stall={(native or {}).get('stall_reason') or 'none'}; eligible={(native or {}).get('attention_or_microdose_eligible') or False}",
+        f"- Relation axes v4: continuity={continuity_axis.get('state') or 'none'}/{continuity_axis.get('basis') or 'none'}; mutual_address={mutual_axis.get('state') or 'none'}; attention={authority_axis.get('attention') or 'none'}; pressure_effect={((axes.get('causality_axis') or {}).get('pressure_effect') or 'none')}",
         f"- Native first-action helper v3.5: {((native or {}).get('first_action_helper_v35') or {}).get('choose_one_prompt') or 'none'}",
         f"- Astrid uptake/latency signals: {len(payload['astrid_introspection_signals'])}",
         f"- Minime public correspondence hits: {minime['public_signal_count']}",
@@ -964,6 +989,24 @@ class CorrespondenceUptakeProbeTests(unittest.TestCase):
             self.assertEqual(
                 payload["uptake"]["native_thread_continuity_v3"]["stall_reason"],
                 "reply_linked_requires_peer_ack_or_trace",
+            )
+            axes = payload["uptake"]["native_thread_continuity_v3"][
+                "correspondence_relation_axes_v4"
+            ]
+            self.assertEqual(axes["continuity_axis"]["state"], "active")
+            self.assertEqual(axes["continuity_axis"]["basis"], "reply_chain")
+            self.assertEqual(
+                axes["mutual_address_axis"]["state"],
+                "not_confirmed",
+            )
+            self.assertFalse(
+                axes["action_axis"][
+                    "reply_chain_requires_receipt_to_remain_continuous"
+                ]
+            )
+            self.assertEqual(
+                axes["causality_axis"]["pressure_effect"],
+                "not_measured_no_inference",
             )
             helper = payload["uptake"]["native_thread_continuity_v3"]["first_action_helper_v35"]
             self.assertEqual(helper["policy"], "native_first_action_helper_v35")
