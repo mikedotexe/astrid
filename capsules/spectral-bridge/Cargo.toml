@@ -36,12 +36,17 @@ rusqlite = { version = "0.32", features = ["bundled"] }
 rustfft = "6.4.1"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
+serde_yaml = "0.9"
 tokio = { version = "1", features = ["rt-multi-thread", "macros", "sync", "time", "net", "signal", "io-util", "io-std"] }
 reqwest = { version = "0.12", default-features = false, features = ["blocking", "json", "rustls-tls"] }
 sha2 = "0.10"
 tokio-tungstenite = "0.21"
+toml = "0.8"
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+tree-sitter = "0.25"
+tree-sitter-python = "0.25"
+tree-sitter-rust = "0.24"
 rascii_art = { path = "../../../RASCII", default-features = false }
 image = "0.25.5"
 zstd = "0.13"
