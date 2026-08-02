@@ -1,4 +1,5 @@
 use std::path::PathBuf;
+use std::sync::{Mutex, MutexGuard, OnceLock};
 
 use astrid_minime_protocol::{
     BEING_CONCERN_SCHEMA_V1, BeingConcernStatusV1, BeingConcernV1, VOLITION_QUEUE_SCHEMA_V1,
@@ -9,6 +10,8 @@ use serde::Deserialize;
 
 use super::state::ConversationState;
 use super::volition;
+
+static QUEUE_OPERATION_LOCK: OnceLock<Mutex<()>> = OnceLock::new();
 
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -99,7 +102,110 @@ pub(super) fn prompt_summary() -> Option<String> {
     ))
 }
 
+pub(super) fn enqueue_owner_inquiry(
+    concern_id: String,
+    title: String,
+    priority: u16,
+    source_attestation_id: String,
+    intent_id: String,
+    dependency_concern_ids: Vec<String>,
+    budget: VolitionBudgetV1,
+    now: u64,
+) -> Result<Vec<String>, String> {
+    let _guard = operation_guard()?;
+    validate_component(&concern_id)?;
+    let mut queue = load_queue()?;
+    if queue
+        .concerns
+        .iter()
+        .any(|concern| concern.concern_id == concern_id)
+    {
+        return Err(format!("concern `{concern_id}` already exists"));
+    }
+    queue.concerns.push(BeingConcernV1 {
+        schema: BEING_CONCERN_SCHEMA_V1.to_string(),
+        concern_id,
+        owner_being: "astrid".to_string(),
+        source_attestation_id,
+        title,
+        priority,
+        status: BeingConcernStatusV1::Queued,
+        work_class: VolitionWorkClassV1::ReadCompute,
+        resource_keys: Vec::new(),
+        substrate_family: None,
+        dependency_concern_ids,
+        intent_ids: vec![intent_id],
+        imported_registry_problem_id: None,
+        owner_authored_priority: true,
+        budget,
+        created_at_unix_ms: now,
+        updated_at_unix_ms: now,
+    });
+    queue.revision = queue.revision.saturating_add(1);
+    let activated = queue.activate_runnable(now);
+    if !queue.is_well_formed() {
+        return Err("inquiry concern violates queue invariants".to_string());
+    }
+    persist_queue(&queue)?;
+    Ok(activated)
+}
+
+pub(super) fn owner_inquiry_status(
+    concern_id: &str,
+) -> Result<Option<BeingConcernStatusV1>, String> {
+    let _guard = operation_guard()?;
+    validate_component(concern_id)?;
+    Ok(load_queue()?
+        .concerns
+        .iter()
+        .find(|concern| concern.concern_id == concern_id)
+        .map(|concern| concern.status))
+}
+
+pub(super) fn active_owner_inquiry_ids() -> Result<Vec<String>, String> {
+    let _guard = operation_guard()?;
+    let manifest_root = volition::astrid_volition_root().join("inquiries/manifests");
+    Ok(load_queue()?
+        .concerns
+        .iter()
+        .filter(|concern| {
+            concern.status == BeingConcernStatusV1::Active
+                && concern.work_class == VolitionWorkClassV1::ReadCompute
+                && concern
+                    .intent_ids
+                    .iter()
+                    .any(|intent| intent.starts_with("astrid-intent-"))
+                && manifest_root
+                    .join(format!("{}.json", concern.concern_id))
+                    .is_file()
+        })
+        .map(|concern| concern.concern_id.clone())
+        .collect())
+}
+
+pub(super) fn transition_owner_inquiry(
+    concern_id: &str,
+    next_status: BeingConcernStatusV1,
+    now: u64,
+) -> Result<Vec<String>, String> {
+    let _guard = operation_guard()?;
+    validate_component(concern_id)?;
+    let mut queue = load_queue()?;
+    if !queue.transition_concern(concern_id, next_status, now) {
+        return Err(format!(
+            "inquiry concern `{concern_id}` cannot transition to {next_status:?}"
+        ));
+    }
+    let activated = queue.activate_runnable(now);
+    if !queue.is_well_formed() {
+        return Err("inquiry concern transition violates queue invariants".to_string());
+    }
+    persist_queue(&queue)?;
+    Ok(activated)
+}
+
 fn add_concern(original: &str, base_action: &str) -> Result<String, String> {
+    let _guard = operation_guard()?;
     let context = volition::exact_self_owned_action_context(original)?;
     let payload = action_payload(original, base_action)?;
     let recipe: ConcernCreateRecipeV1 = serde_json::from_str(payload)
@@ -158,6 +264,7 @@ fn transition(
     base_action: &str,
     next_status: BeingConcernStatusV1,
 ) -> Result<String, String> {
+    let _guard = operation_guard()?;
     let context = volition::exact_self_owned_action_context(original)?;
     let concern_id = action_payload(original, base_action)?;
     validate_component(concern_id)?;
@@ -181,6 +288,7 @@ fn transition(
 }
 
 fn status(original: &str, base_action: &str) -> Result<String, String> {
+    let _guard = operation_guard()?;
     let selector = action_payload_optional(original, base_action);
     let queue = load_queue()?;
     let selected = queue
@@ -268,6 +376,13 @@ fn validate_component(value: &str) -> Result<(), String> {
         );
     }
     Ok(())
+}
+
+fn operation_guard() -> Result<MutexGuard<'static, ()>, String> {
+    QUEUE_OPERATION_LOCK
+        .get_or_init(|| Mutex::new(()))
+        .lock()
+        .map_err(|_| "volition queue operation lock was poisoned".to_string())
 }
 
 fn action_payload<'a>(original: &'a str, base_action: &str) -> Result<&'a str, String> {
