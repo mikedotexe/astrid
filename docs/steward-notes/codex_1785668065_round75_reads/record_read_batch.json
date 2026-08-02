@@ -1,0 +1,24 @@
+{
+  "reads": [
+    {
+      "introspection_id": "introspection_astrid_llm_1785667492",
+      "reader": "codex-heartbeat",
+      "summary_file": "summaries/astrid_llm_1785667492.md",
+      "claims_file": "claims/astrid_llm_1785667492.json",
+      "status": "blocked_needs_steward"
+    }
+  ],
+  "evidence_link_batch": {
+    "manifest": "evidence_links.json",
+    "rows": 14,
+    "events_appended": 35,
+    "new_links": 35,
+    "dry_recheck_existing_links": 35,
+    "authority_state": "evidence_only",
+    "live_eligible_now": false
+  },
+  "closure": {
+    "status": "blocked_needs_steward",
+    "rationale": "The full read, source verification, duplicate route, and non-live counterfactual study are complete. Magnetization, regulator-drive, recursive-pressure, SHADOW_TRAJECTORY, and deliberate peer-Shadow interventions remain exact Tier 5 approval and relevant-being authority waits."
+  }
+}

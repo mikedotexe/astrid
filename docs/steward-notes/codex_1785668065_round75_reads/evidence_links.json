@@ -1,0 +1,102 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_llm_1785667492",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1785668065_round75_reads/summaries/astrid_llm_1785667492.md",
+      "note": "Complete canonical and report-bound source read with source-scoped dispositions."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785667492",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "Complete report-bound source receives spectral text and fill but owns no named substrate setter."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785667492",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/fallback_budget.rs",
+      "note": "Complete selector source parses magnetization as language context with diagnostic-only authority."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785667492",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/fallback_dynamics.rs",
+      "note": "Complete dynamic-weight source bounds absolute magnetization contribution at 0.05."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785667492",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/fallback_contract_tests.rs",
+      "note": "Focused -0.10 and negative-guard regressions passed."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785667492",
+      "claim_id": "c004",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1785668065_round75_reads/SHADOW_ANCHOR_COUNTERFACTUAL_PREREGISTRATION.md",
+      "note": "Pure-function representation sweep is preregistered without live Shadow authority."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785667492",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/spectral_explorer.rs",
+      "note": "Targeted source distinguishes zero regulator drive across admission states."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785667492",
+      "claim_id": "c005",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/spectral_explorer.rs",
+      "note": "Focused stale semantic-trace and zero-drive rendering regression passed."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785667492",
+      "claim_id": "c006",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1785668065_round75_reads/claims/astrid_llm_1785667492.json",
+      "note": "Recursive pressure induction is preserved as an exact Tier 5 wait with required protocol properties."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785667492",
+      "claim_id": "c007",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/fallback_contract_tests.rs",
+      "note": "Exact self/peer regression preserves Astrid's lattice when Minime is restless."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785667492",
+      "claim_id": "c007",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784296541_run20_reads/introspection_astrid_llm_1782197654_claims.json",
+      "note": "Prior claim c002 is the exact self/peer fallback-output comparison route."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785667492",
+      "claim_id": "c008",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1785580847_round63_reads/SHADOW_PRESSURE_500_PAIR_PREREGISTRATION.md",
+      "note": "Existing non-inducing Shadow-pressure observation remains available; no Action or coupling was dispatched."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785667492",
+      "claim_id": "*",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "Unreleased entry records source verification, study route, and authority boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785667492",
+      "claim_id": "*",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Being-feedback ledger preserves the causal response and exact non-live boundaries."
+    }
+  ]
+}

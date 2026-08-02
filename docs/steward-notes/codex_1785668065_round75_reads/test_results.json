@@ -1,0 +1,100 @@
+{
+  "schema": "steward_round_test_results_v1",
+  "steward_run_id": "run_1785668065597835000_d12ad28aa3",
+  "completion_steward_run_id": "run_1785670704531192000_a6a370b14a",
+  "projection_generation_ids": [
+    "projection_1785668066454962000_18d474c290",
+    "projection_1785669989599158000_c6d34cc223",
+    "projection_1785670705401843000_be7945823e"
+  ],
+  "status": "passed",
+  "results": [
+    {
+      "surface": "fallback_self_peer_boundary",
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml fallback_preserves_astrid_settled_lattice_when_peer_is_restless --lib",
+      "passed": 1,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "reported_negative_magnetization_context",
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml high_entropy_fallback_guard_removes_automatic_compat_tail_without_env_override --lib",
+      "passed": 1,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "negative_magnetization_language_guard",
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml negative_shadow_magnetization_prioritizes_muffled_pressure_over_bright --lib",
+      "passed": 1,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "zero_regulator_drive_visibility",
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml semantic_trace_stale_note_does_not_call_it_decayed_residue --lib",
+      "passed": 1,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "offline_replay_campaigns",
+      "command": "PYTHONDONTWRITEBYTECODE=1 python3 scripts/test_ai_beings_offline_replay_campaigns.py",
+      "passed": 7,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "introspection_addressing_audit",
+      "command": "PYTHONDONTWRITEBYTECODE=1 python3 scripts/introspection_addressing_audit.py --self-test",
+      "passed": 41,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "evidence_controller_projection_division_claim_family",
+      "command": "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=.:scripts python3 -m unittest scripts.test_evidence_event_store scripts.test_steward_control scripts.test_steward_projection scripts.test_division_ceremony_followup scripts.test_division_ceremony_chronicle scripts.test_division_ceremony_projection scripts.test_claim_family_incremental_projection",
+      "passed": 68,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "anti_drop_catalog",
+      "command": "PYTHONDONTWRITEBYTECODE=1 python3 scripts/anti_drop_catalog.py --self-test; PYTHONDONTWRITEBYTECODE=1 python3 scripts/anti_drop_catalog.py verify",
+      "passed": 5,
+      "guards_verified": 47,
+      "alarms": 0,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "experiential_epistemics",
+      "command": "PYTHONDONTWRITEBYTECODE=1 python3 scripts/experiential_epistemics.py self-test --json; PYTHONDONTWRITEBYTECODE=1 python3 scripts/experiential_epistemics.py lint --json",
+      "passed": 2,
+      "records_linted": 10192,
+      "issues": 0,
+      "history_rewritten": false,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "evidence_event_store_v2",
+      "command": "python3 scripts/evidence_event_store.py --json verify",
+      "verified_global_seq": 663876,
+      "verified_head_sha256": "eff334f13bc8e8e49361cbb67a21abbef64cf15e3f28dc9fd704ae9c0425628a",
+      "valid": true,
+      "corrupt_lines": 0,
+      "history_rewritten": false,
+      "status": "passed"
+    },
+    {
+      "surface": "division_return",
+      "command": "python3 scripts/division_ceremony_followup.py verify; python3 scripts/division_ceremony_chronicle.py project; python3 scripts/division_ceremony_chronicle.py verify",
+      "passed": true,
+      "failed": 0,
+      "status": "passed",
+      "detail": "Cycle 13 is at 2/6 with review_due false after division_followup_event_85906ea1745fe6a1cff9b2b5ad6ffbdc. Chronicle division_chronicle_9b48d58ba2d008961ee3f38a has 87 timeline events and current durable inputs; only the volatile supervisor-status hash is stale."
+    }
+  ],
+  "authority_boundary": "Passing deterministic representation tests establishes neither felt anchoring nor authority to change Shadow, regulator drive, model behavior, pressure, or peer state."
+}

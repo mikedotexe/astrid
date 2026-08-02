@@ -1,0 +1,58 @@
+{
+  "schema": "exact_source_continuity_receipts_v1",
+  "receipts": [
+    {
+      "introspection_id": "introspection_astrid_llm_1785667492",
+      "source": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "sha256": "dfa9152c2861d2fbf86867fb3ccb506284fda3c9457bf676766878346d9c267c",
+      "complete_lines": 997,
+      "complete_bytes": 36801,
+      "receipt_role": "complete_report_bound_source_exact_report_hash",
+      "worktree_note": "The exact report-bound bytes include 11 pre-existing unstaged lines. They were read but not edited or claimed by this run."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785667492",
+      "source": "capsules/spectral-bridge/src/llm/provider/fallback_budget.rs",
+      "sha256": "2432efcadd62b68c66b5eb6878e36ea36c1e1f397fbcacb331e03e7660128ea9",
+      "complete_lines": 881,
+      "complete_bytes": 35615,
+      "receipt_role": "complete_fallback_budget_and_selector_source"
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785667492",
+      "source": "capsules/spectral-bridge/src/llm/provider/fallback_gradient.rs",
+      "sha256": "8d570b08a7fa829cc0e3805b231aa1dce5792510916d96cd12f755118919c596",
+      "complete_lines": 423,
+      "complete_bytes": 14519,
+      "receipt_role": "complete_metric_extraction_and_gradient_source"
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785667492",
+      "source": "capsules/spectral-bridge/src/llm/provider/fallback_dynamics.rs",
+      "sha256": "1e49bc613cee9c46324c6e7e875ea765322f057c274df7294f50592770caf2f9",
+      "complete_lines": 410,
+      "complete_bytes": 14953,
+      "receipt_role": "complete_dynamic_texture_weight_source"
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785667492",
+      "source": "capsules/spectral-bridge/src/llm/provider/fallback_weights.rs",
+      "included_intervals": ["1-130"],
+      "receipt_role": "targeted_magnetization_threshold_and_language_weight_source"
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785667492",
+      "source": "capsules/spectral-bridge/src/llm/provider/fallback_contract_tests.rs",
+      "sha256": "a7eb9c746dfbc7a81a9a8b734fad33691a710595e1cf9820859c7fad08caba00",
+      "included_intervals": ["2435-2598", "3035-3115"],
+      "receipt_role": "targeted_current_magnetization_and_self_peer_boundary_regressions"
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785667492",
+      "source": "capsules/spectral-bridge/src/spectral_explorer.rs",
+      "sha256": "b2bf25e49ffcdff3a5f1db2d95b88166a516162102f5b43d3dd7ee79dc507106",
+      "included_intervals": ["636-715", "1143-1163"],
+      "receipt_role": "targeted_regulator_drive_visibility_and_zero_drive_regression"
+    }
+  ]
+}
