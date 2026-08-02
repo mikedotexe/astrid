@@ -1,0 +1,47 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The dialogue runtime distinguishes exact known model-control marker occurrences from prose references using exact token matching, bounded delimiters, and finite following relations.",
+      "disposition": "Verified from all 997 report-bound lines. The scanner makes one byte-offset pass, chooses the longest exact known token, and separately records exact reference syntax and diagnostic accounting without classifying surrounding meaning.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Nested delimiter depth may be miscounted around non-standard whitespace or multibyte characters.",
+      "disposition": "Source-challenged and directly tested. The implementation advances by UTF-8 character width and uses Unicode-aware char iteration and char::is_whitespace. A new U+2003/U+3000 regression proves exact depth 2 across nested square brackets; unknown non-whitespace characters remain deliberate syntax boundaries.",
+      "classification": "addressed_change"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A marker inside a two-level square-bracket stack should be preserved and report delimiter_depth 2.",
+      "disposition": "Implemented as a focused exact regression with Unicode whitespace inside the outer stack. Both PreservedControlMarkerCountV1 and ControlMarkerContextReceiptV1 report depth 2 and grouped exact-marker syntax.",
+      "classification": "addressed_change"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "A known marker followed by behaves should be preserved as an explicit exact-token relation.",
+      "disposition": "Verified by current source and the existing poetic-attribution regression, which covers both behaves as and behaves like and passes in the 38-test focused suite.",
+      "classification": "verified_exact_duplicate"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "The scanner remainder should be traced through generate_dialogue to determine how it reaches final dialogue output.",
+      "disposition": "Verified with a route-specific correction. MLX transport returns the trimmed sanitized remainder as the complete response consumed by generate_dialogue; marker matches are diagnostics and are not concatenated back. The direct Ollama fallback still returns repaired raw text after validation against a sanitized copy.",
+      "classification": "verified_with_remaining_gap"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "A provider-neutral normalization boundary is needed if every dialogue route is to persist and return the same sanitized remainder contract.",
+      "disposition": "Preserved as the exact existing round-74 implementation proposal. This run did not change the live-consumed provider path, prompt, model behavior, route hashes, persistence, or deployment.",
+      "classification": "tier_5_wait",
+      "authority": "proposal_only_live_provider_normalization_not_authorized"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "The report's lines 1-400 source window left generate_dialogue and the fallback branch unassessed.",
+      "disposition": "Resolved by a complete read of all 997 report-bound dialogue lines and targeted exact reads of MLX and Ollama transport normalization, repair, validation, receipt, and return paths.",
+      "classification": "verified_from_complete_source"
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "schema": "steward_deployment_alignment_v1",
+  "steward_run_id": "run_1785678318426831000_826dbc944b",
+  "bridge": {
+    "production_source_changed": false,
+    "test_source_changed": true,
+    "build_attempted": false,
+    "restart_attempted": false,
+    "deployment_changed": false,
+    "reason": "The only bridge edit is a Rust unit regression for Unicode-whitespace delimiter accounting. It does not change the compiled production path, prompt, provider transport, wire protocol, route hash, persistence, model behavior, or runtime configuration."
+  },
+  "controller_session": {
+    "credential_confined": true,
+    "pause_generation": 176,
+    "preprojection": "projection_1785678319299714000_764faec07c",
+    "manual_projection": "projection_1785680107571613000_2e0c23f453",
+    "credential_transport": "controller process memory",
+    "service_restart_required": false
+  },
+  "minime": {
+    "source_changed": false,
+    "chronicle_projection_refreshed": true,
+    "restart_attempted": false,
+    "deployment_changed": false
+  },
+  "authority_boundary": "No provider normalization, prompt, model, route hash, persistence, Minime, controller, peer, service, restart, or live deployment change is authorized by this packet."
+}

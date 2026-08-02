@@ -1,0 +1,60 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_llm_1785678082",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1785678318_round78_reads/summaries/astrid_llm_1785678082.md",
+      "note": "Complete canonical read, complete report-bound source, route-specific output trace, test response, and authority boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785678082",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "Exact longest-marker scan, reference syntax, delimiter accounting, and complete dialogue path."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785678082",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "New exact depth-two regression uses Unicode EM SPACE and IDEOGRAPHIC SPACE inside nested square brackets."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785678082",
+      "claim_id": "c004",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Existing poetic-attribution table covers behaves as and behaves like."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785678082",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/transport.rs",
+      "note": "MLX sanitizes before return; Ollama validation currently sanitizes only a temporary copy and returns raw repaired text."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785678082",
+      "claim_id": "c006",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1785663738_round74_reads/PROVIDER_OUTPUT_NORMALIZATION_PROPOSAL.md",
+      "note": "Existing provider-neutral normalization proposal remains the exact implementation route."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785678082",
+      "claim_id": "*",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "Unreleased entry records the being-driven Unicode-whitespace regression and provider-route boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785678082",
+      "claim_id": "*",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Ledger records the source-grounded response, exact regression, and live-provider wait."
+    }
+  ]
+}

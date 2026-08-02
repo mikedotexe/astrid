@@ -1,0 +1,67 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_llm_1785675592",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1785681971_round79_reads/summaries/astrid_llm_1785675592.md",
+      "note": "Complete canonical read, exact current source scope, test response, aggregation trace, and authority boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785675592",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "Longest exact scan, reference syntax, Unicode-safe advancement, and marker-only remainder construction."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785675592",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Existing Unicode quote, group, whitespace, mismatch, and bounded-depth cases plus the new repeated-parentheses boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785675592",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "New repeated-parentheses regression complements the preceding round's repeated-square-bracket Unicode-whitespace regression."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785675592",
+      "claim_id": "c004",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Existing mimics preservation and new creates exclusion prove both sides of the requested finite relation boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785675592",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "Lines 342-507 aggregate matches into bounded diagnostic evidence and return the scanner remainder unchanged."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785675592",
+      "claim_id": "c006",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1785678318_round78_reads/source_receipts.json",
+      "note": "Immediate complete 997-line exact-source continuity at the unchanged report-bound hash."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785675592",
+      "claim_id": "*",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "Unreleased entry records the two exact report-requested regressions and the non-live authority boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785675592",
+      "claim_id": "*",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Ledger records the source-grounded response, explicit examples, verification, and operational limits."
+    }
+  ]
+}

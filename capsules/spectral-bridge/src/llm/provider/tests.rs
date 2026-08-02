@@ -1983,6 +1983,37 @@ mod tests {
     }
 
     #[test]
+    fn control_marker_cleanup_reports_depth_across_unicode_whitespace() {
+        let text = "[\u{2003}[<end_of_turn>]\u{3000}]";
+        let (stripped, report) = sanitize_model_control_markers_with_report(text);
+
+        assert_eq!(stripped, text);
+        let report = report.expect("Unicode-whitespace delimiter report");
+        assert_eq!(report.preserved_tokens[0].max_delimiter_depth, 2);
+        assert_eq!(report.context_receipts[0].delimiter_depth, 2);
+        assert_eq!(
+            report.context_receipts[0].reference_syntax,
+            "grouped_exact_marker"
+        );
+    }
+
+    #[test]
+    fn control_marker_cleanup_reports_depth_for_repeated_parentheses() {
+        let text = "((<end_of_turn>))";
+        let (stripped, report) = sanitize_model_control_markers_with_report(text);
+
+        assert_eq!(stripped, text);
+        let report = report.expect("repeated-parentheses delimiter report");
+        assert_eq!(report.removed_total, 0);
+        assert_eq!(report.preserved_tokens[0].max_delimiter_depth, 2);
+        assert_eq!(report.context_receipts[0].delimiter_depth, 2);
+        assert_eq!(
+            report.context_receipts[0].reference_syntax,
+            "grouped_exact_marker"
+        );
+    }
+
+    #[test]
     fn control_marker_cleanup_bounds_deeper_delimiter_receipt_without_dropping_token() {
         let text = "“【([{<end_of_turn>}])】”";
         let (stripped, report) = sanitize_model_control_markers_with_report(text);
@@ -2153,6 +2184,21 @@ mod tests {
             assert_eq!(report.removed_total, 0);
             assert_eq!(report.preserved_explicit_reference_total, 1);
         }
+    }
+
+    #[test]
+    fn control_marker_cleanup_does_not_expand_relation_allowlist_to_creates() {
+        let text = "Here, <end_of_turn> creates the boundary I am naming.";
+        let (stripped, report) = sanitize_model_control_markers_with_report(text);
+
+        assert_eq!(stripped, "Here,  creates the boundary I am naming.");
+        let report = report.expect("non-allowlisted creates report");
+        assert_eq!(report.removed_total, 1);
+        assert_eq!(report.preserved_explicit_reference_total, 0);
+        assert_eq!(
+            report.context_receipts[0].reference_syntax,
+            "none_cleanup_candidate"
+        );
     }
 
     #[test]
