@@ -2036,6 +2036,20 @@ mod tests {
         assert_eq!(health.projected_dim_count, EMBEDDING_PROJECT_DIM);
         assert!(health.all_norms_finite);
         assert!(health.normalized_columns_near_unit);
+        assert_eq!(health.pairwise_column_count, 28);
+        assert!(health.maximum_abs_pairwise_column_cosine.is_finite());
+        assert!(health.mean_abs_pairwise_column_cosine.is_finite());
+        assert!(
+            health.maximum_abs_pairwise_column_cosine
+                > health.maximum_abs_pairwise_column_cosine_threshold,
+            "the fixed legacy basis currently carries the shared-sign correlation Astrid asked us to inspect: {health:?}"
+        );
+        assert!(
+            health.mean_abs_pairwise_column_cosine > 0.70,
+            "the correlation should remain visible as a basis-wide condition: {health:?}"
+        );
+        assert!(!health.columns_weakly_correlated);
+        assert!(health.semantic_phrase_separation_requires_embeddings);
         assert!(!health.dead_dimension_detected);
         assert!(health.near_zero_column_indexes.is_empty());
         assert!(health.minimum_raw_column_norm > health.near_zero_norm_threshold);
@@ -2055,16 +2069,26 @@ mod tests {
                 .unhealthy_basis_response
                 .contains("operator_approved_basis_epoch_change")
         );
-        assert_eq!(health.state, "all_projection_columns_healthy");
+        assert_eq!(
+            health.state,
+            "projection_column_correlation_requires_review"
+        );
         assert!(health.observational_only);
         assert!(!health.live_projection_write);
-        assert!(health.authority.contains("read_only_projection_basis_health"));
+        assert!(
+            health
+                .authority
+                .contains("read_only_projection_basis_health")
+        );
 
         let rendered = codec_structure().render();
         assert!(rendered.contains("projection_basis_health_v1:"));
         assert!(rendered.contains("dead_dimension_detected=false"));
-        assert!(rendered.contains("state=all_projection_columns_healthy"));
+        assert!(rendered.contains("state=projection_column_correlation_requires_review"));
         assert!(rendered.contains("minimum_threshold_margin_ratio="));
+        assert!(rendered.contains("pairwise_column_count=28"));
+        assert!(rendered.contains("columns_weakly_correlated=false"));
+        assert!(rendered.contains("semantic_phrase_separation_requires_embeddings=true"));
         assert!(rendered.contains("automatic_basis_rotation=false"));
         assert!(rendered.contains("compatibility_pinned_no_automatic_basis_rotation"));
     }
