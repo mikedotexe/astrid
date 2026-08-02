@@ -1,0 +1,194 @@
+{
+  "schema": "introspection_evidence_links_v1",
+  "links": [
+    {
+      "introspection_id": "introspection_minime_sensory_bus_1785641608",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1785640907_round70_reads/summaries/minime_sensory_bus_1785641608.md",
+      "note": "Individual full-read response preserves calcification and cohesion while correcting source ownership."
+    },
+    {
+      "introspection_id": "introspection_minime_sensory_bus_1785641608",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "/Users/v/other/minime/minime/src/sensory_bus.rs",
+      "note": "Complete exact source challenge separates sensory retention reviews from attributed telemetry owners."
+    },
+    {
+      "introspection_id": "introspection_minime_sensory_bus_1785641608",
+      "claim_id": "c005",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1785408097_round41_reads/STUDY_PREREGISTRATION.md",
+      "note": "Existing non-inducing source-separation design answers the pressure/viscosity comparison without duplication."
+    },
+    {
+      "introspection_id": "introspection_minime_sensory_bus_1785641608",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/introspect/source_first_v3/grounding.rs",
+      "note": "Affirmative source-attribution claims now require exact current-source support."
+    },
+    {
+      "introspection_id": "introspection_minime_sensory_bus_1785641608",
+      "claim_id": "c004",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Ledger preserves cohesion versus crowding and the source/activation boundary."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1785640732",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1785640907_round70_reads/summaries/minime_regulator_1785640732.md",
+      "note": "Individual full-read response preserves the nonlinear-resistance account and grounds every disposition."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1785640732",
+      "claim_id": "c004",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1785408097_round41_reads/STUDY_PREREGISTRATION.md",
+      "note": "Existing non-inducing source-separation preregistration fixes pressure, viscosity, entropy, persistence, packing, porosity, and distinguishability comparisons."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1785640732",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "/Users/v/other/minime/minime/src/regulator/core.rs",
+      "note": "Complete exact 24-line inclusion shell."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1785640732",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "/Users/v/other/minime/minime/src/regulator/core/pressure_source.rs",
+      "note": "Complete exact pressure and porosity descriptor source with local control false."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785640544",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1785640907_round70_reads/summaries/astrid_llm_1785640544.md",
+      "note": "Individual full-read response preserves the frozen-cascade account while correcting false source ownership."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785640544",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "Complete exact source lacks the attributed runtime, state, admission, Shadow, and input-handler symbols."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785640544",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/introspect/source_first_v3/grounding.rs",
+      "note": "Affirmative source attribution now requires exact current-source support."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785640544",
+      "claim_id": "c005",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/introspect/source_first_v3/mod.rs",
+      "note": "Six focused regressions cover imagined, visible, mapped, incidental, proposed, and identifier-less cases."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785640544",
+      "claim_id": "c005",
+      "kind": "steward_note",
+      "target": "capsules/spectral-bridge/workspace/environment_receipts/environment_receipts.jsonl",
+      "note": "Durable receipt env_receipt_1785644041956_582000 binds the acknowledged build, binary hash, fresh PID, protocol, logs, and telemetry update."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785640544",
+      "claim_id": "c007",
+      "kind": "steward_note",
+      "target": "scripts/attested_expression_spectral_alignment_study.py",
+      "note": "Existing owner-started default-off study keeps output proxies separate from upstream spectral energy."
+    },
+    {
+      "introspection_id": "introspection_astrid_types_1785640217",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1785640907_round70_reads/summaries/astrid_types_1785640217.md",
+      "note": "Individual full-read response preserves temporal depth as distinct from scalar slope."
+    },
+    {
+      "introspection_id": "introspection_astrid_types_1785640217",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/types/schema/telemetry.rs",
+      "note": "Complete exact source declares transport fields but does not own their calculations or activation."
+    },
+    {
+      "introspection_id": "introspection_astrid_types_1785640217",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/types/schema/experience_delta.rs",
+      "note": "ResidualDeformationTraceV1 preserves bounded temporal deformation fields."
+    },
+    {
+      "introspection_id": "introspection_astrid_types_1785640217",
+      "claim_id": "c004",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/ws/evidence.rs",
+      "note": "Trace builder and regressions retain maximum, latest spike, integral, and multi-signal context."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1785639739",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1785640907_round70_reads/summaries/astrid_ws_1785639739.md",
+      "note": "Individual full-read response preserves the scheduling concern and grounds the lock and timeout findings."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1785639739",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/ws/telemetry_port.rs",
+      "note": "Complete exact source scopes receipt and final state writes around pipeline work."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1785639739",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib",
+      "note": "Complete bridge library suite covers integration timing and backoff regressions."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1785640732",
+      "claim_id": "c003",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Ledger preserves the nonlinear resistance and source-activation distinction."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785640544",
+      "claim_id": "c005",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "Unreleased entry records the affirmative attribution integrity change and authority boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785640544",
+      "claim_id": "c001",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Ledger keeps the frozen-cascade account distinct from corrected source ownership."
+    },
+    {
+      "introspection_id": "introspection_astrid_types_1785640217",
+      "claim_id": "c003",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Ledger preserves temporal depth versus scalar slope and the bounded existing trace route."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1785639739",
+      "claim_id": "c006",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Ledger preserves the sequential-pipeline concern without inventing a deadlock or stall."
+    }
+  ]
+}

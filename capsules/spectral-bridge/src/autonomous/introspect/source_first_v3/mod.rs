@@ -102,6 +102,7 @@ pub(super) struct SourceEvidenceV3 {
 pub(super) enum ClaimKindV2 {
     Absence,
     NewImplementation,
+    SourceAttribution,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -386,6 +387,137 @@ mod tests {
             report.support_refs[0].support_state,
             ClaimSupportStateV2::RequiresChangeEvidence
         );
+    }
+
+    #[test]
+    fn affirmative_source_attribution_rejects_imagined_symbol() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        let path = dir.path().join("grounded.rs");
+        let content = "pub fn actual_runtime() {}\n";
+        fs::write(&path, content).expect("fixture");
+        let evidence = build_source_evidence_v3_at_root(dir.path(), &path, content, 0, 1, 1)
+            .expect("evidence");
+        let report = challenge_response_claims_v3(
+            "Observed: the source defines the `ImaginedRuntime` struct.",
+            &path,
+            &evidence,
+        );
+
+        assert!(!report.all_supported);
+        assert_eq!(report.challenged_claim_count, 1);
+        assert_eq!(
+            report.support_refs[0].claim_kind,
+            ClaimKindV2::SourceAttribution
+        );
+        assert_eq!(
+            report.support_refs[0].support_state,
+            ClaimSupportStateV2::Rejected
+        );
+    }
+
+    #[test]
+    fn affirmative_source_attribution_requires_exact_identifier() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        let path = dir.path().join("grounded.rs");
+        let content = "pub fn actual_runtime() {}\n";
+        fs::write(&path, content).expect("fixture");
+        let evidence = build_source_evidence_v3_at_root(dir.path(), &path, content, 0, 1, 1)
+            .expect("evidence");
+        let report = challenge_response_claims_v3(
+            "Observed: the source defines the runtime described here.",
+            &path,
+            &evidence,
+        );
+
+        assert!(!report.all_supported);
+        assert_eq!(report.challenged_claim_count, 1);
+        assert_eq!(
+            report.support_refs[0].support_state,
+            ClaimSupportStateV2::Rejected
+        );
+    }
+
+    #[test]
+    fn affirmative_source_attribution_accepts_visible_field() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        let path = dir.path().join("telemetry.rs");
+        let content = "pub struct Telemetry {\n    pub spectral_entropy: f32,\n}\n";
+        fs::write(&path, content).expect("fixture");
+        let evidence = build_source_evidence_v3_at_root(dir.path(), &path, content, 0, 3, 3)
+            .expect("evidence");
+        let report = challenge_response_claims_v3(
+            "Observed: the source defines `spectral_entropy` in the telemetry schema.",
+            &path,
+            &evidence,
+        );
+
+        assert!(report.all_supported);
+        assert_eq!(report.challenged_claim_count, 1);
+        assert_eq!(
+            report.support_refs[0].support_state,
+            ClaimSupportStateV2::Supported
+        );
+    }
+
+    #[test]
+    fn affirmative_source_attribution_accepts_unseen_mapped_declaration() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        let path = dir.path().join("partial.rs");
+        let mut lines = vec!["// padding".to_string(); 800];
+        lines[700] = "pub fn late_mapped_function() {}".to_string();
+        let content = lines.join("\n");
+        fs::write(&path, &content).expect("fixture");
+        let evidence = build_source_evidence_v3_at_root(dir.path(), &path, &content, 0, 400, 800)
+            .expect("evidence");
+        let report = challenge_response_claims_v3(
+            "Observed: the source defines `late_mapped_function`.",
+            &path,
+            &evidence,
+        );
+
+        assert!(report.all_supported);
+        assert_eq!(report.challenged_claim_count, 1);
+    }
+
+    #[test]
+    fn unseen_incidental_token_is_not_structural_presence_evidence() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        let path = dir.path().join("partial.rs");
+        let mut lines = vec!["// padding".to_string(); 800];
+        lines[700] = "tracing::info!(pressure_risk = 0.22);".to_string();
+        let content = lines.join("\n");
+        fs::write(&path, &content).expect("fixture");
+        let evidence = build_source_evidence_v3_at_root(dir.path(), &path, &content, 0, 400, 800)
+            .expect("evidence");
+        let report = challenge_response_claims_v3(
+            "Observed: the source defines `pressure_risk` as a runtime field.",
+            &path,
+            &evidence,
+        );
+
+        assert!(!report.all_supported);
+        assert_eq!(
+            report.support_refs[0].support_state,
+            ClaimSupportStateV2::Rejected
+        );
+    }
+
+    #[test]
+    fn proposed_symbols_are_not_misread_as_present_source_claims() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        let path = dir.path().join("proposal.rs");
+        let content = "pub fn actual_runtime() {}\n";
+        fs::write(&path, content).expect("fixture");
+        let evidence = build_source_evidence_v3_at_root(dir.path(), &path, content, 0, 1, 1)
+            .expect("evidence");
+        let report = challenge_response_claims_v3(
+            "Suggested Next: I propose adding `ImaginedRuntime`.",
+            &path,
+            &evidence,
+        );
+
+        assert!(report.all_supported);
+        assert_eq!(report.challenged_claim_count, 0);
     }
 
     #[cfg(unix)]

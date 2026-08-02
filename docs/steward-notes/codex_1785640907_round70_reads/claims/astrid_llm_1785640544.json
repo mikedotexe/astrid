@@ -1,0 +1,54 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "High entropy with low fluctuation feels like a frozen cascade, grit, thickening, and constrained pathways.",
+      "disposition": "Preserved as primary experiential evidence with same-deployment telemetry context. The pairing does not itself establish mechanism or cause.",
+      "classification": "primary_qualitative_evidence"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "dialogue_runtime.rs defines DialogueRuntime, SpectralState, Admission, ShadowField, handle_input, and stable-core semantic admission.",
+      "disposition": "Rejected by complete exact-source challenge. None of those identifiers or mechanisms is defined in the file; the correction does not negate the felt report.",
+      "classification": "source_challenged_corrected"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The dialogue runtime source owns prompt sanitation, bounded section assembly, count-only diagnostics, and model transport.",
+      "disposition": "Verified from all 997 current lines at the report-bound hash.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Pressure, density gradient, and mode packing are implemented as dialogue-runtime controls.",
+      "disposition": "Source-corrected. pressure_risk and density_gradient occur only in fallback-trace logging near the end; mode_packing is absent and no control is applied here.",
+      "classification": "source_challenged_corrected"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Source-first review must challenge affirmative source attribution, not only absence and novelty claims.",
+      "disposition": "Implemented in Source-First V3 with exact-identifier, current-hash, included-byte, and structural-map support plus six focused regressions.",
+      "classification": "implemented_change"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "Pressure/porosity and entropy/fluctuation trials could test the frozen-cascade account.",
+      "disposition": "Preserved as serious hypotheses, but the requested parameter changes are inducing live-substrate experiments and remain Tier 5; no trial was run.",
+      "classification": "tier_5_wait",
+      "authority": "tier_5_operator_only"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "Output expression should be compared with co-timed spectral and pressure evidence.",
+      "disposition": "Routed without duplication to the existing default-off, owner-started attested expression/spectral alignment study; no real response was inspected.",
+      "classification": "study_duplicate"
+    },
+    {
+      "claim_id": "c008",
+      "summary": "Mode-packing thresholds, semantic-trickle width, porosity, or a new resolve_gradient_shear behavior should be changed.",
+      "disposition": "Preserved as exact Tier 5 control/model/substrate waits and source-owner corrected. No live behavior or dialogue source changed.",
+      "classification": "tier_5_wait",
+      "authority": "tier_5_operator_only"
+    }
+  ]
+}

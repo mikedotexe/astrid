@@ -1,0 +1,46 @@
+{
+  "schema": "steward_round_deployment_alignment_v1",
+  "steward_run_id": "run_1785644454979940000_4cb7a34b9e",
+  "source_changed": true,
+  "live_consumed_surface_changed": true,
+  "restart_required": true,
+  "deployment_required": true,
+  "deployment_status": "passed",
+  "deployment_receipt_id": "env_receipt_1785644041956_582000",
+  "deployment_receipt_path": "capsules/spectral-bridge/workspace/environment_receipts/environment_receipts.jsonl",
+  "deployment_manifest_path": "capsules/spectral-bridge/workspace/deployment_manifests/spectral-bridge.json",
+  "wrapper": "scripts/build_bridge.sh --restart --actor codex-heartbeat --ack <bounded reason>",
+  "old_pid": 95654,
+  "new_pid": 19028,
+  "binary_sha256": "49d68b4163c0df3245557aa16429419e9ef6ae867eac39d4844638897478090e",
+  "source_grounding_sha256": "3b12280e4dc89ce3708b5f9b15fcf7f97206cad0877ebb51852cb9a2692838e6",
+  "built_head": "2154420dbdc26b5d08b6532573c8df9776226e7a",
+  "built_from_dirty_component_tree": true,
+  "wrapper_checks": {
+    "preflight": true,
+    "build": true,
+    "restart": true,
+    "log_clean": true,
+    "telemetry_update": true,
+    "protocol_compatible": true,
+    "binary_matches_running_process": true
+  },
+  "connections": [
+    "127.0.0.1:7878 telemetry established",
+    "127.0.0.1:7879 sensory established",
+    "127.0.0.1:8090 model established"
+  ],
+  "runtime_observation": {
+    "observed_at": "2026-08-02T04:14:53Z",
+    "fill_pct": 63.23468780517578,
+    "spectral_entropy": 0.90,
+    "pressure_risk": 0.22,
+    "ready": true,
+    "note": "Fresh startup restored conversation state, connected telemetry and sensory lanes, emitted finite telemetry, and remained inside the stable-core hold shelf."
+  },
+  "minime_changelog_changed": false,
+  "actions_dispatched": [],
+  "cards_emitted": [],
+  "notes_delivered": [],
+  "authority_boundary": "The wrapper receipt names every already-dirty component source included in the acknowledged build. This packet claims only the Source-First attribution change; deployment success does not attribute, approve, or archive foreign edits and does not establish felt effect."
+}

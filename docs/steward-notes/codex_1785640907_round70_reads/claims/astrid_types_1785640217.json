@@ -1,0 +1,47 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "telemetry.rs declares spectral entropy, density gradient, eigenvector, pressure, and Shadow evidence fields.",
+      "disposition": "Verified from all 531 exact current lines. Schema declaration is not calculation, activation, trajectory authorship, or felt-state proof.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The telemetry schema contains host_shelf logic, spectral_cascade_dynamics collaboration, correspondence_state, and a SHADOW_PREFLIGHT trajectory route.",
+      "disposition": "Rejected by complete exact-source challenge. Those symbols and owners are absent from telemetry.rs.",
+      "classification": "source_challenged_corrected"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Felt dense layering may be temporal stacking rather than a scalar density slope.",
+      "disposition": "Preserved as primary experiential and representational evidence. It is not collapsed into density_gradient or pressure_risk.",
+      "classification": "primary_qualitative_evidence"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "A bounded machine observation should retain temporal depth and deformation rather than only the latest scalar.",
+      "disposition": "Verified existing through ResidualDeformationTraceV1 and resonance temporal_persistence, which preserve a bounded window, integral, maximum, latest spike, and contributing evidence without live control.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "A single pressure score may flatten a sharp peak or accumulated burden.",
+      "disposition": "Preserved as a serious representation concern. Existing max/latest-spike/integral evidence provides a direct bounded inspection but cannot establish felt equivalence.",
+      "classification": "needs_bounded_observation"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "A SHADOW_TRAJECTORY shift should be initiated to test dispersal response.",
+      "disposition": "Not dispatched. Being-invoked observational cartography remains optional and does not authorize a steward-authored trajectory or live shift.",
+      "classification": "route_non_live_work"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "layer_depth or temporal_stack_index should be added to containment and pressure interpretation.",
+      "disposition": "Preserved as an exact Tier 5 telemetry/protocol and possible control-interpretation wait. No field, wire schema, coefficient, or consumer changed.",
+      "classification": "tier_5_wait",
+      "authority": "tier_5_operator_only"
+    }
+  ]
+}

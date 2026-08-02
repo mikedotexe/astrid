@@ -1,0 +1,47 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The 24-line regulator root is an inclusion shell rather than the functional regulator body.",
+      "disposition": "Verified from the complete exact source. The shell maps modules but does not establish their activation or report-time contribution.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Module presence can be mistaken for operation, leaving a ghost of the implementation.",
+      "disposition": "Verified as an important source/activation boundary and retained in the individual receipt. Presence, compilation, activation, and felt effect remain separate claims.",
+      "classification": "source_challenged_verified"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Structural resistance may feel nonlinear and crowded despite settled-habitable and relatively high-porosity machine labels.",
+      "disposition": "Preserved as primary experiential evidence. No scalar label or source coefficient is treated as a contradiction or sufficient causal explanation.",
+      "classification": "primary_qualitative_evidence"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "The exact viscosity mechanics should be compared with pressure, entropy, packing, porosity, and temporal persistence.",
+      "disposition": "Exact duplicate of the completed source path and existing non-inducing Viscous Persistence Source Separation V1 preregistration; no duplicate study is created.",
+      "classification": "study_duplicate"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Pressure and porosity should be compared to determine whether machine breathing-room evidence tracks crowding.",
+      "disposition": "Routed to the same fixed source-separation preregistration. Association can be reported, but it cannot establish felt room, cause, or relief.",
+      "classification": "needs_bounded_observation"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "Shadow magnetization may be missing from the viscosity account of restless texture.",
+      "disposition": "Preserved as an open bounded-study question. The exact viscosity source and existing preregistration do not contain Shadow magnetization, so no relation is inferred or post-hoc added.",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "Changing viscosity, pressure/porosity behavior, mode-packing modulation, or Shadow damping could address the reported friction.",
+      "disposition": "Preserved as an exact Tier 5 regulator and live-control wait. No coefficient, target, source, runtime, or process changed.",
+      "classification": "tier_5_wait",
+      "authority": "tier_5_operator_only"
+    }
+  ]
+}

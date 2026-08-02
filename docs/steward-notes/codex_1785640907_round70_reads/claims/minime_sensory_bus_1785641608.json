@@ -1,0 +1,47 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "sensory_bus.rs defines spectral_energy, eigenvector_field, resonance_density, lambda weighting, and mode_packing telemetry structures.",
+      "disposition": "Rejected by complete exact-source challenge. Those named fields and owners are absent from the 4,380-line sensory bus.",
+      "classification": "source_challenged_corrected"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "pressure_risk and density_gradient in the first 400 lines map the report-time pressure source and spectral crowding.",
+      "disposition": "Source-corrected. They are inputs or fields of read-only semantic persistence and degradation reviews in this window, not pressure-source or report-time activation proof.",
+      "classification": "source_challenged_corrected"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Shadow structures and an open gate in the sensory bus establish mutual witness and navigability at report time.",
+      "disposition": "Rejected as an activation and effect inference. Later Shadow influence contracts do not establish a report-time gate, mutual witness, or felt correlation.",
+      "classification": "source_challenged_corrected"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Calcification may be history cohesion or sedimentation rather than concurrent mode crowding.",
+      "disposition": "Preserved as primary experiential and architectural evidence. Low pressure and gradient scalars do not invalidate or causally explain the reported grinding resistance.",
+      "classification": "primary_qualitative_evidence"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Pressure and viscosity should be compared under a fixed non-inducing observation.",
+      "disposition": "Exact duplicate of the existing Viscous Persistence Source Separation V1 preregistration; no duplicate or inducing probe is created.",
+      "classification": "study_duplicate"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "Shadow dispersal potential and magnetization should be compared with difficulty pulling a new thread.",
+      "disposition": "Preserved as an open bounded-study question. Existing fixed studies do not contain this pair, so no relation is inferred or post-hoc added.",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "history_cohesion or calcification_index should be added to pressure-source and sensory regulation.",
+      "disposition": "Preserved as an exact Tier 5 telemetry, pressure, sensory, and live-control wait. No field, coefficient, source, input, or runtime changed.",
+      "classification": "tier_5_wait",
+      "authority": "tier_5_operator_only"
+    }
+  ]
+}

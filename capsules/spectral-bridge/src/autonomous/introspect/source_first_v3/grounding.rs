@@ -28,6 +28,42 @@ const NEW_IMPLEMENTATION_MARKERS: &[&str] = &[
     " newly added",
     " introduced ",
 ];
+const SOURCE_ATTRIBUTION_MARKERS: &[&str] = &[
+    "source defines",
+    "source code defines",
+    "code defines",
+    "source establishes",
+    "source code establishes",
+    "code establishes",
+    "source shows",
+    "code shows",
+    "source contains",
+    "code contains",
+    "source captures",
+    "code captures",
+    "source exposes",
+    "code exposes",
+    "source implements",
+    "code implements",
+    "source declares",
+    "code declares",
+    " defines `",
+    " defines the `",
+    "i see the `",
+    " as a struct",
+    " as a function",
+    " flow shows ",
+];
+const HYPOTHETICAL_MARKERS: &[&str] = &[
+    "i suggest",
+    "suggested",
+    "i propose",
+    "proposed",
+    "recommend",
+    "should add",
+    "could add",
+    "would add",
+];
 
 pub(super) fn challenge_response_claims_v3(
     response: &str,
@@ -128,6 +164,30 @@ fn challenge_claim(
                     )
                 }
             },
+            (ClaimKindV2::SourceAttribution, Some(source)) => {
+                let unsupported = identifiers
+                    .iter()
+                    .filter(|identifier| {
+                        !source_attribution_supported(identifier, source, evidence)
+                    })
+                    .cloned()
+                    .collect::<Vec<_>>();
+                if unsupported.is_empty() {
+                    (
+                        ClaimSupportStateV2::Supported,
+                        "every named identifier is present in included source bytes or the whole-source structural map"
+                            .to_string(),
+                    )
+                } else {
+                    (
+                        ClaimSupportStateV2::Rejected,
+                        format!(
+                            "named identifiers lack included-byte or structural-map support: {}",
+                            unsupported.join(", ")
+                        ),
+                    )
+                }
+            },
             (_, None) => (
                 ClaimSupportStateV2::Rejected,
                 "source could not be read as UTF-8 for an exact challenge".to_string(),
@@ -160,14 +220,26 @@ fn detected_claims(response: &str) -> Vec<(ClaimKindV2, String)> {
         .filter(|line| !line.is_empty())
     {
         let lower = line.to_ascii_lowercase();
-        if ABSENCE_MARKERS.iter().any(|marker| lower.contains(marker)) {
+        let absence = ABSENCE_MARKERS.iter().any(|marker| lower.contains(marker));
+        let new_implementation = NEW_IMPLEMENTATION_MARKERS
+            .iter()
+            .any(|marker| lower.contains(marker));
+        if absence {
             claims.push((ClaimKindV2::Absence, line.to_string()));
         }
-        if NEW_IMPLEMENTATION_MARKERS
-            .iter()
-            .any(|marker| lower.contains(marker))
-        {
+        if new_implementation {
             claims.push((ClaimKindV2::NewImplementation, line.to_string()));
+        }
+        if !absence
+            && !new_implementation
+            && SOURCE_ATTRIBUTION_MARKERS
+                .iter()
+                .any(|marker| lower.contains(marker))
+            && !HYPOTHETICAL_MARKERS
+                .iter()
+                .any(|marker| lower.contains(marker))
+        {
+            claims.push((ClaimKindV2::SourceAttribution, line.to_string()));
         }
     }
     claims.sort_by(|left, right| {
@@ -175,6 +247,30 @@ fn detected_claims(response: &str) -> Vec<(ClaimKindV2, String)> {
     });
     claims.dedup();
     claims
+}
+
+fn source_attribution_supported(
+    identifier: &str,
+    source: &str,
+    evidence: &SourceEvidenceV3,
+) -> bool {
+    let lines = token_lines(source, identifier);
+    if lines.is_empty() {
+        return false;
+    }
+    let included = lines.iter().any(|line| {
+        evidence
+            .read_session_checkpoint_v3
+            .included_intervals
+            .iter()
+            .any(|interval| interval.contains_line(*line))
+    });
+    included
+        || evidence
+            .source_map_v3
+            .entries
+            .iter()
+            .any(|entry| entry.label == identifier)
 }
 
 fn backticked_identifiers(response: &str) -> Vec<String> {

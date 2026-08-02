@@ -108,7 +108,7 @@ impl SourceCoverageManifestV2 {
             match self.claim_support_state {
                 ClaimSupportStateV2::CompleteSourceAvailable => "complete_source_available",
                 ClaimSupportStateV2::StructuralChallengeRequired => {
-                    "partial_source_absence_and_new-implementation_claims_require_exact_structural_challenge"
+                    "partial_source_attribution_absence_and_new-implementation_claims_require_exact_structural_challenge"
                 },
             },
         ) + "\n"
@@ -132,9 +132,10 @@ impl SourceCoverageManifestV2 {
                 interval_text(&self.read_session_v2.included_intervals),
                 interval_text(&self.read_session_v2.uncovered_intervals),
             ),
-            "// Binding claim rule: a partial read may not claim that a schema, function, \
-             mechanism, or implementation is absent unless the whole-file structural map \
-             and exact symbol search support that claim."
+            "// Binding claim rule: affirmative source-attribution claims must name exact \
+             backticked identifiers supported by included bytes or the whole-file structural \
+             map; absence claims require an exact whole-source search; temporal \
+             new-implementation claims also require change evidence."
                 .to_string(),
             "// Whole-file structural outline:".to_string(),
         ];

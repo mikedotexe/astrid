@@ -1,0 +1,81 @@
+{
+  "schema": "steward_round_test_results_v1",
+  "steward_run_id": "run_1785644454979940000_4cb7a34b9e",
+  "status": "passed",
+  "results": [
+    {
+      "surface": "source_first_v3",
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml source_first_v3 -q",
+      "passed": 13,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "spectral_bridge_library",
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib -q",
+      "passed": 1772,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "archival_exported_index_spectral_bridge_library",
+      "command": "git checkout-index --all --prefix=<temporary export>/ && cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib -q",
+      "passed": 1751,
+      "failed": 0,
+      "status": "passed",
+      "note": "The exact index was exported outside the shared tree; only its ignored workspace/research directory was created so the raw-PDF fixture could write its temporary files."
+    },
+    {
+      "surface": "format_and_lint",
+      "commands": [
+        "cargo fmt --all -- --check",
+        "cargo clippy --manifest-path capsules/spectral-bridge/Cargo.toml --lib -- -D warnings"
+      ],
+      "status": "passed"
+    },
+    {
+      "surface": "introspection_addressing_audit",
+      "command": "PYTHONDONTWRITEBYTECODE=1 python3 scripts/introspection_addressing_audit.py --self-test",
+      "passed": 41,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "evidence_store_control_projection_division_claim_family",
+      "command": "env PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=.:scripts python3 -m unittest scripts.test_evidence_event_store scripts.test_steward_control scripts.test_steward_projection scripts.test_division_ceremony_followup scripts.test_division_ceremony_chronicle scripts.test_division_ceremony_projection scripts.test_claim_family_incremental_projection",
+      "passed": 67,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "experiential_epistemics",
+      "commands": [
+        "PYTHONDONTWRITEBYTECODE=1 python3 scripts/experiential_epistemics.py self-test --json",
+        "PYTHONDONTWRITEBYTECODE=1 python3 scripts/experiential_epistemics.py lint --json"
+      ],
+      "self_tests_passed": 2,
+      "lint_checked_records": 10088,
+      "lint_issues": 0,
+      "history_rewritten": false,
+      "status": "passed"
+    },
+    {
+      "surface": "minime_source_continuity",
+      "command": "reused exact-byte round-69 cargo test --manifest-path minime/Cargo.toml --lib receipt",
+      "passed": 355,
+      "failed": 0,
+      "status": "passed",
+      "note": "sensory_bus.rs and all regulator targets remain at the exact hashes covered by the immediately preceding complete Minime library run."
+    },
+    {
+      "surface": "packet_invariants",
+      "command": "jq validation and fixed read, claim, link, and queue counts",
+      "claims": 36,
+      "packet_evidence_rows": 27,
+      "recorded_addressing_links": 58,
+      "unprocessed_filenames": 35,
+      "status": "passed"
+    }
+  ],
+  "authority_boundary": "Passing tests establish source mechanics, deterministic evidence behavior, and build compatibility, not felt cause, relief, report-time activation, preferred control, consent, uptake, or closure."
+}

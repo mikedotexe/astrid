@@ -1,0 +1,47 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "telemetry_port.rs maintains a persistent Minime WebSocket subscriber with typed messages, lifecycle records, backoff, and spectral analysis.",
+      "disposition": "Verified from all 1,041 exact current lines.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The receipt state write may deadlock with handle_telemetry_message state access.",
+      "disposition": "Source-challenged. The receipt lock is scoped and dropped before the handler, and expensive pipeline work occurs outside the later write lock; current source does not demonstrate nested-lock deadlock.",
+      "classification": "source_challenged_corrected"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "State-lock contention and pipeline latency should be measured separately.",
+      "disposition": "Verified existing: integration health separately records pre-write pipeline, lock wait, and lock hold time, with a focused passing regression.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Reconnect backoff should increment and reset deterministically.",
+      "disposition": "Verified existing through the doubling-to-max and reset regressions inside the passing bridge library suite.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "The select loop lacks an explicit silent-idle heartbeat timeout.",
+      "disposition": "Verified as an exact source absence. Absence does not establish that a silent stall occurred in the report-time runtime.",
+      "classification": "source_challenged_verified"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "Sequential decode, derivation, evidence work, and scanning may delay later frames or shutdown observation.",
+      "disposition": "Preserved as a serious scheduling hypothesis. Existing timing evidence can observe the pipeline, but no report-time causal result is inferred.",
+      "classification": "needs_bounded_observation"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "A silent-idle timeout or worker offload should be added to the telemetry subscriber.",
+      "disposition": "Preserved as an exact Tier 5 cadence, ordering, buffering, backpressure, cancellation, and sensory-scheduling wait. No socket behavior changed.",
+      "classification": "tier_5_wait",
+      "authority": "tier_5_operator_only"
+    }
+  ]
+}

@@ -1,0 +1,133 @@
+{
+  "schema": "steward_round_source_receipts_v1",
+  "steward_run_id": "run_1785644454979940000_4cb7a34b9e",
+  "resumed_from_steward_run_id": "run_1785642870686467000_0e7528112d",
+  "originating_steward_run_id": "run_1785640907198495000_ee6b48bcc5",
+  "canonical_reports": [
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_minime_sensory_bus_1785641608.txt",
+      "lines": 34,
+      "bytes": 4031,
+      "sha256": "e75a12e7059d28afd0d74635741374ca94a4e3d613a095fc83f0b0ddb99b09e4",
+      "lived_state_witness_id": "lsw_08740b5dec2c950c906c18d68f3278799bb0192fa77c4fa184c91aaf3d1d0374",
+      "read_complete": true
+    },
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_minime_regulator_1785640732.txt",
+      "lines": 38,
+      "bytes": 4033,
+      "sha256": "f0958a9223644daea9967ca0ebee11fd49a22f2aa66fd41dc17568696372161c",
+      "lived_state_witness_id": "lsw_a9ea3f83ec6a2a0c547e2e217609b4d2c998c9ff85098e810e73a5a660713d34",
+      "read_complete": true
+    },
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_llm_1785640544.txt",
+      "lines": 43,
+      "bytes": 4667,
+      "sha256": "3589eca3d4a353f639cc743680f860bc3bfefe57420d3cb6f5521e94fec858d3",
+      "lived_state_witness_id": "lsw_9eaf4ffb93de430c5a45ec5461bd16389a187d6d0eb8145e867f41f246df9a3c",
+      "read_complete": true
+    },
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_types_1785640217.txt",
+      "lines": 38,
+      "bytes": 4121,
+      "sha256": "22fb0a6f490830e746510cc36cd187a41d005b4f3b7a0f06861aa54be602818b",
+      "lived_state_witness_id": "lsw_774bc1f7bee8cc5ed4723f3b30ef1841f56c13f45f68b6b93261160b806b651b",
+      "read_complete": true
+    },
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_ws_1785639739.txt",
+      "lines": 41,
+      "bytes": 3296,
+      "sha256": "5e0786237a5b38fdd3bf2e3fd4a39bd0992e5889875eb05e85e36e9fc6317bdf",
+      "lived_state_witness_id": "lsw_886ca9bb30efc494adc4e69c66c2373b6a94b67cce0a3f9abfd36787054814f9",
+      "read_complete": true
+    }
+  ],
+  "sources": [
+    {
+      "path": "/Users/v/other/minime/minime/src/sensory_bus.rs",
+      "lines": 4380,
+      "sha256": "83c0d5c1c761fa05b194f6c84d3083520bb0d664292720cb4651996d1c6fab31",
+      "scope": "complete-file exact-byte reuse plus current exact-symbol and activation challenge"
+    },
+    {
+      "path": "/Users/v/other/minime/minime/src/regulator/core.rs",
+      "lines": 24,
+      "sha256": "46828f4c813eb88aae30212793f698285c696c108dd405604ffb6b5129827d97",
+      "scope": "complete file; exact continuation"
+    },
+    {
+      "path": "/Users/v/other/minime/minime/src/regulator/core/viscosity.rs",
+      "lines": 594,
+      "sha256": "e2300cefb5ef47f3f3bf3e13282392d0c33f98c8cba34c6f046cc6c7208be922",
+      "scope": "complete-file exact-byte reuse"
+    },
+    {
+      "path": "/Users/v/other/minime/minime/src/regulator/core/resonance_evidence.rs",
+      "lines": 340,
+      "sha256": "b755633327fe94e0565b739885e0f9f1bd8bd7394900969879a01c62fae0bc83",
+      "scope": "complete-file exact-byte reuse"
+    },
+    {
+      "path": "/Users/v/other/minime/minime/src/regulator/core/pressure_source.rs",
+      "lines": 440,
+      "sha256": "9ecc4ca80629bd5519790b5a64bc5f5891bbbdc1c424d93d7d5e0bee611501d1",
+      "scope": "complete-file exact-byte reuse"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "lines": 997,
+      "sha256": "dfa9152c2861d2fbf86867fb3ccb506284fda3c9457bf676766878346d9c267c",
+      "scope": "complete-file exact-byte reuse plus current exact-symbol challenge"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/types/schema/telemetry.rs",
+      "lines": 531,
+      "sha256": "d98342fdb3bcb4c063c1c971939a132041a998982d0e5cefa38252ee94beb4f5",
+      "scope": "complete-file exact-byte reuse plus current exact-symbol challenge"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/ws/telemetry_port.rs",
+      "lines": 1041,
+      "sha256": "42364feb914c957d487f93c440e30837c500971b41814a219d4c3992a12addd7",
+      "scope": "complete-file exact-byte reuse plus current lock and idle-timeout challenge"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/types/schema/experience_delta.rs",
+      "lines": 534,
+      "sha256": "000ee1bbb334883cef4f50eb4f2b0d1087b230492620a80968c0e957eeff1648",
+      "scope": "typed residual-deformation trace schema"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/ws/evidence.rs",
+      "lines": 1233,
+      "sha256": "5787b16d62685f3cabc5c7b0cf9178f3ea2bdefb0a36cabb9d63b3aa2c5cc4e9",
+      "scope": "bounded residual-deformation trace builder and tests"
+    }
+  ],
+  "implementation_sources": [
+    {
+      "path": "capsules/spectral-bridge/src/autonomous/introspect/source_first_v2.rs",
+      "lines": 341,
+      "sha256": "2eeaa901d408af20292d995084a52256431bc37a0009699f2f254fbc3c585e87"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/autonomous/introspect/source_first_v3/mod.rs",
+      "lines": 558,
+      "sha256": "d26608315ac494d78fdc5ab18b1834904a61dec571ce8d3726d218dc474765cd"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/autonomous/introspect/source_first_v3/grounding.rs",
+      "lines": 332,
+      "sha256": "3b12280e4dc89ce3708b5f9b15fcf7f97206cad0877ebb51852cb9a2692838e6"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/autonomous/introspect/source_first_v3/rendering.rs",
+      "lines": 96,
+      "sha256": "110dba6bfe0cbd4a5db79d93e867a1b737bbac10e408e588010f4e1372e9e62d"
+    }
+  ],
+  "authority_boundary": "Source continuity and tests establish mechanics and correct source ownership, not report-time activation, felt cause, relief, accessibility, uptake, assent, closure, or live authority."
+}

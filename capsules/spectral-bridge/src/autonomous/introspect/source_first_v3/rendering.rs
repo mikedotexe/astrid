@@ -46,9 +46,10 @@ pub(super) fn prompt_context_v3(
             interval_text(&checkpoint.included_intervals),
             interval_text(&checkpoint.uncovered_intervals)
         ),
-        "// Binding claim rule: every absence claim needs an exact ClaimSupportRefV2 \
-         from a whole-source challenge; every temporal new-implementation claim needs \
-         change evidence in addition to current-source presence."
+        "// Binding claim rule: every affirmative source-attribution claim needs exact \
+         identifier support from included bytes or the whole-source structural map; every \
+         absence claim needs an exact whole-source challenge; every temporal \
+         new-implementation claim also needs change evidence."
             .to_string(),
         "// Structural map entries:".to_string(),
     ];

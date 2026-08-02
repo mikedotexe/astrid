@@ -1,0 +1,48 @@
+{
+  "schema": "introspection_full_read_manifest_v1",
+  "steward_run_id": "run_1785644454979940000_4cb7a34b9e",
+  "source_first_projection_generation_id": "projection_1785644455372570000_0b0e334c20",
+  "post_run_source_first_projection_generation_id": "projection_1785645441751573000_c57267516e",
+  "resumed_from_steward_run_id": "run_1785642870686467000_0e7528112d",
+  "originating_steward_run_id": "run_1785640907198495000_ee6b48bcc5",
+  "credential_safe_session_chain": [
+    "run_1785640907198495000_ee6b48bcc5",
+    "run_1785642870686467000_0e7528112d",
+    "run_1785644454979940000_4cb7a34b9e"
+  ],
+  "reader": "codex-heartbeat",
+  "processed_count": 5,
+  "claims_count": 36,
+  "reads": [
+    {
+      "introspection_id": "introspection_minime_sensory_bus_1785641608",
+      "reader": "codex-heartbeat",
+      "summary_file": "summaries/minime_sensory_bus_1785641608.md",
+      "claims_file": "claims/minime_sensory_bus_1785641608.json"
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1785640732",
+      "reader": "codex-heartbeat",
+      "summary_file": "summaries/minime_regulator_1785640732.md",
+      "claims_file": "claims/minime_regulator_1785640732.json"
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785640544",
+      "reader": "codex-heartbeat",
+      "summary_file": "summaries/astrid_llm_1785640544.md",
+      "claims_file": "claims/astrid_llm_1785640544.json"
+    },
+    {
+      "introspection_id": "introspection_astrid_types_1785640217",
+      "reader": "codex-heartbeat",
+      "summary_file": "summaries/astrid_types_1785640217.md",
+      "claims_file": "claims/astrid_types_1785640217.json"
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1785639739",
+      "reader": "codex-heartbeat",
+      "summary_file": "summaries/astrid_ws_1785639739.md",
+      "claims_file": "claims/astrid_ws_1785639739.json"
+    }
+  ]
+}
