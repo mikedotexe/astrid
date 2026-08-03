@@ -1,8 +1,8 @@
 diff --git a/src/lib.rs b/src/lib.rs
-index dd8fb52..1f02df6 100644
+index 990e702bbf..b76a25f6f3 100644
 --- a/src/lib.rs
 +++ b/src/lib.rs
-@@ -221,6 +221,74 @@ fn sovereign_next_repair_enabled() -> bool {
+@@ -263,6 +263,84 @@ fn sovereign_next_repair_enabled() -> bool {
      env::var("sovereign_next_repair").is_ok_and(|value| value.eq_ignore_ascii_case("true"))
  }
 -
@@ -14,7 +14,11 @@ index dd8fb52..1f02df6 100644
 +
 +#[derive(Debug, PartialEq, Eq)]
 +struct FinalizedResponse {
++    /// Terminal bytes published to the client, including any visible repair.
 +    text: String,
++    /// Exact model bytes admitted to session history.
++    /// Executor output has no authored history representation.
++    authored_history_text: Option<String>,
 +    response_provenance: &'static str,
 +}
 +
@@ -24,23 +28,28 @@ index dd8fb52..1f02df6 100644
 +}
 +
 +fn finalize_model_response_with_repair(text: &str, repair_enabled: bool) -> FinalizedResponse {
-+    let trimmed = text.trim_end();
 +    if !repair_enabled {
 +        return FinalizedResponse {
-+            text: trimmed.to_owned(),
++            text: text.to_owned(),
++            authored_history_text: Some(text.to_owned()),
 +            response_provenance: RESPONSE_PROVENANCE_MODEL_AUTHORED,
 +        };
 +    }
-+    let finalized = ensure_sovereign_next(trimmed);
-+    let response_provenance = if finalized == trimmed {
-+        RESPONSE_PROVENANCE_MODEL_AUTHORED
-+    } else if finalized.contains(FORMAT_NEXT_REPAIR_MARKER) {
-+        RESPONSE_PROVENANCE_FORMAT_REPAIR
++    let (finalized, response_provenance) = if has_valid_sovereign_next(text) {
++        (text.to_owned(), RESPONSE_PROVENANCE_MODEL_AUTHORED)
++    } else if let Some(repaired) = canonicalize_split_argument_next(text) {
++        (repaired, RESPONSE_PROVENANCE_FORMAT_REPAIR)
++    } else if let Some(repaired) = canonicalize_embedded_terminal_next(text) {
++        (repaired, RESPONSE_PROVENANCE_FORMAT_REPAIR)
 +    } else {
-+        RESPONSE_PROVENANCE_SAFE_FALLBACK
++        (
++            ensure_sovereign_next(text),
++            RESPONSE_PROVENANCE_SAFE_FALLBACK,
++        )
 +    };
 +    FinalizedResponse {
 +        text: finalized,
++        authored_history_text: Some(text.to_owned()),
 +        response_provenance,
 +    }
 +}
@@ -58,6 +67,7 @@ index dd8fb52..1f02df6 100644
 +    };
 +    FinalizedResponse {
 +        text,
++        authored_history_text: None,
 +        response_provenance: RESPONSE_PROVENANCE_EXECUTOR_ERROR,
 +    }
 +}
@@ -78,7 +88,7 @@ index dd8fb52..1f02df6 100644
  /// Current wall-clock time as milliseconds since UNIX epoch, or 0 if unavailable.
  fn now_ms() -> u64 {
      time::now()
-@@ -587,16 +655,10 @@ impl TurnState {
+@@ -629,16 +707,10 @@ impl TurnState {
              log::error(format!(
                  "Phase {phase_name} timed out after {elapsed_secs}s"
              ));
@@ -99,7 +109,7 @@ index dd8fb52..1f02df6 100644
              self.reset_conversation_turn();
              self.set_phase(Phase::Idle);
              self.save()?;
-@@ -1060,14 +1122,8 @@ impl ReactLoop {
+@@ -1102,14 +1174,8 @@ impl ReactLoop {
              }
              StreamEvent::Error(err) => {
                  log::error(format!("LLM stream error: {err}"));
@@ -116,7 +126,7 @@ index dd8fb52..1f02df6 100644
                  // Clean up ALL in-flight mappings (req2sess + call2sess)
                  // before resetting turn state to prevent orphaned KV entries.
                  Self::cleanup_inflight_mappings(&state);
-@@ -1157,16 +1213,10 @@ impl ReactLoop {
+@@ -1199,16 +1265,10 @@ impl ReactLoop {
              log::error(format!(
                  "ReAct loop exceeded {max_iterations} iterations, forcing stop"
              ));
@@ -137,7 +147,7 @@ index dd8fb52..1f02df6 100644
              state.reset_conversation_turn();
              state.set_phase(Phase::Idle);
              state.save()?;
-@@ -1338,46 +1388,36 @@ impl ReactLoop {
+@@ -1380,45 +1440,41 @@ impl ReactLoop {
                  ) {
                      log::error(format!("Failed to dispatch tool {}: {e}", tc.name));
                      delete_call_sessions(&call_ids);
@@ -167,11 +177,16 @@ index dd8fb52..1f02df6 100644
 -            };
 +            let final_response = finalize_model_response(&state.response_text);
              // Text response with no tool calls - conversation turn complete.
-             // Use atomic append to confirm delivery to session.
++            // Preserve only exact model bytes in session history. Visible
++            // executor repair markers remain confined to terminal publication.
++            let authored_history_text = final_response
++                .authored_history_text
++                .as_deref()
++                .expect("model finalization always retains authored history bytes");
              Self::fetch_messages_with_append(
                  &state.session_id,
 -                &[Message::assistant(&final_text)],
-+                &[Message::assistant(&final_response.text)],
++                &[Message::assistant(authored_history_text)],
              )?;
 -
 +
@@ -199,7 +214,7 @@ index dd8fb52..1f02df6 100644
              state.set_phase(Phase::Idle);
              state.save()?;
          }
-@@ -1698,6 +1738,48 @@ impl ReactLoop {
+@@ -1739,6 +1795,95 @@ impl ReactLoop {
      }
  }
 -
@@ -215,14 +230,49 @@ index dd8fb52..1f02df6 100644
 +
 +    #[test]
 +    fn classifies_exact_safe_and_format_repaired_model_responses() {
-+        let exact = finalize_model_response_with_repair("Reflection.\nNEXT: REST", true);
++        let exact_bytes = "Reflection.\nNEXT: REST\n  ";
++        let exact = finalize_model_response_with_repair(exact_bytes, true);
 +        assert_eq!(
 +            exact.response_provenance,
 +            RESPONSE_PROVENANCE_MODEL_AUTHORED
 +        );
++        assert_eq!(exact.text, exact_bytes);
++        assert_eq!(exact.authored_history_text.as_deref(), Some(exact_bytes));
 +
 +        let safe = finalize_model_response_with_repair("Reflection without an Action.", true);
 +        assert_eq!(safe.response_provenance, RESPONSE_PROVENANCE_SAFE_FALLBACK);
++        assert_eq!(
++            safe.authored_history_text.as_deref(),
++            Some("Reflection without an Action.")
++        );
++        assert!(
++            !safe
++                .authored_history_text
++                .as_deref()
++                .unwrap()
++                .contains("Local contract repair")
++        );
++
++        let marker_spoof =
++            format!("Model bytes mentioning {FORMAT_NEXT_REPAIR_MARKER}\nNEXT: REST\n ");
++        let spoofed = finalize_model_response_with_repair(&marker_spoof, true);
++        assert_eq!(
++            spoofed.response_provenance,
++            RESPONSE_PROVENANCE_MODEL_AUTHORED
++        );
++        assert_eq!(spoofed.text, marker_spoof);
++        assert_eq!(
++            spoofed.authored_history_text.as_deref(),
++            Some(marker_spoof.as_str())
++        );
++
++        let invalid_marker_spoof =
++            format!("Model bytes mentioning {FORMAT_NEXT_REPAIR_MARKER} without an Action.");
++        let invalid_spoofed = finalize_model_response_with_repair(&invalid_marker_spoof, true);
++        assert_eq!(
++            invalid_spoofed.response_provenance,
++            RESPONSE_PROVENANCE_SAFE_FALLBACK
++        );
 +
 +        let tuning = finalize_model_response_with_repair(
 +            "A bounded trial. NEXT: TUNE_RESERVOIR input_gain=1.05 FOR 15m :: test",
@@ -233,6 +283,17 @@ index dd8fb52..1f02df6 100644
 +            RESPONSE_PROVENANCE_FORMAT_REPAIR
 +        );
 +        assert!(tuning.text.contains(FORMAT_NEXT_REPAIR_MARKER));
++        assert_eq!(
++            tuning.authored_history_text.as_deref(),
++            Some("A bounded trial. NEXT: TUNE_RESERVOIR input_gain=1.05 FOR 15m :: test")
++        );
++        assert!(
++            !tuning
++                .authored_history_text
++                .as_deref()
++                .unwrap()
++                .contains(FORMAT_NEXT_REPAIR_MARKER)
++        );
 +    }
 +
 +    #[test]
@@ -242,6 +303,7 @@ index dd8fb52..1f02df6 100644
 +            response.response_provenance,
 +            RESPONSE_PROVENANCE_EXECUTOR_ERROR
 +        );
++        assert!(response.authored_history_text.is_none());
 +        assert!(response.text.ends_with("NEXT: LISTEN"));
 +    }
 +}

@@ -65,6 +65,12 @@ const ASTRID_SERVICE: &str = "astrid.service";
 const SERVICE_RECOVERY_TIMEOUT: Duration = Duration::from_secs(45);
 const HEADLESS_TRACE_RECEIPT_PREFIX: &str = "[astrid-headless-trace] ";
 const HEADLESS_PROVENANCE_RECEIPT_PREFIX: &str = "[astrid-headless-provenance] ";
+const HEADLESS_PROVIDER_METRICS_RECEIPT_PREFIX: &str = "[astrid-headless-provider-metrics] ";
+const HEADLESS_PROVIDER_METRICS_SCHEMA_VERSION_V1: u8 = 1;
+const KERNEL_HTTP_HOST_PRODUCER_KIND: &str = "kernel_host";
+const KERNEL_HTTP_HOST_PRODUCER_ID: &str = "wasm_http_stream";
+const REQUEST_HEADER_LATENCY_SOURCE_V1: &str = "kernel_http_host_trace_v1";
+const LOCAL_PROVIDER_TURN_METRICS_MAX_ENTRIES: usize = 16;
 const HEADLESS_IDLE_TIMEOUT_EXIT_CODE: i32 = 53;
 const HEADLESS_SUPERVISOR_MARGIN_SECONDS: u64 = 30;
 
@@ -252,7 +258,17 @@ struct AutonomyRunReceipt<'a> {
     prompt_estimated_tokens: usize,
     provider_prompt_tokens: Option<u64>,
     provider_completion_tokens: Option<u64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    provider_request_id: Option<Uuid>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    provider_request_count: Option<u64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    provider_successful_header_count: Option<u64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    provider_requests: Option<&'a [HeadlessProviderRequestAttemptV1]>,
     request_header_latency_ms: Option<u64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    request_header_latency_source: Option<&'static str>,
     generation_latency_ms: Option<u64>,
     full_turn_latency_ms: u64,
     elapsed_ms: u64,
@@ -274,8 +290,58 @@ struct TurnResult {
 struct ProviderMetrics {
     prompt_tokens: Option<u64>,
     completion_tokens: Option<u64>,
+    request_id: Option<Uuid>,
+    request_count: Option<u64>,
+    successful_header_count: Option<u64>,
+    requests: Option<Vec<HeadlessProviderRequestAttemptV1>>,
     request_header_latency_ms: Option<u64>,
+    request_header_latency_source: Option<&'static str>,
     generation_latency_ms: Option<u64>,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+struct HeadlessProviderMetricsReceiptV1 {
+    schema_version: u8,
+    trace: serde_json::Value,
+    producer: HeadlessProviderMetricsProducerV1,
+    request_count: u64,
+    successful_header_count: u64,
+    requests: Vec<HeadlessProviderRequestAttemptV1>,
+    #[serde(default)]
+    request_id: Option<Uuid>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    request_header_latency_ms: Option<u64>,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+struct HeadlessProviderMetricsProducerV1 {
+    schema_version: u8,
+    kind: String,
+    id: String,
+}
+
+#[derive(Debug, Clone, Copy, Deserialize, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+enum HeadlessProviderRequestOutcomeV1 {
+    SuccessfulHeaders,
+    NonSuccessStatus,
+    UnknownPeer,
+    NonLoopbackPeer,
+    Timeout,
+    TransportError,
+    Cancelled,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+struct HeadlessProviderRequestAttemptV1 {
+    attempt_id: Uuid,
+    request_id: Uuid,
+    outcome: HeadlessProviderRequestOutcomeV1,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    request_header_latency_ms: Option<u64>,
 }
 
 #[derive(Debug)]
@@ -639,6 +705,27 @@ async fn replay_pending_action_dispatch(
         .map_err(|_| anyhow::anyhow!("Action executor closed during durable outbox replay"))
 }
 
+fn defer_for_human_quiescence(
+    config: &Config,
+    state: &mut AutonomyState,
+    last_human_input: u64,
+    now: u64,
+) -> anyhow::Result<bool> {
+    let next_due =
+        last_human_input.saturating_add(config.autonomy_quiet_minutes.saturating_mul(60_000));
+    if last_human_input == 0 || now >= next_due {
+        return Ok(false);
+    }
+    if state.last_status.as_deref() != Some("waiting_for_human_quiescence")
+        || state.next_due_at_unix_ms != next_due
+    {
+        state.next_due_at_unix_ms = next_due;
+        state.last_status = Some("waiting_for_human_quiescence".to_string());
+        persist_state(config, state).context("quiescence state was not durable")?;
+    }
+    Ok(true)
+}
+
 async fn poll_due_turn(
     config: &Config,
     snapshots: &watch::Receiver<ReservoirSnapshot>,
@@ -665,8 +752,17 @@ async fn poll_due_turn(
         }
         return Ok(());
     }
+    if state.last_status.as_deref() == Some("deferred_outside_operating_shelf")
+        && now < state.next_due_at_unix_ms
+    {
+        // A salient observation remains eligible after a transient safety
+        // deferral, but it must not turn the five-minute shelf retry into a
+        // tight poll-loop retry.
+        return Ok(());
+    }
     let active_chain_follow_up = state.chain_follow_up_pending && state.active_chain_id.is_some();
     let mut trigger_override = None;
+    let mut salient_perception_to_consume = None;
     if active_chain_follow_up || state.total_attempts == 0 {
         if now < state.next_due_at_unix_ms {
             return Ok(());
@@ -686,7 +782,7 @@ async fn poll_due_turn(
                     .saturating_mul(60_000),
             );
         if fresh_perception {
-            state.last_perception_consumed_at_unix_ms = salient_perception.unwrap_or_default();
+            salient_perception_to_consume = salient_perception;
             trigger_override = Some("salient_machine_observation");
         } else if now < heartbeat_due {
             if state.last_status.as_deref() != Some("waiting_for_salient_machine_observation")
@@ -705,14 +801,7 @@ async fn poll_due_turn(
     } else if now < state.next_due_at_unix_ms {
         return Ok(());
     }
-    let last_human_input = *human_activity.borrow();
-    let quiet_ms = config.autonomy_quiet_minutes.saturating_mul(60_000);
-    if last_human_input > 0 && now < last_human_input.saturating_add(quiet_ms) {
-        state.next_due_at_unix_ms = last_human_input.saturating_add(quiet_ms);
-        state.last_status = Some("waiting_for_human_quiescence".to_string());
-        if let Err(error) = persist_state(config, state) {
-            return Err(error).context("quiescence state was not durable");
-        }
+    if defer_for_human_quiescence(config, state, *human_activity.borrow(), now)? {
         return Ok(());
     }
 
@@ -734,6 +823,7 @@ async fn poll_due_turn(
         &snapshot,
         state,
         trigger_override,
+        salient_perception_to_consume,
         action_tx,
         autonomy_trace_registry,
     )
@@ -1832,6 +1922,7 @@ async fn execute_due_turn(
     snapshot: &ReservoirSnapshot,
     state: &mut AutonomyState,
     trigger_override: Option<&'static str>,
+    salient_perception_to_consume: Option<u64>,
     action_tx: &mpsc::Sender<crate::actions::ActionCandidate>,
     autonomy_trace_registry: &AutonomyTraceRegistry,
 ) -> anyhow::Result<()> {
@@ -1864,6 +1955,9 @@ async fn execute_due_turn(
     } else {
         state.ordinary_session_authored_turns
     };
+    // CPU-edge executes one awaited turn at a time and mints a fresh UUIDv4 trace root here. The
+    // host timing registry keys by the later canonical full turn identity; callers that reuse a
+    // generic supplied root concurrently do not receive a stronger disambiguation guarantee.
     let trace = IpcTraceContextV1::root(
         Uuid::new_v4(),
         Uuid::new_v5(&Uuid::NAMESPACE_URL, session_name.as_bytes()).to_string(),
@@ -1875,6 +1969,13 @@ async fn execute_due_turn(
     state.last_prompt_chars = prompt.chars().count();
     state.last_prompt_estimated_tokens = state.last_prompt_chars.saturating_add(3) / 4;
     state.last_session_name = Some(session_name.clone());
+    if let Some(recorded_at) = salient_perception_to_consume {
+        // Consumption and the exact attempt preflight share one durable state
+        // transition. Any earlier transient gate leaves the observation
+        // eligible; a failed preflight restores `prior_state` below.
+        state.last_perception_consumed_at_unix_ms =
+            state.last_perception_consumed_at_unix_ms.max(recorded_at);
+    }
     if let Err(error) = persist_state(config, state) {
         *state = prior_state;
         return Err(error).context("preflight state was not durable; inference suppressed");
@@ -1886,7 +1987,7 @@ async fn execute_due_turn(
     let result = run_turn(config, &prompt, &session_name, &trace).await;
     let provider_metrics = result.as_ref().map_or_else(
         |_| ProviderMetrics::default(),
-        |turn| parse_provider_metrics(&turn.stderr),
+        |turn| parse_provider_metrics(&turn.stderr, &turn.canonical_trace),
     );
     let completion_trace = result
         .as_ref()
@@ -2045,7 +2146,12 @@ fn append_completion_receipt(
         prompt_estimated_tokens: state.last_prompt_estimated_tokens,
         provider_prompt_tokens: context.provider_metrics.prompt_tokens,
         provider_completion_tokens: context.provider_metrics.completion_tokens,
+        provider_request_id: context.provider_metrics.request_id,
+        provider_request_count: context.provider_metrics.request_count,
+        provider_successful_header_count: context.provider_metrics.successful_header_count,
+        provider_requests: context.provider_metrics.requests.as_deref(),
         request_header_latency_ms: context.provider_metrics.request_header_latency_ms,
+        request_header_latency_source: context.provider_metrics.request_header_latency_source,
         generation_latency_ms: context.provider_metrics.generation_latency_ms,
         full_turn_latency_ms: elapsed_ms,
         elapsed_ms,
@@ -3879,29 +3985,101 @@ fn bounded_utf8(bytes: &[u8]) -> String {
     String::from_utf8_lossy(&bytes[start..]).into_owned()
 }
 
-fn parse_provider_metrics(stderr: &str) -> ProviderMetrics {
-    let mut metrics = ProviderMetrics::default();
-    for token in stderr.split_whitespace() {
-        let Some((key, raw_value)) = token.split_once('=') else {
-            continue;
-        };
-        let Ok(value) = raw_value
-            .trim_matches(|character: char| !character.is_ascii_digit())
-            .parse::<u64>()
-        else {
-            continue;
-        };
-        match key
-            .trim_matches(|character: char| !character.is_ascii_alphanumeric() && character != '_')
+fn parse_provider_metrics(stderr: &str, canonical_trace: &IpcTraceContextV1) -> ProviderMetrics {
+    let mut receipts = stderr.lines().filter_map(|line| {
+        line.trim()
+            .strip_prefix(HEADLESS_PROVIDER_METRICS_RECEIPT_PREFIX)
+            .map(str::trim)
+    });
+    let Some(encoded) = receipts.next() else {
+        return ProviderMetrics::default();
+    };
+    if receipts.next().is_some()
+        || !canonical_trace.is_supported()
+        || canonical_trace.turn_id.is_none()
+        || canonical_trace.session_id.is_none()
+    {
+        return ProviderMetrics::default();
+    }
+    let Ok(receipt) = serde_json::from_str::<HeadlessProviderMetricsReceiptV1>(encoded) else {
+        return ProviderMetrics::default();
+    };
+    let Ok(expected_trace) = serde_json::to_value(canonical_trace) else {
+        return ProviderMetrics::default();
+    };
+    if receipt.schema_version != HEADLESS_PROVIDER_METRICS_SCHEMA_VERSION_V1
+        || receipt.trace != expected_trace
+        || receipt.producer.schema_version != 1
+        || receipt.producer.kind != KERNEL_HTTP_HOST_PRODUCER_KIND
+        || receipt.producer.id != KERNEL_HTTP_HOST_PRODUCER_ID
+    {
+        return ProviderMetrics::default();
+    }
+    let Ok(request_count) = usize::try_from(receipt.request_count) else {
+        return ProviderMetrics::default();
+    };
+    if request_count == 0
+        || request_count > LOCAL_PROVIDER_TURN_METRICS_MAX_ENTRIES
+        || receipt.requests.len() != request_count
+        || receipt.successful_header_count > receipt.request_count
+    {
+        return ProviderMetrics::default();
+    }
+    let mut successful_header_count = 0_u64;
+    for (index, request) in receipt.requests.iter().enumerate() {
+        if request.attempt_id.is_nil()
+            || request.request_id.is_nil()
+            || receipt.requests[..index]
+                .iter()
+                .any(|prior| prior.attempt_id == request.attempt_id)
         {
-            "provider_prompt_tokens" => metrics.prompt_tokens = Some(value),
-            "provider_completion_tokens" => metrics.completion_tokens = Some(value),
-            "request_header_latency_ms" => metrics.request_header_latency_ms = Some(value),
-            "generation_latency_ms" => metrics.generation_latency_ms = Some(value),
-            _ => {},
+            return ProviderMetrics::default();
+        }
+        match (request.outcome, request.request_header_latency_ms) {
+            (HeadlessProviderRequestOutcomeV1::SuccessfulHeaders, Some(_)) => {
+                let Some(next) = successful_header_count.checked_add(1) else {
+                    return ProviderMetrics::default();
+                };
+                successful_header_count = next;
+            },
+            (
+                HeadlessProviderRequestOutcomeV1::NonSuccessStatus
+                | HeadlessProviderRequestOutcomeV1::UnknownPeer
+                | HeadlessProviderRequestOutcomeV1::NonLoopbackPeer
+                | HeadlessProviderRequestOutcomeV1::Timeout
+                | HeadlessProviderRequestOutcomeV1::TransportError
+                | HeadlessProviderRequestOutcomeV1::Cancelled,
+                None,
+            ) => {},
+            _ => return ProviderMetrics::default(),
         }
     }
-    metrics
+    if successful_header_count != receipt.successful_header_count {
+        return ProviderMetrics::default();
+    }
+    let single = if receipt.request_count == 1 && receipt.successful_header_count == 1 {
+        let request = &receipt.requests[0];
+        if receipt.request_id != Some(request.request_id)
+            || receipt.request_header_latency_ms != request.request_header_latency_ms
+        {
+            return ProviderMetrics::default();
+        }
+        Some((request.request_id, request.request_header_latency_ms))
+    } else {
+        if receipt.request_id.is_some() || receipt.request_header_latency_ms.is_some() {
+            return ProviderMetrics::default();
+        }
+        None
+    };
+    ProviderMetrics {
+        request_id: single.map(|(request_id, _)| request_id),
+        request_count: Some(receipt.request_count),
+        successful_header_count: Some(receipt.successful_header_count),
+        requests: Some(receipt.requests),
+        request_header_latency_ms: single.and_then(|(_, latency)| latency),
+        request_header_latency_source: Some(REQUEST_HEADER_LATENCY_SOURCE_V1),
+        ..ProviderMetrics::default()
+    }
 }
 
 fn load_state(config: &Config) -> anyhow::Result<AutonomyState> {
@@ -4373,11 +4551,11 @@ mod tests {
         load_state, load_thread_state, load_thread_state_checked, mark_orphaned_turn_interrupted,
         matching_completed_tool_receipt, migrate_legacy_state, migrate_thread_state_on_start,
         migrate_v2_state, parse_headless_provenance_receipt, parse_headless_trace_receipt,
-        parse_provider_metrics, persist_state, process_action_outcome, push_thread_evidence_record,
-        reconcile_pending_receipt_acknowledgements, record_transport_recovery,
-        replay_pending_action_dispatch, roll_daily_budget, rotate_model_session_if_full, run,
-        session_name_for_turn, supervised_headless_idle_timeout_seconds, update_thread_state,
-        write_private_new_durable,
+        parse_provider_metrics, persist_state, poll_due_turn, process_action_outcome,
+        push_thread_evidence_record, reconcile_pending_receipt_acknowledgements,
+        record_transport_recovery, replay_pending_action_dispatch, roll_daily_budget,
+        rotate_model_session_if_full, run, session_name_for_turn,
+        supervised_headless_idle_timeout_seconds, update_thread_state, write_private_new_durable,
     };
     use crate::{
         actions::ActionOutcome,
@@ -4725,7 +4903,10 @@ mod tests {
         ));
         config.prepare_workspace().unwrap();
         fs::create_dir(config.workspace.join("autonomous/state.json")).unwrap();
-        let mut state = AutonomyState::default();
+        let mut state = AutonomyState {
+            last_perception_consumed_at_unix_ms: 123,
+            ..AutonomyState::default()
+        };
         let (action_tx, mut action_rx) = mpsc::channel(1);
         let registry = AutonomyTraceRegistry::default();
         let result = execute_due_turn(
@@ -4733,6 +4914,7 @@ mod tests {
             &ReservoirSnapshot::default(),
             &mut state,
             None,
+            Some(456),
             &action_tx,
             &registry,
         )
@@ -4740,6 +4922,7 @@ mod tests {
 
         assert!(result.is_err());
         assert_eq!(state.total_attempts, 0);
+        assert_eq!(state.last_perception_consumed_at_unix_ms, 123);
         assert!(state.last_trace.is_none());
         assert!(action_rx.try_recv().is_err());
         assert!(!config.workspace.join("autonomous/runs.jsonl").exists());
@@ -4802,20 +4985,208 @@ mod tests {
         assert!(!headless_exit_is_transport_recovery(None));
     }
 
-    #[test]
-    fn provider_metrics_are_structured_only_when_exposed() {
-        let metrics = parse_provider_metrics(
-            "provider_prompt_tokens=842 provider_completion_tokens=96 \
-             request_header_latency_ms=288001 generation_latency_ms=41122 unrelated=7",
-        );
-        assert_eq!(metrics.prompt_tokens, Some(842));
-        assert_eq!(metrics.completion_tokens, Some(96));
-        assert_eq!(metrics.request_header_latency_ms, Some(288_001));
-        assert_eq!(metrics.generation_latency_ms, Some(41_122));
+    fn single_provider_receipt(canonical: &IpcTraceContextV1) -> (serde_json::Value, Uuid) {
+        let request_id = Uuid::new_v4();
+        (
+            serde_json::json!({
+                "schema_version": 1,
+                "trace": canonical,
+                "producer": {
+                    "schema_version": 1,
+                    "kind": super::KERNEL_HTTP_HOST_PRODUCER_KIND,
+                    "id": super::KERNEL_HTTP_HOST_PRODUCER_ID,
+                },
+                "request_count": 1,
+                "successful_header_count": 1,
+                "requests": [{
+                    "attempt_id": Uuid::new_v4(),
+                    "request_id": request_id,
+                    "outcome": "successful_headers",
+                    "request_header_latency_ms": 288_001,
+                }],
+                "request_id": request_id,
+                "request_header_latency_ms": 288_001,
+            }),
+            request_id,
+        )
+    }
 
-        let unavailable = parse_provider_metrics("provider did not expose metrics");
+    fn multi_provider_receipt(canonical: &IpcTraceContextV1) -> serde_json::Value {
+        serde_json::json!({
+            "schema_version": 1,
+            "trace": canonical,
+            "producer": {
+                "schema_version": 1,
+                "kind": super::KERNEL_HTTP_HOST_PRODUCER_KIND,
+                "id": super::KERNEL_HTTP_HOST_PRODUCER_ID,
+            },
+            "request_count": 2,
+            "successful_header_count": 1,
+            "requests": [
+                {
+                    "attempt_id": Uuid::new_v4(),
+                    "request_id": Uuid::new_v4(),
+                    "outcome": "timeout",
+                },
+                {
+                    "attempt_id": Uuid::new_v4(),
+                    "request_id": Uuid::new_v4(),
+                    "outcome": "successful_headers",
+                    "request_header_latency_ms": 17,
+                }
+            ],
+        })
+    }
+
+    fn provider_metrics_line(receipt: &serde_json::Value) -> String {
+        format!(
+            "{}{}",
+            super::HEADLESS_PROVIDER_METRICS_RECEIPT_PREFIX,
+            serde_json::to_string(receipt).unwrap()
+        )
+    }
+
+    #[test]
+    fn provider_metrics_require_one_exact_canonical_receipt() {
+        let canonical = IpcTraceContextV1::root(
+            Uuid::new_v4(),
+            "edge-session".to_string(),
+            Some("chain-a".to_string()),
+        );
+        let (receipt, request_id) = single_provider_receipt(&canonical);
+        let line = format!(
+            "generic request_header_latency_ms=7\n{}{}\n",
+            super::HEADLESS_PROVIDER_METRICS_RECEIPT_PREFIX,
+            serde_json::to_string(&receipt).unwrap()
+        );
+        let metrics = parse_provider_metrics(&line, &canonical);
+        assert_eq!(metrics.prompt_tokens, None);
+        assert_eq!(metrics.completion_tokens, None);
+        assert_eq!(metrics.request_id, Some(request_id));
+        assert_eq!(metrics.request_count, Some(1));
+        assert_eq!(metrics.successful_header_count, Some(1));
+        assert_eq!(metrics.request_header_latency_ms, Some(288_001));
+        assert_eq!(
+            metrics.request_header_latency_source,
+            Some(super::REQUEST_HEADER_LATENCY_SOURCE_V1)
+        );
+        assert_eq!(metrics.generation_latency_ms, None);
+
+        let multi = multi_provider_receipt(&canonical);
+        let multi_line = provider_metrics_line(&multi);
+        let multi_metrics = parse_provider_metrics(&multi_line, &canonical);
+        assert_eq!(multi_metrics.request_count, Some(2));
+        assert_eq!(multi_metrics.successful_header_count, Some(1));
+        assert_eq!(multi_metrics.request_id, None);
+        assert_eq!(multi_metrics.request_header_latency_ms, None);
+        assert_eq!(
+            multi_metrics.request_header_latency_source,
+            Some(super::REQUEST_HEADER_LATENCY_SOURCE_V1)
+        );
+    }
+
+    #[test]
+    fn provider_metrics_reject_malformed_or_ambiguous_receipts() {
+        let canonical = IpcTraceContextV1::root(
+            Uuid::new_v4(),
+            "edge-session".to_string(),
+            Some("chain-a".to_string()),
+        );
+        let (receipt, _) = single_provider_receipt(&canonical);
+        let line = provider_metrics_line(&receipt);
+        let multi = multi_provider_receipt(&canonical);
+
+        let unavailable = parse_provider_metrics(
+            "provider_prompt_tokens=842 request_header_latency_ms=288001",
+            &canonical,
+        );
         assert_eq!(unavailable.prompt_tokens, None);
         assert_eq!(unavailable.request_header_latency_ms, None);
+
+        let duplicate = format!("{line}{line}");
+        assert_eq!(
+            parse_provider_metrics(&duplicate, &canonical).request_header_latency_ms,
+            None
+        );
+
+        let mut wrong_trace = receipt.clone();
+        wrong_trace["trace"]["trace_id"] = serde_json::json!(Uuid::new_v4());
+        let wrong_trace = format!(
+            "{}{}",
+            super::HEADLESS_PROVIDER_METRICS_RECEIPT_PREFIX,
+            serde_json::to_string(&wrong_trace).unwrap()
+        );
+        assert_eq!(
+            parse_provider_metrics(&wrong_trace, &canonical).request_header_latency_ms,
+            None
+        );
+
+        let mut malformed = receipt;
+        malformed["url"] = serde_json::json!("http://127.0.0.1:11434/secret");
+        let malformed = format!(
+            "{}{}",
+            super::HEADLESS_PROVIDER_METRICS_RECEIPT_PREFIX,
+            serde_json::to_string(&malformed).unwrap()
+        );
+        assert_eq!(
+            parse_provider_metrics(&malformed, &canonical).request_header_latency_ms,
+            None
+        );
+
+        let mut duplicate_attempt = multi.clone();
+        duplicate_attempt["requests"][1]["attempt_id"] =
+            duplicate_attempt["requests"][0]["attempt_id"].clone();
+        let duplicate_attempt = format!(
+            "{}{}",
+            super::HEADLESS_PROVIDER_METRICS_RECEIPT_PREFIX,
+            serde_json::to_string(&duplicate_attempt).unwrap()
+        );
+        assert_eq!(
+            parse_provider_metrics(&duplicate_attempt, &canonical).request_count,
+            None
+        );
+
+        let mut false_scalar = multi;
+        false_scalar["request_id"] = serde_json::json!(Uuid::new_v4());
+        false_scalar["request_header_latency_ms"] = serde_json::json!(17);
+        let false_scalar = format!(
+            "{}{}",
+            super::HEADLESS_PROVIDER_METRICS_RECEIPT_PREFIX,
+            serde_json::to_string(&false_scalar).unwrap()
+        );
+        assert_eq!(
+            parse_provider_metrics(&false_scalar, &canonical).request_count,
+            None
+        );
+
+        let mut missing_turn = canonical.clone();
+        missing_turn.turn_id = None;
+        assert_eq!(
+            parse_provider_metrics(&line, &missing_turn).request_count,
+            None
+        );
+        let mut missing_session = canonical.clone();
+        missing_session.session_id = None;
+        assert_eq!(
+            parse_provider_metrics(&line, &missing_session).request_count,
+            None
+        );
+    }
+
+    #[test]
+    fn scheduled_turn_roots_are_fresh_for_same_session_and_chain() {
+        let first = IpcTraceContextV1::root(
+            Uuid::new_v4(),
+            "edge-session".to_string(),
+            Some("chain-a".to_string()),
+        );
+        let second = IpcTraceContextV1::root(
+            Uuid::new_v4(),
+            "edge-session".to_string(),
+            Some("chain-a".to_string()),
+        );
+        assert_ne!(first.trace_id, second.trace_id);
+        assert_ne!(first.turn_id, second.turn_id);
     }
 
     fn outcome(declared_next: &str, digest_character: char) -> ActionOutcome {
@@ -5026,6 +5397,207 @@ mod tests {
         )
         .unwrap();
         assert_eq!(latest_salient_perception(&config), Some(456));
+        fs::remove_dir_all(config.workspace).unwrap();
+    }
+
+    #[tokio::test]
+    #[allow(
+        clippy::too_many_lines,
+        reason = "one end-to-end sequence proves every transient scheduler gate preserves the same invitation"
+    )]
+    async fn salient_perception_is_consumed_only_with_a_durable_attempt_preflight() {
+        let mut config = config();
+        config.workspace = std::env::temp_dir().join(format!(
+            "astrid-edge-salient-attempt-preflight-{}",
+            Uuid::new_v4()
+        ));
+        config.autonomy_event_driven = true;
+        config.autonomy_journal_authored_turns = false;
+        config.astrid_cli = "/usr/bin/false".into();
+        config.prepare_workspace().unwrap();
+
+        let now = super::unix_millis();
+        let perception_at = now.saturating_sub(1_000);
+        fs::write(
+            config.workspace.join("perception/latest.json"),
+            serde_json::json!({
+                "recorded_at_unix_ms": perception_at,
+                "trigger_classes": ["host_state_shift"],
+            })
+            .to_string(),
+        )
+        .unwrap();
+        let mut state = AutonomyState {
+            schema: AUTONOMY_SCHEMA.to_string(),
+            utc_day: now / 86_400_000,
+            attempts_today: 1,
+            total_attempts: 1,
+            ordinary_session_generation: 1,
+            chain_session_generation: 1,
+            last_completed_at_unix_ms: Some(perception_at.saturating_sub(1)),
+            next_due_at_unix_ms: now.saturating_add(3_600_000),
+            last_status: Some("waiting_for_salient_machine_observation".to_string()),
+            ..AutonomyState::default()
+        };
+        persist_state(&config, &state).unwrap();
+
+        let initial_snapshot = ReservoirSnapshot {
+            t_ms: 29_999,
+            fill_ratio: 0.68,
+            fill_target: 0.68,
+            ..ReservoirSnapshot::default()
+        };
+        let (snapshot_tx, snapshot_rx) = watch::channel(initial_snapshot);
+        let (human_tx, human_rx) = watch::channel(0_u64);
+        let (action_tx, mut action_rx) = mpsc::channel(1);
+        let registry = AutonomyTraceRegistry::default();
+
+        // Reservoir warm-up is transient and must not consume the invitation.
+        poll_due_turn(
+            &config,
+            &snapshot_rx,
+            &human_rx,
+            &mut state,
+            &action_tx,
+            &registry,
+        )
+        .await
+        .unwrap();
+        assert_eq!(state.total_attempts, 1);
+        assert_eq!(state.last_perception_consumed_at_unix_ms, 0);
+
+        // The notebook's own short semantic impulse is also transient.
+        snapshot_tx.send_replace(ReservoirSnapshot {
+            t_ms: 30_001,
+            fill_ratio: 0.68,
+            fill_target: 0.68,
+            semantic_fresh: true,
+            ..ReservoirSnapshot::default()
+        });
+        poll_due_turn(
+            &config,
+            &snapshot_rx,
+            &human_rx,
+            &mut state,
+            &action_tx,
+            &registry,
+        )
+        .await
+        .unwrap();
+        assert_eq!(state.total_attempts, 1);
+        assert_eq!(state.last_perception_consumed_at_unix_ms, 0);
+
+        // Human quiescence records a wait, while preserving the observation.
+        snapshot_tx.send_replace(ReservoirSnapshot {
+            t_ms: 30_001,
+            fill_ratio: 0.68,
+            fill_target: 0.68,
+            ..ReservoirSnapshot::default()
+        });
+        human_tx.send_replace(super::unix_millis());
+        poll_due_turn(
+            &config,
+            &snapshot_rx,
+            &human_rx,
+            &mut state,
+            &action_tx,
+            &registry,
+        )
+        .await
+        .unwrap();
+        assert_eq!(
+            state.last_status.as_deref(),
+            Some("waiting_for_human_quiescence")
+        );
+        assert_eq!(state.last_perception_consumed_at_unix_ms, 0);
+
+        // An unsafe shelf records one bounded retry and does not consume or
+        // spin every scheduler poll.
+        human_tx.send_replace(0);
+        snapshot_tx.send_replace(ReservoirSnapshot {
+            t_ms: 30_001,
+            fill_ratio: 0.80,
+            fill_target: 0.68,
+            ..ReservoirSnapshot::default()
+        });
+        poll_due_turn(
+            &config,
+            &snapshot_rx,
+            &human_rx,
+            &mut state,
+            &action_tx,
+            &registry,
+        )
+        .await
+        .unwrap();
+        let safety_retry_at = state.next_due_at_unix_ms;
+        assert_eq!(
+            state.last_status.as_deref(),
+            Some("deferred_outside_operating_shelf")
+        );
+        assert_eq!(state.last_perception_consumed_at_unix_ms, 0);
+
+        snapshot_tx.send_replace(ReservoirSnapshot {
+            t_ms: 30_001,
+            fill_ratio: 0.68,
+            fill_target: 0.68,
+            ..ReservoirSnapshot::default()
+        });
+        poll_due_turn(
+            &config,
+            &snapshot_rx,
+            &human_rx,
+            &mut state,
+            &action_tx,
+            &registry,
+        )
+        .await
+        .unwrap();
+        assert_eq!(state.next_due_at_unix_ms, safety_retry_at);
+        assert_eq!(state.total_attempts, 1);
+        assert_eq!(state.last_perception_consumed_at_unix_ms, 0);
+
+        // Once the safety retry is due, the same exact observation starts one
+        // attempt. `/usr/bin/false` makes inference fail locally after the
+        // durable preflight, which is enough to prove scheduler accounting.
+        state.next_due_at_unix_ms = 0;
+        poll_due_turn(
+            &config,
+            &snapshot_rx,
+            &human_rx,
+            &mut state,
+            &action_tx,
+            &registry,
+        )
+        .await
+        .unwrap();
+        assert_eq!(state.total_attempts, 2);
+        assert_eq!(
+            state.last_trigger.as_deref(),
+            Some("salient_machine_observation")
+        );
+        assert_eq!(state.last_perception_consumed_at_unix_ms, perception_at);
+        assert_eq!(
+            load_state(&config)
+                .unwrap()
+                .last_perception_consumed_at_unix_ms,
+            perception_at
+        );
+        assert!(action_rx.try_recv().is_err());
+
+        // The same timestamp is idempotent after the truthful attempt.
+        poll_due_turn(
+            &config,
+            &snapshot_rx,
+            &human_rx,
+            &mut state,
+            &action_tx,
+            &registry,
+        )
+        .await
+        .unwrap();
+        assert_eq!(state.total_attempts, 2);
+
         fs::remove_dir_all(config.workspace).unwrap();
     }
 

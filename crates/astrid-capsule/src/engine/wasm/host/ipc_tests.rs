@@ -1,6 +1,6 @@
 use super::*;
 use astrid_events::EventBus;
-use astrid_events::ipc::{IpcMessage, IpcPayload, IpcTraceContextV1};
+use astrid_events::ipc::{AgentResponseProvenanceV1, IpcMessage, IpcPayload, IpcTraceContextV1};
 
 /// Publish N IPC messages to a bus and return a receiver subscribed to them.
 fn publish_ipc_messages(bus: &EventBus, topic: &str, count: usize) {
@@ -228,6 +228,46 @@ fn publish_known_type_tag_deserializes_correctly() {
     let payload = deserialize_publish_payload(&bytes).unwrap();
 
     assert_eq!(payload, IpcPayload::Connect);
+}
+
+#[test]
+fn publish_legacy_sdk_raw_agent_response_preserves_typed_provenance() {
+    // Astralis SDK 0.6 predates the host's additive provenance field.  The
+    // ReAct compatibility capsule therefore publishes raw JSON, which must
+    // traverse the exact production guest-host decoder as a typed response.
+    let input = serde_json::json!({
+        "type": "agent_response",
+        "text": "A bounded reflection.\nNEXT: REST",
+        "is_final": true,
+        "session_id": "edge-autonomous-g256",
+        "response_provenance": "model_authored"
+    });
+    let payload = deserialize_publish_payload(&serde_json::to_vec(&input).unwrap()).unwrap();
+
+    assert!(matches!(
+        payload,
+        IpcPayload::AgentResponse {
+            text,
+            is_final: true,
+            session_id,
+            response_provenance: Some(AgentResponseProvenanceV1::ModelAuthored),
+        } if text == "A bounded reflection.\nNEXT: REST"
+            && session_id == "edge-autonomous-g256"
+    ));
+}
+
+#[test]
+fn publish_raw_agent_response_rejects_unknown_provenance_as_untyped_custom() {
+    let input = serde_json::json!({
+        "type": "agent_response",
+        "text": "spoofed",
+        "is_final": true,
+        "session_id": "edge-autonomous-g256",
+        "response_provenance": "operator_claimed_model_authored"
+    });
+    let payload = deserialize_publish_payload(&serde_json::to_vec(&input).unwrap()).unwrap();
+
+    assert!(matches!(payload, IpcPayload::Custom { .. }));
 }
 
 #[test]
