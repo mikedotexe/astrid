@@ -111,6 +111,235 @@ fn ipc_trace_label_is_supported(value: &str) -> bool {
 
 const IPC_PRODUCER_SCHEMA_VERSION_V1: u8 = 1;
 
+/// Producer class stamped by the kernel HTTP host on local-provider timing observations.
+pub const KERNEL_HTTP_HOST_PRODUCER_KIND: &str = "kernel_host";
+/// Producer identifier stamped by the kernel HTTP host on local-provider timing observations.
+pub const KERNEL_HTTP_HOST_PRODUCER_ID: &str = "wasm_http_stream";
+/// Canonical stderr receipt prefix emitted by supervised headless CLI runs.
+pub const HEADLESS_PROVIDER_METRICS_RECEIPT_PREFIX: &str = "[astrid-headless-provider-metrics] ";
+/// Maximum number of per-request timings carried on one bounded turn summary.
+pub const LOCAL_PROVIDER_TURN_METRICS_MAX_ENTRIES: usize = 16;
+
+/// Terminal outcome of one exact, allowlisted loopback-provider HTTP attempt.
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum LocalProviderRequestOutcomeV1 {
+    /// Successful HTTP response headers arrived from a verified loopback peer.
+    SuccessfulHeaders,
+    /// A non-success HTTP status arrived from a verified loopback peer.
+    NonSuccessStatus,
+    /// Response headers arrived but the transport did not expose its peer address.
+    UnknownPeer,
+    /// Response headers arrived from a peer that was not loopback.
+    NonLoopbackPeer,
+    /// The host response-header deadline expired.
+    Timeout,
+    /// The request failed before response headers arrived.
+    TransportError,
+    /// Capsule shutdown cancelled the request before response headers arrived.
+    Cancelled,
+}
+
+/// Bounded terminal record for one exact eligible local-provider request attempt.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
+pub struct LocalProviderRequestAttemptV1 {
+    /// Host-generated identifier distinguishing retries of the same LLM request.
+    pub attempt_id: Uuid,
+    /// Opaque typed LLM request identifier from the direct caller context.
+    pub request_id: Uuid,
+    /// Terminal status recorded by the HTTP host on every send return path.
+    pub outcome: LocalProviderRequestOutcomeV1,
+    /// Exact elapsed time to headers, available only for successful loopback headers.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub request_header_latency_ms: Option<u64>,
+}
+
+impl LocalProviderRequestAttemptV1 {
+    /// Return whether identifiers and outcome-specific latency are coherent.
+    #[must_use]
+    pub const fn is_supported(&self) -> bool {
+        !self.attempt_id.is_nil()
+            && !self.request_id.is_nil()
+            && matches!(
+                (self.outcome, self.request_header_latency_ms),
+                (LocalProviderRequestOutcomeV1::SuccessfulHeaders, Some(_))
+                    | (
+                        LocalProviderRequestOutcomeV1::NonSuccessStatus
+                            | LocalProviderRequestOutcomeV1::UnknownPeer
+                            | LocalProviderRequestOutcomeV1::NonLoopbackPeer
+                            | LocalProviderRequestOutcomeV1::Timeout
+                            | LocalProviderRequestOutcomeV1::TransportError
+                            | LocalProviderRequestOutcomeV1::Cancelled,
+                        None
+                    )
+            )
+    }
+}
+
+const LOCAL_PROVIDER_TURN_METRICS_SCHEMA_VERSION_V1: u8 = 1;
+
+/// Host-owned, bounded completion summary for one traced local-provider turn.
+///
+/// The event bus attaches this summary to the same canonical final response message after taking
+/// the matching host-only registry entry. A guest-supplied value is always cleared first. A turn
+/// exceeding the strict attempt cap is suppressed instead of represented by a partial count.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
+pub struct LocalProviderTurnMetricsV1 {
+    /// Summary wire schema version.
+    pub schema_version: u8,
+    /// Host boundary that measured the requests.
+    pub producer: IpcProducerV1,
+    /// Exact number of eligible HTTP send attempts observed for this turn.
+    pub request_count: u64,
+    /// Exact number of attempts that reached successful headers from a loopback peer.
+    pub successful_header_count: u64,
+    /// Complete bounded set of exact request attempts and terminal statuses.
+    pub requests: Vec<LocalProviderRequestAttemptV1>,
+}
+
+impl LocalProviderTurnMetricsV1 {
+    /// Construct a host-owned bounded turn summary.
+    #[must_use]
+    pub fn new(
+        request_count: u64,
+        successful_header_count: u64,
+        requests: Vec<LocalProviderRequestAttemptV1>,
+    ) -> Self {
+        Self {
+            schema_version: LOCAL_PROVIDER_TURN_METRICS_SCHEMA_VERSION_V1,
+            producer: IpcProducerV1::new(
+                KERNEL_HTTP_HOST_PRODUCER_KIND,
+                KERNEL_HTTP_HOST_PRODUCER_ID,
+            ),
+            request_count,
+            successful_header_count,
+            requests,
+        }
+    }
+
+    /// Return whether the count, bounded entries, and producer are an exact supported summary.
+    #[must_use]
+    pub fn is_supported(&self) -> bool {
+        let Ok(request_count) = usize::try_from(self.request_count) else {
+            return false;
+        };
+        self.schema_version == LOCAL_PROVIDER_TURN_METRICS_SCHEMA_VERSION_V1
+            && self.producer.is_supported()
+            && self.producer.kind == KERNEL_HTTP_HOST_PRODUCER_KIND
+            && self.producer.id == KERNEL_HTTP_HOST_PRODUCER_ID
+            && request_count > 0
+            && self.successful_header_count <= self.request_count
+            && request_count <= LOCAL_PROVIDER_TURN_METRICS_MAX_ENTRIES
+            && self.requests.len() == request_count
+            && self
+                .requests
+                .iter()
+                .all(LocalProviderRequestAttemptV1::is_supported)
+            && self.requests.iter().enumerate().all(|(index, request)| {
+                self.requests[..index]
+                    .iter()
+                    .all(|prior| prior.attempt_id != request.attempt_id)
+            })
+            && u64::try_from(
+                self.requests
+                    .iter()
+                    .filter(|request| {
+                        request.outcome == LocalProviderRequestOutcomeV1::SuccessfulHeaders
+                    })
+                    .count(),
+            )
+            .is_ok_and(|bounded_successes| bounded_successes == self.successful_header_count)
+    }
+
+    /// Return the sole request only when the exact turn count is one.
+    #[must_use]
+    pub fn single_successful_request(&self) -> Option<&LocalProviderRequestAttemptV1> {
+        self.is_supported()
+            .then_some(())
+            .filter(|()| self.request_count == 1 && self.successful_header_count == 1)
+            .and_then(|()| self.requests.first())
+    }
+}
+
+const HEADLESS_PROVIDER_METRICS_SCHEMA_VERSION_V1: u8 = 1;
+
+/// Canonical per-turn provider metrics receipt emitted by the headless CLI.
+///
+/// The receipt contains the complete bounded host summary and the already-attested canonical
+/// response trace. Scalar latency fields are intentionally absent for multi-request turns. Token
+/// counts and generation latency remain absent unless a future kernel boundary measures them.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
+pub struct HeadlessProviderMetricsReceiptV1 {
+    /// Receipt wire schema version.
+    pub schema_version: u8,
+    /// Kernel-attested canonical response trace for the measured turn.
+    pub trace: IpcTraceContextV1,
+    /// Host-owned producer attestation accepted by the headless CLI.
+    pub producer: IpcProducerV1,
+    /// Exact count of eligible HTTP send attempts for this turn.
+    pub request_count: u64,
+    /// Exact count of attempts with successful headers from a verified loopback peer.
+    pub successful_header_count: u64,
+    /// Complete bounded per-request host measurements.
+    pub requests: Vec<LocalProviderRequestAttemptV1>,
+    /// Sole request identifier, present only when `request_count == 1`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub request_id: Option<Uuid>,
+    /// Sole host-dispatch-to-successful-response-header latency, present only for one request.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub request_header_latency_ms: Option<u64>,
+}
+
+impl HeadlessProviderMetricsReceiptV1 {
+    /// Bind an accepted host observation to the canonical response turn.
+    #[must_use]
+    pub fn new(trace: IpcTraceContextV1, metrics: LocalProviderTurnMetricsV1) -> Self {
+        let single = metrics
+            .single_successful_request()
+            .map(|request| (request.request_id, request.request_header_latency_ms));
+        Self {
+            schema_version: HEADLESS_PROVIDER_METRICS_SCHEMA_VERSION_V1,
+            trace,
+            producer: metrics.producer,
+            request_count: metrics.request_count,
+            successful_header_count: metrics.successful_header_count,
+            requests: metrics.requests,
+            request_id: single.map(|(request_id, _)| request_id),
+            request_header_latency_ms: single.and_then(|(_, elapsed_ms)| elapsed_ms),
+        }
+    }
+
+    /// Return whether this receipt and its canonical turn trace are structurally supported.
+    #[must_use]
+    pub fn is_supported(&self) -> bool {
+        self.schema_version == HEADLESS_PROVIDER_METRICS_SCHEMA_VERSION_V1
+            && self.trace.is_supported()
+            && self.trace.turn_id.is_some()
+            && self.trace.session_id.is_some()
+            && self.producer.is_supported()
+            && self.producer.kind == KERNEL_HTTP_HOST_PRODUCER_KIND
+            && self.producer.id == KERNEL_HTTP_HOST_PRODUCER_ID
+            && LocalProviderTurnMetricsV1 {
+                schema_version: LOCAL_PROVIDER_TURN_METRICS_SCHEMA_VERSION_V1,
+                producer: self.producer.clone(),
+                request_count: self.request_count,
+                successful_header_count: self.successful_header_count,
+                requests: self.requests.clone(),
+            }
+            .is_supported()
+            && match self.requests.as_slice() {
+                [request] if self.request_count == 1 && self.successful_header_count == 1 => {
+                    self.request_id == Some(request.request_id)
+                        && self.request_header_latency_ms == request.request_header_latency_ms
+                },
+                _ => self.request_id.is_none() && self.request_header_latency_ms.is_none(),
+            }
+    }
+}
+
 /// Kernel-attested origin of an IPC message.
 ///
 /// Unlike trace metadata, this field is stamped at a host boundary. Native
@@ -185,6 +414,12 @@ pub struct IpcMessage {
     /// ingress boundary and cannot be supplied by a WASM guest.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub producer: Option<IpcProducerV1>,
+    /// Host-only local-provider summary attached atomically to a canonical final response.
+    ///
+    /// The event bus clears this field on every publish before optionally replacing it from its
+    /// private take-once registry. It is observational and grants no authority.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub local_provider_metrics: Option<LocalProviderTurnMetricsV1>,
 }
 
 impl IpcMessage {
@@ -201,6 +436,7 @@ impl IpcMessage {
             principal: None,
             trace: None,
             producer: None,
+            local_provider_metrics: None,
         }
     }
 
@@ -1422,6 +1658,7 @@ mod tests {
         let decoded: IpcMessage = serde_json::from_value(legacy).unwrap();
         assert!(decoded.trace.is_none());
         assert!(decoded.producer.is_none());
+        assert!(decoded.local_provider_metrics.is_none());
     }
 
     #[test]
@@ -1508,5 +1745,88 @@ mod tests {
             serde_json::from_slice(&serde_json::to_vec(&message).unwrap()).unwrap();
         assert_eq!(decoded.producer, message.producer);
         assert!(decoded.producer.as_ref().unwrap().is_supported());
+    }
+
+    #[test]
+    fn local_provider_latency_contract_is_typed_bounded_and_secret_free() {
+        let request_id = Uuid::new_v4();
+        let attempt_id = Uuid::new_v4();
+        let metrics = LocalProviderTurnMetricsV1::new(
+            1,
+            1,
+            vec![LocalProviderRequestAttemptV1 {
+                attempt_id,
+                request_id,
+                outcome: LocalProviderRequestOutcomeV1::SuccessfulHeaders,
+                request_header_latency_ms: Some(288_001),
+            }],
+        );
+        assert!(metrics.is_supported());
+        assert_eq!(
+            metrics.single_successful_request().unwrap().request_id,
+            request_id
+        );
+        let encoded = serde_json::to_value(&metrics).unwrap();
+        assert_eq!(encoded["requests"][0]["request_id"], request_id.to_string());
+        assert_eq!(encoded["requests"][0]["request_header_latency_ms"], 288_001);
+        assert!(encoded.get("url").is_none());
+        assert!(encoded.get("headers").is_none());
+        assert!(encoded.get("body").is_none());
+
+        let multi = LocalProviderTurnMetricsV1::new(
+            2,
+            1,
+            vec![
+                LocalProviderRequestAttemptV1 {
+                    attempt_id: Uuid::new_v4(),
+                    request_id: Uuid::new_v4(),
+                    outcome: LocalProviderRequestOutcomeV1::TransportError,
+                    request_header_latency_ms: None,
+                },
+                LocalProviderRequestAttemptV1 {
+                    attempt_id: Uuid::new_v4(),
+                    request_id: Uuid::new_v4(),
+                    outcome: LocalProviderRequestOutcomeV1::SuccessfulHeaders,
+                    request_header_latency_ms: Some(2),
+                },
+            ],
+        );
+        let receipt = HeadlessProviderMetricsReceiptV1::new(
+            IpcTraceContextV1::root(Uuid::new_v4(), "session", None),
+            multi,
+        );
+        assert!(receipt.is_supported());
+        assert_eq!(receipt.request_count, 2);
+        assert!(receipt.request_id.is_none());
+        assert!(receipt.request_header_latency_ms.is_none());
+
+        let duplicate_attempt = LocalProviderTurnMetricsV1::new(
+            2,
+            2,
+            vec![
+                LocalProviderRequestAttemptV1 {
+                    attempt_id,
+                    request_id: Uuid::new_v4(),
+                    outcome: LocalProviderRequestOutcomeV1::SuccessfulHeaders,
+                    request_header_latency_ms: Some(1),
+                },
+                LocalProviderRequestAttemptV1 {
+                    attempt_id,
+                    request_id: Uuid::new_v4(),
+                    outcome: LocalProviderRequestOutcomeV1::SuccessfulHeaders,
+                    request_header_latency_ms: Some(2),
+                },
+            ],
+        );
+        assert!(!duplicate_attempt.is_supported());
+
+        let malformed = serde_json::json!({
+            "attempt_id": Uuid::new_v4(),
+            "request_id": Uuid::new_v4(),
+            "outcome": "successful_headers",
+            "request_header_latency_ms": 1,
+            "url": "http://secret.invalid"
+        });
+        assert!(serde_json::from_value::<LocalProviderRequestAttemptV1>(malformed).is_err());
     }
 }

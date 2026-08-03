@@ -8,6 +8,14 @@ use crate::engine::wasm::bindings::astrid::capsule::types::{
 };
 use crate::engine::wasm::host::util;
 use crate::engine::wasm::host_state::HostState;
+use astrid_events::ipc::{
+    IpcMessage, IpcPayload, IpcTraceContextV1, LocalProviderRequestOutcomeV1,
+};
+
+const LOCAL_PROVIDER_LLM_REQUEST_TOPIC: &str = "llm.v1.request.generate.openai-compat";
+const LOCAL_PROVIDER_CAPSULE_ID: &str = "astrid-capsule-openai-compat";
+const LOCAL_PROVIDER_COMPLETIONS_PATH: &str = "/v1/chat/completions";
+const REACT_CAPSULE_ID: &str = "astrid-capsule-react";
 
 // ── SSRF prevention ──────────────────────────────────────────────────
 
@@ -109,6 +117,31 @@ fn origin_allowed_by(capsule_id: &str, url: &reqwest::Url, allowlist: &[String])
         host.to_ascii_lowercase()
     );
     allowlist.iter().any(|entry| entry == &binding)
+}
+
+fn is_loopback_origin(url: &reqwest::Url) -> bool {
+    let Some(host) = url.host_str() else {
+        return false;
+    };
+    host.trim_start_matches('[')
+        .trim_end_matches(']')
+        .parse::<std::net::IpAddr>()
+        .is_ok_and(|ip| ip.is_loopback())
+}
+
+fn local_provider_attempt_allowed(
+    capsule_id: &str,
+    url: &reqwest::Url,
+    method: &str,
+    allowlist: &[String],
+) -> bool {
+    capsule_id == LOCAL_PROVIDER_CAPSULE_ID
+        && method.eq_ignore_ascii_case("POST")
+        && url.path() == LOCAL_PROVIDER_COMPLETIONS_PATH
+        && url.query().is_none()
+        && url.fragment().is_none()
+        && origin_allowed_by(capsule_id, url, allowlist)
+        && is_loopback_origin(url)
 }
 
 fn validate_direct_ip(url: &reqwest::Url, allow_local_origin: bool) -> Result<(), String> {
@@ -282,14 +315,123 @@ fn response_header_timeout(allow_local_origin: bool) -> Duration {
 async fn send_stream_request(
     request: reqwest::RequestBuilder,
     start_timeout: Duration,
-) -> Result<reqwest::Response, String> {
+) -> Result<reqwest::Response, SendStreamError> {
     match tokio::time::timeout(start_timeout, request.send()).await {
         Ok(Ok(response)) => Ok(response),
-        Ok(Err(error)) => Err(format!("HTTP stream request failed: {error}")),
-        Err(_) => Err(format!(
-            "HTTP stream response headers timed out after {}s",
-            start_timeout.as_secs()
-        )),
+        Ok(Err(error)) => Err(SendStreamError::Transport(error.to_string())),
+        Err(_) => Err(SendStreamError::Timeout(start_timeout)),
+    }
+}
+
+#[derive(Debug)]
+enum SendStreamError {
+    Transport(String),
+    Timeout(Duration),
+}
+
+impl SendStreamError {
+    const fn outcome(&self) -> LocalProviderRequestOutcomeV1 {
+        match self {
+            Self::Transport(_) => LocalProviderRequestOutcomeV1::TransportError,
+            Self::Timeout(_) => LocalProviderRequestOutcomeV1::Timeout,
+        }
+    }
+}
+
+impl std::fmt::Display for SendStreamError {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Transport(error) => write!(formatter, "HTTP stream request failed: {error}"),
+            Self::Timeout(timeout) => write!(
+                formatter,
+                "HTTP stream response headers timed out after {}s",
+                timeout.as_secs()
+            ),
+        }
+    }
+}
+
+#[derive(Clone)]
+struct LocalProviderRequestContext {
+    trace: IpcTraceContextV1,
+    request_id: uuid::Uuid,
+}
+
+fn current_llm_request_context(caller: Option<&IpcMessage>) -> Option<LocalProviderRequestContext> {
+    let current = caller?;
+    if current.topic != LOCAL_PROVIDER_LLM_REQUEST_TOPIC {
+        return None;
+    }
+    let producer = current
+        .producer
+        .as_ref()
+        .filter(|producer| producer.is_supported())?;
+    if producer.kind != "wasm_capsule" || producer.id != REACT_CAPSULE_ID {
+        return None;
+    }
+    let IpcPayload::LlmRequest { request_id, .. } = &current.payload else {
+        return None;
+    };
+    if request_id.is_nil() {
+        return None;
+    }
+    let trace = current
+        .trace
+        .as_ref()
+        .filter(|trace| {
+            trace.is_supported() && trace.turn_id.is_some() && trace.session_id.is_some()
+        })?
+        .clone();
+    Some(LocalProviderRequestContext {
+        trace,
+        request_id: *request_id,
+    })
+}
+
+fn begin_local_provider_request(
+    state: &HostState,
+    context: Option<&LocalProviderRequestContext>,
+) -> Option<uuid::Uuid> {
+    let context = context?;
+    state
+        .event_bus
+        .begin_local_provider_request(&context.trace, context.request_id)
+}
+
+fn finish_local_provider_request(
+    state: &HostState,
+    context: Option<&LocalProviderRequestContext>,
+    attempt_id: Option<uuid::Uuid>,
+    outcome: LocalProviderRequestOutcomeV1,
+    elapsed: Option<Duration>,
+) {
+    let (Some(context), Some(attempt_id)) = (context, attempt_id) else {
+        return;
+    };
+    let latency_ms = if outcome == LocalProviderRequestOutcomeV1::SuccessfulHeaders {
+        elapsed.and_then(|duration| u64::try_from(duration.as_millis()).ok())
+    } else {
+        None
+    };
+    let _ = state.event_bus.finish_local_provider_request(
+        &context.trace,
+        attempt_id,
+        outcome,
+        latency_ms,
+    );
+}
+
+fn local_provider_response_outcome(
+    status: reqwest::StatusCode,
+    remote_addr: Option<std::net::SocketAddr>,
+) -> LocalProviderRequestOutcomeV1 {
+    match remote_addr {
+        Some(address) if !address.ip().is_loopback() => {
+            LocalProviderRequestOutcomeV1::NonLoopbackPeer
+        },
+        None => LocalProviderRequestOutcomeV1::UnknownPeer,
+        Some(_) if status.is_success() => LocalProviderRequestOutcomeV1::SuccessfulHeaders,
+        Some(_) => LocalProviderRequestOutcomeV1::NonSuccessStatus,
     }
 }
 
@@ -400,6 +542,18 @@ impl http::Host for HostState {
         let parsed_url =
             reqwest::Url::parse(&request.url).map_err(|e| format!("invalid url: {e}"))?;
         let allow_local_origin = local_origin_allowed(&capsule_id, &parsed_url);
+        let observe_local_provider = local_provider_attempt_allowed(
+            &capsule_id,
+            &parsed_url,
+            &request.method,
+            &LOCAL_HTTP_ALLOWLIST,
+        );
+        // Snapshot the validated, direct interceptor caller before network waiting. The selected
+        // CPU-edge provider is a pooled executable interceptor, not a run-loop capsule; accepting
+        // a remembered run-loop message here would make stale context look kernel-attested.
+        let provider_context = observe_local_provider
+            .then(|| current_llm_request_context(self.caller_context.as_ref()))
+            .flatten();
         validate_direct_ip(&parsed_url, allow_local_origin)?;
         let mut client_builder = reqwest::Client::builder()
             .connect_timeout(HTTP_STREAM_CONNECT_TIMEOUT)
@@ -410,6 +564,11 @@ impl http::Host for HostState {
             // generations are not. Do not let a half-open loopback response
             // become the transport inherited by a later model turn.
             client_builder = client_builder.pool_max_idle_per_host(0);
+        }
+        if observe_local_provider {
+            // Environment proxy settings must not turn a syntactically local provider request
+            // into public-web traffic carrying trusted local timing provenance.
+            client_builder = client_builder.no_proxy();
         }
         let client = client_builder
             .build()
@@ -426,9 +585,12 @@ impl http::Host for HostState {
             request_builder = request_builder.body(body);
         }
 
-        // Sending includes waiting for response headers. It must be both
-        // bounded and cancellable: otherwise one provider request can pin the
-        // capsule run loop after its caller has already timed out.
+        // This clock intentionally starts before the host semaphore acquisition below. The exact
+        // value therefore includes host queueing, connection setup, request upload, and provider
+        // wait to successful response headers. It is not generation latency or first-token time.
+        // The wait must be both bounded and cancellable: otherwise one provider request can pin
+        // the capsule run loop after its caller has already timed out.
+        let provider_attempt = begin_local_provider_request(self, provider_context.as_ref());
         let cancel_token = self.cancel_token.clone();
         let started_at = Instant::now();
         let result = util::bounded_block_on_cancellable(
@@ -437,13 +599,44 @@ impl http::Host for HostState {
             &cancel_token,
             send_stream_request(request_builder, response_header_timeout(allow_local_origin)),
         );
-        let response = result
-            .ok_or_else(|| "HTTP stream request cancelled during capsule shutdown".to_string())??;
+        let response = match result {
+            Some(Ok(response)) => response,
+            Some(Err(error)) => {
+                finish_local_provider_request(
+                    self,
+                    provider_context.as_ref(),
+                    provider_attempt,
+                    error.outcome(),
+                    None,
+                );
+                return Err(error.to_string());
+            },
+            None => {
+                finish_local_provider_request(
+                    self,
+                    provider_context.as_ref(),
+                    provider_attempt,
+                    LocalProviderRequestOutcomeV1::Cancelled,
+                    None,
+                );
+                return Err("HTTP stream request cancelled during capsule shutdown".to_string());
+            },
+        };
+        let header_elapsed = started_at.elapsed();
         tracing::info!(
             capsule_id = %capsule_id,
             origin = %parsed_url.origin().ascii_serialization(),
-            elapsed_ms = started_at.elapsed().as_millis(),
+            elapsed_ms = header_elapsed.as_millis(),
             "HTTP stream response headers received"
+        );
+        let provider_outcome =
+            local_provider_response_outcome(response.status(), response.remote_addr());
+        finish_local_provider_request(
+            self,
+            provider_context.as_ref(),
+            provider_attempt,
+            provider_outcome,
+            Some(header_elapsed),
         );
 
         let status = response.status().as_u16();
@@ -529,6 +722,7 @@ impl http::Host for HostState {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use astrid_events::ipc::IpcProducerV1;
     use std::net::IpAddr;
     use std::str::FromStr;
     use tokio::io::{AsyncReadExt as _, AsyncWriteExt as _};
@@ -556,6 +750,174 @@ mod tests {
             &reqwest::Url::parse("http://192.168.2.1:11434/").unwrap(),
             &allowlist
         ));
+    }
+
+    #[test]
+    fn provider_attempt_requires_exact_allowlist_and_loopback_origin() {
+        let capsule = "astrid-capsule-openai-compat";
+        let allowlist = vec![
+            format!("{capsule}@127.0.0.1:11434"),
+            format!("{capsule}@localhost:11435"),
+            format!("{capsule}@example.com:443"),
+            format!("{capsule}@192.168.1.8:11434"),
+            "other-capsule@127.0.0.1:11434".to_string(),
+        ];
+        assert!(local_provider_attempt_allowed(
+            capsule,
+            &reqwest::Url::parse("http://127.0.0.1:11434/v1/chat/completions").unwrap(),
+            "POST",
+            &allowlist,
+        ));
+        assert!(!local_provider_attempt_allowed(
+            capsule,
+            &reqwest::Url::parse("http://localhost:11435/v1/chat/completions").unwrap(),
+            "post",
+            &allowlist,
+        ));
+        assert!(!local_provider_attempt_allowed(
+            capsule,
+            &reqwest::Url::parse("https://example.com/v1/chat/completions").unwrap(),
+            "POST",
+            &allowlist,
+        ));
+        assert!(!local_provider_attempt_allowed(
+            capsule,
+            &reqwest::Url::parse("http://192.168.1.8:11434/v1/chat/completions").unwrap(),
+            "POST",
+            &allowlist,
+        ));
+        assert!(!local_provider_attempt_allowed(
+            "other-capsule",
+            &reqwest::Url::parse("http://127.0.0.1:11434/v1/chat/completions").unwrap(),
+            "POST",
+            &allowlist,
+        ));
+        assert!(!local_provider_attempt_allowed(
+            capsule,
+            &reqwest::Url::parse("http://127.0.0.1:11434/v1/chat/completions").unwrap(),
+            "GET",
+            &allowlist,
+        ));
+        assert!(!local_provider_attempt_allowed(
+            capsule,
+            &reqwest::Url::parse("http://127.0.0.1:11434/api/tags").unwrap(),
+            "POST",
+            &allowlist,
+        ));
+        assert!(!local_provider_attempt_allowed(
+            capsule,
+            &reqwest::Url::parse("http://127.0.0.1:11434/v1/chat/completions?secret=1").unwrap(),
+            "POST",
+            &allowlist,
+        ));
+    }
+
+    #[test]
+    fn provider_attempt_terminal_status_covers_every_response_header_case() {
+        let loopback = "127.0.0.1:11434".parse().unwrap();
+        let public = "198.51.100.8:443".parse().unwrap();
+        assert_eq!(
+            local_provider_response_outcome(reqwest::StatusCode::OK, Some(loopback)),
+            LocalProviderRequestOutcomeV1::SuccessfulHeaders
+        );
+        assert_eq!(
+            local_provider_response_outcome(
+                reqwest::StatusCode::INTERNAL_SERVER_ERROR,
+                Some(loopback)
+            ),
+            LocalProviderRequestOutcomeV1::NonSuccessStatus
+        );
+        assert_eq!(
+            local_provider_response_outcome(reqwest::StatusCode::OK, Some(public)),
+            LocalProviderRequestOutcomeV1::NonLoopbackPeer
+        );
+        assert_eq!(
+            local_provider_response_outcome(reqwest::StatusCode::OK, None),
+            LocalProviderRequestOutcomeV1::UnknownPeer
+        );
+    }
+
+    fn traced_llm_request(trace: IpcTraceContextV1, request_id: uuid::Uuid) -> IpcMessage {
+        IpcMessage::new(
+            LOCAL_PROVIDER_LLM_REQUEST_TOPIC,
+            IpcPayload::LlmRequest {
+                request_id,
+                model: "local".to_string(),
+                messages: Vec::new(),
+                tools: Vec::new(),
+                system: String::new(),
+            },
+            uuid::Uuid::new_v4(),
+        )
+        .with_trace(trace)
+        .with_principal("caller-principal")
+        .with_producer(IpcProducerV1::new("wasm_capsule", REACT_CAPSULE_ID))
+    }
+
+    #[test]
+    fn provider_context_binds_exact_direct_llm_request_trace() {
+        let trace = IpcTraceContextV1::root(
+            uuid::Uuid::new_v4(),
+            "edge-session",
+            Some("chain-a".to_string()),
+        );
+        let request_id = uuid::Uuid::new_v4();
+        let caller = traced_llm_request(trace.clone(), request_id);
+        let context = current_llm_request_context(Some(&caller)).unwrap();
+        assert_eq!(context.trace, trace);
+        assert_eq!(context.request_id, request_id);
+    }
+
+    #[test]
+    fn provider_attempt_rejects_untraced_or_unrelated_callers() {
+        let request_id = uuid::Uuid::new_v4();
+        let mut unsupported = IpcTraceContextV1::root(uuid::Uuid::new_v4(), "session", None);
+        unsupported.schema_version = 99;
+        let unsupported = traced_llm_request(unsupported, request_id);
+        assert!(
+            current_llm_request_context(Some(&unsupported)).is_none(),
+            "unsupported traces must not become provider contexts"
+        );
+
+        let mut missing_turn = IpcTraceContextV1::root(uuid::Uuid::new_v4(), "session", None);
+        missing_turn.turn_id = None;
+        let missing_turn = traced_llm_request(missing_turn, request_id);
+        assert!(current_llm_request_context(Some(&missing_turn)).is_none());
+
+        let mut missing_session = IpcTraceContextV1::root(uuid::Uuid::new_v4(), "session", None);
+        missing_session.session_id = None;
+        let missing_session = traced_llm_request(missing_session, request_id);
+        assert!(current_llm_request_context(Some(&missing_session)).is_none());
+
+        let valid = traced_llm_request(
+            IpcTraceContextV1::root(uuid::Uuid::new_v4(), "session", None),
+            request_id,
+        );
+        assert!(current_llm_request_context(None).is_none());
+
+        let mut wrong_topic = valid.clone();
+        wrong_topic.topic = "llm.v1.request.generate.other".to_string();
+        assert!(current_llm_request_context(Some(&wrong_topic)).is_none());
+
+        let mut wrong_producer = valid.clone();
+        wrong_producer.producer = Some(IpcProducerV1::new("wasm_capsule", "other-capsule"));
+        assert!(current_llm_request_context(Some(&wrong_producer)).is_none());
+
+        let mut native_spoof = valid.clone();
+        native_spoof.producer = Some(IpcProducerV1::new("native_socket_client", REACT_CAPSULE_ID));
+        assert!(current_llm_request_context(Some(&native_spoof)).is_none());
+
+        let unrelated =
+            IpcMessage::new("tool.v1.result", IpcPayload::Connect, uuid::Uuid::new_v4());
+        assert!(
+            current_llm_request_context(Some(&unrelated)).is_none(),
+            "an unrelated direct caller must not fall back to remembered run-loop context"
+        );
+
+        // A valid message present only in run-loop state is deliberately ineligible for the
+        // current pooled provider contract.
+        assert!(current_llm_request_context(None).is_none());
+        assert!(current_llm_request_context(Some(&valid)).is_some());
     }
 
     #[test]
@@ -603,7 +965,7 @@ mod tests {
         )
         .await
         .unwrap_err();
-        assert!(error.contains("response headers timed out"));
+        assert!(error.to_string().contains("response headers timed out"));
 
         let healthy_client = reqwest::Client::builder()
             .pool_max_idle_per_host(0)

@@ -3,17 +3,325 @@
 use std::collections::BTreeMap;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, Mutex};
+use std::time::{Duration, Instant};
 use tokio::sync::broadcast;
 use tracing::{debug, trace, warn};
 
 use crate::event::AstridEvent;
-use crate::ipc::{IpcMessage, IpcPayload, IpcTraceContextV1};
+use crate::ipc::{
+    IpcMessage, IpcPayload, IpcTraceContextV1, LOCAL_PROVIDER_TURN_METRICS_MAX_ENTRIES,
+    LocalProviderRequestAttemptV1, LocalProviderRequestOutcomeV1, LocalProviderTurnMetricsV1,
+};
 use crate::subscriber::SubscriberRegistry;
 
 /// Default channel capacity for the event bus.
 pub(crate) const DEFAULT_CHANNEL_CAPACITY: usize = 1024;
 
 const MAX_TRACE_CORRELATIONS: usize = 4096;
+// Full-key tombstones live until process restart so an old turn can never be re-admitted as a
+// partial suffix. At 96 scheduled turns/day this bound covers more than 170 days.
+const MAX_LOCAL_PROVIDER_TURNS: usize = 16_384;
+const LOCAL_PROVIDER_TURN_TTL: Duration = Duration::from_secs(30 * 60);
+const CANONICAL_AGENT_RESPONSE_TOPIC: &str = "agent.v1.response";
+const REACT_CAPSULE_ID: &str = "astrid-capsule-react";
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
+#[allow(clippy::struct_field_names)]
+struct LocalProviderTurnKey {
+    trace_id: uuid::Uuid,
+    turn_id: uuid::Uuid,
+    session_id: String,
+    chain_id: Option<String>,
+}
+
+impl LocalProviderTurnKey {
+    fn from_trace(trace: &IpcTraceContextV1) -> Option<Self> {
+        if !trace.is_supported() {
+            return None;
+        }
+        Some(Self {
+            trace_id: trace.trace_id,
+            turn_id: trace.turn_id?,
+            session_id: trace.session_id.clone()?,
+            chain_id: trace.chain_id.clone(),
+        })
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum LocalProviderTraceState {
+    Active,
+    Taken,
+    Poisoned,
+}
+
+#[derive(Debug, Clone)]
+struct LocalProviderTraceClaim {
+    state: LocalProviderTraceState,
+    touched_at: Instant,
+}
+
+#[derive(Debug)]
+struct PendingLocalProviderAttempt {
+    request_id: uuid::Uuid,
+    outcome: Option<LocalProviderRequestOutcomeV1>,
+    request_header_latency_ms: Option<u64>,
+}
+
+#[derive(Debug, Default)]
+struct LocalProviderTurnEntry {
+    attempt_count: u64,
+    successful_header_count: u64,
+    attempts: BTreeMap<uuid::Uuid, PendingLocalProviderAttempt>,
+    attempt_order: Vec<uuid::Uuid>,
+}
+
+/// Host-private take-once request registry. Capacity exhaustion disables attribution until process
+/// restart rather than evicting state and risking a false suffix count.
+#[derive(Debug, Default)]
+struct LocalProviderMetricsRegistry {
+    claims: BTreeMap<LocalProviderTurnKey, LocalProviderTraceClaim>,
+    turns: BTreeMap<LocalProviderTurnKey, LocalProviderTurnEntry>,
+    disabled: bool,
+}
+
+impl LocalProviderMetricsRegistry {
+    fn cleanup(&mut self, now: Instant) {
+        // Only active entries can expire. Process-lifetime Taken/Poisoned tombstones are never
+        // scanned on the request path, so cost scales with in-flight turns rather than uptime.
+        let expired_active = self
+            .turns
+            .keys()
+            .filter(|key| {
+                self.claims.get(*key).is_some_and(|claim| {
+                    claim.state == LocalProviderTraceState::Active
+                        && now.duration_since(claim.touched_at) >= LOCAL_PROVIDER_TURN_TTL
+                })
+            })
+            .cloned()
+            .collect::<Vec<_>>();
+        for key in expired_active {
+            self.turns.remove(&key);
+            if let Some(claim) = self.claims.get_mut(&key) {
+                // Retain the bounded full-key tombstone for process lifetime. Re-admitting this
+                // abandoned turn later could report only a suffix of its real attempts.
+                claim.state = LocalProviderTraceState::Poisoned;
+                claim.touched_at = now;
+            }
+        }
+    }
+
+    fn is_disabled(&mut self, now: Instant) -> bool {
+        self.cleanup(now);
+        self.disabled
+    }
+
+    fn disable_for_process(&mut self, now: Instant) {
+        for claim in self.claims.values_mut() {
+            if claim.state == LocalProviderTraceState::Active {
+                claim.state = LocalProviderTraceState::Poisoned;
+                claim.touched_at = now;
+            }
+        }
+        self.turns.clear();
+        // A process-lifetime stop is the only bounded response that cannot later re-admit an
+        // evicted turn and publish a false suffix count. Restart starts a new observation epoch.
+        self.disabled = true;
+    }
+
+    fn poison_claim(&mut self, key: &LocalProviderTurnKey, now: Instant) {
+        self.turns.remove(key);
+        self.claims.insert(
+            key.clone(),
+            LocalProviderTraceClaim {
+                state: LocalProviderTraceState::Poisoned,
+                touched_at: now,
+            },
+        );
+    }
+
+    fn begin(
+        &mut self,
+        trace: &IpcTraceContextV1,
+        request_id: uuid::Uuid,
+        now: Instant,
+    ) -> Option<uuid::Uuid> {
+        if request_id.is_nil() || self.is_disabled(now) {
+            return None;
+        }
+        let key = LocalProviderTurnKey::from_trace(trace)?;
+        if let Some(claim) = self.claims.get(&key) {
+            if claim.state != LocalProviderTraceState::Active {
+                return None;
+            }
+        } else {
+            if self.claims.len() >= MAX_LOCAL_PROVIDER_TURNS {
+                self.disable_for_process(now);
+                return None;
+            }
+            self.claims.insert(
+                key.clone(),
+                LocalProviderTraceClaim {
+                    state: LocalProviderTraceState::Active,
+                    touched_at: now,
+                },
+            );
+            self.turns
+                .insert(key.clone(), LocalProviderTurnEntry::default());
+        }
+
+        let attempt_id = uuid::Uuid::new_v4();
+        let Some(entry) = self.turns.get_mut(&key) else {
+            self.poison_claim(&key, now);
+            return None;
+        };
+        if entry.attempt_order.len() >= LOCAL_PROVIDER_TURN_METRICS_MAX_ENTRIES {
+            self.poison_claim(&key, now);
+            return None;
+        }
+        let Some(attempt_count) = entry.attempt_count.checked_add(1) else {
+            self.poison_claim(&key, now);
+            return None;
+        };
+        entry.attempt_count = attempt_count;
+        entry.attempts.insert(
+            attempt_id,
+            PendingLocalProviderAttempt {
+                request_id,
+                outcome: None,
+                request_header_latency_ms: None,
+            },
+        );
+        entry.attempt_order.push(attempt_id);
+        if let Some(claim) = self.claims.get_mut(&key) {
+            claim.touched_at = now;
+        }
+        Some(attempt_id)
+    }
+
+    fn finish(
+        &mut self,
+        trace: &IpcTraceContextV1,
+        attempt_id: uuid::Uuid,
+        outcome: LocalProviderRequestOutcomeV1,
+        request_header_latency_ms: Option<u64>,
+        now: Instant,
+    ) -> bool {
+        if attempt_id.is_nil() || self.is_disabled(now) {
+            return false;
+        }
+        let Some(key) = LocalProviderTurnKey::from_trace(trace) else {
+            return false;
+        };
+        let Some(claim) = self.claims.get(&key) else {
+            return false;
+        };
+        if claim.state != LocalProviderTraceState::Active {
+            return false;
+        }
+        let Some(entry) = self.turns.get_mut(&key) else {
+            self.poison_claim(&key, now);
+            return false;
+        };
+        let Some(attempt) = entry.attempts.get_mut(&attempt_id) else {
+            self.poison_claim(&key, now);
+            return false;
+        };
+        if attempt.outcome.is_some()
+            || matches!(
+                (outcome, request_header_latency_ms),
+                (LocalProviderRequestOutcomeV1::SuccessfulHeaders, None)
+                    | (
+                        LocalProviderRequestOutcomeV1::NonSuccessStatus
+                            | LocalProviderRequestOutcomeV1::UnknownPeer
+                            | LocalProviderRequestOutcomeV1::NonLoopbackPeer
+                            | LocalProviderRequestOutcomeV1::Timeout
+                            | LocalProviderRequestOutcomeV1::TransportError
+                            | LocalProviderRequestOutcomeV1::Cancelled,
+                        Some(_)
+                    )
+            )
+        {
+            self.poison_claim(&key, now);
+            return false;
+        }
+        attempt.outcome = Some(outcome);
+        attempt.request_header_latency_ms = request_header_latency_ms;
+        if outcome == LocalProviderRequestOutcomeV1::SuccessfulHeaders {
+            let Some(count) = entry.successful_header_count.checked_add(1) else {
+                self.poison_claim(&key, now);
+                return false;
+            };
+            entry.successful_header_count = count;
+        }
+        if let Some(claim) = self.claims.get_mut(&key) {
+            claim.touched_at = now;
+        }
+        true
+    }
+
+    fn take(
+        &mut self,
+        trace: &IpcTraceContextV1,
+        now: Instant,
+    ) -> Option<LocalProviderTurnMetricsV1> {
+        if self.is_disabled(now) {
+            return None;
+        }
+        let key = LocalProviderTurnKey::from_trace(trace)?;
+        let Some(claim) = self.claims.get(&key) else {
+            if self.claims.len() >= MAX_LOCAL_PROVIDER_TURNS {
+                self.disable_for_process(now);
+            } else {
+                // Even a zero-attempt final consumes the key. A late request plus replayed final
+                // must never manufacture post-final metrics for an already completed turn.
+                self.claims.insert(
+                    key,
+                    LocalProviderTraceClaim {
+                        state: LocalProviderTraceState::Taken,
+                        touched_at: now,
+                    },
+                );
+            }
+            return None;
+        };
+        if claim.state != LocalProviderTraceState::Active {
+            return None;
+        }
+        let entry = self.turns.remove(&key)?;
+        if let Some(claim) = self.claims.get_mut(&key) {
+            claim.state = LocalProviderTraceState::Taken;
+            claim.touched_at = now;
+        }
+        if entry
+            .attempts
+            .values()
+            .any(|attempt| attempt.outcome.is_none())
+        {
+            return None;
+        }
+        let requests = entry
+            .attempt_order
+            .iter()
+            .take(LOCAL_PROVIDER_TURN_METRICS_MAX_ENTRIES)
+            .filter_map(|attempt_id| {
+                let attempt = entry.attempts.get(attempt_id)?;
+                Some(LocalProviderRequestAttemptV1 {
+                    attempt_id: *attempt_id,
+                    request_id: attempt.request_id,
+                    outcome: attempt.outcome?,
+                    request_header_latency_ms: attempt.request_header_latency_ms,
+                })
+            })
+            .collect();
+        let summary = LocalProviderTurnMetricsV1::new(
+            entry.attempt_count,
+            entry.successful_header_count,
+            requests,
+        );
+        summary.is_supported().then_some(summary)
+    }
+}
 
 /// Bounded, observational-only correlations used to repair context lost by
 /// asynchronous capsule boundaries. Keys are protocol identifiers, never
@@ -22,10 +330,14 @@ const MAX_TRACE_CORRELATIONS: usize = 4096;
 struct IpcTraceRegistry {
     llm_requests: BTreeMap<uuid::Uuid, IpcTraceContextV1>,
     tool_calls: BTreeMap<String, IpcTraceContextV1>,
+    local_provider_metrics: LocalProviderMetricsRegistry,
 }
 
 impl IpcTraceRegistry {
     fn enrich(&mut self, message: &mut IpcMessage) {
+        // This field is host-owned even on native socket ingress. Never preserve a value supplied
+        // by a guest; a canonical final React response may receive a take-once replacement below.
+        message.local_provider_metrics = None;
         if message
             .trace
             .as_ref()
@@ -59,12 +371,31 @@ impl IpcTraceRegistry {
 
         match &message.payload {
             IpcPayload::LlmRequest { request_id, .. } => {
-                insert_bounded(&mut self.llm_requests, *request_id, trace);
+                insert_bounded(&mut self.llm_requests, *request_id, trace.clone());
             },
             IpcPayload::ToolExecuteRequest { call_id, .. } => {
-                insert_bounded(&mut self.tool_calls, call_id.clone(), trace);
+                insert_bounded(&mut self.tool_calls, call_id.clone(), trace.clone());
             },
             _ => {},
+        }
+
+        if message.topic == CANONICAL_AGENT_RESPONSE_TOPIC
+            && message.producer.as_ref().is_some_and(|producer| {
+                producer.is_supported()
+                    && producer.kind == "wasm_capsule"
+                    && producer.id == REACT_CAPSULE_ID
+            })
+            && matches!(
+                &message.payload,
+                IpcPayload::AgentResponse {
+                    is_final: true,
+                    session_id,
+                    ..
+                } if trace.session_id.as_deref() == Some(session_id.as_str())
+            )
+        {
+            message.local_provider_metrics =
+                self.local_provider_metrics.take(&trace, Instant::now());
         }
     }
 
@@ -151,6 +482,20 @@ pub struct EventBus {
 }
 
 impl EventBus {
+    fn lock_ipc_traces(&self) -> std::sync::MutexGuard<'_, IpcTraceRegistry> {
+        match self.ipc_traces.lock() {
+            Ok(registry) => registry,
+            Err(poisoned) => {
+                let mut registry = poisoned.into_inner();
+                registry
+                    .local_provider_metrics
+                    .disable_for_process(Instant::now());
+                warn!("IPC trace registry poisoned; local-provider attribution disabled");
+                registry
+            },
+        }
+    }
+
     /// Create a new event bus with default capacity.
     #[must_use]
     pub fn new() -> Self {
@@ -170,6 +515,40 @@ impl EventBus {
         }
     }
 
+    /// Register an exact eligible local-provider send before network dispatch.
+    ///
+    /// The returned host-generated attempt ID must be terminalized with
+    /// [`Self::finish_local_provider_request`]. This state is private to the event bus and is
+    /// never broadcast independently of the canonical final response.
+    #[must_use]
+    pub fn begin_local_provider_request(
+        &self,
+        trace: &IpcTraceContextV1,
+        request_id: uuid::Uuid,
+    ) -> Option<uuid::Uuid> {
+        self.lock_ipc_traces()
+            .local_provider_metrics
+            .begin(trace, request_id, Instant::now())
+    }
+
+    /// Terminalize a previously registered local-provider request on every send return path.
+    #[must_use]
+    pub fn finish_local_provider_request(
+        &self,
+        trace: &IpcTraceContextV1,
+        attempt_id: uuid::Uuid,
+        outcome: LocalProviderRequestOutcomeV1,
+        request_header_latency_ms: Option<u64>,
+    ) -> bool {
+        self.lock_ipc_traces().local_provider_metrics.finish(
+            trace,
+            attempt_id,
+            outcome,
+            request_header_latency_ms,
+            Instant::now(),
+        )
+    }
+
     /// Publish an event to all subscribers.
     ///
     /// This method broadcasts the event to all async subscribers and
@@ -183,10 +562,7 @@ impl EventBus {
             ref mut message,
         } = event
         {
-            self.ipc_traces
-                .lock()
-                .unwrap_or_else(std::sync::PoisonError::into_inner)
-                .enrich(message);
+            self.lock_ipc_traces().enrich(message);
             message.seq = self.ipc_seq.fetch_add(1, Ordering::Relaxed);
             if let Some(ipc_trace) = message.trace.as_ref() {
                 metadata.correlation_id = Some(ipc_trace.trace_id);
@@ -428,6 +804,7 @@ impl EventReceiver {
 }
 
 #[cfg(test)]
+#[allow(clippy::similar_names)]
 mod tests {
     use super::*;
     use crate::event::EventMetadata;
@@ -1271,5 +1648,390 @@ mod tests {
             panic!("expected IPC event");
         };
         assert!(message.trace.is_none());
+    }
+
+    fn canonical_final(trace: IpcTraceContextV1) -> AstridEvent {
+        let session_id = trace.session_id.clone().unwrap();
+        AstridEvent::Ipc {
+            metadata: EventMetadata::new("wasm_guest"),
+            message: crate::ipc::IpcMessage::new(
+                CANONICAL_AGENT_RESPONSE_TOPIC,
+                crate::ipc::IpcPayload::AgentResponse {
+                    text: "NEXT: LISTEN".to_string(),
+                    is_final: true,
+                    session_id,
+                    response_provenance: Some(crate::ipc::AgentResponseProvenanceV1::ModelAuthored),
+                },
+                uuid::Uuid::new_v4(),
+            )
+            .with_trace(trace)
+            .with_producer(crate::ipc::IpcProducerV1::new(
+                "wasm_capsule",
+                REACT_CAPSULE_ID,
+            )),
+        }
+    }
+
+    #[tokio::test]
+    async fn local_provider_attempts_attach_atomically_and_take_once() {
+        let bus = EventBus::new();
+        let mut receiver = bus.subscribe();
+        let trace = crate::ipc::IpcTraceContextV1::root(
+            uuid::Uuid::new_v4(),
+            "session-one",
+            Some("chain-one".to_string()),
+        );
+        let failed_request = uuid::Uuid::new_v4();
+        let failed_attempt = bus
+            .begin_local_provider_request(&trace, failed_request)
+            .unwrap();
+        assert!(bus.finish_local_provider_request(
+            &trace,
+            failed_attempt,
+            LocalProviderRequestOutcomeV1::Timeout,
+            None,
+        ));
+        let successful_request = uuid::Uuid::new_v4();
+        let successful_attempt = bus
+            .begin_local_provider_request(&trace, successful_request)
+            .unwrap();
+        assert!(bus.finish_local_provider_request(
+            &trace,
+            successful_attempt,
+            LocalProviderRequestOutcomeV1::SuccessfulHeaders,
+            Some(288_001),
+        ));
+
+        bus.publish(canonical_final(trace.clone()));
+        let received = receiver.recv().await.unwrap();
+        let AstridEvent::Ipc { message, .. } = &*received else {
+            panic!("expected IPC event");
+        };
+        let metrics = message.local_provider_metrics.as_ref().unwrap();
+        assert!(metrics.is_supported());
+        assert_eq!(metrics.request_count, 2);
+        assert_eq!(metrics.successful_header_count, 1);
+        assert_eq!(metrics.requests[0].attempt_id, failed_attempt);
+        assert_eq!(metrics.requests[1].attempt_id, successful_attempt);
+        assert!(metrics.single_successful_request().is_none());
+
+        bus.publish(canonical_final(trace));
+        let duplicate = receiver.recv().await.unwrap();
+        let AstridEvent::Ipc { message, .. } = &*duplicate else {
+            panic!("expected IPC event");
+        };
+        assert!(message.local_provider_metrics.is_none());
+    }
+
+    #[tokio::test]
+    async fn local_provider_full_turn_keys_allow_next_chain_turns_sharing_trace() {
+        let bus = EventBus::new();
+        let mut receiver = bus.subscribe();
+        let first = crate::ipc::IpcTraceContextV1::root(
+            uuid::Uuid::new_v4(),
+            "session-one",
+            Some("chain-one".to_string()),
+        );
+        let mut second = crate::ipc::IpcTraceContextV1::root(
+            uuid::Uuid::new_v4(),
+            "session-one",
+            Some("chain-one".to_string()),
+        );
+        second.trace_id = first.trace_id;
+        assert_ne!(first.turn_id, second.turn_id);
+
+        for (trace, latency) in [(&first, 11), (&second, 22)] {
+            let attempt = bus
+                .begin_local_provider_request(trace, uuid::Uuid::new_v4())
+                .unwrap();
+            assert!(bus.finish_local_provider_request(
+                trace,
+                attempt,
+                LocalProviderRequestOutcomeV1::SuccessfulHeaders,
+                Some(latency),
+            ));
+        }
+        bus.publish(canonical_final(first));
+        bus.publish(canonical_final(second));
+        for expected_latency in [11, 22] {
+            let received = receiver.recv().await.unwrap();
+            let AstridEvent::Ipc { message, .. } = &*received else {
+                panic!("expected IPC event");
+            };
+            assert_eq!(
+                message
+                    .local_provider_metrics
+                    .as_ref()
+                    .and_then(LocalProviderTurnMetricsV1::single_successful_request)
+                    .and_then(|request| request.request_header_latency_ms),
+                Some(expected_latency)
+            );
+        }
+    }
+
+    #[tokio::test]
+    async fn canonical_final_without_attempt_tombstones_late_requests() {
+        let bus = EventBus::new();
+        let mut receiver = bus.subscribe();
+        let trace = crate::ipc::IpcTraceContextV1::root(uuid::Uuid::new_v4(), "session-one", None);
+        bus.publish(canonical_final(trace.clone()));
+        assert!(
+            bus.begin_local_provider_request(&trace, uuid::Uuid::new_v4())
+                .is_none()
+        );
+        bus.publish(canonical_final(trace));
+        for _ in 0..2 {
+            let received = receiver.recv().await.unwrap();
+            let AstridEvent::Ipc { message, .. } = &*received else {
+                panic!("expected IPC event");
+            };
+            assert!(message.local_provider_metrics.is_none());
+        }
+    }
+
+    #[tokio::test]
+    async fn guest_supplied_provider_summary_is_always_stripped() {
+        let bus = EventBus::new();
+        let mut receiver = bus.subscribe();
+        let trace = crate::ipc::IpcTraceContextV1::root(uuid::Uuid::new_v4(), "session-one", None);
+        let mut event = canonical_final(trace);
+        let AstridEvent::Ipc { message, .. } = &mut event else {
+            unreachable!();
+        };
+        message.producer = Some(crate::ipc::IpcProducerV1::new(
+            "native_socket_client",
+            "spoofed-react",
+        ));
+        message.local_provider_metrics = Some(LocalProviderTurnMetricsV1::new(
+            1,
+            1,
+            vec![LocalProviderRequestAttemptV1 {
+                attempt_id: uuid::Uuid::new_v4(),
+                request_id: uuid::Uuid::new_v4(),
+                outcome: LocalProviderRequestOutcomeV1::SuccessfulHeaders,
+                request_header_latency_ms: Some(1),
+            }],
+        ));
+        bus.publish(event);
+        let received = receiver.recv().await.unwrap();
+        let AstridEvent::Ipc { message, .. } = &*received else {
+            panic!("expected IPC event");
+        };
+        assert!(message.local_provider_metrics.is_none());
+    }
+
+    #[tokio::test]
+    async fn incomplete_attempt_final_is_fail_closed_and_take_once() {
+        let bus = EventBus::new();
+        let mut receiver = bus.subscribe();
+        let trace = crate::ipc::IpcTraceContextV1::root(uuid::Uuid::new_v4(), "session-one", None);
+        let attempt = bus
+            .begin_local_provider_request(&trace, uuid::Uuid::new_v4())
+            .unwrap();
+        bus.publish(canonical_final(trace.clone()));
+        assert!(!bus.finish_local_provider_request(
+            &trace,
+            attempt,
+            LocalProviderRequestOutcomeV1::SuccessfulHeaders,
+            Some(1),
+        ));
+        bus.publish(canonical_final(trace));
+        for _ in 0..2 {
+            let received = receiver.recv().await.unwrap();
+            let AstridEvent::Ipc { message, .. } = &*received else {
+                panic!("expected IPC event");
+            };
+            assert!(message.local_provider_metrics.is_none());
+        }
+    }
+
+    #[tokio::test]
+    async fn supplied_summary_cannot_replace_the_real_host_entry() {
+        let bus = EventBus::new();
+        let mut receiver = bus.subscribe();
+        let trace = crate::ipc::IpcTraceContextV1::root(uuid::Uuid::new_v4(), "session-one", None);
+        let real_request = uuid::Uuid::new_v4();
+        let attempt = bus
+            .begin_local_provider_request(&trace, real_request)
+            .unwrap();
+        assert!(bus.finish_local_provider_request(
+            &trace,
+            attempt,
+            LocalProviderRequestOutcomeV1::SuccessfulHeaders,
+            Some(77),
+        ));
+        let mut event = canonical_final(trace);
+        let AstridEvent::Ipc { message, .. } = &mut event else {
+            unreachable!();
+        };
+        message.local_provider_metrics = Some(LocalProviderTurnMetricsV1::new(
+            1,
+            1,
+            vec![LocalProviderRequestAttemptV1 {
+                attempt_id: uuid::Uuid::new_v4(),
+                request_id: uuid::Uuid::new_v4(),
+                outcome: LocalProviderRequestOutcomeV1::SuccessfulHeaders,
+                request_header_latency_ms: Some(999),
+            }],
+        ));
+        bus.publish(event);
+        let received = receiver.recv().await.unwrap();
+        let AstridEvent::Ipc { message, .. } = &*received else {
+            panic!("expected IPC event");
+        };
+        let real = message
+            .local_provider_metrics
+            .as_ref()
+            .and_then(LocalProviderTurnMetricsV1::single_successful_request)
+            .unwrap();
+        assert_eq!(real.attempt_id, attempt);
+        assert_eq!(real.request_id, real_request);
+        assert_eq!(real.request_header_latency_ms, Some(77));
+    }
+
+    #[tokio::test]
+    async fn noncanonical_finals_do_not_take_the_correct_turn_entry() {
+        let bus = EventBus::new();
+        let mut receiver = bus.subscribe();
+        let trace = crate::ipc::IpcTraceContextV1::root(uuid::Uuid::new_v4(), "session-one", None);
+        let attempt = bus
+            .begin_local_provider_request(&trace, uuid::Uuid::new_v4())
+            .unwrap();
+        assert!(bus.finish_local_provider_request(
+            &trace,
+            attempt,
+            LocalProviderRequestOutcomeV1::SuccessfulHeaders,
+            Some(33),
+        ));
+
+        let mut wrong_producer = canonical_final(trace.clone());
+        let AstridEvent::Ipc { message, .. } = &mut wrong_producer else {
+            unreachable!();
+        };
+        message.producer = Some(crate::ipc::IpcProducerV1::new("wasm_capsule", "other"));
+        bus.publish(wrong_producer);
+
+        let mut wrong_topic = canonical_final(trace.clone());
+        let AstridEvent::Ipc { message, .. } = &mut wrong_topic else {
+            unreachable!();
+        };
+        message.topic = "agent.v1.other".to_string();
+        bus.publish(wrong_topic);
+
+        let mut wrong_session = canonical_final(trace.clone());
+        let AstridEvent::Ipc { message, .. } = &mut wrong_session else {
+            unreachable!();
+        };
+        let crate::ipc::IpcPayload::AgentResponse { session_id, .. } = &mut message.payload else {
+            unreachable!();
+        };
+        *session_id = "other-session".to_string();
+        bus.publish(wrong_session);
+
+        bus.publish(canonical_final(trace));
+        let mut received = Vec::new();
+        for _ in 0..4 {
+            received.push(receiver.recv().await.unwrap());
+        }
+        for event in &received[..3] {
+            let AstridEvent::Ipc { message, .. } = &**event else {
+                panic!("expected IPC event");
+            };
+            assert!(message.local_provider_metrics.is_none());
+        }
+        let AstridEvent::Ipc { message, .. } = &*received[3] else {
+            panic!("expected IPC event");
+        };
+        assert_eq!(
+            message
+                .local_provider_metrics
+                .as_ref()
+                .and_then(LocalProviderTurnMetricsV1::single_successful_request)
+                .and_then(|request| request.request_header_latency_ms),
+            Some(33)
+        );
+    }
+
+    #[test]
+    fn expired_active_provider_turn_is_poisoned_not_readmitted() {
+        let mut registry = LocalProviderMetricsRegistry::default();
+        let trace = crate::ipc::IpcTraceContextV1::root(uuid::Uuid::new_v4(), "session-one", None);
+        let now = Instant::now();
+        assert!(registry.begin(&trace, uuid::Uuid::new_v4(), now).is_some());
+        let expired = now.checked_add(LOCAL_PROVIDER_TURN_TTL).unwrap();
+        assert!(
+            registry
+                .begin(&trace, uuid::Uuid::new_v4(), expired)
+                .is_none()
+        );
+        assert!(registry.take(&trace, expired).is_none());
+    }
+
+    #[test]
+    fn provider_attempt_cap_poisons_the_whole_turn() {
+        let mut registry = LocalProviderMetricsRegistry::default();
+        let trace = crate::ipc::IpcTraceContextV1::root(uuid::Uuid::new_v4(), "session-one", None);
+        let now = Instant::now();
+        for _ in 0..LOCAL_PROVIDER_TURN_METRICS_MAX_ENTRIES {
+            let attempt = registry.begin(&trace, uuid::Uuid::new_v4(), now).unwrap();
+            assert!(registry.finish(
+                &trace,
+                attempt,
+                LocalProviderRequestOutcomeV1::SuccessfulHeaders,
+                Some(1),
+                now,
+            ));
+        }
+        assert!(registry.begin(&trace, uuid::Uuid::new_v4(), now).is_none());
+        assert!(registry.take(&trace, now).is_none());
+    }
+
+    #[test]
+    fn provider_registry_capacity_disables_attribution_for_process_lifetime() {
+        let mut registry = LocalProviderMetricsRegistry::default();
+        let now = Instant::now();
+        for index in 0..MAX_LOCAL_PROVIDER_TURNS {
+            let key = LocalProviderTurnKey {
+                trace_id: uuid::Uuid::from_u128(u128::try_from(index).unwrap().saturating_add(1)),
+                turn_id: uuid::Uuid::new_v4(),
+                session_id: "session".to_string(),
+                chain_id: None,
+            };
+            registry.claims.insert(
+                key,
+                LocalProviderTraceClaim {
+                    state: LocalProviderTraceState::Taken,
+                    touched_at: now,
+                },
+            );
+        }
+        let trace = crate::ipc::IpcTraceContextV1::root(uuid::Uuid::new_v4(), "session-new", None);
+        assert!(registry.begin(&trace, uuid::Uuid::new_v4(), now).is_none());
+        let much_later = now
+            .checked_add(LOCAL_PROVIDER_TURN_TTL.saturating_mul(2))
+            .unwrap();
+        assert!(
+            registry
+                .begin(&trace, uuid::Uuid::new_v4(), much_later)
+                .is_none()
+        );
+        assert!(registry.disabled);
+    }
+
+    #[test]
+    fn poisoned_trace_registry_disables_exact_provider_attribution() {
+        let bus = EventBus::new();
+        let shared = Arc::clone(&bus.ipc_traces);
+        let _ = std::thread::spawn(move || {
+            let _guard = shared.lock().unwrap();
+            panic!("intentional registry poison");
+        })
+        .join();
+        let trace = crate::ipc::IpcTraceContextV1::root(uuid::Uuid::new_v4(), "session-one", None);
+        assert!(
+            bus.begin_local_provider_request(&trace, uuid::Uuid::new_v4())
+                .is_none()
+        );
+        assert!(bus.lock_ipc_traces().local_provider_metrics.disabled);
     }
 }
