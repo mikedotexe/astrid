@@ -17,7 +17,17 @@ if [[ ! "$keep_alive" =~ ^[1-9][0-9]*[hm]$ ]]; then
     exit 2
 fi
 if [[ "$workspace" != /* ]]; then
-    workspace="$PWD/$workspace"
+    # Older ICP profiles were relative to ~/.astrid-icp while current units
+    # deliberately keep cwd on the always-present home directory. Preserve a
+    # core-only upgrade boundary without ever writing a warmup receipt to
+    # eMMC: `state/...` is anchored beside the absolute ASTRID_HOME state root.
+    if [[ "$workspace" == state/* \
+        && "${ASTRID_HOME:-}" == /* \
+        && "${ASTRID_HOME%/}" == */state ]]; then
+        workspace="${ASTRID_HOME%/state}/$workspace"
+    else
+        workspace="$PWD/$workspace"
+    fi
 fi
 mkdir -p "$workspace/runtime"
 

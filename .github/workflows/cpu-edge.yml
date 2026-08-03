@@ -31,6 +31,7 @@ on:
       - 'scripts/install_essential_capsules.sh'
       - 'scripts/package_edge_appliance.sh'
       - 'scripts/test_package_edge_appliance.sh'
+      - 'scripts/test_wait_for_icp_ssd.sh'
       - 'scripts/verify_edge_capsule_status.py'
       - 'scripts/warm_ollama_model.sh'
       - 'services/astrid-edge-runtime/**'
@@ -66,6 +67,7 @@ on:
       - 'scripts/install_essential_capsules.sh'
       - 'scripts/package_edge_appliance.sh'
       - 'scripts/test_package_edge_appliance.sh'
+      - 'scripts/test_wait_for_icp_ssd.sh'
       - 'scripts/verify_edge_capsule_status.py'
       - 'scripts/warm_ollama_model.sh'
       - 'services/astrid-edge-runtime/**'
@@ -177,6 +179,7 @@ jobs:
 
       - name: Installer dry runs
         run: |
+          scripts/test_wait_for_icp_ssd.sh
           cargo build -p astrid
           cargo build --manifest-path services/astrid-edge-runtime/Cargo.toml
           scripts/install_headless_linux.sh --binary-dir target/debug --dry-run
@@ -207,3 +210,24 @@ jobs:
         run: |
           systemd-analyze verify packaging/systemd/*.service packaging/systemd/*.timer
           systemd-analyze verify packaging/systemd/icp/*.service packaging/systemd/icp/*.timer
+          merged_units="$(mktemp -d)"
+          install -D -m 0755 packaging/systemd/wait-for-icp-ssd \
+            "$HOME/.local/libexec/astrid/wait-for-icp-ssd"
+          cp packaging/systemd/icp/*.service packaging/systemd/icp/*.timer "$merged_units/"
+          for service in \
+            astrid.service \
+            ollama-cpu.service \
+            astrid-model-warmup.service \
+            astrid-edge-runtime.service \
+            astrid-edge-hindsight.service; do
+            mkdir -p "$merged_units/$service.d"
+            cp packaging/systemd/icp-ssd-required.conf \
+              "$merged_units/$service.d/ssd-required.conf"
+          done
+          SYSTEMD_UNIT_PATH="$merged_units:" systemd-analyze verify \
+            astrid.service \
+            ollama-cpu.service \
+            astrid-model-warmup.service \
+            astrid-edge-runtime.service \
+            astrid-edge-hindsight.service \
+            astrid-edge-hindsight.timer

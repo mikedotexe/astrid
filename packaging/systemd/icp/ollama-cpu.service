@@ -1,7 +1,8 @@
 [Unit]
 Description=ICP Astrid local CPU model service
-Wants=network-online.target
+Wants=network-online.target astrid-model-warmup.service
 After=network-online.target
+Before=astrid-model-warmup.service
 
 [Service]
 Type=simple

@@ -1301,9 +1301,19 @@ the perceive-act-observe loop does not become a self-exciting scheduler.
 Verified stateful Action chains retain their three-minute continuation.
 
 The ICP layout installers install `packaging/systemd/icp-ssd-required.conf` as
-drop-ins so the core,
-model, warmup, and edge services refuse to start when `/media/data` is not a
-real mount point. `scripts/finish_icp_host_hardening.sh` is the separately
+drop-ins on the core, model, warmup, edge, and hindsight services. Their
+eMMC-resident `wait-for-icp-ssd` preflight waits through a bounded boot race,
+then requires the exact SSD UUID, ext4, `nosuid,nodev`, the canonical
+`~/.astrid-icp -> /media/data/astrid` link, inode identity, and the private
+state tree before every start. It also requires `rw`, rejects `ro,noexec`,
+checks every mutable state/model directory without following symlinks, and
+re-reads mount identity immediately before success. Services use the
+always-present eMMC home as cwd while every executable and writable path is
+explicitly rooted below the SSD link. A temporarily absent mount fails visibly
+and retries; a wrong filesystem or retargeted link fails permanently without
+a restart storm. This avoids systemd Conditions, whose false result would
+leave a lingering user service silently skipped after a late SSD mount.
+`scripts/finish_icp_host_hardening.sh` is the separately
 root-gated finalizer: it verifies the SSD UUID, restores standard `1777`
 permissions to the SSD-backed `/tmp`, replaces the device-name fstab row with
 an explicit UUID/ext4 row after validation and backup, and disables unused

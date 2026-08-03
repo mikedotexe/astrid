@@ -25,7 +25,7 @@ it is rejected for profiles that do not explicitly permit tuning.
   already crosses generations.
 - `icp-j3455-8g.env` records the measured four-core, 8 GiB ICP configuration
   and its independent no-inherited-corpus identity. It selects dense Qwen3
-  1.7B at a 2K/128-token tier after explicit non-thinking mode reduced its
+  1.7B at a 2K/112-token tier after explicit non-thinking mode reduced its
   six behavioral cases to 27-59 seconds with all cases passing. An accepted `RESEARCH` choice
   executes one audited read-only search without asking the small model to emit
   a native tool call. `READ_SOURCE <1|2|3>` can then fetch one retained result,
@@ -124,8 +124,13 @@ explicitly; the dry-run output always prints the selected layout and paths.
 For `icp-ssd`, `/media/data` must be mounted and `/media/data/astrid` must be
 owner-writable. The core installer creates only the exact
 `~/.astrid-icp -> /media/data/astrid` symlink and refuses a pre-existing
-non-symlink tree; every ICP service also receives mount, symlink, and state-tree
-guards.
+non-symlink tree. Every ICP service also receives an eMMC-resident bounded
+preflight that retries a delayed mount and pins the filesystem UUID, type,
+required `rw,nosuid,nodev`, forbidden `ro,noexec`, symlink target, inode, and
+every mutable state/model directory. Services keep cwd on the always-present
+eMMC home while every executable and writable path remains explicitly below
+the guarded SSD link. Hindsight uses the same guard, so neither inference nor
+operator telemetry can fall through to an unintended filesystem.
 
 Both installers hold the shared CPU-edge transaction lock, stage and hash a
 complete generation, and snapshot every managed user unit's enabled and active

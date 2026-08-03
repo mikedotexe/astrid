@@ -103,9 +103,25 @@ test -f "$bundle/capsules/astrid-capsule-edge-spectral.capsule"
 test "$(find "$bundle/capsules" -maxdepth 1 -type f -name '*.capsule' | wc -l | tr -d ' ')" -eq 10
 test ! -e "$bundle/packaging/headless/introspection-AGENTS.md"
 test ! -e "$bundle/packaging/headless/introspection-memory.md"
+test -x "$bundle/packaging/systemd/wait-for-icp-ssd"
+for installer in install_headless_linux.sh install_edge_runtime.sh; do
+    grep -Fq 'command+=(-u "$variable")' "$bundle/scripts/$installer"
+done
 grep -Fqx \
-    'ExecCondition=/usr/bin/test %h/.astrid-icp -ef /media/data/astrid' \
+    'ExecCondition=%h/.local/libexec/astrid/wait-for-icp-ssd --systemd-condition --wait-seconds 75 --poll-seconds 2' \
     "$bundle/packaging/systemd/icp-ssd-required.conf"
+grep -Fq 'UnsetEnvironment=ASTRID_ICP_SSD_GUARD_TEST_MODE ' \
+    "$bundle/packaging/systemd/icp-ssd-required.conf"
+if grep -Fq 'Environment=ASTRID_ICP_SSD_GUARD_TEST_MODE=' \
+    "$bundle/packaging/systemd/icp-ssd-required.conf"; then
+    printf 'error: production ICP drop-in exports the guard test gate\n' >&2
+    exit 1
+fi
+if grep -Eq '^ConditionPath(IsMountPoint|IsSymbolicLink|IsDirectory)=/' \
+    "$bundle/packaging/systemd/icp-ssd-required.conf"; then
+    printf 'error: ICP SSD guard still contains clean-skip conditions\n' >&2
+    exit 1
+fi
 grep -Fqx \
     'EnvironmentFile=%h/.config/astrid/edge-tuning-authority.env' \
     "$bundle/packaging/systemd/astrid-edge-tuning-authority.conf"
@@ -117,6 +133,45 @@ grep -Fqx 'ASTRID_EDGE_RESERVOIR_TUNING_ENABLED=false' \
     "$bundle/packaging/appliances/icp-j3455-8g.env"
 grep -Fqx 'ASTRID_EDGE_RESERVOIR_TUNING_PROFILE_PERMITS=true' \
     "$bundle/packaging/appliances/icp-j3455-8g.env"
+grep -Fqx 'ASTRID_EDGE_SOCKET=.astrid-icp/state/run/system.sock' \
+    "$bundle/packaging/appliances/icp-j3455-8g.env"
+grep -Fqx 'WorkingDirectory=%h' \
+    "$bundle/packaging/systemd/icp/astrid-edge-runtime.service"
+grep -Fqx 'EnvironmentFile=%h/.config/astrid/edge-appliance.env' \
+    "$bundle/packaging/systemd/icp/astrid-edge-runtime.service"
+grep -Fqx 'EnvironmentFile=%h/.config/astrid/edge-appliance.env' \
+    "$bundle/packaging/systemd/icp/astrid.service"
+grep -Fqx 'BindsTo=ollama-cpu.service' \
+    "$bundle/packaging/systemd/icp/astrid-model-warmup.service"
+grep -Fqx 'Environment=ASTRID_HOME=%h/.astrid-icp/state' \
+    "$bundle/packaging/systemd/icp/astrid-model-warmup.service"
+grep -Fq 'Wants=network-online.target astrid-model-warmup.service' \
+    "$bundle/packaging/systemd/icp/ollama-cpu.service"
+grep -Fqx 'BindsTo=astrid-model-warmup.service' \
+    "$bundle/packaging/systemd/icp/astrid.service"
+grep -Fqx 'BindsTo=astrid.service' \
+    "$bundle/packaging/systemd/icp/astrid-edge-runtime.service"
+
+warmup_home="$test_root/warmup-home"
+warmup_mock_bin="$test_root/warmup-mock-bin"
+install -d -m 0700 \
+    "$warmup_home/.astrid-icp/state/home/default/edge" \
+    "$warmup_mock_bin"
+printf '#!/usr/bin/env sh\nexit 0\n' > "$warmup_mock_bin/curl"
+chmod 0755 "$warmup_mock_bin/curl"
+(
+    cd "$warmup_home"
+    HOME="$warmup_home" \
+        PATH="$warmup_mock_bin:$PATH" \
+        ASTRID_HOME="$warmup_home/.astrid-icp/state" \
+        ASTRID_EDGE_WORKSPACE=state/home/default/edge \
+        ASTRID_OLLAMA_MODEL=qwen3:test \
+        ASTRID_OLLAMA_KEEP_ALIVE=2h \
+        "$bundle/scripts/warm_ollama_model.sh"
+)
+test -f \
+    "$warmup_home/.astrid-icp/state/home/default/edge/runtime/model_warmup.json"
+test ! -e "$warmup_home/state"
 grep -Fqx 'ASTRID_EDGE_RESERVOIR_TUNING_PROFILE_PERMITS=false' \
     "$bundle/packaging/appliances/generic-cpu.env"
 grep -Fqx 'ASTRID_EDGE_RESERVOIR_TUNING_PROFILE_PERMITS=false' \
@@ -214,23 +269,35 @@ icp_runtime_output="$(
             --profile icp-j3455-8g \
             --layout icp-ssd \
             --observation-only \
+            --start \
             --dry-run
 )"
 [[ "$icp_runtime_output" == *"Selected install layout: icp-ssd"* ]]
 [[ "$icp_runtime_output" == *"ssd-required.conf"* ]]
+[[ "$icp_runtime_output" == *"wait-for-icp-ssd"* ]]
+[[ "$icp_runtime_output" == *"astrid-edge-hindsight.service.d"* ]]
 [[ "$icp_runtime_output" == *".astrid-icp/state"* ]]
+[[ "$icp_runtime_output" == *"mask --runtime astrid-edge-runtime.service"* ]]
+[[ "$icp_runtime_output" == *"restart ollama-cpu.service"* ]]
+[[ "$icp_runtime_output" != *"restart astrid.service"* ]]
 
 icp_core_output="$(
     HOME="$test_home" PATH="$mock_command_dir:$PATH" \
         "$bundle/scripts/install_headless_linux.sh" \
             --binary-dir "$bundle" \
             --layout icp-ssd \
+            --start \
             --dry-run
 )"
 [[ "$icp_core_output" == *"Selected install layout: icp-ssd"* ]]
 [[ "$icp_core_output" == *".astrid-icp/state"* ]]
 [[ "$icp_core_output" == *"ollama-cpu.service"* ]]
 [[ "$icp_core_output" == *"ssd-required.conf"* ]]
+[[ "$icp_core_output" == *"wait-for-icp-ssd"* ]]
+[[ "$icp_core_output" == *"--mount-only"* ]]
+[[ "$icp_core_output" == *"mask --runtime astrid-edge-runtime.service"* ]]
+[[ "$icp_core_output" == *"restart ollama-cpu.service"* ]]
+[[ "$icp_core_output" != *"restart astrid.service"* ]]
 [[ "$icp_core_output" == *"verified files using atomic renames with generation rollback"* ]]
 
 standard_core_output="$(
@@ -341,6 +408,9 @@ printf '%s\n' \
     'if [[ -n "${MOCK_SYSTEMCTL_LOG:-}" ]]; then printf "%s %s\\n" "$command_name" "$*" >> "$MOCK_SYSTEMCTL_LOG"; fi' \
     'case "$command_name" in' \
     '    daemon-reload) exit 0 ;;' \
+    '    cat)' \
+    '        [[ -f "$HOME/.config/systemd/user/${1:?}" ]]' \
+    '        ;;' \
     '    is-enabled)' \
     '        [[ "${1:-}" == "--quiet" ]] && shift' \
     '        [[ -f "$state_dir/${1:?}.enabled" ]] && grep -Fqx 1 "$state_dir/$1.enabled"' \
