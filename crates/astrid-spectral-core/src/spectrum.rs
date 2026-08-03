@@ -6,7 +6,9 @@
 
 use std::cmp::Ordering;
 
-use astrid_minime_protocol::{SpectralFillSemanticsV1, SpectralSubstrateV1};
+use astrid_minime_protocol::{
+    SpectralFillSemanticsV1, SpectralFillSmoothingV1, SpectralSubstrateV1,
+};
 use serde::{Deserialize, Serialize};
 
 const ENERGY_EPSILON: f64 = 1.0e-12;
@@ -42,6 +44,8 @@ pub enum SpectrumBasis {
     ExportedSpectrumPrefix,
     ExportedSpectrumUnknownCoverage,
     ExportedSpectrumWithInconsistentCoverage,
+    /// One or more declared spectrum values were unusable and discarded.
+    IncompleteSanitizedSpectrum,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
@@ -165,6 +169,11 @@ pub fn sanitize_spectrum(
 impl SanitizedSpectrum {
     #[must_use]
     pub fn basis(&self) -> SpectrumBasis {
+        if self.discarded_non_finite_count > 0
+            || self.coverage.usable_mode_count < self.coverage.exported_mode_count
+        {
+            return SpectrumBasis::IncompleteSanitizedSpectrum;
+        }
         match (
             self.coverage.declared_count_is_consistent,
             self.coverage.full_spectrum_exported,
@@ -257,9 +266,8 @@ fn spectral_gaps(eigenvalues: &[f64]) -> SpectralGaps {
             .and_then(|(left, right)| {
                 (*left > ENERGY_EPSILON).then(|| ((*left - *right) / *left).clamp(0.0, 1.0))
             });
-    let adjacent_relative_drops = eigenvalues
+    let all_relative_drops = eigenvalues
         .windows(2)
-        .take(8)
         .map(|pair| {
             if pair[0] > ENERGY_EPSILON {
                 ((pair[0] - pair[1]) / pair[0]).clamp(0.0, 1.0)
@@ -268,7 +276,8 @@ fn spectral_gaps(eigenvalues: &[f64]) -> SpectralGaps {
             }
         })
         .collect::<Vec<_>>();
-    let largest = adjacent_relative_drops
+    let adjacent_relative_drops = all_relative_drops.iter().copied().take(8).collect();
+    let largest = all_relative_drops
         .iter()
         .copied()
         .enumerate()
@@ -291,7 +300,12 @@ pub fn fill_values_are_comparable(left: &SpectralSubstrateV1, right: &SpectralSu
         && right.is_well_formed()
         && left.substrate_kind == right.substrate_kind
         && left.fill_semantics == right.fill_semantics
+        && left.fill_smoothing == right.fill_smoothing
+        && left.fill_smoothing_alpha_ppm == right.fill_smoothing_alpha_ppm
+        && left.reservoir_dimensions == right.reservoir_dimensions
+        && left.covariance_window_samples == right.covariance_window_samples
         && left.fill_semantics != SpectralFillSemanticsV1::UnspecifiedLegacy
+        && left.fill_smoothing != SpectralFillSmoothingV1::UnspecifiedLegacy
 }
 
 /// Computes inverse-participation concentration without retaining the vector.
@@ -325,6 +339,20 @@ pub fn mode_turnover(
     current: &[SpectralMode],
     degeneracy_relative_tolerance: f64,
 ) -> ModeTurnoverSummary {
+    mode_turnover_with_boundary(previous, current, None, None, degeneracy_relative_tolerance)
+}
+
+/// As [`mode_turnover`], while also checking whether the last retained mode is
+/// near-degenerate with the first unretained mode. Only that fifth eigenvalue is
+/// needed; its eigenvector is never retained.
+#[must_use]
+pub fn mode_turnover_with_boundary(
+    previous: &[SpectralMode],
+    current: &[SpectralMode],
+    previous_next_eigenvalue: Option<f64>,
+    current_next_eigenvalue: Option<f64>,
+    degeneracy_relative_tolerance: f64,
+) -> ModeTurnoverSummary {
     let compared_mode_count = previous.len().min(current.len()).min(MAX_TRACKED_MODES);
     let tolerance = if degeneracy_relative_tolerance.is_finite() {
         degeneracy_relative_tolerance.clamp(0.0, 1.0)
@@ -337,6 +365,20 @@ pub fn mode_turnover(
         compared_mode_count,
         tolerance,
     ));
+    mark_boundary_degeneracy(
+        &mut unstable,
+        previous,
+        compared_mode_count,
+        previous_next_eigenvalue,
+        tolerance,
+    );
+    mark_boundary_degeneracy(
+        &mut unstable,
+        current,
+        compared_mode_count,
+        current_next_eigenvalue,
+        tolerance,
+    );
     unstable.sort_unstable();
     unstable.dedup();
 
@@ -344,8 +386,21 @@ pub fn mode_turnover(
         .iter()
         .zip(current.iter())
         .take(compared_mode_count)
-        .map(|(left, right)| sign_invariant_turnover(&left.components, &right.components))
+        .enumerate()
+        .map(|(index, (left, right))| {
+            (!unstable.contains(&index))
+                .then(|| sign_invariant_turnover(&left.components, &right.components))
+                .flatten()
+        })
         .collect::<Vec<_>>();
+    unstable.extend(
+        per_mode_turnover
+            .iter()
+            .enumerate()
+            .filter_map(|(index, turnover)| turnover.is_none().then_some(index)),
+    );
+    unstable.sort_unstable();
+    unstable.dedup();
     let usable = per_mode_turnover
         .iter()
         .filter_map(|value| *value)
@@ -361,6 +416,30 @@ pub fn mode_turnover(
         identity_stable: unstable.is_empty() && compared_mode_count > 0,
         identity_unstable_modes: unstable,
         degeneracy_relative_tolerance: tolerance,
+    }
+}
+
+fn mark_boundary_degeneracy(
+    unstable: &mut Vec<usize>,
+    modes: &[SpectralMode],
+    compared_mode_count: usize,
+    next_eigenvalue: Option<f64>,
+    tolerance: f64,
+) {
+    if compared_mode_count != MAX_TRACKED_MODES || modes.len() < compared_mode_count {
+        return;
+    }
+    let Some(next) = next_eigenvalue else {
+        return;
+    };
+    let retained = modes[compared_mode_count.saturating_sub(1)].eigenvalue;
+    if !retained.is_finite() || !next.is_finite() {
+        unstable.push(compared_mode_count.saturating_sub(1));
+        return;
+    }
+    let scale = retained.abs().max(next.abs()).max(ENERGY_EPSILON);
+    if (retained - next).abs() / scale <= tolerance {
+        unstable.push(compared_mode_count.saturating_sub(1));
     }
 }
 

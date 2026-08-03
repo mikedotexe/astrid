@@ -12,6 +12,15 @@ use crate::{
 };
 use uuid::Uuid;
 
+fn fresh_snapshot(recorded_at_unix_ms: u64, sequence: u64) -> ReservoirSnapshot {
+    ReservoirSnapshot {
+        generation_id: "study-test-generation".to_string(),
+        sequence,
+        recorded_at_unix_ms,
+        ..ReservoirSnapshot::default()
+    }
+}
+
 #[test]
 fn parses_bounded_study_grammar() {
     let study = parse_study(
@@ -90,9 +99,9 @@ fn study_survives_reload_completes_without_inference_and_can_be_cancelled() {
     let mut config = Config::try_parse_from(["edge"]).unwrap();
     config.workspace.clone_from(&workspace);
     config.prepare_workspace().unwrap();
-    let snapshot = ReservoirSnapshot::default();
     let spec = parse_study("fill OVER 1h :: Is the deterministic shelf stable?").unwrap();
     let started = 1_900_000_000_000_u64;
+    let snapshot = fresh_snapshot(started, 1);
     let mut manager = StudyManager::load(&config);
     let definition = manager
         .start(
@@ -109,14 +118,16 @@ fn study_survives_reload_completes_without_inference_and_can_be_cancelled() {
     assert!(manager.tick(&config, &snapshot, started).unwrap().is_none());
 
     let mut reloaded = StudyManager::load(&config);
+    let midpoint_snapshot = fresh_snapshot(started + 30 * 60_000, 2);
     assert!(
         reloaded
-            .tick(&config, &snapshot, started + 30 * 60_000)
+            .tick(&config, &midpoint_snapshot, started + 30 * 60_000)
             .unwrap()
             .is_none()
     );
+    let completion_snapshot = fresh_snapshot(started + 60 * 60_000, 3);
     let completion = reloaded
-        .tick(&config, &snapshot, started + 60 * 60_000)
+        .tick(&config, &completion_snapshot, started + 60 * 60_000)
         .unwrap()
         .unwrap();
     let result = fs::read_to_string(
@@ -158,9 +169,9 @@ fn study_completion_preserves_only_exact_declaring_identity() {
     let mut config = Config::try_parse_from(["edge"]).unwrap();
     config.workspace.clone_from(&workspace);
     config.prepare_workspace().unwrap();
-    let snapshot = ReservoirSnapshot::default();
     let spec = parse_study("fill OVER 1h :: Is the shelf stable?").unwrap();
     let started = 1_900_100_000_000_u64;
+    let snapshot = fresh_snapshot(started + 60 * 60_000, 1);
     let trace = IpcTraceContextV1::root(
         Uuid::new_v4(),
         "session-exact".to_string(),
@@ -191,5 +202,54 @@ fn study_completion_preserves_only_exact_declaring_identity() {
         completion.parent_response_sha256.as_deref(),
         Some(response_sha256.as_str())
     );
+    fs::remove_dir_all(workspace).unwrap();
+}
+
+#[test]
+fn study_excludes_duplicate_and_stale_reservoir_snapshots() {
+    let workspace = std::env::temp_dir().join(format!(
+        "astrid-edge-study-freshness-{}",
+        super::unix_millis()
+    ));
+    let mut config = Config::try_parse_from(["edge"]).unwrap();
+    config.workspace.clone_from(&workspace);
+    config.prepare_workspace().unwrap();
+    let started = 1_900_200_000_000_u64;
+    let spec = parse_study("fill OVER 1h :: Are samples physically distinct?").unwrap();
+    let first = fresh_snapshot(started, 1);
+    let mut manager = StudyManager::load(&config);
+    manager
+        .start(
+            &config,
+            &first,
+            started,
+            &spec,
+            None,
+            None,
+            "operator_harness",
+        )
+        .unwrap();
+    assert!(manager.tick(&config, &first, started).unwrap().is_none());
+
+    assert!(
+        manager
+            .tick(&config, &first, started + 60_000)
+            .unwrap()
+            .is_none()
+    );
+    let active = manager.registry.active.as_ref().unwrap();
+    assert_eq!(active.sample_count, 1);
+    assert_eq!(active.stale_snapshot_tick_count, 1);
+
+    let second = fresh_snapshot(started + 120_000, 2);
+    assert!(
+        manager
+            .tick(&config, &second, started + 120_000)
+            .unwrap()
+            .is_none()
+    );
+    let active = manager.registry.active.as_ref().unwrap();
+    assert_eq!(active.sample_count, 2);
+    assert_eq!(active.stale_snapshot_tick_count, 1);
     fs::remove_dir_all(workspace).unwrap();
 }

@@ -33,6 +33,7 @@ const DAY_MS: u64 = 86_400_000;
 const MAX_STARTS_PER_DAY: usize = 4;
 const MAX_QUESTION_CHARS: usize = 1_000;
 const MAX_SAMPLES: usize = 2_880;
+const SNAPSHOT_FRESHNESS_MS: u64 = 5_000;
 const KNOWN_CADENCE_MINUTES: [usize; 5] = [3, 5, 10, 15, 60];
 
 pub type SharedStudyManager = Arc<Mutex<StudyManager>>;
@@ -62,6 +63,9 @@ struct ActiveStudy {
     midpoint_at_unix_ms: u64,
     completes_at_unix_ms: u64,
     last_sample_at_unix_ms: u64,
+    last_snapshot_generation_id: Option<String>,
+    last_snapshot_sequence: u64,
+    stale_snapshot_tick_count: u64,
     sample_count: usize,
     midpoint_recorded: bool,
     definition_artifact: String,
@@ -81,6 +85,8 @@ struct StudySample {
     schema: String,
     study_id: String,
     recorded_at_unix_ms: u64,
+    snapshot_generation_id: String,
+    snapshot_sequence: u64,
     values: BTreeMap<String, f64>,
     authority: String,
 }
@@ -216,6 +222,9 @@ impl StudyManager {
             midpoint_at_unix_ms: midpoint_at,
             completes_at_unix_ms: completes_at,
             last_sample_at_unix_ms: 0,
+            last_snapshot_generation_id: None,
+            last_snapshot_sequence: 0,
+            stale_snapshot_tick_count: 0,
             sample_count: 0,
             midpoint_recorded: false,
             definition_artifact: definition_relative.clone(),
@@ -310,7 +319,8 @@ impl StudyManager {
             .ok_or_else(|| anyhow::anyhow!("active study specification is missing"))?;
         let sample_due = active.sample_count == 0
             || now.saturating_sub(active.last_sample_at_unix_ms) >= SAMPLE_INTERVAL_MS;
-        if sample_due && active.sample_count < MAX_SAMPLES {
+        let snapshot_fresh = snapshot_is_new_for_study(&active, snapshot, now);
+        if sample_due && snapshot_fresh && active.sample_count < MAX_SAMPLES {
             let values = study_values(
                 config,
                 snapshot,
@@ -324,6 +334,8 @@ impl StudyManager {
                     schema: SAMPLE_SCHEMA.to_string(),
                     study_id: active.study_id.clone(),
                     recorded_at_unix_ms: now,
+                    snapshot_generation_id: snapshot.generation_id.clone(),
+                    snapshot_sequence: snapshot.sequence,
                     values,
                     authority: AUTHORITY.to_string(),
                 },
@@ -332,8 +344,12 @@ impl StudyManager {
                 return Err(error);
             }
             active.last_sample_at_unix_ms = now;
+            active.last_snapshot_generation_id = Some(snapshot.generation_id.clone());
+            active.last_snapshot_sequence = snapshot.sequence;
             active.sample_count = active.sample_count.saturating_add(1);
             self.pending = PendingActivity::default();
+        } else if sample_due && !snapshot_fresh {
+            active.stale_snapshot_tick_count = active.stale_snapshot_tick_count.saturating_add(1);
         }
         if !active.midpoint_recorded && now >= active.midpoint_at_unix_ms {
             if let Err(error) = append_receipt(
@@ -413,6 +429,23 @@ impl StudyManager {
             parent_response_sha256: active.parent_response_sha256,
         }))
     }
+}
+
+fn snapshot_is_new_for_study(active: &ActiveStudy, snapshot: &ReservoirSnapshot, now: u64) -> bool {
+    if snapshot.generation_id.is_empty()
+        || snapshot.sequence == 0
+        || snapshot.recorded_at_unix_ms == 0
+        || now.abs_diff(snapshot.recorded_at_unix_ms) > SNAPSHOT_FRESHNESS_MS
+    {
+        return false;
+    }
+    active
+        .last_snapshot_generation_id
+        .as_ref()
+        .is_none_or(|generation| {
+            *generation != snapshot.generation_id
+                || snapshot.sequence > active.last_snapshot_sequence
+        })
 }
 
 pub async fn run(
@@ -763,6 +796,7 @@ fn render_result(
          Completed: {now} ms since Unix epoch\n\
          Authority: `{AUTHORITY}`\n\
          Samples: {} one-minute aggregates\n\
+         Stale or duplicate reservoir ticks excluded: {}\n\
          Question origin: {}\n\
          Question: {}\n\n\
          {}\n\
@@ -772,6 +806,7 @@ fn render_result(
         active.study_id,
         active.started_at_unix_ms,
         samples.len(),
+        active.stale_snapshot_tick_count,
         active.origin,
         spec.question,
         sections.join("\n")

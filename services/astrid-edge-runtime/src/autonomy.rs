@@ -9,12 +9,14 @@
 use std::{
     fs::{self, OpenOptions},
     io::{Read as _, Seek as _, SeekFrom, Write as _},
-    os::unix::fs::OpenOptionsExt as _,
+    os::unix::fs::{MetadataExt as _, OpenOptionsExt as _, PermissionsExt as _},
+    path::Path,
     process::Stdio,
     sync::Arc,
     time::{Duration, SystemTime, UNIX_EPOCH},
 };
 
+use anyhow::Context as _;
 use ed25519_dalek::{Signature, Verifier as _, VerifyingKey};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest as _, Sha256};
@@ -26,13 +28,14 @@ use tokio::{
 
 use crate::{
     actions::{
-        ActionOutcome, model_authored_prefix_before_safe_fallback, transport_recovery_reason,
+        ActionDispatchEvidence, ActionOutcome, model_authored_prefix_before_format_repair,
+        model_authored_prefix_before_safe_fallback, transport_recovery_reason,
     },
     codec::encode_text,
     config::{AutonomyInitiativeProfile, AutonomyPromptProfile, Config},
     inquiry,
     reservoir::{ReservoirSnapshot, SensoryIngress},
-    trace::IpcTraceContextV1,
+    trace::{AutonomyTraceMatch, AutonomyTraceRegistry, IpcTraceContextV1},
 };
 use uuid::Uuid;
 
@@ -60,9 +63,31 @@ const MAX_THREAD_OPEN_QUESTIONS: usize = 4;
 const MAX_THREAD_NEXT_OPTIONS: usize = 4;
 const ASTRID_SERVICE: &str = "astrid.service";
 const SERVICE_RECOVERY_TIMEOUT: Duration = Duration::from_secs(45);
+const HEADLESS_TRACE_RECEIPT_PREFIX: &str = "[astrid-headless-trace] ";
+const HEADLESS_PROVENANCE_RECEIPT_PREFIX: &str = "[astrid-headless-provenance] ";
+const HEADLESS_IDLE_TIMEOUT_EXIT_CODE: i32 = 53;
+const HEADLESS_SUPERVISOR_MARGIN_SECONDS: u64 = 30;
 
-#[derive(Debug, Default, Deserialize, Serialize)]
+#[derive(Debug, Clone, Copy, Deserialize, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+enum HeadlessResponseProvenance {
+    #[serde(rename = "model_authored")]
+    ExactModel,
+    #[serde(rename = "model_authored_with_local_safe_fallback")]
+    WithLocalSafeFallback,
+    #[serde(rename = "model_authored_with_local_format_repair")]
+    WithLocalFormatRepair,
+}
+
+impl HeadlessResponseProvenance {
+    const fn grants_exact_model_authority(self) -> bool {
+        matches!(self, Self::ExactModel)
+    }
+}
+
+#[derive(Debug, Clone, Default, Deserialize, Serialize)]
 #[serde(default)]
+#[allow(clippy::struct_excessive_bools)] // Additive on-disk v3 state preserves migration compatibility.
 struct AutonomyState {
     schema: String,
     utc_day: u64,
@@ -85,6 +110,7 @@ struct AutonomyState {
     last_trigger: Option<String>,
     last_declared_next: Option<String>,
     last_response_sha256: Option<String>,
+    last_response_provenance: Option<HeadlessResponseProvenance>,
     last_transport_response_sha256: Option<String>,
     last_authored_transcript_path: Option<String>,
     last_session_name: Option<String>,
@@ -100,6 +126,17 @@ struct AutonomyState {
     active_chain_step: u32,
     chain_follow_up_pending: bool,
     last_chain_transition: Option<String>,
+    run_receipt_pending: bool,
+    chain_receipt_pending: bool,
+    action_dispatch_pending: bool,
+    pending_action_response_sha256: Option<String>,
+    pending_action_trace: Option<IpcTraceContextV1>,
+    pending_action_session_id: Option<String>,
+    pending_action_transcript_path: Option<String>,
+    pending_action_response_provenance: Option<HeadlessResponseProvenance>,
+    thread_projection_pending: Option<ActionOutcome>,
+    operator_pause_reason: Option<String>,
+    operator_pause_since_unix_ms: Option<u64>,
     last_perception_consumed_at_unix_ms: u64,
 }
 
@@ -201,6 +238,7 @@ struct AutonomyRunReceipt<'a> {
     target_fill_pct: f32,
     declared_next: Option<&'a str>,
     response_sha256: Option<&'a str>,
+    response_provenance: Option<HeadlessResponseProvenance>,
     transcript_path: Option<&'a str>,
     journal_path: Option<&'a str>,
     session_name: &'a str,
@@ -228,6 +266,8 @@ struct AutonomyRunReceipt<'a> {
 struct TurnResult {
     response: String,
     stderr: String,
+    canonical_trace: IpcTraceContextV1,
+    response_provenance: HeadlessResponseProvenance,
 }
 
 #[derive(Debug, Default)]
@@ -246,8 +286,10 @@ struct TurnFailure {
 
 struct TurnCompletion {
     status: &'static str,
+    authored_response: Option<String>,
     declared_next: Option<String>,
     response_sha256: Option<String>,
+    response_provenance: Option<HeadlessResponseProvenance>,
     transcript_path: Option<String>,
     journal_path: Option<String>,
 }
@@ -316,40 +358,40 @@ pub async fn run(
     human_activity: watch::Receiver<u64>,
     ingress_tx: mpsc::Sender<SensoryIngress>,
     mut action_outcomes: mpsc::Receiver<ActionOutcome>,
+    action_tx: mpsc::Sender<crate::actions::ActionCandidate>,
+    autonomy_trace_registry: Arc<AutonomyTraceRegistry>,
 ) {
-    let mut state = load_state(&config);
-    let now = unix_millis();
-    match migrate_thread_state_on_start(&config, now) {
-        Ok(true) => eprintln!("edge working thread migrated to spectral evidence v6"),
-        Ok(false) => {},
-        Err(error) => eprintln!("edge working-thread migration failed: {error}"),
+    let mut state = match initialize_autonomy_state(&config) {
+        Ok(state) => state,
+        Err(error) => {
+            eprintln!("edge autonomy failed closed during initialization: {error:#}");
+            return;
+        },
+    };
+    if let Some(reason) = state.operator_pause_reason.as_deref() {
+        eprintln!("edge autonomy durably operator-paused while reservoir remains online: {reason}");
+        std::future::pending::<()>().await;
+        return;
     }
-    normalize_session_generations(&mut state);
-    let orphaned_trace = state.last_trace.clone();
-    if mark_orphaned_turn_interrupted(&mut state, now) {
-        eprintln!("edge autonomy recovered an orphaned running turn after restart");
-        if let Err(error) = append_recovery_receipt(
-            &config,
-            &RecoveryReceipt {
-                schema: "astrid_edge_transport_recovery_v2",
-                started_at_unix_ms: state.last_started_at_unix_ms.unwrap_or(now),
-                completed_at_unix_ms: now,
-                reason: "interrupted_by_restart",
-                status: "interrupted",
-                trace: orphaned_trace.as_ref(),
-                authority: "local_transport_liveness_recovery_only",
-            },
-        ) {
-            eprintln!("edge orphaned-turn recovery receipt failed: {error}");
+    if state.action_dispatch_pending
+        && let Err(error) = replay_pending_action_dispatch(&config, &state, &action_tx).await
+    {
+        set_operator_pause(
+            &mut state,
+            &format!("action_dispatch_replay_requires_operator_review: {error:#}"),
+            unix_millis(),
+        );
+        if let Err(persist_error) = persist_state(&config, &state) {
+            eprintln!(
+                "edge autonomy failed closed: Action replay and durable pause both failed: {error:#}; {persist_error:#}"
+            );
+            return;
         }
-    }
-    roll_daily_budget(&mut state, now);
-    if state.next_due_at_unix_ms == 0 {
-        state.next_due_at_unix_ms =
-            now.saturating_add(config.autonomy_initial_delay_seconds.saturating_mul(1_000));
-    }
-    if let Err(error) = persist_state(&config, &state) {
-        eprintln!("edge autonomy state initialization failed: {error}");
+        eprintln!(
+            "edge autonomy durably operator-paused after Action replay validation failed: {error:#}"
+        );
+        std::future::pending::<()>().await;
+        return;
     }
     eprintln!(
         "edge autonomy enabled: interval={}m event_driven={} event_heartbeat={}m follow_up={}m \
@@ -369,13 +411,232 @@ pub async fn run(
     loop {
         tokio::select! {
             Some(outcome) = action_outcomes.recv() => {
-                process_action_outcome(&config, &mut state, &outcome, &ingress_tx).await;
+                if let Err(error) = process_action_outcome(
+                    &config,
+                    &mut state,
+                    &outcome,
+                    &ingress_tx,
+                ).await {
+                    eprintln!("edge autonomy failed closed: {error:#}");
+                    return;
+                }
             },
             _ = poll.tick() => {
-                poll_due_turn(&config, &snapshots, &human_activity, &mut state).await;
+                if let Err(error) = poll_due_turn(
+                    &config,
+                    &snapshots,
+                    &human_activity,
+                    &mut state,
+                    &action_tx,
+                    &autonomy_trace_registry,
+                ).await {
+                    eprintln!("edge autonomy failed closed: {error:#}");
+                    return;
+                }
             },
         }
     }
+}
+
+fn initialize_autonomy_state(config: &Config) -> anyhow::Result<AutonomyState> {
+    let mut state = load_state(config).context("validate existing scheduler state")?;
+    let now = unix_millis();
+    if migrate_thread_state_on_start(config, now).context("validate working-thread state")? {
+        eprintln!("edge working thread migrated to spectral evidence v6");
+    }
+    normalize_session_generations(&mut state);
+    match reconcile_pending_receipt_acknowledgements(config, &mut state) {
+        Ok(true) => eprintln!(
+            "edge autonomy reconciled an exact durable receipt after an interrupted acknowledgement"
+        ),
+        Ok(false) => {},
+        Err(error) => {
+            set_operator_pause(
+                &mut state,
+                &format!("receipt_integrity_requires_operator_review: {error:#}"),
+                now,
+            );
+            persist_state(config, &state).context("persist durable autonomy integrity pause")?;
+            return Ok(state);
+        },
+    }
+    if let Err(error) = reconcile_pending_thread_projection(config, &mut state) {
+        set_operator_pause(
+            &mut state,
+            &format!("thread_projection_requires_operator_review: {error:#}"),
+            now,
+        );
+        persist_state(config, &state)
+            .context("persist working-thread projection integrity pause")?;
+        return Ok(state);
+    }
+    let orphaned_trace = state.last_trace.clone();
+    if mark_orphaned_turn_interrupted(&mut state, now) {
+        eprintln!("edge autonomy recovered an orphaned running turn after restart");
+        let started_at = state.last_started_at_unix_ms.unwrap_or(now);
+        if !orphaned_recovery_receipt_exists(config, started_at, orphaned_trace.as_ref())? {
+            append_recovery_receipt(
+                config,
+                &RecoveryReceipt {
+                    schema: "astrid_edge_transport_recovery_v2",
+                    started_at_unix_ms: started_at,
+                    completed_at_unix_ms: now,
+                    reason: "interrupted_by_restart",
+                    status: "interrupted",
+                    trace: orphaned_trace.as_ref(),
+                    authority: "local_transport_liveness_recovery_only",
+                },
+            )
+            .context("persist orphaned-turn recovery receipt")?;
+        }
+    }
+    if state.action_dispatch_pending {
+        let evidence = pending_action_dispatch_evidence(config, &state);
+        match evidence {
+            Ok(ActionDispatchEvidence::Absent) => {},
+            Ok(ActionDispatchEvidence::Completed) => {
+                if let Err(error) = recover_completed_action(config, &mut state) {
+                    set_operator_pause(
+                        &mut state,
+                        &format!("completed_action_recovery_requires_operator_review: {error:#}"),
+                        now,
+                    );
+                }
+            },
+            Ok(ActionDispatchEvidence::Pending) => set_operator_pause(
+                &mut state,
+                "ambiguous_action_dispatch_requires_operator_review",
+                now,
+            ),
+            Err(error) => set_operator_pause(
+                &mut state,
+                &format!("action_dispatch_integrity_requires_operator_review: {error:#}"),
+                now,
+            ),
+        }
+    }
+    roll_daily_budget(&mut state, now);
+    if state.next_due_at_unix_ms == 0 {
+        state.next_due_at_unix_ms =
+            now.saturating_add(config.autonomy_initial_delay_seconds.saturating_mul(1_000));
+    }
+    persist_state(config, &state).context("persist initial scheduler state")?;
+    Ok(state)
+}
+
+fn reconcile_pending_thread_projection(
+    config: &Config,
+    state: &mut AutonomyState,
+) -> anyhow::Result<()> {
+    let Some(outcome) = state.thread_projection_pending.clone() else {
+        return Ok(());
+    };
+    update_thread_state(config, state, &outcome)?;
+    state.thread_projection_pending = None;
+    persist_state(config, state).context("acknowledge recovered working-thread projection")?;
+    eprintln!("edge autonomy recovered an exact working-thread projection after restart");
+    Ok(())
+}
+
+fn recover_completed_action(config: &Config, state: &mut AutonomyState) -> anyhow::Result<()> {
+    let trace = state
+        .pending_action_trace
+        .clone()
+        .context("completed Action recovery lacks its exact trace")?;
+    let response_sha256 = state
+        .pending_action_response_sha256
+        .clone()
+        .context("completed Action recovery lacks its response hash")?;
+    let outcome = crate::actions::completed_action_outcome(config, &trace, &response_sha256)?
+        .context("completed Action recovery lacks its exact durable outcome")?;
+    anyhow::ensure!(
+        pending_action_outcome_matches(state, &outcome),
+        "completed Action outcome conflicts with pending scheduler state"
+    );
+    process_action_outcome_durable(config, state, &outcome)?;
+    eprintln!(
+        "edge autonomy recovered exact pacing and continuity from a completed Action receipt"
+    );
+    Ok(())
+}
+
+fn set_operator_pause(state: &mut AutonomyState, reason: &str, now: u64) {
+    state.operator_pause_reason = Some(reason.chars().take(320).collect());
+    state.operator_pause_since_unix_ms = Some(now);
+}
+
+fn pending_action_dispatch_evidence(
+    config: &Config,
+    state: &AutonomyState,
+) -> anyhow::Result<ActionDispatchEvidence> {
+    let trace = state
+        .pending_action_trace
+        .as_ref()
+        .context("pending Action dispatch lacks its exact trace")?;
+    trace
+        .turn_id
+        .context("pending Action dispatch lacks its canonical turn ID")?;
+    let response_sha256 = state
+        .pending_action_response_sha256
+        .as_deref()
+        .context("pending Action dispatch lacks its response hash")?;
+    crate::actions::action_dispatch_evidence(config, trace, response_sha256)
+}
+
+async fn replay_pending_action_dispatch(
+    config: &Config,
+    state: &AutonomyState,
+    action_tx: &mpsc::Sender<crate::actions::ActionCandidate>,
+) -> anyhow::Result<()> {
+    let trace = state
+        .pending_action_trace
+        .clone()
+        .context("pending Action replay lacks its exact trace")?;
+    let session_id = state
+        .pending_action_session_id
+        .clone()
+        .context("pending Action replay lacks its session")?;
+    let relative = state
+        .pending_action_transcript_path
+        .as_deref()
+        .context("pending Action replay lacks its authored transcript")?;
+    let path = Path::new(relative);
+    anyhow::ensure!(
+        path.components()
+            .all(|component| matches!(component, std::path::Component::Normal(_))),
+        "pending Action transcript path is not a confined relative path"
+    );
+    let transcript = fs::read_to_string(config.workspace.join(path))?;
+    let response_section = transcript
+        .split_once("## Response\n\n")
+        .map(|(_, response)| response)
+        .context("pending Action transcript lacks its response section")?;
+    let response = response_section
+        .split_once("\n\n## Transport note")
+        .map_or(response_section, |(response, _)| response)
+        .to_string();
+    let response_sha256 = format!("{:x}", Sha256::digest(response.as_bytes()));
+    anyhow::ensure!(
+        state.pending_action_response_sha256.as_deref() == Some(response_sha256.as_str()),
+        "pending Action transcript does not match its durable response hash"
+    );
+    let turn_id = trace
+        .turn_id
+        .context("pending Action replay lacks its canonical turn ID")?;
+    let exact_model_authority = state
+        .pending_action_response_provenance
+        .is_some_and(HeadlessResponseProvenance::grants_exact_model_authority);
+    action_tx
+        .send(crate::actions::ActionCandidate {
+            session_id,
+            response,
+            trace: Some(trace),
+            tuning_authority_turn_id: exact_model_authority.then_some(turn_id),
+            tuning_authority_source: exact_model_authority
+                .then_some("scheduler_verified_authored_turn"),
+        })
+        .await
+        .map_err(|_| anyhow::anyhow!("Action executor closed during durable outbox replay"))
 }
 
 async fn poll_due_turn(
@@ -383,9 +644,14 @@ async fn poll_due_turn(
     snapshots: &watch::Receiver<ReservoirSnapshot>,
     human_activity: &watch::Receiver<u64>,
     state: &mut AutonomyState,
-) {
+    action_tx: &mpsc::Sender<crate::actions::ActionCandidate>,
+    autonomy_trace_registry: &AutonomyTraceRegistry,
+) -> anyhow::Result<()> {
     let now = unix_millis();
     roll_daily_budget(state, now);
+    if state.action_dispatch_pending {
+        return Ok(());
+    }
     if state.attempts_today >= config.autonomy_max_turns_per_day {
         let next_due = next_utc_day_millis(now);
         if state.last_status.as_deref() != Some("daily_budget_exhausted")
@@ -394,16 +660,16 @@ async fn poll_due_turn(
             state.next_due_at_unix_ms = next_due;
             state.last_status = Some("daily_budget_exhausted".to_string());
             if let Err(error) = persist_state(config, state) {
-                eprintln!("edge autonomy daily-budget state failed: {error}");
+                return Err(error).context("daily-budget state was not durable");
             }
         }
-        return;
+        return Ok(());
     }
     let active_chain_follow_up = state.chain_follow_up_pending && state.active_chain_id.is_some();
     let mut trigger_override = None;
     if active_chain_follow_up || state.total_attempts == 0 {
         if now < state.next_due_at_unix_ms {
-            return;
+            return Ok(());
         }
     } else if config.autonomy_event_driven {
         let salient_perception = latest_salient_perception(config);
@@ -429,15 +695,15 @@ async fn poll_due_turn(
                 state.next_due_at_unix_ms = heartbeat_due;
                 state.last_status = Some("waiting_for_salient_machine_observation".to_string());
                 if let Err(error) = persist_state(config, state) {
-                    eprintln!("edge autonomy event-wait state failed: {error}");
+                    return Err(error).context("event-wait state was not durable");
                 }
             }
-            return;
+            return Ok(());
         } else {
             trigger_override = Some("event_driven_quiet_heartbeat");
         }
     } else if now < state.next_due_at_unix_ms {
-        return;
+        return Ok(());
     }
     let last_human_input = *human_activity.borrow();
     let quiet_ms = config.autonomy_quiet_minutes.saturating_mul(60_000);
@@ -445,25 +711,33 @@ async fn poll_due_turn(
         state.next_due_at_unix_ms = last_human_input.saturating_add(quiet_ms);
         state.last_status = Some("waiting_for_human_quiescence".to_string());
         if let Err(error) = persist_state(config, state) {
-            eprintln!("edge autonomy quiescence state failed: {error}");
+            return Err(error).context("quiescence state was not durable");
         }
-        return;
+        return Ok(());
     }
 
     let snapshot = snapshots.borrow().clone();
     if snapshot.t_ms < 30_000 || snapshot.semantic_fresh {
-        return;
+        return Ok(());
     }
     if !(0.58..=0.78).contains(&snapshot.fill_ratio) {
         state.next_due_at_unix_ms = now.saturating_add(5 * 60_000);
         state.last_status = Some("deferred_outside_operating_shelf".to_string());
         if let Err(error) = persist_state(config, state) {
-            eprintln!("edge autonomy shelf deferral state failed: {error}");
+            return Err(error).context("shelf deferral state was not durable");
         }
-        return;
+        return Ok(());
     }
 
-    execute_due_turn(config, &snapshot, state, trigger_override).await;
+    execute_due_turn(
+        config,
+        &snapshot,
+        state,
+        trigger_override,
+        action_tx,
+        autonomy_trace_registry,
+    )
+    .await
 }
 
 /// Return the timestamp of the newest observation with an exogenous host,
@@ -513,10 +787,32 @@ async fn process_action_outcome(
     state: &mut AutonomyState,
     outcome: &ActionOutcome,
     ingress_tx: &mpsc::Sender<SensoryIngress>,
-) {
-    if action_outcome_already_processed(state, outcome) {
-        return;
+) -> anyhow::Result<()> {
+    let summary = process_action_outcome_durable(config, state, outcome)?;
+    if let Some(summary) = summary
+        && ingress_tx
+            .send(SensoryIngress::Semantic(encode_text(
+                "thread_state",
+                &summary,
+            )))
+            .await
+            .is_err()
+    {
+        eprintln!("thread-state semantic impulse dropped: reservoir closed");
     }
+    Ok(())
+}
+
+fn process_action_outcome_durable(
+    config: &Config,
+    state: &mut AutonomyState,
+    outcome: &ActionOutcome,
+) -> anyhow::Result<Option<String>> {
+    if action_outcome_already_processed(state, outcome) {
+        return Ok(None);
+    }
+    let prior_state = state.clone();
+    let completes_pending_dispatch = pending_action_outcome_matches(state, outcome);
     state.last_action_response_sha256 = Some(outcome.response_sha256.clone());
     let supported_trace = outcome.trace.as_ref().filter(|trace| trace.is_supported());
     state.last_action_trace_id = supported_trace.map(|trace| trace.trace_id);
@@ -525,8 +821,16 @@ async fn process_action_outcome(
     if let Some(transition) = transition.as_ref() {
         state.last_chain_transition = Some(transition.transition.to_string());
     }
+    if completes_pending_dispatch {
+        clear_pending_action_dispatch(state);
+    }
+    state.thread_projection_pending = Some(outcome.clone());
+    state.chain_receipt_pending = transition.is_some();
     if let Err(error) = persist_state(config, state) {
-        eprintln!("edge action-chain state persistence failed: {error}");
+        *state = prior_state;
+        return Err(error).context(
+            "action-chain state was not durable; receipt, continuity, and follow-up suppressed",
+        );
     }
     if let Some(transition) = transition {
         let receipt = ActionChainReceipt {
@@ -539,18 +843,27 @@ async fn process_action_outcome(
             session_id: &outcome.session_id,
             response_sha256: &outcome.response_sha256,
             declared_next: outcome.declared_next.as_deref(),
-            executor_status: outcome.status,
-            executor_outcome: outcome.outcome,
-            decision_source: outcome.decision_source,
-            recovery_reason: outcome.recovery_reason,
+            executor_status: &outcome.status,
+            executor_outcome: &outcome.outcome,
+            decision_source: &outcome.decision_source,
+            recovery_reason: outcome.recovery_reason.as_deref(),
             unexecuted_intention: outcome.unexecuted_intention.as_deref(),
-            validation_reason: outcome.validation_reason,
+            validation_reason: outcome.validation_reason.as_deref(),
             next_due_at_unix_ms: transition.next_due_at_unix_ms,
             trace: outcome.trace.as_ref(),
             authority: "verified_next_outcome_bounded_follow_up_only",
         };
         if let Err(error) = append_chain_receipt(config, &receipt) {
-            eprintln!("edge action-chain receipt failed: {error}");
+            return Err(error).context(
+                "action-chain receipt was not durable; continuity and follow-up suppressed",
+            );
+        }
+        state.chain_receipt_pending = false;
+        if let Err(error) = persist_state(config, state) {
+            state.chain_receipt_pending = true;
+            return Err(error).context(
+                "action-chain receipt acknowledgement was not durable; continuity and follow-up suppressed",
+            );
         }
         eprintln!(
             "edge action chain: id={} step={}/{} transition={} next_due_ms={}",
@@ -561,17 +874,44 @@ async fn process_action_outcome(
             transition.next_due_at_unix_ms,
         );
     }
-    if let Some(summary) = update_thread_state(config, state, outcome)
-        && ingress_tx
-            .send(SensoryIngress::Semantic(encode_text(
-                "thread_state",
-                &summary,
-            )))
-            .await
-            .is_err()
-    {
-        eprintln!("thread-state semantic impulse dropped: reservoir closed");
+    let summary = update_thread_state(config, state, outcome)
+        .context("working-thread projection was not durable; Action acknowledgement retained")?;
+    state.thread_projection_pending = None;
+    if let Err(error) = persist_state(config, state) {
+        state.thread_projection_pending = Some(outcome.clone());
+        return Err(error).context(
+            "working-thread projection acknowledgement was not durable; retry marker retained",
+        );
     }
+    Ok(summary)
+}
+
+fn pending_action_outcome_matches(state: &AutonomyState, outcome: &ActionOutcome) -> bool {
+    if !state.action_dispatch_pending
+        || state.pending_action_response_sha256.as_deref() != Some(outcome.response_sha256.as_str())
+        || state.pending_action_session_id.as_deref() != Some(outcome.session_id.as_str())
+    {
+        return false;
+    }
+    let (Some(expected), Some(actual)) = (
+        state.pending_action_trace.as_ref(),
+        outcome.trace.as_ref().filter(|trace| trace.is_supported()),
+    ) else {
+        return false;
+    };
+    expected.trace_id == actual.trace_id
+        && expected.turn_id == actual.turn_id
+        && expected.session_id == actual.session_id
+        && expected.chain_id == actual.chain_id
+}
+
+fn clear_pending_action_dispatch(state: &mut AutonomyState) {
+    state.action_dispatch_pending = false;
+    state.pending_action_response_sha256 = None;
+    state.pending_action_trace = None;
+    state.pending_action_session_id = None;
+    state.pending_action_transcript_path = None;
+    state.pending_action_response_provenance = None;
 }
 
 #[allow(clippy::too_many_lines)] // One bounded state transition keeps thread provenance together.
@@ -579,12 +919,14 @@ fn update_thread_state(
     config: &Config,
     state: &AutonomyState,
     outcome: &ActionOutcome,
-) -> Option<String> {
+) -> anyhow::Result<Option<String>> {
     let authored = matches!(
-        outcome.decision_source,
+        outcome.decision_source.as_str(),
         "astrid_declared" | "local_format_repair_preserved_astrid_declaration"
     );
-    let declaration = outcome.declared_next.as_deref()?.trim();
+    let Some(declaration) = outcome.declared_next.as_deref().map(str::trim) else {
+        return Ok(None);
+    };
     let verb = declaration
         .split_whitespace()
         .next()
@@ -594,10 +936,14 @@ fn update_thread_state(
         || (outcome.status == "honored" && matches!(verb.as_str(), "LISTEN" | "REST"));
     if !authored || !accepted || outcome.recovery_reason.is_some() {
         // Executor repairs and failed actions never become continuity.
-        return None;
+        return Ok(None);
     }
 
-    let mut thread = load_thread_state(config);
+    let mut thread = load_thread_state_checked(config)?;
+    if thread_state_matches_outcome(&thread, outcome) {
+        append_thread_projection_once(config, &thread, outcome)?;
+        return Ok(Some(compact_thread_summary(&thread)));
+    }
     let argument = declaration
         .find(char::is_whitespace)
         .map_or("", |index| declaration[index..].trim());
@@ -605,7 +951,7 @@ fn update_thread_state(
 
     if matches!(verb.as_str(), "LISTEN" | "REST") {
         if thread.status != "active" {
-            return None;
+            return Ok(None);
         }
         thread.status = "paused".to_string();
         thread.last_action = Some(bounded_thread_text(declaration));
@@ -664,7 +1010,7 @@ fn update_thread_state(
             thread.latest_note = Some(bounded_thread_text(argument));
             push_thread_value(&mut thread.next_options, argument, MAX_THREAD_NEXT_OPTIONS);
         } else {
-            thread.latest_note = Some(bounded_thread_text(outcome.outcome));
+            thread.latest_note = Some(bounded_thread_text(&outcome.outcome));
         }
         thread.uncertainty = Some(if verb == "RESEARCH" {
             "External evidence is bounded and remains to be compared with local observations."
@@ -686,18 +1032,14 @@ fn update_thread_state(
         thread.trace.clone_from(&outcome.trace);
 
         if let Some(receipt) =
-            latest_action_receipt(&config.workspace.join("actions/receipts.jsonl"))
-            && receipt
-                .get("response_sha256")
-                .and_then(serde_json::Value::as_str)
-                == Some(outcome.response_sha256.as_str())
+            matching_action_receipt(&config.workspace.join("actions/receipts.jsonl"), outcome)
         {
             if let Some(path) = receipt
                 .get("artifact_path")
                 .and_then(serde_json::Value::as_str)
             {
                 let (kind, epistemic_status, verified) =
-                    artifact_evidence_classification(outcome.outcome, path);
+                    artifact_evidence_classification(&outcome.outcome, path);
                 let reference = bounded_basename(path);
                 if verified {
                     push_thread_evidence(&mut thread, &format!("{kind} {reference}"));
@@ -708,7 +1050,7 @@ fn update_thread_state(
                         kind: kind.to_string(),
                         epistemic_status: epistemic_status.to_string(),
                         reference,
-                        summary: bounded_thread_text(outcome.outcome),
+                        summary: bounded_thread_text(&outcome.outcome),
                         source: "authored_action_receipt".to_string(),
                         captured_at_unix_ms: now,
                         sha256: verified_receipt_artifact_path(config, path)
@@ -837,7 +1179,7 @@ fn update_thread_state(
             );
         }
         if verb == "CHECK" && outcome.status == "executed" {
-            thread.conclusion = Some(bounded_thread_text(outcome.outcome));
+            thread.conclusion = Some(bounded_thread_text(&outcome.outcome));
         }
         if verb == "PROPOSE" && !argument.is_empty() {
             thread.hypothesis = Some(bounded_thread_text(argument));
@@ -847,15 +1189,14 @@ fn update_thread_state(
             push_thread_value(&mut thread.methods, argument, MAX_THREAD_FINDINGS);
         }
         if verb == "STUDY"
-            && let Some(path) = latest_action_receipt(
-                &config.workspace.join("actions/receipts.jsonl"),
-            )
-            .and_then(|receipt| {
-                receipt
-                    .get("artifact_path")
-                    .and_then(serde_json::Value::as_str)
-                    .map(str::to_string)
-            })
+            && let Some(path) =
+                matching_action_receipt(&config.workspace.join("actions/receipts.jsonl"), outcome)
+                    .and_then(|receipt| {
+                        receipt
+                            .get("artifact_path")
+                            .and_then(serde_json::Value::as_str)
+                            .map(str::to_string)
+                    })
         {
             let study_id = bounded_basename(&path).trim_end_matches(".md").to_string();
             push_thread_value(&mut thread.study_ids, &study_id, MAX_THREAD_FINDINGS);
@@ -873,17 +1214,50 @@ fn update_thread_state(
             push_thread_value(&mut thread.provenance_hashes, &hash, MAX_THREAD_EVIDENCE);
         }
     } else {
-        return None;
+        return Ok(None);
     }
 
     thread.revision = thread.revision.saturating_add(1);
-    if let Err(error) = persist_thread_state(config, &thread) {
-        eprintln!("thread-state persistence failed: {error}");
+    persist_thread_state(config, &thread)?;
+    append_thread_projection_once(config, &thread, outcome)?;
+    Ok(Some(compact_thread_summary(&thread)))
+}
+
+fn thread_state_matches_outcome(thread: &ThreadState, outcome: &ActionOutcome) -> bool {
+    thread.response_sha256.as_deref() == Some(outcome.response_sha256.as_str())
+        && thread.session_id.as_deref() == Some(outcome.session_id.as_str())
+        && thread.updated_at_unix_ms == outcome.recorded_at_unix_ms
+        && thread.trace == outcome.trace
+}
+
+fn append_thread_projection_once(
+    config: &Config,
+    thread: &ThreadState,
+    outcome: &ActionOutcome,
+) -> anyhow::Result<()> {
+    let path = config.workspace.join("autonomous/thread_state.jsonl");
+    match fs::symlink_metadata(&path) {
+        Ok(metadata) => anyhow::ensure!(
+            metadata.file_type().is_file(),
+            "working-thread ledger is not a regular non-symlink file: {}",
+            path.display()
+        ),
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => {},
+        Err(error) => return Err(error.into()),
     }
-    if let Err(error) = append_thread_state(config, &thread) {
-        eprintln!("thread-state ledger append failed: {error}");
+    if path.exists() {
+        for line in fs::read_to_string(&path)?.lines() {
+            if line.trim().is_empty() {
+                continue;
+            }
+            let prior: ThreadState = serde_json::from_str(line)
+                .with_context(|| format!("decode working-thread ledger {}", path.display()))?;
+            if thread_state_matches_outcome(&prior, outcome) {
+                return Ok(());
+            }
+        }
     }
-    Some(compact_thread_summary(&thread))
+    append_thread_state(config, thread)
 }
 
 fn push_thread_evidence(thread: &mut ThreadState, value: &str) {
@@ -1084,35 +1458,50 @@ fn compact_thread_summary(thread: &ThreadState) -> String {
 }
 
 fn load_thread_state(config: &Config) -> ThreadState {
+    load_thread_state_checked(config).unwrap_or_else(|error| {
+        eprintln!("edge working thread unavailable: {error}");
+        ThreadState {
+            schema: THREAD_STATE_SCHEMA.to_string(),
+            status: "unavailable_state_validation_failed".to_string(),
+            ..ThreadState::default()
+        }
+    })
+}
+
+fn load_thread_state_checked(config: &Config) -> anyhow::Result<ThreadState> {
     let path = config.workspace.join("autonomous/thread_state.json");
-    fs::read(path)
-        .ok()
-        .and_then(|bytes| serde_json::from_slice::<ThreadState>(&bytes).ok())
-        .filter(|state| {
-            state.schema == THREAD_STATE_SCHEMA
-                || state.schema == LEGACY_THREAD_STATE_V5_SCHEMA
-                || state.schema == LEGACY_THREAD_STATE_V4_SCHEMA
-                || state.schema == LEGACY_THREAD_STATE_V3_SCHEMA
-                || state.schema == LEGACY_THREAD_STATE_V2_SCHEMA
-                || state.schema == LEGACY_THREAD_STATE_V1_SCHEMA
-        })
-        .map_or_else(
-            || ThreadState {
-                schema: THREAD_STATE_SCHEMA.to_string(),
-                ..ThreadState::default()
-            },
-            migrate_thread_state,
-        )
+    let Some(bytes) = read_optional_regular_state(&path)? else {
+        return Ok(ThreadState {
+            schema: THREAD_STATE_SCHEMA.to_string(),
+            ..ThreadState::default()
+        });
+    };
+    let state = serde_json::from_slice::<ThreadState>(&bytes)
+        .map_err(|error| anyhow::anyhow!("decode {}: {error}", path.display()))?;
+    if !matches!(
+        state.schema.as_str(),
+        THREAD_STATE_SCHEMA
+            | LEGACY_THREAD_STATE_V5_SCHEMA
+            | LEGACY_THREAD_STATE_V4_SCHEMA
+            | LEGACY_THREAD_STATE_V3_SCHEMA
+            | LEGACY_THREAD_STATE_V2_SCHEMA
+            | LEGACY_THREAD_STATE_V1_SCHEMA
+    ) {
+        anyhow::bail!("unsupported thread schema {:?}", state.schema);
+    }
+    Ok(migrate_thread_state(state))
 }
 
 fn migrate_thread_state_on_start(config: &Config, now: u64) -> anyhow::Result<bool> {
     let path = config.workspace.join("autonomous/thread_state.json");
-    let Some(raw) = fs::read(&path)
-        .ok()
-        .and_then(|bytes| serde_json::from_slice::<ThreadState>(&bytes).ok())
-    else {
+    let Some(bytes) = read_optional_regular_state(&path)? else {
         return Ok(false);
     };
+    let raw = serde_json::from_slice::<ThreadState>(&bytes)
+        .map_err(|error| anyhow::anyhow!("decode {}: {error}", path.display()))?;
+    if raw.schema == THREAD_STATE_SCHEMA {
+        return Ok(false);
+    }
     if !matches!(
         raw.schema.as_str(),
         LEGACY_THREAD_STATE_V1_SCHEMA
@@ -1121,7 +1510,7 @@ fn migrate_thread_state_on_start(config: &Config, now: u64) -> anyhow::Result<bo
             | LEGACY_THREAD_STATE_V4_SCHEMA
             | LEGACY_THREAD_STATE_V5_SCHEMA
     ) {
-        return Ok(false);
+        anyhow::bail!("unsupported thread schema {:?}", raw.schema);
     }
     let mut migrated = migrate_thread_state(raw);
     migrated.revision = migrated.revision.saturating_add(1);
@@ -1172,27 +1561,32 @@ fn migrate_thread_state(mut thread: ThreadState) -> ThreadState {
 
 fn persist_thread_state(config: &Config, thread: &ThreadState) -> anyhow::Result<()> {
     let path = config.workspace.join("autonomous/thread_state.json");
-    let temporary = config.workspace.join("autonomous/thread_state.json.tmp");
+    validate_existing_private_regular(&path)?;
+    let temporary = config.workspace.join(format!(
+        "autonomous/thread_state.json.tmp.{}.{}",
+        std::process::id(),
+        Uuid::new_v4()
+    ));
     let mut file = OpenOptions::new()
-        .create(true)
-        .truncate(true)
+        .create_new(true)
         .write(true)
         .mode(0o600)
         .open(&temporary)?;
     file.write_all(&serde_json::to_vec_pretty(thread)?)?;
     file.sync_all()?;
-    fs::rename(temporary, path)?;
+    fs::rename(&temporary, &path)?;
+    fs::set_permissions(&path, fs::Permissions::from_mode(0o600))?;
+    sync_parent(&path)?;
     Ok(())
 }
 
 fn append_thread_state(config: &Config, thread: &ThreadState) -> anyhow::Result<()> {
-    let mut log = OpenOptions::new()
-        .create(true)
-        .append(true)
-        .mode(0o600)
-        .open(config.workspace.join("autonomous/thread_state.jsonl"))?;
+    let path = config.workspace.join("autonomous/thread_state.jsonl");
+    let mut log = open_private_append_regular(&path)?;
     serde_json::to_writer(&mut log, thread)?;
     log.write_all(b"\n")?;
+    log.sync_data()?;
+    sync_parent(&path)?;
     Ok(())
 }
 
@@ -1223,7 +1617,7 @@ fn apply_action_outcome(
         .and_then(|action| action.split_whitespace().next())
         .unwrap_or_default()
         .to_ascii_uppercase();
-    let accepted = matches!(outcome.status, "honored" | "executed");
+    let accepted = matches!(outcome.status.as_str(), "honored" | "executed");
 
     if outcome.recovery_reason.is_some() {
         return Some(schedule_transport_recovery(state, now));
@@ -1429,12 +1823,19 @@ fn chain_id(outcome: &ActionOutcome) -> String {
     format!("chain-{}-{digest_prefix}", outcome.recorded_at_unix_ms)
 }
 
+#[allow(
+    clippy::too_many_lines,
+    reason = "one turn transaction keeps state, receipt durability, and Action dispatch suppression visibly ordered"
+)]
 async fn execute_due_turn(
     config: &Config,
     snapshot: &ReservoirSnapshot,
     state: &mut AutonomyState,
     trigger_override: Option<&'static str>,
-) {
+    action_tx: &mpsc::Sender<crate::actions::ActionCandidate>,
+    autonomy_trace_registry: &AutonomyTraceRegistry,
+) -> anyhow::Result<()> {
+    let prior_state = state.clone();
     rotate_model_session_if_full(config, state);
     let trigger = if state.chain_follow_up_pending && state.active_chain_id.is_some() {
         "action_chain_follow_up"
@@ -1475,7 +1876,11 @@ async fn execute_due_turn(
     state.last_prompt_estimated_tokens = state.last_prompt_chars.saturating_add(3) / 4;
     state.last_session_name = Some(session_name.clone());
     if let Err(error) = persist_state(config, state) {
-        eprintln!("edge autonomy preflight state failed: {error}");
+        *state = prior_state;
+        return Err(error).context("preflight state was not durable; inference suppressed");
+    }
+    if let Err(error) = autonomy_trace_registry.register(&trace) {
+        return Err(error).context("scheduler trace registration failed; inference suppressed");
     }
 
     let result = run_turn(config, &prompt, &session_name, &trace).await;
@@ -1483,6 +1888,27 @@ async fn execute_due_turn(
         |_| ProviderMetrics::default(),
         |turn| parse_provider_metrics(&turn.stderr),
     );
+    let completion_trace = result
+        .as_ref()
+        .map_or_else(|_| trace.clone(), |turn| turn.canonical_trace.clone());
+    if result.is_ok() {
+        match autonomy_trace_registry.observe_or_bind(&completion_trace) {
+            Ok(AutonomyTraceMatch::Registered) => {},
+            Ok(
+                AutonomyTraceMatch::NotRegistered | AutonomyTraceMatch::RegisteredIdentityConflict,
+            ) => {
+                anyhow::bail!(
+                    "canonical response did not match its registered scheduler turn; Action dispatch suppressed"
+                );
+            },
+            Err(error) => {
+                return Err(error).context(
+                    "canonical turn registry validation failed; Action dispatch suppressed",
+                );
+            },
+        }
+        state.last_trace = Some(completion_trace.clone());
+    }
     let completed_at = unix_millis();
     state.last_completed_at_unix_ms = Some(completed_at);
     state.last_turn_elapsed_ms = Some(completed_at.saturating_sub(started_at));
@@ -1496,8 +1922,20 @@ async fn execute_due_turn(
         started_at,
         completed_at,
     );
+    if completion.status == "authored_completed" {
+        anyhow::ensure!(
+            completion.transcript_path.is_some(),
+            "authored transcript was not durable; authored accounting, receipt, and Action dispatch suppressed"
+        );
+        anyhow::ensure!(
+            !config.autonomy_journal_authored_turns || completion.journal_path.is_some(),
+            "authored signal journal was not durable; authored accounting, receipt, and Action dispatch suppressed"
+        );
+    }
+    state.run_receipt_pending = true;
     if let Err(error) = persist_state(config, state) {
-        eprintln!("edge autonomy completion state failed: {error}");
+        return Err(error)
+            .context("completion state failed; receipt and Action dispatch suppressed");
     }
     let receipt_context = RunReceiptContext {
         trigger,
@@ -1506,13 +1944,62 @@ async fn execute_due_turn(
         session_name: &session_name,
         session_generation,
         session_authored_turns_before,
-        trace: &trace,
+        trace: &completion_trace,
         provider_metrics: &provider_metrics,
     };
     if let Err(error) =
         append_completion_receipt(config, snapshot, state, &completion, &receipt_context)
     {
-        eprintln!("edge autonomy run receipt failed: {error}");
+        return Err(error).context("run receipt failed; Action dispatch suppressed");
+    }
+    state.run_receipt_pending = false;
+    state.action_dispatch_pending = completion.status == "authored_completed";
+    if state.action_dispatch_pending {
+        state
+            .pending_action_response_sha256
+            .clone_from(&completion.response_sha256);
+        state.pending_action_trace = Some(completion_trace.clone());
+        state.pending_action_session_id = Some(
+            completion_trace
+                .session_id
+                .clone()
+                .unwrap_or_else(|| session_name.clone()),
+        );
+        state
+            .pending_action_transcript_path
+            .clone_from(&completion.transcript_path);
+        state.pending_action_response_provenance = completion.response_provenance;
+    } else {
+        clear_pending_action_dispatch(state);
+    }
+    if let Err(error) = persist_state(config, state) {
+        state.run_receipt_pending = true;
+        return Err(error)
+            .context("run receipt acknowledgement failed; Action dispatch suppressed");
+    }
+    if completion.status == "authored_completed"
+        && let Some(response) = completion.authored_response.clone()
+    {
+        let exact_model_authority = completion
+            .response_provenance
+            .is_some_and(HeadlessResponseProvenance::grants_exact_model_authority);
+        let candidate = crate::actions::ActionCandidate {
+            session_id: completion_trace
+                .session_id
+                .clone()
+                .unwrap_or_else(|| session_name.clone()),
+            response,
+            trace: Some(completion_trace.clone()),
+            tuning_authority_turn_id: exact_model_authority
+                .then_some(completion_trace.turn_id)
+                .flatten(),
+            tuning_authority_source: exact_model_authority
+                .then_some("scheduler_verified_authored_turn"),
+        };
+        action_tx
+            .send(candidate)
+            .await
+            .map_err(|_| anyhow::anyhow!("Action executor closed after durable authored turn"))?;
     }
     eprintln!(
         "edge autonomous turn: status={} next={} fill={:.1}% next_due_ms={}",
@@ -1521,6 +2008,7 @@ async fn execute_due_turn(
         snapshot.fill_ratio * 100.0,
         state.next_due_at_unix_ms,
     );
+    Ok(())
 }
 
 fn append_completion_receipt(
@@ -1543,6 +2031,7 @@ fn append_completion_receipt(
         target_fill_pct: snapshot.fill_target * 100.0,
         declared_next: completion.declared_next.as_deref(),
         response_sha256: completion.response_sha256.as_deref(),
+        response_provenance: completion.response_provenance,
         transcript_path: completion.transcript_path.as_deref(),
         journal_path: completion.journal_path.as_deref(),
         session_name: context.session_name,
@@ -1572,6 +2061,7 @@ fn append_completion_receipt(
     append_run_receipt(config, &receipt)
 }
 
+#[allow(clippy::too_many_lines)] // Provenance-byte consistency and authorship classification stay one audited transition.
 fn finish_turn_result(
     config: &Config,
     snapshot: &ReservoirSnapshot,
@@ -1591,10 +2081,21 @@ fn finish_turn_result(
             started_at,
             completed_at,
         ),
-        Ok(turn) => {
-            if let Some(authored_prefix) =
-                model_authored_prefix_before_safe_fallback(&turn.response)
-            {
+        Ok(turn) => match turn.response_provenance {
+            HeadlessResponseProvenance::WithLocalSafeFallback => {
+                let Some(authored_prefix) =
+                    model_authored_prefix_before_safe_fallback(&turn.response)
+                else {
+                    return finish_failed_turn(
+                        state,
+                        &TurnFailure {
+                            message: "safe-fallback provenance did not match the terminal response"
+                                .to_string(),
+                            transport_recovery: false,
+                        },
+                        completed_at,
+                    );
+                };
                 if authored_prefix.is_empty() {
                     return finish_failed_turn(
                         state,
@@ -1613,8 +2114,10 @@ fn finish_turn_result(
                         &turn.stderr,
                         "local safe fallback excluded from authored transcript and journal",
                     ),
+                    canonical_trace: turn.canonical_trace.clone(),
+                    response_provenance: turn.response_provenance,
                 };
-                return finish_authored_turn(
+                finish_authored_turn(
                     config,
                     snapshot,
                     state,
@@ -1622,17 +2125,56 @@ fn finish_turn_result(
                     trigger,
                     started_at,
                     completed_at,
-                );
-            }
-            finish_authored_turn(
-                config,
-                snapshot,
-                state,
-                &turn,
-                trigger,
-                started_at,
-                completed_at,
-            )
+                )
+            },
+            HeadlessResponseProvenance::WithLocalFormatRepair => {
+                if model_authored_prefix_before_format_repair(&turn.response).is_none()
+                    || model_authored_prefix_before_safe_fallback(&turn.response).is_some()
+                {
+                    return finish_failed_turn(
+                        state,
+                        &TurnFailure {
+                            message: "format-repair provenance did not match the terminal response"
+                                .to_string(),
+                            transport_recovery: false,
+                        },
+                        completed_at,
+                    );
+                }
+                finish_authored_turn(
+                    config,
+                    snapshot,
+                    state,
+                    &turn,
+                    trigger,
+                    started_at,
+                    completed_at,
+                )
+            },
+            HeadlessResponseProvenance::ExactModel => {
+                if model_authored_prefix_before_safe_fallback(&turn.response).is_some()
+                    || model_authored_prefix_before_format_repair(&turn.response).is_some()
+                {
+                    return finish_failed_turn(
+                        state,
+                        &TurnFailure {
+                            message: "exact-model provenance contradicted a local repair marker"
+                                .to_string(),
+                            transport_recovery: false,
+                        },
+                        completed_at,
+                    );
+                }
+                finish_authored_turn(
+                    config,
+                    snapshot,
+                    state,
+                    &turn,
+                    trigger,
+                    started_at,
+                    completed_at,
+                )
+            },
         },
         Err(error) => finish_failed_turn(state, &error, completed_at),
     }
@@ -1663,10 +2205,13 @@ fn finish_transport_repair(
         })
         .ok();
     record_transport_recovery(state, Some(response_sha256.clone()), completed_at);
+    state.last_response_provenance = Some(turn.response_provenance);
     TurnCompletion {
         status: "transport_recovery",
+        authored_response: None,
         declared_next: None,
         response_sha256: Some(response_sha256),
+        response_provenance: Some(turn.response_provenance),
         transcript_path,
         journal_path: None,
     }
@@ -1711,6 +2256,7 @@ fn finish_authored_turn(
     state.last_status = Some("authored_completed".to_string());
     state.last_declared_next.clone_from(&declared_next);
     state.last_response_sha256 = Some(response_sha256.clone());
+    state.last_response_provenance = Some(turn.response_provenance);
     state
         .last_authored_transcript_path
         .clone_from(&transcript_path);
@@ -1718,8 +2264,10 @@ fn finish_authored_turn(
         completed_at.saturating_add(config.autonomy_interval_minutes.saturating_mul(60_000));
     TurnCompletion {
         status: "authored_completed",
+        authored_response: Some(turn.response.clone()),
         declared_next,
         response_sha256: Some(response_sha256),
+        response_provenance: Some(turn.response_provenance),
         transcript_path,
         journal_path,
     }
@@ -1733,6 +2281,7 @@ fn finish_failed_turn(
     state.consecutive_failures = state.consecutive_failures.saturating_add(1);
     state.last_declared_next = None;
     state.last_response_sha256 = None;
+    state.last_response_provenance = None;
     let backoff_minutes = failure_backoff_minutes(state.consecutive_failures);
     state.next_due_at_unix_ms = completed_at.saturating_add(backoff_minutes.saturating_mul(60_000));
     let status = if error.transport_recovery {
@@ -1750,8 +2299,10 @@ fn finish_failed_turn(
     };
     TurnCompletion {
         status,
+        authored_response: None,
         declared_next: None,
         response_sha256: None,
+        response_provenance: None,
         transcript_path: None,
         journal_path: None,
     }
@@ -1961,6 +2512,28 @@ fn latest_action_receipt(path: &std::path::Path) -> Option<serde_json::Value> {
     serde_json::from_str::<serde_json::Value>(&line).ok()
 }
 
+fn matching_action_receipt(
+    path: &std::path::Path,
+    outcome: &ActionOutcome,
+) -> Option<serde_json::Value> {
+    let content = fs::read_to_string(path).ok()?;
+    content.lines().rev().find_map(|line| {
+        let value = serde_json::from_str::<serde_json::Value>(line).ok()?;
+        let receipt_trace = value
+            .get("trace")
+            .cloned()
+            .and_then(|trace| serde_json::from_value::<IpcTraceContextV1>(trace).ok());
+        (value
+            .get("response_sha256")
+            .and_then(serde_json::Value::as_str)
+            == Some(outcome.response_sha256.as_str())
+            && value.get("session_id").and_then(serde_json::Value::as_str)
+                == Some(outcome.session_id.as_str())
+            && receipt_trace.as_ref() == outcome.trace.as_ref())
+        .then_some(value)
+    })
+}
+
 fn compact_receipt_summary(value: Option<&serde_json::Value>) -> String {
     let Some(value) = value else {
         return "none".to_string();
@@ -2026,43 +2599,104 @@ fn matching_web_receipt(
     config: &Config,
     action_receipt: Option<&serde_json::Value>,
 ) -> Option<serde_json::Value> {
-    let parent_response_sha256 = action_receipt?
-        .get("response_sha256")
-        .and_then(serde_json::Value::as_str)?;
-    let content = fs::read_to_string(config.workspace.join("web/receipts.jsonl")).ok()?;
-    content.lines().rev().find_map(|line| {
-        let value = serde_json::from_str::<serde_json::Value>(line).ok()?;
-        let phase = value.get("phase").and_then(serde_json::Value::as_str);
-        (phase == Some("completed")
-            && value
-                .get("parent_response_sha256")
-                .and_then(serde_json::Value::as_str)
-                == Some(parent_response_sha256))
-        .then_some(value)
-    })
+    matching_completed_tool_receipt(
+        &config.workspace.join("web/receipts.jsonl"),
+        action_receipt?,
+        "astrid_edge_web_tool_receipt_v2",
+    )
 }
 
 fn matching_spectral_receipt(
     config: &Config,
     action_receipt: Option<&serde_json::Value>,
 ) -> Option<serde_json::Value> {
-    let action = action_receipt?;
+    matching_completed_tool_receipt(
+        &config.workspace.join("spectral/receipts.jsonl"),
+        action_receipt?,
+        "astrid_edge_spectral_receipt_v1",
+    )
+}
+
+fn matching_completed_tool_receipt(
+    path: &Path,
+    action: &serde_json::Value,
+    expected_schema: &str,
+) -> Option<serde_json::Value> {
     let parent_response_sha256 = action
         .get("response_sha256")
         .and_then(serde_json::Value::as_str)?;
-    let content = fs::read_to_string(config.workspace.join("spectral/receipts.jsonl")).ok()?;
-    content.lines().rev().find_map(|line| {
-        let value = serde_json::from_str::<serde_json::Value>(line).ok()?;
-        (value.get("schema").and_then(serde_json::Value::as_str)
-            == Some("astrid_edge_spectral_receipt_v1")
-            && value.get("phase").and_then(serde_json::Value::as_str) == Some("completed")
-            && value
+    let action_trace = action
+        .get("trace")
+        .cloned()
+        .and_then(|trace| serde_json::from_value::<IpcTraceContextV1>(trace).ok())
+        .filter(IpcTraceContextV1::is_supported)?;
+    if action.get("session_id").and_then(serde_json::Value::as_str)
+        != action_trace.session_id.as_deref()
+    {
+        return None;
+    }
+    let values = fs::read_to_string(path)
+        .ok()?
+        .lines()
+        .map(serde_json::from_str::<serde_json::Value>)
+        .collect::<Result<Vec<_>, _>>()
+        .ok()?;
+    let requested = values
+        .iter()
+        .filter_map(|value| {
+            let trace = value
+                .get("trace")
+                .cloned()
+                .and_then(|trace| serde_json::from_value::<IpcTraceContextV1>(trace).ok())?;
+            if value.get("schema").and_then(serde_json::Value::as_str) == Some(expected_schema)
+                && value.get("phase").and_then(serde_json::Value::as_str) == Some("requested")
+                && value
+                    .get("parent_response_sha256")
+                    .and_then(serde_json::Value::as_str)
+                    == Some(parent_response_sha256)
+                && trace_is_direct_child(&action_trace, &trace)
+            {
+                Some((value.get("call_id")?.as_str()?.to_string(), trace))
+            } else {
+                None
+            }
+        })
+        .collect::<Vec<_>>();
+    values.iter().rev().find_map(|value| {
+        if value.get("schema").and_then(serde_json::Value::as_str) != Some(expected_schema)
+            || value.get("phase").and_then(serde_json::Value::as_str) != Some("completed")
+            || value
                 .get("parent_response_sha256")
                 .and_then(serde_json::Value::as_str)
-                == Some(parent_response_sha256)
-            && exact_trace_lineage_matches(action, &value))
-        .then_some(value)
+                != Some(parent_response_sha256)
+        {
+            return None;
+        }
+        let call_id = value.get("call_id")?.as_str()?;
+        let completion_trace = value
+            .get("trace")
+            .cloned()
+            .and_then(|trace| serde_json::from_value::<IpcTraceContextV1>(trace).ok())?;
+        let matching_requests = requested
+            .iter()
+            .filter(|(requested_call_id, request_trace)| {
+                requested_call_id == call_id
+                    && (completion_trace == *request_trace
+                        || trace_is_direct_child(request_trace, &completion_trace))
+            })
+            .count();
+        (matching_requests == 1).then(|| value.clone())
     })
+}
+
+fn trace_is_direct_child(parent: &IpcTraceContextV1, child: &IpcTraceContextV1) -> bool {
+    parent.is_supported()
+        && child.is_supported()
+        && parent.trace_id == child.trace_id
+        && parent.turn_id == child.turn_id
+        && parent.session_id == child.session_id
+        && parent.chain_id == child.chain_id
+        && child.parent_span_id == Some(parent.span_id)
 }
 
 fn compact_introspection_continuation(
@@ -2094,24 +2728,14 @@ fn compact_introspection_continuation(
     {
         return String::new();
     }
-    let Some(parent_hash) = field("response_sha256") else {
-        return String::new();
-    };
-    let Ok(content) = fs::read_to_string(config.workspace.join("introspection/receipts.jsonl"))
-    else {
+    let path = config.workspace.join("introspection/receipts.jsonl");
+    if !path.exists() {
         return "Self-study continuation: no completed private introspection receipt is available; \
                 do not invent a result.\n"
             .to_string();
-    };
-    let receipt = content.lines().rev().find_map(|line| {
-        let value = serde_json::from_str::<serde_json::Value>(line).ok()?;
-        (value.get("phase").and_then(serde_json::Value::as_str) == Some("completed")
-            && value
-                .get("parent_response_sha256")
-                .and_then(serde_json::Value::as_str)
-                == Some(parent_hash))
-        .then_some(value)
-    });
+    }
+    let receipt =
+        matching_completed_tool_receipt(&path, action, "astrid_edge_introspection_receipt_v1");
     let Some(receipt) = receipt else {
         return "Self-study continuation: the private read-only search has no matching completed \
                 receipt; treat owned evidence as unavailable.\n"
@@ -2594,18 +3218,6 @@ const fn hex_nibble(value: u8) -> Option<u8> {
     }
 }
 
-fn exact_trace_lineage_matches(action: &serde_json::Value, receipt: &serde_json::Value) -> bool {
-    let Some(action_trace) = action.get("trace") else {
-        return false;
-    };
-    let Some(receipt_trace) = receipt.get("trace") else {
-        return false;
-    };
-    ["trace_id", "session_id", "chain_id"]
-        .into_iter()
-        .all(|field| action_trace.get(field) == receipt_trace.get(field))
-}
-
 fn compact_research_continuation(
     config: &Config,
     value: Option<&serde_json::Value>,
@@ -2831,6 +3443,11 @@ async fn run_turn(
     if let Some(chain_id) = trace.chain_id.as_deref() {
         command.arg("--trace-chain-id").arg(chain_id);
     }
+    let headless_idle_timeout_seconds =
+        supervised_headless_idle_timeout_seconds(config.autonomy_timeout_seconds);
+    command
+        .arg("--headless-idle-timeout-seconds")
+        .arg(headless_idle_timeout_seconds.to_string());
     let child = command
         .arg("-p")
         .arg(prompt)
@@ -2873,13 +3490,20 @@ async fn run_turn(
     let stdout = bounded_utf8(&output.stdout);
     let stderr = bounded_utf8(&output.stderr);
     if !output.status.success() {
+        let transport_recovery = headless_exit_is_transport_recovery(output.status.code());
+        if transport_recovery
+            && let Err(error) =
+                recover_astrid_service(config, "edge_headless_idle_timeout", Some(trace)).await
+        {
+            eprintln!("edge Astrid service recovery failed: {error}");
+        }
         return Err(TurnFailure {
             message: format!(
                 "Astrid CLI exited {}: {}",
                 output.status,
                 stderr.chars().take(2_000).collect::<String>()
             ),
-            transport_recovery: false,
+            transport_recovery,
         });
     }
     let response = stdout.trim_end().to_string();
@@ -2889,7 +3513,75 @@ async fn run_turn(
             transport_recovery: false,
         });
     }
-    Ok(TurnResult { response, stderr })
+    let canonical_trace =
+        parse_headless_trace_receipt(&stderr, trace).map_err(|error| TurnFailure {
+            message: format!("headless canonical turn attestation failed: {error}"),
+            transport_recovery: true,
+        })?;
+    let response_provenance =
+        parse_headless_provenance_receipt(&stderr).map_err(|error| TurnFailure {
+            message: format!("headless terminal provenance attestation failed: {error}"),
+            transport_recovery: true,
+        })?;
+    Ok(TurnResult {
+        response,
+        stderr,
+        canonical_trace,
+        response_provenance,
+    })
+}
+
+fn supervised_headless_idle_timeout_seconds(supervisor_timeout_seconds: u64) -> u64 {
+    supervisor_timeout_seconds
+        .saturating_sub(HEADLESS_SUPERVISOR_MARGIN_SECONDS)
+        .max(30)
+}
+
+fn headless_exit_is_transport_recovery(exit_code: Option<i32>) -> bool {
+    exit_code == Some(HEADLESS_IDLE_TIMEOUT_EXIT_CODE)
+}
+
+fn parse_headless_trace_receipt(
+    stderr: &str,
+    requested: &IpcTraceContextV1,
+) -> anyhow::Result<IpcTraceContextV1> {
+    let mut receipts = stderr.lines().filter_map(|line| {
+        line.trim()
+            .strip_prefix(HEADLESS_TRACE_RECEIPT_PREFIX)
+            .map(str::trim)
+    });
+    let encoded = receipts
+        .next()
+        .context("headless CLI emitted no canonical trace receipt")?;
+    if receipts.next().is_some() {
+        anyhow::bail!("headless CLI emitted more than one canonical trace receipt");
+    }
+    let canonical = serde_json::from_str::<IpcTraceContextV1>(encoded)
+        .context("decode canonical headless trace receipt")?;
+    if !canonical.is_supported()
+        || canonical.trace_id != requested.trace_id
+        || canonical.turn_id.is_none()
+        || canonical.session_id != requested.session_id
+        || canonical.chain_id != requested.chain_id
+    {
+        anyhow::bail!("canonical headless trace did not match the requested trace/session/chain");
+    }
+    Ok(canonical)
+}
+
+fn parse_headless_provenance_receipt(stderr: &str) -> anyhow::Result<HeadlessResponseProvenance> {
+    let mut receipts = stderr.lines().filter_map(|line| {
+        line.trim()
+            .strip_prefix(HEADLESS_PROVENANCE_RECEIPT_PREFIX)
+            .map(str::trim)
+    });
+    let encoded = receipts
+        .next()
+        .context("headless CLI emitted no terminal provenance receipt")?;
+    if receipts.next().is_some() {
+        anyhow::bail!("headless CLI emitted more than one terminal provenance receipt");
+    }
+    serde_json::from_str(encoded).context("decode canonical headless terminal provenance receipt")
 }
 
 async fn recover_astrid_service(
@@ -2950,21 +3642,32 @@ fn persist_transcript(
 ) -> anyhow::Result<String> {
     let relative = format!("autonomous/turns/autonomous_{started_at}.md");
     let path = config.workspace.join(&relative);
+    let authority = match turn.response_provenance {
+        HeadlessResponseProvenance::ExactModel => {
+            "exact model-authored reflection; effects require the separate allowlisted NEXT executor"
+        },
+        HeadlessResponseProvenance::WithLocalSafeFallback => {
+            "model-authored prefix only; local safe fallback was excluded before persistence"
+        },
+        HeadlessResponseProvenance::WithLocalFormatRepair => {
+            "model-authored reflection with a visibly marked formatting-only executor repair"
+        },
+    };
     let content = format!(
         "# {} autonomous turn\n\n\
          Started: {started_at} ms since Unix epoch\n\
          Trigger: {trigger}\n\
          Fill before: {:.2}% (target {:.2}%)\n\
-         Authority: model-authored reflection; effects require the separate allowlisted NEXT executor\n\n\
+         Authority: {authority}\n\n\
          ## Response\n\n{}\n\n\
          ## Transport note\n\n{}\n",
         config.instance_name,
         snapshot.fill_ratio * 100.0,
         snapshot.fill_target * 100.0,
-        turn.response.trim(),
+        turn.response,
         turn.stderr.trim(),
     );
-    fs::write(path, content)?;
+    write_private_new_durable(&path, content.as_bytes())?;
     Ok(relative)
 }
 
@@ -2977,27 +3680,41 @@ fn persist_authored_signal_journal(
 ) -> anyhow::Result<String> {
     let relative = format!("journal/signal_{started_at}.md");
     let path = config.workspace.join(&relative);
+    let authored_projection = model_authored_projection(turn);
+    let distinction = match turn.response_provenance {
+        HeadlessResponseProvenance::ExactModel => "exact model-authored scheduled response",
+        HeadlessResponseProvenance::WithLocalSafeFallback => {
+            "model-authored prefix; local safe fallback excluded"
+        },
+        HeadlessResponseProvenance::WithLocalFormatRepair => {
+            "model-authored prefix; formatting-only executor repair excluded"
+        },
+    };
     let content = format!(
         "# {} autonomous signal journal\n\n\
          Recorded: {started_at} ms since Unix epoch\n\
          Trigger: {trigger}\n\
          Fill before: {:.2}% (target {:.2}%)\n\
-         Authority: genuinely model-authored scheduled response, automatically preserved by the \
-         edge runtime\n\
-         Distinction: this is not an executor fallback and not a self-declared JOURNAL Action\n\n\
+         Authority: {distinction}, automatically preserved by the edge runtime\n\
+         Distinction: this is not a self-declared JOURNAL Action\n\n\
          ## Reflection\n\n{}\n",
         config.instance_name,
         snapshot.fill_ratio * 100.0,
         snapshot.fill_target * 100.0,
-        turn.response.trim(),
+        authored_projection,
     );
-    let mut file = OpenOptions::new()
-        .create_new(true)
-        .write(true)
-        .open(&path)?;
-    file.write_all(content.as_bytes())?;
-    file.sync_all()?;
+    write_private_new_durable(&path, content.as_bytes())?;
     Ok(relative)
+}
+
+fn model_authored_projection(turn: &TurnResult) -> &str {
+    match turn.response_provenance {
+        HeadlessResponseProvenance::WithLocalFormatRepair => {
+            model_authored_prefix_before_format_repair(&turn.response).unwrap_or(&turn.response)
+        },
+        HeadlessResponseProvenance::ExactModel
+        | HeadlessResponseProvenance::WithLocalSafeFallback => &turn.response,
+    }
 }
 
 fn persist_recovery_transcript(
@@ -3020,11 +3737,26 @@ fn persist_recovery_transcript(
         config.instance_name,
         snapshot.fill_ratio * 100.0,
         snapshot.fill_target * 100.0,
-        turn.response.trim(),
+        turn.response,
         turn.stderr.trim(),
     );
-    fs::write(path, content)?;
+    write_private_new_durable(&path, content.as_bytes())?;
     Ok(relative)
+}
+
+fn write_private_new_durable(path: &Path, content: &[u8]) -> anyhow::Result<()> {
+    let parent = path
+        .parent()
+        .context("private durable file lacks a parent directory")?;
+    let mut file = OpenOptions::new()
+        .create_new(true)
+        .write(true)
+        .mode(0o600)
+        .open(path)?;
+    file.write_all(content)?;
+    file.sync_all()?;
+    fs::File::open(parent)?.sync_all()?;
+    Ok(())
 }
 
 fn recent_owned_artifacts(config: &Config) -> String {
@@ -3101,6 +3833,13 @@ fn last_authored_response_excerpt(config: &Config, state: &AutonomyState) -> Opt
         .split_once("\n\n## Transport note")
         .map_or(response_section, |(response, _)| response)
         .trim();
+    let response = if state.last_response_provenance
+        == Some(HeadlessResponseProvenance::WithLocalFormatRepair)
+    {
+        model_authored_prefix_before_format_repair(response).unwrap_or(response)
+    } else {
+        response
+    };
     (!response.is_empty()).then(|| {
         response
             .chars()
@@ -3165,22 +3904,39 @@ fn parse_provider_metrics(stderr: &str) -> ProviderMetrics {
     metrics
 }
 
-fn load_state(config: &Config) -> AutonomyState {
+fn load_state(config: &Config) -> anyhow::Result<AutonomyState> {
     let path = config.workspace.join("autonomous/state.json");
-    let Some(value) = fs::read(path)
-        .ok()
-        .and_then(|bytes| serde_json::from_slice::<serde_json::Value>(&bytes).ok())
-    else {
-        return new_state();
+    let Some(bytes) = read_optional_regular_state(&path)? else {
+        return Ok(new_state());
     };
+    let value = serde_json::from_slice::<serde_json::Value>(&bytes)
+        .map_err(|error| anyhow::anyhow!("decode {}: {error}", path.display()))?;
     match value.get("schema").and_then(serde_json::Value::as_str) {
-        Some(AUTONOMY_SCHEMA) => serde_json::from_value(value).unwrap_or_else(|_| new_state()),
+        Some(AUTONOMY_SCHEMA) => serde_json::from_value(value)
+            .map_err(|error| anyhow::anyhow!("decode {}: {error}", path.display())),
         Some(LEGACY_AUTONOMY_V2_SCHEMA) => serde_json::from_value::<AutonomyState>(value)
-            .map_or_else(|_| new_state(), migrate_v2_state),
+            .map(migrate_v2_state)
+            .map_err(|error| anyhow::anyhow!("migrate {}: {error}", path.display())),
         Some(LEGACY_AUTONOMY_V1_SCHEMA) => serde_json::from_value::<LegacyAutonomyState>(value)
-            .map_or_else(|_| new_state(), migrate_legacy_state),
-        _ => new_state(),
+            .map(migrate_legacy_state)
+            .map_err(|error| anyhow::anyhow!("migrate {}: {error}", path.display())),
+        schema => anyhow::bail!("unsupported autonomy schema {schema:?}"),
     }
+}
+
+fn read_optional_regular_state(path: &Path) -> anyhow::Result<Option<Vec<u8>>> {
+    let metadata = match fs::symlink_metadata(path) {
+        Ok(metadata) => metadata,
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => return Ok(None),
+        Err(error) => return Err(error.into()),
+    };
+    if metadata.file_type().is_symlink() || !metadata.file_type().is_file() {
+        anyhow::bail!(
+            "authority state path is not a regular non-symlink file: {}",
+            path.display()
+        );
+    }
+    Ok(Some(fs::read(path)?))
 }
 
 fn migrate_v2_state(mut state: AutonomyState) -> AutonomyState {
@@ -3226,6 +3982,217 @@ fn migrate_legacy_state(legacy: LegacyAutonomyState) -> AutonomyState {
 fn normalize_session_generations(state: &mut AutonomyState) {
     state.ordinary_session_generation = state.ordinary_session_generation.max(1);
     state.chain_session_generation = state.chain_session_generation.max(1);
+}
+
+fn reconcile_pending_receipt_acknowledgements(
+    config: &Config,
+    state: &mut AutonomyState,
+) -> anyhow::Result<bool> {
+    let mut changed = false;
+    if state.run_receipt_pending {
+        let receipt = exact_pending_run_receipt(config, state)?.context(
+            "pending run receipt is absent or does not match the exact durable turn identity",
+        )?;
+        reconstruct_action_outbox_from_run_receipt(state, &receipt)?;
+        state.run_receipt_pending = false;
+        changed = true;
+    }
+    if state.chain_receipt_pending {
+        anyhow::ensure!(
+            ledger_contains_exact_pending_chain(config, state)?,
+            "pending chain receipt is absent or does not match the exact durable Action identity"
+        );
+        state.chain_receipt_pending = false;
+        changed = true;
+    }
+    if changed {
+        persist_state(config, state)
+            .context("persist exact pending-receipt acknowledgement reconciliation")?;
+    }
+    Ok(changed)
+}
+
+fn exact_pending_run_receipt(
+    config: &Config,
+    state: &AutonomyState,
+) -> anyhow::Result<Option<serde_json::Value>> {
+    let Some(trace) = state.last_trace.as_ref() else {
+        return Ok(None);
+    };
+    let Some(completed_at) = state.last_completed_at_unix_ms else {
+        return Ok(None);
+    };
+    let expected_response_sha256 = match state.last_status.as_deref() {
+        Some("authored_completed") => state.last_response_sha256.as_deref(),
+        Some("transport_recovery") => state.last_transport_response_sha256.as_deref(),
+        _ => None,
+    };
+    let expected_status = match state.last_status.as_deref() {
+        Some(status) if status.starts_with("failed:") => Some("failed"),
+        status => status,
+    };
+    let path = config.workspace.join("autonomous/runs.jsonl");
+    validate_existing_private_regular(&path)?;
+    let content = fs::read_to_string(&path)
+        .with_context(|| format!("read private autonomy ledger {}", path.display()))?;
+    let mut matches = Vec::new();
+    for line in content.lines().filter(|line| !line.trim().is_empty()) {
+        let value = serde_json::from_str::<serde_json::Value>(line)
+            .with_context(|| format!("parse private autonomy ledger {}", path.display()))?;
+        let exact = value.get("schema").and_then(serde_json::Value::as_str) == Some(RUN_SCHEMA)
+            && value
+                .get("completed_at_unix_ms")
+                .and_then(serde_json::Value::as_u64)
+                == Some(completed_at)
+            && value.get("status").and_then(serde_json::Value::as_str) == expected_status
+            && value
+                .get("response_sha256")
+                .and_then(serde_json::Value::as_str)
+                == expected_response_sha256
+            && value
+                .get("trace")
+                .and_then(|value| serde_json::from_value::<IpcTraceContextV1>(value.clone()).ok())
+                .is_some_and(|receipt_trace| receipt_trace == *trace);
+        if exact {
+            matches.push(value);
+        }
+    }
+    anyhow::ensure!(matches.len() <= 1, "duplicate exact pending run receipts");
+    Ok(matches.pop())
+}
+
+fn reconstruct_action_outbox_from_run_receipt(
+    state: &mut AutonomyState,
+    receipt: &serde_json::Value,
+) -> anyhow::Result<()> {
+    if state.last_status.as_deref() != Some("authored_completed") {
+        return Ok(());
+    }
+    anyhow::ensure!(
+        !state.action_dispatch_pending
+            && state.pending_action_response_sha256.is_none()
+            && state.pending_action_trace.is_none()
+            && state.pending_action_session_id.is_none()
+            && state.pending_action_transcript_path.is_none()
+            && state.pending_action_response_provenance.is_none(),
+        "pending run receipt conflicts with an existing Action outbox"
+    );
+    let response_sha256 = receipt
+        .get("response_sha256")
+        .and_then(serde_json::Value::as_str)
+        .context("authored run receipt lacks its response hash")?;
+    let transcript_path = receipt
+        .get("transcript_path")
+        .and_then(serde_json::Value::as_str)
+        .context("authored run receipt lacks its durable transcript path")?;
+    let trace = receipt
+        .get("trace")
+        .cloned()
+        .map(serde_json::from_value::<IpcTraceContextV1>)
+        .transpose()?
+        .context("authored run receipt lacks its canonical trace")?;
+    anyhow::ensure!(
+        trace.is_supported() && trace.turn_id.is_some(),
+        "authored run receipt has an unsupported canonical trace"
+    );
+    let response_provenance = receipt
+        .get("response_provenance")
+        .cloned()
+        .map(serde_json::from_value::<HeadlessResponseProvenance>)
+        .transpose()?
+        .context("authored run receipt lacks explicit terminal provenance")?;
+    anyhow::ensure!(
+        state.last_response_sha256.as_deref() == Some(response_sha256)
+            && state.last_trace.as_ref() == Some(&trace)
+            && state.last_response_provenance == Some(response_provenance),
+        "authored run receipt does not match durable scheduler authorship state"
+    );
+    let session_id = trace
+        .session_id
+        .clone()
+        .or_else(|| {
+            receipt
+                .get("session_name")
+                .and_then(serde_json::Value::as_str)
+                .map(str::to_string)
+        })
+        .context("authored run receipt lacks its session identity")?;
+    state.action_dispatch_pending = true;
+    state.pending_action_response_sha256 = Some(response_sha256.to_string());
+    state.pending_action_trace = Some(trace);
+    state.pending_action_session_id = Some(session_id);
+    state.pending_action_transcript_path = Some(transcript_path.to_string());
+    state.pending_action_response_provenance = Some(response_provenance);
+    Ok(())
+}
+
+fn ledger_contains_exact_pending_chain(
+    config: &Config,
+    state: &AutonomyState,
+) -> anyhow::Result<bool> {
+    let (Some(response_sha256), Some(trace_id), Some(span_id)) = (
+        state.last_action_response_sha256.as_deref(),
+        state.last_action_trace_id,
+        state.last_action_span_id,
+    ) else {
+        return Ok(false);
+    };
+    ledger_contains_exact_json(&config.workspace.join("autonomous/chains.jsonl"), |value| {
+        value.get("schema").and_then(serde_json::Value::as_str)
+            == Some("astrid_edge_action_chain_v2")
+            && value
+                .get("response_sha256")
+                .and_then(serde_json::Value::as_str)
+                == Some(response_sha256)
+            && value
+                .get("trace")
+                .and_then(|value| serde_json::from_value::<IpcTraceContextV1>(value.clone()).ok())
+                .is_some_and(|receipt_trace| {
+                    receipt_trace.trace_id == trace_id && receipt_trace.span_id == span_id
+                })
+    })
+}
+
+fn ledger_contains_exact_json(
+    path: &Path,
+    predicate: impl Fn(&serde_json::Value) -> bool,
+) -> anyhow::Result<bool> {
+    validate_existing_private_regular(path)?;
+    let content = fs::read_to_string(path)
+        .with_context(|| format!("read private autonomy ledger {}", path.display()))?;
+    let mut found = false;
+    for line in content.lines().filter(|line| !line.trim().is_empty()) {
+        let value = serde_json::from_str::<serde_json::Value>(line)
+            .with_context(|| format!("parse private autonomy ledger {}", path.display()))?;
+        found |= predicate(&value);
+    }
+    Ok(found)
+}
+
+fn orphaned_recovery_receipt_exists(
+    config: &Config,
+    started_at_unix_ms: u64,
+    trace: Option<&IpcTraceContextV1>,
+) -> anyhow::Result<bool> {
+    let path = config.workspace.join("autonomous/recoveries.jsonl");
+    if !path.exists() {
+        return Ok(false);
+    }
+    ledger_contains_exact_json(&path, |value| {
+        value.get("schema").and_then(serde_json::Value::as_str)
+            == Some("astrid_edge_transport_recovery_v2")
+            && value
+                .get("started_at_unix_ms")
+                .and_then(serde_json::Value::as_u64)
+                == Some(started_at_unix_ms)
+            && value.get("reason").and_then(serde_json::Value::as_str)
+                == Some("interrupted_by_restart")
+            && value
+                .get("trace")
+                .and_then(|value| serde_json::from_value::<IpcTraceContextV1>(value.clone()).ok())
+                .as_ref()
+                == trace
+    })
 }
 
 fn mark_orphaned_turn_interrupted(state: &mut AutonomyState, now: u64) -> bool {
@@ -3281,42 +4248,88 @@ fn record_transport_recovery(
 
 fn persist_state(config: &Config, state: &AutonomyState) -> anyhow::Result<()> {
     let path = config.workspace.join("autonomous/state.json");
-    let temporary = config.workspace.join("autonomous/state.json.tmp");
-    fs::write(&temporary, serde_json::to_vec_pretty(state)?)?;
-    fs::rename(temporary, path)?;
+    validate_existing_private_regular(&path)?;
+    let temporary = config.workspace.join(format!(
+        "autonomous/state.json.tmp.{}.{}",
+        std::process::id(),
+        Uuid::new_v4()
+    ));
+    let mut file = OpenOptions::new()
+        .write(true)
+        .create_new(true)
+        .mode(0o600)
+        .open(&temporary)?;
+    file.write_all(&serde_json::to_vec_pretty(state)?)?;
+    file.sync_all()?;
+    fs::rename(&temporary, &path)?;
+    fs::set_permissions(&path, fs::Permissions::from_mode(0o600))?;
+    sync_parent(&path)?;
     Ok(())
 }
 
 fn append_run_receipt(config: &Config, receipt: &AutonomyRunReceipt<'_>) -> anyhow::Result<()> {
-    let mut log = OpenOptions::new()
-        .create(true)
-        .append(true)
-        .mode(0o600)
-        .open(config.workspace.join("autonomous/runs.jsonl"))?;
-    serde_json::to_writer(&mut log, receipt)?;
-    log.write_all(b"\n")?;
-    Ok(())
+    append_private_json_line(&config.workspace.join("autonomous/runs.jsonl"), receipt)
 }
 
 fn append_chain_receipt(config: &Config, receipt: &ActionChainReceipt<'_>) -> anyhow::Result<()> {
-    let mut log = OpenOptions::new()
-        .create(true)
-        .append(true)
-        .mode(0o600)
-        .open(config.workspace.join("autonomous/chains.jsonl"))?;
-    serde_json::to_writer(&mut log, receipt)?;
-    log.write_all(b"\n")?;
-    Ok(())
+    append_private_json_line(&config.workspace.join("autonomous/chains.jsonl"), receipt)
 }
 
 fn append_recovery_receipt(config: &Config, receipt: &RecoveryReceipt<'_>) -> anyhow::Result<()> {
-    let mut log = OpenOptions::new()
+    append_private_json_line(
+        &config.workspace.join("autonomous/recoveries.jsonl"),
+        receipt,
+    )
+}
+
+fn append_private_json_line(path: &Path, value: &impl Serialize) -> anyhow::Result<()> {
+    let mut log = open_private_append_regular(path)?;
+    serde_json::to_writer(&mut log, value)?;
+    log.write_all(b"\n")?;
+    log.sync_data()?;
+    sync_parent(path)?;
+    Ok(())
+}
+
+fn open_private_append_regular(path: &Path) -> anyhow::Result<fs::File> {
+    validate_existing_private_regular(path)?;
+    let file = OpenOptions::new()
         .create(true)
         .append(true)
         .mode(0o600)
-        .open(config.workspace.join("autonomous/recoveries.jsonl"))?;
-    serde_json::to_writer(&mut log, receipt)?;
-    log.write_all(b"\n")?;
+        .open(path)?;
+    let opened = file.metadata()?;
+    let path_metadata = fs::symlink_metadata(path)?;
+    if !path_metadata.file_type().is_file()
+        || opened.dev() != path_metadata.dev()
+        || opened.ino() != path_metadata.ino()
+    {
+        anyhow::bail!(
+            "private autonomy ledger path changed identity or is not regular: {}",
+            path.display()
+        );
+    }
+    file.set_permissions(fs::Permissions::from_mode(0o600))?;
+    Ok(file)
+}
+
+fn validate_existing_private_regular(path: &Path) -> anyhow::Result<()> {
+    match fs::symlink_metadata(path) {
+        Ok(metadata) if metadata.file_type().is_file() => Ok(()),
+        Ok(_) => anyhow::bail!(
+            "private autonomy target is not a regular non-symlink file: {}",
+            path.display()
+        ),
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(()),
+        Err(error) => Err(error.into()),
+    }
+}
+
+fn sync_parent(path: &Path) -> anyhow::Result<()> {
+    let parent = path
+        .parent()
+        .ok_or_else(|| anyhow::anyhow!("private autonomy path has no parent"))?;
+    fs::File::open(parent)?.sync_all()?;
     Ok(())
 }
 
@@ -3350,28 +4363,37 @@ fn unix_millis() -> u64 {
 #[cfg(test)]
 mod tests {
     use super::{
-        AUTONOMY_SCHEMA, AutonomyState, LegacyAutonomyState, MAX_COMPACT_PROMPT_CHARS,
-        THREAD_STATE_SCHEMA, ThreadEvidence, ThreadState, TurnResult,
+        AUTONOMY_SCHEMA, AutonomyState, HeadlessResponseProvenance, LegacyAutonomyState,
+        MAX_COMPACT_PROMPT_CHARS, THREAD_STATE_SCHEMA, ThreadEvidence, ThreadState, TurnResult,
         action_outcome_already_processed, apply_action_outcome, artifact_evidence_classification,
-        build_prompt, compact_spectral_continuation, failure_backoff_minutes,
-        final_next_declaration, finish_turn_result, is_autonomous_prompt, is_stateful_action_verb,
-        latest_salient_perception, latest_verified_tuning_result, load_thread_state,
-        mark_orphaned_turn_interrupted, migrate_legacy_state, migrate_thread_state_on_start,
-        migrate_v2_state, parse_provider_metrics, push_thread_evidence_record,
-        record_transport_recovery, roll_daily_budget, rotate_model_session_if_full,
-        session_name_for_turn, update_thread_state,
+        build_prompt, compact_spectral_continuation, execute_due_turn, failure_backoff_minutes,
+        final_next_declaration, finish_turn_result, headless_exit_is_transport_recovery,
+        initialize_autonomy_state, is_autonomous_prompt, is_stateful_action_verb,
+        last_authored_response_excerpt, latest_salient_perception, latest_verified_tuning_result,
+        load_state, load_thread_state, load_thread_state_checked, mark_orphaned_turn_interrupted,
+        matching_completed_tool_receipt, migrate_legacy_state, migrate_thread_state_on_start,
+        migrate_v2_state, parse_headless_provenance_receipt, parse_headless_trace_receipt,
+        parse_provider_metrics, persist_state, process_action_outcome, push_thread_evidence_record,
+        reconcile_pending_receipt_acknowledgements, record_transport_recovery,
+        replay_pending_action_dispatch, roll_daily_budget, rotate_model_session_if_full, run,
+        session_name_for_turn, supervised_headless_idle_timeout_seconds, update_thread_state,
+        write_private_new_durable,
     };
     use crate::{
         actions::ActionOutcome,
         config::{AutonomyInitiativeProfile, AutonomyPromptProfile, Config},
         reservoir::ReservoirSnapshot,
-        trace::IpcTraceContextV1,
+        trace::{AutonomyTraceRegistry, IpcTraceContextV1},
     };
     use ed25519_dalek::{Signer as _, SigningKey};
     use sha2::{Digest as _, Sha256};
     use std::fmt::Write as _;
     use std::fs;
     use std::io::Write as _;
+    use std::os::unix::fs::PermissionsExt as _;
+    use std::sync::Arc;
+    use std::time::Duration;
+    use tokio::sync::{mpsc, watch};
     use uuid::Uuid;
 
     fn config() -> Config {
@@ -3419,6 +4441,368 @@ mod tests {
     }
 
     #[test]
+    fn authored_outbox_files_are_private_durable_and_never_overwritten() {
+        let workspace = std::env::temp_dir().join(format!(
+            "astrid-edge-durable-authored-file-{}",
+            Uuid::new_v4()
+        ));
+        fs::create_dir_all(&workspace).unwrap();
+        let path = workspace.join("turn.md");
+        write_private_new_durable(&path, b"first").unwrap();
+        assert_eq!(fs::read(&path).unwrap(), b"first");
+        assert_eq!(
+            fs::metadata(&path).unwrap().permissions().mode() & 0o777,
+            0o600
+        );
+        assert!(write_private_new_durable(&path, b"second").is_err());
+        assert_eq!(fs::read(&path).unwrap(), b"first");
+
+        let outside = workspace.with_extension("outside-authored-file");
+        fs::write(&outside, b"operator-owned").unwrap();
+        let linked = workspace.join("linked.md");
+        std::os::unix::fs::symlink(&outside, &linked).unwrap();
+        assert!(write_private_new_durable(&linked, b"mutated").is_err());
+        assert_eq!(fs::read(&outside).unwrap(), b"operator-owned");
+
+        fs::remove_file(outside).unwrap();
+        fs::remove_dir_all(workspace).unwrap();
+    }
+
+    fn canonical_trace() -> IpcTraceContextV1 {
+        IpcTraceContextV1::root(Uuid::new_v4(), "test-session".to_string(), None)
+    }
+
+    #[test]
+    fn existing_corrupt_or_future_authority_state_never_resets_to_fresh() {
+        let mut config = config();
+        config.workspace = std::env::temp_dir().join(format!(
+            "astrid-edge-fail-closed-state-{}",
+            super::unix_millis()
+        ));
+        config.prepare_workspace().unwrap();
+
+        fs::write(config.workspace.join("autonomous/state.json"), b"{broken").unwrap();
+        assert!(load_state(&config).is_err());
+        fs::write(
+            config.workspace.join("autonomous/state.json"),
+            br#"{"schema":"astrid_edge_autonomy_v999"}"#,
+        )
+        .unwrap();
+        assert!(load_state(&config).is_err());
+
+        fs::write(
+            config.workspace.join("autonomous/thread_state.json"),
+            br#"{"schema":"astrid_edge_thread_state_v999"}"#,
+        )
+        .unwrap();
+        assert!(load_thread_state_checked(&config).is_err());
+
+        #[cfg(unix)]
+        {
+            let outside = config.workspace.join("outside_state.json");
+            fs::write(
+                &outside,
+                serde_json::to_vec(&AutonomyState {
+                    schema: AUTONOMY_SCHEMA.to_string(),
+                    ..AutonomyState::default()
+                })
+                .unwrap(),
+            )
+            .unwrap();
+            fs::remove_file(config.workspace.join("autonomous/state.json")).unwrap();
+            std::os::unix::fs::symlink(&outside, config.workspace.join("autonomous/state.json"))
+                .unwrap();
+            assert!(load_state(&config).is_err());
+        }
+
+        fs::remove_dir_all(config.workspace).unwrap();
+    }
+
+    #[tokio::test]
+    async fn startup_durably_pauses_for_an_unacknowledged_run_receipt() {
+        let mut config = config();
+        config.workspace = std::env::temp_dir().join(format!(
+            "astrid-edge-pending-run-receipt-{}",
+            super::unix_millis()
+        ));
+        config.prepare_workspace().unwrap();
+        persist_state(
+            &config,
+            &AutonomyState {
+                schema: AUTONOMY_SCHEMA.to_string(),
+                run_receipt_pending: true,
+                ..AutonomyState::default()
+            },
+        )
+        .unwrap();
+
+        let (_snapshot_tx, snapshot_rx) = watch::channel(ReservoirSnapshot::default());
+        let (_human_tx, human_rx) = watch::channel(0_u64);
+        let (ingress_tx, _ingress_rx) = mpsc::channel(1);
+        let (_outcome_tx, outcome_rx) = mpsc::channel(1);
+        let (action_tx, _action_rx) = mpsc::channel(1);
+        assert!(
+            tokio::time::timeout(
+                Duration::from_millis(50),
+                run(
+                    Arc::new(config.clone()),
+                    snapshot_rx,
+                    human_rx,
+                    ingress_tx,
+                    outcome_rx,
+                    action_tx,
+                    Arc::new(AutonomyTraceRegistry::default()),
+                ),
+            )
+            .await
+            .is_err()
+        );
+        let paused = load_state(&config).unwrap();
+        assert!(
+            paused.operator_pause_reason.as_deref().is_some_and(
+                |reason| reason.starts_with("receipt_integrity_requires_operator_review")
+            )
+        );
+
+        fs::remove_dir_all(config.workspace).unwrap();
+    }
+
+    #[tokio::test]
+    async fn restart_reconciles_and_replays_only_an_exact_durable_run_receipt() {
+        let mut config = config();
+        config.workspace = std::env::temp_dir().join(format!(
+            "astrid-edge-exact-run-receipt-{}",
+            super::unix_millis()
+        ));
+        config.prepare_workspace().unwrap();
+        let trace = canonical_trace();
+        let response = "  A durable authored turn.\nNEXT: LISTEN";
+        let response_sha256 = format!("{:x}", Sha256::digest(response.as_bytes()));
+        let transcript_path = "introspections/exact_run_receipt.md";
+        write_private_new_durable(
+            &config.workspace.join(transcript_path),
+            format!("# Exact receipt test\n\n## Response\n\n{response}").as_bytes(),
+        )
+        .unwrap();
+        let mut state = AutonomyState {
+            schema: AUTONOMY_SCHEMA.to_string(),
+            last_completed_at_unix_ms: Some(77),
+            last_status: Some("authored_completed".to_string()),
+            last_response_sha256: Some(response_sha256.clone()),
+            last_response_provenance: Some(HeadlessResponseProvenance::ExactModel),
+            last_trace: Some(trace.clone()),
+            run_receipt_pending: true,
+            ..AutonomyState::default()
+        };
+        fs::write(
+            config.workspace.join("autonomous/runs.jsonl"),
+            format!(
+                "{}\n",
+                serde_json::json!({
+                    "schema": super::RUN_SCHEMA,
+                    "completed_at_unix_ms": 77,
+                    "status": "authored_completed",
+                    "response_sha256": response_sha256,
+                    "response_provenance": "model_authored",
+                    "transcript_path": transcript_path,
+                    "session_name": "test-session",
+                    "trace": trace,
+                })
+            ),
+        )
+        .unwrap();
+
+        assert!(reconcile_pending_receipt_acknowledgements(&config, &mut state).unwrap());
+        assert!(!state.run_receipt_pending);
+        assert!(state.action_dispatch_pending);
+        assert_eq!(
+            state.pending_action_response_provenance,
+            Some(HeadlessResponseProvenance::ExactModel)
+        );
+        let persisted = load_state(&config).unwrap();
+        assert!(!persisted.run_receipt_pending);
+        assert!(persisted.action_dispatch_pending);
+
+        let (action_tx, mut action_rx) = mpsc::channel(1);
+        replay_pending_action_dispatch(&config, &persisted, &action_tx)
+            .await
+            .unwrap();
+        let replayed = action_rx.recv().await.unwrap();
+        assert_eq!(replayed.response, response);
+        assert_eq!(replayed.tuning_authority_turn_id, trace.turn_id);
+        assert_eq!(
+            replayed.tuning_authority_source,
+            Some("scheduler_verified_authored_turn")
+        );
+
+        fs::remove_dir_all(config.workspace).unwrap();
+    }
+
+    #[test]
+    fn orphaned_turn_recovery_is_idempotent_after_receipt_before_state_crash() {
+        let mut config = config();
+        config.workspace = std::env::temp_dir().join(format!(
+            "astrid-edge-idempotent-recovery-{}",
+            super::unix_millis()
+        ));
+        config.prepare_workspace().unwrap();
+        let trace = canonical_trace();
+        persist_state(
+            &config,
+            &AutonomyState {
+                schema: AUTONOMY_SCHEMA.to_string(),
+                last_started_at_unix_ms: Some(123),
+                last_status: Some("running".to_string()),
+                last_trace: Some(trace.clone()),
+                ..AutonomyState::default()
+            },
+        )
+        .unwrap();
+        fs::write(
+            config.workspace.join("autonomous/recoveries.jsonl"),
+            format!(
+                "{}\n",
+                serde_json::json!({
+                    "schema": "astrid_edge_transport_recovery_v2",
+                    "started_at_unix_ms": 123,
+                    "completed_at_unix_ms": 456,
+                    "reason": "interrupted_by_restart",
+                    "status": "interrupted",
+                    "trace": trace,
+                    "authority": "local_transport_liveness_recovery_only",
+                })
+            ),
+        )
+        .unwrap();
+
+        let state = initialize_autonomy_state(&config).unwrap();
+        assert_eq!(state.last_status.as_deref(), Some("interrupted_by_restart"));
+        assert_eq!(
+            fs::read_to_string(config.workspace.join("autonomous/recoveries.jsonl"))
+                .unwrap()
+                .lines()
+                .count(),
+            1
+        );
+
+        fs::remove_dir_all(config.workspace).unwrap();
+    }
+
+    #[tokio::test]
+    async fn chain_state_failure_suppresses_receipt_continuity_and_follow_up() {
+        let mut config = config();
+        config.workspace = std::env::temp_dir().join(format!(
+            "astrid-edge-chain-state-failure-{}",
+            super::unix_millis()
+        ));
+        config.prepare_workspace().unwrap();
+        fs::create_dir(config.workspace.join("autonomous/state.json")).unwrap();
+        let mut state = AutonomyState::default();
+        let (ingress_tx, mut ingress_rx) = mpsc::channel(1);
+        let result = process_action_outcome(
+            &config,
+            &mut state,
+            &outcome("SELF_STUDY spectral stability", 'f'),
+            &ingress_tx,
+        )
+        .await;
+
+        assert!(result.is_err());
+        assert!(state.last_action_response_sha256.is_none());
+        assert!(!state.chain_follow_up_pending);
+        assert!(!config.workspace.join("autonomous/chains.jsonl").exists());
+        assert!(ingress_rx.try_recv().is_err());
+
+        fs::remove_dir_all(config.workspace).unwrap();
+    }
+
+    #[tokio::test]
+    async fn preflight_state_failure_prevents_inference_and_trace_registration() {
+        let mut config = config();
+        config.workspace = std::env::temp_dir().join(format!(
+            "astrid-edge-preflight-state-failure-{}",
+            super::unix_millis()
+        ));
+        config.prepare_workspace().unwrap();
+        fs::create_dir(config.workspace.join("autonomous/state.json")).unwrap();
+        let mut state = AutonomyState::default();
+        let (action_tx, mut action_rx) = mpsc::channel(1);
+        let registry = AutonomyTraceRegistry::default();
+        let result = execute_due_turn(
+            &config,
+            &ReservoirSnapshot::default(),
+            &mut state,
+            None,
+            &action_tx,
+            &registry,
+        )
+        .await;
+
+        assert!(result.is_err());
+        assert_eq!(state.total_attempts, 0);
+        assert!(state.last_trace.is_none());
+        assert!(action_rx.try_recv().is_err());
+        assert!(!config.workspace.join("autonomous/runs.jsonl").exists());
+
+        fs::remove_dir_all(config.workspace).unwrap();
+    }
+
+    #[test]
+    fn canonical_headless_receipt_must_match_requested_trace_and_identity() {
+        let requested = IpcTraceContextV1::root(
+            Uuid::new_v4(),
+            "edge-session".to_string(),
+            Some("chain-a".to_string()),
+        );
+        let canonical = IpcTraceContextV1::root(
+            requested.trace_id,
+            "edge-session".to_string(),
+            Some("chain-a".to_string()),
+        );
+        let stderr = format!(
+            "provider_prompt_tokens=10\n{}{}\n",
+            super::HEADLESS_TRACE_RECEIPT_PREFIX,
+            serde_json::to_string(&canonical).unwrap()
+        );
+        assert_eq!(
+            parse_headless_trace_receipt(&stderr, &requested).unwrap(),
+            canonical
+        );
+
+        let wrong_session = IpcTraceContextV1::root(
+            requested.trace_id,
+            "other-session".to_string(),
+            Some("chain-a".to_string()),
+        );
+        let stderr = format!(
+            "{}{}",
+            super::HEADLESS_TRACE_RECEIPT_PREFIX,
+            serde_json::to_string(&wrong_session).unwrap()
+        );
+        assert!(parse_headless_trace_receipt(&stderr, &requested).is_err());
+
+        let provenance = format!(
+            "{}\"model_authored\"\n",
+            super::HEADLESS_PROVENANCE_RECEIPT_PREFIX
+        );
+        assert_eq!(
+            parse_headless_provenance_receipt(&provenance).unwrap(),
+            HeadlessResponseProvenance::ExactModel
+        );
+        assert!(parse_headless_provenance_receipt("").is_err());
+        assert!(parse_headless_provenance_receipt(&format!("{provenance}{provenance}")).is_err());
+    }
+
+    #[test]
+    fn headless_idle_deadline_precedes_the_outer_supervisor_and_is_transport_recovery() {
+        assert_eq!(supervised_headless_idle_timeout_seconds(720), 690);
+        assert_eq!(supervised_headless_idle_timeout_seconds(60), 30);
+        assert!(headless_exit_is_transport_recovery(Some(53)));
+        assert!(!headless_exit_is_transport_recovery(Some(1)));
+        assert!(!headless_exit_is_transport_recovery(None));
+    }
+
+    #[test]
     fn provider_metrics_are_structured_only_when_exposed() {
         let metrics = parse_provider_metrics(
             "provider_prompt_tokens=842 provider_completion_tokens=96 \
@@ -3440,18 +4824,175 @@ mod tests {
             session_id: "human-session".to_string(),
             response_sha256: digest_character.to_string().repeat(64),
             declared_next: Some(declared_next.to_string()),
-            decision_source: "astrid_declared",
+            decision_source: "astrid_declared".to_string(),
             status: if matches!(declared_next, "LISTEN" | "REST") {
-                "honored"
+                "honored".to_string()
             } else {
-                "executed"
+                "executed".to_string()
             },
-            outcome: "test_outcome",
+            outcome: "test_outcome".to_string(),
             recovery_reason: None,
             unexecuted_intention: None,
             validation_reason: None,
             trace: None,
         }
+    }
+
+    fn write_completed_action_transaction(
+        config: &Config,
+        dispatch_trace: &IpcTraceContextV1,
+        outcome: &ActionOutcome,
+    ) {
+        let turn_id = dispatch_trace.turn_id.unwrap();
+        let dispatches = ["requested", "completed"]
+            .into_iter()
+            .map(|phase| {
+                serde_json::json!({
+                    "schema": "astrid_edge_action_dispatch_v1",
+                    "phase": phase,
+                    "recorded_at_unix_ms": outcome.recorded_at_unix_ms,
+                    "turn_id": turn_id,
+                    "response_sha256": outcome.response_sha256,
+                    "trace": dispatch_trace,
+                    "authority": "executor_idempotency_record_not_astrid_authorship",
+                })
+                .to_string()
+            })
+            .collect::<Vec<_>>()
+            .join("\n");
+        fs::write(
+            config.workspace.join("actions/dispatches.jsonl"),
+            format!("{dispatches}\n"),
+        )
+        .unwrap();
+        fs::write(
+            config.workspace.join("actions/receipts.jsonl"),
+            format!(
+                "{}\n",
+                serde_json::json!({
+                    "schema": "astrid_edge_action_receipt_v4",
+                    "recorded_at_unix_ms": outcome.recorded_at_unix_ms,
+                    "session_id": outcome.session_id,
+                    "response_sha256": outcome.response_sha256,
+                    "declared_next": outcome.declared_next,
+                    "decision_source": outcome.decision_source,
+                    "status": outcome.status,
+                    "outcome": outcome.outcome,
+                    "recovery_reason": outcome.recovery_reason,
+                    "unexecuted_intention": outcome.unexecuted_intention,
+                    "validation_reason": outcome.validation_reason,
+                    "trace": outcome.trace,
+                    "authority": "validated_model_next_with_optional_syntax_only_repair_owned_workspace_only",
+                })
+            ),
+        )
+        .unwrap();
+    }
+
+    fn pending_state_for_action(
+        dispatch_trace: &IpcTraceContextV1,
+        outcome: &ActionOutcome,
+    ) -> AutonomyState {
+        AutonomyState {
+            schema: AUTONOMY_SCHEMA.to_string(),
+            action_dispatch_pending: true,
+            pending_action_response_sha256: Some(outcome.response_sha256.clone()),
+            pending_action_trace: Some(dispatch_trace.clone()),
+            pending_action_session_id: Some(outcome.session_id.clone()),
+            pending_action_response_provenance: Some(HeadlessResponseProvenance::ExactModel),
+            ..AutonomyState::default()
+        }
+    }
+
+    #[test]
+    fn completed_action_recovery_preserves_rest_and_stateful_pacing() {
+        for (declaration, expected_transition, expected_delay_minutes) in [
+            ("REST", "extended_after_rest", 30_u64),
+            (
+                "JOURNAL retain this recovered thread",
+                "follow_up_scheduled",
+                5_u64,
+            ),
+        ] {
+            let mut config = config();
+            config.workspace = std::env::temp_dir().join(format!(
+                "astrid-edge-completed-action-recovery-{}-{}",
+                declaration.split_whitespace().next().unwrap(),
+                Uuid::new_v4()
+            ));
+            config.prepare_workspace().unwrap();
+            let dispatch_trace = IpcTraceContextV1::root(
+                Uuid::new_v4(),
+                "recovered-action-session".to_string(),
+                None,
+            );
+            let mut recovered = outcome(declaration, 'd');
+            recovered.session_id = "recovered-action-session".to_string();
+            recovered.recorded_at_unix_ms = super::unix_millis();
+            recovered.trace = Some(dispatch_trace.child());
+            write_completed_action_transaction(&config, &dispatch_trace, &recovered);
+            persist_state(
+                &config,
+                &pending_state_for_action(&dispatch_trace, &recovered),
+            )
+            .unwrap();
+
+            let before = super::unix_millis();
+            let state = initialize_autonomy_state(&config).unwrap();
+            let after = super::unix_millis();
+            assert!(!state.action_dispatch_pending);
+            assert!(state.thread_projection_pending.is_none());
+            assert!(state.operator_pause_reason.is_none());
+            assert_eq!(
+                state.last_chain_transition.as_deref(),
+                Some(expected_transition)
+            );
+            let minimum = before.saturating_add(expected_delay_minutes * 60_000);
+            let maximum = after
+                .saturating_add(expected_delay_minutes * 60_000)
+                .saturating_add(1_000);
+            assert!(state.next_due_at_unix_ms >= minimum);
+            assert!(state.next_due_at_unix_ms <= maximum);
+            if declaration.starts_with("JOURNAL") {
+                assert!(state.chain_follow_up_pending);
+                let thread = load_thread_state_checked(&config).unwrap();
+                assert_eq!(thread.last_action.as_deref(), Some(declaration));
+            } else {
+                assert!(!state.chain_follow_up_pending);
+            }
+            fs::remove_dir_all(config.workspace).unwrap();
+        }
+    }
+
+    #[test]
+    fn thread_projection_recovery_is_idempotent_after_state_before_ack_crash() {
+        let mut config = config();
+        config.workspace = std::env::temp_dir().join(format!(
+            "astrid-edge-thread-projection-recovery-{}",
+            Uuid::new_v4()
+        ));
+        config.prepare_workspace().unwrap();
+        let projected = outcome("JOURNAL persist me once", 'e');
+        update_thread_state(&config, &AutonomyState::default(), &projected)
+            .unwrap()
+            .unwrap();
+        let mut state = AutonomyState {
+            schema: AUTONOMY_SCHEMA.to_string(),
+            thread_projection_pending: Some(projected),
+            ..AutonomyState::default()
+        };
+        persist_state(&config, &state).unwrap();
+
+        state = initialize_autonomy_state(&config).unwrap();
+        assert!(state.thread_projection_pending.is_none());
+        assert_eq!(
+            fs::read_to_string(config.workspace.join("autonomous/thread_state.jsonl"))
+                .unwrap()
+                .lines()
+                .count(),
+            1
+        );
+        fs::remove_dir_all(config.workspace).unwrap();
     }
 
     #[test]
@@ -3584,7 +5125,9 @@ mod tests {
             ..AutonomyState::default()
         };
         let research = outcome("RESEARCH an unresolved reservoir question", 'a');
-        let summary = update_thread_state(&config, &state, &research).unwrap();
+        let summary = update_thread_state(&config, &state, &research)
+            .unwrap()
+            .unwrap();
         assert!(summary.contains("chain-thread-test"));
         let persisted = load_thread_state(&config);
         assert_eq!(persisted.status, "active");
@@ -3600,14 +5143,14 @@ mod tests {
         assert_eq!(persisted.evidence.len(), 0);
 
         let journal = outcome("JOURNAL first local observation", 'c');
-        update_thread_state(&config, &state, &journal);
+        update_thread_state(&config, &state, &journal).unwrap();
         let enriched = load_thread_state(&config);
         assert_eq!(enriched.authored_claims, vec!["first local observation"]);
         assert!(enriched.findings.is_empty());
         assert_eq!(enriched.open_questions.len(), 1);
 
         let proposal = outcome("PROPOSE the reservoir preserves distinct threads", 'd');
-        update_thread_state(&config, &state, &proposal);
+        update_thread_state(&config, &state, &proposal).unwrap();
         assert_eq!(
             load_thread_state(&config).hypothesis.as_deref(),
             Some("the reservoir preserves distinct threads")
@@ -3616,14 +5159,14 @@ mod tests {
         let listen = outcome("LISTEN", 'b');
         state.active_chain_id = None;
         state.last_chain_transition = Some("closed_by_listen".to_string());
-        update_thread_state(&config, &state, &listen);
+        update_thread_state(&config, &state, &listen).unwrap();
         let paused = load_thread_state(&config);
         assert_eq!(paused.status, "paused");
         assert_eq!(paused.last_action.as_deref(), Some("LISTEN"));
         let thread_id = paused.thread_id.clone();
         state.active_chain_id = Some("a-later-execution-chain".to_string());
         let resumed = outcome("MEASURE whether the rhythm matches scheduler cadence", 'e');
-        update_thread_state(&config, &state, &resumed);
+        update_thread_state(&config, &state, &resumed).unwrap();
         let resumed = load_thread_state(&config);
         assert_eq!(resumed.thread_id, thread_id);
         assert_eq!(resumed.status, "active");
@@ -3672,8 +5215,12 @@ mod tests {
         assert!(prompt.chars().count() <= MAX_COMPACT_PROMPT_CHARS);
 
         let mut fallback = outcome("LISTEN", 'c');
-        fallback.decision_source = "local_safe_fallback";
-        assert!(update_thread_state(&config, &AutonomyState::default(), &fallback).is_none());
+        fallback.decision_source = "local_safe_fallback".to_string();
+        assert!(
+            update_thread_state(&config, &AutonomyState::default(), &fallback)
+                .unwrap()
+                .is_none()
+        );
         assert!(
             !config
                 .workspace
@@ -3764,6 +5311,7 @@ mod tests {
     }
 
     #[test]
+    #[allow(clippy::too_many_lines)] // Complete causal fixture is clearer in one regression.
     fn spectral_continuation_and_thread_evidence_require_exact_hash_and_trace() {
         let mut config = config();
         config.workspace = std::env::temp_dir().join(format!(
@@ -3783,6 +5331,7 @@ mod tests {
             "status": "executed",
             "outcome": "self_study_written",
             "declared_next": "SELF_STUDY spectral: what changed?",
+            "session_id": "spectral-session",
             "response_sha256": response_sha256,
             "trace": trace,
         });
@@ -3795,7 +5344,14 @@ mod tests {
         fs::write(
             config.workspace.join("spectral/receipts.jsonl"),
             format!(
-                "{}\n",
+                "{}\n{}\n",
+                serde_json::json!({
+                    "schema": "astrid_edge_spectral_receipt_v1",
+                    "phase": "requested",
+                    "call_id": "edge-spectral-exact",
+                    "parent_response_sha256": response_sha256,
+                    "trace": completed_trace.clone(),
+                }),
                 serde_json::json!({
                     "schema": "astrid_edge_spectral_receipt_v1",
                     "phase": "completed",
@@ -3836,7 +5392,8 @@ mod tests {
         assert!(continuation.contains("not your authorship"));
 
         let mut action_outcome = outcome("SELF_STUDY spectral: what changed?", 'c');
-        action_outcome.outcome = "self_study_written";
+        action_outcome.session_id = "spectral-session".to_string();
+        action_outcome.outcome = "self_study_written".to_string();
         action_outcome.trace = Some(trace.clone());
         update_thread_state(&config, &AutonomyState::default(), &action_outcome).unwrap();
         let thread = load_thread_state(&config);
@@ -3850,10 +5407,14 @@ mod tests {
         assert!(spectral.summary.contains("mode_turnover mean=0.0800"));
 
         let mut fallback = action_outcome.clone();
-        fallback.decision_source = "local_safe_fallback";
-        fallback.status = "repaired";
-        fallback.recovery_reason = Some("provider_timeout");
-        assert!(update_thread_state(&config, &AutonomyState::default(), &fallback).is_none());
+        fallback.decision_source = "local_safe_fallback".to_string();
+        fallback.status = "repaired".to_string();
+        fallback.recovery_reason = Some("provider_timeout".to_string());
+        assert!(
+            update_thread_state(&config, &AutonomyState::default(), &fallback)
+                .unwrap()
+                .is_none()
+        );
         assert_eq!(
             load_thread_state(&config).evidence_records.len(),
             thread.evidence_records.len()
@@ -4090,26 +5651,58 @@ mod tests {
         ));
         fs::create_dir_all(config.workspace.join("actions")).unwrap();
         fs::create_dir_all(config.workspace.join("web")).unwrap();
+        let action_trace = IpcTraceContextV1::root(
+            Uuid::new_v4(),
+            "research-session".to_string(),
+            Some("research-chain".to_string()),
+        );
+        let request_trace = action_trace.child();
         fs::write(
             config.workspace.join("actions/receipts.jsonl"),
-            "{\"decision_source\":\"astrid_declared\",\"status\":\"executed\",\
-             \"declared_next\":\"RESEARCH current CPU reservoir literature\",\
-             \"outcome\":\"research_question_written\",\
-             \"response_sha256\":\"exact-parent-hash\",\
-             \"artifact_path\":\"home://edge/research/research_1.md\"}\n",
+            format!(
+                "{}\n",
+                serde_json::json!({
+                    "decision_source": "astrid_declared",
+                    "status": "executed",
+                    "declared_next": "RESEARCH current CPU reservoir literature",
+                    "outcome": "research_question_written",
+                    "response_sha256": "exact-parent-hash",
+                    "artifact_path": "home://edge/research/research_1.md",
+                    "session_id": "research-session",
+                    "trace": action_trace,
+                })
+            ),
         )
         .unwrap();
         fs::write(
             config.workspace.join("web/receipts.jsonl"),
-            "{\"phase\":\"completed\",\"tool_name\":\"search_web\",\"status\":\"success\",\
-             \"parent_response_sha256\":\"exact-parent-hash\",\
-             \"arguments\":{\"query\":\"current CPU reservoir literature\",\"count\":5},\
-             \"result_summary\":{\"results\":[{\"title\":\"A bounded result\",\
-             \"url\":\"https://example.com/paper\"}]}}\n\
-             {\"phase\":\"completed\",\"tool_name\":\"search_web\",\"status\":\"success\",\
-             \"parent_response_sha256\":\"unrelated-harness-parent\",\
-             \"arguments\":{\"query\":\"unrelated later search\",\"count\":5},\
-             \"result_summary\":{\"results\":[]}}\n",
+            format!(
+                "{}\n{}\n",
+                serde_json::json!({
+                    "schema": "astrid_edge_web_tool_receipt_v2",
+                    "phase": "requested",
+                    "call_id": "exact-search",
+                    "parent_response_sha256": "exact-parent-hash",
+                    "trace": request_trace.clone(),
+                }),
+                serde_json::json!({
+                    "schema": "astrid_edge_web_tool_receipt_v2",
+                    "phase": "completed",
+                    "call_id": "exact-search",
+                    "tool_name": "search_web",
+                    "status": "success",
+                    "parent_response_sha256": "exact-parent-hash",
+                    "arguments": {
+                        "query": "current CPU reservoir literature",
+                        "count": 5
+                    },
+                    "trace": request_trace,
+                    "result_summary": {"results": [{
+                        "title": "A bounded result",
+                        "url": "https://example.com/paper"
+                    }]}
+                })
+            ),
         )
         .unwrap();
         let prompt = build_prompt(
@@ -4127,6 +5720,89 @@ mod tests {
             prompt.find("Search evidence").unwrap() < prompt.find("Verified continuity").unwrap()
         );
         fs::remove_dir_all(config.workspace).unwrap();
+    }
+
+    #[test]
+    fn tool_evidence_rejects_same_hash_from_a_foreign_causal_trace() {
+        let workspace = std::env::temp_dir().join(format!(
+            "astrid-edge-foreign-tool-evidence-{}",
+            Uuid::new_v4()
+        ));
+        fs::create_dir_all(&workspace).unwrap();
+        let response_sha256 = "f".repeat(64);
+        let action_trace = IpcTraceContextV1::root(
+            Uuid::new_v4(),
+            "owned-session".to_string(),
+            Some("owned-chain".to_string()),
+        );
+        let foreign_trace = IpcTraceContextV1::root(
+            Uuid::new_v4(),
+            "foreign-session".to_string(),
+            Some("foreign-chain".to_string()),
+        );
+        let action = serde_json::json!({
+            "response_sha256": response_sha256,
+            "session_id": "owned-session",
+            "trace": action_trace.clone(),
+        });
+        for (filename, schema) in [
+            ("web.jsonl", "astrid_edge_web_tool_receipt_v2"),
+            (
+                "introspection.jsonl",
+                "astrid_edge_introspection_receipt_v1",
+            ),
+        ] {
+            let owned_request = action_trace.child();
+            let foreign_request = foreign_trace.child();
+            let requested = |call_id: &str, trace: &IpcTraceContextV1| {
+                serde_json::json!({
+                    "schema": schema,
+                    "phase": "requested",
+                    "call_id": call_id,
+                    "parent_response_sha256": response_sha256,
+                    "trace": trace,
+                })
+            };
+            let completed = |call_id: &str, trace: &IpcTraceContextV1| {
+                serde_json::json!({
+                    "schema": schema,
+                    "phase": "completed",
+                    "call_id": call_id,
+                    "parent_response_sha256": response_sha256,
+                    "trace": trace,
+                })
+            };
+            let path = workspace.join(filename);
+            fs::write(
+                &path,
+                format!(
+                    "{}\n{}\n{}\n{}\n",
+                    requested("owned-call", &owned_request),
+                    completed("owned-call", &owned_request),
+                    requested("foreign-call", &foreign_request),
+                    completed("foreign-call", &foreign_request),
+                ),
+            )
+            .unwrap();
+            assert_eq!(
+                matching_completed_tool_receipt(&path, &action, schema)
+                    .unwrap()
+                    .get("call_id")
+                    .and_then(serde_json::Value::as_str),
+                Some("owned-call")
+            );
+            fs::write(
+                &path,
+                format!(
+                    "{}\n{}\n",
+                    requested("foreign-call", &foreign_request),
+                    completed("foreign-call", &foreign_request),
+                ),
+            )
+            .unwrap();
+            assert!(matching_completed_tool_receipt(&path, &action, schema).is_none());
+        }
+        fs::remove_dir_all(workspace).unwrap();
     }
 
     #[test]
@@ -4204,6 +5880,8 @@ mod tests {
             Ok(TurnResult {
                 response: "A grounded local observation.\nNEXT: LISTEN".to_string(),
                 stderr: "connected".to_string(),
+                canonical_trace: canonical_trace(),
+                response_provenance: HeadlessResponseProvenance::ExactModel,
             }),
             "scheduled_self_directed_turn",
             1,
@@ -4211,7 +5889,7 @@ mod tests {
         );
         let journal_path = authored.journal_path.unwrap();
         let journal = fs::read_to_string(config.workspace.join(journal_path)).unwrap();
-        assert!(journal.contains("genuinely model-authored scheduled response"));
+        assert!(journal.contains("exact model-authored scheduled response"));
         assert!(journal.contains("A grounded local observation."));
 
         let recovery = finish_turn_result(
@@ -4224,6 +5902,8 @@ mod tests {
                     to LISTEN.]\nNEXT: LISTEN"
                     .to_string(),
                 stderr: "timeout".to_string(),
+                canonical_trace: canonical_trace(),
+                response_provenance: HeadlessResponseProvenance::WithLocalSafeFallback,
             }),
             "scheduled_self_directed_turn",
             3,
@@ -4260,6 +5940,8 @@ mod tests {
                     to LISTEN.]\nNEXT: LISTEN"
                     .to_string(),
                 stderr: "connected".to_string(),
+                canonical_trace: canonical_trace(),
+                response_provenance: HeadlessResponseProvenance::WithLocalSafeFallback,
             }),
             "scheduled_self_directed_turn",
             10,
@@ -4287,6 +5969,68 @@ mod tests {
     }
 
     #[test]
+    fn formatting_repair_is_dispatchable_but_excluded_from_authored_continuity() {
+        let mut config = config();
+        config.workspace = std::env::temp_dir().join(format!(
+            "astrid-edge-format-repair-authorship-{}",
+            super::unix_millis()
+        ));
+        config.prepare_workspace().unwrap();
+        let mut state = AutonomyState::default();
+        let marker = "[Local contract formatting repair: preserved one unambiguous model-authored terminal action.]";
+        let response = format!("A model-authored observation.\n\n{marker}\nNEXT: JOURNAL bounded");
+        let completion = finish_turn_result(
+            &config,
+            &ReservoirSnapshot::default(),
+            &mut state,
+            Ok(TurnResult {
+                response: response.clone(),
+                stderr: "connected".to_string(),
+                canonical_trace: canonical_trace(),
+                response_provenance: HeadlessResponseProvenance::WithLocalFormatRepair,
+            }),
+            "scheduled_self_directed_turn",
+            21,
+            22,
+        );
+        assert_eq!(completion.status, "authored_completed");
+        assert_eq!(
+            completion.authored_response.as_deref(),
+            Some(response.as_str())
+        );
+
+        let journal =
+            fs::read_to_string(config.workspace.join(completion.journal_path.unwrap())).unwrap();
+        assert!(journal.contains("formatting-only executor repair excluded"));
+        assert!(journal.contains("A model-authored observation."));
+        assert!(!journal.contains(marker));
+        assert!(!journal.contains("NEXT: JOURNAL bounded"));
+        assert_eq!(
+            last_authored_response_excerpt(&config, &state).as_deref(),
+            Some("A model-authored observation.")
+        );
+
+        let mut contradicted = AutonomyState::default();
+        let rejected = finish_turn_result(
+            &config,
+            &ReservoirSnapshot::default(),
+            &mut contradicted,
+            Ok(TurnResult {
+                response,
+                stderr: String::new(),
+                canonical_trace: canonical_trace(),
+                response_provenance: HeadlessResponseProvenance::ExactModel,
+            }),
+            "scheduled_self_directed_turn",
+            23,
+            24,
+        );
+        assert_eq!(rejected.status, "failed");
+        assert_eq!(contradicted.authored_turns_today, 0);
+        fs::remove_dir_all(config.workspace).unwrap();
+    }
+
+    #[test]
     fn executor_only_safe_fallback_is_not_an_authored_turn() {
         let mut config = config();
         config.workspace = std::env::temp_dir().join(format!(
@@ -4304,6 +6048,8 @@ mod tests {
                     safely to LISTEN.]\nNEXT: LISTEN"
                     .to_string(),
                 stderr: String::new(),
+                canonical_trace: canonical_trace(),
+                response_provenance: HeadlessResponseProvenance::WithLocalSafeFallback,
             }),
             "scheduled_self_directed_turn",
             30,
@@ -4570,9 +6316,9 @@ mod tests {
             apply_action_outcome(&config, &mut state, &outcome("SELF_STUDY echoes", 'f')).unwrap();
         let chain_id = first.chain_id.unwrap();
         let mut timeout = outcome("LISTEN", '0');
-        timeout.decision_source = "local_safe_fallback";
-        timeout.status = "repaired";
-        timeout.recovery_reason = Some("react_streaming_timeout");
+        timeout.decision_source = "local_safe_fallback".to_string();
+        timeout.status = "repaired".to_string();
+        timeout.recovery_reason = Some("react_streaming_timeout".to_string());
 
         let retry = apply_action_outcome(&config, &mut state, &timeout).unwrap();
         assert_eq!(retry.chain_id.as_deref(), Some(chain_id.as_str()));
@@ -4588,10 +6334,10 @@ mod tests {
         let config = config();
         let mut state = AutonomyState::default();
         let mut malformed = outcome("LISTEN", '1');
-        malformed.decision_source = "local_safe_fallback";
-        malformed.status = "repaired";
+        malformed.decision_source = "local_safe_fallback".to_string();
+        malformed.status = "repaired".to_string();
         malformed.unexecuted_intention = Some("PROPOSE".to_string());
-        malformed.validation_reason = Some("missing_action_argument");
+        malformed.validation_reason = Some("missing_action_argument".to_string());
 
         let first = apply_action_outcome(&config, &mut state, &malformed).unwrap();
         assert_eq!(first.transition, "action_validation_retry_scheduled");

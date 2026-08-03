@@ -11,13 +11,19 @@ file = "astrid_capsule_edge_spectral.wasm"
 type = "executable"
 capabilities = { fs_read = [
     "home://edge/runtime/spectral_state.json",
-    "home://edge/spectral/recent_rollups.jsonl",
+    "home://edge/spectral/recent_rollups.current.jsonl",
+    "home://edge/spectral/recent_rollups.previous.jsonl",
+    "home://edge/spectral/activity_receipts.current.jsonl",
+    "home://edge/spectral/activity_receipts.previous.jsonl",
 ] }
 
 [capabilities]
 fs_read = [
     "home://edge/runtime/spectral_state.json",
-    "home://edge/spectral/recent_rollups.jsonl",
+    "home://edge/spectral/recent_rollups.current.jsonl",
+    "home://edge/spectral/recent_rollups.previous.jsonl",
+    "home://edge/spectral/activity_receipts.current.jsonl",
+    "home://edge/spectral/activity_receipts.previous.jsonl",
 ]
 ipc_publish = ["tool.v1.execute.*.result", "tool.v1.response.describe.*"]
 ipc_subscribe = [

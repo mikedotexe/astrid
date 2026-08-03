@@ -89,8 +89,9 @@ async fn main() -> Result<()> {
     let (human_activity_tx, human_activity_rx) = watch::channel(0_u64);
     let (notebook_activity_tx, _) = broadcast::channel::<notebook::ActivityEvent>(128);
     let study_manager = Arc::new(std::sync::Mutex::new(inquiry::StudyManager::load(&config)));
+    let autonomy_trace_registry = Arc::new(trace::AutonomyTraceRegistry::default());
 
-    let reservoir_task = tokio::spawn(reservoir::run(
+    let mut reservoir_task = tokio::spawn(reservoir::run(
         Arc::clone(&config),
         ingress_rx,
         reservoir_command_rx,
@@ -107,11 +108,12 @@ async fn main() -> Result<()> {
     let ipc_task = tokio::spawn(ipc::run(
         Arc::clone(&config),
         ingress_tx.clone(),
-        action_tx,
+        action_tx.clone(),
         human_activity_tx,
         notebook_activity_tx.clone(),
+        Arc::clone(&autonomy_trace_registry),
     ));
-    let action_task = tokio::spawn(actions::run(
+    let mut action_task = tokio::spawn(actions::run(
         Arc::clone(&config),
         action_rx,
         snapshot_rx.clone(),
@@ -121,7 +123,7 @@ async fn main() -> Result<()> {
         Arc::clone(&study_manager),
         tuning_tx,
     ));
-    let tuning_task = tokio::spawn(tuning::run(
+    let mut tuning_task = tokio::spawn(tuning::run(
         Arc::clone(&config),
         tuning_rx,
         reservoir_command_tx,
@@ -146,20 +148,22 @@ async fn main() -> Result<()> {
             ingress_tx.clone(),
         ))
     });
-    let spectral_task = config.spectral_enabled.then(|| {
+    let mut spectral_task = config.spectral_enabled.then(|| {
         tokio::spawn(spectral::run(
             Arc::clone(&config),
             snapshot_rx.clone(),
             notebook_activity_tx.subscribe(),
         ))
     });
-    let autonomy_task = config.autonomy_enabled.then(|| {
+    let mut autonomy_task = config.autonomy_enabled.then(|| {
         tokio::spawn(autonomy::run(
             Arc::clone(&config),
             snapshot_rx.clone(),
             human_activity_rx,
             ingress_tx.clone(),
             action_outcome_rx,
+            action_tx,
+            autonomy_trace_registry,
         ))
     });
 
@@ -171,8 +175,32 @@ async fn main() -> Result<()> {
         config.autonomy_enabled,
     );
 
-    tokio::signal::ctrl_c().await?;
-    eprintln!("astrid-edge-runtime shutting down");
+    let critical_exit = tokio::select! {
+        signal = tokio::signal::ctrl_c() => {
+            signal?;
+            None
+        },
+        result = &mut reservoir_task => {
+            Some(critical_task_exit("reservoir", result))
+        },
+        result = &mut tuning_task => {
+            Some(critical_task_exit("tuning manager", result))
+        },
+        result = &mut action_task => {
+            Some(critical_task_exit("Action executor", result))
+        },
+        result = optional_task_exit(&mut spectral_task) => {
+            Some(critical_task_exit("spectral observer", result))
+        },
+        result = optional_task_exit(&mut autonomy_task) => {
+            Some(critical_task_exit("autonomy scheduler", result))
+        },
+    };
+    if let Some(error) = critical_exit.as_ref() {
+        eprintln!("astrid-edge-runtime critical task failed: {error}");
+    } else {
+        eprintln!("astrid-edge-runtime shutting down");
+    }
 
     let mut tasks = vec![
         reservoir_task,
@@ -198,5 +226,24 @@ async fn main() -> Result<()> {
     for task in tasks {
         task.abort();
     }
-    Ok(())
+    critical_exit.map_or(Ok(()), Err)
+}
+
+fn critical_task_exit(
+    task: &'static str,
+    result: std::result::Result<(), tokio::task::JoinError>,
+) -> anyhow::Error {
+    match result {
+        Ok(()) => anyhow::anyhow!("critical {task} task exited unexpectedly"),
+        Err(error) => anyhow::anyhow!("critical {task} task failed: {error}"),
+    }
+}
+
+async fn optional_task_exit(
+    task: &mut Option<tokio::task::JoinHandle<()>>,
+) -> std::result::Result<(), tokio::task::JoinError> {
+    match task {
+        Some(task) => task.await,
+        None => std::future::pending().await,
+    }
 }

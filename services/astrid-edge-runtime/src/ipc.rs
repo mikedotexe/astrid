@@ -7,7 +7,7 @@
 
 use std::{
     collections::{HashMap, HashSet},
-    fs::OpenOptions,
+    fs::{self, OpenOptions},
     io::{BufRead as _, BufReader, Write as _},
     os::unix::fs::OpenOptionsExt as _,
     path::Path,
@@ -37,7 +37,10 @@ use crate::{
     config::Config,
     notebook::ActivityEvent,
     reservoir::SensoryIngress,
-    trace::{IpcTraceContextV1, message_trace},
+    trace::{
+        AutonomyTraceMatch, AutonomyTraceRegistry, IpcTraceContextV1, message_producer,
+        message_trace,
+    },
 };
 
 const MAX_FRAME_SIZE: usize = 50 * 1024 * 1024;
@@ -50,6 +53,8 @@ const SPECTRAL_TIMEOUT: Duration = Duration::from_secs(120);
 const SOURCE_FETCH_TIMEOUT: Duration = Duration::from_secs(120);
 const SOURCE_FETCH_MAX_CHARS: u64 = 64 * 1_024;
 const EDGE_EXECUTOR_SOURCE_ID: &str = "a57d1d30-0000-4000-8000-000000000001";
+const CANONICAL_AGENT_RESPONSE_TOPIC: &str = "agent.v1.response";
+const REACT_CAPSULE_ID: &str = "astrid-capsule-react";
 const OPERATOR_INQUIRY_SESSION_SEED: &[u8] = b"edge-operator-inquiry-harness-v1";
 static WEB_CALL_SEQUENCE: AtomicU64 = AtomicU64::new(1);
 static INTROSPECTION_CALL_SEQUENCE: AtomicU64 = AtomicU64::new(1);
@@ -1099,6 +1104,7 @@ pub async fn run(
     action_tx: mpsc::Sender<ActionCandidate>,
     human_activity_tx: watch::Sender<u64>,
     activity_tx: broadcast::Sender<ActivityEvent>,
+    autonomy_trace_registry: Arc<AutonomyTraceRegistry>,
 ) {
     let mut backoff = Duration::from_secs(1);
     loop {
@@ -1108,6 +1114,7 @@ pub async fn run(
             &action_tx,
             &human_activity_tx,
             &activity_tx,
+            &autonomy_trace_registry,
         )
         .await
         {
@@ -1129,6 +1136,7 @@ async fn observe_once(
     action_tx: &mpsc::Sender<ActionCandidate>,
     human_activity_tx: &watch::Sender<u64>,
     activity_tx: &broadcast::Sender<ActivityEvent>,
+    autonomy_trace_registry: &AutonomyTraceRegistry,
 ) -> Result<()> {
     let mut stream = UnixStream::connect(&config.astrid_socket)
         .await
@@ -1161,12 +1169,33 @@ async fn observe_once(
                 }
             },
             Some("agent_response") => {
+                if !is_kernel_attested_react_response(&message) {
+                    eprintln!(
+                        "ignored agent_response with incoherent topic or unattested producer"
+                    );
+                    continue;
+                }
                 let text = payload.get("text").and_then(Value::as_str).unwrap_or("");
                 let is_final = payload
                     .get("is_final")
                     .and_then(Value::as_bool)
                     .unwrap_or(false);
-                if is_final && !terminal_agent_response_is_current(config, &message, text) {
+                let response_provenance = agent_response_provenance(payload);
+                if is_final && !response_provenance.may_enter_authored_paths() {
+                    eprintln!(
+                        "excluded non-authored terminal agent response with provenance {}",
+                        response_provenance.label()
+                    );
+                    continue;
+                }
+                if is_final
+                    && !terminal_agent_response_is_current(
+                        config,
+                        autonomy_trace_registry,
+                        &message,
+                        text,
+                    )
+                {
                     eprintln!(
                         "ignored stale autonomous terminal response: interrupted, recovered, or already consumed"
                     );
@@ -1195,7 +1224,20 @@ async fn observe_once(
                         .await
                         .map_err(|_| anyhow::anyhow!("reservoir ingress closed"))?;
                 }
-                if is_final {
+                // Autonomous output is admitted to the Action executor only by
+                // the scheduler after it has durably classified the turn as
+                // genuinely authored. The IPC copy remains observational.
+                if is_final
+                    && !message_uses_autonomy_trace(config, autonomy_trace_registry, &message)
+                {
+                    let trace = message_trace(&message);
+                    let tuning_authority_turn_id = response_provenance
+                        .grants_exact_model_authority()
+                        .then(|| trace.as_ref().and_then(|trace| trace.turn_id))
+                        .flatten();
+                    let tuning_authority_source = response_provenance
+                        .grants_exact_model_authority()
+                        .then_some("kernel_attested_exact_model_terminal_response");
                     action_tx
                         .send(ActionCandidate {
                             session_id: payload
@@ -1204,7 +1246,9 @@ async fn observe_once(
                                 .unwrap_or("default")
                                 .to_string(),
                             response: text.to_string(),
-                            trace: message_trace(&message),
+                            trace,
+                            tuning_authority_turn_id,
+                            tuning_authority_source,
                         })
                         .await
                         .map_err(|_| anyhow::anyhow!("action executor closed"))?;
@@ -1279,6 +1323,74 @@ async fn observe_once(
     }
 }
 
+fn is_kernel_attested_react_response(message: &Value) -> bool {
+    if message.get("topic").and_then(Value::as_str) != Some(CANONICAL_AGENT_RESPONSE_TOPIC) {
+        return false;
+    }
+    if message
+        .get("seq")
+        .and_then(Value::as_u64)
+        .unwrap_or_default()
+        == 0
+    {
+        return false;
+    }
+    let Some(timestamp) = message
+        .get("timestamp")
+        .and_then(Value::as_str)
+        .and_then(|value| chrono::DateTime::parse_from_rfc3339(value).ok())
+    else {
+        return false;
+    };
+    let age = Utc::now().signed_duration_since(timestamp.with_timezone(&Utc));
+    if age > chrono::Duration::minutes(10) || age < chrono::Duration::seconds(-30) {
+        return false;
+    }
+    let Some(producer) = message_producer(message) else {
+        return false;
+    };
+    producer.kind == "wasm_capsule" && producer.id == REACT_CAPSULE_ID
+}
+
+fn message_uses_autonomy_trace(
+    config: &Config,
+    registry: &AutonomyTraceRegistry,
+    message: &Value,
+) -> bool {
+    let Some(trace) = message_trace(message) else {
+        return false;
+    };
+    match registry.observe_or_bind(&trace) {
+        Ok(AutonomyTraceMatch::Registered) => true,
+        Ok(AutonomyTraceMatch::RegisteredIdentityConflict) => {
+            eprintln!("suppressed scheduler trace with conflicting kernel turn/session identity");
+            true
+        },
+        Err(error) => {
+            eprintln!("suppressed terminal response: autonomy trace registry failed: {error}");
+            true
+        },
+        Ok(AutonomyTraceMatch::NotRegistered) => match autonomy_state_owns_trace(config, &trace) {
+            Ok(true) => true,
+            Ok(false) => match autonomy_trace_is_durable(config, &trace.trace_id.to_string()) {
+                Ok(durable) => durable,
+                Err(error) => {
+                    eprintln!(
+                        "suppressed terminal response: autonomy ledger validation failed: {error}"
+                    );
+                    true
+                },
+            },
+            Err(error) => {
+                eprintln!(
+                    "suppressed terminal response: autonomy state validation failed: {error}"
+                );
+                true
+            },
+        },
+    }
+}
+
 fn pending_web_call(
     message: &Value,
     payload: &Value,
@@ -1337,62 +1449,120 @@ fn read_autonomy_trace_id(config: &Config) -> Option<String> {
         .map(ToOwned::to_owned)
 }
 
-/// Decide whether a terminal response may become experience or reach the Action executor.
+/// Decide whether a terminal response may become bounded assistant experience.
 ///
-/// Interactive responses are accepted. A response carrying the current autonomous trace is
-/// accepted only while its turn is running, or in the narrow race where the scheduler has
-/// durably completed the same authored response but its Action has not been consumed yet.
-/// Traces already present in a run/recovery ledger are old autonomous responses and are rejected.
-fn terminal_agent_response_is_current(config: &Config, message: &Value, text: &str) -> bool {
+/// Interactive responses are accepted and may separately reach the Action executor. A response
+/// carrying the current autonomous trace is observational here and is accepted only while its
+/// turn is running, or in the narrow race where the scheduler has durably completed the same
+/// authored response but its Action has not been consumed yet. The scheduler alone dispatches
+/// autonomous Actions after state and receipt acknowledgement. Traces already present in a
+/// run/recovery ledger are old autonomous responses and are rejected.
+fn terminal_agent_response_is_current(
+    config: &Config,
+    registry: &AutonomyTraceRegistry,
+    message: &Value,
+    text: &str,
+) -> bool {
     let Some(trace) = message_trace(message).filter(IpcTraceContextV1::is_supported) else {
         return true;
     };
-    let trace_id = trace.trace_id.to_string();
-    let state = std::fs::read(config.workspace.join("autonomous/state.json"))
-        .ok()
-        .and_then(|bytes| serde_json::from_slice::<Value>(&bytes).ok());
-    if let Some(state) = state.as_ref()
-        && state.get("last_trace_id").and_then(Value::as_str) == Some(trace_id.as_str())
-    {
-        if state.get("last_status").and_then(Value::as_str) == Some("running") {
+    match registry.observe_or_bind(&trace) {
+        Ok(AutonomyTraceMatch::Registered) => {},
+        Ok(AutonomyTraceMatch::RegisteredIdentityConflict) | Err(_) => return false,
+        Ok(AutonomyTraceMatch::NotRegistered) => {
+            if autonomy_state_owns_trace(config, &trace).unwrap_or(true)
+                || autonomy_trace_is_durable(config, &trace.trace_id.to_string()).unwrap_or(true)
+            {
+                return false;
+            }
             return true;
-        }
-        let response_sha256 = format!("{:x}", Sha256::digest(text.as_bytes()));
-        return state.get("last_status").and_then(Value::as_str) == Some("authored_completed")
-            && state.get("last_response_sha256").and_then(Value::as_str)
-                == Some(response_sha256.as_str())
-            && state
-                .get("last_action_response_sha256")
-                .and_then(Value::as_str)
-                != Some(response_sha256.as_str());
+        },
     }
-
-    !autonomy_trace_is_durable(config, &trace_id)
+    let Ok(Some(state)) = read_autonomy_state(config) else {
+        return false;
+    };
+    if !state_value_owns_trace(&state, &trace) {
+        return false;
+    }
+    if state.get("last_status").and_then(Value::as_str) == Some("running") {
+        return true;
+    }
+    let response_sha256 = format!("{:x}", Sha256::digest(text.as_bytes()));
+    state.get("last_status").and_then(Value::as_str) == Some("authored_completed")
+        && state.get("last_response_sha256").and_then(Value::as_str)
+            == Some(response_sha256.as_str())
+        && state
+            .get("last_action_response_sha256")
+            .and_then(Value::as_str)
+            != Some(response_sha256.as_str())
 }
 
-fn autonomy_trace_is_durable(config: &Config, trace_id: &str) -> bool {
-    ["autonomous/runs.jsonl", "autonomous/recoveries.jsonl"]
-        .iter()
-        .any(|relative| {
-            let Ok(file) = std::fs::File::open(config.workspace.join(relative)) else {
-                return false;
-            };
-            BufReader::new(file)
-                .lines()
-                .map_while(std::result::Result::ok)
-                .any(|line| {
-                    serde_json::from_str::<Value>(&line)
-                        .ok()
-                        .and_then(|value| {
-                            value
-                                .pointer("/trace/trace_id")
-                                .and_then(Value::as_str)
-                                .map(str::to_owned)
-                        })
-                        .as_deref()
-                        == Some(trace_id)
-                })
-        })
+fn read_autonomy_state(config: &Config) -> Result<Option<Value>> {
+    let path = config.workspace.join("autonomous/state.json");
+    let metadata = match fs::symlink_metadata(&path) {
+        Ok(metadata) => metadata,
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => return Ok(None),
+        Err(error) => return Err(error.into()),
+    };
+    if !metadata.file_type().is_file() {
+        bail!(
+            "autonomy state is not a regular non-symlink file: {}",
+            path.display()
+        );
+    }
+    let bytes = fs::read(&path)?;
+    Ok(Some(
+        serde_json::from_slice(&bytes).context("parse autonomy state for IPC authority")?,
+    ))
+}
+
+fn state_value_owns_trace(state: &Value, trace: &IpcTraceContextV1) -> bool {
+    let trace_id = trace.trace_id.to_string();
+    if state.get("last_trace_id").and_then(Value::as_str) != Some(trace_id.as_str()) {
+        return false;
+    }
+    let Some(stored) = state
+        .get("last_trace")
+        .and_then(|value| serde_json::from_value::<IpcTraceContextV1>(value.clone()).ok())
+    else {
+        // Transitional v2/v3 state recorded only the exact root trace ID.
+        return true;
+    };
+    stored.is_supported()
+        && stored.trace_id == trace.trace_id
+        && stored.session_id == trace.session_id
+        && stored.chain_id == trace.chain_id
+}
+
+fn autonomy_state_owns_trace(config: &Config, trace: &IpcTraceContextV1) -> Result<bool> {
+    Ok(read_autonomy_state(config)?
+        .as_ref()
+        .is_some_and(|state| state_value_owns_trace(state, trace)))
+}
+
+fn autonomy_trace_is_durable(config: &Config, trace_id: &str) -> Result<bool> {
+    for relative in ["autonomous/runs.jsonl", "autonomous/recoveries.jsonl"] {
+        let path = config.workspace.join(relative);
+        let metadata = match fs::symlink_metadata(&path) {
+            Ok(metadata) => metadata,
+            Err(error) if error.kind() == std::io::ErrorKind::NotFound => continue,
+            Err(error) => return Err(error.into()),
+        };
+        if !metadata.file_type().is_file() {
+            bail!(
+                "autonomy ledger is not a regular non-symlink file: {}",
+                path.display()
+            );
+        }
+        for line in BufReader::new(fs::File::open(&path)?).lines() {
+            let value = serde_json::from_str::<Value>(&line?)
+                .with_context(|| format!("parse autonomy ledger {}", path.display()))?;
+            if value.pointer("/trace/trace_id").and_then(Value::as_str) == Some(trace_id) {
+                return Ok(true);
+            }
+        }
+    }
+    Ok(false)
 }
 
 fn completed_web_receipt(
@@ -2104,6 +2274,61 @@ fn final_agent_response_text(payload: &Value) -> Option<&str> {
         .filter(|text| !text.is_empty())
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum AgentResponseProvenance {
+    LegacyUnspecified,
+    ModelAuthored,
+    ModelAuthoredWithLocalSafeFallback,
+    ModelAuthoredWithLocalFormatRepair,
+    ExecutorTerminalError,
+    Invalid,
+}
+
+impl AgentResponseProvenance {
+    const fn may_enter_authored_paths(self) -> bool {
+        matches!(
+            self,
+            Self::ModelAuthored
+                | Self::ModelAuthoredWithLocalSafeFallback
+                | Self::ModelAuthoredWithLocalFormatRepair
+        )
+    }
+
+    const fn grants_exact_model_authority(self) -> bool {
+        matches!(self, Self::ModelAuthored)
+    }
+
+    const fn label(self) -> &'static str {
+        match self {
+            Self::LegacyUnspecified => "legacy_unspecified",
+            Self::ModelAuthored => "model_authored",
+            Self::ModelAuthoredWithLocalSafeFallback => "model_authored_with_local_safe_fallback",
+            Self::ModelAuthoredWithLocalFormatRepair => "model_authored_with_local_format_repair",
+            Self::ExecutorTerminalError => "executor_terminal_error",
+            Self::Invalid => "invalid",
+        }
+    }
+}
+
+fn agent_response_provenance(payload: &Value) -> AgentResponseProvenance {
+    match payload.get("response_provenance") {
+        None | Some(Value::Null) => AgentResponseProvenance::LegacyUnspecified,
+        Some(Value::String(value)) if value == "model_authored" => {
+            AgentResponseProvenance::ModelAuthored
+        },
+        Some(Value::String(value)) if value == "model_authored_with_local_safe_fallback" => {
+            AgentResponseProvenance::ModelAuthoredWithLocalSafeFallback
+        },
+        Some(Value::String(value)) if value == "model_authored_with_local_format_repair" => {
+            AgentResponseProvenance::ModelAuthoredWithLocalFormatRepair
+        },
+        Some(Value::String(value)) if value == "executor_terminal_error" => {
+            AgentResponseProvenance::ExecutorTerminalError
+        },
+        Some(_) => AgentResponseProvenance::Invalid,
+    }
+}
+
 /// Return only the portion of a terminal response that may become assistant
 /// experience. Transport recovery is never experience; when the executor
 /// appended a safe fallback to a non-empty model prefix, only that authored
@@ -2165,15 +2390,20 @@ async fn write_frame(stream: &mut UnixStream, value: &Value) -> Result<()> {
 #[cfg(test)]
 mod tests {
     use super::{
-        SelectedSearchResult, SpectralQuery, agent_response_experience_text, completed_web_receipt,
-        final_agent_response_text, introspection_search_request, is_operator_inquiry_message,
-        latest_search_result, load_web_call_state, mirrored_user_text, operator_inquiry_session_id,
+        AgentResponseProvenance, SelectedSearchResult, SpectralQuery,
+        agent_response_experience_text, agent_response_provenance, completed_web_receipt,
+        final_agent_response_text, introspection_search_request, is_kernel_attested_react_response,
+        is_operator_inquiry_message, latest_search_result, load_web_call_state,
+        message_uses_autonomy_trace, mirrored_user_text, operator_inquiry_session_id,
         pending_web_call, ranked_search_results, requested_web_receipt, research_search_request,
         source_fetch_request, spectral_tool_arguments, spectral_tool_request,
         summarize_introspection_result, summarize_spectral_result,
         terminal_agent_response_is_current, web_tool_name_from_result_topic,
     };
-    use crate::{config::Config, trace::IpcTraceContextV1};
+    use crate::{
+        config::Config,
+        trace::{AutonomyTraceRegistry, IpcTraceContextV1},
+    };
     use clap::Parser as _;
     use serde_json::{Value, json};
     use sha2::Digest as _;
@@ -2479,6 +2709,68 @@ mod tests {
     }
 
     #[test]
+    fn interactive_executor_errors_cannot_enter_experience_or_actions() {
+        let executor_error = json!({
+            "type": "agent_response",
+            "text": "LLM error: unavailable",
+            "is_final": true,
+            "response_provenance": "executor_terminal_error"
+        });
+        let provenance = agent_response_provenance(&executor_error);
+        assert_eq!(provenance, AgentResponseProvenance::ExecutorTerminalError);
+        assert!(!provenance.may_enter_authored_paths());
+        assert!(!provenance.grants_exact_model_authority());
+
+        let exact_model = json!({"response_provenance": "model_authored"});
+        let provenance = agent_response_provenance(&exact_model);
+        assert!(provenance.may_enter_authored_paths());
+        assert!(provenance.grants_exact_model_authority());
+
+        let formatting_repair = json!({
+            "response_provenance": "model_authored_with_local_format_repair"
+        });
+        let provenance = agent_response_provenance(&formatting_repair);
+        assert!(provenance.may_enter_authored_paths());
+        assert!(!provenance.grants_exact_model_authority());
+
+        let malformed = json!({"response_provenance": 7});
+        assert!(!agent_response_provenance(&malformed).may_enter_authored_paths());
+        assert!(
+            !agent_response_provenance(&json!({})).may_enter_authored_paths(),
+            "legacy responses remain decodable history but cannot enter new authored paths"
+        );
+        assert!(!agent_response_provenance(&json!({})).grants_exact_model_authority());
+    }
+
+    #[test]
+    fn only_canonical_kernel_attested_react_output_is_a_response() {
+        let canonical = json!({
+            "topic": "agent.v1.response",
+            "seq": 42,
+            "timestamp": chrono::Utc::now().to_rfc3339(),
+            "producer": {
+                "schema_version": 1,
+                "kind": "wasm_capsule",
+                "id": "astrid-capsule-react"
+            },
+            "payload": {"type": "agent_response", "text": "NEXT: LISTEN", "is_final": true}
+        });
+        assert!(is_kernel_attested_react_response(&canonical));
+
+        let mut smuggled = canonical.clone();
+        smuggled["topic"] = json!("tool.v1.execute.search_web.result");
+        assert!(!is_kernel_attested_react_response(&smuggled));
+
+        let mut socket_spoof = canonical.clone();
+        socket_spoof["producer"]["kind"] = json!("native_socket_client");
+        assert!(!is_kernel_attested_react_response(&socket_spoof));
+
+        let mut foreign_capsule = canonical;
+        foreign_capsule["producer"]["id"] = json!("astrid-capsule-edge-spectral");
+        assert!(!is_kernel_attested_react_response(&foreign_capsule));
+    }
+
+    #[test]
     fn executor_fallback_never_enters_assistant_experience() {
         let marker = "[Local contract repair: no valid final action was emitted; defaulting safely to LISTEN.]";
         let only_fallback = format!("{marker}\nNEXT: LISTEN");
@@ -2522,6 +2814,8 @@ mod tests {
         let message = json!({"trace": trace});
         let text = "A bounded response.\n\nNEXT: LISTEN";
         let response_sha256 = format!("{:x}", sha2::Sha256::digest(text.as_bytes()));
+        let registry = AutonomyTraceRegistry::default();
+        registry.register(&trace).unwrap();
 
         std::fs::write(
             workspace.join("autonomous/state.json"),
@@ -2532,7 +2826,9 @@ mod tests {
             .unwrap(),
         )
         .unwrap();
-        assert!(terminal_agent_response_is_current(&config, &message, text));
+        assert!(terminal_agent_response_is_current(
+            &config, &registry, &message, text
+        ));
 
         std::fs::write(
             workspace.join("autonomous/state.json"),
@@ -2543,7 +2839,9 @@ mod tests {
             .unwrap(),
         )
         .unwrap();
-        assert!(!terminal_agent_response_is_current(&config, &message, text));
+        assert!(!terminal_agent_response_is_current(
+            &config, &registry, &message, text
+        ));
 
         std::fs::write(
             workspace.join("autonomous/state.json"),
@@ -2555,7 +2853,9 @@ mod tests {
             .unwrap(),
         )
         .unwrap();
-        assert!(terminal_agent_response_is_current(&config, &message, text));
+        assert!(terminal_agent_response_is_current(
+            &config, &registry, &message, text
+        ));
 
         std::fs::write(
             workspace.join("autonomous/state.json"),
@@ -2568,7 +2868,9 @@ mod tests {
             .unwrap(),
         )
         .unwrap();
-        assert!(!terminal_agent_response_is_current(&config, &message, text));
+        assert!(!terminal_agent_response_is_current(
+            &config, &registry, &message, text
+        ));
 
         let old_trace =
             IpcTraceContextV1::root(Uuid::new_v4(), "old-autonomous-session".to_string(), None);
@@ -2580,6 +2882,7 @@ mod tests {
         let old_message = json!({"trace": old_trace});
         assert!(!terminal_agent_response_is_current(
             &config,
+            &registry,
             &old_message,
             text
         ));
@@ -2588,8 +2891,53 @@ mod tests {
             IpcTraceContextV1::root(Uuid::new_v4(), "interactive-session".to_string(), None);
         assert!(terminal_agent_response_is_current(
             &config,
+            &registry,
             &json!({"trace": interactive}),
             text
+        ));
+        std::fs::remove_dir_all(workspace).unwrap();
+    }
+
+    #[test]
+    fn durable_running_trace_stays_scheduler_owned_across_observer_restart() {
+        let workspace = std::env::temp_dir().join(format!(
+            "astrid-edge-restarted-terminal-authority-{}",
+            super::unix_millis()
+        ));
+        std::fs::create_dir_all(workspace.join("autonomous")).unwrap();
+        let config = Config::parse_from([
+            "test",
+            "--workspace",
+            workspace.to_str().unwrap_or_default(),
+        ]);
+        let trace = IpcTraceContextV1::root(
+            Uuid::new_v4(),
+            "autonomous-session".to_string(),
+            Some("chain-1".to_string()),
+        );
+        let message = json!({"trace": trace});
+        std::fs::write(
+            workspace.join("autonomous/state.json"),
+            serde_json::to_vec(&json!({
+                "last_trace_id": trace.trace_id,
+                "last_trace": trace,
+                "last_status": "running"
+            }))
+            .unwrap(),
+        )
+        .unwrap();
+        let restarted_registry = AutonomyTraceRegistry::default();
+
+        assert!(!terminal_agent_response_is_current(
+            &config,
+            &restarted_registry,
+            &message,
+            "late response\nNEXT: LISTEN"
+        ));
+        assert!(message_uses_autonomy_trace(
+            &config,
+            &restarted_registry,
+            &message
         ));
         std::fs::remove_dir_all(workspace).unwrap();
     }

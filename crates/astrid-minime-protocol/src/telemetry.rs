@@ -340,6 +340,22 @@ pub enum SpectralFillSemanticsV1 {
     NormalizedCovarianceEffectiveRank,
 }
 
+/// Declares whether the compatible `fill_ratio` field is instantaneous or
+/// temporally smoothed. The underlying fill definition and its temporal filter
+/// are separate facts; consumers need both before treating values as
+/// comparable evidence.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum SpectralFillSmoothingV1 {
+    /// The packet predates an explicit temporal-filter declaration.
+    #[default]
+    UnspecifiedLegacy,
+    /// The packet reports the current spectral sample directly.
+    Instantaneous,
+    /// The packet reports an exponential moving average of spectral samples.
+    ExponentialMovingAverage,
+}
+
 pub const SPECTRAL_SUBSTRATE_POLICY_V1: &str = "spectral_substrate_v1";
 
 /// Additive metadata that makes otherwise ambiguous spectral values explicit.
@@ -349,6 +365,12 @@ pub struct SpectralSubstrateV1 {
     pub schema_version: u8,
     pub substrate_kind: SpectralSubstrateKindV1,
     pub fill_semantics: SpectralFillSemanticsV1,
+    #[serde(default)]
+    pub fill_smoothing: SpectralFillSmoothingV1,
+    /// Integer parts-per-million avoids ambiguous float equality in evidence
+    /// comparability checks. `180_000` represents an EMA alpha of `0.18`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub fill_smoothing_alpha_ppm: Option<u32>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub reservoir_dimensions: Option<usize>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -363,6 +385,8 @@ impl SpectralSubstrateV1 {
             schema_version: 1,
             substrate_kind: SpectralSubstrateKindV1::MinimeThresholdedEigenfill,
             fill_semantics: SpectralFillSemanticsV1::ThresholdedEigenvalueOccupancy,
+            fill_smoothing: SpectralFillSmoothingV1::Instantaneous,
+            fill_smoothing_alpha_ppm: None,
             reservoir_dimensions,
             covariance_window_samples: None,
         }
@@ -372,12 +396,15 @@ impl SpectralSubstrateV1 {
     pub fn cpu_edge_covariance_effective_rank(
         reservoir_dimensions: usize,
         covariance_window_samples: usize,
+        fill_smoothing_alpha_ppm: u32,
     ) -> Self {
         Self {
             policy: SPECTRAL_SUBSTRATE_POLICY_V1.to_string(),
             schema_version: 1,
             substrate_kind: SpectralSubstrateKindV1::CpuEdgeCovarianceEffectiveRank,
             fill_semantics: SpectralFillSemanticsV1::NormalizedCovarianceEffectiveRank,
+            fill_smoothing: SpectralFillSmoothingV1::ExponentialMovingAverage,
+            fill_smoothing_alpha_ppm: Some(fill_smoothing_alpha_ppm),
             reservoir_dimensions: Some(reservoir_dimensions),
             covariance_window_samples: Some(covariance_window_samples),
         }
@@ -393,13 +420,23 @@ impl SpectralSubstrateV1 {
             (
                 SpectralSubstrateKindV1::LegacyUnknown,
                 SpectralFillSemanticsV1::UnspecifiedLegacy,
-            ) => true,
+            ) => {
+                self.fill_smoothing == SpectralFillSmoothingV1::UnspecifiedLegacy
+                    && self.fill_smoothing_alpha_ppm.is_none()
+            },
             (
                 SpectralSubstrateKindV1::MinimeThresholdedEigenfill,
                 SpectralFillSemanticsV1::ThresholdedEigenvalueOccupancy,
-            ) => self
-                .reservoir_dimensions
-                .is_none_or(|dimensions| dimensions > 0),
+            ) => {
+                self.reservoir_dimensions
+                    .is_none_or(|dimensions| dimensions > 0)
+                    && matches!(
+                        self.fill_smoothing,
+                        SpectralFillSmoothingV1::Instantaneous
+                            | SpectralFillSmoothingV1::UnspecifiedLegacy
+                    )
+                    && self.fill_smoothing_alpha_ppm.is_none()
+            },
             (
                 SpectralSubstrateKindV1::CpuEdgeCovarianceEffectiveRank,
                 SpectralFillSemanticsV1::NormalizedCovarianceEffectiveRank,
@@ -409,6 +446,15 @@ impl SpectralSubstrateV1 {
                     && self
                         .covariance_window_samples
                         .is_some_and(|samples| samples > 0)
+                    && match self.fill_smoothing {
+                        SpectralFillSmoothingV1::UnspecifiedLegacy => {
+                            self.fill_smoothing_alpha_ppm.is_none()
+                        },
+                        SpectralFillSmoothingV1::ExponentialMovingAverage => self
+                            .fill_smoothing_alpha_ppm
+                            .is_some_and(|alpha| (1..=1_000_000).contains(&alpha)),
+                        SpectralFillSmoothingV1::Instantaneous => false,
+                    }
             },
             _ => false,
         }
@@ -422,6 +468,12 @@ pub struct SpectrumCoverageV1 {
     pub full_spectrum_mode_count: usize,
     pub exported_spectrum_mode_count: usize,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub usable_spectrum_mode_count: Option<usize>,
+    #[serde(default)]
+    pub discarded_non_finite_mode_count: usize,
+    #[serde(default)]
+    pub clamped_negative_mode_count: usize,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub exported_spectrum_energy_ratio: Option<f32>,
     pub denominator_uses_full_spectrum: bool,
 }
@@ -431,6 +483,10 @@ impl SpectrumCoverageV1 {
     pub fn is_well_formed(&self) -> bool {
         self.full_spectrum_mode_count > 0
             && self.exported_spectrum_mode_count <= self.full_spectrum_mode_count
+            && self
+                .usable_spectrum_mode_count
+                .is_none_or(|count| count <= self.full_spectrum_mode_count)
+            && !(self.denominator_uses_full_spectrum && self.discarded_non_finite_mode_count > 0)
             && self
                 .exported_spectrum_energy_ratio
                 .is_none_or(|ratio| ratio.is_finite() && (0.0..=1.0).contains(&ratio))
@@ -451,6 +507,12 @@ pub struct SpectralDenominatorV1 {
     pub distinguishability_loss: f32,
     pub lambda1_energy_share: f32,
     pub spectral_entropy: f32,
+    /// Unsmoothed effective-rank fill derived from this exact spectrum.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub instantaneous_fill_ratio: Option<f32>,
+    /// The compatibility `fill_ratio` value after the declared temporal filter.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub smoothed_fill_ratio: Option<f32>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub spectrum_coverage_v1: Option<SpectrumCoverageV1>,
 }
