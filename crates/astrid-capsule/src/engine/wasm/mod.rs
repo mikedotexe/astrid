@@ -526,6 +526,7 @@ impl ExecutionEngine for WasmEngine {
                     principal: ctx.principal.clone(),
                     capsule_uuid,
                     caller_context: None,
+                    run_loop_trace_context: None,
                     invocation_kv: None,
                     capsule_log,
                     capsule_id: crate::capsule::CapsuleId::new(&manifest.package.name)
@@ -1088,6 +1089,7 @@ pub fn run_lifecycle(
         principal: astrid_core::PrincipalId::default(),
         capsule_uuid: uuid::Uuid::new_v4(),
         caller_context: None,
+        run_loop_trace_context: None,
         invocation_kv: None,
         capsule_log: None,
         capsule_id: cfg.capsule_id.clone(),

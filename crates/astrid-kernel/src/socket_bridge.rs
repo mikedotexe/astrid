@@ -9,7 +9,7 @@ use std::sync::Arc;
 use astrid_core::session_token::{
     HandshakeRequest, HandshakeResponse, PROTOCOL_VERSION, SessionToken,
 };
-use astrid_events::ipc::{IpcMessage, IpcPayload, IpcTraceContextV1};
+use astrid_events::ipc::{IpcMessage, IpcPayload, IpcProducerV1, IpcTraceContextV1};
 use astrid_events::{AstridEvent, EventMetadata};
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::UnixStream;
@@ -134,6 +134,7 @@ async fn read_client_messages(
     loop {
         match read_ipc_frame(&mut read_half).await {
             Ok(Some(mut message)) => {
+                attest_native_socket_message(&mut message, connection_source);
                 ensure_user_input_trace(&mut message);
                 if let Some(sensory_message) = sensory_user_input_mirror(&message) {
                     let _ = kernel.event_bus.publish(AstridEvent::Ipc {
@@ -153,6 +154,15 @@ async fn read_client_messages(
             },
         }
     }
+}
+
+/// Replace any client-supplied producer claim at the authenticated kernel
+/// boundary. Authentication proves access to the socket, not capsule identity.
+fn attest_native_socket_message(message: &mut IpcMessage, connection_source: &str) {
+    message.producer = Some(IpcProducerV1::new(
+        "native_socket_client",
+        connection_source,
+    ));
 }
 
 fn traced_event_metadata(source: &str, message: &IpcMessage) -> EventMetadata {
@@ -295,10 +305,10 @@ async fn write_json_frame<T: serde::Serialize, W: AsyncWriteExt + Unpin>(
 #[cfg(test)]
 mod tests {
     use super::{
-        SENSORY_USER_INPUT_TOPIC, ensure_user_input_trace, sensory_user_input_mirror,
-        should_forward_event, traced_event_metadata,
+        SENSORY_USER_INPUT_TOPIC, attest_native_socket_message, ensure_user_input_trace,
+        sensory_user_input_mirror, should_forward_event, traced_event_metadata,
     };
-    use astrid_events::ipc::{IpcMessage, IpcPayload, IpcTraceContextV1};
+    use astrid_events::ipc::{IpcMessage, IpcPayload, IpcProducerV1, IpcTraceContextV1};
     use uuid::Uuid;
 
     #[test]
@@ -349,6 +359,7 @@ mod tests {
                 text: "hello".to_string(),
                 is_final: true,
                 session_id: "session".to_string(),
+                response_provenance: None,
             },
             Uuid::nil(),
         );
@@ -379,6 +390,7 @@ mod tests {
         assert_eq!(trace.session_id.as_deref(), Some("session-one"));
         assert_eq!(trace.chain_id.as_deref(), Some("chain-one"));
         assert!(trace.parent_span_id.is_none());
+        assert!(trace.turn_id.is_some());
 
         let mirrored = sensory_user_input_mirror(&message).unwrap();
         assert_eq!(mirrored.trace, message.trace);
@@ -386,6 +398,27 @@ mod tests {
             traced_event_metadata("test", &mirrored).correlation_id,
             Some(supplied_trace_id),
         );
+    }
+
+    #[test]
+    fn socket_boundary_overwrites_spoofed_capsule_producer() {
+        let mut message = IpcMessage::new(
+            "agent.v1.response",
+            IpcPayload::AgentResponse {
+                text: "NEXT: LISTEN".to_string(),
+                is_final: true,
+                session_id: "session".to_string(),
+                response_provenance: None,
+            },
+            Uuid::new_v4(),
+        )
+        .with_producer(IpcProducerV1::new("wasm_capsule", "astrid-capsule-react"));
+
+        attest_native_socket_message(&mut message, "native_socket_bridge:connection");
+
+        let producer = message.producer.as_ref().unwrap();
+        assert_eq!(producer.kind, "native_socket_client");
+        assert_eq!(producer.id, "native_socket_bridge:connection");
     }
 
     #[test]
@@ -402,6 +435,7 @@ mod tests {
         message.trace = Some(IpcTraceContextV1 {
             schema_version: 99,
             trace_id: Uuid::nil(),
+            turn_id: None,
             span_id: Uuid::nil(),
             parent_span_id: None,
             session_id: None,

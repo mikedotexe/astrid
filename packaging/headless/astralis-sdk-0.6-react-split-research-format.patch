@@ -1,7 +1,7 @@
 diff --git a/src/lib.rs b/src/lib.rs
 --- a/src/lib.rs
 +++ b/src/lib.rs
-@@ -155,12 +155,82 @@ fn canonicalize_embedded_terminal_next(text: &str) -> Option<String> {
+@@ -155,12 +155,87 @@ fn canonicalize_embedded_terminal_next(text: &str) -> Option<String> {
      ))
  }
  
@@ -53,6 +53,11 @@ diff --git a/src/lib.rs b/src/lib.rs
 +            | "CANCEL_STUDY"
 +            | "SYNTHESIZE"
 +            | "SHARE"
++            | "TUNE_RESERVOIR"
++            | "CANCEL_TUNING"
++            | "VALIDATE_TUNING"
++            | "ADOPT_TUNING"
++            | "REVERT_TUNING"
 +    ) {
 +        return None;
 +    }
@@ -84,7 +89,7 @@ diff --git a/src/lib.rs b/src/lib.rs
      }
      if let Some(repaired) = canonicalize_embedded_terminal_next(trimmed) {
          return repaired;
-@@ -1705,8 +1775,8 @@ mod sovereign_next_tests {
+@@ -1705,8 +1780,8 @@ mod sovereign_next_tests {
  mod sovereign_next_tests {
      use super::{
          FORMAT_NEXT_REPAIR_MARKER, SAFE_NEXT_REPAIR_MARKER,
@@ -95,7 +100,7 @@ diff --git a/src/lib.rs b/src/lib.rs
      };
  
      #[test]
-@@ -1783,6 +1853,37 @@ mod sovereign_next_tests {
+@@ -1783,6 +1858,46 @@ mod sovereign_next_tests {
      }
  
      #[test]
@@ -120,6 +125,15 @@ diff --git a/src/lib.rs b/src/lib.rs
 +        assert!(
 +            canonicalize_split_argument_next("NEXT: LISTEN\nA different action").is_none()
 +        );
++        let tuning = canonicalize_split_argument_next(
++            "A bounded experiment.\nNEXT: TUNE_RESERVOIR\n\
++             input_gain=1.05 FOR 15m :: Test one hypothesis.",
++        )
++        .unwrap();
++        assert!(tuning.contains(FORMAT_NEXT_REPAIR_MARKER));
++        assert!(tuning.ends_with(
++            "NEXT: TUNE_RESERVOIR input_gain=1.05 FOR 15m :: Test one hypothesis."
++        ));
 +        assert!(
 +            canonicalize_split_argument_next(&format!(
 +                "NEXT: RESEARCH\n{}",

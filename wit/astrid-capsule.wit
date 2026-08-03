@@ -188,7 +188,8 @@ interface types {
 
     /// IPC message envelope returned by `ipc-poll` and `ipc-recv`.
     record ipc-envelope {
-        /// List of IPC messages received since last poll/recv.
+        /// Zero or one IPC message. The one-message boundary lets the host bind
+        /// a run-loop capsule's subsequent publish to this exact caller trace.
         messages: list<ipc-message>,
         /// Number of messages dropped due to buffer overflow.
         dropped: u64,
@@ -424,13 +425,17 @@ interface ipc {
 
     /// Non-blocking poll for messages on a subscription.
     ///
-    /// Returns the messages received since last poll, plus drop/lag counts.
+    /// Returns at most one queued message plus drop/lag counts; later messages
+    /// remain queued. Until the next poll/recv, the host retains only that
+    /// message's observational trace for subsequent guest publishes. It grants
+    /// no principal or capability authority.
     ipc-poll: func(handle-id: u64) -> result<ipc-envelope, string>;
 
     /// Blocking receive on a subscription with timeout.
     ///
     /// Blocks the WASM thread until a message arrives, the timeout expires
-    /// (capped at 60s), or the capsule is unloaded.
+    /// (capped at 60s), or the capsule is unloaded. Returns at most one message
+    /// and installs only its observational trace as the run-loop publish parent.
     ipc-recv: func(handle-id: u64, timeout-ms: u64) -> result<ipc-envelope, string>;
 
     /// Get pre-registered interceptor handle mappings for run-loop capsules.
