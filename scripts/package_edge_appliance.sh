@@ -10,7 +10,8 @@ Usage: scripts/package_edge_appliance.sh --version VERSION --target TARGET \
 
 The capsule directory must contain all ten version-matched essential
 `.capsule` archives. The output is an installable CPU-edge tar.gz plus a
-SHA-256 sidecar.
+SHA-256 sidecar. TARGET must be x86_64-unknown-linux-gnu or
+aarch64-unknown-linux-gnu.
 EOF
 }
 
@@ -38,6 +39,17 @@ if [[ -z "$version" || -z "$target" || -z "$core_binary_dir" || -z "$edge_binary
     usage >&2
     exit 2
 fi
+if [[ ! "$version" =~ ^[A-Za-z0-9][A-Za-z0-9._-]*$ ]]; then
+    printf 'error: version must contain only letters, digits, dot, underscore, or hyphen\n' >&2
+    exit 2
+fi
+case "$target" in
+    x86_64-unknown-linux-gnu | aarch64-unknown-linux-gnu) ;;
+    *)
+        printf 'error: unsupported CPU-edge target: %s\n' "$target" >&2
+        exit 2
+        ;;
+esac
 
 script_dir="$(CDPATH= cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 project_root="$(CDPATH= cd -- "$script_dir/.." && pwd)"
@@ -68,6 +80,36 @@ if [[ ! -x "$edge_binary" ]]; then
     printf 'error: missing edge runtime binary: %s\n' "$edge_binary" >&2
     exit 1
 fi
+python3 - "$target" \
+    "$core_binary_dir/astrid" \
+    "$core_binary_dir/astrid-daemon" \
+    "$core_binary_dir/astrid-build" \
+    "$edge_binary" <<'PY'
+import pathlib
+import struct
+import sys
+
+target = sys.argv[1]
+expected_machine = {
+    "x86_64-unknown-linux-gnu": 62,
+    "aarch64-unknown-linux-gnu": 183,
+}[target]
+for raw_path in sys.argv[2:]:
+    path = pathlib.Path(raw_path)
+    with path.open("rb") as handle:
+        header = handle.read(20)
+    if len(header) < 20 or header[:4] != b"\x7fELF":
+        raise SystemExit(f"error: packaged binary is not ELF: {path}")
+    if header[4] != 2 or header[5] != 1:
+        raise SystemExit(f"error: packaged binary is not little-endian ELF64: {path}")
+    elf_type, machine = struct.unpack_from("<HH", header, 16)
+    if elf_type not in {2, 3}:
+        raise SystemExit(f"error: packaged ELF is not executable/shared: {path}")
+    if machine != expected_machine:
+        raise SystemExit(
+            f"error: packaged ELF machine {machine} does not match target {target}: {path}"
+        )
+PY
 for capsule in "${essential_capsules[@]}"; do
     if [[ ! -f "$capsule_dir/$capsule.capsule" ]]; then
         printf 'error: missing capsule archive: %s\n' "$capsule_dir/$capsule.capsule" >&2
@@ -184,6 +226,8 @@ manifest = {
     "bundle_format": "cpu-edge.2",
     "version": sys.argv[2],
     "target": sys.argv[3],
+    "binary_format": "elf64-little-endian",
+    "binary_architecture_verified": True,
     "source_commit": sys.argv[4],
     "source_tree_state": sys.argv[5],
     "rustc": sys.argv[6],

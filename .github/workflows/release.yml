@@ -118,6 +118,7 @@ jobs:
       - name: Build host capsule packager and target binaries
         env:
           CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER: aarch64-linux-gnu-gcc
+          ASTRID_EDGE_SOURCE_COMMIT: ${{ github.sha }}
         run: |
           cargo build --release -p astrid
           cargo build --release --target "${{ matrix.target }}" -p astrid
@@ -155,7 +156,49 @@ jobs:
             --edge-binary "services/astrid-edge-runtime/target/${{ matrix.target }}/release/astrid-edge-runtime" \
             --capsule-dir dist/essential \
             --output-dir dist
-          echo "ASSET=$(find dist -maxdepth 1 -name 'astrid-cpu-edge-*.tar.gz' -print -quit)" >> "$GITHUB_ENV"
+          asset="dist/astrid-cpu-edge-${GITHUB_REF_NAME#v}-${{ matrix.target }}.tar.gz"
+          test -f "$asset"
+          test -f "${asset}.sha256"
+          echo "ASSET=$asset" >> "$GITHUB_ENV"
+
+      - name: Verify release packaging and archive inventory
+        run: |
+          scripts/test_package_edge_appliance.sh
+          sha256sum -c "${ASSET}.sha256"
+          verify_root="$(mktemp -d)"
+          trap 'rm -rf -- "$verify_root"' EXIT
+          tar -C "$verify_root" -xzf "$ASSET"
+          bundle="$verify_root/astrid-cpu-edge-${GITHUB_REF_NAME#v}-${{ matrix.target }}"
+          test -d "$bundle"
+          (
+            cd "$bundle"
+            sha256sum -c SHA256SUMS
+          )
+          python3 - \
+            "$bundle/BUILD-MANIFEST.json" \
+            "${{ matrix.target }}" \
+            "${GITHUB_REF_NAME#v}" <<'PY'
+          import json
+          import pathlib
+          import sys
+
+          manifest = json.loads(pathlib.Path(sys.argv[1]).read_text(encoding="utf-8"))
+          assert manifest["schema"] == "astrid_cpu_edge_build_manifest_v2"
+          assert manifest["bundle_format"] == "cpu-edge.2"
+          assert manifest["target"] == sys.argv[2]
+          assert manifest["version"] == sys.argv[3]
+          assert manifest["binary_architecture_verified"] is True
+          assert manifest["essential_capsule_count"] == 10
+          assert manifest["expected_loaded_capsule_count"] == 20
+          assert manifest["incremental_installed_code_bytes"] <= 20 * 1024 * 1024
+          PY
+          test "$(find "$bundle/capsules" -maxdepth 1 -type f -name '*.capsule' | wc -l)" -eq 10
+          systemd-analyze verify \
+            "$bundle"/packaging/systemd/*.service \
+            "$bundle"/packaging/systemd/*.timer
+          systemd-analyze verify \
+            "$bundle"/packaging/systemd/icp/*.service \
+            "$bundle"/packaging/systemd/icp/*.timer
 
       - name: Upload CPU-edge archive
         uses: actions/upload-artifact@v4
