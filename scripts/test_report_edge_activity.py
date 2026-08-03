@@ -21,6 +21,7 @@ class EdgeActivityTest(unittest.TestCase):
     SPAN_REQUEST = "00000000-0000-4000-8000-000000000013"
     SPAN_RESULT = "00000000-0000-4000-8000-000000000014"
     SPAN_THREAD = "00000000-0000-4000-8000-000000000015"
+    TURN_ONE = "00000000-0000-4000-8000-000000000021"
 
     def setUp(self) -> None:
         self.temporary = tempfile.TemporaryDirectory()
@@ -50,12 +51,14 @@ class EdgeActivityTest(unittest.TestCase):
         trace_id: str,
         span_id: str,
         parent_span_id: str | None = None,
+        turn_id: str | None = None,
     ) -> dict[str, object]:
         return {
             "schema_version": 1,
             "trace_id": trace_id,
             "span_id": span_id,
             "parent_span_id": parent_span_id,
+            "turn_id": turn_id or EdgeActivityTest.TURN_ONE,
             "session_id": "session-one",
             "chain_id": "chain-one",
         }
@@ -106,6 +109,202 @@ class EdgeActivityTest(unittest.TestCase):
         self.assertEqual(action["trace_attribution"], "exact_response_session_join")
         self.assertIsNone(web["trace_id"])
         self.assertEqual(web["trace_attribution"], "legacy_unattributed")
+
+    def test_ambiguous_response_session_join_remains_unattributed(self) -> None:
+        second_trace = "00000000-0000-4000-8000-000000000031"
+        self.write_lines(
+            "autonomous/runs.jsonl",
+            [
+                {
+                    "status": "authored_completed",
+                    "session_name": "session-one",
+                    "response_sha256": "a" * 64,
+                    "trace": self.trace(self.TRACE_ONE, self.SPAN_ROOT),
+                },
+                {
+                    "status": "authored_completed",
+                    "session_name": "session-one",
+                    "response_sha256": "a" * 64,
+                    "trace": self.trace(
+                        second_trace,
+                        "00000000-0000-4000-8000-000000000032",
+                        turn_id="00000000-0000-4000-8000-000000000033",
+                    ),
+                },
+            ],
+        )
+        self.write_lines(
+            "actions/receipts.jsonl",
+            [
+                {
+                    "recorded_at_unix_ms": 100,
+                    "session_id": "session-one",
+                    "response_sha256": "a" * 64,
+                    "decision_source": "astrid_declared",
+                }
+            ],
+        )
+
+        action = next(
+            event
+            for event in activity.collect_events(self.workspace, 1_000)
+            if event["kind"] == "action"
+        )
+        self.assertIsNone(action["trace_id"])
+        self.assertEqual(action["trace_attribution"], "legacy_unattributed")
+
+    def test_run_authorship_surfaces_local_response_provenance(self) -> None:
+        cases = (
+            ("model_authored", True, False, False, False),
+            (
+                "model_authored_with_local_safe_fallback",
+                True,
+                False,
+                True,
+                False,
+            ),
+            (
+                "model_authored_with_local_format_repair",
+                True,
+                False,
+                False,
+                True,
+            ),
+            ("executor_terminal_error", False, True, False, False),
+            ("unknown_provenance", False, True, False, False),
+        )
+        for provenance, authored, fallback, safe_used, repair_used in cases:
+            with self.subTest(provenance=provenance):
+                result = activity.run_authorship(
+                    {
+                        "status": "authored_completed",
+                        "response_provenance": provenance,
+                    },
+                    {},
+                )
+                expected_provenance = (
+                    "invalid" if provenance == "unknown_provenance" else provenance
+                )
+                self.assertEqual(result.response_provenance, expected_provenance)
+                self.assertEqual(result.authored, authored)
+                self.assertEqual(result.fallback, fallback)
+                self.assertEqual(result.local_safe_fallback_used, safe_used)
+                self.assertEqual(result.local_format_repair_used, repair_used)
+
+        legacy = activity.run_authorship({"status": "authored_completed"}, {})
+        self.assertEqual(legacy.response_provenance, "legacy_unspecified")
+        self.assertTrue(legacy.authored)
+        self.assertFalse(legacy.local_safe_fallback_used)
+        self.assertFalse(legacy.local_format_repair_used)
+
+    def test_turn_activity_renders_local_modification_flags(self) -> None:
+        self.write_lines(
+            "autonomous/runs.jsonl",
+            [
+                {
+                    "completed_at_unix_ms": 100,
+                    "status": "authored_completed",
+                    "response_provenance": (
+                        "model_authored_with_local_format_repair"
+                    ),
+                    "trace": self.trace(self.TRACE_ONE, self.SPAN_ROOT),
+                }
+            ],
+        )
+        turn = next(
+            event
+            for event in activity.collect_events(self.workspace, 1_000)
+            if event["kind"] == "turn"
+        )
+        self.assertEqual(
+            turn["response_provenance"],
+            "model_authored_with_local_format_repair",
+        )
+        self.assertFalse(turn["local_safe_fallback_used"])
+        self.assertTrue(turn["local_format_repair_used"])
+        rendered = "\n".join(activity.text_lines([turn]))
+        self.assertIn(
+            "provenance=model_authored_with_local_format_repair", rendered
+        )
+        self.assertIn("local_format_repair=true", rendered)
+
+    def test_action_dispatch_phases_are_non_authored_first_class_events(self) -> None:
+        trace = self.trace(self.TRACE_ONE, self.SPAN_ACTION, self.SPAN_ROOT)
+        self.write_lines(
+            "actions/dispatches.jsonl",
+            [
+                {
+                    "schema": "astrid_edge_action_dispatch_v1",
+                    "phase": phase,
+                    "recorded_at_unix_ms": timestamp,
+                    "turn_id": self.TURN_ONE,
+                    "response_sha256": "a" * 64,
+                    "trace": trace,
+                    "authority": "executor_idempotency_record_not_astrid_authorship",
+                }
+                for phase, timestamp in (("requested", 100), ("completed", 102))
+            ],
+        )
+
+        events = [
+            event
+            for event in activity.collect_events(self.workspace, 1_000)
+            if event["kind"] == "action_dispatch"
+        ]
+        self.assertEqual([event["phase"] for event in events], ["requested", "completed"])
+        self.assertTrue(all(event["authored"] is False for event in events))
+        self.assertTrue(
+            all(event["trace_attribution"] == "first_class" for event in events)
+        )
+        self.assertTrue(
+            all(event["source_ledger"] == "actions/dispatches.jsonl" for event in events)
+        )
+        rendered = "\n".join(activity.text_lines(events))
+        self.assertIn("ACTION_DISPATCH", rendered)
+        self.assertIn("authority=executor-idempotency", rendered)
+
+    def test_invalid_action_dispatch_is_explicitly_untrusted(self) -> None:
+        trace = self.trace(self.TRACE_ONE, self.SPAN_ACTION, self.SPAN_ROOT)
+        self.write_lines(
+            "actions/dispatches.jsonl",
+            [
+                {
+                    "schema": "astrid_edge_action_dispatch_v1",
+                    "phase": "requested",
+                    "recorded_at_unix_ms": 100,
+                    "turn_id": "00000000-0000-4000-8000-000000000099",
+                    "response_sha256": "a" * 64,
+                    "trace": trace,
+                },
+                {
+                    "schema": "astrid_edge_action_dispatch_v1",
+                    "phase": "requested",
+                    "recorded_at_unix_ms": 101,
+                    "turn_id": self.TURN_ONE,
+                    "response_sha256": "not-a-hash",
+                    "trace": trace,
+                },
+            ],
+        )
+
+        events = [
+            event
+            for event in activity.collect_events(self.workspace, 1_000)
+            if event["kind"] == "action_dispatch"
+        ]
+        self.assertEqual(len(events), 2)
+        self.assertTrue(all(event["status"] == "invalid" for event in events))
+        self.assertTrue(
+            all(
+                event["trace_attribution"] == "invalid_untrusted_record"
+                for event in events
+            )
+        )
+        self.assertEqual(
+            {event["integrity_error"] for event in events},
+            {"trace_turn_id_mismatch", "invalid_response_sha256"},
+        )
+        self.assertTrue(all(event["trace_id"] is None for event in events))
 
     def test_request_completion_and_stale_state_are_deterministic_and_bounded(self) -> None:
         request_trace = self.trace(
@@ -186,25 +385,121 @@ class EdgeActivityTest(unittest.TestCase):
                         "schema_version": 99,
                     },
                 },
+                {
+                    "completed_at_unix_ms": 300,
+                    "status": "authored_completed",
+                    "session_name": "session-three",
+                    "trace": {
+                        **self.trace(self.TRACE_ONE, self.SPAN_ROOT),
+                        "turn_id": "00000000-0000-0000-0000-000000000000",
+                    },
+                },
+                {
+                    "completed_at_unix_ms": 400,
+                    "status": "authored_completed",
+                    "session_name": "session-four",
+                    "trace": {
+                        **self.trace(self.TRACE_ONE, self.SPAN_ROOT),
+                        "session_id": "session\nspoof",
+                    },
+                },
+                {
+                    "completed_at_unix_ms": 500,
+                    "status": "authored_completed",
+                    "session_name": "session-five",
+                    "trace": {
+                        **self.trace(self.TRACE_ONE, self.SPAN_ROOT),
+                        "parent_span_id": self.SPAN_ROOT,
+                    },
+                },
+                {
+                    "completed_at_unix_ms": 600,
+                    "status": "authored_completed",
+                    "session_name": "session-six",
+                    "trace": {
+                        **self.trace(self.TRACE_ONE, self.SPAN_ROOT),
+                        "session_id": "   ",
+                    },
+                },
             ],
         )
 
         events = activity.collect_events(self.workspace, 1_000)
-        self.assertEqual(len(events), 2)
+        self.assertEqual(len(events), 6)
         for event in events:
             self.assertIsNone(event["trace_id"])
             self.assertEqual(event["trace_attribution"], "legacy_unattributed")
 
     def test_interrupted_action_correction_overrides_false_authorship(self) -> None:
+        second_trace = "00000000-0000-4000-8000-000000000041"
+        second_turn = "00000000-0000-4000-8000-000000000042"
         self.write_lines(
             "actions/receipts.jsonl",
             [
                 {
                     "recorded_at_unix_ms": 100,
-                    "response_sha256": "interrupted-hash",
+                    "response_sha256": "a" * 64,
                     "decision_source": "astrid_declared",
                     "status": "executed",
                     "declared_next": "JOURNAL stale",
+                    "trace": self.trace(self.TRACE_ONE, self.SPAN_ACTION),
+                },
+                {
+                    "recorded_at_unix_ms": 101,
+                    "response_sha256": "a" * 64,
+                    "decision_source": "astrid_declared",
+                    "status": "executed",
+                    "declared_next": "JOURNAL same text, different turn",
+                    "trace": self.trace(
+                        second_trace,
+                        "00000000-0000-4000-8000-000000000043",
+                        turn_id=second_turn,
+                    ),
+                },
+            ],
+        )
+        self.write_lines(
+            "actions/interrupted_corrections.jsonl",
+            [
+                {
+                    "schema": "astrid_edge_interrupted_action_correction_v2",
+                    "recorded_at_unix_ms": 200,
+                    "response_sha256": "a" * 64,
+                    "trace_id": self.TRACE_ONE,
+                    "turn_id": self.TURN_ONE,
+                    "identity_kind": "turn_id",
+                    "corrected_status": "revoked_interrupted_trace_non_authored",
+                    "authority": "operator_reconciliation_non_authored_no_action_authority",
+                }
+            ],
+        )
+
+        events = activity.collect_events(self.workspace, 1_000)
+        actions = [value for value in events if value["kind"] == "action"]
+        self.assertEqual(actions[0]["status"], "revoked_interrupted_trace_non_authored")
+        self.assertFalse(actions[0]["authored"])
+        self.assertTrue(actions[0]["fallback"])
+        self.assertEqual(actions[1]["status"], "executed")
+        self.assertTrue(actions[1]["authored"])
+        self.assertFalse(actions[1]["fallback"])
+        correction = next(
+            value for value in events if value["kind"] == "action_correction"
+        )
+        self.assertEqual(correction["trace_attribution"], "exact_trace_response_join")
+        self.assertIn(
+            "status=revoked_interrupted_trace_non_authored",
+            "\n".join(activity.text_lines(actions)),
+        )
+
+    def test_legacy_interrupted_correction_remains_unattributed(self) -> None:
+        self.write_lines(
+            "actions/receipts.jsonl",
+            [
+                {
+                    "recorded_at_unix_ms": 100,
+                    "response_sha256": "a" * 64,
+                    "decision_source": "astrid_declared",
+                    "status": "executed",
                     "trace": self.trace(self.TRACE_ONE, self.SPAN_ACTION),
                 }
             ],
@@ -213,26 +508,129 @@ class EdgeActivityTest(unittest.TestCase):
             "actions/interrupted_corrections.jsonl",
             [
                 {
+                    "schema": "astrid_edge_interrupted_action_correction_v1",
                     "recorded_at_unix_ms": 200,
-                    "response_sha256": "interrupted-hash",
+                    "response_sha256": "a" * 64,
+                    "trace_id": self.TRACE_ONE,
                     "corrected_status": "revoked_interrupted_trace_non_authored",
-                    "authority": "operator_reconciliation_non_authored_no_action_authority",
                 }
             ],
         )
 
-        event = next(
+        events = activity.collect_events(self.workspace, 1_000)
+        action = next(value for value in events if value["kind"] == "action")
+        correction = next(
+            value for value in events if value["kind"] == "action_correction"
+        )
+        self.assertEqual(action["status"], "executed")
+        self.assertTrue(action["authored"])
+        self.assertEqual(correction["trace_attribution"], "legacy_unattributed")
+
+    def test_transport_authorship_correction_reclassifies_turn_and_action(self) -> None:
+        transcript = "autonomous/turns/autonomous_100.md"
+        response_hash = "b" * 64
+        independent_trace = "00000000-0000-4000-8000-000000000051"
+        independent_turn = "00000000-0000-4000-8000-000000000052"
+        self.write_lines(
+            "autonomous/runs.jsonl",
+            [
+                {
+                    "completed_at_unix_ms": 100,
+                    "status": "authored_completed",
+                    "session_name": "session-one",
+                    "response_sha256": response_hash,
+                    "transcript_path": transcript,
+                    "trace": self.trace(self.TRACE_ONE, self.SPAN_ROOT),
+                }
+            ],
+        )
+        self.write_lines(
+            "actions/receipts.jsonl",
+            [
+                {
+                    "recorded_at_unix_ms": 101,
+                    "response_sha256": response_hash,
+                    "decision_source": "astrid_declared",
+                    "status": "executed",
+                    "declared_next": "JOURNAL false transport output",
+                    "trace": self.trace(self.TRACE_ONE, self.SPAN_ACTION),
+                },
+                {
+                    "recorded_at_unix_ms": 103,
+                    "session_id": "session-one",
+                    "response_sha256": response_hash,
+                    "decision_source": "astrid_declared",
+                    "status": "executed",
+                    "declared_next": "JOURNAL independently authored same bytes",
+                    "trace": self.trace(
+                        independent_trace,
+                        "00000000-0000-4000-8000-000000000053",
+                        turn_id=independent_turn,
+                    ),
+                }
+            ],
+        )
+        self.write_lines(
+            "autonomous/thread_state.jsonl",
+            [
+                {
+                    "updated_at_unix_ms": 102,
+                    "response_sha256": response_hash,
+                    "status": "active",
+                    "event": "action_journal",
+                    "trace": self.trace(self.TRACE_ONE, self.SPAN_THREAD),
+                }
+            ],
+        )
+        self.write_lines(
+            "autonomous/authorship_corrections.jsonl",
+            [
+                {
+                    "schema": "astrid_edge_authorship_correction_v2",
+                    "recorded_at_unix_ms": 200,
+                    "original_transcript_path": transcript,
+                    "response_sha256": response_hash,
+                    "reason": activity.TRANSPORT_AUTHORSHIP_CORRECTION_REASON,
+                    "authority": (
+                        "deterministic_provenance_correction_no_model_or_action_invocation"
+                    ),
+                }
+            ],
+        )
+
+        events = activity.collect_events(self.workspace, 1_000)
+        turn = next(value for value in events if value["kind"] == "turn")
+        actions = [value for value in events if value["kind"] == "action"]
+        action = next(
             value
-            for value in activity.collect_events(self.workspace, 1_000)
-            if value["kind"] == "action"
+            for value in actions
+            if value.get("trace_id") == self.TRACE_ONE
         )
-        self.assertEqual(event["status"], "revoked_interrupted_trace_non_authored")
-        self.assertFalse(event["authored"])
-        self.assertTrue(event["fallback"])
-        self.assertIn(
-            "status=revoked_interrupted_trace_non_authored",
-            "\n".join(activity.text_lines([event])),
+        independent_action = next(
+            value
+            for value in actions
+            if value.get("trace_id") == independent_trace
         )
+        thread = next(value for value in events if value["kind"] == "thread")
+        self.assertEqual(turn["status"], "transport_recovery")
+        self.assertFalse(turn["authored"])
+        self.assertTrue(turn["fallback"])
+        self.assertEqual(
+            turn["correction_reason"],
+            activity.TRANSPORT_AUTHORSHIP_CORRECTION_REASON,
+        )
+        self.assertEqual(
+            action["status"], "revoked_legacy_transport_non_authored"
+        )
+        self.assertFalse(action["authored"])
+        self.assertTrue(action["fallback"])
+        self.assertTrue(independent_action["authored"])
+        self.assertFalse(independent_action["fallback"])
+        self.assertFalse(thread["authored"])
+        self.assertTrue(thread["fallback"])
+        rendered = "\n".join(activity.text_lines([turn, action, thread]))
+        self.assertIn("authored=false", rendered)
+        self.assertIn(activity.TRANSPORT_AUTHORSHIP_CORRECTION_REASON, rendered)
 
     def test_operator_study_is_explicitly_non_authored_and_attributed(self) -> None:
         self.write_lines(
@@ -261,6 +659,8 @@ class EdgeActivityTest(unittest.TestCase):
         self.assertFalse(event["authored"])
         self.assertEqual(event["origin"], "operator_harness")
         self.assertEqual(event["trace_attribution"], "operator_harness")
+        self.assertNotIn("payload_hash_valid", event)
+        self.assertNotIn("signature_present_not_verified", event)
         rendered = "\n".join(activity.text_lines([event]))
         self.assertIn("[operator] STUDY", rendered)
         self.assertIn("origin=operator_harness", rendered)
@@ -390,6 +790,7 @@ class EdgeActivityTest(unittest.TestCase):
                             "recorded_at_unix_ms": 590,
                             "trace": trace,
                             "response_sha256": "a" * 64,
+                            "attribution": "temporal_rollup_context_not_exact_or_causal",
                         }
                     ],
                     "activity_ref_count": 1,
@@ -413,6 +814,7 @@ class EdgeActivityTest(unittest.TestCase):
                             "parameter": "input_gain",
                             "requested_value": 1.05,
                             "rollback_reason": "expired",
+                            "authority_turn_id": self.TURN_ONE,
                         },
                         "authority": "signed_private_tuning_manager",
                     },
@@ -433,9 +835,14 @@ class EdgeActivityTest(unittest.TestCase):
         self.assertIsNone(spectral["trace_id"])
         self.assertEqual(spectral_link["trace_id"], self.TRACE_ONE)
         self.assertEqual(tuning["trace_id"], self.TRACE_ONE)
+        self.assertEqual(tuning["turn_id"], self.TURN_ONE)
+        self.assertEqual(tuning["authority_turn_id"], self.TURN_ONE)
         self.assertEqual(tuning["timestamp_unix_ms"], 700)
         self.assertEqual(tuning["tuning_id"], "tuning-1")
         self.assertEqual(spectral["spectral_entropy"], 0.9)
+        self.assertNotIn("payload_hash_valid", spectral)
+        self.assertFalse(tuning["payload_hash_valid"])
+        self.assertTrue(tuning["signature_present_not_verified"])
         rendered = "\n".join(activity.text_lines([spectral, tuning]))
         self.assertIn("machine-derived authored=false", rendered)
         self.assertIn("rollback=expired", rendered)

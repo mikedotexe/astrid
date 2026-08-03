@@ -16,25 +16,151 @@ import json
 import time
 import uuid
 from pathlib import Path
-from typing import Any, Iterable
+from typing import Any, Iterable, NamedTuple
 
-SCHEMA = "astrid_edge_activity_report_v1"
+SCHEMA = "astrid_edge_activity_report_v2"
+AUTHORSHIP_ATTRIBUTION_VERSION = 5
 STALE_WEB_CALL_MS = 5 * 60_000
 STALE_INTROSPECTION_CALL_MS = 5 * 60_000
+TRANSPORT_AUTHORSHIP_CORRECTION_REASON = (
+    "legacy_transport_sentinel_reclassified_non_authored"
+)
+MAX_TRACE_LABEL_CHARS = 96
+INTERRUPTED_ACTION_CORRECTION_SCHEMA = (
+    "astrid_edge_interrupted_action_correction_v2"
+)
+ACTION_DISPATCH_SCHEMA = "astrid_edge_action_dispatch_v1"
+MODEL_RESPONSE_PROVENANCES = frozenset(
+    {
+        "model_authored",
+        "model_authored_with_local_safe_fallback",
+        "model_authored_with_local_format_repair",
+    }
+)
+
+
+class RunAuthorship(NamedTuple):
+    status: str
+    authored: bool
+    fallback: bool
+    correction: dict[str, Any] | None
+    response_provenance: str
+    local_safe_fallback_used: bool
+    local_format_repair_used: bool
+
+
+def normalized_uuid(value: Any) -> str | None:
+    """Return a canonical, non-nil UUID or ``None``.
+
+    Nil identifiers do not identify an event and therefore must never be
+    presented as first-class causal telemetry.
+    """
+    try:
+        parsed = uuid.UUID(str(value))
+    except (TypeError, ValueError, AttributeError):
+        return None
+    return str(parsed) if parsed.int != 0 else None
+
+
+def valid_trace_label(value: Any, *, required: bool) -> bool:
+    if value is None:
+        return not required
+    if (
+        not isinstance(value, str)
+        or not value.strip()
+        or len(value) > MAX_TRACE_LABEL_CHARS
+    ):
+        return False
+    return not any(ord(character) < 0x20 or ord(character) == 0x7F for character in value)
+
+
+def normalized_trace_label(value: Any) -> str | None:
+    return str(value) if valid_trace_label(value, required=False) and value else None
 
 
 def valid_trace(value: dict[str, Any]) -> bool:
     trace = value.get("trace")
     if not isinstance(trace, dict) or trace.get("schema_version", 1) != 1:
         return False
-    try:
-        uuid.UUID(str(trace["trace_id"]))
-        uuid.UUID(str(trace["span_id"]))
-        if trace.get("parent_span_id") is not None:
-            uuid.UUID(str(trace["parent_span_id"]))
-    except (KeyError, TypeError, ValueError):
+    if normalized_uuid(trace.get("trace_id")) is None:
+        return False
+    if normalized_uuid(trace.get("span_id")) is None:
+        return False
+    if trace.get("parent_span_id") is not None and normalized_uuid(
+        trace.get("parent_span_id")
+    ) is None:
+        return False
+    if (
+        normalized_uuid(trace.get("parent_span_id"))
+        == normalized_uuid(trace.get("span_id"))
+    ):
+        return False
+    if trace.get("turn_id") is not None and normalized_uuid(
+        trace.get("turn_id")
+    ) is None:
+        return False
+    if not valid_trace_label(trace.get("session_id"), required=True):
+        return False
+    if not valid_trace_label(trace.get("chain_id"), required=False):
         return False
     return True
+
+
+def valid_response_sha256(value: Any) -> bool:
+    return (
+        isinstance(value, str)
+        and len(value) == 64
+        and all(character in "0123456789abcdef" for character in value)
+    )
+
+
+def exact_response_identity(
+    value: dict[str, Any], *, flat_identity: bool = False
+) -> tuple[str, str, str, str] | None:
+    """Bind response text to an exact turn/trace event identity."""
+    response_hash = value.get("response_sha256")
+    trace = value.get("trace")
+    if isinstance(trace, dict):
+        if trace.get("schema_version", 1) != 1:
+            return None
+        exact_trace_id = normalized_uuid(trace.get("trace_id"))
+        exact_turn_id = normalized_uuid(trace.get("turn_id"))
+    elif flat_identity:
+        exact_trace_id = normalized_uuid(value.get("trace_id"))
+        exact_turn_id = normalized_uuid(value.get("turn_id"))
+    else:
+        return None
+    if not valid_response_sha256(response_hash) or exact_trace_id is None:
+        return None
+    if exact_turn_id is not None:
+        return "turn", exact_turn_id, exact_trace_id, str(response_hash)
+    return "trace", "", exact_trace_id, str(response_hash)
+
+
+def interrupted_correction_identity(
+    value: dict[str, Any],
+) -> tuple[str, str, str, str] | None:
+    if value.get("schema") != INTERRUPTED_ACTION_CORRECTION_SCHEMA:
+        return None
+    return exact_response_identity(value, flat_identity=True)
+
+
+def action_dispatch_integrity_error(value: dict[str, Any]) -> str | None:
+    if value.get("schema") != ACTION_DISPATCH_SCHEMA:
+        return "unsupported_schema"
+    if value.get("phase") not in {"requested", "completed"}:
+        return "unsupported_phase"
+    top_turn_id = normalized_uuid(value.get("turn_id"))
+    if top_turn_id is None:
+        return "invalid_turn_id"
+    if not valid_response_sha256(value.get("response_sha256")):
+        return "invalid_response_sha256"
+    if not valid_trace(value):
+        return "invalid_trace"
+    trace = value["trace"]
+    if normalized_uuid(trace.get("turn_id")) != top_turn_id:
+        return "trace_turn_id_mismatch"
+    return None
 
 
 def read_json_lines(path: Path) -> list[dict[str, Any]]:
@@ -61,6 +187,112 @@ def read_json(path: Path) -> dict[str, Any]:
     return value if isinstance(value, dict) else {}
 
 
+def transport_authorship_corrections(
+    workspace: Path,
+) -> dict[Any, dict[str, Any]]:
+    """Index exact legacy transport corrections by immutable identifiers.
+
+    Timestamp proximity is intentionally never used.  A transcript path is
+    sufficient for the run that owns that path.  A response hash is reusable
+    text identity rather than event identity, so downstream records require the
+    exact turn/trace identity derived from that corrected run as well.
+    """
+    corrections: dict[Any, dict[str, Any]] = {}
+    runs_by_transcript = {
+        str(run.get("transcript_path")): run
+        for run in read_json_lines(workspace / "autonomous/runs.jsonl")
+        if isinstance(run.get("transcript_path"), str)
+        and run.get("transcript_path")
+    }
+    for value in read_json_lines(
+        workspace / "autonomous/authorship_corrections.jsonl"
+    ):
+        if value.get("reason") != TRANSPORT_AUTHORSHIP_CORRECTION_REASON:
+            continue
+        transcript_path = value.get("original_transcript_path")
+        if isinstance(transcript_path, str) and transcript_path:
+            corrections[f"transcript:{transcript_path}"] = value
+        response_hash = value.get("response_sha256")
+        corrected_run = runs_by_transcript.get(str(transcript_path or ""))
+        if (
+            not isinstance(response_hash, str)
+            or not response_hash
+            or corrected_run is None
+            or corrected_run.get("response_sha256") != response_hash
+        ):
+            continue
+        identity = exact_response_identity(corrected_run)
+        if identity is not None:
+            corrections[("response_identity", *identity)] = value
+    return corrections
+
+
+def transport_authorship_correction(
+    value: dict[str, Any],
+    corrections: dict[Any, dict[str, Any]],
+) -> dict[str, Any] | None:
+    transcript_path = value.get("transcript_path")
+    if isinstance(transcript_path, str) and transcript_path:
+        correction = corrections.get(f"transcript:{transcript_path}")
+        if correction is not None:
+            return correction
+    response_hash = value.get("response_sha256")
+    if not isinstance(response_hash, str) or not response_hash:
+        return None
+    identity = exact_response_identity(value)
+    return (
+        corrections.get(("response_identity", *identity))
+        if identity is not None
+        else None
+    )
+
+
+def run_authorship(
+    run: dict[str, Any],
+    corrections: dict[Any, dict[str, Any]],
+) -> RunAuthorship:
+    """Return the correction-aware status, authorship, and fallback flags."""
+    status = str(run.get("status", "unknown"))
+    correction = transport_authorship_correction(run, corrections)
+    if status == "authored_completed" and correction is not None:
+        status = "transport_recovery"
+    raw_provenance = run.get("response_provenance")
+    if raw_provenance is None:
+        response_provenance = "legacy_unspecified"
+    elif raw_provenance in MODEL_RESPONSE_PROVENANCES | {"executor_terminal_error"}:
+        response_provenance = str(raw_provenance)
+    else:
+        response_provenance = "invalid"
+    local_safe_fallback_used = (
+        response_provenance == "model_authored_with_local_safe_fallback"
+    )
+    local_format_repair_used = (
+        response_provenance == "model_authored_with_local_format_repair"
+    )
+    provenance_can_be_authored = response_provenance in MODEL_RESPONSE_PROVENANCES | {
+        "legacy_unspecified"
+    }
+    authored = (
+        status == "authored_completed"
+        and correction is None
+        and provenance_can_be_authored
+    )
+    fallback = correction is not None or status in {
+        "transport_recovery",
+        "failed",
+        "interrupted",
+    } or response_provenance in {"executor_terminal_error", "invalid"}
+    return RunAuthorship(
+        status,
+        authored,
+        fallback,
+        correction,
+        response_provenance,
+        local_safe_fallback_used,
+        local_format_repair_used,
+    )
+
+
 def spectral_metric(value: dict[str, Any], name: str) -> Any:
     metrics = value.get("metrics")
     if isinstance(metrics, dict) and name in metrics:
@@ -78,7 +310,12 @@ def flatten_signed_tuning(value: dict[str, Any]) -> dict[str, Any]:
     """
     payload = value.get("payload")
     if not isinstance(payload, dict):
-        return value
+        return {
+            **value,
+            "signed_envelope": False,
+            "payload_hash_valid": None,
+            "signature_present_not_verified": False,
+        }
     flattened = dict(payload)
     detail = payload.get("detail")
     if isinstance(detail, dict):
@@ -105,13 +342,18 @@ def trace_fields(value: dict[str, Any]) -> dict[str, Any]:
             "trace_id": None,
             "span_id": None,
             "parent_span_id": None,
-            "session_id": value.get("session_id") or value.get("session_name"),
-            "chain_id": value.get("chain_id"),
+            "turn_id": normalized_uuid(value.get("turn_id")),
+            "session_id": normalized_trace_label(
+                value.get("session_id") or value.get("session_name")
+            ),
+            "chain_id": normalized_trace_label(value.get("chain_id")),
         }
     return {
-        "trace_id": trace.get("trace_id"),
-        "span_id": trace.get("span_id"),
-        "parent_span_id": trace.get("parent_span_id"),
+        "trace_id": normalized_uuid(trace.get("trace_id")),
+        "span_id": normalized_uuid(trace.get("span_id")),
+        "parent_span_id": normalized_uuid(trace.get("parent_span_id")),
+        "turn_id": normalized_uuid(trace.get("turn_id"))
+        or normalized_uuid(value.get("turn_id")),
         "session_id": trace.get("session_id")
         or value.get("session_id")
         or value.get("session_name"),
@@ -154,13 +396,17 @@ def base_event(
 
 def collect_events(workspace: Path, now_ms: int) -> list[dict[str, Any]]:
     runs = read_json_lines(workspace / "autonomous/runs.jsonl")
+    transport_corrections = transport_authorship_corrections(workspace)
+    action_dispatches = read_json_lines(workspace / "actions/dispatches.jsonl")
     actions = read_json_lines(workspace / "actions/receipts.jsonl")
+    interrupted_correction_records = read_json_lines(
+        workspace / "actions/interrupted_corrections.jsonl"
+    )
     interrupted_action_corrections = {
-        str(item.get("response_sha256") or ""): item
-        for item in read_json_lines(
-            workspace / "actions/interrupted_corrections.jsonl"
-        )
+        key: item
+        for item in interrupted_correction_records
         if item.get("corrected_status") == "revoked_interrupted_trace_non_authored"
+        if (key := interrupted_correction_identity(item)) is not None
     }
     chains = read_json_lines(workspace / "autonomous/chains.jsonl")
     recoveries = read_json_lines(workspace / "autonomous/recoveries.jsonl")
@@ -178,7 +424,7 @@ def collect_events(workspace: Path, now_ms: int) -> list[dict[str, Any]]:
     duplicate_notices = read_json_lines(workspace / "research/duplication_notices.jsonl")
     peer = read_json_lines(workspace / "peer/receipts.jsonl")
 
-    exact_runs: dict[tuple[str, str], dict[str, Any]] = {}
+    exact_run_candidates: dict[tuple[str, str], list[dict[str, Any]]] = {}
     for run in runs:
         response_hash = run.get("response_sha256")
         session = run.get("session_name")
@@ -187,12 +433,20 @@ def collect_events(workspace: Path, now_ms: int) -> list[dict[str, Any]]:
             and isinstance(session, str)
             and valid_trace(run)
         ):
-            exact_runs[(response_hash, session)] = run
-            exact_runs[(response_hash, str(uuid.uuid5(uuid.NAMESPACE_URL, session)))] = run
+            for key in (
+                (response_hash, session),
+                (response_hash, str(uuid.uuid5(uuid.NAMESPACE_URL, session))),
+            ):
+                exact_run_candidates.setdefault(key, []).append(run)
+    exact_runs = {
+        key: candidates[0]
+        for key, candidates in exact_run_candidates.items()
+        if len(candidates) == 1
+    }
 
     events: list[dict[str, Any]] = []
     for run in runs:
-        status = str(run.get("status", "unknown"))
+        authorship = run_authorship(run, transport_corrections)
         event = base_event(
             run,
             "turn",
@@ -201,9 +455,12 @@ def collect_events(workspace: Path, now_ms: int) -> list[dict[str, Any]]:
         )
         event.update(
             {
-                "status": status,
-                "authored": status == "authored_completed",
-                "fallback": status in {"transport_recovery", "failed", "interrupted"},
+                "status": authorship.status,
+                "authored": authorship.authored,
+                "fallback": authorship.fallback,
+                "response_provenance": authorship.response_provenance,
+                "local_safe_fallback_used": authorship.local_safe_fallback_used,
+                "local_format_repair_used": authorship.local_format_repair_used,
                 "trigger": run.get("trigger"),
                 "declared_next": run.get("declared_next"),
                 "response_sha256": run.get("response_sha256"),
@@ -218,6 +475,12 @@ def collect_events(workspace: Path, now_ms: int) -> list[dict[str, Any]]:
                 "session_authored_turns_before": run.get("session_authored_turns_before"),
                 "artifact_path": run.get("transcript_path"),
                 "journal_path": run.get("journal_path"),
+                "correction_reason": authorship.correction.get("reason")
+                if authorship.correction
+                else None,
+                "correction_authority": authorship.correction.get("authority")
+                if authorship.correction
+                else None,
             }
         )
         events.append(event)
@@ -255,9 +518,13 @@ def collect_events(workspace: Path, now_ms: int) -> list[dict[str, Any]]:
         events.append(event)
 
     for action in actions:
-        correction = interrupted_action_corrections.get(
-            str(action.get("response_sha256") or "")
+        interrupted_correction = interrupted_action_corrections.get(
+            exact_response_identity(action)
         )
+        transport_correction = transport_authorship_correction(
+            action, transport_corrections
+        )
+        correction = interrupted_correction or transport_correction
         event = base_event(
             action,
             "action",
@@ -271,11 +538,15 @@ def collect_events(workspace: Path, now_ms: int) -> list[dict[str, Any]]:
                 event.update(trace_fields(matched))
                 event["trace_attribution"] = "exact_response_session_join"
         decision_source = str(action.get("decision_source", "unknown"))
+        if interrupted_correction:
+            action_status = interrupted_correction.get("corrected_status")
+        elif transport_correction:
+            action_status = "revoked_legacy_transport_non_authored"
+        else:
+            action_status = action.get("status")
         event.update(
             {
-                "status": correction.get("corrected_status")
-                if correction
-                else action.get("status"),
+                "status": action_status,
                 "authored": not correction
                 and decision_source
                 in {
@@ -290,12 +561,77 @@ def collect_events(workspace: Path, now_ms: int) -> list[dict[str, Any]]:
                 "response_sha256": action.get("response_sha256"),
                 "artifact_path": action.get("artifact_path"),
                 "validation_reason": action.get("validation_reason"),
+                "execution_error": action.get("execution_error"),
                 "unexecuted_intention": action.get("unexecuted_intention"),
                 "correction_authority": correction.get("authority")
                 if correction
                 else None,
+                "correction_reason": correction.get("reason")
+                if correction
+                else None,
             }
         )
+        events.append(event)
+
+    for correction in interrupted_correction_records:
+        identity = interrupted_correction_identity(correction)
+        exact = identity is not None
+        event = {
+            "timestamp_unix_ms": int(
+                correction.get("recorded_at_unix_ms", 0) or 0
+            ),
+            "kind": "action_correction",
+            "source_ledger": "actions/interrupted_corrections.jsonl",
+            "trace_attribution": (
+                "exact_trace_response_join" if exact else "legacy_unattributed"
+            ),
+            "trace_id": normalized_uuid(correction.get("trace_id")) if exact else None,
+            "span_id": None,
+            "parent_span_id": None,
+            "turn_id": normalized_uuid(correction.get("turn_id")) if exact else None,
+            "session_id": None,
+            "chain_id": None,
+            "status": correction.get("corrected_status"),
+            "authored": False,
+            "fallback": True,
+            "response_sha256": correction.get("response_sha256"),
+            "authority": correction.get("authority"),
+            "identity_kind": correction.get("identity_kind") if exact else None,
+        }
+        events.append(event)
+
+    for dispatch in action_dispatches:
+        phase = str(dispatch.get("phase") or "unknown")
+        integrity_error = action_dispatch_integrity_error(dispatch)
+        event = base_event(
+            dispatch,
+            "action_dispatch",
+            int(dispatch.get("recorded_at_unix_ms", 0) or 0),
+            "actions/dispatches.jsonl",
+        )
+        event.update(
+            {
+                "status": phase if integrity_error is None else "invalid",
+                "phase": phase,
+                "response_sha256": dispatch.get("response_sha256"),
+                "authored": False,
+                "fallback": False,
+                "authority": dispatch.get("authority"),
+                "integrity_error": integrity_error,
+            }
+        )
+        if integrity_error is not None:
+            event.update(
+                {
+                    "trace_attribution": "invalid_untrusted_record",
+                    "trace_id": None,
+                    "span_id": None,
+                    "parent_span_id": None,
+                    "turn_id": None,
+                    "session_id": None,
+                    "chain_id": None,
+                }
+            )
         events.append(event)
 
     for chain in chains:
@@ -341,6 +677,7 @@ def collect_events(workspace: Path, now_ms: int) -> list[dict[str, Any]]:
         events.append(event)
 
     for thread in threads:
+        correction = transport_authorship_correction(thread, transport_corrections)
         event = base_event(
             thread,
             "thread",
@@ -370,8 +707,14 @@ def collect_events(workspace: Path, now_ms: int) -> list[dict[str, Any]]:
                 "evidence": thread.get("evidence", []),
                 "evidence_records": thread.get("evidence_records", []),
                 "event": thread.get("event"),
-                "authored": True,
-                "fallback": False,
+                "authored": correction is None,
+                "fallback": correction is not None,
+                "correction_reason": correction.get("reason")
+                if correction
+                else None,
+                "correction_authority": correction.get("authority")
+                if correction
+                else None,
             }
         )
         events.append(event)
@@ -397,10 +740,6 @@ def collect_events(workspace: Path, now_ms: int) -> list[dict[str, Any]]:
                 "authored": False,
                 "fallback": False,
                 "authority": receipt.get("authority"),
-                "payload_hash_valid": receipt.get("payload_hash_valid"),
-                "signature_present_not_verified": receipt.get(
-                    "signature_present_not_verified"
-                ),
             }
         )
         if receipt.get("origin") == "operator_harness":
@@ -458,7 +797,7 @@ def collect_events(workspace: Path, now_ms: int) -> list[dict[str, Any]]:
                 )
                 linked.update(
                     {
-                        "status": "exact_identifier_join_non_causal",
+                        "status": "temporal_rollup_context_not_exact_or_causal",
                         "activity_kind": reference.get("kind")
                         or reference.get("event_kind"),
                         "response_sha256": reference.get("response_sha256"),
@@ -485,6 +824,14 @@ def collect_events(workspace: Path, now_ms: int) -> list[dict[str, Any]]:
                 "status": receipt.get("status"),
                 "phase": receipt.get("phase") or receipt.get("kind"),
                 "event_kind": receipt.get("event_kind"),
+                "snapshot_generation_id": receipt.get("snapshot_generation_id"),
+                "snapshot_sequence": receipt.get("snapshot_sequence"),
+                "snapshot_recorded_at_unix_ms": receipt.get(
+                    "snapshot_recorded_at_unix_ms"
+                ),
+                "snapshot_sha256": receipt.get("snapshot_sha256"),
+                "spectral_metrics": receipt.get("metrics"),
+                "attribution": receipt.get("attribution"),
                 "response_sha256": receipt.get("response_sha256")
                 or receipt.get("parent_response_sha256"),
                 "artifact_path": receipt.get("artifact_path"),
@@ -518,6 +865,15 @@ def collect_events(workspace: Path, now_ms: int) -> list[dict[str, Any]]:
                 "authored": False,
                 "fallback": False,
                 "authority": receipt.get("authority"),
+                "authority_turn_id": normalized_uuid(
+                    receipt.get("authority_turn_id")
+                ),
+                "signed_envelope": receipt.get("signed_envelope", False),
+                "payload_sha256": receipt.get("payload_sha256"),
+                "payload_hash_valid": receipt.get("payload_hash_valid"),
+                "signature_present_not_verified": receipt.get(
+                    "signature_present_not_verified"
+                ),
             }
         )
         events.append(event)
@@ -792,6 +1148,8 @@ def text_lines(events: list[dict[str, Any]]) -> list[str]:
         if result == 0 and event.get("parent_span_id"):
             return {
                 "action": 1,
+                "action_correction": 1,
+                "action_dispatch": 1,
                 "chain": 2,
                 "web_request": 2,
                 "web_result": 3,
@@ -824,20 +1182,41 @@ def text_lines(events: list[dict[str, Any]]) -> list[str]:
         )[:8]
         common = (
             f"{iso_time(int(event['timestamp_unix_ms']))} "
-            f"[{trace}] {event['kind'].upper()}"
+            f"[{trace}] {event['kind'].upper()} "
+            f"turn={str(event.get('turn_id') or '-')[:8]}"
         )
         kind = event["kind"]
         if kind == "turn":
             detail = (
                 f"status={event.get('status')} authored={str(event.get('authored')).lower()} "
+                f"provenance={event.get('response_provenance')} "
+                f"local_safe_fallback={str(event.get('local_safe_fallback_used')).lower()} "
+                f"local_format_repair={str(event.get('local_format_repair_used')).lower()} "
                 f"session={short(event.get('session_id'), 48)} "
                 f"NEXT={short(event.get('declared_next'))}"
             )
         elif kind == "action":
             detail = (
                 f"status={event.get('status')} source={event.get('decision_source')} "
+                f"authored={str(event.get('authored')).lower()} "
                 f"NEXT={short(event.get('declared_next'))} "
                 f"artifact={short(event.get('artifact_path'), 90)}"
+            )
+            if event.get("execution_error"):
+                detail += f" error={short(event.get('execution_error'), 100)}"
+        elif kind == "action_dispatch":
+            detail = (
+                f"phase={event.get('phase')} status={event.get('status')} authored=false "
+                f"response={short(event.get('response_sha256'), 16)} "
+                "authority=executor-idempotency"
+            )
+            if event.get("integrity_error"):
+                detail += f" integrity={event.get('integrity_error')}"
+        elif kind == "action_correction":
+            detail = (
+                f"status={event.get('status')} authored=false "
+                f"response={short(event.get('response_sha256'), 16)} "
+                f"identity={event.get('identity_kind') or 'legacy-unattributed'}"
             )
         elif kind == "chain":
             detail = (
@@ -910,7 +1289,9 @@ def text_lines(events: list[dict[str, Any]]) -> list[str]:
                 f"phase={event.get('phase')} status={event.get('status')} "
                 f"parameter={event.get('parameter')} value={event.get('requested_value')} "
                 f"rollback={event.get('rollback_reason')} authored=false "
-                f"payload_hash_valid={event.get('payload_hash_valid')}"
+                f"authority_turn={short(event.get('authority_turn_id'), 36)} "
+                f"payload_hash_valid={event.get('payload_hash_valid')} "
+                f"signature_present={event.get('signature_present_not_verified')}"
             )
         elif kind == "duplication_advisory":
             detail = (
@@ -929,6 +1310,8 @@ def text_lines(events: list[dict[str, Any]]) -> list[str]:
             )
         else:
             detail = f"status={event.get('status')} reason={short(event.get('reason'))}"
+        if event.get("correction_reason"):
+            detail += f" correction={short(event.get('correction_reason'), 80)}"
         attribution = event.get("trace_attribution")
         if attribution != "first_class":
             detail += f" attribution={attribution}"
@@ -952,6 +1335,8 @@ def parser() -> argparse.ArgumentParser:
         choices=(
             "turn",
             "action",
+            "action_correction",
+            "action_dispatch",
             "chain",
             "web_request",
             "web_result",
@@ -993,6 +1378,7 @@ def render(args: argparse.Namespace, already_seen: set[str]) -> set[str]:
             json.dumps(
                 {
                     "schema": SCHEMA,
+                    "authorship_attribution_version": AUTHORSHIP_ATTRIBUTION_VERSION,
                     "generated_at_unix_ms": now_ms,
                     "workspace": str(workspace),
                     "events": fresh,

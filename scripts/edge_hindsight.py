@@ -21,7 +21,9 @@ versioned.
 from __future__ import annotations
 
 import argparse
+import contextlib
 import datetime as dt
+import fcntl
 import hashlib
 import importlib.machinery
 import importlib.util
@@ -32,6 +34,7 @@ import sqlite3
 import stat
 import sys
 import time
+import uuid
 from pathlib import Path
 from typing import Any, Iterable, Iterator
 
@@ -42,13 +45,17 @@ FILL_SCHEMA = "astrid_edge_hindsight_fill_rollup_v1"
 REPORT_SCHEMA = "astrid_edge_hindsight_report_v1"
 LEGACY_STATE_SCHEMA = "astrid_edge_hindsight_collector_state_v1"
 STATE_SCHEMA = "astrid_edge_hindsight_collector_state_v2"
-DATABASE_SCHEMA_VERSION = 3
-ARTIFACT_ATTRIBUTION_VERSION = 3
+DATABASE_SCHEMA_VERSION = 4
+ARTIFACT_ATTRIBUTION_VERSION = 4
+ATTRIBUTION_PROJECTION_VERSION = 4
+SPECTRAL_TUNING_PROJECTION_VERSION = 2
 LEDGER_HASH_SCOPE = "exact_open_file_prefix_v1"
 DEFAULT_BUCKET_MINUTES = 15
 MAX_EXCERPT_CHARS = 480
+MAX_TRACE_LABEL_CHARS = 96
 
 ACTIVITY_LEDGERS = (
+    "actions/dispatches.jsonl",
     "actions/receipts.jsonl",
     "actions/interrupted_corrections.jsonl",
     "autonomous/runs.jsonl",
@@ -112,7 +119,12 @@ def spectral_metric(value: dict[str, Any], name: str) -> Any:
 def flatten_signed_tuning(value: dict[str, Any]) -> dict[str, Any]:
     payload = value.get("payload")
     if not isinstance(payload, dict):
-        return value
+        return {
+            **value,
+            "signed_envelope": False,
+            "payload_hash_valid": None,
+            "signature_present_not_verified": False,
+        }
     flattened = dict(payload)
     detail = payload.get("detail")
     if isinstance(detail, dict):
@@ -135,8 +147,38 @@ def now_ms() -> int:
     return time.time_ns() // 1_000_000
 
 
+def read_host_boot_id() -> str | None:
+    """Return the canonical Linux boot ID, or fail closed when unavailable."""
+    try:
+        value = Path("/proc/sys/kernel/random/boot_id").read_text(
+            encoding="utf-8"
+        ).strip()
+        return str(uuid.UUID(value))
+    except (OSError, ValueError):
+        return None
+
+
 def canonical_bytes(value: dict[str, Any]) -> bytes:
     return json.dumps(value, sort_keys=True, separators=(",", ":")).encode()
+
+
+def strict_json_loads(value: str | bytes) -> Any:
+    """Decode standard JSON and reject values Python would make non-finite."""
+
+    def reject_constant(constant: str) -> None:
+        raise ValueError(f"non-standard JSON constant: {constant}")
+
+    decoded = json.loads(value, parse_constant=reject_constant)
+    pending = [decoded]
+    while pending:
+        item = pending.pop()
+        if isinstance(item, float) and not math.isfinite(item):
+            raise ValueError("JSON number is outside the finite numeric domain")
+        if isinstance(item, dict):
+            pending.extend(item.values())
+        elif isinstance(item, list):
+            pending.extend(item)
+    return decoded
 
 
 def digest_value(value: dict[str, Any]) -> str:
@@ -179,6 +221,16 @@ def owner_directory(path: Path) -> None:
     path.chmod(0o700)
 
 
+def fsync_directory(path: Path) -> None:
+    """Persist directory-entry changes made by an atomic replace/create."""
+    flags = os.O_RDONLY | getattr(os, "O_DIRECTORY", 0)
+    descriptor = os.open(path, flags)
+    try:
+        os.fsync(descriptor)
+    finally:
+        os.close(descriptor)
+
+
 def owner_write_json(path: Path, value: dict[str, Any]) -> None:
     owner_directory(path.parent)
     temporary = path.with_name(f".{path.name}.{os.getpid()}.tmp")
@@ -191,7 +243,7 @@ def owner_write_json(path: Path, value: dict[str, Any]) -> None:
             handle.flush()
             os.fsync(handle.fileno())
         os.replace(temporary, path)
-        path.chmod(0o600)
+        fsync_directory(path.parent)
     finally:
         try:
             temporary.unlink()
@@ -206,40 +258,88 @@ def append_chained(
 ) -> tuple[str | None, int]:
     owner_directory(path.parent)
     count = 0
-    flags = os.O_WRONLY | os.O_CREAT | os.O_APPEND
+    flags = os.O_RDWR | os.O_CREAT | os.O_APPEND
+    flags |= getattr(os, "O_NOFOLLOW", 0)
     descriptor = os.open(path, flags, 0o600)
-    with os.fdopen(descriptor, "a", encoding="utf-8") as handle:
+    with os.fdopen(descriptor, "r+b") as handle:
+        os.fchmod(handle.fileno(), 0o600)
+        handle.seek(0)
+        chain, known_hashes = inspect_chain_bytes(handle.read(), present=True)
+        if not chain["valid"]:
+            issues = "; ".join(chain["issues"])
+            raise RuntimeError(f"refusing to append to invalid chain {path}: {issues}")
+        actual_head = chain["head_sha256"]
+        if (
+            previous_hash is not None
+            and previous_hash != actual_head
+            and previous_hash not in known_hashes
+        ):
+            raise RuntimeError(
+                f"collector state head is not an ancestor of {path}: {previous_hash}"
+            )
+        # A valid on-disk chain is authoritative after a crash between the
+        # append fsync and collector-state replacement. Continue from its real
+        # head instead of emitting a broken previous-hash link.
+        previous_hash = actual_head
+        handle.seek(0, os.SEEK_END)
         for source in values:
             record = {**source, "previous_record_sha256": previous_hash}
             record["record_sha256"] = digest_value(record)
-            handle.write(json.dumps(record, sort_keys=True, separators=(",", ":")))
-            handle.write("\n")
+            handle.write(
+                json.dumps(record, sort_keys=True, separators=(",", ":")).encode()
+            )
+            handle.write(b"\n")
             previous_hash = str(record["record_sha256"])
             count += 1
         handle.flush()
         os.fsync(handle.fileno())
-    path.chmod(0o600)
+    fsync_directory(path.parent)
     return previous_hash, count
+
+
+@contextlib.contextmanager
+def exclusive_collector_lock(operator_root: Path) -> Iterator[None]:
+    """Serialize a complete collector checkpoint across timer/manual runs."""
+    owner_directory(operator_root)
+    lock_path = operator_root / "collector.lock"
+    flags = os.O_RDWR | os.O_CREAT
+    flags |= getattr(os, "O_NOFOLLOW", 0)
+    descriptor = os.open(lock_path, flags, 0o600)
+    with os.fdopen(descriptor, "r+b") as handle:
+        mode = os.fstat(handle.fileno()).st_mode
+        if not stat.S_ISREG(mode):
+            raise RuntimeError(f"collector lock is not a regular file: {lock_path}")
+        os.fchmod(handle.fileno(), 0o600)
+        try:
+            fcntl.flock(handle.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError as error:
+            raise RuntimeError(
+                f"another edge hindsight collector already holds {lock_path}"
+            ) from error
+        try:
+            yield
+        finally:
+            fcntl.flock(handle.fileno(), fcntl.LOCK_UN)
 
 
 def read_json(path: Path) -> dict[str, Any]:
     try:
-        value = json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):
+        value = strict_json_loads(path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeError, ValueError):
         return {}
     return value if isinstance(value, dict) else {}
 
 
 def json_lines(path: Path) -> Iterator[dict[str, Any]]:
     try:
-        handle = path.open("r", encoding="utf-8", errors="replace")
+        handle = path.open("rb")
     except OSError:
         return
     with handle:
         for line in handle:
             try:
-                value = json.loads(line)
-            except json.JSONDecodeError:
+                value = strict_json_loads(line)
+            except (UnicodeError, ValueError):
                 continue
             if isinstance(value, dict):
                 yield value
@@ -256,15 +356,64 @@ def normalize_relative_path(value: Any) -> str | None:
     return candidate.as_posix()
 
 
+def normalized_uuid(value: Any) -> str | None:
+    try:
+        parsed = uuid.UUID(str(value))
+    except (TypeError, ValueError, AttributeError):
+        return None
+    return str(parsed) if parsed.int != 0 else None
+
+
 def trace_summary(value: dict[str, Any]) -> dict[str, Any] | None:
     trace = value.get("trace")
-    if not isinstance(trace, dict):
+    if not isinstance(trace, dict) or trace.get("schema_version", 1) != 1:
         return None
-    return {
-        key: trace.get(key)
-        for key in ("schema_version", "trace_id", "span_id", "parent_span_id", "session_id", "chain_id")
-        if trace.get(key) is not None
-    }
+
+    def identifier(name: str, *, required: bool) -> str | None:
+        raw = trace.get(name)
+        if raw is None:
+            if required:
+                raise ValueError(name)
+            return None
+        parsed = normalized_uuid(raw)
+        if parsed is None:
+            raise ValueError(name)
+        return parsed
+
+    def label(name: str, *, required: bool) -> str | None:
+        raw = trace.get(name)
+        if raw is None:
+            if required:
+                raise ValueError(name)
+            return None
+        if (
+            not isinstance(raw, str)
+            or not raw.strip()
+            or len(raw) > MAX_TRACE_LABEL_CHARS
+            or any(ord(character) < 0x20 or ord(character) == 0x7F for character in raw)
+        ):
+            raise ValueError(name)
+        return raw
+
+    try:
+        result = {
+            "schema_version": 1,
+            "trace_id": identifier("trace_id", required=True),
+            "span_id": identifier("span_id", required=True),
+            "session_id": label("session_id", required=True),
+        }
+        for name, normalized in (
+            ("parent_span_id", identifier("parent_span_id", required=False)),
+            ("turn_id", identifier("turn_id", required=False)),
+            ("chain_id", label("chain_id", required=False)),
+        ):
+            if normalized is not None:
+                result[name] = normalized
+        if result.get("parent_span_id") == result.get("span_id"):
+            return None
+    except (TypeError, ValueError, AttributeError):
+        return None
+    return result
 
 
 def action_authority(declared_next: Any, decision_source: Any) -> tuple[str, bool]:
@@ -313,14 +462,34 @@ def action_authority(declared_next: Any, decision_source: Any) -> tuple[str, boo
 
 def attribution_index(workspace: Path) -> dict[str, dict[str, Any]]:
     index: dict[str, dict[str, Any]] = {}
-    interrupted_action_corrections = {
-        str(item.get("response_sha256") or ""): item
-        for item in json_lines(workspace / "actions/interrupted_corrections.jsonl")
-        if item.get("corrected_status") == "revoked_interrupted_trace_non_authored"
-    }
+    activity_module = load_activity_module(infer_state_root(workspace))
+    transport_corrections = (
+        activity_module.transport_authorship_corrections(workspace)
+        if activity_module is not None
+        else {}
+    )
+    interrupted_action_corrections = {}
+    if activity_module is not None:
+        interrupted_action_corrections = {
+            key: item
+            for item in json_lines(workspace / "actions/interrupted_corrections.jsonl")
+            if item.get("corrected_status")
+            == "revoked_interrupted_trace_non_authored"
+            if (
+                key := activity_module.interrupted_correction_identity(item)
+            )
+            is not None
+        }
     for run in json_lines(workspace / "autonomous/runs.jsonl"):
-        status = str(run.get("status", ""))
-        authored = status == "authored_completed"
+        if activity_module is not None:
+            run_authorship = activity_module.run_authorship(
+                run, transport_corrections
+            )
+            authored = run_authorship.authored
+            correction = run_authorship.correction
+        else:
+            authored = str(run.get("status", "")) == "authored_completed"
+            correction = None
         for field in ("transcript_path", "journal_path"):
             relative = normalize_relative_path(run.get(field))
             if relative is None:
@@ -331,7 +500,11 @@ def attribution_index(workspace: Path) -> dict[str, dict[str, Any]]:
                 else "executor_transport_record_not_astrid_authorship"
             )
             index[relative] = {
-                "causal_attribution": "exact_run_path_join",
+                "causal_attribution": (
+                    "exact_authorship_correction_join"
+                    if correction
+                    else "exact_run_path_join"
+                ),
                 "authority": authority,
                 "astrid_authored": authored,
                 "causal_timestamp_unix_ms": int(
@@ -341,15 +514,52 @@ def attribution_index(workspace: Path) -> dict[str, dict[str, Any]]:
                 "session_id": run.get("session_name"),
                 "trace": trace_summary(run),
             }
+    seen_transport_corrections: set[str] = set()
+    for correction in transport_corrections.values():
+        correction_id = str(
+            correction.get("original_transcript_path")
+            or correction.get("response_sha256")
+            or ""
+        )
+        if not correction_id or correction_id in seen_transport_corrections:
+            continue
+        seen_transport_corrections.add(correction_id)
+        for field in ("recovery_transcript_path", "recovery_journal_path"):
+            relative = normalize_relative_path(correction.get(field))
+            if relative is None:
+                continue
+            index[relative] = {
+                "causal_attribution": "exact_authorship_correction_join",
+                "authority": "executor_transport_record_not_astrid_authorship",
+                "astrid_authored": False,
+                "causal_timestamp_unix_ms": int(
+                    correction.get("recorded_at_unix_ms", 0) or 0
+                ),
+                "response_sha256": correction.get("response_sha256"),
+                "session_id": None,
+                "trace": None,
+            }
     for action in json_lines(workspace / "actions/receipts.jsonl"):
         relative = normalize_relative_path(action.get("artifact_path"))
         if relative is None:
             continue
-        correction = interrupted_action_corrections.get(
-            str(action.get("response_sha256") or "")
+        action_identity = (
+            activity_module.exact_response_identity(action)
+            if activity_module is not None
+            else None
+        )
+        correction = interrupted_action_corrections.get(action_identity)
+        transport_correction = (
+            activity_module.transport_authorship_correction(
+                action, transport_corrections
+            )
+            if activity_module is not None
+            else None
         )
         if correction:
             authority, authored = "revoked_interrupted_trace_non_authored", False
+        elif transport_correction:
+            authority, authored = "revoked_legacy_transport_non_authored", False
         else:
             authority, authored = action_authority(
                 action.get("declared_next"), action.get("decision_source")
@@ -357,7 +567,7 @@ def attribution_index(workspace: Path) -> dict[str, dict[str, Any]]:
         index[relative] = {
             "causal_attribution": (
                 "exact_action_correction_join"
-                if correction
+                if correction or transport_correction
                 else "exact_action_path_join"
             ),
             "authority": authority,
@@ -582,9 +792,9 @@ def ingest_fill(
                 break
             offset = handle.tell()
             try:
-                value = json.loads(line)
+                value = strict_json_loads(line)
                 timestamp = int(value["recorded_at_unix_ms"])
-            except (json.JSONDecodeError, KeyError, TypeError, ValueError):
+            except (KeyError, OverflowError, TypeError, UnicodeError, ValueError):
                 continue
             start = timestamp - timestamp % bucket_ms
             if pending is None:
@@ -636,13 +846,14 @@ def ledger_summary(
             nonlocal first_timestamp, last_timestamp
             line_count += 1
             try:
-                value = json.loads(raw_line.decode("utf-8", errors="replace"))
-            except json.JSONDecodeError:
+                value = strict_json_loads(raw_line)
+            except (UnicodeError, ValueError):
+                invalid_json += 1
+                return
+            if not isinstance(value, dict):
                 invalid_json += 1
                 return
             valid_json += 1
-            if not isinstance(value, dict):
-                return
             timestamp = next(
                 (
                     int(value[field])
@@ -685,6 +896,7 @@ def ledger_summary(
         "valid_json_lines": valid_json,
         "invalid_json_lines": invalid_json,
         "trailing_partial_bytes": len(pending),
+        "snapshot_unread_bytes": remaining,
         "first_timestamp_unix_ms": first_timestamp,
         "last_timestamp_unix_ms": last_timestamp,
         "sha256": digest.hexdigest(),
@@ -766,6 +978,25 @@ def activity_events(workspace: Path, current_ms: int) -> list[dict[str, Any]]:
     return list(module.collect_events(workspace, current_ms))
 
 
+def ensure_database_column(
+    connection: sqlite3.Connection,
+    table: str,
+    column: str,
+    declaration: str,
+) -> None:
+    """Add one optional projection column without rebuilding an existing DB."""
+    if not table.replace("_", "").isalnum() or not column.replace("_", "").isalnum():
+        raise ValueError("invalid SQLite projection identifier")
+    existing = {
+        str(row[1])
+        for row in connection.execute(f'PRAGMA table_info("{table}")').fetchall()
+    }
+    if column not in existing:
+        connection.execute(
+            f'ALTER TABLE "{table}" ADD COLUMN "{column}" {declaration}'
+        )
+
+
 def prepare_hindsight_database(connection: sqlite3.Connection) -> None:
     connection.executescript(
         """
@@ -782,6 +1013,7 @@ def prepare_hindsight_database(connection: sqlite3.Connection) -> None:
             trace_id TEXT,
             session_id TEXT,
             chain_id TEXT,
+            turn_id TEXT,
             status TEXT,
             declared_next TEXT,
             source_ledger TEXT NOT NULL,
@@ -802,6 +1034,7 @@ def prepare_hindsight_database(connection: sqlite3.Connection) -> None:
             astrid_authored INTEGER NOT NULL,
             causal_attribution TEXT NOT NULL,
             trace_id TEXT,
+            turn_id TEXT,
             payload_json TEXT NOT NULL
         );
         CREATE INDEX IF NOT EXISTS artifact_versions_time
@@ -834,6 +1067,7 @@ def prepare_hindsight_database(connection: sqlite3.Connection) -> None:
             density_gradient REAL,
             mode_turnover REAL,
             trace_id TEXT,
+            turn_id TEXT,
             payload_json TEXT NOT NULL
         );
         CREATE INDEX IF NOT EXISTS spectral_rollups_time
@@ -852,13 +1086,35 @@ def prepare_hindsight_database(connection: sqlite3.Connection) -> None:
             trace_id TEXT,
             session_id TEXT,
             chain_id TEXT,
+            turn_id TEXT,
+            authority_turn_id TEXT,
             response_sha256 TEXT,
+            payload_sha256 TEXT,
+            payload_hash_valid INTEGER,
+            signature_present_not_verified INTEGER,
             payload_json TEXT NOT NULL
         );
         CREATE INDEX IF NOT EXISTS tuning_events_time
             ON tuning_events(recorded_at_unix_ms);
         CREATE INDEX IF NOT EXISTS tuning_events_trace
             ON tuning_events(trace_id, recorded_at_unix_ms);
+        CREATE TABLE IF NOT EXISTS spectral_receipts (
+            event_id TEXT PRIMARY KEY,
+            recorded_at_unix_ms INTEGER NOT NULL,
+            phase TEXT NOT NULL,
+            status TEXT,
+            event_kind TEXT,
+            trace_id TEXT,
+            session_id TEXT,
+            chain_id TEXT,
+            turn_id TEXT,
+            response_sha256 TEXT,
+            payload_json TEXT NOT NULL
+        );
+        CREATE INDEX IF NOT EXISTS spectral_receipts_time
+            ON spectral_receipts(recorded_at_unix_ms);
+        CREATE INDEX IF NOT EXISTS spectral_receipts_trace
+            ON spectral_receipts(trace_id, recorded_at_unix_ms);
         CREATE TABLE IF NOT EXISTS checkpoints (
             record_sha256 TEXT PRIMARY KEY,
             recorded_at_unix_ms INTEGER NOT NULL,
@@ -868,6 +1124,40 @@ def prepare_hindsight_database(connection: sqlite3.Connection) -> None:
         );
         CREATE INDEX IF NOT EXISTS checkpoints_time
             ON checkpoints(recorded_at_unix_ms);
+        """
+    )
+    # ``CREATE TABLE IF NOT EXISTS`` does not evolve installed projections.
+    # These nullable additions keep upgrades in place and avoid destructive
+    # table replacement while the source ledgers remain authoritative.
+    for table, column, declaration in (
+        ("activity_events", "turn_id", "TEXT"),
+        ("artifact_versions", "turn_id", "TEXT"),
+        ("spectral_rollups", "turn_id", "TEXT"),
+        ("tuning_events", "turn_id", "TEXT"),
+        ("tuning_events", "authority_turn_id", "TEXT"),
+        ("tuning_events", "payload_sha256", "TEXT"),
+        ("tuning_events", "payload_hash_valid", "INTEGER"),
+        (
+            "tuning_events",
+            "signature_present_not_verified",
+            "INTEGER",
+        ),
+    ):
+        ensure_database_column(connection, table, column, declaration)
+    connection.executescript(
+        """
+        CREATE INDEX IF NOT EXISTS activity_events_turn
+            ON activity_events(turn_id, timestamp_unix_ms);
+        CREATE INDEX IF NOT EXISTS artifact_versions_turn
+            ON artifact_versions(turn_id, timestamp_unix_ms);
+        CREATE INDEX IF NOT EXISTS spectral_rollups_turn
+            ON spectral_rollups(turn_id, recorded_at_unix_ms);
+        CREATE INDEX IF NOT EXISTS tuning_events_turn
+            ON tuning_events(turn_id, recorded_at_unix_ms);
+        CREATE INDEX IF NOT EXISTS tuning_events_authority_turn
+            ON tuning_events(authority_turn_id, recorded_at_unix_ms);
+        CREATE INDEX IF NOT EXISTS spectral_receipts_turn
+            ON spectral_receipts(turn_id, recorded_at_unix_ms);
         """
     )
     connection.execute(
@@ -894,6 +1184,46 @@ def sync_hindsight_database(
         connection.execute("PRAGMA journal_mode=WAL")
         connection.execute("PRAGMA synchronous=FULL")
         prepare_hindsight_database(connection)
+        prior_projection = connection.execute(
+            "SELECT value FROM metadata WHERE key = ?",
+            ("attribution_projection_version",),
+        ).fetchone()
+        if prior_projection is None or prior_projection[0] != str(
+            ATTRIBUTION_PROJECTION_VERSION
+        ):
+            # This database is a rebuildable operator projection.  Clearing
+            # attribution-bearing tables prevents pre-correction rows from
+            # coexisting with their corrected event payloads indefinitely.
+            connection.execute("DELETE FROM activity_events")
+            connection.execute("DELETE FROM artifact_versions")
+        connection.execute(
+            "INSERT OR REPLACE INTO metadata(key, value) VALUES(?, ?)",
+            (
+                "attribution_projection_version",
+                str(ATTRIBUTION_PROJECTION_VERSION),
+            ),
+        )
+        prior_spectral_tuning_projection = connection.execute(
+            "SELECT value FROM metadata WHERE key = ?",
+            ("spectral_tuning_projection_version",),
+        ).fetchone()
+        if (
+            prior_spectral_tuning_projection is None
+            or prior_spectral_tuning_projection[0]
+            != str(SPECTRAL_TUNING_PROJECTION_VERSION)
+        ):
+            # Earlier schema-v3 projections mixed spectral observation
+            # receipts into ``tuning_events``.  Both are rebuildable indexes,
+            # so clear just these projections and re-read their source ledgers.
+            connection.execute("DELETE FROM spectral_receipts")
+            connection.execute("DELETE FROM tuning_events")
+        connection.execute(
+            "INSERT OR REPLACE INTO metadata(key, value) VALUES(?, ?)",
+            (
+                "spectral_tuning_projection_version",
+                str(SPECTRAL_TUNING_PROJECTION_VERSION),
+            ),
+        )
         for event in activity_events(workspace, current_ms):
             payload = json.dumps(event, sort_keys=True, separators=(",", ":"))
             event_id = hashlib.sha256(payload.encode()).hexdigest()
@@ -901,9 +1231,9 @@ def sync_hindsight_database(
                 """
                 INSERT OR IGNORE INTO activity_events(
                     event_id, timestamp_unix_ms, kind, authored, fallback,
-                    trace_id, session_id, chain_id, status, declared_next,
-                    source_ledger, payload_json
-                ) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    trace_id, session_id, chain_id, turn_id, status,
+                    declared_next, source_ledger, payload_json
+                ) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     event_id,
@@ -918,6 +1248,7 @@ def sync_hindsight_database(
                     event.get("trace_id"),
                     event.get("session_id"),
                     event.get("chain_id"),
+                    event.get("turn_id"),
                     event.get("status"),
                     event.get("declared_next"),
                     str(event.get("source_ledger", "unknown")),
@@ -925,8 +1256,9 @@ def sync_hindsight_database(
                 ),
             )
         for value in json_lines(operator_root / "artifacts.jsonl"):
-            trace = value.get("trace")
-            trace_id = trace.get("trace_id") if isinstance(trace, dict) else None
+            trace = trace_summary(value) or {}
+            trace_id = trace.get("trace_id")
+            turn_id = trace.get("turn_id")
             timestamp = int(
                 value.get("causal_timestamp_unix_ms")
                 or value.get("file_mtime_unix_ms")
@@ -938,8 +1270,8 @@ def sync_hindsight_database(
                 INSERT OR IGNORE INTO artifact_versions(
                     record_sha256, timestamp_unix_ms, relative_path,
                     content_sha256, authority, astrid_authored,
-                    causal_attribution, trace_id, payload_json
-                ) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    causal_attribution, trace_id, turn_id, payload_json
+                ) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     value.get("record_sha256"),
@@ -950,6 +1282,7 @@ def sync_hindsight_database(
                     int(bool(value.get("astrid_authored"))),
                     str(value.get("causal_attribution", "unknown")),
                     trace_id,
+                    turn_id,
                     json.dumps(value, sort_keys=True, separators=(",", ":")),
                 ),
             )
@@ -977,8 +1310,9 @@ def sync_hindsight_database(
             )
         for value in json_lines(workspace / "spectral/rollups.jsonl"):
             payload = json.dumps(value, sort_keys=True, separators=(",", ":"))
-            trace = value.get("trace")
-            trace_id = trace.get("trace_id") if isinstance(trace, dict) else None
+            trace = trace_summary(value) or {}
+            trace_id = trace.get("trace_id")
+            turn_id = trace.get("turn_id")
             substrate = value.get("substrate")
             substrate = substrate if isinstance(substrate, dict) else {}
             record_sha256 = value.get("record_sha256") or hashlib.sha256(
@@ -990,8 +1324,8 @@ def sync_hindsight_database(
                     record_sha256, recorded_at_unix_ms, substrate_kind,
                     fill_metric, fill_pct, spectral_entropy, lambda1_share,
                     tail_share, density_gradient, mode_turnover, trace_id,
-                    payload_json
-                ) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    turn_id, payload_json
+                ) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     record_sha256,
@@ -1013,49 +1347,80 @@ def sync_hindsight_database(
                     spectral_metric(value, "density_gradient"),
                     spectral_metric(value, "mode_turnover"),
                     trace_id,
+                    turn_id,
                     payload,
                 ),
             )
-        for relative in ("spectral/receipts.jsonl", "tuning/receipts.jsonl"):
-            for raw_value in json_lines(workspace / relative):
-                value = (
-                    flatten_signed_tuning(raw_value)
-                    if relative == "tuning/receipts.jsonl"
-                    else raw_value
-                )
-                payload = json.dumps(
-                    raw_value, sort_keys=True, separators=(",", ":")
-                )
-                trace = value.get("trace")
-                trace = trace if isinstance(trace, dict) else {}
-                event_id = value.get("record_sha256") or hashlib.sha256(
-                    f"{relative}:{payload}".encode()
-                ).hexdigest()
-                connection.execute(
-                    """
-                    INSERT OR IGNORE INTO tuning_events(
-                        event_id, recorded_at_unix_ms, tuning_id, candidate_id,
-                        phase, status, parameter, requested_value, trace_id,
-                        session_id, chain_id, response_sha256, payload_json
-                    ) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                    """,
-                    (
-                        event_id,
-                        int(value.get("recorded_at_unix_ms", 0) or 0),
-                        value.get("tuning_id") or value.get("experiment_id"),
-                        value.get("candidate_id"),
-                        str(value.get("phase") or value.get("kind") or "observation"),
-                        value.get("status"),
-                        value.get("parameter"),
-                        value.get("requested_value") or value.get("value"),
-                        trace.get("trace_id"),
-                        trace.get("session_id") or value.get("session_id"),
-                        trace.get("chain_id") or value.get("chain_id"),
-                        value.get("response_sha256")
-                        or value.get("parent_response_sha256"),
-                        payload,
-                    ),
-                )
+        for value in json_lines(workspace / "spectral/receipts.jsonl"):
+            payload = json.dumps(value, sort_keys=True, separators=(",", ":"))
+            trace = trace_summary(value) or {}
+            event_id = value.get("record_sha256") or hashlib.sha256(
+                f"spectral/receipts.jsonl:{payload}".encode()
+            ).hexdigest()
+            connection.execute(
+                """
+                INSERT OR IGNORE INTO spectral_receipts(
+                    event_id, recorded_at_unix_ms, phase, status, event_kind,
+                    trace_id, session_id, chain_id, turn_id,
+                    response_sha256, payload_json
+                ) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    event_id,
+                    int(value.get("recorded_at_unix_ms", 0) or 0),
+                    str(value.get("phase") or value.get("kind") or "observation"),
+                    value.get("status"),
+                    value.get("event_kind"),
+                    trace.get("trace_id"),
+                    trace.get("session_id") or value.get("session_id"),
+                    trace.get("chain_id") or value.get("chain_id"),
+                    trace.get("turn_id") or value.get("turn_id"),
+                    value.get("response_sha256")
+                    or value.get("parent_response_sha256"),
+                    payload,
+                ),
+            )
+        for raw_value in json_lines(workspace / "tuning/receipts.jsonl"):
+            value = flatten_signed_tuning(raw_value)
+            payload = json.dumps(raw_value, sort_keys=True, separators=(",", ":"))
+            trace = trace_summary(value) or {}
+            event_id = value.get("record_sha256") or hashlib.sha256(
+                f"tuning/receipts.jsonl:{payload}".encode()
+            ).hexdigest()
+            connection.execute(
+                """
+                INSERT OR IGNORE INTO tuning_events(
+                    event_id, recorded_at_unix_ms, tuning_id, candidate_id,
+                    phase, status, parameter, requested_value, trace_id,
+                    session_id, chain_id, turn_id, authority_turn_id,
+                    response_sha256, payload_sha256, payload_hash_valid,
+                    signature_present_not_verified, payload_json
+                ) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    event_id,
+                    int(value.get("recorded_at_unix_ms", 0) or 0),
+                    value.get("tuning_id") or value.get("experiment_id"),
+                    value.get("candidate_id"),
+                    str(value.get("phase") or value.get("kind") or "observation"),
+                    value.get("status"),
+                    value.get("parameter"),
+                    value.get("requested_value") or value.get("value"),
+                    trace.get("trace_id"),
+                    trace.get("session_id") or value.get("session_id"),
+                    trace.get("chain_id") or value.get("chain_id"),
+                    trace.get("turn_id") or value.get("turn_id"),
+                    normalized_uuid(value.get("authority_turn_id")),
+                    value.get("response_sha256")
+                    or value.get("parent_response_sha256"),
+                    value.get("payload_sha256"),
+                    None
+                    if value.get("payload_hash_valid") is None
+                    else int(bool(value.get("payload_hash_valid"))),
+                    int(bool(value.get("signature_present_not_verified"))),
+                    payload,
+                ),
+            )
         for value in json_lines(operator_root / "checkpoints.jsonl"):
             connection.execute(
                 """
@@ -1092,6 +1457,7 @@ def sync_hindsight_database(
                 "artifact_versions",
                 "fill_rollups",
                 "spectral_rollups",
+                "spectral_receipts",
                 "tuning_events",
                 "checkpoints",
             )
@@ -1103,6 +1469,10 @@ def sync_hindsight_database(
             candidate.chmod(0o600)
     return {
         "schema_version": DATABASE_SCHEMA_VERSION,
+        "attribution_projection_version": ATTRIBUTION_PROJECTION_VERSION,
+        "spectral_tuning_projection_version": (
+            SPECTRAL_TUNING_PROJECTION_VERSION
+        ),
         "path": str(path),
         "quick_check": quick_check,
         "owner_only": stat.S_IMODE(path.stat().st_mode) & 0o077 == 0,
@@ -1120,15 +1490,28 @@ def hindsight_database_status(path: Path) -> dict[str, Any]:
         connection = sqlite3.connect(f"file:{path}?mode=ro", uri=True, timeout=10)
         try:
             quick_check = str(connection.execute("PRAGMA quick_check").fetchone()[0])
+            available_tables = {
+                str(row[0])
+                for row in connection.execute(
+                    "SELECT name FROM sqlite_master WHERE type = 'table'"
+                ).fetchall()
+            }
             counts = {
-                table: int(
-                    connection.execute(f"SELECT count(*) FROM {table}").fetchone()[0]
+                table: (
+                    int(
+                        connection.execute(
+                            f'SELECT count(*) FROM "{table}"'
+                        ).fetchone()[0]
+                    )
+                    if table in available_tables
+                    else 0
                 )
                 for table in (
                     "activity_events",
                     "artifact_versions",
                     "fill_rollups",
                     "spectral_rollups",
+                    "spectral_receipts",
                     "tuning_events",
                     "checkpoints",
                 )
@@ -1149,6 +1532,13 @@ def hindsight_database_status(path: Path) -> dict[str, Any]:
             "row_counts": {},
         }
     metadata = path.stat()
+
+    def metadata_integer(name: str) -> int:
+        try:
+            return int(database_metadata.get(name, "0"))
+        except (TypeError, ValueError):
+            return 0
+
     return {
         "present": True,
         "path": str(path),
@@ -1156,7 +1546,21 @@ def hindsight_database_status(path: Path) -> dict[str, Any]:
         "owner_only": stat.S_IMODE(metadata.st_mode) & 0o077 == 0,
         "size_bytes": metadata.st_size,
         "row_counts": counts,
-        "last_sync_unix_ms": int(database_metadata.get("last_sync_unix_ms", "0")),
+        "schema_version": metadata_integer("schema_version"),
+        "projection_upgrade_required": (
+            metadata_integer("schema_version") != DATABASE_SCHEMA_VERSION
+            or metadata_integer("attribution_projection_version")
+            != ATTRIBUTION_PROJECTION_VERSION
+            or metadata_integer("spectral_tuning_projection_version")
+            != SPECTRAL_TUNING_PROJECTION_VERSION
+        ),
+        "attribution_projection_version": metadata_integer(
+            "attribution_projection_version"
+        ),
+        "spectral_tuning_projection_version": metadata_integer(
+            "spectral_tuning_projection_version"
+        ),
+        "last_sync_unix_ms": metadata_integer("last_sync_unix_ms"),
     }
 
 
@@ -1215,6 +1619,15 @@ def query_hindsight_database(
             """,
             (start_ms, end_ms),
         ).fetchall()
+        spectral_receipt_payloads = connection.execute(
+            """
+            SELECT payload_json FROM spectral_receipts
+            WHERE recorded_at_unix_ms BETWEEN ? AND ?
+            ORDER BY recorded_at_unix_ms, event_id
+            LIMIT ?
+            """,
+            (start_ms, end_ms, limit),
+        ).fetchall()
         tuning_payloads = connection.execute(
             """
             SELECT payload_json FROM tuning_events
@@ -1234,8 +1647,8 @@ def query_hindsight_database(
         result: list[dict[str, Any]] = []
         for (payload,) in rows:
             try:
-                value = json.loads(payload)
-            except json.JSONDecodeError:
+                value = strict_json_loads(payload)
+            except (UnicodeError, ValueError):
                 continue
             if isinstance(value, dict):
                 result.append(value)
@@ -1247,6 +1660,7 @@ def query_hindsight_database(
         "artifacts": payloads(artifact_payloads),
         "fill_rollups": payloads(fill_payloads),
         "spectral_rollups": payloads(spectral_payloads),
+        "spectral_receipts": payloads(spectral_receipt_payloads),
         "tuning_events": [
             flatten_signed_tuning(value) for value in payloads(tuning_payloads)
         ],
@@ -1263,6 +1677,16 @@ def infer_state_root(workspace: Path) -> Path:
 
 
 def record(args: argparse.Namespace) -> dict[str, Any]:
+    workspace = args.workspace.expanduser().resolve()
+    state_root = (args.state_root or infer_state_root(workspace)).expanduser().resolve()
+    operator_root = (
+        args.operator_root or state_root / "operator/hindsight"
+    ).expanduser().resolve()
+    with exclusive_collector_lock(operator_root):
+        return record_locked(args)
+
+
+def record_locked(args: argparse.Namespace) -> dict[str, Any]:
     workspace = args.workspace.expanduser().resolve()
     state_root = (args.state_root or infer_state_root(workspace)).expanduser().resolve()
     operator_root = (args.operator_root or state_root / "operator/hindsight").expanduser().resolve()
@@ -1320,6 +1744,12 @@ def record(args: argparse.Namespace) -> dict[str, Any]:
         if isinstance(epoch_integrity_violations, list) and not migrating_from_v1
         else []
     )
+    pending_tail_observations = state.get("pending_tail_observations")
+    pending_tail_observations = (
+        pending_tail_observations
+        if isinstance(pending_tail_observations, dict) and not migrating_from_v1
+        else {}
+    )
     legacy_violation_count = state.get("legacy_violation_count_at_v2_migration")
     if not isinstance(legacy_violation_count, int):
         legacy_violation_count = len(integrity_violations) if migrating_from_v1 else 0
@@ -1360,11 +1790,75 @@ def record(args: argparse.Namespace) -> dict[str, Any]:
         relative: ledger_summary(workspace / relative)
         for relative in ACTIVITY_LEDGERS
     }
+    existing_syntax_violations = {
+        (str(value.get("ledger")), str(value.get("snapshot_sha256")))
+        for value in epoch_integrity_violations
+        if isinstance(value, dict)
+        and value.get("classification") == "ledger_malformed_json_or_partial_tail"
+    }
+    for relative, summary in ledgers.items():
+        invalid_lines = int(summary.get("invalid_json_lines", 0) or 0)
+        trailing_bytes = int(summary.get("trailing_partial_bytes", 0) or 0)
+        unread_bytes = int(summary.get("snapshot_unread_bytes", 0) or 0)
+        if not summary.get("present") or not (
+            invalid_lines or trailing_bytes or unread_bytes
+        ):
+            pending_tail_observations.pop(relative, None)
+            continue
+        signature = (relative, str(summary.get("sha256")))
+        if signature in existing_syntax_violations:
+            pending_tail_observations.pop(relative, None)
+            continue
+        tail_only = trailing_bytes > 0 and invalid_lines == 0 and unread_bytes == 0
+        tail_observation = {
+            "snapshot_sha256": summary.get("sha256"),
+            "snapshot_size_bytes": summary.get("size_bytes"),
+            "trailing_partial_bytes": trailing_bytes,
+            "first_observed_at_unix_ms": observed_at,
+        }
+        if tail_only:
+            prior_tail = pending_tail_observations.get(relative)
+            stable_tail = (
+                isinstance(prior_tail, dict)
+                and prior_tail.get("snapshot_sha256")
+                == tail_observation["snapshot_sha256"]
+                and prior_tail.get("snapshot_size_bytes")
+                == tail_observation["snapshot_size_bytes"]
+                and prior_tail.get("trailing_partial_bytes")
+                == tail_observation["trailing_partial_bytes"]
+            )
+            if not stable_tail:
+                pending_tail_observations[relative] = tail_observation
+                continue
+        pending_tail_observations.pop(relative, None)
+        violation = {
+            "classification": "ledger_malformed_json_or_partial_tail",
+            "detected_at_unix_ms": observed_at,
+            "continuity_epoch": continuity_epoch,
+            "ledger": relative,
+            "snapshot_sha256": summary.get("sha256"),
+            "snapshot_size_bytes": summary.get("size_bytes"),
+            "invalid_json_lines": invalid_lines,
+            "trailing_partial_bytes": trailing_bytes,
+            "snapshot_unread_bytes": unread_bytes,
+            "confirmation": (
+                "stable_tail_confirmed_across_subsequent_checkpoint"
+                if tail_only
+                else "complete_malformed_record_or_snapshot_short_read"
+            ),
+        }
+        integrity_violations.append(violation)
+        epoch_integrity_violations.append(violation)
+    integrity_violations = integrity_violations[-100:]
+    epoch_integrity_violations = epoch_integrity_violations[-100:]
+    if epoch_integrity_violations:
+        continuity_status = "integrity_violation"
     state_database = database_inventory(state_root / "var/state.db")
     audit_database = database_inventory(state_root / "home/default/.local/audit")
     checkpoint = {
         "schema": CHECKPOINT_SCHEMA,
         "recorded_at_unix_ms": observed_at,
+        "host_boot_id": read_host_boot_id(),
         "continuity_epoch": continuity_epoch,
         "continuity_status": continuity_status,
         "workspace": str(workspace),
@@ -1375,6 +1869,7 @@ def record(args: argparse.Namespace) -> dict[str, Any]:
         "historical_ledger_integrity_violation_count": len(integrity_violations),
         "legacy_race_compatible_unresolved_violation_count": legacy_violation_count,
         "current_epoch_integrity_violation_count": len(epoch_integrity_violations),
+        "pending_tail_observation_count": len(pending_tail_observations),
         "artifacts_discovered": artifacts_written,
         "artifact_inventory_count": len(artifact_inventory),
         "fill_rollups_completed": fill_written,
@@ -1410,6 +1905,7 @@ def record(args: argparse.Namespace) -> dict[str, Any]:
         "checkpoint_record_sha256": checkpoint_hash,
         "ledger_integrity_violations": integrity_violations,
         "epoch_integrity_violations": epoch_integrity_violations,
+        "pending_tail_observations": pending_tail_observations,
     }
     owner_write_json(state_path, state)
     owner_write_json(
@@ -1432,11 +1928,25 @@ def record(args: argparse.Namespace) -> dict[str, Any]:
     }
 
 
-def verify_chain(path: Path) -> dict[str, Any]:
+def inspect_chain_bytes(
+    raw: bytes, *, present: bool
+) -> tuple[dict[str, Any], set[str]]:
     previous: str | None = None
     count = 0
     issues: list[str] = []
-    for line_number, value in enumerate(json_lines(path), 1):
+    known_hashes: set[str] = set()
+    raw_lines = raw.splitlines(keepends=True)
+    for line_number, raw_line in enumerate(raw_lines, 1):
+        if not raw_line.endswith(b"\n"):
+            issues.append(f"line {line_number}: unterminated trailing record")
+        try:
+            value = strict_json_loads(raw_line)
+        except (UnicodeError, ValueError):
+            issues.append(f"line {line_number}: malformed JSON record")
+            continue
+        if not isinstance(value, dict):
+            issues.append(f"line {line_number}: record is not an object")
+            continue
         claimed = value.get("record_sha256")
         payload = {key: item for key, item in value.items() if key != "record_sha256"}
         actual = digest_value(payload)
@@ -1445,14 +1955,29 @@ def verify_chain(path: Path) -> dict[str, Any]:
         if claimed != actual:
             issues.append(f"line {line_number}: record hash mismatch")
         previous = str(claimed) if isinstance(claimed, str) else None
+        if previous is not None:
+            known_hashes.add(previous)
         count += 1
-    return {
-        "present": path.is_file(),
-        "valid": path.is_file() and not issues,
+    result = {
+        "present": present,
+        "valid": present and not issues,
         "records": count,
         "head_sha256": previous,
         "issues": issues[:20],
     }
+    return result, known_hashes
+
+
+def verify_chain(path: Path) -> dict[str, Any]:
+    try:
+        raw = path.read_bytes()
+    except OSError:
+        raw = b""
+        present = False
+    else:
+        present = path.is_file()
+    result, _known_hashes = inspect_chain_bytes(raw, present=present)
+    return result
 
 
 def checkpoint_prefix_status(workspace: Path, latest: dict[str, Any]) -> dict[str, Any]:
@@ -1635,7 +2160,14 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
     database_path = operator_root / "hindsight.sqlite3"
     operator_database = hindsight_database_status(database_path)
     database_view: dict[str, Any] | None = None
-    if operator_database.get("quick_check") == "ok":
+    if (
+        operator_database.get("quick_check") == "ok"
+        and operator_database.get("schema_version") == DATABASE_SCHEMA_VERSION
+        and operator_database.get("attribution_projection_version")
+        == ATTRIBUTION_PROJECTION_VERSION
+        and operator_database.get("spectral_tuning_projection_version")
+        == SPECTRAL_TUNING_PROJECTION_VERSION
+    ):
         database_view = query_hindsight_database(
             database_path, start_ms, end_ms, args.limit
         )
@@ -1717,6 +2249,7 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
 
     if database_view is not None:
         spectral_records = list(database_view["spectral_rollups"])
+        spectral_receipts = list(database_view["spectral_receipts"])
         tuning_events = list(database_view["tuning_events"])
     else:
         spectral_records = [
@@ -1726,20 +2259,21 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
             <= int(value.get("recorded_at_unix_ms", 0) or 0)
             <= end_ms
         ]
+        spectral_receipts = [
+            value
+            for value in json_lines(workspace / "spectral/receipts.jsonl")
+            if start_ms
+            <= int(value.get("recorded_at_unix_ms", 0) or 0)
+            <= end_ms
+        ][-args.limit :]
         tuning_events = [
-            (
-                flatten_signed_tuning(value)
-                if relative == "tuning/receipts.jsonl"
-                else value
-            )
-            for relative in ("spectral/receipts.jsonl", "tuning/receipts.jsonl")
-            for value in json_lines(workspace / relative)
+            flatten_signed_tuning(value)
+            for value in json_lines(workspace / "tuning/receipts.jsonl")
             if start_ms
             <= int(
                 (
                     value.get("payload", {}).get("recorded_at_unix_ms", 0)
-                    if relative == "tuning/receipts.jsonl"
-                    and isinstance(value.get("payload"), dict)
+                    if isinstance(value.get("payload"), dict)
                     else value.get("recorded_at_unix_ms", 0)
                 )
                 or 0
@@ -1753,6 +2287,28 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
         "artifacts": verify_chain(operator_root / "artifacts.jsonl"),
         "fill_rollups": verify_chain(operator_root / "fill_rollups.jsonl"),
     }
+    current_ledger_syntax = {
+        relative: ledger_summary(workspace / relative) for relative in ACTIVITY_LEDGERS
+    }
+    current_ledger_syntax_issues = {
+        relative: {
+            "invalid_json_lines": int(summary.get("invalid_json_lines", 0) or 0),
+            "trailing_partial_bytes": int(
+                summary.get("trailing_partial_bytes", 0) or 0
+            ),
+            "snapshot_unread_bytes": int(
+                summary.get("snapshot_unread_bytes", 0) or 0
+            ),
+        }
+        for relative, summary in current_ledger_syntax.items()
+        if summary.get("present")
+        and (
+            int(summary.get("invalid_json_lines", 0) or 0) > 0
+            or int(summary.get("trailing_partial_bytes", 0) or 0) > 0
+            or int(summary.get("snapshot_unread_bytes", 0) or 0) > 0
+        )
+    }
+    current_ledger_syntax_valid = not current_ledger_syntax_issues
     prefix = checkpoint_prefix_status(workspace, latest)
     prefix_ok = bool(prefix) and all(value in {"unchanged_and_verified", "append_only_advance_verified"} for value in prefix.values())
     checkpoint_at = int(latest.get("recorded_at_unix_ms", 0) or 0)
@@ -1764,6 +2320,9 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
     )
     epoch_violations = int(
         latest.get("current_epoch_integrity_violation_count", 0) or 0
+    )
+    pending_tail_observations = int(
+        latest.get("pending_tail_observation_count", 0) or 0
     )
     checkpoint_continuity_valid = latest.get(
         "continuity_from_previous_checkpoint_valid"
@@ -1779,6 +2338,8 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
             "checkpoint_present": bool(latest),
             "checkpoint_age_seconds": (current_ms - checkpoint_at) // 1000 if checkpoint_at else None,
             "chains": chains,
+            "current_ledger_syntax_valid": current_ledger_syntax_valid,
+            "current_ledger_syntax_issues": current_ledger_syntax_issues,
             "checkpointed_ledger_prefixes": prefix,
             "checkpointed_ledger_prefixes_valid": prefix_ok,
             "continuity_epoch": latest.get("continuity_epoch"),
@@ -1787,8 +2348,10 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
             "historical_ledger_integrity_violation_count": historical_violations,
             "legacy_race_compatible_unresolved_violation_count": legacy_violations,
             "current_epoch_integrity_violation_count": epoch_violations,
+            "pending_tail_observation_count": pending_tail_observations,
             "overall_valid": bool(latest)
             and chain_integrity_valid
+            and current_ledger_syntax_valid
             and prefix_ok
             and checkpoint_continuity_valid is not False
             and epoch_violations == 0,
@@ -1805,6 +2368,7 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
             "artifact_files_returned": len(artifacts),
             "fill_rollup_count_in_range": len(fill_records),
             "spectral_rollup_count_in_range": len(spectral_records),
+            "spectral_receipt_count_in_range": len(spectral_receipts),
             "tuning_event_count_in_range": len(tuning_events),
             "state_database": latest.get("state_database") or database_inventory(state_root / "var/state.db"),
             "audit_database": latest.get("audit_database") or database_inventory(state_root / "home/default/.local/audit"),
@@ -1814,6 +2378,7 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
         "spectral": {
             "summary": spectral_summary(spectral_records),
             "rollups": spectral_records,
+            "receipts": spectral_receipts,
             "tuning_events": tuning_events,
             "authority": "deterministic_machine_derivation_not_authorship_or_causal_proof",
         },
@@ -1833,10 +2398,10 @@ def render_text(report: dict[str, Any]) -> str:
         f"Workspace: {report['workspace']}",
         "",
         "## Integrity and durable coverage",
-        f"Checkpoint: {'present' if integrity['checkpoint_present'] else 'missing'}; age={integrity['checkpoint_age_seconds']}s; overall_valid={str(integrity['overall_valid']).lower()}; ledger_prefixes_valid={str(integrity['checkpointed_ledger_prefixes_valid']).lower()}; epoch={integrity.get('continuity_epoch')}; status={integrity.get('continuity_status')}; current_epoch_violations={integrity['current_epoch_integrity_violation_count']}; legacy_race_compatible_unresolved={integrity['legacy_race_compatible_unresolved_violation_count']}; historical_raw={integrity['historical_ledger_integrity_violation_count']}",
+        f"Checkpoint: {'present' if integrity['checkpoint_present'] else 'missing'}; age={integrity['checkpoint_age_seconds']}s; overall_valid={str(integrity['overall_valid']).lower()}; ledger_prefixes_valid={str(integrity['checkpointed_ledger_prefixes_valid']).lower()}; epoch={integrity.get('continuity_epoch')}; status={integrity.get('continuity_status')}; current_epoch_violations={integrity['current_epoch_integrity_violation_count']}; pending_tail_observations={integrity.get('pending_tail_observation_count', 0)}; legacy_race_compatible_unresolved={integrity['legacy_race_compatible_unresolved_violation_count']}; historical_raw={integrity['historical_ledger_integrity_violation_count']}",
         "Chains: " + ", ".join(f"{name}={'valid' if value['valid'] else 'INVALID'}({value['records']})" for name, value in integrity["chains"].items()),
         f"Query source={sources['historical_query_source']}; activity events={sources['activity_event_count_in_range']} (showing {sources['activity_events_returned']}); artifact files={sources['artifact_file_count_in_range']} (showing {sources['artifact_files_returned']}); fill rollups={sources['fill_rollup_count_in_range']}",
-        f"Spectral rollups={sources.get('spectral_rollup_count_in_range', 0)}; tuning lifecycle events={sources.get('tuning_event_count_in_range', 0)}",
+        f"Spectral rollups={sources.get('spectral_rollup_count_in_range', 0)}; spectral receipts={sources.get('spectral_receipt_count_in_range', 0)}; tuning lifecycle events={sources.get('tuning_event_count_in_range', 0)}",
     ]
     state_db = sources["state_database"]
     audit_db = sources["audit_database"]
@@ -1883,6 +2448,13 @@ def render_text(report: dict[str, Any]) -> str:
                 )
     else:
         lines.append("No substrate-labeled spectral rollups in this range.")
+    for event in spectral.get("receipts", []):
+        lines.append(
+            f"{iso_time(int(event.get('recorded_at_unix_ms', 0) or 0))} "
+            f"SPECTRAL_RECEIPT phase={event.get('phase') or event.get('kind')} "
+            f"status={event.get('status')} event={event.get('event_kind')} "
+            f"turn={str((event.get('trace') or {}).get('turn_id') or event.get('turn_id') or '-')[:8]}"
+        )
     for event in spectral.get("tuning_events", []):
         lines.append(
             f"{iso_time(int(event.get('recorded_at_unix_ms', 0) or 0))} "
@@ -1897,7 +2469,7 @@ def render_text(report: dict[str, Any]) -> str:
         authored = event.get("authored")
         detail = event.get("declared_next") or event.get("query") or event.get("url") or event.get("summary") or event.get("reason") or event.get("status")
         lines.append(
-            f"{timestamp} {kind} authored={str(authored).lower() if authored is not None else '-'} trace={str(event.get('trace_id') or 'legacy')[:8]} {short(detail, 180)}"
+            f"{timestamp} {kind} authored={str(authored).lower() if authored is not None else '-'} trace={str(event.get('trace_id') or 'legacy')[:8]} turn={str(event.get('turn_id') or '-')[:8]} {short(detail, 180)}"
         )
     if not report["activity"]:
         lines.append("No activity events in this range.")

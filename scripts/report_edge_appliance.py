@@ -18,6 +18,7 @@ import re
 import subprocess
 import time
 import urllib.request
+import uuid
 from pathlib import Path
 from typing import Any
 
@@ -40,6 +41,13 @@ ESSENTIAL_EDGE_CAPSULES = frozenset(
         "astrid-capsule-edge-context",
         "astrid-capsule-edge-introspector",
         "astrid-capsule-edge-spectral",
+    }
+)
+MODEL_RESPONSE_PROVENANCES = frozenset(
+    {
+        "model_authored",
+        "model_authored_with_local_safe_fallback",
+        "model_authored_with_local_format_repair",
     }
 )
 
@@ -72,6 +80,192 @@ def read_json_lines(path: Path) -> list[dict[str, Any]]:
         if isinstance(value, dict):
             values.append(value)
     return values
+
+
+def normalized_uuid(value: Any) -> str | None:
+    try:
+        parsed = uuid.UUID(str(value))
+    except (TypeError, ValueError, AttributeError):
+        return None
+    return str(parsed) if parsed.int != 0 else None
+
+
+def valid_trace_label(value: Any, *, required: bool) -> bool:
+    if value is None:
+        return not required
+    if not isinstance(value, str) or not value.strip() or len(value) > 96:
+        return False
+    return not any(ord(character) < 0x20 or ord(character) == 0x7F for character in value)
+
+
+def valid_trace(value: dict[str, Any]) -> bool:
+    trace = value.get("trace")
+    if not isinstance(trace, dict) or trace.get("schema_version", 1) != 1:
+        return False
+    span_id = normalized_uuid(trace.get("span_id"))
+    parent_span_id = normalized_uuid(trace.get("parent_span_id"))
+    if normalized_uuid(trace.get("trace_id")) is None or span_id is None:
+        return False
+    if trace.get("parent_span_id") is not None and parent_span_id is None:
+        return False
+    if span_id == parent_span_id:
+        return False
+    if trace.get("turn_id") is not None and normalized_uuid(trace.get("turn_id")) is None:
+        return False
+    return valid_trace_label(trace.get("session_id"), required=True) and valid_trace_label(
+        trace.get("chain_id"), required=False
+    )
+
+
+def valid_response_sha256(value: Any) -> bool:
+    return isinstance(value, str) and re.fullmatch(r"[0-9a-f]{64}", value) is not None
+
+
+def run_response_provenance(item: dict[str, Any]) -> tuple[str, bool, bool]:
+    raw = item.get("response_provenance")
+    if raw is None:
+        provenance = "legacy_unspecified"
+    elif raw in MODEL_RESPONSE_PROVENANCES | {"executor_terminal_error"}:
+        provenance = str(raw)
+    else:
+        provenance = "invalid"
+    return (
+        provenance,
+        provenance == "model_authored_with_local_safe_fallback",
+        provenance == "model_authored_with_local_format_repair",
+    )
+
+
+DispatchCorrelationKey = tuple[str, str, str, str | None, str, str]
+
+
+def dispatch_key(item: dict[str, Any]) -> DispatchCorrelationKey | None:
+    """Return turn, trace, session, chain, response, and dispatch span."""
+    turn_id = normalized_uuid(item.get("turn_id"))
+    trace = item.get("trace")
+    if (
+        item.get("schema") != "astrid_edge_action_dispatch_v1"
+        or item.get("phase") not in {"requested", "completed"}
+        or turn_id is None
+        or not valid_response_sha256(item.get("response_sha256"))
+        or not valid_trace(item)
+        or not isinstance(trace, dict)
+        or normalized_uuid(trace.get("turn_id")) != turn_id
+    ):
+        return None
+    return (
+        turn_id,
+        str(normalized_uuid(trace["trace_id"])),
+        str(trace["session_id"]),
+        str(trace["chain_id"]) if trace.get("chain_id") is not None else None,
+        str(item["response_sha256"]),
+        str(normalized_uuid(trace["span_id"])),
+    )
+
+
+def action_receipt_dispatch_key(item: dict[str, Any]) -> DispatchCorrelationKey | None:
+    """Bind an Action child span to the exact dispatch span that parented it."""
+    trace = item.get("trace")
+    if (
+        item.get("schema") != "astrid_edge_action_receipt_v4"
+        or not valid_trace(item)
+        or not isinstance(trace, dict)
+        or (turn_id := normalized_uuid(trace.get("turn_id"))) is None
+        or (parent_span_id := normalized_uuid(trace.get("parent_span_id"))) is None
+        or item.get("session_id") != trace.get("session_id")
+        or not valid_response_sha256(item.get("response_sha256"))
+    ):
+        return None
+    return (
+        turn_id,
+        str(normalized_uuid(trace["trace_id"])),
+        str(trace["session_id"]),
+        str(trace["chain_id"]) if trace.get("chain_id") is not None else None,
+        str(item["response_sha256"]),
+        parent_span_id,
+    )
+
+
+def exact_response_identity(
+    item: dict[str, Any], *, flat_identity: bool = False
+) -> tuple[str, str, str, str] | None:
+    trace = item.get("trace")
+    if isinstance(trace, dict):
+        if trace.get("schema_version", 1) != 1:
+            return None
+        exact_trace_id = normalized_uuid(trace.get("trace_id"))
+        exact_turn_id = normalized_uuid(trace.get("turn_id"))
+    elif flat_identity:
+        exact_trace_id = normalized_uuid(item.get("trace_id"))
+        exact_turn_id = normalized_uuid(item.get("turn_id"))
+    else:
+        return None
+    response_hash = item.get("response_sha256")
+    if exact_trace_id is None or not valid_response_sha256(response_hash):
+        return None
+    if exact_turn_id is not None:
+        return "turn", exact_turn_id, exact_trace_id, str(response_hash)
+    return "trace", "", exact_trace_id, str(response_hash)
+
+
+def interrupted_correction_identity(
+    item: dict[str, Any],
+) -> tuple[str, str, str, str] | None:
+    if item.get("schema") != "astrid_edge_interrupted_action_correction_v2":
+        return None
+    return exact_response_identity(item, flat_identity=True)
+
+
+def summarize_action_dispatches(
+    action_dispatches: list[dict[str, Any]],
+    action_receipts: list[dict[str, Any]],
+) -> dict[str, int]:
+    valid_dispatches = [
+        (item, key)
+        for item in action_dispatches
+        if (key := dispatch_key(item)) is not None
+    ]
+    requested_keys = [
+        key for item, key in valid_dispatches if item.get("phase") == "requested"
+    ]
+    completed_keys = [
+        key for item, key in valid_dispatches if item.get("phase") == "completed"
+    ]
+    receipt_keys = [
+        key
+        for item in action_receipts
+        if (key := action_receipt_dispatch_key(item)) is not None
+    ]
+    requested_set = set(requested_keys)
+    completed_set = set(completed_keys)
+    receipt_set = set(receipt_keys)
+    paired_dispatches = requested_set & completed_set
+    return {
+        "records_total": len(action_dispatches),
+        "requested_total": len(requested_keys),
+        "completed_total": len(completed_keys),
+        "fully_correlated_total": len(paired_dispatches & receipt_set),
+        "pending_total": len(requested_set - completed_set),
+        "orphan_completion_total": len(completed_set - requested_set),
+        "completed_without_action_receipt_total": len(
+            paired_dispatches - receipt_set
+        ),
+        "action_receipt_without_intent_total": len(receipt_set - requested_set),
+        "action_receipt_without_completion_total": len(
+            (receipt_set & requested_set) - completed_set
+        ),
+        "duplicate_phase_total": len(requested_keys)
+        - len(requested_set)
+        + len(completed_keys)
+        - len(completed_set),
+        "duplicate_action_receipt_total": len(receipt_keys) - len(receipt_set),
+        "unattributed_action_receipt_total": sum(
+            action_receipt_dispatch_key(item) is None for item in action_receipts
+        ),
+        "malformed_total": sum(
+            dispatch_key(item) is None for item in action_dispatches
+        ),
+    }
 
 
 def spectral_metric(value: dict[str, Any], name: str) -> Any:
@@ -495,7 +689,7 @@ def main() -> int:
         ),
     )
     emit(
-        "spectral_window_exact_activity_refs",
+        "spectral_window_temporal_activity_contexts",
         sum(int(item.get("activity_ref_count", 0) or 0) for item in spectral_rollups),
     )
     emit(
@@ -514,7 +708,10 @@ def main() -> int:
     )
     spectral_paths = (
         workspace / "spectral/rollups.jsonl",
-        workspace / "spectral/recent_rollups.jsonl",
+        workspace / "spectral/recent_rollups.current.jsonl",
+        workspace / "spectral/recent_rollups.previous.jsonl",
+        workspace / "spectral/activity_receipts.current.jsonl",
+        workspace / "spectral/activity_receipts.previous.jsonl",
         workspace / "spectral/receipts.jsonl",
     )
     emit(
@@ -698,14 +895,39 @@ def main() -> int:
         "last_trace_id",
         "active_chain_id",
         "active_chain_step",
+        "run_receipt_pending",
+        "chain_receipt_pending",
+        "action_dispatch_pending",
+        "operator_pause_reason",
+        "operator_pause_since_unix_ms",
         "next_due_at_unix_ms",
         "last_perception_consumed_at_unix_ms",
     )
     for key in state_keys:
-        value = autonomy.get(key, "none" if key == "active_chain_id" else 0)
-        if key == "active_chain_id" and value is None:
+        optional_text = key in ("active_chain_id", "operator_pause_reason")
+        value = autonomy.get(key, "none" if optional_text else 0)
+        if optional_text and value is None:
             value = "none"
         emit(f"autonomy_{key}", value)
+    last_response_provenance, last_safe_fallback, last_format_repair = (
+        run_response_provenance(
+            {"response_provenance": autonomy.get("last_response_provenance")}
+        )
+    )
+    emit("autonomy_last_response_provenance", last_response_provenance)
+    emit(
+        "autonomy_last_local_safe_fallback_used",
+        last_safe_fallback,
+    )
+    emit(
+        "autonomy_last_local_format_repair_used",
+        last_format_repair,
+    )
+    last_trace = autonomy.get("last_trace")
+    emit(
+        "autonomy_last_turn_id",
+        last_trace.get("turn_id", "none") if isinstance(last_trace, dict) else "none",
+    )
 
     thread = read_json(workspace / "autonomous/thread_state.json")
     emit("thread_state_schema", thread.get("schema", "none"))
@@ -811,6 +1033,27 @@ def main() -> int:
         for item in recent_runs
         if int(item.get("completed_at_unix_ms", 0) or 0) >= cutoff_ms
     ]
+    run_provenance = [run_response_provenance(item) for item in window_runs]
+    for provenance in (
+        "model_authored",
+        "model_authored_with_local_safe_fallback",
+        "model_authored_with_local_format_repair",
+        "executor_terminal_error",
+        "legacy_unspecified",
+        "invalid",
+    ):
+        emit(
+            f"autonomy_window_response_provenance_{provenance}_turns",
+            sum(value[0] == provenance for value in run_provenance),
+        )
+    emit(
+        "autonomy_window_local_safe_fallback_used_turns",
+        sum(value[1] for value in run_provenance),
+    )
+    emit(
+        "autonomy_window_local_format_repair_used_turns",
+        sum(value[2] for value in run_provenance),
+    )
     prompt_chars = [
         int(item.get("prompt_chars", 0) or 0)
         for item in window_runs
@@ -848,20 +1091,35 @@ def main() -> int:
     )
 
     action_receipts = read_json_lines(workspace / "actions/receipts.jsonl")
+    action_dispatches = read_json_lines(workspace / "actions/dispatches.jsonl")
+    dispatch_summary = summarize_action_dispatches(action_dispatches, action_receipts)
+    for field, value in dispatch_summary.items():
+        emit(f"action_dispatch_{field}", value)
+    interrupted_correction_records = read_json_lines(
+        workspace / "actions/interrupted_corrections.jsonl"
+    )
     interrupted_action_corrections = {
-        str(item.get("response_sha256") or ""): item
-        for item in read_json_lines(
-            workspace / "actions/interrupted_corrections.jsonl"
-        )
+        key: item
+        for item in interrupted_correction_records
         if item.get("corrected_status") == "revoked_interrupted_trace_non_authored"
+        if (key := interrupted_correction_identity(item)) is not None
     }
     emit(
         "action_interrupted_trace_corrections_total",
         len(interrupted_action_corrections),
     )
+    emit(
+        "action_interrupted_legacy_unattributed_corrections_total",
+        sum(
+            item.get("corrected_status")
+            == "revoked_interrupted_trace_non_authored"
+            and interrupted_correction_identity(item) is None
+            for item in interrupted_correction_records
+        ),
+    )
     for index, item in enumerate(action_receipts[-5:], start=1):
         correction = interrupted_action_corrections.get(
-            str(item.get("response_sha256") or "")
+            exact_response_identity(item)
         )
         for key in (
             "recorded_at_unix_ms",
@@ -869,6 +1127,7 @@ def main() -> int:
             "declared_next",
             "unexecuted_intention",
             "validation_reason",
+            "execution_error",
         ):
             emit(f"recent_action_{index}_{key}", item.get(key, "none"))
         emit(
@@ -1186,7 +1445,7 @@ def main() -> int:
         if int(item.get("recorded_at_unix_ms", 0)) >= cutoff_ms
     ]
     def action_provenance(item: dict[str, Any]) -> str:
-        if str(item.get("response_sha256") or "") in interrupted_action_corrections:
+        if exact_response_identity(item) in interrupted_action_corrections:
             return "revoked_interrupted_trace_non_authored"
         return str(item.get("decision_source", "unknown"))
 
