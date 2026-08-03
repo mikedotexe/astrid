@@ -3,6 +3,8 @@
 
 from __future__ import annotations
 
+import contextlib
+import io
 import json
 import sys
 import tempfile
@@ -197,6 +199,183 @@ class EdgeActivityTest(unittest.TestCase):
         self.assertFalse(legacy.local_safe_fallback_used)
         self.assertFalse(legacy.local_format_repair_used)
 
+    def test_modern_terminal_runs_without_provenance_are_explicitly_non_authored(
+        self,
+    ) -> None:
+        for status in ("transport_recovery", "failed", "interrupted"):
+            expected = f"{status}_non_authored"
+            for explicit_null in (False, True):
+                run = {
+                    "schema": "astrid_edge_autonomy_run_v4",
+                    "status": status,
+                }
+                if explicit_null:
+                    run["response_provenance"] = None
+                with self.subTest(status=status, explicit_null=explicit_null):
+                    result = activity.run_authorship(run, {})
+                    self.assertEqual(result.response_provenance, expected)
+                    self.assertFalse(result.authored)
+                    self.assertTrue(result.fallback)
+
+        corrected = activity.run_authorship(
+            {
+                "schema": "astrid_edge_autonomy_run_v4",
+                "status": "authored_completed",
+                "transcript_path": "transcripts/corrected.md",
+            },
+            {"transcript:transcripts/corrected.md": {"reason": "corrected"}},
+        )
+        self.assertEqual(corrected.status, "transport_recovery")
+        self.assertEqual(
+            corrected.response_provenance, "transport_recovery_non_authored"
+        )
+        self.assertFalse(corrected.authored)
+
+    def test_missing_provenance_stays_legacy_when_not_a_modern_terminal_run(
+        self,
+    ) -> None:
+        cases = (
+            {"status": "failed"},
+            {
+                "schema": "astrid_edge_autonomy_run_v3",
+                "status": "interrupted",
+                "response_provenance": None,
+            },
+            {
+                "schema": "astrid_edge_autonomy_run_v4",
+                "status": "authored_completed",
+            },
+            {
+                "schema": "astrid_edge_autonomy_run_v4",
+                "status": "otherwise_unmarked",
+            },
+        )
+        for run in cases:
+            with self.subTest(run=run):
+                result = activity.run_authorship(run, {})
+                self.assertEqual(result.response_provenance, "legacy_unspecified")
+
+    def test_malformed_or_claimed_derived_raw_provenance_is_invalid(self) -> None:
+        for raw_provenance in (
+            ["model_authored"],
+            {"kind": "model_authored"},
+            "failed_non_authored",
+        ):
+            with self.subTest(raw_provenance=raw_provenance):
+                result = activity.run_authorship(
+                    {
+                        "schema": "astrid_edge_autonomy_run_v4",
+                        "status": "failed",
+                        "response_provenance": raw_provenance,
+                    },
+                    {},
+                )
+                self.assertEqual(result.response_provenance, "invalid")
+                self.assertFalse(result.authored)
+                self.assertTrue(result.fallback)
+
+    def test_response_provenance_counters_are_fixed_and_zero_filled(self) -> None:
+        events = [
+            {
+                "kind": "turn",
+                "response_provenance": "failed_non_authored",
+            },
+            {
+                "kind": "turn",
+                "response_provenance": "failed_non_authored",
+            },
+            {
+                "kind": "turn",
+                "response_provenance": "legacy_unspecified",
+            },
+            {"kind": "action", "response_provenance": "model_authored"},
+        ]
+        counts = activity.response_provenance_counts(events)
+        self.assertEqual(
+            tuple(counts), activity.RESPONSE_PROVENANCE_COUNTER_KEYS
+        )
+        self.assertEqual(counts["failed_non_authored"], 2)
+        self.assertEqual(counts["legacy_unspecified"], 1)
+        self.assertEqual(counts["transport_recovery_non_authored"], 0)
+        self.assertEqual(sum(counts.values()), 3)
+        self.assertEqual(
+            activity.response_provenance_summary_line(events),
+            "RESPONSE_PROVENANCE_COUNTS "
+            + " ".join(
+                f"{key}={counts[key]}"
+                for key in activity.RESPONSE_PROVENANCE_COUNTER_KEYS
+            ),
+        )
+
+    def test_json_output_includes_terminal_provenance_counters(self) -> None:
+        self.write_lines(
+            "autonomous/runs.jsonl",
+            [
+                {
+                    "schema": "astrid_edge_autonomy_run_v4",
+                    "completed_at_unix_ms": timestamp,
+                    "status": status,
+                    "response_provenance": None,
+                }
+                for timestamp, status in (
+                    (100, "transport_recovery"),
+                    (200, "failed"),
+                    (300, "interrupted"),
+                )
+            ],
+        )
+        args = activity.parser().parse_args(
+            [
+                "--workspace",
+                str(self.workspace),
+                "--since",
+                "0",
+                "--until",
+                "1",
+                "--format",
+                "json",
+            ]
+        )
+        output = io.StringIO()
+        with contextlib.redirect_stdout(output):
+            activity.render(args, set())
+        report = json.loads(output.getvalue())
+        self.assertEqual(report["authorship_attribution_version"], 6)
+        self.assertEqual(
+            [event["response_provenance"] for event in report["events"]],
+            [
+                "transport_recovery_non_authored",
+                "failed_non_authored",
+                "interrupted_non_authored",
+            ],
+        )
+        counts = report["response_provenance_counts"]
+        self.assertEqual(
+            tuple(counts), activity.RESPONSE_PROVENANCE_COUNTER_KEYS
+        )
+        self.assertEqual(counts["transport_recovery_non_authored"], 1)
+        self.assertEqual(counts["failed_non_authored"], 1)
+        self.assertEqual(counts["interrupted_non_authored"], 1)
+        self.assertEqual(counts["model_authored"], 0)
+
+        text_args = activity.parser().parse_args(
+            [
+                "--workspace",
+                str(self.workspace),
+                "--since",
+                "0",
+                "--until",
+                "1",
+            ]
+        )
+        text_output = io.StringIO()
+        with contextlib.redirect_stdout(text_output):
+            activity.render(text_args, set())
+        self.assertEqual(
+            text_output.getvalue().splitlines()[0],
+            activity.response_provenance_summary_line(report["events"]),
+        )
+
     def test_turn_activity_renders_local_modification_flags(self) -> None:
         self.write_lines(
             "autonomous/runs.jsonl",
@@ -227,6 +406,178 @@ class EdgeActivityTest(unittest.TestCase):
             "provenance=model_authored_with_local_format_repair", rendered
         )
         self.assertIn("local_format_repair=true", rendered)
+
+    def test_turn_activity_separates_exact_and_legacy_header_latency(self) -> None:
+        exact_trace = self.trace(self.TRACE_ONE, self.SPAN_ROOT)
+        self.write_lines(
+            "autonomous/runs.jsonl",
+            [
+                {
+                    "schema": "astrid_edge_autonomy_run_v4",
+                    "completed_at_unix_ms": 100,
+                    "status": "authored_completed",
+                    "trigger": "exact",
+                    "request_header_latency_ms": 288_001,
+                    "request_header_latency_source": "kernel_http_host_trace_v1",
+                    "provider_request_id": "00000000-0000-4000-8000-000000000071",
+                    "provider_request_count": 1,
+                    "provider_successful_header_count": 1,
+                    "provider_requests": [
+                        {
+                            "attempt_id": "00000000-0000-4000-8000-000000000075",
+                            "request_id": "00000000-0000-4000-8000-000000000071",
+                            "outcome": "successful_headers",
+                            "request_header_latency_ms": 288_001,
+                        }
+                    ],
+                    "trace": exact_trace,
+                },
+                {
+                    "schema": "astrid_edge_autonomy_run_v4",
+                    "completed_at_unix_ms": 102,
+                    "status": "authored_completed",
+                    "trigger": "tampered-exact",
+                    "request_header_latency_ms": 9,
+                    "request_header_latency_source": "kernel_http_host_trace_v1",
+                    "provider_request_id": "00000000-0000-4000-8000-000000000091",
+                    "provider_request_count": 1,
+                    "provider_successful_header_count": 1,
+                    "provider_requests": [
+                        {
+                            "attempt_id": "00000000-0000-4000-8000-000000000095",
+                            "request_id": "00000000-0000-4000-8000-000000000091",
+                            "outcome": ["successful_headers"],
+                            "request_header_latency_ms": 9,
+                        }
+                    ],
+                    "trace": self.trace(
+                        "00000000-0000-4000-8000-000000000092",
+                        "00000000-0000-4000-8000-000000000093",
+                        turn_id="00000000-0000-4000-8000-000000000094",
+                    ),
+                },
+                {
+                    "schema": "astrid_edge_autonomy_run_v4",
+                    "completed_at_unix_ms": 103,
+                    "status": "authored_completed",
+                    "trigger": "multi",
+                    "request_header_latency_ms": None,
+                    "request_header_latency_source": "kernel_http_host_trace_v1",
+                    "provider_request_count": 2,
+                    "provider_successful_header_count": 1,
+                    "provider_requests": [
+                        {
+                            "attempt_id": "00000000-0000-4000-8000-0000000000a1",
+                            "request_id": "00000000-0000-4000-8000-0000000000a2",
+                            "outcome": "timeout",
+                        },
+                        {
+                            "attempt_id": "00000000-0000-4000-8000-0000000000a3",
+                            "request_id": "00000000-0000-4000-8000-0000000000a4",
+                            "outcome": "successful_headers",
+                            "request_header_latency_ms": 17,
+                        },
+                    ],
+                    "trace": self.trace(
+                        "00000000-0000-4000-8000-0000000000a5",
+                        "00000000-0000-4000-8000-0000000000a6",
+                        turn_id="00000000-0000-4000-8000-0000000000a7",
+                    ),
+                },
+                {
+                    "schema": "astrid_edge_autonomy_run_v4",
+                    "completed_at_unix_ms": 101,
+                    "status": "authored_completed",
+                    "trigger": "legacy",
+                    "request_header_latency_ms": 7,
+                    "trace": self.trace(
+                        "00000000-0000-4000-8000-000000000081",
+                        "00000000-0000-4000-8000-000000000082",
+                        turn_id="00000000-0000-4000-8000-000000000083",
+                    ),
+                },
+            ],
+        )
+        turns = {
+            event["trigger"]: event
+            for event in activity.collect_events(self.workspace, 1_000)
+            if event["kind"] == "turn"
+        }
+        exact = turns["exact"]
+        self.assertEqual(exact["request_header_latency_ms"], 288_001)
+        self.assertEqual(
+            exact["request_header_latency_source"], "kernel_http_host_trace_v1"
+        )
+        self.assertEqual(
+            exact["provider_request_id"],
+            "00000000-0000-4000-8000-000000000071",
+        )
+        self.assertEqual(exact["provider_request_count"], 1)
+        self.assertEqual(exact["provider_successful_header_count"], 1)
+        self.assertEqual(len(exact["provider_requests"]), 1)
+        self.assertFalse(exact["provider_metrics_invalid_claimed_exact"])
+        self.assertIsNone(exact["request_header_latency_ms_legacy_unattributed"])
+
+        legacy = turns["legacy"]
+        self.assertIsNone(legacy["request_header_latency_ms"])
+        self.assertIsNone(legacy["request_header_latency_source"])
+        self.assertEqual(legacy["request_header_latency_ms_legacy_unattributed"], 7)
+
+        tampered = turns["tampered-exact"]
+        self.assertIsNone(tampered["request_header_latency_ms"])
+        self.assertIsNone(tampered["request_header_latency_ms_legacy_unattributed"])
+        self.assertIsNone(tampered["provider_request_count"])
+        self.assertTrue(tampered["provider_metrics_invalid_claimed_exact"])
+
+        multi = turns["multi"]
+        self.assertEqual(multi["provider_request_count"], 2)
+        self.assertEqual(multi["provider_successful_header_count"], 1)
+        self.assertEqual(len(multi["provider_requests"]), 2)
+        self.assertIsNone(multi["provider_request_id"])
+        self.assertIsNone(multi["request_header_latency_ms"])
+        self.assertFalse(multi["provider_metrics_invalid_claimed_exact"])
+        self.assertIsNone(
+            activity.legacy_unattributed_header_latency(
+                {"request_header_latency_ms": float("nan")}
+            )
+        )
+
+    def test_completed_operator_session_retirement_is_visible_and_non_authored(self) -> None:
+        self.write_lines(
+            "autonomous/session_retirements.jsonl",
+            [
+                {
+                    "schema": "astrid_edge_operator_session_retirement_v1",
+                    "phase": "requested",
+                    "recorded_at_unix_ms": 99,
+                    "prior_session_generation": 255,
+                    "new_session_generation": 256,
+                },
+                {
+                    "schema": "astrid_edge_operator_session_retirement_v1",
+                    "phase": "completed",
+                    "recorded_at_unix_ms": 100,
+                    "transition_id": "retirement-one",
+                    "prior_session_generation": 255,
+                    "new_session_generation": 256,
+                    "reason": "retire unverified legacy session history",
+                    "authority": "operator_compatibility_repair_no_turn",
+                },
+            ],
+        )
+
+        events = [
+            event
+            for event in activity.collect_events(self.workspace, 1_000)
+            if event["kind"] == "session_retirement"
+        ]
+        self.assertEqual(len(events), 1)
+        self.assertFalse(events[0]["authored"])
+        self.assertEqual(events[0]["trace_attribution"], "operator_session_retirement")
+        rendered = "\n".join(activity.text_lines(events))
+        self.assertIn("SESSION_RETIREMENT", rendered)
+        self.assertIn("generation=255->256", rendered)
+        self.assertIn("counters-preserved=true", rendered)
 
     def test_action_dispatch_phases_are_non_authored_first_class_events(self) -> None:
         trace = self.trace(self.TRACE_ONE, self.SPAN_ACTION, self.SPAN_ROOT)

@@ -13,13 +13,14 @@ import argparse
 import datetime as dt
 import hashlib
 import json
+import math
 import time
 import uuid
 from pathlib import Path
 from typing import Any, Iterable, NamedTuple
 
 SCHEMA = "astrid_edge_activity_report_v2"
-AUTHORSHIP_ATTRIBUTION_VERSION = 5
+AUTHORSHIP_ATTRIBUTION_VERSION = 6
 STALE_WEB_CALL_MS = 5 * 60_000
 STALE_INTROSPECTION_CALL_MS = 5 * 60_000
 TRANSPORT_AUTHORSHIP_CORRECTION_REASON = (
@@ -37,6 +38,23 @@ MODEL_RESPONSE_PROVENANCES = frozenset(
         "model_authored_with_local_format_repair",
     }
 )
+NON_AUTHORED_STATUS_PROVENANCES = {
+    "failed": "failed_non_authored",
+    "interrupted": "interrupted_non_authored",
+    "transport_recovery": "transport_recovery_non_authored",
+}
+RESPONSE_PROVENANCE_COUNTER_KEYS = (
+    "executor_terminal_error",
+    "failed_non_authored",
+    "interrupted_non_authored",
+    "invalid",
+    "legacy_unspecified",
+    "model_authored",
+    "model_authored_with_local_format_repair",
+    "model_authored_with_local_safe_fallback",
+    "transport_recovery_non_authored",
+)
+REQUEST_HEADER_LATENCY_SOURCE_V1 = "kernel_http_host_trace_v1"
 
 
 class RunAuthorship(NamedTuple):
@@ -104,6 +122,130 @@ def valid_trace(value: dict[str, Any]) -> bool:
     if not valid_trace_label(trace.get("chain_id"), required=False):
         return False
     return True
+
+
+def exact_provider_request_telemetry(
+    run: dict[str, Any],
+) -> tuple[int, int, list[dict[str, Any]]] | None:
+    """Return strict kernel-host attempts from one canonical turn."""
+    request_count = run.get("provider_request_count")
+    successful_count = run.get("provider_successful_header_count")
+    requests = run.get("provider_requests")
+    trace = run.get("trace")
+    if (
+        run.get("schema") != "astrid_edge_autonomy_run_v4"
+        or run.get("request_header_latency_source")
+        != REQUEST_HEADER_LATENCY_SOURCE_V1
+        or not valid_trace(run)
+        or not isinstance(trace, dict)
+        or normalized_uuid(trace.get("turn_id")) is None
+        or isinstance(request_count, bool)
+        or not isinstance(request_count, int)
+        or not 1 <= request_count <= 16
+        or isinstance(successful_count, bool)
+        or not isinstance(successful_count, int)
+        or not 0 <= successful_count <= request_count
+        or not isinstance(requests, list)
+        or len(requests) != request_count
+    ):
+        return None
+    outcomes = {
+        "successful_headers",
+        "non_success_status",
+        "unknown_peer",
+        "non_loopback_peer",
+        "timeout",
+        "transport_error",
+        "cancelled",
+    }
+    attempt_ids: set[str] = set()
+    observed_successes = 0
+    for request in requests:
+        if not isinstance(request, dict) or not {
+            "attempt_id",
+            "request_id",
+            "outcome",
+        }.issubset(request) or not set(request).issubset(
+            {"attempt_id", "request_id", "outcome", "request_header_latency_ms"}
+        ):
+            return None
+        attempt_id = normalized_uuid(request.get("attempt_id"))
+        if (
+            attempt_id is None
+            or attempt_id in attempt_ids
+            or normalized_uuid(request.get("request_id")) is None
+            or not isinstance(request.get("outcome"), str)
+            or request.get("outcome") not in outcomes
+        ):
+            return None
+        attempt_ids.add(attempt_id)
+        latency = request.get("request_header_latency_ms")
+        if request.get("outcome") == "successful_headers":
+            if (
+                isinstance(latency, bool)
+                or not isinstance(latency, int)
+                or not 0 <= latency <= (2**64 - 1)
+            ):
+                return None
+            observed_successes += 1
+        elif latency is not None:
+            return None
+    if observed_successes != successful_count:
+        return None
+    if request_count == 1 and successful_count == 1:
+        only = requests[0]
+        scalar_request_id = normalized_uuid(run.get("provider_request_id"))
+        scalar_latency = run.get("request_header_latency_ms")
+        if (
+            scalar_request_id is None
+            or scalar_request_id != normalized_uuid(only.get("request_id"))
+            or isinstance(scalar_latency, bool)
+            or not isinstance(scalar_latency, int)
+            or not 0 <= scalar_latency <= (2**64 - 1)
+            or scalar_latency != only.get("request_header_latency_ms")
+        ):
+            return None
+    elif (
+        run.get("provider_request_id") is not None
+        or run.get("request_header_latency_ms") is not None
+    ):
+        return None
+    return request_count, successful_count, requests
+
+
+def exact_request_header_latency(
+    run: dict[str, Any],
+) -> tuple[int, str, int] | None:
+    """Return only a one-attempt/one-success trace-bound kernel-host latency."""
+    telemetry = exact_provider_request_telemetry(run)
+    if telemetry is None or telemetry[:2] != (1, 1):
+        return None
+    latency = run.get("request_header_latency_ms")
+    request_id = normalized_uuid(run.get("provider_request_id"))
+    if (
+        isinstance(latency, bool)
+        or not isinstance(latency, int)
+        or request_id is None
+    ):
+        return None
+    return latency, request_id, 1
+
+
+def legacy_unattributed_header_latency(run: dict[str, Any]) -> int | float | None:
+    latency = run.get("request_header_latency_ms")
+    if (
+        run.get("request_header_latency_source") is not None
+        or run.get("provider_request_id") is not None
+        or run.get("provider_request_count") is not None
+        or run.get("provider_successful_header_count") is not None
+        or run.get("provider_requests") is not None
+        or isinstance(latency, bool)
+        or not isinstance(latency, (int, float))
+        or not math.isfinite(latency)
+        or not 0 <= latency <= (2**64 - 1)
+    ):
+        return None
+    return latency
 
 
 def valid_response_sha256(value: Any) -> bool:
@@ -258,8 +400,15 @@ def run_authorship(
         status = "transport_recovery"
     raw_provenance = run.get("response_provenance")
     if raw_provenance is None:
-        response_provenance = "legacy_unspecified"
-    elif raw_provenance in MODEL_RESPONSE_PROVENANCES | {"executor_terminal_error"}:
+        response_provenance = (
+            NON_AUTHORED_STATUS_PROVENANCES[status]
+            if run.get("schema") == "astrid_edge_autonomy_run_v4"
+            and status in NON_AUTHORED_STATUS_PROVENANCES
+            else "legacy_unspecified"
+        )
+    elif isinstance(raw_provenance, str) and raw_provenance in (
+        MODEL_RESPONSE_PROVENANCES | {"executor_terminal_error"}
+    ):
         response_provenance = str(raw_provenance)
     else:
         response_provenance = "invalid"
@@ -277,11 +426,16 @@ def run_authorship(
         and correction is None
         and provenance_can_be_authored
     )
-    fallback = correction is not None or status in {
-        "transport_recovery",
-        "failed",
-        "interrupted",
-    } or response_provenance in {"executor_terminal_error", "invalid"}
+    fallback = (
+        correction is not None
+        or status in NON_AUTHORED_STATUS_PROVENANCES
+        or response_provenance
+        in {
+            "executor_terminal_error",
+            "invalid",
+            *NON_AUTHORED_STATUS_PROVENANCES.values(),
+        }
+    )
     return RunAuthorship(
         status,
         authored,
@@ -410,6 +564,9 @@ def collect_events(workspace: Path, now_ms: int) -> list[dict[str, Any]]:
     }
     chains = read_json_lines(workspace / "autonomous/chains.jsonl")
     recoveries = read_json_lines(workspace / "autonomous/recoveries.jsonl")
+    session_retirements = read_json_lines(
+        workspace / "autonomous/session_retirements.jsonl"
+    )
     threads = read_json_lines(workspace / "autonomous/thread_state.jsonl")
     web = read_json_lines(workspace / "web/receipts.jsonl")
     introspection = read_json_lines(workspace / "introspection/receipts.jsonl")
@@ -447,6 +604,14 @@ def collect_events(workspace: Path, now_ms: int) -> list[dict[str, Any]]:
     events: list[dict[str, Any]] = []
     for run in runs:
         authorship = run_authorship(run, transport_corrections)
+        exact_provider_telemetry = exact_provider_request_telemetry(run)
+        exact_header_latency = exact_request_header_latency(run)
+        legacy_header_latency = legacy_unattributed_header_latency(run)
+        invalid_claimed_provider_metrics = (
+            run.get("request_header_latency_source")
+            == REQUEST_HEADER_LATENCY_SOURCE_V1
+            and exact_provider_telemetry is None
+        )
         event = base_event(
             run,
             "turn",
@@ -468,7 +633,26 @@ def collect_events(workspace: Path, now_ms: int) -> list[dict[str, Any]]:
                 "elapsed_ms": run.get("elapsed_ms"),
                 "provider_prompt_tokens": run.get("provider_prompt_tokens"),
                 "provider_completion_tokens": run.get("provider_completion_tokens"),
-                "request_header_latency_ms": run.get("request_header_latency_ms"),
+                "provider_request_id": exact_header_latency[1]
+                if exact_header_latency
+                else None,
+                "provider_request_count": exact_provider_telemetry[0]
+                if exact_provider_telemetry
+                else None,
+                "provider_successful_header_count": exact_provider_telemetry[1]
+                if exact_provider_telemetry
+                else None,
+                "provider_requests": exact_provider_telemetry[2]
+                if exact_provider_telemetry
+                else None,
+                "request_header_latency_ms": exact_header_latency[0]
+                if exact_header_latency
+                else None,
+                "request_header_latency_source": REQUEST_HEADER_LATENCY_SOURCE_V1
+                if exact_provider_telemetry
+                else None,
+                "request_header_latency_ms_legacy_unattributed": legacy_header_latency,
+                "provider_metrics_invalid_claimed_exact": invalid_claimed_provider_metrics,
                 "generation_latency_ms": run.get("generation_latency_ms"),
                 "full_turn_latency_ms": run.get("full_turn_latency_ms", run.get("elapsed_ms")),
                 "session_generation": run.get("session_generation"),
@@ -675,6 +859,42 @@ def collect_events(workspace: Path, now_ms: int) -> list[dict[str, Any]]:
             }
         )
         events.append(event)
+
+    for retirement in session_retirements:
+        if (
+            retirement.get("schema")
+            != "astrid_edge_operator_session_retirement_v1"
+            or retirement.get("phase") != "completed"
+        ):
+            continue
+        events.append(
+            {
+                "timestamp_unix_ms": int(
+                    retirement.get("recorded_at_unix_ms", 0) or 0
+                ),
+                "kind": "session_retirement",
+                "source_ledger": "autonomous/session_retirements.jsonl",
+                "trace_attribution": "operator_session_retirement",
+                "trace_id": None,
+                "span_id": None,
+                "parent_span_id": None,
+                "turn_id": None,
+                "session_id": None,
+                "chain_id": None,
+                "status": "completed",
+                "authored": False,
+                "fallback": False,
+                "transition_id": retirement.get("transition_id"),
+                "prior_session_generation": retirement.get(
+                    "prior_session_generation"
+                ),
+                "new_session_generation": retirement.get(
+                    "new_session_generation"
+                ),
+                "reason": retirement.get("reason"),
+                "authority": retirement.get("authority"),
+            }
+        )
 
     for thread in threads:
         correction = transport_authorship_correction(thread, transport_corrections)
@@ -1154,6 +1374,7 @@ def text_lines(events: list[dict[str, Any]]) -> list[str]:
                 "web_request": 2,
                 "web_result": 3,
                 "recovery": 1,
+                "session_retirement": 1,
                 "thread": 1,
                 "introspection_request": 2,
                 "introspection_result": 3,
@@ -1176,7 +1397,8 @@ def text_lines(events: list[dict[str, Any]]) -> list[str]:
                 "machine"
                 if event.get("kind") == "perception"
                 else "operator"
-                if event.get("trace_attribution") == "operator_harness"
+                if event.get("trace_attribution")
+                in {"operator_harness", "operator_session_retirement"}
                 else "legacy"
             )
         )[:8]
@@ -1217,6 +1439,14 @@ def text_lines(events: list[dict[str, Any]]) -> list[str]:
                 f"status={event.get('status')} authored=false "
                 f"response={short(event.get('response_sha256'), 16)} "
                 f"identity={event.get('identity_kind') or 'legacy-unattributed'}"
+            )
+        elif kind == "session_retirement":
+            detail = (
+                "authored=false counters-preserved=true "
+                f"generation={event.get('prior_session_generation')}"
+                f"->{event.get('new_session_generation')} "
+                f"reason={short(event.get('reason'), 100)} "
+                f"authority={short(event.get('authority'), 100)}"
             )
         elif kind == "chain":
             detail = (
@@ -1319,6 +1549,28 @@ def text_lines(events: list[dict[str, Any]]) -> list[str]:
     return lines
 
 
+def response_provenance_counts(events: Iterable[dict[str, Any]]) -> dict[str, int]:
+    """Return fixed-key counts for the turn provenance labels in this output."""
+    counts = {key: 0 for key in RESPONSE_PROVENANCE_COUNTER_KEYS}
+    for event in events:
+        if event.get("kind") != "turn":
+            continue
+        provenance = event.get("response_provenance")
+        key = (
+            provenance
+            if isinstance(provenance, str) and provenance in counts
+            else "invalid"
+        )
+        counts[key] += 1
+    return counts
+
+
+def response_provenance_summary_line(events: Iterable[dict[str, Any]]) -> str:
+    counts = response_provenance_counts(events)
+    values = " ".join(f"{key}={counts[key]}" for key in RESPONSE_PROVENANCE_COUNTER_KEYS)
+    return f"RESPONSE_PROVENANCE_COUNTS {values}"
+
+
 def parser() -> argparse.ArgumentParser:
     value = argparse.ArgumentParser()
     value.add_argument("--workspace", type=Path)
@@ -1341,6 +1593,7 @@ def parser() -> argparse.ArgumentParser:
             "web_request",
             "web_result",
             "recovery",
+            "session_retirement",
             "thread",
             "introspection_request",
             "introspection_result",
@@ -1374,6 +1627,7 @@ def render(args: argparse.Namespace, already_seen: set[str]) -> set[str]:
             fresh.append(event)
             already_seen.add(key)
     if args.format == "json":
+        provenance_counts = response_provenance_counts(fresh)
         print(
             json.dumps(
                 {
@@ -1381,6 +1635,7 @@ def render(args: argparse.Namespace, already_seen: set[str]) -> set[str]:
                     "authorship_attribution_version": AUTHORSHIP_ATTRIBUTION_VERSION,
                     "generated_at_unix_ms": now_ms,
                     "workspace": str(workspace),
+                    "response_provenance_counts": provenance_counts,
                     "events": fresh,
                 },
                 sort_keys=True,
@@ -1391,6 +1646,8 @@ def render(args: argparse.Namespace, already_seen: set[str]) -> set[str]:
         for event in fresh:
             print(json.dumps(event, sort_keys=True), flush=True)
     else:
+        if fresh or not args.follow:
+            print(response_provenance_summary_line(fresh), flush=True)
         for line in text_lines(fresh):
             print(line, flush=True)
     return already_seen
