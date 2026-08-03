@@ -4,12 +4,19 @@ on:
   pull_request:
     paths:
       - '.github/workflows/cpu-edge.yml'
+      - '.github/workflows/release.yml'
+      - 'Cargo.lock'
+      - 'Cargo.toml'
       - 'capsules/astralis/astrid-capsule-edge-context/**'
       - 'capsules/astralis/astrid-capsule-edge-introspector/**'
       - 'capsules/astralis/astrid-capsule-edge-spectral/**'
+      - 'crates/astrid-approval/**'
+      - 'crates/astrid-build/**'
       - 'crates/astrid-capsule/**'
       - 'crates/astrid-cli/**'
+      - 'crates/astrid-core/**'
       - 'crates/astrid-events/**'
+      - 'crates/astrid-guest/**'
       - 'crates/astrid-kernel/**'
       - 'crates/astrid-minime-protocol/**'
       - 'crates/astrid-spectral-core/**'
@@ -25,14 +32,30 @@ on:
       - 'scripts/package_edge_appliance.sh'
       - 'scripts/test_package_edge_appliance.sh'
       - 'scripts/verify_edge_capsule_status.py'
+      - 'scripts/warm_ollama_model.sh'
       - 'services/astrid-edge-runtime/**'
+      - 'wit/**'
   push:
     branches: [main]
     paths:
       - '.github/workflows/cpu-edge.yml'
-      - 'capsules/astralis/astrid-capsule-edge-*/**'
+      - '.github/workflows/release.yml'
+      - 'Cargo.lock'
+      - 'Cargo.toml'
+      - 'capsules/astralis/astrid-capsule-edge-context/**'
+      - 'capsules/astralis/astrid-capsule-edge-introspector/**'
+      - 'capsules/astralis/astrid-capsule-edge-spectral/**'
+      - 'crates/astrid-approval/**'
+      - 'crates/astrid-build/**'
+      - 'crates/astrid-capsule/**'
+      - 'crates/astrid-cli/**'
+      - 'crates/astrid-core/**'
+      - 'crates/astrid-events/**'
+      - 'crates/astrid-guest/**'
+      - 'crates/astrid-kernel/**'
       - 'crates/astrid-minime-protocol/**'
       - 'crates/astrid-spectral-core/**'
+      - 'crates/astrid-types/**'
       - 'docs/headless-linux.md'
       - 'packaging/appliances/**'
       - 'packaging/headless/**'
@@ -44,7 +67,9 @@ on:
       - 'scripts/package_edge_appliance.sh'
       - 'scripts/test_package_edge_appliance.sh'
       - 'scripts/verify_edge_capsule_status.py'
+      - 'scripts/warm_ollama_model.sh'
       - 'services/astrid-edge-runtime/**'
+      - 'wit/**'
 
 permissions:
   contents: read
@@ -79,19 +104,48 @@ jobs:
           cargo fmt --manifest-path capsules/astralis/astrid-capsule-edge-spectral/Cargo.toml -- --check
 
       - name: Strict edge Clippy
-        run: cargo clippy --manifest-path services/astrid-edge-runtime/Cargo.toml --all-targets -- -D warnings
+        run: |
+          cargo clippy \
+            -p astrid \
+            -p astrid-capsule \
+            -p astrid-events \
+            -p astrid-guest \
+            -p astrid-kernel \
+            -p astrid-minime-protocol \
+            -p astrid-spectral-core \
+            -p astrid-types \
+            --lib --bins -- -D warnings
+          cargo clippy \
+            --manifest-path services/astrid-edge-runtime/Cargo.toml \
+            --all-targets -- -D warnings
 
       - name: Core transport and tracing checks
         run: |
-          cargo test -p astrid-capsule response_headers
-          cargo test -p astrid-capsule local_header_deadline
-          cargo test -p astrid-events
+          ASTRID_AUTO_BUILD_KERNEL=1 cargo test \
+            -p astrid \
+            -p astrid-capsule \
+            -p astrid-events \
+            -p astrid-kernel \
+            -p astrid-types
 
       - name: Edge runtime tests
         run: cargo test --manifest-path services/astrid-edge-runtime/Cargo.toml
 
+      - name: Authority boundary and spectral protocol checks
+        run: |
+          cargo test -p astrid-approval
+          cargo test -p astrid-minime-protocol -p astrid-spectral-core
+          cargo test \
+            --manifest-path services/astrid-edge-runtime/Cargo.toml \
+            legacy_control_has_no_external_ingress_authority
+          cargo test \
+            --manifest-path services/astrid-edge-runtime/Cargo.toml \
+            provenance_requires_exact_unrepaired_trace_binding
+
       - name: Edge capsule builds
         run: |
+          cargo clippy --manifest-path capsules/astralis/astrid-capsule-edge-context/Cargo.toml --all-targets -- -D warnings
+          cargo clippy --manifest-path capsules/astralis/astrid-capsule-edge-introspector/Cargo.toml --all-targets -- -D warnings
           cargo build --manifest-path capsules/astralis/astrid-capsule-edge-context/Cargo.toml --target wasm32-wasip2
           cargo build --manifest-path capsules/astralis/astrid-capsule-edge-introspector/Cargo.toml --target wasm32-wasip2
           cargo test --manifest-path capsules/astralis/astrid-capsule-edge-spectral/Cargo.toml
@@ -125,6 +179,21 @@ jobs:
           scripts/install_edge_runtime.sh \
             --profile generic-cpu \
             --binary services/astrid-edge-runtime/target/debug/astrid-edge-runtime \
+            --dry-run
+          scripts/install_edge_runtime.sh \
+            --profile avado-i3-16g \
+            --binary services/astrid-edge-runtime/target/debug/astrid-edge-runtime \
+            --observation-only \
+            --dry-run
+          scripts/install_edge_runtime.sh \
+            --profile icp-j3455-8g \
+            --layout icp-ssd \
+            --binary services/astrid-edge-runtime/target/debug/astrid-edge-runtime \
+            --observation-only \
+            --dry-run
+          scripts/install_headless_linux.sh \
+            --binary-dir target/debug \
+            --layout icp-ssd \
             --dry-run
 
       - name: Verify appliance archive

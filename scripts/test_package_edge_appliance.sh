@@ -12,10 +12,21 @@ capsule_dir="$test_root/capsules"
 output_dir="$test_root/output"
 install -d -m 0755 "$binary_dir" "$capsule_dir" "$output_dir"
 
-for binary in astrid astrid-daemon astrid-build astrid-edge-runtime; do
-    printf '#!/usr/bin/env sh\nexit 0\n' > "$binary_dir/$binary"
-    chmod 0755 "$binary_dir/$binary"
-done
+python3 - "$binary_dir" <<'PY'
+import pathlib
+import struct
+import sys
+
+root = pathlib.Path(sys.argv[1])
+header = bytearray(64)
+header[:4] = b"\x7fELF"
+header[4:7] = bytes((2, 1, 1))  # ELF64, little-endian, current version.
+struct.pack_into("<HHI", header, 16, 2, 62, 1)  # Executable, x86-64.
+for name in ("astrid", "astrid-daemon", "astrid-build", "astrid-edge-runtime"):
+    path = root / name
+    path.write_bytes(header)
+    path.chmod(0o755)
+PY
 
 for capsule in \
     astrid-capsule-cli \
@@ -30,6 +41,37 @@ for capsule in \
     astrid-capsule-edge-spectral; do
     printf 'fixture:%s\n' "$capsule" > "$capsule_dir/$capsule.capsule"
 done
+
+if "$script_dir/package_edge_appliance.sh" \
+    --version test \
+    --target unsupported-linux-target \
+    --core-binary-dir "$binary_dir" \
+    --edge-binary "$binary_dir/astrid-edge-runtime" \
+    --capsule-dir "$capsule_dir" \
+    --output-dir "$output_dir" >/dev/null 2>&1; then
+    printf 'error: unsupported CPU-edge target was accepted\n' >&2
+    exit 1
+fi
+if "$script_dir/package_edge_appliance.sh" \
+    --version test \
+    --target aarch64-unknown-linux-gnu \
+    --core-binary-dir "$binary_dir" \
+    --edge-binary "$binary_dir/astrid-edge-runtime" \
+    --capsule-dir "$capsule_dir" \
+    --output-dir "$output_dir" >/dev/null 2>&1; then
+    printf 'error: x86-64 binaries were accepted for an ARM64 archive\n' >&2
+    exit 1
+fi
+if "$script_dir/package_edge_appliance.sh" \
+    --version ../escape \
+    --target x86_64-unknown-linux-gnu \
+    --core-binary-dir "$binary_dir" \
+    --edge-binary "$binary_dir/astrid-edge-runtime" \
+    --capsule-dir "$capsule_dir" \
+    --output-dir "$output_dir" >/dev/null 2>&1; then
+    printf 'error: unsafe CPU-edge version was accepted\n' >&2
+    exit 1
+fi
 
 "$script_dir/package_edge_appliance.sh" \
     --version test \
@@ -55,12 +97,31 @@ test ! -e "$bundle/packaging/headless/introspection-memory.md"
 grep -Fqx \
     'ExecCondition=/usr/bin/test %h/.astrid-icp -ef /media/data/astrid' \
     "$bundle/packaging/systemd/icp-ssd-required.conf"
+grep -Fqx \
+    'EnvironmentFile=%h/.config/astrid/edge-tuning-authority.env' \
+    "$bundle/packaging/systemd/astrid-edge-tuning-authority.conf"
+grep -Fqx 'ASTRID_EDGE_RESERVOIR_TUNING_ENABLED=false' \
+    "$bundle/packaging/appliances/avado-i3-16g.env"
+grep -Fqx 'ASTRID_EDGE_RESERVOIR_TUNING_PROFILE_PERMITS=true' \
+    "$bundle/packaging/appliances/avado-i3-16g.env"
+grep -Fqx 'ASTRID_EDGE_RESERVOIR_TUNING_ENABLED=false' \
+    "$bundle/packaging/appliances/icp-j3455-8g.env"
+grep -Fqx 'ASTRID_EDGE_RESERVOIR_TUNING_PROFILE_PERMITS=true' \
+    "$bundle/packaging/appliances/icp-j3455-8g.env"
+grep -Fqx 'ASTRID_EDGE_RESERVOIR_TUNING_PROFILE_PERMITS=false' \
+    "$bundle/packaging/appliances/generic-cpu.env"
+grep -Fqx 'ASTRID_EDGE_RESERVOIR_TUNING_PROFILE_PERMITS=false' \
+    "$bundle/packaging/appliances/icp-discovery.env"
 mock_command_dir="$test_root/mock-command-bin"
 test_home="$test_root/home"
 install -d -m 0755 "$mock_command_dir" "$test_home"
 printf '#!/usr/bin/env sh\nprintf "Linux\\n"\n' > "$mock_command_dir/uname"
 printf '#!/usr/bin/env sh\nexit 0\n' > "$mock_command_dir/systemctl"
-chmod 0755 "$mock_command_dir/uname" "$mock_command_dir/systemctl"
+printf '#!/usr/bin/env sh\nexit 0\n' > "$mock_command_dir/flock"
+chmod 0755 \
+    "$mock_command_dir/uname" \
+    "$mock_command_dir/systemctl" \
+    "$mock_command_dir/flock"
 (
     cd "$bundle"
     sha256sum -c SHA256SUMS
@@ -114,6 +175,8 @@ observation_output="$(
 [[ "$observation_output" == *"Reservoir tuning authority mode: observation-only"* ]]
 [[ "$observation_output" == *"astrid-edge-observation-only.env"* ]]
 [[ "$observation_output" == *"10-tuning-authority.conf"* ]]
+[[ "$observation_output" == *"stage and verify generation"* ]]
+[[ "$observation_output" == *"committed verified install generation"* ]]
 
 tuning_output="$(
     HOME="$test_home" PATH="$mock_command_dir:$PATH" \
@@ -159,6 +222,273 @@ icp_core_output="$(
 [[ "$icp_core_output" == *".astrid-icp/state"* ]]
 [[ "$icp_core_output" == *"ollama-cpu.service"* ]]
 [[ "$icp_core_output" == *"ssd-required.conf"* ]]
+[[ "$icp_core_output" == *"verified files using atomic renames with generation rollback"* ]]
+
+standard_core_output="$(
+    HOME="$test_home" PATH="$mock_command_dir:$PATH" \
+        "$bundle/scripts/install_headless_linux.sh" \
+            --binary-dir "$bundle" \
+            --layout standard \
+            --dry-run
+)"
+[[ "$standard_core_output" == *"ollama-cpu.service"* ]]
+[[ "$standard_core_output" == *"require executable"*".local/bin/ollama"* ]]
+[[ "$standard_core_output" == *"stage and verify generation"* ]]
+if HOME="$test_home" PATH="$mock_command_dir:$PATH" \
+    "$bundle/scripts/install_headless_linux.sh" \
+        --binary-dir "$bundle" \
+        --layout standard \
+        --start >/dev/null 2>&1; then
+    printf 'error: standard service start accepted a missing Ollama executable\n' >&2
+    exit 1
+fi
+install -d -m 0755 "$test_home/.local/bin"
+printf '#!/usr/bin/env sh\nexit 0\n' > "$test_home/.local/bin/ollama"
+chmod 0755 "$test_home/.local/bin/ollama"
+HOME="$test_home" PATH="$mock_command_dir:$PATH" \
+    "$bundle/scripts/install_headless_linux.sh" \
+        --binary-dir "$bundle" \
+        --layout standard >/dev/null
+cmp \
+    "$bundle/packaging/systemd/ollama-cpu.service" \
+    "$test_home/.config/systemd/user/ollama-cpu.service"
+
+printf 'prior-core-generation\n' > "$test_home/.astrid/bin/astrid"
+real_mv="$(command -v mv)"
+fault_command_dir="$test_root/fault-command-bin"
+install -d -m 0755 "$fault_command_dir"
+printf '%s\n' \
+    '#!/usr/bin/env bash' \
+    'set -euo pipefail' \
+    'for argument in "$@"; do' \
+    '    if [[ "$argument" == *.astrid-stage.* ]]; then' \
+    '        count=0' \
+    '        [[ -f "$MOCK_MV_COUNT" ]] && count="$(<"$MOCK_MV_COUNT")"' \
+    '        count=$((count + 1))' \
+    '        printf "%s\\n" "$count" > "$MOCK_MV_COUNT"' \
+    '        if [[ "$count" == "$MOCK_MV_FAIL_AT" ]]; then exit 79; fi' \
+    '        break' \
+    '    fi' \
+    'done' \
+    'exec "$REAL_MV" "$@"' \
+    > "$fault_command_dir/mv"
+chmod 0755 "$fault_command_dir/mv"
+if HOME="$test_home" \
+    PATH="$fault_command_dir:$mock_command_dir:$PATH" \
+    REAL_MV="$real_mv" \
+    MOCK_MV_COUNT="$test_root/mv-count" \
+    MOCK_MV_FAIL_AT=2 \
+    "$bundle/scripts/install_headless_linux.sh" \
+        --binary-dir "$bundle" \
+        --layout standard >/dev/null 2>&1; then
+    printf 'error: injected core-generation switch failure unexpectedly succeeded\n' >&2
+    exit 1
+fi
+grep -Fqx 'prior-core-generation' "$test_home/.astrid/bin/astrid"
+if find "$test_home" \
+    \( -name '*.astrid-stage.*' -o -name '*.astrid-backup.*' \) \
+    -print -quit | grep -q .; then
+    printf 'error: core-generation rollback left transaction files behind\n' >&2
+    exit 1
+fi
+
+HOME="$test_home" PATH="$mock_command_dir:$PATH" \
+    "$bundle/scripts/install_edge_runtime.sh" \
+        --binary "$bundle/astrid-edge-runtime" \
+        --profile avado-i3-16g \
+        --observation-only >/dev/null
+printf 'prior-edge-generation\n' > "$test_home/.astrid/bin/astrid-edge-runtime"
+rm -f "$test_root/mv-count"
+if HOME="$test_home" \
+    PATH="$fault_command_dir:$mock_command_dir:$PATH" \
+    REAL_MV="$real_mv" \
+    MOCK_MV_COUNT="$test_root/mv-count" \
+    MOCK_MV_FAIL_AT=2 \
+    "$bundle/scripts/install_edge_runtime.sh" \
+        --binary "$bundle/astrid-edge-runtime" \
+        --profile avado-i3-16g \
+        --observation-only >/dev/null 2>&1; then
+    printf 'error: injected edge-generation switch failure unexpectedly succeeded\n' >&2
+    exit 1
+fi
+grep -Fqx 'prior-edge-generation' "$test_home/.astrid/bin/astrid-edge-runtime"
+if find "$test_home" \
+    \( -name '*.astrid-stage.*' -o -name '*.astrid-backup.*' \) \
+    -print -quit | grep -q .; then
+    printf 'error: edge-generation rollback left transaction files behind\n' >&2
+    exit 1
+fi
+
+stateful_command_dir="$test_root/stateful-command-bin"
+install -d -m 0755 "$stateful_command_dir"
+printf '%s\n' \
+    '#!/usr/bin/env bash' \
+    'set -euo pipefail' \
+    '[[ "${1:-}" == "--user" ]] && shift' \
+    'command_name="${1:-}"' \
+    '[[ -n "$command_name" ]] && shift' \
+    'state_dir="${MOCK_SYSTEMCTL_STATE_DIR:?}"' \
+    'mkdir -p "$state_dir"' \
+    'if [[ -n "${MOCK_SYSTEMCTL_LOG:-}" ]]; then printf "%s %s\\n" "$command_name" "$*" >> "$MOCK_SYSTEMCTL_LOG"; fi' \
+    'case "$command_name" in' \
+    '    daemon-reload) exit 0 ;;' \
+    '    is-enabled)' \
+    '        [[ "${1:-}" == "--quiet" ]] && shift' \
+    '        [[ -f "$state_dir/${1:?}.enabled" ]] && grep -Fqx 1 "$state_dir/$1.enabled"' \
+    '        ;;' \
+    '    is-active)' \
+    '        [[ "${1:-}" == "--quiet" ]] && shift' \
+    '        [[ -f "$state_dir/${1:?}.active" ]] && grep -Fqx 1 "$state_dir/$1.active"' \
+    '        ;;' \
+    '    enable | disable)' \
+    '        value=0' \
+    '        [[ "$command_name" == "enable" ]] && value=1' \
+    '        for unit in "$@"; do printf "%s\\n" "$value" > "$state_dir/$unit.enabled"; done' \
+    '        ;;' \
+    '    restart | start | stop)' \
+    '        value=1' \
+    '        [[ "$command_name" == "stop" ]] && value=0' \
+    '        for unit in "$@"; do' \
+    '            operation="$command_name:$unit"' \
+    '            if [[ "${MOCK_SYSTEMCTL_FAIL_ONCE:-}" == "$operation" && ! -e "$state_dir/failure-injected" ]]; then' \
+    '                : > "$state_dir/failure-injected"' \
+    '                exit 78' \
+    '            fi' \
+    '            printf "%s\\n" "$value" > "$state_dir/$unit.active"' \
+    '        done' \
+    '        ;;' \
+    '    *) printf "unexpected mocked systemctl command: %s\\n" "$command_name" >&2; exit 2 ;;' \
+    'esac' \
+    > "$stateful_command_dir/systemctl"
+chmod 0755 "$stateful_command_dir/systemctl"
+
+core_service_home="$test_root/core-service-home"
+core_state="$test_root/core-systemd-state"
+install -d -m 0755 \
+    "$core_service_home/.local/bin" \
+    "$core_service_home/.astrid/bin" \
+    "$core_service_home/.config/systemd/user" \
+    "$core_state"
+printf '#!/usr/bin/env sh\nexit 0\n' > "$core_service_home/.local/bin/ollama"
+chmod 0755 "$core_service_home/.local/bin/ollama"
+printf 'prior-core-binary\n' > "$core_service_home/.astrid/bin/astrid"
+chmod 0755 "$core_service_home/.astrid/bin/astrid"
+for unit in \
+    ollama-cpu.service \
+    astrid-model-warmup.service \
+    astrid.service; do
+    printf 'prior-core-unit:%s\n' "$unit" \
+        > "$core_service_home/.config/systemd/user/$unit"
+done
+printf '0\n' > "$core_state/ollama-cpu.service.enabled"
+printf '1\n' > "$core_state/ollama-cpu.service.active"
+printf '1\n' > "$core_state/astrid-model-warmup.service.enabled"
+printf '0\n' > "$core_state/astrid-model-warmup.service.active"
+printf '0\n' > "$core_state/astrid.service.enabled"
+printf '1\n' > "$core_state/astrid.service.active"
+if HOME="$core_service_home" \
+    PATH="$stateful_command_dir:$mock_command_dir:$PATH" \
+    MOCK_SYSTEMCTL_STATE_DIR="$core_state" \
+    MOCK_SYSTEMCTL_FAIL_ONCE='restart:astrid-model-warmup.service' \
+    "$bundle/scripts/install_headless_linux.sh" \
+        --binary-dir "$bundle" \
+        --layout standard \
+        --start >/dev/null 2>&1; then
+    printf 'error: injected core service-transition failure unexpectedly succeeded\n' >&2
+    exit 1
+fi
+test -f "$core_state/failure-injected"
+grep -Fqx 'prior-core-binary' "$core_service_home/.astrid/bin/astrid"
+grep -Fqx 'prior-core-unit:astrid.service' \
+    "$core_service_home/.config/systemd/user/astrid.service"
+grep -Fqx 0 "$core_state/ollama-cpu.service.enabled"
+grep -Fqx 1 "$core_state/ollama-cpu.service.active"
+grep -Fqx 1 "$core_state/astrid-model-warmup.service.enabled"
+grep -Fqx 0 "$core_state/astrid-model-warmup.service.active"
+grep -Fqx 0 "$core_state/astrid.service.enabled"
+grep -Fqx 1 "$core_state/astrid.service.active"
+
+edge_service_home="$test_root/edge-service-home"
+edge_state="$test_root/edge-systemd-state"
+install -d -m 0755 \
+    "$edge_service_home/.astrid/bin" \
+    "$edge_service_home/.config/systemd/user" \
+    "$edge_state"
+printf 'prior-edge-binary\n' \
+    > "$edge_service_home/.astrid/bin/astrid-edge-runtime"
+chmod 0755 "$edge_service_home/.astrid/bin/astrid-edge-runtime"
+for unit in \
+    astrid-model-warmup.service \
+    astrid-edge-runtime.service \
+    astrid-edge-hindsight.service \
+    astrid-edge-hindsight.timer; do
+    printf 'prior-edge-unit:%s\n' "$unit" \
+        > "$edge_service_home/.config/systemd/user/$unit"
+done
+printf '0\n' > "$edge_state/astrid-model-warmup.service.enabled"
+printf '1\n' > "$edge_state/astrid-model-warmup.service.active"
+printf '1\n' > "$edge_state/astrid-edge-runtime.service.enabled"
+printf '0\n' > "$edge_state/astrid-edge-runtime.service.active"
+printf '0\n' > "$edge_state/astrid-edge-hindsight.timer.enabled"
+printf '1\n' > "$edge_state/astrid-edge-hindsight.timer.active"
+if HOME="$edge_service_home" \
+    PATH="$stateful_command_dir:$mock_command_dir:$PATH" \
+    MOCK_SYSTEMCTL_STATE_DIR="$edge_state" \
+    MOCK_SYSTEMCTL_FAIL_ONCE='restart:astrid-edge-runtime.service' \
+    "$bundle/scripts/install_edge_runtime.sh" \
+        --binary "$bundle/astrid-edge-runtime" \
+        --profile avado-i3-16g \
+        --observation-only \
+        --start >/dev/null 2>&1; then
+    printf 'error: injected edge service-transition failure unexpectedly succeeded\n' >&2
+    exit 1
+fi
+test -f "$edge_state/failure-injected"
+grep -Fqx 'prior-edge-binary' \
+    "$edge_service_home/.astrid/bin/astrid-edge-runtime"
+grep -Fqx 'prior-edge-unit:astrid-edge-runtime.service' \
+    "$edge_service_home/.config/systemd/user/astrid-edge-runtime.service"
+grep -Fqx 0 "$edge_state/astrid-model-warmup.service.enabled"
+grep -Fqx 1 "$edge_state/astrid-model-warmup.service.active"
+grep -Fqx 1 "$edge_state/astrid-edge-runtime.service.enabled"
+grep -Fqx 0 "$edge_state/astrid-edge-runtime.service.active"
+grep -Fqx 0 "$edge_state/astrid-edge-hindsight.timer.enabled"
+grep -Fqx 1 "$edge_state/astrid-edge-hindsight.timer.active"
+
+ledger_home="$test_root/ledger-home"
+external_ledger="$test_root/external-dispatch-ledger.jsonl"
+install -d -m 0700 "$ledger_home/.astrid/home/default/edge/actions"
+printf '{}\n' > "$external_ledger"
+chmod 0644 "$external_ledger"
+ln -s "$external_ledger" \
+    "$ledger_home/.astrid/home/default/edge/actions/dispatches.jsonl"
+ledger_symlink_error="$test_root/ledger-symlink-error.log"
+if HOME="$ledger_home" PATH="$mock_command_dir:$PATH" \
+    "$bundle/scripts/install_edge_runtime.sh" \
+        --binary "$bundle/astrid-edge-runtime" \
+        --profile avado-i3-16g \
+        --observation-only >/dev/null 2>"$ledger_symlink_error"; then
+    printf 'error: edge installer followed an activity-ledger symlink\n' >&2
+    exit 1
+fi
+grep -Fq 'refusing owner-mode normalization through ledger symlink' \
+    "$ledger_symlink_error"
+external_mode="$(stat -c '%a' "$external_ledger" 2>/dev/null || stat -f '%Lp' "$external_ledger")"
+[[ "$external_mode" == "644" ]]
+
+nonregular_home="$test_root/nonregular-ledger-home"
+install -d -m 0700 \
+    "$nonregular_home/.astrid/home/default/edge/actions/receipts.jsonl"
+nonregular_ledger_error="$test_root/nonregular-ledger-error.log"
+if HOME="$nonregular_home" PATH="$mock_command_dir:$PATH" \
+    "$bundle/scripts/install_edge_runtime.sh" \
+        --binary "$bundle/astrid-edge-runtime" \
+        --profile avado-i3-16g \
+        --observation-only >/dev/null 2>"$nonregular_ledger_error"; then
+    printf 'error: edge installer accepted a nonregular activity ledger\n' >&2
+    exit 1
+fi
+grep -Fq 'activity ledger is not a regular file' "$nonregular_ledger_error"
 
 icp_capsule_output="$(
     HOME="$test_home" \
@@ -168,6 +498,8 @@ icp_capsule_output="$(
             --dry-run
 )"
 [[ "$icp_capsule_output" == *"ASTRID_HOME="*".astrid-icp/state"* ]]
+[[ "$icp_capsule_output" == *"preflight all capsule archives"* ]]
+[[ "$icp_capsule_output" == *"committed verified capsule generation"* ]]
 
 install -d -m 0755 "$test_home/.astrid-icp"
 if HOME="$test_home" PATH="$mock_command_dir:$PATH" \
@@ -179,6 +511,199 @@ if HOME="$test_home" PATH="$mock_command_dir:$PATH" \
     exit 1
 fi
 
+core_symlink_home="$test_root/core-symlink-home"
+core_external_target="$test_root/core-external-target"
+install -d -m 0700 "$core_symlink_home/.astrid" "$core_external_target"
+printf 'core-external-sentinel\n' > "$core_external_target/sentinel"
+ln -s "$core_external_target" "$core_symlink_home/.astrid/bin"
+core_symlink_error="$test_root/core-symlink-ancestor-error.log"
+if HOME="$core_symlink_home" PATH="$mock_command_dir:$PATH" \
+    "$bundle/scripts/install_headless_linux.sh" \
+        --binary-dir "$bundle" \
+        --layout standard >/dev/null 2>"$core_symlink_error"; then
+    printf 'error: core installer followed a managed ancestor symlink\n' >&2
+    exit 1
+fi
+grep -Fq 'managed directory component must not be a symlink' \
+    "$core_symlink_error"
+grep -Fqx 'core-external-sentinel' "$core_external_target/sentinel"
+test "$(find "$core_external_target" -mindepth 1 -maxdepth 1 -print | wc -l | tr -d ' ')" -eq 1
+
+edge_symlink_home="$test_root/edge-symlink-home"
+edge_external_target="$test_root/edge-external-target"
+install -d -m 0700 "$edge_symlink_home/.astrid" "$edge_external_target"
+printf 'edge-external-sentinel\n' > "$edge_external_target/sentinel"
+ln -s "$edge_external_target" "$edge_symlink_home/.astrid/bin"
+edge_symlink_error="$test_root/edge-symlink-ancestor-error.log"
+if HOME="$edge_symlink_home" PATH="$mock_command_dir:$PATH" \
+    "$bundle/scripts/install_edge_runtime.sh" \
+        --binary "$bundle/astrid-edge-runtime" \
+        --profile avado-i3-16g \
+        --observation-only >/dev/null 2>"$edge_symlink_error"; then
+    printf 'error: edge installer followed a managed ancestor symlink\n' >&2
+    exit 1
+fi
+grep -Fq 'managed directory component must not be a symlink' \
+    "$edge_symlink_error"
+grep -Fqx 'edge-external-sentinel' "$edge_external_target/sentinel"
+test "$(find "$edge_external_target" -mindepth 1 -maxdepth 1 -print | wc -l | tr -d ' ')" -eq 1
+
+capsule_names=(
+    astrid-capsule-cli
+    astrid-capsule-fs
+    astrid-capsule-http
+    astrid-capsule-shell
+    astrid-capsule-skills
+    astrid-capsule-agents
+    astrid-capsule-memory
+    astrid-capsule-edge-context
+    astrid-capsule-edge-introspector
+    astrid-capsule-edge-spectral
+)
+live_capsule_root="$test_home/.astrid/home/default/.local/capsules"
+install -d -m 0700 "$live_capsule_root"
+for capsule in "${capsule_names[@]}"; do
+    install -d -m 0700 "$live_capsule_root/$capsule"
+    printf 'prior:%s\n' "$capsule" > "$live_capsule_root/$capsule/prior.txt"
+done
+printf '%s\n' \
+    '#!/usr/bin/env bash' \
+    'set -euo pipefail' \
+    'if [[ "${1:-}" != "capsule" || "${2:-}" != "install" ]]; then exit 2; fi' \
+    'archive="$3"' \
+    'capsule="${archive##*/}"' \
+    'capsule="${capsule%.capsule}"' \
+    'target="$ASTRID_HOME/home/default/.local/capsules/$capsule"' \
+    'mkdir -p "$target"' \
+    'printf "[package]\\nname = \\"%s\\"\\nversion = \\"1.0.0\\"\\n" "$capsule" > "$target/Capsule.toml"' \
+    'printf "{}\\n" > "$target/meta.json"' \
+    'printf "new:%s\\n" "$capsule" > "$target/new.txt"' \
+    'if [[ "$ASTRID_HOME" == "$MOCK_LIVE_ASTRID_HOME" ]]; then' \
+    '    count=0' \
+    '    [[ -f "$MOCK_CAPSULE_COUNT" ]] && count="$(<"$MOCK_CAPSULE_COUNT")"' \
+    '    count=$((count + 1))' \
+    '    printf "%s\\n" "$count" > "$MOCK_CAPSULE_COUNT"' \
+    '    if [[ "$MOCK_CAPSULE_FAIL_AT" != 0 && "$count" == "$MOCK_CAPSULE_FAIL_AT" ]]; then exit 71; fi' \
+    'fi' \
+    > "$bundle/astrid"
+chmod 0755 "$bundle/astrid"
+
+capsule_symlink_home="$test_root/capsule-symlink-home"
+capsule_external_target="$test_root/capsule-external-target"
+install -d -m 0700 \
+    "$capsule_symlink_home/.astrid/home/default/.local" \
+    "$capsule_external_target"
+printf 'capsule-external-sentinel\n' > "$capsule_external_target/sentinel"
+ln -s "$capsule_external_target" \
+    "$capsule_symlink_home/.astrid/home/default/.local/capsules"
+capsule_symlink_error="$test_root/capsule-symlink-ancestor-error.log"
+if HOME="$capsule_symlink_home" PATH="$mock_command_dir:$PATH" \
+    "$bundle/scripts/install_essential_capsules.sh" \
+        --capsule-dir "$bundle/capsules" >/dev/null 2>"$capsule_symlink_error"; then
+    printf 'error: capsule installer followed a managed ancestor symlink\n' >&2
+    exit 1
+fi
+grep -Fq 'managed directory component must not be a symlink' \
+    "$capsule_symlink_error"
+grep -Fqx 'capsule-external-sentinel' "$capsule_external_target/sentinel"
+test "$(find "$capsule_external_target" -mindepth 1 -maxdepth 1 -print | wc -l | tr -d ' ')" -eq 1
+
+if HOME="$test_home" \
+    PATH="$mock_command_dir:$PATH" \
+    MOCK_LIVE_ASTRID_HOME="$test_home/.astrid" \
+    MOCK_CAPSULE_COUNT="$test_root/capsule-count" \
+    MOCK_CAPSULE_FAIL_AT=2 \
+    "$bundle/scripts/install_essential_capsules.sh" \
+        --capsule-dir "$bundle/capsules" >/dev/null 2>&1; then
+    printf 'error: injected capsule-set failure unexpectedly succeeded\n' >&2
+    exit 1
+fi
+for capsule in "${capsule_names[@]}"; do
+    grep -Fqx "prior:$capsule" "$live_capsule_root/$capsule/prior.txt"
+    test ! -e "$live_capsule_root/$capsule/new.txt"
+done
+if find "$test_home/.astrid/.install-transactions" \
+    -maxdepth 1 -type d -name 'essential-capsules-*' -print -quit | grep -q .; then
+    printf 'error: capsule-set rollback left a transaction directory behind\n' >&2
+    exit 1
+fi
+
+capsule_service_state="$test_root/capsule-systemd-state"
+install -d -m 0755 "$capsule_service_state"
+printf '0\n' > "$capsule_service_state/astrid.service.active"
+rm -f "$test_root/capsule-count" "$capsule_service_state/failure-injected"
+if HOME="$test_home" \
+    PATH="$stateful_command_dir:$mock_command_dir:$PATH" \
+    MOCK_SYSTEMCTL_STATE_DIR="$capsule_service_state" \
+    MOCK_SYSTEMCTL_FAIL_ONCE='restart:astrid.service' \
+    MOCK_LIVE_ASTRID_HOME="$test_home/.astrid" \
+    MOCK_CAPSULE_COUNT="$test_root/capsule-count" \
+    MOCK_CAPSULE_FAIL_AT=0 \
+    "$bundle/scripts/install_essential_capsules.sh" \
+        --capsule-dir "$bundle/capsules" \
+        --restart >/dev/null 2>&1; then
+    printf 'error: injected capsule restart failure unexpectedly succeeded\n' >&2
+    exit 1
+fi
+test -f "$capsule_service_state/failure-injected"
+grep -Fqx 0 "$capsule_service_state/astrid.service.active"
+for capsule in "${capsule_names[@]}"; do
+    grep -Fqx "prior:$capsule" "$live_capsule_root/$capsule/prior.txt"
+    test ! -e "$live_capsule_root/$capsule/new.txt"
+done
+
+printf '1\n' > "$capsule_service_state/astrid.service.active"
+rm -f "$test_root/capsule-count" "$capsule_service_state/failure-injected"
+if HOME="$test_home" \
+    PATH="$stateful_command_dir:$mock_command_dir:$PATH" \
+    MOCK_SYSTEMCTL_STATE_DIR="$capsule_service_state" \
+    MOCK_SYSTEMCTL_FAIL_ONCE='restart:astrid.service' \
+    MOCK_LIVE_ASTRID_HOME="$test_home/.astrid" \
+    MOCK_CAPSULE_COUNT="$test_root/capsule-count" \
+    MOCK_CAPSULE_FAIL_AT=0 \
+    "$bundle/scripts/install_essential_capsules.sh" \
+        --capsule-dir "$bundle/capsules" \
+        --restart >/dev/null 2>&1; then
+    printf 'error: injected capsule restart failure unexpectedly succeeded\n' >&2
+    exit 1
+fi
+test -f "$capsule_service_state/failure-injected"
+grep -Fqx 1 "$capsule_service_state/astrid.service.active"
+for capsule in "${capsule_names[@]}"; do
+    grep -Fqx "prior:$capsule" "$live_capsule_root/$capsule/prior.txt"
+    test ! -e "$live_capsule_root/$capsule/new.txt"
+done
+
+no_restart_log="$test_root/capsule-no-restart-systemctl.log"
+rm -f "$test_root/capsule-count" "$no_restart_log"
+if HOME="$test_home" \
+    PATH="$stateful_command_dir:$mock_command_dir:$PATH" \
+    MOCK_SYSTEMCTL_STATE_DIR="$capsule_service_state" \
+    MOCK_SYSTEMCTL_LOG="$no_restart_log" \
+    MOCK_LIVE_ASTRID_HOME="$test_home/.astrid" \
+    MOCK_CAPSULE_COUNT="$test_root/capsule-count" \
+    MOCK_CAPSULE_FAIL_AT=2 \
+    "$bundle/scripts/install_essential_capsules.sh" \
+        --capsule-dir "$bundle/capsules" >/dev/null 2>&1; then
+    printf 'error: injected no-restart capsule failure unexpectedly succeeded\n' >&2
+    exit 1
+fi
+test ! -e "$no_restart_log"
+grep -Fqx 1 "$capsule_service_state/astrid.service.active"
+
+rm -f "$test_root/capsule-count"
+HOME="$test_home" \
+    PATH="$mock_command_dir:$PATH" \
+    MOCK_LIVE_ASTRID_HOME="$test_home/.astrid" \
+    MOCK_CAPSULE_COUNT="$test_root/capsule-count" \
+    MOCK_CAPSULE_FAIL_AT=0 \
+    "$bundle/scripts/install_essential_capsules.sh" \
+        --capsule-dir "$bundle/capsules" >/dev/null
+for capsule in "${capsule_names[@]}"; do
+    grep -Fqx "new:$capsule" "$live_capsule_root/$capsule/new.txt"
+done
+test -f "$test_home/.astrid/etc/install-manifests/essential-capsules.current"
+
 python3 - "$bundle/BUILD-MANIFEST.json" <<'PY'
 import json
 import pathlib
@@ -188,6 +713,8 @@ manifest = json.loads(pathlib.Path(sys.argv[1]).read_text(encoding="utf-8"))
 assert manifest["schema"] == "astrid_cpu_edge_build_manifest_v2"
 assert manifest["bundle_format"] == "cpu-edge.2"
 assert manifest["target"] == "x86_64-unknown-linux-gnu"
+assert manifest["binary_format"] == "elf64-little-endian"
+assert manifest["binary_architecture_verified"] is True
 assert manifest["source_tree_state"] in {"clean", "dirty", "unavailable"}
 assert manifest["essential_capsule_count"] == 10
 assert manifest["expected_loaded_capsule_count"] == 20

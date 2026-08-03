@@ -63,6 +63,28 @@ class DeploymentWrapperTests(unittest.TestCase):
             self.assertEqual(result.returncode, 0, f"{path}: {result.stderr}")
             self.assertIn("usage:", result.stdout)
 
+    def test_division_deploy_fail_closes_dormant_daughter_labels(self) -> None:
+        text = (ROOT / "scripts/deploy_division_runtime.sh").read_text()
+        self.assertIn("CHILD_LABELS=(", text)
+        self.assertIn('unload_child_label "$label"', text)
+        self.assertIn('launchctl print "$DOMAIN/$label"', text)
+        self.assertIn("dormant daughter label remained loaded", text)
+        self.assertIn('daughter_minime_unloaded=true', text)
+        self.assertIn('daughter_astrid_unloaded=true', text)
+
+    def test_self_change_promotion_is_verified_and_rollbackable(self) -> None:
+        for name in ("build_bridge.sh", "deploy_minime.sh"):
+            text = (ROOT / "scripts" / name).read_text()
+            self.assertIn("--promote-candidate", text)
+            self.assertIn("self_change_canary.py", text)
+            self.assertIn("verify-promotion", text)
+            self.assertIn("restore_candidate_binary", text)
+            self.assertIn("artifact_sha256", text)
+
+        wrapper = (ROOT / "scripts/run_self_change_canary.sh").read_text()
+        self.assertIn("ASTRID_SANCTIONED_SELF_CHANGE_WRAPPER=1", wrapper)
+        self.assertIn("verify-promotion", wrapper)
+
 
 if __name__ == "__main__":
     unittest.main()

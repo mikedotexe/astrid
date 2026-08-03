@@ -10,7 +10,8 @@ scheduler, bounded `NEXT:` executor, and model-facing local identity. They
 contain no credentials.
 
 `install_edge_runtime.sh` defaults to an explicit observation-only authority
-override even when a measured profile describes eventual tuning capability.
+file. Measured profiles remain disabled themselves and declare eventual
+capability separately with `ASTRID_EDGE_RESERVOIR_TUNING_PROFILE_PERMITS`.
 After observation acceptance, `--enable-tuning` is a separate reversible step;
 it is rejected for profiles that do not explicitly permit tuning.
 
@@ -76,7 +77,8 @@ it does not copy continuity or enable appliance-to-appliance messages.
 `astrid-edge-hindsight.timer` adds a separate fifteen-minute operator
 checkpoint outside `home/default/edge`. Checkpoint v2 opens each ledger once,
 captures its inode and byte length, and hashes and parses exactly that prefix;
-concurrent append bytes are deferred to the next checkpoint. It hash-chains
+concurrent append bytes are deferred to the next checkpoint. Each checkpoint
+binds its evidence to the canonical Linux boot ID. It hash-chains
 checkpoint, artifact, and fill-rollup ledgers; verifies exact append-only
 prefixes; indexes every version of an owned artifact with exact causal
 attribution where identifiers exist; and
@@ -97,7 +99,10 @@ spectral/tuning lifecycle summaries. Late autonomous responses associated with a
 interrupted/recovered trace are rejected before experience or Action admission.
 The bundled `reconcile-edge-interrupted-actions` tool can audit older ledgers
 and, only with `--apply`, append an owner correction and quarantine the exact
-affected artifact without rewriting historical receipts.
+affected artifact without rewriting historical receipts. Correction v2 binds
+the canonical trace/turn plus response hash; repeated response text on another
+turn remains independent, and legacy hash-only corrections stay explicitly
+unattributed.
 
 Measured CPU profiles also select compact autonomous prompts and declare the
 model, context, output ceiling, and keepalive consumed by
@@ -121,6 +126,13 @@ owner-writable. The core installer creates only the exact
 `~/.astrid-icp -> /media/data/astrid` symlink and refuses a pre-existing
 non-symlink tree; every ICP service also receives mount, symlink, and state-tree
 guards.
+
+Both installers hold the shared CPU-edge transaction lock, stage and hash a
+complete generation, and snapshot every managed user unit's enabled and active
+state. If a file or service transition fails, rollback restores both the prior
+bytes and those exact unit states. Owner-ledger permission normalization rejects
+symlinks, nonregular files, and parents resolving outside the private edge tree
+before applying mode `0600`.
 
 Run `scripts/probe_headless_linux.sh` before promoting a discovery profile into
 a hardware-specific profile. Model settings remain in the provider and capsule

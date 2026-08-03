@@ -130,10 +130,12 @@ scripts/report_edge_appliance.sh --window-minutes 20
 ```
 
 Report v15 includes the exact loaded-capsule count, service restart counts, live source provenance,
-autonomy/chain state, trace coverage, attributed and unattributed web calls,
+autonomy/chain state and receipt-acknowledgement health, canonical turn IDs,
+trace coverage, attributed and unattributed web calls,
 pending and stale calls, private introspection status, deterministic notebook
 freshness, Action provenance, scheduled-prompt and provider timing fields,
-typed-evidence retention, current hindsight epoch validity, legacy integrity
+typed-evidence retention, separately counted spectral-query and tuning lifecycle
+receipts, current hindsight epoch validity, legacy integrity
 alerts, recent correlated activity, and the
 percentage of five-second samples in the 65-72% preferred band and 65-73.5%
 broad band. Raw window statistics retain cold-start samples; separately labeled
@@ -146,13 +148,37 @@ benchmark, and a stable fill report.
 
 Post-upgrade socket input receives an observational trace root. ReAct,
 provider, router, tool, Action, chain, and artifact receipts preserve that trace
-with child spans. The trace is not a capability and is never consulted by an
-authorization gate. Scheduled turns supply their trace explicitly through
-hidden headless CLI options; ordinary clients receive a kernel-minted root.
-When an asynchronous capsule boundary omits context, the event bus restores a
-child only from an exact session, LLM request, or tool call identifier. It never
-uses timestamps or latest-activity proximity, and malformed trace versions are
+with child spans. The trace is not a capability and is never sufficient for an
+authorization decision. Exact kernel producer identity, the scheduler's
+positive in-memory turn registry, canonical kernel-minted `turn_id`, durable
+authorship receipt, and one-use Action validation provide authority; trace
+fields only bind those independent proofs together. Scheduled turns supply
+their trace explicitly through hidden headless CLI options; ordinary clients
+receive a kernel-minted root. Nil identifiers, self-parenting spans, control
+characters, and blank or oversized session/chain identifiers are rejected.
+Run-loop capsules receive at most one IPC message per poll/recv; while its
+handler runs, the host retains that exact message as the observational parent
+for capsule publishes. It does not propagate the inbound principal or any
+capability authority. When another asynchronous boundary omits context, the
+event bus restores a child only from an exact LLM request or tool call
+identifier. A reused session identifier is deliberately insufficient: a late
+response remains untraced instead of inheriting the newest turn. Timestamps and
+latest-activity proximity are never used, and malformed trace versions are
 discarded.
+
+Terminal ReAct output also carries typed response provenance. Exact model
+output, model output with a visible safe tail, formatting-only Action repair,
+and executor-generated terminal errors remain distinct. Scheduled turns fail
+closed when that provenance is absent, and the edge observer never admits
+legacy-unprovenanced or executor-generated terminal prose into new experience,
+Action, journal, or tuning paths. Legacy records remain readable as historical
+data; compatibility does not grant current authorship authority.
+The scheduler also verifies that the declared provenance agrees with the actual
+terminal markers. A formatting-only repair remains available to the Action
+executor, while its local marker and canonicalized line are omitted from
+Astrid-authored journal and continuity projections. Exact tuning authority is
+retained only for unrepaired model bytes, including after a crash-safe outbox
+replay.
 
 The owner-only per-appliance viewer combines the append-only ledgers without
 reading artifact bodies:
@@ -203,13 +229,28 @@ request header, or unindexed artifact prose. The hash-chained JSONL files are
 the authority; SQLite is a rebuildable query surface and is checked with
 `PRAGMA quick_check` at every sync and report.
 
+Hindsight schema v4 carries the canonical `turn_id` through activity,
+artifacts, spectral evidence, and signed tuning lifecycle rows. Spectral query
+receipts have their own table and rendering surface; they are never counted as
+reservoir tuning. A projection-version migration removes the old mixed rows
+and deterministically rebuilds both views from their separate append-only
+source ledgers. Reports refuse a stale-schema or stale-projection database and
+fall back to the authoritative ledgers until the next successful sync.
+
 Checkpoint v2 opens each ledger once, captures its inode and byte length, then
 hashes and parses exactly that immutable prefix. Bytes appended concurrently are
 left for the next checkpoint, eliminating the old size/hash race without a
-special case for `fill_history.jsonl`. The first v2 record begins a named
+special case for `fill_history.jsonl`. Each new checkpoint also records the
+canonical Linux boot ID so post-reboot safety checks cannot reuse pre-reboot
+health evidence. The first v2 record begins a named
 continuity epoch and makes no claim across the migration boundary. Historical
 v1 alerts remain visible as unresolved race-compatible history; only subsequent
 v2 prefix checks establish validity in the current epoch.
+The collector holds an owner-only nonblocking lock, rebuilds append-chain heads
+from strictly verified on-disk records after an interrupted state update, and
+rejects malformed, non-object, non-finite, invalid-UTF-8, torn, or concurrently
+shortened JSONL. Atomic state replacements sync their parent directory, and the
+runtime syncs each fill-history sample before hindsight can cite it.
 
 The observer writes outside `home/default/edge`, has no network or model
 authority, and supplies no semantic impulse. Its records therefore cannot
@@ -248,7 +289,12 @@ The fleet viewer checks each host clock over SSH, labels every event with its
 appliance, and merges by recorded epoch. Historical records remain
 `legacy_unattributed` unless an exact response-hash plus session-ID join exists;
 timestamps alone are never treated as causation. Transport fallback and local
-safe repair remain non-authored in both views.
+safe repair remain non-authored in both views. Activity report v2 overlays
+legacy transport corrections only through exact transcript paths or an exact
+response-hash-plus-session join; a response hash by itself is reusable text
+identity and never establishes event identity. Hindsight refreshes its
+rebuildable attribution projection when that contract changes, so stale
+false-authorship rows cannot survive alongside the corrected event.
 
 ## Install a prebuilt release
 
@@ -433,9 +479,10 @@ current Mac's model throughput.
 A dedicated 16 GiB AVADO can also host a small quantized model for independent,
 credential-free operation. The included `ollama-cpu.service` binds Ollama only
 to `127.0.0.1:11434`, permits one generation at a time, keeps one model loaded,
-uses an 8,192-token context, keeps it resident for two hours, and leaves CPU and
-memory uncapped. Install Ollama under `~/.local`, copy the unit into
-`~/.config/systemd/user`, then select an
+uses a 4,096-token service default, keeps it resident for two hours, and leaves
+CPU and memory uncapped. Install Ollama at `~/.local/bin/ollama`; the standard
+core installer copies and enables the matching user unit when `--start` is
+selected. Then select an
 OpenAI-compatible capsule base URL of `http://127.0.0.1:11434`. Do not append
 `/v1`; the provider capsule adds `/v1/chat/completions`.
 
@@ -602,7 +649,9 @@ scripts/install_edge_runtime.sh \
 ```
 
 Observation-only is the installer default and writes an explicit owner-readable
-authority override after the appliance profile. Keep it in place for the first
+authority file required by the service. The appliance profile itself remains
+disabled and declares only whether the hardware profile permits a later
+operator enablement. Keep observation-only in place for the first
 60 valid minute rollups, capsule harness, four natural turns, and six-hour soak.
 After those gates pass, enable tuning authority as a separate auditable step:
 
@@ -646,7 +695,10 @@ Rich spectral history is owner-only and summary-only:
 ```text
 edge/runtime/spectral_state.json       atomic state v2
 edge/spectral/rollups.jsonl            append-only one-minute rollups
-edge/spectral/recent_rollups.jsonl     atomic bounded 1,440-row capsule view
+edge/spectral/recent_rollups.current.jsonl   append-only current UTC-day capsule view
+edge/spectral/recent_rollups.previous.jsonl  rotated previous UTC-day capsule view
+edge/spectral/activity_receipts.current.jsonl   exact current-day activity/snapshot joins
+edge/spectral/activity_receipts.previous.jsonl  rotated previous-day activity/snapshot joins
 edge/spectral/receipts.jsonl           exact query and activity lineage
 edge/tuning/evidence/                  signed trial and validation evidence
 ```
@@ -659,9 +711,10 @@ identity. Up to two activity links may be carried only when exact trace,
 session, chain, or response identifiers exist; truncation is explicit, and
 timestamp proximity is never substituted.
 
-The model-hidden `astrid-capsule-edge-spectral` has only two read grants: the
-atomic state and bounded recent projection. It has no network, process, shell,
-write, or control authority. Astrid voluntarily reaches it with:
+The model-hidden `astrid-capsule-edge-spectral` has only five read grants: the
+atomic state plus current/previous bounded rollup and activity-receipt
+projections. It has no network, process, shell, write, or control authority.
+Astrid voluntarily reaches it with:
 
 ```text
 NEXT: SELF_STUDY spectral: <question>
@@ -681,7 +734,10 @@ messages and no longer advertises those capabilities. Reservoir tuning is a
 private typed channel from the Action executor to the tuning manager and then
 the reservoir. It cannot be reached by capsules, sockets, shell commands,
 untraced callers, transport fallback, formatting repair, or replayed responses.
-The 68% target and ESN leak are not tunable.
+Eligibility requires either a kernel-attested canonical React terminal response
+or a scheduler-verified authored completion, plus its one-use turn identity and
+durable run accounting. Trace metadata alone grants no authority. The 68%
+target and ESN leak are not tunable.
 
 The voluntary Actions are:
 
@@ -763,7 +819,17 @@ is receipted as
 `local_format_repair_preserved_astrid_declaration`; ambiguous or invalid
 content never executes. Quoted or unknown final actions remain invalid. Every
 decision—including no action—gets an append-only receipt in
-`~/.astrid/home/default/edge/actions/receipts.jsonl`.
+`~/.astrid/home/default/edge/actions/receipts.jsonl`. Traced stateful Actions
+also use the owner-only `actions/dispatches.jsonl` intent/completion ledger.
+The scheduler durably records the exact turn and response hash before handing
+it to the executor; the executor syncs an intent before mutation and a
+completion only after the Action receipt is durable. A restart can therefore
+replay an absent handoff or acknowledge an exact completed handoff, but an
+ambiguous pending mutation is never repeated automatically.
+Runtime and reports bind that transaction by canonical turn, trace, and response
+hash. A completion is not considered whole unless the matching Action receipt
+exists; duplicate, orphaned, malformed, and mismatched records remain explicit
+integrity states rather than inferred success.
 
 An accepted, model-authored `SELF_STUDY <question>` invokes the separately
 installed `astrid-capsule-edge-introspector` through the Action executor. The
@@ -848,6 +914,21 @@ recoveries, and failures are accounted independently. These limits bound
 scheduling and compute without choosing Astrid's Action or treating
 continuation as an obligation; repeated Actions remain valid.
 
+Autonomous execution is a fail-closed filesystem transaction. The scheduler
+persists the running turn before invoking the model, accepts only the single
+kernel-attested canonical turn returned by headless mode, persists its
+authorship classification with a pending-receipt marker, appends and syncs the
+run receipt, then durably acknowledges that receipt before dispatching an
+Action through that durable outbox. Chain transitions use the same
+state/receipt/acknowledgement ordering.
+An interrupted acknowledgement may be reconciled only against the exact trace,
+turn, response hash, status, and completion identity already present in the
+owner-only ledger. Missing, malformed, mismatched, or unwritable authority
+state fails closed before inference. An unresolved receipt or Action-dispatch
+ambiguity instead enters a durable, explicitly reported operator pause while
+the reservoir, sensing, and telemetry remain online; it is never represented
+as a completed or authored turn and no mutation is retried.
+
 The measured profiles enable standing private initiative. A scheduled turn may
 begin its own read-only public research, self-study, notice, plan, draft,
 append-only revision, or deterministic check from current local evidence
@@ -908,7 +989,7 @@ The loop durably records:
 
 | Path | Meaning |
 |---|---|
-| `edge/autonomous/state.json` | v3 attempt/authorship/recovery accounting, ordinary and within-chain session generations, active-chain lineage, prompt estimate, and next due time |
+| `edge/autonomous/state.json` | v3 attempt/authorship/recovery accounting, ordinary and within-chain session generations, active-chain lineage, prompt estimate, next due time, and crash-safe run/chain receipt acknowledgement markers |
 | `edge/autonomous/runs.jsonl` | append-only authored, recovery, failure, and interruption receipts |
 | `edge/autonomous/chains.jsonl` | verified action-to-follow-up transitions and chain closures |
 | `edge/autonomous/recoveries.jsonl` | bounded Astrid service restarts caused by an edge-owned outer timeout |
@@ -972,6 +1053,11 @@ connection so a dead request cannot pin later turns. A possibly accepted
 request is never retried automatically.
 The edge autonomy wrapper uses a 720-second outer timeout so ReAct can emit its
 own terminal result or safe repair before the supervisor kills a stuck child.
+It explicitly gives the hidden headless client a 690-second per-message idle
+deadline, preserving a 30-second cancellation/recovery margin. Headless timeout
+exit 53 is classified as transport recovery and requests the same bounded
+Astrid-service cleanup as the outer watchdog; it is never treated as an
+authored turn.
 If ReAct reports a streaming-timeout repair, the scheduler preserves an active
 chain's verified step and retries it at the configured follow-up interval. It
 does not immediately restart the daemon because another authenticated session
