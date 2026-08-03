@@ -1103,7 +1103,16 @@ fixed at 300 seconds. Only an exact allowlisted loopback provider origin may use
 the bounded profile override: 300 seconds on AVADO and 420 on ICP. Startup is
 cancellable, and exact loopback provider requests use a fresh non-pooled
 connection so a dead request cannot pin later turns. A possibly accepted
-request is never retried automatically.
+request is never retried automatically. Direct WASM interceptors retain the
+ordinary 300-second epoch deadline; only the exact
+`astrid-capsule-openai-compat` interceptor receives 570 seconds. That deadline
+orders the ICP ladder as 420 seconds for response headers, 120 seconds for one
+stalled stream read, and 30 seconds for the guest to publish or fail. An exact,
+host-attested ReAct request whose provider traps receives one sanitized,
+kernel-authored stream error with the original request identifier and a child
+trace. ReAct therefore produces a traced executor error before its independent
+600-second watchdog, while malformed, legacy, multi-interceptor, or unattested
+requests receive no synthetic terminal. This path remains non-authored.
 The edge autonomy wrapper uses a 720-second outer timeout so ReAct can emit its
 own terminal result or safe repair before the supervisor kills a stuck child.
 It explicitly gives the hidden headless client a 690-second per-message idle
@@ -1160,13 +1169,18 @@ and declarations rejected by the ordinary Action validator remain rejected.
 
 The selected profile uses a 112-token output ceiling and enables scheduled
 inference. The 27-59 second figures are direct behavioral cases; each used at
-most 39 output tokens. A post-upgrade natural turn at the former 128-token
-ceiling reached local-provider headers in 353 seconds (inside the 420-second
-deadline and its required 60-second margin) but then exhausted the independent
-600-second ReAct streaming budget. It remained non-authored and was classified
-as transport recovery. The 112-token ceiling is therefore the highest retained
-generation cap; 96 remains the fail-closed fallback if it cannot complete the
-same behavioral and natural-turn gates. Under the old thinking route, fresh
+most 39 output tokens. A clean operator-only gate at 112 tokens passed all 24
+cold/warm behavioral cases with a 56.979-second worst full response and no
+header or full-turn gate failures; its prompt and response artifacts are
+created owner-only. A post-upgrade natural turn at the former 128-token ceiling
+reached local-provider headers in 353 seconds (inside the 420-second deadline
+and its required 60-second margin) but then exhausted the generic 300-second
+WASM interceptor epoch before ReAct could receive the provider stream. It
+remained non-authored and was classified as transport recovery. The
+capsule-specific 570-second repair above closes that exact failure without
+widening ordinary capsule execution. The 112-token ceiling is therefore the
+highest retained generation cap; 96 remains the fail-closed fallback if it
+cannot complete the same behavioral and natural-turn gates. Under the old thinking route, fresh
 full-stack prompts around 840 tokens took roughly four minutes on the J3455,
 while allowing prior dialogue to accumulate drove a 1,671-token scheduled
 prompt into the 720-second transport-recovery boundary.
