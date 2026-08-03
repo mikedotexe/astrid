@@ -42,6 +42,18 @@ CASE_MAX_TOKENS = {
 }
 
 
+def ensure_owner_only_directory(path: Path) -> None:
+    """Create or tighten one operator-harness directory."""
+    path.mkdir(mode=0o700, parents=True, exist_ok=True)
+    path.chmod(0o700)
+
+
+def write_owner_only_text(path: Path, content: str) -> None:
+    """Write one benchmark artifact without retaining a permissive prior mode."""
+    path.write_text(content)
+    path.chmod(0o600)
+
+
 def messages(appliance: str, memory_fact: str) -> dict[str, list[dict[str, Any]]]:
     return {
         "grounded": [
@@ -305,18 +317,26 @@ def main() -> int:
     if "tool_result" in selected_cases and "tool_choice" not in selected_cases:
         parser.error("tool_result requires tool_choice in the same run")
 
+    # Exact prompts and model outputs are operator evidence, not public telemetry.
+    # Set the process umask before creating any output so there is no permissive
+    # creation-to-chmod window even when the caller's login umask is 0002.
+    os.umask(0o077)
     output_dir = args.output_dir or Path(
         f"model-benchmark-{time.strftime('%Y%m%dT%H%M%SZ', time.gmtime())}"
     )
-    output_dir.mkdir(parents=True, exist_ok=True)
+    ensure_owner_only_directory(output_dir)
     summary = output_dir / "summary.tsv"
     validation = output_dir / "validation.tsv"
-    summary.write_text(
+    write_owner_only_text(
+        summary,
         "model\tphase\trepetition\tcase\thttp_start_s\thttp_total_s\t"
         "load_s\tprompt_tokens\tprompt_tps\toutput_tokens\toutput_tps\t"
-        "ollama_total_s\ttool_calls\n"
+        "ollama_total_s\ttool_calls\n",
     )
-    validation.write_text("model\tphase\trepetition\tcase\tstatus\n")
+    write_owner_only_text(
+        validation,
+        "model\tphase\trepetition\tcase\tstatus\n",
+    )
     base_messages = messages(args.appliance, args.memory_fact)
     max_tokens = bounded_case_max_tokens(args.output_cap)
 
@@ -329,7 +349,7 @@ def main() -> int:
             stderr=subprocess.DEVNULL,
         )
         model_dir = output_dir / safe_name(model)
-        model_dir.mkdir(parents=True, exist_ok=True)
+        ensure_owner_only_directory(model_dir)
         for repetition in range(args.repetitions):
             phase = "cold" if repetition == 0 else "warm"
             case_inputs = dict(base_messages)
@@ -366,7 +386,10 @@ def main() -> int:
                     args.request_timeout,
                 )
                 response_path = model_dir / f"{phase}_{repetition}_{case}.json"
-                response_path.write_text(json.dumps(response, indent=2) + "\n")
+                write_owner_only_text(
+                    response_path,
+                    json.dumps(response, indent=2) + "\n",
+                )
                 calls = response.get("message", {}).get("tool_calls", [])
                 calls = calls if isinstance(calls, list) else []
                 with summary.open("a") as output:
@@ -402,11 +425,13 @@ def main() -> int:
                     f"{total_seconds:.1f}s {'pass' if validate(case, response) else 'FAIL'}",
                     flush=True,
                 )
+        residency_path = model_dir / "ollama-ps.txt"
         subprocess.run(
             [args.ollama_bin, "ps"],
             check=False,
-            stdout=(model_dir / "ollama-ps.txt").open("w"),
+            stdout=residency_path.open("w"),
         )
+        residency_path.chmod(0o600)
     print(f"summary: {summary}")
     print(f"validation: {validation}")
     return 0

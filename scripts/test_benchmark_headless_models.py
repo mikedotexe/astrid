@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import os
+from pathlib import Path
+import tempfile
 import unittest
 
 from scripts import benchmark_headless_models as benchmark
@@ -23,6 +26,20 @@ class BenchmarkHeadlessModelsTests(unittest.TestCase):
             set(benchmark.bounded_case_max_tokens(32).values()),
             {32},
         )
+
+    def test_operator_output_helpers_tighten_existing_modes(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            directory = Path(temporary) / "benchmark"
+            directory.mkdir(mode=0o755)
+            artifact = directory / "summary.tsv"
+            artifact.write_text("prior\n")
+            os.chmod(artifact, 0o644)
+
+            benchmark.ensure_owner_only_directory(directory)
+            benchmark.write_owner_only_text(artifact, "current\n")
+
+            self.assertEqual(directory.stat().st_mode & 0o777, 0o700)
+            self.assertEqual(artifact.stat().st_mode & 0o777, 0o600)
 
 
 if __name__ == "__main__":
