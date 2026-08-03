@@ -393,7 +393,8 @@ transaction_begin() {
     for pending in \
         "$transaction_parent"/headless-linux-* \
         "$transaction_parent"/edge-runtime-* \
-        "$transaction_parent"/essential-capsules-*; do
+        "$transaction_parent"/essential-capsules-* \
+        "$transaction_parent"/headless-application-capsules-*; do
         if [[ -d "$pending" ]]; then
             printf 'error: pending CPU-edge transaction requires operator recovery: %s\n' \
                 "$pending" >&2

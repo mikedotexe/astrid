@@ -162,7 +162,9 @@ done
 cp -R "$project_root/packaging/systemd" "$bundle/packaging/"
 install -m 0644 "$project_root/docs/headless-linux.md" "$bundle/docs/"
 for asset in \
+    build_astralis_cpu_edge_capsules.py \
     install_headless_linux.sh \
+    install_headless_application_capsules.py \
     install_edge_runtime.sh \
     install_essential_capsules.sh \
     verify_edge_capsule_status.py \
@@ -179,6 +181,7 @@ for asset in \
     migrate_edge_transport_sentinels.py \
     migrate_edge_operator_harness_isolation.py \
     reconcile_edge_interrupted_actions.py \
+    retire_edge_autonomy_session.py \
     benchmark_headless_models.py \
     benchmark_headless_models.sh \
     finish_avado_host_hardening.sh \

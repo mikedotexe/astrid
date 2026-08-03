@@ -201,7 +201,10 @@ is a chronological trace tree; `json` emits a report envelope and `jsonl` emits
 one event per line. Exact bounded search queries, public URLs, result metadata,
 and hashes are retained. Request headers and fetched bodies are not. An
 unmatched request becomes visibly stale after five minutes, but the viewer
-never manufactures a completion.
+never manufactures a completion. Operator-only model-session retirement is
+also rendered as a distinct non-authored `session_retirement` event, including
+the exact old and replacement generations; it preserves counters, due time,
+trace lineage, and Astrid's artifacts rather than masquerading as a turn.
 
 ### Durable hindsight
 
@@ -430,6 +433,56 @@ restart. It does not install an LLM
 provider, session router, or credentials. Prefer this version-matched bootstrap
 over a moving distro branch when the published distro requires a newer Astrid
 host ABI.
+
+### Transactionally replace external application capsules
+
+Provider, Prompt Builder, router, and ReAct capsules come from the compatible
+Astralis application set rather than the ten in-tree essentials. Never replace
+one of these by copying an unpacked directory over the live tree. Use the
+external-capsule transaction installer with the exact archive produced by the
+audited SDK build:
+
+```bash
+python3 scripts/build_astralis_cpu_edge_capsules.py \
+  --output-dir dist/astralis-cpu-edge
+```
+
+The pinned revisions, lockfiles, patch preimages, deterministic archive rules,
+and air-gapped build route are documented in
+`packaging/headless/ASTRALIS_CPU_EDGE_CAPSULES.md`.
+
+```bash
+scripts/install_headless_application_capsules.py \
+  --capsule /operator/staging/astrid-capsule-react.capsule \
+  --env astrid-capsule-react=packaging/headless/react-cpu.env.json \
+  --restart \
+  --expected-total 20 \
+  --dry-run
+
+# Remove --dry-run only after reviewing the isolated lifecycle preflight.
+```
+
+Use `--layout icp-ssd`, the ICP-specific environment file, and its actual
+loaded-capsule total on the ICP appliance. Repeat `--capsule` and `--env` to
+switch a mutually dependent application set as one transaction.
+
+The installer discovers each capsule ID by installing its archive into a
+disposable `ASTRID_HOME`; it does not trust the filename. Before live mutation,
+it takes exact snapshots of every affected capsule directory, environment
+file, referenced content-addressed WASM/WIT object, current generation
+manifest, `astrid.service` properties, and loaded-capsule status. It shares the
+same owner-only lock and crashed-transaction gate as the core, edge-runtime,
+and essential-capsule installers. With `--restart`, acceptance requires the
+declared capsule set and total, an active service, a stable nonzero PID, and no
+increase in `NRestarts`. Any failed lifecycle install or health gate restores
+the prior files and prior service active state.
+
+Successful generations are recorded under
+`ASTRID_HOME/etc/install-manifests/headless-application-capsules/`, with an
+owner-only SHA-256 sidecar and atomic `current` copies. These manifests are
+operator deployment evidence; they are not Astrid-authored memory and grant no
+Action authority. Environment JSON is capped, validated, and installed mode
+`0600`; archives and installed trees may contain no symlinks.
 
 ## Low-resource configuration
 
@@ -1105,17 +1158,25 @@ model-authored pieces, and uses the same visible formatting-repair provenance.
 Extra markers, argument-free verbs, control characters, oversized arguments,
 and declarations rejected by the ordinary Action validator remain rejected.
 
-The selected profile uses a 128-token output ceiling and enables scheduled
-inference. The 27-59 second figures are direct behavioral cases, not yet a
-post-upgrade naturally scheduled full Astrid turn. Under the old thinking route,
-fresh full-stack prompts around 840 tokens took roughly four minutes on the
-J3455, while allowing prior dialogue to accumulate drove a 1,671-token
-scheduled prompt into the 720-second transport-recovery boundary.
-The ICP profile therefore rotates after every authored turn and carries only
-the compact authored/executor continuity into a fresh session. Research search
-execution itself completed in under one second once the Action was accepted.
-The 600-second ReAct stream and 720-second edge watchdog remain hard bounds.
-This box is deliberately slow, but it can author, journal, and research without
+The selected profile uses a 112-token output ceiling and enables scheduled
+inference. The 27-59 second figures are direct behavioral cases; each used at
+most 39 output tokens. A post-upgrade natural turn at the former 128-token
+ceiling reached local-provider headers in 353 seconds (inside the 420-second
+deadline and its required 60-second margin) but then exhausted the independent
+600-second ReAct streaming budget. It remained non-authored and was classified
+as transport recovery. The 112-token ceiling is therefore the highest retained
+generation cap; 96 remains the fail-closed fallback if it cannot complete the
+same behavioral and natural-turn gates. Under the old thinking route, fresh
+full-stack prompts around 840 tokens took roughly four minutes on the J3455,
+while allowing prior dialogue to accumulate drove a 1,671-token scheduled
+prompt into the 720-second transport-recovery boundary.
+
+The ICP profile retains up to four authored ordinary turns so Ollama can reuse
+their bounded prefix, while chain sessions rotate after every authored turn.
+Research search execution itself completed in under one second once the Action
+was accepted. The 420-second local header deadline, 600-second ReAct stream,
+and 720-second edge watchdog remain independent hard bounds. This box is
+deliberately slow, but it can author, journal, and research without
 manufacturing fallback as agency.
 The suite runs one cold and three warm repetitions, records HTTP response-start
 and total timing separately, and checks grounded fill-state honesty, required
@@ -1195,13 +1256,28 @@ quarantine, and removes its false authored claim from bounded current thread
 state. Reports and activity views render the original event as
 `revoked_interrupted_trace_non_authored`.
 
-Report v15 reads the daemon's bounded local-provider timing records and emits
-windowed `local_provider_header_latency_ms_*` fields for the exact allowlisted
-loopback origin. These samples are intentionally labeled as origin-window
-metrics rather than joined to an individual turn: trace IDs are not invented
-where the HTTP host log does not expose them. Run receipts still carry
-per-turn prompt, completion, header, generation, and full-turn fields whenever
-the provider path exposes those values.
+Report v15 keeps daemon-log `local_provider_header_latency_ms_*` samples labeled
+as origin-window metrics rather than inventing a per-turn join. New core builds
+also keep a bounded host-private request registry: every exact eligible
+loopback-provider send is registered before dispatch, terminalized on every
+return path, and attached take-once to the same canonical final ReAct response.
+The edge run receipt persists the exact attempt and successful-header counts
+plus the bounded per-attempt IDs, outcomes, and successful-header latencies;
+it emits scalar request ID and header latency fields only for one-attempt,
+one-success turns. Guest-supplied attachments are discarded, incomplete or
+ambiguous summaries fail closed, and pre-upgrade unmarked latency remains
+explicitly `legacy_unattributed` rather than being upgraded by timestamp.
+The daemon retains 16,384 consumed full-turn keys (about 170 days at 96 keys
+per day, absent additional interactive or other-uplink ReAct traffic);
+exhausting that bound disables exact provider attribution until the daemon
+restarts instead of evicting a key and risking suffix-only counts.
+Prompt-token, completion-token, and generation-latency fields remain absent
+unless a trusted provider boundary actually exposes them.
+
+The ICP profile keeps up to four authored ordinary turns in one model session,
+which reuses the J3455's expensive prompt prefill while remaining inside its
+2K context. Action-chain sessions rotate after each authored turn while their
+durable chain continuity remains intact.
 
 The ICP profile uses event-driven ordinary invitations: a fresh machine
 observation caused by host/source availability, host state, I/O, or acoustic
