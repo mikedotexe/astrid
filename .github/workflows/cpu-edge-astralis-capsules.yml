@@ -1,0 +1,65 @@
+name: CPU Edge Astralis Capsules
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/cpu-edge-astralis-capsules.yml'
+      - 'packaging/headless/astralis-cpu-edge-capsules.toml'
+      - 'packaging/headless/astralis-locks/**'
+      - 'packaging/headless/astralis-sdk-0.6-*.patch'
+      - 'scripts/build_astralis_cpu_edge_capsules.py'
+      - 'scripts/test_build_astralis_cpu_edge_capsules.py'
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/cpu-edge-astralis-capsules.yml'
+      - 'packaging/headless/astralis-cpu-edge-capsules.toml'
+      - 'packaging/headless/astralis-locks/**'
+      - 'packaging/headless/astralis-sdk-0.6-*.patch'
+      - 'scripts/build_astralis_cpu_edge_capsules.py'
+      - 'scripts/test_build_astralis_cpu_edge_capsules.py'
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Pinned SDK 0.6 compatibility capsules
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install pinned Rust and Component Model target
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: '1.94.1'
+          targets: wasm32-wasip2
+          components: rustfmt, clippy
+
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Offline recipe and tamper checks
+        run: |
+          python3 scripts/build_astralis_cpu_edge_capsules.py --verify-only
+          python3 -m unittest scripts/test_build_astralis_cpu_edge_capsules.py
+          python3 -m py_compile \
+            scripts/build_astralis_cpu_edge_capsules.py \
+            scripts/test_build_astralis_cpu_edge_capsules.py
+
+      - name: Test, lint, and build pinned external capsules
+        run: |
+          python3 scripts/build_astralis_cpu_edge_capsules.py \
+            --jobs 4 \
+            --output-dir dist/astralis-cpu-edge
+
+      - name: Publish compatibility capsule evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: astralis-cpu-edge-capsules
+          path: dist/astralis-cpu-edge/
+          if-no-files-found: error
+          retention-days: 14

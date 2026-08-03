@@ -1,0 +1,21 @@
+diff --git a/src/lib.rs b/src/lib.rs
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -211,14 +211,10 @@ impl ContextEngineCapsule {
+
+         log::info("Context Engine capsule ready");
+
+-        loop {
+-            // Block until a message arrives (up to 60s), eliminating busy-spin polling.
+-            match ipc::recv(&sub, 60_000) {
+-                Ok(result) => {
+-                    dispatch_poll_result(&result, &config);
+-                }
+-                Err(_) => break,
+-            }
++        // Block until a message arrives (up to 60s), eliminating busy-spin polling.
++        while let Ok(result) = ipc::recv(&sub, 60_000) {
++            dispatch_poll_result(&result, &config);
+
+             // Drain hook topics to prevent backpressure.
+             let _ = ipc::poll(&hook_sub);
