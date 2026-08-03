@@ -4,10 +4,12 @@
 from __future__ import annotations
 
 import contextlib
+import hashlib
 import importlib.util
 import io
 import json
 from pathlib import Path
+import tempfile
 import unittest
 
 
@@ -19,6 +21,158 @@ SPEC.loader.exec_module(REPORT)
 
 
 class FillSummaryTests(unittest.TestCase):
+    @staticmethod
+    def current_react_manifest() -> dict[str, object]:
+        return {
+            "schema": "astrid_headless_application_capsule_generation_v1",
+            "generation_id": "headless-application-capsules-20260803T120000Z-42",
+            "capsules": [
+                {
+                    "capsule_id": "astrid-capsule-react",
+                    "archive_sha256": "a" * 64,
+                    "normalized_payload_sha256": "b" * 64,
+                    "installed_tree_sha256": "c" * 64,
+                    "content_objects": [
+                        {
+                            "kind": "wasm",
+                            "digest": "d" * 64,
+                            "sha256": "e" * 64,
+                        },
+                        {
+                            "kind": "wit",
+                            "digest": "f" * 64,
+                            "sha256": "1" * 64,
+                        },
+                    ],
+                }
+            ],
+        }
+
+    @staticmethod
+    def write_current_manifest(
+        root: Path,
+        manifest: dict[str, object],
+        *,
+        sidecar_digest: str | None = None,
+        write_sidecar: bool = True,
+    ) -> str:
+        manifest_root = root / "etc/install-manifests"
+        manifest_root.mkdir(parents=True, exist_ok=True)
+        payload = (json.dumps(manifest, sort_keys=True) + "\n").encode()
+        (manifest_root / REPORT.CURRENT_CAPSULE_MANIFEST_NAME).write_bytes(payload)
+        digest = hashlib.sha256(payload).hexdigest()
+        if write_sidecar:
+            (manifest_root / REPORT.CURRENT_CAPSULE_SIDECAR_NAME).write_text(
+                f"{sidecar_digest or digest}  {REPORT.CURRENT_CAPSULE_MANIFEST_NAME}\n",
+                encoding="utf-8",
+            )
+        return digest
+
+    @staticmethod
+    def write_legacy_react_manifest(root: Path) -> None:
+        manifest_root = root / "etc/install-manifests"
+        manifest_root.mkdir(parents=True, exist_ok=True)
+        (manifest_root / "react-provenance-v1.json").write_text(
+            json.dumps(
+                {
+                    "deployment_state": "legacy-active",
+                    "deployment": {"live_content_address": "d" * 64},
+                    "artifact": {"sha256": "e" * 64},
+                }
+            ),
+            encoding="utf-8",
+        )
+
+    def test_react_provenance_prefers_verified_current_generic_manifest(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            self.write_legacy_react_manifest(root)
+            digest = self.write_current_manifest(root, self.current_react_manifest())
+
+            view = REPORT.react_provenance_view(root)
+
+        self.assertEqual(view["source"], "current_generic_manifest")
+        self.assertEqual(view["validation"], "verified")
+        self.assertEqual(view["generation_state"], "verified_current_generic_manifest")
+        self.assertEqual(view["live_content_address"], "d" * 64)
+        self.assertEqual(view["archive_sha256"], "a" * 64)
+        self.assertEqual(view["manifest_sha256"], digest)
+
+    def test_react_provenance_sidecar_failure_never_falls_back_to_legacy(self) -> None:
+        for write_sidecar, digest in ((True, "f" * 64), (False, None)):
+            with self.subTest(write_sidecar=write_sidecar):
+                with tempfile.TemporaryDirectory() as temporary:
+                    root = Path(temporary)
+                    self.write_legacy_react_manifest(root)
+                    self.write_current_manifest(
+                        root,
+                        self.current_react_manifest(),
+                        sidecar_digest=digest,
+                        write_sidecar=write_sidecar,
+                    )
+                    view = REPORT.react_provenance_view(root)
+
+                self.assertEqual(view["source"], "current_generic_manifest_invalid")
+                self.assertEqual(view["archive_sha256"], "unavailable")
+                self.assertNotEqual(view["archive_sha256"], "e" * 64)
+
+    def test_react_provenance_rejects_schema_and_react_entry_mismatch(self) -> None:
+        malformed_manifests = []
+        wrong_schema = self.current_react_manifest()
+        wrong_schema["schema"] = "future_schema"
+        malformed_manifests.append(wrong_schema)
+        missing_entry = self.current_react_manifest()
+        missing_entry["capsules"] = []
+        malformed_manifests.append(missing_entry)
+        malformed_entry = self.current_react_manifest()
+        malformed_entry["capsules"][0]["installed_tree_sha256"] = "not-a-hash"
+        malformed_manifests.append(malformed_entry)
+        missing_content_objects = self.current_react_manifest()
+        del missing_content_objects["capsules"][0]["content_objects"]
+        malformed_manifests.append(missing_content_objects)
+        missing_wasm = self.current_react_manifest()
+        missing_wasm["capsules"][0]["content_objects"] = [
+            {
+                "kind": "wit",
+                "digest": "f" * 64,
+                "sha256": "1" * 64,
+            }
+        ]
+        malformed_manifests.append(missing_wasm)
+        ambiguous_wasm = self.current_react_manifest()
+        ambiguous_wasm["capsules"][0]["content_objects"].append(
+            {
+                "kind": "wasm",
+                "digest": "2" * 64,
+                "sha256": "3" * 64,
+            }
+        )
+        malformed_manifests.append(ambiguous_wasm)
+
+        for manifest in malformed_manifests:
+            with self.subTest(manifest=manifest):
+                with tempfile.TemporaryDirectory() as temporary:
+                    root = Path(temporary)
+                    self.write_legacy_react_manifest(root)
+                    self.write_current_manifest(root, manifest)
+                    view = REPORT.react_provenance_view(root)
+
+                self.assertEqual(view["source"], "current_generic_manifest_invalid")
+                self.assertEqual(view["live_content_address"], "unavailable")
+                self.assertEqual(view["archive_sha256"], "unavailable")
+
+    def test_react_provenance_legacy_only_remains_visible_as_manual(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            self.write_legacy_react_manifest(root)
+            view = REPORT.react_provenance_view(root)
+
+        self.assertEqual(view["source"], "legacy_manual_manifest")
+        self.assertEqual(view["validation"], "legacy_manual_unverified")
+        self.assertEqual(view["generation_state"], "legacy-active")
+        self.assertEqual(view["live_content_address"], "d" * 64)
+        self.assertEqual(view["archive_sha256"], "e" * 64)
+
     def test_run_provenance_keeps_local_fallback_and_format_repair_distinct(self) -> None:
         self.assertEqual(
             REPORT.run_response_provenance(
@@ -48,6 +202,56 @@ class FillSummaryTests(unittest.TestCase):
             REPORT.run_response_provenance({"response_provenance": "spoofed"}),
             ("invalid", False, False),
         )
+
+    def test_modern_non_authored_runs_have_observational_provenance(self) -> None:
+        for status in ("transport_recovery", "failed", "interrupted"):
+            with self.subTest(status=status):
+                run = {
+                    "schema": "astrid_edge_autonomy_run_v4",
+                    "status": status,
+                    "response_provenance": None,
+                }
+                self.assertEqual(
+                    REPORT.run_response_provenance(run),
+                    (f"{status}_non_authored", False, False),
+                )
+
+        legacy = {
+            "schema": "astrid_edge_autonomy_run_v3",
+            "status": "failed",
+            "response_provenance": None,
+        }
+        self.assertEqual(
+            REPORT.run_response_provenance(legacy),
+            ("legacy_unspecified", False, False),
+        )
+
+    def test_last_provenance_uses_latest_run_when_state_value_is_null(self) -> None:
+        runs = [
+            {
+                "schema": "astrid_edge_autonomy_run_v4",
+                "status": "authored_completed",
+                "response_provenance": "model_authored",
+            },
+            {
+                "schema": "astrid_edge_autonomy_run_v4",
+                "status": "transport_recovery",
+                "response_provenance": None,
+            },
+        ]
+        self.assertEqual(
+            REPORT.latest_response_provenance(
+                {"last_response_provenance": None}, runs
+            ),
+            ("transport_recovery_non_authored", False, False),
+        )
+
+        counts = REPORT.response_provenance_counts(runs)
+        self.assertEqual(list(counts), list(REPORT.RESPONSE_PROVENANCE_LABELS))
+        self.assertEqual(counts["model_authored"], 1)
+        self.assertEqual(counts["transport_recovery_non_authored"], 1)
+        self.assertEqual(counts["failed_non_authored"], 0)
+        self.assertEqual(counts["interrupted_non_authored"], 0)
 
     def test_action_dispatch_summary_exposes_pending_orphan_and_corrupt_records(self) -> None:
         dispatch_span = "00000000-0000-4000-8000-000000000090"
@@ -258,6 +462,43 @@ class FillSummaryTests(unittest.TestCase):
                 values["ASTRID_EDGE_RESERVOIR_TUNING_ENABLED"], "false"
             )
 
+    def test_live_process_profile_overrides_staged_rollout_profile(self) -> None:
+        import tempfile
+
+        with tempfile.TemporaryDirectory() as temporary:
+            home = Path(temporary)
+            config = home / ".config/astrid"
+            config.mkdir(parents=True)
+            (config / "edge-appliance.env").write_text(
+                "ASTRID_EDGE_AUTONOMY_ENABLED=true\n"
+                "ASTRID_EDGE_SPECTRAL_ENABLED=true\n",
+                encoding="utf-8",
+            )
+            values = REPORT.effective_profile_values(
+                home,
+                {
+                    "ASTRID_EDGE_AUTONOMY_ENABLED": "false",
+                    "ASTRID_EDGE_SPECTRAL_ENABLED": "false",
+                },
+            )
+            self.assertEqual(values["ASTRID_EDGE_AUTONOMY_ENABLED"], "false")
+            self.assertEqual(values["ASTRID_EDGE_SPECTRAL_ENABLED"], "false")
+
+    def test_process_profile_parser_excludes_unrelated_and_secret_values(self) -> None:
+        values = REPORT.parse_process_profile_values(
+            b"ASTRID_EDGE_AUTONOMY_ENABLED=false\0"
+            b"ASTRID_OLLAMA_MODEL=qwen3:1.7b\0"
+            b"OPENAI_API_KEY=do-not-report\0"
+            b"PATH=/usr/bin\0malformed\0"
+        )
+        self.assertEqual(
+            values,
+            {
+                "ASTRID_EDGE_AUTONOMY_ENABLED": "false",
+                "ASTRID_OLLAMA_MODEL": "qwen3:1.7b",
+            },
+        )
+
     def test_loaded_capsule_contract_requires_exact_count_and_essentials(self) -> None:
         essential = sorted(REPORT.ESSENTIAL_EDGE_CAPSULES)
         loaded = essential + [f"base-{index:02d}" for index in range(10)]
@@ -276,6 +517,27 @@ class FillSummaryTests(unittest.TestCase):
                     {"status": {"loaded_capsules": loaded[:-1] + [loaded[0]]}}
                 )
             )
+        )
+
+    def test_session_retirement_report_counts_completed_exact_schema_only(self) -> None:
+        rows = [
+            {
+                "schema": "astrid_edge_operator_session_retirement_v1",
+                "phase": "requested",
+            },
+            {
+                "schema": "astrid_edge_operator_session_retirement_v1",
+                "phase": "completed",
+                "prior_session_generation": 255,
+            },
+            {
+                "schema": "legacy_session_retirement",
+                "phase": "completed",
+            },
+        ]
+        self.assertEqual(
+            REPORT.completed_session_retirements(rows),
+            [rows[1]],
         )
 
     def test_signed_tuning_state_uses_payload_and_active_focus(self) -> None:
@@ -310,6 +572,94 @@ class FillSummaryTests(unittest.TestCase):
         )
         self.assertEqual(fields["fill_inside_65_72_pct"], "40.0")
         self.assertEqual(fields["fill_inside_65_73_5_pct"], "60.0")
+
+    def test_exact_header_latency_requires_trace_source_request_and_single_count(self) -> None:
+        run = {
+            "schema": "astrid_edge_autonomy_run_v4",
+            "request_header_latency_ms": 288_001,
+            "request_header_latency_source": "kernel_http_host_trace_v1",
+            "provider_request_id": "00000000-0000-4000-8000-000000000071",
+            "provider_request_count": 1,
+            "provider_successful_header_count": 1,
+            "provider_requests": [
+                {
+                    "attempt_id": "00000000-0000-4000-8000-000000000075",
+                    "request_id": "00000000-0000-4000-8000-000000000071",
+                    "outcome": "successful_headers",
+                    "request_header_latency_ms": 288_001,
+                }
+            ],
+            "trace": {
+                "schema_version": 1,
+                "trace_id": "00000000-0000-4000-8000-000000000072",
+                "turn_id": "00000000-0000-4000-8000-000000000073",
+                "span_id": "00000000-0000-4000-8000-000000000074",
+                "session_id": "session-one",
+            },
+        }
+        self.assertEqual(
+            REPORT.exact_request_header_latency(run),
+            (288_001, "00000000-0000-4000-8000-000000000071", 1),
+        )
+
+        for field, value in (
+            ("request_header_latency_source", None),
+            ("provider_request_count", 2),
+            ("provider_successful_header_count", 0),
+            ("provider_request_id", None),
+        ):
+            malformed = dict(run)
+            malformed[field] = value
+            self.assertIsNone(REPORT.exact_request_header_latency(malformed))
+        missing_turn = dict(run)
+        missing_turn["trace"] = dict(run["trace"])
+        missing_turn["trace"].pop("turn_id")
+        self.assertIsNone(REPORT.exact_request_header_latency(missing_turn))
+
+        duplicate_attempt = dict(run)
+        duplicate_attempt["provider_request_count"] = 2
+        duplicate_attempt["provider_successful_header_count"] = 2
+        duplicate_attempt["provider_request_id"] = None
+        duplicate_attempt["request_header_latency_ms"] = None
+        duplicate_attempt["provider_requests"] = [
+            dict(run["provider_requests"][0]),
+            dict(run["provider_requests"][0]),
+        ]
+        self.assertIsNone(
+            REPORT.exact_provider_request_telemetry(duplicate_attempt)
+        )
+
+        tampered_claim = dict(run)
+        tampered_claim["provider_requests"] = []
+        self.assertIsNone(REPORT.exact_provider_request_telemetry(tampered_claim))
+        self.assertIsNone(REPORT.legacy_unattributed_header_latency(tampered_claim))
+
+        unhashable_outcome = dict(run)
+        unhashable_outcome["provider_requests"] = [
+            dict(run["provider_requests"][0], outcome=["successful_headers"])
+        ]
+        self.assertIsNone(
+            REPORT.exact_provider_request_telemetry(unhashable_outcome)
+        )
+
+        boolean_scalar = dict(run)
+        boolean_scalar["request_header_latency_ms"] = True
+        boolean_scalar["provider_requests"] = [
+            dict(run["provider_requests"][0], request_header_latency_ms=1)
+        ]
+        self.assertIsNone(
+            REPORT.exact_provider_request_telemetry(boolean_scalar)
+        )
+
+        legacy = {
+            "schema": "astrid_edge_autonomy_run_v4",
+            "request_header_latency_ms": 7,
+        }
+        self.assertEqual(REPORT.legacy_unattributed_header_latency(legacy), 7)
+        legacy["request_header_latency_ms"] = float("nan")
+        self.assertIsNone(REPORT.legacy_unattributed_header_latency(legacy))
+        legacy["request_header_latency_ms"] = float("inf")
+        self.assertIsNone(REPORT.legacy_unattributed_header_latency(legacy))
 
     def test_local_header_latency_uses_exact_origin_and_window(self) -> None:
         import tempfile

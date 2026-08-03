@@ -13,6 +13,7 @@ import argparse
 import datetime as dt
 import hashlib
 import json
+import math
 import os
 import re
 import subprocess
@@ -50,6 +51,28 @@ MODEL_RESPONSE_PROVENANCES = frozenset(
         "model_authored_with_local_format_repair",
     }
 )
+NON_AUTHORED_RESPONSE_PROVENANCE_BY_STATUS = {
+    "transport_recovery": "transport_recovery_non_authored",
+    "failed": "failed_non_authored",
+    "interrupted": "interrupted_non_authored",
+}
+RESPONSE_PROVENANCE_LABELS = (
+    "model_authored",
+    "model_authored_with_local_safe_fallback",
+    "model_authored_with_local_format_repair",
+    "executor_terminal_error",
+    "transport_recovery_non_authored",
+    "failed_non_authored",
+    "interrupted_non_authored",
+    "legacy_unspecified",
+    "invalid",
+)
+REQUEST_HEADER_LATENCY_SOURCE_V1 = "kernel_http_host_trace_v1"
+CURRENT_CAPSULE_MANIFEST_SCHEMA = "astrid_headless_application_capsule_generation_v1"
+CURRENT_CAPSULE_MANIFEST_NAME = "headless-application-capsules.current.json"
+CURRENT_CAPSULE_SIDECAR_NAME = "headless-application-capsules.current.sha256"
+REACT_CAPSULE_ID = "astrid-capsule-react"
+SHA256_PATTERN = re.compile(r"[0-9a-f]{64}")
 
 
 def emit(name: str, value: Any) -> None:
@@ -64,6 +87,186 @@ def read_json(path: Path) -> dict[str, Any]:
     except (OSError, json.JSONDecodeError):
         return {}
     return value if isinstance(value, dict) else {}
+
+
+def _unavailable_react_provenance(source: str, validation: str) -> dict[str, Any]:
+    return {
+        "source": source,
+        "validation": validation,
+        "generation_state": "unavailable",
+        "generation_id": "unavailable",
+        "live_content_address": "unavailable",
+        "archive_sha256": "unavailable",
+        "manifest_sha256": "unavailable",
+    }
+
+
+def react_provenance_view(astrid_root: Path) -> dict[str, Any]:
+    """Resolve React provenance, preferring the hashed generic current manifest."""
+    manifest_root = astrid_root / "etc/install-manifests"
+    current_path = manifest_root / CURRENT_CAPSULE_MANIFEST_NAME
+    sidecar_path = manifest_root / CURRENT_CAPSULE_SIDECAR_NAME
+    current_present = any(
+        path.exists() or path.is_symlink() for path in (current_path, sidecar_path)
+    )
+    if current_present:
+        if any(
+            path.is_symlink() or not path.is_file()
+            for path in (current_path, sidecar_path)
+        ):
+            return _unavailable_react_provenance(
+                "current_generic_manifest_invalid", "current_files_not_regular"
+            )
+        try:
+            payload = current_path.read_bytes()
+            sidecar = sidecar_path.read_text(encoding="utf-8")
+        except (OSError, UnicodeError):
+            return _unavailable_react_provenance(
+                "current_generic_manifest_invalid", "current_files_unreadable"
+            )
+        if len(payload) > 4 * 1024 * 1024 or len(sidecar) > 256:
+            return _unavailable_react_provenance(
+                "current_generic_manifest_invalid", "current_files_oversized"
+            )
+        sidecar_match = re.fullmatch(
+            rf"(?P<digest>[0-9a-f]{{64}})  {re.escape(CURRENT_CAPSULE_MANIFEST_NAME)}\n",
+            sidecar,
+        )
+        payload_sha256 = hashlib.sha256(payload).hexdigest()
+        if (
+            sidecar_match is None
+            or sidecar_match.group("digest") != payload_sha256
+        ):
+            return _unavailable_react_provenance(
+                "current_generic_manifest_invalid", "current_sidecar_mismatch"
+            )
+        try:
+            manifest = json.loads(payload)
+        except (UnicodeError, json.JSONDecodeError):
+            return _unavailable_react_provenance(
+                "current_generic_manifest_invalid", "current_manifest_malformed"
+            )
+        if (
+            not isinstance(manifest, dict)
+            or manifest.get("schema") != CURRENT_CAPSULE_MANIFEST_SCHEMA
+        ):
+            return _unavailable_react_provenance(
+                "current_generic_manifest_invalid", "current_schema_mismatch"
+            )
+        generation_id = manifest.get("generation_id")
+        capsules = manifest.get("capsules")
+        if (
+            not isinstance(generation_id, str)
+            or not generation_id.strip()
+            or len(generation_id) > 128
+            or any(ord(character) < 0x20 or ord(character) == 0x7F for character in generation_id)
+            or not isinstance(capsules, list)
+            or not 1 <= len(capsules) <= 128
+        ):
+            return _unavailable_react_provenance(
+                "current_generic_manifest_invalid", "current_manifest_malformed"
+            )
+        capsule_ids: set[str] = set()
+        react_entries: list[dict[str, Any]] = []
+        for entry in capsules:
+            if not isinstance(entry, dict):
+                return _unavailable_react_provenance(
+                    "current_generic_manifest_invalid", "current_capsule_entry_malformed"
+                )
+            capsule_id = entry.get("capsule_id")
+            if (
+                not isinstance(capsule_id, str)
+                or not capsule_id
+                or len(capsule_id) > 128
+                or capsule_id in capsule_ids
+            ):
+                return _unavailable_react_provenance(
+                    "current_generic_manifest_invalid", "current_capsule_entry_malformed"
+                )
+            capsule_ids.add(capsule_id)
+            if capsule_id == REACT_CAPSULE_ID:
+                react_entries.append(entry)
+        if len(react_entries) != 1:
+            return _unavailable_react_provenance(
+                "current_generic_manifest_invalid", "current_react_entry_mismatch"
+            )
+        react = react_entries[0]
+        archive_sha256 = react.get("archive_sha256")
+        normalized_sha256 = react.get("normalized_payload_sha256")
+        installed_sha256 = react.get("installed_tree_sha256")
+        if not all(
+            isinstance(value, str) and SHA256_PATTERN.fullmatch(value) is not None
+            for value in (archive_sha256, normalized_sha256, installed_sha256)
+        ):
+            return _unavailable_react_provenance(
+                "current_generic_manifest_invalid", "current_react_entry_malformed"
+            )
+        content_objects = react.get("content_objects")
+        if (
+            not isinstance(content_objects, list)
+            or not 1 <= len(content_objects) <= 256
+        ):
+            return _unavailable_react_provenance(
+                "current_generic_manifest_invalid", "current_react_content_objects_malformed"
+            )
+        wasm_objects: list[dict[str, Any]] = []
+        for content_object in content_objects:
+            if not isinstance(content_object, dict):
+                return _unavailable_react_provenance(
+                    "current_generic_manifest_invalid",
+                    "current_react_content_objects_malformed",
+                )
+            kind = content_object.get("kind")
+            digest = content_object.get("digest")
+            object_sha256 = content_object.get("sha256")
+            if (
+                kind not in {"wasm", "wit"}
+                or not isinstance(digest, str)
+                or SHA256_PATTERN.fullmatch(digest) is None
+                or not isinstance(object_sha256, str)
+                or SHA256_PATTERN.fullmatch(object_sha256) is None
+            ):
+                return _unavailable_react_provenance(
+                    "current_generic_manifest_invalid",
+                    "current_react_content_objects_malformed",
+                )
+            if kind == "wasm":
+                wasm_objects.append(content_object)
+        if len(wasm_objects) != 1:
+            return _unavailable_react_provenance(
+                "current_generic_manifest_invalid", "current_react_wasm_object_mismatch"
+            )
+        return {
+            "source": "current_generic_manifest",
+            "validation": "verified",
+            "generation_state": "verified_current_generic_manifest",
+            "generation_id": generation_id,
+            "live_content_address": wasm_objects[0]["digest"],
+            "archive_sha256": archive_sha256,
+            "manifest_sha256": payload_sha256,
+        }
+
+    legacy_path = manifest_root / "react-provenance-v1.json"
+    if legacy_path.exists() or legacy_path.is_symlink():
+        legacy = read_json(legacy_path)
+        deployment = legacy.get("deployment")
+        if not isinstance(deployment, dict):
+            deployment = {}
+        artifact = legacy.get("artifact")
+        if not isinstance(artifact, dict):
+            artifact = {}
+        return {
+            "source": "legacy_manual_manifest",
+            "validation": "legacy_manual_unverified",
+            "generation_state": legacy.get("deployment_state", "unavailable"),
+            "generation_id": "unavailable",
+            "live_content_address": deployment.get(
+                "live_content_address", "unavailable"
+            ),
+            "archive_sha256": artifact.get("sha256", "unavailable"),
+            "manifest_sha256": "unavailable",
+        }
+    return _unavailable_react_provenance("unavailable", "not_found")
 
 
 def read_json_lines(path: Path) -> list[dict[str, Any]]:
@@ -117,6 +320,138 @@ def valid_trace(value: dict[str, Any]) -> bool:
     )
 
 
+def exact_provider_request_telemetry(
+    run: dict[str, Any],
+) -> tuple[int, int, list[dict[str, Any]]] | None:
+    """Return strict kernel-host attempts from one canonical turn."""
+    request_count = run.get("provider_request_count")
+    successful_count = run.get("provider_successful_header_count")
+    requests = run.get("provider_requests")
+    trace = run.get("trace")
+    if (
+        run.get("schema") != "astrid_edge_autonomy_run_v4"
+        or run.get("request_header_latency_source")
+        != REQUEST_HEADER_LATENCY_SOURCE_V1
+        or not valid_trace(run)
+        or not isinstance(trace, dict)
+        or normalized_uuid(trace.get("turn_id")) is None
+        or isinstance(request_count, bool)
+        or not isinstance(request_count, int)
+        or not 1 <= request_count <= 16
+        or isinstance(successful_count, bool)
+        or not isinstance(successful_count, int)
+        or not 0 <= successful_count <= request_count
+        or not isinstance(requests, list)
+        or len(requests) != request_count
+    ):
+        return None
+    accepted_outcomes = {
+        "successful_headers",
+        "non_success_status",
+        "unknown_peer",
+        "non_loopback_peer",
+        "timeout",
+        "transport_error",
+        "cancelled",
+    }
+    attempt_ids: set[str] = set()
+    observed_successes = 0
+    for request in requests:
+        if not isinstance(request, dict) or not {
+            "attempt_id",
+            "request_id",
+            "outcome",
+        }.issubset(request) or not set(request).issubset(
+            {"attempt_id", "request_id", "outcome", "request_header_latency_ms"}
+        ):
+            return None
+        attempt_id = normalized_uuid(request.get("attempt_id"))
+        request_id = normalized_uuid(request.get("request_id"))
+        outcome = request.get("outcome")
+        latency = request.get("request_header_latency_ms")
+        if (
+            attempt_id is None
+            or attempt_id in attempt_ids
+            or request_id is None
+            or not isinstance(outcome, str)
+            or outcome not in accepted_outcomes
+        ):
+            return None
+        attempt_ids.add(attempt_id)
+        if outcome == "successful_headers":
+            if (
+                isinstance(latency, bool)
+                or not isinstance(latency, int)
+                or not 0 <= latency <= (2**64 - 1)
+            ):
+                return None
+            observed_successes += 1
+        elif latency is not None:
+            return None
+    if observed_successes != successful_count:
+        return None
+    if request_count == 1 and successful_count == 1:
+        only = requests[0]
+        scalar_request_id = normalized_uuid(run.get("provider_request_id"))
+        scalar_latency = run.get("request_header_latency_ms")
+        if (
+            scalar_request_id is None
+            or scalar_request_id != normalized_uuid(only.get("request_id"))
+            or isinstance(scalar_latency, bool)
+            or not isinstance(scalar_latency, int)
+            or not 0 <= scalar_latency <= (2**64 - 1)
+            or scalar_latency != only.get("request_header_latency_ms")
+        ):
+            return None
+    elif (
+        run.get("provider_request_id") is not None
+        or run.get("request_header_latency_ms") is not None
+    ):
+        return None
+    return request_count, successful_count, requests
+
+
+def exact_provider_request_counts(run: dict[str, Any]) -> tuple[int, int] | None:
+    telemetry = exact_provider_request_telemetry(run)
+    return (telemetry[0], telemetry[1]) if telemetry is not None else None
+
+
+def exact_request_header_latency(
+    run: dict[str, Any],
+) -> tuple[int, str, int] | None:
+    """Return only a one-attempt/one-success trace-bound kernel-host latency."""
+    if exact_provider_request_counts(run) != (1, 1):
+        return None
+    latency = run.get("request_header_latency_ms")
+    request_id = normalized_uuid(run.get("provider_request_id"))
+    if (
+        isinstance(latency, bool)
+        or not isinstance(latency, int)
+        or not 0 <= latency <= (2**64 - 1)
+        or request_id is None
+    ):
+        return None
+    return latency, request_id, 1
+
+
+def legacy_unattributed_header_latency(run: dict[str, Any]) -> int | float | None:
+    """Return only genuinely legacy numeric latency, never a malformed exact claim."""
+    latency = run.get("request_header_latency_ms")
+    if (
+        run.get("request_header_latency_source") is not None
+        or run.get("provider_request_id") is not None
+        or run.get("provider_request_count") is not None
+        or run.get("provider_successful_header_count") is not None
+        or run.get("provider_requests") is not None
+        or isinstance(latency, bool)
+        or not isinstance(latency, (int, float))
+        or not math.isfinite(latency)
+        or not 0 <= latency <= (2**64 - 1)
+    ):
+        return None
+    return latency
+
+
 def valid_response_sha256(value: Any) -> bool:
     return isinstance(value, str) and re.fullmatch(r"[0-9a-f]{64}", value) is not None
 
@@ -124,8 +459,16 @@ def valid_response_sha256(value: Any) -> bool:
 def run_response_provenance(item: dict[str, Any]) -> tuple[str, bool, bool]:
     raw = item.get("response_provenance")
     if raw is None:
-        provenance = "legacy_unspecified"
-    elif raw in MODEL_RESPONSE_PROVENANCES | {"executor_terminal_error"}:
+        status = item.get("status")
+        provenance = (
+            NON_AUTHORED_RESPONSE_PROVENANCE_BY_STATUS.get(status)
+            if item.get("schema") == "astrid_edge_autonomy_run_v4"
+            and isinstance(status, str)
+            else None
+        ) or "legacy_unspecified"
+    elif isinstance(raw, str) and raw in MODEL_RESPONSE_PROVENANCES | {
+        "executor_terminal_error"
+    }:
         provenance = str(raw)
     else:
         provenance = "invalid"
@@ -134,6 +477,27 @@ def run_response_provenance(item: dict[str, Any]) -> tuple[str, bool, bool]:
         provenance == "model_authored_with_local_safe_fallback",
         provenance == "model_authored_with_local_format_repair",
     )
+
+
+def response_provenance_counts(runs: list[dict[str, Any]]) -> dict[str, int]:
+    """Return a stable zero-filled count surface for all recognized labels."""
+    counts = {label: 0 for label in RESPONSE_PROVENANCE_LABELS}
+    for run in runs:
+        provenance = run_response_provenance(run)[0]
+        counts[provenance] += 1
+    return counts
+
+
+def latest_response_provenance(
+    autonomy: dict[str, Any], runs: list[dict[str, Any]]
+) -> tuple[str, bool, bool]:
+    """Prefer the latest durable run when state cleared its provenance."""
+    state_provenance = autonomy.get("last_response_provenance")
+    if state_provenance is not None:
+        return run_response_provenance({"response_provenance": state_provenance})
+    if runs:
+        return run_response_provenance(runs[-1])
+    return run_response_provenance({})
 
 
 DispatchCorrelationKey = tuple[str, str, str, str | None, str, str]
@@ -315,14 +679,20 @@ def tuning_state_focus(value: dict[str, Any]) -> tuple[str, dict[str, Any]]:
     return "inactive", {}
 
 
-def command(*arguments: str) -> str:
+def command(
+    *arguments: str, environment: dict[str, str] | None = None
+) -> str:
     try:
+        command_environment = os.environ.copy()
+        if environment is not None:
+            command_environment.update(environment)
         return subprocess.run(
             arguments,
             check=False,
             capture_output=True,
             text=True,
             timeout=5,
+            env=command_environment,
         ).stdout.strip()
     except (OSError, subprocess.TimeoutExpired):
         return ""
@@ -345,6 +715,17 @@ def loaded_capsules_from_status(raw: str) -> list[str] | None:
 
 def loaded_capsule_contract(loaded: list[str]) -> bool:
     return len(loaded) == 20 and ESSENTIAL_EDGE_CAPSULES.issubset(loaded)
+
+
+def completed_session_retirements(
+    rows: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    return [
+        item
+        for item in rows
+        if item.get("schema") == "astrid_edge_operator_session_retirement_v1"
+        and item.get("phase") == "completed"
+    ]
 
 
 def service_value(service: str, field: str) -> str:
@@ -375,12 +756,45 @@ def profile_values(path: Path) -> dict[str, str]:
     return values
 
 
-def effective_profile_values(home: Path) -> dict[str, str]:
+def parse_process_profile_values(raw: bytes) -> dict[str, str]:
+    """Parse only non-secret appliance profile keys from a process environment."""
+    values: dict[str, str] = {}
+    for entry in raw.split(b"\0"):
+        if b"=" not in entry:
+            continue
+        raw_name, raw_value = entry.split(b"=", 1)
+        name = raw_name.decode("utf-8", errors="replace")
+        if not name.startswith(("ASTRID_EDGE_", "ASTRID_OLLAMA_")):
+            continue
+        values[name] = raw_value.decode("utf-8", errors="replace")
+    return values
+
+
+def process_profile_values(service: str) -> dict[str, str]:
+    """Read allowlisted live edge settings from the running service process."""
+    raw_pid = service_value(service, "MainPID")
+    if not raw_pid.isdecimal() or int(raw_pid) <= 0:
+        return {}
+    try:
+        raw = Path(f"/proc/{raw_pid}/environ").read_bytes()
+    except OSError:
+        return {}
+    return parse_process_profile_values(raw)
+
+
+def effective_profile_values(
+    home: Path, live_values: dict[str, str] | None = None
+) -> dict[str, str]:
     values = profile_values(home / ".config/astrid/edge-appliance.env")
     # The rollout authority file is loaded after the appliance profile by the
     # systemd drop-in. Mirror that precedence so reports show effective tuning
     # authority rather than the eventual profile capability.
     values.update(profile_values(home / ".config/astrid/edge-tuning-authority.env"))
+    # The running process is the final authority during staged rollouts.  This
+    # includes systemd Environment= and EnvironmentFile= overrides that are
+    # deliberately absent from the durable appliance profile.
+    if live_values is not None:
+        values.update(live_values)
     return values
 
 
@@ -461,7 +875,8 @@ def main() -> int:
     if not state_path.is_file() or not history_path.is_file():
         parser.error(f"edge telemetry is unavailable under {workspace / 'runtime'}")
 
-    profile = effective_profile_values(home)
+    live_profile = process_profile_values("astrid-edge-runtime.service")
+    profile = effective_profile_values(home, live_profile)
     now_ms = time.time_ns() // 1_000_000
     cutoff_ms = now_ms - args.window_minutes * 60_000
     state = read_json(state_path)
@@ -475,7 +890,13 @@ def main() -> int:
     ):
         emit(f"{label}_service_state", service_value(service, "ActiveState"))
         emit(f"{label}_service_restarts", service_value(service, "NRestarts"))
-    status_raw = command(str(astrid_root / "bin/astrid"), "--format", "json", "status")
+    status_raw = command(
+        str(astrid_root / "bin/astrid"),
+        "--format",
+        "json",
+        "status",
+        environment={"ASTRID_HOME": str(astrid_root)},
+    )
     loaded_capsules = loaded_capsules_from_status(status_raw)
     emit(
         "astrid_loaded_capsule_count",
@@ -497,6 +918,23 @@ def main() -> int:
         "astrid_loaded_capsules",
         ",".join(sorted(loaded_capsules)) if loaded_capsules is not None else "unavailable",
     )
+    react_provenance = react_provenance_view(astrid_root)
+    emit("react_provenance_source", react_provenance["source"])
+    emit("react_provenance_validation", react_provenance["validation"])
+    emit(
+        "react_provenance_generation_state",
+        react_provenance["generation_state"],
+    )
+    emit("react_provenance_generation_id", react_provenance["generation_id"])
+    emit(
+        "react_provenance_live_content_address",
+        react_provenance["live_content_address"],
+    )
+    emit(
+        "react_provenance_archive_sha256",
+        react_provenance["archive_sha256"],
+    )
+    emit("react_provenance_manifest_sha256", react_provenance["manifest_sha256"])
     emit(
         "model_warmup_service_state",
         service_value("astrid-model-warmup.service", "ActiveState"),
@@ -561,6 +999,10 @@ def main() -> int:
     emit(
         "autonomy_prompt_max_chars",
         profile.get("ASTRID_EDGE_AUTONOMY_PROMPT_MAX_CHARS", ""),
+    )
+    emit(
+        "autonomy_session_max_authored_turns",
+        profile.get("ASTRID_EDGE_AUTONOMY_SESSION_MAX_AUTHORED_TURNS", ""),
     )
     emit(
         "autonomy_chain_session_max_authored_turns",
@@ -872,6 +1314,7 @@ def main() -> int:
         max(local_header_latencies, default=0),
     )
 
+    recent_runs = read_json_lines(workspace / "autonomous/runs.jsonl")
     autonomy = read_json(workspace / "autonomous/state.json")
     emit("autonomy_state_schema", autonomy.get("schema", "none"))
     state_keys = (
@@ -910,9 +1353,7 @@ def main() -> int:
             value = "none"
         emit(f"autonomy_{key}", value)
     last_response_provenance, last_safe_fallback, last_format_repair = (
-        run_response_provenance(
-            {"response_provenance": autonomy.get("last_response_provenance")}
-        )
+        latest_response_provenance(autonomy, recent_runs)
     )
     emit("autonomy_last_response_provenance", last_response_provenance)
     emit(
@@ -928,6 +1369,35 @@ def main() -> int:
         "autonomy_last_turn_id",
         last_trace.get("turn_id", "none") if isinstance(last_trace, dict) else "none",
     )
+    session_retirements = completed_session_retirements(
+        read_json_lines(workspace / "autonomous/session_retirements.jsonl")
+    )
+    emit("autonomy_operator_session_retirements_total", len(session_retirements))
+    emit(
+        "autonomy_operator_session_retirements_window",
+        sum(
+            int(item.get("recorded_at_unix_ms", 0) or 0) >= cutoff_ms
+            for item in session_retirements
+        ),
+    )
+    if session_retirements:
+        latest_retirement = session_retirements[-1]
+        emit(
+            "autonomy_latest_retired_session_generation",
+            latest_retirement.get("prior_session_generation", "none"),
+        )
+        emit(
+            "autonomy_latest_replacement_session_generation",
+            latest_retirement.get("new_session_generation", "none"),
+        )
+        emit(
+            "autonomy_latest_session_retirement_reason",
+            latest_retirement.get("reason", "none"),
+        )
+        emit(
+            "autonomy_latest_session_retirement_authority",
+            latest_retirement.get("authority", "none"),
+        )
 
     thread = read_json(workspace / "autonomous/thread_state.json")
     emit("thread_state_schema", thread.get("schema", "none"))
@@ -1001,7 +1471,6 @@ def main() -> int:
         "failed": 0,
         "interrupted": 0,
     }
-    recent_runs = read_json_lines(workspace / "autonomous/runs.jsonl")
     transport_corrections = {
         str(item.get("original_transcript_path"))
         for item in read_json_lines(
@@ -1034,17 +1503,11 @@ def main() -> int:
         if int(item.get("completed_at_unix_ms", 0) or 0) >= cutoff_ms
     ]
     run_provenance = [run_response_provenance(item) for item in window_runs]
-    for provenance in (
-        "model_authored",
-        "model_authored_with_local_safe_fallback",
-        "model_authored_with_local_format_repair",
-        "executor_terminal_error",
-        "legacy_unspecified",
-        "invalid",
-    ):
+    provenance_counts = response_provenance_counts(window_runs)
+    for provenance, count in provenance_counts.items():
         emit(
             f"autonomy_window_response_provenance_{provenance}_turns",
-            sum(value[0] == provenance for value in run_provenance),
+            count,
         )
     emit(
         "autonomy_window_local_safe_fallback_used_turns",
@@ -1070,7 +1533,6 @@ def main() -> int:
     for field in (
         "provider_prompt_tokens",
         "provider_completion_tokens",
-        "request_header_latency_ms",
         "generation_latency_ms",
     ):
         values = [
@@ -1080,6 +1542,60 @@ def main() -> int:
         ]
         emit(f"autonomy_window_{field}_samples", len(values))
         emit(f"autonomy_window_{field}_p95", percentile(values))
+    exact_header_latencies = [
+        exact[0]
+        for item in window_runs
+        if (exact := exact_request_header_latency(item)) is not None
+    ]
+    legacy_header_latencies = [
+        legacy
+        for item in window_runs
+        if (legacy := legacy_unattributed_header_latency(item)) is not None
+    ]
+    exact_provider_telemetry = [
+        exact
+        for item in window_runs
+        if (exact := exact_provider_request_telemetry(item)) is not None
+    ]
+    invalid_claimed_provider_metrics = [
+        item
+        for item in window_runs
+        if item.get("request_header_latency_source")
+        == REQUEST_HEADER_LATENCY_SOURCE_V1
+        and exact_provider_request_telemetry(item) is None
+    ]
+    emit(
+        "autonomy_window_request_header_latency_ms_samples",
+        len(exact_header_latencies),
+    )
+    emit(
+        "autonomy_window_request_header_latency_ms_exact_samples",
+        len(exact_header_latencies),
+    )
+    emit(
+        "autonomy_window_request_header_latency_ms_legacy_unattributed_samples",
+        len(legacy_header_latencies),
+    )
+    emit(
+        "autonomy_window_request_header_latency_ms_p95",
+        percentile(exact_header_latencies),
+    )
+    emit(
+        "autonomy_window_provider_request_metrics_exact_samples",
+        len(exact_provider_telemetry),
+    )
+    emit(
+        "autonomy_window_provider_request_attempts_total",
+        sum(item[0] for item in exact_provider_telemetry),
+    )
+    emit(
+        "autonomy_window_provider_successful_headers_total",
+        sum(item[1] for item in exact_provider_telemetry),
+    )
+    emit(
+        "autonomy_window_provider_metrics_invalid_claimed_exact",
+        len(invalid_claimed_provider_metrics),
+    )
     emit(
         "autonomy_window_signal_journals",
         sum(
