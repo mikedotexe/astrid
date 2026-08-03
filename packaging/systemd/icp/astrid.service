@@ -1,18 +1,22 @@
 [Unit]
 Description=ICP Astrid agent runtime
-Wants=network-online.target astrid-model-warmup.service
+Wants=network-online.target astrid-edge-runtime.service
+BindsTo=astrid-model-warmup.service
 After=network-online.target astrid-model-warmup.service
+Before=astrid-edge-runtime.service
 StartLimitIntervalSec=60
 StartLimitBurst=5
 
 [Service]
 Type=simple
-WorkingDirectory=%h/.astrid-icp/workspace
+# Keep cwd on the always-present eMMC home. Every executable, writable path,
+# and runtime path remains explicitly rooted through the guarded SSD symlink.
+WorkingDirectory=%h
 Environment=ASTRID_HOME=%h/.astrid-icp/state
 Environment=TMPDIR=%h/.astrid-icp/tmp
 Environment=PATH=%h/.astrid-icp/state/bin:%h/.astrid-icp/ollama/runtime/bin:/usr/local/bin:/usr/bin:/bin
 Environment=TOKIO_WORKER_THREADS=4
-EnvironmentFile=-%h/.config/astrid/edge-appliance.env
+EnvironmentFile=%h/.config/astrid/edge-appliance.env
 Environment=ASTRID_LOCAL_HTTP_ALLOWLIST=astrid-capsule-openai-compat@127.0.0.1:11434
 ExecStart=%h/.astrid-icp/state/bin/astrid-daemon --workspace %h/.astrid-icp/workspace
 Restart=on-failure

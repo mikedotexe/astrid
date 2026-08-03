@@ -34,6 +34,7 @@ interrupted_action_reconciliation_source="$project_root/scripts/reconcile_edge_i
 tuning_authority_dropin_source="$project_root/packaging/systemd/astrid-edge-tuning-authority.conf"
 observation_only_env_source="$project_root/packaging/systemd/astrid-edge-observation-only.env"
 tuning_enabled_env_source="$project_root/packaging/systemd/astrid-edge-tuning-enabled.env"
+ssd_wait_source=""
 build_jobs="$(getconf _NPROCESSORS_ONLN 2>/dev/null || printf '1')"
 prebuilt_binary=""
 if [[ -x "$project_root/astrid-edge-runtime" ]]; then
@@ -162,10 +163,13 @@ fi
 if [[ "$layout" == "icp-ssd" ]]; then
     astrid_home="$HOME/.astrid-icp/state"
     unit_source="$project_root/packaging/systemd/icp/astrid-edge-runtime.service"
+    core_unit_source="$project_root/packaging/systemd/icp/astrid.service"
+    ollama_unit_source="$project_root/packaging/systemd/icp/ollama-cpu.service"
     warmup_unit_source="$project_root/packaging/systemd/icp/astrid-model-warmup.service"
     hindsight_unit_source="$project_root/packaging/systemd/icp/astrid-edge-hindsight.service"
     hindsight_timer_source="$project_root/packaging/systemd/icp/astrid-edge-hindsight.timer"
     ssd_guard_source="$project_root/packaging/systemd/icp-ssd-required.conf"
+    ssd_wait_source="$project_root/packaging/systemd/wait-for-icp-ssd"
 else
     astrid_home="$HOME/.astrid"
     unit_source="$project_root/packaging/systemd/astrid-edge-runtime.service"
@@ -175,6 +179,16 @@ else
     ssd_guard_source=""
 fi
 edge_workspace="$astrid_home/home/default/edge"
+if [[ "$layout" == "icp-ssd" && "$dry_run" == "0" ]]; then
+    edge_enable_state="$(
+        systemctl --user is-enabled astrid-edge-runtime.service 2>/dev/null || true
+    )"
+    if [[ "$edge_enable_state" == "masked" \
+        || "$edge_enable_state" == "masked-runtime" ]]; then
+        printf 'error: refusing to override operator-masked astrid-edge-runtime.service\n' >&2
+        exit 1
+    fi
+fi
 for required_file in \
     "$unit_source" \
     "$warmup_unit_source" \
@@ -196,9 +210,18 @@ for required_file in \
         exit 1
     fi
 done
-if [[ "$layout" == "icp-ssd" && ( ! -f "$ssd_guard_source" || ! -r "$ssd_guard_source" ) ]]; then
-    printf 'error: required ICP SSD service guard not readable: %s\n' "$ssd_guard_source" >&2
-    exit 1
+if [[ "$layout" == "icp-ssd" ]]; then
+    for required_storage_asset in \
+        "$core_unit_source" \
+        "$ollama_unit_source" \
+        "$ssd_guard_source" \
+        "$ssd_wait_source"; do
+        if [[ ! -f "$required_storage_asset" || ! -r "$required_storage_asset" ]]; then
+            printf 'error: required ICP SSD storage asset not readable: %s\n' \
+                "$required_storage_asset" >&2
+            exit 1
+        fi
+    done
 fi
 if grep -Ev '^[[:space:]]*(#.*)?$|^[A-Z][A-Z0-9_]*=(\"[^\"]*\"|[^[:space:]#]+)[[:space:]]*$' \
     "$profile_source" >/dev/null; then
@@ -219,6 +242,41 @@ run() {
     if (( dry_run == 0 )); then
         "$@"
     fi
+}
+
+ssd_guard_test_variables=(
+    ASTRID_ICP_SSD_GUARD_TEST_MODE
+    ASTRID_ICP_SSD_GUARD_MOUNT_PATH
+    ASTRID_ICP_SSD_GUARD_EXPECTED_UUID
+    ASTRID_ICP_SSD_GUARD_ROOT_PATH
+    ASTRID_ICP_SSD_GUARD_LINK_PATH
+    ASTRID_ICP_SSD_GUARD_STATE_PATH
+    ASTRID_ICP_SSD_GUARD_STATE_BIN_PATH
+    ASTRID_ICP_SSD_GUARD_STATE_RUN_PATH
+    ASTRID_ICP_SSD_GUARD_STATE_VAR_PATH
+    ASTRID_ICP_SSD_GUARD_STATE_HOME_PATH
+    ASTRID_ICP_SSD_GUARD_STATE_DEFAULT_PATH
+    ASTRID_ICP_SSD_GUARD_EDGE_WORKSPACE_PATH
+    ASTRID_ICP_SSD_GUARD_WORKSPACE_PATH
+    ASTRID_ICP_SSD_GUARD_TMP_PATH
+    ASTRID_ICP_SSD_GUARD_OLLAMA_PATH
+    ASTRID_ICP_SSD_GUARD_OLLAMA_RUNTIME_PATH
+    ASTRID_ICP_SSD_GUARD_OLLAMA_RUNTIME_BIN_PATH
+    ASTRID_ICP_SSD_GUARD_OLLAMA_MODELS_PATH
+    ASTRID_ICP_SSD_GUARD_FINDMNT
+    ASTRID_ICP_SSD_GUARD_READLINK
+    ASTRID_ICP_SSD_GUARD_SLEEP
+)
+
+run_ssd_wait() {
+    local -a command=(env)
+    local variable
+
+    for variable in "${ssd_guard_test_variables[@]}"; do
+        command+=(-u "$variable")
+    done
+    command+=("$ssd_wait_source" "$@")
+    run "${command[@]}"
 }
 
 validate_managed_directory_chain() {
@@ -289,6 +347,9 @@ validate_edge_managed_directories() {
         "$capsule_env_dir"; do
         validate_managed_directory_chain "$HOME" "$allowed_symlink" "$directory"
     done
+    if [[ "$layout" == "icp-ssd" ]]; then
+        validate_managed_directory_chain "$HOME" "" "$ssd_wait_dir"
+    fi
     for directory in \
         "$config_home" \
         "$unit_dir" \
@@ -296,6 +357,7 @@ validate_edge_managed_directories() {
         "$unit_dir/astrid.service.d" \
         "$unit_dir/ollama-cpu.service.d" \
         "$unit_dir/astrid-model-warmup.service.d" \
+        "$unit_dir/astrid-edge-hindsight.service.d" \
         "$profile_dir"; do
         validate_managed_directory_chain \
             "$(dirname -- "$config_home")" "" "$directory"
@@ -315,12 +377,28 @@ declare -a transaction_destinations=()
 declare -a transaction_stages=()
 declare -a transaction_backups=()
 declare -a transaction_had_existing=()
-declare -a transaction_managed_units=(
-    astrid-model-warmup.service
-    astrid-edge-runtime.service
-    astrid-edge-hindsight.service
-    astrid-edge-hindsight.timer
-)
+if [[ "$layout" == "icp-ssd" ]]; then
+    # The edge installer also replaces storage guards on the provider and
+    # core. Snapshot and restart the whole dependency chain as one generation.
+    declare -a transaction_managed_units=(
+        ollama-cpu.service
+        astrid-model-warmup.service
+        astrid.service
+        astrid-edge-runtime.service
+        astrid-edge-hindsight.service
+        astrid-edge-hindsight.timer
+    )
+else
+    declare -a transaction_managed_units=(
+        astrid-model-warmup.service
+        astrid-edge-runtime.service
+        astrid-edge-hindsight.service
+        astrid-edge-hindsight.timer
+    )
+fi
+transaction_runtime_masked_edge=0
+transaction_quiesce_edge_until_commit=0
+declare -a transaction_unit_was_present=()
 declare -a transaction_unit_was_enabled=()
 declare -a transaction_unit_was_active=()
 
@@ -332,6 +410,11 @@ transaction_snapshot_systemd_state() {
         return
     fi
     for unit in "${transaction_managed_units[@]}"; do
+        if systemctl --user cat "$unit" >/dev/null 2>&1; then
+            transaction_unit_was_present+=(1)
+        else
+            transaction_unit_was_present+=(0)
+        fi
         if systemctl --user is-enabled --quiet "$unit" >/dev/null 2>&1; then
             transaction_unit_was_enabled+=(1)
         else
@@ -353,8 +436,12 @@ transaction_prepare_systemd_rollback() {
     # exist. This also handles a failed first install whose restored state has
     # no unit file at all.
     for (( index = 0; index < ${#transaction_managed_units[@]}; index++ )); do
+        unit="${transaction_managed_units[$index]}"
+        if (( transaction_runtime_masked_edge == 1 )) \
+            && [[ "$unit" == "astrid-edge-runtime.service" ]]; then
+            continue
+        fi
         if [[ "${transaction_unit_was_enabled[$index]}" == "0" ]]; then
-            unit="${transaction_managed_units[$index]}"
             systemctl --user disable "$unit" >/dev/null 2>&1 || restore_failed=1
         fi
     done
@@ -368,13 +455,24 @@ transaction_restore_systemd_state() {
     systemctl --user daemon-reload >/dev/null 2>&1 || restore_failed=1
     for (( index = 0; index < ${#transaction_managed_units[@]}; index++ )); do
         unit="${transaction_managed_units[$index]}"
-        if [[ "${transaction_unit_was_enabled[$index]}" == "1" ]]; then
+        if (( transaction_runtime_masked_edge == 1 )) \
+            && [[ "$unit" == "astrid-edge-runtime.service" ]]; then
+            continue
+        fi
+        if [[ "${transaction_unit_was_present[$index]}" == "1" \
+            && "${transaction_unit_was_enabled[$index]}" == "1" ]]; then
             systemctl --user enable "$unit" >/dev/null 2>&1 || restore_failed=1
         fi
     done
     for (( index = 0; index < ${#transaction_managed_units[@]}; index++ )); do
         unit="${transaction_managed_units[$index]}"
-        if [[ "${transaction_unit_was_active[$index]}" == "1" ]]; then
+        if (( transaction_runtime_masked_edge == 1 )) \
+            && [[ "$unit" == "astrid-edge-runtime.service" ]]; then
+            continue
+        fi
+        if [[ "${transaction_unit_was_present[$index]}" == "0" ]]; then
+            continue
+        elif [[ "${transaction_unit_was_active[$index]}" == "1" ]]; then
             # A failed install may already have restarted the new generation.
             # Restart after restoring files so the prior generation is live.
             systemctl --user restart "$unit" >/dev/null 2>&1 || restore_failed=1
@@ -382,6 +480,29 @@ transaction_restore_systemd_state() {
             systemctl --user stop "$unit" >/dev/null 2>&1 || restore_failed=1
         fi
     done
+    if (( transaction_runtime_masked_edge == 1 )); then
+        systemctl --user unmask --runtime astrid-edge-runtime.service \
+            >/dev/null 2>&1 || restore_failed=1
+        transaction_runtime_masked_edge=0
+        for (( index = 0; index < ${#transaction_managed_units[@]}; index++ )); do
+            unit="${transaction_managed_units[$index]}"
+            [[ "$unit" == "astrid-edge-runtime.service" ]] || continue
+            if [[ "${transaction_unit_was_present[$index]}" == "0" ]]; then
+                break
+            fi
+            if [[ "${transaction_unit_was_enabled[$index]}" == "1" ]]; then
+                systemctl --user enable "$unit" >/dev/null 2>&1 || restore_failed=1
+            else
+                systemctl --user disable "$unit" >/dev/null 2>&1 || restore_failed=1
+            fi
+            if [[ "${transaction_unit_was_active[$index]}" == "1" ]]; then
+                systemctl --user restart "$unit" >/dev/null 2>&1 || restore_failed=1
+            else
+                systemctl --user stop "$unit" >/dev/null 2>&1 || restore_failed=1
+            fi
+            break
+        done
+    fi
     return "$restore_failed"
 }
 
@@ -395,6 +516,17 @@ transaction_abort() {
     if (( dry_run == 0 )) && [[ -n "$transaction_root" ]]; then
         printf 'Install transaction %s interrupted (%s); restoring prior generation...\n' \
             "$transaction_id" "$reason" >&2
+        if (( transaction_systemd_touched == 1 \
+            && transaction_quiesce_edge_until_commit == 1 )); then
+            if systemctl --user mask --runtime astrid-edge-runtime.service \
+                >/dev/null 2>&1; then
+                transaction_runtime_masked_edge=1
+            else
+                rollback_failed=1
+            fi
+            systemctl --user stop astrid-edge-runtime.service \
+                >/dev/null 2>&1 || rollback_failed=1
+        fi
         if (( transaction_systemd_touched == 1 )); then
             transaction_prepare_systemd_rollback || rollback_failed=1
         fi
@@ -595,6 +727,7 @@ transaction_commit() {
         committed_root="$transaction_root"
         transaction_root=""
         trap - EXIT HUP INT TERM
+        transaction_quiesce_edge_until_commit=0
         for backup in "${transaction_backups[@]}"; do
             if [[ -e "$backup" || -L "$backup" ]]; then
                 rm -f -- "$backup" || \
@@ -636,6 +769,12 @@ if [[ "$layout" == "icp-ssd" ]]; then
     fi
 fi
 
+if [[ "$layout" == "icp-ssd" ]]; then
+    # Refuse all SSD-backed writes until the exact filesystem and complete
+    # private directory tree pass the same guard used by the live services.
+    run_ssd_wait --wait-seconds 0
+fi
+
 if [[ -n "$prebuilt_binary" ]]; then
     binary="$prebuilt_binary"
     printf 'Using prebuilt astrid-edge-runtime at %s\n' "$binary"
@@ -661,6 +800,8 @@ fi
 unit_dir="${XDG_CONFIG_HOME:-$HOME/.config}/systemd/user"
 profile_dir="${XDG_CONFIG_HOME:-$HOME/.config}/astrid"
 capsule_env_dir="$astrid_home/home/default/.config/env"
+ssd_wait_dir="$HOME/.local/libexec/astrid"
+ssd_wait_dest="$ssd_wait_dir/wait-for-icp-ssd"
 validate_edge_managed_directories
 run install -d -m 0700 \
     "$edge_workspace" \
@@ -673,10 +814,12 @@ run install -d -m 0700 "$capsule_env_dir"
 run install -d -m 0755 "$unit_dir" "$unit_dir/astrid-edge-runtime.service.d"
 if [[ "$layout" == "icp-ssd" ]]; then
     run install -d -m 0755 \
+        "$ssd_wait_dir" \
         "$unit_dir/astrid.service.d" \
         "$unit_dir/ollama-cpu.service.d" \
         "$unit_dir/astrid-model-warmup.service.d" \
-        "$unit_dir/astrid-edge-runtime.service.d"
+        "$unit_dir/astrid-edge-runtime.service.d" \
+        "$unit_dir/astrid-edge-hindsight.service.d"
 fi
 run install -d -m 0700 "$profile_dir"
 transaction_begin
@@ -720,11 +863,16 @@ transaction_stage_file \
     0644 \
     "$unit_dir/astrid-edge-runtime.service.d/10-tuning-authority.conf"
 if [[ "$layout" == "icp-ssd" ]]; then
+    transaction_stage_file "$core_unit_source" 0644 "$unit_dir/astrid.service"
+    transaction_stage_file "$ollama_unit_source" 0644 \
+        "$unit_dir/ollama-cpu.service"
+    transaction_stage_file "$ssd_wait_source" 0755 "$ssd_wait_dest"
     for service in \
         astrid.service \
         ollama-cpu.service \
         astrid-model-warmup.service \
-        astrid-edge-runtime.service; do
+        astrid-edge-runtime.service \
+        astrid-edge-hindsight.service; do
         transaction_stage_file \
             "$ssd_guard_source" \
             0644 \
@@ -805,6 +953,9 @@ if [[ -d "$edge_workspace/tuning/evidence" ]]; then
     done < <(find "$edge_workspace/tuning/evidence" -maxdepth 1 -type f -print0)
 fi
 
+if [[ "$layout" == "icp-ssd" ]]; then
+    run_ssd_wait --wait-seconds 0
+fi
 transaction_switch_and_verify
 if (( dry_run == 0 )); then
     transaction_systemd_touched=1
@@ -816,8 +967,22 @@ if (( start_service == 1 )); then
         astrid-model-warmup.service \
         astrid-edge-runtime.service \
         astrid-edge-hindsight.timer
-    run systemctl --user restart astrid-model-warmup.service
-    run systemctl --user restart astrid-edge-runtime.service
+    if [[ "$layout" == "icp-ssd" ]]; then
+        # A runtime mask keeps the scheduler quiescent even though the ordered
+        # provider chain may pull warmup and core during recovery.
+        transaction_quiesce_edge_until_commit=1
+        run systemctl --user mask --runtime astrid-edge-runtime.service
+        transaction_runtime_masked_edge=1
+        run systemctl --user stop astrid-edge-runtime.service
+        run systemctl --user restart ollama-cpu.service
+        run systemctl --user start astrid.service
+        run systemctl --user unmask --runtime astrid-edge-runtime.service
+        transaction_runtime_masked_edge=0
+        run systemctl --user start astrid-edge-runtime.service
+    else
+        run systemctl --user restart astrid-model-warmup.service
+        run systemctl --user restart astrid-edge-runtime.service
+    fi
     run systemctl --user start astrid-edge-hindsight.timer
 fi
 transaction_commit

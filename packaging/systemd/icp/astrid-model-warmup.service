@@ -1,18 +1,23 @@
 [Unit]
 Description=Load ICP Astrid's selected local CPU model
 Documentation=https://docs.ollama.com/api
-Requires=ollama-cpu.service
+BindsTo=ollama-cpu.service
+Wants=astrid.service
 After=ollama-cpu.service
 Before=astrid.service astrid-edge-runtime.service
-ConditionPathExists=%h/.config/astrid/edge-appliance.env
 
 [Service]
 Type=oneshot
-WorkingDirectory=%h/.astrid-icp
+# Keep cwd available while the SSD guard waits; profile paths are explicitly
+# rooted beneath .astrid-icp.
+WorkingDirectory=%h
+Environment=ASTRID_HOME=%h/.astrid-icp/state
 EnvironmentFile=%h/.config/astrid/edge-appliance.env
 ExecStart=%h/.astrid-icp/state/bin/warm-ollama-model
 RemainAfterExit=yes
 TimeoutStartSec=660
+Restart=on-failure
+RestartSec=5
 UMask=0077
 
 [Install]

@@ -1,12 +1,11 @@
 [Unit]
 Description=Checkpoint ICP Astrid edge activity for owner-only hindsight
 After=astrid-edge-runtime.service
-ConditionPathIsMountPoint=/media/data
-ConditionPathIsDirectory=%h/.astrid-icp/state/home/default/edge
 
 [Service]
 Type=oneshot
-WorkingDirectory=%h/.astrid-icp
+# The shared preflight verifies every absolute SSD-backed collection path.
+WorkingDirectory=%h
 ExecStart=%h/.astrid-icp/state/bin/edge-hindsight record --workspace %h/.astrid-icp/state/home/default/edge --state-root %h/.astrid-icp/state
 UMask=0077
 Nice=10
