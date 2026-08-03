@@ -87,8 +87,17 @@ extract_dir="$test_root/extracted"
 install -d -m 0755 "$extract_dir"
 tar -C "$extract_dir" -xzf "$archive"
 bundle="$extract_dir/astrid-cpu-edge-test-x86_64-unknown-linux-gnu"
+test -x "$bundle/scripts/build_astralis_cpu_edge_capsules.py"
 test -x "$bundle/scripts/install_essential_capsules.sh"
+test -x "$bundle/scripts/install_headless_application_capsules.py"
 test -x "$bundle/scripts/verify_edge_capsule_status.py"
+for transactional_installer in \
+    install_headless_linux.sh \
+    install_edge_runtime.sh \
+    install_essential_capsules.sh; do
+    grep -Fq 'headless-application-capsules-*' \
+        "$bundle/scripts/$transactional_installer"
+done
 test -x "$bundle/scripts/relay_edge_peer_review.py"
 test -f "$bundle/capsules/astrid-capsule-edge-spectral.capsule"
 test "$(find "$bundle/capsules" -maxdepth 1 -type f -name '*.capsule' | wc -l | tr -d ' ')" -eq 10

@@ -32,6 +32,15 @@ FETCH_TOOL = [
     }
 ]
 
+CASE_MAX_TOKENS = {
+    "grounded": 96,
+    "tool_choice": 64,
+    "tool_result": 96,
+    "tool_restraint": 64,
+    "reflection": 128,
+    "artifact_action": 96,
+}
+
 
 def messages(appliance: str, memory_fact: str) -> dict[str, list[dict[str, Any]]]:
     return {
@@ -179,6 +188,7 @@ def api_chat(
     tools: list[dict[str, Any]] | None,
     context: int,
     max_tokens: int,
+    request_timeout: int,
 ) -> tuple[dict[str, Any], float, float]:
     payload: dict[str, Any] = {
         "model": model,
@@ -202,7 +212,7 @@ def api_chat(
         method="POST",
     )
     started = time.monotonic()
-    with urllib.request.urlopen(request, timeout=360) as opened:
+    with urllib.request.urlopen(request, timeout=request_timeout) as opened:
         headers_at = time.monotonic()
         response = json.load(opened)
     completed = time.monotonic()
@@ -226,6 +236,15 @@ def safe_name(value: str) -> str:
     return value.replace("/", "_").replace(":", "_")
 
 
+def bounded_case_max_tokens(output_cap: int | None) -> dict[str, int]:
+    if output_cap is None:
+        return dict(CASE_MAX_TOKENS)
+    return {
+        case: min(case_maximum, output_cap)
+        for case, case_maximum in CASE_MAX_TOKENS.items()
+    }
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("models", nargs="+")
@@ -242,6 +261,17 @@ def main() -> int:
     parser.add_argument("--context", type=int, default=int(os.environ.get("ASTRID_MODEL_CONTEXT", "8192")))
     parser.add_argument("--ollama-bin", default=os.environ.get("OLLAMA_BIN", "ollama"))
     parser.add_argument(
+        "--output-cap",
+        type=int,
+        help="cap every behavioral case at this many generated tokens",
+    )
+    parser.add_argument(
+        "--request-timeout",
+        type=int,
+        default=360,
+        help="per-case HTTP timeout in seconds (default: 360)",
+    )
+    parser.add_argument(
         "--repetitions",
         type=int,
         default=4,
@@ -255,6 +285,10 @@ def main() -> int:
     args = parser.parse_args()
     if args.context < 1:
         parser.error("--context must be positive")
+    if args.output_cap is not None and args.output_cap < 1:
+        parser.error("--output-cap must be positive")
+    if args.request_timeout < 1:
+        parser.error("--request-timeout must be positive")
     if not 1 <= args.repetitions <= 10:
         parser.error("--repetitions must be between 1 and 10")
     selected_cases = tuple(case.strip() for case in args.cases.split(",") if case.strip())
@@ -284,14 +318,7 @@ def main() -> int:
     )
     validation.write_text("model\tphase\trepetition\tcase\tstatus\n")
     base_messages = messages(args.appliance, args.memory_fact)
-    max_tokens = {
-        "grounded": 96,
-        "tool_choice": 64,
-        "tool_result": 96,
-        "tool_restraint": 64,
-        "reflection": 128,
-        "artifact_action": 96,
-    }
+    max_tokens = bounded_case_max_tokens(args.output_cap)
 
     for model in args.models:
         print(f"benchmarking {model}", flush=True)
@@ -336,6 +363,7 @@ def main() -> int:
                     tools,
                     args.context,
                     max_tokens[case],
+                    args.request_timeout,
                 )
                 response_path = model_dir / f"{phase}_{repetition}_{case}.json"
                 response_path.write_text(json.dumps(response, indent=2) + "\n")
