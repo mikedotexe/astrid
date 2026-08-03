@@ -1,8 +1,9 @@
 use super::{
-    AUTHORITY, CorrelationFilter, MAX_ROLLUPS, ROLLUP_MAX_BYTES, bounded_limit, correlated_records,
-    decode_utf8_bounded, ensure_allowed_keys, parse_jsonl, sanitize_spectral_record, select_window,
-    sha256, summarize_activity_link_coverage, summarize_metrics, validate_rollups,
-    validate_short_identifier, validate_trace_id,
+    AUTHORITY, CorrelationFilter, MAX_ROLLUPS, MAX_ROLLUPS_PER_DAY, ROLLUP_MAX_BYTES,
+    bounded_limit, correlated_activity_receipt, decode_utf8_bounded, ensure_allowed_keys,
+    parse_jsonl, sanitize_spectral_record, select_window, sha256, summarize_activity_link_coverage,
+    summarize_metrics, validate_activity_receipts, validate_rollups, validate_short_identifier,
+    validate_trace_id,
 };
 use astrid_guest::serde_json::{Value, json};
 
@@ -52,7 +53,8 @@ fn jsonl_ignores_only_an_unterminated_trailing_fragment() {
 
 #[test]
 fn recent_projection_caps_match_the_contract() {
-    assert_eq!(MAX_ROLLUPS, 1_440);
+    assert_eq!(MAX_ROLLUPS_PER_DAY, 1_440);
+    assert_eq!(MAX_ROLLUPS, 2_880);
     assert_eq!(ROLLUP_MAX_BYTES, 1_024);
     let rows = (0..=MAX_ROLLUPS)
         .map(|_| "{}")
@@ -119,31 +121,41 @@ fn correlations_require_exact_explicit_identifiers() {
 }
 
 #[test]
-fn correlation_uses_explicit_bounded_activity_refs_not_shared_timestamps() {
+fn correlation_uses_hash_bound_snapshot_receipts_not_minute_buckets() {
     let filter = CorrelationFilter::from_args(&json!({"trace_id": TRACE})).unwrap();
-    let rollup = json!({
-        "schema": "astrid_edge_spectral_rollup_v1",
+    let receipt = hashed(json!({
+        "schema": "astrid_edge_spectral_receipt_v1",
         "recorded_at_unix_ms": 10,
+        "phase": "activity_observed",
+        "activity_kind": "action",
+        "status": "machine_snapshot_recorded",
+        "trace": {"trace_id": TRACE, "session_id": "session-1"},
+        "response_sha256": "a".repeat(64),
+        "snapshot_generation_id": "generation-1",
+        "snapshot_sequence": 9,
+        "snapshot_recorded_at_unix_ms": 8,
+        "snapshot_sha256": "b".repeat(64),
         "metrics": {"fill_pct": 68.0},
-        "activity_refs": [
-            {
-                "kind": "action",
-                "recorded_at_unix_ms": 9,
-                "trace": {"trace_id": TRACE, "session_id": "session-1"},
-                "response_sha256": "a".repeat(64)
-            }
-        ]
-    });
-    let matches = correlated_records(&rollup, &filter);
-    assert_eq!(matches.len(), 1);
-    assert_eq!(matches[0]["activity_kind"], "action");
+        "authority": AUTHORITY
+    }));
+    validate_activity_receipts(std::slice::from_ref(&receipt)).unwrap();
+    let matched = correlated_activity_receipt(&receipt, &filter).unwrap();
+    assert_eq!(matched["activity_kind"], "action");
+    assert_eq!(matched["snapshot"]["generation_id"], "generation-1");
+    assert_eq!(matched["snapshot"]["sequence"], 9);
+    assert_eq!(matched["snapshot"]["metrics"]["fill_pct"], 68.0);
 
-    let unrelated = json!({
-        "schema": "astrid_edge_spectral_rollup_v1",
+    let unrelated = hashed(json!({
+        "schema": "astrid_edge_spectral_receipt_v1",
         "recorded_at_unix_ms": 10,
-        "activity_refs": [{"trace_id": "00000000-0000-4000-8000-000000000002"}]
-    });
-    assert!(correlated_records(&unrelated, &filter).is_empty());
+        "trace": {"trace_id": "00000000-0000-4000-8000-000000000002"},
+        "snapshot_generation_id": "generation-2",
+        "snapshot_sequence": 9,
+        "snapshot_recorded_at_unix_ms": 8,
+        "snapshot_sha256": "c".repeat(64),
+        "metrics": {"fill_pct": 68.0}
+    }));
+    assert!(correlated_activity_receipt(&unrelated, &filter).is_none());
 }
 
 #[test]
@@ -152,7 +164,10 @@ fn rollup_schema_timestamp_and_activity_ref_caps_are_strict() {
         validate_rollups(&[hashed(json!({
             "schema": "astrid_edge_spectral_rollup_v1",
             "recorded_at_unix_ms": 1,
-            "activity_refs": [{}, {}]
+            "activity_refs": [
+                {"attribution": "temporal_rollup_context_not_exact_or_causal"},
+                {"attribution": "temporal_rollup_context_not_exact_or_causal"}
+            ]
         }))])
         .is_ok()
     );
@@ -229,11 +244,14 @@ fn output_is_machine_observed_and_non_causal() {
 }
 
 #[test]
-fn manifest_grants_only_two_fixed_read_paths_and_ipc() {
+fn manifest_grants_only_five_fixed_read_paths_and_ipc() {
     let manifest = include_str!("../Capsule.toml");
     assert!(manifest.contains("home://edge/runtime/spectral_state.json"));
-    assert!(manifest.contains("home://edge/spectral/recent_rollups.jsonl"));
-    assert_eq!(manifest.matches("home://").count(), 4);
+    assert!(manifest.contains("home://edge/spectral/recent_rollups.current.jsonl"));
+    assert!(manifest.contains("home://edge/spectral/recent_rollups.previous.jsonl"));
+    assert!(manifest.contains("home://edge/spectral/activity_receipts.current.jsonl"));
+    assert!(manifest.contains("home://edge/spectral/activity_receipts.previous.jsonl"));
+    assert_eq!(manifest.matches("home://").count(), 10);
     for forbidden in [
         "home://edge/spectral/rollups.jsonl",
         "home://edge/spectral/receipts.jsonl",

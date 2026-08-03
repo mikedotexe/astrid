@@ -3,11 +3,19 @@ use serde_json::{Map, Value, json};
 use sha2::{Digest as _, Sha256};
 
 const STATE_PATH: &str = "home://edge/runtime/spectral_state.json";
-const RECENT_ROLLUPS_PATH: &str = "home://edge/spectral/recent_rollups.jsonl";
+const RECENT_ROLLUPS_CURRENT_PATH: &str = "home://edge/spectral/recent_rollups.current.jsonl";
+const RECENT_ROLLUPS_PREVIOUS_PATH: &str = "home://edge/spectral/recent_rollups.previous.jsonl";
+const ACTIVITY_RECEIPTS_CURRENT_PATH: &str = "home://edge/spectral/activity_receipts.current.jsonl";
+const ACTIVITY_RECEIPTS_PREVIOUS_PATH: &str =
+    "home://edge/spectral/activity_receipts.previous.jsonl";
 const STATE_MAX_BYTES: usize = 64 * 1024;
-const RECENT_ROLLUPS_MAX_BYTES: usize = 1_536 * 1024;
+const RECENT_ROLLUPS_DAY_MAX_BYTES: usize = 1_536 * 1024;
+const ACTIVITY_RECEIPTS_DAY_MAX_BYTES: usize = 2 * 1024 * 1024;
 const ROLLUP_MAX_BYTES: usize = 1_024;
-const MAX_ROLLUPS: usize = 1_440;
+const ACTIVITY_RECEIPT_MAX_BYTES: usize = 4_096;
+const MAX_ROLLUPS_PER_DAY: usize = 1_440;
+const MAX_ROLLUPS: usize = MAX_ROLLUPS_PER_DAY * 2;
+const MAX_ACTIVITY_RECEIPTS: usize = 8_192;
 const MAX_CORRELATIONS: usize = 20;
 const MAX_ACTIVITY_REFS_PER_ROLLUP: usize = 2;
 const MAX_CAUSAL_ID_CHARS: usize = 96;
@@ -144,6 +152,7 @@ fn read_spectral_window(args: &Value) -> Result<String, String> {
     let rows = select_window(&ledger.rows, minutes);
     let (start, end) = window_bounds(&rows);
     let projection_sha256 = sha256(source.raw.as_bytes());
+    let temporal_window_context = summarize_activity_link_coverage(&ledger.rows);
 
     serialize(&json!({
         "schema": "astrid_edge_spectral_window_result_v1",
@@ -161,6 +170,7 @@ fn read_spectral_window(args: &Value) -> Result<String, String> {
         "trailing_partial_ignored": ledger.trailing_partial_ignored,
         "metrics": summarize_metrics(&rows),
         "coverage": sanitize_coverage(rows.last().copied()),
+        "temporal_window_context": temporal_window_context,
         "authority": AUTHORITY,
         "causality": "correlation_only_no_causal_claim",
     }))
@@ -179,22 +189,22 @@ fn correlate_spectral_activity(args: &Value) -> Result<String, String> {
     )?;
     let filter = CorrelationFilter::from_args(args)?;
     let limit = bounded_limit(args, MAX_CORRELATIONS)?;
-    let rollups = read_rollups()?;
-    let parsed_rollups = parse_jsonl(
-        &rollups.raw,
-        ROLLUP_MAX_BYTES,
-        MAX_ROLLUPS,
-        "spectral rollup",
+    let receipts = read_activity_receipts()?;
+    let parsed_receipts = parse_jsonl(
+        &receipts.raw,
+        ACTIVITY_RECEIPT_MAX_BYTES,
+        MAX_ACTIVITY_RECEIPTS,
+        "spectral activity receipt",
     )?;
-    validate_rollups(&parsed_rollups.rows)?;
-    let mut matches = Vec::new();
-    for row in &parsed_rollups.rows {
-        matches.extend(correlated_records(row, &filter));
-    }
-    let link_coverage = summarize_activity_link_coverage(&parsed_rollups.rows);
+    validate_activity_receipts(&parsed_receipts.rows)?;
+    let mut matches = parsed_receipts
+        .rows
+        .iter()
+        .filter_map(|receipt| correlated_activity_receipt(receipt, &filter))
+        .collect::<Vec<_>>();
 
     matches.sort_by_key(|row| {
-        row.get("recorded_at_unix_ms")
+        row.get("activity_recorded_at_unix_ms")
             .and_then(Value::as_u64)
             .unwrap_or_default()
     });
@@ -208,25 +218,69 @@ fn correlate_spectral_activity(args: &Value) -> Result<String, String> {
         "count": matches.len(),
         "match_count": matches.len(),
         "matches": matches,
-        "source": "recent_rollups_projection",
-        "activity_link_coverage": link_coverage,
-        "attribution_rule": "explicit_identifiers_only_never_timestamp_proximity",
+        "source": receipts.label,
+        "trailing_partial_ignored": parsed_receipts.trailing_partial_ignored,
+        "attribution_rule": "explicit_event_identifiers_to_hash_bound_snapshot_identity_only_never_minute_buckets_or_timestamp_proximity",
         "authority": AUTHORITY,
         "causality": "correlation_only_no_causal_claim",
     }))
 }
 
 fn read_rollups() -> Result<LedgerSource, String> {
-    read_utf8_bounded(RECENT_ROLLUPS_PATH, RECENT_ROLLUPS_MAX_BYTES)
-        .map(|raw| LedgerSource {
-            raw,
-            label: "recent_rollups_projection",
-        })
-        .map_err(|error| {
-            format!(
-                "bounded recent rollup projection is unavailable; authoritative history is intentionally outside capsule authority: {error}"
-            )
-        })
+    read_daily_projection(
+        RECENT_ROLLUPS_CURRENT_PATH,
+        RECENT_ROLLUPS_PREVIOUS_PATH,
+        RECENT_ROLLUPS_DAY_MAX_BYTES,
+        "daily_current_rollup_projection",
+        "daily_current_and_previous_rollup_projections",
+    )
+}
+
+fn read_activity_receipts() -> Result<LedgerSource, String> {
+    read_daily_projection(
+        ACTIVITY_RECEIPTS_CURRENT_PATH,
+        ACTIVITY_RECEIPTS_PREVIOUS_PATH,
+        ACTIVITY_RECEIPTS_DAY_MAX_BYTES,
+        "daily_current_activity_receipt_projection",
+        "daily_current_and_previous_activity_receipt_projections",
+    )
+}
+
+fn read_daily_projection(
+    current_path: &str,
+    previous_path: &str,
+    maximum_day_bytes: usize,
+    current_label: &'static str,
+    combined_label: &'static str,
+) -> Result<LedgerSource, String> {
+    let current = read_utf8_bounded(current_path, maximum_day_bytes).map_err(|error| {
+        format!(
+            "bounded current-day spectral projection is unavailable; authoritative history is intentionally outside capsule authority: {error}"
+        )
+    })?;
+    // The runtime creates both bounded projections before observing activity,
+    // including an empty previous-day file before the first UTC rotation. A
+    // read error therefore fails closed rather than masquerading as no history.
+    let previous = read_utf8_bounded(previous_path, maximum_day_bytes).map_err(|error| {
+        format!("bounded previous-day spectral projection is unavailable: {error}")
+    })?;
+    let has_previous = !previous.is_empty();
+    let mut raw = previous;
+    if has_previous && !raw.ends_with('\n') {
+        // A rotated projection should always contain newline-terminated append
+        // records. Completing the boundary makes a torn final record fail JSON
+        // validation rather than fuse with the current day's first record.
+        raw.push('\n');
+    }
+    raw.push_str(&current);
+    Ok(LedgerSource {
+        raw,
+        label: if has_previous {
+            combined_label
+        } else {
+            current_label
+        },
+    })
 }
 
 fn read_utf8_bounded(path: &str, maximum: usize) -> Result<String, String> {
@@ -342,7 +396,58 @@ fn validate_rollups(rows: &[Value]) -> Result<(), String> {
                     "spectral rollup line {line_number} contains a non-object activity ref"
                 ));
             }
+            if activity_refs.iter().any(|reference| {
+                reference.get("attribution").and_then(Value::as_str)
+                    != Some("temporal_rollup_context_not_exact_or_causal")
+            }) {
+                return Err(format!(
+                    "spectral rollup line {line_number} has an activity ref without the temporal-context boundary"
+                ));
+            }
         }
+    }
+    Ok(())
+}
+
+fn validate_activity_receipts(rows: &[Value]) -> Result<(), String> {
+    for (index, row) in rows.iter().enumerate() {
+        let line_number = index.saturating_add(1);
+        if row.get("schema").and_then(Value::as_str) != Some("astrid_edge_spectral_receipt_v1") {
+            return Err(format!(
+                "spectral activity receipt line {line_number} has an unsupported schema"
+            ));
+        }
+        if row
+            .get("snapshot_generation_id")
+            .and_then(Value::as_str)
+            .is_none_or(str::is_empty)
+            || row
+                .get("snapshot_sequence")
+                .and_then(Value::as_u64)
+                .is_none_or(|sequence| sequence == 0)
+            || row
+                .get("snapshot_recorded_at_unix_ms")
+                .and_then(Value::as_u64)
+                .is_none_or(|timestamp| timestamp == 0)
+            || row
+                .get("snapshot_sha256")
+                .and_then(Value::as_str)
+                .is_none_or(|hash| !validate_sha256(hash))
+        {
+            return Err(format!(
+                "spectral activity receipt line {line_number} has invalid snapshot identity"
+            ));
+        }
+        if !row.get("metrics").is_some_and(Value::is_object) {
+            return Err(format!(
+                "spectral activity receipt line {line_number} has no bounded metrics object"
+            ));
+        }
+        verify_record_hash(row).map_err(|error| {
+            format!(
+                "spectral activity receipt line {line_number} failed hash verification: {error}"
+            )
+        })?;
     }
     Ok(())
 }
@@ -574,7 +679,15 @@ fn sanitize_coverage(value: Option<&Value>) -> Value {
             .and_then(Value::as_f64),
         "denominator_uses_full_spectrum": coverage
             .get("denominator_uses_full_spectrum")
-            .and_then(Value::as_bool),
+            .and_then(Value::as_bool)
+            .or_else(|| {
+                (coverage
+                    .get("incomplete_spectrum_sample_count")
+                    .and_then(Value::as_u64)
+                    .unwrap_or_default()
+                    == 0)
+                    .then_some(true)
+            }),
         "sample_count": coverage.get("sample_count").and_then(Value::as_u64),
         "expected_sample_count": coverage
             .get("expected_sample_count")
@@ -613,48 +726,26 @@ fn sanitize_sensor_provenance(value: &Value) -> Value {
     })
 }
 
-fn correlated_records(value: &Value, filter: &CorrelationFilter) -> Vec<Value> {
-    let references = value
-        .get("activity_refs")
-        .and_then(Value::as_array)
-        .map_or_else(|| vec![value], |references| references.iter().collect());
-    references
-        .into_iter()
-        .filter_map(|reference| {
-            let matched_fields = filter.matched_fields(reference)?;
-            Some(json!({
-                "kind": "spectral_rollup_activity_link",
-                "recorded_at_unix_ms": recorded_at(value),
-                "activity_recorded_at_unix_ms": recorded_at(reference),
-                "activity_kind": bounded_known_string(reference, &["/kind"], 40),
-                "event_kind": bounded_known_string(reference, &["/event_kind", "/phase"], 64),
-                "status": bounded_known_string(reference, &["/status"], 64),
-                "experiment_id": bounded_known_string(reference, &["/experiment_id"], 128),
-                "parameter": sanitize_parameter(reference.get("parameter")),
-                "matched_fields": matched_fields,
-                "spectral": sanitize_spectral_record(value),
-                "record_sha256": bounded_hash(value, &["/record_sha256", "/result_sha256"]),
-            }))
-        })
-        .collect()
-}
-
-fn sanitize_parameter(value: Option<&Value>) -> Value {
-    let Some(value) = value else {
-        return Value::Null;
-    };
-    if let Some(name) = value.as_str() {
-        return Value::String(name.chars().take(40).collect());
-    }
-    json!({
-        "name": value
-            .get("name")
-            .and_then(Value::as_str)
-            .map(|text| text.chars().take(40).collect::<String>()),
-        "baseline": value.get("baseline").and_then(Value::as_f64),
-        "requested": value.get("requested").and_then(Value::as_f64),
-        "active": value.get("active").and_then(Value::as_f64),
-    })
+fn correlated_activity_receipt(value: &Value, filter: &CorrelationFilter) -> Option<Value> {
+    let matched_fields = filter.matched_fields(value)?;
+    Some(json!({
+        "kind": "exact_activity_snapshot_receipt",
+        "activity_recorded_at_unix_ms": recorded_at(value),
+        "activity_kind": bounded_known_string(value, &["/activity_kind"], 48),
+        "status": bounded_known_string(value, &["/status"], 64),
+        "matched_fields": matched_fields,
+        "snapshot": {
+            "generation_id": bounded_known_string(value, &["/snapshot_generation_id"], 128),
+            "sequence": value.get("snapshot_sequence").and_then(Value::as_u64),
+            "recorded_at_unix_ms": value
+                .get("snapshot_recorded_at_unix_ms")
+                .and_then(Value::as_u64),
+            "sha256": bounded_hash(value, &["/snapshot_sha256"]),
+            "metrics": sanitize_spectral_record(value).get("metrics").cloned(),
+        },
+        "attribution": "exact_event_identity_to_hash_bound_snapshot_non_causal",
+        "record_sha256": bounded_hash(value, &["/record_sha256"]),
+    }))
 }
 
 fn bounded_known_string(value: &Value, pointers: &[&str], maximum: usize) -> Option<String> {
@@ -873,10 +964,16 @@ fn describe() -> astrid_guest::CapsuleResult {
         ],
         "limits": {
             "rollup_record_bytes": ROLLUP_MAX_BYTES,
-            "recent_rollups": MAX_ROLLUPS,
+            "recent_rollups_per_day": MAX_ROLLUPS_PER_DAY,
+            "maximum_loaded_rollups": MAX_ROLLUPS,
+            "activity_receipt_record_bytes": ACTIVITY_RECEIPT_MAX_BYTES,
+            "maximum_loaded_activity_receipts": MAX_ACTIVITY_RECEIPTS,
             "activity_refs_per_rollup": MAX_ACTIVITY_REFS_PER_ROLLUP,
             "correlation_matches": MAX_CORRELATIONS,
-            "preferred_projection": RECENT_ROLLUPS_PATH,
+            "current_projection": RECENT_ROLLUPS_CURRENT_PATH,
+            "previous_projection": RECENT_ROLLUPS_PREVIOUS_PATH,
+            "activity_current_projection": ACTIVITY_RECEIPTS_CURRENT_PATH,
+            "activity_previous_projection": ACTIVITY_RECEIPTS_PREVIOUS_PATH,
             "authoritative_history_access": false
         },
         "authority": "private_read_only_no_network_write_process_shell_or_control"

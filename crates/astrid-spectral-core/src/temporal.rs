@@ -64,6 +64,7 @@ pub struct RollingSpectralSummary {
     pub partial_spectrum_sample_count: usize,
     pub unknown_coverage_sample_count: usize,
     pub inconsistent_coverage_sample_count: usize,
+    pub incomplete_sanitized_sample_count: usize,
     pub identity_unstable_sample_count: usize,
     pub normalized_entropy: ScalarSummary,
     pub effective_modes: ScalarSummary,
@@ -282,6 +283,10 @@ pub fn rolling_spectral_summary(
         inconsistent_coverage_sample_count: basis_count(
             &ordered,
             SpectrumBasis::ExportedSpectrumWithInconsistentCoverage,
+        ),
+        incomplete_sanitized_sample_count: basis_count(
+            &ordered,
+            SpectrumBasis::IncompleteSanitizedSpectrum,
         ),
         identity_unstable_sample_count: ordered
             .iter()

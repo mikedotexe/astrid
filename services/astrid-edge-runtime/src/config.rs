@@ -400,8 +400,8 @@ impl Config {
         if !(1..=96).contains(&self.perceptual_notebook_max_per_day) {
             bail!("perceptual notebook daily ceiling must be between 1 and 96");
         }
-        if !(15..=3_600).contains(&self.spectral_rollup_seconds) {
-            bail!("spectral rollup interval must be between 15 and 3600 seconds");
+        if self.spectral_rollup_seconds != 60 {
+            bail!("spectral rollup interval must be exactly 60 seconds");
         }
         if !(1..=4).contains(&self.reservoir_tuning_max_per_day) {
             bail!("reservoir tuning daily ceiling must be between 1 and 4");

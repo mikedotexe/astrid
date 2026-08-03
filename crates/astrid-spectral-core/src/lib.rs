@@ -18,7 +18,7 @@ pub use spectrum::{
     MAX_TRACKED_MODES, ModeConcentration, ModeTurnoverSummary, SanitizedSpectrum,
     SpectralEnergyShares, SpectralGaps, SpectralMetrics, SpectralMode, SpectrumBasis,
     SpectrumCoverage, fill_values_are_comparable, mode_concentration, mode_turnover,
-    sanitize_spectrum,
+    mode_turnover_with_boundary, sanitize_spectrum,
 };
 pub use temporal::{
     CorrelationSummary, CrossCorrelationPoint, MAX_CROSS_CORRELATION_LAG, RollingSpectralSummary,

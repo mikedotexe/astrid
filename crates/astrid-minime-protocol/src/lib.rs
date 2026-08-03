@@ -37,8 +37,8 @@ pub use telemetry::{
     SettledMobilityReviewV1, ShadowClassV3, ShadowFieldModeV2, ShadowFieldV2, ShadowFieldV3,
     ShadowInfluenceResponseV3, ShadowPhaseTransitionV3, ShadowPreservationModeV1, ShadowSnapshotV3,
     SiltGranularityV1, SpectralDampingWarmStartReviewV1, SpectralDenominatorV1,
-    SpectralFillSemanticsV1, SpectralFingerprintV1, SpectralSubstrateKindV1, SpectralSubstrateV1,
-    SpectrumCoverageV1, ViscosityVector,
+    SpectralFillSemanticsV1, SpectralFillSmoothingV1, SpectralFingerprintV1,
+    SpectralSubstrateKindV1, SpectralSubstrateV1, SpectrumCoverageV1, ViscosityVector,
 };
 pub use version::{
     CompatibilityStatus, PROTOCOL_MAJOR, PROTOCOL_MINOR, PROTOCOL_NAME, ProtocolHeaderV1,

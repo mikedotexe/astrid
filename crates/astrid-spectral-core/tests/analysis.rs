@@ -1,9 +1,9 @@
-use astrid_minime_protocol::SpectralSubstrateV1;
+use astrid_minime_protocol::{SpectralFillSmoothingV1, SpectralSubstrateV1};
 use astrid_spectral_core::{
     CorrelationAttributionV1, CorrelationEvidenceV1, NonCausalSpectralEvidenceV1, SpectralMode,
     SpectrumBasis, TimedScalar, TimedSpectralObservation, cross_correlation,
-    fill_values_are_comparable, mode_concentration, mode_turnover, pearson_correlation,
-    rolling_spectral_summary, sanitize_spectrum, summarize_timed_scalars,
+    fill_values_are_comparable, mode_concentration, mode_turnover, mode_turnover_with_boundary,
+    pearson_correlation, rolling_spectral_summary, sanitize_spectrum, summarize_timed_scalars,
 };
 
 fn observation(t_ms: u64, values: &[f32], turnover: Option<f64>) -> TimedSpectralObservation {
@@ -25,7 +25,7 @@ fn sanitation_is_explicit_and_partial_coverage_is_not_upgraded() {
     assert_eq!(spectrum.discarded_non_finite_count, 1);
     assert_eq!(spectrum.clamped_negative_count, 1);
     assert_eq!(spectrum.coverage.exported_mode_fraction, Some(4.0 / 128.0));
-    assert_eq!(spectrum.basis(), SpectrumBasis::ExportedSpectrumPrefix);
+    assert_eq!(spectrum.basis(), SpectrumBasis::IncompleteSanitizedSpectrum);
 
     let inconsistent = sanitize_spectrum(&[3.0, 2.0, 1.0], Some(2));
     assert_eq!(
@@ -57,12 +57,19 @@ fn entropy_shares_gaps_and_density_are_deterministic() {
 
 #[test]
 fn fill_comparability_requires_the_same_known_semantics() {
-    let edge = SpectralSubstrateV1::cpu_edge_covariance_effective_rank(128, 256);
-    let edge_peer = SpectralSubstrateV1::cpu_edge_covariance_effective_rank(128, 512);
+    let edge = SpectralSubstrateV1::cpu_edge_covariance_effective_rank(128, 256, 180_000);
+    let edge_peer = SpectralSubstrateV1::cpu_edge_covariance_effective_rank(128, 512, 180_000);
     let minime = SpectralSubstrateV1::minime_thresholded_eigenfill(Some(128));
 
-    assert!(fill_values_are_comparable(&edge, &edge_peer));
+    assert!(!fill_values_are_comparable(&edge, &edge_peer));
+    assert!(fill_values_are_comparable(&edge, &edge));
     assert!(!fill_values_are_comparable(&edge, &minime));
+
+    let mut pre_upgrade = edge.clone();
+    pre_upgrade.fill_smoothing = SpectralFillSmoothingV1::UnspecifiedLegacy;
+    pre_upgrade.fill_smoothing_alpha_ppm = None;
+    assert!(pre_upgrade.is_well_formed());
+    assert!(!fill_values_are_comparable(&pre_upgrade, &pre_upgrade));
 }
 
 #[test]
@@ -96,6 +103,75 @@ fn mode_turnover_ignores_sign_and_marks_degenerate_identity() {
     let turnover = mode_turnover(&previous, &degenerate, 0.01);
     assert!(!turnover.identity_stable);
     assert_eq!(turnover.identity_unstable_modes, vec![0, 1]);
+}
+
+#[test]
+fn turnover_suppresses_unstable_modes_and_checks_the_retained_boundary() {
+    let modes = (0..4)
+        .map(|index| SpectralMode {
+            eigenvalue: 4.0 - f64::from(u32::try_from(index).unwrap()),
+            components: (0..4)
+                .map(|component| if component == index { 1.0 } else { 0.0 })
+                .collect(),
+        })
+        .collect::<Vec<_>>();
+    let mut rotated = modes.clone();
+    rotated[3].components = vec![1.0, 0.0, 0.0, 0.0];
+    let turnover = mode_turnover_with_boundary(&modes, &rotated, Some(0.995), Some(0.995), 0.01);
+    assert!(!turnover.identity_stable);
+    assert_eq!(turnover.identity_unstable_modes, vec![3]);
+    assert_eq!(turnover.per_mode_turnover[3], None);
+    assert_eq!(turnover.mean_sign_invariant_turnover, Some(0.0));
+}
+
+#[test]
+fn turnover_never_labels_unusable_eigenvectors_identity_stable() {
+    let previous = vec![
+        SpectralMode {
+            eigenvalue: 2.0,
+            components: vec![1.0, 0.0],
+        },
+        SpectralMode {
+            eigenvalue: 1.0,
+            components: vec![0.0, 1.0],
+        },
+    ];
+    for unusable in [vec![f64::NAN, 0.0], vec![0.0, 0.0]] {
+        let current = vec![
+            SpectralMode {
+                eigenvalue: 2.0,
+                components: unusable,
+            },
+            previous[1].clone(),
+        ];
+        let turnover = mode_turnover(&previous, &current, 0.01);
+        assert!(!turnover.identity_stable);
+        assert_eq!(turnover.identity_unstable_modes, vec![0]);
+        assert_eq!(turnover.per_mode_turnover[0], None);
+        assert_eq!(turnover.mean_sign_invariant_turnover, Some(0.0));
+    }
+}
+
+#[test]
+fn discarded_non_finite_values_never_claim_full_spectrum_basis() {
+    let spectrum = sanitize_spectrum(&[2.0, f32::NAN], Some(2));
+    assert_eq!(spectrum.basis(), SpectrumBasis::IncompleteSanitizedSpectrum);
+    assert_eq!(spectrum.coverage.usable_mode_count, 1);
+}
+
+#[test]
+fn largest_gap_scans_beyond_the_bounded_exported_head() {
+    let mut values = vec![10.0_f32; 10];
+    for (index, value) in values.iter_mut().enumerate() {
+        *value -= f32::from(u16::try_from(index).unwrap()) * 0.01;
+    }
+    values.push(0.1);
+    let metrics = sanitize_spectrum(&values, Some(values.len()))
+        .metrics()
+        .expect("metrics");
+    assert_eq!(metrics.gaps.adjacent_relative_drops.len(), 8);
+    assert_eq!(metrics.gaps.largest_relative_drop_after_mode, Some(10));
+    assert!(metrics.gaps.largest_relative_drop.unwrap() > 0.98);
 }
 
 #[test]
@@ -152,7 +228,7 @@ fn evidence_is_non_causal_hash_bound_and_tamper_evident() {
     .expect("rolling summary");
     let correlation =
         pearson_correlation(&[0.67, 0.68, 0.69], &[0.2, 0.3, 0.4]).expect("correlation");
-    let substrate = SpectralSubstrateV1::cpu_edge_covariance_effective_rank(128, 256);
+    let substrate = SpectralSubstrateV1::cpu_edge_covariance_effective_rank(128, 256, 180_000);
     let second_summary = summary.clone();
     let second_correlation = correlation.clone();
     let second_substrate = substrate.clone();

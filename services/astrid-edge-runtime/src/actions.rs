@@ -9,15 +9,17 @@
 use std::{
     fs::{self, OpenOptions},
     io::Write as _,
-    os::unix::fs::OpenOptionsExt as _,
+    os::unix::fs::{MetadataExt as _, OpenOptionsExt as _, PermissionsExt as _},
     path::{Path, PathBuf},
     sync::Arc,
     time::{SystemTime, UNIX_EPOCH},
 };
 
-use serde::Serialize;
+use anyhow::Context as _;
+use serde::{Deserialize, Serialize};
 use sha2::{Digest as _, Sha256};
 use tokio::sync::{broadcast, mpsc, watch};
+use uuid::Uuid;
 
 use crate::{
     codec::encode_text,
@@ -46,20 +48,25 @@ pub struct ActionCandidate {
     pub session_id: String,
     pub response: String,
     pub trace: Option<IpcTraceContextV1>,
+    /// One-use turn identifier admitted only by a trusted runtime boundary.
+    /// Trace metadata alone never populates this field.
+    pub tuning_authority_turn_id: Option<Uuid>,
+    /// Trusted boundary that admitted the one-use turn identifier.
+    pub tuning_authority_source: Option<&'static str>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct ActionOutcome {
     pub recorded_at_unix_ms: u64,
     pub session_id: String,
     pub response_sha256: String,
     pub declared_next: Option<String>,
-    pub decision_source: &'static str,
-    pub status: &'static str,
-    pub outcome: &'static str,
-    pub recovery_reason: Option<&'static str>,
+    pub decision_source: String,
+    pub status: String,
+    pub outcome: String,
+    pub recovery_reason: Option<String>,
     pub unexecuted_intention: Option<String>,
-    pub validation_reason: Option<&'static str>,
+    pub validation_reason: Option<String>,
     pub trace: Option<IpcTraceContextV1>,
 }
 
@@ -124,6 +131,8 @@ struct ActionReceipt {
     recovery_reason: Option<&'static str>,
     unexecuted_intention: Option<String>,
     validation_reason: Option<&'static str>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    execution_error: Option<String>,
     artifact_path: Option<String>,
     fill_pct: f32,
     target_fill_pct: f32,
@@ -138,9 +147,25 @@ struct ActionReceipt {
     authority: &'static str,
 }
 
+#[derive(Deserialize)]
+struct DurableActionOutcome {
+    recorded_at_unix_ms: u64,
+    session_id: String,
+    response_sha256: String,
+    declared_next: Option<String>,
+    decision_source: String,
+    status: String,
+    outcome: String,
+    recovery_reason: Option<String>,
+    unexecuted_intention: Option<String>,
+    validation_reason: Option<String>,
+    trace: Option<IpcTraceContextV1>,
+}
+
 struct ExecutionResult {
     receipt_json: String,
     outcome: ActionOutcome,
+    dispatch_key: Option<ActionDispatchKey>,
 }
 
 struct ActionExecution {
@@ -162,7 +187,33 @@ struct ActionInterpretation {
     validation_reason: Option<&'static str>,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum ActionDispatchEvidence {
+    Absent,
+    Pending,
+    Completed,
+}
+
+#[derive(Debug, Clone)]
+struct ActionDispatchKey {
+    turn_id: Uuid,
+    response_sha256: String,
+    trace: IpcTraceContextV1,
+}
+
+#[derive(Serialize)]
+struct ActionDispatchReceipt<'a> {
+    schema: &'static str,
+    phase: &'static str,
+    recorded_at_unix_ms: u64,
+    turn_id: Uuid,
+    response_sha256: &'a str,
+    trace: &'a IpcTraceContextV1,
+    authority: &'static str,
+}
+
 #[allow(clippy::too_many_arguments)] // Explicit channels keep authority boundaries visible.
+#[allow(clippy::too_many_lines)] // Keep mutation, durable completion, and feedback ordering together.
 pub async fn run(
     config: Arc<Config>,
     mut candidates: mpsc::Receiver<ActionCandidate>,
@@ -259,11 +310,27 @@ pub async fn run(
                 {
                     eprintln!("sovereign NEXT action feedback dropped: reservoir closed");
                 }
+                if let Some(dispatch_key) = result.dispatch_key.as_ref()
+                    && let Err(error) = append_action_dispatch_phase(
+                        &config,
+                        dispatch_key,
+                        "completed",
+                        unix_millis(),
+                    )
+                {
+                    eprintln!(
+                        "sovereign NEXT action executor failed closed before dispatch acknowledgement: {error:#}"
+                    );
+                    return;
+                }
                 if config.autonomy_enabled && outcome_tx.send(result.outcome).await.is_err() {
                     eprintln!("sovereign NEXT chain feedback dropped: scheduler closed");
                 }
             },
-            Err(error) => eprintln!("sovereign NEXT action failed: {error}"),
+            Err(error) => {
+                eprintln!("sovereign NEXT action executor failed closed: {error:#}");
+                return;
+            },
         }
     }
 }
@@ -271,7 +338,7 @@ pub async fn run(
 fn action_outcome_may_enter_experience(outcome: &ActionOutcome) -> bool {
     outcome.recovery_reason.is_none()
         && matches!(
-            outcome.decision_source,
+            outcome.decision_source.as_str(),
             "astrid_declared" | "local_format_repair_preserved_astrid_declaration"
         )
 }
@@ -280,7 +347,7 @@ fn accepted_research_question(outcome: &ActionOutcome) -> Option<&str> {
     if outcome.status != "executed"
         || outcome.outcome != "research_question_written"
         || !matches!(
-            outcome.decision_source,
+            outcome.decision_source.as_str(),
             "astrid_declared" | "local_format_repair_preserved_astrid_declaration"
         )
     {
@@ -298,7 +365,7 @@ fn accepted_self_study_question(outcome: &ActionOutcome) -> Option<&str> {
     if outcome.status != "executed"
         || outcome.outcome != "self_study_written"
         || !matches!(
-            outcome.decision_source,
+            outcome.decision_source.as_str(),
             "astrid_declared" | "local_format_repair_preserved_astrid_declaration"
         )
         || outcome.recovery_reason.is_some()
@@ -369,19 +436,24 @@ async fn execute_candidate_with_studies(
     } = interpret_response(&candidate.response);
     let timestamp = unix_millis();
     let response_sha256 = format!("{:x}", Sha256::digest(candidate.response.as_bytes()));
+    let dispatch_key = begin_action_dispatch(config, candidate, &response_sha256, timestamp)?;
     let action_trace = candidate.trace.as_ref().map(IpcTraceContextV1::child);
     let tuning_provenance =
         (!local_safe_fallback && !local_format_repair && recovery_reason.is_none())
             .then(|| {
-                action_trace.clone().map(|trace| TuningProvenance {
+                let authority_turn_id = candidate.tuning_authority_turn_id?;
+                let decision_source = candidate.tuning_authority_source?;
+                let trace = action_trace.clone()?;
+                (trace.turn_id == Some(authority_turn_id)).then_some(TuningProvenance {
                     session_id: candidate.session_id.clone(),
+                    authority_turn_id: authority_turn_id.to_string(),
                     response_sha256: response_sha256.clone(),
                     trace,
-                    decision_source: "astrid_declared",
+                    decision_source,
                 })
             })
             .flatten();
-    let execution = execute_interpreted_action(
+    let (execution, execution_error) = match execute_interpreted_action(
         config,
         timestamp,
         parsed.as_ref(),
@@ -394,7 +466,24 @@ async fn execute_candidate_with_studies(
         tuning_tx,
         tuning_provenance,
     )
-    .await?;
+    .await
+    {
+        Ok(execution) => (execution, None),
+        Err(error) => {
+            eprintln!("sovereign Action execution failed after durable intent: {error:#}");
+            (
+                ActionExecution {
+                    status: "failed",
+                    outcome: "action_execution_failed_after_durable_intent",
+                    artifact_path: None,
+                    tuning_id: None,
+                    tuning_candidate_id: None,
+                    tuning_phase: None,
+                },
+                Some(bounded_chars(&format!("{error:#}"), 320)),
+            )
+        },
+    };
     let ActionExecution {
         status,
         outcome,
@@ -404,11 +493,6 @@ async fn execute_candidate_with_studies(
         tuning_phase,
     } = execution;
 
-    let mut receipt_log = OpenOptions::new()
-        .create(true)
-        .append(true)
-        .mode(0o600)
-        .open(config.workspace.join("actions/receipts.jsonl"))?;
     let decision_source = if local_safe_fallback {
         "local_safe_fallback"
     } else if local_format_repair {
@@ -431,6 +515,7 @@ async fn execute_candidate_with_studies(
         recovery_reason,
         unexecuted_intention: unexecuted_intention.clone(),
         validation_reason,
+        execution_error,
         artifact_path,
         fill_pct: snapshot.fill_ratio * 100.0,
         target_fill_pct: snapshot.fill_target * 100.0,
@@ -441,25 +526,30 @@ async fn execute_candidate_with_studies(
         authority: "validated_model_next_with_optional_syntax_only_repair_owned_workspace_only",
     };
     let receipt_json = serde_json::to_string(&receipt)?;
+    let mut receipt_log =
+        open_private_action_append(&config.workspace.join("actions/receipts.jsonl"))?;
     receipt_log.write_all(receipt_json.as_bytes())?;
     receipt_log.write_all(b"\n")?;
+    receipt_log.sync_data()?;
+    sync_parent_directory(&config.workspace.join("actions/receipts.jsonl"))?;
     eprintln!(
         "sovereign NEXT: status={status} outcome={outcome} fill={:.1}%",
         receipt.fill_pct
     );
     Ok(ExecutionResult {
         receipt_json,
+        dispatch_key,
         outcome: ActionOutcome {
             recorded_at_unix_ms: timestamp,
             session_id: candidate.session_id.clone(),
             response_sha256,
             declared_next,
-            decision_source,
-            status,
-            outcome,
-            recovery_reason,
+            decision_source: decision_source.to_string(),
+            status: status.to_string(),
+            outcome: outcome.to_string(),
+            recovery_reason: recovery_reason.map(str::to_string),
             unexecuted_intention,
-            validation_reason,
+            validation_reason: validation_reason.map(str::to_string),
             trace: action_trace,
         },
     })
@@ -473,6 +563,299 @@ async fn execute_candidate(
 ) -> anyhow::Result<ExecutionResult> {
     let manager = Arc::new(std::sync::Mutex::new(inquiry::StudyManager::load(config)));
     execute_candidate_with_studies(config, candidate, snapshot, &manager, None).await
+}
+
+fn begin_action_dispatch(
+    config: &Config,
+    candidate: &ActionCandidate,
+    response_sha256: &str,
+    timestamp: u64,
+) -> anyhow::Result<Option<ActionDispatchKey>> {
+    let Some(trace) = candidate.trace.as_ref() else {
+        return Ok(None);
+    };
+    let Some(turn_id) = trace.turn_id else {
+        return Ok(None);
+    };
+    anyhow::ensure!(trace.is_supported(), "Action trace is structurally invalid");
+    match action_dispatch_evidence(config, trace, response_sha256)? {
+        ActionDispatchEvidence::Absent => {},
+        ActionDispatchEvidence::Pending => {
+            anyhow::bail!(
+                "Action dispatch has a durable pending intent without a completion receipt"
+            );
+        },
+        ActionDispatchEvidence::Completed => {
+            anyhow::bail!("duplicate completed Action dispatch was suppressed");
+        },
+    }
+    let key = ActionDispatchKey {
+        turn_id,
+        response_sha256: response_sha256.to_string(),
+        trace: trace.clone(),
+    };
+    append_action_dispatch_phase(config, &key, "requested", timestamp)?;
+    Ok(Some(key))
+}
+
+fn append_action_dispatch_phase(
+    config: &Config,
+    key: &ActionDispatchKey,
+    phase: &'static str,
+    timestamp: u64,
+) -> anyhow::Result<()> {
+    let receipt = ActionDispatchReceipt {
+        schema: "astrid_edge_action_dispatch_v1",
+        phase,
+        recorded_at_unix_ms: timestamp,
+        turn_id: key.turn_id,
+        response_sha256: &key.response_sha256,
+        trace: &key.trace,
+        authority: "executor_idempotency_record_not_astrid_authorship",
+    };
+    let mut ledger =
+        open_private_action_append(&config.workspace.join("actions/dispatches.jsonl"))?;
+    serde_json::to_writer(&mut ledger, &receipt)?;
+    ledger.write_all(b"\n")?;
+    ledger.sync_data()?;
+    sync_parent_directory(&config.workspace.join("actions/dispatches.jsonl"))?;
+    Ok(())
+}
+
+#[allow(clippy::too_many_lines)] // One exact dispatch/receipt join is the audited replay boundary.
+pub(crate) fn action_dispatch_evidence(
+    config: &Config,
+    expected_trace: &IpcTraceContextV1,
+    response_sha256: &str,
+) -> anyhow::Result<ActionDispatchEvidence> {
+    anyhow::ensure!(
+        expected_trace.is_supported(),
+        "expected Action trace is structurally invalid"
+    );
+    let turn_id = expected_trace
+        .turn_id
+        .context("expected Action trace lacks its canonical turn ID")?;
+    let mut requested = 0_u8;
+    let mut completed = 0_u8;
+    let turn_id_text = turn_id.to_string();
+    for value in read_private_action_ledger(&config.workspace.join("actions/dispatches.jsonl"))? {
+        if value.get("schema").and_then(serde_json::Value::as_str)
+            != Some("astrid_edge_action_dispatch_v1")
+            || value.get("turn_id").and_then(serde_json::Value::as_str)
+                != Some(turn_id_text.as_str())
+        {
+            continue;
+        }
+        anyhow::ensure!(
+            value
+                .get("response_sha256")
+                .and_then(serde_json::Value::as_str)
+                == Some(response_sha256),
+            "Action dispatch record conflicts with its expected response hash"
+        );
+        let dispatch_trace = value
+            .get("trace")
+            .cloned()
+            .map(serde_json::from_value::<IpcTraceContextV1>)
+            .transpose()
+            .context("decode exact Action dispatch trace")?
+            .context("exact Action dispatch lacks its trace")?;
+        anyhow::ensure!(
+            dispatch_trace == *expected_trace,
+            "Action dispatch record conflicts with its expected exact trace"
+        );
+        match value.get("phase").and_then(serde_json::Value::as_str) {
+            Some("requested") => requested = requested.saturating_add(1),
+            Some("completed") => completed = completed.saturating_add(1),
+            _ => anyhow::bail!("Action dispatch ledger contains an unsupported phase"),
+        }
+    }
+    anyhow::ensure!(
+        requested <= 1 && completed <= 1,
+        "duplicate Action dispatch ledger phase"
+    );
+
+    let mut receipt_matches = 0_usize;
+    for value in read_private_action_ledger(&config.workspace.join("actions/receipts.jsonl"))? {
+        if value
+            .pointer("/trace/turn_id")
+            .and_then(serde_json::Value::as_str)
+            != Some(turn_id_text.as_str())
+        {
+            continue;
+        }
+        anyhow::ensure!(
+            value
+                .get("response_sha256")
+                .and_then(serde_json::Value::as_str)
+                == Some(response_sha256),
+            "Action receipt conflicts with its expected response hash"
+        );
+        let receipt_trace = value
+            .get("trace")
+            .cloned()
+            .map(serde_json::from_value::<IpcTraceContextV1>)
+            .transpose()
+            .context("decode exact Action receipt trace")?
+            .context("exact Action receipt lacks its trace")?;
+        anyhow::ensure!(
+            same_causal_turn(&receipt_trace, expected_trace),
+            "Action receipt conflicts with its expected causal turn"
+        );
+        anyhow::ensure!(
+            receipt_trace.parent_span_id == Some(expected_trace.span_id),
+            "Action receipt is not a direct child of its dispatch span"
+        );
+        receipt_matches = receipt_matches.saturating_add(1);
+    }
+    anyhow::ensure!(
+        receipt_matches <= 1,
+        "duplicate exact Action completion receipt"
+    );
+    if receipt_matches == 1 {
+        anyhow::ensure!(
+            requested == 1,
+            "Action receipt exists without a dispatch intent"
+        );
+        return Ok(if completed == 1 {
+            ActionDispatchEvidence::Completed
+        } else {
+            ActionDispatchEvidence::Pending
+        });
+    }
+    anyhow::ensure!(
+        completed == 0,
+        "dispatch completion exists without an Action receipt"
+    );
+    Ok(if requested == 1 {
+        ActionDispatchEvidence::Pending
+    } else {
+        ActionDispatchEvidence::Absent
+    })
+}
+
+/// Recover the exact durable executor outcome after a crash between Action
+/// completion and scheduler acknowledgement. This reconstructs pacing and
+/// thread continuity from the receipt; it never replays the mutation.
+pub(crate) fn completed_action_outcome(
+    config: &Config,
+    expected_trace: &IpcTraceContextV1,
+    response_sha256: &str,
+) -> anyhow::Result<Option<ActionOutcome>> {
+    if action_dispatch_evidence(config, expected_trace, response_sha256)?
+        != ActionDispatchEvidence::Completed
+    {
+        return Ok(None);
+    }
+    let turn_id = expected_trace
+        .turn_id
+        .context("expected Action trace lacks its canonical turn ID")?;
+    let turn_id_text = turn_id.to_string();
+    let mut recovered = None;
+    for value in read_private_action_ledger(&config.workspace.join("actions/receipts.jsonl"))? {
+        if value
+            .pointer("/trace/turn_id")
+            .and_then(serde_json::Value::as_str)
+            != Some(turn_id_text.as_str())
+        {
+            continue;
+        }
+        anyhow::ensure!(
+            recovered.is_none(),
+            "duplicate exact Action completion receipt"
+        );
+        let durable: DurableActionOutcome =
+            serde_json::from_value(value).context("decode exact durable Action outcome")?;
+        anyhow::ensure!(
+            durable.response_sha256 == response_sha256,
+            "Action receipt conflicts with its expected response hash"
+        );
+        let trace = durable
+            .trace
+            .as_ref()
+            .context("exact Action receipt lacks its trace")?;
+        anyhow::ensure!(
+            same_causal_turn(trace, expected_trace)
+                && trace.parent_span_id == Some(expected_trace.span_id),
+            "Action receipt conflicts with its expected direct causal parent"
+        );
+        anyhow::ensure!(
+            expected_trace.session_id.as_deref() == Some(durable.session_id.as_str()),
+            "Action receipt session conflicts with its expected trace session"
+        );
+        recovered = Some(ActionOutcome {
+            recorded_at_unix_ms: durable.recorded_at_unix_ms,
+            session_id: durable.session_id,
+            response_sha256: durable.response_sha256,
+            declared_next: durable.declared_next,
+            decision_source: durable.decision_source,
+            status: durable.status,
+            outcome: durable.outcome,
+            recovery_reason: durable.recovery_reason,
+            unexecuted_intention: durable.unexecuted_intention,
+            validation_reason: durable.validation_reason,
+            trace: durable.trace,
+        });
+    }
+    recovered
+        .map(Some)
+        .context("completed Action dispatch lacks its exact durable outcome")
+}
+
+fn same_causal_turn(left: &IpcTraceContextV1, right: &IpcTraceContextV1) -> bool {
+    left.is_supported()
+        && right.is_supported()
+        && left.trace_id == right.trace_id
+        && left.turn_id == right.turn_id
+        && left.session_id == right.session_id
+        && left.chain_id == right.chain_id
+}
+
+fn read_private_action_ledger(path: &Path) -> anyhow::Result<Vec<serde_json::Value>> {
+    let metadata = match fs::symlink_metadata(path) {
+        Ok(metadata) => metadata,
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => return Ok(Vec::new()),
+        Err(error) => return Err(error.into()),
+    };
+    anyhow::ensure!(
+        metadata.file_type().is_file(),
+        "private Action ledger is not a regular non-symlink file: {}",
+        path.display()
+    );
+    let content = fs::read_to_string(path)?;
+    content
+        .lines()
+        .filter(|line| !line.trim().is_empty())
+        .map(|line| serde_json::from_str(line).map_err(Into::into))
+        .collect()
+}
+
+fn open_private_action_append(path: &Path) -> anyhow::Result<fs::File> {
+    match fs::symlink_metadata(path) {
+        Ok(metadata) if metadata.file_type().is_file() => {},
+        Ok(_) => anyhow::bail!(
+            "private Action ledger is not a regular non-symlink file: {}",
+            path.display()
+        ),
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => {},
+        Err(error) => return Err(error.into()),
+    }
+    let file = OpenOptions::new()
+        .create(true)
+        .append(true)
+        .mode(0o600)
+        .open(path)?;
+    let opened = file.metadata()?;
+    let current = fs::symlink_metadata(path)?;
+    anyhow::ensure!(
+        current.file_type().is_file()
+            && opened.dev() == current.dev()
+            && opened.ino() == current.ino(),
+        "private Action ledger identity changed while opening: {}",
+        path.display()
+    );
+    file.set_permissions(fs::Permissions::from_mode(0o600))?;
+    Ok(file)
 }
 
 #[allow(clippy::too_many_arguments)] // One audited Action execution boundary.
@@ -899,6 +1282,12 @@ pub(crate) fn model_authored_prefix_before_safe_fallback(response: &str) -> Opti
         .map(|marker_offset| response[..marker_offset].trim_end())
 }
 
+pub(crate) fn model_authored_prefix_before_format_repair(response: &str) -> Option<&str> {
+    response
+        .rfind(FORMAT_NEXT_REPAIR_MARKER)
+        .map(|marker_offset| response[..marker_offset].trim_end())
+}
+
 /// Recover only an unambiguous terminal declaration that a small model placed
 /// at the end of its authored prefix before the provider appended a safe
 /// LISTEN. This recognizes exact final, split-argument, and final-prose layouts.
@@ -1257,6 +1646,7 @@ fn record_duplicate_journal_advisory(
     serde_json::to_writer(&mut log, &receipt)?;
     log.write_all(b"\n")?;
     log.sync_data()?;
+    sync_parent_directory(&config.workspace.join("research/duplication_notices.jsonl"))?;
     Ok(())
 }
 
@@ -1765,9 +2155,22 @@ fn write_check_receipt(
 }
 
 fn write_new_file(path: &Path, content: &[u8]) -> anyhow::Result<()> {
-    let mut file = OpenOptions::new().write(true).create_new(true).open(path)?;
+    let mut file = OpenOptions::new()
+        .write(true)
+        .create_new(true)
+        .mode(0o600)
+        .open(path)?;
     file.write_all(content)?;
-    file.sync_data()?;
+    file.sync_all()?;
+    sync_parent_directory(path)?;
+    Ok(())
+}
+
+fn sync_parent_directory(path: &Path) -> anyhow::Result<()> {
+    let parent = path
+        .parent()
+        .context("durable Action path lacks a parent directory")?;
+    fs::File::open(parent)?.sync_all()?;
     Ok(())
 }
 
@@ -1784,21 +2187,26 @@ fn unix_millis() -> u64 {
 #[cfg(test)]
 mod tests {
     use super::{
-        FORMAT_NEXT_REPAIR_MARKER, MAX_ACTION_ARGUMENT_CHARS, SAFE_NEXT_REPAIR_MARKER,
-        SovereignAction, accepted_research_question, accepted_self_study_question,
-        action_outcome_may_enter_experience, action_validation_reason, bounded_artifact_id,
-        execute_candidate, execute_tuning_action, final_next_declaration, find_owned_artifact,
-        is_local_safe_fallback, model_authored_prefix_before_safe_fallback, parse_action,
-        readable_source_excerpt, recovery_reason, spectral_query_for_question,
+        ActionDispatchEvidence, FORMAT_NEXT_REPAIR_MARKER, MAX_ACTION_ARGUMENT_CHARS,
+        SAFE_NEXT_REPAIR_MARKER, SovereignAction, accepted_research_question,
+        accepted_self_study_question, action_dispatch_evidence,
+        action_outcome_may_enter_experience, action_validation_reason,
+        append_action_dispatch_phase, begin_action_dispatch, bounded_artifact_id,
+        completed_action_outcome, execute_candidate, execute_tuning_action, final_next_declaration,
+        find_owned_artifact, is_local_safe_fallback, model_authored_prefix_before_safe_fallback,
+        parse_action, readable_source_excerpt, recovery_reason, spectral_query_for_question,
         spectral_self_study_question, transport_recovery_reason,
-        unambiguous_model_action_before_safe_fallback, write_signal_measurement,
+        unambiguous_model_action_before_safe_fallback, write_new_file, write_signal_measurement,
     };
     use crate::{
         actions::ActionCandidate,
         config::{AutonomyPromptProfile, Config},
         reservoir::ReservoirSnapshot,
+        trace::IpcTraceContextV1,
     };
-    use std::{fs, path::Path};
+    use sha2::{Digest as _, Sha256};
+    use std::{fs, os::unix::fs::PermissionsExt as _, path::Path};
+    use uuid::Uuid;
 
     fn test_config(workspace: &Path) -> Config {
         Config {
@@ -2039,9 +2447,9 @@ mod tests {
             session_id: "test".to_string(),
             response_sha256: "hash".to_string(),
             declared_next: Some("RESEARCH current CPU reservoir literature".to_string()),
-            decision_source: "astrid_declared",
-            status: "executed",
-            outcome: "research_question_written",
+            decision_source: "astrid_declared".to_string(),
+            status: "executed".to_string(),
+            outcome: "research_question_written".to_string(),
             recovery_reason: None,
             unexecuted_intention: None,
             validation_reason: None,
@@ -2053,15 +2461,15 @@ mod tests {
         );
         for mut rejected in [
             super::ActionOutcome {
-                decision_source: "local_safe_fallback",
+                decision_source: "local_safe_fallback".to_string(),
                 ..accepted.clone()
             },
             super::ActionOutcome {
-                status: "declined",
+                status: "declined".to_string(),
                 ..accepted.clone()
             },
             super::ActionOutcome {
-                outcome: "journal_written",
+                outcome: "journal_written".to_string(),
                 ..accepted.clone()
             },
         ] {
@@ -2078,9 +2486,9 @@ mod tests {
             session_id: "test".to_string(),
             response_sha256: "hash".to_string(),
             declared_next: Some("SELF_STUDY what have I noticed about heat?".to_string()),
-            decision_source: "astrid_declared",
-            status: "executed",
-            outcome: "self_study_written",
+            decision_source: "astrid_declared".to_string(),
+            status: "executed".to_string(),
+            outcome: "self_study_written".to_string(),
             recovery_reason: None,
             unexecuted_intention: None,
             validation_reason: None,
@@ -2093,18 +2501,18 @@ mod tests {
         assert!(action_outcome_may_enter_experience(&accepted));
 
         let formatting_repair = super::ActionOutcome {
-            decision_source: "local_format_repair_preserved_astrid_declaration",
+            decision_source: "local_format_repair_preserved_astrid_declaration".to_string(),
             ..accepted.clone()
         };
         assert!(action_outcome_may_enter_experience(&formatting_repair));
 
         for rejected in [
             super::ActionOutcome {
-                decision_source: "local_safe_fallback",
+                decision_source: "local_safe_fallback".to_string(),
                 ..accepted.clone()
             },
             super::ActionOutcome {
-                recovery_reason: Some("react_streaming_timeout"),
+                recovery_reason: Some("react_streaming_timeout".to_string()),
                 ..accepted.clone()
             },
         ] {
@@ -2113,7 +2521,7 @@ mod tests {
         }
 
         let authored_failure = super::ActionOutcome {
-            status: "failed",
+            status: "failed".to_string(),
             ..accepted
         };
         assert_eq!(accepted_self_study_question(&authored_failure), None);
@@ -2209,6 +2617,8 @@ mod tests {
                      NEXT: NOTICE one unambiguous observation"
                 ),
                 trace: None,
+                tuning_authority_turn_id: None,
+                tuning_authority_source: None,
             },
             &ReservoirSnapshot::default(),
         )
@@ -2248,6 +2658,8 @@ mod tests {
                 session_id: "split-format-repair".to_string(),
                 response,
                 trace: None,
+                tuning_authority_turn_id: None,
+                tuning_authority_source: None,
             },
             &ReservoirSnapshot::default(),
         )
@@ -2286,6 +2698,8 @@ mod tests {
                      {SAFE_NEXT_REPAIR_MARKER}\nNEXT: LISTEN"
                 ),
                 trace: None,
+                tuning_authority_turn_id: None,
+                tuning_authority_source: None,
             },
             &ReservoirSnapshot::default(),
         )
@@ -2347,6 +2761,24 @@ mod tests {
         fs::remove_dir_all(workspace).unwrap();
     }
 
+    #[test]
+    fn durable_action_file_creation_is_owner_only_and_never_overwrites() {
+        let workspace = std::env::temp_dir().join(format!(
+            "astrid-edge-durable-action-file-{}",
+            super::unix_millis()
+        ));
+        fs::create_dir_all(&workspace).unwrap();
+        let path = workspace.join("artifact.md");
+        write_new_file(&path, b"first generation").unwrap();
+        assert_eq!(
+            fs::metadata(&path).unwrap().permissions().mode() & 0o777,
+            0o600
+        );
+        assert!(write_new_file(&path, b"replacement").is_err());
+        assert_eq!(fs::read(&path).unwrap(), b"first generation");
+        fs::remove_dir_all(workspace).unwrap();
+    }
+
     #[tokio::test]
     async fn every_stateful_action_stays_inside_the_owned_workspace() {
         let workspace =
@@ -2372,6 +2804,8 @@ mod tests {
                     session_id: "test-session".to_string(),
                     response: format!("brief reflection\nNEXT: {declaration}"),
                     trace: None,
+                    tuning_authority_turn_id: None,
+                    tuning_authority_source: None,
                 },
                 &snapshot,
             )
@@ -2401,6 +2835,8 @@ mod tests {
                     session_id: "test-session".to_string(),
                     response: format!("brief reflection\nNEXT: {declaration}"),
                     trace: None,
+                    tuning_authority_turn_id: None,
+                    tuning_authority_source: None,
                 },
                 &snapshot,
             )
@@ -2424,14 +2860,287 @@ mod tests {
                         session_id: "test-session".to_string(),
                         response: format!("brief reflection\nNEXT: {declaration}"),
                         trace: None,
+                        tuning_authority_turn_id: None,
+                        tuning_authority_source: None,
                     },
                     &snapshot,
                 )
-                .await;
-                assert!(linked.is_err());
+                .await
+                .unwrap();
+                assert_eq!(linked.outcome.status, "failed");
+                assert_eq!(
+                    linked.outcome.outcome,
+                    "action_execution_failed_after_durable_intent"
+                );
+                let receipt: serde_json::Value =
+                    serde_json::from_str(&linked.receipt_json).unwrap();
+                assert!(receipt["execution_error"].as_str().is_some_and(|error| {
+                    error.contains("symlink") || error.contains("owned artifact")
+                }));
             }
             fs::remove_file(outside).unwrap();
         }
+        fs::remove_dir_all(workspace).unwrap();
+    }
+
+    #[tokio::test]
+    async fn traced_action_dispatch_is_durable_and_exactly_once() {
+        let workspace =
+            std::env::temp_dir().join(format!("astrid-edge-action-dispatch-{}", Uuid::new_v4()));
+        let mut config = test_config(&workspace);
+        config.autonomy_enabled = false;
+        config.prepare_workspace().unwrap();
+        let response = "A bounded observation.\nNEXT: NOTICE write this exactly once".to_string();
+        let trace =
+            IpcTraceContextV1::root(Uuid::new_v4(), "action-dispatch-session".to_string(), None);
+        let response_sha256 = format!("{:x}", Sha256::digest(response.as_bytes()));
+        let candidate = ActionCandidate {
+            session_id: "action-dispatch-session".to_string(),
+            response,
+            trace: Some(trace),
+            tuning_authority_turn_id: None,
+            tuning_authority_source: None,
+        };
+
+        assert_eq!(
+            action_dispatch_evidence(&config, candidate.trace.as_ref().unwrap(), &response_sha256,)
+                .unwrap(),
+            ActionDispatchEvidence::Absent
+        );
+        let result = execute_candidate(&config, &candidate, &ReservoirSnapshot::default())
+            .await
+            .unwrap();
+        assert_eq!(
+            action_dispatch_evidence(&config, candidate.trace.as_ref().unwrap(), &response_sha256,)
+                .unwrap(),
+            ActionDispatchEvidence::Pending
+        );
+        assert_eq!(fs::read_dir(workspace.join("notices")).unwrap().count(), 1);
+
+        let duplicate = execute_candidate(&config, &candidate, &ReservoirSnapshot::default())
+            .await
+            .err()
+            .expect("pending dispatch must reject a duplicate execution");
+        assert!(duplicate.to_string().contains("durable pending intent"));
+        assert_eq!(fs::read_dir(workspace.join("notices")).unwrap().count(), 1);
+
+        append_action_dispatch_phase(
+            &config,
+            result.dispatch_key.as_ref().unwrap(),
+            "completed",
+            super::unix_millis(),
+        )
+        .unwrap();
+        assert_eq!(
+            action_dispatch_evidence(&config, candidate.trace.as_ref().unwrap(), &response_sha256,)
+                .unwrap(),
+            ActionDispatchEvidence::Completed
+        );
+        let completed_duplicate =
+            execute_candidate(&config, &candidate, &ReservoirSnapshot::default())
+                .await
+                .err()
+                .expect("completed dispatch must reject a duplicate execution");
+        assert!(
+            completed_duplicate
+                .to_string()
+                .contains("duplicate completed Action dispatch")
+        );
+        assert_eq!(fs::read_dir(workspace.join("notices")).unwrap().count(), 1);
+
+        let recovered =
+            completed_action_outcome(&config, candidate.trace.as_ref().unwrap(), &response_sha256)
+                .unwrap()
+                .unwrap();
+        assert_eq!(
+            recovered.declared_next.as_deref(),
+            Some("NOTICE write this exactly once")
+        );
+        assert_eq!(
+            recovered.trace.as_ref().unwrap().parent_span_id,
+            Some(candidate.trace.as_ref().unwrap().span_id)
+        );
+
+        let dispatch_path = workspace.join("actions/dispatches.jsonl");
+        assert_eq!(
+            fs::metadata(&dispatch_path).unwrap().permissions().mode() & 0o777,
+            0o600
+        );
+        assert_eq!(
+            fs::read_to_string(dispatch_path).unwrap().lines().count(),
+            2
+        );
+        fs::remove_dir_all(workspace).unwrap();
+    }
+
+    #[tokio::test]
+    async fn durable_dispatch_intent_blocks_mutation_after_a_crash_boundary() {
+        let workspace =
+            std::env::temp_dir().join(format!("astrid-edge-action-intent-{}", Uuid::new_v4()));
+        let mut config = test_config(&workspace);
+        config.autonomy_enabled = false;
+        config.prepare_workspace().unwrap();
+        let response = "A bounded observation.\nNEXT: NOTICE never duplicate me".to_string();
+        let trace =
+            IpcTraceContextV1::root(Uuid::new_v4(), "action-intent-session".to_string(), None);
+        let response_sha256 = format!("{:x}", Sha256::digest(response.as_bytes()));
+        let candidate = ActionCandidate {
+            session_id: "action-intent-session".to_string(),
+            response,
+            trace: Some(trace),
+            tuning_authority_turn_id: None,
+            tuning_authority_source: None,
+        };
+
+        begin_action_dispatch(&config, &candidate, &response_sha256, super::unix_millis()).unwrap();
+        assert_eq!(
+            action_dispatch_evidence(&config, candidate.trace.as_ref().unwrap(), &response_sha256,)
+                .unwrap(),
+            ActionDispatchEvidence::Pending
+        );
+        assert_eq!(fs::read_dir(workspace.join("notices")).unwrap().count(), 0);
+
+        let replay = execute_candidate(&config, &candidate, &ReservoirSnapshot::default())
+            .await
+            .err()
+            .expect("durable pending intent must suppress replay");
+        assert!(replay.to_string().contains("durable pending intent"));
+        assert_eq!(fs::read_dir(workspace.join("notices")).unwrap().count(), 0);
+        fs::remove_dir_all(workspace).unwrap();
+    }
+
+    #[test]
+    fn dispatch_evidence_rejects_a_conflicting_trace_with_reused_turn_and_hash() {
+        let workspace = std::env::temp_dir().join(format!(
+            "astrid-edge-action-conflicting-trace-{}",
+            Uuid::new_v4()
+        ));
+        let config = test_config(&workspace);
+        config.prepare_workspace().unwrap();
+        let expected =
+            IpcTraceContextV1::root(Uuid::new_v4(), "expected-session".to_string(), None);
+        let mut conflicting = expected.clone();
+        conflicting.trace_id = Uuid::new_v4();
+        let response_sha256 = "a".repeat(64);
+        fs::write(
+            workspace.join("actions/dispatches.jsonl"),
+            format!(
+                "{}\n",
+                serde_json::json!({
+                    "schema": "astrid_edge_action_dispatch_v1",
+                    "phase": "requested",
+                    "recorded_at_unix_ms": 1,
+                    "turn_id": expected.turn_id.unwrap(),
+                    "response_sha256": response_sha256,
+                    "trace": conflicting,
+                })
+            ),
+        )
+        .unwrap();
+
+        let error = action_dispatch_evidence(&config, &expected, &response_sha256).unwrap_err();
+        assert!(
+            error
+                .to_string()
+                .contains("conflicts with its expected exact trace")
+        );
+
+        fs::write(
+            workspace.join("actions/dispatches.jsonl"),
+            format!(
+                "{}\n",
+                serde_json::json!({
+                    "schema": "astrid_edge_action_dispatch_v1",
+                    "phase": "requested",
+                    "recorded_at_unix_ms": 2,
+                    "turn_id": expected.turn_id.unwrap(),
+                    "response_sha256": "b".repeat(64),
+                    "trace": expected,
+                })
+            ),
+        )
+        .unwrap();
+        let error = action_dispatch_evidence(&config, &expected, &response_sha256).unwrap_err();
+        assert!(error.to_string().contains("expected response hash"));
+        fs::remove_dir_all(workspace).unwrap();
+    }
+
+    #[test]
+    fn dispatch_evidence_rejects_an_action_receipt_with_the_wrong_parent_span() {
+        let workspace = std::env::temp_dir().join(format!(
+            "astrid-edge-action-wrong-parent-{}",
+            Uuid::new_v4()
+        ));
+        let config = test_config(&workspace);
+        config.prepare_workspace().unwrap();
+        let expected =
+            IpcTraceContextV1::root(Uuid::new_v4(), "expected-session".to_string(), None);
+        let response_sha256 = "c".repeat(64);
+        let key = super::ActionDispatchKey {
+            turn_id: expected.turn_id.unwrap(),
+            response_sha256: response_sha256.clone(),
+            trace: expected.clone(),
+        };
+        append_action_dispatch_phase(&config, &key, "requested", 1).unwrap();
+        append_action_dispatch_phase(&config, &key, "completed", 2).unwrap();
+        let mut wrong_parent = expected.child();
+        wrong_parent.parent_span_id = Some(Uuid::new_v4());
+        fs::write(
+            workspace.join("actions/receipts.jsonl"),
+            format!(
+                "{}\n",
+                serde_json::json!({
+                    "schema": "astrid_edge_action_receipt_v4",
+                    "recorded_at_unix_ms": 2,
+                    "session_id": "expected-session",
+                    "response_sha256": response_sha256,
+                    "declared_next": "LISTEN",
+                    "decision_source": "astrid_declared",
+                    "status": "honored",
+                    "outcome": "listen_no_workspace_mutation",
+                    "trace": wrong_parent,
+                })
+            ),
+        )
+        .unwrap();
+
+        let error = action_dispatch_evidence(&config, &expected, &response_sha256).unwrap_err();
+        assert!(error.to_string().contains("direct child"));
+        fs::remove_dir_all(workspace).unwrap();
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn dispatch_ledger_symlink_is_rejected_without_touching_its_target() {
+        let workspace = std::env::temp_dir().join(format!(
+            "astrid-edge-action-ledger-symlink-{}",
+            Uuid::new_v4()
+        ));
+        let config = test_config(&workspace);
+        config.prepare_workspace().unwrap();
+        let outside = workspace.with_extension("outside-dispatch-ledger");
+        fs::write(&outside, "operator-owned\n").unwrap();
+        std::os::unix::fs::symlink(&outside, workspace.join("actions/dispatches.jsonl")).unwrap();
+        let response = "A bounded observation.\nNEXT: NOTICE refuse this dispatch".to_string();
+        let candidate = ActionCandidate {
+            session_id: "action-symlink-session".to_string(),
+            response: response.clone(),
+            trace: Some(IpcTraceContextV1::root(
+                Uuid::new_v4(),
+                "action-symlink-session".to_string(),
+                None,
+            )),
+            tuning_authority_turn_id: None,
+            tuning_authority_source: None,
+        };
+        let response_sha256 = format!("{:x}", Sha256::digest(response.as_bytes()));
+
+        let error =
+            begin_action_dispatch(&config, &candidate, &response_sha256, super::unix_millis())
+                .unwrap_err();
+        assert!(error.to_string().contains("not a regular non-symlink file"));
+        assert_eq!(fs::read_to_string(&outside).unwrap(), "operator-owned\n");
+        fs::remove_file(outside).unwrap();
         fs::remove_dir_all(workspace).unwrap();
     }
 }

@@ -193,6 +193,7 @@ fn valid_summary(summary: &RollingSpectralSummary) -> bool {
         summary.partial_spectrum_sample_count,
         summary.unknown_coverage_sample_count,
         summary.inconsistent_coverage_sample_count,
+        summary.incomplete_sanitized_sample_count,
     ]
     .into_iter()
     .sum::<usize>();
