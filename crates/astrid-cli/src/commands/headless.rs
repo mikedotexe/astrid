@@ -19,6 +19,54 @@ struct CollectedResponse {
     tool_calls: Vec<serde_json::Value>,
     canonical_trace: Option<astrid_types::ipc::IpcTraceContextV1>,
     response_provenance: Option<astrid_types::ipc::AgentResponseProvenanceV1>,
+    provider_metrics: Option<astrid_types::ipc::HeadlessProviderMetricsReceiptV1>,
+}
+
+fn canonical_provider_metrics_receipt(
+    message: &astrid_types::ipc::IpcMessage,
+    canonical: &astrid_types::ipc::IpcTraceContextV1,
+) -> Option<astrid_types::ipc::HeadlessProviderMetricsReceiptV1> {
+    if !canonical.is_supported() || canonical.turn_id.is_none() || canonical.session_id.is_none() {
+        return None;
+    }
+    let producer = message
+        .producer
+        .as_ref()
+        .filter(|producer| producer.is_supported())?;
+    if message.topic != CANONICAL_AGENT_RESPONSE_TOPIC
+        || producer.kind != "wasm_capsule"
+        || producer.id != REACT_CAPSULE_ID
+        || message.trace.as_ref() != Some(canonical)
+        || !matches!(
+            &message.payload,
+            astrid_types::ipc::IpcPayload::AgentResponse {
+                is_final: true,
+                session_id,
+                ..
+            } if canonical.session_id.as_deref() == Some(session_id.as_str())
+        )
+    {
+        return None;
+    }
+    let metrics = message
+        .local_provider_metrics
+        .as_ref()
+        .filter(|metrics| metrics.is_supported())?;
+    let receipt = astrid_types::ipc::HeadlessProviderMetricsReceiptV1::new(
+        canonical.clone(),
+        metrics.clone(),
+    );
+    receipt.is_supported().then_some(receipt)
+}
+
+fn message_matches_expected_trace(
+    message: &astrid_types::ipc::IpcMessage,
+    expected: &astrid_types::ipc::IpcTraceContextV1,
+) -> bool {
+    message
+        .trace
+        .as_ref()
+        .is_some_and(|trace| trace.trace_id == expected.trace_id)
 }
 
 /// Observational tracing and liveness controls supplied by a supervised
@@ -163,6 +211,13 @@ pub(crate) async fn run_headless(
             )?)?
         );
     }
+    if let Some(provider_metrics) = collected.provider_metrics.as_ref() {
+        eprintln!(
+            "{}{}",
+            astrid_types::ipc::HEADLESS_PROVIDER_METRICS_RECEIPT_PREFIX,
+            serde_json::to_string(provider_metrics)?
+        );
+    }
 
     // Final output
     match format {
@@ -209,16 +264,14 @@ async fn collect_response(
     let mut tool_calls: Vec<serde_json::Value> = Vec::new();
     let mut canonical_trace: Option<astrid_types::ipc::IpcTraceContextV1> = None;
     let mut response_provenance = None;
+    let mut provider_metrics = None;
     loop {
         let Some(message) = read_before_idle_deadline(client, timeout_duration).await? else {
             break;
         };
 
-        if let Some(expected) = expected_trace
-            && message
-                .trace
-                .as_ref()
-                .is_none_or(|trace| trace.trace_id != expected.trace_id)
+        if expected_trace
+            .is_some_and(|expected| !message_matches_expected_trace(&message, expected))
         {
             continue;
         }
@@ -247,6 +300,9 @@ async fn collect_response(
                 response_text.push_str(text);
                 if *is_final {
                     response_provenance = *provenance;
+                    provider_metrics = canonical_trace.as_ref().and_then(|canonical| {
+                        canonical_provider_metrics_receipt(&message, canonical)
+                    });
                     break;
                 }
             },
@@ -302,6 +358,7 @@ async fn collect_response(
         tool_calls,
         canonical_trace,
         response_provenance,
+        provider_metrics,
         expected_trace.is_some(),
     )
 }
@@ -328,6 +385,7 @@ fn finish_collected_response(
     tool_calls: Vec<serde_json::Value>,
     canonical_trace: Option<astrid_types::ipc::IpcTraceContextV1>,
     response_provenance: Option<astrid_types::ipc::AgentResponseProvenanceV1>,
+    provider_metrics: Option<astrid_types::ipc::HeadlessProviderMetricsReceiptV1>,
     trace_required: bool,
 ) -> Result<CollectedResponse> {
     if trace_required && canonical_trace.is_none() {
@@ -340,6 +398,7 @@ fn finish_collected_response(
         tool_calls,
         canonical_trace,
         response_provenance,
+        provider_metrics,
     })
 }
 
@@ -426,12 +485,14 @@ fn canonical_response_trace(
 #[cfg(test)]
 mod tests {
     use super::{
-        canonical_response_trace, record_canonical_response_trace, reject_executor_terminal_error,
+        canonical_provider_metrics_receipt, canonical_response_trace,
+        record_canonical_response_trace, reject_executor_terminal_error,
         require_scheduled_terminal_provenance,
     };
     use astrid_core::SessionId;
     use astrid_types::ipc::{
         AgentResponseProvenanceV1, IpcMessage, IpcPayload, IpcProducerV1, IpcTraceContextV1,
+        LocalProviderRequestAttemptV1, LocalProviderRequestOutcomeV1, LocalProviderTurnMetricsV1,
     };
 
     fn response(session: &SessionId, trace: IpcTraceContextV1) -> IpcMessage {
@@ -447,6 +508,103 @@ mod tests {
         )
         .with_trace(trace)
         .with_producer(IpcProducerV1::new("wasm_capsule", "astrid-capsule-react"))
+    }
+
+    fn provider_attempt(
+        request_id: uuid::Uuid,
+        outcome: LocalProviderRequestOutcomeV1,
+        elapsed_ms: Option<u64>,
+    ) -> LocalProviderRequestAttemptV1 {
+        LocalProviderRequestAttemptV1 {
+            attempt_id: uuid::Uuid::new_v4(),
+            request_id,
+            outcome,
+            request_header_latency_ms: elapsed_ms,
+        }
+    }
+
+    #[test]
+    fn provider_metrics_require_host_attached_final_canonical_response() {
+        let session = SessionId::from_uuid(uuid::Uuid::new_v4());
+        let expected = IpcTraceContextV1::root(
+            uuid::Uuid::new_v4(),
+            session.0.to_string(),
+            Some("chain-a".to_string()),
+        );
+        // The socket boundary re-roots the requested trace with the canonical turn identity.
+        let canonical = IpcTraceContextV1::root(
+            expected.trace_id,
+            session.0.to_string(),
+            expected.chain_id.clone(),
+        );
+        let request_id = uuid::Uuid::new_v4();
+        let mut message = response(&session, canonical.clone());
+        message.local_provider_metrics = Some(LocalProviderTurnMetricsV1::new(
+            1,
+            1,
+            vec![provider_attempt(
+                request_id,
+                LocalProviderRequestOutcomeV1::SuccessfulHeaders,
+                Some(288_001),
+            )],
+        ));
+        let receipt = canonical_provider_metrics_receipt(&message, &canonical).unwrap();
+        assert!(receipt.is_supported());
+        assert_eq!(receipt.trace, canonical);
+        assert_eq!(receipt.request_count, 1);
+        assert_eq!(receipt.successful_header_count, 1);
+        assert_eq!(receipt.request_id, Some(request_id));
+        assert_eq!(receipt.request_header_latency_ms, Some(288_001));
+
+        let mut non_final = message.clone();
+        if let IpcPayload::AgentResponse { is_final, .. } = &mut non_final.payload {
+            *is_final = false;
+        }
+        assert!(canonical_provider_metrics_receipt(&non_final, &canonical).is_none());
+
+        let mut spoofed = message;
+        spoofed.producer = Some(IpcProducerV1::new("native_socket_client", "spoof"));
+        assert!(canonical_provider_metrics_receipt(&spoofed, &canonical).is_none());
+    }
+
+    #[test]
+    fn provider_metrics_preserve_exact_multi_attempt_count_without_scalar() {
+        let session = SessionId::from_uuid(uuid::Uuid::new_v4());
+        let canonical = IpcTraceContextV1::root(
+            uuid::Uuid::new_v4(),
+            session.0.to_string(),
+            Some("chain-a".to_string()),
+        );
+        let mut message = response(&session, canonical.clone());
+        message.local_provider_metrics = Some(LocalProviderTurnMetricsV1::new(
+            2,
+            1,
+            vec![
+                provider_attempt(
+                    uuid::Uuid::new_v4(),
+                    LocalProviderRequestOutcomeV1::Timeout,
+                    None,
+                ),
+                provider_attempt(
+                    uuid::Uuid::new_v4(),
+                    LocalProviderRequestOutcomeV1::SuccessfulHeaders,
+                    Some(20),
+                ),
+            ],
+        ));
+        let receipt = canonical_provider_metrics_receipt(&message, &canonical).unwrap();
+        assert_eq!(receipt.request_count, 2);
+        assert_eq!(receipt.successful_header_count, 1);
+        assert_eq!(receipt.requests.len(), 2);
+        assert!(receipt.request_id.is_none());
+        assert!(receipt.request_header_latency_ms.is_none());
+
+        message
+            .local_provider_metrics
+            .as_mut()
+            .unwrap()
+            .request_count = 1;
+        assert!(canonical_provider_metrics_receipt(&message, &canonical).is_none());
     }
 
     #[test]
