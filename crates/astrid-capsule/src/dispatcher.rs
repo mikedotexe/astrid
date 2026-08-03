@@ -43,6 +43,14 @@ use astrid_events::{AstridEvent, EventBus};
 /// they arrive), new events are dropped with a warning rather than blocking
 /// the dispatcher. 256 is generous for typical usage.
 const CAPSULE_EVENT_QUEUE_CAPACITY: usize = 256;
+const LOCAL_PROVIDER_CAPSULE_ID: &str = "astrid-capsule-openai-compat";
+const LOCAL_PROVIDER_REQUEST_TOPIC: &str = "llm.v1.request.generate.openai-compat";
+const LOCAL_PROVIDER_STREAM_TOPIC: &str = "llm.v1.stream.openai-compat";
+const LOCAL_PROVIDER_ACTION: &str = "handle_llm_request";
+const REACT_CAPSULE_ID: &str = "astrid-capsule-react";
+const PROVIDER_FAILURE_MESSAGE: &str = "local provider interceptor failed";
+const DISPATCHER_PRODUCER_KIND: &str = "kernel_dispatcher";
+const DISPATCHER_PRODUCER_ID: &str = "local_provider_interceptor_failure";
 
 /// Work item sent to a per-capsule ordered queue.
 struct InterceptorWork {
@@ -221,6 +229,7 @@ impl EventDispatcher {
                 topic,
                 payload_bytes,
                 ipc_message,
+                &self.event_bus,
             );
         }
 
@@ -245,6 +254,7 @@ fn dispatch_to_capsule_queues(
     topic: Arc<String>,
     payload_bytes: Arc<Vec<u8>>,
     ipc_message: Option<Arc<astrid_events::ipc::IpcMessage>>,
+    event_bus: &Arc<EventBus>,
 ) {
     if matches.is_empty() {
         return;
@@ -259,7 +269,15 @@ fn dispatch_to_capsule_queues(
     // For single-interceptor events (common case), skip chain overhead.
     if matches_owned.len() == 1 {
         let (capsule, action) = matches_owned.into_iter().next().unwrap();
-        dispatch_single(queues, capsule, action, topic, payload_bytes, ipc_message);
+        dispatch_single(
+            queues,
+            capsule,
+            action,
+            topic,
+            payload_bytes,
+            ipc_message,
+            event_bus,
+        );
         return;
     }
 
@@ -345,10 +363,12 @@ fn dispatch_single(
     topic: Arc<String>,
     payload_bytes: Arc<Vec<u8>>,
     ipc_message: Option<Arc<astrid_events::ipc::IpcMessage>>,
+    event_bus: &Arc<EventBus>,
 ) {
     let sender = queues.entry(capsule.id().clone()).or_insert_with(|| {
         let (tx, mut rx) = mpsc::channel::<InterceptorWork>(CAPSULE_EVENT_QUEUE_CAPACITY);
         let capsule = Arc::clone(&capsule);
+        let event_bus = Arc::clone(event_bus);
         tokio::task::spawn(async move {
             while let Some(work) = rx.recv().await {
                 debug!(
@@ -391,11 +411,19 @@ fn dispatch_single(
                         );
                     },
                     Err(e) => {
+                        let terminal_error_published = publish_exact_local_provider_failure(
+                            &event_bus,
+                            capsule.id(),
+                            &work.action,
+                            &work.topic,
+                            work.ipc_message.as_deref(),
+                        );
                         warn!(
                             capsule_id = %capsule.id(),
                             action = %work.action,
                             topic = %work.topic,
                             error = %e,
+                            terminal_error_published,
                             "Interceptor invocation failed"
                         );
                     },
@@ -418,6 +446,76 @@ fn dispatch_single(
             "Capsule dispatch queue full or closed, dropping event: {e}"
         );
     }
+}
+
+/// Publish one kernel-authored provider stream error only for the exact, host-attested ReAct
+/// request path used by the local OpenAI-compatible provider. The synthetic event retains the
+/// typed request identifier and a child of the original trace so ReAct can publish its existing
+/// executor-terminal response inside the scheduled headless trace.
+fn publish_exact_local_provider_failure(
+    event_bus: &EventBus,
+    capsule_id: &CapsuleId,
+    action: &str,
+    topic: &str,
+    caller: Option<&astrid_events::ipc::IpcMessage>,
+) -> bool {
+    let Some(message) = exact_local_provider_failure_message(capsule_id, action, topic, caller)
+    else {
+        return false;
+    };
+    event_bus.publish(AstridEvent::Ipc {
+        metadata: astrid_events::EventMetadata::new("dispatcher"),
+        message,
+    });
+    true
+}
+
+fn exact_local_provider_failure_message(
+    capsule_id: &CapsuleId,
+    action: &str,
+    topic: &str,
+    caller: Option<&astrid_events::ipc::IpcMessage>,
+) -> Option<astrid_events::ipc::IpcMessage> {
+    if capsule_id.as_str() != LOCAL_PROVIDER_CAPSULE_ID
+        || action != LOCAL_PROVIDER_ACTION
+        || topic != LOCAL_PROVIDER_REQUEST_TOPIC
+    {
+        return None;
+    }
+    let caller = caller.filter(|message| message.topic == LOCAL_PROVIDER_REQUEST_TOPIC)?;
+    let producer = caller
+        .producer
+        .as_ref()
+        .filter(|producer| producer.is_supported())?;
+    if producer.kind != "wasm_capsule" || producer.id != REACT_CAPSULE_ID {
+        return None;
+    }
+    let astrid_events::ipc::IpcPayload::LlmRequest { request_id, .. } = &caller.payload else {
+        return None;
+    };
+    if request_id.is_nil() {
+        return None;
+    }
+    let trace = caller.trace.as_ref().filter(|trace| {
+        trace.is_supported() && trace.turn_id.is_some() && trace.session_id.is_some()
+    })?;
+    let mut message = astrid_events::ipc::IpcMessage::new(
+        LOCAL_PROVIDER_STREAM_TOPIC,
+        astrid_events::ipc::IpcPayload::LlmStreamEvent {
+            request_id: *request_id,
+            event: astrid_events::llm::StreamEvent::Error(PROVIDER_FAILURE_MESSAGE.to_string()),
+        },
+        uuid::Uuid::new_v4(),
+    )
+    .with_trace(trace.child())
+    .with_producer(astrid_events::ipc::IpcProducerV1::new(
+        DISPATCHER_PRODUCER_KIND,
+        DISPATCHER_PRODUCER_ID,
+    ));
+    if let Some(principal) = caller.principal.as_deref() {
+        message = message.with_principal(principal);
+    }
+    Some(message)
 }
 
 /// Find all capsules with interceptors matching the given topic.
@@ -468,7 +566,7 @@ mod tests {
 
     use crate::capsule::{Capsule, CapsuleId, CapsuleState, InterceptResult};
     use crate::context::CapsuleContext;
-    use crate::error::CapsuleResult;
+    use crate::error::{CapsuleError, CapsuleResult};
     use crate::manifest::{CapabilitiesDef, CapsuleManifest, InterceptorDef, PackageDef};
     use astrid_events::ipc::IpcPayload;
 
@@ -481,6 +579,10 @@ mod tests {
         invocation_log: Option<Arc<Mutex<Vec<String>>>>,
         /// Override the default `Continue` result for testing chain semantics.
         result_override: Option<InterceptResult>,
+        /// Return a WASM error instead of an interceptor result.
+        failure_override: Option<String>,
+        /// Return `NotSupported` instead of an interceptor result.
+        not_supported_override: bool,
     }
 
     impl MockCapsule {
@@ -538,6 +640,8 @@ mod tests {
                 invoked: Arc::clone(&invoked),
                 invocation_log,
                 result_override: None,
+                failure_override: None,
+                not_supported_override: false,
             };
             (capsule, invoked)
         }
@@ -570,6 +674,12 @@ mod tests {
             if let Some(ref log) = self.invocation_log {
                 log.lock().unwrap().push(self.id.to_string());
             }
+            if let Some(ref failure) = self.failure_override {
+                return Err(CapsuleError::WasmError(failure.clone()));
+            }
+            if self.not_supported_override {
+                return Err(CapsuleError::NotSupported("test skip".to_string()));
+            }
             if let Some(ref result) = self.result_override {
                 return Ok(result.clone());
             }
@@ -590,6 +700,290 @@ mod tests {
             metadata: astrid_events::EventMetadata::new("test"),
             message: msg,
         });
+    }
+
+    fn exact_provider_request() -> astrid_events::ipc::IpcMessage {
+        astrid_events::ipc::IpcMessage::new(
+            LOCAL_PROVIDER_REQUEST_TOPIC,
+            IpcPayload::LlmRequest {
+                request_id: uuid::Uuid::new_v4(),
+                model: "qwen3:1.7b".to_string(),
+                messages: Vec::new(),
+                tools: Vec::new(),
+                system: String::new(),
+            },
+            uuid::Uuid::new_v4(),
+        )
+        .with_principal("default")
+        .with_trace(astrid_events::ipc::IpcTraceContextV1::root(
+            uuid::Uuid::new_v4(),
+            uuid::Uuid::new_v4().to_string(),
+            None,
+        ))
+        .with_producer(astrid_events::ipc::IpcProducerV1::new(
+            "wasm_capsule",
+            REACT_CAPSULE_ID,
+        ))
+    }
+
+    async fn wait_until_invoked(invoked: &AtomicBool) {
+        tokio::time::timeout(Duration::from_secs(1), async {
+            while !invoked.load(Ordering::SeqCst) {
+                tokio::task::yield_now().await;
+            }
+        })
+        .await
+        .unwrap();
+    }
+
+    #[test]
+    fn exact_provider_failure_preserves_typed_request_and_trace() {
+        let caller = exact_provider_request();
+        let original_trace = caller.trace.as_ref().unwrap();
+        let request_id = match &caller.payload {
+            IpcPayload::LlmRequest { request_id, .. } => *request_id,
+            _ => unreachable!(),
+        };
+        let message = exact_local_provider_failure_message(
+            &CapsuleId::from_static(LOCAL_PROVIDER_CAPSULE_ID),
+            LOCAL_PROVIDER_ACTION,
+            LOCAL_PROVIDER_REQUEST_TOPIC,
+            Some(&caller),
+        )
+        .unwrap();
+
+        assert_eq!(message.topic, LOCAL_PROVIDER_STREAM_TOPIC);
+        assert!(matches!(
+            message.payload,
+            IpcPayload::LlmStreamEvent {
+                request_id: actual_request_id,
+                event: astrid_events::llm::StreamEvent::Error(ref error),
+            } if actual_request_id == request_id && error == PROVIDER_FAILURE_MESSAGE
+        ));
+        let failure_trace = message.trace.as_ref().unwrap();
+        assert_eq!(failure_trace.trace_id, original_trace.trace_id);
+        assert_eq!(failure_trace.turn_id, original_trace.turn_id);
+        assert_eq!(failure_trace.session_id, original_trace.session_id);
+        assert_eq!(failure_trace.parent_span_id, Some(original_trace.span_id));
+        assert_ne!(failure_trace.span_id, original_trace.span_id);
+        assert_eq!(message.principal.as_deref(), Some("default"));
+        let producer = message.producer.as_ref().unwrap();
+        assert_eq!(producer.kind, DISPATCHER_PRODUCER_KIND);
+        assert_eq!(producer.id, DISPATCHER_PRODUCER_ID);
+    }
+
+    #[test]
+    fn provider_failure_bridge_rejects_unattested_or_inexact_requests() {
+        let capsule_id = CapsuleId::from_static(LOCAL_PROVIDER_CAPSULE_ID);
+        let caller = exact_provider_request();
+        let rejects = |candidate: Option<&astrid_events::ipc::IpcMessage>| {
+            assert!(
+                exact_local_provider_failure_message(
+                    &capsule_id,
+                    LOCAL_PROVIDER_ACTION,
+                    LOCAL_PROVIDER_REQUEST_TOPIC,
+                    candidate,
+                )
+                .is_none()
+            );
+        };
+        rejects(None);
+        assert!(
+            exact_local_provider_failure_message(
+                &CapsuleId::from_static("other-provider"),
+                LOCAL_PROVIDER_ACTION,
+                LOCAL_PROVIDER_REQUEST_TOPIC,
+                Some(&caller),
+            )
+            .is_none()
+        );
+        assert!(
+            exact_local_provider_failure_message(
+                &capsule_id,
+                "other_action",
+                LOCAL_PROVIDER_REQUEST_TOPIC,
+                Some(&caller),
+            )
+            .is_none()
+        );
+        assert!(
+            exact_local_provider_failure_message(
+                &capsule_id,
+                LOCAL_PROVIDER_ACTION,
+                "llm.v1.request.generate.other-provider",
+                Some(&caller),
+            )
+            .is_none()
+        );
+
+        let mut wrong_caller_topic = caller.clone();
+        wrong_caller_topic.topic = "llm.v1.request.generate.other-provider".to_string();
+        rejects(Some(&wrong_caller_topic));
+
+        let mut untyped = caller.clone();
+        untyped.payload = IpcPayload::Custom {
+            data: serde_json::json!({}),
+        };
+        rejects(Some(&untyped));
+
+        let mut nil_request = caller.clone();
+        let IpcPayload::LlmRequest { request_id, .. } = &mut nil_request.payload else {
+            unreachable!();
+        };
+        *request_id = uuid::Uuid::nil();
+        rejects(Some(&nil_request));
+
+        let mut unattested = caller.clone();
+        unattested.producer = None;
+        rejects(Some(&unattested));
+
+        let mut wrong_producer = caller.clone();
+        wrong_producer.producer = Some(astrid_events::ipc::IpcProducerV1::new(
+            "wasm_capsule",
+            "other-capsule",
+        ));
+        rejects(Some(&wrong_producer));
+
+        let mut unsupported_producer = caller.clone();
+        unsupported_producer
+            .producer
+            .as_mut()
+            .unwrap()
+            .schema_version = 0;
+        rejects(Some(&unsupported_producer));
+
+        let mut untraced = caller.clone();
+        untraced.trace = None;
+        rejects(Some(&untraced));
+
+        let mut missing_turn = caller.clone();
+        missing_turn.trace.as_mut().unwrap().turn_id = None;
+        rejects(Some(&missing_turn));
+
+        let mut missing_session = caller.clone();
+        missing_session.trace.as_mut().unwrap().session_id = None;
+        rejects(Some(&missing_session));
+
+        let mut unsupported_trace = caller;
+        unsupported_trace.trace.as_mut().unwrap().schema_version = 0;
+        rejects(Some(&unsupported_trace));
+    }
+
+    #[tokio::test]
+    async fn exact_provider_interceptor_error_publishes_traced_stream_error() {
+        let (mut provider, invoked) =
+            MockCapsule::new(LOCAL_PROVIDER_CAPSULE_ID, LOCAL_PROVIDER_REQUEST_TOPIC);
+        provider.manifest.interceptors[0].action = LOCAL_PROVIDER_ACTION.to_string();
+        provider.failure_override = Some("interrupt".to_string());
+
+        let mut registry = CapsuleRegistry::new();
+        registry.register(Box::new(provider)).unwrap();
+        let registry = Arc::new(RwLock::new(registry));
+        let bus = Arc::new(EventBus::with_capacity(64));
+        let mut errors = bus.subscribe_topic(LOCAL_PROVIDER_STREAM_TOPIC);
+        let dispatcher = EventDispatcher::new(Arc::clone(&registry), Arc::clone(&bus));
+        let handle = tokio::spawn(dispatcher.run());
+        tokio::task::yield_now().await;
+
+        let caller = exact_provider_request();
+        let original_trace = caller.trace.as_ref().unwrap().clone();
+        let request_id = match &caller.payload {
+            IpcPayload::LlmRequest { request_id, .. } => *request_id,
+            _ => unreachable!(),
+        };
+        bus.publish(AstridEvent::Ipc {
+            metadata: astrid_events::EventMetadata::new("test"),
+            message: caller,
+        });
+
+        let event = tokio::time::timeout(Duration::from_secs(1), errors.recv())
+            .await
+            .unwrap()
+            .unwrap();
+        let AstridEvent::Ipc { message, .. } = &*event else {
+            panic!("expected IPC provider failure event");
+        };
+        assert!(invoked.load(Ordering::SeqCst));
+        assert!(matches!(
+            message.payload,
+            IpcPayload::LlmStreamEvent {
+                request_id: actual_request_id,
+                event: astrid_events::llm::StreamEvent::Error(ref error),
+            } if actual_request_id == request_id && error == PROVIDER_FAILURE_MESSAGE
+        ));
+        let failure_trace = message.trace.as_ref().unwrap();
+        assert_eq!(failure_trace.trace_id, original_trace.trace_id);
+        assert_eq!(failure_trace.turn_id, original_trace.turn_id);
+        assert_eq!(failure_trace.session_id, original_trace.session_id);
+        assert_eq!(failure_trace.parent_span_id, Some(original_trace.span_id));
+        handle.abort();
+    }
+
+    #[tokio::test]
+    async fn exact_provider_not_supported_does_not_publish_stream_error() {
+        let (mut provider, invoked) =
+            MockCapsule::new(LOCAL_PROVIDER_CAPSULE_ID, LOCAL_PROVIDER_REQUEST_TOPIC);
+        provider.manifest.interceptors[0].action = LOCAL_PROVIDER_ACTION.to_string();
+        provider.not_supported_override = true;
+
+        let mut registry = CapsuleRegistry::new();
+        registry.register(Box::new(provider)).unwrap();
+        let registry = Arc::new(RwLock::new(registry));
+        let bus = Arc::new(EventBus::with_capacity(64));
+        let mut errors = bus.subscribe_topic(LOCAL_PROVIDER_STREAM_TOPIC);
+        let dispatcher = EventDispatcher::new(Arc::clone(&registry), Arc::clone(&bus));
+        let handle = tokio::spawn(dispatcher.run());
+        tokio::task::yield_now().await;
+
+        bus.publish(AstridEvent::Ipc {
+            metadata: astrid_events::EventMetadata::new("test"),
+            message: exact_provider_request(),
+        });
+
+        wait_until_invoked(&invoked).await;
+        assert!(
+            tokio::time::timeout(Duration::from_millis(25), errors.recv())
+                .await
+                .is_err()
+        );
+        handle.abort();
+    }
+
+    #[tokio::test]
+    async fn multi_interceptor_failure_does_not_publish_stream_error() {
+        let (mut provider, invoked) = MockCapsule::with_priority(
+            LOCAL_PROVIDER_CAPSULE_ID,
+            LOCAL_PROVIDER_REQUEST_TOPIC,
+            10,
+            None,
+        );
+        provider.manifest.interceptors[0].action = LOCAL_PROVIDER_ACTION.to_string();
+        provider.failure_override = Some("interrupt".to_string());
+        let (other, _) =
+            MockCapsule::with_priority("other-interceptor", LOCAL_PROVIDER_REQUEST_TOPIC, 20, None);
+
+        let mut registry = CapsuleRegistry::new();
+        registry.register(Box::new(provider)).unwrap();
+        registry.register(Box::new(other)).unwrap();
+        let registry = Arc::new(RwLock::new(registry));
+        let bus = Arc::new(EventBus::with_capacity(64));
+        let mut errors = bus.subscribe_topic(LOCAL_PROVIDER_STREAM_TOPIC);
+        let dispatcher = EventDispatcher::new(Arc::clone(&registry), Arc::clone(&bus));
+        let handle = tokio::spawn(dispatcher.run());
+        tokio::task::yield_now().await;
+
+        bus.publish(AstridEvent::Ipc {
+            metadata: astrid_events::EventMetadata::new("test"),
+            message: exact_provider_request(),
+        });
+
+        wait_until_invoked(&invoked).await;
+        assert!(
+            tokio::time::timeout(Duration::from_millis(25), errors.recv())
+                .await
+                .is_err()
+        );
+        handle.abort();
     }
 
     #[tokio::test]

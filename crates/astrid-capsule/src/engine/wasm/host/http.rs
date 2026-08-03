@@ -279,8 +279,13 @@ const MAX_ACTIVE_HTTP_STREAMS: usize = 4;
 const HTTP_STREAM_CONNECT_TIMEOUT: Duration = Duration::from_secs(30);
 /// Maximum time to wait for streaming response headers.
 const HTTP_STREAM_START_TIMEOUT: Duration = Duration::from_secs(300);
+/// Maximum response-header deadline admitted for an exact allowlisted local
+/// origin. The provider capsule's guest deadline is ordered above this plus
+/// one complete inter-chunk wait.
+pub(in crate::engine::wasm) const LOCAL_HTTP_STREAM_START_TIMEOUT_MAX_SECS: u64 = 420;
 /// Per-chunk read timeout for streaming HTTP responses.
-const HTTP_STREAM_READ_TIMEOUT: Duration = Duration::from_secs(120);
+pub(in crate::engine::wasm) const HTTP_STREAM_READ_TIMEOUT_SECS: u64 = 120;
+const HTTP_STREAM_READ_TIMEOUT: Duration = Duration::from_secs(HTTP_STREAM_READ_TIMEOUT_SECS);
 
 /// Loopback provider header deadline. Public requests always retain the fixed
 /// deadline above; this setting applies only after an exact
@@ -300,7 +305,7 @@ static LOCAL_HTTP_STREAM_START_TIMEOUT: std::sync::LazyLock<Duration> =
 
 fn local_header_timeout_seconds(raw: Option<&str>) -> u64 {
     raw.and_then(|value| value.trim().parse::<u64>().ok())
-        .filter(|seconds| (60..=600).contains(seconds))
+        .filter(|seconds| (60..=LOCAL_HTTP_STREAM_START_TIMEOUT_MAX_SECS).contains(seconds))
         .unwrap_or(HTTP_STREAM_START_TIMEOUT.as_secs())
 }
 
@@ -932,6 +937,8 @@ mod tests {
         assert_eq!(local_header_timeout_seconds(None), 300);
         assert_eq!(local_header_timeout_seconds(Some("420")), 420);
         assert_eq!(local_header_timeout_seconds(Some("59")), 300);
+        assert_eq!(local_header_timeout_seconds(Some("421")), 300);
+        assert_eq!(local_header_timeout_seconds(Some("600")), 300);
         assert_eq!(local_header_timeout_seconds(Some("601")), 300);
         assert_eq!(local_header_timeout_seconds(Some("not-a-number")), 300);
         assert_eq!(response_header_timeout(false), Duration::from_secs(300));
