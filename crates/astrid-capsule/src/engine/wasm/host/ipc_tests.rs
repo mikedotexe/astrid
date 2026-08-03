@@ -258,13 +258,88 @@ fn capsule_publish_creates_a_child_span_without_changing_authority_fields() {
     )
     .with_principal("operator")
     .with_trace(trace.clone());
-    let child = child_trace_context(Some(&caller)).unwrap();
+    let child = child_trace_context(Some(&caller), None).unwrap();
 
     assert_eq!(child.trace_id, trace.trace_id);
     assert_eq!(child.parent_span_id, Some(trace.span_id));
     assert_eq!(child.session_id, trace.session_id);
     assert_eq!(child.chain_id, trace.chain_id);
     assert_eq!(caller.principal.as_deref(), Some("operator"));
+}
+
+#[test]
+fn direct_invocation_trace_precedes_run_loop_trace() {
+    let direct = IpcTraceContextV1::root(uuid::Uuid::new_v4(), "direct", None);
+    let run_loop = IpcTraceContextV1::root(uuid::Uuid::new_v4(), "run-loop", None);
+    let direct_message = IpcMessage::new(
+        "direct.request",
+        IpcPayload::Custom {
+            data: serde_json::json!({}),
+        },
+        uuid::Uuid::new_v4(),
+    )
+    .with_trace(direct.clone());
+    let run_loop_message = IpcMessage::new(
+        "run.loop.request",
+        IpcPayload::Custom {
+            data: serde_json::json!({}),
+        },
+        uuid::Uuid::new_v4(),
+    )
+    .with_trace(run_loop);
+
+    let child = child_trace_context(Some(&direct_message), Some(&run_loop_message)).unwrap();
+    assert_eq!(child.trace_id, direct.trace_id);
+    assert_eq!(child.parent_span_id, Some(direct.span_id));
+}
+
+#[test]
+fn run_loop_delivery_preserves_each_queued_messages_exact_trace() {
+    let bus = EventBus::new();
+    let mut receiver = bus.subscribe_topic("turn.request");
+    let first = IpcTraceContextV1::root(uuid::Uuid::new_v4(), "same-session", None);
+    let second = IpcTraceContextV1::root(uuid::Uuid::new_v4(), "same-session", None);
+    for trace in [&first, &second] {
+        bus.publish(AstridEvent::Ipc {
+            metadata: EventMetadata::new("test"),
+            message: IpcMessage::new(
+                "turn.request",
+                IpcPayload::Custom {
+                    data: serde_json::json!({}),
+                },
+                uuid::Uuid::new_v4(),
+            )
+            .with_trace(trace.clone()),
+        });
+    }
+
+    let first_event = receiver.try_recv();
+    let first_result = single_event_result(
+        first_event.as_deref(),
+        util::MAX_GUEST_PAYLOAD_LEN as usize,
+        receiver.drain_lagged(),
+    );
+    assert_eq!(first_result.messages.len(), 1);
+    assert_eq!(
+        child_trace_context(None, first_result.messages.first())
+            .unwrap()
+            .trace_id,
+        first.trace_id
+    );
+
+    let second_event = receiver.try_recv();
+    let second_result = single_event_result(
+        second_event.as_deref(),
+        util::MAX_GUEST_PAYLOAD_LEN as usize,
+        receiver.drain_lagged(),
+    );
+    assert_eq!(second_result.messages.len(), 1);
+    assert_eq!(
+        child_trace_context(None, second_result.messages.first())
+            .unwrap()
+            .trace_id,
+        second.trace_id
+    );
 }
 
 #[test]

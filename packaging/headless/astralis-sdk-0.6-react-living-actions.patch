@@ -1,48 +1,31 @@
 diff --git a/src/lib.rs b/src/lib.rs
+index 09a3699..bcbd899 100644
 --- a/src/lib.rs
 +++ b/src/lib.rs
-@@ -96,13 +96,34 @@ fn has_valid_sovereign_next(text: &str) -> bool {
-         "NEXT: REMEMBER ",
-         "NEXT: SELF_STUDY ",
-         "NEXT: PROPOSE ",
-+        "NEXT: NOTICE ",
-+        "NEXT: DAYDREAM ",
-+        "NEXT: ASPIRE ",
-+        "NEXT: RESEARCH ",
-+        "NEXT: PLAN ",
-+        "NEXT: DRAFT ",
+@@ -106,7 +106,19 @@ fn has_valid_sovereign_next(text: &str) -> bool {
+         "NEXT: RESEARCH ",
+         "NEXT: PLAN ",
+         "NEXT: DRAFT ",
 +        "NEXT: READ ",
 +        "NEXT: READ_SOURCE ",
-+        "NEXT: CHECK ",
+         "NEXT: CHECK ",
 +        "NEXT: MEASURE ",
 +        "NEXT: STUDY ",
 +        "NEXT: CANCEL_STUDY ",
 +        "NEXT: SYNTHESIZE ",
 +        "NEXT: SHARE ",
++        "NEXT: TUNE_RESERVOIR ",
++        "NEXT: CANCEL_TUNING ",
++        "NEXT: VALIDATE_TUNING ",
++        "NEXT: ADOPT_TUNING ",
++        "NEXT: REVERT_TUNING ",
      ]
      .iter()
      .any(|prefix| {
-         final_line
-             .strip_prefix(prefix)
-             .is_some_and(|argument| !argument.trim().is_empty())
-     })
-+        || final_line.strip_prefix("NEXT: REVISE ").is_some_and(|argument| {
-+            argument
-+                .split_once("::")
-+                .is_some_and(|(artifact, revision)| {
-+                    !artifact.trim().is_empty() && !revision.trim().is_empty()
-+                })
-+        })
- }
- 
- /// Preserve a valid model-authored declaration or append a transparent,
-@@ -1628,6 +1649,24 @@ mod sovereign_next_tests {
+@@ -1652,6 +1664,29 @@ mod sovereign_next_tests {
          assert!(has_valid_sovereign_next(
              "A response.\nNEXT: SELF_STUDY What changes after input?"
          ));
-+        assert!(has_valid_sovereign_next(
-+            "A response.\nNEXT: REVISE draft_123.md :: clarify the distinction"
-+        ));
 +        assert!(has_valid_sovereign_next(
 +            "A response.\nNEXT: READ journal_123.md"
 +        ));
@@ -55,9 +38,17 @@ diff --git a/src/lib.rs b/src/lib.rs
 +        assert!(has_valid_sovereign_next(
 +            "A response.\nNEXT: SYNTHESIZE source_1.md :: A bounded claim"
 +        ));
-+        assert!(!has_valid_sovereign_next(
-+            "A response.\nNEXT: REVISE draft_123.md"
-+        ));
-         assert!(!has_valid_sovereign_next(
-             "NEXT: JOURNAL not final\nA response."
++        for declaration in [
++            "TUNE_RESERVOIR input_gain=1.05 FOR 15m :: Test a bounded hypothesis",
++            "CANCEL_TUNING tuning_123",
++            "VALIDATE_TUNING candidate_123 :: Test it for six hours",
++            "ADOPT_TUNING candidate_123 :: Evidence supports this candidate",
++            "REVERT_TUNING adoption_123 :: Return to baseline",
++        ] {
++            assert!(has_valid_sovereign_next(&format!(
++                "A response.\nNEXT: {declaration}"
++            )));
++        }
+         assert!(has_valid_sovereign_next(
+             "A response.\nNEXT: REVISE draft_123.md :: clarify the distinction"
          ));

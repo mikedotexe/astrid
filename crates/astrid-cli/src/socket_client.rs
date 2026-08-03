@@ -288,6 +288,7 @@ mod tests {
                 text: "mine".to_string(),
                 is_final: true,
                 session_id: current.0.to_string(),
+                response_provenance: None,
             },
             uuid::Uuid::nil(),
         );
@@ -297,6 +298,7 @@ mod tests {
                 text: "theirs".to_string(),
                 is_final: true,
                 session_id: other.to_string(),
+                response_provenance: None,
             },
             uuid::Uuid::nil(),
         );
@@ -306,6 +308,7 @@ mod tests {
                 text: "legacy".to_string(),
                 is_final: true,
                 session_id: "default".to_string(),
+                response_provenance: None,
             },
             uuid::Uuid::nil(),
         );

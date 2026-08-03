@@ -20,7 +20,6 @@ const MAX_TRACE_CORRELATIONS: usize = 4096;
 /// timestamps, and none of this state participates in authorization.
 #[derive(Debug, Default)]
 struct IpcTraceRegistry {
-    sessions: BTreeMap<String, IpcTraceContextV1>,
     llm_requests: BTreeMap<uuid::Uuid, IpcTraceContextV1>,
     tool_calls: BTreeMap<String, IpcTraceContextV1>,
 }
@@ -37,6 +36,13 @@ impl IpcTraceRegistry {
 
         Self::normalize_user_input_root(message);
         Self::reject_mismatched_session(message);
+        if message
+            .trace
+            .as_ref()
+            .is_some_and(|trace| !trace.is_supported())
+        {
+            message.trace = None;
+        }
 
         if message.trace.is_none() {
             message.trace = self.exact_parent(message).map(IpcTraceContextV1::child);
@@ -52,9 +58,6 @@ impl IpcTraceRegistry {
         };
 
         match &message.payload {
-            IpcPayload::UserInput { session_id, .. } => {
-                insert_bounded(&mut self.sessions, session_id.clone(), trace);
-            },
             IpcPayload::LlmRequest { request_id, .. } => {
                 insert_bounded(&mut self.llm_requests, *request_id, trace);
             },
@@ -105,7 +108,6 @@ impl IpcTraceRegistry {
 
     fn exact_parent(&self, message: &IpcMessage) -> Option<&IpcTraceContextV1> {
         match &message.payload {
-            IpcPayload::AgentResponse { session_id, .. } => self.sessions.get(session_id),
             IpcPayload::LlmStreamEvent { request_id, .. }
             | IpcPayload::LlmResponse { request_id, .. } => self.llm_requests.get(request_id),
             IpcPayload::ToolExecuteResult { call_id, .. } => self.tool_calls.get(call_id),
@@ -985,7 +987,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn ipc_bus_mints_root_and_repairs_async_agent_response() {
+    async fn ipc_bus_mints_root_and_preserves_explicit_agent_response_trace() {
         let bus = EventBus::new();
         let mut receiver = bus.subscribe();
         let session_id = uuid::Uuid::new_v4().to_string();
@@ -1027,10 +1029,12 @@ mod tests {
                 text: "hi".into(),
                 is_final: true,
                 session_id,
+                response_provenance: None,
             },
             uuid::Uuid::new_v4(),
         )
-        .with_principal("astrid");
+        .with_principal("astrid")
+        .with_trace(root.child());
         bus.publish(AstridEvent::Ipc {
             metadata: EventMetadata::new("react"),
             message: response,
@@ -1070,7 +1074,7 @@ mod tests {
             let AstridEvent::Ipc { message, .. } = &*event else {
                 panic!("expected IPC event");
             };
-            roots.insert(session_id, message.trace.as_ref().unwrap().trace_id);
+            roots.insert(session_id, message.trace.as_ref().unwrap().clone());
         }
 
         for session_id in sessions.into_iter().rev() {
@@ -1082,6 +1086,39 @@ mod tests {
                         text: session_id.into(),
                         is_final: true,
                         session_id: session_id.into(),
+                        response_provenance: None,
+                    },
+                    uuid::Uuid::new_v4(),
+                )
+                .with_trace(roots[session_id].child()),
+            });
+            let event = receiver.recv().await.unwrap();
+            let AstridEvent::Ipc { message, .. } = &*event else {
+                panic!("expected IPC event");
+            };
+            assert_eq!(
+                message.trace.as_ref().unwrap().trace_id,
+                roots[session_id].trace_id
+            );
+        }
+    }
+
+    #[tokio::test]
+    async fn late_same_session_response_never_inherits_the_newest_turn() {
+        let bus = EventBus::new();
+        let mut receiver = bus.subscribe();
+        let session_id = "reused-session";
+        let mut roots = Vec::new();
+
+        for text in ["old turn", "new turn"] {
+            bus.publish(AstridEvent::Ipc {
+                metadata: EventMetadata::new("socket"),
+                message: crate::ipc::IpcMessage::new(
+                    "user.v1.prompt",
+                    crate::ipc::IpcPayload::UserInput {
+                        text: text.into(),
+                        session_id: session_id.into(),
+                        context: None,
                     },
                     uuid::Uuid::new_v4(),
                 ),
@@ -1090,8 +1127,42 @@ mod tests {
             let AstridEvent::Ipc { message, .. } = &*event else {
                 panic!("expected IPC event");
             };
-            assert_eq!(message.trace.as_ref().unwrap().trace_id, roots[session_id]);
+            roots.push(message.trace.as_ref().unwrap().clone());
         }
+        assert_ne!(roots[0].trace_id, roots[1].trace_id);
+
+        let late_response = || {
+            crate::ipc::IpcMessage::new(
+                "agent.v1.response",
+                crate::ipc::IpcPayload::AgentResponse {
+                    text: "late old response".into(),
+                    is_final: true,
+                    session_id: session_id.into(),
+                    response_provenance: None,
+                },
+                uuid::Uuid::new_v4(),
+            )
+        };
+        bus.publish(AstridEvent::Ipc {
+            metadata: EventMetadata::new("react"),
+            message: late_response(),
+        });
+        let untraced = receiver.recv().await.unwrap();
+        let AstridEvent::Ipc { message, .. } = &*untraced else {
+            panic!("expected IPC event");
+        };
+        assert!(message.trace.is_none());
+
+        bus.publish(AstridEvent::Ipc {
+            metadata: EventMetadata::new("react"),
+            message: late_response().with_trace(roots[0].child()),
+        });
+        let explicitly_old = receiver.recv().await.unwrap();
+        let AstridEvent::Ipc { message, .. } = &*explicitly_old else {
+            panic!("expected IPC event");
+        };
+        assert_eq!(message.trace.as_ref().unwrap().trace_id, roots[0].trace_id);
+        assert_ne!(message.trace.as_ref().unwrap().trace_id, roots[1].trace_id);
     }
 
     #[tokio::test]
@@ -1166,10 +1237,34 @@ mod tests {
                     text: "unattributed".into(),
                     is_final: true,
                     session_id: "session".into(),
+                    response_provenance: None,
                 },
                 uuid::Uuid::new_v4(),
             )
             .with_trace(malformed),
+        });
+        let event = receiver.recv().await.unwrap();
+        let AstridEvent::Ipc { message, .. } = &*event else {
+            panic!("expected IPC event");
+        };
+        assert!(message.trace.is_none());
+    }
+
+    #[tokio::test]
+    async fn oversized_user_session_does_not_emit_an_invalid_root_trace() {
+        let bus = EventBus::new();
+        let mut receiver = bus.subscribe();
+        bus.publish(AstridEvent::Ipc {
+            metadata: EventMetadata::new("cli"),
+            message: crate::ipc::IpcMessage::new(
+                "user.v1.prompt",
+                crate::ipc::IpcPayload::UserInput {
+                    text: "hello".into(),
+                    session_id: "s".repeat(97),
+                    context: None,
+                },
+                uuid::Uuid::new_v4(),
+            ),
         });
         let event = receiver.recv().await.unwrap();
         let AstridEvent::Ipc { message, .. } = &*event else {

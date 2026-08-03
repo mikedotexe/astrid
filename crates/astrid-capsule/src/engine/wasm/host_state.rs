@@ -64,6 +64,12 @@ pub struct HostState {
     pub capsule_log: Option<Arc<std::sync::Mutex<std::fs::File>>>,
     /// Context of the current caller (set per-invocation by the dispatcher).
     pub caller_context: Option<astrid_events::ipc::IpcMessage>,
+    /// Exact IPC message most recently delivered to a run-loop capsule.
+    ///
+    /// This is separate from `caller_context`: it carries observational trace
+    /// lineage for a subsequent guest publish without granting the inbound
+    /// principal, KV scope, or any other invocation authority to the run loop.
+    pub run_loop_trace_context: Option<astrid_events::ipc::IpcMessage>,
     /// The unique session UUID for this plugin's execution state.
     pub capsule_uuid: uuid::Uuid,
     /// Workspace root directory (file operations are confined here).
@@ -345,6 +351,7 @@ mod tests {
             principal: astrid_core::PrincipalId::default(),
             capsule_uuid: uuid::Uuid::new_v4(),
             caller_context: None,
+            run_loop_trace_context: None,
             invocation_kv: None,
             capsule_log: None,
             capsule_id: CapsuleId::from_static("test"),
@@ -422,6 +429,7 @@ mod tests {
             principal: astrid_core::PrincipalId::default(),
             capsule_uuid: uuid::Uuid::new_v4(),
             caller_context: None,
+            run_loop_trace_context: None,
             invocation_kv: None,
             capsule_log: None,
             capsule_id: CapsuleId::from_static("test"),
@@ -504,6 +512,7 @@ mod tests {
             principal: astrid_core::PrincipalId::default(),
             capsule_uuid: uuid::Uuid::new_v4(),
             caller_context: None,
+            run_loop_trace_context: None,
             invocation_kv: None,
             capsule_log: None,
             capsule_id: CapsuleId::from_static("test"),
@@ -582,6 +591,7 @@ mod tests {
             principal: astrid_core::PrincipalId::default(),
             capsule_uuid: uuid::Uuid::new_v4(),
             caller_context: None,
+            run_loop_trace_context: None,
             invocation_kv: None,
             capsule_log: None,
             capsule_id: CapsuleId::from_static("test"),
@@ -676,6 +686,7 @@ mod tests {
             principal: astrid_core::PrincipalId::default(),
             capsule_uuid: uuid::Uuid::new_v4(),
             caller_context: None,
+            run_loop_trace_context: None,
             invocation_kv: None,
             capsule_log: None,
             capsule_id: CapsuleId::from_static("test"),

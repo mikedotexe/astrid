@@ -16,6 +16,7 @@ use crate::authority::{
 };
 
 const IPC_TRACE_SCHEMA_VERSION_V1: u8 = 1;
+const IPC_TRACE_LABEL_MAX_CHARS: usize = 96;
 
 /// Observational correlation carried across IPC hops.
 ///
@@ -28,6 +29,13 @@ pub struct IpcTraceContextV1 {
     pub schema_version: u8,
     /// Stable identifier for one causal activity trace.
     pub trace_id: Uuid,
+    /// Identifier for one authenticated user/model turn within the trace.
+    ///
+    /// Like the rest of this structure this value is observational by itself.
+    /// Authority consumers must additionally require a kernel-attested producer
+    /// or another trusted runtime boundary before using it as a replay key.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub turn_id: Option<Uuid>,
     /// Identifier for this individual IPC or local receipt span.
     pub span_id: Uuid,
     /// Direct parent span, absent only at a trace root.
@@ -48,6 +56,7 @@ impl IpcTraceContextV1 {
         Self {
             schema_version: IPC_TRACE_SCHEMA_VERSION_V1,
             trace_id,
+            turn_id: Some(Uuid::new_v4()),
             span_id: Uuid::new_v4(),
             parent_span_id: None,
             session_id: Some(session_id.into()),
@@ -61,6 +70,7 @@ impl IpcTraceContextV1 {
         Self {
             schema_version: IPC_TRACE_SCHEMA_VERSION_V1,
             trace_id: self.trace_id,
+            turn_id: self.turn_id,
             span_id: Uuid::new_v4(),
             parent_span_id: Some(self.span_id),
             session_id: self.session_id.clone(),
@@ -68,11 +78,76 @@ impl IpcTraceContextV1 {
         }
     }
 
-    /// Return whether this trace uses the supported schema.
+    /// Return whether this trace is a bounded, structurally valid v1 context.
+    ///
+    /// `turn_id` remains optional so trace records written before the additive
+    /// turn identifier was introduced continue to decode as observational
+    /// history. When an optional identifier is present, it must not be nil.
+    #[must_use]
+    pub fn is_supported(&self) -> bool {
+        self.schema_version == IPC_TRACE_SCHEMA_VERSION_V1
+            && !self.trace_id.is_nil()
+            && !self.span_id.is_nil()
+            && self.turn_id.is_none_or(|turn_id| !turn_id.is_nil())
+            && self.parent_span_id.is_none_or(|parent_span_id| {
+                !parent_span_id.is_nil() && parent_span_id != self.span_id
+            })
+            && self
+                .session_id
+                .as_deref()
+                .is_none_or(ipc_trace_label_is_supported)
+            && self
+                .chain_id
+                .as_deref()
+                .is_none_or(ipc_trace_label_is_supported)
+    }
+}
+
+fn ipc_trace_label_is_supported(value: &str) -> bool {
+    !value.trim().is_empty()
+        && value.chars().count() <= IPC_TRACE_LABEL_MAX_CHARS
+        && !value.chars().any(char::is_control)
+}
+
+const IPC_PRODUCER_SCHEMA_VERSION_V1: u8 = 1;
+
+/// Kernel-attested origin of an IPC message.
+///
+/// Unlike trace metadata, this field is stamped at a host boundary. Native
+/// socket input is always overwritten by the kernel and WASM guests cannot
+/// supply it through the guest ABI.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct IpcProducerV1 {
+    /// Producer-attestation wire schema version.
+    #[serde(default = "default_ipc_producer_schema_version")]
+    pub schema_version: u8,
+    /// Host-owned producer class, such as `wasm_capsule` or
+    /// `native_socket_client`.
+    pub kind: String,
+    /// Host-owned producer identifier.
+    pub id: String,
+}
+
+impl IpcProducerV1 {
+    /// Construct a producer attestation at a trusted host boundary.
+    #[must_use]
+    pub fn new(kind: impl Into<String>, id: impl Into<String>) -> Self {
+        Self {
+            schema_version: IPC_PRODUCER_SCHEMA_VERSION_V1,
+            kind: kind.into(),
+            id: id.into(),
+        }
+    }
+
+    /// Return whether this attestation uses the supported schema.
     #[must_use]
     pub const fn is_supported(&self) -> bool {
-        self.schema_version == IPC_TRACE_SCHEMA_VERSION_V1
+        self.schema_version == IPC_PRODUCER_SCHEMA_VERSION_V1
     }
+}
+
+const fn default_ipc_producer_schema_version() -> u8 {
+    IPC_PRODUCER_SCHEMA_VERSION_V1
 }
 
 const fn default_ipc_trace_schema_version() -> u8 {
@@ -106,6 +181,10 @@ pub struct IpcMessage {
     /// Optional observational trace context. It never grants authority.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub trace: Option<IpcTraceContextV1>,
+    /// Optional host-attested producer. This is overwritten at every native
+    /// ingress boundary and cannot be supplied by a WASM guest.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub producer: Option<IpcProducerV1>,
 }
 
 impl IpcMessage {
@@ -121,6 +200,7 @@ impl IpcMessage {
             seq: 0,
             principal: None,
             trace: None,
+            producer: None,
         }
     }
 
@@ -144,11 +224,36 @@ impl IpcMessage {
         self.trace = Some(trace);
         self
     }
+
+    /// Attach a host-owned producer attestation.
+    #[must_use]
+    pub fn with_producer(mut self, producer: IpcProducerV1) -> Self {
+        self.producer = Some(producer);
+        self
+    }
 }
 
 /// Default session ID for conversations.
 fn default_session_id() -> String {
     "default".into()
+}
+
+/// Declared origin of a terminal agent response.
+///
+/// This value is supplied by the producing capsule and is not authority on its
+/// own. Authority-sensitive consumers must also verify the producer and turn
+/// trace at a trusted host boundary.
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum AgentResponseProvenanceV1 {
+    /// The terminal bytes are exactly the model's authored response.
+    ModelAuthored,
+    /// A local non-writing `LISTEN` fallback follows any authored prefix.
+    ModelAuthoredWithLocalSafeFallback,
+    /// Local code repaired only the layout of one model-authored Action.
+    ModelAuthoredWithLocalFormatRepair,
+    /// Local executor/runtime code generated the terminal response.
+    ExecutorTerminalError,
 }
 
 /// Standardized cross-boundary payload schemas.
@@ -180,6 +285,9 @@ pub enum IpcPayload {
         /// Session ID for multi-session attribution.
         #[serde(default = "default_session_id")]
         session_id: String,
+        /// Declared response origin. Absent on legacy producers.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        response_provenance: Option<AgentResponseProvenanceV1>,
     },
     /// An interceptor or capsule request for capability approval.
     ApprovalRequired {
@@ -565,6 +673,7 @@ mod tests {
                 text: "hello".into(),
                 is_final: true,
                 session_id: "default".into(),
+                response_provenance: None,
             },
             Uuid::new_v4(),
         );
@@ -634,10 +743,45 @@ mod tests {
             text: "hello".into(),
             is_final: true,
             session_id: "s1".into(),
+            response_provenance: Some(AgentResponseProvenanceV1::ModelAuthored),
         };
         let json = serde_json::to_string(&payload).unwrap();
         let parsed: IpcPayload = serde_json::from_str(&json).unwrap();
         assert_eq!(parsed, payload);
+    }
+
+    #[test]
+    fn agent_response_provenance_is_additive_and_typed() {
+        let legacy: IpcPayload = serde_json::from_value(serde_json::json!({
+            "type": "agent_response",
+            "text": "legacy",
+            "is_final": true,
+            "session_id": "legacy-session"
+        }))
+        .unwrap();
+        assert!(matches!(
+            legacy,
+            IpcPayload::AgentResponse {
+                response_provenance: None,
+                ..
+            }
+        ));
+
+        let executor_error = IpcPayload::AgentResponse {
+            text: "LLM error: unavailable".into(),
+            is_final: true,
+            session_id: "session".into(),
+            response_provenance: Some(AgentResponseProvenanceV1::ExecutorTerminalError),
+        };
+        let encoded = serde_json::to_value(&executor_error).unwrap();
+        assert_eq!(
+            encoded["response_provenance"],
+            serde_json::json!("executor_terminal_error")
+        );
+        assert_eq!(
+            serde_json::from_value::<IpcPayload>(encoded).unwrap(),
+            executor_error
+        );
     }
 
     #[test]
@@ -897,6 +1041,7 @@ mod tests {
                 text: String::new(),
                 is_final: false,
                 session_id: "s".into(),
+                response_provenance: None,
             },
             IpcPayload::ApprovalRequired {
                 request_id: "req-1".into(),
@@ -1276,6 +1421,7 @@ mod tests {
         });
         let decoded: IpcMessage = serde_json::from_value(legacy).unwrap();
         assert!(decoded.trace.is_none());
+        assert!(decoded.producer.is_none());
     }
 
     #[test]
@@ -1286,10 +1432,81 @@ mod tests {
         let child = first.child();
 
         assert_eq!(child.trace_id, first.trace_id);
+        assert_eq!(child.turn_id, first.turn_id);
         assert_eq!(child.parent_span_id, Some(first.span_id));
         assert_eq!(child.session_id.as_deref(), Some("session-one"));
         assert_eq!(child.chain_id.as_deref(), Some("chain-one"));
         assert_ne!(child.span_id, first.span_id);
         assert_ne!(first.trace_id, second.trace_id);
+        assert_ne!(first.turn_id, second.turn_id);
+    }
+
+    #[test]
+    fn legacy_trace_without_turn_id_remains_supported() {
+        let trace_id = Uuid::new_v4();
+        let span_id = Uuid::new_v4();
+        let legacy = serde_json::json!({
+            "schema_version": 1,
+            "trace_id": trace_id,
+            "span_id": span_id,
+            "session_id": "legacy-session",
+            "chain_id": "legacy-chain"
+        });
+        let decoded: IpcTraceContextV1 = serde_json::from_value(legacy).unwrap();
+        assert_eq!(decoded.turn_id, None);
+        assert!(decoded.is_supported());
+    }
+
+    #[test]
+    fn trace_validation_rejects_nil_ids_cycles_and_unbounded_labels() {
+        let valid = IpcTraceContextV1::root(Uuid::new_v4(), "session", Some("chain".into()));
+        assert!(valid.is_supported());
+
+        let mut invalid = valid.clone();
+        invalid.trace_id = Uuid::nil();
+        assert!(!invalid.is_supported());
+
+        let mut invalid = valid.clone();
+        invalid.span_id = Uuid::nil();
+        assert!(!invalid.is_supported());
+
+        let mut invalid = valid.clone();
+        invalid.turn_id = Some(Uuid::nil());
+        assert!(!invalid.is_supported());
+
+        let mut invalid = valid.clone();
+        invalid.parent_span_id = Some(Uuid::nil());
+        assert!(!invalid.is_supported());
+
+        let mut invalid = valid.clone();
+        invalid.parent_span_id = Some(invalid.span_id);
+        assert!(!invalid.is_supported());
+
+        let mut legacy_compatible = valid.clone();
+        legacy_compatible.turn_id = None;
+        assert!(legacy_compatible.is_supported());
+
+        let mut invalid = valid.clone();
+        invalid.session_id = Some(" \t ".into());
+        assert!(!invalid.is_supported());
+
+        let mut invalid = valid.clone();
+        invalid.chain_id = Some("x".repeat(97));
+        assert!(!invalid.is_supported());
+
+        let mut boundary = valid;
+        boundary.session_id = Some("s".repeat(96));
+        boundary.chain_id = None;
+        assert!(boundary.is_supported());
+    }
+
+    #[test]
+    fn producer_attestation_roundtrips_additively() {
+        let message = IpcMessage::new("agent.v1.response", IpcPayload::Connect, Uuid::nil())
+            .with_producer(IpcProducerV1::new("wasm_capsule", "astrid-capsule-react"));
+        let decoded: IpcMessage =
+            serde_json::from_slice(&serde_json::to_vec(&message).unwrap()).unwrap();
+        assert_eq!(decoded.producer, message.producer);
+        assert!(decoded.producer.as_ref().unwrap().is_supported());
     }
 }
