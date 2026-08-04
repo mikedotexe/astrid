@@ -1,0 +1,14 @@
+{
+  "schema": "steward_verification_receipt_v1",
+  "verification": {
+    "surface": "control_marker_finite_relation_and_markdown_delimiter_boundaries",
+    "production_code_changed": false,
+    "test_code_changed": true,
+    "exact_source_hash_reused": true,
+    "focused_tests_pass": true,
+    "full_bridge_library_tests_pass": true,
+    "strict_clippy_pass": true,
+    "live_authority_granted": false
+  },
+  "authority": "source and test verification only; no parser grammar provider model prompt persistence service cpu_runtime peer or live-control authority"
+}

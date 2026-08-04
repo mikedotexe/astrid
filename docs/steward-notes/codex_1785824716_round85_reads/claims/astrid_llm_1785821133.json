@@ -1,0 +1,40 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The dialogue runtime scans exact known model-control markers and distinguishes bounded quoted, grouped, and following-relation references from structural occurrences.",
+      "disposition": "Verified existing against the exact report-bound source SHA-256. The same 1,038-line source was read fully in round 84, and its current hash is unchanged.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Multibyte UTF-8, Unicode whitespace, or delimiter depth might make a supported reference fall through to structural cleanup.",
+      "disposition": "Verified bounded contract and exact duplicate. Traversal advances by complete Rust char scalars, char::is_whitespace handles the declared whitespace boundary, and receipts prove exact two-, three-, four-, and deeper-stack behavior while conservatively bounding depth at four.",
+      "classification": "addressed_duplicate"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A three-level bracketed exact marker should retain grouped-reference context.",
+      "disposition": "Exact stronger duplicate coverage passes: the three-level mixed-bracket regression preserves the marker and reports depth three; bounded nested-stack, repeated-pair, four-level, and deeper-stack tests cover the same pairwise mechanism.",
+      "classification": "addressed_duplicate"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "The unlisted following word creates should not preserve an unframed marker.",
+      "disposition": "The report's exact negative case already exists and passes. The marker is removed, surrounding prose remains exact, and the receipt remains none_cleanup_candidate.",
+      "classification": "addressed_duplicate"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "The sanitizer remainder should be traced through generate_dialogue into final provider output.",
+      "disposition": "Addressed duplicate with exact source continuity. Provider-neutral normalization sanitizes and trims MLX and Ollama output before validation and return; its current fallback-contract and transport hashes match round-82 receipts, and both route-neutral normalization tests pass.",
+      "classification": "addressed_duplicate"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "The report covered only source lines 1-400 of a 1,038-line file.",
+      "disposition": "Closed by exact-hash continuity with round 84's complete 1,038-line, 38,205-byte read. No claim about the uncovered interval was inferred from the partial window.",
+      "classification": "verified_complete_source"
+    }
+  ]
+}

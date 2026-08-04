@@ -1,0 +1,85 @@
+{
+  "schema": "steward_test_results_v1",
+  "results": [
+    {
+      "command": "cargo test control_marker -- --nocapture",
+      "working_directory": "capsules/spectral-bridge",
+      "status": "passed",
+      "passed": 44,
+      "failed": 0
+    },
+    {
+      "command": "cargo test provider_output_normalization -- --nocapture",
+      "working_directory": "capsules/spectral-bridge",
+      "status": "passed",
+      "passed": 2,
+      "failed": 0
+    },
+    {
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib",
+      "status": "inherited_exact_source_verification",
+      "passed": 1800,
+      "failed": 0,
+      "evidence": "docs/steward-notes/codex_1785820219_round84_reads/test_results.json"
+    },
+    {
+      "command": "PYTHONDONTWRITEBYTECODE=1 python3 scripts/introspection_addressing_audit.py --self-test",
+      "status": "passed",
+      "passed": 41,
+      "failed": 0
+    },
+    {
+      "command": "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=.:scripts python3 -m unittest scripts.test_evidence_event_store scripts.test_steward_control scripts.test_steward_projection scripts.test_division_ceremony_followup scripts.test_division_ceremony_chronicle scripts.test_division_ceremony_projection scripts.test_claim_family_incremental_projection",
+      "status": "passed",
+      "passed": 68,
+      "failed": 0
+    },
+    {
+      "command": "PYTHONDONTWRITEBYTECODE=1 python3 scripts/anti_drop_catalog.py --self-test",
+      "status": "passed",
+      "passed": 5,
+      "failed": 0
+    },
+    {
+      "command": "PYTHONDONTWRITEBYTECODE=1 python3 scripts/anti_drop_catalog.py verify",
+      "status": "passed",
+      "guards": 47,
+      "gaps": 0,
+      "alarms": 0
+    },
+    {
+      "command": "PYTHONDONTWRITEBYTECODE=1 python3 scripts/experiential_epistemics.py self-test --json",
+      "status": "passed",
+      "passed": 2,
+      "failed": 0
+    },
+    {
+      "command": "PYTHONDONTWRITEBYTECODE=1 python3 scripts/experiential_epistemics.py lint --json",
+      "status": "passed",
+      "checked_record_count": 10273,
+      "issue_count": 0
+    },
+    {
+      "command": "git diff --check",
+      "status": "passed"
+    },
+    {
+      "command": "PYTHONDONTWRITEBYTECODE=1 python3 scripts/evidence_event_store.py --json verify",
+      "status": "passed",
+      "last_global_seq": 684251,
+      "last_event_sha256": "9e7585426f3c8435279cd7957e30d218da139e7e8eda53c384bbb5f15a7d90bf",
+      "active_stream_count": 16,
+      "corrupt_lines": 0
+    },
+    {
+      "command": "python3 scripts/division_ceremony_chronicle.py verify",
+      "status": "passed",
+      "chronicle_id": "division_chronicle_e251ba10ee0f061033f26737",
+      "durable_inputs_current": true,
+      "volatile_inputs_current": false,
+      "volatile_mismatches": ["supervisor_status_sha256"],
+      "json_sha256": "ab85ea05b2a6698922a4e69011f63f0be82476dfaa3a84ee8b58ff1e7c5af7f6",
+      "html_sha256": "058eb554edf1ac52eb22e15e31c4dfe9a159ec19d4c63ed55b1b7b3010d44ec8"
+    }
+  ]
+}

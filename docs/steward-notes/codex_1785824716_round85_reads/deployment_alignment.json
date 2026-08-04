@@ -1,0 +1,14 @@
+{
+  "schema": "steward_deployment_alignment_v1",
+  "live_consumed_surface_changed": false,
+  "bridge_production_source_changed": false,
+  "test_source_changed": false,
+  "minime_source_changed": false,
+  "restart_required_for_this_round": false,
+  "deployment_required_for_this_round": false,
+  "deployment_performed": false,
+  "prior_provider_normalization_deployment_debt_preserved": true,
+  "foreign_dirty_bridge_preserved": true,
+  "alignment": "verification_only_no_new_live_alignment_needed",
+  "authority_boundary": "no provider model prompt persistence service minime cpu_runtime peer or live-control change"
+}

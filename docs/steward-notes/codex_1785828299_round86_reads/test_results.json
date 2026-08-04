@@ -1,0 +1,100 @@
+{
+  "schema": "steward_test_results_v1",
+  "results": [
+    {
+      "command": "cargo test control_marker -- --nocapture",
+      "working_directory": "capsules/spectral-bridge",
+      "status": "passed",
+      "passed": 46,
+      "failed": 0
+    },
+    {
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib",
+      "status": "passed",
+      "passed": 1802,
+      "failed": 0
+    },
+    {
+      "command": "cargo clippy --manifest-path capsules/spectral-bridge/Cargo.toml --lib --tests -- -D warnings",
+      "status": "passed"
+    },
+    {
+      "command": "PYTHONDONTWRITEBYTECODE=1 python3 scripts/introspection_addressing_audit.py --self-test",
+      "status": "passed",
+      "passed": 41,
+      "failed": 0
+    },
+    {
+      "command": "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=.:scripts python3 -m unittest scripts.test_evidence_event_store scripts.test_steward_control scripts.test_steward_projection scripts.test_division_ceremony_followup scripts.test_division_ceremony_chronicle scripts.test_division_ceremony_projection scripts.test_claim_family_incremental_projection",
+      "status": "passed",
+      "passed": 68,
+      "failed": 0
+    },
+    {
+      "command": "PYTHONDONTWRITEBYTECODE=1 python3 scripts/anti_drop_catalog.py --self-test",
+      "status": "passed",
+      "passed": 5,
+      "failed": 0
+    },
+    {
+      "command": "PYTHONDONTWRITEBYTECODE=1 python3 scripts/anti_drop_catalog.py verify",
+      "status": "passed",
+      "guards": 47,
+      "gaps": 0,
+      "alarms": 0
+    },
+    {
+      "command": "PYTHONDONTWRITEBYTECODE=1 python3 scripts/experiential_epistemics.py self-test --json",
+      "status": "passed",
+      "passed": 2,
+      "failed": 0
+    },
+    {
+      "command": "PYTHONDONTWRITEBYTECODE=1 python3 scripts/experiential_epistemics.py lint --json",
+      "status": "passed",
+      "checked_record_count": 10279,
+      "issue_count": 0
+    },
+    {
+      "command": "git diff --check",
+      "status": "passed"
+    },
+    {
+      "command": "cargo fmt --all -- --check",
+      "working_directory": "capsules/spectral-bridge",
+      "status": "blocked_by_preexisting_foreign_format_drift",
+      "owned_diff_clean": true,
+      "foreign_path": "capsules/spectral-bridge/src/autonomous/next_action/workspace.rs",
+      "foreign_lines": [385, 669],
+      "first_safe_command_after_owner_stabilization": "cargo fmt --all -- --check"
+    },
+    {
+      "command": "PYTHONDONTWRITEBYTECODE=1 python3 scripts/evidence_event_store.py --json verify",
+      "status": "passed",
+      "last_global_seq": 684721,
+      "last_event_sha256": "a09427490aad24cbf45d4b3084fd7e3fc72e26df9a5fee4b0e5c4c0fd00f34aa",
+      "active_stream_count": 16,
+      "corrupt_lines": 0,
+      "history_rewritten": false
+    },
+    {
+      "command": "python3 scripts/division_ceremony_followup.py verify",
+      "status": "passed",
+      "cycle_sequence": 14,
+      "completed_rounds_since_followup": 5,
+      "rounds_remaining_before_followup": 1,
+      "review_due": false,
+      "last_round_event_id": "division_followup_event_a11148e11f5e07e28494e5ded0773fd7"
+    },
+    {
+      "command": "python3 scripts/division_ceremony_chronicle.py verify",
+      "status": "passed",
+      "chronicle_id": "division_chronicle_513ccc8c53cf764f2535c5bc",
+      "durable_inputs_current": true,
+      "volatile_inputs_current": false,
+      "volatile_mismatches": ["supervisor_status_sha256"],
+      "json_sha256": "7d91bdfe327e78956980594b9b320b590a988f6befa780ecae8d719dc8776ebc",
+      "html_sha256": "f3b107547b5c03be4783905f0ea32ce1c1505f62b9279bed13c679db68b894ce"
+    }
+  ]
+}

@@ -2466,6 +2466,21 @@ mod tests {
     }
 
     #[test]
+    fn control_marker_cleanup_does_not_expand_relation_allowlist_to_underscored_appears_as() {
+        let text = "Here, <end_of_turn> appears_as the boundary I am naming.";
+        let (stripped, report) = sanitize_model_control_markers_with_report(text);
+
+        assert_eq!(stripped, "Here,  appears_as the boundary I am naming.");
+        let report = report.expect("non-allowlisted underscored relation report");
+        assert_eq!(report.removed_total, 1);
+        assert_eq!(report.preserved_explicit_reference_total, 0);
+        assert_eq!(
+            report.context_receipts[0].reference_syntax,
+            "none_cleanup_candidate"
+        );
+    }
+
+    #[test]
     fn control_marker_cleanup_preserves_relation_across_newline() {
         let text = "<end_of_turn>\nrepresents the boundary I am naming.";
         let (stripped, report) = sanitize_model_control_markers_with_report(text);
@@ -2497,6 +2512,21 @@ mod tests {
         assert_eq!(report.preserved_explicit_reference_total, 1);
         assert_eq!(report.preserved_tokens[0].quoted_reference_occurrences, 1);
         assert_eq!(report.preserved_tokens[0].grouped_reference_occurrences, 0);
+    }
+
+    #[test]
+    fn control_marker_cleanup_does_not_treat_markdown_emphasis_as_exact_delimiters() {
+        let text = "The identifier **<end_of_turn>** remains visible.";
+        let (stripped, report) = sanitize_model_control_markers_with_report(text);
+
+        assert_eq!(stripped, "The identifier **** remains visible.");
+        let report = report.expect("Markdown-emphasis cleanup report");
+        assert_eq!(report.removed_total, 1);
+        assert_eq!(report.preserved_explicit_reference_total, 0);
+        assert_eq!(
+            report.context_receipts[0].reference_syntax,
+            "none_cleanup_candidate"
+        );
     }
 
     #[test]

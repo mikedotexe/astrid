@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The dialogue runtime scans exact known model-control markers and preserves only markers with declared delimiter or following-relation evidence.",
+      "disposition": "Verified against the exact report-bound source SHA-256. The same 1,038-line source was read fully in round 84, and its current hash is unchanged.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The delimiter-depth bound could mishandle a marker wrapped by a fifth delimiter pair.",
+      "disposition": "Verified existing bounded behavior. The depth limit caps the evidence receipt at four proven outward pairs rather than measuring character distance; the exact five-pair regression preserves the marker and reports depth four.",
+      "classification": "addressed_duplicate"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Unlisted following words such as appears_as or triggers should leave reference_syntax absent and remove only the unframed marker.",
+      "disposition": "Implemented the missing exact appears_as regression. It remains one underscore-bearing word, is outside the finite allowlist, removes only the marker, and records none_cleanup_candidate. The existing exact triggers regression proves the same boundary.",
+      "classification": "addressed_change"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Common Markdown or LLM formatting should not make an unsupported delimiter leak or preserve a structural marker.",
+      "disposition": "Backticks are already a declared exact quote pair and preserve the marker. A new Markdown-emphasis regression proves that double asterisks are not silently promoted to quote syntax: the marker is removed and the surrounding asterisks and prose remain exact.",
+      "classification": "addressed_change"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "The canonical report covered only source lines 1-400 of a 1,038-line file.",
+      "disposition": "Closed by exact-hash continuity with round 84's complete 1,038-line, 38,205-byte read. No claim about the uncovered interval was inferred from the partial report window.",
+      "classification": "verified_complete_source"
+    }
+  ]
+}
