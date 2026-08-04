@@ -78,6 +78,19 @@ fn score_read_more_candidate(hint: &str, candidate: &str, rank: usize) -> f32 {
     score + (overlap as f32 * 18.0)
 }
 
+fn previous_recorded_choice_was_read_more(conv: &ConversationState) -> bool {
+    conv.recent_next_choices
+        .iter()
+        .rev()
+        .nth(1)
+        .is_some_and(|choice| {
+            choice
+                .split_whitespace()
+                .next()
+                .is_some_and(|action| action.eq_ignore_ascii_case("READ_MORE"))
+        })
+}
+
 fn extract_url_arg(original: &str, action: &str, fallback: &str) -> Option<String> {
     let raw_s = strip_action(original, action);
     let raw_owned = if raw_s.is_empty() {
@@ -367,6 +380,16 @@ pub(super) fn handle_action(
         "READ_MORE" => {
             let hint = strip_action(original, "READ_MORE");
             if conv.last_read_path.is_none() {
+                if previous_recorded_choice_was_read_more(conv) {
+                    conv.pending_file_listing = Some(
+                        "[The previous continuation reached the end of its source. Open something new with BROWSE, MIKE_READ, AR_READ, LIST_FILES, or CODEX.]"
+                            .to_string(),
+                    );
+                    info!(
+                        "READ_MORE: previous continuation completed; recovery fallback skipped"
+                    );
+                    return true;
+                }
                 match recover_read_more_target(conv, &hint) {
                     Some((path, offset, label)) if offset != usize::MAX => {
                         conv.last_read_path = Some(path);
@@ -647,7 +670,7 @@ mod tests {
     use super::{
         ConversationState, advance_by_chars, clamp_to_char_boundary, extract_url_arg,
         looks_like_raw_pdf_dump, parse_saved_page_header, queue_browse_url,
-        recover_read_more_target,
+        previous_recorded_choice_was_read_more, recover_read_more_target,
     };
     use crate::paths::bridge_paths;
     use std::fs;
@@ -694,6 +717,24 @@ mod tests {
             Some("https://example.test/paper?x=1")
         );
         assert!(!conv.wants_search);
+    }
+
+    #[test]
+    fn completed_read_more_does_not_recover_a_new_overflow_source() {
+        let mut conv = ConversationState::new(Vec::new(), None);
+        conv.recent_next_choices.push_back("STILL".to_string());
+        conv.recent_next_choices.push_back("READ_MORE".to_string());
+        assert!(!previous_recorded_choice_was_read_more(&conv));
+
+        conv.recent_next_choices
+            .push_back("read_more context-overflow".to_string());
+        assert!(previous_recorded_choice_was_read_more(&conv));
+
+        conv.recent_next_choices.push_back("SPEAK".to_string());
+        assert!(previous_recorded_choice_was_read_more(&conv));
+
+        conv.recent_next_choices.push_back("READ_MORE".to_string());
+        assert!(!previous_recorded_choice_was_read_more(&conv));
     }
 
     #[test]
