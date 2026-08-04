@@ -1,6 +1,19 @@
 const SEMANTIC_HEARTBEAT_INTERVAL: Duration = Duration::from_secs(7);
 const SEMANTIC_HEARTBEAT_INTENSITY: f32 = 0.30;
 
+fn should_arm_prompt_overflow_read_more(
+    active_read_path: Option<&str>,
+    recent_next_choice: Option<&str>,
+) -> bool {
+    active_read_path.is_none()
+        && !recent_next_choice.is_some_and(|choice| {
+            choice
+                .split_whitespace()
+                .next()
+                .is_some_and(|action| action.eq_ignore_ascii_case("READ_MORE"))
+        })
+}
+
 pub(crate) const fn semantic_heartbeat_constants_v1() -> (u64, f32) {
     (
         SEMANTIC_HEARTBEAT_INTERVAL.as_secs(),
@@ -1945,7 +1958,12 @@ pub fn spawn_autonomous_loop(
                                     )
                                 ).await {
                                     Ok((result, prompt_overflow)) => {
-                                        if let Some(of) = prompt_overflow {
+                                        if let Some(of) = prompt_overflow
+                                            && should_arm_prompt_overflow_read_more(
+                                                conv.last_read_path.as_deref(),
+                                                conv.recent_next_choices.back().map(String::as_str),
+                                            )
+                                        {
                                             conv.last_read_path = Some(of.path.to_string_lossy().to_string());
                                             conv.last_read_offset = of.offset;
                                             conv.last_read_meaning_summary = Some(format!("Context overflow: {}", of.summary));
