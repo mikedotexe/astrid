@@ -15,8 +15,9 @@ mod tests {
         GEMMA4_CANARY_REFLECTIVE_TIMEOUT_SECS, GEMMA4_CANARY_REFLECTIVE_TOKEN_CAP,
         GEMMA4_CANARY_SYSTEM_PROMPT, GEMMA4_CANARY_WITNESS_CONTEXT_PROMPT_CAP,
         GEMMA4_CANARY_WITNESS_CONTEXT_TIMEOUT_SECS, GEMMA4_CANARY_WITNESS_PROMPT_CAP,
-        GEMMA4_CANARY_WITNESS_TIMEOUT_SECS, Message, MlxProfile, MlxResponse, ModelQosClassV1,
-        ModelQosTimingV1, PromptBudgetReport, SYSTEM_PROMPT, append_llm_diagnostic_jsonl_at,
+        GEMMA4_CANARY_WITNESS_TIMEOUT_SECS, ChatResponse, Message, MlxProfile, MlxResponse,
+        ModelQosClassV1, ModelQosTimingV1, PromptBudgetReport, SYSTEM_PROMPT,
+        append_llm_diagnostic_jsonl_at,
         apply_mlx_request_policy, build_ollama_chat_request, clamp_dialogue_tokens_for_profile,
         compact_ollama_dialogue_fallback_messages, contains_deprecated_runtime_language,
         control_marker_cleanup_diagnostic, count_next_lines,
@@ -32,7 +33,8 @@ mod tests {
         is_valid_dialogue_output_for_profile, is_valid_ollama_dialogue_fallback_output_for_budget,
         is_valid_ollama_dialogue_fallback_output_for_profile, journal_continuity_contract_v1,
         llm_diagnostic_io_retryability, local_degrade_path_for_label, model_qos_class_for_label,
-        model_qos_v1, reinforce_ollama_fallback_contract, repair_ollama_dialogue_fallback_next,
+        model_qos_v1, normalize_provider_output_v1, reinforce_ollama_fallback_contract,
+        repair_ollama_dialogue_fallback_next,
         sanitize_deprecated_runtime_language, sanitize_gemma4_canary_output_for_label,
         sanitize_minime_context_for_dialogue, sanitize_model_control_markers,
         sanitize_model_control_markers_with_report, sha256_parts,
@@ -1750,11 +1752,13 @@ mod tests {
             &report,
             "hello ",
             "dialogue_live",
-            MlxProfile::Gemma4Canary,
+            "mlx",
+            MlxProfile::Gemma4Canary.as_str(),
         );
-        assert_eq!(diagnostic.schema, "control_marker_cleanup_v10");
-        assert_eq!(diagnostic.schema_version, 10);
+        assert_eq!(diagnostic.schema, "control_marker_cleanup_v11");
+        assert_eq!(diagnostic.schema_version, 11);
         assert_eq!(diagnostic.label, "dialogue_live");
+        assert_eq!(diagnostic.provider_route, "mlx");
         assert_eq!(diagnostic.profile, GEMMA4_12B_PROFILE);
         assert_eq!(
             diagnostic.marker_contract,
@@ -1798,6 +1802,124 @@ mod tests {
     }
 
     #[test]
+    fn provider_output_normalization_is_identical_for_mlx_and_ollama_fixtures() {
+        let cases = [
+            (" \nVisible <end_of_turn> answer.\t", "Visible  answer."),
+            (
+                " I compare (([<end_of_turn>])) with boundaries. ",
+                "I compare (([<end_of_turn>])) with boundaries.",
+            ),
+            (
+                " The token <channel|> echoes without yielding. ",
+                "The token <channel|> echoes without yielding.",
+            ),
+            ("  Wärme carries punctuation—still here.  ", "Wärme carries punctuation—still here."),
+        ];
+
+        for (raw, expected) in cases {
+            let mlx: MlxResponse = serde_json::from_value(serde_json::json!({
+                "choices": [{"message": {"role": "assistant", "content": raw}}]
+            }))
+            .expect("MLX fixture");
+            let ollama: ChatResponse = serde_json::from_value(serde_json::json!({
+                "message": {"role": "assistant", "content": raw}
+            }))
+            .expect("Ollama fixture");
+            let mlx_raw = &mlx.choices[0]
+                .message
+                .as_ref()
+                .expect("MLX message")
+                .content;
+            let ollama_raw = &ollama.message.as_ref().expect("Ollama message").content;
+            let mlx_normalized = normalize_provider_output_v1(mlx_raw);
+            let ollama_normalized = normalize_provider_output_v1(ollama_raw);
+
+            assert_eq!(mlx_normalized.text, expected);
+            assert_eq!(ollama_normalized.text, expected);
+            assert_eq!(mlx_normalized.text, ollama_normalized.text);
+        }
+    }
+
+    #[test]
+    fn provider_output_normalization_rejects_marker_only_output_on_both_routes() {
+        for raw in [" <end_of_turn> ", "\n<eos>\t<channel|> "] {
+            let mlx = normalize_provider_output_v1(raw);
+            let ollama = normalize_provider_output_v1(raw);
+            assert!(mlx.text.is_empty());
+            assert!(ollama.text.is_empty());
+            assert!(mlx.cleanup_report.is_some());
+            assert!(ollama.cleanup_report.is_some());
+        }
+    }
+
+    #[test]
+    fn provider_cleanup_diagnostic_names_route_without_raw_output() {
+        let raw = "private remainder must stay out of diagnostics <end_of_turn>";
+        let normalization = normalize_provider_output_v1(raw);
+        let report = normalization.cleanup_report.as_ref().expect("cleanup report");
+        let diagnostic = control_marker_cleanup_diagnostic(
+            report,
+            &normalization.text,
+            "dialogue_live",
+            "ollama",
+            "gemma4:latest",
+        );
+        let serialized = serde_json::to_string(&diagnostic).expect("diagnostic JSON");
+
+        assert_eq!(diagnostic.schema, "control_marker_cleanup_v11");
+        assert_eq!(diagnostic.provider_route, "ollama");
+        assert_eq!(diagnostic.profile, "gemma4:latest");
+        assert!(!serialized.contains("private remainder"));
+    }
+
+    #[test]
+    fn normalized_bytes_feed_repair_and_lived_state_response_hash() {
+        let raw = "  answer from fallback <eos>  ";
+        let normalization = normalize_provider_output_v1(raw);
+        let repaired = repair_ollama_dialogue_fallback_next(
+            &normalization.text,
+            MlxProfile::Gemma4Canary,
+        );
+        assert!(!repaired.contains("<eos>"));
+
+        let normalized_route = crate::lived_state_witness::model_route_v1(
+            Some("job_normalized".to_string()),
+            None,
+            None,
+            "ollama_fallback",
+            "gemma4:latest",
+            10,
+            20,
+            None,
+            None,
+            None,
+            &normalization.text,
+        );
+        let raw_route = crate::lived_state_witness::model_route_v1(
+            Some("job_raw".to_string()),
+            None,
+            None,
+            "ollama_fallback",
+            "gemma4:latest",
+            10,
+            20,
+            None,
+            None,
+            None,
+            raw,
+        );
+        let normalized_json = serde_json::to_value(normalized_route).expect("normalized route");
+        let raw_json = serde_json::to_value(raw_route).expect("raw route");
+
+        assert_ne!(
+            normalized_json["response_sha256"],
+            raw_json["response_sha256"]
+        );
+        assert_eq!(normalized_json["provider_route"], "ollama_fallback");
+        assert_eq!(normalization.text, "answer from fallback");
+    }
+
+    #[test]
     fn control_marker_cleanup_preserves_quoted_exact_token_reference() {
         let text = "I use \"<end_of_turn>\" here as a phrase with semantic intent.";
         let (stripped, report) = sanitize_model_control_markers_with_report(text);
@@ -1825,7 +1947,8 @@ mod tests {
             &report,
             &stripped,
             "dialogue_live",
-            MlxProfile::Gemma4Canary,
+            "mlx",
+            MlxProfile::Gemma4Canary.as_str(),
         );
         let integrity = diagnostic.control_marker_integrity_check_v2;
         assert_eq!(integrity.policy, "control_marker_integrity_check_v2");
@@ -2116,7 +2239,8 @@ mod tests {
             &report,
             &stripped,
             "dialogue_live",
-            MlxProfile::Gemma4Canary,
+            "mlx",
+            MlxProfile::Gemma4Canary.as_str(),
         );
         let integrity = diagnostic.control_marker_integrity_check_v2;
         assert_eq!(integrity.state, "review_output_erased");
@@ -2150,7 +2274,8 @@ mod tests {
             &report,
             &stripped,
             "dialogue_live",
-            MlxProfile::Gemma4Canary,
+            "mlx",
+            MlxProfile::Gemma4Canary.as_str(),
         );
         let integrity = diagnostic.control_marker_integrity_check_v2;
         assert_eq!(integrity.state, "explicit_token_reference_preserved");
@@ -2384,7 +2509,8 @@ mod tests {
             &report,
             &stripped,
             "dialogue_live",
-            MlxProfile::Gemma4Canary,
+            "mlx",
+            MlxProfile::Gemma4Canary.as_str(),
         );
         let surface = diagnostic.sanitized_output_surface_v3;
 
@@ -2417,7 +2543,8 @@ mod tests {
             &report,
             &stripped,
             "dialogue_live",
-            MlxProfile::Gemma4Canary,
+            "mlx",
+            MlxProfile::Gemma4Canary.as_str(),
         );
         let surface = diagnostic.sanitized_output_surface_v3;
 
