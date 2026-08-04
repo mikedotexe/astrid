@@ -1,0 +1,48 @@
+{
+  "schema": "introspection_cadence_verification_v1",
+  "run_id": "run_1785857414699848000_97cfb6d854",
+  "pre_projection_generation_id": "projection_1785857415674247000_e05b48a276",
+  "source_first": {
+    "fully_processed_report_count": 1,
+    "focused_marker_tests_passed": 37,
+    "report_bound_source_lines_read": 1038
+  },
+  "implementation": {
+    "focused_cadence_tests_passed": 21,
+    "cadence_audit_tests_passed": 6,
+    "bridge_library_tests_passed": 1824,
+    "strict_clippy_passed": true,
+    "format_check_passed": true
+  },
+  "stewardship": {
+    "addressing_tests_passed": 41,
+    "evidence_event_store_tests_passed": 13,
+    "steward_control_tests_passed": 27,
+    "division_followup_tests_passed": 3,
+    "division_chronicle_tests_passed": 10,
+    "projector_tests_passed": 14,
+    "projection_cursor_tests_passed": 4,
+    "epistemic_self_tests_passed": 2,
+    "epistemic_lint_checked_records": 10301,
+    "epistemic_lint_issue_count": 0
+  },
+  "deployment": {
+    "wrapper": "scripts/build_bridge.sh",
+    "binary_sha256": "d99118e80d926dd95797791bce058ce222d3b7dd7ff4bd84a0a7c00a6b97341b",
+    "old_pid": 85731,
+    "new_pid": 92807,
+    "environment_receipt_id": "env_receipt_1785869362512_192000",
+    "signed_lineage_handoff_applied": true,
+    "telemetry_fresh": true,
+    "sensory_connected": true,
+    "post_start_errors_found": false,
+    "minime_engine_pid": 98190,
+    "minime_restarted": false
+  },
+  "authority": {
+    "cadence_enabled": false,
+    "cadence_activation_authority_granted": false,
+    "pilot_started": false,
+    "live_control_authority_granted": false
+  }
+}

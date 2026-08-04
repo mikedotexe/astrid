@@ -85,6 +85,8 @@ struct SavedState {
     wants_introspect: bool,
     #[serde(default)]
     introspect_target: Option<(String, usize)>,
+    #[serde(default)]
+    introspection_cadence: next_action::introspection_cadence::IntrospectionCadenceV1,
     /// Condition change receipts — persist across restarts so Astrid sees
     /// recent changes even after bridge restart.
     #[serde(default)]
@@ -256,6 +258,7 @@ fn save_state(conv: &mut ConversationState) {
         last_read_meaning_summary: conv.last_read_meaning_summary.clone(),
         wants_introspect: conv.wants_introspect,
         introspect_target: conv.introspect_target.clone(),
+        introspection_cadence: conv.introspection_cadence.clone(),
         condition_receipts: conv.condition_receipts.clone(),
         attention: conv.attention.clone(),
         last_exchange_codec_signature: conv.last_exchange_codec_signature.clone(),
@@ -340,6 +343,12 @@ fn restore_state(conv: &mut ConversationState) {
     conv.last_read_meaning_summary = state.last_read_meaning_summary;
     conv.wants_introspect = state.wants_introspect;
     conv.introspect_target = state.introspect_target;
+    conv.introspection_cadence = state.introspection_cadence;
+    conv.introspection_cadence.repair_after_restore(
+        conv.exchange_count,
+        next_action::introspection_cadence::unix_now_ms_for_restore(),
+    );
+    conv.introspection_cadence_attempt = None;
     conv.condition_receipts = state.condition_receipts;
     conv.attention = state.attention;
     conv.last_exchange_codec_signature = state.last_exchange_codec_signature;
@@ -372,4 +381,68 @@ fn restore_state(conv: &mut ConversationState) {
         witness_depth = conv.witness_depth.as_str(),
         "restored conversation state from previous session"
     );
+}
+
+#[cfg(test)]
+mod cadence_saved_state_tests {
+    use super::*;
+
+    fn minimal_saved_state() -> serde_json::Value {
+        serde_json::json!({
+            "exchange_count": 42,
+            "creative_temperature": 0.8,
+            "response_length": 512,
+            "self_reflect_paused": true,
+            "ears_closed": false,
+            "senses_snoozed": false,
+            "recent_next_choices": [],
+            "history": []
+        })
+    }
+
+    #[test]
+    fn saved_state_legacy_default_keeps_introspection_cadence_off() {
+        let restored: SavedState =
+            serde_json::from_value(minimal_saved_state()).expect("legacy saved state");
+        assert!(!restored.introspection_cadence.enabled);
+        assert_eq!(restored.introspection_cadence.every_exchanges, 0);
+        assert_eq!(restored.introspection_cadence.pending_since_exchange, None);
+    }
+
+    #[test]
+    fn saved_state_restores_pending_introspection_cadence_fields() {
+        let mut value = minimal_saved_state();
+        value["introspection_cadence"] = serde_json::json!({
+            "schema_version": 1,
+            "enabled": true,
+            "every_exchanges": 12,
+            "target": {"label": "astrid:llm", "offset": 400},
+            "anchor_completed_exchange": 30,
+            "pending_since_exchange": 42,
+            "last_attempt_exchange": 41,
+            "last_admitted_exchange": 18,
+            "last_outcome": {
+                "event": "failed",
+                "exchange": 41,
+                "reason": "provider_timeout",
+                "attempt_id": "attempt-1",
+                "artifact_path": null
+            }
+        });
+        let restored: SavedState = serde_json::from_value(value).expect("cadence saved state");
+        assert!(restored.introspection_cadence.enabled);
+        assert_eq!(restored.introspection_cadence.every_exchanges, 12);
+        assert_eq!(
+            restored
+                .introspection_cadence
+                .target
+                .as_ref()
+                .map(|target| (target.label.as_str(), target.offset)),
+            Some(("astrid:llm", 400))
+        );
+        assert_eq!(
+            restored.introspection_cadence.pending_since_exchange,
+            Some(42)
+        );
+    }
 }

@@ -1,0 +1,53 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_llm_1785854143",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1785857414_introspection_cadence/summaries/astrid_llm_1785854143.md",
+      "note": "Complete canonical read, complete report-bound source read, focused test verification, output trace, and authority boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785854143",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "Exact longest-marker scan, finite reference syntax, and byte-preserving remainder construction."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785854143",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Unicode first-word scanning and conservative finite relation regressions."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785854143",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Explicit behaves/functions/relation preservation and surrounding-content regressions."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785854143",
+      "claim_id": "c004",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Exact nested-delimiter accounting through the four-level bound."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785854143",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/transport.rs",
+      "note": "Both MLX and Ollama normalize before downstream validation and return."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785854143",
+      "claim_id": "c005",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Provider-parity, marker-only rejection, repair, and lived-state hash regressions."
+    }
+  ]
+}

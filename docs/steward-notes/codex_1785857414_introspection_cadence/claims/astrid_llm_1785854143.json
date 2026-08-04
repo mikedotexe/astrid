@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The dialogue runtime scans exact known control-marker byte sequences and distinguishes preserved exact references from cleanup candidates.",
+      "disposition": "Verified from all 1,038 report-bound source lines at the exact source hash. The single-pass longest-match scanner preserves only bounded delimiter syntax or a finite following relation and copies every other character by UTF-8 width.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Punctuation, a mathematical operator, or a complex multi-word phrase after a marker may make first_word_after empty or select an incorrect relation token.",
+      "disposition": "Source-challenged and verified existing. The split skips all non-alphanumeric characters except underscore and selects the first nonempty Unicode word, so punctuation or an operator does not cause an empty result when a later word exists. Multi-word relations deliberately use a finite allowlisted first word; no exact failing relation was supplied to justify widening it.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A known marker followed by a recognized relation such as behaves should remain in the sanitized remainder with non-marker content intact.",
+      "disposition": "Verified by existing exact regressions. The focused marker suite covers behaves as, behaves like, functions as, newline-separated relations, byte-exact surrounding content, and explicit preserved-token accounting; all 37 tests pass.",
+      "classification": "verified_exact_duplicate"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Markers wrapped in nested delimiters should be preserved with depth bounded by MAX_EXACT_REFERENCE_DELIMITER_DEPTH.",
+      "disposition": "Verified by existing exact two-, three-, four-, and deeper-level delimiter tests, including Unicode whitespace and repeated pairs. Depth is reported exactly through the bound of four and deeper stacks preserve the token while bounding the receipt; all focused tests pass.",
+      "classification": "verified_exact_duplicate"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "The scanner remainder and matches should be traced through generate_dialogue to determine the final output contract.",
+      "disposition": "Verified from the complete dialogue source and current transport source. MLX and Ollama both normalize raw provider output before downstream validation and return; the normalized bytes also feed fallback repair and lived-state response hashing. Marker matches are diagnostic evidence and are not appended back to output.",
+      "classification": "verified_existing"
+    }
+  ]
+}

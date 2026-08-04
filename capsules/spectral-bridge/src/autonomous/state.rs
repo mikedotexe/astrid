@@ -1060,6 +1060,12 @@ pub(in crate::autonomous) struct ConversationState {
     pub wants_introspect: bool,
     /// Optional: specific source label and line offset for targeted introspection.
     pub introspect_target: Option<(String, usize)>,
+    /// Astrid-authored standing introspection preference. Default OFF.
+    pub introspection_cadence: super::next_action::introspection_cadence::IntrospectionCadenceV1,
+    /// Ephemeral claim for a cadence-selected attempt. Persisted due state remains
+    /// pending until canonical admission, so a crash cannot silently advance it.
+    pub introspection_cadence_attempt:
+        Option<super::next_action::introspection_cadence::IntrospectionCadenceAttemptV1>,
     /// Astrid chose NEXT: REVISE [keyword] — load a previous creation and iterate.
     pub revise_keyword: Option<String>,
     /// Astrid chose NEXT: COMPOSE or VOICE — generate WAV from spectral state.
@@ -1285,6 +1291,9 @@ impl ConversationState {
             last_read_meaning_summary: None,
             wants_introspect: false,
             introspect_target: None,
+            introspection_cadence:
+                super::next_action::introspection_cadence::IntrospectionCadenceV1::default(),
+            introspection_cadence_attempt: None,
             revise_keyword: None,
             wants_compose_audio: false,
             wants_analyze_audio: false,
@@ -3073,7 +3082,9 @@ pub(super) fn choose_mode(
     fill_pct: f32,
     fingerprint: Option<&[f32]>,
 ) -> Mode {
+    super::next_action::introspection_cadence::observe_due(conv);
     if safety == SafetyLevel::Red {
+        super::next_action::introspection_cadence::defer_pending(conv, "safety_red");
         conv.emphasis = Some(
             "SAFETY: Fill is at emergency level. Your output is reduced to protect the shared substrate. This is the only state where your choice is overridden. You can write NEXT: to choose what happens when fill recovers.".to_string(),
         );
@@ -3081,21 +3092,29 @@ pub(super) fn choose_mode(
     }
 
     if conv.pending_remote_self_study.is_some() {
+        super::next_action::introspection_cadence::defer_pending(conv, "pending_peer_self_study");
         return Mode::Dialogue;
     }
     if conv.wants_introspect {
+        super::next_action::introspection_cadence::defer_pending(
+            conv,
+            "newer_one_shot_introspection",
+        );
         conv.wants_introspect = false;
         return Mode::Introspect;
     }
     if conv.wants_evolve {
+        super::next_action::introspection_cadence::defer_pending(conv, "newer_one_shot_evolve");
         conv.wants_evolve = false;
         return Mode::Evolve;
     }
     if let Some(mode) = conv.next_mode_override.take() {
+        super::next_action::introspection_cadence::defer_pending(conv, "newer_one_shot_mode");
         return mode;
     }
 
     if safety != SafetyLevel::Green {
+        super::next_action::introspection_cadence::defer_pending(conv, "safety_non_green");
         conv.emphasis = Some(format!(
             "Note: Fill is elevated ({safety:?}). You chose no specific action, so defaulting to witness mode. You can always override with NEXT:."
         ));
@@ -3105,6 +3124,7 @@ pub(super) fn choose_mode(
     let fill_delta = (fill_pct - conv.prev_fill).abs();
 
     if fill_delta > 5.0 {
+        super::next_action::introspection_cadence::defer_pending(conv, "existing_fill_delta_mode");
         return Mode::MomentCapture;
     }
 
@@ -3114,12 +3134,24 @@ pub(super) fn choose_mode(
         let gap_ratio = fp.get(25).copied().unwrap_or(1.0);
 
         if spectral_entropy < 0.2 && gap_ratio > 5.0 {
+            super::next_action::introspection_cadence::defer_pending(
+                conv,
+                "existing_spectral_experiment_mode",
+            );
             return Mode::Experiment;
         }
 
         if rotation_rate > 0.5 {
+            super::next_action::introspection_cadence::defer_pending(
+                conv,
+                "existing_rotation_witness_mode",
+            );
             return Mode::Witness;
         }
+    }
+
+    if super::next_action::introspection_cadence::try_select_due(conv) {
+        return Mode::Introspect;
     }
 
     let seed = std::time::SystemTime::now()

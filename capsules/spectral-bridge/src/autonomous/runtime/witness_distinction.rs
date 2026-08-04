@@ -480,4 +480,7 @@ use sha2::{Digest as _, Sha256};
 use tokio::sync::{RwLock, mpsc};
 use tracing::{debug, info, warn};
 
-use self::next_action::{NextActionContext, attractor_suggestion_prompt_note, handle_next_action};
+use self::next_action::{
+    NextActionContext, attractor_suggestion_prompt_note, handle_next_action,
+    handle_operator_next_action,
+};

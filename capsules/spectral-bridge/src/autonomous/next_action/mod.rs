@@ -9,6 +9,7 @@ mod codex;
 pub(crate) mod collaboration;
 mod division;
 mod identify_pattern;
+pub(crate) mod introspection_cadence;
 mod lived_term;
 mod mike;
 mod modes;
@@ -1718,6 +1719,7 @@ fn route_for_preflight_base(base_action: &str) -> String {
         | "RELEASE_ATTRACTOR" => "attractor",
         "SHADOW_PREFLIGHT" | "SHADOW_INFLUENCE" | "RELEASE_SHADOW" | "LEND_DENSITY" => "shadow",
         "INTROSPECT" | "SELF_STUDY" => "modes",
+        "INTROSPECTION_CADENCE" => "introspection_cadence",
         "OWNER_POLICY_CREATE"
         | "OWNER_POLICY_STATUS"
         | "OWNER_POLICY_WITHDRAW"
@@ -1846,6 +1848,10 @@ fn expected_artifacts_for_preflight(base_action: &str, stage: &str, route: &str)
     }
     if stage == "live_control" {
         artifacts.push("gate_or_control_record".to_string());
+    }
+    if base_action == "INTROSPECTION_CADENCE" {
+        artifacts.push("persisted_cadence_state".to_string());
+        artifacts.push("condition_metric_lifecycle_event".to_string());
     }
     artifacts
 }
@@ -1994,7 +2000,34 @@ pub(crate) fn action_preflight_report(action_text: &str) -> ActionPreflightRepor
 pub(super) fn handle_next_action(
     conv: &mut ConversationState,
     next_action: &str,
+    ctx: NextActionContext<'_>,
+) -> NextActionOutcome {
+    handle_next_action_with_author(
+        conv,
+        next_action,
+        ctx,
+        introspection_cadence::NextActionAuthorV1::Astrid,
+    )
+}
+
+pub(super) fn handle_operator_next_action(
+    conv: &mut ConversationState,
+    next_action: &str,
+    ctx: NextActionContext<'_>,
+) -> NextActionOutcome {
+    handle_next_action_with_author(
+        conv,
+        next_action,
+        ctx,
+        introspection_cadence::NextActionAuthorV1::Operator,
+    )
+}
+
+fn handle_next_action_with_author(
+    conv: &mut ConversationState,
+    next_action: &str,
     mut ctx: NextActionContext<'_>,
+    author: introspection_cadence::NextActionAuthorV1,
 ) -> NextActionOutcome {
     // v4.0 Phase 1 — Multi-NEXT detection. Astrid already emits chained
     // actions like "BROWSE arxiv AND READ_MORE" naturally; previously the
@@ -2004,11 +2037,14 @@ pub(super) fn handle_next_action(
     let unwrapped = unwrap_outer_action_wrappers(next_action);
     let segments = split_multi_action(&unwrapped);
     if segments.len() > 1 {
-        return dispatch_multi_action(conv, segments, ctx);
+        return dispatch_multi_action(conv, segments, ctx, author);
     }
     self_regulation::reconcile_active_lease(conv);
     let _ = super::self_control_v2::reconcile_if_present(conv);
     let (base_action, original) = canonicalize_next_action_components(next_action);
+    if author == introspection_cadence::NextActionAuthorV1::Astrid {
+        introspection_cadence::note_astrid_action(conv);
+    }
     let stage = action_continuity_stage_for_base(base_action.as_str());
     let visibility = action_continuity_visibility_for_base(base_action.as_str());
 
@@ -2038,6 +2074,12 @@ pub(super) fn handle_next_action(
             "placeholder",
             format!("Placeholder NEXT action `{original}` was not executed."),
         );
+    }
+
+    if let Some(outcome) =
+        introspection_cadence::handle_action(conv, &base_action, &original, author)
+    {
+        return outcome;
     }
 
     match action_continuity::research_budget_guard_for_next(&original, ctx.fill_pct, ctx.telemetry)
@@ -2152,7 +2194,7 @@ pub(super) fn handle_next_action(
             return NextActionOutcome::blocked("experiment_continuity", message)
                 .with_stage_visibility("blocked", visibility);
         }
-        let inner_outcome = handle_next_action(
+        let inner_outcome = handle_next_action_with_author(
             conv,
             &inner_action,
             NextActionContext {
@@ -2164,6 +2206,7 @@ pub(super) fn handle_next_action(
                 response_text: ctx.response_text,
                 workspace: ctx.workspace,
             },
+            author,
         );
         let record_result = action_continuity::record_experiment_bind_run(
             ctx.db,
@@ -2468,6 +2511,7 @@ fn dispatch_multi_action(
     conv: &mut ConversationState,
     segments: Vec<String>,
     ctx: NextActionContext<'_>,
+    author: introspection_cadence::NextActionAuthorV1,
 ) -> NextActionOutcome {
     let NextActionContext {
         burst_count,
@@ -2518,7 +2562,7 @@ fn dispatch_multi_action(
         // Phase 2 emphasis preservation: clear before segment runs so
         // we can detect what THIS segment added; accumulate after.
         conv.emphasis = None;
-        let outcome = handle_next_action(conv, &segment, segment_ctx);
+        let outcome = handle_next_action_with_author(conv, &segment, segment_ctx, author);
         let segment_emphasis = conv.emphasis.take();
         accumulated_emphasis = match (accumulated_emphasis, segment_emphasis) {
             (Some(prior), Some(new)) if !new.trim().is_empty() => Some(format!("{prior}\n\n{new}")),
