@@ -1,0 +1,44 @@
+{
+  "schema": "steward_division_return_v1",
+  "round_event_id": "division_followup_event_ece1003c08d6c26f39f8d46b5add91b8",
+  "processed_report_count": 1,
+  "pre_finish_projection_generation_id": "projection_1785832997411283000_38e6b1c1af",
+  "review_became_due": true,
+  "public_division_reply_count": 0,
+  "formal_division_action_count": 0,
+  "silence_interpreted": false,
+  "due_state_chronicle": {
+    "chronicle_id": "division_chronicle_c9a8687e2a28a6b6768360ea",
+    "json_sha256": "c034f15bd588e9b79a2594f7a83792ae67ea872baca4af28a0f08cda82238e22",
+    "html_sha256": "949df4d66396334dad29f384dfab2a0dad0a78243bc727c526ef79eead8a5e65"
+  },
+  "notes": {
+    "astrid": {
+      "path": "capsules/spectral-bridge/workspace/inbox/read/steward_division_return_cycle14_20260804.txt",
+      "sha256": "3699afc9d77ed483d5f96800d90ef670a9ea52645c6c887bfd8c00a6638aedfa"
+    },
+    "minime": {
+      "path": "/Users/v/other/minime/workspace/inbox/read/steward_division_return_cycle14_20260804.txt",
+      "sha256": "a71559d5054d2493b3016c1c193214aa0f60fafffbb653196f3303a01b5c2045"
+    }
+  },
+  "followup_event_id": "division_followup_event_13844de03aa756dcf174e10c967a9467",
+  "tracker": {
+    "cycle_sequence": 15,
+    "completed_rounds_since_followup": 0,
+    "rounds_remaining_before_followup": 6,
+    "review_due": false,
+    "event_count": 99,
+    "event_head_sha256": "7e9811be2cd723d122221d9fad17c64bc76c86fd9083f08c664dc55a9481cc24"
+  },
+  "projected_chronicle": {
+    "chronicle_id": "division_chronicle_75322a635edab0468abf0a2b",
+    "timeline_event_count": 99,
+    "json_sha256": "6beb2d3356ddd65fef6f66c2cdabe0a78cfb46bfa67b9485bc099b4f1f17ea0c",
+    "html_sha256": "3d4425c606085631e27968980e5c2b4b13869848407d18c8377f42bffbfbadf4",
+    "durable_inputs_current": true,
+    "volatile_inputs_current": false,
+    "volatile_mismatches": ["supervisor_status_sha256"]
+  },
+  "authority": "bounded evidence-only steward attention; no hold decline intent assent withdrawal return review uptake felt state closure readiness or authority inferred"
+}

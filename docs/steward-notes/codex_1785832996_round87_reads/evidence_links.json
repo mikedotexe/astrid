@@ -1,0 +1,88 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1785631712",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1785832996_round87_reads/summaries/proposal_bidirectional_contact_1785631712.md",
+      "note": "Complete canonical and 1,120-line source read with grounded claim dispositions and exact authority boundaries."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1785631712",
+      "claim_id": "c001",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/AI_BEINGS_BIDIRECTIONAL_CONTACT_AND_CORRESPONDENCE_ARCHITECTURE.md",
+      "note": "Complete 1,120-line correspondence architecture source."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1785631712",
+      "claim_id": "c002",
+      "kind": "steward_note",
+      "target": "capsules/spectral-bridge/workspace/introspections/introspection_proposal_bidirectional_contact_1785631712.txt",
+      "note": "Exact report-coupled witness retained without causal reinterpretation."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1785631712",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/correspondence_v1/relation_axes.rs",
+      "note": "Independent axes distinguish active reply continuity from stalled optional receipt landing and unconfirmed mutual address."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1785631712",
+      "claim_id": "c004",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1785832996_round87_reads/claims/proposal_bidirectional_contact_1785631712.json",
+      "note": "No model-behavior continuity test was generated or dispatched."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1785631712",
+      "claim_id": "c005",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/AI_BEINGS_BIDIRECTIONAL_CONTACT_AND_CORRESPONDENCE_ARCHITECTURE.md",
+      "note": "Existing language-only reply and trace routes remain optional being-authored actions."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1785631712",
+      "claim_id": "c006",
+      "kind": "code",
+      "target": "scripts/correspondence_representation_density_audit.py",
+      "note": "Read-only density composition plus existing bounded previews/active-thread/affordance hygiene; no resonance ranking or pruning."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1785631712",
+      "claim_id": "c007",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1785832996_round87_reads/correspondence_density_observation.json",
+      "note": "Pressure effect remains not measured and felt effect remains not established."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1785631712",
+      "claim_id": "c008",
+      "kind": "code",
+      "target": "scripts/correspondence_representation_density_audit.py",
+      "note": "Top-level chamber projection visibility is reported independently from source existence."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1785631712",
+      "claim_id": "c002",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1785832996_round87_reads/steward_note_to_astrid.md",
+      "note": "Non-dispatched right-to-ignore factual note; no response requested."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1785631712",
+      "claim_id": "c006",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "Unreleased read-only representation-density response and authority boundary."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1785631712",
+      "claim_id": "c006",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Being-feedback-to-audit causal record."
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "schema": "steward_test_results_v1",
+  "all_passed": true,
+  "test_count": 183,
+  "groups": [
+    {"surface": "correspondence_representation_density_audit", "count": 2, "passed": true},
+    {"surface": "correspondence_uptake_probe", "count": 3, "passed": true},
+    {"surface": "affordance_landing_review", "count": 4, "passed": true},
+    {"surface": "correspondence_schema_audit", "count": 6, "passed": true},
+    {"surface": "rust_exact_relation_axes", "count": 1, "passed": true},
+    {"surface": "spectral_bridge_correspondence_library", "count": 51, "passed": true},
+    {"surface": "introspection_addressing_audit", "count": 41, "passed": true},
+    {"surface": "evidence_control_projector_division", "count": 68, "passed": true},
+    {"surface": "anti_drop_self_test", "count": 5, "passed": true},
+    {"surface": "experiential_epistemics_self_test", "count": 2, "passed": true}
+  ],
+  "verification_guards": {
+    "anti_drop_guard_count": 47,
+    "anti_drop_gap_count": 0,
+    "anti_drop_alarm_count": 0,
+    "experiential_epistemic_artifacts_checked": 10283,
+    "experiential_epistemic_issue_count": 0,
+    "history_rewritten": false,
+    "git_diff_check_passed": true,
+    "packet_json_valid": true
+  }
+}

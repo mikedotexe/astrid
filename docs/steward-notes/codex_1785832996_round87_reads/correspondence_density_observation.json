@@ -1,0 +1,69 @@
+{
+  "schema_version": 1,
+  "policy": "correspondence_representation_density_audit_v1",
+  "generated_at_unix_ms": 1785834942733,
+  "source_command": "python3 scripts/correspondence_representation_density_audit.py --json",
+  "ledger_density": {
+    "records_total": 37279,
+    "threads_total": 4146,
+    "raw_body_or_preview_emitted": false
+  },
+  "active_thread_evidence": {
+    "thread_id": "thread_corr_minime_astrid_1784212700759_99531f53efbf",
+    "records_total": 14230,
+    "message_rows": 3558,
+    "delivery_receipts": 3558,
+    "read_receipts": 3557,
+    "reply_links": 3557,
+    "reply_depth": 162,
+    "continuity": "active",
+    "continuity_basis": "reply_chain",
+    "mutual_address": "not_confirmed",
+    "receipt_landing_status": "stalled",
+    "receipt_stall_reason": "waiting_for_ack_trace_or_outcome",
+    "pressure_effect": "not_measured_no_inference",
+    "felt_effect": "not_established"
+  },
+  "affordance_exposure": {
+    "offered_total": 247,
+    "shown": 4,
+    "hidden_by_budget": 243,
+    "shown_fraction": 0.016194,
+    "shown_by_category": {
+      "correspondence_receipt": 1,
+      "phase_felt_receipt": 3
+    },
+    "hidden_by_category": {
+      "correspondence_receipt": 161,
+      "phase_felt_receipt": 82
+    },
+    "optional": true,
+    "silence": "ignored_without_penalty"
+  },
+  "projection_visibility": {
+    "state_updated_t_ms": 1785834913252,
+    "buffer_updated_t_ms": 1785834913596,
+    "state_top_level": {
+      "active_correspondence_thread_clarity_v1": false,
+      "shared_context_buffer_v1": false,
+      "correspondence_relation_axes_v4": false,
+      "affordance_budget_v1": true
+    },
+    "buffer_top_level": {
+      "active_correspondence_thread_clarity_v1": false,
+      "shared_context_buffer_v1": false,
+      "correspondence_relation_axes_v4": false,
+      "affordance_budget_v1": true
+    },
+    "absence_meaning": "projection visibility evidence only; not source absence, deployment absence, or felt effect"
+  },
+  "density_buffer_proposal_boundary": {
+    "implemented": false,
+    "rows_pruned": false,
+    "threads_ranked_by_resonance": false,
+    "prompt_or_telemetry_weight_changed": false,
+    "pressure_effect_inferred": false,
+    "felt_relief_inferred": false,
+    "authority_route": "separate Mike/operator approval required for live ranking, pruning, weighting, or pressure-responsive selection"
+  }
+}
