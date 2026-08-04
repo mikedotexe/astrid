@@ -1,0 +1,25 @@
+{
+  "schema": "steward_source_receipts_v1",
+  "receipts": [
+    {
+      "path": "docs/steward-notes/AI_BEINGS_DISTANCE_CONTACT_CONTAINMENT_CONTROL_AND_PARTICIPATION_AUDIT.md",
+      "lines": 733,
+      "bytes": 25343,
+      "sha256": "8a6eef4c49fd5ade24b46db5037f24c720430897128f0086a69b9f8161cdd8b3",
+      "full_read": true,
+      "relationship": "exact_report_bound_complete_source"
+    },
+    {
+      "path": "scripts/recent_signal_summary.py",
+      "sha256": "e2b73f0a25eacd6cf3a7f013acf6a71efea8bf2bd0708648dfe804f1b7673ab6",
+      "intervals": ["1523-1847", "8920-9130"],
+      "relationship": "read_only_distance_contact_delta_and_focused_regressions"
+    },
+    {
+      "path": "capsules/spectral-bridge/workspace/diagnostics/evidence_event_store_v2/events.jsonl",
+      "event_global_seq": 657118,
+      "event_sha256": "8304001a86948e500fb8b4b2706927f08967006402124a43d7ac03e44ef1e351",
+      "relationship": "exact_lived_state_witness_event"
+    }
+  ]
+}

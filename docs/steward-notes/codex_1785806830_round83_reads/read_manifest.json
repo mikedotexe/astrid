@@ -1,0 +1,17 @@
+{
+  "schema": "steward_read_manifest_v1",
+  "steward_run_id": "run_1785805902993263000_0914122016",
+  "processed_report_count": 1,
+  "reports": [
+    {
+      "filename": "introspection_proposal_distance_contact_control_1785632076.txt",
+      "introspection_id": "introspection_proposal_distance_contact_control_1785632076",
+      "logical_lines": 36,
+      "bytes": 4138,
+      "sha256": "381b1b3c9d3650741e888e841c423bf1c29279ceed12442664e62094c89cbb68",
+      "lived_state_witness_id": "lsw_019dac2d3f0d956b7779bac490ea1d5af2460c87b2137ffd7888f2f79dd597b0",
+      "full_read": true,
+      "disposition": "addressed_change"
+    }
+  ]
+}

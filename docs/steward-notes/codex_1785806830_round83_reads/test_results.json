@@ -1,0 +1,95 @@
+{
+  "schema": "steward_test_results_v1",
+  "results": [
+    {
+      "command": "PYTHONPATH=scripts PYTHONDONTWRITEBYTECODE=1 python3 -m unittest recent_signal_summary.RecentSignalSummaryTests.test_distance_contact_control_delta_reads_shadow_and_semantic_pressure recent_signal_summary.RecentSignalSummaryTests.test_distance_contact_elasticity_does_not_equate_packing_with_restlessness",
+      "status": "passed",
+      "passed": 2,
+      "failed": 0
+    },
+    {
+      "command": "PYTHONDONTWRITEBYTECODE=1 python3 scripts/recent_signal_summary.py --self-test",
+      "status": "passed",
+      "passed": 39,
+      "failed": 0
+    },
+    {
+      "command": "cargo test --manifest-path minime/Cargo.toml receptivity_buffer -- --nocapture",
+      "working_directory": "../minime",
+      "status": "passed",
+      "test_executions": 6,
+      "failed": 0,
+      "warnings": 4,
+      "warning_scope": "pre_existing_foreign_division_dead_code"
+    },
+    {
+      "command": "PYTHONDONTWRITEBYTECODE=1 python3 scripts/receptivity_bias_replay.py --self-test",
+      "status": "passed"
+    },
+    {
+      "command": "PYTHONDONTWRITEBYTECODE=1 python3 scripts/introspection_addressing_audit.py --self-test",
+      "status": "passed",
+      "passed": 41,
+      "failed": 0
+    },
+    {
+      "command": "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=.:scripts python3 -m unittest scripts.test_evidence_event_store scripts.test_steward_control scripts.test_steward_projection scripts.test_division_ceremony_followup scripts.test_division_ceremony_chronicle scripts.test_division_ceremony_projection scripts.test_claim_family_incremental_projection",
+      "status": "passed",
+      "passed": 68,
+      "failed": 0
+    },
+    {
+      "command": "PYTHONDONTWRITEBYTECODE=1 python3 scripts/anti_drop_catalog.py --self-test",
+      "status": "passed",
+      "passed": 5,
+      "failed": 0
+    },
+    {
+      "command": "PYTHONDONTWRITEBYTECODE=1 python3 scripts/anti_drop_catalog.py verify",
+      "status": "passed",
+      "guards": 47,
+      "gaps": 0,
+      "alarms": 0
+    },
+    {
+      "command": "PYTHONDONTWRITEBYTECODE=1 python3 scripts/experiential_epistemics.py self-test --json",
+      "status": "passed",
+      "passed": 2,
+      "failed": 0
+    },
+    {
+      "command": "PYTHONDONTWRITEBYTECODE=1 python3 scripts/experiential_epistemics.py lint --json",
+      "status": "passed",
+      "checked_record_count": 10259,
+      "issue_count": 0
+    },
+    {
+      "command": "PYTHONDONTWRITEBYTECODE=1 python3 scripts/evidence_event_store.py --json verify",
+      "status": "passed",
+      "last_global_seq": 681836,
+      "last_event_sha256": "a2d274ac0018f63ef358d8ca9529c0d3a85366045f8c8ec099988c945881442d",
+      "corrupt_lines": 0
+    },
+    {
+      "command": "PYTHONDONTWRITEBYTECODE=1 python3 scripts/evidence_event_store.py --json status",
+      "status": "passed",
+      "last_global_seq": 681838,
+      "last_event_sha256": "a22b6c93fcd8627dc85128590af110d6033ba92fbcb0cce150388cb9edd05615",
+      "active_stream_count": 16,
+      "legacy_imported_global_seq": 32278,
+      "history_rewritten": false
+    },
+    {
+      "command": "PYTHONDONTWRITEBYTECODE=1 python3 scripts/division_ceremony_followup.py verify",
+      "status": "passed",
+      "cycle_sequence": 14,
+      "completed_rounds_since_followup": 2,
+      "review_due": false,
+      "last_round_event_id": "division_followup_event_bfcd7b7bfd0ec24ef5dc193f6765facf"
+    },
+    {
+      "command": "git diff --check",
+      "status": "passed"
+    }
+  ]
+}

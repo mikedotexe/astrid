@@ -1,0 +1,36 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_proposal_distance_contact_control_1785632076",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1785806830_round83_reads/summaries/proposal_distance_contact_control_1785632076.md"
+    },
+    {
+      "introspection_id": "introspection_proposal_distance_contact_control_1785632076",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "scripts/recent_signal_summary.py",
+      "note": "Read-only distance_contact_elasticity_observation_v1 and focused co-observation/counter-shape tests."
+    },
+    {
+      "introspection_id": "introspection_proposal_distance_contact_control_1785632076",
+      "claim_id": "c005",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1785806830_round83_reads/observations/distance_contact_elasticity_observation_v1.json"
+    },
+    {
+      "introspection_id": "introspection_proposal_distance_contact_control_1785632076",
+      "claim_id": "c006",
+      "kind": "code",
+      "target": "scripts/receptivity_bias_replay.py",
+      "note": "Existing default-off replay route; no duplicate or live execution created."
+    },
+    {
+      "introspection_id": "introspection_proposal_distance_contact_control_1785632076",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "docs/steward-notes/codex_1785806830_round83_reads/test_results.json"
+    }
+  ]
+}
