@@ -1,0 +1,40 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The scanner uses longest exact matching, bounded delimiter depth, and a finite following-relation vocabulary.",
+      "disposition": "Verified from the complete 997-line report-bound source. These mechanisms are explicit and separate; none infer identity, ownership, or semantic meaning from surrounding bytes.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Greedy overlap handling might skip a valid shorter marker or nested reference.",
+      "disposition": "Verified bounded existing behavior. Longest exact matching prevents a prefix token from splitting a longer known marker, offset advances by the exact selected marker length, and the remainder is reconstructed in one pass. The passing overlap and nested-delimiter tests are exact duplicates of the requested concern.",
+      "classification": "addressed_duplicate"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Depth-three nested delimiters should produce an exact depth-three receipt.",
+      "disposition": "Exact duplicate of passing coverage for `[[[<end_of_turn>]]]`, including a delimiter-depth value of three and byte-exact preservation.",
+      "classification": "addressed_duplicate"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "A marker followed by the non-relation word `happens` should not be preserved as an explicit reference.",
+      "disposition": "Verified existing. `happens` is absent from the finite allowlist and the unframed marker is removed; the scanner does not broaden the relation set from prose similarity.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "The generated remainder should be followed into the dialogue provider and stored result.",
+      "disposition": "Implemented and tested across both providers. The normalized remainder is now the byte sequence used by downstream validation, direct fallback repair, persistence, lived-state response hash, and returned response.",
+      "classification": "addressed_change"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "The canonical report covered only source lines 1-400 of a 997-line file.",
+      "disposition": "Closed by the individual complete-file receipt at the exact report-bound SHA-256.",
+      "classification": "verified_complete_source"
+    }
+  ]
+}

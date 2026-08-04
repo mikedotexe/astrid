@@ -1,0 +1,81 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_llm_1785743120",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1785801558_round82_reads/summaries/astrid_llm_1785743120.md"
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785739812",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1785801558_round82_reads/summaries/astrid_llm_1785739812.md"
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785725987",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1785801558_round82_reads/summaries/astrid_llm_1785725987.md"
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785743120",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/fallback_contracts.rs",
+      "note": "Shared normalization result and route-tagged bounded diagnostic."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785739812",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/transport.rs",
+      "note": "MLX and Ollama normalize before validation and return."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785725987",
+      "claim_id": "c004",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Provider fixtures, marker-only output, diagnostic privacy, repair, and response-hash coverage."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1785734620",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1785801558_round82_reads/summaries/astrid_autonomous_1785734620.md"
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1785734620",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "scripts/burst_rest_transition_envelope_audit.py",
+      "note": "Read-only, source-hash-bound transition and low-fill scheduling audit."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1785734620",
+      "claim_id": "c003",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1785801558_round82_reads/observations/burst_rest_transition_envelope_v1.json"
+    },
+    {
+      "introspection_id": "introspection_proposal_12d_glimpse_1785632418",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1785801558_round82_reads/summaries/proposal_12d_glimpse_1785632418.md"
+    },
+    {
+      "introspection_id": "introspection_proposal_12d_glimpse_1785632418",
+      "claim_id": "c008",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1785710980_round81_reads/read_manifest.json",
+      "note": "Prior evidence belongs to cancelled run run_1785710385262466000_fe7c28330d and is not relabeled."
+    },
+    {
+      "introspection_id": "introspection_proposal_12d_glimpse_1785632418",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "docs/steward-notes/codex_1785801558_round82_reads/test_results.json"
+    }
+  ]
+}

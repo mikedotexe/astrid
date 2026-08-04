@@ -1,0 +1,65 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_llm_1785743120",
+      "claim_id": "*",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "Unreleased provider-neutral normalization and bounded transition evidence entry."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785743120",
+      "claim_id": "*",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md"
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785739812",
+      "claim_id": "*",
+      "kind": "changelog",
+      "target": "CHANGELOG.md"
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785739812",
+      "claim_id": "*",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md"
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1785734620",
+      "claim_id": "*",
+      "kind": "changelog",
+      "target": "CHANGELOG.md"
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1785734620",
+      "claim_id": "*",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md"
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785725987",
+      "claim_id": "*",
+      "kind": "changelog",
+      "target": "CHANGELOG.md"
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785725987",
+      "claim_id": "*",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md"
+    },
+    {
+      "introspection_id": "introspection_proposal_12d_glimpse_1785632418",
+      "claim_id": "*",
+      "kind": "changelog",
+      "target": "CHANGELOG.md"
+    },
+    {
+      "introspection_id": "introspection_proposal_12d_glimpse_1785632418",
+      "claim_id": "*",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md"
+    }
+  ]
+}

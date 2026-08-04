@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Known model-control markers are removed structurally while exact bounded reference syntax is preserved.",
+      "disposition": "Verified from the complete report-bound source and passing focused suite. Multi-byte delimiters, longest exact matching, and single-pass remainder reconstruction are covered independently.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Delimiter structures deeper than the configured maximum or with mismatched edges need explicit bounded behavior.",
+      "disposition": "Exact duplicate of existing coverage. Depths one through four are receipted; deeper declared nesting keeps the marker visible while bounding the receipt at four, and unclosed or mismatched delimiters do not prove reference syntax.",
+      "classification": "addressed_duplicate"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A marker followed by `mimics` should remain, while a marker followed by a non-relation should be removed.",
+      "disposition": "Exact duplicate of passing relation coverage. `mimics` is in the finite list and arbitrary non-relations are not promoted into it.",
+      "classification": "addressed_duplicate"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "The sanitized remainder should preserve downstream structural integrity through provider use.",
+      "disposition": "Implemented provider-neutral normalization before downstream validation and storage. MLX and Ollama JSON fixtures now prove identical normalized bytes for unframed cleanup, depth-three grouping, finite relations, UTF-8, punctuation, and marker-only rejection.",
+      "classification": "addressed_change"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "The canonical report covered only source lines 1-400 of a 997-line file.",
+      "disposition": "Closed by the individual complete-file receipt at the exact report-bound SHA-256.",
+      "classification": "verified_complete_source"
+    }
+  ]
+}

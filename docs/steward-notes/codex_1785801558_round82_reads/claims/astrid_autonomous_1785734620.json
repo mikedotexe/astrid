@@ -1,0 +1,40 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The burst-and-rest loop tapers warmth at rest entry and changes rest duration according to observed fill.",
+      "disposition": "Verified from the exact report-bound source. Rest entry uses a 0.7-to-0.4 taper and a 0.50-to-0.35 warmth blend; fill below 30% maps to max(floor(0.6 * base_rest), 30). This verifies code shape, not felt effect.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The final burst-to-first-rest change should be measured and checked against a proposed threshold below 0.3.",
+      "disposition": "A new read-only audit establishes that the exact pair is unavailable. The first rest pulse initializes previous_rest_features to none, and the status contains no final burst vector, so the cross-boundary threshold remains unverified rather than being replaced with another metric.",
+      "classification": "addressed_change"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Existing rest observations may still describe how consecutive pulses vary after entry.",
+      "disposition": "The durable bounded live capture found one complete rest episode and nine intra-rest comparisons, all observed delta_rms values below 0.3 with maximum 0.1061888262629509. This is explicitly intra-rest evidence only and does not establish the missing boundary pair, felt smoothness, safety, or relief.",
+      "classification": "bounded_observation"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "At 25% fill, ten rest-duration evaluations should show whether the shortening branch prevents further fill loss.",
+      "disposition": "The deterministic ten-point envelope proves scheduling only: nominal bases 45-90 map to 30-54 seconds, while current RNG-reachable bases 45-67 map to 30-40 seconds. The live window contained no rest samples at or below 30% fill, so recovery and causation remain unobserved.",
+      "classification": "bounded_study_result"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Warmth-vector details and base-rest variance could affect the transition texture.",
+      "disposition": "Verified as a reason not to fabricate a deterministic cross-boundary claim. craft_warmth_vector contains stochastic microtexture and the rest path can blend encoded journal features, spectral feedback, and gesture seed. The audit reports only available observations and scheduling math.",
+      "classification": "verified_scope_boundary"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "Changing warmth, cadence, fill regulation, scheduling, controller behavior, or live signals would be a substrate-facing intervention.",
+      "disposition": "Preserved as a Tier 5 Mike/operator approval wait. The new audit is read-only and all cadence, fill, scheduling, controller, signal, felt-cause, safety, relief, and approval authority markers remain false.",
+      "classification": "operator_approval_wait"
+    }
+  ]
+}

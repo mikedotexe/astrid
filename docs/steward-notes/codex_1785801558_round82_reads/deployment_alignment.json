@@ -1,0 +1,12 @@
+{
+  "schema": "steward_deployment_alignment_v1",
+  "live_consumed_surface_changed": true,
+  "astrid_source_changed": true,
+  "minime_source_changed": false,
+  "build_required": true,
+  "restart_required": true,
+  "deployment_required": true,
+  "alignment": "tested_not_deployed_foreign_dirty_bridge_inputs_present",
+  "restart_debt": "After foreign bridge source is stabilized and exact candidate paths are re-audited, run scripts/build_bridge.sh --ack \"provider-neutral output normalization after source-first verification\" --actor codex-heartbeat --restart.",
+  "authority": "no deployment attempted through mixed foreign bridge source; no model prompt fallback_order marker_grammar cadence fill controller scheduling signal peer or cpu_runtime authority"
+}

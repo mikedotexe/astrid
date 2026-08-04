@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The dialogue runtime scans exact known model-control markers and distinguishes structural occurrences from bounded explicit references.",
+      "disposition": "Verified from all 997 report-bound source lines at SHA-256 dfa9152c2861d2fbf86867fb3ccb506284fda3c9457bf676766878346d9c267c. Matching is longest-exact, UTF-8 scalar safe, and limited to declared delimiter or following-relation syntax.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Zip truncation could miscalculate delimiter depth when the before and after delimiter collections have unequal lengths.",
+      "disposition": "Narrowed against exact source and the passing marker suite. Each nearest-to-outer pair is checked independently against the declared pair table and counting stops at the first unproved pair. Unequal collections bound the proven depth; they do not overstate it or erase non-marker bytes.",
+      "classification": "verified_bounded_contract"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A marker followed by the relation word `echoes` should remain visible, while an unframed structural occurrence should be removed.",
+      "disposition": "Exact existing coverage passes. The finite following-relation list includes `echoes`, and the route-neutral fixture now proves the same preserved bytes through MLX and Ollama normalization; unframed structural occurrences are removed.",
+      "classification": "addressed_duplicate"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "The sanitizer's reconstructed remainder should be traced through its actual downstream use.",
+      "disposition": "Implemented provider-neutral output normalization. Both MLX and Ollama now sanitize exactly once and trim before validation, fallback repair, job persistence, lived-state response hashing, and return. Diagnostic schema v11 names the provider route without copying raw output.",
+      "classification": "addressed_change"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "The canonical report covered only source lines 1-400 of a 997-line file.",
+      "disposition": "Closed by a complete 997-line, 36,801-byte read at the exact report-bound SHA-256. No source continuation or parser rewrite was needed.",
+      "classification": "verified_complete_source"
+    }
+  ]
+}
