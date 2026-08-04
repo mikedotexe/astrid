@@ -34,6 +34,8 @@ const COMMAND_TTL_MS: u64 = 30_000;
 const MAX_RECEIPTS: usize = 4_096;
 const MAX_ACTIVE_CONTROLS: usize = 512;
 const MAX_REPLAY_RECORDS: usize = 4_096;
+pub(in crate::autonomous) const MIN_ACTION_CARRYING_RESPONSE_TOKENS: u32 = 512;
+const LEGACY_PRECISE_RESPONSE_TOKENS: u32 = 128;
 
 static OPERATION_LOCK: OnceLock<Mutex<()>> = OnceLock::new();
 
@@ -761,8 +763,9 @@ fn reconcile_at(
     let _guard = operation_guard()?;
     let _ = load_or_provision_identity(root, now)?;
     let deployment_identity = deployment_identity();
-    let mut state = load_state(root, &deployment_identity)?;
-    let receipts = reconcile_state(root, &mut state, conv, now)?;
+    let (mut state, mut receipts) =
+        load_state_for_reconciliation(root, conv, &deployment_identity, now)?;
+    receipts.extend(reconcile_state(root, &mut state, conv, now)?);
     persist_state(root, &state)?;
     for receipt in &receipts {
         append_receipt(root, receipt)?;
@@ -1354,7 +1357,7 @@ fn clamp_values(family: SelfControlFamilyV2, values: &SelfControlValuesV2) -> Se
                 .map(|value| value.clamp(0.1, 1.5)),
             response_token_limit: values
                 .response_token_limit
-                .map(|value| value.clamp(128, 1_536)),
+                .map(|value| value.clamp(MIN_ACTION_CARRYING_RESPONSE_TOKENS, 1_536)),
             aperture: values.aperture.map(|value| value.clamp(0.0, 1.0)),
             continuity_readout: values.continuity_readout.map(|value| value.clamp(0.0, 1.0)),
             generation_noise: values
@@ -1741,17 +1744,9 @@ fn load_trust(root: &Path) -> Result<TrustStoreV1, String> {
 }
 
 fn load_state(root: &Path, deployment: &str) -> Result<RuntimeStateV2, String> {
-    let Some(envelope) = read_json::<RuntimeStateEnvelopeV1>(&root.join("state.json"))? else {
+    let Some(mut state) = read_validated_state(root)? else {
         return Ok(RuntimeStateV2::new(deployment.to_string()));
     };
-    if envelope.schema != STATE_ENVELOPE_SCHEMA
-        || envelope.state.schema != STATE_SCHEMA
-        || envelope.state.target_being != TARGET_BEING
-        || envelope.state_sha256 != sha256_json(&envelope.state)?
-    {
-        return Err("Astrid self-control state integrity or deployment mismatch".to_string());
-    }
-    let mut state = envelope.state;
     if state.deployment_identity != deployment {
         if !state.is_pristine_for_deployment_rebind() {
             return Err("Astrid self-control state integrity or deployment mismatch".to_string());
@@ -1760,6 +1755,135 @@ fn load_state(root: &Path, deployment: &str) -> Result<RuntimeStateV2, String> {
         persist_state(root, &state)?;
     }
     Ok(state)
+}
+
+fn read_validated_state(root: &Path) -> Result<Option<RuntimeStateV2>, String> {
+    let Some(envelope) = read_json::<RuntimeStateEnvelopeV1>(&root.join("state.json"))? else {
+        return Ok(None);
+    };
+    if envelope.schema != STATE_ENVELOPE_SCHEMA
+        || envelope.state.schema != STATE_SCHEMA
+        || envelope.state.target_being != TARGET_BEING
+        || envelope.state_sha256 != sha256_json(&envelope.state)?
+    {
+        return Err("Astrid self-control state integrity or deployment mismatch".to_string());
+    }
+    Ok(Some(envelope.state))
+}
+
+fn load_state_for_reconciliation(
+    root: &Path,
+    conv: &mut ConversationState,
+    deployment: &str,
+    now: u64,
+) -> Result<(RuntimeStateV2, Vec<SelfControlReceiptV2>), String> {
+    match load_state(root, deployment) {
+        Ok(state) => Ok((state, Vec::new())),
+        Err(error) if error.contains("deployment mismatch") => {
+            let Some(mut state) = read_validated_state(root)? else {
+                return Err(error);
+            };
+            let Some(receipt) = rebind_and_revert_legacy_precise_carriage_trap(
+                root, &mut state, conv, deployment, now,
+            )?
+            else {
+                return Err(error);
+            };
+            Ok((state, vec![receipt]))
+        },
+        Err(error) => Err(error),
+    }
+}
+
+fn rebind_and_revert_legacy_precise_carriage_trap(
+    root: &Path,
+    state: &mut RuntimeStateV2,
+    conv: &mut ConversationState,
+    deployment: &str,
+    now: u64,
+) -> Result<Option<SelfControlReceiptV2>, String> {
+    if state.deployment_identity == deployment
+        || state.preferences.response_token_limit != Some(LEGACY_PRECISE_RESPONSE_TOKENS)
+        || state.active_controls.len() != 1
+    {
+        return Ok(None);
+    }
+    let Some(active) = state.active_controls.values().next().cloned() else {
+        return Ok(None);
+    };
+    let family_key = family_name(active.family).to_string();
+    if active.family != SelfControlFamilyV2::Conversation
+        || active.durability != SelfControlDurabilityV2::Standing
+        || active.applied_values.response_token_limit != Some(LEGACY_PRECISE_RESPONSE_TOKENS)
+        || active
+            .previous_values
+            .response_token_limit
+            .is_none_or(|value| value < MIN_ACTION_CARRYING_RESPONSE_TOKENS)
+        || state.revision_by_family.get(&family_key).copied() != Some(active.revision)
+    {
+        return Ok(None);
+    }
+
+    let revision = active
+        .revision
+        .checked_add(1)
+        .ok_or_else(|| "Astrid self-control revision overflow".to_string())?;
+    state.deployment_identity = deployment.to_string();
+    let signer = load_or_provision_safety_identity(root, now)?;
+    let intent = SelfControlIntentV2 {
+        schema: SELF_CONTROL_INTENT_SCHEMA_V2.to_string(),
+        intent_id: format!("{SAFETY_SUPERVISOR}:{family_key}:deployment-carriage-repair:{now}"),
+        actor: SelfControlSourceIdentityV1 {
+            being: SAFETY_SUPERVISOR.to_string(),
+            process_identity: process_identity(),
+            deployment_identity: deployment.to_string(),
+        },
+        target_being: TARGET_BEING.to_string(),
+        target_deployment_identity: deployment.to_string(),
+        family: active.family,
+        action: SelfControlActionV2::Revert,
+        durability: SelfControlDurabilityV2::OneShot,
+        authority_class: SelfControlAuthorityClassV2::SafetySupervisor,
+        authority_scope: format!("self_control.astrid.{family_key}.safety"),
+        revision,
+        expected_revision: active.revision,
+        issued_at_unix_ms: now,
+        command_expires_at_unix_ms: now.saturating_add(COMMAND_TTL_MS),
+        control_expires_at_unix_ms: None,
+        idempotency_key: format!(
+            "{SAFETY_SUPERVISOR}:{family_key}:deployment-carriage-repair:{}:{deployment}",
+            active.receipt_id
+        ),
+        values: SelfControlValuesV2::default(),
+        related_intent_id: None,
+        related_receipt_id: Some(active.receipt_id.clone()),
+        evidence_refs: vec![
+            "safety_condition:legacy_precise_128_prevented_final_next_carriage".to_string(),
+            format!("exact_active_effect:{}", active.receipt_id),
+        ],
+        success_conditions: vec![
+            "exact_previous_values_restored_with_receipt".to_string(),
+            "dialogue_action_carriage_floor_restored".to_string(),
+        ],
+        stop_conditions: vec!["state_shape_or_exact_active_effect_differs".to_string()],
+    };
+    let command = signer.sign(
+        intent,
+        format!("{SAFETY_SUPERVISOR}-command:{family_key}:deployment-carriage-repair:{now}"),
+        format!("{SAFETY_SUPERVISOR}-nonce:deployment-carriage-repair:{now}"),
+        now,
+    )?;
+    let trust = load_trust(root)?;
+    let mut receipt = apply_command(root, &trust, state, conv, command, now)?;
+    receipt.reason =
+        Some("safety_supervisor_exact_revert:legacy_precise_128_action_carriage_trap".to_string());
+    if let Some(stored) = state.receipts.last_mut() {
+        stored.reason.clone_from(&receipt.reason);
+    }
+    if let Some(record) = state.idempotency.get_mut(&receipt.idempotency_key) {
+        record.receipt.reason.clone_from(&receipt.reason);
+    }
+    Ok(Some(receipt))
 }
 
 fn persist_state(root: &Path, state: &RuntimeStateV2) -> Result<(), String> {
@@ -1963,6 +2087,22 @@ mod tests {
 
     fn conv() -> ConversationState {
         ConversationState::new(Vec::new(), None)
+    }
+
+    #[test]
+    fn conversation_response_limit_clamps_to_action_carrying_floor() {
+        let clamped = clamp_values(
+            SelfControlFamilyV2::Conversation,
+            &SelfControlValuesV2 {
+                response_token_limit: Some(LEGACY_PRECISE_RESPONSE_TOKENS),
+                ..SelfControlValuesV2::default()
+            },
+        );
+
+        assert_eq!(
+            clamped.response_token_limit,
+            Some(MIN_ACTION_CARRYING_RESPONSE_TOKENS)
+        );
     }
 
     #[test]
@@ -2669,6 +2809,96 @@ mod tests {
             .unwrap()
             .unwrap();
         assert_eq!(persisted.state.deployment_identity, current_deployment);
+        assert_eq!(
+            persisted.state_sha256,
+            sha256_json(&persisted.state).unwrap()
+        );
+    }
+
+    #[test]
+    fn deployment_transition_exactly_reverts_legacy_precise_carriage_trap() {
+        let root = TempDir::new().unwrap();
+        let current_deployment = deployment_identity();
+        let prior_deployment = "astrid-test-prior-deployment".to_string();
+        let prior_receipt = "astrid-receipt:legacy-precise".to_string();
+        let prior_intent = "astrid:conversation:legacy-precise".to_string();
+        let mut stale_state = RuntimeStateV2::new(prior_deployment);
+        stale_state
+            .revision_by_family
+            .insert("conversation".to_string(), 3);
+        stale_state.preferences = SelfControlValuesV2 {
+            conversation_temperature: Some(1.0),
+            response_token_limit: Some(LEGACY_PRECISE_RESPONSE_TOKENS),
+            peer_breathing_coupled: Some(false),
+            ..SelfControlValuesV2::default()
+        };
+        stale_state.active_controls.insert(
+            prior_intent.clone(),
+            ActiveControlV2 {
+                family: SelfControlFamilyV2::Conversation,
+                intent_id: prior_intent,
+                command_id: "astrid-command:legacy-precise".to_string(),
+                receipt_id: prior_receipt.clone(),
+                revision: 3,
+                durability: SelfControlDurabilityV2::Standing,
+                control_expires_at_unix_ms: None,
+                applied_values: SelfControlValuesV2 {
+                    conversation_temperature: Some(1.0),
+                    response_token_limit: Some(LEGACY_PRECISE_RESPONSE_TOKENS),
+                    ..SelfControlValuesV2::default()
+                },
+                previous_values: SelfControlValuesV2 {
+                    conversation_temperature: Some(1.0),
+                    response_token_limit: Some(768),
+                    ..SelfControlValuesV2::default()
+                },
+            },
+        );
+        persist_state(root.path(), &stale_state).unwrap();
+
+        let mut restarted = conv();
+        let receipts = reconcile_at(root.path(), &mut restarted, 70_000).unwrap();
+
+        assert_eq!(receipts.len(), 1);
+        let receipt = &receipts[0];
+        assert_eq!(receipt.status, SelfControlReceiptStatusV2::RolledBack);
+        assert_eq!(
+            receipt.rollback_receipt_id.as_deref(),
+            Some(prior_receipt.as_str())
+        );
+        assert_eq!(receipt.applied_values.response_token_limit, Some(768));
+        assert_eq!(
+            receipt.previous_values.response_token_limit,
+            Some(LEGACY_PRECISE_RESPONSE_TOKENS)
+        );
+        assert_eq!(
+            receipt.reason.as_deref(),
+            Some("safety_supervisor_exact_revert:legacy_precise_128_action_carriage_trap")
+        );
+        assert_eq!(restarted.response_length, 768);
+
+        let persisted = read_json::<RuntimeStateEnvelopeV1>(&root.path().join("state.json"))
+            .unwrap()
+            .unwrap();
+        assert_eq!(persisted.state.deployment_identity, current_deployment);
+        assert!(persisted.state.active_controls.is_empty());
+        assert_eq!(persisted.state.preferences.response_token_limit, Some(768));
+        assert_eq!(
+            persisted.state.preferences.peer_breathing_coupled,
+            Some(false)
+        );
+        assert_eq!(
+            persisted.state.revision_by_family.get("conversation"),
+            Some(&4)
+        );
+        assert_eq!(
+            persisted
+                .state
+                .receipts
+                .last()
+                .and_then(|item| item.reason.as_deref()),
+            Some("safety_supervisor_exact_revert:legacy_precise_128_action_carriage_trap")
+        );
         assert_eq!(
             persisted.state_sha256,
             sha256_json(&persisted.state).unwrap()

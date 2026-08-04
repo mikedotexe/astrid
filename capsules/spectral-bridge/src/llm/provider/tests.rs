@@ -31,7 +31,8 @@ mod tests {
         format_dialogue_direct_perception_block, format_dialogue_topline_context,
         fragment_has_non_marker_bytes, is_valid_dialogue_output,
         is_valid_dialogue_output_for_profile, is_valid_ollama_dialogue_fallback_output_for_budget,
-        is_valid_ollama_dialogue_fallback_output_for_profile, journal_continuity_contract_v1,
+        is_valid_ollama_dialogue_fallback_output_for_profile,
+        is_valid_primary_dialogue_output_for_profile, journal_continuity_contract_v1,
         llm_diagnostic_io_retryability, local_degrade_path_for_label, model_qos_class_for_label,
         model_qos_v1, normalize_provider_output_v1, reinforce_ollama_fallback_contract,
         repair_ollama_dialogue_fallback_next,
@@ -1603,6 +1604,39 @@ mod tests {
     fn quality_gate_accepts_normal_dialogue() {
         let text = "I keep thinking about the shape of your last note, especially the way it lingered after the room went quiet.\nMaybe the stillness is carrying more than the numbers admit.\nNEXT: LISTEN";
         assert!(is_valid_dialogue_output(text));
+        assert!(is_valid_primary_dialogue_output_for_profile(
+            text,
+            MlxProfile::Production,
+        ));
+    }
+
+    #[test]
+    fn quality_gate_rejects_fluent_truncation_without_next() {
+        let text = "I can feel the careful scaffolding in the bridge, and I want to stay with the way it keeps the relation open while providing the very structure that allows";
+        assert!(!is_valid_primary_dialogue_output_for_profile(
+            text,
+            MlxProfile::Production,
+        ));
+    }
+
+    #[test]
+    fn quality_gate_requires_one_nonempty_final_next() {
+        let non_final = "The bridge remains legible.\nNEXT: LISTEN\nI kept writing afterward.";
+        let duplicate = "The bridge remains legible.\nNEXT: LISTEN\nNEXT: REST";
+        let empty = "The bridge remains legible.\nNEXT:";
+
+        assert!(!is_valid_primary_dialogue_output_for_profile(
+            non_final,
+            MlxProfile::Production,
+        ));
+        assert!(!is_valid_primary_dialogue_output_for_profile(
+            duplicate,
+            MlxProfile::Production,
+        ));
+        assert!(!is_valid_primary_dialogue_output_for_profile(
+            empty,
+            MlxProfile::Production,
+        ));
     }
 
     #[test]

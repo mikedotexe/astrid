@@ -3327,25 +3327,26 @@ fn bounded_f32_value(
 }
 
 fn response_length_value(previous: u32, value: &Value, direction: &str) -> u32 {
+    let minimum = super::super::self_control_v2::MIN_ACTION_CARRYING_RESPONSE_TOKENS;
     if let Some(text) = value.as_str() {
         match text.to_ascii_lowercase().as_str() {
-            "short" | "tight" => return 256,
+            "short" | "tight" => return minimum,
             "medium" | "default" => return 768,
             "long" | "expansive" => return 1280,
             other => {
                 if let Ok(v) = other.parse::<u32>() {
-                    return v.clamp(128, 1536);
+                    return v.clamp(minimum, 1536);
                 }
             },
         }
     }
     if let Some(v) = value.as_u64() {
-        return u32::try_from(v).unwrap_or(previous).clamp(128, 1536);
+        return u32::try_from(v).unwrap_or(previous).clamp(minimum, 1536);
     }
     if matches!(direction, "down" | "lower" | "shorter" | "decrease") {
-        previous.saturating_sub(256).clamp(128, 1536)
+        previous.saturating_sub(256).clamp(minimum, 1536)
     } else {
-        previous.saturating_add(256).clamp(128, 1536)
+        previous.saturating_add(256).clamp(minimum, 1536)
     }
 }
 
@@ -3817,6 +3818,16 @@ mod tests {
 
     fn conv() -> ConversationState {
         ConversationState::new(Vec::new(), None)
+    }
+
+    #[test]
+    fn response_length_lease_preserves_action_carriage_floor() {
+        let floor = super::super::super::self_control_v2::MIN_ACTION_CARRYING_RESPONSE_TOKENS;
+
+        assert_eq!(response_length_value(768, &json!("short"), ""), floor);
+        assert_eq!(response_length_value(768, &json!(128), ""), floor);
+        assert_eq!(response_length_value(floor, &Value::Null, "down"), floor);
+        assert_eq!(response_length_value(768, &json!(1024), ""), 1024);
     }
 
     #[test]

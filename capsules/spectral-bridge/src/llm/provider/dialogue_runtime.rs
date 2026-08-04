@@ -620,6 +620,42 @@ fn is_valid_dialogue_output(text: &str) -> bool {
     true
 }
 
+fn has_one_nonempty_final_next_action(text: &str) -> bool {
+    let stripped = sanitize_model_control_markers(text);
+    let next_count = count_next_lines(&stripped);
+    if next_count != 1 {
+        warn!(
+            "quality gate reject: expected exactly one NEXT line, found {} — body: {}",
+            next_count,
+            &stripped[..stripped.floor_char_boundary(120)]
+        );
+        return false;
+    }
+    if !final_nonempty_line_is_next(&stripped) {
+        warn!(
+            "quality gate reject: NEXT line was not final — body: {}",
+            &stripped[..stripped.floor_char_boundary(120)]
+        );
+        return false;
+    }
+    let final_action_present = stripped
+        .lines()
+        .rev()
+        .find_map(|line| {
+            let trimmed = line.trim();
+            (!trimmed.is_empty()).then_some(trimmed)
+        })
+        .and_then(|line| line.strip_prefix("NEXT:"))
+        .is_some_and(|action| !action.trim().is_empty());
+    if !final_action_present {
+        warn!(
+            "quality gate reject: final NEXT action was empty — body: {}",
+            &stripped[..stripped.floor_char_boundary(120)]
+        );
+    }
+    final_action_present
+}
+
 fn is_valid_dialogue_output_for_profile(text: &str, profile: MlxProfile) -> bool {
     if !is_valid_dialogue_output(text) {
         return false;
@@ -632,6 +668,11 @@ fn is_valid_dialogue_output_for_profile(text: &str, profile: MlxProfile) -> bool
         return false;
     }
     true
+}
+
+fn is_valid_primary_dialogue_output_for_profile(text: &str, profile: MlxProfile) -> bool {
+    is_valid_dialogue_output_for_profile(text, profile)
+        && has_one_nonempty_final_next_action(text)
 }
 
 /// Generate Astrid's response to minime's journal entry and spectral state.
@@ -943,7 +984,7 @@ pub async fn generate_dialogue(
     )
     .await
     .and_then(|text| {
-        if is_valid_dialogue_output_for_profile(&text, mlx_profile) {
+        if is_valid_primary_dialogue_output_for_profile(&text, mlx_profile) {
             Some(text)
         } else {
             warn!(
