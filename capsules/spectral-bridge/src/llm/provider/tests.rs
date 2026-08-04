@@ -1770,6 +1770,22 @@ mod tests {
     }
 
     #[test]
+    fn control_marker_scanner_removes_adjacent_mixed_markers_without_rewriting_remainder() {
+        let text = "left<end_of_turn><eos><|im_end|>right";
+        let (stripped, report) = sanitize_model_control_markers_with_report(text);
+        let report = report.expect("adjacent mixed-marker cleanup report");
+
+        assert_eq!(stripped.as_bytes(), b"leftright");
+        assert_eq!(report.observed_total, 3);
+        assert_eq!(report.removed_total, 3);
+        assert_eq!(report.preserved_explicit_reference_total, 0);
+        assert_eq!(
+            report.removed_marker_bytes,
+            "<end_of_turn><eos><|im_end|>".len()
+        );
+    }
+
+    #[test]
     fn control_marker_sanitizer_preserves_common_linguistic_substrings() {
         let text =
             "transaction, action, thoughtfulness, channel, finality, and analysis remain intact";
@@ -2068,6 +2084,16 @@ mod tests {
         assert_eq!(report.observed_total, 1);
         assert_eq!(report.removed_total, 1);
         assert_eq!(report.preserved_explicit_reference_total, 0);
+    }
+
+    #[test]
+    fn control_marker_relation_word_scanner_keeps_unicode_alphanumerics_together() {
+        let text = "x \u{2014} d\u{00e9}clenche_\u{03bb}2!";
+
+        assert_eq!(
+            super::first_word_after(text, "x".len()),
+            "d\u{00e9}clenche_\u{03bb}2"
+        );
     }
 
     #[test]
@@ -2416,6 +2442,21 @@ mod tests {
 
         assert_eq!(stripped, "Here,  creates the boundary I am naming.");
         let report = report.expect("non-allowlisted creates report");
+        assert_eq!(report.removed_total, 1);
+        assert_eq!(report.preserved_explicit_reference_total, 0);
+        assert_eq!(
+            report.context_receipts[0].reference_syntax,
+            "none_cleanup_candidate"
+        );
+    }
+
+    #[test]
+    fn control_marker_cleanup_does_not_expand_relation_allowlist_to_triggers() {
+        let text = "Here, <end_of_turn> triggers the boundary I am naming.";
+        let (stripped, report) = sanitize_model_control_markers_with_report(text);
+
+        assert_eq!(stripped, "Here,  triggers the boundary I am naming.");
+        let report = report.expect("non-allowlisted triggers report");
         assert_eq!(report.removed_total, 1);
         assert_eq!(report.preserved_explicit_reference_total, 0);
         assert_eq!(

@@ -1,0 +1,15 @@
+{
+  "schema": "steward_deployment_alignment_v1",
+  "live_consumed_surface_changed": false,
+  "bridge_production_source_changed": false,
+  "test_source_changed": true,
+  "minime_source_changed": false,
+  "restart_required": false,
+  "deployment_required": false,
+  "deployment_performed": false,
+  "live_bridge_pid_observed_before_run": 24790,
+  "live_bridge_binary_sha256_observed_before_run": "5bd835d20ccfe314aa988aad0fa153ef6fdf48d9cdf81fc6ca7abc135b346be6",
+  "foreign_dirty_bridge_preserved": true,
+  "alignment": "test_only_no_live_alignment_needed",
+  "authority_boundary": "no grammar provider model prompt persistence service minime cpu_runtime peer or live-control change"
+}

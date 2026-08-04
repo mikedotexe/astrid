@@ -1,0 +1,22 @@
+{
+  "schema": "steward_source_receipts_v1",
+  "receipts": [
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "lines": 1038,
+      "bytes": 38205,
+      "sha256": "f7c0570ce495b1978d9b6f588cba6ecb00a93b1573316bc22752e6e10d47f20a",
+      "full_read": true,
+      "relationship": "exact_report_bound_complete_source"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "intervals": ["1773-1787", "2090-2098", "2200-2213", "2262-2278", "2454-2467"],
+      "relationship": "adjacent_marker_unicode_word_unicode_quote_whitespace_and_triggers_regressions"
+    },
+    {
+      "path": "docs/steward-notes/codex_1785801558_round82_reads/RUN_REPORT.md",
+      "relationship": "prior_provider_normalization_and_marker_cluster_response_continuity"
+    }
+  ]
+}

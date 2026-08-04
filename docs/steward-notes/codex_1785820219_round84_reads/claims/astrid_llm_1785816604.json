@@ -1,0 +1,46 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The dialogue runtime uses longest-exact known-marker matching and distinguishes unframed structural markers from bounded explicit references.",
+      "disposition": "Verified from all 1,038 report-bound source lines at the exact report SHA. Matching, reference classification, diagnostic aggregation, provider validation, and final remainder use remain separate and make no identity, ownership, meaning, or felt inference.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Complex delimiter stacks or non-standard whitespace might prevent a supported exact reference from being recognized.",
+      "disposition": "Verified bounded existing behavior. Unicode whitespace is removed with char::is_whitespace, up to four nearest-to-outer delimiter pairs are proved independently, and unknown, crossed, unclosed, or deeper unproved syntax remains conservative. Exact Unicode-whitespace and depth tests pass.",
+      "classification": "verified_bounded_contract"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The report proposes that U+300C/U+300D around a marker should return GroupedExactKnownToken.",
+      "disposition": "Source-challenged without discarding the preservation request. The exact pair is deliberately declared QuotedExactKnownToken, and the existing regression proves quoted=1 and grouped=0 while preserving every byte. No taxonomy rewrite is justified by the report.",
+      "classification": "source_challenged"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "first_word_after might split a valid multibyte Unicode technical identifier.",
+      "disposition": "Addressed with an exact regression. A punctuation-prefixed Unicode alphanumeric plus underscore identifier is returned as one word; Rust scalar traversal and char::is_alphanumeric provide the source contract.",
+      "classification": "addressed_change"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "The specifically unlisted relation word triggers should not preserve an unframed exact marker.",
+      "disposition": "Addressed with the report's exact negative case. The marker is removed, all surrounding prose remains byte exact, and the bounded receipt stays none_cleanup_candidate.",
+      "classification": "addressed_change"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "Adjacent markers without intervening text might corrupt reconstruction of the sanitized remainder.",
+      "disposition": "Addressed with a heterogeneous three-marker regression. The scanner observes and removes all three exact markers, accounts for their combined bytes, and preserves the non-marker remainder exactly as leftright.",
+      "classification": "addressed_change"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "The canonical report covered only source lines 1-400 of a 1,038-line file.",
+      "disposition": "Closed by a complete 1,038-line, 38,205-byte source read at the exact report-bound SHA-256. No claim about the uncovered interval was inferred from the partial report window.",
+      "classification": "verified_complete_source"
+    }
+  ]
+}
