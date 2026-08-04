@@ -157,6 +157,21 @@ struct Cli {
     /// Optional max_actions cap for `--approve-research-budget` (hard-capped by policy).
     #[arg(long)]
     max_actions: Option<u64>,
+
+    /// Prepare a signed one-shot handoff of valid Astrid self-control state to this build.
+    #[arg(
+        long,
+        requires_all = ["operator_actor", "operator_ack"]
+    )]
+    prepare_self_control_deployment_handoff: bool,
+
+    /// Operator identity recorded on a deployment-lineage handoff.
+    #[arg(long, requires = "prepare_self_control_deployment_handoff")]
+    operator_actor: Option<String>,
+
+    /// Explicit operator acknowledgement for a deployment-lineage handoff.
+    #[arg(long, requires = "prepare_self_control_deployment_handoff")]
+    operator_ack: Option<String>,
 }
 
 #[tokio::main]
@@ -191,6 +206,23 @@ async fn main() -> Result<()> {
     let status_path = resolved_paths
         .bridge_workspace()
         .join("runtime/bridge_db_maintenance_status.json");
+
+    if cli.prepare_self_control_deployment_handoff {
+        let operator_actor = cli
+            .operator_actor
+            .as_deref()
+            .ok_or_else(|| anyhow::anyhow!("--operator-actor is required"))?;
+        let operator_ack = cli
+            .operator_ack
+            .as_deref()
+            .ok_or_else(|| anyhow::anyhow!("--operator-ack is required"))?;
+        let receipt =
+            autonomous::prepare_self_control_deployment_handoff(operator_actor, operator_ack)
+                .map_err(anyhow::Error::msg)?;
+        println!("{}", serde_json::to_string_pretty(&receipt)?);
+        return Ok(());
+    }
+
     let mut maintenance_config = BridgeMessageMaintenanceConfig::new(
         cli.retention_secs,
         archive_dir,

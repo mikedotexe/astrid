@@ -24,6 +24,9 @@ use sha2::{Digest as _, Sha256};
 
 use super::state::ConversationState;
 
+#[path = "self_control_v2/deployment_handoff.rs"]
+mod deployment_handoff;
+
 const TARGET_BEING: &str = "astrid";
 const SAFETY_SUPERVISOR: &str = "safety_supervisor";
 const IDENTITY_SCHEMA: &str = "astrid.self_control.owner_identity.v1";
@@ -1778,11 +1781,17 @@ fn load_state_for_reconciliation(
     now: u64,
 ) -> Result<(RuntimeStateV2, Vec<SelfControlReceiptV2>), String> {
     match load_state(root, deployment) {
-        Ok(state) => Ok((state, Vec::new())),
+        Ok(state) => {
+            deployment_handoff::finalize_completed_for_current(root, &state, deployment, now)?;
+            Ok((state, Vec::new()))
+        },
         Err(error) if error.contains("deployment mismatch") => {
             let Some(mut state) = read_validated_state(root)? else {
                 return Err(error);
             };
+            if deployment_handoff::consume_pending_for_current(root, &mut state, deployment, now)? {
+                return Ok((state, Vec::new()));
+            }
             let Some(receipt) = rebind_and_revert_legacy_precise_carriage_trap(
                 root, &mut state, conv, deployment, now,
             )?
@@ -1793,6 +1802,18 @@ fn load_state_for_reconciliation(
         },
         Err(error) => Err(error),
     }
+}
+
+pub(super) fn prepare_deployment_handoff(
+    operator_actor: &str,
+    operator_ack: &str,
+) -> Result<Value, String> {
+    deployment_handoff::prepare_for_current(
+        &default_root(),
+        operator_actor,
+        operator_ack,
+        now_unix_ms(),
+    )
 }
 
 fn rebind_and_revert_legacy_precise_carriage_trap(
