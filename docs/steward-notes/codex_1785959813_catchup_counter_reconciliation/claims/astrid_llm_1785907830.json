@@ -1,0 +1,10 @@
+{
+  "introspection_id": "introspection_astrid_llm_1785907830",
+  "claims": [
+    {"claim_id": "c001", "summary": "The scanner records quoted, grouped, and explicit relation contexts with a bounded delimiter depth.", "disposition": "Verified from the complete report-bound source.", "classification": "verified_existing"},
+    {"claim_id": "c002", "summary": "ASCII lowercasing or adjacent punctuation may over-normalize the relation word.", "disposition": "Exact source shows punctuation is split before lowercasing and Unicode alphanumeric content is preserved; existing regressions cover this boundary.", "classification": "exact_duplicate"},
+    {"claim_id": "c003", "summary": "The relation manifests should be retained while an underscore-bearing is_not should remain outside the allowlist.", "disposition": "Verified by exact finite-source membership and duplicate underscore relation tests.", "classification": "verified_existing"},
+    {"claim_id": "c004", "summary": "Five nested pairs should exceed the receipt bound without crashing or dropping an exact grouped token.", "disposition": "Exact duplicate of the bounded-deeper-delimiter regression.", "classification": "exact_duplicate"},
+    {"claim_id": "c005", "summary": "The later dialogue path should be checked for sanitized remainder integration.", "disposition": "Verified by the complete source read and provider normalization tests.", "classification": "verified_existing"}
+  ]
+}

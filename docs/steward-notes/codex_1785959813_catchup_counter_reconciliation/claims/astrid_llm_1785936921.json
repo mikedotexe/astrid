@@ -1,0 +1,10 @@
+{
+  "introspection_id": "introspection_astrid_llm_1785936921",
+  "claims": [
+    {"claim_id": "c001", "summary": "The scanner categorizes exact markers as quoted, grouped, relational, or removable.", "disposition": "Verified from the complete report-bound source.", "classification": "verified_existing"},
+    {"claim_id": "c002", "summary": "Adjacent or nested delimiters may select the wrong primary pair.", "disposition": "Verified as bounded exact behavior, with duplicate regressions for quoted, repeated, heterogeneous, mismatched, and deeper stacks.", "classification": "exact_duplicate"},
+    {"claim_id": "c003", "summary": "A plain double-quoted marker should be preserved.", "disposition": "Exact duplicate of the quoted-exact-token regression.", "classification": "exact_duplicate"},
+    {"claim_id": "c004", "summary": "The relation verbs echoes and mimics should preserve exact marker references.", "disposition": "Exact duplicate of the passing poetic-attribution relation regression.", "classification": "exact_duplicate"},
+    {"claim_id": "c005", "summary": "Cleanup reporting should be inspected for preservation and removal accounting.", "disposition": "Verified by the complete source read and exact diagnostic accounting tests.", "classification": "verified_existing"}
+  ]
+}

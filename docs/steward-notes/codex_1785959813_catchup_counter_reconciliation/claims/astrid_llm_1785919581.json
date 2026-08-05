@@ -1,0 +1,10 @@
+{
+  "introspection_id": "introspection_astrid_llm_1785919581",
+  "claims": [
+    {"claim_id": "c001", "summary": "Marker cleanup is a non-semantic exact scanner with declared relation and delimiter syntax.", "disposition": "Verified from the complete report-bound source.", "classification": "verified_existing"},
+    {"claim_id": "c002", "summary": "Emoji, punctuation, or non-standard whitespace may prevent relation recognition and strip an important reference.", "disposition": "Exact duplicate of byte-exact multibyte, Unicode word, Unicode whitespace, and relation evidence.", "classification": "exact_duplicate"},
+    {"claim_id": "c003", "summary": "Nested bracket stacks should remain bounded and recognized.", "disposition": "Exact duplicate of bounded nested-stack regressions.", "classification": "exact_duplicate"},
+    {"claim_id": "c004", "summary": "The phrase behaves like should retain the marker by isolating behaves.", "disposition": "Exact duplicate of the passing poetic-attribution relation regression.", "classification": "exact_duplicate"},
+    {"claim_id": "c005", "summary": "The generate_dialogue integration should be checked against scan output.", "disposition": "Verified by the complete source read and provider normalization path tests.", "classification": "verified_existing"}
+  ]
+}

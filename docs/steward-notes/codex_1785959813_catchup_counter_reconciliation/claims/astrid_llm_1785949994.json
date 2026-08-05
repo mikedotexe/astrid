@@ -1,0 +1,10 @@
+{
+  "introspection_id": "introspection_astrid_llm_1785949994",
+  "claims": [
+    {"claim_id": "c001", "summary": "Marker cleanup separates exact occurrence detection from quoted, grouped, or relational reference syntax.", "disposition": "Verified from the complete report-bound source.", "classification": "verified_existing"},
+    {"claim_id": "c002", "summary": "An adjacent non-delimiter punctuation character may prevent a valid quoted or grouped classification.", "disposition": "Verified as an intentional exact-syntax boundary: only the nearest matched non-whitespace delimiter pair is admitted, preventing punctuation from broadening the grammar.", "classification": "verified_existing"},
+    {"claim_id": "c003", "summary": "Curly braces separated from the marker by spaces should preserve a grouped exact reference.", "disposition": "Exact duplicate of declared-group and Unicode-whitespace delimiter regressions.", "classification": "exact_duplicate"},
+    {"claim_id": "c004", "summary": "The relation allowlist should retain echoes and reject contains.", "disposition": "Verified by the finite source allowlist and passing relation-family regressions; contains is not admitted.", "classification": "verified_existing"},
+    {"claim_id": "c005", "summary": "Cleanup aggregation and non-marker-byte accounting should be inspected.", "disposition": "Verified by the full source read and exact accounting regressions, including longest-match and byte-exact remainder tests.", "classification": "verified_existing"}
+  ]
+}

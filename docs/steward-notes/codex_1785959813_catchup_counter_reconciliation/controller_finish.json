@@ -1,0 +1,22 @@
+{
+  "schema": "sanitized_steward_finish_receipt_v1",
+  "run_id": "run_1785959813743785000_f5adea01d1",
+  "actor": "codex-heartbeat",
+  "requested_outcome": "success",
+  "outcome": "success",
+  "pause_generation": 210,
+  "source_first_preprojection_generation_id": "projection_1785959814654376000_162cbc0c5b",
+  "source_first_postprojection_generation_id": "projection_1785966129821830000_801b6a9baa",
+  "evidence_event_store_v2": {
+    "valid": true,
+    "last_global_seq": 702403,
+    "last_event_sha256": "59ffe593ca437c13a6ea44d3b31b39d568e4be70487fec38ebc7f9b7aee4f430",
+    "active_stream_count": 16,
+    "corrupt_lines": 0
+  },
+  "git_policy_violations": [],
+  "projection_error": null,
+  "finished_at": "2026-08-05T21:47:51.938128+00:00",
+  "raw_output_included": false,
+  "raw_prompt_included": false
+}

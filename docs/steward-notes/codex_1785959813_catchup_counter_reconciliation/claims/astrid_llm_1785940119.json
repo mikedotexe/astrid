@@ -1,0 +1,10 @@
+{
+  "introspection_id": "introspection_astrid_llm_1785940119",
+  "claims": [
+    {"claim_id": "c001", "summary": "The marker scanner greedily matches exact known tokens and preserves only explicit reference syntax.", "disposition": "Verified from the complete report-bound source.", "classification": "verified_existing"},
+    {"claim_id": "c002", "summary": "Complex punctuation may prevent first_word_after from finding a valid relation verb.", "disposition": "Exact duplicate of existing Unicode/punctuation evidence: non-word punctuation is skipped and the first non-empty Unicode word is retained for finite allowlist comparison.", "classification": "exact_duplicate"},
+    {"claim_id": "c003", "summary": "A marker followed by behaves should remain in the exact remainder.", "disposition": "Exact duplicate of passing poetic-attribution and relation regressions.", "classification": "exact_duplicate"},
+    {"claim_id": "c004", "summary": "Triple nested marker delimiters should remain recognized within the depth bound.", "disposition": "Exact duplicate of the exact-three-level and heterogeneous nested-stack regressions.", "classification": "exact_duplicate"},
+    {"claim_id": "c005", "summary": "The final output construction should be checked for how it consumes cleanup results.", "disposition": "Verified by the complete 1,038-line source read and provider normalization tests.", "classification": "verified_existing"}
+  ]
+}

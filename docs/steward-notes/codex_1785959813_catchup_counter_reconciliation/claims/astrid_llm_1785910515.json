@@ -1,0 +1,10 @@
+{
+  "introspection_id": "introspection_astrid_llm_1785910515",
+  "claims": [
+    {"claim_id": "c001", "summary": "The scanner retains markers only under exact local reference syntax.", "disposition": "Verified from the complete report-bound source.", "classification": "verified_existing"},
+    {"claim_id": "c002", "summary": "A marker adjacent to multibyte Unicode may make text slicing land inside a character and panic.", "disposition": "Contradicted by source construction and the byte-exact multibyte regression: all scan offsets advance at UTF-8 character boundaries.", "classification": "verified_existing"},
+    {"claim_id": "c003", "summary": "Emoji or Han characters adjacent to a marker should be tested for boundary safety.", "disposition": "Exact duplicate of the multibyte scanner regression and Unicode scalar traversal proof.", "classification": "exact_duplicate"},
+    {"claim_id": "c004", "summary": "A bracketed marker in a contextual phrase should remain visible.", "disposition": "Exact duplicate of declared grouping and relation regressions; bracket syntax independently preserves the exact marker.", "classification": "exact_duplicate"},
+    {"claim_id": "c005", "summary": "Boundary behavior around non-ASCII characters should be verified.", "disposition": "Verified from exact source and focused tests without a runtime change.", "classification": "verified_existing"}
+  ]
+}

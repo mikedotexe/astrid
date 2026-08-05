@@ -1750,10 +1750,128 @@ def _addressing_scope_counts(items: list[dict[str, Any]]) -> dict[str, Any]:
     }
 
 
+def _blocked_needs_steward_breakdown(
+    artifacts: dict[str, dict[str, Any]],
+    work_items: dict[str, dict[str, Any]],
+) -> dict[str, Any]:
+    blocked = [
+        item
+        for item in artifacts.values()
+        if str(item.get("status") or "") == "blocked_needs_steward"
+    ]
+    active = [item for item in blocked if item.get("present_on_disk") is not False]
+    historical_absent = [
+        item for item in blocked if item.get("present_on_disk") is False
+    ]
+
+    active_claims: list[tuple[str, str, dict[str, Any]]] = []
+    for artifact in active:
+        introspection_id = str(artifact.get("introspection_id") or "")
+        claims = artifact.get("claims") if isinstance(artifact.get("claims"), dict) else {}
+        for claim_id, claim in claims.items():
+            if isinstance(claim, dict):
+                active_claims.append((introspection_id, str(claim_id), claim))
+
+    active_claim_keys = {
+        (introspection_id, claim_id) for introspection_id, claim_id, _ in active_claims
+    }
+    blocked_claims = [
+        (introspection_id, claim_id, claim)
+        for introspection_id, claim_id, claim in active_claims
+        if str(claim.get("disposition") or "") == "blocked_needs_steward"
+    ]
+    linked_work_items = [
+        item
+        for item in work_items.values()
+        if (
+            str(item.get("source_introspection_id") or ""),
+            str(item.get("claim_id") or ""),
+        )
+        in active_claim_keys
+    ]
+    linked_claim_keys = {
+        (
+            str(item.get("source_introspection_id") or ""),
+            str(item.get("claim_id") or ""),
+        )
+        for item in linked_work_items
+    }
+    linked_status_counts = Counter(
+        str(item.get("status") or "unknown") for item in linked_work_items
+    )
+    unique_artifacts_by_status: dict[str, int] = {}
+    for status in sorted(linked_status_counts):
+        unique_artifacts_by_status[status] = len(
+            {
+                str(item.get("source_introspection_id") or "")
+                for item in linked_work_items
+                if str(item.get("status") or "unknown") == status
+            }
+        )
+
+    partition_statuses = {
+        "evidence_work": {"ready_for_implementation", "needs_sandbox"},
+        "authority_waits": {"needs_operator_approval", "needs_steward_grant"},
+        "awaiting_response": {"implemented_awaiting_felt_response"},
+        "verified_or_closed_evidence": {"verified_existing", *WORK_TERMINAL_STATUSES},
+    }
+    partitions: dict[str, dict[str, Any]] = {}
+    for name, statuses in partition_statuses.items():
+        rows = [
+            item
+            for item in linked_work_items
+            if str(item.get("status") or "unknown") in statuses
+        ]
+        partitions[name] = {
+            "statuses": sorted(statuses),
+            "work_item_count": len(rows),
+            "unique_artifact_count": len(
+                {str(item.get("source_introspection_id") or "") for item in rows}
+            ),
+        }
+
+    proof_gap_claim_count = sum(
+        len(item.get("proof_missing_claims") or []) for item in active
+    )
+    return {
+        "schema": "blocked_needs_steward_breakdown_v1",
+        "active_artifact_count": len(active),
+        "historical_absent_artifact_count": len(historical_absent),
+        "active_full_read_count": sum(1 for item in active if item.get("full_read")),
+        "active_claim_complete_artifact_count": sum(
+            1
+            for item in active
+            if isinstance(item.get("claims"), dict) and bool(item.get("claims"))
+        ),
+        "active_claim_count": len(active_claims),
+        "active_blocked_claim_count": len(blocked_claims),
+        "proof_gap_artifact_count": sum(
+            1 for item in active if item.get("proof_missing_claims")
+        ),
+        "proof_gap_claim_count": proof_gap_claim_count,
+        "blocked_claims_with_work_item_count": sum(
+            1
+            for introspection_id, claim_id, _ in blocked_claims
+            if (introspection_id, claim_id) in linked_claim_keys
+        ),
+        "blocked_claims_without_work_item_count": sum(
+            1
+            for introspection_id, claim_id, _ in blocked_claims
+            if (introspection_id, claim_id) not in linked_claim_keys
+        ),
+        "linked_work_item_count": len(linked_work_items),
+        "linked_work_items_by_status": dict(sorted(linked_status_counts.items())),
+        "unique_artifacts_by_work_status": unique_artifacts_by_status,
+        "partitions": partitions,
+    }
+
+
 def counter_audit_for_artifacts(
     artifacts: dict[str, dict[str, Any]],
     summary: dict[str, Any],
+    work_items: dict[str, dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
+    work_items = work_items or {}
     all_items = [
         item for item in artifacts.values() if item.get("present_on_disk") is not False
     ]
@@ -1809,6 +1927,9 @@ def counter_audit_for_artifacts(
         },
         "checks": checks,
         "mismatches": mismatches,
+        "blocked_needs_steward_breakdown": _blocked_needs_steward_breakdown(
+            artifacts, work_items
+        ),
         "all_artifacts": all_counts,
         "canonical_introspections": canonical_counts,
         "thin_introspection_outputs": thin_counts,
@@ -1877,7 +1998,7 @@ def materialized_status(
             for name, count in source_counts.most_common(10)
         ],
     }
-    counter_audit = counter_audit_for_artifacts(artifacts, summary)
+    counter_audit = counter_audit_for_artifacts(artifacts, summary, work_items)
     status = {
         "schema": SCHEMA,
         "schema_version": SCHEMA_VERSION,
@@ -1933,6 +2054,7 @@ def report_from_status(status: dict[str, Any]) -> dict[str, Any]:
         else counter_audit_for_artifacts(
             status.get("artifacts") if isinstance(status.get("artifacts"), dict) else {},
             summary,
+            status.get("work_items") if isinstance(status.get("work_items"), dict) else {},
         )
     )
     canonical_remaining = int(
@@ -3761,6 +3883,130 @@ class IntrospectionAddressingAuditTests(unittest.TestCase):
         )
         self.assertIn("- canonical_remaining: 0", rendered)
         self.assertIn("- noncanonical_pending: 1", rendered)
+
+    def test_counter_audit_explains_blocked_steward_debt_without_reclassifying_it(self) -> None:
+        active_one = {
+            "introspection_id": "introspection_astrid_llm_10",
+            "artifact_kind": "canonical_introspection",
+            "present_on_disk": True,
+            "full_read": True,
+            "fully_addressed": False,
+            "status": "blocked_needs_steward",
+            "proof_missing_claims": [],
+            "claims": {
+                "c001": {
+                    "claim_id": "c001",
+                    "disposition": "blocked_needs_steward",
+                },
+                "c002": {"claim_id": "c002", "disposition": "addressed_change"},
+            },
+        }
+        active_two = {
+            "introspection_id": "introspection_minime_regulator_11",
+            "artifact_kind": "canonical_introspection",
+            "present_on_disk": True,
+            "full_read": True,
+            "fully_addressed": False,
+            "status": "blocked_needs_steward",
+            "proof_missing_claims": ["c003"],
+            "claims": {
+                "c003": {
+                    "claim_id": "c003",
+                    "disposition": "blocked_needs_steward",
+                },
+                "c004": {
+                    "claim_id": "c004",
+                    "disposition": "blocked_needs_steward",
+                },
+            },
+        }
+        historical_absent = {
+            "introspection_id": "introspection_astrid_codec_9",
+            "artifact_kind": "canonical_introspection",
+            "present_on_disk": False,
+            "full_read": True,
+            "fully_addressed": False,
+            "status": "blocked_needs_steward",
+            "proof_missing_claims": [],
+            "claims": {"c001": {"claim_id": "c001"}},
+        }
+        work_items = {
+            "wi_ready": {
+                "source_introspection_id": active_one["introspection_id"],
+                "claim_id": "c001",
+                "status": "ready_for_implementation",
+            },
+            "wi_verified": {
+                "source_introspection_id": active_one["introspection_id"],
+                "claim_id": "c001",
+                "status": "verified_existing",
+            },
+            "wi_wait": {
+                "source_introspection_id": active_one["introspection_id"],
+                "claim_id": "c002",
+                "status": "needs_operator_approval",
+            },
+            "wi_response": {
+                "source_introspection_id": active_two["introspection_id"],
+                "claim_id": "c003",
+                "status": "implemented_awaiting_felt_response",
+            },
+            "wi_historical": {
+                "source_introspection_id": historical_absent["introspection_id"],
+                "claim_id": "c001",
+                "status": "needs_sandbox",
+            },
+        }
+
+        status = materialized_status(
+            {
+                active_one["introspection_id"]: active_one,
+                active_two["introspection_id"]: active_two,
+                historical_absent["introspection_id"]: historical_absent,
+            },
+            work_items=work_items,
+            cutoff={"cutoff": "introspection_astrid_llm_10.txt", "cutoff_timestamp": 10},
+        )
+        audit = status["counter_audit"]
+        breakdown = audit["blocked_needs_steward_breakdown"]
+
+        self.assertEqual(audit["all_artifacts"]["blocked_needs_steward_count"], 2)
+        self.assertEqual(breakdown["active_artifact_count"], 2)
+        self.assertEqual(breakdown["historical_absent_artifact_count"], 1)
+        self.assertEqual(breakdown["active_full_read_count"], 2)
+        self.assertEqual(breakdown["active_claim_complete_artifact_count"], 2)
+        self.assertEqual(breakdown["active_claim_count"], 4)
+        self.assertEqual(breakdown["active_blocked_claim_count"], 3)
+        self.assertEqual(breakdown["proof_gap_artifact_count"], 1)
+        self.assertEqual(breakdown["proof_gap_claim_count"], 1)
+        self.assertEqual(breakdown["blocked_claims_with_work_item_count"], 2)
+        self.assertEqual(breakdown["blocked_claims_without_work_item_count"], 1)
+        self.assertEqual(breakdown["linked_work_item_count"], 4)
+        self.assertEqual(
+            breakdown["linked_work_items_by_status"],
+            {
+                "implemented_awaiting_felt_response": 1,
+                "needs_operator_approval": 1,
+                "ready_for_implementation": 1,
+                "verified_existing": 1,
+            },
+        )
+        self.assertEqual(
+            breakdown["unique_artifacts_by_work_status"]["verified_existing"], 1
+        )
+        self.assertEqual(
+            breakdown["partitions"]["evidence_work"]["work_item_count"], 1
+        )
+        self.assertEqual(
+            breakdown["partitions"]["authority_waits"]["work_item_count"], 1
+        )
+        self.assertEqual(
+            breakdown["partitions"]["awaiting_response"]["work_item_count"], 1
+        )
+        self.assertEqual(
+            breakdown["partitions"]["verified_or_closed_evidence"]["work_item_count"],
+            1,
+        )
 
     def test_work_items_do_not_make_introspection_fully_addressed(self) -> None:
         import tempfile

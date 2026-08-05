@@ -1,0 +1,10 @@
+{
+  "introspection_id": "introspection_astrid_llm_1785933024",
+  "claims": [
+    {"claim_id": "c001", "summary": "The runtime distinguishes quoted, grouped, and explicit-relation marker references.", "disposition": "Verified from the complete report-bound source.", "classification": "verified_existing"},
+    {"claim_id": "c002", "summary": "Multi-word phrases such as appears to be may fail because only the first word is inspected.", "disposition": "Contradicted by the exact grammar for the named case: appears is the first word and is allowlisted; the bounded first-word rule is intentional.", "classification": "verified_existing"},
+    {"claim_id": "c003", "summary": "Unicode group brackets such as the declared double brackets should preserve a marker.", "disposition": "Exact duplicate of declared Unicode group-delimiter regressions.", "classification": "exact_duplicate"},
+    {"claim_id": "c004", "summary": "A marker followed by behaves as should be retained.", "disposition": "Exact duplicate of the passing relation regression.", "classification": "exact_duplicate"},
+    {"claim_id": "c005", "summary": "The later dialogue path should be checked for remainder integration.", "disposition": "Verified by the complete source read and provider normalization path tests.", "classification": "verified_existing"}
+  ]
+}

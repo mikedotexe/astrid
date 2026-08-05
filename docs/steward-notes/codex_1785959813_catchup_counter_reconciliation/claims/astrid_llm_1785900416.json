@@ -1,0 +1,10 @@
+{
+  "introspection_id": "introspection_astrid_llm_1785900416",
+  "claims": [
+    {"claim_id": "c001", "summary": "The marker scanner separates exact marker presence from quoted, grouped, or relational reference syntax.", "disposition": "Verified from the complete report-bound source.", "classification": "verified_existing"},
+    {"claim_id": "c002", "summary": "Non-standard multibyte delimiter sequences or international word boundaries may evade recognition.", "disposition": "Verified as a finite declared grammar, with exact Unicode delimiter, whitespace, word, and multibyte regressions.", "classification": "exact_duplicate"},
+    {"claim_id": "c003", "summary": "A declared Unicode grouped pair separated by whitespace should preserve the marker.", "disposition": "Exact duplicate of declared-group and Unicode-whitespace regressions.", "classification": "exact_duplicate"},
+    {"claim_id": "c004", "summary": "The relation echoes should retain the marker in the remainder.", "disposition": "Exact duplicate of the passing relation regression.", "classification": "exact_duplicate"},
+    {"claim_id": "c005", "summary": "The final generate_dialogue use of the remainder should be examined.", "disposition": "Verified by the complete 1,038-line source read and normalization path tests.", "classification": "verified_existing"}
+  ]
+}

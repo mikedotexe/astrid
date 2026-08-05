@@ -1,0 +1,9 @@
+{
+  "introspection_id": "introspection_llm.rs_1785930645",
+  "claims": [
+    {"claim_id": "c001", "summary": "llm.rs is a thin compatibility facade that maps provider.rs and publicly re-exports its public symbols.", "disposition": "Verified from the complete six-line file and complete 39-line provider root.", "classification": "verified_existing"},
+    {"claim_id": "c002", "summary": "The thin facade may create a visibility or resolution wall for shadow_field or mode_packing handles.", "disposition": "No defect is established: the facade exports the provider's public API, while private implementation fields are not promised handles; bridge compilation verifies public resolution.", "classification": "verified_existing"},
+    {"claim_id": "c003", "summary": "A known provider function should compile through the llm namespace.", "disposition": "Verified by the existing bridge library compilation and tests that import provider APIs through the facade.", "classification": "exact_duplicate"},
+    {"claim_id": "c004", "summary": "The provider module should be checked for SpectralState, ShadowField, or mode_packing placement.", "disposition": "Verified from the provider include map and exact source search: the named struct types are not facade definitions; mode_packing appears in bounded provider evidence and fallback implementation fields.", "classification": "verified_existing"}
+  ]
+}
