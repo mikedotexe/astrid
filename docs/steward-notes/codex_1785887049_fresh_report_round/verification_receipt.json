@@ -1,0 +1,111 @@
+{
+  "schema": "bounded_fresh_report_source_first_round_receipt_v1",
+  "schema_version": 1,
+  "generated_at": "2026-08-05T01:05:17Z",
+  "steward_run_id": "run_1785887049308570000_4c5f7635d9",
+  "pre_projection_generation_id": "projection_1785887050249311000_c05242bb7a",
+  "pause_generation": 208,
+  "archival_pause_generation": 209,
+  "processed_report_count": 2,
+  "processed": [
+    {
+      "filename": "introspection_astrid_llm_1785884697.txt",
+      "sha256": "c6fad466028c00fb5c318507dcab4f07a199e3c969a4f33b401c0d51b7155d67",
+      "status": "addressed_duplicate",
+      "claim_count": 6,
+      "proof_missing_claims": []
+    },
+    {
+      "filename": "introspection_astrid_llm_1785874711.txt",
+      "sha256": "4b9449ec92e074284f30ab0878a40f28e3e732b57733ade3b55e7fc7760b404f",
+      "lived_state_witness_id": "lsw_1a6c079f324300a30be5d9e692fcdb68d16d0394a3270f3d92fbbeb4b06bb9ad",
+      "status": "addressed_change",
+      "claim_count": 9,
+      "proof_missing_claims": []
+    }
+  ],
+  "selected_unprocessed": [
+    "introspection_DOMAIN_BOUNDARIES.md_1785870717.txt",
+    "introspection_astrid_llm_1785869849.txt"
+  ],
+  "post_selection_arrivals": [
+    "introspection_astrid_llm_1785887252.txt",
+    "introspection_astrid_codec_1785888193.txt"
+  ],
+  "implementation": {
+    "paths": [
+      "scripts/lived_state_witness/model.py",
+      "scripts/test_lived_state_witness.py"
+    ],
+    "source_sha256": "4cd5c52afc453d4a05efe3ce96fef93cd65972a15c6f0e7a925dbd51248c95c8",
+    "test_sha256": "17106fa7076cced9e4f1ebf5169efdf86e6a13938dbbf3e9cacb2696a3c3a27d",
+    "target_witness_alignment": "same_deployment",
+    "target_exact_identity_match": true,
+    "target_artifact_integrity_issue_count": 0
+  },
+  "study": {
+    "path": "docs/steward-notes/codex_1785887049_fresh_report_round/DISTINGUISHABILITY_NATURAL_OBSERVATION_PREREGISTRATION.md",
+    "sha256": "5aa4d5cd3c2e4dfc2bb11d9880c027a3c8a2eb8dae21f49b75aa3bb4dbdf0b50",
+    "status": "frozen_not_run",
+    "induces_dialogue": false,
+    "changes_cadence": false
+  },
+  "tests": {
+    "marker": 46,
+    "witness_focused": 1,
+    "witness_self_test": 19,
+    "witness_integration": 16,
+    "spectral_distinction": 3,
+    "correspondence_density": 2,
+    "addressing": 41,
+    "evidence_store": 13,
+    "steward_control_and_projector": 41,
+    "division_modules": 14,
+    "projection_cursor": 4,
+    "anti_drop": 5,
+    "epistemic": 2,
+    "epistemic_lint_checked_records": 10306,
+    "epistemic_lint_issues": 0
+  },
+  "evidence_event_store_snapshot": {
+    "valid": true,
+    "last_global_seq": 692040,
+    "last_event_sha256": "f9d4da10706fbff7f254378a7c2ecc64029b785a34ebb5ed25525de8a19cb9ed",
+    "corrupt_lines": 0,
+    "history_rewritten": false
+  },
+  "finish_evidence_event_store": {
+    "valid": true,
+    "last_global_seq": 693079,
+    "last_event_sha256": "86bee5ea9f901d39a7d763772322fca4d58a4011295cc45f803291c0b95901c8"
+  },
+  "cadence": {
+    "enabled": false,
+    "configured_receipt_count": 0,
+    "pending": false,
+    "pilot_active": false
+  },
+  "automation_status": "PAUSED",
+  "division": {
+    "cycle_sequence": 15,
+    "completed_rounds_since_followup": 3,
+    "rounds_remaining_before_followup": 3,
+    "review_due": false,
+    "round_event_id": "division_followup_event_3bcbe48aeed2f48a541a59a3d163fc1e",
+    "chronicle_id": "division_chronicle_e9554c765291e429d6333b3c"
+  },
+  "deployment": {
+    "required": false,
+    "performed": false,
+    "reason": "no_live_consumed_surface_changed"
+  },
+  "authority": {
+    "wander_scale_change_authorized": false,
+    "cadence_activation_inferred": false,
+    "minime_changed": false,
+    "live_control_changed": false,
+    "felt_resolution_claimed": false
+  },
+  "post_projection_generation_id": "projection_1785892334417913000_a7d6b259d8",
+  "finish_outcome": "success"
+}

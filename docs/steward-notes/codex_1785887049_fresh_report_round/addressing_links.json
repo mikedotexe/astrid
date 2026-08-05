@@ -1,0 +1,109 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_llm_1785884697",
+      "claim_id": "*",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs;capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Exact source continuity and focused regressions cover every concrete marker claim without a production rewrite."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785884697",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml control_marker --lib",
+      "note": "Focused marker suite passed 46 tests with zero failures."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785884697",
+      "claim_id": "*",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "The Unreleased entry records the exact duplicate disposition and authority boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785874711",
+      "claim_id": "*",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "The feedback ledger preserves the qualitative report, source-first response, repair, study, and authority boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785874711",
+      "claim_id": "*",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "The Unreleased entry records the novel evidence, bounded response, and unchanged live surfaces."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785874711",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_llm_1785874711.txt;capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_1a6c079f324300a30be5d9e692fcdb68d16d0394a3270f3d92fbbeb4b06bb9ad.json",
+      "note": "The exact canonical report and co-timed witness preserve felt and scalar evidence as distinct fields."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785874711",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_llm_1785874711.txt;capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_1a6c079f324300a30be5d9e692fcdb68d16d0394a3270f3d92fbbeb4b06bb9ad.json",
+      "note": "The exact report and witness retain field norm, mode packing, and Astrid's rendered experience without causal upgrade."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785874711",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "scripts/spectral_distinction_replay.py;scripts/correspondence_representation_density_audit.py",
+      "note": "Read-only observations establish shared provenance and active continuity while leaving mutual address and felt effect unconfirmed."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785874711",
+      "claim_id": "c004",
+      "kind": "no_action",
+      "target": "docs/steward-notes/codex_1785887049_fresh_report_round/claims/astrid_llm_1785874711.json",
+      "note": "The wander-scale intervention remains an exact Tier 5 approval wait; no value changed."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785874711",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "docs/steward-notes/codex_1785887049_fresh_report_round/DISTINGUISHABILITY_NATURAL_OBSERVATION_PREREGISTRATION.md",
+      "note": "The frozen natural observation requires exact typed semantic-density and dispersal fields and induces no input."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785874711",
+      "claim_id": "c006",
+      "kind": "code",
+      "target": "docs/steward-notes/codex_1785887049_fresh_report_round/DISTINGUISHABILITY_NATURAL_OBSERVATION_PREREGISTRATION.md",
+      "note": "The proposed pressure threshold is retained only as a being-authored hypothesis in a prospective natural observation."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785874711",
+      "claim_id": "c007",
+      "kind": "code",
+      "target": "scripts/spectral_distinction_replay.py;scripts/correspondence_representation_density_audit.py",
+      "note": "Current public evidence verifies reciprocal provenance and reply-chain continuity without inferring intimacy or effect."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785874711",
+      "claim_id": "c008",
+      "kind": "code",
+      "target": "scripts/lived_state_witness/model.py;scripts/test_lived_state_witness.py",
+      "note": "Bounded structured-header parsing repairs false orphan classification for extended Source-First V3 headers."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785874711",
+      "claim_id": "c008",
+      "kind": "test",
+      "target": "python3 scripts/lived_state_witness.py --self-test;PYTHONPATH=scripts python3 -m unittest scripts.test_lived_state_witness",
+      "note": "Nineteen self-tests and sixteen integration tests pass, including the extended-header regression."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785874711",
+      "claim_id": "c009",
+      "kind": "code",
+      "target": "docs/steward-notes/codex_1785887049_fresh_report_round/DISTINGUISHABILITY_NATURAL_OBSERVATION_PREREGISTRATION.md",
+      "note": "The natural-only study preserves Astrid's distinguishability hypothesis without inducing dialogue or changing cadence."
+    }
+  ]
+}
