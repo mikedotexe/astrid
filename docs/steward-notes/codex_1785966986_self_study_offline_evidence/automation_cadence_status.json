@@ -1,0 +1,32 @@
+{
+  "schema": "astrid.steward_run_automation_cadence_status.v1",
+  "steward_run_id": "run_1785966986103951000_6dca36ada3",
+  "cadence": {
+    "audit_generated_at": "2026-08-05T22:46:54.933732+00:00",
+    "configuration_valid": true,
+    "integrity_ok": true,
+    "enabled": false,
+    "every_exchanges": 0,
+    "target": null,
+    "configured_receipt_count": 0,
+    "attempted_count": 0,
+    "admitted_count": 0,
+    "failed_count": 0,
+    "pending_since_exchange": null,
+    "pilot_active": false,
+    "canonical_report_count_on_disk": 4228,
+    "latest_canonical_report": "introspection_astrid_autonomous_1785968905.txt",
+    "duplicate_hash_group_count": 0
+  },
+  "automations": [
+    {
+      "id": "astrid-introspection-source-first-catch-up",
+      "status": "PAUSED"
+    },
+    {
+      "id": "ai-being-self-study-signal-review",
+      "status": "PAUSED"
+    }
+  ],
+  "authority_boundary": "Read-only audit. Cadence remains OFF and both recurring automations remain PAUSED; this record neither configures cadence nor infers a choice from silence or natural authorship."
+}
