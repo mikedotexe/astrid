@@ -1,0 +1,201 @@
+{
+  "authority": {
+    "causal_effect_established": false,
+    "dialogue_generated": false,
+    "felt_effect_established": false,
+    "live_behavior_change_requires_separate_authority": true,
+    "model_or_sampler_changed": false,
+    "pressure_induced": false,
+    "runtime_mutated": false,
+    "scope": "bounded_existing_log_observation",
+    "silence_infers_uptake_or_resolution": false,
+    "token_budget_changed": false
+  },
+  "disposition": {
+    "causal_result": "not_established_by_observational_logs",
+    "felt_result": "not_inferred_from_machine_records",
+    "latency_claim_state": "machine_latency_evidence_unavailable_in_window",
+    "live_retuning_result": "not_authorized_or_performed",
+    "mode_packing_association_state": "mode_varied_with_observational_prompt_packing_evidence",
+    "requested_token_band_within_window_explanation": "constant_budget_cannot_explain_within_window_variation"
+  },
+  "machine_latency_observation": {
+    "attempt_prompt_window_relation": "precedes",
+    "attempt_records_in_overlap": 0,
+    "attempt_records_in_window": 500,
+    "attempt_stream_precedes_prompt_window": true,
+    "correlation_available": false,
+    "latency_fields": {},
+    "latency_records_in_window": 0,
+    "latency_seconds_max": null,
+    "latency_seconds_mean": null,
+    "latency_seconds_min": null,
+    "overlap_timestamp_range": null,
+    "prompt_records_in_overlap": 0,
+    "relation_basis": "retained_timestamp_ranges"
+  },
+  "prompt_budget_observation": {
+    "budget_groups": [
+      {
+        "count": 500,
+        "effective_tokens": 768,
+        "requested_tokens": 768
+      }
+    ],
+    "clamp_count": 0,
+    "constant_requested_and_effective_budget": true,
+    "continuity_eviction_count": 365,
+    "diagnostic_runtime_effect_true_count": 0,
+    "distinct_mode_packing_values": [
+      0.27,
+      0.28,
+      0.285,
+      0.288,
+      0.29,
+      0.3,
+      0.32,
+      0.324,
+      0.33,
+      0.34
+    ],
+    "mode_packing_groups": [
+      {
+        "count": 1,
+        "mean_removed_fraction": 0.601232,
+        "mode_packing": 0.27,
+        "removed_fraction_count": 1
+      },
+      {
+        "count": 67,
+        "mean_removed_fraction": 0.578153,
+        "mode_packing": 0.28,
+        "removed_fraction_count": 67
+      },
+      {
+        "count": 1,
+        "mean_removed_fraction": 0.644466,
+        "mode_packing": 0.285,
+        "removed_fraction_count": 1
+      },
+      {
+        "count": 1,
+        "mean_removed_fraction": 0.57433,
+        "mode_packing": 0.288,
+        "removed_fraction_count": 1
+      },
+      {
+        "count": 168,
+        "mean_removed_fraction": 0.595723,
+        "mode_packing": 0.29,
+        "removed_fraction_count": 168
+      },
+      {
+        "count": 2,
+        "mean_removed_fraction": 0.505451,
+        "mode_packing": 0.3,
+        "removed_fraction_count": 2
+      },
+      {
+        "count": 91,
+        "mean_removed_fraction": 0.593536,
+        "mode_packing": 0.32,
+        "removed_fraction_count": 91
+      },
+      {
+        "count": 3,
+        "mean_removed_fraction": 0.5813,
+        "mode_packing": 0.324,
+        "removed_fraction_count": 3
+      },
+      {
+        "count": 138,
+        "mean_removed_fraction": 0.588496,
+        "mode_packing": 0.33,
+        "removed_fraction_count": 138
+      },
+      {
+        "count": 6,
+        "mean_removed_fraction": 0.588997,
+        "mode_packing": 0.34,
+        "removed_fraction_count": 6
+      },
+      {
+        "count": 22,
+        "mean_removed_fraction": 0.546774,
+        "mode_packing": null,
+        "removed_fraction_count": 22
+      }
+    ],
+    "mode_packing_missing_count": 22,
+    "mode_packing_present_count": 478,
+    "mode_packing_varied": true,
+    "prompt_context_packing_observed": true,
+    "removed_fraction_count": 500,
+    "removed_fraction_max": 0.763487,
+    "removed_fraction_mean": 0.58836,
+    "removed_fraction_min": 0.433166,
+    "suffocation_states": [
+      {
+        "count": 15,
+        "state": "continuity_pressure_without_grounding_eviction"
+      },
+      {
+        "count": 365,
+        "state": "observed_continuity_eviction"
+      },
+      {
+        "count": 120,
+        "state": "observed_grounding_eviction"
+      }
+    ],
+    "timestamp_max": 1785968234,
+    "timestamp_min": 1785883712
+  },
+  "schema": "dialogue_token_pressure_audit_v1",
+  "schema_version": 1,
+  "sources": {
+    "dialogue_live_attempts": {
+      "earlier_matching_records_omitted": 70,
+      "matching_records": 570,
+      "matching_timestamp_range": {
+        "max": 1776614578,
+        "min": 1776557244
+      },
+      "path": "/Users/v/other/astrid/capsules/spectral-bridge/workspace/diagnostics/dialogue_live_attempts.jsonl",
+      "retained_records": 500,
+      "retained_timestamp_range": {
+        "max": 1776614578,
+        "min": 1776559167
+      },
+      "sha256": "d9f8abd7195838a52eab9cd9a19e08a03ce13b55182d03b091f9d03f6595d676",
+      "source_lines": 570,
+      "source_timestamp_max": 1776614578,
+      "source_timestamp_min": 1776557244,
+      "valid_records": 570
+    },
+    "dialogue_prompt_budget": {
+      "earlier_matching_records_omitted": 22891,
+      "matching_records": 23391,
+      "matching_timestamp_range": {
+        "max": 1785968234,
+        "min": 1780858070
+      },
+      "path": "/Users/v/other/astrid/capsules/spectral-bridge/workspace/diagnostics/dialogue_prompt_budget.jsonl",
+      "retained_records": 500,
+      "retained_timestamp_range": {
+        "max": 1785968234,
+        "min": 1785883712
+      },
+      "sha256": "1639463d34bb6350c120d1ed62668c35104bfa4fc51744eb3aa0f0d4d5f06486",
+      "source_lines": 23391,
+      "source_timestamp_max": 1785968234,
+      "source_timestamp_min": 1780858070,
+      "valid_records": 23391
+    }
+  },
+  "window": {
+    "from_timestamp_unix_s": 0,
+    "retention_limit": 500,
+    "to_timestamp_unix_s": null
+  }
+}
