@@ -1,0 +1,9 @@
+{
+  "claims": [
+    {"claim_id": "c001", "summary": "The source implements a bounded scanner that classifies exact known model-control markers by finite reference context.", "disposition": "Verify from the exact 1-400 source interval and existing scanner regressions.", "classification": "verified_existing"},
+    {"claim_id": "c002", "summary": "A complex phrase whose first word is outside the finite relation allowlist can receive no reference syntax and be stripped.", "disposition": "Verify as intentional finite-grammar behavior; an unlisted word is not evidence of reference intent.", "classification": "verified_existing"},
+    {"claim_id": "c003", "summary": "A marker followed by `behaves like` should remain visible as an explicit exact-token relation.", "disposition": "Exact duplicate of the passing poetic-attribution regression.", "classification": "exact_duplicate"},
+    {"claim_id": "c004", "summary": "Three nested square-bracket pairs should be recognized within the bounded delimiter depth.", "disposition": "Exact duplicate of existing three-, four-, and deeper bounded delimiter regressions.", "classification": "exact_duplicate"},
+    {"claim_id": "c005", "summary": "The scanner result should be traced through `generate_dialogue` to final output handling.", "disposition": "Verify downstream validation and return source; keep provider-neutral output normalization as a separate live-consumed operator wait.", "classification": "verified_existing"}
+  ]
+}

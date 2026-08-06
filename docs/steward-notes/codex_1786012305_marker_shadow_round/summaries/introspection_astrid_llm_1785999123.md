@@ -1,0 +1,3 @@
+# Full Read: introspection_astrid_llm_1785999123
+
+All 45 report lines, all 491 witness lines, and exact source lines 1-400 were read. Rust `char` iteration and `char_indices` operate on Unicode scalars and retain exact byte offsets, so the proposed partial UTF-8 consumption cannot occur in this scanner. `«[marker]»` is a valid two-level declared delimiter stack. The report's expectation that an unlisted following verb defaults to no reference syntax while preserving the marker is contradicted by source: no reference syntax makes the exact known control marker a cleanup candidate, leaving surrounding bytes. Existing multibyte, nested delimiter, and unlisted-relation tests prove those mechanics.

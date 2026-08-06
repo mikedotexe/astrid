@@ -1,0 +1,81 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_llm_1785892559",
+      "claim_id": "*",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs;capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Exact source covers the finite relation grammar, Unicode delimiter depth, longest-marker selection, and provider normalization path."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785892559",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib control_marker",
+      "note": "All 47 current marker regressions pass without a production change."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785892559",
+      "claim_id": "c002",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1786018969_fresh_facade_marker_round/claims/introspection_astrid_llm_1786014425.json",
+      "note": "The later source-identical report independently verifies the same finite relation and delimiter behavior."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1785888193",
+      "claim_id": "*",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/codec/projection.rs;capsules/spectral-bridge/src/codec/encoding.rs;capsules/spectral-bridge/src/codec/structure.rs;capsules/spectral-bridge/src/codec/structural_evidence.rs;capsules/spectral-bridge/src/codec/focus_evidence.rs;capsules/spectral-bridge/src/codec/tests.rs",
+      "note": "Exact source separates the 768-to-8 projection, direct 48D legacy construction, warmth and narrative lanes, entropy lift, and read-only diagnostic companions."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1785888193",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "codec_vibrancy_and_warmth_continuity_are_readout_only;tail_vibrancy_entropy_086_lifts_tail_output_above_threshold;embedding_projection_lane_distinguishes_dense_inputs_without_widening_live_vector;narrative_arc_probe_documents_tail_dimension_loss;high_entropy_vibrancy_does_not_write_narrative_arc_or_shadow_reserved_dims;dimensionality_flatness_detects_empty_expansion_vs_filled_48d_lane;codec_lane_separation",
+      "note": "Eight focused codec tests pass, including two lane-separation tests and explicit legacy-width rejection."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1785888193",
+      "claim_id": "c004",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1783886846_introspection_astrid_codec_1783885169_claims.json;docs/steward-notes/codex_1784198584_introspection_astrid_codec_1783423718_claims.json;docs/steward-notes/codex_1784276865_run13_reads/introspection_astrid_codec_1782848118_claims.json;docs/steward-notes/codex_1784276865_run13_reads/introspection_astrid_codec_1782934203_claims.json",
+      "note": "Prior independently read codec reports preserve the same legacy-width, warmth, projection, and narrative-lane claim families."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1785888193",
+      "claim_id": "c006",
+      "kind": "no_action",
+      "target": "tier_5:mike_operator_codec_live_representation_approval_required",
+      "note": "No semantic width, projection basis, narrative mapping, gain, clamp, transport, or protocol authority is inferred."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785892559",
+      "claim_id": "*",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "The Unreleased entry records source-verified marker behavior and the unchanged live boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1785888193",
+      "claim_id": "*",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "The Unreleased entry records the verified mapping boundary and ungranted live representation wait."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785892559",
+      "claim_id": "*",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "The feedback ledger preserves Astrid's scanner questions and the exact response."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1785888193",
+      "claim_id": "*",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "The feedback ledger preserves the codec concern, mechanical evidence, and authority boundary."
+    }
+  ]
+}

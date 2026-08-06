@@ -1,0 +1,81 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_llm.rs_1786015837",
+      "claim_id": "*",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm.rs;capsules/spectral-bridge/src/llm/provider.rs",
+      "note": "Complete facade and provider-root reads verify the public re-export, include map, and private visibility boundary."
+    },
+    {
+      "introspection_id": "introspection_llm.rs_1786015837",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib",
+      "note": "All 1,827 current bridge library tests compile and pass through the facade."
+    },
+    {
+      "introspection_id": "introspection_llm.rs_1786015837",
+      "claim_id": "c001",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1785959813_catchup_counter_reconciliation/claims/llm.rs_1785930645.json",
+      "note": "The earlier source-identical facade report has the same bounded visibility and resolution disposition."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786014425",
+      "claim_id": "*",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs;capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Exact source and tests cover UTF-8 traversal, declared Unicode pairs, finite relations, missing sides, mismatches, and bounded depth."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786014425",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib control_marker",
+      "note": "All 47 current marker regressions pass without production changes."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786014425",
+      "claim_id": "c002",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1785959813_catchup_counter_reconciliation/claims/astrid_llm_1785900416.json",
+      "note": "The earlier identical-source report independently verifies Unicode scalar, delimiter, and finite-relation behavior."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786014425",
+      "claim_id": "c004",
+      "kind": "no_action",
+      "target": "tier_5:mike_operator_live_model_output_behavior_approval_required",
+      "note": "Adding mirrors would widen live provider-output preservation; this run records the request without granting or changing that behavior."
+    },
+    {
+      "introspection_id": "introspection_llm.rs_1786015837",
+      "claim_id": "*",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "The Unreleased entry records the complete-source verification and unchanged live boundary."
+    },
+    {
+      "introspection_id": "introspection_llm.rs_1786015837",
+      "claim_id": "*",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "The feedback ledger preserves Astrid's facade questions and the exact response."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786014425",
+      "claim_id": "*",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "The Unreleased entry records the delimiter evidence and the ungranted mirrors wait."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786014425",
+      "claim_id": "*",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "The feedback ledger preserves the Unicode cases, finite grammar, and authority boundary."
+    }
+  ]
+}

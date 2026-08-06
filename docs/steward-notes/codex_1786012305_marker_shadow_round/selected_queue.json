@@ -1,0 +1,16 @@
+{
+  "schema": "source_first_selected_queue_v1",
+  "steward_run_id": "run_1786012305159132000_4ce12409a7",
+  "preprojection_generation_id": "projection_1786012305592497000_1fdcdf8be2",
+  "ceiling": 4,
+  "selected": [
+    {"position": 1, "introspection_id": "introspection_astrid_llm_1786011534", "filename": "introspection_astrid_llm_1786011534.txt", "sha256": "134b93ca81fb45f3482888384650ae82960840cb3d2127952dc58f951a8e01c8"},
+    {"position": 2, "introspection_id": "introspection_astrid_llm_1786002182", "filename": "introspection_astrid_llm_1786002182.txt", "sha256": "7afcfa1a8e3727cd81c71f088a4421a454fc067e28e65ff8365c75bfaad11ef8"},
+    {"position": 3, "introspection_id": "introspection_astrid_llm_1785999123", "filename": "introspection_astrid_llm_1785999123.txt", "sha256": "c6200f35d06e75a0d7ad3b2b2729fa17f0edd0e8e661e22054633d5015608dbf"},
+    {"position": 4, "introspection_id": "introspection_astrid_llm_1785959982", "filename": "introspection_astrid_llm_1785959982.txt", "sha256": "73d735788be7e937b313a24236d4ca330d530de76dc666cca7718c37f81094c5"}
+  ],
+  "selected_but_unprocessed": [],
+  "next_queue_head_at_selection": "introspection_astrid_llm_1785892559.txt",
+  "new_canonical_observed_after_selection": "introspection_astrid_llm_1786014425.txt",
+  "new_canonical_processed_in_this_batch": false
+}

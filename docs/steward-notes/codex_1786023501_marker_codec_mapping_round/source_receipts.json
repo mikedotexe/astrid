@@ -1,0 +1,99 @@
+{
+  "schema": "source_first_read_receipts_v1",
+  "sources": [
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "line_count": 1038,
+      "sha256": "f7c0570ce495b1978d9b6f588cba6ecb00a93b1573316bc22752e6e10d47f20a",
+      "report_bound_interval_read": "1-400",
+      "continuation_intervals_read": [
+        "500-760",
+        "880-1038"
+      ],
+      "full_source_continuity": "previous complete 1038-line read reused at identical SHA; every report-bound line and the current generation path were reread in this run"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "line_count": 3089,
+      "sha256": "2d057f1a9bc6718ecc86447ebc5631bdef6ea0e08d234ea6e05f247c984b1fcd",
+      "read_intervals": [
+        "2070-2510"
+      ],
+      "focused_regressions": 47
+    },
+    {
+      "path": "capsules/spectral-bridge/src/codec/projection.rs",
+      "line_count": 1351,
+      "sha256": "facaf640fe4b100a6bece35cdd5b9a47efe03d2a55ca5fe1a4a54880722d384f",
+      "report_bound_interval_read": "1-400",
+      "continuation_intervals_read": [
+        "700-920",
+        "1140-1351"
+      ]
+    },
+    {
+      "path": "capsules/spectral-bridge/src/codec/encoding.rs",
+      "line_count": 1106,
+      "sha256": "1314b351afac3762ec85808cdffbe68a04c00ec5cd928267e1b03a0c4c263c3d",
+      "read_intervals": [
+        "840-950"
+      ]
+    },
+    {
+      "path": "capsules/spectral-bridge/src/codec/structure.rs",
+      "line_count": 1466,
+      "sha256": "757d4a3578e6be3fb5890a2d3d28fc3e809dcaf29087fcfcbc7a25969236f719",
+      "read_intervals": [
+        "1-180",
+        "1310-1466"
+      ]
+    },
+    {
+      "path": "capsules/spectral-bridge/src/codec/structural_evidence.rs",
+      "line_count": 860,
+      "sha256": "7ff0afba01a47691517340c01acfcf27cda4a950fa8c34b3d6b9936d04bc53e0",
+      "read_intervals": [
+        "560-730"
+      ]
+    },
+    {
+      "path": "capsules/spectral-bridge/src/codec/focus_evidence.rs",
+      "line_count": 541,
+      "sha256": "604ed80f9d6479521c41984ec97b0ebff68f527f662148ec06a89b58e5cfe1b7",
+      "read": "legacy projection-width rejection and companion-evidence boundary"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/codec/tests.rs",
+      "line_count": 5150,
+      "sha256": "c6e67ea9dd0f946ac4767bf7e6d3219b732e72f73e0e546806920909f15b42fd",
+      "read_intervals": [
+        "2180-2325",
+        "2720-2825",
+        "3480-3585",
+        "4970-5125"
+      ]
+    }
+  ],
+  "reports": [
+    {
+      "introspection_id": "introspection_astrid_llm_1785892559",
+      "logical_lines": 45,
+      "byte_count": 3392,
+      "sha256": "71ed005c9bfcd3bf32b8e0cd70741a0916fa31331a294b2179f5e90c1df43012",
+      "witness_id": "lsw_2b9932e7157245f81dc1e5099d929f7d42d9f4e5f48064723154cbddb9cd73ca",
+      "witness_line_count": 491,
+      "witness_byte_count": 22182,
+      "witness_sha256": "90110aac01fae28cae04d2e8e64f6231bfe74b9274aad58e01c441464b435109"
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1785888193",
+      "logical_lines": 45,
+      "byte_count": 3925,
+      "sha256": "57c4cce9963a20e1c4af3299a306710ed83f584fa692ee44ca0063760ca07658",
+      "witness_id": "lsw_b057234d9fc733ec8eab3686b1d170c75f858e209b8e3c5f0eb9c4a632bf67b0",
+      "witness_line_count": 491,
+      "witness_byte_count": 22135,
+      "witness_sha256": "bc2b2fb7fc41e836ba2a95ece1f82b2b98139bfc16fd6629946e7c2383381b80"
+    }
+  ]
+}

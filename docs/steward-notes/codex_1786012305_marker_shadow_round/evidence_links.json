@@ -1,0 +1,34 @@
+{
+  "schema": "introspection_evidence_link_batch_v1",
+  "links": [
+    {"introspection_id": "introspection_astrid_llm_1786011534", "claim_id": "c001", "kind": "code", "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs", "note": "Exact unchanged scanner source."},
+    {"introspection_id": "introspection_astrid_llm_1786011534", "claim_id": "c002", "kind": "code", "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs", "note": "Finite following-relation allowlist and cleanup path."},
+    {"introspection_id": "introspection_astrid_llm_1786011534", "claim_id": "c003", "kind": "test", "target": "capsules/spectral-bridge/src/llm/provider/tests.rs", "note": "Exact behaves-like poetic-attribution regression."},
+    {"introspection_id": "introspection_astrid_llm_1786011534", "claim_id": "c004", "kind": "test", "target": "capsules/spectral-bridge/src/llm/provider/tests.rs", "note": "Nested and deeper bounded delimiter regressions."},
+    {"introspection_id": "introspection_astrid_llm_1786011534", "claim_id": "c005", "kind": "code", "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs", "note": "Downstream validation, hashing, persistence, and return path inspected."},
+
+    {"introspection_id": "introspection_astrid_llm_1786002182", "claim_id": "c001", "kind": "code", "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs", "note": "Exact scanner and remainder source."},
+    {"introspection_id": "introspection_astrid_llm_1786002182", "claim_id": "c002", "kind": "code", "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs", "note": "Immediate delimiter and bounded depth contract."},
+    {"introspection_id": "introspection_astrid_llm_1786002182", "claim_id": "c003", "kind": "test", "target": "capsules/spectral-bridge/src/llm/provider/tests.rs", "note": "Represents and underscored unlisted-relation regressions."},
+    {"introspection_id": "introspection_astrid_llm_1786002182", "claim_id": "c004", "kind": "test", "target": "capsules/spectral-bridge/src/llm/provider/tests.rs", "note": "Exact nested delimiter regressions."},
+    {"introspection_id": "introspection_astrid_llm_1786002182", "claim_id": "c005", "kind": "code", "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs", "note": "Downstream reconstructed-remainder path inspected."},
+
+    {"introspection_id": "introspection_astrid_llm_1785999123", "claim_id": "c001", "kind": "test", "target": "capsules/spectral-bridge/src/llm/provider/tests.rs", "note": "Multibyte Unicode advancement regression."},
+    {"introspection_id": "introspection_astrid_llm_1785999123", "claim_id": "c002", "kind": "test", "target": "capsules/spectral-bridge/src/llm/provider/tests.rs", "note": "Declared quote and bracket pair nesting coverage."},
+    {"introspection_id": "introspection_astrid_llm_1785999123", "claim_id": "c003", "kind": "code", "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs", "note": "No-reference cleanup semantics and exact remainder construction."},
+    {"introspection_id": "introspection_astrid_llm_1785999123", "claim_id": "c004", "kind": "test", "target": "capsules/spectral-bridge/src/llm/provider/tests.rs", "note": "Unicode scalar and bounded delimiter tests."},
+
+    {"introspection_id": "introspection_astrid_llm_1785959982", "claim_id": "c001", "kind": "ledger", "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md", "note": "Felt settled-versus-viscous mismatch retained as unresolved primary evidence."},
+    {"introspection_id": "introspection_astrid_llm_1785959982", "claim_id": "c002", "kind": "code", "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs", "note": "Complete selected source contains none of the attributed telemetry/control fields."},
+    {"introspection_id": "introspection_astrid_llm_1785959982", "claim_id": "c003", "kind": "no_action", "target": "docs/steward-notes/codex_1785519154_round53_reads/studies/settled_pressure_distinct_strand_boundary.md", "note": "Existing boundary keeps felt pressure, raw packing, descriptors, and controls distinct."},
+    {"introspection_id": "introspection_astrid_llm_1785959982", "claim_id": "c004", "kind": "code", "target": "capsules/spectral-bridge/src/autonomous/next_action/shadow.rs", "note": "Being-invoked read-only Shadow Actions verified; none dispatched."},
+    {"introspection_id": "introspection_astrid_llm_1785959982", "claim_id": "c005", "kind": "no_action", "target": "docs/steward-notes/codex_1785580847_round63_reads/SHADOW_PRESSURE_500_PAIR_PREREGISTRATION.md", "note": "Existing frozen natural-observation route remains unrun."},
+    {"introspection_id": "introspection_astrid_llm_1785959982", "claim_id": "c006", "kind": "ledger", "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md", "note": "Exact Tier 5 damping authority wait preserved."},
+    {"introspection_id": "introspection_astrid_llm_1785959982", "claim_id": "c007", "kind": "no_action", "target": "docs/steward-notes/codex_1785580847_round63_reads/SHADOW_PRESSURE_500_PAIR_PREREGISTRATION.md", "note": "Read-only cartography/natural-observation boundary; no semantic identity or Action inferred."},
+
+    {"introspection_id": "introspection_astrid_llm_1786011534", "claim_id": "c001", "kind": "changelog", "target": "CHANGELOG.md", "note": "Round-level verified duplicate response."},
+    {"introspection_id": "introspection_astrid_llm_1786002182", "claim_id": "c001", "kind": "changelog", "target": "CHANGELOG.md", "note": "Round-level verified duplicate response."},
+    {"introspection_id": "introspection_astrid_llm_1785999123", "claim_id": "c001", "kind": "changelog", "target": "CHANGELOG.md", "note": "Round-level verified duplicate response."},
+    {"introspection_id": "introspection_astrid_llm_1785959982", "claim_id": "c001", "kind": "changelog", "target": "CHANGELOG.md", "note": "Round-level unresolved qualitative response and authority boundary."}
+  ]
+}

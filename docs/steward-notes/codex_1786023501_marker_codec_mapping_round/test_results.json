@@ -1,0 +1,102 @@
+{
+  "schema": "steward_test_results_v1",
+  "results": [
+    {
+      "surface": "marker regressions",
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib control_marker",
+      "passed": 47,
+      "failed": 0
+    },
+    {
+      "surface": "focused codec mapping, warmth, entropy, lane, and narrative regressions",
+      "command": "eight exact focused spectral-bridge library tests",
+      "passed": 8,
+      "failed": 0
+    },
+    {
+      "surface": "complete bridge library",
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib",
+      "passed": 1827,
+      "failed": 0
+    },
+    {
+      "surface": "addressing audit",
+      "command": "python3 scripts/introspection_addressing_audit.py --self-test",
+      "passed": 42,
+      "failed": 0
+    },
+    {
+      "surface": "Evidence Store/controller/projector/Division/cursor",
+      "command": "PYTHONPATH=.:scripts python3 -m unittest scripts.test_evidence_event_store scripts.test_steward_control scripts.test_steward_projection scripts.test_division_ceremony_followup scripts.test_division_ceremony_chronicle scripts.test_division_ceremony_projection scripts.test_claim_family_incremental_projection scripts.test_projection_cursors",
+      "passed": 72,
+      "failed": 0
+    },
+    {
+      "surface": "anti-drop self-test",
+      "command": "python3 scripts/anti_drop_catalog.py --self-test",
+      "passed": 5,
+      "failed": 0
+    },
+    {
+      "surface": "anti-drop live verify",
+      "command": "python3 scripts/anti_drop_catalog.py verify --json",
+      "guards": 47,
+      "gaps": 0,
+      "alarms": 0
+    },
+    {
+      "surface": "cadence audit",
+      "command": "PYTHONPATH=.:scripts python3 -m unittest scripts.test_introspection_cadence_audit",
+      "passed": 6,
+      "failed": 0
+    },
+    {
+      "surface": "cadence live strict audit",
+      "command": "python3 scripts/introspection_cadence_audit.py --strict --json",
+      "valid": true,
+      "enabled": false,
+      "configured_receipts": 0,
+      "pending_attempts": 0
+    },
+    {
+      "surface": "experiential epistemics",
+      "command": "python3 scripts/experiential_epistemics.py self-test",
+      "passed": 2,
+      "failed": 0
+    },
+    {
+      "surface": "epistemic lint",
+      "command": "python3 scripts/experiential_epistemics.py lint --json",
+      "records": 10441,
+      "issues": 0,
+      "history_rewritten": false
+    },
+    {
+      "surface": "Evidence Event Store V2 full-chain verify before the manual projection",
+      "command": "PYTHONDONTWRITEBYTECODE=1 python3 scripts/evidence_event_store.py --json verify",
+      "sequence": 710130,
+      "head": "e8442c14b4cff16e51fabfad82138988316ee3f095e707818a8eb62d93105bce",
+      "streams": 16,
+      "corrupt_lines": 0,
+      "valid": true
+    },
+    {
+      "surface": "steward controller and V1 immutability",
+      "command": "python3 scripts/steward_control.py --json verify",
+      "sequence": 710132,
+      "head": "95a4d722645f189b387480001037f7dab91e6a9f80af494180ed5a68f9eb4a8f",
+      "streams": 16,
+      "v1_immutable": true,
+      "valid": true
+    },
+    {
+      "surface": "manual source-first projection",
+      "generation_id": "projection_1786025153167751000_0808c4172f",
+      "steps": 20,
+      "counter_audit_valid": true,
+      "authority_scan_passed": true
+    }
+  ],
+  "rust_source_changed": false,
+  "deployment_required": false
+}

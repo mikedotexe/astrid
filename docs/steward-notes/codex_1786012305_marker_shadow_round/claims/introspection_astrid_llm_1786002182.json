@@ -1,0 +1,9 @@
+{
+  "claims": [
+    {"claim_id": "c001", "summary": "The marker scanner preserves exact declared references and strips unframed known control markers.", "disposition": "Verify from exact source and focused regressions.", "classification": "verified_existing"},
+    {"claim_id": "c002", "summary": "Non-whitespace characters between a marker and an apparent delimiter, or delimiter depth beyond the bound, can prevent grouped-reference proof.", "disposition": "Verify as the intentional immediate-pair and bounded-depth contract; no concrete current defect is established.", "classification": "verified_existing"},
+    {"claim_id": "c003", "summary": "`represents` should preserve a marker while an underscored word outside the allowlist should not create relation syntax.", "disposition": "Exact duplicate of passing punctuation/newline `represents` and underscored `appears_as` regressions.", "classification": "exact_duplicate"},
+    {"claim_id": "c004", "summary": "Three nested square-bracket pairs should be recognized.", "disposition": "Exact duplicate of existing nested delimiter regressions.", "classification": "exact_duplicate"},
+    {"claim_id": "c005", "summary": "The reconstructed remainder should be traced into final dialogue output.", "disposition": "Verify the downstream source path without changing provider output behavior.", "classification": "verified_existing"}
+  ]
+}

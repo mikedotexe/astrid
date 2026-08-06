@@ -1,0 +1,42 @@
+{
+  "introspection_id": "introspection_astrid_codec_1785888193",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The codec uses a 48-dimensional semantic representation with legacy 32-dimensional compatibility, projected embedding features, emotional warmth, and a narrative-arc lane.",
+      "disposition": "Verified across projection, encoding, and structure source. Legacy warmth is directly constructed as 48 dimensions with warmth at index 24 and emotional features at 24-31; narrative arc remains separately assigned to 40-43.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Projection precision and compression evidence monitor thinning or fidelity loss.",
+      "disposition": "Verified as read-only evidence surfaces. Existing projection precision, compression, dimensional-flatness, and lane-separation tests pass without changing live dimensions or gain.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "project_embedding may map a 32-dimensional legacy vector into 48 dimensions and shift or zero-pad the new lanes.",
+      "disposition": "The feared path is disproven by current source. project_embedding accepts exactly 768 input dimensions and returns eight projected features for indices 32-39; a 32-element input is rejected rather than widened.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "A dimensionality-integrity regression should prove that legacy-width input is not silently shifted into the widened representation.",
+      "disposition": "Exact duplicate of the lane-separation audit and legacy_projection_width_rejected regression, which explicitly prove this boundary and pass now.",
+      "classification": "exact_duplicate"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "At spectral entropy 0.86, vibrancy should be smoothly lifted rather than governed by a hard gate.",
+      "disposition": "Exact duplicate of the current smoothstep-lift regression. The 0.86 case lifts tail output above threshold, and high-entropy feedback does not write narrative or reserved dimensions.",
+      "classification": "exact_duplicate"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "Narrative-arc information may be compressed by the multi-scale resonance loss threshold.",
+      "disposition": "Current source separates these mechanisms. The threshold belongs to a read-only 12D glimpse companion review, while narrative-arc tail loss is exposed by a separate diagnostic sidecar. Any live width, mapping, gain, clamp, transport, or protocol change remains an explicit Tier 5 operator wait.",
+      "classification": "tier_5_wait",
+      "authority": "mike_operator_codec_live_representation_approval_required"
+    }
+  ]
+}

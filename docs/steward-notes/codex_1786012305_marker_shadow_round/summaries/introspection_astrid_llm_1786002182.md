@@ -1,0 +1,3 @@
+# Full Read: introspection_astrid_llm_1786002182
+
+All 45 report lines, all 491 witness lines, and exact source lines 1-400 were read. The report accurately describes marker scanning and asks about delimiter adjacency, punctuation-heavy relation parsing, `represents`, an unlisted underscored relation, three nested brackets, and downstream remainder use. Matching delimiters must immediately surround the marker apart from whitespace; this is the declared proof boundary. Existing exact tests cover `represents` across punctuation/newlines, the unlisted underscored word `appears_as`, nested depths, and the downstream path. No malformed or currently untested failure is established.

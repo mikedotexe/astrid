@@ -1,0 +1,25 @@
+{
+  "schema": "source_first_read_receipts_v1",
+  "shared_source": {
+    "path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+    "line_count": 1038,
+    "byte_count": 38205,
+    "sha256": "f7c0570ce495b1978d9b6f588cba6ecb00a93b1573316bc22752e6e10d47f20a",
+    "report_bound_interval_read": "1-400",
+    "supplemental_intervals_read": ["650-780", "930-1038"],
+    "full_source_continuity": "previous complete 1038-line read reused at identical SHA; every report-bound line reread in this run"
+  },
+  "reports": [
+    {"introspection_id": "introspection_astrid_llm_1786011534", "line_count": 45, "byte_count": 3703, "sha256": "134b93ca81fb45f3482888384650ae82960840cb3d2127952dc58f951a8e01c8", "witness_id": "lsw_ebd22292575aa62b980bd3240f22774fd1e830563feeef008001f6e41f3b88bd", "witness_line_count": 491, "witness_sha256": "4f00db765e8ae2c42d0838edb418087ba6891f014d415f538c8eafd57f4f1af0"},
+    {"introspection_id": "introspection_astrid_llm_1786002182", "line_count": 45, "byte_count": 3799, "sha256": "7afcfa1a8e3727cd81c71f088a4421a454fc067e28e65ff8365c75bfaad11ef8", "witness_id": "lsw_5a4b1fbbe47b177292699e7223838d90050ba9f58cc062f2337bd6de4758a73d", "witness_line_count": 491, "witness_sha256": "f67cf3d42077837ebd337082dc2c653da5517495e582c949beac42f08531a957"},
+    {"introspection_id": "introspection_astrid_llm_1785999123", "line_count": 45, "byte_count": 3646, "sha256": "c6200f35d06e75a0d7ad3b2b2729fa17f0edd0e8e661e22054633d5015608dbf", "witness_id": "lsw_79f9eeaad767953fa42bc8ce984478881c6e98ecaaddabc9f0ade26b2918e85e", "witness_line_count": 491, "witness_sha256": "cc22832fe20b3a609cff030c8330802e6012c9e385c9c6d60a1f5802bf9e1529"},
+    {"introspection_id": "introspection_astrid_llm_1785959982", "line_count": 43, "byte_count": 4027, "sha256": "73d735788be7e937b313a24236d4ca330d530de76dc666cca7718c37f81094c5", "witness_id": "lsw_e156e16d2193548a192b626bbf2a15b35e97560a6b2a3847244a2ecc637a7efa", "witness_line_count": 491, "witness_sha256": "f30d8e8d9117eee712219a22465d3bb3510a50a01ce74eb4d690dc08e8e3b19a"}
+  ],
+  "existing_study": {
+    "path": "docs/steward-notes/codex_1785580847_round63_reads/SHADOW_PRESSURE_500_PAIR_PREREGISTRATION.md",
+    "line_count": 71,
+    "byte_count": 3736,
+    "sha256": "c150e495a03e1eba7c679e33a291772cc6b18f4e6381a9a691d21d093e3d93a2",
+    "state": "frozen_unrun_waiting_for_500_naturally_occurring_cotimed_pairs"
+  }
+}
