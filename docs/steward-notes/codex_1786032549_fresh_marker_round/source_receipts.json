@@ -1,0 +1,27 @@
+{
+  "schema": "source_first_read_receipts_v1",
+  "steward_run_id": "run_1786032549793840000_79a22e846c",
+  "reports": [
+    {
+      "introspection_id": "introspection_astrid_llm_1786031364",
+      "line_count": 45,
+      "byte_count": 3800,
+      "sha256": "ab881c3561cbbd5dddfb721c100b43ef4ea06bf962d52ace3c8da8fa15c754a1",
+      "witness_id": "lsw_96617321c691604d8a3e594824ab0e1ec11a3206dbd8095f0de3738afec7054b",
+      "witness_projection_line_count": 564,
+      "witness_projection_byte_count": 26860,
+      "witness_projection_sha256": "25ba206e5bb5686cc6d43c36bb81a5ca28882a35aa746b9f75c83d49afb4e4d6"
+    }
+  ],
+  "sources": [
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "line_count": 1038,
+      "byte_count": 38205,
+      "sha256": "f7c0570ce495b1978d9b6f588cba6ecb00a93b1573316bc22752e6e10d47f20a",
+      "selected_interval": "1-400",
+      "selected_interval_sha256": "d751baf503a4d7e15aa69d1afbf0da95c615cfe874515b14124b8d789b8275a3",
+      "read_disposition": "The exact selected interval was read in this run. The prior complete 1,038-line read is reused only because the full-file SHA remains byte-identical; downstream lines 400-1038 and provider transport normalization were checked again for this report."
+    }
+  ]
+}

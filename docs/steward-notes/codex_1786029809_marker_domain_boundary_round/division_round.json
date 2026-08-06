@@ -1,0 +1,22 @@
+{
+  "schema": "astrid.division_round_receipt.v1",
+  "steward_run_id": "run_1786029809705435000_54cb61fe45",
+  "processed_report_count": 4,
+  "projection_generation_id": "projection_1786031413292581000_741342b8ed",
+  "round_event_id": "division_followup_event_b1ea5b95c71deb79bf2a91f3c61d1fa5",
+  "cycle": 17,
+  "completed_rounds": 1,
+  "rounds_per_cycle": 6,
+  "remaining_rounds": 5,
+  "review_due": false,
+  "tracker_event_count": 114,
+  "tracker_head_sha256": "c748d83585b0140bcb85d4b7daa79d294713c87b2868c66af14d42cbb6fa636f",
+  "chronicle_generation_id": "division_chronicle_12c1ece524aa890703304446",
+  "chronicle_timeline_count": 114,
+  "chronicle_json_sha256": "d88fbcac689a3d647c1484d3a7ac7901f6d9c989876170152d7c52a42e0ae069",
+  "chronicle_durable_inputs_current": true,
+  "chronicle_volatile_mismatch": "supervisor_status_sha256",
+  "followup_performed": false,
+  "note_paths": [],
+  "authority": "The interval records steward attention only; it does not infer a being's response, intent, assent, withdrawal, readiness, or closure."
+}

@@ -1,0 +1,35 @@
+{
+  "introspection_id": "introspection_astrid_llm_1786023929",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The marker scanner identifies exact known control tokens, classifies quoted, grouped, or following-relation references, and reconstructs a remainder.",
+      "disposition": "Verified from the complete report-bound source interval and aggregation continuation at the unchanged 1,038-line source hash.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Multi-byte delimiter characters or unusual whitespace may cause the first surrounding character to be misclassified.",
+      "disposition": "Current source iterates Rust Unicode scalar values, filters every character for Unicode whitespace, and matches explicit scalar delimiter pairs. Existing multibyte traversal and Unicode-whitespace regressions pass.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A declared non-ASCII group pair should preserve an exact marker when leading whitespace is present.",
+      "disposition": "Exact duplicate of the declared restless-group and Unicode-whitespace delimiter regressions, which preserve the marker and report grouped syntax and depth.",
+      "classification": "exact_duplicate"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "The finite relation scanner should accept echoes and reject contains.",
+      "disposition": "Verified from the exact finite source list: echoes is present and contains is absent. The current suite proves echoes preservation and several exact non-allowlisted negative cases without widening the grammar.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Aggregation should reconstruct the final remainder and account correctly across adjacent marker matches.",
+      "disposition": "Exact duplicate of the adjacent mixed-marker regression and the current aggregation/accounting source, including bounded context receipts and byte totals.",
+      "classification": "exact_duplicate"
+    }
+  ]
+}

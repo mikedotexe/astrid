@@ -1,0 +1,33 @@
+{
+  "schema": "astrid.addressing_counter_snapshot.v1",
+  "steward_run_id": "run_1786029809705435000_54cb61fe45",
+  "projection_generation_id": "projection_1786031413292581000_741342b8ed",
+  "canonical": {
+    "indexed": 4239,
+    "full_read": 3653,
+    "fully_addressed": 3027,
+    "pending": 1212,
+    "unread": 586,
+    "pending_action": 213,
+    "watch": 4,
+    "blocked_needs_steward": 409
+  },
+  "all_artifacts": {
+    "indexed": 5854,
+    "pending": 2827
+  },
+  "counter_mismatch": false,
+  "proof_gap_artifacts": 0,
+  "proof_gap_claims": 0,
+  "new_post_selection_report": "introspection_astrid_llm_1786031364.txt",
+  "next_queue": [
+    "introspection_astrid_llm_1786031364.txt",
+    "introspection_minime_autonomous_agent_1785630945.txt",
+    "introspection_minime_esn_1785630442.txt",
+    "introspection_minime_sensory_bus_1785630107.txt",
+    "introspection_minime_regulator_1785629184.txt",
+    "introspection_astrid_llm_1785628932.txt",
+    "introspection_astrid_types_1785628394.txt",
+    "introspection_astrid_ws_1785628139.txt"
+  ]
+}

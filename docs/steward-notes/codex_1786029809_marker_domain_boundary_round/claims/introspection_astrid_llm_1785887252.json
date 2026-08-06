@@ -1,0 +1,9 @@
+{
+  "claims": [
+    {"claim_id": "c001", "summary": "The selected LLM source scans known control markers, classifies exact reference syntax, and preserves markers followed by declared relations including appears, behaves, and represents.", "disposition": "Verified against the unchanged complete 1,038-line source and current marker regressions.", "classification": "verified_existing"},
+    {"claim_id": "c002", "summary": "Punctuation-heavy or multi-word relation phrases may make first_word_after return an empty string and lose the marker.", "disposition": "Source-challenged and exact-test duplicate: split plus first nonempty selection skips punctuation and whitespace, while the exact punctuation-run regression preserves represents and a multi-word phrase is decided by its first word.", "classification": "exact_duplicate"},
+    {"claim_id": "c003", "summary": "A known marker followed by represents a state should remain in the reconstructed output.", "disposition": "Exact duplicate of current following-relation regressions, including represents across punctuation and newline boundaries.", "classification": "exact_duplicate"},
+    {"claim_id": "c004", "summary": "Three nested matching bracket pairs should preserve an exact marker reference.", "disposition": "Exact duplicate of the three-level and bounded nested-delimiter regressions, which preserve byte-exact text and record depth three.", "classification": "exact_duplicate"},
+    {"claim_id": "c005", "summary": "The downstream generate_dialogue path should be checked for how scanner remainder and receipts affect returned output.", "disposition": "Verified from the previously completed unchanged source read: provider output is sanitized, validated, hashed, persisted, and returned through the same normalized remainder path without reinserting removed control markers.", "classification": "verified_existing"}
+  ]
+}

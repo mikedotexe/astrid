@@ -1,0 +1,61 @@
+{
+  "schema": "introspection_evidence_link_batch_v1",
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_llm_1786031364",
+      "claim_id": "*",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "Exact scanner, finite relation, bounded delimiter, reconstruction, and quality-gate source at the unchanged complete-file SHA."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786031364",
+      "claim_id": "*",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/fallback_contracts.rs",
+      "note": "Provider-neutral normalization returns the sanitized remainder and cleanup report."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786031364",
+      "claim_id": "*",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/transport.rs",
+      "note": "Both MLX and Ollama normalize raw provider output before returning text to generate_dialogue."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786031364",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Current punctuation-run, behaves, bounded over-depth, normalization, remainder, and output-validation regressions."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786031364",
+      "claim_id": "c002",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1786029809_marker_domain_boundary_round/claims/introspection_astrid_llm_1785887252.json",
+      "note": "Exact prior punctuation, multi-word relation, and downstream claim-family disposition at the same source SHA."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786031364",
+      "claim_id": "c003",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1786029809_marker_domain_boundary_round/claims/introspection_astrid_llm_1785869849.json",
+      "note": "Exact prior behaves and delimiter-depth claim-family disposition at the same source SHA."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786031364",
+      "claim_id": "c001",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "Round-level exact-source verification and unchanged live boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786031364",
+      "claim_id": "c005",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Independent natural-report handling, provider normalization evidence, and authority boundary."
+    }
+  ]
+}

@@ -1,0 +1,3 @@
+# Full-read summary
+
+Astrid returns to the exact marker scanner with concrete questions about Unicode delimiters, unusual whitespace, the finite `echoes` relation, exclusion of `contains`, and adjacent-match aggregation. The complete report and complete 491-line lived-state witness were read independently. At the identical 1,038-line source hash, current source and all 47 marker regressions verify Unicode-scalar traversal, Unicode-whitespace filtering, declared group pairs, finite relation handling, byte-exact remainder reconstruction, and adjacent-marker accounting. The report receives its own durable evidence rather than another parser rewrite or an inferred request to widen live provider-output grammar.

@@ -1,0 +1,24 @@
+{
+  "schema": "steward_deployment_alignment_v1",
+  "steward_run_id": "run_1786029809705435000_54cb61fe45",
+  "live_consumed_surface_changed": false,
+  "deployment_attempted": false,
+  "deployment_required": false,
+  "restart_performed": false,
+  "cadence": {
+    "enabled": false,
+    "configured_receipt_present": false,
+    "pending_attempt": false,
+    "pilot_started": false
+  },
+  "automation": {
+    "source_first_automation": "active",
+    "self_study_automation": "paused"
+  },
+  "minime": {
+    "source_changed": false,
+    "regulation_changed": false,
+    "restart_performed": false
+  },
+  "authority": "No pressure, fill, controller, cadence, scheduling, model, protocol, reservoir, Minime, CPU, or other live-control state was changed or inferred."
+}

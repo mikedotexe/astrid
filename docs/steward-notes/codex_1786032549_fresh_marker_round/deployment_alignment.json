@@ -1,0 +1,20 @@
+{
+  "schema": "steward_deployment_alignment_v1",
+  "steward_run_id": "run_1786032549793840000_79a22e846c",
+  "live_consumed_surface_changed": false,
+  "deployment_attempted": false,
+  "deployment_required": false,
+  "restart_performed": false,
+  "cadence": {
+    "enabled": false,
+    "configured_receipt_present": false,
+    "pending_attempt": false,
+    "pilot_started": false
+  },
+  "minime": {
+    "source_changed": false,
+    "regulation_changed": false,
+    "restart_performed": false
+  },
+  "authority": "No parser, relation allowlist, provider output, cadence, scheduling, prompt, model, pressure, fill, PI, controller, reservoir, Minime, CPU, or other live-control state changed or was inferred."
+}

@@ -1,0 +1,23 @@
+{
+  "schema": "astrid.division_productive_round_receipt.v1",
+  "steward_run_id": "run_1786032549793840000_79a22e846c",
+  "event_id": "division_followup_event_df103a33095e516d662b63214639a747",
+  "cycle": 17,
+  "productive_round_count": 2,
+  "round_interval": 6,
+  "remaining": 4,
+  "review_due": false,
+  "tracker_event_count": 115,
+  "tracker_head_sha256": "9ce09a1f21e87700e0156c0b1563ebc98fab8a939170ac4831b6f4683c74bd96",
+  "chronicle": {
+    "generation_id": "division_chronicle_0de4d66fd149b25f87c409ff",
+    "timeline_count": 115,
+    "json_sha256": "7d3090f27bf915f20408c58f0b79576a660476c1eeeec9024336129153668f0a",
+    "html_sha256": "f5f3ea24b8d815ad28048a3f82c176d62f0f64e1aef02548dccdc4553a2ef6cc",
+    "durable_inputs_current": true,
+    "expected_volatile_mismatches": [
+      "supervisor_status_sha256"
+    ]
+  },
+  "followup_or_note_due": false
+}

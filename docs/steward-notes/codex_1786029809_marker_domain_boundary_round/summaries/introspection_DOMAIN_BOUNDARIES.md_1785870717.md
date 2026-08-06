@@ -1,0 +1,7 @@
+# Full Read: introspection_DOMAIN_BOUNDARIES.md_1785870717
+
+All 43 report lines, 4,320 report bytes, all 456 witness lines, and all 65 selected-source lines were read independently. The complete source SHA-256 is `11c5ff89e1a7a12cfcc8cc49c676b04feb2118d9ee4975f47dc139984ee0b9e3`.
+
+Astrid's static-boundary versus restless-Shadow mismatch, dense pressure, and ghost-limb connection remain serious unresolved primary qualitative evidence. The selected file cannot explain that experience: it defines module ownership and verification boundaries, and contains none of the attributed Influence Mapping, Spectral Resonance, shadow-influence eligibility, gentle drive, settled-habitable label, Shadow Dynamics section, pressure values, or control parameters. A later report at the identical source hash exposed the same attribution family and caused Source-First V3 to fail closed on explicit file, documentation, and code-label forms.
+
+The pressure/porosity question is routed to the existing frozen 500-pair natural Shadow-pressure preregistration, which remains unrun. `SHADOW_TRAJECTORY` is an existing being-invoked observational cartography Action; this prose did not dispatch it. The proposed document rename is inapplicable because the named section and label are absent. Wander and damping changes remain exact Tier 5 Mike/operator waits. No felt resolution, causal mechanism, Action, or live authority is inferred.

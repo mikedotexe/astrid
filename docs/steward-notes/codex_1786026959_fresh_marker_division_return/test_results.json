@@ -1,0 +1,63 @@
+{
+  "schema": "steward_test_results_v1",
+  "focused_marker_regressions": {
+    "passed": 47,
+    "failed": 0
+  },
+  "addressing": {
+    "passed": 42,
+    "failed": 0
+  },
+  "integrity_group": {
+    "scope": "Evidence Store, steward control, source-first projector, Division tracker and Chronicle, and projection cursors",
+    "passed": 72,
+    "failed": 0
+  },
+  "anti_drop": {
+    "self_tests_passed": 5,
+    "live_guards_verified": 47,
+    "gaps": 0,
+    "alarms": 0
+  },
+  "cadence": {
+    "self_tests_passed": 6,
+    "strict_live_audit_valid": true,
+    "enabled": false,
+    "configured_receipt_count": 0,
+    "pending_or_failed_attempt_count": 0,
+    "duplicate_hash_group_count": 0,
+    "canonical_median_gap_seconds": 423.0
+  },
+  "experiential_epistemics": {
+    "self_tests_passed": 2,
+    "lint_checked_record_count": 10457,
+    "lint_issue_count": 0,
+    "history_rewritten": false
+  },
+  "manual_source_first_projection": {
+    "generation_id": "projection_1786028246340101000_59885f803a",
+    "completed_steps": 20,
+    "authority_scan_passed": true,
+    "counter_audit_valid": true,
+    "status": "passed"
+  },
+  "evidence_event_store": {
+    "verification_valid": true,
+    "corrupt_lines": 0,
+    "stream_count": 16,
+    "pre_report_sequence": 711080,
+    "pre_report_head_sha256": "bcbe97900083dc7f2ddaf772194934d8c774f8d1cdfac1d43494e733195b47da",
+    "v1_immutable": true
+  },
+  "division": {
+    "followup_verify_valid": true,
+    "chronicle_verify_valid": true,
+    "durable_inputs_current": true,
+    "volatile_mismatches": [
+      "supervisor_status_sha256"
+    ]
+  },
+  "rust_source_changed": false,
+  "full_bridge_library_rerun_required": false,
+  "adjacent_checkpoint_full_bridge_library_tests": 1827
+}
