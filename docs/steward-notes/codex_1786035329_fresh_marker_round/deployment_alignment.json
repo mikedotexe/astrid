@@ -1,0 +1,12 @@
+{
+  "schema": "deployment_alignment_v1",
+  "live_consumed_surface_changed": false,
+  "change_scope": "test_and_evidence_only",
+  "build_required": false,
+  "restart_required": false,
+  "deployment_required": false,
+  "deployment_attempted": false,
+  "minime_changed": false,
+  "cadence_changed": false,
+  "authority_boundary": "No production parser, provider-output grammar, prompt, model, cadence, pressure, fill, PI, controller, reservoir, Minime, CPU runtime, service, or live-control behavior changed."
+}

@@ -1,0 +1,61 @@
+{
+  "schema": "introspection_evidence_link_batch_v1",
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_llm_1786034340",
+      "claim_id": "*",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "Exact scanner, Unicode word, finite relation, delimiter taxonomy, reconstruction, and generate_dialogue source at the unchanged complete-file SHA."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786034340",
+      "claim_id": "c006",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/fallback_contracts.rs",
+      "note": "Provider-neutral normalization separates sanitized output text from cleanup evidence."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786034340",
+      "claim_id": "c006",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/transport.rs",
+      "note": "Both MLX and Ollama normalize raw provider text before returning it to generate_dialogue."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786034340",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Current Unicode-word, non-ASCII quote, malformed-delimiter, finite-relation, normalization, and new exact contains-negative regressions."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786034340",
+      "claim_id": "c004",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1785820219_round84_reads/claims/astrid_llm_1785816604.json",
+      "note": "Prior exact source correction records U+300C/U+300D as quote rather than group delimiters."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786034340",
+      "claim_id": "c005",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1786026959_fresh_marker_division_return/claims/introspection_astrid_llm_1786023929.json",
+      "note": "Prior source-level disposition verifies echoes present and contains absent at the same source SHA; this round adds the exact negative regression."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786034340",
+      "claim_id": "c005",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "Being-caused exact contains regression and unchanged live grammar boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786034340",
+      "claim_id": "c005",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Independent natural-report handling, direct test response, source correction, and authority boundary."
+    }
+  ]
+}

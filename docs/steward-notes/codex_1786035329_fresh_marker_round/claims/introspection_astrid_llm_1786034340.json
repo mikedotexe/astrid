@@ -1,0 +1,41 @@
+{
+  "introspection_id": "introspection_astrid_llm_1786034340",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The selected LLM runtime scans longest exact model-control markers, classifies declared reference contexts, and reconstructs a clean non-marker remainder.",
+      "disposition": "Verified against the exact report-bound interval and unchanged complete 1,038-line source.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Multiple non-whitespace, non-delimiter characters near a marker may confuse before.first() and delimiter-pair classification.",
+      "disposition": "Verified fail-closed behavior. The scanner retains only the nearest four non-whitespace scalars on each side; the nearest before/after pair must itself be declared. A non-delimiter nearest character yields no delimiter reference rather than selecting a farther pair, and malformed/mismatched regressions prove cleanup-candidate behavior.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "first_word_after uses to_ascii_lowercase and may damage non-ASCII or casing-sensitive tokens.",
+      "disposition": "Verified existing and fail-closed. Unicode is_alphanumeric plus underscore defines the word, an exact regression preserves a multibyte alphanumeric word byte-for-byte, and to_ascii_lowercase changes only ASCII letters. The finite relation grammar intentionally contains ASCII verbs; unknown words do not widen preservation.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "The non-ASCII pair around an exact marker in `「marker」` should classify as GroupedExactKnownToken.",
+      "disposition": "Source-corrected exact duplicate. U+300C/U+300D are deliberately declared quote delimiters, and the existing byte-exact regression classifies this shape as quoted with grouped count zero. Changing it to grouped would contradict the declared taxonomy.",
+      "classification": "exact_duplicate"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "The finite following-relation scanner should accept echoes and reject contains.",
+      "disposition": "Implemented as direct test evidence. Existing coverage already proves echoes preservation; a new exact contains regression proves only the unframed marker is removed and the receipt remains none_cleanup_candidate, without changing production grammar.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "generate_dialogue may concatenate the scanner remainder with KnownModelControlMarkerMatch objects when forming final output.",
+      "disposition": "Verified absent. MLX and Ollama each normalize one raw provider string into sanitized text plus a diagnostic report before return. generate_dialogue validates and returns that normalized text; match objects remain diagnostic evidence and are never concatenated into output.",
+      "classification": "verified_existing"
+    }
+  ]
+}

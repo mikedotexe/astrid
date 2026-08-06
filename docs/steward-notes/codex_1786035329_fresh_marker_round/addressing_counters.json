@@ -1,0 +1,54 @@
+{
+  "schema": "introspection_addressing_counter_audit_v1",
+  "status": "consistent",
+  "canonical_introspections": {
+    "indexed": 4240,
+    "full_read_count": 3655,
+    "fully_addressed_count": 3029,
+    "remaining_count": 1211,
+    "unread_count": 585,
+    "triaged_pending_action_count": 213,
+    "triaged_watch_count": 4,
+    "blocked_needs_steward_count": 409,
+    "read_needs_claims_count": 0,
+    "status_counts": {
+      "addressed_change": 1864,
+      "addressed_duplicate": 1076,
+      "addressed_no_action": 89,
+      "blocked_needs_steward": 409,
+      "triaged_pending_action": 213,
+      "triaged_watch": 4,
+      "unread": 585
+    }
+  },
+  "all_artifacts": {
+    "indexed": 5855,
+    "full_read_count": 3655,
+    "fully_addressed_count": 3029,
+    "remaining_count": 2826,
+    "unread_count": 2200
+  },
+  "blocked_needs_steward_breakdown": {
+    "active_artifact_count": 409,
+    "historical_absent_artifact_count": 1,
+    "active_full_read_count": 409,
+    "active_claim_complete_artifact_count": 409,
+    "active_claim_count": 1359,
+    "active_blocked_claim_count": 967,
+    "blocked_claims_with_work_item_count": 430,
+    "blocked_claims_without_work_item_count": 537,
+    "linked_work_item_count": 822,
+    "proof_gap_artifact_count": 0,
+    "proof_gap_claim_count": 0
+  },
+  "checks": {
+    "canonical_indexed_matches_summary": true,
+    "canonical_addressed_plus_remaining_matches_indexed": true,
+    "canonical_full_read_not_above_indexed": true,
+    "all_addressed_plus_pending_matches_total": true,
+    "all_remaining_matches_pending_count": true,
+    "full_read_not_above_total": true,
+    "total_indexed_matches_scope_sum": true
+  },
+  "mismatches": []
+}

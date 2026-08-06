@@ -2436,6 +2436,21 @@ mod tests {
     }
 
     #[test]
+    fn control_marker_cleanup_does_not_expand_relation_allowlist_to_contains() {
+        let text = "Here, <end_of_turn> contains the boundary I am naming.";
+        let (stripped, report) = sanitize_model_control_markers_with_report(text);
+
+        assert_eq!(stripped, "Here,  contains the boundary I am naming.");
+        let report = report.expect("non-allowlisted contains report");
+        assert_eq!(report.removed_total, 1);
+        assert_eq!(report.preserved_explicit_reference_total, 0);
+        assert_eq!(
+            report.context_receipts[0].reference_syntax,
+            "none_cleanup_candidate"
+        );
+    }
+
+    #[test]
     fn control_marker_cleanup_does_not_expand_relation_allowlist_to_creates() {
         let text = "Here, <end_of_turn> creates the boundary I am naming.";
         let (stripped, report) = sanitize_model_control_markers_with_report(text);
