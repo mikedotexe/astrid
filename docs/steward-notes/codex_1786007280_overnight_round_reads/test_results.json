@@ -1,0 +1,23 @@
+{
+  "schema": "astrid.steward_run_test_results.v1",
+  "steward_run_id": "run_1786007280384891000_eb1ecdda76",
+  "results": [
+    {"suite": "exact multiple-punctuation regression", "passed": 1, "failed": 0},
+    {"suite": "model control-marker regressions", "passed": 47, "failed": 0},
+    {"suite": "spectral-bridge library", "passed": 1827, "failed": 0},
+    {"suite": "spectral-bridge strict all-target/all-feature Clippy", "passed": 1, "failed": 0},
+    {"suite": "introspection addressing audit", "passed": 42, "failed": 0},
+    {"suite": "source-first projector, Evidence Store, steward control, Division, Chronicle, claim-family, and cursor", "passed": 72, "failed": 0},
+    {"suite": "anti-drop self-tests", "passed": 5, "failed": 0},
+    {"suite": "anti-drop verification", "guards": 47, "gaps": 0, "alarms": 0},
+    {"suite": "experiential epistemics self-tests", "passed": 2, "failed": 0},
+    {"suite": "epistemic lint", "records_checked": 10406, "issues": 0},
+    {
+      "suite": "repository Rust formatting",
+      "status": "blocked_by_preexisting_foreign_format_drift",
+      "owned_file_clean": true,
+      "foreign_path": "capsules/spectral-bridge/src/autonomous/next_action/workspace.rs",
+      "foreign_lines": [385, 669]
+    }
+  ]
+}

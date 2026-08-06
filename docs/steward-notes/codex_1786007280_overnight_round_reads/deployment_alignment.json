@@ -1,0 +1,21 @@
+{
+  "schema": "astrid.steward_deployment_alignment.v1",
+  "live_consumed_source_changed": false,
+  "test_only_rust_changed": true,
+  "build_attempted": false,
+  "restart_attempted": false,
+  "deployment_required": false,
+  "existing_live_runtime": {
+    "pid": 92807,
+    "binary_sha256": "d99118e80d926dd95797791bce058ce222d3b7dd7ff4bd84a0a7c00a6b97341b",
+    "minime_telemetry_connection": "127.0.0.1:7878 established",
+    "minime_sensory_connection": "127.0.0.1:7879 established"
+  },
+  "minime_runtime": {
+    "pid": 98246,
+    "listeners": ["127.0.0.1:7878", "127.0.0.1:7879", "127.0.0.1:7880"],
+    "source_changed": false,
+    "restart_attempted": false
+  },
+  "authority_boundary": "A test-only regression requires no live bridge deployment and grants no runtime or control authority."
+}

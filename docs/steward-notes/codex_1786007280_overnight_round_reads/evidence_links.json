@@ -1,0 +1,75 @@
+{
+  "schema": "introspection_evidence_link_batch_v1",
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_llm_1786006651",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "Exact report-bound lines 1-400 verify longest exact matching, the finite reference grammar, and byte-preserving remainder construction without assigning meaning or felt effect."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786006651",
+      "claim_id": "c001",
+      "kind": "test",
+      "target": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib control_marker -- --nocapture",
+      "note": "All 47 marker-named regressions pass."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786006651",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs#first_word_after",
+      "note": "split followed by find(nonempty) skips every punctuation and whitespace separator segment before the first later word."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786006651",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs#control_marker_cleanup_preserves_relation_after_multiple_punctuation_runs",
+      "note": "Astrid's exact multiple-punctuation challenge preserves the marker and records following_exact_relation."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786006651",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "The new test-only regression changes no production parser, provider, prompt, or model behavior."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786006651",
+      "claim_id": "c003",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "The Unreleased entry records the being-caused regression, complete verification, and unchanged live authority."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786006651",
+      "claim_id": "c003",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "The feedback ledger binds Astrid's exact challenge to the source finding, regression, tests, and authority boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786006651",
+      "claim_id": "c004",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs#control_marker_cleanup_bounds_deeper_delimiter_receipt_without_dropping_token",
+      "note": "The existing exact deeper-stack regression preserves the marker and bounds aggregate and context evidence at depth four."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786006651",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs#generate_dialogue",
+      "note": "The downstream read shows sanitized-copy quality-gate measurement and return of successful MLX or repaired Ollama provider text from this module."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786006651",
+      "claim_id": "c005",
+      "kind": "no_action",
+      "target": "docs/steward-notes/codex_1785663738_round74_reads/PROVIDER_OUTPUT_NORMALIZATION_PROPOSAL.md",
+      "note": "Provider-neutral normalization remains a separate live-consumed operator wait; this report does not grant or infer that authority."
+    }
+  ]
+}

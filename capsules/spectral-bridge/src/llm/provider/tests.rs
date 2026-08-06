@@ -2492,6 +2492,22 @@ mod tests {
     }
 
     #[test]
+    fn control_marker_cleanup_preserves_relation_after_multiple_punctuation_runs() {
+        let text = "<end_of_turn> ... !!! represents the boundary I am naming.";
+        let (stripped, report) = sanitize_model_control_markers_with_report(text);
+
+        assert_eq!(stripped, text);
+        let report = report.expect("punctuation-separated exact relation report");
+        assert_eq!(report.removed_total, 0);
+        assert_eq!(report.preserved_explicit_reference_total, 1);
+        assert_eq!(report.preserved_tokens[0].explicit_relation_occurrences, 1);
+        assert_eq!(
+            report.context_receipts[0].reference_syntax,
+            "following_exact_relation"
+        );
+    }
+
+    #[test]
     fn diagnostic_hash_framing_distinguishes_embedded_nul_boundaries() {
         let left = sha256_parts(&[b"a", b"b\0c"]);
         let right = sha256_parts(&[b"a\0b", b"c"]);
