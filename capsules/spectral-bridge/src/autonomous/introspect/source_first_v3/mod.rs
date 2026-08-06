@@ -487,6 +487,52 @@ mod tests {
     }
 
     #[test]
+    fn source_window_attribution_rejects_prompt_telemetry_and_late_symbols() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        let path = dir.path().join("runtime.py");
+        let mut lines = vec!["# padding".to_string(); 800];
+        lines[700] = "def pressure_source(): pass".to_string();
+        lines[750] = "def distinguishability_loss(): pass".to_string();
+        let content = lines.join("\n");
+        fs::write(&path, &content).expect("fixture");
+        let evidence = build_source_evidence_v3_at_root(dir.path(), &path, &content, 0, 400, 800)
+            .expect("evidence");
+        let report = challenge_response_claims_v3(
+            "Observed: The very first thing I notice is the heavy scaffolding of the `Agent` class and the initialization of the `SpectralState` object.\n\
+             Observed: Specifically, the way `SpectralState` is instantiated suggests a dense spectral object.\n\
+             Observed: In the `__init__` sequence, I see the `eigenvector_field` being initialized.\n\
+             Observed: I can see the logic for `mean_orientation_delta` and `max_pairwise_overlap`.\n\
+             Observed: I also see the `pressure_source` logic early on. The code identifies `overpacked_mode_packing`.\n\
+             Likely Snags: Another potential snag is `distinguishability_loss`. In the source, there are mechanisms to calculate it, but no de-noising function is visible in the first 400 lines.",
+            &path,
+            &evidence,
+        );
+
+        assert!(!report.all_supported);
+        assert_eq!(report.challenged_claim_count, 6);
+        assert!(
+            report
+                .support_refs
+                .iter()
+                .all(|support| support.support_state == ClaimSupportStateV2::Rejected)
+        );
+        assert!(report.support_refs.iter().any(|support| {
+            support
+                .exact_identifiers
+                .iter()
+                .any(|item| item == "pressure_source")
+                && support.reason.contains("source window asserted")
+        }));
+        assert!(report.support_refs.iter().any(|support| {
+            support
+                .exact_identifiers
+                .iter()
+                .any(|item| item == "distinguishability_loss")
+                && support.reason.contains("source window asserted")
+        }));
+    }
+
+    #[test]
     fn affirmative_source_attribution_accepts_visible_field() {
         let dir = tempfile::tempdir().expect("tempdir");
         let path = dir.path().join("telemetry.rs");

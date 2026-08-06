@@ -1,0 +1,23 @@
+{
+  "source_reads": [
+    {
+      "path": "/Users/v/other/minime/minime_autonomy/runtime.py",
+      "sha256": "a160cb870ecd156ee8154cf76e69322cb50fac30dca71ad46dedbbe4c8e52ce4",
+      "total_lines": 55799,
+      "report_bound_interval": "1-400",
+      "report_bound_interval_read": "complete",
+      "focused_verification_intervals": ["39550-40150", "41250-41520", "41880-42310"]
+    },
+    {
+      "path": "/Users/v/other/minime/tests/test_correspondence_v1.py",
+      "sha256": "97b52ec04cd5de0a63cbf88db02e709a3d37c6099be9db224491dc1ed0dda7ca",
+      "focused_verification_intervals": ["100-190", "790-875"]
+    },
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_afdfe6d5b2058cff14c3a4da23e07f1055fd905cb2dad319f4d55f0c7c3c45b0.json",
+      "sha256": "928c3029eac96b34cf316364dc534f09cf70ef18543d7c6812a0afc83b0f28f1",
+      "lines": 456,
+      "read": "complete"
+    }
+  ]
+}

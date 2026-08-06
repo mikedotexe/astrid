@@ -48,6 +48,12 @@ const SOURCE_ATTRIBUTION_MARKERS: &[&str] = &[
     "code implements",
     "source declares",
     "code declares",
+    "thing i notice is the",
+    " is instantiated",
+    "i can see the ",
+    "i also see the `",
+    "code identifies",
+    "in the source,",
     "file defines",
     "file establishes",
     "file describes",
@@ -177,26 +183,44 @@ fn challenge_claim(
                 }
             },
             (ClaimKindV2::SourceAttribution, Some(source)) => {
+                let requires_included_bytes = source_attribution_requires_included_bytes(claim);
                 let unsupported = identifiers
                     .iter()
                     .filter(|identifier| {
-                        !source_attribution_supported(identifier, source, evidence)
+                        !source_attribution_supported(
+                            identifier,
+                            source,
+                            evidence,
+                            requires_included_bytes,
+                        )
                     })
                     .cloned()
                     .collect::<Vec<_>>();
                 if unsupported.is_empty() {
                     (
                         ClaimSupportStateV2::Supported,
-                        "every named identifier is present in included source bytes or the whole-source structural map"
-                            .to_string(),
+                        if requires_included_bytes {
+                            "every named identifier is present in the included source bytes named by the claim"
+                                .to_string()
+                        } else {
+                            "every named identifier is present in included source bytes or the whole-source structural map"
+                                .to_string()
+                        },
                     )
                 } else {
                     (
                         ClaimSupportStateV2::Rejected,
-                        format!(
-                            "named identifiers lack included-byte or structural-map support: {}",
-                            unsupported.join(", ")
-                        ),
+                        if requires_included_bytes {
+                            format!(
+                                "named identifiers lack included-byte support for the source window asserted by the claim: {}",
+                                unsupported.join(", ")
+                            )
+                        } else {
+                            format!(
+                                "named identifiers lack included-byte or structural-map support: {}",
+                                unsupported.join(", ")
+                            )
+                        },
                     )
                 }
             },
@@ -265,6 +289,7 @@ fn source_attribution_supported(
     identifier: &str,
     source: &str,
     evidence: &SourceEvidenceV3,
+    requires_included_bytes: bool,
 ) -> bool {
     let lines = token_lines(source, identifier);
     if lines.is_empty() {
@@ -278,11 +303,22 @@ fn source_attribution_supported(
             .any(|interval| interval.contains_line(*line))
     });
     included
-        || evidence
-            .source_map_v3
-            .entries
-            .iter()
-            .any(|entry| entry.label == identifier)
+        || (!requires_included_bytes
+            && evidence
+                .source_map_v3
+                .entries
+                .iter()
+                .any(|entry| entry.label == identifier))
+}
+
+fn source_attribution_requires_included_bytes(claim: &str) -> bool {
+    let lower = claim.to_ascii_lowercase();
+    lower.contains("source window")
+        || lower.contains("included source")
+        || lower.contains("included lines")
+        || lower.contains("early on")
+        || (lower.contains("first ") && lower.contains(" lines"))
+        || (lower.contains("initial ") && lower.contains(" lines"))
 }
 
 fn backticked_identifiers(response: &str) -> Vec<String> {
