@@ -1,0 +1,46 @@
+{
+  "schema": "astrid.steward_addressing_snapshot.v1",
+  "phase": "pre_finish_projection",
+  "audit_status": "consistent",
+  "canonical_indexed": 4231,
+  "canonical_fully_addressed": 3015,
+  "canonical_remaining": 1216,
+  "canonical_full_read": 3639,
+  "canonical_status_counts": {
+    "addressed_change": 1862,
+    "addressed_duplicate": 1064,
+    "addressed_no_action": 89,
+    "blocked_needs_steward": 407,
+    "triaged_pending_action": 213,
+    "triaged_watch": 4,
+    "unread": 592
+  },
+  "proof_gap_artifacts": 0,
+  "proof_gap_claims": 0,
+  "blocked_breakdown": {
+    "active_artifacts": 407,
+    "historical_absent_artifacts": 1,
+    "active_full_read": 407,
+    "active_claim_complete": 407,
+    "active_blocked_claims": 952,
+    "blocked_claims_with_work_items": 430,
+    "blocked_claims_without_work_items": 522,
+    "authority_wait_work_items": 280,
+    "evidence_work_items": 13,
+    "awaiting_response_work_items": 77,
+    "verified_or_closed_work_items": 452
+  },
+  "canonical_files_on_disk": 4233,
+  "unprojected_during_run": [
+    "introspection_astrid_llm_1785999123.txt",
+    "introspection_astrid_llm_1786002182.txt"
+  ],
+  "next_pre_finish_queue": [
+    "introspection_astrid_llm_1785959982.txt",
+    "introspection_astrid_llm_1785892559.txt",
+    "introspection_astrid_codec_1785888193.txt",
+    "introspection_astrid_llm_1785887252.txt",
+    "introspection_DOMAIN_BOUNDARIES.md_1785870717.txt"
+  ],
+  "note": "successful controller finish projects the two natural reports admitted during this run before the next heartbeat selects work"
+}

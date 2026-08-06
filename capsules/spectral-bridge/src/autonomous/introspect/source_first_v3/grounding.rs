@@ -35,6 +35,7 @@ const SOURCE_ATTRIBUTION_MARKERS: &[&str] = &[
     "source establishes",
     "source code establishes",
     "code establishes",
+    "in the source code `",
     "source shows",
     "code shows",
     "source contains",

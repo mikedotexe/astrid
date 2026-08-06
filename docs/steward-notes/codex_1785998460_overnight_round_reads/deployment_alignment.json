@@ -1,0 +1,53 @@
+{
+  "schema": "astrid.steward_deployment_alignment.v1",
+  "live_consumed_source_changed": true,
+  "source_change": "source-first attribution recognition for the exact phrase In the source code",
+  "preflight": {
+    "ok": false,
+    "exit_code": 2,
+    "reason": "dirty_no_ack",
+    "foreign_activity": false,
+    "dirty_bridge_input_count": 10,
+    "owned_inputs": [
+      "capsules/spectral-bridge/src/autonomous/introspect/source_first_v3/grounding.rs",
+      "capsules/spectral-bridge/src/autonomous/introspect/source_first_v3/mod.rs"
+    ],
+    "foreign_or_shared_inputs": [
+      "capsules/spectral-bridge/src/autonomous/division_ceremony.rs",
+      "capsules/spectral-bridge/src/autonomous/division_ceremony/status.rs",
+      "capsules/spectral-bridge/src/autonomous/division_ceremony/tests.rs",
+      "capsules/spectral-bridge/src/autonomous/introspect.rs",
+      "capsules/spectral-bridge/src/autonomous/introspect/source_first_v3/mapping.rs",
+      "capsules/spectral-bridge/src/autonomous/next_action/modes.rs",
+      "capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs",
+      "capsules/spectral-bridge/src/autonomous/runtime/tests.rs"
+    ]
+  },
+  "build_attempted": false,
+  "restart_attempted": false,
+  "deployment_aligned": false,
+  "existing_live_runtime": {
+    "launchd_state": "running",
+    "pid": 92807,
+    "started_at": "2026-08-04T18:49:20Z",
+    "binary_sha256": "d99118e80d926dd95797791bce058ce222d3b7dd7ff4bd84a0a7c00a6b97341b",
+    "model_connection": "127.0.0.1:8090 established",
+    "minime_telemetry_connection": "127.0.0.1:7878 established",
+    "minime_sensory_connection": "127.0.0.1:7879 established",
+    "recent_exchange_count": 155267,
+    "recent_log_state": "ongoing successful exchanges, embeddings, telemetry, and Shadow publication"
+  },
+  "minime_runtime": {
+    "pid": 98246,
+    "listeners": [
+      "127.0.0.1:7878",
+      "127.0.0.1:7879",
+      "127.0.0.1:7880"
+    ],
+    "source_changed": false,
+    "restart_attempted": false
+  },
+  "first_safe_command": "python3 scripts/deploy_preflight.py --component bridge --repo /Users/v/other/astrid --json",
+  "next_step": "wait until foreign bridge inputs are committed or otherwise clean, rerun unacknowledged preflight, then use scripts/build_bridge.sh only if preflight passes",
+  "authority_boundary": "no acknowledgement was supplied and no foreign work was folded into a live binary"
+}

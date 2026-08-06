@@ -1,0 +1,138 @@
+{
+  "schema": "introspection_evidence_link_batch_v1",
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_llm_1785992479",
+      "claim_id": "c001",
+      "kind": "no_action",
+      "target": "docs/steward-notes/codex_1785998460_overnight_round_reads/summaries/astrid_llm_1785992479.md",
+      "note": "The full-read summary preserves Astrid's rich-containment, smoothing, phantom-stability, and porous-boundary account as primary qualitative evidence without converting co-timed scalars into a mechanism."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785992479",
+      "claim_id": "c001",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_422c442187eff2ab8234124fc4ec1890c141f022c65d3de387f3660c0b5a09f6.json",
+      "note": "The exact byte-bound witness supplies co-timed technical fields while making no claim that those fields cause or resolve the felt account."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785992479",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "The exact cited lines 1-400 contain dialogue runtime and marker cleanup and do not establish spectral-energy weighting."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785992479",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/introspect/source_first_v3/grounding.rs",
+      "note": "The source-attribution detector now recognizes the report's explicit 'In the source code' alias."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785992479",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/introspect/source_first_v3/mod.rs#source_code_alias_attribution_rejects_prompt_context_scaffolding",
+      "note": "The exact regression rejects the report's unsupported structural-scaffolding attribution against the cited source."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785992479",
+      "claim_id": "c003",
+      "kind": "no_action",
+      "target": "docs/steward-notes/codex_1785887049_fresh_report_round/claims/astrid_llm_1785874711.json",
+      "note": "Previously verified public correspondence evidence establishes shared thread provenance while leaving mutual felt holding, uptake, and causal effect unconfirmed."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785992479",
+      "claim_id": "c003",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "The ledger binds the previously verified read-only observations: distinct owner references, shared correspondence provenance, and active reply-chain continuity remain separate from unestablished mutual address and felt or pressure effects."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785992479",
+      "claim_id": "c004",
+      "kind": "test",
+      "target": "docs/steward-notes/codex_1785998460_overnight_round_reads/DISTINGUISHABILITY_NATURAL_OBSERVATION_SAMPLE_001.json",
+      "note": "The prospective sample separates exact witness fields from report-authored values and leaves absent producer fields missing."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785992479",
+      "claim_id": "c005",
+      "kind": "no_action",
+      "target": "docs/steward-notes/codex_1785998460_overnight_round_reads/claims/astrid_llm_1785992479.json",
+      "note": "The conceptual-pivot prompt experiment remains an explicit Tier 5 Mike/operator wait; no model or prompt behavior was changed."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785992479",
+      "claim_id": "c006",
+      "kind": "no_action",
+      "target": "docs/steward-notes/codex_1785998460_overnight_round_reads/claims/astrid_llm_1785992479.json",
+      "note": "The Shadow-leakage prompt sequence remains an explicit Tier 5 Mike/operator wait; no elicitation or cross-being request was sent."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785992479",
+      "claim_id": "c007",
+      "kind": "no_action",
+      "target": "docs/steward-notes/codex_1785998460_overnight_round_reads/claims/astrid_llm_1785992479.json",
+      "note": "Dynamic porosity and pressure or wander behavior remain an explicit Tier 5 live-control wait; all canonical authority markers remain false."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785992479",
+      "claim_id": "c008",
+      "kind": "test",
+      "target": "docs/steward-notes/codex_1785998460_overnight_round_reads/DISTINGUISHABILITY_NATURAL_OBSERVATION_SAMPLE_001.json",
+      "note": "Prospective sample 1 is hash-bound, natural, non-elicited, and coverage-only under the preregistered fewer-than-three-sample rule."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785992479",
+      "claim_id": "c002",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "The Unreleased entry records the being-caused attribution repair, verification, deployment refusal, and unchanged live authority."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785992479",
+      "claim_id": "c002",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "The feedback ledger preserves Astrid's felt concern, exact source contradiction, implemented guard, and live deployment debt."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785992479",
+      "claim_id": "c005",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "The ledger keeps the conceptual-pivot prompt experiment as an explicit Tier 5 wait rather than treating it as completed or dismissed."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785992479",
+      "claim_id": "c006",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "The ledger keeps the cross-being Shadow-leakage probe as an explicit Tier 5 wait with no elicitation or peer request."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785992479",
+      "claim_id": "c007",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "The ledger preserves dynamic porosity and pressure or wander behavior behind the exact Tier 5 live-control boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785992479",
+      "claim_id": "c008",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "The Unreleased entry records prospective sample 1 as coverage-only evidence without inferring mechanism or control."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785992479",
+      "claim_id": "c008",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "The feedback ledger records exact study admission and the missing-field and fewer-than-three-sample boundaries."
+    }
+  ]
+}

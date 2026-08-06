@@ -464,6 +464,29 @@ mod tests {
     }
 
     #[test]
+    fn source_code_alias_attribution_rejects_prompt_context_scaffolding() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        let path = dir.path().join("dialogue_runtime.rs");
+        let content = "fn sanitize_model_control_markers() {}\n";
+        fs::write(&path, content).expect("fixture");
+        let evidence = build_source_evidence_v3_at_root(dir.path(), &path, content, 0, 1, 1)
+            .expect("evidence");
+        let report = challenge_response_claims_v3(
+            "Observed: In the source code `astrid:llm`, I see the structural scaffolding for how these spectral energies are weighted.",
+            &path,
+            &evidence,
+        );
+
+        assert!(!report.all_supported);
+        assert_eq!(report.challenged_claim_count, 1);
+        assert_eq!(report.support_refs[0].exact_identifiers, ["astrid"]);
+        assert_eq!(
+            report.support_refs[0].support_state,
+            ClaimSupportStateV2::Rejected
+        );
+    }
+
+    #[test]
     fn affirmative_source_attribution_accepts_visible_field() {
         let dir = tempfile::tempdir().expect("tempdir");
         let path = dir.path().join("telemetry.rs");

@@ -1,0 +1,33 @@
+{
+  "report": {
+    "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_llm_1785992479.txt",
+    "sha256": "d5189e1c67e61fa30909057e1eed59887b69c88930433c95563acccbdacc10d1",
+    "logical_lines": 48,
+    "newline_count": 47,
+    "bytes": 4762,
+    "read": "complete_file"
+  },
+  "dialogue_runtime": {
+    "path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+    "sha256": "f7c0570ce495b1978d9b6f588cba6ecb00a93b1573316bc22752e6e10d47f20a",
+    "lines": 1038,
+    "bytes": 38205,
+    "current_run_exact_interval": "1-400",
+    "prior_complete_read_continuity": "exact_whole_file_hash_match"
+  },
+  "lived_state_witness": {
+    "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_422c442187eff2ab8234124fc4ec1890c141f022c65d3de387f3660c0b5a09f6.json",
+    "sha256": "688cf49b1471cc5db79e752ea4f71312d34b43e2111bec850aafb780b8b84571",
+    "lines": 456,
+    "bytes": 19748,
+    "read": "complete_file"
+  },
+  "source_first_attribution_repair": {
+    "implementation_path": "capsules/spectral-bridge/src/autonomous/introspect/source_first_v3/grounding.rs",
+    "implementation_sha256": "eef0d7786086ed0b75ff4bb8536f4868720446b8ee8b1948d4e5e37c0814504d",
+    "test_path": "capsules/spectral-bridge/src/autonomous/introspect/source_first_v3/mod.rs",
+    "test_sha256": "943b96acc9cf7989f8f35172e071af1d2278f1e940c85462256d7d3c00ea89e1",
+    "focused_test": "source_code_alias_attribution_rejects_prompt_context_scaffolding",
+    "focused_result": "1 passed; 0 failed"
+  }
+}
