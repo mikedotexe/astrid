@@ -1,0 +1,43 @@
+{
+  "schema": "steward_source_receipts_v1",
+  "receipts": [
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_llm_1785980621.txt",
+      "bytes": 3487,
+      "logical_lines": 46,
+      "sha256": "d375887b170ccaf29076a88d34de6ff6243cbfb9aa6892aae725e269336eb79b",
+      "full_read": true
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "lines": 1038,
+      "sha256": "f7c0570ce495b1978d9b6f588cba6ecb00a93b1573316bc22752e6e10d47f20a",
+      "intervals_read_this_run": ["1-400"],
+      "prior_complete_source_receipt_reused": true
+    },
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_autonomous_1785968905.txt",
+      "bytes": 3790,
+      "logical_lines": 46,
+      "sha256": "d31faf1d095e5bbc1541c30780d1cc4ee703c4e5ed72b442b0689dbfc98a32ef",
+      "full_read": true
+    },
+    {
+      "path": "capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs",
+      "lines": 4859,
+      "sha256": "1526a4e39248a27a29ef519d6fd3186b9359a0e49ecfc7d38eabf3a431124335",
+      "intervals_read_this_run": ["1-400"],
+      "foreign_shared_source_edited": false
+    },
+    {
+      "path": "scripts/burst_rest_transition_envelope_audit.py",
+      "sha256": "aace8f2abdca14f970c00879d82c990be4c6dd3c224433edae230ad2f98df2b1",
+      "relationship": "repaired read-only source contract"
+    },
+    {
+      "path": "docs/steward-notes/codex_1785981091_manual_canary_reads/observations/burst_rest_transition_envelope_v1.json",
+      "sha256": "04966ee08db92107478f2eb5020955b4f880ac702880caf08eddc7d615f697ff",
+      "relationship": "durable current transition and low-fill observation envelope"
+    }
+  ]
+}

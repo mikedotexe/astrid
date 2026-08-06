@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The scanner coordinates longest exact marker matching, exact reference syntax, finite following relations, and byte-preserving remainder construction.",
+      "disposition": "Verified in exact source lines 18-219 and the focused marker regressions; no runtime activation or meaning is inferred.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The four-pair delimiter evidence bound may remove a marker merely because five decorative characters precede it.",
+      "disposition": "Source-challenged and verified existing: the nearest non-whitespace delimiter pair controls preservation, while the five-level stack regression preserves the marker and bounds only the receipt depth to four.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The exact relation `echoes` and longest-overlap selection should preserve the named marker without corrupting the remainder.",
+      "disposition": "Verified by the existing poetic-attribution and longest-overlapping-token regressions against the unchanged source SHA.",
+      "classification": "verified_existing"
+    }
+  ]
+}

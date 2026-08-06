@@ -1,0 +1,74 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_llm_1785980621",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "Exact source SHA and report-bound lines 1-400 verify scanner coordination."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785980621",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs#control_marker_cleanup_bounds_deeper_delimiter_receipt_without_dropping_token",
+      "note": "Five-level stack is preserved while proven receipt depth remains four."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785980621",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs#control_marker_cleanup_preserves_longest_overlapping_token_when_named_as_content",
+      "note": "Existing focused regressions cover longest overlap and the exact `echoes` relation."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1785968905",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs",
+      "note": "Exact report-bound source verifies fill read, rest formula, and warmth taper."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1785968905",
+      "claim_id": "c001",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/runtime/tests.rs#fill_responsive_rest_keeps_critical_floor_and_band_boundaries",
+      "note": "Existing regression verifies critical floor, branch boundaries, cap, and NaN fallback."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1785968905",
+      "claim_id": "c002",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1785981091_manual_canary_reads/observations/burst_rest_transition_envelope_v1.json",
+      "note": "Read-only natural capture retains the missing boundary pair and absent low-fill episode."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1785968905",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "scripts/burst_rest_transition_envelope_audit.py",
+      "note": "Deterministic envelope verifies 25-percent rest arithmetic without changing scheduling."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1785968905",
+      "claim_id": "c004",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Exact live-control boundary remains visible and unchanged."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1785968905",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "scripts/burst_rest_transition_envelope_audit.py",
+      "note": "Audit contract now recognizes the extracted helper while excluding unrelated prompt-overflow code."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1785968905",
+      "claim_id": "c005",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "Being-driven non-live audit repair and authority boundary recorded under Unreleased."
+    }
+  ]
+}

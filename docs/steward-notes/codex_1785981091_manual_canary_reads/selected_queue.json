@@ -1,0 +1,16 @@
+{
+  "schema": "bounded_manual_canary_selection_v1",
+  "ceiling": 4,
+  "processed": [
+    "introspection_astrid_llm_1785980621.txt",
+    "introspection_astrid_autonomous_1785968905.txt"
+  ],
+  "selected_but_unprocessed": [
+    "introspection_DOMAIN_BOUNDARIES.md_1785960773.txt",
+    "introspection_astrid_llm_1785959982.txt"
+  ],
+  "stop_reason": "serious live-substrate transition claim required bounded source verification and repair of its non-live observation audit",
+  "cadence_state": "off",
+  "automations_state": "paused",
+  "authority": "selection and review evidence only; no live-control or authorship inference"
+}

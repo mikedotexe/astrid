@@ -30,12 +30,16 @@ DEFAULT_STATUS = Path(
     "/Users/v/other/minime/workspace/runtime/bridge_semantic_heartbeat_status.json"
 )
 EXPECTED_TRANSITION_SOURCE_SHA256 = (
-    "b7ce517fb84b2dd97e760a4e7c0c1ea840e2c4c2e7c591e07c43c083dae8b694"
+    "e601aa74c2787573f18a919ecf5dc100b795f2fa4ba34f10f3fa645364335674"
 )
 REGION_SEPARATOR = "\n--transition-region--\n"
 TRANSITION_SOURCE_REGIONS = (
     (
         "const SEMANTIC_HEARTBEAT_INTERVAL",
+        "fn should_arm_prompt_overflow_read_more",
+    ),
+    (
+        "fn fill_responsive_rest_secs",
         "pub(crate) const fn semantic_heartbeat_constants_v1",
     ),
     ("            let seed =", "            let wait = if burst_count"),
@@ -351,6 +355,14 @@ def frozen_fixture() -> dict[str, Any]:
 
 def run_self_test(source_path: Path) -> dict[str, Any]:
     source_sha256, relevant_source_sha256 = read_source_contract(source_path)
+    source_text = source_path.read_text(encoding="utf-8")
+    unrelated_variant = source_text.replace(
+        ".split_whitespace()",
+        ".split_ascii_whitespace()",
+        1,
+    )
+    assert unrelated_variant != source_text
+    assert transition_source_sha256(unrelated_variant) == relevant_source_sha256
     fixture = frozen_fixture()
     fixture_bytes = json.dumps(fixture, sort_keys=True, separators=(",", ":")).encode()
     result = analyze_status(
@@ -374,7 +386,7 @@ def run_self_test(source_path: Path) -> dict[str, Any]:
         "ok": True,
         "fixture_sha256": sha256_bytes(fixture_bytes),
         "transition_relevant_source_sha256": relevant_source_sha256,
-        "checks": 7,
+        "checks": 8,
     }
 
 

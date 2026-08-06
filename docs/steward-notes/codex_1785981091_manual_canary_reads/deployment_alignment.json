@@ -1,0 +1,11 @@
+{
+  "schema": "steward_deployment_alignment_v1",
+  "live_consumed_surface_changed": false,
+  "bridge_source_changed_by_run": false,
+  "minime_changed": false,
+  "build_run": false,
+  "restart_run": false,
+  "deployment_run": false,
+  "alignment_required": false,
+  "reason": "The only implementation is a read-only steward audit contract; live orchestration and runtime behavior were not edited."
+}

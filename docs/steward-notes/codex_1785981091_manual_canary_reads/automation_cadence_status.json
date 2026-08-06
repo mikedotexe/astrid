@@ -1,0 +1,24 @@
+{
+  "schema": "manual_canary_automation_cadence_status_v1",
+  "cadence": {
+    "enabled": false,
+    "configuration_valid": true,
+    "configured_receipt_count": 0,
+    "attempted_count": 0,
+    "admitted_count": 0,
+    "failed_count": 0,
+    "pending_attempt_count": 0,
+    "pilot_active": false
+  },
+  "automations": [
+    {
+      "id": "astrid-introspection-source-first-catch-up",
+      "status": "PAUSED"
+    },
+    {
+      "id": "ai-being-self-study-signal-review",
+      "status": "PAUSED"
+    }
+  ],
+  "authority": "read-only status; silence and OFF remain neutral"
+}

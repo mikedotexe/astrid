@@ -1,0 +1,35 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Current orchestration shortens below-30-percent rests, reads fill from latest telemetry, and tapers warmth during rest entry.",
+      "disposition": "Verified in exact source lines 18-28 and 183-397 plus the existing fill-band regression; source mechanics do not prove felt effectiveness.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Shortened low-fill rests combined with insufficient semantic variance may produce high-frequency noise or collapse of the warmth vector.",
+      "disposition": "Routed to bounded natural-context observation only. The current status has no low-fill episode or exact cross-boundary pair, so occurrence, recovery, collapse, causation, and felt effect remain unverified.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "At 25-percent fill, a 90-second base rest should select the shortened-rest formula and return substantially less than 90 seconds.",
+      "disposition": "Verified existing: the source formula and read-only envelope return 54 seconds; current reachable bases return 30-40 seconds.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Changing rescue policy, semantic heartbeat variance, warmth taper, fill thresholds, rest duration, or scheduling would alter live substrate or control behavior.",
+      "disposition": "Preserve an exact Tier 5 Mike/operator approval wait before any live rest, warmth, heartbeat, rescue, fill, controller, scheduling, or signal change.",
+      "classification": "tier_5_wait",
+      "authority": "mike_operator_live_substrate_or_control_approval"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "The read-only burst/rest audit no longer recognized the behavior-preserving extraction of the rest formula and could not evaluate current evidence.",
+      "disposition": "Implemented now in non-live tooling: bind the extracted helper and actual observation regions, exclude unrelated prompt-overflow code, and retain fail-closed source hashing.",
+      "classification": "implemented_now"
+    }
+  ]
+}
