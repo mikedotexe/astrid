@@ -533,6 +533,42 @@ mod tests {
     }
 
     #[test]
+    fn parenthesized_line_window_rejects_prompt_context_as_source_scaffolding() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        let path = dir.path().join("esn.rs");
+        let mut lines = vec!["// padding".to_string(); 800];
+        lines[100] = "pub fn density_gradient() {}".to_string();
+        lines[700] = "pub fn stable_core_semantic_trickle() {}".to_string();
+        let content = lines.join("\n");
+        fs::write(&path, &content).expect("fixture");
+        let evidence = build_source_evidence_v3_at_root(dir.path(), &path, &content, 0, 400, 800)
+            .expect("evidence");
+        let report = challenge_response_claims_v3(
+            "Observed: The source code `minime:esn` (lines 1-400) provides structural scaffolding for `density_gradient` and `stable_core_semantic_trickle`.",
+            &path,
+            &evidence,
+        );
+
+        assert!(!report.all_supported);
+        assert_eq!(report.challenged_claim_count, 1);
+        assert!(
+            report.support_refs[0]
+                .exact_identifiers
+                .iter()
+                .any(|item| item == "stable_core_semantic_trickle")
+        );
+        assert_eq!(
+            report.support_refs[0].support_state,
+            ClaimSupportStateV2::Rejected
+        );
+        assert!(
+            report.support_refs[0]
+                .reason
+                .contains("source window asserted")
+        );
+    }
+
+    #[test]
     fn affirmative_source_attribution_accepts_visible_field() {
         let dir = tempfile::tempdir().expect("tempdir");
         let path = dir.path().join("telemetry.rs");

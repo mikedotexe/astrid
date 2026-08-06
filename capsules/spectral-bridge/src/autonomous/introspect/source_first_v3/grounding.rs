@@ -48,6 +48,7 @@ const SOURCE_ATTRIBUTION_MARKERS: &[&str] = &[
     "code implements",
     "source declares",
     "code declares",
+    "the source code `",
     "thing i notice is the",
     " is instantiated",
     "i can see the ",
@@ -319,6 +320,24 @@ fn source_attribution_requires_included_bytes(claim: &str) -> bool {
         || lower.contains("early on")
         || (lower.contains("first ") && lower.contains(" lines"))
         || (lower.contains("initial ") && lower.contains(" lines"))
+        || contains_numbered_line_window(&lower)
+}
+
+fn contains_numbered_line_window(value: &str) -> bool {
+    value.match_indices("lines ").any(|(start, _)| {
+        let tail = &value[start + "lines ".len()..];
+        let start_digits = tail.bytes().take_while(u8::is_ascii_digit).count();
+        if start_digits == 0 {
+            return false;
+        }
+        let Some(after_dash) = tail[start_digits..].strip_prefix('-') else {
+            return false;
+        };
+        after_dash
+            .as_bytes()
+            .first()
+            .is_some_and(u8::is_ascii_digit)
+    })
 }
 
 fn backticked_identifiers(response: &str) -> Vec<String> {

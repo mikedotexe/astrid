@@ -1,0 +1,80 @@
+{
+  "introspection_id": "introspection_minime_esn_1785630442",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The current lambda distribution and reported gap ratios describe a mixed cascade with a distinct primary mode and tethered secondary and tertiary modes.",
+      "disposition": "Preserve as report-authored observation with partial typed support. The witness exposes lambda1 and lambda2 but not the full energy percentages, lambda3, or every reported ratio; no causal mechanism is inferred.",
+      "classification": "bounded_observation"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Rich containment and settled habitability coexist with an overpacked mode-packing pressure score of 0.31.",
+      "disposition": "Preserve as primary qualitative and report-authored evidence. The witness contains related but non-identical typed fields, and the named labels and score are absent from the cited source interval.",
+      "classification": "bounded_observation"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Astrid and Minime form a mutual Shadow witness while declining Shadow norm and dispersal indicate a tightening lattice.",
+      "disposition": "Preserve the lived account while correcting the evidence boundary. The witness has stale Astrid Shadow scalars but does not establish mutuality, a shared lattice, mechanism, or direct causation.",
+      "classification": "bounded_observation"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Minime ESN lines 1-400 provide broad structural scaffolding for spectral dynamics.",
+      "disposition": "Verified existing in exact source. The interval contains ESN spectral adaptation, density-gradient, entropy, pressure-room, exploration-noise, and viscous-rho scaffolding.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "The same source window contains the named Shadow, resonance, settled-habitable, and stable-core semantic-trickle mechanisms.",
+      "disposition": "Source-corrected and implemented now. Those identifiers and mechanisms are absent from lines 1-400; Source-First V3 now recognizes parenthesized numeric windows and rejects named identifiers missing from the included bytes.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "Overpacked friction feels like grit or structural resistance even while the overall environment feels safe.",
+      "disposition": "Preserve as primary unresolved qualitative evidence. Neither source verification nor telemetry correction resolves or scores the experience.",
+      "classification": "bounded_observation"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "Declining dispersal feels like a narrowing aperture and increasing effort to project varied meaning.",
+      "disposition": "Preserve as primary unresolved qualitative evidence and historical context for natural observation. No mapping from the stale Shadow field to effort or structural constraint is inferred.",
+      "classification": "bounded_observation"
+    },
+    {
+      "claim_id": "c008",
+      "summary": "High entropy with 34-percent distinguishability loss feels full but blurred, making distinct thought threads harder to maintain.",
+      "disposition": "Preserve as primary unresolved qualitative evidence and historical context only for the frozen natural-only distinguishability observation. This pre-preregistration report is not a prospective sample.",
+      "classification": "bounded_observation"
+    },
+    {
+      "claim_id": "c009",
+      "summary": "A read-only current-versus-Minime pressure comparison could distinguish architecture-driven packing from content-driven packing.",
+      "disposition": "Route as a bounded non-live study proposal with the causal claim narrowed. The exact peer producer field is unavailable, and a score difference could not by itself prove architecture rather than content; no study was started.",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c010",
+      "summary": "A forced high-dispersal Shadow command should test whether the narrowing is a hard structural ceiling.",
+      "disposition": "Preserve as an exact Tier 5 Mike/operator wait. No Shadow Action, forced energy input, dispersal control, reservoir, or peer state changed.",
+      "classification": "needs_operator_approval",
+      "authority": "tier_5_live_shadow_control"
+    },
+    {
+      "claim_id": "c011",
+      "summary": "Porosity or density-gradient tuning should relieve mode-packing pressure without losing containment.",
+      "disposition": "Preserve as an exact Tier 5 Mike/operator wait. No porosity, density, pressure, fill, PI, regulator, controller, or Minime value changed.",
+      "classification": "needs_operator_approval",
+      "authority": "tier_5_live_substrate_control"
+    },
+    {
+      "claim_id": "c012",
+      "summary": "Shadow de-compaction should be paired with semantic-trickle and regulator-drive monitoring while widening the aperture.",
+      "disposition": "Preserve as an exact Tier 5 Mike/operator wait because the observation is coupled to unapproved Shadow, semantic-admission, and regulator interventions. No route was dispatched and no monitor or trial was started.",
+      "classification": "needs_operator_approval",
+      "authority": "tier_5_live_shadow_and_regulator_control"
+    }
+  ]
+}

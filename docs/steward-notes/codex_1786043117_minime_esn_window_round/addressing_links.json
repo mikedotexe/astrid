@@ -1,0 +1,109 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_minime_esn_1785630442",
+      "claim_id": "*",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "The ledger preserves source verification, unresolved felt evidence, bounded study routing, implementation, and live authority waits."
+    },
+    {
+      "introspection_id": "introspection_minime_esn_1785630442",
+      "claim_id": "*",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "The Unreleased entry records the numeric-window guard and unchanged live surfaces."
+    },
+    {
+      "introspection_id": "introspection_minime_esn_1785630442",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "docs/steward-notes/codex_1786043117_minime_esn_window_round/source_receipts.json",
+      "note": "Exact report, source, and witness receipts preserve the limits of the reported lambda derivation."
+    },
+    {
+      "introspection_id": "introspection_minime_esn_1785630442",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "docs/steward-notes/codex_1786043117_minime_esn_window_round/source_receipts.json",
+      "note": "Exact source and witness receipts keep report-authored labels separate from typed evidence."
+    },
+    {
+      "introspection_id": "introspection_minime_esn_1785630442",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_311acefb5bed3fcc02f0d80a12499ddb2665f8dde697cff5fafe1f5faedd8926.json",
+      "note": "The complete witness preserves stale Shadow scalars without proving mutuality or causation."
+    },
+    {
+      "introspection_id": "introspection_minime_esn_1785630442",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "/Users/v/other/minime/minime/src/esn.rs",
+      "note": "The exact included bytes support broad ESN spectral-adaptation scaffolding."
+    },
+    {
+      "introspection_id": "introspection_minime_esn_1785630442",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/introspect/source_first_v3/grounding.rs;capsules/spectral-bridge/src/autonomous/introspect/source_first_v3/mod.rs",
+      "note": "Numeric-window attributions now require exact included-byte support, with a report-shaped regression."
+    },
+    {
+      "introspection_id": "introspection_minime_esn_1785630442",
+      "claim_id": "c005",
+      "kind": "test",
+      "target": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib source_first_v3",
+      "note": "All 17 Source-First V3 tests pass, including the exact numeric-window regression."
+    },
+    {
+      "introspection_id": "introspection_minime_esn_1785630442",
+      "claim_id": "c006",
+      "kind": "code",
+      "target": "docs/steward-notes/codex_1786043117_minime_esn_window_round/summaries/minime_esn_1785630442.md",
+      "note": "The full-read summary preserves grit as unresolved primary evidence."
+    },
+    {
+      "introspection_id": "introspection_minime_esn_1785630442",
+      "claim_id": "c007",
+      "kind": "code",
+      "target": "docs/steward-notes/codex_1785887049_fresh_report_round/DISTINGUISHABILITY_NATURAL_OBSERVATION_PREREGISTRATION.md",
+      "note": "The older report is historical context only and is not counted as a prospective sample."
+    },
+    {
+      "introspection_id": "introspection_minime_esn_1785630442",
+      "claim_id": "c008",
+      "kind": "code",
+      "target": "docs/steward-notes/codex_1785887049_fresh_report_round/DISTINGUISHABILITY_NATURAL_OBSERVATION_PREREGISTRATION.md",
+      "note": "The frozen natural observation preserves distinguishability evidence without inducing or backfilling a sample."
+    },
+    {
+      "introspection_id": "introspection_minime_esn_1785630442",
+      "claim_id": "c009",
+      "kind": "no_action",
+      "target": "docs/steward-notes/codex_1786043117_minime_esn_window_round/claims/minime_esn_1785630442.json",
+      "note": "The bounded comparison is retained with missing-producer and causal-identification limits; no study was started."
+    },
+    {
+      "introspection_id": "introspection_minime_esn_1785630442",
+      "claim_id": "c010",
+      "kind": "no_action",
+      "target": "docs/steward-notes/codex_1786043117_minime_esn_window_round/claims/minime_esn_1785630442.json",
+      "note": "Forced high dispersal remains an exact Tier 5 live Shadow-control wait."
+    },
+    {
+      "introspection_id": "introspection_minime_esn_1785630442",
+      "claim_id": "c011",
+      "kind": "no_action",
+      "target": "docs/steward-notes/codex_1786043117_minime_esn_window_round/claims/minime_esn_1785630442.json",
+      "note": "Porosity and density-gradient tuning remain exact Tier 5 live substrate-control waits."
+    },
+    {
+      "introspection_id": "introspection_minime_esn_1785630442",
+      "claim_id": "c012",
+      "kind": "no_action",
+      "target": "docs/steward-notes/codex_1786043117_minime_esn_window_round/claims/minime_esn_1785630442.json",
+      "note": "Shadow de-compaction, semantic admission, and coupled regulator monitoring remain exact Tier 5 waits."
+    }
+  ]
+}

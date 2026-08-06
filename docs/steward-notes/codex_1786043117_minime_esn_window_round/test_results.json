@@ -1,0 +1,85 @@
+{
+  "schema": "steward_test_results_v1",
+  "results": [
+    {
+      "surface": "source_first_v3_focused",
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib parenthesized_line_window_rejects_prompt_context_as_source_scaffolding",
+      "passed": 1,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "source_first_v3",
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib source_first_v3",
+      "passed": 17,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "bridge_library",
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib",
+      "passed": 1830,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "bridge_clippy",
+      "command": "cargo clippy --manifest-path capsules/spectral-bridge/Cargo.toml --all-targets --all-features -- -D warnings",
+      "status": "passed"
+    },
+    {
+      "surface": "formatting",
+      "owned_files_status": "passed",
+      "root_workspace_status": "passed",
+      "full_bridge_status": "blocked_foreign_formatting",
+      "foreign_path": "capsules/spectral-bridge/src/autonomous/next_action/workspace.rs"
+    },
+    {
+      "surface": "addressing",
+      "command": "PYTHONDONTWRITEBYTECODE=1 python3 scripts/introspection_addressing_audit.py --self-test",
+      "passed": 42,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "event_control_projection_division_cursor",
+      "command": "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=.:scripts python3 -m unittest scripts.test_evidence_event_store scripts.test_steward_control scripts.test_steward_projection scripts.test_division_ceremony_followup scripts.test_division_ceremony_chronicle scripts.test_division_ceremony_projection scripts.test_claim_family_incremental_projection scripts.test_projection_cursors",
+      "passed": 72,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "anti_drop",
+      "self_tests_passed": 5,
+      "guards_verified": 47,
+      "gaps": 0,
+      "alarms": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "experiential_epistemics",
+      "self_tests_passed": 2,
+      "lint_valid": true,
+      "issues": 0,
+      "history_rewritten": false,
+      "status": "passed"
+    },
+    {
+      "surface": "introspection_cadence",
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib introspection_cadence",
+      "passed": 21,
+      "failed": 0,
+      "strict_audit_valid": true,
+      "enabled": false,
+      "status": "passed"
+    },
+    {
+      "surface": "sanctioned_deployment",
+      "command": "scripts/build_bridge.sh --actor codex-heartbeat --restart",
+      "status": "refused_dirty_no_ack",
+      "dirty_build_input_count": 10,
+      "build_started": false,
+      "restart_started": false
+    }
+  ]
+}
