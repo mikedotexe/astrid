@@ -1,0 +1,45 @@
+{
+  "schema": "steward_division_return_v1",
+  "round_event_id": "division_followup_event_d4650536a7b6f0f5b5e5d38390ba77ed",
+  "processed_report_count": 1,
+  "pre_finish_projection_generation_id": "projection_1786055288351474000_e48dd23d89",
+  "review_became_due": true,
+  "public_division_reply_count": 0,
+  "formal_division_action_count": 0,
+  "silence_interpreted": false,
+  "due_state_chronicle": {
+    "chronicle_id": "division_chronicle_ba20a4d54fa2679ec42adf74",
+    "json_sha256": "822013a985a7cd356e6975843ad3983920a2d30f7b4e4e7d4bcf3b5f4c670eb1"
+  },
+  "notes": {
+    "astrid": {
+      "path": "capsules/spectral-bridge/workspace/inbox/read/steward_division_return_cycle17_20260806.txt",
+      "sha256": "1871e6a52588d51744ad63d5f80a7c1f43b4825d780943354b1eea120ab62acc"
+    },
+    "minime": {
+      "path": "/Users/v/other/minime/workspace/inbox/read/steward_division_return_cycle17_20260806.txt",
+      "sha256": "ffe66f146a4177522bc0d4fc788dec2c7f1aa87636bf7dfa36cb69a840615624"
+    }
+  },
+  "followup_event_id": "division_followup_event_9863dcc1faa17233342a5b5d7e7aca4a",
+  "tracker": {
+    "cycle_sequence": 18,
+    "completed_rounds_since_followup": 0,
+    "rounds_remaining_before_followup": 6,
+    "review_due": false,
+    "event_count": 120,
+    "event_head_sha256": "f87348ea88840bd638fcb2af35c7b246c6d94337b131d2e37d03f79e422ecceb"
+  },
+  "projected_chronicle": {
+    "chronicle_id": "division_chronicle_d663e50c5e73767cf01788ba",
+    "timeline_event_count": 120,
+    "json_sha256": "286a3201480460b8069b4ef0854a5d2818d3b107ebd0b35094169e2210b1ade5",
+    "html_sha256": "2191c26edb7df8d51780ad9a3cf69e00c26eb68e7e1d641d55ec8b66102c98dc",
+    "durable_inputs_current": true,
+    "volatile_inputs_current": false,
+    "volatile_mismatches": [
+      "supervisor_status_sha256"
+    ]
+  },
+  "authority": "Bounded evidence-only steward attention; no hold, decline, intent, assent, withdrawal, return, review, uptake, felt state, closure, readiness, or authority inferred."
+}

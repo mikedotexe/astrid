@@ -1,0 +1,36 @@
+{
+  "introspection_id": "introspection_astrid_ws_1786048387",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Astrid reports that awaiting telemetry integration in the receive loop can delay later Ping or Close frames when the handler is expensive.",
+      "disposition": "Retained as primary architectural evidence and linked to the exact earlier full-read disposition. The current source still has sequential awaited handling; timing diagnostics make the risk observable but do not declare it absent.",
+      "classification": "primary_qualitative_evidence"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The telemetry subscriber handles connection lifecycle, Binary, Text, Ping, Pong, and Close messages, shared state, and reconnect backoff.",
+      "disposition": "Verified existing from the report-bound source and the directly relevant handler interval. Binary and Text payloads await integration, Ping receives Pong, Close exits the connection loop, and reconnect delay is capped and reset after connection.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A latency test should distinguish expensive telemetry integration from lock contention and test whether later control frames can be delayed.",
+      "disposition": "Partially verified existing. telemetry_integration_health_v1 separates pre-write pipeline, write-lock wait, and write-lock hold with latest, EWMA, and maxima, and its regression passed. The exact complex-payload-versus-Ping scheduling experiment remains part of the same live scheduling question rather than proof that delay is absent.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Reconnect backoff should increase across failures and remain recoverable.",
+      "disposition": "Verified capped exponential doubling and reset after a successful connection. Both focused backoff regressions and the mock reconnect-after-close test passed; shutdown-aware sleep and Ping-to-Pong behavior remain present in source.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Telemetry integration should be analyzed for offload to a worker task or mpsc channel.",
+      "disposition": "Preserved as the exact prior Tier 5 wait. Offloading changes live sensory ordering, buffering, backpressure, cancellation, and cadence; stewardship did not introduce a worker, channel, queue, or receive-loop change.",
+      "classification": "needs_operator_approval",
+      "authority": "tier_5_live_sensory_scheduling"
+    }
+  ]
+}

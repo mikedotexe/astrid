@@ -1,0 +1,81 @@
+{
+  "schema": "steward_test_results_v1",
+  "results": [
+    {
+      "surface": "telemetry_backoff",
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib backoff_",
+      "passed": 2,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "telemetry_integration_health",
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib telemetry_integration_health_separates_pipeline_wait_and_hold",
+      "passed": 1,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "mock_telemetry_admission",
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --test mock_ws_integration bridge_receives_telemetry_from_mock_ws",
+      "passed": 1,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "mock_telemetry_reconnect",
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --test mock_ws_integration telemetry_subscriber_reconnects_after_close_and_routes_binary",
+      "passed": 1,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "source_first_v3",
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib source_first_v3",
+      "passed": 17,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "addressing",
+      "command": "PYTHONDONTWRITEBYTECODE=1 python3 scripts/introspection_addressing_audit.py --self-test",
+      "passed": 42,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "event_control_projection_division_cursor",
+      "command": "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=.:scripts python3 -m unittest scripts.test_evidence_event_store scripts.test_steward_control scripts.test_steward_projection scripts.test_division_ceremony_followup scripts.test_division_ceremony_chronicle scripts.test_division_ceremony_projection scripts.test_claim_family_incremental_projection scripts.test_projection_cursors",
+      "passed": 72,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "anti_drop",
+      "self_tests_passed": 5,
+      "guards_verified": 47,
+      "gaps": 0,
+      "alarms": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "experiential_epistemics",
+      "self_tests_passed": 2,
+      "lint_valid": true,
+      "checked_record_count": 10517,
+      "issues": 0,
+      "history_rewritten": false,
+      "status": "passed"
+    },
+    {
+      "surface": "introspection_cadence",
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib introspection_cadence",
+      "passed": 21,
+      "failed": 0,
+      "strict_audit_valid": true,
+      "enabled": false,
+      "durable_configured_receipt_exists": false,
+      "status": "passed"
+    }
+  ]
+}
