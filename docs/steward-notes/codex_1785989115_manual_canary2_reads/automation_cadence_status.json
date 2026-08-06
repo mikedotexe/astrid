@@ -1,0 +1,23 @@
+{
+  "schema": "steward_automation_cadence_status_v1",
+  "source_first_automation": {
+    "id": "astrid-introspection-source-first-catch-up",
+    "status": "PAUSED",
+    "resume_blocker": "source-attribution guard is tested but not deployed"
+  },
+  "self_study_automation": {
+    "id": "ai-being-self-study-signal-review",
+    "status": "PAUSED"
+  },
+  "cadence": {
+    "enabled": false,
+    "every_exchanges": 0,
+    "target": null,
+    "durable_configured_receipt_exists": false,
+    "lifecycle_event_count": 0,
+    "pending_attempt": false,
+    "pilot_active": false,
+    "integrity_ok": true
+  },
+  "authority": "Cadence OFF and silence remain neutral; this canary does not infer or activate cadence and does not resume either automation."
+}

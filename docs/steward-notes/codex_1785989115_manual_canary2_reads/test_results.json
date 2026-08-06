@@ -1,0 +1,29 @@
+{
+  "schema": "astrid.steward_run_test_results.v1",
+  "steward_run_id": "run_1785989115491517000_d8873c8bb3",
+  "results": [
+    {"suite": "source attribution focused regression", "passed": 1, "failed": 0},
+    {"suite": "model control-marker regressions", "passed": 46, "failed": 0},
+    {"suite": "spectral-bridge library", "passed": 1825, "failed": 0},
+    {"suite": "spectral-bridge strict all-target/all-feature Clippy", "passed": 1, "failed": 0},
+    {"suite": "owned Rust file formatting", "passed": 2, "failed": 0, "note": "Exact rustfmt checks pass. The broad manifest check still reports unrelated pre-existing formatting drift in autonomous/next_action/workspace.rs, which this run did not edit."},
+    {"suite": "introspection addressing audit", "passed": 42, "failed": 0},
+    {"suite": "source-first projector, Evidence Store, steward control, Division, Chronicle, and cursor", "passed": 71, "failed": 0, "note": "A first combined invocation omitted PYTHONPATH=scripts and produced four import errors after 54 passing tests; the corrected repository invocation passed all 71."},
+    {"suite": "anti-drop self-tests", "passed": 5, "failed": 0},
+    {"suite": "anti-drop verification", "passed": 47, "failed": 0, "alarms": 0, "gaps": 0},
+    {"suite": "experiential epistemics self-tests", "passed": 2, "failed": 0},
+    {"suite": "epistemic lint", "records_checked": 10388, "issues": 0}
+  ],
+  "command_corrections": [
+    "The workspace package selector did not include the standalone spectral-bridge manifest; all Rust commands were rerun with --manifest-path capsules/spectral-bridge/Cargo.toml.",
+    "The combined Python suite was rerun with PYTHONPATH=.:scripts after script-local imports failed in the first invocation."
+  ],
+  "evidence_store_snapshot": {
+    "sequence": 705359,
+    "head_sha256": "063339e30b9361dfaa8db16d5c792dd05a571bf09bd8e03bb24a773f1fb84c65",
+    "stream_count": 16,
+    "corrupt_lines": 0,
+    "valid": true,
+    "v1_history_rewritten": false
+  }
+}

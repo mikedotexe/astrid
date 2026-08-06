@@ -1,0 +1,14 @@
+{
+  "schema": "manual_canary_addressing_counter_snapshot_v1",
+  "canonical_indexed": 4230,
+  "canonical_fully_addressed": 3014,
+  "canonical_remaining": 1216,
+  "canonical_unread": 592,
+  "canonical_triaged_pending_action": 213,
+  "canonical_triaged_watch": 4,
+  "canonical_blocked_needs_steward": 407,
+  "proof_gap_artifact_count": 0,
+  "proof_gap_claim_count": 0,
+  "audit_status": "consistent",
+  "cutoff": "introspection_astrid_llm_1785986002.txt"
+}

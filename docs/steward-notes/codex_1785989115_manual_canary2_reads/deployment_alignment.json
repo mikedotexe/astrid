@@ -1,0 +1,44 @@
+{
+  "schema": "steward_deployment_alignment_v1",
+  "live_surface_changed": false,
+  "source_change_live_consumed_if_deployed": true,
+  "deployment_attempted": false,
+  "deployment_required_before_automation_resume": true,
+  "preflight": {
+    "ok": false,
+    "exit_code": 2,
+    "reason": "dirty_no_ack",
+    "foreign_activity_active": false,
+    "dirty_bridge_input_count": 10,
+    "foreign_or_shared_inputs_excluded_from_deployment": [
+      "capsules/spectral-bridge/src/autonomous/division_ceremony.rs",
+      "capsules/spectral-bridge/src/autonomous/division_ceremony/status.rs",
+      "capsules/spectral-bridge/src/autonomous/division_ceremony/tests.rs",
+      "capsules/spectral-bridge/src/autonomous/introspect.rs",
+      "capsules/spectral-bridge/src/autonomous/introspect/source_first_v3/mapping.rs",
+      "capsules/spectral-bridge/src/autonomous/next_action/modes.rs",
+      "capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs",
+      "capsules/spectral-bridge/src/autonomous/runtime/tests.rs"
+    ],
+    "owned_dirty_inputs": [
+      "capsules/spectral-bridge/src/autonomous/introspect/source_first_v3/grounding.rs",
+      "capsules/spectral-bridge/src/autonomous/introspect/source_first_v3/mod.rs"
+    ]
+  },
+  "existing_live_bridge": {
+    "pid": 92807,
+    "started": "2026-08-04T11:49:20-07:00",
+    "binary_sha256": "d99118e80d926dd95797791bce058ce222d3b7dd7ff4bd84a0a7c00a6b97341b",
+    "launchd_state": "running",
+    "binary_process_alignment": "deployed_existing_binary",
+    "recent_logs": "active exchanges, successful embeddings and codec projection, telemetry safety restoration, no restart loop observed"
+  },
+  "minime_alignment": {
+    "source_changed": false,
+    "pid": 98246,
+    "listening_ports": [7878, 7879, 7880],
+    "restart_performed": false
+  },
+  "first_safe_command": "After the eight foreign/shared bridge inputs are committed or removed from the component build diff, rerun python3 scripts/deploy_preflight.py --component bridge --repo /Users/v/other/astrid --json; only a clean result may proceed to scripts/build_bridge.sh.",
+  "authority": "No dirty-source acknowledgement was used; no foreign Division, orchestration, CPU, rest, action-mode, or mapping work was folded into a live binary."
+}

@@ -1,0 +1,16 @@
+{
+  "schema": "bounded_manual_canary_selection_v1",
+  "ceiling": 4,
+  "processed": [
+    "introspection_astrid_llm_1785986002.txt",
+    "introspection_DOMAIN_BOUNDARIES.md_1785960773.txt"
+  ],
+  "selected_but_unprocessed": [
+    "introspection_astrid_llm_1785959982.txt",
+    "introspection_astrid_llm_1785892559.txt"
+  ],
+  "stop_reason": "complete-source domain report attributed prompt-only spectral and shadow context to a module-ownership document; validation repair required",
+  "cadence_state": "off",
+  "automations_state": "paused_during_canary",
+  "authority": "selection and review evidence only; no live-control or authorship inference"
+}

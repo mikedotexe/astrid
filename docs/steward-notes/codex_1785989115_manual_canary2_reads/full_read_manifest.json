@@ -1,0 +1,39 @@
+{
+  "schema": "bounded_manual_canary_full_read_manifest_v1",
+  "steward_run_id": "run_1785989115491517000_d8873c8bb3",
+  "preprojection_generation_id": "projection_1785989116375465000_17783d372c",
+  "batch_ceiling": 4,
+  "processed_count": 2,
+  "processed": [
+    {
+      "introspection_id": "introspection_astrid_llm_1785986002",
+      "filename": "introspection_astrid_llm_1785986002.txt",
+      "report_sha256": "b2f815aabb1c913850514b58da7ea35eb34604a8d40b216d5cfd7bce2871900a",
+      "lived_state_witness_id": "lsw_3f31a615948f15e4f8acd54bea7893aae44e73e24fb0e61f6afbf64ab2edadfd",
+      "source_sha256": "f7c0570ce495b1978d9b6f588cba6ecb00a93b1573316bc22752e6e10d47f20a",
+      "source_interval_read": "1-400 of 1038",
+      "status": "addressed_duplicate",
+      "fully_addressed": true
+    },
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1785960773",
+      "filename": "introspection_DOMAIN_BOUNDARIES.md_1785960773.txt",
+      "report_sha256": "1b567005599ffe824200dcc616f7ba7fa4f638de6ae8425e26291492b00a4110",
+      "lived_state_witness_id": "lsw_fdfdeaf66a911c09ccddeeaca0615d23ea419d060fffb19e0aa5445fefcccdaa",
+      "source_sha256": "11c5ff89e1a7a12cfcc8cc49c676b04feb2118d9ee4975f47dc139984ee0b9e3",
+      "source_interval_read": "1-65 of 65",
+      "status": "addressed_change",
+      "fully_addressed": true
+    }
+  ],
+  "selected_but_unprocessed": [
+    "introspection_astrid_llm_1785959982.txt",
+    "introspection_astrid_llm_1785892559.txt"
+  ],
+  "stop_reason": "The second report made affirmative source attributions that were absent from the complete selected Markdown source; the unfamiliar validation defect required a narrow implementation and full verification before any further reading.",
+  "next_strict_queue": [
+    "introspection_astrid_llm_1785959982.txt",
+    "introspection_astrid_llm_1785892559.txt",
+    "introspection_astrid_codec_1785888193.txt"
+  ]
+}

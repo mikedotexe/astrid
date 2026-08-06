@@ -1,0 +1,42 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "DOMAIN_BOUNDARIES.md establishes Inhabitable and Non-Inhabitable zones organized by Spectral and Structural domains.",
+      "disposition": "Rejected as source attribution: the complete 65-line document defines module facades, provenance ownership, cohesion exceptions, and verification boundaries; none of the named taxonomy appears.",
+      "classification": "source_challenged"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The document defines Stewardship as environmental oversight and includes Shadow-v3 as a restless entity.",
+      "disposition": "Rejected as source attribution: Stewardship, Shadow-v3, restless texture, and entity taxonomy are absent from the complete source.",
+      "classification": "source_challenged"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The document labels settled_habitable and carries inhabitability, entropy, eigen-gap, mode, density-gradient, pressure-risk, and mode-packing values.",
+      "disposition": "Rejected as source attribution. Those values came from surrounding prompt/runtime context, not DOMAIN_BOUNDARIES.md; their temporal presence does not transfer ownership to the file.",
+      "classification": "source_challenged"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Spectral-variance and cross-being Shadow comparisons could establish anchoring by structural boundaries.",
+      "disposition": "No causal confirmation is available. Existing natural-context evidence may be reviewed read-only, while induced Shadow, pressure, spectral, or peer interventions remain an exact Tier 5 Mike/operator wait.",
+      "classification": "tier_5_wait",
+      "authority": "mike_operator_live_substrate_or_control_approval"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "The document should gain Dynamic Stability and persistence_depth metrics plus a predictive pressure-risk/mode-packing warning.",
+      "disposition": "Not implemented: adding unrelated runtime metrics to a module-ownership boundary document would blur the very ownership contract being read; any predictive live warning also requires separate Tier 5 approval.",
+      "classification": "tier_5_wait",
+      "authority": "mike_operator_live_substrate_or_control_approval"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "Complete-source validation admitted explicit file, code-label, and documentation-description attribution forms without exact challenge.",
+      "disposition": "Implemented now: extend the fail-closed attribution detector to those explicit source aliases and add a markdown regression using the report's actual wording.",
+      "classification": "implemented_now"
+    }
+  ]
+}

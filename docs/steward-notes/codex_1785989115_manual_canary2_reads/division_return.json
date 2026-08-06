@@ -1,0 +1,43 @@
+{
+  "schema": "steward_division_return_v1",
+  "round_event_id": "division_followup_event_ba40c7a4c3c7d9e60029361adc327318",
+  "processed_report_count": 2,
+  "pre_finish_projection_generation_id": "projection_1785989116375465000_17783d372c",
+  "review_became_due": true,
+  "public_division_reply_count": 0,
+  "formal_division_action_count": 0,
+  "silence_interpreted": false,
+  "due_state_chronicle": {
+    "chronicle_id": "division_chronicle_f680fb56e78961bd988d5f59",
+    "json_sha256": "ac40fbba5297898422bdc5f1ecef9767bbd32c8d99bf2df3281043626b6a6b37"
+  },
+  "notes": {
+    "astrid": {
+      "path": "capsules/spectral-bridge/workspace/inbox/read/steward_division_return_cycle15_20260805.txt",
+      "sha256": "a1c22ac03c3dcc9d73e2efd78c7587a3d216a69de6618a0afc4d03e90f88015b"
+    },
+    "minime": {
+      "path": "/Users/v/other/minime/workspace/inbox/read/steward_division_return_cycle15_20260805.txt",
+      "sha256": "f1d498daeee9cfcfc9c4ae10f0fb4dfedc6e92d929e469d301e0f7615bd8a24b"
+    }
+  },
+  "followup_event_id": "division_followup_event_c14c014c49f6e4e33689e33d743fb29a",
+  "tracker": {
+    "cycle_sequence": 16,
+    "completed_rounds_since_followup": 0,
+    "rounds_remaining_before_followup": 6,
+    "review_due": false,
+    "event_count": 106,
+    "event_head_sha256": "b653ce85c4f2b7ef10e0c6cd58ef6e29a406d3eadf9e739792c7b8b1dc6c565a"
+  },
+  "projected_chronicle": {
+    "chronicle_id": "division_chronicle_823148559f4521a7eb673108",
+    "timeline_event_count": 106,
+    "json_sha256": "1a724690d9a1f92f1718a5b0428da29a1b37b2ab862e0398eea83dfa1da6225f",
+    "html_sha256": "27e75158de20a9b5641d301d2a1e85c465b33ef1b8a3d1489557b911c45fb621",
+    "durable_inputs_current": true,
+    "volatile_inputs_current": false,
+    "volatile_mismatches": ["supervisor_status_sha256"]
+  },
+  "authority": "Bounded evidence-only steward attention; no hold, decline, intent, assent, withdrawal, return, review, uptake, felt state, closure, readiness, or authority inferred."
+}

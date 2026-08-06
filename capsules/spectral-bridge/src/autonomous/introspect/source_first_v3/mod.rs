@@ -438,6 +438,32 @@ mod tests {
     }
 
     #[test]
+    fn affirmative_markdown_attribution_rejects_prompt_context_as_source_content() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        let path = dir.path().join("DOMAIN_BOUNDARIES.md");
+        let content = "# Domain Boundaries\n\n## Stable Facades\n\nOwnership remains explicit.\n";
+        fs::write(&path, content).expect("fixture");
+        let evidence = build_source_evidence_v3_at_root(dir.path(), &path, content, 0, 5, 5)
+            .expect("evidence");
+        let report = challenge_response_claims_v3(
+            "Observed: the `DOMAIN_BOUNDARIES.md` file establishes an Inhabitable taxonomy.\n\
+             Likely Snags: the code labels the current state as `settled_habitable`.\n\
+             Likely Snags: the documentation describes a gentle navigable slope.",
+            &path,
+            &evidence,
+        );
+
+        assert!(!report.all_supported);
+        assert_eq!(report.challenged_claim_count, 3);
+        assert!(
+            report
+                .support_refs
+                .iter()
+                .all(|support| support.support_state == ClaimSupportStateV2::Rejected)
+        );
+    }
+
+    #[test]
     fn affirmative_source_attribution_accepts_visible_field() {
         let dir = tempfile::tempdir().expect("tempdir");
         let path = dir.path().join("telemetry.rs");
