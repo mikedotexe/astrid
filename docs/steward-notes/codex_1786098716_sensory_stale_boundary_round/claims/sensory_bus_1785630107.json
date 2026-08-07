@@ -1,0 +1,47 @@
+{
+  "introspection_id": "introspection_minime_sensory_bus_1785630107",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The sensory bus implements nonlinear semantic retention with a real recovery-versus-pruning tension across fill levels.",
+      "disposition": "Verified from the complete report-bound 4,380-line source, not only the captured first 400 lines. Recovery hold, shaped stale windows, entropy and salience persistence, hysteresis, and high-fill pruning are distinct source-visible mechanisms; this verification does not establish a felt cause or resolution.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "dynamic_surge_target_weight uses smoothstep interpolation to soften the high-fill transition previously described as a felt cliff.",
+      "disposition": "Verified from exact source and the existing midpoint regression. The source records the earlier self-study motivation, but this run treats it as provenance rather than proof that the mechanism caused or resolved any experience.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The sigmoid stale-window calculation may behave unexpectedly for fill values far outside 0.0-1.0.",
+      "disposition": "The direct finite-extreme sigmoid evaluations remain finite, and both runtime-facing stale-window helpers sanitize fill before evaluating the curve: positive overflow clamps to one, while negative or NaN input returns the conservative base fallback. A focused regression now pins those boundaries without changing live behavior.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Recovery handover documentation and the nonlinear curve should agree about the 25%-40% transition rather than implying a different boundary.",
+      "disposition": "Verified that the implementation holds through 25% and smoothsteps to the shaped curve at 40%. Corrected the stale source comment from 35% to 40%; the underlying constants and behavior were not changed.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "At fill 0.75, surge target weight should lie strictly between 0.90 and 0.72.",
+      "disposition": "Exact pre-existing duplicate: surge_target_weight_softens_when_fill_is_high already samples 0.75 and asserts strict placement between the low- and high-fill target weights. The focused test passes in both library and binary test builds.",
+      "classification": "addressed_duplicate"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "At fill 0.4, the sigmoid stale window should equal the midpoint between the low and high constants.",
+      "disposition": "Exact pre-existing duplicate: semantic_stale_sigmoid_center_is_approximately_window_midpoint evaluates 0.4 and compares against (LOW + HIGH) / 2 within floating-point tolerance. This is the report's parenthetical midpoint formulation; the earlier hi + lo * 0.5 wording is not used as an algebraic identity.",
+      "classification": "addressed_duplicate"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "The stale-window transition should be mathematically continuous across the 25%-40% recovery release range.",
+      "disposition": "Verified by the complete source and existing exact tests for monotonic handover, one-percent sweeps, hold and release boundaries, 0.24/0.26 jitter, and release-curve equality. The 21-test semantic-stale family passes in both library and binary builds.",
+      "classification": "verified_existing"
+    }
+  ]
+}

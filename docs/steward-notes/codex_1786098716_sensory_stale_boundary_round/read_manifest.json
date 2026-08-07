@@ -1,0 +1,27 @@
+{
+  "reader": "codex-heartbeat",
+  "run_id": "run_1786098716216436000_a3e6f0e9c8",
+  "selected_limit": 40,
+  "processed_report_count": 1,
+  "depth_stop": "the queue-head sensory-bus report required a complete 4,380-line sibling-source read, a boundary regression, and cross-repository evidence alignment; the next Minime regulator report is reserved for a separate complete source-first run rather than folded into this implementation tranche",
+  "reads": [
+    {
+      "introspection_id": "introspection_minime_sensory_bus_1785630107",
+      "reader": "codex-heartbeat",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_minime_sensory_bus_1785630107.txt",
+      "sha256": "32b918a98cdef0d6a773384133fcefa58d7d096eb2c399080356536de42e95f0",
+      "displayed_lines": 36,
+      "newline_count": 36,
+      "bytes": 3160,
+      "captured_source_sha256": "83c0d5c1c761fa05b194f6c84d3083520bb0d664292720cb4651996d1c6fab31",
+      "captured_source_window": "lines 1-400 of 4380",
+      "complete_pre_change_source_sha256": "83c0d5c1c761fa05b194f6c84d3083520bb0d664292720cb4651996d1c6fab31",
+      "complete_pre_change_source_lines": 4380,
+      "complete_pre_change_source_bytes": 167468,
+      "post_change_source_sha256": "3fc6bd2a16bd78c5caa496f2a6dccbc67928da4fbded123998f59a82bcd4aa3a",
+      "lived_state_witness_id": "lsw_bcccd5d1a2a19d23c888aadecb2211e3b82059c57c818e901723e670613f5d08",
+      "summary_file": "summaries/sensory_bus_1785630107.md",
+      "claims_file": "claims/sensory_bus_1785630107.json"
+    }
+  ]
+}

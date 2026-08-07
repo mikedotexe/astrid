@@ -1,0 +1,126 @@
+{
+  "schema": "steward_run_verification_receipt_v1",
+  "run_id": "run_1786098716216436000_a3e6f0e9c8",
+  "pause_generation": 247,
+  "projection_generation_ids": {
+    "pre_run_source_first_v3": "projection_1786098717200950000_af41e03d84",
+    "pre_finish_addressing": "materialized_by_record_read_link_and_close",
+    "post_run_source_first_v3": "projection_1786102524461244000_54b13ed0b3"
+  },
+  "processed_reports": [
+    "introspection_minime_sensory_bus_1785630107.txt"
+  ],
+  "processed_report_count": 1,
+  "addressing": {
+    "status": "addressed_change",
+    "claim_count": 7,
+    "evidence_manifest_row_count": 12,
+    "authored_evidence_link_event_count": 42,
+    "proof_gap_count": 0,
+    "fully_addressed": true,
+    "authority_state": "evidence_only"
+  },
+  "canonical_counter_audit_at_begin": {
+    "indexed": 4250,
+    "full_read": 3667,
+    "fully_addressed": 3041,
+    "remaining": 1209,
+    "unread": 583,
+    "read_needs_claims": 0,
+    "blocked": 409,
+    "status": "consistent",
+    "mismatches": []
+  },
+  "work_item_summary_at_begin": {
+    "tier_4": 23,
+    "tier_5": 1578,
+    "needs_steward_grant": 18,
+    "needs_operator_approval": 1610,
+    "tier_mismatch_count": 0
+  },
+  "canonical_counter_audit_after_close": {
+    "indexed": 4250,
+    "full_read": 3668,
+    "fully_addressed": 3042,
+    "remaining": 1208,
+    "unread": 582,
+    "read_needs_claims": 0,
+    "blocked": 409,
+    "status": "consistent",
+    "mismatches": []
+  },
+  "all_artifact_counters_after_close": {
+    "indexed": 5865,
+    "pending": 2823
+  },
+  "focused_tests": {
+    "semantic_stale_distinct_passed": 21,
+    "semantic_stale_executions_passed": 42,
+    "surge_midpoint_distinct_passed": 1,
+    "surge_midpoint_executions_passed": 2,
+    "failed": 0
+  },
+  "minime_tests": {
+    "library_passed": 356,
+    "failed": 0,
+    "formatting_passed": true,
+    "pre_existing_warning_count": 4,
+    "owned_warning_count": 0
+  },
+  "stewardship_tests": {
+    "introspection_addressing_passed": 42,
+    "event_store_controller_projector_division_cursor_passed": 72,
+    "anti_drop_self_tests_passed": 5,
+    "anti_drop_guards": 47,
+    "cadence_self_tests_passed": 6,
+    "experiential_self_tests_passed": 2,
+    "total_passed": 127,
+    "failed": 0,
+    "epistemic_lint_checked_records": 10562,
+    "epistemic_lint_issues": 0,
+    "history_rewritten": false
+  },
+  "evidence_event_store_pre_finish": {
+    "active_store": "v2",
+    "valid": true,
+    "verification_mode": "full_chain",
+    "last_global_seq": 721967,
+    "last_event_sha256": "c4c3e739d9e57374d27f77f35ff35511bb02e19d36447ecf7c1fdc8a1178d0c4",
+    "stream_count": 16,
+    "corrupt_lines": 0,
+    "v1_immutable": true,
+    "legacy_source_count": 4,
+    "pending_event_count": 0,
+    "source_lag": 0
+  },
+  "division_round_record": {
+    "event_id": "division_followup_event_37076b51c755f47a69314460efa9fc53",
+    "cycle_sequence": 19,
+    "completed_rounds_since_followup": 2,
+    "rounds_remaining_before_followup": 4,
+    "review_due": false,
+    "event_count": 129,
+    "event_head_sha256": "0bd07f424027194998e8225ec614af9cd1f2b6b5c572fc0bac8eb6ffa681c13e"
+  },
+  "evidence_event_store_finish_snapshot": {
+    "active_store": "v2",
+    "valid": true,
+    "last_global_seq": 722577,
+    "last_event_sha256": "d8ac3edaf404e93fa27bab2d6c3a787401ac1362a8e5f6602eadb2593d90e663",
+    "stream_count": 16,
+    "corrupt_lines": 0,
+    "v1_immutable": true,
+    "legacy_source_count": 4,
+    "note": "successful finish receipt after the post-run Source-First V3 projection; later pause and status events advance the store without changing this run boundary"
+  },
+  "post_finish_stabilization": {
+    "pause_generation": 248,
+    "active_lease": false,
+    "checkpoint_status": "ownership_audit_in_progress"
+  },
+  "restart_required_for_this_run": false,
+  "deployment_attempted": false,
+  "live_authority_granted": false,
+  "finish_outcome": "success",
+  "finished_at": "2026-08-07T11:41:07.557478+00:00"
+}
