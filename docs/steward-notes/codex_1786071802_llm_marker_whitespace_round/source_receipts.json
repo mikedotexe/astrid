@@ -1,0 +1,55 @@
+{
+  "source_reads": [
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "sha256": "f7c0570ce495b1978d9b6f588cba6ecb00a93b1573316bc22752e6e10d47f20a",
+      "lines": 1038,
+      "bytes": 38205,
+      "read": "complete"
+    },
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_fdd7315f190795a1a9cdedf404dbead7e473e6382f078b2518040126f64c1287.json",
+      "sha256": "be6927856afc5666e52d9dbec2e56058fb346d73b1b4604e9fd97ae820745607",
+      "newline_count": 491,
+      "bytes": 22171,
+      "read": "complete",
+      "authority": "evidence_only_no_direct_causation_or_live_authority"
+    },
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_c0ac053979a5e7768c4d330b7d888464b5c604cb8a2ea77fc188547823520434.json",
+      "sha256": "4832f5fdc8b94bbdbca2dee6582cc8e290ddaa1e3479551a9f7bf59d68964fac",
+      "newline_count": 491,
+      "bytes": 22168,
+      "read": "complete",
+      "authority": "evidence_only_no_direct_causation_or_live_authority"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/fallback_contracts.rs",
+      "sha256": "7f4cf2038ef66086a4c33279ebd84116d3a7aa1d34cc1f4202576fd47d03039f",
+      "lines": 1395,
+      "bytes": 48585,
+      "read_scope": "directly relevant MLX normalization and dialogue-return intervals"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/transport.rs",
+      "sha256": "97475c4af5aba553476d81a0d690d6b3c93147639951776fc81a43b92e134ee4",
+      "lines": 1310,
+      "bytes": 42086,
+      "read_scope": "directly relevant Ollama normalization and dialogue-return intervals"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "sha256_after_change": "0df3eeef11c07d70cdd7715f33f6858320658c7cc599180b21045951ce09b5c8",
+      "lines_after_change": 3145,
+      "read_scope": "marker regressions covering punctuation, newline relations, quote taxonomy, delimiter depth, and downstream normalized-byte evidence"
+    },
+    {
+      "paths": [
+        "docs/steward-notes/codex_1786064934_llm_marker_round/claims/llm_1786062450.json",
+        "docs/steward-notes/codex_1784851492_source_currentness_and_hash_reads/introspection_astrid_llm_1784849719_claims.json",
+        "docs/steward-notes/codex_1786035329_fresh_marker_round/claims/introspection_astrid_llm_1786034340.json"
+      ],
+      "read_scope": "prior exact claim evidence used only where source and current tests independently confirmed identity"
+    }
+  ]
+}

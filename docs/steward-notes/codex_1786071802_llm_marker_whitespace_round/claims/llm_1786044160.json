@@ -1,0 +1,35 @@
+{
+  "introspection_id": "introspection_astrid_llm_1786044160",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The dialogue runtime performs a longest-exact single pass over known model-control markers.",
+      "disposition": "Verified from the complete 1,038-line source and closed as an exact duplicate of prior complete-source evidence. Longest overlap, UTF-8 scalar traversal, and ordered remainder reconstruction are unchanged.",
+      "classification": "exact_duplicate"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Punctuation-heavy or multiword text after a marker may make first_word_after empty or misclassify a valid relation.",
+      "disposition": "Source-corrected and verified existing. Punctuation and whitespace are skipped until the first nonempty word. Multiword phrases are intentionally classified by that first word against the finite relation vocabulary; a tail with no word fails closed.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The relation word represents should preserve an exact marker across punctuation and a newline.",
+      "disposition": "Verified by the existing multiple-punctuation and newline regressions. Both preserve exact bytes and record following_exact_relation.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Declared quote delimiters separated from an exact marker by multiple whitespace forms should preserve it with a bounded delimiter receipt.",
+      "disposition": "Implemented a bounded test for ASCII quotes and spaces, Japanese corner quotes across tab/newline, and U+301D/U+301E across U+2003/U+3000. Every case preserves exact bytes, records quoted count one and grouped count zero, and proves delimiter depth one.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "The marker-cleanup remainder should reach generate_dialogue rather than remain an isolated helper result.",
+      "disposition": "Verified across the exact provider consumers. MLX and Ollama normalize raw output before generate_dialogue validates, returns, and persists that text; cleanup matches remain separate evidence.",
+      "classification": "verified_existing"
+    }
+  ]
+}

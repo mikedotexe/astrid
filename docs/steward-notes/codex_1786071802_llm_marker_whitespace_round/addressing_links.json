@@ -1,0 +1,144 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_llm_1786064951",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "The complete source proves longest exact matching, UTF-8 scalar traversal, finite preservation classification, and ordered remainder reconstruction."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786064951",
+      "claim_id": "c001",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1786064934_llm_marker_round/claims/llm_1786062450.json",
+      "note": "The immediate prior complete-source packet records the same scanner architecture under the same source SHA."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786064951",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "first_word_after splits on non-alphanumeric, non-underscore scalars and selects the first nonempty segment, so separator runs are skipped and no-word tails fail closed."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786064951",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Current regressions prove preservation after multiple punctuation runs and across a newline."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786064951",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "The declared delimiter table classifies Japanese corner brackets as quote pairs rather than grouped-reference pairs."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786064951",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Exact non-ASCII quote regressions preserve the marker and assert quoted count one with grouped count zero."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786064951",
+      "claim_id": "c004",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "control_marker_cleanup_preserves_relation_across_newline is the exact requested relation boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786064951",
+      "claim_id": "c004",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784851492_source_currentness_and_hash_reads/introspection_astrid_llm_1784849719_claims.json",
+      "note": "The originating report's packet records the exact newline regression and its source-grounded disposition."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786064951",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/fallback_contracts.rs;capsules/spectral-bridge/src/llm/provider/transport.rs;capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "Both provider transports normalize raw output before generate_dialogue validates, returns, and persists the reconstructed text; match records remain separate evidence."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786044160",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "The complete source proves the report's scanner architecture and unchanged finite preservation grammar."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786044160",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "The finite first-word helper skips punctuation and whitespace, then intentionally classifies only the first later word."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786044160",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Existing punctuation-run and fail-closed relation tests cover the named edge without a production grammar change."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786044160",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Current exact tests preserve represents after multiple punctuation runs and across a newline."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786044160",
+      "claim_id": "c004",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "The new regression proves quoted exact-token preservation across ASCII and Unicode whitespace for three declared quote pairs."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786044160",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "The production delimiter table and bounded exact-reference classifier remain unchanged and provide the behavior under test."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786044160",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/fallback_contracts.rs;capsules/spectral-bridge/src/llm/provider/transport.rs;capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "MLX and Ollama each normalize raw output before generate_dialogue consumes the text; cleanup diagnostics remain separate."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786064951",
+      "claim_id": "*",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "The Unreleased entry records the duplicate verification, bounded test response, and unchanged live-authority boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786044160",
+      "claim_id": "*",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "The Unreleased entry records the duplicate verification, bounded test response, and unchanged live-authority boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786064951",
+      "claim_id": "*",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "The feedback ledger preserves Astrid's causal contribution, source corrections, and no-live-change boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786044160",
+      "claim_id": "*",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "The feedback ledger preserves Astrid's causal contribution, source corrections, and no-live-change boundary."
+    }
+  ]
+}

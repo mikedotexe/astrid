@@ -1,0 +1,94 @@
+{
+  "schema": "steward_test_results_v1",
+  "results": [
+    {
+      "surface": "quoted_exact_token_whitespace",
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib control_marker_cleanup_preserves_quoted_exact_tokens_across_whitespace",
+      "passed": 1,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "existing_marker_preservation_family",
+      "passed": 14,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "provider_normalization_filters",
+      "passed": 3,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "marker_regression_family",
+      "passed": 50,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "spectral_bridge_library",
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib",
+      "passed": 1832,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "spectral_bridge_clippy",
+      "command": "cargo clippy --manifest-path capsules/spectral-bridge/Cargo.toml --all-targets --all-features -- -D warnings",
+      "status": "passed"
+    },
+    {
+      "surface": "provenance_typestate",
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --test provenance_typestate",
+      "compile_fail_cases_passed": 12,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "steward_tooling_self_tests",
+      "groups": {
+        "introspection_addressing": 42,
+        "event_store_controller_projector_division_cursor": 72,
+        "anti_drop": 5,
+        "cadence": 6,
+        "experiential_epistemics": 2
+      },
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "anti_drop_live_verify",
+      "guards": 47,
+      "gaps": 0,
+      "alarms": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "cadence_strict_audit",
+      "canonical_reports": 4246,
+      "integrity_ok": true,
+      "cadence_enabled": false,
+      "pending_or_failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "epistemic_lint",
+      "valid": true,
+      "issues": 0,
+      "warnings": 0,
+      "history_rewritten": false,
+      "status": "passed"
+    },
+    {
+      "surface": "owned_test_hunk_format",
+      "command": "rustfmt --edition 2024 --check capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "owned_hunk_status": "passed",
+      "preexisting_same_file_format_debt": "unrelated import and earlier-test formatting",
+      "status": "blocked_by_preexisting_format_debt"
+    }
+  ],
+  "production_rust_changed": false,
+  "test_rust_changed": true,
+  "deployment_required": false
+}

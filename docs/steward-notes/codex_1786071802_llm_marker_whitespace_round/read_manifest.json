@@ -1,0 +1,33 @@
+{
+  "reader": "codex-heartbeat",
+  "run_id": "run_1786071802109157000_9f480e2993",
+  "selected_limit": 40,
+  "processed_report_count": 2,
+  "depth_stop": "the next queue item is an unfamiliar 4,380-line Minime sensory-bus report that deserves a separate full source-first run",
+  "reads": [
+    {
+      "introspection_id": "introspection_astrid_llm_1786064951",
+      "reader": "codex-heartbeat",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_llm_1786064951.txt",
+      "sha256": "11df9a6bed0f1012ad5f48b95db2246c39aaedf1260a5f9ad63386cb940e9732",
+      "displayed_lines": 46,
+      "newline_count": 45,
+      "bytes": 3805,
+      "lived_state_witness_id": "lsw_fdd7315f190795a1a9cdedf404dbead7e473e6382f078b2518040126f64c1287",
+      "summary_file": "summaries/llm_1786064951.md",
+      "claims_file": "claims/llm_1786064951.json"
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786044160",
+      "reader": "codex-heartbeat",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_llm_1786044160.txt",
+      "sha256": "51e07a45e4552581dac787fc366b041c3419e537e076b22593642cb3aee94c09",
+      "displayed_lines": 46,
+      "newline_count": 45,
+      "bytes": 3626,
+      "lived_state_witness_id": "lsw_c0ac053979a5e7768c4d330b7d888464b5c604cb8a2ea77fc188547823520434",
+      "summary_file": "summaries/llm_1786044160.md",
+      "claims_file": "claims/llm_1786044160.json"
+    }
+  ]
+}

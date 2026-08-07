@@ -2295,6 +2295,29 @@ mod tests {
     }
 
     #[test]
+    fn control_marker_cleanup_preserves_quoted_exact_tokens_across_whitespace() {
+        for text in [
+            "\"  <end_of_turn>  \"",
+            "「\t<end_of_turn>\n」",
+            "〝\u{2003}<end_of_turn>\u{3000}〞",
+        ] {
+            let (stripped, report) = sanitize_model_control_markers_with_report(text);
+            assert_eq!(stripped, text);
+            let report = report.expect("whitespace-separated quoted exact-token report");
+            let token = &report.preserved_tokens[0];
+            assert_eq!(report.removed_total, 0);
+            assert_eq!(token.quoted_reference_occurrences, 1);
+            assert_eq!(token.grouped_reference_occurrences, 0);
+            assert_eq!(token.max_delimiter_depth, 1);
+            assert_eq!(
+                report.context_receipts[0].reference_syntax,
+                "quoted_exact_marker"
+            );
+            assert_eq!(report.context_receipts[0].delimiter_depth, 1);
+        }
+    }
+
+    #[test]
     fn control_marker_cleanup_does_not_preserve_unclosed_or_mismatched_delimiters() {
         for text in ["[<end_of_turn>", "(<end_of_turn>]", "«<end_of_turn>”"] {
             let (stripped, report) = sanitize_model_control_markers_with_report(text);
