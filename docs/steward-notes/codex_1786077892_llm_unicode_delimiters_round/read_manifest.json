@@ -1,0 +1,21 @@
+{
+  "reader": "codex-heartbeat",
+  "run_id": "run_1786077892966010000_7fb07097fc",
+  "selected_limit": 40,
+  "processed_report_count": 1,
+  "depth_stop": "the queue-head report caused a production sanitizer change; the next item is an unfamiliar 4,380-line Minime sensory-bus report that deserves a separate complete source-first run",
+  "reads": [
+    {
+      "introspection_id": "introspection_astrid_llm_1786076073",
+      "reader": "codex-heartbeat",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_llm_1786076073.txt",
+      "sha256": "3d810535c0226111cfdebe598de62ce4b7ed236387566fe471cf71454289bfa2",
+      "displayed_lines": 46,
+      "newline_count": 45,
+      "bytes": 3955,
+      "lived_state_witness_id": "lsw_9be888642e3104d6684a2c2fbee75eb793935cd8d65ddaca19f8dedbc3ba59bb",
+      "summary_file": "summaries/llm_1786076073.md",
+      "claims_file": "claims/llm_1786076073.json"
+    }
+  ]
+}

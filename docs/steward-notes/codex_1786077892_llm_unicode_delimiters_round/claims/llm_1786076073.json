@@ -1,0 +1,35 @@
+{
+  "introspection_id": "introspection_astrid_llm_1786076073",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The dialogue runtime uses longest exact known-marker matches and preserves marker bytes only when a finite reference syntax is proven.",
+      "disposition": "Verified from the complete 1,038-line pre-change source. The scanner advances by exact marker byte length or one UTF-8 scalar, reconstructs all non-marker scalars in order, and preserves exact marker bytes only for declared paired delimiters or a finite following relation.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "An unsupported nearest non-whitespace punctuation pair can strip a marker that was intended as an explicit reference.",
+      "disposition": "Verified as a real finite-table boundary. Before this response, vertical CJK presentation-form quotes and several common CJK or fullwidth group pairs returned no reference syntax and therefore removed the exact marker from the remainder.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A marker enclosed by ordinary double quotes should remain visible and classify as a quoted exact-token reference.",
+      "disposition": "Verified by the existing ASCII quoted-reference regression, which preserves the full input byte-for-byte and records one quoted occurrence, zero removed occurrences, and delimiter depth one.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "A marker followed by manifests should remain visible through the explicit-relation path.",
+      "disposition": "Verified from the finite relation list and the existing poetic-attribution regression, whose relation loop includes manifests and records one following exact relation with no removed marker.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Common Unicode punctuation used across languages should receive exact preservation coverage without broad semantic inference.",
+      "disposition": "Implemented now by adding two exact vertical CJK quote pairs and six exact CJK or fullwidth grouping pairs. Two regressions prove every pair's classification and a three-level non-whitespace stack while leaving unsupported punctuation fail-closed.",
+      "classification": "implemented_now"
+    }
+  ]
+}

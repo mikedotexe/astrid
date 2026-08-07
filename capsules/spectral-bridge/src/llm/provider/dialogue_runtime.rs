@@ -168,17 +168,27 @@ fn exact_reference_delimiter_pair(
             | (Some('「'), Some('」'))
             | (Some('『'), Some('』'))
             | (Some('〝'), Some('〞'))
+            | (Some('﹁'), Some('﹂'))
+            | (Some('﹃'), Some('﹄'))
     ) {
         Some(ExactKnownMarkerReferenceContext::QuotedExactKnownToken)
     } else if matches!(
         (before, after),
-        (Some('['), Some(']')) | (Some('('), Some(')')) | (Some('{'), Some('}'))
+        (Some('['), Some(']'))
+            | (Some('('), Some(')'))
+            | (Some('{'), Some('}'))
             | (Some('⟦'), Some('⟧'))
             | (Some('⟨'), Some('⟩'))
             | (Some('【'), Some('】'))
             | (Some('〔'), Some('〕'))
             | (Some('〚'), Some('〛'))
             | (Some('〈'), Some('〉'))
+            | (Some('《'), Some('》'))
+            | (Some('〖'), Some('〗'))
+            | (Some('〘'), Some('〙'))
+            | (Some('（'), Some('）'))
+            | (Some('［'), Some('］'))
+            | (Some('｛'), Some('｝'))
     ) {
         Some(ExactKnownMarkerReferenceContext::GroupedExactKnownToken)
     } else {

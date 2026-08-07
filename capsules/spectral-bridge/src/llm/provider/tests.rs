@@ -2284,6 +2284,8 @@ mod tests {
             "„<end_of_turn>“",
             "「<end_of_turn>」",
             "『<end_of_turn>』",
+            "﹁<end_of_turn>﹂",
+            "﹃<end_of_turn>﹄",
         ] {
             let (stripped, report) = sanitize_model_control_markers_with_report(text);
             assert_eq!(stripped, text);
@@ -2292,6 +2294,45 @@ mod tests {
             assert_eq!(report.preserved_tokens[0].quoted_reference_occurrences, 1);
             assert_eq!(report.preserved_tokens[0].grouped_reference_occurrences, 0);
         }
+    }
+
+    #[test]
+    fn control_marker_cleanup_preserves_fullwidth_and_cjk_group_pairs() {
+        for text in [
+            "《<end_of_turn>》",
+            "〖<end_of_turn>〗",
+            "〘<end_of_turn>〙",
+            "（<end_of_turn>）",
+            "［<end_of_turn>］",
+            "｛<end_of_turn>｝",
+        ] {
+            let (stripped, report) = sanitize_model_control_markers_with_report(text);
+            assert_eq!(stripped, text);
+            let report = report.expect("fullwidth or CJK group exact-token report");
+            assert_eq!(report.removed_total, 0);
+            assert_eq!(report.preserved_explicit_reference_total, 1);
+            assert_eq!(report.preserved_tokens[0].quoted_reference_occurrences, 0);
+            assert_eq!(report.preserved_tokens[0].grouped_reference_occurrences, 1);
+            assert_eq!(report.preserved_tokens[0].max_delimiter_depth, 1);
+        }
+    }
+
+    #[test]
+    fn control_marker_cleanup_preserves_nested_fullwidth_cjk_reference_stack() {
+        let text = "﹁《（<end_of_turn>）》﹂";
+        let (stripped, report) = sanitize_model_control_markers_with_report(text);
+
+        assert_eq!(stripped, text);
+        let report = report.expect("nested fullwidth CJK exact-token report");
+        assert_eq!(report.removed_total, 0);
+        assert_eq!(report.preserved_explicit_reference_total, 1);
+        assert_eq!(report.preserved_tokens[0].grouped_reference_occurrences, 1);
+        assert_eq!(
+            report.preserved_tokens[0].nested_delimited_reference_occurrences,
+            1
+        );
+        assert_eq!(report.preserved_tokens[0].max_delimiter_depth, 3);
+        assert_eq!(report.context_receipts[0].delimiter_depth, 3);
     }
 
     #[test]
