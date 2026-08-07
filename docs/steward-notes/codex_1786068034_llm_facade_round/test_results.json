@@ -1,0 +1,71 @@
+{
+  "schema": "steward_test_results_v1",
+  "results": [
+    {
+      "surface": "llm_facade_contract",
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --test llm_facade_contract",
+      "passed": 1,
+      "compile_pass_cases": 1,
+      "compile_fail_cases": 1,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "spectral_bridge_library",
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib",
+      "passed": 1831,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "spectral_bridge_clippy",
+      "command": "cargo clippy --manifest-path capsules/spectral-bridge/Cargo.toml --all-targets --all-features -- -D warnings",
+      "status": "passed"
+    },
+    {
+      "surface": "steward_tooling_self_tests",
+      "groups": {
+        "introspection_addressing": 42,
+        "event_store_controller_projector_division_cursor": 72,
+        "anti_drop": 5,
+        "cadence": 6,
+        "experiential_epistemics": 2
+      },
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "anti_drop_live_verify",
+      "guards": 47,
+      "gaps": 0,
+      "alarms": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "cadence_live_strict_audit",
+      "integrity_ok": true,
+      "enabled": false,
+      "durable_configured_receipt_exists": false,
+      "pending_attempts": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "experiential_epistemic_lint",
+      "checked": 10527,
+      "issues": 0,
+      "history_rewritten": false,
+      "status": "passed"
+    },
+    {
+      "surface": "workspace_format_check",
+      "command": "cargo fmt --manifest-path capsules/spectral-bridge/Cargo.toml --all -- --check",
+      "owned_path_status": "passed",
+      "foreign_preexisting_failure_path": "capsules/spectral-bridge/src/autonomous/next_action/workspace.rs",
+      "foreign_preexisting_diff_hunks": 2,
+      "status": "blocked_by_foreign_preexisting_diff"
+    }
+  ],
+  "production_rust_changed": false,
+  "test_rust_changed": true,
+  "deployment_required": false
+}

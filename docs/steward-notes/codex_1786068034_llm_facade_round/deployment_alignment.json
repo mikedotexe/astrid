@@ -1,0 +1,13 @@
+{
+  "schema": "steward_deployment_alignment_v1",
+  "production_source_changed": false,
+  "live_consumed_surface_changed": false,
+  "minime_changed": false,
+  "build_attempted": false,
+  "restart_required": false,
+  "restart_attempted": false,
+  "deployment_required": false,
+  "deployment_attempted": false,
+  "live_authority_granted": false,
+  "note": "The response is confined to compile-time tests, review evidence, changelog, and feedback ledger."
+}
