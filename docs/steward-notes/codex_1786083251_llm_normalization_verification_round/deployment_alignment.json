@@ -1,0 +1,21 @@
+{
+  "schema": "steward_deployment_alignment_v1",
+  "live_consumed_source_changed_this_run": false,
+  "production_rust_changed_this_run": false,
+  "test_rust_changed_this_run": false,
+  "prompt_or_report_renderer_changed_this_run": false,
+  "protocol_or_abi_changed_this_run": false,
+  "minime_changed_this_run": false,
+  "new_restart_required_for_live_alignment": false,
+  "new_deployment_required_for_live_alignment": false,
+  "deployment_attempted": false,
+  "live_alignment_state": "verification_only_prior_sanitizer_change_remains_not_deployed",
+  "existing_deployment_debt": "The provider sanitizer expansion archived as 6344ba25e9d33ea051034a866f04d3fba25b3d6a remains undeployed; Mike/operator authorization and a clean stabilization pass are required before scripts/build_bridge.sh may align it live.",
+  "first_safe_action_for_existing_debt": "obtain Mike/operator deployment authorization, claim a stabilization pause, re-audit exact candidate paths and foreign activity, then use scripts/build_bridge.sh with an explicit reviewed-change acknowledgement",
+  "authority": {
+    "live_control_granted": false,
+    "operator_approval_inferred": false,
+    "felt_resolution_inferred": false,
+    "uptake_or_consent_inferred": false
+  }
+}

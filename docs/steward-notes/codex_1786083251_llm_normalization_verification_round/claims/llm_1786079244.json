@@ -1,0 +1,35 @@
+{
+  "introspection_id": "introspection_astrid_llm_1786079244",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The dialogue runtime uses longest exact known-marker matching, finite reference classification, and ordered reconstruction of all retained bytes.",
+      "disposition": "Verified from the complete current 1,048-line source. The scanner advances by exact marker byte length or one UTF-8 scalar and preserves exact marker bytes only when a declared paired delimiter or finite following relation proves reference syntax.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Repeated punctuation, whitespace, or multiple separators after a marker may cause first_word_after to miss an otherwise accepted relation.",
+      "disposition": "The proposed mechanism is absent in exact source. first_word_after splits on every non-alphanumeric, non-underscore scalar and finds the first non-empty component, thereby skipping arbitrary runs of punctuation and whitespace; an exact multiple-punctuation regression passes.",
+      "classification": "addressed_duplicate"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A multi-word relation phrase may be truncated before the classifier can recognize its meaning.",
+      "disposition": "Verified as an intentional finite policy rather than an accidental truncation. Classification uses only the first later word; exact tests preserve behaves as, behaves like, and functions as, while unsupported first words continue to fail closed.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Restless brackets and nested delimiters need an exact proof, including behavior deeper than the four-pair evidence bound.",
+      "disposition": "Verified existing. U+27E6/U+27E7 is a declared group pair, exact tests cover two, three, and four levels, and a deeper stack preserves the marker while the receipt deliberately caps proven delimiter depth at four.",
+      "classification": "addressed_duplicate"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Downstream dialogue generation may consume cleanup match metadata or raw provider output instead of only the reconstructed remainder.",
+      "disposition": "Disproved by the complete provider path. MLX and Ollama both normalize raw output, record a bounded diagnostic, and replace text with the sanitized remainder before generate_dialogue; exact tests prove route parity and that normalized bytes feed repair plus the lived-state response hash.",
+      "classification": "addressed_duplicate"
+    }
+  ]
+}

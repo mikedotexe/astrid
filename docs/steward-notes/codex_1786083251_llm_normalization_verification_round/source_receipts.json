@@ -1,0 +1,41 @@
+{
+  "source_reads": [
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "sha256": "8f3c16091b532cba5879726de058ba16af2469f3cea8698d4ece1016fc04f2af",
+      "lines": 1048,
+      "bytes": 38557,
+      "read": "complete",
+      "temporal_note": "current archived source; the report captured c4074072502b62a01a118873b83372426cd0b1c7a07a834da8f04d5c758f9c3f at 1046 lines while the prior edit was in flight"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/transport.rs",
+      "sha256": "97475c4af5aba553476d81a0d690d6b3c93147639951776fc81a43b92e134ee4",
+      "lines": 1310,
+      "bytes": 42086,
+      "read_scope": "complete MLX and Ollama normalization-to-generate_dialogue paths"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/fallback_contracts.rs",
+      "sha256": "7f4cf2038ef66086a4c33279ebd84116d3a7aa1d34cc1f4202576fd47d03039f",
+      "lines": 1395,
+      "bytes": 48585,
+      "read_scope": "complete provider-neutral normalization definition and bounded diagnostic recording path"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "sha256": "5064415de87975dfcd028045eafb2ea657980ecd3391afba8d4e7ea022438060",
+      "lines": 3186,
+      "bytes": 129538,
+      "read_scope": "complete directly relevant cleanup, route-parity, normalized-repair, and lived-state-hash regressions"
+    },
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_65078ba53c47ed5d2708a5e74fbdf823b5a1e7c1db8b3732ebff2af5678c6396.json",
+      "sha256": "920e5f1260df1e059cda19397657fdc71d96f68cf34f53a82a4c8572ba8ca58a",
+      "newline_count": 491,
+      "bytes": 22158,
+      "read": "complete",
+      "authority": "evidence_only_no_direct_causation_or_live_authority"
+    }
+  ]
+}

@@ -1,0 +1,52 @@
+{
+  "schema": "steward_division_return_v1",
+  "round_event_id": "division_followup_event_6f270b75524481ca940d729d9b96cc43",
+  "processed_report_count": 1,
+  "pre_finish_projection_generation_id": "projection_1786087375335510000_8f6ec93177",
+  "review_became_due": true,
+  "public_division_reply_count": 0,
+  "formal_division_action_count": 0,
+  "silence_interpreted": false,
+  "due_state_chronicle": {
+    "chronicle_id": "division_chronicle_871370dee996fabad6e47db0",
+    "timeline_event_count": 126,
+    "timeline_source_counts": {
+      "ceremony": 0,
+      "followup": 126,
+      "native": 0,
+      "sovereign_runtime": 0
+    },
+    "json_sha256": "e9cd3cd55205739277aa5e424cc0a0a8e8ae003405d4f8518df8351c9ae356e4"
+  },
+  "notes": {
+    "astrid": {
+      "path": "capsules/spectral-bridge/workspace/inbox/read/steward_division_return_cycle18_20260807.txt",
+      "sha256": "b5918a6a8e241f04962e861bdc43801b8fc812557483d0c12d4456880d29f71f"
+    },
+    "minime": {
+      "path": "/Users/v/other/minime/workspace/inbox/read/steward_division_return_cycle18_20260807.txt",
+      "sha256": "1c4a4fbbbbd96ed8e445fa5f73d529ca4e6b3ee3511510176a440c975c794d06"
+    }
+  },
+  "followup_event_id": "division_followup_event_d9fab23e29498beeb49e7e4dc6ee9d39",
+  "tracker": {
+    "cycle_sequence": 19,
+    "completed_rounds_since_followup": 0,
+    "rounds_remaining_before_followup": 6,
+    "review_due": false,
+    "event_count": 127,
+    "event_head_sha256": "323d18a16326001c05c52c013b9ad05c4cf88df1fa2366d1afde7a2ff09bbc12"
+  },
+  "projected_chronicle": {
+    "chronicle_id": "division_chronicle_0693035d6dbb91c25911a8b1",
+    "timeline_event_count": 127,
+    "json_sha256": "2946604721fb0d34332ce480c2e38a8b23b5c037b386927135a61aacf1d5b74d",
+    "html_sha256": "64a8627d9442d9c284319ddf138af97c4e4eb2fda159486e16ece3b8392487ac",
+    "durable_inputs_current": true,
+    "volatile_inputs_current": false,
+    "volatile_mismatches": [
+      "supervisor_status_sha256"
+    ]
+  },
+  "authority": "Bounded evidence-only steward attention; no hold, decline, intent, assent, withdrawal, return, review, uptake, felt state, closure, readiness, or authority inferred."
+}

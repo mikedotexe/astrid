@@ -1,0 +1,126 @@
+{
+  "schema": "steward_run_verification_receipt_v1",
+  "run_id": "run_1786087374499506000_ea2bd11caa",
+  "pause_generation": 243,
+  "projection_generation_ids": {
+    "pre_run_source_first_v3": "projection_1786087375335510000_8f6ec93177",
+    "pre_finish_addressing": "materialized_by_record_read_link_and_close",
+    "post_run_source_first_v3": "pending controller finish"
+  },
+  "processed_reports": [
+    "introspection_astrid_llm_1786084556.txt"
+  ],
+  "processed_report_count": 1,
+  "addressing": {
+    "status": "addressed_change",
+    "claim_count": 4,
+    "evidence_manifest_row_count": 13,
+    "authored_evidence_link_event_count": 28,
+    "proof_gap_count": 0,
+    "fully_addressed": true
+  },
+  "canonical_counter_audit": {
+    "indexed": 4249,
+    "full_read": 3666,
+    "fully_addressed": 3040,
+    "remaining": 1209,
+    "unread": 583,
+    "read_needs_claims": 0,
+    "blocked": 409,
+    "status": "consistent",
+    "mismatches": []
+  },
+  "all_artifact_counters": {
+    "indexed": 5864,
+    "pending": 2824
+  },
+  "work_item_summary": {
+    "tier_4": 23,
+    "tier_5": 1578,
+    "needs_steward_grant": 18,
+    "needs_operator_approval": 1610,
+    "tier_mismatch_count": 0
+  },
+  "division_at_begin": {
+    "cycle_sequence": 18,
+    "completed_rounds_since_followup": 5,
+    "rounds_remaining_before_followup": 1,
+    "review_due": false,
+    "last_round_event_id": "division_followup_event_22aa95afc00edbc90c87f611a039cf0d",
+    "event_count": 125,
+    "event_head_sha256": "7fd6a415a1be969b6ba106ed35a412ae12a37f42967e382febb6770ab164f0b5"
+  },
+  "focused_tests": {
+    "exact_dash_passed": 1,
+    "marker_cleanup_family_passed": 44,
+    "distinct_tests_passed": 44,
+    "failed": 0
+  },
+  "stewardship_tests": {
+    "introspection_addressing_passed": 42,
+    "event_store_controller_projector_division_cursor_passed": 72,
+    "anti_drop_self_tests_passed": 5,
+    "anti_drop_guards": 47,
+    "cadence_self_tests_passed": 6,
+    "experiential_self_tests_passed": 2,
+    "total_passed": 127,
+    "failed": 0,
+    "epistemic_lint_checked_records": 10553,
+    "epistemic_lint_issues": 0,
+    "history_rewritten": false
+  },
+  "restart_required_for_this_run": false,
+  "deployment_attempted": false,
+  "live_authority_granted": false,
+  "division_round_record": {
+    "event_id": "division_followup_event_6f270b75524481ca940d729d9b96cc43",
+    "cycle_sequence": 18,
+    "completed_rounds_since_followup": 6,
+    "review_due": true,
+    "event_count": 126,
+    "event_head_sha256": "9c89f182477ac64365093adb3c389ca64b78af540313fa1eb1442dcb5a3841c2"
+  },
+  "division_return": {
+    "public_division_reply_count": 0,
+    "formal_division_action_count": 0,
+    "silence_interpreted": false,
+    "due_chronicle_id": "division_chronicle_871370dee996fabad6e47db0",
+    "due_chronicle_json_sha256": "e9cd3cd55205739277aa5e424cc0a0a8e8ae003405d4f8518df8351c9ae356e4",
+    "followup_event_id": "division_followup_event_d9fab23e29498beeb49e7e4dc6ee9d39",
+    "astrid_note_sha256": "b5918a6a8e241f04962e861bdc43801b8fc812557483d0c12d4456880d29f71f",
+    "minime_note_sha256": "1c4a4fbbbbd96ed8e445fa5f73d529ca4e6b3ee3511510176a440c975c794d06",
+    "cycle_sequence_after": 19,
+    "completed_rounds_after": 0,
+    "review_due_after": false,
+    "event_count_after": 127,
+    "event_head_sha256_after": "323d18a16326001c05c52c013b9ad05c4cf88df1fa2366d1afde7a2ff09bbc12",
+    "projected_chronicle_id": "division_chronicle_0693035d6dbb91c25911a8b1",
+    "projected_chronicle_json_sha256": "2946604721fb0d34332ce480c2e38a8b23b5c037b386927135a61aacf1d5b74d",
+    "durable_inputs_current": true,
+    "volatile_supervisor_status_mismatch": true
+  },
+  "evidence_event_store_prefinish_snapshot": {
+    "active_store": "v2",
+    "valid": true,
+    "last_global_seq": 720374,
+    "last_event_sha256": "36054cc7e31efc3cf07e4ad2b1cef47f73653bb5a0e33a52747c6f9c248a5999",
+    "stream_count": 16,
+    "corrupt_lines": 0,
+    "pending_source_events": 0,
+    "v1_immutable": true,
+    "legacy_source_count": 4,
+    "note": "controller heartbeat and finish events advance this verified pre-finish snapshot"
+  },
+  "pre_finish_next_queue": [
+    "introspection_minime_sensory_bus_1785630107.txt",
+    "introspection_minime_regulator_1785629184.txt",
+    "introspection_astrid_llm_1785628932.txt"
+  ],
+  "finish_outcome": "pending controller finish",
+  "prior_archival_checkpoint": {
+    "commit_sha": "6344ba25e9d33ea051034a866f04d3fba25b3d6a",
+    "quoted_introspection_ref": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_llm_1786076073.txt",
+    "exact_committed_path_count": 12
+  },
+  "checkpoint_after_finish": "due after the sixth-round Division return; exact ownership and foreign overlap must be audited under a separate stabilization pause"
+}

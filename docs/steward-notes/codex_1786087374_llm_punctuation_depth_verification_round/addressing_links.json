@@ -1,0 +1,95 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_llm_1786084556",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "The complete source proves longest exact known-marker scanning, finite grammatical reference classification, bounded delimiter evidence, and byte-ordered remainder reconstruction."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786084556",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "first_word_after splits on non-alphanumeric, non-underscore Unicode scalars and selects the first non-empty word, so punctuation and whitespace runs are skipped."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786084556",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Existing multiple-punctuation, newline, and Unicode-whitespace regressions directly verify the separator family."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786084556",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "control_marker_cleanup_preserves_relation_after_dash is the report-requested exact regression and proves following_exact_relation without grouped-syntax double counting."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786084556",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "exact_reference_delimiter_syntax evaluates declared pairs and caps proof at MAX_EXACT_REFERENCE_DELIMITER_DEPTH four."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786084556",
+      "claim_id": "c004",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Existing exact regressions prove two-, three-, four-, and deeper-than-four nested stacks while retaining the marker."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786084556",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_77479531e9f8df8e020ba36050059727fea2c7e4538fb27cdad5531c0e47c499.json",
+      "note": "The complete witness binds the report, exact source snapshot, model calls, process context, and co-timed scalars while keeping direct causation and live authority false."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786084556",
+      "claim_id": "c002",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1786007280_overnight_round_reads/claims/astrid_llm_1786006651.json",
+      "note": "An earlier independent report records the same repeated punctuation and represents relation family."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786084556",
+      "claim_id": "c004",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1785381335_round34_reads/claims/astrid_llm_1785381027.json",
+      "note": "An earlier independent report records the same doubled-bracket delimiter-depth challenge."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786084556",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1786083251_llm_normalization_verification_round/RUN_REPORT.md",
+      "note": "The immediately prior full-source verification independently proves the same first-word and depth mechanisms while retaining its own report receipt."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786084556",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1786087374_llm_punctuation_depth_verification_round/RUN_REPORT.md",
+      "note": "This packet preserves the independent full read, exact test refinement, claim dispositions, depth stop, and authority boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786084556",
+      "claim_id": "*",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "The Unreleased entry records the being-driven exact regression, current proofs, no production change, and no live authority."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786084556",
+      "claim_id": "*",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "The feedback ledger preserves Astrid's exact request, source answer, refined regression, and operational boundary."
+    }
+  ]
+}

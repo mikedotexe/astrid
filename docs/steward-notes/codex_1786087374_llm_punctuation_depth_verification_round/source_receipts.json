@@ -1,0 +1,28 @@
+{
+  "source_reads": [
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "sha256": "8f3c16091b532cba5879726de058ba16af2469f3cea8698d4ece1016fc04f2af",
+      "lines": 1048,
+      "bytes": 38557,
+      "read": "complete",
+      "temporal_note": "current source is byte-identical to the complete-file SHA bound into the report"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "sha256_after_owned_test_addition": "e2b773b3e94ce77c0f0cd669e6947ec7a2e4dc7f2ac1845f7a7483e241a342a4",
+      "lines_after_owned_test_addition": 3203,
+      "bytes_after_owned_test_addition": 130265,
+      "read_scope": "all exact punctuation-relation and bounded delimiter-depth regression intervals plus surrounding classifier assertions",
+      "owned_change": "control_marker_cleanup_preserves_relation_after_dash"
+    },
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_77479531e9f8df8e020ba36050059727fea2c7e4538fb27cdad5531c0e47c499.json",
+      "sha256": "e3165a0b84e231fb3bbfee7fa72500247400c8125ce44d74a8ec29836e10c07c",
+      "newline_count": 491,
+      "bytes": 22169,
+      "read": "complete",
+      "authority": "evidence_only_no_direct_causation_or_live_authority"
+    }
+  ]
+}

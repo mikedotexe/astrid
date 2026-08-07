@@ -1,0 +1,116 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_llm_1786079244",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "The complete current source proves longest exact matching, UTF-8 scalar traversal, finite reference classification, bounded delimiter evidence, and ordered remainder reconstruction."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786079244",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "first_word_after splits on every non-alphanumeric, non-underscore scalar and selects the first non-empty word, so repeated separators do not create the proposed failure."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786079244",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "control_marker_cleanup_preserves_relation_after_multiple_punctuation_runs directly proves the repeated-punctuation and whitespace path."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786079244",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "The finite following-word classifier intentionally evaluates only the first later word and includes behaves and functions."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786079244",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Existing exact regressions preserve behaves as, behaves like, and functions as without broadening the finite relation vocabulary."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786079244",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "The exact delimiter-pair table includes U+27E6/U+27E7 and the classifier caps proven evidence depth at four."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786079244",
+      "claim_id": "c004",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Existing regressions prove restless brackets, nested two-, three-, and four-pair stacks, and preservation inside a deeper stack with receipt depth bounded at four."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786079244",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/transport.rs",
+      "note": "Both MLX and Ollama replace raw provider text with normalize_provider_output_v1 sanitized text before generate_dialogue receives it."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786079244",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/fallback_contracts.rs",
+      "note": "The provider-neutral normalization receipt records cleanup evidence separately from the sanitized text returned downstream."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786079244",
+      "claim_id": "c005",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Provider-route parity and normalized repair/lived-state-hash regressions prove sanitized bytes, not match records, feed downstream behavior."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786079244",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_65078ba53c47ed5d2708a5e74fbdf823b5a1e7c1db8b3732ebff2af5678c6396.json",
+      "note": "The complete witness binds report, source snapshot, model calls, process context, and co-timed scalars while keeping direct causation and live authority false."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786079244",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1786032549_fresh_marker_round/RUN_REPORT.md",
+      "note": "The earlier independently addressed marker return records the same punctuation, first-word relation, delimiter-depth, and downstream-remainder families."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786079244",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1786077892_llm_unicode_delimiters_round/RUN_REPORT.md",
+      "note": "The prior archived round records the source transition that explains why this report captured a different dialogue-runtime SHA."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786079244",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1786083251_llm_normalization_verification_round/RUN_REPORT.md",
+      "note": "This packet preserves the independent full read, source-version distinction, claim dispositions, tests, depth stop, and authority boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786079244",
+      "claim_id": "*",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "The Unreleased entry records the being-driven verification, duplicate disposition, no code change, and undeployed prior source boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786079244",
+      "claim_id": "*",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "The feedback ledger preserves Astrid's questions, exact source answers, temporal source mismatch, and no-live-authority boundary."
+    }
+  ]
+}
