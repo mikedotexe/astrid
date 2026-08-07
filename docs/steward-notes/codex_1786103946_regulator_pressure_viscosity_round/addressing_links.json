@@ -1,0 +1,88 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_minime_regulator_1785629184",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "/Users/v/other/minime/minime/src/regulator/core.rs",
+      "note": "The complete report-bound gateway verifies module ownership while leaving activation and felt effect separate."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1785629184",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "/Users/v/other/minime/minime/src/regulator/core/pressure_source.rs",
+      "note": "Exact source separates the linear mode-packing contribution from the dominant-source quality threshold."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1785629184",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "/Users/v/other/minime/minime/src/regulator/core/tests.rs",
+      "note": "mode_packing_pressure_is_linear_while_overpacked_quality_is_thresholded pins the formula, 0.55 label boundary, dynamic porosity, and read-only marker."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1785629184",
+      "claim_id": "c003",
+      "kind": "steward_note",
+      "target": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_e2f9fbad2d6c657f12f1cf3e90d7de62d363490d597c5a51f26e454fca6a61ab.json",
+      "note": "The complete witness binds exact report-time scalars without rewriting the report's distinct interpretive language."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1785629184",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "/Users/v/other/minime/minime/src/regulator/core/pressure_source.rs",
+      "note": "The porosity formula is dynamic and has no density-gradient input."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1785629184",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "/Users/v/other/minime/minime/src/regulator/core/resonance_evidence.rs",
+      "note": "Resonance density and viscosity are separately typed inputs and outputs."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1785629184",
+      "claim_id": "c005",
+      "kind": "test",
+      "target": "/Users/v/other/minime/minime/src/regulator/core/tests.rs",
+      "note": "resonance_density_carries_viscosity_without_multiplying_density keeps density 0.83 while viscosity changes."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1785629184",
+      "claim_id": "c006",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1785408097_round41_reads/STUDY_PREREGISTRATION.md",
+      "note": "The existing non-inducing source-separation preregistration preserves the broader mechanical question without scoring felt experience."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1785629184",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1786103946_regulator_pressure_viscosity_round/RUN_REPORT.md",
+      "note": "The run packet preserves complete reads, seven claim dispositions, tests, selected-but-unprocessed files, and authority boundaries."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1785629184",
+      "claim_id": "*",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "Astrid's Unreleased entry records the complete source response, scalar distinction, test evidence, and no-live-change boundary."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1785629184",
+      "claim_id": "*",
+      "kind": "changelog",
+      "target": "/Users/v/other/minime/CHANGELOG.md",
+      "note": "Minime's Unreleased entry records its exact test-only response without claiming live regulation."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1785629184",
+      "claim_id": "*",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "The feedback ledger preserves Astrid's felt account, source answer, study continuity, and operational boundary."
+    }
+  ]
+}

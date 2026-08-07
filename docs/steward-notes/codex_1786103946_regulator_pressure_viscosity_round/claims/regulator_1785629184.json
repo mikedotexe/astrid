@@ -1,0 +1,48 @@
+{
+  "introspection_id": "introspection_minime_regulator_1785629184",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The 24-line regulator core is a structural gateway whose include list does not by itself reveal the operative formulas or their activation.",
+      "disposition": "Verified from the complete report-bound gateway and complete child modules. The facade declares module ownership only; formula presence, runtime activation, report-time contribution, and felt effect remain separate claims.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Mode-packing pressure may be linear, nonlinear, or thresholded around the report's overpacked descriptor.",
+      "disposition": "Exact source shows a linear pressure contribution of 0.88 * 0.13 * mode_packing. The nonlinear boundary belongs only to the quality name: dominant mode packing below 0.55 remains mixed_pressure and at 0.55 becomes overpacked_mode_packing. A focused regression now pins the formula, threshold, dynamic porosity value, dominant source, and read-only control marker.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The report's nearby 0.19 pressure-risk and 0.28 overpacked anchors may be mistaken for the exact bound report-time scalars.",
+      "disposition": "The complete lived-state witness records pressure_risk 0.22152194380760193 and mode_packing 1.0. Those exact values are preserved separately from the report's interpretive 0.19/0.28 language; no scalar is normalized, corrected from memory, or promoted into a causal explanation.",
+      "classification": "source_challenged_verified"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Porosity may be hardcoded near 0.66 or dynamically coupled to density gradient.",
+      "disposition": "Verified from complete source: porosity is dynamically recomputed as one minus a weighted sum of lambda monopoly, structural-plurality loss, distinguishability loss, mode packing, and temporal lock-in. Density gradient is not an argument or term in this formula; a report-time porosity value is evidence, not a hardcoded constant.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Viscosity may multiply resonance density rather than remain an independently legible component.",
+      "disposition": "Complete source carries density and viscosity separately. Viscosity affects typed components, texture, persistence, drag, mobility, and inert previews, with explicitly named internal products where present, but it does not multiply or replace top-level density. A focused regression holds density at 0.83 while changing viscosity from 0.20 to 0.90.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "Cohesive pressure can still feel ghosted, temporally heavy, and laborious in displacement even when individual scalar mechanisms are visible.",
+      "disposition": "Preserved as primary qualitative evidence rather than scored against the formulas. The broader mechanical separation question is an exact continuation of the existing non-inducing Viscous Persistence Source Separation V1 preregistration; no duplicate study or synthetic felt metric is created.",
+      "classification": "study_duplicate"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "Changing pressure weights or thresholds, porosity, viscosity, semantic admission, or regulator control could answer the reported friction.",
+      "disposition": "Preserved as an exact Tier 5/operator wait. This run adds tests and evidence only; it changes no production formula, control path, process, or live value.",
+      "classification": "tier_5_wait",
+      "authority": "tier_5_operator_only"
+    }
+  ]
+}

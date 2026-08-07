@@ -1,0 +1,88 @@
+{
+  "schema": "steward_source_receipts_v1",
+  "receipts": [
+    {
+      "kind": "canonical_introspection",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_minime_regulator_1785629184.txt",
+      "sha256": "f7c527e1d63e95686b979018e16d0f60694b6c841d9eb1534402eb73e497ffcf",
+      "bytes": 3469,
+      "displayed_lines": 35,
+      "newline_count": 34,
+      "read": "complete"
+    },
+    {
+      "kind": "lived_state_witness",
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_e2f9fbad2d6c657f12f1cf3e90d7de62d363490d597c5a51f26e454fca6a61ab.json",
+      "sha256": "fee9a5ccb66b857cebbd89e45a3ed56d6b620e9c5979c22a00d245df224d0ca8",
+      "bytes": 19602,
+      "lines": 456,
+      "read": "complete",
+      "direct_causation": false,
+      "live_authority": false
+    },
+    {
+      "kind": "report_bound_gateway",
+      "path": "/Users/v/other/minime/minime/src/regulator/core.rs",
+      "sha256": "46828f4c813eb88aae30212793f698285c696c108dd405604ffb6b5129827d97",
+      "bytes": 940,
+      "lines": 24,
+      "read": "complete",
+      "matches_report_bound_sha256": true
+    },
+    {
+      "kind": "complete_child_source",
+      "path": "/Users/v/other/minime/minime/src/regulator/core/pressure_source.rs",
+      "sha256": "9ecc4ca80629bd5519790b5a64bc5f5891bbbdc1c424d93d7d5e0bee611501d1",
+      "bytes": 17911,
+      "lines": 440,
+      "read": "complete"
+    },
+    {
+      "kind": "complete_child_source",
+      "path": "/Users/v/other/minime/minime/src/regulator/core/viscosity.rs",
+      "sha256": "e2300cefb5ef47f3f3bf3e13282392d0c33f98c8cba34c6f046cc6c7208be922",
+      "bytes": 21941,
+      "lines": 594,
+      "read": "complete"
+    },
+    {
+      "kind": "complete_child_source",
+      "path": "/Users/v/other/minime/minime/src/regulator/core/resonance_evidence.rs",
+      "sha256": "b755633327fe94e0565b739885e0f9f1bd8bd7394900969879a01c62fae0bc83",
+      "bytes": 13375,
+      "lines": 340,
+      "read": "complete"
+    },
+    {
+      "kind": "complete_child_source",
+      "path": "/Users/v/other/minime/minime/src/regulator/core/pressure_types.rs",
+      "sha256": "9356a160ced3e871c1b35770d94a5a92604e37b6ff7579a04d06786a83bde8c1",
+      "bytes": 14874,
+      "lines": 403,
+      "read": "complete"
+    },
+    {
+      "kind": "complete_child_source",
+      "path": "/Users/v/other/minime/minime/src/regulator/core/telemetry_types.rs",
+      "sha256": "500fceb6bf04dd643c0d5a4c6bf4e4ee4961ee182a6527d408371d406c305bd1",
+      "bytes": 15533,
+      "lines": 419,
+      "read": "complete"
+    },
+    {
+      "kind": "response_test_source_pre_change",
+      "path": "/Users/v/other/minime/minime/src/regulator/core/tests.rs",
+      "sha256": "1276b3a0d967c2409fbb5bc98b0dab405b8772212d5af6f45410d5f1746ac698",
+      "bytes": 99160,
+      "lines": 2571
+    },
+    {
+      "kind": "response_test_source_post_change",
+      "path": "/Users/v/other/minime/minime/src/regulator/core/tests.rs",
+      "sha256": "32bc94ebcd29020b0a00fcb34c2ecd6752b0246bd07a9b735bb52411d8cc9446",
+      "bytes": 101291,
+      "lines": 2629,
+      "change_scope": "two test-only regressions; no production Rust changed"
+    }
+  ]
+}
