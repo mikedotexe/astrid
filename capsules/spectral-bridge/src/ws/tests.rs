@@ -4163,6 +4163,58 @@ mod tests {
     }
 
     #[test]
+    fn telemetry_heartbeat_normal_jitter_window_has_deterministic_stddev() {
+        let mut state = BridgeState::new();
+        for observed_at_unix_s in [100.0, 101.0, 102.25] {
+            let sample = make_pressure_telemetry(0.70, 0.20, 0.40);
+            record_pressure_trend_sample_v1(
+                &mut state,
+                &sample,
+                70.0,
+                observed_at_unix_s,
+            );
+        }
+        let mut heartbeat = build_telemetry_heartbeat_delta_v1(
+            Some(102.25),
+            103.75,
+            &WebSocketLaneTrace::default(),
+        );
+        attach_rolling_arrival_cadence_v1(
+            &mut heartbeat,
+            &state.pressure_trend_samples_v1,
+            103.75,
+            4,
+        );
+
+        assert_eq!(heartbeat.jitter_class, "normal");
+        assert_eq!(heartbeat.inter_arrival_ms, Some(1_500.0));
+        assert_eq!(heartbeat.rolling_inter_arrival_sample_count, 3);
+        assert_eq!(heartbeat.rolling_inter_arrival_mean_ms, Some(1_250.0));
+        assert!(
+            (heartbeat
+                .rolling_inter_arrival_variance_ms2
+                .unwrap_or_default()
+                - 41_666.668)
+                .abs()
+                < 0.01
+        );
+        assert!(
+            (heartbeat
+                .rolling_inter_arrival_stddev_ms
+                .unwrap_or_default()
+                - 204.124_15)
+                .abs()
+                < 0.001
+        );
+        assert_eq!(heartbeat.rolling_inter_arrival_range_ms, Some(500.0));
+        assert_eq!(heartbeat.rolling_inter_arrival_change_ms, Some(500.0));
+        assert_eq!(
+            heartbeat.rolling_inter_arrival_state,
+            "arrival_intervals_lengthening"
+        );
+    }
+
+    #[test]
     fn telemetry_integration_health_separates_pipeline_wait_and_hold() {
         let clear = build_telemetry_integration_health_v1(None, 4.0, 0.2, 1.0);
         assert_eq!(clear.classification, "clear_at_latest_sample");

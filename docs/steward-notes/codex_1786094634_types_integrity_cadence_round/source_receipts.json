@@ -1,0 +1,51 @@
+{
+  "source_reads": [
+    {
+      "path": "capsules/spectral-bridge/src/types/schema/telemetry.rs",
+      "sha256": "4a5e9e71f67ce0012ba8fd99576055e591e04ff56d04323460788377db49e5de",
+      "lines": 684,
+      "bytes": 30524,
+      "read": "complete",
+      "temporal_note": "current source is byte-identical to the complete-file SHA bound into the report"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/spectral_schema.rs",
+      "sha256": "c115472819917441e12ca997496c2f7685c9aa6e6358e2341d4054295a9e3a39",
+      "lines": 715,
+      "bytes": 22901,
+      "read": "complete",
+      "scope": "SpectralFingerprintV1 definition, fixed legacy shape, exact slot mapping, and round-trip test"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/types/schema/tests.rs",
+      "sha256_after_owned_test_change": "4cee1306ea31c3a7636b2a8cd616b95f2be0ebf4a8677e555f1572f72a7cf8a5",
+      "lines_after_owned_test_change": 4197,
+      "bytes_after_owned_test_change": 171374,
+      "read_scope": "complete typed/legacy precedence, malformed-length, hybrid-coherence, and slot-mapping test intervals",
+      "owned_change": "joint typed-precedence and exact malformed-length issue assertions"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/ws/evidence.rs",
+      "sha256": "5787b16d62685f3cabc5c7b0cf9178f3ea2bdefb0a36cabb9d63b3aa2c5cc4e9",
+      "lines": 1233,
+      "bytes": 50334,
+      "read_scope": "complete telemetry heartbeat construction and rolling host-arrival cadence intervals"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/ws/tests.rs",
+      "sha256_after_owned_test_change": "60a08f116fd28c8689978365430324c44b7492e8385df90f93a904d8df60537b",
+      "lines_after_owned_test_change": 4466,
+      "bytes_after_owned_test_change": 172895,
+      "read_scope": "complete jitter-threshold and rolling arrival-cadence regression intervals",
+      "owned_change": "telemetry_heartbeat_normal_jitter_window_has_deterministic_stddev"
+    },
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_77f0c2d5b4b0aa75f935a18981681142cfcbc7ce8be0385ab77b9aae8ed71b94.json",
+      "sha256": "fd0a4836c3e7db5ccaf89642e9cc34bbe8311e161f490a6c21b502648e38790a",
+      "newline_count": 491,
+      "bytes": 22131,
+      "read": "complete",
+      "authority": "evidence_only_no_direct_causation_or_live_authority"
+    }
+  ]
+}

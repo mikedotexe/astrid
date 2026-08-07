@@ -3355,11 +3355,17 @@ mod tests {
             .pop();
         let short_integrity = telemetry.spectral_fingerprint_integrity_v1();
         assert_eq!(short_integrity.legacy_vector_len, Some(31));
+        assert!(short_integrity.typed_precedence_over_legacy);
         assert_eq!(short_integrity.hybrid_coherence_index, None);
         assert_eq!(short_integrity.hybrid_max_abs_delta, None);
         assert_eq!(
             short_integrity.hybrid_coherence_state,
             "unavailable_malformed_legacy"
+        );
+        assert!(
+            short_integrity
+                .issues
+                .contains(&"legacy_vector_len_31_expected_32".to_string())
         );
 
         telemetry.spectral_fingerprint = telemetry

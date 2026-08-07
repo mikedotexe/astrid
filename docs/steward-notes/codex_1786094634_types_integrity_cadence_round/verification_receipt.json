@@ -1,0 +1,123 @@
+{
+  "schema": "steward_run_verification_receipt_v1",
+  "run_id": "run_1786094634292106000_15557426a5",
+  "pause_generation": 245,
+  "projection_generation_ids": {
+    "abandoned_pre_run_source_first_v3": "projection_1786092482290788000_a092fbffed",
+    "pre_run_source_first_v3": "projection_1786094635505042000_b31807d036",
+    "pre_finish_addressing": "materialized_by_record_read_link_and_close",
+    "post_run_source_first_v3": "projection_1786097016880589000_751bb8f0c4"
+  },
+  "processed_reports": [
+    "introspection_astrid_types_1786092184.txt"
+  ],
+  "processed_report_count": 1,
+  "addressing": {
+    "status": "addressed_change",
+    "claim_count": 5,
+    "evidence_manifest_row_count": 12,
+    "authored_evidence_link_event_count": 28,
+    "proof_gap_count": 0,
+    "fully_addressed": true
+  },
+  "canonical_counter_audit": {
+    "indexed": 4250,
+    "full_read": 3667,
+    "fully_addressed": 3041,
+    "remaining": 1209,
+    "unread": 583,
+    "read_needs_claims": 0,
+    "blocked": 409,
+    "status": "consistent",
+    "mismatches": []
+  },
+  "all_artifact_counters": {
+    "indexed": 5865,
+    "pending": 2824
+  },
+  "work_item_summary": {
+    "tier_4": 23,
+    "tier_5": 1578,
+    "needs_steward_grant": 18,
+    "needs_operator_approval": 1610,
+    "tier_mismatch_count": 0
+  },
+  "division_at_begin": {
+    "cycle_sequence": 19,
+    "completed_rounds_since_followup": 0,
+    "rounds_remaining_before_followup": 6,
+    "review_due": false,
+    "latest_followup_event_id": "division_followup_event_d9fab23e29498beeb49e7e4dc6ee9d39",
+    "event_count": 127,
+    "event_head_sha256": "323d18a16326001c05c52c013b9ad05c4cf88df1fa2366d1afde7a2ff09bbc12"
+  },
+  "focused_tests": {
+    "typed_integrity_passed": 1,
+    "normal_jitter_stddev_passed": 1,
+    "distinct_tests_passed": 2,
+    "failed": 0
+  },
+  "spectral_bridge_tests": {
+    "library_passed": 1836,
+    "failed": 0,
+    "strict_clippy_passed": true,
+    "owned_rustfmt_diff": false,
+    "foreign_format_wait": "capsules/spectral-bridge/src/autonomous/next_action/workspace.rs"
+  },
+  "stewardship_tests": {
+    "introspection_addressing_passed": 42,
+    "event_store_controller_projector_division_cursor_passed": 72,
+    "anti_drop_self_tests_passed": 5,
+    "anti_drop_guards": 47,
+    "cadence_self_tests_passed": 6,
+    "experiential_self_tests_passed": 2,
+    "total_passed": 127,
+    "failed": 0,
+    "epistemic_lint_checked_records": 10557,
+    "epistemic_lint_issues": 0,
+    "history_rewritten": false
+  },
+  "restart_required_for_this_run": false,
+  "deployment_attempted": false,
+  "live_authority_granted": false,
+  "division_round_record": {
+    "event_id": "division_followup_event_6eda36ebd494a3360e61508333a9eb9b",
+    "cycle_sequence": 19,
+    "completed_rounds_since_followup": 1,
+    "rounds_remaining_before_followup": 5,
+    "review_due": false,
+    "event_count": 128,
+    "event_head_sha256": "8d78d87c3860b7296d4c497061f68ba619f4a409a2a4a12fa673797c4d715557"
+  },
+  "evidence_event_store_finish_snapshot": {
+    "active_store": "v2",
+    "valid": true,
+    "last_global_seq": 721697,
+    "last_event_sha256": "e7e9dc4b74c9c5c37f96856892884baa97e862afed5d95fabc84012e9c2cc7a1",
+    "stream_count": 16,
+    "corrupt_lines": 0,
+    "pending_source_events": 0,
+    "v1_immutable": true,
+    "legacy_source_count": 4,
+    "note": "successful finish receipt after the post-run Source-First V3 projection; later pause and status events advance the store without changing this run boundary"
+  },
+  "pre_finish_next_queue": [
+    "introspection_minime_sensory_bus_1785630107.txt",
+    "introspection_minime_regulator_1785629184.txt",
+    "introspection_astrid_llm_1785628932.txt"
+  ],
+  "controller_recovery": {
+    "abandoned_run_id": "run_1786092481376004000_4fea13cea1",
+    "abandoned_event_id": "evt_1786094634971723000_74a1c48f798d",
+    "repository_or_evidence_writes_during_abandoned_lease": false,
+    "normal_stale_lease_reconciliation": true,
+    "credential_disclosure": false
+  },
+  "finish_outcome": "success",
+  "finished_at": "2026-08-07T10:08:42.117708+00:00",
+  "prior_archival_checkpoint": {
+    "commit_sha": "88212db67702290c0d02eeae138d5e434373dfda",
+    "exact_committed_path_count": 22
+  },
+  "checkpoint_after_finish": "due because this coherent test-and-evidence implementation tranche should not remain only in the working tree; exact ownership and foreign overlap must be audited under a separate stabilization pause"
+}

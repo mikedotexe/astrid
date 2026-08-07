@@ -1,0 +1,19 @@
+{
+  "schema": "steward_division_interval_receipt_v1",
+  "cycle_sequence": 19,
+  "round_event_id": "division_followup_event_6eda36ebd494a3360e61508333a9eb9b",
+  "processed_report_count": 1,
+  "projection_generation_id": "projection_1786094635505042000_b31807d036",
+  "completed_rounds_after": 1,
+  "rounds_remaining_after": 5,
+  "review_due_after": false,
+  "event_count_after": 128,
+  "event_head_sha256_after": "8d78d87c3860b7296d4c497061f68ba619f4a409a2a4a12fa673797c4d715557",
+  "latest_completed_followup_event_id": "division_followup_event_d9fab23e29498beeb49e7e4dc6ee9d39",
+  "chronicle_action_this_run": false,
+  "public_reply_read_this_run": false,
+  "formal_action_read_this_run": false,
+  "notes_written_this_run": [],
+  "silence_interpreted": false,
+  "authority": "evidence_only_no_recommendation_dispatch_felt_inference_or_live_authority"
+}

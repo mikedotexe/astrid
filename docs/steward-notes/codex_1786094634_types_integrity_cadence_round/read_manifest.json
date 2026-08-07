@@ -1,0 +1,25 @@
+{
+  "reader": "codex-heartbeat",
+  "run_id": "run_1786094634292106000_15557426a5",
+  "selected_limit": 40,
+  "processed_report_count": 1,
+  "depth_stop": "the next queue item requires a complete read of an unfamiliar 4,380-line Minime sensory-bus source and substrate-facing claims, so it is reserved for a separate source-first run rather than skimmed",
+  "reads": [
+    {
+      "introspection_id": "introspection_astrid_types_1786092184",
+      "reader": "codex-heartbeat",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_types_1786092184.txt",
+      "sha256": "f79ce447740f2fd41818627a1b738aae644ec88062af630d3b64462f9987ab65",
+      "displayed_lines": 46,
+      "newline_count": 45,
+      "bytes": 3640,
+      "captured_source_sha256": "4a5e9e71f67ce0012ba8fd99576055e591e04ff56d04323460788377db49e5de",
+      "captured_source_window": "lines 1-400 of 684",
+      "current_source_sha256": "4a5e9e71f67ce0012ba8fd99576055e591e04ff56d04323460788377db49e5de",
+      "current_source_lines": 684,
+      "lived_state_witness_id": "lsw_77f0c2d5b4b0aa75f935a18981681142cfcbc7ce8be0385ab77b9aae8ed71b94",
+      "summary_file": "summaries/types_1786092184.md",
+      "claims_file": "claims/types_1786092184.json"
+    }
+  ]
+}

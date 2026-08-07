@@ -1,0 +1,35 @@
+{
+  "introspection_id": "introspection_astrid_types_1786092184",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "telemetry.rs defines typed cadence, jitter, rolling-density, connection-perception, and spectral-fingerprint integrity evidence with a hybrid typed/legacy reconciliation path.",
+      "disposition": "Verified from the complete current 684-line source, whose SHA exactly matches the report-bound source. Shape evidence, status fields, and diagnostic authority remain explicitly distinct.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The private spectral_fingerprint_hybrid_coherence_v1 helper returns None for an incompatible legacy length and could mask why coherence was unavailable.",
+      "disposition": "Verified only at the private helper boundary and bounded at the public API. The public integrity builder already records unavailable_malformed_legacy, the exact legacy-vector length issue, summary, basis, and scope; existing malformed-length tests already covered the state and the strengthened regression now proves the diagnostic fields together.",
+      "classification": "addressed_duplicate"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Typed precedence with an incompatible legacy vector length should populate hybrid_coherence_state and retain the diagnostic reason.",
+      "disposition": "Implemented now by extending the existing 31-slot regression to assert typed precedence, unavailable_malformed_legacy, and legacy_vector_len_31_expected_32 in one public integrity result.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "rolling_inter_arrival_stddev_ms should remain stable when host inter-arrival intervals fluctuate within the normal jitter-class bound.",
+      "disposition": "Implemented now with a deterministic 1,000/1,250/1,500 millisecond host-arrival window. The test proves normal classification on the latest interval plus mean, population variance, standard deviation, range, change, and lengthening state without changing cadence.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "SpectralFingerprintV1::to_legacy_slots should be examined to confirm that its output shape consistently matches the helper's 32-element requirement.",
+      "disposition": "Verified from the complete 715-line definition. The mapping returns a fixed [f32; 32] assembled as 8 eigenvalues, 8 concentration values, 8 cosine values, four scalars, and four adjacent-gap ratios; the existing round-trip test proves the exact named-slot mapping.",
+      "classification": "verified_existing"
+    }
+  ]
+}
