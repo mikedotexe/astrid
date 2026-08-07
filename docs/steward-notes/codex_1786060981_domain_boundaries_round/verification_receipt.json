@@ -1,0 +1,27 @@
+{
+  "schema": "steward_run_verification_receipt_v1",
+  "run_id": "run_1786060981023730000_698775ac84",
+  "finish_outcome": "cancelled_session_timeout_after_passed_projection",
+  "projection_generation_ids": {
+    "pre_run": "projection_1786060982193660000_792c522645",
+    "pre_finish": "projection_1786062452140640000_f4f25387d5"
+  },
+  "processed_reports": [
+    "introspection_DOMAIN_BOUNDARIES.md_1786053541.txt"
+  ],
+  "processed_report_count": 1,
+  "implementation": {
+    "production_rust_changed": false,
+    "compiler_snapshot_files_refreshed": 5,
+    "provenance_compile_fail_cases_passed": 12
+  },
+  "tests": {
+    "bridge_library_passed": 1830,
+    "strict_clippy": "passed",
+    "steward_tooling": "passed"
+  },
+  "restart_required": false,
+  "deployment_attempted": false,
+  "live_authority_granted": false,
+  "recovery_run_id": "run_1786064934607407000_5d45066d70"
+}

@@ -1,0 +1,20 @@
+{
+  "reader": "codex-heartbeat",
+  "run_id": "run_1786060981023730000_698775ac84",
+  "selected_limit": 40,
+  "processed_report_count": 1,
+  "depth_stop": "the queue head exposed a failing provenance typestate suite and required a bounded non-live repair",
+  "reports": [
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1786053541",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_DOMAIN_BOUNDARIES.md_1786053541.txt",
+      "sha256": "f77f00eda1162733f29a4a56e6c0addb83949bf56dd4f99579a252fbbc69c49f",
+      "displayed_lines": 44,
+      "newline_count": 43,
+      "bytes": 3574,
+      "lived_state_witness_id": "lsw_6924923baad59d1e26b6ba65e5b051fc5e9201ebb8b4a6fbb73f8b64573c3935",
+      "summary_file": "summaries/domain_boundaries_1786053541.md",
+      "claims_file": "claims/domain_boundaries_1786053541.json"
+    }
+  ]
+}

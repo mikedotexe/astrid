@@ -2259,6 +2259,24 @@ mod tests {
     }
 
     #[test]
+    fn control_marker_cleanup_preserves_restless_group_delimiters_across_whitespace() {
+        for text in [
+            "⟦ <end_of_turn> ⟧",
+            "⟦\t<end_of_turn>\n⟧",
+            "⟦\u{2003}<end_of_turn>\u{3000}⟧",
+        ] {
+            let (stripped, report) = sanitize_model_control_markers_with_report(text);
+            assert_eq!(stripped, text);
+            let report = report.expect("whitespace-delimited exact-token report");
+            assert_eq!(report.removed_total, 0);
+            assert_eq!(report.preserved_explicit_reference_total, 1);
+            assert_eq!(report.preserved_tokens[0].grouped_reference_occurrences, 1);
+            assert_eq!(report.preserved_tokens[0].max_delimiter_depth, 1);
+            assert_eq!(report.context_receipts[0].delimiter_depth, 1);
+        }
+    }
+
+    #[test]
     fn control_marker_cleanup_preserves_non_ascii_matching_quote_pairs() {
         for text in [
             "«<end_of_turn>»",

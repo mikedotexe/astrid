@@ -1,0 +1,40 @@
+{
+  "source_reads": [
+    {
+      "path": "capsules/spectral-bridge/DOMAIN_BOUNDARIES.md",
+      "sha256": "11c5ff89e1a7a12cfcc8cc49c676b04feb2118d9ee4975f47dc139984ee0b9e3",
+      "lines": 65,
+      "read": "complete"
+    },
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_6924923baad59d1e26b6ba65e5b051fc5e9201ebb8b4a6fbb73f8b64573c3935.json",
+      "sha256": "99afb2e02c08e33a6dfd3987e3e845203fcec4ab8d9fe1078a2486eada64d710",
+      "newline_count": 491,
+      "read": "complete",
+      "authority": "evidence_only_no_direct_causation_or_live_authority"
+    },
+    {
+      "paths": [
+        "capsules/spectral-bridge/src/ws.rs",
+        "capsules/spectral-bridge/src/autonomous.rs",
+        "capsules/spectral-bridge/src/codec.rs",
+        "capsules/spectral-bridge/src/llm.rs",
+        "capsules/spectral-bridge/src/types.rs",
+        "capsules/spectral-bridge/src/action_continuity.rs"
+      ],
+      "line_counts": [6, 12, 9, 6, 9, 6],
+      "read": "complete"
+    },
+    {
+      "paths": [
+        "capsules/spectral-bridge/src/witness/provenance.rs",
+        "capsules/spectral-bridge/src/authority_types.rs",
+        "capsules/spectral-bridge/src/ws/telemetry_port.rs",
+        "capsules/spectral-bridge/tests/provenance_typestate.rs",
+        "capsules/spectral-bridge/tests/ui/interpretation_cannot_dispatch.rs",
+        "capsules/spectral-bridge/tests/ui/interpretation_cannot_dispatch.stderr"
+      ],
+      "read_scope": "directly relevant interpretation construction, dispatch signature, and exact compile-fail barrier"
+    }
+  ]
+}

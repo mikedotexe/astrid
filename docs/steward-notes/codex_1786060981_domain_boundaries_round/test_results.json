@@ -1,0 +1,33 @@
+{
+  "schema": "steward_test_results_v1",
+  "rustc": "1.94.1 (e408947bf 2026-03-25)",
+  "results": [
+    {
+      "surface": "facade_line_count",
+      "threshold": 1000,
+      "counts": {
+        "ws.rs": 6,
+        "autonomous.rs": 12,
+        "codec.rs": 9,
+        "llm.rs": 6,
+        "types.rs": 9,
+        "action_continuity.rs": 6
+      },
+      "status": "passed"
+    },
+    {
+      "surface": "provenance_typestate_initial",
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --test provenance_typestate",
+      "interpretation_cannot_dispatch": "passed",
+      "stale_diagnostic_snapshot_count": 5,
+      "status": "failed_snapshot_mismatch"
+    },
+    {
+      "surface": "provenance_typestate_after_snapshot_refresh",
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --test provenance_typestate",
+      "negative_cases_passed": 12,
+      "failed": 0,
+      "status": "passed"
+    }
+  ]
+}

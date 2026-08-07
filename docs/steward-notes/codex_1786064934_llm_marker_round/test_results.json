@@ -1,0 +1,74 @@
+{
+  "schema": "steward_test_results_v1",
+  "results": [
+    {
+      "surface": "restless_group_whitespace",
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib control_marker_cleanup_preserves_restless_group_delimiters_across_whitespace",
+      "passed": 1,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "echoes_relation",
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib control_marker_cleanup_preserves_poetic_attribution_without_literal_cue",
+      "passed": 1,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "spectral_bridge_library",
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib",
+      "passed": 1831,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "spectral_bridge_clippy",
+      "command": "cargo clippy --manifest-path capsules/spectral-bridge/Cargo.toml --all-targets --all-features -- -D warnings",
+      "status": "passed"
+    },
+    {
+      "surface": "provenance_typestate",
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --test provenance_typestate",
+      "compile_fail_cases_passed": 12,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "steward_tooling_self_tests",
+      "groups": {
+        "introspection_addressing": 42,
+        "event_store_controller_projector_division_cursor": 72,
+        "anti_drop": 5,
+        "cadence": 6,
+        "experiential_epistemics": 2
+      },
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "anti_drop_live_verify",
+      "guards": 47,
+      "gaps": 0,
+      "alarms": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "epistemic_lint",
+      "checked": 10522,
+      "issues": 0,
+      "history_rewritten": false,
+      "status": "passed"
+    },
+    {
+      "surface": "workspace_format_check",
+      "command": "cargo fmt --manifest-path capsules/spectral-bridge/Cargo.toml --all -- --check",
+      "owned_path_status": "passed",
+      "foreign_preexisting_failure_path": "capsules/spectral-bridge/src/autonomous/next_action/workspace.rs",
+      "status": "blocked_by_foreign_preexisting_diff"
+    }
+  ],
+  "production_rust_changed": false,
+  "test_rust_changed": true,
+  "deployment_required": false
+}

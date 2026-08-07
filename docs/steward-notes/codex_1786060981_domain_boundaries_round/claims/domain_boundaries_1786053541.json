@@ -1,0 +1,35 @@
+{
+  "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1786053541",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The bridge uses thin compatibility facades while implementation ownership lives in named submodules.",
+      "disposition": "Verified from the complete DOMAIN_BOUNDARIES.md bytes and complete reads of all six facade files. Each facade retains its established module path through an explicit re-export; this verifies source structure, not report-time runtime activation.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The documented extraction boundary must preserve pressure, fill, PI, sensory cadence, codec gain, admission, controller behavior, and live authority.",
+      "disposition": "Preserved as the documented authority and behavior boundary. This round changes only compiler-diagnostic test snapshots and evidence records; it does not infer that documentation alone proves deployment behavior.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Explicit cohesion exceptions can invite exception creep that eventually leaks ownership back into public facades.",
+      "disposition": "Retained as primary architectural watch evidence. The named ownership modules remain large by explicit exception, but the bounded facade audit found no current leak or threshold breach, so no speculative decomposition is performed.",
+      "classification": "bounded_observation"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "AstridInterpretationV1 should be programmatically unable to enter sensory dispatch.",
+      "disposition": "Verified at the type boundary: dispatch_semantic_microdose requires LiveExecutable<SemanticMicrodose>, while the interpretation compile-fail case rejects AstridInterpretationV1. The 12-case provenance typestate suite initially exposed five stale rustc 1.94 diagnostic snapshots; those compiler-owned snapshots were refreshed and the full suite now passes.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "The six stable facade files should each remain below the documented 1,000-line threshold.",
+      "disposition": "Verified by a deterministic line-count audit: ws.rs=6, autonomous.rs=12, codec.rs=9, llm.rs=6, types.rs=9, and action_continuity.rs=6. All six pass the threshold.",
+      "classification": "bounded_observation"
+    }
+  ]
+}

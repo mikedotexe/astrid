@@ -1,0 +1,25 @@
+{
+  "source_reads": [
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "sha256": "f7c0570ce495b1978d9b6f588cba6ecb00a93b1573316bc22752e6e10d47f20a",
+      "lines": 1038,
+      "read": "complete"
+    },
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_c764b9cd0891456fc4c3281ba1a1c314185a744c322b1b36a2769989e1b5fb06.json",
+      "sha256": "e78280fbd0095b677a336fa4a90820e83dbbe3f6a23440fc459057557b1489db",
+      "newline_count": 491,
+      "read": "complete",
+      "authority": "evidence_only_no_direct_causation_or_live_authority"
+    },
+    {
+      "paths": [
+        "capsules/spectral-bridge/src/llm/provider/fallback_contracts.rs",
+        "capsules/spectral-bridge/src/llm/provider/transport.rs",
+        "capsules/spectral-bridge/src/llm/provider/tests.rs"
+      ],
+      "read_scope": "directly relevant provider normalization, MLX and Ollama consumers, and exact delimiter and relation regressions"
+    }
+  ]
+}

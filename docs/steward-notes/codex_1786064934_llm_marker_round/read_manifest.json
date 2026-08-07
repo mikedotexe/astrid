@@ -1,0 +1,20 @@
+{
+  "reader": "codex-heartbeat",
+  "run_id": "run_1786064934607407000_5d45066d70",
+  "selected_limit": 40,
+  "processed_report_count": 1,
+  "depth_stop": "the queue head exposed one missing exact delimiter-whitespace regression and required a bounded non-live test response",
+  "reports": [
+    {
+      "introspection_id": "introspection_astrid_llm_1786062450",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_llm_1786062450.txt",
+      "sha256": "840d9ac2914bc3c2e6fdcd21045118c07bcb571050cafd40241ce1305b29a52e",
+      "displayed_lines": 46,
+      "newline_count": 45,
+      "bytes": 3682,
+      "lived_state_witness_id": "lsw_c764b9cd0891456fc4c3281ba1a1c314185a744c322b1b36a2769989e1b5fb06",
+      "summary_file": "summaries/llm_1786062450.md",
+      "claims_file": "claims/llm_1786062450.json"
+    }
+  ]
+}
