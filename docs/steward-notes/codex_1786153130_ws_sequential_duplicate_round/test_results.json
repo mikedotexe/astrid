@@ -1,0 +1,38 @@
+{
+  "schema": "steward_test_results_v1",
+  "results": [
+    {
+      "surface": "telemetry_backoff",
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib backoff_",
+      "passed": 2,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "telemetry_integration_health",
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib telemetry_integration_health_separates_pipeline_wait_and_hold",
+      "passed": 1,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "mock_telemetry_admission",
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --test mock_ws_integration bridge_receives_telemetry_from_mock_ws",
+      "passed": 1,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "mock_telemetry_reconnect",
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --test mock_ws_integration telemetry_subscriber_reconnects_after_close_and_routes_binary",
+      "passed": 1,
+      "failed": 0,
+      "status": "passed"
+    }
+  ],
+  "focused_distinct_tests_passed": 5,
+  "focused_failed": 0,
+  "production_rust_changed_this_run": false,
+  "test_rust_changed_this_run": false,
+  "deployment_attempted": false
+}

@@ -1,0 +1,41 @@
+{
+  "introspection_id": "introspection_astrid_ws_1785628139",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The telemetry lane maintains persistent connection, frame tracing, pong responses, disconnect accounting, and capped reconnect backoff.",
+      "disposition": "Verified from the complete exact source and focused current-tree tests. This establishes transport mechanics, not quality of contact or felt effect.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Awaiting the full telemetry handler inside the receive loop can delay a later shutdown or control frame when integration work is expensive.",
+      "disposition": "Preserved as source-confirmed architectural evidence. Existing split timing diagnostics make pipeline, lock-wait, and lock-hold cost observable but do not prove the scheduling risk absent.",
+      "classification": "primary_architectural_evidence"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "record_ws_message_received performs slow database interaction while holding the shared state write lock.",
+      "disposition": "Corrected from exact source: the function only updates in-memory counters and timestamps. SQLite writes occur later outside the state lock, though still synchronously in the receive task; a heartbeat snapshot write remains inside the measured lock hold.",
+      "classification": "source_attribution_correction"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "A high-frequency telemetry stream should test integration latency and shutdown responsiveness under load.",
+      "disposition": "Routed to existing non-live Tier 3 trials trial_4e04f8b28bb44b2f and trial_db5ded51ba8bcb6e. They retain sequential-stall and high-frequency latency hypotheses and have no result; no duplicate trial or false result is created.",
+      "classification": "routed_existing_sandbox"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Reconnect failures should increase backoff without entering a tight retry loop.",
+      "disposition": "Verified by source and two focused regressions: delays double from one second to a 60-second cap, remain capped, and reset after connection.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "Telemetry integration should move to tokio::spawn, spawn_blocking, or a worker channel.",
+      "disposition": "Preserved as the exact prior Tier 5 Mike/operator wait. Offload changes sensory ordering, buffering, backpressure, cancellation, and cadence; no worker or live scheduling change is authorized here.",
+      "classification": "needs_operator_approval"
+    }
+  ]
+}

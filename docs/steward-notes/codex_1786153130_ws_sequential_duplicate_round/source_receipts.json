@@ -1,0 +1,56 @@
+{
+  "source_reads": [
+    {
+      "path": "capsules/spectral-bridge/src/ws/telemetry_port.rs",
+      "sha256": "42364feb914c957d487f93c440e30837c500971b41814a219d4c3992a12addd7",
+      "lines": 1041,
+      "bytes": 39749,
+      "read": "complete",
+      "relation": "byte-identical report-bound and current source"
+    },
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_e342d9beff49c7c6e66fdaeaf93a5d427b86f053c9b5c62a1bd15e6b72266d63.json",
+      "sha256": "7ece9a8e30ec07eb424dd6e81ecc4aa70153f9ca2f89ba062db6f6ecdb9549c7",
+      "lines": 491,
+      "bytes": 22126,
+      "read": "complete",
+      "authority": "evidence_only_no_direct_causation_or_live_authority"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/ws/health_trace.rs",
+      "sha256": "8d673856ff2f63f96b92ab07a0cbf632eeb030a0c92ebd231c5d09cec51225a5",
+      "lines": 200,
+      "bytes": 6755,
+      "read": "complete"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/ws/bridge_state.rs",
+      "sha256": "0e6d0603d4b9737a8f65e56b10fcb3e17c0ba15ac9155685ed22b093db8d2117",
+      "lines": 1554,
+      "bytes": 74711,
+      "read_scope": "telemetry timing conversion, EWMA, classification, and diagnostic authority"
+    },
+    {
+      "path": "docs/steward-notes/codex_1785574580_round62_reads/claims/astrid_ws_1785571286.json",
+      "sha256": "8e46007d26bd9116513f30e363b5d46691ef884338a2e0f82613d13e72c8767d",
+      "lines": 34,
+      "bytes": 2057,
+      "read": "complete",
+      "relation": "exact prior grounded claim dispositions"
+    },
+    {
+      "path": "docs/steward-notes/codex_1786051800_ws_sequential_duplicate_round/summaries/astrid_ws_1786048387.md",
+      "sha256": "44543fe6e3db8820a1daa02fe884fda821ae438eed0746b4e957d56a12bc9909",
+      "lines": 11,
+      "bytes": 1999,
+      "read": "complete",
+      "relation": "later independent same-source duplicate"
+    },
+    {
+      "path": "capsules/spectral-bridge/workspace/diagnostics/sandbox_trial_queue_v1/status.json",
+      "sha256": "8e045be85e30fe852d64d06c0c604769d709ff959b9e7934bf39959582683087",
+      "read_scope": "structured trial records trial_4e04f8b28bb44b2f and trial_db5ded51ba8bcb6e",
+      "result_state": "no_result"
+    }
+  ]
+}

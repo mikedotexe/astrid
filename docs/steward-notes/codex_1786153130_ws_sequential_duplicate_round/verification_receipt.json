@@ -1,0 +1,122 @@
+{
+  "schema": "steward_run_verification_receipt_v1",
+  "pause_generation": 271,
+  "run_lifecycle": {
+    "productive_run_id": "run_1786153130852517000_8e332e866c",
+    "productive_run_preprojection": "projection_1786153131778786000_a02bb30f29",
+    "productive_run_terminal_outcome": "cancelled",
+    "productive_run_terminal_reason": "controller maximum-run timeout after durable addressing and Division-return writes",
+    "continuation_run_id": "run_1786155149360002000_b570b64356",
+    "continuation_preprojection": "projection_1786155150317302000_d240eda49d",
+    "continuation_role": "credential-confined receipt sealing and clean terminal projection; no additional productive round",
+    "continuation_finish_outcome": "pending controller finish"
+  },
+  "processed_reports": [
+    "introspection_astrid_ws_1785628139.txt"
+  ],
+  "processed_report_count": 1,
+  "unprocessed_selected_manifest": "unprocessed_selected.json",
+  "addressing": {
+    "status": "addressed_duplicate",
+    "claim_count": 6,
+    "evidence_link_count": 6,
+    "proof_gap_count": 0,
+    "fully_addressed": true
+  },
+  "canonical_counter_audit": {
+    "indexed": 4258,
+    "full_read": 3680,
+    "fully_addressed": 3053,
+    "remaining": 1205,
+    "unread": 578,
+    "read_needs_claims": 0,
+    "blocked": 410,
+    "triaged_pending_action": 213,
+    "triaged_watch": 4,
+    "status": "consistent",
+    "mismatches": []
+  },
+  "work_item_summary": {
+    "tier_4": 23,
+    "tier_5": 1578,
+    "needs_steward_grant": 18,
+    "needs_operator_approval": 1610,
+    "needs_sandbox": 750,
+    "ready_for_implementation": 21,
+    "tier_mismatch_count": 0
+  },
+  "actions": {
+    "new_corridor_programs": 0,
+    "new_sandbox_trials": 0,
+    "new_studies": 0,
+    "new_portfolio_actions": 0,
+    "new_cards": 0,
+    "existing_sandbox_trials": [
+      "trial_4e04f8b28bb44b2f",
+      "trial_db5ded51ba8bcb6e"
+    ],
+    "existing_sandbox_result_available": false,
+    "tier_5_wait": "worker, queue, buffering, backpressure, cancellation, sensory ordering, and cadence changes remain Mike/operator approval waits with live authority false"
+  },
+  "division": {
+    "productive_round_event_id": "division_followup_event_3deecff2c0965f3f686a3a71cc19dbe9",
+    "completed_followup_event_id": "division_followup_event_dc5c97910edfa54934513eb1332f6779",
+    "completed_against_chronicle_id": "division_chronicle_a7494b79f55c8c123b9660b6",
+    "reprojected_chronicle_id": "division_chronicle_9ec39252cb594deb6da05bfa",
+    "new_public_division_replies": 0,
+    "new_formal_ceremony_actions": 0,
+    "astrid_note": "capsules/spectral-bridge/workspace/inbox/read/steward_division_return_cycle20_20260807.txt",
+    "astrid_note_sha256": "943255a317f82051bbee96a1821202d4e88ffee4316846ddb48848ef89c5747c",
+    "minime_note": "/Users/v/other/minime/workspace/inbox/read/steward_division_return_cycle20_20260807.txt",
+    "minime_note_sha256": "051eb19be6c4c968ba635f93dba63c175eed9d6bceec12a085d03088c7d72e3a",
+    "cycle_sequence_after": 21,
+    "completed_rounds_since_followup_after": 0,
+    "rounds_remaining_before_followup_after": 6,
+    "review_due_after": false,
+    "event_count_after": 141,
+    "event_head_sha256_after": "ca0eb4df795d1c44067d29be8028260847c92092c342f30c397988260cfb2d32"
+  },
+  "focused_tests": {
+    "passed": 5,
+    "failed": 0
+  },
+  "stewardship_tests": {
+    "introspection_addressing_passed": 42,
+    "event_store_controller_projector_division_chronicle_claim_family_cursor_passed": 72,
+    "experiential_self_tests_passed": 2,
+    "total_passed": 116,
+    "failed": 0,
+    "epistemic_lint_checked_records": 10632,
+    "epistemic_lint_issues": 0,
+    "history_rewritten": false
+  },
+  "evidence_event_store_continuation_prefinish_snapshot": {
+    "active_store": "v2",
+    "valid": true,
+    "last_global_seq": 729668,
+    "last_event_sha256": "3f8438f46a7bcbff2247a0d000d79b7e314a2cdf96fbfead82f43dc8ef8092c1",
+    "stream_count": 16,
+    "corrupt_lines": 0,
+    "pending_source_events": 0,
+    "v1_immutable": true,
+    "legacy_source_count": 4
+  },
+  "next_reading_queue": [
+    "introspection_astrid_autonomous_1785627823.txt",
+    "introspection_astrid_codec_1785627566.txt",
+    "introspection_proposal_12d_glimpse_1785627314.txt"
+  ],
+  "changelog_updated": true,
+  "feedback_ledger_updated": true,
+  "restart_required_for_this_run": false,
+  "deployment_attempted": false,
+  "live_authority_granted": false,
+  "archival_checkpoint": {
+    "status": "due_after_successful_continuation_finish",
+    "candidate_packet": "docs/steward-notes/codex_1786153130_ws_sequential_duplicate_round/",
+    "mixed_file_commit_debt": [
+      "CHANGELOG.md",
+      "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md"
+    ]
+  }
+}
