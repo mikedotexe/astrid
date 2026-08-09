@@ -43,12 +43,14 @@ secrets.toml
 
 # Compiled WASM test fixtures (rebuild via scripts/compile-test-plugin.sh)
 **/*.wasm
+!crates/astrid-openclaw/kernel/engine.wasm
 
 # Generated test fixtures (rebuilt by test setup)
 crates/astrid-integration-tests/tests/fixtures/
 
-# QuickJS kernel (rebuild via scripts/build-quickjs-kernel.sh)
-# (covered by **/*.wasm above)
+# The reviewed QuickJS kernel is a signed, tracked release input. Deliberate
+# replacements are rebuilt via scripts/build-quickjs-kernel.sh and must update
+# the adjacent BLAKE3 sidecar in the same reviewed change.
 
 # Node.js (packages/)
 packages/*/node_modules/

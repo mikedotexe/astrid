@@ -381,6 +381,9 @@ payloads = {
         (b"version = 4\n", "mutable_build_manifest", "0644", "regular")
     for capsule in capsules
 }
+payloads["source/LICENSE-js-pdk"] = (
+    b"js-pdk fixture license\n", "build_required_immutable", "0644", "regular"
+)
 for service in services:
     payloads[f"source/services/{service}/Cargo.lock"] = (
         b"version = 4\n",

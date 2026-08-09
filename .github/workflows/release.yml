@@ -10,6 +10,7 @@ permissions:
 
 env:
   CARGO_TERM_COLOR: always
+  ASTRID_REQUIRE_KERNEL_HASH: "1"
 
 jobs:
   # ── Build binaries for each platform ──────────────────────────────
@@ -331,10 +332,11 @@ jobs:
           clean_source="$RUNNER_TEMP/cpu-edge-signed-source"
           git worktree add --detach "$clean_source" "$GITHUB_SHA"
           trap 'git worktree remove --force "$clean_source" >/dev/null 2>&1 || true' EXIT
-          test -f crates/astrid-openclaw/kernel/engine.wasm
-          install -D -m 0644 \
+          git -C "$clean_source" ls-files --error-unmatch -- \
             crates/astrid-openclaw/kernel/engine.wasm \
-            "$clean_source/crates/astrid-openclaw/kernel/engine.wasm"
+            crates/astrid-openclaw/kernel/engine.wasm.blake3
+          test -f "$clean_source/crates/astrid-openclaw/kernel/engine.wasm"
+          test ! -L "$clean_source/crates/astrid-openclaw/kernel/engine.wasm"
 
           sync_args=()
           for manifest in \
@@ -521,7 +523,7 @@ jobs:
 
             **From source (requires Rust 1.94+):**
             ```
-            cargo install astrid
+            cargo install --locked --git https://github.com/mikedotexe/astrid.git --tag ${{ github.ref_name }} astrid
             ```
 
             **Pre-built binaries:**

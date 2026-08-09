@@ -2293,6 +2293,8 @@ def expected_source_origin(path):
         return INSPECT_ONLY_ORIGIN
     if denied_source_path(path):
         return None
+    if path == "LICENSE-js-pdk":
+        return "build_required_immutable"
     if path == "Cargo.lock" or path == "Cargo.toml":
         return "mutable_build_manifest"
     if path == "wit/astrid-capsule.wit":
@@ -2455,6 +2457,7 @@ missing_service_locks = sorted(required_service_locks - seen)
 if missing_service_locks:
     raise SystemExit(f"source inventory omits required edge service locks: {missing_service_locks}")
 required_quickjs = {
+    "source/LICENSE-js-pdk",
     "source/crates/astrid-openclaw/kernel/engine.wasm",
     "source/crates/astrid-openclaw/kernel/engine.wasm.blake3",
 }

@@ -223,11 +223,15 @@ mod tests {
     }
 
     #[test]
-    fn kernel_hash_is_stable() {
+    fn reviewed_kernel_identity_is_exact() {
         let h1 = kernel_hash();
         let h2 = kernel_hash();
         assert_eq!(h1, h2, "kernel_hash should be deterministic");
-        assert_eq!(h1.len(), 64, "blake3 hex should be 64 chars");
+        assert_eq!(QUICKJS_KERNEL.len(), 1_568_372);
+        assert_eq!(
+            h1,
+            "8c1685a206c32633d364701e6bd90b6658f1d92959f8136c82ad9a309c114862"
+        );
     }
 
     #[test]

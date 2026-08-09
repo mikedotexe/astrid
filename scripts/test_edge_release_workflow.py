@@ -87,6 +87,14 @@ class ReleaseWorkflowPolicyTests(unittest.TestCase):
         self.assertIn('--manifest-path "$clean_source/Cargo.toml"', build)
         self.assertRegex(build, r"(?m)^\s+--locked \\$")
         self.assertIn('--cargo-lock "$clean_source/Cargo.lock"', build)
+        self.assertIn(
+            'git -C "$clean_source" ls-files --error-unmatch --', build
+        )
+        self.assertIn("crates/astrid-openclaw/kernel/engine.wasm", build)
+        self.assertNotRegex(
+            build,
+            r"install -D -m 0644\s+\\?\s*crates/astrid-openclaw/kernel/engine\.wasm",
+        )
         for service in (
             "astrid-edge-runtime",
             "astrid-edge-checkpoint",
@@ -111,8 +119,24 @@ class ReleaseWorkflowPolicyTests(unittest.TestCase):
         ):
             self.assertIn(capsule, build)
 
+    def test_release_and_cpu_edge_require_the_tracked_quickjs_kernel(self) -> None:
+        self.assertIn('ASTRID_REQUIRE_KERNEL_HASH: "1"', self.text)
+        self.assertNotIn("ASTRID_AUTO_BUILD_KERNEL", self.text)
+        cpu_edge = CPU_EDGE_WORKFLOWS[0].read_text(encoding="utf-8")
+        self.assertIn('ASTRID_REQUIRE_KERNEL_HASH: "1"', cpu_edge)
+        self.assertNotIn("ASTRID_AUTO_BUILD_KERNEL", cpu_edge)
+        self.assertIn("'crates/astrid-openclaw/**'", cpu_edge)
+
     def test_cpu_edge_ci_covers_private_inquiry_and_retirement_surfaces(self) -> None:
         workflow = CPU_EDGE_WORKFLOWS[0].read_text(encoding="utf-8")
+        for path in (
+            "'crates/astrid-hooks/**'",
+            "'scripts/*hardening*'",
+            "'scripts/astrid_train.py'",
+            "'scripts/test_astrid_train.py'",
+        ):
+            with self.subTest(path=path):
+                self.assertEqual(workflow.count(path), 2)
         for test in (
             "scripts/test_astrid_train.py",
             "scripts/test_retire_edge_origin_mac_affordance.py",
@@ -143,6 +167,14 @@ class ReleaseWorkflowPolicyTests(unittest.TestCase):
         )
         self.assertEqual(self.text.count('os.environ["GITHUB_REF_NAME"]'), 2)
         self.assertEqual(self.text.count("does not match workspace"), 2)
+
+    def test_source_install_is_bound_to_the_attested_fork_tag(self) -> None:
+        self.assertIn(
+            "cargo install --locked --git https://github.com/mikedotexe/astrid.git "
+            "--tag ${{ github.ref_name }} astrid",
+            self.text,
+        )
+        self.assertNotIn("cargo install astrid", self.text)
 
 
 if __name__ == "__main__":

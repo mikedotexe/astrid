@@ -212,6 +212,7 @@ extract_dir="$test_root/extracted"
 install -d -m 0755 "$extract_dir"
 tar -C "$extract_dir" -xzf "$archive"
 bundle="$extract_dir/astrid-cpu-edge-test-x86_64-unknown-linux-gnu"
+test -f "$bundle/LICENSE-js-pdk"
 repository_root="$(CDPATH= cd -- "$script_dir/.." && pwd)"
 if find "$bundle" \( -type d -name __pycache__ -o -type f \( -name '*.pyc' -o -name '*.pyo' \) \) -print -quit | grep -q .; then
     printf 'error: interpreter cache entered the CPU-edge archive\n' >&2

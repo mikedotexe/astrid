@@ -114,7 +114,15 @@ fn main() {
         println!("cargo:warning=  Auto-build:   ASTRID_AUTO_BUILD_KERNEL=1 cargo build");
     }
 
-    // Auto-build failed or disabled — write placeholder
+    if require_hash {
+        eprintln!(
+            "\n  error: ASTRID_REQUIRE_KERNEL_HASH=1 but the reviewed QuickJS kernel is absent \
+             or its rebuild failed. Refusing to compile with a placeholder.\n"
+        );
+        std::process::exit(1);
+    }
+
+    // Auto-build failed or disabled — development builds retain the placeholder path.
     write_placeholder(&kernel_dst);
 }
 
@@ -435,6 +443,7 @@ fn install_built_kernel(built_wasm: &Path, kernel_dst: &Path, kernel_dir: &Path)
     // via install_existing_kernel, bypassing enforcement entirely.
     let hash = blake3::hash(&wasm_bytes).to_hex().to_string();
 
+    let hash_path = kernel_dir.join("engine.wasm.blake3");
     if let Some(expected) = EXPECTED_KERNEL_HASH {
         if hash != expected {
             println!(
@@ -444,6 +453,24 @@ fn install_built_kernel(built_wasm: &Path, kernel_dst: &Path, kernel_dir: &Path)
             return false;
         }
         println!("cargo:warning=  [auto-build] blake3 hash verified against pinned value");
+    } else if hash_path.exists() {
+        let Ok(hash_content) = std::fs::read_to_string(&hash_path) else {
+            println!("cargo:warning=  [auto-build] FAILED: cannot read pinned BLAKE3 sidecar");
+            return false;
+        };
+        let Some(expected) = hash_content.split_whitespace().next() else {
+            println!("cargo:warning=  [auto-build] FAILED: pinned BLAKE3 sidecar is empty");
+            return false;
+        };
+        if hash != expected {
+            println!(
+                "cargo:warning=  [auto-build] FAILED: rebuilt kernel disagrees with the \
+                 pinned BLAKE3 sidecar!\n  expected: {expected}\n  actual:   {hash}\n  \
+                 Refusing to replace the reviewed kernel."
+            );
+            return false;
+        }
+        println!("cargo:warning=  [auto-build] blake3 hash verified against pinned sidecar");
     } else {
         println!(
             "cargo:warning=  [auto-build] WARNING: EXPECTED_KERNEL_HASH is None - \
@@ -488,7 +515,6 @@ fn install_built_kernel(built_wasm: &Path, kernel_dst: &Path, kernel_dir: &Path)
     );
 
     // Write blake3 hash file to source tree (only if one doesn't already exist)
-    let hash_path = kernel_dir.join("engine.wasm.blake3");
     if hash_path.exists() {
         println!(
             "cargo:warning=  [auto-build] blake3 hash file already exists - \

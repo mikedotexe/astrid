@@ -21,8 +21,8 @@ KERNEL_DIR="$ROOT_DIR/crates/astrid-openclaw/kernel"
 BUILD_ROOT="${TMPDIR:-/tmp}/quickjs-kernel-build"
 BUILD_DIR="$BUILD_ROOT/js-pdk"
 
-JS_PDK_REPO="https://github.com/nicholasgasior/extism-js.git"
-JS_PDK_TAG="v1.6.0"
+JS_PDK_REPO="https://github.com/extism/js-pdk.git"
+JS_PDK_REV="88eade10a7c6341d5d023cb503962795232fc863"
 
 # Check wasm32-wasip1 target is installed
 if ! rustup target list --installed | grep -q wasm32-wasip1; then
@@ -30,9 +30,14 @@ if ! rustup target list --installed | grep -q wasm32-wasip1; then
     rustup target add wasm32-wasip1
 fi
 
-echo "==> Cloning js-pdk ${JS_PDK_TAG}..."
+echo "==> Fetching reviewed js-pdk ${JS_PDK_REV}..."
 rm -rf "$BUILD_ROOT"
-git clone --depth 1 --branch "$JS_PDK_TAG" "$JS_PDK_REPO" "$BUILD_DIR"
+mkdir -p "$BUILD_DIR"
+git -C "$BUILD_DIR" init --quiet
+git -C "$BUILD_DIR" remote add origin "$JS_PDK_REPO"
+git -C "$BUILD_DIR" fetch --quiet --depth 1 origin "$JS_PDK_REV"
+git -C "$BUILD_DIR" checkout --quiet --detach FETCH_HEAD
+test "$(git -C "$BUILD_DIR" rev-parse HEAD)" = "$JS_PDK_REV"
 
 echo "==> Installing wasi-sdk..."
 cd "$BUILD_DIR"
@@ -62,19 +67,18 @@ if command -v wasm-opt &>/dev/null; then
         "$BUILT_WASM" -o "$BUILT_WASM"
 fi
 
+# A deliberate replacement is reviewable only when the binary and verifier are
+# produced together. Refuse to mutate the tracked pair without b3sum.
+if ! command -v b3sum &>/dev/null; then
+    echo "ERROR: b3sum is required to replace the reviewed QuickJS kernel" >&2
+    exit 1
+fi
 echo "==> Installing kernel..."
 mkdir -p "$KERNEL_DIR"
 cp "$BUILT_WASM" "$KERNEL_DIR/engine.wasm"
-
-# Update blake3 hash
-if command -v b3sum &>/dev/null; then
-    cd "$KERNEL_DIR"
-    b3sum engine.wasm > engine.wasm.blake3
-    echo "==> Updated blake3 hash"
-else
-    echo "==> WARNING: b3sum not found, skipping hash update"
-    echo "    Install with: cargo install b3sum"
-fi
+cd "$KERNEL_DIR"
+b3sum engine.wasm > engine.wasm.blake3
+echo "==> Updated blake3 hash"
 
 SIZE=$(wc -c < "$KERNEL_DIR/engine.wasm" | tr -d ' ')
 echo "==> Success: $KERNEL_DIR/engine.wasm ($SIZE bytes)"

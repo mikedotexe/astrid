@@ -62,6 +62,7 @@ SAFE_COMPONENT = re.compile(r"[A-Za-z0-9][A-Za-z0-9._+-]*\Z")
 SAFE_APPLIANCE_ID = re.compile(r"[a-z0-9][a-z0-9._-]{0,63}\Z")
 QUICKJS_KERNEL_PATH = "crates/astrid-openclaw/kernel/engine.wasm"
 QUICKJS_KERNEL_HASH_PATH = "crates/astrid-openclaw/kernel/engine.wasm.blake3"
+QUICKJS_KERNEL_LICENSE_PATH = "LICENSE-js-pdk"
 
 LOCAL_EDGE_CAPSULES = (
     "astrid-capsule-agents",
@@ -435,6 +436,8 @@ def source_role(path: str) -> str | None:
         return "inspect_only_immutable_boundary"
     if denied_source_path(path):
         return None
+    if path == QUICKJS_KERNEL_LICENSE_PATH:
+        return "build_required_immutable"
     if path in {"Cargo.toml", "Cargo.lock"}:
         return "mutable_build_manifest"
     if path == "wit/astrid-capsule.wit":
@@ -563,6 +566,9 @@ def tracked_source_payloads(repo: Path, object_format: str) -> list[Payload]:
         "source/services/astrid-edge-runtime/Cargo.toml",
         "source/services/astrid-edge-runtime/Cargo.lock",
         "source/crates/astrid-daemon/Cargo.toml",
+        f"source/{QUICKJS_KERNEL_PATH}",
+        f"source/{QUICKJS_KERNEL_HASH_PATH}",
+        f"source/{QUICKJS_KERNEL_LICENSE_PATH}",
         "source/scripts/warm_ollama_model.sh",
     }
     required.update(
@@ -734,22 +740,24 @@ def external_capsule_source_payloads(
     return payloads
 
 
-def quickjs_kernel_payload(repo: Path, tracked: list[Payload]) -> Payload:
-    """Bind the ignored, build-required QuickJS kernel into signed source.
+def validate_quickjs_kernel_payloads(tracked: list[Payload]) -> None:
+    """Validate the indexed, build-required QuickJS kernel inputs.
 
     The tracked BLAKE3 sidecar is syntax-checked here. The Rust build script is
     the final cryptographic BLAKE3 verifier during every locked offline build;
-    this envelope independently binds the exact WASM bytes with SHA-256.
+    the Git object and signed source inventory independently bind the exact WASM
+    bytes with Git object hashing and SHA-256.
     """
 
-    path = repo / QUICKJS_KERNEL_PATH
-    try:
-        metadata = path.lstat()
-    except OSError as error:
-        raise BundleError("required QuickJS engine.wasm payload is absent") from error
-    if path.is_symlink() or not stat.S_ISREG(metadata.st_mode) or metadata.st_nlink != 1:
-        raise BundleError("QuickJS engine.wasm must be a single-linked regular file")
-    data = read_regular(path, limit=MAX_QUICKJS_KERNEL_BYTES)
+    engine = next(
+        (item for item in tracked if item.path == f"source/{QUICKJS_KERNEL_PATH}"),
+        None,
+    )
+    if engine is None:
+        raise BundleError("tracked QuickJS engine.wasm payload is absent")
+    data = payload_bytes(engine)
+    if len(data) > MAX_QUICKJS_KERNEL_BYTES:
+        raise BundleError("QuickJS engine.wasm exceeds its byte ceiling")
     if len(data) < 8 or data[:8] != b"\0asm\x01\0\0\0":
         raise BundleError("QuickJS engine.wasm has an invalid WASM header")
     sidecar = next(
@@ -764,14 +772,6 @@ def quickjs_kernel_payload(repo: Path, tracked: list[Payload]) -> Payload:
         raise BundleError("QuickJS engine.wasm.blake3 is not ASCII") from error
     if re.fullmatch(r"[0-9a-f]{64}  engine\.wasm\n?", sidecar_text) is None:
         raise BundleError("QuickJS engine.wasm.blake3 has an invalid exact record")
-    return Payload(
-        path=f"source/{QUICKJS_KERNEL_PATH}",
-        origin="build_required_immutable",
-        mode=0o644,
-        sha256=sha256_bytes(data),
-        size=len(data),
-        source=path,
-    )
 
 
 def parse_rustc_metadata_bytes(data: bytes) -> tuple[bytes, dict[str, str]]:
@@ -1172,7 +1172,7 @@ def build_bundle(args: argparse.Namespace) -> dict[str, Any]:
     payloads.extend(
         external_capsule_source_payloads(args.external_capsule_source_dir, payloads)
     )
-    payloads.append(quickjs_kernel_payload(repo, payloads))
+    validate_quickjs_kernel_payloads(payloads)
     present_payload_paths = {payload.path for payload in payloads}
     missing_capsule_inputs = sorted(
         f"source/capsules/astralis/{capsule}/{leaf}"
@@ -1336,7 +1336,11 @@ def validate_inventory(manifest: dict[str, Any]) -> list[dict[str, Any]]:
     if manifest.get("file_count") != len(normalized) or manifest.get("uncompressed_bytes") != total:
         raise BundleError("manifest aggregate counts do not match its inventory")
     present = {record["path"] for record in normalized}
-    required = {f"source/{QUICKJS_KERNEL_PATH}", f"source/{QUICKJS_KERNEL_HASH_PATH}"}
+    required = {
+        f"source/{QUICKJS_KERNEL_PATH}",
+        f"source/{QUICKJS_KERNEL_HASH_PATH}",
+        f"source/{QUICKJS_KERNEL_LICENSE_PATH}",
+    }
     required.update(
         f"source/capsules/astralis/{capsule}/{leaf}"
         for capsule in EDGE_CAPSULES

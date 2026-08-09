@@ -5,8 +5,10 @@ on:
     paths:
       - '.github/workflows/cpu-edge.yml'
       - '.github/workflows/release.yml'
+      - '.gitignore'
       - 'Cargo.lock'
       - 'Cargo.toml'
+      - 'LICENSE-js-pdk'
       - 'capsules/astralis/astrid-capsule-agents/**'
       - 'capsules/astralis/astrid-capsule-cli/**'
       - 'capsules/astralis/astrid-capsule-edge-context/**'
@@ -24,8 +26,10 @@ on:
       - 'crates/astrid-core/**'
       - 'crates/astrid-events/**'
       - 'crates/astrid-guest/**'
+      - 'crates/astrid-hooks/**'
       - 'crates/astrid-kernel/**'
       - 'crates/astrid-minime-protocol/**'
+      - 'crates/astrid-openclaw/**'
       - 'crates/astrid-spectral-core/**'
       - 'crates/astrid-types/**'
       - 'docs/headless-linux.md'
@@ -34,8 +38,11 @@ on:
       - 'packaging/headless/**'
       - 'packaging/systemd/**'
       - 'scripts/*edge*'
+      - 'scripts/*hardening*'
       - 'scripts/edge_self_change/**'
       - 'scripts/*headless*'
+      - 'scripts/astrid_train.py'
+      - 'scripts/test_astrid_train.py'
       - 'scripts/astrid_at_a_glance.py'
       - 'scripts/install_essential_capsules.sh'
       - 'scripts/package_edge_appliance.sh'
@@ -56,8 +63,10 @@ on:
     paths:
       - '.github/workflows/cpu-edge.yml'
       - '.github/workflows/release.yml'
+      - '.gitignore'
       - 'Cargo.lock'
       - 'Cargo.toml'
+      - 'LICENSE-js-pdk'
       - 'capsules/astralis/astrid-capsule-agents/**'
       - 'capsules/astralis/astrid-capsule-cli/**'
       - 'capsules/astralis/astrid-capsule-edge-context/**'
@@ -75,8 +84,10 @@ on:
       - 'crates/astrid-core/**'
       - 'crates/astrid-events/**'
       - 'crates/astrid-guest/**'
+      - 'crates/astrid-hooks/**'
       - 'crates/astrid-kernel/**'
       - 'crates/astrid-minime-protocol/**'
+      - 'crates/astrid-openclaw/**'
       - 'crates/astrid-spectral-core/**'
       - 'crates/astrid-types/**'
       - 'docs/headless-linux.md'
@@ -85,8 +96,11 @@ on:
       - 'packaging/headless/**'
       - 'packaging/systemd/**'
       - 'scripts/*edge*'
+      - 'scripts/*hardening*'
       - 'scripts/edge_self_change/**'
       - 'scripts/*headless*'
+      - 'scripts/astrid_train.py'
+      - 'scripts/test_astrid_train.py'
       - 'scripts/astrid_at_a_glance.py'
       - 'scripts/install_essential_capsules.sh'
       - 'scripts/package_edge_appliance.sh'
@@ -108,6 +122,7 @@ permissions:
 
 env:
   CARGO_TERM_COLOR: always
+  ASTRID_REQUIRE_KERNEL_HASH: "1"
 
 jobs:
   ubuntu-22-04:
@@ -207,7 +222,7 @@ jobs:
 
       - name: Core transport and tracing checks
         run: |
-          ASTRID_AUTO_BUILD_KERNEL=1 cargo test \
+          cargo test \
             -p astrid \
             -p astrid-capsule \
             -p astrid-events \

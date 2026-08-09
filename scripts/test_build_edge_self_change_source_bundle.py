@@ -80,6 +80,26 @@ class SourceBundleTests(unittest.TestCase):
         )
         self.assertEqual(required - tracked, set())
 
+    def test_repository_quickjs_kernel_is_reviewable_and_not_ignored(self) -> None:
+        repository = SCRIPT.parent.parent
+        kernel = repository / bundle.QUICKJS_KERNEL_PATH
+        self.assertEqual(kernel.stat().st_size, 1_568_372)
+        self.assertEqual(
+            bundle.sha256_bytes(kernel.read_bytes()),
+            "318c3b10c3f7dea63ba532bbe055a62b6c0d965688769d4f7bc4ca5fbfc8313f",
+        )
+        ignored = subprocess.run(
+            ["git", "check-ignore", "--quiet", "--", bundle.QUICKJS_KERNEL_PATH],
+            cwd=repository,
+            check=False,
+        )
+        self.assertNotEqual(ignored.returncode, 0)
+        self.assertEqual(
+            (repository / bundle.QUICKJS_KERNEL_HASH_PATH).read_text(encoding="ascii"),
+            "8c1685a206c32633d364701e6bd90b6658f1d92959f8136c82ad9a309c114862"
+            "  engine.wasm\n",
+        )
+
     def test_source_and_installer_share_four_gib_uncompressed_bound(self) -> None:
         self.assertEqual(bundle.MAX_UNCOMPRESSED_BYTES, 4 * 1024 * 1024 * 1024)
         installer = SCRIPT.with_name("install_edge_self_evolution_root.sh").read_text(
@@ -161,7 +181,11 @@ rust-version = "1.94"
 """,
         )
         write(self.repo / ".cargo/config.toml", "[net]\noffline = true\n")
-        write(self.repo / ".gitignore", "**/*.wasm\n")
+        write(
+            self.repo / ".gitignore",
+            "**/*.wasm\n!crates/astrid-openclaw/kernel/engine.wasm\n",
+        )
+        write(self.repo / bundle.QUICKJS_KERNEL_LICENSE_PATH, "js-pdk fixture license\n")
         write(self.repo / "clippy.toml", "msrv = \"1.94\"\n")
         write(self.repo / "rustfmt.toml", "edition = \"2024\"\n")
         write(
@@ -484,6 +508,12 @@ LLVM version: {bundle.REQUIRED_LLVM_VERSION}
             records["source/packaging/systemd/astrid-edge-runtime.service"]["origin"],
             "mutable_astrid_service_template",
         )
+        for path in (
+            "source/LICENSE-js-pdk",
+            "source/crates/astrid-openclaw/kernel/engine.wasm",
+            "source/crates/astrid-openclaw/kernel/engine.wasm.blake3",
+        ):
+            self.assertEqual(records[path]["origin"], "build_required_immutable")
         self.assertIn(
             "source/capsules/astralis/astrid-capsule-edge-introspector/Cargo.lock",
             paths,
@@ -824,10 +854,13 @@ LLVM version: {bundle.REQUIRED_LLVM_VERSION}
 
     def test_quickjs_kernel_is_required_and_wasm_header_is_validated(self) -> None:
         kernel = self.repo / bundle.QUICKJS_KERNEL_PATH
-        kernel.unlink()
-        with self.assertRaisesRegex(bundle.BundleError, "engine.wasm payload is absent"):
+        git(self.repo, "rm", "--quiet", str(kernel.relative_to(self.repo)))
+        git(self.repo, "commit", "--quiet", "-m", "remove tracked QuickJS kernel")
+        with self.assertRaisesRegex(bundle.BundleError, "tracked CPU-edge source is absent.*engine.wasm"):
             bundle.build_bundle(self._build_args(self.root / "missing-kernel.tar.gz"))
         write(kernel, b"not-wasm")
+        git(self.repo, "add", "-f", str(kernel.relative_to(self.repo)))
+        git(self.repo, "commit", "--quiet", "-m", "add invalid QuickJS kernel")
         with self.assertRaisesRegex(bundle.BundleError, "invalid WASM header"):
             bundle.build_bundle(self._build_args(self.root / "bad-kernel.tar.gz"))
 
