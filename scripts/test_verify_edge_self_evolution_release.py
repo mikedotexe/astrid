@@ -63,7 +63,7 @@ class ReleaseVerificationTests(unittest.TestCase):
                 source_digest="1" * 40,
             )
         self.assertEqual(identity.sha256, self.digest)
-        self.assertEqual(workflow, "unicity-astrid/astrid/.github/workflows/release.yml")
+        self.assertEqual(workflow, "mikedotexe/astrid/.github/workflows/release.yml")
         command = run.call_args.args[0]
         self.assertIn("--signer-workflow", command)
         self.assertIn("--source-ref", command)

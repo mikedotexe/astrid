@@ -131,6 +131,19 @@ class ReleaseWorkflowPolicyTests(unittest.TestCase):
         self.assertNotIn("inherited corpus for introspection requests", guide)
         self.assertIn("No inherited corpus is available to either appliance.", guide)
 
+    def test_optional_homebrew_notification_cannot_fail_the_fork_release(self) -> None:
+        notification = self.text.split("      - name: Notify Homebrew tap\n", 1)[1]
+        self.assertIn('if [ -z "${GH_TOKEN:-}" ]; then', notification)
+        self.assertIn("skipping Homebrew notification", notification)
+        self.assertIn("exit 0", notification)
+
+    def test_release_tag_is_bound_to_workspace_version_before_both_builds(self) -> None:
+        self.assertEqual(
+            self.text.count("- name: Bind release tag to workspace version"), 2
+        )
+        self.assertEqual(self.text.count('os.environ["GITHUB_REF_NAME"]'), 2)
+        self.assertEqual(self.text.count("does not match workspace"), 2)
+
 
 if __name__ == "__main__":
     unittest.main()

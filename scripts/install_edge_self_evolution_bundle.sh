@@ -247,7 +247,7 @@ root_metadata = extracted_root.lstat()
 if (
     receipt.get("schema") != "astrid.edge.self_evolution_operator_handoff.v1"
     or receipt.get("authority") != "trusted_operator_verified_github_oidc_sigstore_release_handoff"
-    or receipt.get("repository") != "unicity-astrid/astrid"
+    or receipt.get("repository") != "mikedotexe/astrid"
     or receipt.get("signer_workflow") != ".github/workflows/release.yml"
     or not isinstance(receipt.get("source_tag"), str)
     or safe_tag.fullmatch(receipt["source_tag"]) is None

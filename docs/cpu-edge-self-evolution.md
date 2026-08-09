@@ -462,7 +462,7 @@ python3 scripts/verify_edge_self_evolution_release.py \
 
 Use `--appliance icp` and a distinct receipt for ICP. The helper invokes
 `gh attestation verify` with the pinned
-`unicity-astrid/astrid/.github/workflows/release.yml`, rejects self-hosted
+`mikedotexe/astrid/.github/workflows/release.yml`, rejects self-hosted
 runners, verifies the attested subject digest, copies through the existing
 authenticated SSH alias, and verifies the same SHA-256 remotely. It writes an
 owner-only receipt containing the repository, workflow, source ref, source

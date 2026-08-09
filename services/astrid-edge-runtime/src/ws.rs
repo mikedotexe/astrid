@@ -275,9 +275,6 @@ fn external_control_kind(message: &SensoryMsg) -> Option<&'static str> {
         SensoryMsg::Control { .. } => {
             Some("legacy_control_policy_blocked_private_action_executor_only")
         },
-        SensoryMsg::SelfControl { .. } => {
-            Some("self_control_policy_blocked_private_action_executor_only")
-        },
         _ => None,
     }
 }
@@ -315,7 +312,12 @@ mod tests {
             "process".to_string(),
             "deployment".to_string(),
         ));
-        assert!(!hello.supports_self_control_v2());
+        assert!(
+            hello
+                .capabilities
+                .iter()
+                .all(|value| !value.starts_with("self_control_"))
+        );
         assert!(
             hello
                 .capabilities

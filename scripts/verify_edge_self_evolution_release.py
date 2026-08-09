@@ -28,7 +28,7 @@ from typing import Any, Sequence
 
 SCHEMA = "astrid.edge.operator_release_verification.v1"
 PREDICATE = "https://slsa.dev/provenance/v1"
-DEFAULT_REPOSITORY = "unicity-astrid/astrid"
+DEFAULT_REPOSITORY = "mikedotexe/astrid"
 MAX_ARTIFACT_BYTES = 8 * 1024 * 1024 * 1024
 MAX_ATTESTATION_OUTPUT_BYTES = 8 * 1024 * 1024
 COMMIT_DIGEST = re.compile(r"[0-9a-f]{40}\Z")
@@ -67,7 +67,7 @@ from pathlib import Path, PurePosixPath
 
 SCHEMA = "astrid.edge.self_evolution_operator_handoff.v1"
 AUTHORITY = "trusted_operator_verified_github_oidc_sigstore_release_handoff"
-REPOSITORY = "unicity-astrid/astrid"
+REPOSITORY = "mikedotexe/astrid"
 SIGNER_WORKFLOW = ".github/workflows/release.yml"
 BASE = Path("/var/lib/astrid-edge-bootstrap")
 MAX_EXPANDED = 8 * 1024 * 1024 * 1024

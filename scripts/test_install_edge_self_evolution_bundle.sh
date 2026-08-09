@@ -289,7 +289,7 @@ metadata = extracted.stat()
 receipt = {
     "schema": "astrid.edge.self_evolution_operator_handoff.v1",
     "authority": "trusted_operator_verified_github_oidc_sigstore_release_handoff",
-    "repository": "unicity-astrid/astrid",
+    "repository": "mikedotexe/astrid",
     "signer_workflow": ".github/workflows/release.yml",
     "source_tag": "vtest-v1",
     "source_commit": "a" * 40,
