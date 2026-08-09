@@ -1,12 +1,19 @@
 use std::{cmp::Reverse, collections::BTreeSet};
 
 use astrid_guest::{
-    bindings::astrid::capsule::types::FileEntryKind, capsule_result, fs, serde_json, tool,
+    bindings::astrid::capsule::types::{FileEntryKind, NoFollowFileStat},
+    capsule_result, fs, serde_json, sys, tool,
 };
 use serde_json::{Value, json};
 use sha2::{Digest as _, Sha256};
 
 const HOME_ROOT: &str = "home://edge";
+/// Native CPU-edge executor identity stamped on its authenticated IPC requests.
+///
+/// The kernel dispatcher preserves the originating `IpcMessage` as the WASM
+/// invocation caller. This check is therefore enforced at execution time, not
+/// merely by omitting the tools from model-facing description schemas.
+const EDGE_EXECUTOR_SOURCE_ID: &str = "a57d1d30-0000-4000-8000-000000000001";
 const MAX_BASENAMES: usize = 50;
 const MAX_READ_CHARS: usize = 8_000;
 const MAX_QUERY_CHARS: usize = 160;
@@ -63,27 +70,13 @@ type ToolHandler = fn(&Value) -> Result<String, String>;
 
 impl astrid_guest::Guest for EdgeIntrospectorCapsule {
     fn astrid_hook_trigger(action: String, payload: Vec<u8>) -> astrid_guest::CapsuleResult {
-        match action.as_str() {
-            "tool_execute_list_owned_artifacts" => {
-                handle_tool(&payload, "list_owned_artifacts", list_owned_artifacts)
-            },
-            "tool_execute_read_owned_artifact" => {
-                handle_tool(&payload, "read_owned_artifact", read_owned_artifact)
-            },
-            "tool_execute_search_owned_text" => {
-                handle_tool(&payload, "search_owned_text", search_owned_text)
-            },
-            "tool_execute_inspect_owned_question" => {
-                handle_tool(&payload, "inspect_owned_question", inspect_owned_question)
-            },
-            "tool_execute_read_owned_continuity" => {
-                handle_tool(&payload, "read_owned_continuity", read_owned_continuity)
-            },
-            action if action.starts_with("tool_execute_") => {
-                capsule_result::deny("unadvertised introspection tool denied")
-            },
-            _ => capsule_result::continue_empty(),
+        let Some((expected_tool, handler)) = advertised_tool(&action) else {
+            return capsule_result::deny("unadvertised introspection action denied");
+        };
+        if let Err(reason) = require_edge_executor_caller() {
+            return capsule_result::deny(reason);
         }
+        handle_tool(&payload, expected_tool, handler)
     }
 
     fn run() {}
@@ -91,6 +84,35 @@ impl astrid_guest::Guest for EdgeIntrospectorCapsule {
     fn astrid_install() {}
 
     fn astrid_upgrade() {}
+}
+
+fn advertised_tool(action: &str) -> Option<(&'static str, ToolHandler)> {
+    match action {
+        "tool_execute_list_owned_artifacts" => Some(("list_owned_artifacts", list_owned_artifacts)),
+        "tool_execute_read_owned_artifact" => Some(("read_owned_artifact", read_owned_artifact)),
+        "tool_execute_search_owned_text" => Some(("search_owned_text", search_owned_text)),
+        "tool_execute_inspect_owned_question" => {
+            Some(("inspect_owned_question", inspect_owned_question))
+        },
+        "tool_execute_read_owned_continuity" => {
+            Some(("read_owned_continuity", read_owned_continuity))
+        },
+        _ => None,
+    }
+}
+
+fn require_edge_executor_caller() -> Result<(), String> {
+    let caller = sys::get_caller()
+        .map_err(|_| "introspection caller context unavailable; invocation denied".to_string())?;
+    authorize_caller_source(&caller.source_id)
+}
+
+fn authorize_caller_source(source_id: &str) -> Result<(), String> {
+    if source_id == EDGE_EXECUTOR_SOURCE_ID {
+        Ok(())
+    } else {
+        Err("introspection invocation requires the native edge executor".to_string())
+    }
 }
 
 fn handle_tool(
@@ -350,6 +372,12 @@ fn kind_allows_basename(kind: &str, basename: &str) -> bool {
 }
 
 fn read_bounded_file(path: &str, maximum_bytes: usize) -> Result<String, String> {
+    // This guest-side check gives callers a precise policy failure before any
+    // bytes are requested. It is deliberately not treated as a race guard:
+    // the atomic host operation below re-opens without following links and
+    // verifies device/inode/size/link-count/mtime before, during, and after the
+    // read.
+    ensure_bounded_regular_file(path, maximum_bytes)?;
     let maximum = u64::try_from(maximum_bytes)
         .map_err(|_| "artifact byte bound cannot be represented".to_string())?;
     let read = fs::read_bounded_nofollow(path, maximum)?;
@@ -365,12 +393,21 @@ fn read_bounded_file(path: &str, maximum_bytes: usize) -> Result<String, String>
 
 fn ensure_bounded_regular_file(path: &str, maximum_bytes: usize) -> Result<(), String> {
     let stat = fs::lstat_nofollow(path)?;
-    if stat.kind != FileEntryKind::RegularFile || stat.hard_link_count != 1 {
-        return Err(
-            "artifacts must be non-symlink regular files with exactly one hard link".to_string(),
-        );
-    }
+    validate_regular_single_link(&stat)?;
     validate_file_size(stat.size, maximum_bytes)
+}
+
+fn ensure_regular_single_link(path: &str) -> Result<(), String> {
+    let stat = fs::lstat_nofollow(path)?;
+    validate_regular_single_link(&stat)
+}
+
+fn validate_regular_single_link(stat: &NoFollowFileStat) -> Result<(), String> {
+    if stat.kind == FileEntryKind::RegularFile && stat.hard_link_count == 1 {
+        Ok(())
+    } else {
+        Err("artifacts must be non-symlink regular files with exactly one hard link".to_string())
+    }
 }
 
 fn validate_file_size(size: u64, maximum_bytes: usize) -> Result<(), String> {
@@ -436,12 +473,15 @@ fn selected_kinds(args: &Value) -> Result<Vec<(&'static str, &'static str)>, Str
 }
 
 fn validate_basename(value: &str) -> Result<(), String> {
+    let lower = value.to_ascii_lowercase();
     if value.is_empty()
         || value.chars().count() > 128
         || value.starts_with('.')
         || value.contains('/')
         || value.contains('\\')
         || value.contains("..")
+        || lower.contains("origin-mac")
+        || lower.contains("origin_mac")
         || value.chars().any(char::is_control)
     {
         return Err("artifact reference must be a visible basename".to_string());
@@ -602,6 +642,10 @@ fn read_jsonl_tail(
     if !fs::exists(path)? {
         return Ok(Vec::new());
     }
+    // Ledgers may legitimately exceed the tail byte cap, so preflight only
+    // the entry type/link count here. The atomic host tail read enforces the
+    // byte bound and stable identity.
+    ensure_regular_single_link(path)?;
     let maximum = u64::try_from(MAX_FILE_BYTES_CONSIDERED)
         .map_err(|_| "JSONL tail bound cannot be represented".to_string())?;
     let read = fs::read_tail_nofollow(path, maximum)?;
@@ -780,12 +824,14 @@ astrid_guest::export!(EdgeIntrospectorCapsule with_types_in astrid_guest::bindin
 #[cfg(test)]
 mod tests {
     use super::{
-        MAX_EXCERPT_CHARS, MAX_SCALAR_CHARS, best_question_line, bounded_limit,
-        complete_jsonl_tail, is_recovery_record, kind_allows_basename, literal_excerpt,
-        normalized_words, question_terms, require_exact_argument_keys, sanitize_evidence,
-        sanitize_thread, selected_kinds, valid_action_evidence, valid_web_evidence,
-        validate_basename, validate_file_size,
+        EDGE_EXECUTOR_SOURCE_ID, MAX_EXCERPT_CHARS, MAX_SCALAR_CHARS, advertised_tool,
+        authorize_caller_source, best_question_line, bounded_limit, complete_jsonl_tail,
+        is_recovery_record, kind_allows_basename, literal_excerpt, normalized_words,
+        question_terms, require_exact_argument_keys, sanitize_evidence, sanitize_thread,
+        selected_kinds, valid_action_evidence, valid_web_evidence, validate_basename,
+        validate_file_size, validate_regular_single_link,
     };
+    use astrid_guest::bindings::astrid::capsule::types::{FileEntryKind, NoFollowFileStat};
     use astrid_guest::serde_json::json;
 
     #[test]
@@ -831,6 +877,25 @@ mod tests {
         assert!(validate_basename("observation_1.json").is_ok());
         assert!(validate_file_size(64, 64).is_ok());
         assert!(validate_file_size(65, 64).is_err());
+    }
+
+    #[test]
+    fn exact_entry_policy_rejects_links_directories_and_special_nodes() {
+        let stat = |kind, hard_link_count| NoFollowFileStat {
+            size: 12,
+            kind,
+            mtime: Some(1),
+            hard_link_count,
+        };
+        assert!(validate_regular_single_link(&stat(FileEntryKind::RegularFile, 1)).is_ok());
+        for rejected in [
+            stat(FileEntryKind::RegularFile, 2),
+            stat(FileEntryKind::Symlink, 1),
+            stat(FileEntryKind::Directory, 1),
+            stat(FileEntryKind::Other, 1),
+        ] {
+            assert!(validate_regular_single_link(&rejected).is_err());
+        }
     }
 
     #[test]
@@ -977,6 +1042,19 @@ mod tests {
     }
 
     #[test]
+    fn inherited_origin_mac_references_are_rejected_at_the_capsule_boundary() {
+        for value in [
+            "origin-mac.txt",
+            "ORIGIN-MAC.json",
+            "origin_mac.md",
+            "origin-mac/first.txt",
+        ] {
+            assert!(validate_basename(value).is_err(), "accepted {value}");
+        }
+        assert!(validate_basename("local-reflection.md").is_ok());
+    }
+
+    #[test]
     fn continuity_and_evidence_scalars_are_bounded_and_typed() {
         let long = "x".repeat(MAX_SCALAR_CHARS.saturating_add(100));
         let thread = sanitize_thread(&json!({
@@ -1008,7 +1086,7 @@ mod tests {
     }
 
     #[test]
-    fn manifest_is_model_hidden_but_keeps_direct_executor_routes() {
+    fn empty_prompt_allowlist_cannot_discover_model_hidden_introspector() {
         let manifest = include_str!("../Capsule.toml");
         for forbidden in [
             "tool.v1.request.describe",
@@ -1029,6 +1107,69 @@ mod tests {
             "tool.v1.execute.*.result",
         ] {
             assert!(manifest.contains(expected), "missing route: {expected}");
+        }
+
+        // The CPU-edge prompt builder treats an empty allowlist as deny-all,
+        // not as discovery of every installed tool. This capsule also has no
+        // describe route, so neither empty nor explicitly broadened prompt
+        // profiles can discover its private schemas.
+        let allowlist_patch =
+            include_str!("../../../../packaging/headless/astralis-sdk-0.6-tool-allowlist.patch");
+        assert!(allowlist_patch.contains("Empty means no discovered tools"));
+        assert!(allowlist_patch.contains("An empty model tool allowlist exposes no schemas"));
+        assert!(!allowlist_patch.contains("blank exposes every discovered tool"));
+        assert!(!allowlist_patch.contains("if !tool_allowlist.is_empty()"));
+
+        for profile in [
+            include_str!("../../../../packaging/headless/prompt-builder-cpu.env.json"),
+            include_str!("../../../../packaging/headless/prompt-builder-icp-bootstrap.env.json"),
+        ] {
+            assert!(!profile.contains("owned_artifact"));
+            assert!(!profile.contains("owned_text"));
+            assert!(!profile.contains("owned_continuity"));
+            assert!(!profile.contains("inspect_owned"));
+        }
+    }
+
+    #[test]
+    fn authorization_accepts_only_the_exact_native_edge_executor() {
+        assert!(authorize_caller_source(EDGE_EXECUTOR_SOURCE_ID).is_ok());
+        for rejected in [
+            "",
+            "a57d1d30-0000-4000-8000-000000000000",
+            "A57D1D30-0000-4000-8000-000000000001",
+            "a57d1d30-0000-4000-8000-000000000001 ",
+            "astrid-capsule-react",
+        ] {
+            assert!(
+                authorize_caller_source(rejected).is_err(),
+                "accepted {rejected}"
+            );
+        }
+    }
+
+    #[test]
+    fn authorization_boundary_rejects_every_unadvertised_action() {
+        for advertised in [
+            "tool_execute_list_owned_artifacts",
+            "tool_execute_read_owned_artifact",
+            "tool_execute_search_owned_text",
+            "tool_execute_inspect_owned_question",
+            "tool_execute_read_owned_continuity",
+        ] {
+            assert!(
+                advertised_tool(advertised).is_some(),
+                "missing {advertised}"
+            );
+        }
+        for rejected in [
+            "tool_execute_shell",
+            "tool_execute_read_owned_artifacts",
+            "tool_describe",
+            "before_tool_call",
+            "",
+        ] {
+            assert!(advertised_tool(rejected).is_none(), "accepted {rejected}");
         }
     }
 }

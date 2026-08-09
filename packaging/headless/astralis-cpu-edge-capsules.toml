@@ -40,18 +40,19 @@ revision = "b6f21b4c300ad397dfb5a1e79a7f1c76fc9ecfd5"
 lockfile = "packaging/headless/astralis-locks/prompt-builder.Cargo.lock"
 lock_sha256 = "f61d739c6011f74775fbb7186844a4274bc8c282ae8ff06be8bf915b67d26b86"
 source_blob_cargo_toml = "0d1745b90925cfac2c5bfa595869530d258927ac"
-source_blob_capsule_toml = "12925d67e05c656d6d8fe9d470886211f7f50134"
-source_blob_lib_rs = "77d12f14773de71e620e47e6da2b12e02c199bb1"
-source_blob_tests_rs = "daf54177486b453e1b0fe80f15ae8f27df808799"
+source_blob_capsule_toml = "a45edb5ce1cd699bcb4943bd3d5b0eca464c21b7"
+source_blob_lib_rs = "a4035f15b096b97b6b7ae68544142e0486d94e0f"
+source_blob_tests_rs = "b43a9ecee48aae9629e12752924e6c22a3199782"
 steps = [
   { kind = "patch", file = "packaging/headless/astralis-sdk-0.6-prompt-builder-exact-abi.patch", sha256 = "ad59c70cc60b1f68ab055fb4d719db366518cc77a2b8c644188b382620e615bf" },
   { kind = "patch", file = "packaging/headless/astralis-sdk-0.6-prompt-builder-daemon.patch", sha256 = "6e938e5d6e7f1d693763ecc407c8a11de6f96584a5a48842c37ac0df39ba96c3" },
   { kind = "patch", file = "packaging/headless/astralis-sdk-0.6-fresh-tool-discovery.patch", sha256 = "ac3bd91ecfc8848c87f8e2009c41243e5579bf264ecb2a6210cccbefd14a87ea" },
-  { kind = "patch", file = "packaging/headless/astralis-sdk-0.6-tool-allowlist.patch", sha256 = "00b5d08db85aca238d8ba77a698ae04969c88a85075178041e0d0924850bd403" },
+  { kind = "patch", file = "packaging/headless/astralis-sdk-0.6-tool-allowlist.patch", sha256 = "633817d5cbb8a199c3d315bf886d1bd4ead24aa704bdadd909b36d801306aeea" },
   { kind = "patch", file = "packaging/headless/astralis-sdk-0.6-direct-prompt-hooks.patch", sha256 = "f7a3e0b217603c7d5a6f5b4178a8825818fa1080a4f5c97726d34aa314186b85" },
-  { kind = "patch", file = "packaging/headless/astralis-sdk-0.6-prompt-builder-explicit-web-tools.patch", sha256 = "5c4f18dc2ed7e7dfccf45eca9301ff041ecbce653488728b52e27855c65e834b" },
+  { kind = "patch", file = "packaging/headless/astralis-sdk-0.6-prompt-builder-explicit-web-tools.patch", sha256 = "98ac4ca05f7c9bd73f6029e8f9a58eb931b6be13ddd17288b9953f67ff009591" },
   { kind = "patch", file = "packaging/headless/astralis-sdk-0.6-prompt-builder-test-only-legacy.patch", sha256 = "e0df61f925dc952593bf4a5e5a4d4156e65912609e9726f4839ec01408a3ab6f" },
   { kind = "patch", file = "packaging/headless/astralis-sdk-0.6-prompt-builder-host-tests.patch", sha256 = "f16271f5e960dba24e5b26dd1ac573cc3dad4d5a0bd9278ca8c2ff0d6a994d35" },
+  { kind = "patch", file = "packaging/headless/astralis-sdk-0.6-prompt-builder-deny-empty-tests.patch", sha256 = "87933fdedbdcc584513aef7225312b7066f0fb97cf345f082fdc50c9d25e4665" },
   { kind = "rustfmt" },
 ]
 

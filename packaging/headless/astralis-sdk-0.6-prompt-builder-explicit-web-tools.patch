@@ -4,7 +4,7 @@ diff --git a/Capsule.toml b/Capsule.toml
 @@ -17,6 +17,7 @@ type = "daemon"
  
  [env]
- tool_allowlist = { type = "string", default = "fetch_url", request = "Comma-separated tool names exposed to the model; blank exposes every discovered tool" }
+ tool_allowlist = { type = "string", default = "fetch_url", request = "Comma-separated tool names exposed to the model; blank exposes no tool schemas" }
 +web_tools_on_explicit_request_only = { type = "string", default = "false", request = "Expose allowlisted web schemas only when the latest user message explicitly requests web/search/fetch" }
  
  [publish]
@@ -14,7 +14,7 @@ diff --git a/src/lib.rs b/src/lib.rs
 +++ b/src/lib.rs
 @@ -32,6 +32,8 @@ struct Config {
      hook_timeout_ms: u64,
-     /// Tool names exposed to the model. Empty means all discovered tools.
+     /// Tool names exposed to the model. Empty means no discovered tools.
      tool_allowlist: std::collections::HashSet<String>,
 +    /// Whether ordinary turns omit web schemas until the latest user asks.
 +    web_tools_on_explicit_request_only: bool,

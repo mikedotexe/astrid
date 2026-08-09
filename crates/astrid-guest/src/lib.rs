@@ -124,6 +124,11 @@ pub mod fs {
     }
 
     /// Inspect an exact path entry without following symbolic links.
+    ///
+    /// This is a classification/preflight surface, not a stable read token.
+    /// Callers that consume bytes must use [`read_bounded_nofollow`] or
+    /// [`read_tail_nofollow`], whose host operation binds and revalidates the
+    /// opened file identity across the read.
     pub fn lstat_nofollow(path: &str) -> Result<NoFollowFileStat, String> {
         host_fs::fs_lstat_nofollow(path)
     }
@@ -233,11 +238,20 @@ pub mod process {
 /// System helpers.
 pub mod sys {
     use crate::bindings::astrid::capsule::sys as host_sys;
-    use crate::bindings::astrid::capsule::types::LogLevel;
+    use crate::bindings::astrid::capsule::types::{CallerContext, LogLevel};
 
     /// Read a manifest/config value.
     pub fn get_config(key: &str) -> Result<String, String> {
         host_sys::get_config(key)
+    }
+
+    /// Return the kernel-carried caller for the current interceptor invocation.
+    ///
+    /// Direct calls without an originating IPC message return an empty caller
+    /// context. Capsules enforcing source authority should therefore compare
+    /// `source_id` against an exact allowlisted identity and fail closed.
+    pub fn get_caller() -> Result<CallerContext, String> {
+        host_sys::get_caller()
     }
 
     /// Emit an info log.

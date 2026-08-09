@@ -247,7 +247,7 @@ hash_file() { sha256sum -- "$1" | awk '{print $1}'; }
 operator_home_wrapper() {
     local target=$1
     case "$target" in
-        "$OPERATOR_REPORT_ROOT/astrid-at-a-glance"|"$OPERATOR_REPORT_ROOT/report-edge-appliance"|"$OPERATOR_REPORT_ROOT/report-edge-activity") ;;
+        "$OPERATOR_REPORT_ROOT/astrid-at-a-glance"|"$OPERATOR_REPORT_ROOT/astrid-train"|"$OPERATOR_REPORT_ROOT/report-edge-appliance"|"$OPERATOR_REPORT_ROOT/report-edge-activity") ;;
         *) die "operator home wrapper target is not allowlisted" ;;
     esac
     cat <<EOF
@@ -572,6 +572,7 @@ fi
 operator_home_bin=$state_root/bin
 declare -a operator_home_wrappers=(
     "$runtime_home/astrid-at-a-glance"
+    "$runtime_home/astrid-train"
     "$operator_home_bin/report-edge-appliance"
     "$operator_home_bin/report-edge-activity"
 )
@@ -584,7 +585,9 @@ if $live_run; then
     readonly -a EXPECTED_OPERATOR_REPORT_MEMBERS=(
         MANIFEST.sha256
         astrid-at-a-glance
+        astrid-train
         astrid_at_a_glance.py
+        astrid_train.py
         report-edge-activity
         report-edge-appliance
         report_edge_activity.py
@@ -596,7 +599,7 @@ if $live_run; then
         validate_root_regular "$OPERATOR_REPORT_ROOT/$member" "immutable operator report member"
         IFS=' ' read -r member_owner member_mode member_links < <(stat_values "$OPERATOR_REPORT_ROOT/$member")
         expected_mode=444
-        [[ $member == astrid-at-a-glance || $member == report-edge-activity || $member == report-edge-appliance ]] && expected_mode=555
+        [[ $member == astrid-at-a-glance || $member == astrid-train || $member == report-edge-activity || $member == report-edge-appliance ]] && expected_mode=555
         [[ $member_owner == 0 && $member_mode == "$expected_mode" && $member_links == 1 ]] \
             || die "immutable operator report member identity is invalid: $member"
     done
@@ -852,6 +855,7 @@ done
 for wrapper in "${operator_home_wrappers[@]}"; do
     case "${wrapper##*/}" in
         astrid-at-a-glance) operator_target=$OPERATOR_REPORT_ROOT/astrid-at-a-glance ;;
+        astrid-train) operator_target=$OPERATOR_REPORT_ROOT/astrid-train ;;
         report-edge-appliance) operator_target=$OPERATOR_REPORT_ROOT/report-edge-appliance ;;
         report-edge-activity) operator_target=$OPERATOR_REPORT_ROOT/report-edge-activity ;;
         *) die "operator wrapper path escaped the exact allowlist" ;;

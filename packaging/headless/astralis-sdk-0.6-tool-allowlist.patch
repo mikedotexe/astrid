@@ -6,7 +6,7 @@ diff --git a/Capsule.toml b/Capsule.toml
  "astrid:prompt" = "1.0.0"
  
 +[env]
-+tool_allowlist = { type = "string", default = "fetch_url", request = "Comma-separated tool names exposed to the model; blank exposes every discovered tool" }
++tool_allowlist = { type = "string", default = "fetch_url", request = "Comma-separated tool names exposed to the model; blank exposes no tool schemas" }
 +
  [publish]
  "prompt_builder.v1.response.*" = { wit = "@unicity-astrid/wit/prompt/assemble-response" }
@@ -17,7 +17,7 @@ diff --git a/src/lib.rs b/src/lib.rs
 @@ -30,5 +30,7 @@ struct Config {
      /// Maximum time (in milliseconds) to wait for plugin hook responses.
      hook_timeout_ms: u64,
-+    /// Tool names exposed to the model. Empty means all discovered tools.
++    /// Tool names exposed to the model. Empty means no discovered tools.
 +    tool_allowlist: std::collections::HashSet<String>,
  }
  
@@ -61,17 +61,17 @@ diff --git a/src/lib.rs b/src/lib.rs
 -        all_tools.len()
 -    ));
 +    let discovered_count = all_tools.len();
-+    if !tool_allowlist.is_empty() {
-+        all_tools.retain(|tool| {
-+            tool.get("name")
-+                .and_then(|name| name.as_str())
-+                .is_some_and(|name| tool_allowlist.contains(name))
-+        });
-+    }
++    // An empty model tool allowlist exposes no schemas. Private capsules must
++    // never become model-visible because a profile omitted configuration.
++    all_tools.retain(|tool| {
++        tool.get("name")
++            .and_then(|name| name.as_str())
++            .is_some_and(|name| tool_allowlist.contains(name))
++    });
 +
 +    if tool_allowlist.is_empty() {
 +        log::info(format!(
-+            "Collected all {discovered_count} tool schemas via trigger_hook"
++            "Selected 0 of {discovered_count} discovered tool schemas: empty allowlist is deny-all"
 +        ));
 +    } else {
 +        log::info(format!(

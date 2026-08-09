@@ -826,10 +826,12 @@ mod tests {
     }
 
     #[test]
-    fn symlink_components_and_hardlinks_never_reach_file_bytes() {
+    fn symlinks_inside_or_outside_and_hardlinks_never_reach_file_bytes() {
         let root = tempfile::tempdir().unwrap();
+        let outside = tempfile::tempdir().unwrap();
         std::fs::create_dir(root.path().join("owned")).unwrap();
         std::fs::write(root.path().join("owned/secret.txt"), b"must-not-read").unwrap();
+        std::fs::write(outside.path().join("outside.txt"), b"outside-must-not-read").unwrap();
 
         #[cfg(unix)]
         {
@@ -838,6 +840,22 @@ mod tests {
                 resolve_no_follow_entry_at(root.path(), Path::new("owned/link.txt")).unwrap();
             assert_eq!(super::entry_kind(&link.metadata), FileEntryKind::Symlink);
             assert!(read_bounded_no_follow_entry(link, 64, BoundedFileReadMode::Whole).is_err());
+
+            std::os::unix::fs::symlink(
+                outside.path().join("outside.txt"),
+                root.path().join("owned/outside-link.txt"),
+            )
+            .unwrap();
+            let outside_link =
+                resolve_no_follow_entry_at(root.path(), Path::new("owned/outside-link.txt"))
+                    .unwrap();
+            assert_eq!(
+                super::entry_kind(&outside_link.metadata),
+                FileEntryKind::Symlink
+            );
+            assert!(
+                read_bounded_no_follow_entry(outside_link, 64, BoundedFileReadMode::Whole).is_err()
+            );
 
             std::os::unix::fs::symlink("owned", root.path().join("owned-link")).unwrap();
             assert!(
@@ -855,6 +873,32 @@ mod tests {
             resolve_no_follow_entry_at(root.path(), Path::new("owned/hardlink.txt")).unwrap();
         assert!(hardlink.metadata.nlink() > 1);
         assert!(read_bounded_no_follow_entry(hardlink, 64, BoundedFileReadMode::Whole).is_err());
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn fifo_socket_and_directory_entries_are_rejected_before_open() {
+        use nix::sys::stat::Mode;
+        use nix::unistd::mkfifo;
+
+        let root = tempfile::tempdir().unwrap();
+        mkfifo(&root.path().join("pipe"), Mode::S_IRUSR | Mode::S_IWUSR).unwrap();
+        let fifo = resolve_no_follow_entry_at(root.path(), Path::new("pipe")).unwrap();
+        assert_eq!(super::entry_kind(&fifo.metadata), FileEntryKind::Other);
+        assert!(read_bounded_no_follow_entry(fifo, 64, BoundedFileReadMode::Whole).is_err());
+
+        let _listener = std::os::unix::net::UnixListener::bind(root.path().join("socket")).unwrap();
+        let socket = resolve_no_follow_entry_at(root.path(), Path::new("socket")).unwrap();
+        assert_eq!(super::entry_kind(&socket.metadata), FileEntryKind::Other);
+        assert!(read_bounded_no_follow_entry(socket, 64, BoundedFileReadMode::Whole).is_err());
+
+        std::fs::create_dir(root.path().join("directory")).unwrap();
+        let directory = resolve_no_follow_entry_at(root.path(), Path::new("directory")).unwrap();
+        assert_eq!(
+            super::entry_kind(&directory.metadata),
+            FileEntryKind::Directory
+        );
+        assert!(read_bounded_no_follow_entry(directory, 64, BoundedFileReadMode::Whole).is_err());
     }
 
     #[test]
