@@ -1,6 +1,6 @@
 //! Event bus for broadcasting events to subscribers.
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
@@ -24,6 +24,230 @@ const MAX_LOCAL_PROVIDER_TURNS: usize = 16_384;
 const LOCAL_PROVIDER_TURN_TTL: Duration = Duration::from_secs(30 * 60);
 const CANONICAL_AGENT_RESPONSE_TOPIC: &str = "agent.v1.response";
 const REACT_CAPSULE_ID: &str = "astrid-capsule-react";
+const GENERATION_LEASE_SCHEMA: &str = "astrid.edge_self_change.maintenance_lease.v2";
+const GENERATION_LEASE_KIND: &str = "generation_transition";
+const REFLECTION_LEASE_SCHEMA: &str = "astrid.edge_scheduled_reflection.lease.v1";
+const REFLECTION_LEASE_KIND: &str = "scheduled_reflection";
+
+/// Exact, process-local activity counts used only to prove a CPU-edge
+/// maintenance drain. These observations never grant authority.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct MaintenanceActivitySnapshot {
+    /// Whether every activity transition since process start was exact.
+    pub exact: bool,
+    /// Number of admitted conversations without a canonical terminal response.
+    pub active_conversations: usize,
+    /// Number of distinct sessions represented by active conversations.
+    pub active_sessions: usize,
+    /// Number of tool calls without a terminal result.
+    pub active_tools: usize,
+    /// Number of provider requests without an exact terminal response or
+    /// terminal stream event.
+    pub active_llm_requests: usize,
+}
+
+#[derive(Debug)]
+struct MaintenanceGate {
+    blocked: bool,
+    exact: bool,
+    conversations: BTreeMap<uuid::Uuid, String>,
+    tools: BTreeMap<String, uuid::Uuid>,
+    llm_requests: BTreeMap<uuid::Uuid, uuid::Uuid>,
+}
+
+impl Default for MaintenanceGate {
+    fn default() -> Self {
+        Self {
+            blocked: false,
+            exact: true,
+            conversations: BTreeMap::new(),
+            tools: BTreeMap::new(),
+            llm_requests: BTreeMap::new(),
+        }
+    }
+}
+
+impl MaintenanceGate {
+    fn admits_while_blocked(&self, message: &IpcMessage) -> bool {
+        match &message.payload {
+            IpcPayload::UserInput { .. } => false,
+            IpcPayload::AgentResponse { session_id, .. } => message
+                .trace
+                .as_ref()
+                .filter(|trace| trace.is_supported())
+                .is_some_and(|trace| self.conversations.get(&trace.trace_id) == Some(session_id)),
+            IpcPayload::LlmRequest { request_id, .. } => {
+                !request_id.is_nil()
+                    && !self.llm_requests.contains_key(request_id)
+                    && message
+                        .trace
+                        .as_ref()
+                        .filter(|trace| trace.is_supported())
+                        .is_some_and(|trace| self.conversations.contains_key(&trace.trace_id))
+            },
+            IpcPayload::LlmStreamEvent { request_id, .. }
+            | IpcPayload::LlmResponse { request_id, .. } => {
+                !request_id.is_nil()
+                    && self.llm_requests.get(request_id).is_some_and(|expected| {
+                        message
+                            .trace
+                            .as_ref()
+                            .is_none_or(|trace| trace.is_supported() && trace.trace_id == *expected)
+                    })
+            },
+            IpcPayload::ToolExecuteRequest { call_id, .. } => message
+                .trace
+                .as_ref()
+                .filter(|trace| trace.is_supported())
+                .is_some_and(|trace| {
+                    self.conversations.contains_key(&trace.trace_id)
+                        && !self.tools.contains_key(call_id)
+                }),
+            IpcPayload::ToolExecuteResult { call_id, .. } => message
+                .trace
+                .as_ref()
+                .filter(|trace| trace.is_supported())
+                .is_some_and(|trace| self.tools.get(call_id) == Some(&trace.trace_id)),
+            IpcPayload::ToolCancelRequest { call_ids } => message
+                .trace
+                .as_ref()
+                .filter(|trace| trace.is_supported())
+                .is_some_and(|trace| {
+                    !call_ids.is_empty()
+                        && call_ids
+                            .iter()
+                            .all(|call_id| self.tools.get(call_id) == Some(&trace.trace_id))
+                }),
+            _ => true,
+        }
+    }
+
+    fn observe_before_publish(&mut self, message: &IpcMessage) {
+        match &message.payload {
+            IpcPayload::UserInput { session_id, .. }
+                if message.topic != "sensory.v1.user_input" =>
+            {
+                let Some(trace) = message.trace.as_ref().filter(|trace| trace.is_supported())
+                else {
+                    self.exact = false;
+                    return;
+                };
+                if self
+                    .conversations
+                    .insert(trace.trace_id, session_id.clone())
+                    .is_some()
+                {
+                    self.exact = false;
+                }
+            },
+            IpcPayload::ToolExecuteRequest { call_id, .. } => {
+                let Some(trace) = message.trace.as_ref().filter(|trace| trace.is_supported())
+                else {
+                    self.exact = false;
+                    return;
+                };
+                if self.tools.insert(call_id.clone(), trace.trace_id).is_some() {
+                    self.exact = false;
+                }
+            },
+            IpcPayload::LlmRequest { request_id, .. } => {
+                let Some(trace) = message.trace.as_ref().filter(|trace| trace.is_supported())
+                else {
+                    self.exact = false;
+                    return;
+                };
+                if request_id.is_nil()
+                    || !self.conversations.contains_key(&trace.trace_id)
+                    || self.llm_requests.contains_key(request_id)
+                {
+                    self.exact = false;
+                    return;
+                }
+                self.llm_requests.insert(*request_id, trace.trace_id);
+            },
+            IpcPayload::LlmStreamEvent { request_id, .. }
+            | IpcPayload::LlmResponse { request_id, .. } => {
+                let Some(trace) = message.trace.as_ref().filter(|trace| trace.is_supported())
+                else {
+                    self.exact = false;
+                    return;
+                };
+                if self.llm_requests.get(request_id) != Some(&trace.trace_id) {
+                    self.exact = false;
+                }
+            },
+            _ => {},
+        }
+    }
+
+    fn observe_after_publish(&mut self, message: &IpcMessage) {
+        match &message.payload {
+            IpcPayload::AgentResponse {
+                is_final: true,
+                session_id,
+                ..
+            } if message.topic == CANONICAL_AGENT_RESPONSE_TOPIC
+                && message.producer.as_ref().is_some_and(|producer| {
+                    producer.is_supported()
+                        && producer.kind == "wasm_capsule"
+                        && producer.id == REACT_CAPSULE_ID
+                }) =>
+            {
+                let Some(trace) = message.trace.as_ref().filter(|trace| trace.is_supported())
+                else {
+                    self.exact = false;
+                    return;
+                };
+                if self.conversations.get(&trace.trace_id) != Some(session_id)
+                    || trace.session_id.as_deref() != Some(session_id.as_str())
+                {
+                    self.exact = false;
+                    return;
+                }
+                self.conversations.remove(&trace.trace_id);
+            },
+            IpcPayload::ToolExecuteResult { call_id, .. } => {
+                let Some(trace) = message.trace.as_ref().filter(|trace| trace.is_supported())
+                else {
+                    self.exact = false;
+                    return;
+                };
+                if self.tools.get(call_id) != Some(&trace.trace_id) {
+                    self.exact = false;
+                    return;
+                }
+                self.tools.remove(call_id);
+            },
+            IpcPayload::LlmResponse { request_id, .. }
+            | IpcPayload::LlmStreamEvent {
+                request_id,
+                event: crate::llm::StreamEvent::Done | crate::llm::StreamEvent::Error(_),
+            } => {
+                let Some(trace) = message.trace.as_ref().filter(|trace| trace.is_supported())
+                else {
+                    self.exact = false;
+                    return;
+                };
+                if self.llm_requests.get(request_id) != Some(&trace.trace_id) {
+                    self.exact = false;
+                    return;
+                }
+                self.llm_requests.remove(request_id);
+            },
+            _ => {},
+        }
+    }
+
+    fn snapshot(&self) -> MaintenanceActivitySnapshot {
+        MaintenanceActivitySnapshot {
+            exact: self.exact,
+            active_conversations: self.conversations.len(),
+            active_sessions: self.conversations.values().collect::<BTreeSet<_>>().len(),
+            active_tools: self.tools.len(),
+            active_llm_requests: self.llm_requests.len(),
+        }
+    }
+}
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 #[allow(clippy::struct_field_names)]
@@ -479,6 +703,10 @@ pub struct EventBus {
     ipc_seq: Arc<AtomicU64>,
     /// Exact protocol-identifier trace correlations.
     ipc_traces: Arc<Mutex<IpcTraceRegistry>>,
+    /// Immutable-updater maintenance gate for new user work. This is a
+    /// process-local routing boundary, not a capability or authorization
+    /// substitute.
+    maintenance_gate: Arc<Mutex<MaintenanceGate>>,
 }
 
 impl EventBus {
@@ -492,6 +720,19 @@ impl EventBus {
                     .disable_for_process(Instant::now());
                 warn!("IPC trace registry poisoned; local-provider attribution disabled");
                 registry
+            },
+        }
+    }
+
+    fn lock_maintenance_gate(&self) -> std::sync::MutexGuard<'_, MaintenanceGate> {
+        match self.maintenance_gate.lock() {
+            Ok(gate) => gate,
+            Err(poisoned) => {
+                let mut gate = poisoned.into_inner();
+                gate.blocked = true;
+                gate.exact = false;
+                warn!("maintenance activity registry poisoned; self-change disabled until restart");
+                gate
             },
         }
     }
@@ -512,7 +753,98 @@ impl EventBus {
             capacity,
             ipc_seq: Arc::new(AtomicU64::new(1)),
             ipc_traces: Arc::new(Mutex::new(IpcTraceRegistry::default())),
+            maintenance_gate: Arc::new(Mutex::new(MaintenanceGate::default())),
         }
+    }
+
+    /// Block or admit all new IPC [`IpcPayload::UserInput`] events at the
+    /// kernel bus boundary. Already-published work continues to completion.
+    pub fn set_user_input_blocked(&self, blocked: bool) {
+        self.lock_maintenance_gate().blocked = blocked;
+    }
+
+    /// Return whether new IPC user input is currently blocked.
+    #[must_use]
+    pub fn user_input_is_blocked(&self) -> bool {
+        self.lock_maintenance_gate().blocked
+    }
+
+    /// Return exact in-process conversation, provider, and tool drain state.
+    #[must_use]
+    pub fn maintenance_activity(&self) -> MaintenanceActivitySnapshot {
+        self.lock_maintenance_gate().snapshot()
+    }
+
+    /// Publish one ordered maintenance barrier only while admission is blocked
+    /// and every tracked conversation/provider/tool transition is exactly
+    /// drained.
+    ///
+    /// The returned sequence proves successful asynchronous-bus enqueue. Trace
+    /// metadata remains observational; this kernel producer attestation and the
+    /// root lease binding are what distinguish the barrier from guest data.
+    #[must_use]
+    pub fn publish_maintenance_barrier(
+        &self,
+        source_id: uuid::Uuid,
+        lease_schema: &str,
+        lease_kind: &str,
+        lease_id: &str,
+        lease_payload_sha256: &str,
+    ) -> Option<u64> {
+        if source_id.is_nil()
+            || !matches!(
+                (lease_schema, lease_kind),
+                (GENERATION_LEASE_SCHEMA, GENERATION_LEASE_KIND)
+                    | (REFLECTION_LEASE_SCHEMA, REFLECTION_LEASE_KIND)
+            )
+            || lease_id.is_empty()
+            || lease_id.len() > 64
+            || lease_id.chars().any(char::is_control)
+            || lease_payload_sha256.len() != 64
+            || !lease_payload_sha256
+                .bytes()
+                .all(|byte| matches!(byte, b'0'..=b'9' | b'a'..=b'f'))
+        {
+            return None;
+        }
+        let maintenance = self.lock_maintenance_gate();
+        let activity = maintenance.snapshot();
+        if !maintenance.blocked
+            || !activity.exact
+            || activity.active_conversations != 0
+            || activity.active_llm_requests != 0
+            || activity.active_tools != 0
+        {
+            return None;
+        }
+        let mut message = IpcMessage::new(
+            "system.v1.maintenance_barrier",
+            IpcPayload::RawJson(serde_json::json!({
+                "schema": "astrid.edge.maintenance_barrier.v2",
+                "lease_schema": lease_schema,
+                "lease_kind": lease_kind,
+                "lease_id": lease_id,
+                "lease_payload_sha256": lease_payload_sha256,
+                "authority": "kernel_ordered_drain_barrier_not_action_authority"
+            })),
+            source_id,
+        );
+        message.producer = Some(crate::ipc::IpcProducerV1::new(
+            "kernel_host",
+            "maintenance_gate",
+        ));
+        message.seq = self.ipc_seq.fetch_add(1, Ordering::Relaxed);
+        let sequence = message.seq;
+        let event = Arc::new(AstridEvent::Ipc {
+            metadata: crate::event::EventMetadata::new("kernel:maintenance"),
+            message,
+        });
+        if self.sender.send(Arc::clone(&event)).is_err() {
+            return None;
+        }
+        drop(maintenance);
+        self.registry.notify(&event, self);
+        Some(sequence)
     }
 
     /// Register an exact eligible local-provider send before network dispatch.
@@ -556,6 +888,17 @@ impl EventBus {
     ///
     /// Returns the number of async receivers that received the event.
     pub fn publish(&self, mut event: AstridEvent) -> usize {
+        // Gate admission and record the corresponding activity transition
+        // under one mutex. The immutable updater can therefore never observe
+        // a drained snapshot between admission and accounting.
+        let mut maintenance = self.lock_maintenance_gate();
+        if maintenance.blocked
+            && let AstridEvent::Ipc { ref message, .. } = event
+            && !maintenance.admits_while_blocked(message)
+        {
+            debug!(topic = %message.topic, "new IPC work rejected during immutable maintenance");
+            return 0;
+        }
         // Stamp IPC messages with a monotonic sequence number for ordered delivery.
         if let AstridEvent::Ipc {
             ref mut metadata,
@@ -573,6 +916,7 @@ impl EventBus {
                         .and_then(|session_id| uuid::Uuid::parse_str(session_id).ok());
                 }
             }
+            maintenance.observe_before_publish(message);
         }
         let event = Arc::new(event);
 
@@ -580,6 +924,9 @@ impl EventBus {
 
         // Broadcast to async subscribers first so they don't wait for synchronous subscribers
         let count = if let Ok(c) = self.sender.send(Arc::clone(&event)) {
+            if let AstridEvent::Ipc { message, .. } = event.as_ref() {
+                maintenance.observe_after_publish(message);
+            }
             debug!(
                 event_type = %event.event_type(),
                 receiver_count = c,
@@ -587,10 +934,12 @@ impl EventBus {
             );
             c
         } else {
-            // No receivers - this is fine
+            // Fail closed: a start remains active and a terminal is not
+            // acknowledged unless the async bus accepted it.
             trace!(event_type = %event.event_type(), "No receivers for event");
             0
         };
+        drop(maintenance);
 
         // Notify synchronous subscribers
         self.registry.notify(&event, self);
@@ -655,6 +1004,7 @@ impl Clone for EventBus {
             capacity: self.capacity,
             ipc_seq: Arc::clone(&self.ipc_seq),
             ipc_traces: Arc::clone(&self.ipc_traces),
+            maintenance_gate: Arc::clone(&self.maintenance_gate),
         }
     }
 }
@@ -837,6 +1187,410 @@ mod tests {
 
         let msg = receiver.recv().await.unwrap();
         assert_eq!(msg.event_type(), "astrid.v1.lifecycle.runtime_started");
+    }
+
+    #[tokio::test]
+    async fn maintenance_gate_blocks_only_new_user_input_and_is_shared_by_clones() {
+        let bus = EventBus::new();
+        let mut receiver = bus.subscribe();
+        let clone = bus.clone();
+        clone.set_user_input_blocked(true);
+        let user = IpcMessage::new(
+            "user.v1.input",
+            IpcPayload::UserInput {
+                text: "blocked".to_string(),
+                session_id: "session".to_string(),
+                context: None,
+            },
+            uuid::Uuid::new_v4(),
+        );
+        assert_eq!(
+            bus.publish(AstridEvent::Ipc {
+                metadata: EventMetadata::new("test"),
+                message: user,
+            }),
+            0
+        );
+        assert!(receiver.try_recv().is_none());
+
+        let other = AstridEvent::RuntimeStarted {
+            metadata: EventMetadata::new("test"),
+            version: "0.1.0".to_string(),
+        };
+        assert_eq!(bus.publish(other), 1);
+        assert!(receiver.recv().await.is_some());
+        bus.set_user_input_blocked(false);
+        assert!(!clone.user_input_is_blocked());
+    }
+
+    #[tokio::test]
+    async fn maintenance_barrier_binds_an_exact_supported_lease_schema_and_kind() {
+        let bus = EventBus::new();
+        let mut receiver = bus.subscribe();
+        let source_id = uuid::Uuid::new_v4();
+        let payload_hash = "a".repeat(64);
+        bus.set_user_input_blocked(true);
+
+        assert!(
+            bus.publish_maintenance_barrier(
+                source_id,
+                GENERATION_LEASE_SCHEMA,
+                REFLECTION_LEASE_KIND,
+                "crossed-authority",
+                &payload_hash,
+            )
+            .is_none()
+        );
+        assert!(
+            bus.publish_maintenance_barrier(
+                source_id,
+                "astrid.edge_scheduled_reflection.lease.v0",
+                REFLECTION_LEASE_KIND,
+                "legacy-authority",
+                &payload_hash,
+            )
+            .is_none()
+        );
+
+        let sequence = bus
+            .publish_maintenance_barrier(
+                source_id,
+                REFLECTION_LEASE_SCHEMA,
+                REFLECTION_LEASE_KIND,
+                "reflection-lease",
+                &payload_hash,
+            )
+            .expect("the exact scheduled-reflection authority should publish");
+        let event = receiver.recv().await.expect("barrier event");
+        let AstridEvent::Ipc { message, .. } = event.as_ref() else {
+            panic!("expected IPC barrier");
+        };
+        assert_eq!(message.seq, sequence);
+        let IpcPayload::RawJson(payload) = &message.payload else {
+            panic!("expected structured barrier payload");
+        };
+        assert_eq!(
+            payload.get("schema").and_then(serde_json::Value::as_str),
+            Some("astrid.edge.maintenance_barrier.v2")
+        );
+        assert_eq!(
+            payload
+                .get("lease_schema")
+                .and_then(serde_json::Value::as_str),
+            Some(REFLECTION_LEASE_SCHEMA)
+        );
+        assert_eq!(
+            payload
+                .get("lease_kind")
+                .and_then(serde_json::Value::as_str),
+            Some(REFLECTION_LEASE_KIND)
+        );
+    }
+
+    #[tokio::test]
+    #[allow(clippy::too_many_lines)] // One ordered end-to-end drain protocol scenario.
+    async fn maintenance_barrier_waits_for_canonical_turn_and_ignores_sensory_mirror() {
+        let bus = EventBus::new();
+        let mut receiver = bus.subscribe();
+        let source_id = uuid::Uuid::new_v4();
+        let trace = crate::ipc::IpcTraceContextV1::root(uuid::Uuid::new_v4(), "session-a", None);
+        for topic in ["sensory.v1.user_input", "user.v1.input"] {
+            let mut input = IpcMessage::new(
+                topic,
+                IpcPayload::UserInput {
+                    text: "hello".to_string(),
+                    session_id: "session-a".to_string(),
+                    context: None,
+                },
+                source_id,
+            );
+            input.trace = Some(trace.clone());
+            assert_eq!(
+                bus.publish(AstridEvent::Ipc {
+                    metadata: EventMetadata::new("socket"),
+                    message: input,
+                }),
+                1
+            );
+        }
+        let activity = bus.maintenance_activity();
+        assert!(activity.exact);
+        assert_eq!(activity.active_conversations, 1);
+        bus.set_user_input_blocked(true);
+        let llm_request_id = uuid::Uuid::new_v4();
+        let mut in_flight_llm = IpcMessage::new(
+            "llm.v1.request",
+            IpcPayload::LlmRequest {
+                request_id: llm_request_id,
+                model: "local-model".to_string(),
+                messages: vec![],
+                tools: vec![],
+                system: String::new(),
+            },
+            source_id,
+        );
+        in_flight_llm.trace = Some(trace.clone());
+        assert_eq!(
+            bus.publish(AstridEvent::Ipc {
+                metadata: EventMetadata::new("capsule"),
+                message: in_flight_llm,
+            }),
+            1
+        );
+        let mut in_flight_tool = IpcMessage::new(
+            "tool.v1.execute",
+            IpcPayload::ToolExecuteRequest {
+                call_id: "call-before-drain".to_string(),
+                tool_name: "read_owned".to_string(),
+                arguments: serde_json::json!({}),
+            },
+            source_id,
+        );
+        in_flight_tool.trace = Some(trace.clone());
+        assert_eq!(
+            bus.publish(AstridEvent::Ipc {
+                metadata: EventMetadata::new("capsule"),
+                message: in_flight_tool,
+            }),
+            1
+        );
+        assert!(
+            bus.publish_maintenance_barrier(
+                source_id,
+                GENERATION_LEASE_SCHEMA,
+                GENERATION_LEASE_KIND,
+                "lease-test",
+                &"a".repeat(64),
+            )
+            .is_none()
+        );
+
+        let mut response = IpcMessage::new(
+            "agent.v1.response",
+            IpcPayload::AgentResponse {
+                text: "done".to_string(),
+                is_final: true,
+                session_id: "session-a".to_string(),
+                response_provenance: None,
+            },
+            source_id,
+        );
+        response.trace = Some(trace.clone());
+        response.producer = Some(crate::ipc::IpcProducerV1::new(
+            "wasm_capsule",
+            REACT_CAPSULE_ID,
+        ));
+        assert_eq!(
+            bus.publish(AstridEvent::Ipc {
+                metadata: EventMetadata::new("capsule"),
+                message: response,
+            }),
+            1
+        );
+        let mut foreign_result = IpcMessage::new(
+            "tool.v1.result",
+            IpcPayload::ToolExecuteResult {
+                call_id: "call-before-drain".to_string(),
+                result: crate::llm::ToolCallResult::success("call-before-drain", "foreign result"),
+            },
+            source_id,
+        );
+        foreign_result.trace = Some(crate::ipc::IpcTraceContextV1::root(
+            uuid::Uuid::new_v4(),
+            "session-b",
+            None,
+        ));
+        assert_eq!(
+            bus.publish(AstridEvent::Ipc {
+                metadata: EventMetadata::new("capsule"),
+                message: foreign_result,
+            }),
+            0
+        );
+        let still_active = bus.maintenance_activity();
+        assert!(still_active.exact);
+        assert_eq!(still_active.active_tools, 1);
+        assert_eq!(still_active.active_llm_requests, 1);
+        let mut tool_result = IpcMessage::new(
+            "tool.v1.result",
+            IpcPayload::ToolExecuteResult {
+                call_id: "call-before-drain".to_string(),
+                result: crate::llm::ToolCallResult::success("call-before-drain", "bounded result"),
+            },
+            source_id,
+        );
+        tool_result.trace = Some(trace.clone());
+        assert_eq!(
+            bus.publish(AstridEvent::Ipc {
+                metadata: EventMetadata::new("capsule"),
+                message: tool_result,
+            }),
+            1
+        );
+        assert!(
+            bus.publish_maintenance_barrier(
+                source_id,
+                GENERATION_LEASE_SCHEMA,
+                GENERATION_LEASE_KIND,
+                "lease-test",
+                &"a".repeat(64),
+            )
+            .is_none()
+        );
+        let mut foreign_llm_terminal = IpcMessage::new(
+            "llm.v1.stream",
+            IpcPayload::LlmStreamEvent {
+                request_id: llm_request_id,
+                event: crate::llm::StreamEvent::Done,
+            },
+            source_id,
+        );
+        foreign_llm_terminal.trace = Some(crate::ipc::IpcTraceContextV1::root(
+            uuid::Uuid::new_v4(),
+            "session-b",
+            None,
+        ));
+        assert_eq!(
+            bus.publish(AstridEvent::Ipc {
+                metadata: EventMetadata::new("foreign-provider"),
+                message: foreign_llm_terminal,
+            }),
+            0
+        );
+        assert_eq!(bus.maintenance_activity().active_llm_requests, 1);
+        let mut llm_terminal = IpcMessage::new(
+            "llm.v1.stream",
+            IpcPayload::LlmStreamEvent {
+                request_id: llm_request_id,
+                event: crate::llm::StreamEvent::Done,
+            },
+            source_id,
+        );
+        llm_terminal.trace = Some(trace.clone());
+        assert_eq!(
+            bus.publish(AstridEvent::Ipc {
+                metadata: EventMetadata::new("provider"),
+                message: llm_terminal,
+            }),
+            1
+        );
+        let sequence = bus
+            .publish_maintenance_barrier(
+                source_id,
+                GENERATION_LEASE_SCHEMA,
+                GENERATION_LEASE_KIND,
+                "lease-test",
+                &"a".repeat(64),
+            )
+            .expect("drained exact activity should publish a barrier");
+        assert_ne!(sequence, 0);
+        let mut saw_barrier = false;
+        while let Some(event) = receiver.try_recv() {
+            if matches!(
+                event.as_ref(),
+                AstridEvent::Ipc { message, .. }
+                    if message.topic == "system.v1.maintenance_barrier"
+                        && message.seq == sequence
+            ) {
+                saw_barrier = true;
+            }
+        }
+        assert!(saw_barrier);
+
+        let mut late_tool = IpcMessage::new(
+            "tool.v1.execute",
+            IpcPayload::ToolExecuteRequest {
+                call_id: "call-after-barrier".to_string(),
+                tool_name: "read_owned".to_string(),
+                arguments: serde_json::json!({}),
+            },
+            source_id,
+        );
+        late_tool.trace = Some(trace.clone());
+        assert_eq!(
+            bus.publish(AstridEvent::Ipc {
+                metadata: EventMetadata::new("capsule"),
+                message: late_tool,
+            }),
+            0
+        );
+
+        for payload in [
+            IpcPayload::LlmRequest {
+                request_id: uuid::Uuid::new_v4(),
+                model: "local-model".to_string(),
+                messages: vec![],
+                tools: vec![],
+                system: String::new(),
+            },
+            IpcPayload::LlmStreamEvent {
+                request_id: uuid::Uuid::new_v4(),
+                event: crate::llm::StreamEvent::TextDelta("late".to_string()),
+            },
+            IpcPayload::LlmResponse {
+                request_id: uuid::Uuid::new_v4(),
+                response: crate::llm::LlmResponse {
+                    message: crate::llm::Message {
+                        role: crate::llm::MessageRole::Assistant,
+                        content: crate::llm::MessageContent::Text("late".to_string()),
+                    },
+                    has_tool_calls: false,
+                    stop_reason: crate::llm::StopReason::EndTurn,
+                    usage: crate::llm::Usage::default(),
+                },
+            },
+        ] {
+            let mut late_llm = IpcMessage::new("llm.v1.late", payload, source_id);
+            late_llm.trace = Some(trace.clone());
+            assert_eq!(
+                bus.publish(AstridEvent::Ipc {
+                    metadata: EventMetadata::new("capsule"),
+                    message: late_llm,
+                }),
+                0
+            );
+        }
+
+        let mut duplicate_response = IpcMessage::new(
+            "agent.v1.response",
+            IpcPayload::AgentResponse {
+                text: "late duplicate".to_string(),
+                is_final: true,
+                session_id: "session-a".to_string(),
+                response_provenance: None,
+            },
+            source_id,
+        );
+        duplicate_response.trace = Some(trace.clone());
+        duplicate_response.producer = Some(crate::ipc::IpcProducerV1::new(
+            "wasm_capsule",
+            REACT_CAPSULE_ID,
+        ));
+        assert_eq!(
+            bus.publish(AstridEvent::Ipc {
+                metadata: EventMetadata::new("capsule"),
+                message: duplicate_response,
+            }),
+            0
+        );
+
+        let mut duplicate_result = IpcMessage::new(
+            "tool.v1.result",
+            IpcPayload::ToolExecuteResult {
+                call_id: "call-before-drain".to_string(),
+                result: crate::llm::ToolCallResult::success("call-before-drain", "late duplicate"),
+            },
+            source_id,
+        );
+        duplicate_result.trace = Some(trace);
+        assert_eq!(
+            bus.publish(AstridEvent::Ipc {
+                metadata: EventMetadata::new("capsule"),
+                message: duplicate_result,
+            }),
+            0
+        );
+        assert!(receiver.try_recv().is_none());
     }
 
     #[tokio::test]

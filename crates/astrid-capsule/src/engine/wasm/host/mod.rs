@@ -7,6 +7,8 @@
 
 /// Capsule-level approval requests.
 pub(crate) mod approval;
+#[cfg(unix)]
+mod core_web_broker;
 /// Elicit lifecycle API (install/upgrade user input collection).
 pub(crate) mod elicit;
 /// File system operations for plugins.

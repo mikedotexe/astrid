@@ -1654,7 +1654,7 @@ mod tests {
         // Export section
         let mut exports = ExportSection::new();
         for (i, name) in export_names.iter().enumerate() {
-            exports.export(*name, ExportKind::Func, i as u32);
+            exports.export(name, ExportKind::Func, i as u32);
         }
         module.section(&exports);
 

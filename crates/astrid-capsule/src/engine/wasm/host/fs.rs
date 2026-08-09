@@ -1,8 +1,16 @@
+use std::ffi::OsString;
+use std::io::{Read, Seek, SeekFrom};
 use std::path::{Component, Path, PathBuf};
 use std::sync::Arc;
 
+use cap_fs_ext::{DirExt as _, FollowSymlinks, MetadataExt as _, OpenOptionsFollowExt as _};
+use cap_std::ambient_authority;
+use cap_std::fs::{Dir, Metadata, OpenOptions};
+
 use crate::engine::wasm::bindings::astrid::capsule::fs;
-use crate::engine::wasm::bindings::astrid::capsule::types::FileStat;
+use crate::engine::wasm::bindings::astrid::capsule::types::{
+    BoundedFileRead, BoundedFileReadMode, FileEntryKind, FileStat, NoFollowFileStat,
+};
 use crate::engine::wasm::host::util;
 use crate::engine::wasm::host_state::HostState;
 
@@ -14,6 +22,9 @@ const CWD_SCHEME: &str = "cwd://";
 
 /// Path prefix that maps to the principal's tmp directory.
 const TMP_PREFIX: &str = "/tmp/";
+
+/// Immutable host ceiling for either a whole-file or tail no-follow read.
+const MAX_NOFOLLOW_READ_BYTES: u64 = 64 * 1024;
 
 /// Strip any leading absolute slashes or prefixes (e.g. C:\) from the requested path
 fn make_relative(requested: &str) -> &Path {
@@ -232,6 +243,239 @@ fn resolve_vfs(state: &HostState, resolved: &ResolvedPath) -> Result<ResolvedVfs
     }
 }
 
+/// A final path entry reached through directory handles without following any
+/// symbolic-link component.
+struct NoFollowEntry {
+    parent: Dir,
+    basename: OsString,
+    physical: PathBuf,
+    metadata: Metadata,
+}
+
+fn no_follow_root_and_relative(
+    state: &HostState,
+    raw_path: &str,
+) -> Result<(PathBuf, PathBuf), String> {
+    let (root, requested, direct_host_backing) =
+        if let Some(stripped) = raw_path.strip_prefix(CWD_SCHEME) {
+            (&state.workspace_root, stripped, state.overlay_vfs.is_none())
+        } else if let Some(stripped) = raw_path.strip_prefix(HOME_SCHEME) {
+            (
+                state.home_root.as_ref().ok_or_else(|| {
+                    "home:// scheme is not available: no home directory is configured".to_string()
+                })?,
+                stripped,
+                state.home_vfs.is_some(),
+            )
+        } else if raw_path.starts_with(TMP_PREFIX) || raw_path == "/tmp" {
+            (
+                state
+                    .tmp_dir
+                    .as_ref()
+                    .ok_or_else(|| "/tmp is not available for this principal".to_string())?,
+                raw_path
+                    .strip_prefix(TMP_PREFIX)
+                    .or_else(|| raw_path.strip_prefix("/tmp"))
+                    .unwrap_or(""),
+                state.tmp_vfs.is_some(),
+            )
+        } else {
+            (&state.workspace_root, raw_path, state.overlay_vfs.is_none())
+        };
+    if !direct_host_backing {
+        return Err(
+            "no-follow inspection is unavailable for a non-direct or overlay VFS".to_string(),
+        );
+    }
+    let canonical_root = root
+        .canonicalize()
+        .map_err(|error| format!("cannot resolve no-follow capability root: {error}"))?;
+    let requested = Path::new(requested);
+    if requested.as_os_str().is_empty()
+        || requested.is_absolute()
+        || requested
+            .components()
+            .any(|component| !matches!(component, Component::Normal(_)))
+    {
+        return Err("no-follow paths must contain only relative normal components".to_string());
+    }
+    Ok((canonical_root, requested.to_path_buf()))
+}
+
+fn resolve_no_follow_entry(state: &HostState, raw_path: &str) -> Result<NoFollowEntry, String> {
+    let (root, relative) = no_follow_root_and_relative(state, raw_path)?;
+    resolve_no_follow_entry_at(&root, &relative)
+}
+
+fn resolve_no_follow_entry_at(root: &Path, relative: &Path) -> Result<NoFollowEntry, String> {
+    let mut components = relative.components().peekable();
+    let basename = components
+        .next_back()
+        .and_then(|component| match component {
+            Component::Normal(value) => Some(value.to_os_string()),
+            _ => None,
+        })
+        .ok_or_else(|| "no-follow path has no final entry".to_string())?;
+    let mut parent = Dir::open_ambient_dir(root, ambient_authority())
+        .map_err(|error| format!("cannot open no-follow capability root: {error}"))?;
+    for component in components {
+        let Component::Normal(name) = component else {
+            return Err("no-follow path contains a non-normal component".to_string());
+        };
+        parent = parent
+            .open_dir_nofollow(name)
+            .map_err(|_| "no-follow path has a symlink or non-directory component".to_string())?;
+    }
+    let metadata = parent
+        .symlink_metadata(&basename)
+        .map_err(|error| format!("cannot inspect no-follow entry: {error}"))?;
+    Ok(NoFollowEntry {
+        parent,
+        physical: root.join(relative),
+        basename,
+        metadata,
+    })
+}
+
+fn metadata_mtime(metadata: &Metadata) -> Option<u64> {
+    metadata
+        .modified()
+        .ok()
+        .map(cap_std::time::SystemTime::into_std)
+        .and_then(|time| time.duration_since(std::time::UNIX_EPOCH).ok())
+        .map(|duration| duration.as_secs())
+}
+
+fn entry_kind(metadata: &Metadata) -> FileEntryKind {
+    let file_type = metadata.file_type();
+    if file_type.is_symlink() {
+        FileEntryKind::Symlink
+    } else if metadata.is_file() {
+        FileEntryKind::RegularFile
+    } else if metadata.is_dir() {
+        FileEntryKind::Directory
+    } else {
+        FileEntryKind::Other
+    }
+}
+
+fn no_follow_stat(metadata: &Metadata) -> NoFollowFileStat {
+    NoFollowFileStat {
+        size: metadata.len(),
+        kind: entry_kind(metadata),
+        mtime: metadata_mtime(metadata),
+        hard_link_count: metadata.nlink(),
+    }
+}
+
+fn stable_identity(metadata: &Metadata) -> (u64, u64, u64, u64, Option<(u64, u32)>) {
+    let modified = metadata
+        .modified()
+        .ok()
+        .map(cap_std::time::SystemTime::into_std)
+        .and_then(|time| time.duration_since(std::time::UNIX_EPOCH).ok())
+        .map(|duration| (duration.as_secs(), duration.subsec_nanos()));
+    (
+        metadata.dev(),
+        metadata.ino(),
+        metadata.nlink(),
+        metadata.len(),
+        modified,
+    )
+}
+
+fn read_region(
+    file: &mut cap_std::fs::File,
+    offset: u64,
+    length: usize,
+) -> Result<Vec<u8>, String> {
+    file.seek(SeekFrom::Start(offset))
+        .map_err(|error| format!("cannot seek bounded no-follow file: {error}"))?;
+    let mut data = vec![0_u8; length];
+    file.read_exact(&mut data)
+        .map_err(|error| format!("cannot read stable bounded no-follow region: {error}"))?;
+    Ok(data)
+}
+
+fn read_bounded_no_follow_entry(
+    entry: NoFollowEntry,
+    maximum_bytes: u64,
+    mode: BoundedFileReadMode,
+) -> Result<BoundedFileRead, String> {
+    if maximum_bytes == 0 || maximum_bytes > MAX_NOFOLLOW_READ_BYTES {
+        return Err(format!(
+            "bounded no-follow read must request 1-{MAX_NOFOLLOW_READ_BYTES} bytes"
+        ));
+    }
+    if !entry.metadata.is_file()
+        || entry.metadata.file_type().is_symlink()
+        || entry.metadata.nlink() != 1
+    {
+        return Err(
+            "bounded no-follow reads require a non-symlink regular file with one hard link"
+                .to_string(),
+        );
+    }
+    let captured_size = entry.metadata.len();
+    let offset = match mode {
+        BoundedFileReadMode::Whole => {
+            if captured_size > maximum_bytes {
+                return Err("whole-file no-follow read exceeds the requested bound".to_string());
+            }
+            0
+        },
+        BoundedFileReadMode::Tail => captured_size.saturating_sub(maximum_bytes),
+    };
+    let length = usize::try_from(captured_size.saturating_sub(offset))
+        .map_err(|_| "bounded no-follow region cannot be represented".to_string())?;
+    let mut options = OpenOptions::new();
+    options.read(true).follow(FollowSymlinks::No);
+    let mut file = entry
+        .parent
+        .open_with(&entry.basename, &options)
+        .map_err(|error| format!("cannot open bounded no-follow file: {error}"))?;
+    let opened = file
+        .metadata()
+        .map_err(|error| format!("cannot inspect opened no-follow file: {error}"))?;
+    if stable_identity(&entry.metadata) != stable_identity(&opened)
+        || !opened.is_file()
+        || opened.nlink() != 1
+    {
+        return Err("bounded no-follow file identity changed before reading".to_string());
+    }
+    let starts_at_line_boundary = if offset == 0 {
+        true
+    } else {
+        read_region(&mut file, offset.saturating_sub(1), 1)? == b"\n"
+    };
+    let first = read_region(&mut file, offset, length)?;
+    let second = read_region(&mut file, offset, length)?;
+    if first != second {
+        return Err("bounded no-follow file changed while reading".to_string());
+    }
+    let after = file
+        .metadata()
+        .map_err(|error| format!("cannot re-inspect opened no-follow file: {error}"))?;
+    let path_after = entry
+        .parent
+        .symlink_metadata(&entry.basename)
+        .map_err(|error| format!("cannot re-inspect no-follow path: {error}"))?;
+    if stable_identity(&opened) != stable_identity(&after)
+        || stable_identity(&after) != stable_identity(&path_after)
+        || path_after.file_type().is_symlink()
+        || !path_after.is_file()
+        || path_after.nlink() != 1
+    {
+        return Err("bounded no-follow file identity changed during reading".to_string());
+    }
+    Ok(BoundedFileRead {
+        data: first,
+        offset,
+        captured_size,
+        starts_at_line_boundary,
+    })
+}
+
 impl fs::Host for HostState {
     fn fs_exists(&mut self, path: String) -> Result<bool, String> {
         let capsule_id = self.capsule_id.as_str().to_owned();
@@ -372,6 +616,43 @@ impl fs::Host for HostState {
         })
     }
 
+    fn fs_lstat_nofollow(&mut self, path: String) -> Result<NoFollowFileStat, String> {
+        let entry = resolve_no_follow_entry(self, &path)?;
+        if let Some(gate) = self.security.clone() {
+            let physical = entry.physical.to_string_lossy().to_string();
+            let capsule_id = self.capsule_id.as_str().to_owned();
+            let check =
+                util::bounded_block_on(&self.runtime_handle, &self.host_semaphore, async move {
+                    gate.check_file_read(&capsule_id, &physical).await
+                });
+            if let Err(reason) = check {
+                return Err(format!("security denied no-follow stat: {reason}"));
+            }
+        }
+        Ok(no_follow_stat(&entry.metadata))
+    }
+
+    fn fs_read_bounded_nofollow(
+        &mut self,
+        path: String,
+        maximum_bytes: u64,
+        mode: BoundedFileReadMode,
+    ) -> Result<BoundedFileRead, String> {
+        let entry = resolve_no_follow_entry(self, &path)?;
+        if let Some(gate) = self.security.clone() {
+            let physical = entry.physical.to_string_lossy().to_string();
+            let capsule_id = self.capsule_id.as_str().to_owned();
+            let check =
+                util::bounded_block_on(&self.runtime_handle, &self.host_semaphore, async move {
+                    gate.check_file_read(&capsule_id, &physical).await
+                });
+            if let Err(reason) = check {
+                return Err(format!("security denied bounded no-follow read: {reason}"));
+            }
+        }
+        read_bounded_no_follow_entry(entry, maximum_bytes, mode)
+    }
+
     fn fs_unlink(&mut self, path: String) -> Result<(), String> {
         let capsule_id = self.capsule_id.as_str().to_owned();
 
@@ -492,5 +773,128 @@ impl fs::Host for HostState {
             res
         })
         .map_err(|e| format!("write_file failed: {e}"))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::path::Path;
+
+    use cap_fs_ext::MetadataExt as _;
+
+    use super::{
+        BoundedFileReadMode, FileEntryKind, MAX_NOFOLLOW_READ_BYTES, read_bounded_no_follow_entry,
+        resolve_no_follow_entry_at,
+    };
+
+    #[test]
+    fn bounded_no_follow_whole_and_tail_reads_are_stable_and_capped() {
+        let root = tempfile::tempdir().unwrap();
+        std::fs::create_dir(root.path().join("owned")).unwrap();
+        std::fs::write(
+            root.path().join("owned/ledger.jsonl"),
+            b"first\nsecond\nthird\n",
+        )
+        .unwrap();
+
+        let whole = read_bounded_no_follow_entry(
+            resolve_no_follow_entry_at(root.path(), Path::new("owned/ledger.jsonl")).unwrap(),
+            64,
+            BoundedFileReadMode::Whole,
+        )
+        .unwrap();
+        assert_eq!(whole.data, b"first\nsecond\nthird\n");
+        assert_eq!(whole.offset, 0);
+        assert!(whole.starts_at_line_boundary);
+
+        let tail = read_bounded_no_follow_entry(
+            resolve_no_follow_entry_at(root.path(), Path::new("owned/ledger.jsonl")).unwrap(),
+            12,
+            BoundedFileReadMode::Tail,
+        )
+        .unwrap();
+        assert_eq!(tail.data, b"econd\nthird\n");
+        assert_eq!(tail.offset, 7);
+        assert!(!tail.starts_at_line_boundary);
+
+        let oversized = read_bounded_no_follow_entry(
+            resolve_no_follow_entry_at(root.path(), Path::new("owned/ledger.jsonl")).unwrap(),
+            MAX_NOFOLLOW_READ_BYTES.saturating_add(1),
+            BoundedFileReadMode::Tail,
+        );
+        assert!(oversized.is_err());
+    }
+
+    #[test]
+    fn symlink_components_and_hardlinks_never_reach_file_bytes() {
+        let root = tempfile::tempdir().unwrap();
+        std::fs::create_dir(root.path().join("owned")).unwrap();
+        std::fs::write(root.path().join("owned/secret.txt"), b"must-not-read").unwrap();
+
+        #[cfg(unix)]
+        {
+            std::os::unix::fs::symlink("secret.txt", root.path().join("owned/link.txt")).unwrap();
+            let link =
+                resolve_no_follow_entry_at(root.path(), Path::new("owned/link.txt")).unwrap();
+            assert_eq!(super::entry_kind(&link.metadata), FileEntryKind::Symlink);
+            assert!(read_bounded_no_follow_entry(link, 64, BoundedFileReadMode::Whole).is_err());
+
+            std::os::unix::fs::symlink("owned", root.path().join("owned-link")).unwrap();
+            assert!(
+                resolve_no_follow_entry_at(root.path(), Path::new("owned-link/secret.txt"))
+                    .is_err()
+            );
+        }
+
+        std::fs::hard_link(
+            root.path().join("owned/secret.txt"),
+            root.path().join("owned/hardlink.txt"),
+        )
+        .unwrap();
+        let hardlink =
+            resolve_no_follow_entry_at(root.path(), Path::new("owned/hardlink.txt")).unwrap();
+        assert!(hardlink.metadata.nlink() > 1);
+        assert!(read_bounded_no_follow_entry(hardlink, 64, BoundedFileReadMode::Whole).is_err());
+    }
+
+    #[test]
+    fn path_replacement_between_inspection_and_open_is_rejected() {
+        let root = tempfile::tempdir().unwrap();
+        std::fs::write(root.path().join("value.txt"), b"original").unwrap();
+        let inspected = resolve_no_follow_entry_at(root.path(), Path::new("value.txt")).unwrap();
+        std::fs::rename(
+            root.path().join("value.txt"),
+            root.path().join("replaced.txt"),
+        )
+        .unwrap();
+        std::fs::write(root.path().join("value.txt"), b"attacker").unwrap();
+        assert!(read_bounded_no_follow_entry(inspected, 64, BoundedFileReadMode::Whole).is_err());
+    }
+
+    #[test]
+    fn current_fs_linker_accepts_a_legacy_fs_interface_import() {
+        const LEGACY_COMPONENT: &str = r#"
+            (component
+              (type $legacy-fs
+                (instance
+                  (type $exists-result (result bool (error string)))
+                  (type $exists-func
+                    (func (param "path" string) (result $exists-result)))
+                  (export "fs-exists" (func (type $exists-func)))))
+              (import "astrid:capsule/fs@0.1.0"
+                (instance $legacy-fs-import (type $legacy-fs))))
+        "#;
+
+        let mut configuration = wasmtime::Config::new();
+        configuration.wasm_component_model(true);
+        let engine = wasmtime::Engine::new(&configuration).unwrap();
+        let component = wasmtime::component::Component::new(&engine, LEGACY_COMPONENT).unwrap();
+        let mut linker = wasmtime::component::Linker::<super::HostState>::new(&engine);
+        crate::engine::wasm::bindings::Capsule::add_to_linker::<
+            super::HostState,
+            wasmtime::component::HasSelf<super::HostState>,
+        >(&mut linker, |state| state)
+        .unwrap();
+        linker.instantiate_pre(&component).unwrap();
     }
 }

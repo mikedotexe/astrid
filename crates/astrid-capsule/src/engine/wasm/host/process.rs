@@ -7,6 +7,7 @@ use tracing::warn;
 
 use astrid_workspace::SandboxCommand;
 
+use crate::cpu_edge_policy::{process_authority_denied_message, process_authority_disabled};
 use crate::engine::wasm::bindings::astrid::capsule::process;
 use crate::engine::wasm::bindings::astrid::capsule::types::{
     KillProcessResult, ProcessResult, ReadLogsResult, SpawnBackgroundResult, SpawnRequest,
@@ -254,6 +255,9 @@ fn prepare_sandboxed_command(
 
 impl process::Host for HostState {
     fn spawn(&mut self, request: SpawnRequest) -> Result<ProcessResult, String> {
+        if process_authority_disabled() {
+            return Err(process_authority_denied_message().to_string());
+        }
         let workspace_root = self.workspace_root.clone();
         let security = self.security.clone();
         let capsule_id = self.capsule_id.as_str().to_owned();
@@ -345,6 +349,9 @@ impl process::Host for HostState {
     }
 
     fn spawn_background(&mut self, request: SpawnRequest) -> Result<SpawnBackgroundResult, String> {
+        if process_authority_disabled() {
+            return Err(process_authority_denied_message().to_string());
+        }
         // Check process limit before doing any expensive work.
         if self.background_processes.len() >= MAX_BACKGROUND_PROCESSES {
             return Err(format!(
@@ -437,6 +444,9 @@ impl process::Host for HostState {
     }
 
     fn read_logs(&mut self, process_id: u64) -> Result<ReadLogsResult, String> {
+        if process_authority_disabled() {
+            return Err(process_authority_denied_message().to_string());
+        }
         let proc = self
             .background_processes
             .get_mut(&process_id)
@@ -474,6 +484,9 @@ impl process::Host for HostState {
     }
 
     fn kill(&mut self, process_id: u64) -> Result<KillProcessResult, String> {
+        if process_authority_disabled() {
+            return Err(process_authority_denied_message().to_string());
+        }
         // Remove from map (takes ownership) so we can drop the HostState lock
         // before doing the potentially-blocking kill + wait.
         let mut proc = self
@@ -634,7 +647,7 @@ mod tests {
     fn kill_nonexistent_returns_error() {
         let processes: std::collections::HashMap<u64, ManagedProcess> =
             std::collections::HashMap::new();
-        assert!(processes.get(&999).is_none());
+        assert!(!processes.contains_key(&999));
     }
 
     #[test]
@@ -860,7 +873,7 @@ mod tests {
 
         assert!(tracker.active_pids.lock().unwrap().contains_key(&pid_b));
 
-        if let Some(raw) = i32::try_from(pid_b).ok() {
+        if let Ok(raw) = i32::try_from(pid_b) {
             let _ = nix::sys::signal::kill(
                 nix::unistd::Pid::from_raw(raw),
                 nix::sys::signal::Signal::SIGKILL,

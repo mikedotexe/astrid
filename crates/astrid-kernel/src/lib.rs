@@ -15,6 +15,7 @@
 mod capsule_runtime_health;
 /// The Management API router listening to the `EventBus`.
 pub mod kernel_router;
+mod maintenance;
 /// The Unix Domain Socket manager.
 pub mod socket;
 mod socket_bridge;
@@ -118,6 +119,9 @@ impl Kernel {
         );
 
         let event_bus = Arc::new(EventBus::new());
+        // Establish the root-owned maintenance admission state before the
+        // native socket listener or any dispatcher can accept work.
+        maintenance::initialize_gate(&event_bus);
         let capsules = Arc::new(RwLock::new(CapsuleRegistry::new()));
 
         // Resolve the Astrid home directory. Required for persistent KV store
@@ -694,6 +698,7 @@ fn spawn_kernel_tasks(kernel: &Arc<Kernel>) {
     drop(spawn_idle_monitor(Arc::clone(kernel)));
     drop(spawn_react_watchdog(Arc::clone(&kernel.event_bus)));
     drop(spawn_capsule_health_monitor(Arc::clone(kernel)));
+    drop(maintenance::spawn(Arc::clone(kernel)));
 
     // Spawn the event dispatcher — routes EventBus events to capsule interceptors.
     // Wire the identity store so auto-provisioning is gated.
@@ -839,7 +844,7 @@ fn load_or_generate_runtime_key(keys_dir: &Path) -> std::io::Result<KeyPair> {
 /// Number of permanent internal event bus subscribers that are not client
 /// connections: `KernelRouter` (`kernel.request.*`), `ConnectionTracker` (`client.*`),
 /// and `EventDispatcher` (all events).
-const INTERNAL_SUBSCRIBER_COUNT: usize = 3;
+const INTERNAL_SUBSCRIBER_COUNT: usize = 4;
 
 /// Initial grace period before idle checking begins.
 const IDLE_INITIAL_GRACE: std::time::Duration = std::time::Duration::from_secs(5);

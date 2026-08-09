@@ -24,6 +24,8 @@ astrid-vfs = { workspace = true }
 semver = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
+sha2 = { workspace = true }
+nix = { workspace = true }
 tempfile = { workspace = true }
 tokio = { workspace = true, features = ["full", "signal"] }
 tracing = { workspace = true }

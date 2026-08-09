@@ -3,6 +3,7 @@
 use std::path::PathBuf;
 
 use crate::capsule::{Capsule, CompositeCapsule};
+use crate::cpu_edge_policy::{process_authority_denied_message, process_authority_disabled};
 use crate::error::CapsuleResult;
 use crate::manifest::CapsuleManifest;
 
@@ -35,6 +36,11 @@ impl CapsuleLoader {
         manifest: CapsuleManifest,
         capsule_dir: PathBuf,
     ) -> CapsuleResult<Box<dyn Capsule>> {
+        if process_authority_disabled() && !manifest.mcp_servers.is_empty() {
+            return Err(crate::error::CapsuleError::NotSupported(
+                process_authority_denied_message().to_string(),
+            ));
+        }
         let mut composite = CompositeCapsule::new(manifest.clone())?;
 
         // 1. WASM Component Engine (Pure WASM or Compiled OpenClaw)

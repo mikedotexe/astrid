@@ -10,7 +10,7 @@ use astrid_core::session_token::{
     HandshakeRequest, HandshakeResponse, PROTOCOL_VERSION, SessionToken,
 };
 use astrid_events::ipc::{IpcMessage, IpcPayload, IpcProducerV1, IpcTraceContextV1};
-use astrid_events::{AstridEvent, EventMetadata};
+use astrid_events::{AstridEvent, EventMetadata, EventReceiver};
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::UnixStream;
 use tokio::net::unix::{OwnedReadHalf, OwnedWriteHalf};
@@ -57,15 +57,27 @@ async fn handle_connection(kernel: Arc<crate::Kernel>, mut stream: UnixStream) {
     }
 
     let connection_source = format!("{BRIDGE_SOURCE}:{}", uuid::Uuid::new_v4());
+    // Subscribe before publishing the connection event. This gives the client
+    // one exact observation epoch: a maintenance barrier can never be emitted
+    // into the gap between connection admission and receiver creation.
+    let receiver = kernel.event_bus.subscribe();
     publish_client_event(&kernel, &connection_source, IpcPayload::Connect);
     let (read_half, write_half) = stream.into_split();
-    let writer = tokio::spawn(forward_events_to_client(
-        Arc::clone(&kernel),
+    let mut writer = tokio::spawn(forward_events_to_client(
         write_half,
         connection_source.clone(),
+        receiver,
     ));
-    read_client_messages(Arc::clone(&kernel), read_half, &connection_source).await;
-    writer.abort();
+    let reader_source = connection_source.clone();
+    let mut reader = tokio::spawn(read_client_messages(
+        Arc::clone(&kernel),
+        read_half,
+        reader_source,
+    ));
+    tokio::select! {
+        _ = &mut writer => reader.abort(),
+        _ = &mut reader => writer.abort(),
+    }
     publish_client_event(
         &kernel,
         &connection_source,
@@ -129,21 +141,21 @@ fn validate_handshake(
 async fn read_client_messages(
     kernel: Arc<crate::Kernel>,
     mut read_half: OwnedReadHalf,
-    connection_source: &str,
+    connection_source: String,
 ) {
     loop {
         match read_ipc_frame(&mut read_half).await {
             Ok(Some(mut message)) => {
-                attest_native_socket_message(&mut message, connection_source);
+                attest_native_socket_message(&mut message, &connection_source);
                 ensure_user_input_trace(&mut message);
                 if let Some(sensory_message) = sensory_user_input_mirror(&message) {
                     let _ = kernel.event_bus.publish(AstridEvent::Ipc {
-                        metadata: traced_event_metadata(connection_source, &sensory_message),
+                        metadata: traced_event_metadata(&connection_source, &sensory_message),
                         message: sensory_message,
                     });
                 }
                 let _ = kernel.event_bus.publish(AstridEvent::Ipc {
-                    metadata: traced_event_metadata(connection_source, &message),
+                    metadata: traced_event_metadata(&connection_source, &message),
                     message,
                 });
             },
@@ -204,12 +216,20 @@ fn sensory_user_input_mirror(message: &IpcMessage) -> Option<IpcMessage> {
 }
 
 async fn forward_events_to_client(
-    kernel: Arc<crate::Kernel>,
     mut write_half: OwnedWriteHalf,
     connection_source: String,
+    mut receiver: EventReceiver,
 ) {
-    let mut receiver = kernel.event_bus.subscribe();
     while let Some(event) = receiver.recv().await {
+        let lagged = receiver.drain_lagged();
+        if lagged != 0 {
+            // A client that missed any event can no longer make an exact
+            // ordered-drain claim. Closing the authenticated observation
+            // epoch makes the edge runtime poison maintenance exactness for
+            // this process rather than forwarding a later barrier.
+            warn!(lagged, %connection_source, "native socket observation epoch lost events");
+            break;
+        }
         let AstridEvent::Ipc { metadata, message } = &*event else {
             continue;
         };
@@ -306,10 +326,39 @@ async fn write_json_frame<T: serde::Serialize, W: AsyncWriteExt + Unpin>(
 mod tests {
     use super::{
         SENSORY_USER_INPUT_TOPIC, attest_native_socket_message, ensure_user_input_trace,
-        sensory_user_input_mirror, should_forward_event, traced_event_metadata,
+        forward_events_to_client, sensory_user_input_mirror, should_forward_event,
+        traced_event_metadata,
     };
     use astrid_events::ipc::{IpcMessage, IpcPayload, IpcProducerV1, IpcTraceContextV1};
+    use astrid_events::{AstridEvent, EventBus, EventMetadata};
     use uuid::Uuid;
+
+    #[tokio::test]
+    async fn lagged_socket_epoch_closes_before_forwarding_a_later_barrier() {
+        let bus = EventBus::with_capacity(1);
+        let receiver = bus.subscribe();
+        for version in ["one", "two", "three"] {
+            assert_eq!(
+                bus.publish(AstridEvent::RuntimeStarted {
+                    metadata: EventMetadata::new("test"),
+                    version: version.to_string(),
+                }),
+                1
+            );
+        }
+        let (server, _client) = tokio::net::UnixStream::pair().unwrap();
+        let (_read_half, write_half) = server.into_split();
+        tokio::time::timeout(
+            std::time::Duration::from_secs(1),
+            forward_events_to_client(
+                write_half,
+                "native_socket_bridge:observer".to_string(),
+                receiver,
+            ),
+        )
+        .await
+        .expect("lagged observation epoch should close immediately");
+    }
 
     #[test]
     fn socket_client_does_not_receive_its_own_events() {

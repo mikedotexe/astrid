@@ -296,6 +296,9 @@ impl WasmHandler {
             principal: astrid_core::PrincipalId::default(),
             capsule_uuid: uuid::Uuid::new_v4(),
             caller_context: None,
+            // Hook invocations are not IPC run-loop deliveries, so they have
+            // no observational trace context to propagate.
+            run_loop_trace_context: None,
             invocation_kv: None,
             capsule_log: None,
             capsule_id: CapsuleId::from_static(&hook_identity),

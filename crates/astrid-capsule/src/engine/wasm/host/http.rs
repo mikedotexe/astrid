@@ -1,6 +1,11 @@
 use reqwest::header::{CONNECTION, HeaderMap, HeaderName, HeaderValue};
+use sha2::{Digest as _, Sha256};
+use std::fs::{self, OpenOptions};
+use std::os::unix::fs::{MetadataExt as _, OpenOptionsExt as _, PermissionsExt as _};
+use std::path::{Component, Path, PathBuf};
 use std::sync::Arc;
 use std::time::{Duration, Instant};
+use std::time::{SystemTime, UNIX_EPOCH};
 
 use crate::engine::wasm::bindings::astrid::capsule::http;
 use crate::engine::wasm::bindings::astrid::capsule::types::{
@@ -16,6 +21,84 @@ const LOCAL_PROVIDER_LLM_REQUEST_TOPIC: &str = "llm.v1.request.generate.openai-c
 const LOCAL_PROVIDER_CAPSULE_ID: &str = "astrid-capsule-openai-compat";
 const LOCAL_PROVIDER_COMPLETIONS_PATH: &str = "/v1/chat/completions";
 const REACT_CAPSULE_ID: &str = "astrid-capsule-react";
+const PROVIDER_BROKER_SOCKET: &str = "/run/astrid-edge-self-change/provider-runtime.sock";
+const PROVIDER_BROKER_AUTHORITY: &str = "astrid-edge-provider";
+const PROVIDER_BROKER_CLIENT: &str = "edge-runtime";
+const PROVIDER_BROKER_CLIENT_HEADER: &str = "x-astrid-provider-client";
+const PROVIDER_BROKER_NONCE_HEADER: &str = "x-astrid-provider-nonce";
+const PROVIDER_BROKER_AUTH_HEADER: &str = "x-astrid-provider-auth";
+const PROVIDER_BROKER_DOMAIN: &[u8] = b"astrid.edge.provider_broker.request.v1";
+
+#[derive(Clone, Debug)]
+struct ProviderBrokerConfig {
+    socket_path: PathBuf,
+    credential_path: PathBuf,
+}
+
+#[derive(Debug)]
+enum ProviderBrokerState {
+    Absent,
+    Configured(ProviderBrokerConfig),
+    Invalid(String),
+}
+
+static PROVIDER_BROKER: std::sync::LazyLock<ProviderBrokerState> =
+    std::sync::LazyLock::new(|| match provider_broker_from_environment() {
+        Ok(Some(config)) => ProviderBrokerState::Configured(config),
+        Ok(None) => ProviderBrokerState::Absent,
+        Err(error) => {
+            tracing::error!(%error, "invalid immutable local-provider broker configuration");
+            ProviderBrokerState::Invalid(error)
+        },
+    });
+
+fn configured_provider_broker() -> Result<Option<&'static ProviderBrokerConfig>, String> {
+    match &*PROVIDER_BROKER {
+        ProviderBrokerState::Absent => Ok(None),
+        ProviderBrokerState::Configured(config) => Ok(Some(config)),
+        ProviderBrokerState::Invalid(error) => Err(format!(
+            "immutable local-provider broker configuration is invalid: {error}"
+        )),
+    }
+}
+
+fn provider_broker_from_environment() -> Result<Option<ProviderBrokerConfig>, String> {
+    let socket = std::env::var_os("ASTRID_LOCAL_PROVIDER_UNIX_SOCKET");
+    let credential = std::env::var_os("ASTRID_LOCAL_PROVIDER_CREDENTIAL");
+    match (socket, credential) {
+        (None, None) => Ok(None),
+        (Some(socket), Some(credential)) => {
+            let socket_path = PathBuf::from(socket);
+            let credential_path = PathBuf::from(credential);
+            if socket_path != Path::new(PROVIDER_BROKER_SOCKET)
+                || !exact_absolute_path(&credential_path)
+                || credential_path
+                    .file_name()
+                    .and_then(std::ffi::OsStr::to_str)
+                    != Some("provider-request.key")
+                || !credential_path.starts_with("/run/credentials/astrid.service")
+            {
+                return Err(
+                    "provider broker socket or credential escaped the root-owned contract"
+                        .to_string(),
+                );
+            }
+            Ok(Some(ProviderBrokerConfig {
+                socket_path,
+                credential_path,
+            }))
+        },
+        _ => Err("provider broker socket and credential must be configured together".to_string()),
+    }
+}
+
+fn exact_absolute_path(path: &Path) -> bool {
+    path.is_absolute()
+        && path != Path::new("/")
+        && path
+            .components()
+            .all(|component| matches!(component, Component::RootDir | Component::Normal(_)))
+}
 
 // ── SSRF prevention ──────────────────────────────────────────────────
 
@@ -140,8 +223,164 @@ fn local_provider_attempt_allowed(
         && url.path() == LOCAL_PROVIDER_COMPLETIONS_PATH
         && url.query().is_none()
         && url.fragment().is_none()
-        && origin_allowed_by(capsule_id, url, allowlist)
+        && (origin_allowed_by(capsule_id, url, allowlist)
+            || provider_broker_origin_allowed(
+                url,
+                matches!(&*PROVIDER_BROKER, ProviderBrokerState::Configured(_)),
+            ))
         && is_loopback_origin(url)
+}
+
+fn provider_broker_origin_allowed(url: &reqwest::Url, configured: bool) -> bool {
+    configured
+        && url.scheme() == "http"
+        && url.host_str() == Some("127.0.0.1")
+        && url.port() == Some(11434)
+        && url.path() == LOCAL_PROVIDER_COMPLETIONS_PATH
+        && url.query().is_none()
+        && url.fragment().is_none()
+}
+
+fn provider_broker_request_headers(
+    broker: &ProviderBrokerConfig,
+    body: &[u8],
+) -> Result<HeaderMap, String> {
+    let key = read_provider_broker_key(&broker.credential_path)?;
+    let nonce = provider_broker_nonce()?;
+    let signature = provider_broker_signature(
+        &key,
+        PROVIDER_BROKER_CLIENT,
+        LOCAL_PROVIDER_COMPLETIONS_PATH,
+        &nonce,
+        body,
+    );
+    let mut headers = HeaderMap::new();
+    headers.insert(
+        reqwest::header::HOST,
+        HeaderValue::from_static(PROVIDER_BROKER_AUTHORITY),
+    );
+    headers.insert(
+        reqwest::header::CONTENT_TYPE,
+        HeaderValue::from_static("application/json"),
+    );
+    headers.insert(
+        reqwest::header::ACCEPT,
+        HeaderValue::from_static("application/json"),
+    );
+    headers.insert(CONNECTION, HeaderValue::from_static("close"));
+    headers.insert(
+        HeaderName::from_static(PROVIDER_BROKER_CLIENT_HEADER),
+        HeaderValue::from_static(PROVIDER_BROKER_CLIENT),
+    );
+    headers.insert(
+        HeaderName::from_static(PROVIDER_BROKER_NONCE_HEADER),
+        HeaderValue::from_str(&nonce).map_err(|error| error.to_string())?,
+    );
+    headers.insert(
+        HeaderName::from_static(PROVIDER_BROKER_AUTH_HEADER),
+        HeaderValue::from_str(&signature).map_err(|error| error.to_string())?,
+    );
+    Ok(headers)
+}
+
+fn read_provider_broker_key(path: &Path) -> Result<[u8; 32], String> {
+    let before = fs::symlink_metadata(path).map_err(|error| error.to_string())?;
+    let effective_uid = nix::unistd::geteuid().as_raw();
+    validate_provider_credential(&before, effective_uid)?;
+    let file = OpenOptions::new()
+        .read(true)
+        .custom_flags(nix::libc::O_NOFOLLOW | nix::libc::O_CLOEXEC)
+        .open(path)
+        .map_err(|error| error.to_string())?;
+    let opened = file.metadata().map_err(|error| error.to_string())?;
+    let after = fs::symlink_metadata(path).map_err(|error| error.to_string())?;
+    validate_provider_credential(&opened, effective_uid)?;
+    validate_provider_credential(&after, effective_uid)?;
+    let identity = |metadata: &fs::Metadata| (metadata.dev(), metadata.ino());
+    if identity(&before) != identity(&opened) || identity(&opened) != identity(&after) {
+        return Err("provider broker credential changed during verified open".to_string());
+    }
+    let bytes = std::io::Read::bytes(file)
+        .collect::<std::io::Result<Vec<_>>>()
+        .map_err(|error| error.to_string())?;
+    bytes
+        .try_into()
+        .map_err(|_| "provider broker credential must contain exactly 32 bytes".to_string())
+}
+
+fn validate_provider_credential(metadata: &fs::Metadata, effective_uid: u32) -> Result<(), String> {
+    if !metadata.is_file()
+        || metadata.file_type().is_symlink()
+        || metadata.nlink() != 1
+        || ![0, effective_uid].contains(&metadata.uid())
+        || metadata.permissions().mode() & 0o077 != 0
+        || metadata.len() != 32
+    {
+        return Err("provider broker credential identity is invalid".to_string());
+    }
+    Ok(())
+}
+
+fn provider_broker_nonce() -> Result<String, String> {
+    let now = u64::try_from(
+        SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .map_err(|_| "system clock is before Unix epoch".to_string())?
+            .as_millis(),
+    )
+    .map_err(|_| "Unix milliseconds do not fit u64".to_string())?;
+    let first = uuid::Uuid::new_v4().simple().to_string();
+    let second = uuid::Uuid::new_v4().simple().to_string();
+    Ok(format!("{now:016x}{}", &format!("{first}{second}")[..48]))
+}
+
+fn provider_broker_signature(
+    key: &[u8; 32],
+    client: &str,
+    path: &str,
+    nonce: &str,
+    body: &[u8],
+) -> String {
+    let body_hash = Sha256::digest(body);
+    provider_broker_hmac(
+        key,
+        PROVIDER_BROKER_DOMAIN,
+        &[
+            client.as_bytes(),
+            path.as_bytes(),
+            nonce.as_bytes(),
+            &body_hash,
+        ],
+    )
+}
+
+fn provider_broker_hmac(key: &[u8; 32], domain: &[u8], fields: &[&[u8]]) -> String {
+    const BLOCK: usize = 64;
+    let mut normalized = [0_u8; BLOCK];
+    normalized[..key.len()].copy_from_slice(key);
+    let mut inner_pad = [0x36_u8; BLOCK];
+    let mut outer_pad = [0x5c_u8; BLOCK];
+    for index in 0..BLOCK {
+        inner_pad[index] ^= normalized[index];
+        outer_pad[index] ^= normalized[index];
+    }
+    let mut encoded = Vec::new();
+    append_provider_field(&mut encoded, domain);
+    for field in fields {
+        append_provider_field(&mut encoded, field);
+    }
+    let mut inner = Sha256::new();
+    inner.update(inner_pad);
+    inner.update(encoded);
+    let mut outer = Sha256::new();
+    outer.update(outer_pad);
+    outer.update(inner.finalize());
+    format!("{:x}", outer.finalize())
+}
+
+fn append_provider_field(target: &mut Vec<u8>, field: &[u8]) {
+    target.extend_from_slice(&u64::try_from(field.len()).unwrap_or(u64::MAX).to_be_bytes());
+    target.extend_from_slice(field);
 }
 
 fn validate_direct_ip(url: &reqwest::Url, allow_local_origin: bool) -> Result<(), String> {
@@ -429,7 +668,15 @@ fn finish_local_provider_request(
 fn local_provider_response_outcome(
     status: reqwest::StatusCode,
     remote_addr: Option<std::net::SocketAddr>,
+    authenticated_unix_broker: bool,
 ) -> LocalProviderRequestOutcomeV1 {
+    if authenticated_unix_broker {
+        return if status.is_success() {
+            LocalProviderRequestOutcomeV1::SuccessfulHeaders
+        } else {
+            LocalProviderRequestOutcomeV1::NonSuccessStatus
+        };
+    }
     match remote_addr {
         Some(address) if !address.ip().is_loopback() => {
             LocalProviderRequestOutcomeV1::NonLoopbackPeer
@@ -455,6 +702,17 @@ impl http::Host for HostState {
             &runtime_handle,
             &host_semaphore,
         )?;
+
+        #[cfg(unix)]
+        if let Some(response) = super::core_web_broker::route(
+            &capsule_id,
+            self.caller_context.as_ref(),
+            &request,
+            &runtime_handle,
+            &host_semaphore,
+        )? {
+            return Ok(response);
+        }
 
         let parsed_url =
             reqwest::Url::parse(&request.url).map_err(|e| format!("invalid url: {e}"))?;
@@ -546,13 +804,19 @@ impl http::Host for HostState {
 
         let parsed_url =
             reqwest::Url::parse(&request.url).map_err(|e| format!("invalid url: {e}"))?;
-        let allow_local_origin = local_origin_allowed(&capsule_id, &parsed_url);
         let observe_local_provider = local_provider_attempt_allowed(
             &capsule_id,
             &parsed_url,
             &request.method,
             &LOCAL_HTTP_ALLOWLIST,
         );
+        let provider_broker = if observe_local_provider {
+            configured_provider_broker()?
+        } else {
+            None
+        };
+        let allow_local_origin = local_origin_allowed(&capsule_id, &parsed_url)
+            || provider_broker_origin_allowed(&parsed_url, provider_broker.is_some());
         // Snapshot the validated, direct interceptor caller before network waiting. The selected
         // CPU-edge provider is a pooled executable interceptor, not a run-loop capsule; accepting
         // a remembered run-loop message here would make stale context look kernel-attested.
@@ -575,18 +839,38 @@ impl http::Host for HostState {
             // into public-web traffic carrying trusted local timing provenance.
             client_builder = client_builder.no_proxy();
         }
+        if let Some(broker) = provider_broker {
+            client_builder = client_builder.unix_socket(broker.socket_path.clone());
+        }
         let client = client_builder
             .build()
             .map_err(|e| format!("failed to build http client: {e}"))?;
 
         let method = parse_method(&request.method)?;
-        let mut headers = build_headers(&request.headers)?;
-        if allow_local_origin {
-            headers.insert(CONNECTION, HeaderValue::from_static("close"));
-        }
+        let body = request.body.unwrap_or_default();
+        let (request_url, headers) = if provider_broker.is_some() {
+            if body.is_empty() {
+                return Err("provider broker request body is absent".to_string());
+            }
+            (
+                format!("http://{PROVIDER_BROKER_AUTHORITY}{LOCAL_PROVIDER_COMPLETIONS_PATH}"),
+                provider_broker_request_headers(
+                    provider_broker.ok_or_else(|| {
+                        "provider broker disappeared during exact request".to_string()
+                    })?,
+                    body.as_bytes(),
+                )?,
+            )
+        } else {
+            let mut headers = build_headers(&request.headers)?;
+            if allow_local_origin {
+                headers.insert(CONNECTION, HeaderValue::from_static("close"));
+            }
+            (request.url, headers)
+        };
 
-        let mut request_builder = client.request(method, &request.url).headers(headers);
-        if let Some(body) = request.body {
+        let mut request_builder = client.request(method, request_url).headers(headers);
+        if !body.is_empty() {
             request_builder = request_builder.body(body);
         }
 
@@ -634,8 +918,11 @@ impl http::Host for HostState {
             elapsed_ms = header_elapsed.as_millis(),
             "HTTP stream response headers received"
         );
-        let provider_outcome =
-            local_provider_response_outcome(response.status(), response.remote_addr());
+        let provider_outcome = local_provider_response_outcome(
+            response.status(),
+            response.remote_addr(),
+            provider_broker.is_some(),
+        );
         finish_local_provider_request(
             self,
             provider_context.as_ref(),
@@ -822,24 +1109,49 @@ mod tests {
         let loopback = "127.0.0.1:11434".parse().unwrap();
         let public = "198.51.100.8:443".parse().unwrap();
         assert_eq!(
-            local_provider_response_outcome(reqwest::StatusCode::OK, Some(loopback)),
+            local_provider_response_outcome(reqwest::StatusCode::OK, Some(loopback), false),
             LocalProviderRequestOutcomeV1::SuccessfulHeaders
         );
         assert_eq!(
             local_provider_response_outcome(
                 reqwest::StatusCode::INTERNAL_SERVER_ERROR,
-                Some(loopback)
+                Some(loopback),
+                false
             ),
             LocalProviderRequestOutcomeV1::NonSuccessStatus
         );
         assert_eq!(
-            local_provider_response_outcome(reqwest::StatusCode::OK, Some(public)),
+            local_provider_response_outcome(reqwest::StatusCode::OK, Some(public), false),
             LocalProviderRequestOutcomeV1::NonLoopbackPeer
         );
         assert_eq!(
-            local_provider_response_outcome(reqwest::StatusCode::OK, None),
+            local_provider_response_outcome(reqwest::StatusCode::OK, None, false),
             LocalProviderRequestOutcomeV1::UnknownPeer
         );
+        assert_eq!(
+            local_provider_response_outcome(reqwest::StatusCode::OK, None, true),
+            LocalProviderRequestOutcomeV1::SuccessfulHeaders
+        );
+    }
+
+    #[test]
+    fn provider_broker_origin_is_exact_and_never_grants_dns_or_admin_routes() {
+        assert!(provider_broker_origin_allowed(
+            &reqwest::Url::parse("http://127.0.0.1:11434/v1/chat/completions").unwrap(),
+            true,
+        ));
+        for value in [
+            "http://localhost:11434/v1/chat/completions",
+            "http://127.0.0.53:53/v1/chat/completions",
+            "http://127.0.0.1:11434/api/delete",
+            "http://127.0.0.1:11434/api/pull",
+            "http://127.0.0.1:11434/v1/chat/completions?admin=1",
+        ] {
+            assert!(!provider_broker_origin_allowed(
+                &reqwest::Url::parse(value).unwrap(),
+                true,
+            ));
+        }
     }
 
     fn traced_llm_request(trace: IpcTraceContextV1, request_id: uuid::Uuid) -> IpcMessage {

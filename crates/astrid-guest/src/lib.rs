@@ -84,6 +84,9 @@ pub mod capsule_result {
 /// Filesystem helpers.
 pub mod fs {
     use crate::bindings::astrid::capsule::fs as host_fs;
+    use crate::bindings::astrid::capsule::types::{
+        BoundedFileRead, BoundedFileReadMode, NoFollowFileStat,
+    };
 
     /// Read a UTF-8-ish text file, replacing invalid bytes lossily.
     pub fn read_text(path: &str) -> Result<String, String> {
@@ -118,6 +121,24 @@ pub mod fs {
     /// Return true when the path is a directory.
     pub fn is_dir(path: &str) -> Result<bool, String> {
         host_fs::fs_stat(path).map(|stat| stat.is_dir)
+    }
+
+    /// Inspect an exact path entry without following symbolic links.
+    pub fn lstat_nofollow(path: &str) -> Result<NoFollowFileStat, String> {
+        host_fs::fs_lstat_nofollow(path)
+    }
+
+    /// Read an entire stable regular file under both the guest and host bounds.
+    pub fn read_bounded_nofollow(
+        path: &str,
+        maximum_bytes: u64,
+    ) -> Result<BoundedFileRead, String> {
+        host_fs::fs_read_bounded_nofollow(path, maximum_bytes, BoundedFileReadMode::Whole)
+    }
+
+    /// Read a stable bounded tail without loading the preceding file contents.
+    pub fn read_tail_nofollow(path: &str, maximum_bytes: u64) -> Result<BoundedFileRead, String> {
+        host_fs::fs_read_bounded_nofollow(path, maximum_bytes, BoundedFileReadMode::Tail)
     }
 }
 

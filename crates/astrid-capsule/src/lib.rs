@@ -9,6 +9,7 @@
 
 pub mod capsule;
 pub mod context;
+mod cpu_edge_policy;
 pub mod discovery;
 pub mod dispatcher;
 pub mod engine;
