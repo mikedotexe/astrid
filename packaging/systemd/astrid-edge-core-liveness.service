@@ -1,0 +1,39 @@
+[Unit]
+Description=Astrid CPU-edge attested core-liveness recovery
+Documentation=https://github.com/unicity-astrid/astrid
+Requires=astrid-edge-generation-guard.service
+After=astrid-edge-generation-guard.service
+
+[Service]
+Type=oneshot
+User=root
+Group=root
+ExecStartPre=/usr/bin/test -s /etc/astrid/edge-rescue-helper.json
+ExecStartPre=/usr/bin/test -x /usr/libexec/astrid/astrid-edge-rescue-helper
+ExecStart=/usr/libexec/astrid/astrid-edge-rescue-helper --config /etc/astrid/edge-rescue-helper.json recover-core-liveness
+TimeoutStartSec=90s
+UMask=0077
+NoNewPrivileges=yes
+PrivateDevices=yes
+PrivateNetwork=yes
+PrivateTmp=yes
+ProtectClock=yes
+ProtectControlGroups=yes
+ProtectHome=yes
+ProtectHostname=yes
+ProtectKernelLogs=yes
+ProtectKernelModules=yes
+ProtectKernelTunables=yes
+ProtectSystem=strict
+ReadOnlyPaths=/etc/astrid
+CapabilityBoundingSet=
+AmbientCapabilities=
+LockPersonality=yes
+MemoryDenyWriteExecute=yes
+RestrictAddressFamilies=AF_UNIX
+RestrictRealtime=yes
+RestrictSUIDSGID=yes
+SystemCallArchitectures=native
+SystemCallErrorNumber=EPERM
+SystemCallFilter=@system-service
+SystemCallFilter=~@clock @debug @module @mount @obsolete @raw-io @reboot @swap

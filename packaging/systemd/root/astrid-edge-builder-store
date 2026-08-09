@@ -1,0 +1,639 @@
+#!/usr/bin/python3
+"""Create and attest the fixed CPU-edge offline builder filesystem.
+
+The builder store is deliberately a fully allocated ext4 loop image.  It gives
+the unprivileged compiler a hard disk-usage ceiling without spending anonymous
+RAM or permitting sparse-file overcommit.  This helper is root-only and never
+mounts the image itself: systemd owns the mount lifecycle, while this program
+creates the image, prepares the mounted directory layout, and verifies both.
+"""
+
+from __future__ import annotations
+
+import argparse
+import hashlib
+import json
+import os
+import pathlib
+import re
+import stat
+import subprocess
+import sys
+from typing import Any
+
+
+SCHEMA = "astrid.edge_builder_store.config.v1"
+IMAGE_BYTES = 64 * 1024 * 1024 * 1024
+HOST_RESERVE_BYTES = 64 * 1024 * 1024 * 1024
+STORE_MINIMUM_FREE_BYTES = 8 * 1024 * 1024 * 1024
+FILESYSTEM_LABEL = "ASTRID_EDGE_BUILD"
+PERSISTENT_BACKING_TYPES = frozenset({"ext4", "xfs", "btrfs"})
+REQUIRED_OPTIONS = frozenset({"rw", "nodev", "nosuid", "noatime"})
+FORBIDDEN_OPTIONS = frozenset({"ro", "dev", "suid", "exec-off", "noexec", "atime", "relatime", "strictatime"})
+UUID_RE = re.compile(r"^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$")
+# Units invoke the immutable launcher path exactly, while the sealed identity binds
+# the canonical interpreter file behind Ubuntu's root-owned python3 symlink.
+PYTHON_PATH = pathlib.Path("/usr/bin/python3").resolve(strict=True)
+
+
+class StoreError(RuntimeError):
+    """A fail-closed builder-store validation error."""
+
+
+def _run(arguments: list[str]) -> str:
+    completed = subprocess.run(
+        arguments,
+        stdin=subprocess.DEVNULL,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+        check=False,
+    )
+    if completed.returncode != 0:
+        detail = completed.stderr.strip().splitlines()
+        suffix = f": {detail[-1]}" if detail else ""
+        raise StoreError(f"command failed ({pathlib.Path(arguments[0]).name}){suffix}")
+    return completed.stdout
+
+
+def _require_root_linux() -> None:
+    if sys.platform != "linux" or os.geteuid() != 0:
+        raise StoreError("builder-store management requires Linux root")
+
+
+def _absolute(path: str, *, label: str) -> pathlib.Path:
+    value = pathlib.Path(path)
+    if not value.is_absolute() or value == pathlib.Path("/") or "\x00" in path:
+        raise StoreError(f"{label} must be a non-root absolute path")
+    if any(part in {".", ".."} for part in value.parts):
+        raise StoreError(f"{label} contains an unsafe path component")
+    return value
+
+
+def _reject_symlink_ancestry(path: pathlib.Path, *, allow_leaf_absent: bool) -> None:
+    cursor = path
+    if allow_leaf_absent and not cursor.exists() and not cursor.is_symlink():
+        cursor = cursor.parent
+    while cursor != cursor.parent:
+        if cursor.is_symlink():
+            raise StoreError(f"symlink ancestry is forbidden: {cursor}")
+        cursor = cursor.parent
+
+
+def _require_regular(path: pathlib.Path, *, owner: int, mode: int, size: int | None = None) -> os.stat_result:
+    metadata = path.lstat()
+    if not stat.S_ISREG(metadata.st_mode) or metadata.st_nlink != 1:
+        raise StoreError(f"expected a single-linked regular file: {path}")
+    if metadata.st_uid != owner or stat.S_IMODE(metadata.st_mode) != mode:
+        raise StoreError(f"file ownership or mode differs from immutable contract: {path}")
+    if size is not None and metadata.st_size != size:
+        raise StoreError(f"file size differs from immutable contract: {path}")
+    return metadata
+
+
+def _require_secure_directory(path: pathlib.Path, *, label: str) -> os.stat_result:
+    metadata = path.lstat()
+    if (
+        not stat.S_ISDIR(metadata.st_mode)
+        or stat.S_ISLNK(metadata.st_mode)
+        or metadata.st_uid != 0
+        or stat.S_IMODE(metadata.st_mode) & 0o022
+    ):
+        raise StoreError(f"{label} must be a root-owned non-group/world-writable directory")
+    return metadata
+
+
+def _fully_allocated(metadata: os.stat_result) -> bool:
+    return metadata.st_blocks * 512 >= metadata.st_size
+
+
+def _sha256_regular(path: pathlib.Path, *, maximum_bytes: int) -> str:
+    metadata = path.lstat()
+    if (
+        not stat.S_ISREG(metadata.st_mode)
+        or metadata.st_uid != 0
+        or metadata.st_nlink < 1
+        or stat.S_IMODE(metadata.st_mode) & 0o022
+        or metadata.st_size <= 0
+        or metadata.st_size > maximum_bytes
+    ):
+        raise StoreError(f"trusted executable identity is outside policy: {path}")
+    digest = hashlib.sha256()
+    descriptor = os.open(path, os.O_RDONLY | os.O_CLOEXEC | getattr(os, "O_NOFOLLOW", 0))
+    with os.fdopen(descriptor, "rb") as handle:
+        while chunk := handle.read(1024 * 1024):
+            digest.update(chunk)
+    after = path.lstat()
+    if (
+        metadata.st_dev,
+        metadata.st_ino,
+        metadata.st_size,
+        metadata.st_mtime_ns,
+        metadata.st_ctime_ns,
+    ) != (after.st_dev, after.st_ino, after.st_size, after.st_mtime_ns, after.st_ctime_ns):
+        raise StoreError(f"trusted executable changed while hashing: {path}")
+    return digest.hexdigest()
+
+
+def _findmnt(path: pathlib.Path) -> dict[str, Any]:
+    output = _run([
+        "/usr/bin/findmnt",
+        "--json",
+        "--target",
+        str(path),
+        "--output",
+        "TARGET,SOURCE,FSTYPE,UUID,OPTIONS",
+    ])
+    data = json.loads(output)
+    filesystems = data.get("filesystems", [])
+    if len(filesystems) != 1:
+        raise StoreError(f"could not resolve one backing filesystem for {path}")
+    return filesystems[0]
+
+
+def _mount_options(value: str) -> frozenset[str]:
+    return frozenset(item.strip() for item in value.split(",") if item.strip())
+
+
+def _backing_identity(path: pathlib.Path) -> dict[str, Any]:
+    mount = _findmnt(path)
+    metadata = path.stat() if path.exists() else path.parent.stat()
+    return {
+        "target": str(pathlib.Path(mount["target"]).resolve()),
+        "source": str(mount.get("source", "")),
+        "fstype": str(mount.get("fstype", "")),
+        "uuid": str(mount.get("uuid", "") or "").lower(),
+        "device": metadata.st_dev,
+    }
+
+
+def _free_bytes(path: pathlib.Path) -> int:
+    values = os.statvfs(path)
+    return values.f_bavail * values.f_frsize
+
+
+def _fsync_directory(path: pathlib.Path) -> None:
+    descriptor = os.open(path, os.O_RDONLY | getattr(os, "O_DIRECTORY", 0) | os.O_CLOEXEC)
+    try:
+        os.fsync(descriptor)
+    finally:
+        os.close(descriptor)
+
+
+def _remove_recoverable_pending(path: pathlib.Path) -> bool:
+    if not path.exists() and not path.is_symlink():
+        return False
+    _require_regular(path, owner=0, mode=0o600)
+    path.unlink()
+    _fsync_directory(path.parent)
+    return True
+
+
+def _atomic_json(path: pathlib.Path, value: dict[str, Any]) -> None:
+    pending = path.with_name(f".{path.name}.pending")
+    if pending.exists() or pending.is_symlink() or path.exists() or path.is_symlink():
+        raise StoreError("builder-store config or pending config already exists")
+    payload = (json.dumps(value, sort_keys=True, separators=(",", ":")) + "\n").encode()
+    descriptor = os.open(pending, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_CLOEXEC, 0o400)
+    with os.fdopen(descriptor, "wb") as handle:
+        handle.write(payload)
+        handle.flush()
+        os.fsync(handle.fileno())
+    os.replace(pending, path)
+    _fsync_directory(path.parent)
+
+
+def _read_config(path: pathlib.Path) -> dict[str, Any]:
+    _reject_symlink_ancestry(path, allow_leaf_absent=False)
+    metadata = _require_regular(path, owner=0, mode=0o400)
+    if metadata.st_size > 16 * 1024:
+        raise StoreError("builder-store config exceeds its size bound")
+    with path.open("rb") as handle:
+        payload = handle.read(16 * 1024 + 1)
+    try:
+        config = json.loads(payload)
+    except (UnicodeDecodeError, json.JSONDecodeError) as error:
+        raise StoreError("builder-store config is malformed") from error
+    expected = {
+        "schema",
+        "image",
+        "mount",
+        "image_bytes",
+        "filesystem_uuid",
+        "filesystem_label",
+        "image_device",
+        "image_inode",
+        "builder_uid",
+        "builder_gid",
+        "backing",
+        "required_backing_mount",
+        "required_backing_uuid",
+        "required_mount_options",
+        "mount_unit",
+        "python",
+    }
+    if not isinstance(config, dict) or set(config) != expected or config.get("schema") != SCHEMA:
+        raise StoreError("builder-store config schema or keys differ from the fixed contract")
+    if config.get("image_bytes") != IMAGE_BYTES or config.get("filesystem_label") != FILESYSTEM_LABEL:
+        raise StoreError("builder-store config changed its fixed image contract")
+    if config.get("required_mount_options") != sorted(REQUIRED_OPTIONS):
+        raise StoreError("builder-store config changed its fixed mount options")
+    if not UUID_RE.fullmatch(str(config.get("filesystem_uuid", ""))):
+        raise StoreError("builder-store filesystem UUID is malformed")
+    if (
+        not isinstance(config.get("builder_uid"), int)
+        or isinstance(config.get("builder_uid"), bool)
+        or int(config["builder_uid"]) <= 0
+        or not isinstance(config.get("builder_gid"), int)
+        or isinstance(config.get("builder_gid"), bool)
+        or int(config["builder_gid"]) <= 0
+        or not isinstance(config.get("image_device"), int)
+        or not isinstance(config.get("image_inode"), int)
+        or not isinstance(config.get("backing"), dict)
+    ):
+        raise StoreError("builder-store numeric identity fields are malformed")
+    backing = config["backing"]
+    if set(backing) != {"target", "source", "fstype", "uuid", "device"} or not isinstance(
+        backing.get("device"), int
+    ):
+        raise StoreError("builder-store backing identity is malformed")
+    if backing.get("fstype") not in PERSISTENT_BACKING_TYPES or not UUID_RE.fullmatch(
+        str(backing.get("uuid", ""))
+    ):
+        raise StoreError("builder-store backing is not an allowlisted persistent filesystem")
+    mount = _absolute(str(config.get("mount", "")), label="mount")
+    image = _absolute(str(config.get("image", "")), label="image")
+    if image == mount or image.is_relative_to(mount) or mount.is_relative_to(image):
+        raise StoreError("configured builder image and mount are not disjoint")
+    required_mount = str(config.get("required_backing_mount", ""))
+    required_uuid = str(config.get("required_backing_uuid", ""))
+    if bool(required_mount) != bool(required_uuid) or (required_uuid and not UUID_RE.fullmatch(required_uuid)):
+        raise StoreError("configured required backing identity is malformed")
+    if required_mount:
+        required = _absolute(required_mount, label="required backing mount")
+        _reject_symlink_ancestry(required, allow_leaf_absent=False)
+    if config.get("mount_unit") != _mount_unit_name(mount):
+        raise StoreError("builder-store mount unit name does not exactly escape its Where path")
+    python = config.get("python")
+    if (
+        not isinstance(python, dict)
+        or set(python) != {"path", "sha256"}
+        or python.get("path") != str(PYTHON_PATH)
+        or not re.fullmatch(r"[0-9a-f]{64}", str(python.get("sha256", "")))
+        or _sha256_regular(PYTHON_PATH, maximum_bytes=64 * 1024 * 1024) != python["sha256"]
+    ):
+        raise StoreError("builder-store Python interpreter identity changed")
+    return config
+
+
+def _mount_unit_name(path: pathlib.Path) -> str:
+    value = _run(["/usr/bin/systemd-escape", "--path", "--suffix=mount", str(path)]).strip()
+    if not value.endswith(".mount") or "/" in value or not value:
+        raise StoreError("systemd returned an invalid escaped mount-unit name")
+    return value
+
+
+def _verify_backing(config: dict[str, Any], image: pathlib.Path) -> None:
+    current = _backing_identity(image)
+    if current != config["backing"]:
+        raise StoreError("builder image backing filesystem identity changed")
+    required_mount = config["required_backing_mount"]
+    required_uuid = config["required_backing_uuid"]
+    if bool(required_mount) != bool(required_uuid):
+        raise StoreError("required backing mount and UUID must be supplied together")
+    if required_mount:
+        required = _absolute(required_mount, label="required backing mount")
+        _reject_symlink_ancestry(required, allow_leaf_absent=False)
+        required = required.resolve()
+        if current["target"] != str(required) or current["uuid"] != required_uuid:
+            raise StoreError("builder image is not on the exact required backing filesystem")
+    if _free_bytes(image.parent) < HOST_RESERVE_BYTES:
+        raise StoreError("builder image backing filesystem fell below the 64 GiB host reserve")
+
+
+def _blkid(image: pathlib.Path) -> dict[str, str]:
+    output = _run(["/usr/sbin/blkid", "-p", "-o", "export", str(image)])
+    return dict(line.split("=", 1) for line in output.splitlines() if "=" in line)
+
+
+def _verify_image(config: dict[str, Any]) -> pathlib.Path:
+    image = _absolute(config["image"], label="image")
+    _reject_symlink_ancestry(image, allow_leaf_absent=False)
+    metadata = _require_regular(image, owner=0, mode=0o600, size=IMAGE_BYTES)
+    if metadata.st_dev != config["image_device"] or metadata.st_ino != config["image_inode"]:
+        raise StoreError("builder image inode identity changed")
+    if not _fully_allocated(metadata):
+        raise StoreError("builder image is sparse or incompletely allocated")
+    _verify_backing(config, image)
+    values = _blkid(image)
+    if (
+        values.get("TYPE") != "ext4"
+        or values.get("LABEL") != FILESYSTEM_LABEL
+        or values.get("UUID", "").lower() != config["filesystem_uuid"]
+    ):
+        raise StoreError("builder image filesystem identity changed")
+    return image
+
+
+def _verify_mount(config: dict[str, Any], image: pathlib.Path) -> pathlib.Path:
+    mount_path = _absolute(config["mount"], label="mount")
+    _reject_symlink_ancestry(mount_path, allow_leaf_absent=False)
+    mount = _findmnt(mount_path)
+    if pathlib.Path(mount["target"]).resolve() != mount_path.resolve():
+        raise StoreError("builder root is not an exact mount point")
+    options = _mount_options(str(mount.get("options", "")))
+    if not REQUIRED_OPTIONS.issubset(options) or FORBIDDEN_OPTIONS.intersection(options):
+        raise StoreError("builder filesystem mount options differ from the fixed policy")
+    if mount.get("fstype") != "ext4" or str(mount.get("uuid", "")).lower() != config["filesystem_uuid"]:
+        raise StoreError("mounted builder filesystem type or UUID changed")
+    source = str(mount.get("source", ""))
+    if not source.startswith("/dev/loop"):
+        raise StoreError("builder filesystem is not mounted through a loop device")
+    loop = json.loads(
+        _run(
+            [
+                "/usr/sbin/losetup",
+                "--json",
+                "--output",
+                "NAME,BACK-FILE,OFFSET,SIZELIMIT,RO",
+                source,
+            ]
+        )
+    ).get("loopdevices", [])
+    if len(loop) != 1:
+        raise StoreError("builder loop-device identity is ambiguous")
+    record = loop[0]
+    backing_file = pathlib.Path(str(record.get("back-file", ""))).resolve()
+    if (
+        backing_file != image.resolve()
+        or int(record.get("offset", 0) or 0) != 0
+        or int(record.get("sizelimit", 0) or 0) != 0
+        or bool(record.get("ro", False))
+    ):
+        raise StoreError("loop device does not bind the exact writable image")
+    return mount_path
+
+
+def _verify_layout(config: dict[str, Any], mount_path: pathlib.Path) -> None:
+    expected = {
+        mount_path: (0, int(config["builder_gid"]), 0o710),
+        mount_path / "work": (0, int(config["builder_gid"]), 0o710),
+        mount_path / "builds": (0, 0, 0o700),
+    }
+    mount_device = mount_path.stat().st_dev
+    for path, (uid, gid, mode) in expected.items():
+        metadata = path.lstat()
+        if (
+            not stat.S_ISDIR(metadata.st_mode)
+            or path.is_symlink()
+            or metadata.st_uid != uid
+            or metadata.st_gid != gid
+            or stat.S_IMODE(metadata.st_mode) != mode
+            or metadata.st_dev != mount_device
+        ):
+            raise StoreError(f"builder directory layout differs from the fixed contract: {path}")
+    names = {entry.name for entry in mount_path.iterdir()}
+    if not names.issubset({"lost+found", "work", "builds"}):
+        raise StoreError("builder filesystem contains unexpected top-level content")
+    values = os.statvfs(mount_path)
+    capacity = values.f_blocks * values.f_frsize
+    if capacity < IMAGE_BYTES * 9 // 10 or capacity > IMAGE_BYTES:
+        raise StoreError("builder filesystem capacity differs from the fixed image bound")
+    if _free_bytes(mount_path) < STORE_MINIMUM_FREE_BYTES:
+        raise StoreError("builder filesystem has less than the immutable free-space reserve")
+
+
+def initialize(arguments: argparse.Namespace) -> None:
+    _require_root_linux()
+    config_path = _absolute(arguments.config, label="config")
+    image = _absolute(arguments.image, label="image")
+    mount = _absolute(arguments.mount, label="mount")
+    if image == mount or image.is_relative_to(mount) or mount.is_relative_to(image):
+        raise StoreError("builder image and mount must be disjoint")
+    for path in (config_path, image, mount):
+        _reject_symlink_ancestry(path, allow_leaf_absent=True)
+    if not image.parent.is_dir() or not config_path.parent.is_dir():
+        raise StoreError("builder image and config parents must already exist")
+    _require_secure_directory(image.parent, label="builder image parent")
+    _require_secure_directory(config_path.parent, label="builder config parent")
+    _require_secure_directory(mount.parent, label="builder mount parent")
+    if mount.exists() and (mount.is_symlink() or not mount.is_dir()):
+        raise StoreError("builder mount path must be absent or a real directory")
+    required_mount = arguments.required_backing_mount or ""
+    required_uuid = (arguments.required_backing_uuid or "").lower()
+    if bool(required_mount) != bool(required_uuid) or (required_uuid and not UUID_RE.fullmatch(required_uuid)):
+        raise StoreError("required backing mount and valid UUID must be supplied together")
+    if required_mount:
+        required_path = _absolute(required_mount, label="required backing mount")
+        _reject_symlink_ancestry(required_path, allow_leaf_absent=False)
+        required_mount = str(required_path.resolve())
+    backing = _backing_identity(image.parent)
+    if backing["fstype"] not in PERSISTENT_BACKING_TYPES or not UUID_RE.fullmatch(backing["uuid"]):
+        raise StoreError("builder image parent is not an allowlisted UUID-bound persistent filesystem")
+    if required_mount and (backing["target"] != required_mount or backing["uuid"] != required_uuid):
+        raise StoreError("image parent is not on the exact required backing filesystem")
+    pending = image.with_name(f".{image.name}.pending")
+    _remove_recoverable_pending(pending)
+    config_pending = config_path.with_name(f".{config_path.name}.pending")
+    if config_pending.exists() or config_pending.is_symlink():
+        _require_regular(config_pending, owner=0, mode=0o400)
+        config_pending.unlink()
+        _fsync_directory(config_path.parent)
+    if config_path.exists() or config_path.is_symlink():
+        if not image.exists() or image.is_symlink():
+            raise StoreError("builder-store config exists without its exact image")
+        existing = _read_config(config_path)
+        if (
+            existing["image"] != str(image)
+            or existing["mount"] != str(mount)
+            or existing["builder_uid"] != arguments.builder_uid
+            or existing["builder_gid"] != arguments.builder_gid
+            or existing["required_backing_mount"] != required_mount
+            or existing["required_backing_uuid"] != required_uuid
+        ):
+            raise StoreError("existing builder-store config differs from requested identity")
+        _verify_image(existing)
+        return
+    if mount.exists() and any(mount.iterdir()):
+        raise StoreError("new builder mount path must be absent or empty")
+    filesystem_uuid = ""
+    reconstruct = image.exists() or image.is_symlink()
+    if reconstruct:
+        metadata = _require_regular(image, owner=0, mode=0o600, size=IMAGE_BYTES)
+        if not _fully_allocated(metadata):
+            raise StoreError("orphaned builder image is sparse or incompletely allocated")
+        if _free_bytes(image.parent) < HOST_RESERVE_BYTES:
+            raise StoreError("orphaned builder image backing fell below the host reserve")
+        values = _blkid(image)
+        filesystem_uuid = values.get("UUID", "").lower()
+        if (
+            values.get("TYPE") != "ext4"
+            or values.get("LABEL") != FILESYSTEM_LABEL
+            or not UUID_RE.fullmatch(filesystem_uuid)
+        ):
+            raise StoreError("orphaned builder image cannot be safely reconstructed")
+    elif _free_bytes(image.parent) < IMAGE_BYTES + HOST_RESERVE_BYTES:
+        raise StoreError("backing filesystem cannot allocate 64 GiB while retaining 64 GiB free")
+    if reconstruct:
+        metadata = _require_regular(image, owner=0, mode=0o600, size=IMAGE_BYTES)
+        config = {
+            "schema": SCHEMA,
+            "image": str(image),
+            "mount": str(mount),
+            "image_bytes": IMAGE_BYTES,
+            "filesystem_uuid": filesystem_uuid,
+            "filesystem_label": FILESYSTEM_LABEL,
+            "image_device": metadata.st_dev,
+            "image_inode": metadata.st_ino,
+            "builder_uid": arguments.builder_uid,
+            "builder_gid": arguments.builder_gid,
+            "backing": backing,
+            "required_backing_mount": required_mount,
+            "required_backing_uuid": required_uuid,
+            "required_mount_options": sorted(REQUIRED_OPTIONS),
+            "mount_unit": _mount_unit_name(mount),
+            "python": {
+                "path": str(PYTHON_PATH),
+                "sha256": _sha256_regular(PYTHON_PATH, maximum_bytes=64 * 1024 * 1024),
+            },
+        }
+        _atomic_json(config_path, config)
+        return
+    descriptor = os.open(pending, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_CLOEXEC, 0o600)
+    os.close(descriptor)
+    try:
+        _run(["/usr/bin/fallocate", "--length", str(IMAGE_BYTES), str(pending)])
+        os.chmod(pending, 0o600)
+        metadata = _require_regular(pending, owner=0, mode=0o600, size=IMAGE_BYTES)
+        if not _fully_allocated(metadata) or _free_bytes(image.parent) < HOST_RESERVE_BYTES:
+            raise StoreError("builder image allocation is sparse or consumed the host reserve")
+        filesystem_uuid = pathlib.Path("/proc/sys/kernel/random/uuid").read_text(encoding="ascii").strip().lower()
+        if not UUID_RE.fullmatch(filesystem_uuid):
+            raise StoreError("kernel supplied a malformed filesystem UUID")
+        _run([
+            "/usr/sbin/mkfs.ext4",
+            "-q",
+            "-F",
+            "-m",
+            "0",
+            "-U",
+            filesystem_uuid,
+            "-L",
+            FILESYSTEM_LABEL,
+            "-E",
+            "nodiscard,lazy_itable_init=0,lazy_journal_init=0",
+            str(pending),
+        ])
+        with pending.open("rb") as handle:
+            os.fsync(handle.fileno())
+        metadata = _require_regular(pending, owner=0, mode=0o600, size=IMAGE_BYTES)
+        if not _fully_allocated(metadata):
+            raise StoreError("filesystem creation made the builder image sparse")
+        os.replace(pending, image)
+        _fsync_directory(image.parent)
+        metadata = _require_regular(image, owner=0, mode=0o600, size=IMAGE_BYTES)
+        config = {
+            "schema": SCHEMA,
+            "image": str(image),
+            "mount": str(mount),
+            "image_bytes": IMAGE_BYTES,
+            "filesystem_uuid": filesystem_uuid,
+            "filesystem_label": FILESYSTEM_LABEL,
+            "image_device": metadata.st_dev,
+            "image_inode": metadata.st_ino,
+            "builder_uid": arguments.builder_uid,
+            "builder_gid": arguments.builder_gid,
+            "backing": backing,
+            "required_backing_mount": required_mount,
+            "required_backing_uuid": required_uuid,
+            "required_mount_options": sorted(REQUIRED_OPTIONS),
+            "mount_unit": _mount_unit_name(mount),
+            "python": {
+                "path": str(PYTHON_PATH),
+                "sha256": _sha256_regular(PYTHON_PATH, maximum_bytes=64 * 1024 * 1024),
+            },
+        }
+        _atomic_json(config_path, config)
+    except BaseException:
+        if pending.exists() and not pending.is_symlink():
+            pending.unlink()
+            _fsync_directory(image.parent)
+        raise
+
+
+def prepare(arguments: argparse.Namespace) -> None:
+    _require_root_linux()
+    config = _read_config(_absolute(arguments.config, label="config"))
+    image = _verify_image(config)
+    mount_path = _verify_mount(config, image)
+    names = {entry.name for entry in mount_path.iterdir()}
+    if not names.issubset({"lost+found", "work", "builds"}):
+        raise StoreError("builder filesystem contains unexpected top-level content")
+    os.chown(mount_path, 0, int(config["builder_gid"]))
+    os.chmod(mount_path, 0o710)
+    for name, uid, gid, mode in (
+        ("work", 0, int(config["builder_gid"]), 0o710),
+        ("builds", 0, 0, 0o700),
+    ):
+        path = mount_path / name
+        if path.exists() or path.is_symlink():
+            metadata = path.lstat()
+            if not stat.S_ISDIR(metadata.st_mode) or stat.S_ISLNK(metadata.st_mode):
+                raise StoreError(f"builder layout entry is not a real directory: {path}")
+        else:
+            path.mkdir(mode=mode)
+        os.chown(path, uid, gid)
+        os.chmod(path, mode)
+    _fsync_directory(mount_path)
+    _verify_layout(config, mount_path)
+
+
+def verify(arguments: argparse.Namespace) -> None:
+    _require_root_linux()
+    config = _read_config(_absolute(arguments.config, label="config"))
+    image = _verify_image(config)
+    mount_path = _verify_mount(config, image)
+    _verify_layout(config, mount_path)
+
+
+def unit_name(arguments: argparse.Namespace) -> None:
+    _require_root_linux()
+    config = _read_config(_absolute(arguments.config, label="config"))
+    print(config["mount_unit"])
+
+
+def parser() -> argparse.ArgumentParser:
+    result = argparse.ArgumentParser(description=__doc__)
+    commands = result.add_subparsers(dest="command", required=True)
+    create = commands.add_parser("initialize")
+    create.add_argument("--config", required=True)
+    create.add_argument("--image", required=True)
+    create.add_argument("--mount", required=True)
+    create.add_argument("--builder-uid", type=int, required=True)
+    create.add_argument("--builder-gid", type=int, required=True)
+    create.add_argument("--required-backing-mount")
+    create.add_argument("--required-backing-uuid")
+    create.set_defaults(function=initialize)
+    for name, function in (("prepare", prepare), ("verify", verify), ("unit-name", unit_name)):
+        command = commands.add_parser(name)
+        command.add_argument("--config", required=True)
+        command.set_defaults(function=function)
+    return result
+
+
+def main() -> int:
+    try:
+        arguments = parser().parse_args()
+        if arguments.command == "initialize" and (
+            arguments.builder_uid <= 0 or arguments.builder_gid <= 0
+        ):
+            raise StoreError("builder UID and GID must be positive")
+        arguments.function(arguments)
+    except (OSError, ValueError, StoreError) as error:
+        print(f"error: {error}", file=sys.stderr)
+        return 2
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

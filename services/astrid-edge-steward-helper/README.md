@@ -1,0 +1,60 @@
+# Astrid CPU-edge immutable steward helper
+
+This standalone Rust workspace is the native, digest-pinned `model` profile for the CPU-edge immutable rescue root. One invocation performs at most one scheduled reflection. It has no process or shell API, cannot run candidate code, and opens no connection except one fresh HTTP connection at a time to the exact loopback Ollama origin and, when configured, the dedicated immutable read-only web broker over `/run/astrid-edge-self-change/web-steward.sock`.
+
+The helper:
+
+- acquires the shared advisory model lock and defers while autonomy, a conversation, an Action, recovery, or thermal pressure is active;
+- fail-closed defers for an active or malformed immutable maintenance lease before locking, after locking, and immediately before provider inference; only an exact expired v2 lease is ignored;
+- binds the active symlink to the root-controlled generation file and verifies that generation's cumulative signed CPU-edge source snapshot;
+- programmatically projects bounded continuity, self profile, verified evidence, machine observation, spectral/host state, and the prior scheduled reflection into a mandatory rich introspection pass;
+- permits that rich pass to use only bounded owned introspection and optional read-only web research, rejecting every source/candidate tool at the authorization boundary;
+- starts a fresh clean source-review turn only after an exact final `SOURCE_REVIEW: REQUEST`, with only revalidated signed source/build/generation facts and source/candidate tools;
+- applies distinct rich and source-authoring output-token ceilings while limiting both passes together to eight exact textual model/tool exchanges;
+- maintains one exact-schema HMAC-authenticated private draft capped at 25 signed source IDs, 4,000 conservative full-before/full-after lines, and 8 MiB of aggregate replacement text;
+- accepts full-content replacements only after an exact current-content hash check, then revalidates the live generation, cumulative source identity, original hashes, replacement hashes, line accounting, and vendored dependency policy before formatting or submission;
+- rejects all unadvertised tools and arguments at the native authorization boundary and never carries rich or web-derived prose into candidate authority;
+- emits no intent for provider errors, partial/length-truncated output, malformed tools, tool-only loops, local fallback, or a non-exact terminal declaration;
+- checkpoints the exact rich model response before clean review, writes it separately from its 320-character continuity summary, and preserves it if clean review fails or is interrupted;
+- recovers a signed rich/clean checkpoint without a second model call, reopens a prepared draft after non-authored clean failure, and keeps the original two-hour cadence anchor; and
+- durably signs the exact authored completion before any candidate intent is visible, then publishes a completion-gated wrapper, patch, and binding as one recoverable transaction;
+- issues exactly one bounded `keep_alive=0` unload only after a candidate envelope is durable, records a signed confirmed/deferred handoff, and never retries it;
+- reconciles a submitted draft only from the exact root-projected supervisor lifecycle, then archives it and exports signed full and body-free summary bundles; and
+- writes only steward:`runtime` mode-`0640` files inside three installer-created steward:`runtime` mode-`0750`, ACL-isolated output directories; it never creates, chmods, or chowns those directories.
+
+Build and verify without dependency acquisition:
+
+```bash
+cargo test --manifest-path services/astrid-edge-steward-helper/Cargo.toml --locked --offline
+cargo clippy --manifest-path services/astrid-edge-steward-helper/Cargo.toml --all-targets --locked --offline -- -D warnings
+cargo build --manifest-path services/astrid-edge-steward-helper/Cargo.toml --release --locked --offline
+```
+
+`Cargo.lock` belongs to this independent workspace and must ship beside the helper source in the immutable build input.
+
+## Installation contract
+
+Install the release ELF root-owned and non-writable at a path covered by the supervisor command-profile trusted executable roots. Pin its SHA-256 as the `model` executable. With systemd credentials its only static arguments are `--config /etc/astrid-edge-self-change/steward-helper.json --credential-directory %d`; `LoadCredential=source.key:/etc/astrid-edge-self-change/source-signing.key`, `LoadCredential=intent.key:/etc/astrid-edge-self-change/intent-attestation.key`, and `LoadCredential=supervisor-status:/var/lib/astrid-edge-self-change/steward-status.json` provide the two secrets plus a bounded non-secret root projection without `CAP_DAC_READ_SEARCH`. The installed CLI derives the due slot and scheduled question internally. It has no operator-supplied `--due-nonce` or `--question` route; both are rejected as unknown arguments.
+
+The root-owned systemd service must use the existing immutable rescue-root sandbox, permit loopback only to the configured Ollama port, and reach its broker solely through the dedicated systemd-owned Unix socket. The broker alone owns tightly bounded external read-only search egress; the helper cannot choose an upstream, headers, arbitrary fetch body, or arbitrary destination. Results are explicitly untrusted metadata. The service must never receive general egress. No candidate-controlled argv, environment, working directory, command, URL, or model identifier is accepted.
+
+The installer creates exactly `workspace/runtime/scheduled-introspection/projection`, `workspace/introspections/scheduled`, and `workspace/self-change/patch-outbox` as steward:`runtime` mode `0750`. The helper service runs with the runtime group and `UMask=0027`, so every projection, artifact, ledger, and export is steward:`runtime` mode `0640`: runtime can read, while only the steward can write. The helper rejects any ownership or mode drift instead of repairing it at runtime. Runtime admission state is a separate runtime-owned sibling and is not writable or visible through these paths.
+
+The non-secret config is a root-owned, non-linked regular file with no group/world write bits; mode `0440` and group `astrid-steward` is supported. Fallback `/etc` key files remain root-owned, non-writable mode `0400`; `LoadCredential` is preferred. A credential directory must be absolute, non-writable, and contain exactly `source.key`, `intent.key`, and `supervisor-status`. Systemd 249 may expose read-only credential copies as root-owned or ID-mapped to the unit user. The two key files are regular, non-linked, non-writable, and exactly 32 bytes; the status snapshot is a bounded regular non-linked JSON file and is parsed with an exact schema. The config pins both key SHA-256 identities, target, bootstrap signed source ID, source-manifest hash, active-generation symlink, and current-generation binding. Source-signing and intent-attestation keys must differ. Mutable helper state, supervisor state, signed source, releases, and root-of-trust paths remain separate. The bootstrap source is used only for an authenticated operator-initial generation; a promoted generation must provide a sealed HMAC-authenticated cumulative `source-snapshot`, which becomes the sole source for its successor. `config.example.json` documents all required fields.
+
+The source-bundle extractor must materialize `MANIFEST.json` and `MANIFEST.signature.json` next to the exact inventory tree without symlinks or hardlinks. Root/core/edge/capsule `Cargo.toml` and all separately inventoried locks use the explicit `mutable_build_manifest` origin; immutable `.cargo/config`, Clippy, and rustfmt policy stay ineligible. The inventory includes `source/Cargo.lock`, `source/services/astrid-edge-runtime/Cargo.lock`, and the edge capsule locks. The helper parses proposed manifests/locks and rejects git/alternate-registry dependencies or any external name/version absent from the signed vendor inventory. The immutable offline build remains the final dependency gate.
+
+The steward helper, rescue helper, per-client Unix web brokers, and checkpoint writer are immutable native helpers. Their service trees and unit authority are absent from every candidate source inventory and are rejected again by the steward, legacy supervisor, runtime classifier, rescue manifest verifier, and immutable replay—even if a malformed signed record falsely labels one as mutable.
+
+Model-authored service changes are limited to the six base fragments named by the immutable transactional installer: Ollama, model warmup, core, edge runtime, hindsight service, and hindsight timer, in the root or ICP profile location. The source inventory gives only those files a mutable service origin (while accepting the older build-required origin for upgrade compatibility); every rescue, broker, steward, checkpoint, drop-in, SSH, sudo, and host unit stays ineligible.
+
+Before any patch or authority artifact is published, the helper writes an owner-only signed authored transaction and then atomically persists the identical signed `authored_completion.v2` proof under `helper_state/completed-nonces/<due_nonce>`. Only after that proof and its directory are durable does it create `astrid.edge_self_change.completed_intent_envelope.v1`, which wraps the existing signed v1 intent plus the completion proof and signs the whole unsigned wrapper. A second owner-only prepared record under `helper_state/intent-transactions/<candidate-id>-<candidate-sha256>/` binds every byte needed for idempotent publication. The helper then writes the candidate patch under `candidate-outbox` as `candidate-patch-<patch_sha256>.json`, its intent binding, the completed supervisor wrapper, the submitted draft, and finally a hash-chained committed record. On restart, an exact inbox or processed wrapper causes remaining effects to complete from the retained transactions even if immutable supervision has already activated a different generation; no current-source reload is required for that published recovery. Missing completion proof, bare v1 envelopes, duplicated, mismatched, replayed, or conflicting projections fail closed. The immutable build profile must open the exact digest-derived patch file, re-hash it, require its candidate/base/source bindings, and apply replacements into a disposable candidate tree.
+
+The immutable broker contract is `POST /v1/search` on the exact steward Unix socket, with fixed logical Host `astrid-edge-web-broker`, exact `SO_PEERCRED` UID, a steward-only request key, and broker-signed responses. Requests use `astrid.edge.web_search.request.v2`, bind the scheduled trace, and pass the broker's natural-language anti-exfiltration validator and rolling rate bound; responses use `astrid.edge.web_search.response.v1` and return at most five bounded title/URL/snippet records. A source fetch is single-use and accepted only for an exact URL returned to the same client and trace. Only requested/completed/failed metadata and hashes enter the signed private ledger. No request headers, result page, fetched body, or response body is retained.
+
+Web-derived and owned reflective text never enter a code-authoring turn. The rich pass cannot invoke
+candidate tools. If it ends with the exact source-review request marker, a new clean turn sees only
+signed source/build/generation facts and a fixed question; that clean turn cannot invoke owned or
+web tools. `submit_candidate` creates only a non-authorizing prepared draft. If the clean direct
+model session does not end with the exact matching `CHANGESET` declaration, that candidate is
+reopened as the same durable editing draft rather than becoming a frozen orphan.

@@ -1,0 +1,18 @@
+[Unit]
+Description=Astrid CPU-edge model-warmup gateway socket
+Documentation=https://github.com/unicity-astrid/astrid
+
+[Socket]
+ListenStream=/run/astrid-edge-self-change/provider-warmup.sock
+SocketUser=root
+SocketGroup=@@PROVIDER_WARMUP_GROUP@@
+SocketMode=0660
+DirectoryMode=0755
+Accept=no
+Service=astrid-edge-provider-broker@model-warmup.service
+RemoveOnStop=yes
+FlushPending=yes
+Backlog=2
+
+[Install]
+WantedBy=sockets.target

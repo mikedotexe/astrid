@@ -1,0 +1,72 @@
+[Unit]
+Description=Astrid CPU-edge fail-closed self-change supervisor
+Documentation=https://github.com/unicity-astrid/astrid
+Requires=astrid-edge-generation-guard.service
+After=local-fs.target astrid-edge-generation-guard.service
+Before=astrid-edge-steward.service
+OnSuccess=astrid-edge-steward.service
+
+[Service]
+Type=oneshot
+User=root
+Group=root
+ExecStartPre=/usr/bin/test -s /etc/astrid/edge-service-manager.json
+ExecStartPre=/usr/bin/test -s /etc/astrid/edge-self-change.json
+ExecStartPre=/usr/bin/test -s /etc/astrid/edge-self-change.key
+ExecStartPre=/usr/bin/test -s /etc/astrid/edge-self-evolution-intent.key
+ExecStartPre=/usr/bin/test -s /etc/astrid/edge-rescue-helper.json
+ExecStartPre=/usr/bin/test -x /usr/libexec/astrid/edge-self-change-supervisor
+ExecStartPre=/usr/bin/test -x /usr/libexec/astrid/astrid-edge-rescue-helper
+ExecStartPre=/usr/libexec/astrid/astrid-edge-rescue-helper --config /etc/astrid/edge-rescue-helper.json verify-proc-isolation
+ExecStartPre=/usr/libexec/astrid/astrid-edge-rescue-helper --config /etc/astrid/edge-rescue-helper.json recover-model-after-build
+ExecStart=/usr/bin/python3 -I -E -s /usr/libexec/astrid/edge-self-change-supervisor --config /etc/astrid/edge-self-change.json --execute supervise
+ExecStopPost=/usr/libexec/astrid/astrid-edge-rescue-helper --config /etc/astrid/edge-rescue-helper.json recover-model-after-build
+# Covers the immutable 24-hour pipeline plus drain, model restoration, and
+# supervisor bookkeeping. The profile retains a separate 25-hour hard bound.
+TimeoutStartSec=26h
+TimeoutStopSec=30s
+KillMode=mixed
+UMask=0077
+# Exact state/release binds are installed by the root bootstrap drop-in. The
+# supervisor authenticates and coordinates; candidate choice remains outside it.
+NoNewPrivileges=yes
+PrivateDevices=yes
+PrivateNetwork=yes
+PrivateTmp=yes
+ProtectClock=yes
+ProtectControlGroups=yes
+ProtectHome=yes
+ProtectHostname=yes
+ProtectKernelLogs=yes
+ProtectKernelModules=yes
+ProtectKernelTunables=yes
+ProtectProc=invisible
+# Cargo/rustc may still read aggregate CPU and memory files such as
+# /proc/cpuinfo and /proc/meminfo; unrelated process directories stay hidden.
+ProcSubset=all
+ProtectSystem=strict
+ReadOnlyPaths=/etc/astrid
+CapabilityBoundingSet=CAP_CHOWN CAP_DAC_OVERRIDE CAP_FOWNER CAP_KILL CAP_SETGID CAP_SETUID
+AmbientCapabilities=
+LockPersonality=yes
+# The fixed offline workspace/capsule gates execute Wasmtime, whose JIT must
+# transition anonymous mappings from writable to executable. Candidate input
+# still cannot select commands, and PrivateNetwork/cgroups/native invariant
+# replay confine this one root build service. Probation does not JIT and keeps
+# MemoryDenyWriteExecute=yes.
+MemoryDenyWriteExecute=no
+# Candidate and synthetic validation bind two ephemeral 127.0.0.1 listeners
+# for the isolated shadow reservoir. PrivateNetwork keeps this AF_INET socket
+# family inside a fresh loopback-only namespace with no external interfaces.
+RestrictAddressFamilies=AF_UNIX AF_INET
+RestrictRealtime=yes
+RestrictSUIDSGID=yes
+SystemCallArchitectures=native
+SystemCallErrorNumber=EPERM
+SystemCallFilter=@system-service
+SystemCallFilter=~@clock @debug @module @mount @obsolete @raw-io @reboot @swap
+NoExecPaths=/
+ExecPaths=/usr/bin/python3 /usr/bin/test /usr/libexec/astrid/astrid-edge-rescue-helper /usr/lib /usr/lib64 /lib /lib64
+
+[Install]
+WantedBy=multi-user.target

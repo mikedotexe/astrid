@@ -1,0 +1,82 @@
+{
+  "schema": "astrid.edge.steward_helper.config.v1",
+  "appliance_id": "avado-astrid",
+  "target": "x86_64-unknown-linux-gnu",
+  "model": "qwen3.5:4b",
+  "ollama_origin": "http://127.0.0.1:11434",
+  "connect_timeout_ms": 30000,
+  "header_timeout_ms": 300000,
+  "total_timeout_ms": 660000,
+  "web_broker": {
+    "socket_path": "/run/astrid-edge-self-change/web-steward.sock",
+    "request_key_path": "/etc/astrid-edge-self-change/steward-web-request.key",
+    "request_key_sha256": "4444444444444444444444444444444444444444444444444444444444444444",
+    "response_verify_key_path": "/etc/astrid-edge-self-change/web-response.pub",
+    "response_verify_key_sha256": "5555555555555555555555555555555555555555555555555555555555555555",
+    "connect_timeout_ms": 1000,
+    "header_timeout_ms": 10000,
+    "total_timeout_ms": 20000,
+    "result_limit": 5
+  },
+  "context_tokens": 4096,
+  "output_tokens": 192,
+  "source_authoring_output_tokens": 256,
+  "model_lock": "/home/avado/.astrid/home/default/edge/runtime/model.lock",
+  "workspace_root": "/home/avado/.astrid/home/default/edge",
+  "workspace_uid": 1000,
+  "workspace_gid": 1000,
+  "source_root": "/var/lib/astrid-edge-self-change/source/generation-1/astrid-edge-self-change-source",
+  "source_manifest": "/var/lib/astrid-edge-self-change/source/generation-1/astrid-edge-self-change-source/MANIFEST.json",
+  "source_manifest_sha256": "2222222222222222222222222222222222222222222222222222222222222222",
+  "source_signature": "/var/lib/astrid-edge-self-change/source/generation-1/astrid-edge-self-change-source/MANIFEST.signature.json",
+  "expected_source_id": "cpu-edge:3333333333333333333333333333333333333333333333333333333333333333",
+  "source_signing_key": "/etc/astrid-edge-self-change/source-signing.key",
+  "source_signing_key_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+  "attestor_key": "/etc/astrid-edge-self-change/intent-attestation.key",
+  "attestor_key_sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+  "state_root": "/var/lib/astrid-edge-steward-helper",
+  "supervisor_inbox": "/var/lib/astrid-edge-self-change/inbox",
+  "supervisor_status": "/var/lib/astrid-edge-self-change/steward-status.json",
+  "current_generation": "/var/lib/astrid-edge-self-change/current-generation",
+  "active_generation_link": "/opt/astrid-edge/current",
+  "maintenance_lease": "/var/lib/astrid-edge-self-change/maintenance.json",
+  "patch_export_root": "/home/avado/.astrid/home/default/edge/self-change/patch-outbox",
+  "owned_inputs": [
+    {
+      "kind": "continuity",
+      "path": "/home/avado/.astrid/home/default/edge/autonomous/thread_state.json",
+      "maximum_files": 1,
+      "maximum_bytes_per_file": 65536
+    },
+    {
+      "kind": "self_profile",
+      "path": "/home/avado/.astrid/home/default/edge/self/profile.json",
+      "maximum_files": 1,
+      "maximum_bytes_per_file": 65536
+    },
+    {
+      "kind": "verified_evidence",
+      "path": "/home/avado/.astrid/home/default/edge/autonomous/thread_state.jsonl",
+      "maximum_files": 1,
+      "maximum_bytes_per_file": 65536
+    },
+    {
+      "kind": "machine_observation",
+      "path": "/home/avado/.astrid/home/default/edge/perception/latest.json",
+      "maximum_files": 1,
+      "maximum_bytes_per_file": 65536
+    },
+    {
+      "kind": "spectral_host_state",
+      "path": "/home/avado/.astrid/home/default/edge/runtime/spectral_state.json",
+      "maximum_files": 1,
+      "maximum_bytes_per_file": 65536
+    }
+  ],
+  "gates": {
+    "autonomy_state": "/home/avado/.astrid/home/default/edge/autonomous/state.json",
+    "action_receipts": "/home/avado/.astrid/home/default/edge/actions/receipts.jsonl",
+    "thermal_celsius": "/sys/devices/virtual/thermal/thermal_zone0/temp",
+    "maximum_thermal_celsius": 85
+  }
+}

@@ -1,0 +1,1480 @@
+#!/usr/bin/env bash
+# Transactionally move the fixed CPU-edge service stack from a user manager to
+# root-owned system units which continue to run as the appliance identity.
+set -euo pipefail
+IFS=$'\n\t'
+umask 077
+PATH=/usr/sbin:/usr/bin:/sbin:/bin
+export PATH
+
+dry_run=false
+render_only=false
+start_services=false
+profile= appliance_id= runtime_user= runtime_home= unit_source_root= user_unit_root= system_unit_root=
+rescue_system_unit_root=
+active_generation_root= management_marker= self_evolution_dropin_sha256=
+post_install_verifier= post_install_verifier_config=
+model_lock= maintenance_lease= authority_env=
+unit_policy=
+ollama_binary= ollama_binary_sha256=
+operator_report_manifest_sha256=
+required_mount= required_mount_uuid=
+provider_output_tokens=
+completion_marker=
+state_store_helper= state_store_helper_sha256= state_store_config=
+state_store_runtime_mount_unit= state_store_rollback_mount_unit=
+state_store_verify_unit= state_store_health_timer=
+source_root= candidate_root= builder_root= updater_root= toolchain_root=
+output_root= render_state_device= render_web_response_verify_sha256= render_audio_feeder_uid=
+declare -a requested_units=() requested_hash_specs=() profile_dropin_hash_specs=()
+
+die() { printf 'error: %s\n' "$*" >&2; exit 2; }
+need_value() { [[ $# -ge 2 && -n $2 ]] || die "missing value for $1"; }
+usage() {
+    cat <<'EOF'
+usage: migrate-edge-user-services-to-system [--dry-run | --render-only --output-root ABS] [--start-services]
+  --profile avado|icp --runtime-user USER --runtime-home ABS
+  --appliance-id SAFE-ID
+  --unit-source-root ABS --user-unit-root ABS --system-unit-root /etc/systemd/system
+  --rescue-system-unit-root UPDATER_ROOT/system-units
+  --active-generation-root ABS/current
+  --management-marker /etc/astrid/edge-service-manager.json
+  --self-evolution-dropin-sha256 HEX64
+  --post-install-verifier ABS --post-install-verifier-config ABS
+  --model-lock ABS (persistent root-owned shared lock)
+  --maintenance-lease ABS (persistent root-owned dynamic lease)
+  --authority-env /etc/astrid/edge-self-change-authority.env
+  --unit-policy SUPERVISOR_STATE/unit-policy.json
+  --ollama-binary ABS --ollama-binary-sha256 HEX64
+  --operator-report-manifest-sha256 HEX64
+  --provider-output-tokens N (exact active capsule and gateway ceiling)
+  --state-store-helper ABS --state-store-helper-sha256 HEX64
+  --state-store-config /etc/astrid/edge-state-store.json
+  --state-store-runtime-mount-unit NAME.mount
+  --state-store-rollback-mount-unit NAME.mount
+  --state-store-verify-unit astrid-edge-state-store-verify.service
+  --state-store-health-timer astrid-edge-state-store-health.timer
+  --source-root ABS --candidate-root ABS --builder-root ABS
+  --updater-root ABS --toolchain-root ABS
+  --unit NAME --unit-sha256 NAME=HEX (repeat for the exact six-unit stack)
+  --profile-dropin-sha256 NAME=HEX (repeat for the exact profile drop-ins)
+  [--required-mount /media/data --required-mount-uuid UUID]
+  Render-only fixture values:
+  --render-state-device /dev/disk/by-uuid/UUID
+  --render-web-response-verify-sha256 HEX64
+  [--render-audio-feeder-uid UID] (required for AVADO)
+  Real execution also requires --completion-marker PRIVATE_ROOT_DIR/system-migration.complete.
+EOF
+}
+
+while (($#)); do
+    case "$1" in
+        --dry-run) dry_run=true; shift ;;
+        --render-only) render_only=true; shift ;;
+        --output-root) need_value "$@"; output_root=$2; shift 2 ;;
+        --render-state-device) need_value "$@"; render_state_device=$2; shift 2 ;;
+        --render-web-response-verify-sha256) need_value "$@"; render_web_response_verify_sha256=$2; shift 2 ;;
+        --render-audio-feeder-uid) need_value "$@"; render_audio_feeder_uid=$2; shift 2 ;;
+        --start-services) start_services=true; shift ;;
+        --profile) need_value "$@"; profile=$2; shift 2 ;;
+        --appliance-id) need_value "$@"; appliance_id=$2; shift 2 ;;
+        --runtime-user) need_value "$@"; runtime_user=$2; shift 2 ;;
+        --runtime-home) need_value "$@"; runtime_home=$2; shift 2 ;;
+        --unit-source-root) need_value "$@"; unit_source_root=$2; shift 2 ;;
+        --user-unit-root) need_value "$@"; user_unit_root=$2; shift 2 ;;
+        --system-unit-root) need_value "$@"; system_unit_root=$2; shift 2 ;;
+        --rescue-system-unit-root) need_value "$@"; rescue_system_unit_root=$2; shift 2 ;;
+        --active-generation-root) need_value "$@"; active_generation_root=$2; shift 2 ;;
+        --management-marker) need_value "$@"; management_marker=$2; shift 2 ;;
+        --self-evolution-dropin-sha256) need_value "$@"; self_evolution_dropin_sha256=$2; shift 2 ;;
+        --post-install-verifier) need_value "$@"; post_install_verifier=$2; shift 2 ;;
+        --post-install-verifier-config) need_value "$@"; post_install_verifier_config=$2; shift 2 ;;
+        --model-lock) need_value "$@"; model_lock=$2; shift 2 ;;
+        --maintenance-lease) need_value "$@"; maintenance_lease=$2; shift 2 ;;
+        --authority-env) need_value "$@"; authority_env=$2; shift 2 ;;
+        --unit-policy) need_value "$@"; unit_policy=$2; shift 2 ;;
+        --ollama-binary) need_value "$@"; ollama_binary=$2; shift 2 ;;
+        --ollama-binary-sha256) need_value "$@"; ollama_binary_sha256=$2; shift 2 ;;
+        --operator-report-manifest-sha256) need_value "$@"; operator_report_manifest_sha256=$2; shift 2 ;;
+        --provider-output-tokens) need_value "$@"; provider_output_tokens=$2; shift 2 ;;
+        --state-store-helper) need_value "$@"; state_store_helper=$2; shift 2 ;;
+        --state-store-helper-sha256) need_value "$@"; state_store_helper_sha256=$2; shift 2 ;;
+        --state-store-config) need_value "$@"; state_store_config=$2; shift 2 ;;
+        --state-store-runtime-mount-unit) need_value "$@"; state_store_runtime_mount_unit=$2; shift 2 ;;
+        --state-store-rollback-mount-unit) need_value "$@"; state_store_rollback_mount_unit=$2; shift 2 ;;
+        --state-store-verify-unit) need_value "$@"; state_store_verify_unit=$2; shift 2 ;;
+        --state-store-health-timer) need_value "$@"; state_store_health_timer=$2; shift 2 ;;
+        --source-root) need_value "$@"; source_root=$2; shift 2 ;;
+        --candidate-root) need_value "$@"; candidate_root=$2; shift 2 ;;
+        --builder-root) need_value "$@"; builder_root=$2; shift 2 ;;
+        --updater-root) need_value "$@"; updater_root=$2; shift 2 ;;
+        --toolchain-root) need_value "$@"; toolchain_root=$2; shift 2 ;;
+        --unit) need_value "$@"; requested_units+=("$2"); shift 2 ;;
+        --unit-sha256) need_value "$@"; requested_hash_specs+=("$2"); shift 2 ;;
+        --profile-dropin-sha256) need_value "$@"; profile_dropin_hash_specs+=("$2"); shift 2 ;;
+        --required-mount) need_value "$@"; required_mount=$2; shift 2 ;;
+        --required-mount-uuid) need_value "$@"; required_mount_uuid=$2; shift 2 ;;
+        --completion-marker) need_value "$@"; completion_marker=$2; shift 2 ;;
+        -h|--help) usage; exit 0 ;;
+        *) die "unsupported argument: $1" ;;
+    esac
+done
+
+[[ $profile == avado || $profile == icp ]] || die "profile must be avado or icp"
+if $dry_run && $render_only; then
+    die "--dry-run and --render-only are mutually exclusive"
+fi
+live_run=true
+if $dry_run || $render_only; then live_run=false; fi
+if $render_only; then
+    ! $start_services || die "--render-only cannot start services"
+    [[ -n $output_root ]] || die "--render-only requires --output-root"
+    [[ $output_root == /* && $output_root != / && $output_root != *'/../'* && $output_root != */.. && $output_root != *' '* ]] \
+        || die "unsafe render output root: $output_root"
+    [[ -d $output_root && ! -L $output_root ]] || die "render output root must be an existing non-symlink directory"
+    [[ -O $output_root ]] || die "render output root must be owned by the invoking identity"
+    [[ -z $(find "$output_root" -maxdepth 0 -perm -0022 -print) ]] || die "render output root must not be group/world writable"
+    [[ -z $(find "$output_root" -mindepth 1 -maxdepth 1 -print -quit) ]] || die "render output root must be empty"
+    [[ $render_state_device == /dev/disk/by-uuid/* && $render_state_device != *'/../'* && $render_state_device != *' '* ]] \
+        || die "render state device must use the stable /dev/disk/by-uuid namespace"
+    [[ $render_web_response_verify_sha256 =~ ^[0-9a-f]{64}$ ]] \
+        || die "render web response verifier SHA-256 is invalid"
+    if [[ $profile == avado ]]; then
+        [[ $render_audio_feeder_uid =~ ^[1-9][0-9]*$ ]] || die "AVADO render requires a non-root audio feeder UID"
+    else
+        [[ -z $render_audio_feeder_uid ]] || die "ICP render does not accept an audio feeder UID"
+    fi
+else
+    [[ -z $output_root && -z $render_state_device && -z $render_web_response_verify_sha256 && -z $render_audio_feeder_uid ]] \
+        || die "render-only arguments require --render-only"
+fi
+
+[[ $appliance_id =~ ^[a-z0-9][a-z0-9._-]{0,63}$ ]] || die "invalid appliance identifier"
+[[ $runtime_user =~ ^[a-z_][a-z0-9_-]{0,30}$ ]] || die "invalid runtime user"
+for path in "$runtime_home" "$unit_source_root" "$user_unit_root" "$system_unit_root" "$rescue_system_unit_root" "$active_generation_root" "$management_marker" "$post_install_verifier" "$post_install_verifier_config" "$model_lock" "$maintenance_lease" "$authority_env" "$unit_policy" "$ollama_binary" "$state_store_helper" "$state_store_config" "$source_root" "$candidate_root" "$builder_root" "$updater_root" "$toolchain_root"; do
+    [[ $path == /* && $path != / && $path != *'/../'* && $path != */.. && $path != *' '* ]] || die "unsafe absolute path: $path"
+done
+[[ $user_unit_root == "$runtime_home/.config/systemd/user" ]] || die "user unit root is not beneath the explicit runtime home"
+[[ $system_unit_root == /etc/systemd/system ]] || die "system unit root must be /etc/systemd/system"
+[[ $rescue_system_unit_root == "$updater_root/system-units" ]] \
+    || die "rescue system-unit root must be the exact private updater alias"
+[[ $management_marker == /etc/astrid/edge-service-manager.json ]] || die "management marker path is not the fixed operator contract"
+[[ $authority_env == /etc/astrid/edge-self-change-authority.env ]] || die "self-change authority path is not the fixed root contract"
+[[ $self_evolution_dropin_sha256 =~ ^[0-9a-f]{64}$ ]] || die "self-evolution drop-in SHA-256 is invalid"
+[[ $ollama_binary_sha256 =~ ^[0-9a-f]{64}$ ]] || die "Ollama binary SHA-256 is invalid"
+[[ $operator_report_manifest_sha256 =~ ^[0-9a-f]{64}$ ]] || die "operator report manifest SHA-256 is invalid"
+[[ $provider_output_tokens =~ ^[0-9]+$ ]] && ((provider_output_tokens >= 64 && provider_output_tokens <= 512)) || die "provider output-token ceiling is invalid"
+[[ $state_store_helper_sha256 =~ ^[0-9a-f]{64}$ ]] || die "state-store helper SHA-256 is invalid"
+[[ $state_store_config == /etc/astrid/edge-state-store.json ]] || die "state-store config is not the immutable root contract"
+[[ $state_store_runtime_mount_unit == *.mount && $state_store_rollback_mount_unit == *.mount && $state_store_runtime_mount_unit != "$state_store_rollback_mount_unit" ]] || die "state-store mount units are invalid"
+[[ $state_store_verify_unit == astrid-edge-state-store-verify.service ]] || die "state-store verifier unit is invalid"
+[[ $state_store_health_timer == astrid-edge-state-store-health.timer ]] || die "state-store health timer is invalid"
+[[ ${active_generation_root##*/} == current ]] || die "active generation root must end in /current"
+[[ -d $runtime_home && -d $unit_source_root && -d $user_unit_root ]] || die "runtime home, sources, and user-unit root must exist"
+runtime_uid=$(id -u "$runtime_user" 2>/dev/null) || die "runtime user does not exist"
+runtime_gid=$(id -g "$runtime_user" 2>/dev/null) || die "runtime group does not exist"
+active_profile_env=${model_lock%/*}/active-profile.env
+[[ $active_profile_env == /*/active-profile.env && $active_profile_env != *'/../'* && $active_profile_env != *' '* ]] \
+    || die "active profile path is unsafe"
+supervisor_state_root=${model_lock%/*}
+release_parent=${active_generation_root%/*}
+builder_image=${builder_root}.ext4
+[[ ${maintenance_lease%/*} == "$supervisor_state_root" ]] \
+    || die "maintenance lease and model lock must share the immutable supervisor root"
+[[ $release_parent != / && ${active_generation_root##*/} == current ]] \
+    || die "active generation root has no bounded release parent"
+declare -a private_managed_roots=(
+    "$supervisor_state_root" "$release_parent" "$source_root" "$candidate_root"
+    "$builder_root" "$builder_image" "$updater_root" "$toolchain_root"
+    /etc/astrid /etc/astrid-edge-self-change
+    /usr/libexec/astrid /usr/libexec/astrid-edge/immutable
+    /var/lib/astrid-edge-provider /var/lib/astrid-edge-web-core
+    /var/lib/astrid-edge-web-runtime
+    /var/lib/astrid-edge-web-steward /var/lib/astrid-edge-model-warmup
+    /opt/astrid-edge-presentation
+)
+userctl() {
+    runuser -u "$runtime_user" -- env XDG_RUNTIME_DIR="/run/user/$runtime_uid" DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/$runtime_uid/bus" systemctl --user "$@"
+}
+if $live_run; then
+    [[ $(id -u) == 0 && $(uname -s) == Linux ]] || die "migration requires Linux root"
+    for command_name in getent stat sha256sum awk find sort grep sed tr cp rm mkdir mktemp install systemctl systemd-analyze runuser findmnt readlink python3 sleep chattr lsattr; do
+        command -v "$command_name" >/dev/null || die "required command absent: $command_name"
+    done
+    account_home=$(getent passwd "$runtime_user" | cut -d: -f6)
+    [[ $account_home == "$runtime_home" ]] || die "runtime home does not match the account database"
+    $start_services || die "live migration requires --start-services"
+fi
+
+readonly -a STACK=(
+    ollama-cpu.service
+    astrid-model-warmup.service
+    astrid.service
+    astrid-edge-runtime.service
+    astrid-edge-hindsight.service
+    astrid-edge-hindsight.timer
+)
+readonly MODEL_LOCK_GROUP=astrid-edge-model-lock
+readonly REFLECTION_LEASE=/run/astrid-edge-self-change/reflection.json
+readonly OLLAMA_RUNTIME_DIGEST=/etc/astrid/edge-ollama-runtime.sha256
+readonly OPERATOR_REPORT_ROOT=/usr/libexec/astrid-edge/operator
+readonly OPERATOR_REPORT_MANIFEST=/usr/libexec/astrid-edge/operator/MANIFEST.sha256
+readonly HINDSIGHT_WRITER=/usr/libexec/astrid-edge/immutable/edge_hindsight.py
+readonly HINDSIGHT_CONFIG=/etc/astrid-edge-self-change/hindsight-writer.json
+readonly SCHEDULED_AUTHORSHIP_VERIFY_KEY=/etc/astrid/edge-scheduled-authorship.pub
+readonly WEB_CORE_CLIENT_GROUP=astrid-edge-web-core-client
+readonly WEB_CORE_CONFIG=/etc/astrid-edge-self-change/web-broker-core.json
+readonly CORE_WEB_REQUEST_KEY=/etc/astrid-edge-self-change/core-web-request.key
+readonly WEB_RESPONSE_VERIFY_KEY=/etc/astrid-edge-self-change/web-response.pub
+readonly WEB_CORE_SOCKET_UNIT=astrid-edge-web-broker-core.socket
+readonly WEB_CORE_SERVICE_UNIT=astrid-edge-web-broker-core.service
+readonly WEB_CORE_SOCKET=/run/astrid-edge-self-change/web-core.sock
+readonly AUDIO_CLIENT_GROUP=astrid-edge-audio-client
+readonly AUDIO_FEEDER_UID_ENV=ASTRID_EDGE_AUDIO_FEEDER_UID
+readonly ICP_SSD_GUARD=/usr/libexec/astrid-edge/immutable/wait-for-icp-ssd
+scheduled_authorship_root=$candidate_root/scheduled-authorship
+scheduled_authorship_verify_key_sha256=
+scheduled_authorship_steward_uid=
+contains() { local needle=$1 value; shift; for value in "$@"; do [[ $value == "$needle" ]] && return 0; done; return 1; }
+((${#requested_units[@]} == ${#STACK[@]})) || die "the exact six-unit appliance stack is required"
+((${#requested_hash_specs[@]} == ${#STACK[@]})) || die "every appliance unit requires an explicit SHA-256"
+for unit in "${STACK[@]}"; do contains "$unit" "${requested_units[@]}" || die "required stack unit absent: $unit"; done
+for unit in "${requested_units[@]}"; do contains "$unit" "${STACK[@]}" || die "unexpected stack unit: $unit"; done
+
+source_profile=$unit_source_root
+[[ $profile == icp ]] && source_profile=$unit_source_root/icp
+hash_file() { sha256sum -- "$1" | awk '{print $1}'; }
+operator_home_wrapper() {
+    local target=$1
+    case "$target" in
+        "$OPERATOR_REPORT_ROOT/astrid-at-a-glance"|"$OPERATOR_REPORT_ROOT/report-edge-appliance"|"$OPERATOR_REPORT_ROOT/report-edge-activity") ;;
+        *) die "operator home wrapper target is not allowlisted" ;;
+    esac
+    cat <<EOF
+#!/bin/sh
+exec $target "\$@"
+EOF
+}
+stat_values() {
+    if stat -c '%u %a %h' -- "$1" >/dev/null 2>&1; then stat -c '%u %a %h' -- "$1"; else stat -f '%u %Lp %l' -- "$1"; fi
+}
+if $live_run; then
+    validate_root_regular "$active_profile_env" "active immutable profile"
+    [[ $(stat_values "$active_profile_env") == '0 400 1' ]] \
+        || die "active immutable profile ownership/mode/link count is invalid"
+    [[ $completion_marker == /*/system-migration.complete && ! -e $completion_marker && ! -L $completion_marker ]] || die "completion marker must be an absent exact absolute path"
+    marker_parent=${completion_marker%/*}
+    IFS=' ' read -r marker_owner marker_mode marker_links < <(stat_values "$marker_parent")
+    [[ -d $marker_parent && ! -L $marker_parent && $marker_owner == 0 && $marker_mode == 700 && $marker_links -ge 1 ]] || die "completion marker parent must be a private root-owned directory"
+fi
+validate_regular() {
+    local path=$1 label=$2 owner mode links
+    [[ -f $path && ! -L $path ]] || die "$label is not a regular non-symlink: $path"
+    IFS=' ' read -r owner mode links < <(stat_values "$path")
+    [[ $links == 1 ]] || die "$label is hard-linked: $path"
+    (( (8#$mode & 8#022) == 0 )) || die "$label is group/world writable: $path"
+}
+validate_root_regular() {
+    local path=$1 label=$2 owner mode links
+    validate_regular "$path" "$label"
+    IFS=' ' read -r owner mode links < <(stat_values "$path")
+    [[ $owner == 0 && $links == 1 ]] || die "$label must be root-owned and single-linked: $path"
+}
+expected_profile_dropins=(astrid-local-ollama.conf)
+[[ $profile == icp ]] && expected_profile_dropins=(icp-ssd-required.conf astrid-edge-tuning-authority.conf)
+((${#profile_dropin_hash_specs[@]} == ${#expected_profile_dropins[@]})) || die "every profile drop-in requires an explicit SHA-256"
+declare -a profile_dropin_hashes=()
+for name in "${expected_profile_dropins[@]}"; do
+    expected_hash=
+    for spec in "${profile_dropin_hash_specs[@]}"; do
+        [[ ${spec%%=*} == "$name" ]] || continue
+        [[ -z $expected_hash ]] || die "duplicate profile drop-in SHA-256: $name"
+        expected_hash=${spec#*=}
+    done
+    [[ $expected_hash =~ ^[0-9a-f]{64}$ ]] || die "missing or invalid profile drop-in SHA-256: $name"
+    validate_later=$unit_source_root/$name
+    [[ -f $validate_later && ! -L $validate_later ]] || die "profile drop-in source is absent: $name"
+    [[ $(hash_file "$validate_later") == "$expected_hash" ]] || die "profile drop-in source digest mismatch: $name"
+    profile_dropin_hashes+=("$expected_hash")
+done
+if $live_run; then
+    [[ -L $active_generation_root ]] || die "active generation root must be the root-owned current symlink"
+    active_generation_resolved=$(readlink -f -- "$active_generation_root") || die "cannot resolve active generation"
+    [[ -d $active_generation_resolved && ! -L $active_generation_resolved ]] || die "active generation target is absent"
+    IFS=' ' read -r generation_owner generation_mode generation_links < <(stat_values "$active_generation_resolved")
+    [[ $generation_owner == 0 ]] && (( (8#$generation_mode & 8#022) == 0 )) || die "active generation target is not root-owned immutable content"
+    for relative in astrid-daemon astrid-edge-runtime scripts/warm_ollama_model.sh scripts/edge_hindsight.py; do
+        validate_root_regular "$active_generation_root/$relative" "active generation executable"
+        [[ -x $active_generation_root/$relative ]] || die "active generation executable lacks execute permission: $relative"
+    done
+    [[ -d $active_generation_root/installed-capsules && ! -L $active_generation_root/installed-capsules ]] || die "active generation has no immutable installed capsule tree"
+    validate_root_regular "$post_install_verifier" "post-install verifier"
+    [[ -x $post_install_verifier ]] || die "post-install verifier is not executable"
+    validate_root_regular "$post_install_verifier_config" "post-install verifier config"
+    validate_root_regular "$HINDSIGHT_WRITER" "immutable hindsight writer"
+    [[ $(stat_values "$HINDSIGHT_WRITER" | awk '{print $2}') == 444 ]] \
+        || die "immutable hindsight writer must have exact mode 0444"
+    validate_root_regular "$HINDSIGHT_CONFIG" "immutable hindsight writer config"
+    IFS=' ' read -r hindsight_config_owner hindsight_config_mode hindsight_config_links < <(stat_values "$HINDSIGHT_CONFIG")
+    [[ $hindsight_config_owner == 0 && $hindsight_config_mode == 440 && $hindsight_config_links == 1 ]] \
+        || die "immutable hindsight writer config must be root-owned mode 0440"
+    [[ $(stat -c '%g' -- "$HINDSIGHT_CONFIG") == "$runtime_gid" ]] \
+        || die "immutable hindsight writer config is not bound to the runtime group"
+    scheduled_authorship_steward_uid=$(id -u astrid-edge-steward 2>/dev/null) \
+        || die "scheduled-authorship steward identity is absent"
+    scheduled_authorship_steward_gid=$(id -g astrid-edge-steward 2>/dev/null) \
+        || die "scheduled-authorship steward group is absent"
+    IFS=' ' read -r authorship_owner authorship_mode authorship_links < <(stat_values "$scheduled_authorship_root")
+    [[ -d $scheduled_authorship_root && ! -L $scheduled_authorship_root \
+        && $authorship_owner == "$scheduled_authorship_steward_uid" \
+        && $authorship_mode == 750 && $authorship_links -ge 1 \
+        && $(stat -c '%g' -- "$scheduled_authorship_root") == "$runtime_gid" ]] \
+        || die "scheduled-authorship root is not steward:runtime mode 0750"
+    [[ $scheduled_authorship_steward_gid != "$runtime_gid" ]] \
+        || die "scheduled-authorship steward and runtime groups must remain distinct"
+    validate_root_regular "$SCHEDULED_AUTHORSHIP_VERIFY_KEY" "scheduled-authorship public key"
+    [[ $(stat_values "$SCHEDULED_AUTHORSHIP_VERIFY_KEY" | awk '{print $2}') == 440 \
+        && $(stat -c '%g' -- "$SCHEDULED_AUTHORSHIP_VERIFY_KEY") == "$runtime_gid" \
+        && $(wc -c <"$SCHEDULED_AUTHORSHIP_VERIFY_KEY" | tr -d ' ') == 32 ]] \
+        || die "scheduled-authorship public key identity is invalid"
+    scheduled_authorship_verify_key_sha256=$(hash_file "$SCHEDULED_AUTHORSHIP_VERIFY_KEY")
+    web_core_client_gid=$(getent group "$WEB_CORE_CLIENT_GROUP" | cut -d: -f3)
+    [[ $web_core_client_gid =~ ^[1-9][0-9]*$ ]] || die "core web-broker client group is absent"
+    [[ -z $(getent group "$WEB_CORE_CLIENT_GROUP" | cut -d: -f4) ]] \
+        || die "core web-broker authority leaked into persistent account membership"
+    validate_root_regular "$WEB_CORE_CONFIG" "immutable core web-broker config"
+    IFS=' ' read -r core_web_config_owner core_web_config_mode core_web_config_links < <(stat_values "$WEB_CORE_CONFIG")
+    [[ $core_web_config_owner == 0 && $core_web_config_mode == 440 && $core_web_config_links == 1 ]] \
+        || die "immutable core web-broker config must be root-owned single-link mode 0440"
+    validate_root_regular "$CORE_WEB_REQUEST_KEY" "immutable core web-broker request key"
+    [[ $(stat_values "$CORE_WEB_REQUEST_KEY" | awk '{print $2}') == 400 \
+        && $(wc -c <"$CORE_WEB_REQUEST_KEY" | tr -d ' ') == 32 ]] \
+        || die "immutable core web-broker request key identity is invalid"
+    validate_root_regular "$WEB_RESPONSE_VERIFY_KEY" "immutable web-broker response public key"
+    [[ $(stat_values "$WEB_RESPONSE_VERIFY_KEY" | awk '{print $2}') == 644 \
+        && $(wc -c <"$WEB_RESPONSE_VERIFY_KEY" | tr -d ' ') == 32 ]] \
+        || die "immutable web-broker response public key identity is invalid"
+    web_response_verify_sha256=$(hash_file "$WEB_RESPONSE_VERIFY_KEY")
+    core_web_request_sha256=$(hash_file "$CORE_WEB_REQUEST_KEY")
+    /usr/bin/python3 -I -E -s - "$WEB_CORE_CONFIG" "$runtime_uid" "$web_core_client_gid" \
+        "$core_web_request_sha256" "$web_response_verify_sha256" <<'PY'
+import json, sys
+
+path, runtime_uid, socket_gid, request_sha256, response_sha256 = sys.argv[1:]
+value = json.load(open(path, encoding="ascii"))
+expected = {
+    "schema": "astrid.edge.web_broker.config.v3",
+    "client_id": "edge-core",
+    "expected_peer_uid": int(runtime_uid),
+    "socket_gid": int(socket_gid),
+    "socket_path": "/run/astrid-edge-self-change/web-core.sock",
+    "request_key_path": "/run/credentials/astrid-edge-web-broker-core.service/request.key",
+    "request_key_sha256": request_sha256,
+    "response_verify_key_sha256": response_sha256,
+    "quota_state_path": "/var/lib/astrid-edge-web-core/search-quota.jsonl",
+    "maximum_searches_per_hour": 8,
+    "maximum_searches_per_utc_day": 24,
+    "maximum_concurrent_requests": 2,
+}
+for key, wanted in expected.items():
+    if value.get(key) != wanted:
+        raise SystemExit(f"core web-broker config mismatch: {key}")
+PY
+    for unit in "$WEB_CORE_SOCKET_UNIT" "$WEB_CORE_SERVICE_UNIT"; do
+        validate_root_regular "$system_unit_root/$unit" "installed core web-broker unit"
+        systemctl is-active --quiet "$unit" || die "immutable core web-broker unit is not active: $unit"
+    done
+    [[ -S $WEB_CORE_SOCKET && ! -L $WEB_CORE_SOCKET ]] || die "core web-broker socket is absent or unsafe"
+    IFS=' ' read -r core_web_socket_owner core_web_socket_mode core_web_socket_links < <(stat_values "$WEB_CORE_SOCKET")
+    [[ $core_web_socket_owner == 0 && $core_web_socket_mode == 660 && $core_web_socket_links == 1 \
+        && $(stat -c '%g' -- "$WEB_CORE_SOCKET") == "$web_core_client_gid" ]] \
+        || die "core web-broker socket ownership or mode escaped its dedicated client group"
+    [[ $(systemctl show "$WEB_CORE_SERVICE_UNIT" --property=User --value) == astrid-edge-web \
+        && $(systemctl show "$WEB_CORE_SERVICE_UNIT" --property=Group --value) == astrid-edge-web ]] \
+        || die "immutable core web-broker is not running under its dedicated identity"
+    [[ $(systemctl show "$WEB_CORE_SERVICE_UNIT" --property=NRestarts --value) == 0 ]] \
+        || die "immutable core web-broker restarted before service migration"
+    [[ ! -e $management_marker && ! -L $management_marker ]] || die "management marker already exists"
+    [[ ! -e $OLLAMA_RUNTIME_DIGEST && ! -L $OLLAMA_RUNTIME_DIGEST ]] || die "Ollama runtime digest contract already exists"
+    ollama_contract_parent=${OLLAMA_RUNTIME_DIGEST%/*}
+    [[ -d $ollama_contract_parent && ! -L $ollama_contract_parent ]] || die "Ollama digest contract parent is absent or a symlink"
+    IFS=' ' read -r ollama_contract_owner ollama_contract_mode ollama_contract_links < <(stat_values "$ollama_contract_parent")
+    [[ $ollama_contract_owner == 0 && $ollama_contract_links -ge 1 ]] \
+        || die "Ollama digest contract parent is not a root-owned directory"
+    (( (8#$ollama_contract_mode & 8#022) == 0 )) || die "Ollama digest contract parent is group/world writable"
+fi
+declare -a reviewed_hashes=()
+for unit in "${STACK[@]}"; do
+    expected_hash=
+    for spec in "${requested_hash_specs[@]}"; do
+        [[ ${spec%%=*} == "$unit" ]] || continue
+        [[ -z $expected_hash ]] || die "duplicate unit SHA-256: $unit"
+        expected_hash=${spec#*=}
+    done
+    [[ $expected_hash =~ ^[0-9a-f]{64}$ ]] || die "missing or invalid unit SHA-256: $unit"
+    validate_regular "$source_profile/$unit" "repository unit"
+    validate_regular "$user_unit_root/$unit" "deployed user unit"
+    [[ $(hash_file "$source_profile/$unit") == "$expected_hash" ]] || die "repository unit digest mismatch: $unit"
+    [[ $(hash_file "$user_unit_root/$unit") == "$expected_hash" ]] || die "deployed user unit differs from reviewed source: $unit"
+    reviewed_hashes+=("$expected_hash")
+    if $live_run; then
+        [[ ! -e $system_unit_root/$unit && ! -L $system_unit_root/$unit ]] || die "system unit target already exists: $unit"
+    fi
+done
+
+if [[ $profile == icp ]]; then
+    [[ $required_mount == /media/data && $required_mount_uuid =~ ^[A-Fa-f0-9-]{4,64}$ ]] || die "ICP requires the exact SSD mount and UUID"
+else
+    [[ -z $required_mount && -z $required_mount_uuid ]] || die "AVADO migration does not accept an ICP mount guard"
+fi
+
+# Refuse unreviewed live drop-ins. Retired non-.conf files are inert and ignored.
+for unit in "${STACK[@]}"; do
+    [[ ! -e $user_unit_root/$unit.d || ( -d $user_unit_root/$unit.d && ! -L $user_unit_root/$unit.d ) ]] || die "user unit drop-in root is not a regular directory: $unit"
+done
+while IFS= read -r live_dropin; do
+    relative=${live_dropin#"$user_unit_root/"}
+    case "$profile:$relative" in
+        avado:astrid.service.d/local-ollama.conf)
+            reviewed=$unit_source_root/astrid-local-ollama.conf ;;
+        icp:astrid.service.d/ssd-required.conf|icp:astrid-model-warmup.service.d/ssd-required.conf|icp:ollama-cpu.service.d/ssd-required.conf|icp:astrid-edge-runtime.service.d/ssd-required.conf|icp:astrid-edge-hindsight.service.d/ssd-required.conf)
+            reviewed=$unit_source_root/icp-ssd-required.conf ;;
+        icp:astrid-edge-runtime.service.d/10-tuning-authority.conf)
+            reviewed=$unit_source_root/astrid-edge-tuning-authority.conf ;;
+        icp:astrid-edge-runtime.service.d/20-spectral-deferred.conf)
+            [[ $(<"$live_dropin") == $'[Service]\nEnvironmentFile=%h/.config/astrid/edge-spectral-deferred.env' ]] || die "spectral deferral drop-in is not the exact reviewed shape"
+            continue ;;
+        *) die "unreviewed live user drop-in blocks migration: $relative" ;;
+    esac
+    validate_regular "$reviewed" "reviewed drop-in"
+    [[ $(hash_file "$reviewed") == "$(hash_file "$live_dropin")" ]] || die "live drop-in differs from reviewed source: $relative"
+done < <(find "$user_unit_root" -mindepth 2 -maxdepth 2 -name '*.conf' -print | LC_ALL=C sort)
+
+state_root=$runtime_home/.astrid
+runtime_workspace=$runtime_home/.astrid/home/default/edge
+core_workspace=$runtime_home
+model_root=$runtime_home/.local/share/ollama/models
+ollama_launcher=$runtime_home/.local/bin/ollama
+ollama_runtime_root=
+capsule_root=$runtime_home/.astrid/home/default/.local/capsules
+runtime_tmp=/tmp
+if [[ $profile == icp ]]; then
+    icp_link=$runtime_home/.astrid-icp
+    [[ -L $icp_link ]] || die "ICP appliance root must remain the reviewed home symlink"
+    icp_root=$(readlink -f -- "$icp_link") || die "cannot resolve ICP appliance root"
+    if $live_run; then
+        [[ $icp_root == /media/data/astrid ]] || die "ICP appliance symlink must resolve to exact /media/data/astrid"
+    fi
+    state_root=$runtime_home/.astrid-icp/state
+    runtime_workspace=$runtime_home/.astrid-icp/state/home/default/edge
+    core_workspace=$runtime_home/.astrid-icp/workspace
+    model_root=$runtime_home/.astrid-icp/ollama/models
+    ollama_launcher=$runtime_home/.astrid-icp/ollama/runtime/bin/ollama
+    ollama_runtime_root=$runtime_home/.astrid-icp/ollama/runtime
+    capsule_root=$runtime_home/.astrid-icp/state/home/default/.local/capsules
+    runtime_tmp=$state_root/tmp
+fi
+# Root-manager namespaces must not depend on a user-home symlink surviving
+# ProtectHome=tmpfs.  Resolve every SSD-backed ICP path before rendering the
+# unit, while retaining AVADO's synthetic (tmpfs-backed) workspace root.
+if [[ $profile == icp ]]; then
+    state_root=$(readlink -f -- "$state_root") || die "cannot resolve ICP state root"
+    runtime_workspace=$(readlink -f -- "$runtime_workspace") || die "cannot resolve ICP edge workspace"
+    core_workspace=$(readlink -f -- "$core_workspace") || die "cannot resolve ICP core workspace"
+    model_root=$(readlink -f -- "$model_root") || die "cannot resolve ICP model root"
+    ollama_runtime_root=$(readlink -f -- "$ollama_runtime_root") || die "cannot resolve ICP Ollama runtime root"
+    runtime_tmp=$(readlink -f -- "$runtime_tmp") || die "cannot resolve ICP temporary root"
+    [[ $state_root == "$icp_root/state" \
+        && $runtime_workspace == "$icp_root/state/home/default/edge" \
+        && $core_workspace == "$icp_root/workspace" \
+        && $model_root == "$icp_root/ollama/models" \
+        && $ollama_runtime_root == "$icp_root/ollama/runtime" \
+        && $runtime_tmp == "$icp_root/state/tmp" ]] \
+        || die "ICP canonical SSD layout escaped its reviewed root"
+fi
+[[ -e $ollama_launcher || -L $ollama_launcher ]] || die "profile Ollama launcher is absent: $ollama_launcher"
+ollama_launcher_resolved=$(readlink -f -- "$ollama_launcher") || die "profile Ollama launcher cannot be resolved"
+[[ $ollama_binary == "$ollama_launcher_resolved" ]] || die "Ollama binary is not the exact profile launcher target"
+if [[ $profile == avado ]]; then
+    ollama_runtime_root=${ollama_binary%/bin/ollama}
+    [[ $ollama_binary == "$ollama_runtime_root/bin/ollama" \
+        && $ollama_runtime_root == "$runtime_home/.local/"ollama-v* \
+        && ${ollama_runtime_root##*/} =~ ^ollama-v[0-9]+\.[0-9]+\.[0-9]+$ ]] \
+        || die "AVADO Ollama launcher target is outside its exact versioned runtime root"
+else
+    [[ $ollama_binary == "$ollama_runtime_root/bin/ollama" && ! -L $ollama_launcher ]] \
+        || die "ICP Ollama binary is outside its exact SSD runtime root"
+fi
+validate_regular "$ollama_binary" "profile Ollama binary"
+[[ -x $ollama_binary ]] || die "profile Ollama binary is not executable"
+IFS=' ' read -r ollama_owner ollama_mode ollama_links < <(stat_values "$ollama_binary")
+[[ $ollama_owner == "$runtime_uid" && $ollama_links == 1 ]] || die "profile Ollama binary identity is not runtime-owned and single-linked"
+[[ $(hash_file "$ollama_binary") == "$ollama_binary_sha256" ]] || die "profile Ollama binary digest mismatch"
+for directory_spec in "$ollama_runtime_root:runtime" "$model_root:models"; do
+    directory=${directory_spec%:*}; label=${directory_spec##*:}
+    [[ -d $directory && ! -L $directory ]] || die "profile Ollama $label root is absent or a symlink"
+    IFS=' ' read -r directory_owner directory_mode directory_links < <(stat_values "$directory")
+    [[ $directory_owner == "$runtime_uid" && $directory_links -ge 1 ]] \
+        || die "profile Ollama $label root identity is invalid"
+    (( (8#$directory_mode & 8#022) == 0 )) || die "profile Ollama $label root is group/world writable"
+done
+config_root=$runtime_home/.config/astrid
+[[ $model_lock == /*/model.lock ]] || die "persistent model-lock binding is invalid"
+maintenance_root=${model_lock%/*}
+[[ $maintenance_lease == "$maintenance_root/maintenance.json" ]] || die "maintenance lease is not bound to persistent supervisor state"
+[[ $unit_policy == "$maintenance_root/unit-policy.json" ]] || die "unit policy is not bound to persistent supervisor state"
+generation_binding=$maintenance_root/current-generation
+maintenance_core_ack=$state_root/run/maintenance-core-ack.json
+maintenance_edge_ack=$runtime_workspace/runtime/maintenance-edge-ack.json
+if $live_run; then
+    [[ -d $rescue_system_unit_root && ! -L $rescue_system_unit_root ]] \
+        || die "private rescue system-unit alias is absent or unsafe"
+    [[ $(stat -c '%u:%a' -- "$updater_root") == 0:700 ]] \
+        || die "private rescue system-unit alias parent is not root-only"
+    [[ $(stat -c '%u:%a' -- "$rescue_system_unit_root") == $(stat -c '%u:%a' -- "$system_unit_root") ]] \
+        || die "private rescue system-unit alias identity is invalid"
+    [[ $(stat -c '%D:%i' -- "$rescue_system_unit_root") == $(stat -c '%D:%i' -- "$system_unit_root") ]] \
+        || die "private rescue system-unit alias is not bound to the live unit root"
+    [[ $(findmnt -rn -M "$rescue_system_unit_root" -o TARGET) == "$rescue_system_unit_root" ]] \
+        || die "private rescue system-unit alias is not an exact mountpoint"
+    [[ -f $model_lock && ! -L $model_lock ]] || die "persistent model lock is absent or unsafe"
+    IFS=' ' read -r lock_owner lock_mode lock_links < <(stat_values "$model_lock")
+    model_lock_gid=$(getent group "$MODEL_LOCK_GROUP" | cut -d: -f3)
+    [[ $model_lock_gid =~ ^[1-9][0-9]*$ && $(stat -c '%g' -- "$model_lock") == "$model_lock_gid" ]] || die "persistent model lock has the wrong dedicated group"
+    [[ $lock_owner == 0 && $lock_mode == 640 && $lock_links == 1 ]] || die "persistent model lock must be root-owned single-link mode-0640 content"
+    [[ -z $(getent group "$MODEL_LOCK_GROUP" | cut -d: -f4) ]] \
+        || die "model-lock authority leaked into persistent account membership"
+    validate_root_regular "$authority_env" "self-change authority environment"
+    [[ $(<"$authority_env") == 'ASTRID_EDGE_SELF_CHANGE_ENABLED=false' ]] || die "self-change authority must remain disabled throughout cutover"
+    [[ -d $maintenance_root && ! -L $maintenance_root ]] || die "persistent maintenance root is absent"
+    IFS=' ' read -r maintenance_owner maintenance_mode maintenance_links < <(stat_values "$maintenance_root")
+    [[ $maintenance_owner == 0 && $maintenance_links -ge 1 ]] && (( (8#$maintenance_mode & 8#022) == 0 )) || die "persistent maintenance root is not immutable root-owned state"
+    [[ ! -e $maintenance_lease && ! -L $maintenance_lease ]] || die "maintenance lease must be absent before base cutover"
+    [[ ! -e $unit_policy && ! -L $unit_policy ]] || die "unit policy target must be absent before base cutover"
+fi
+for path in "$state_root" "$model_root" "$config_root" "$capsule_root"; do [[ -e $path && ! -L $path ]] || die "required service path is absent or a symlink: $path"; done
+if [[ $profile == icp ]]; then [[ -e $runtime_tmp && ! -L $runtime_tmp ]] || die "required service path is absent or a symlink: $runtime_tmp"; fi
+if [[ $profile == avado ]]; then
+    core_memory_max=3221225472
+    core_cpu_quota=300%
+    edge_memory_max=1073741824
+    edge_cpu_quota=100%
+    io_read_bandwidth=64M
+    io_write_bandwidth=32M
+else
+    core_memory_max=2147483648
+    core_cpu_quota=180%
+    edge_memory_max=805306368
+    edge_cpu_quota=75%
+    io_read_bandwidth=32M
+    io_write_bandwidth=16M
+fi
+operator_home_bin=$state_root/bin
+declare -a operator_home_wrappers=(
+    "$runtime_home/astrid-at-a-glance"
+    "$operator_home_bin/report-edge-appliance"
+    "$operator_home_bin/report-edge-activity"
+)
+if $live_run; then
+    [[ -d $OPERATOR_REPORT_ROOT && ! -L $OPERATOR_REPORT_ROOT ]] || die "immutable operator report root is absent or a symlink"
+    IFS=' ' read -r report_root_owner report_root_mode report_root_links < <(stat_values "$OPERATOR_REPORT_ROOT")
+    [[ $report_root_owner == 0 && $report_root_mode == 555 && $report_root_links -ge 1 ]] \
+        || die "immutable operator report root identity is invalid"
+    mapfile -t operator_report_members < <(find "$OPERATOR_REPORT_ROOT" -mindepth 1 -maxdepth 1 -printf '%f\n' | LC_ALL=C sort)
+    readonly -a EXPECTED_OPERATOR_REPORT_MEMBERS=(
+        MANIFEST.sha256
+        astrid-at-a-glance
+        astrid_at_a_glance.py
+        report-edge-activity
+        report-edge-appliance
+        report_edge_activity.py
+        report_edge_appliance.py
+    )
+    [[ ${operator_report_members[*]-} == "${EXPECTED_OPERATOR_REPORT_MEMBERS[*]}" ]] \
+        || die "immutable operator report membership is not exact"
+    for member in "${EXPECTED_OPERATOR_REPORT_MEMBERS[@]}"; do
+        validate_root_regular "$OPERATOR_REPORT_ROOT/$member" "immutable operator report member"
+        IFS=' ' read -r member_owner member_mode member_links < <(stat_values "$OPERATOR_REPORT_ROOT/$member")
+        expected_mode=444
+        [[ $member == astrid-at-a-glance || $member == report-edge-activity || $member == report-edge-appliance ]] && expected_mode=555
+        [[ $member_owner == 0 && $member_mode == "$expected_mode" && $member_links == 1 ]] \
+            || die "immutable operator report member identity is invalid: $member"
+    done
+    [[ $(hash_file "$OPERATOR_REPORT_MANIFEST") == "$operator_report_manifest_sha256" ]] \
+        || die "immutable operator report manifest digest mismatch"
+    sha256sum --check --strict --status "$OPERATOR_REPORT_MANIFEST" \
+        || die "immutable operator report tree digest verification failed"
+    for wrapper_parent in "$runtime_home" "$operator_home_bin"; do
+        [[ -d $wrapper_parent && ! -L $wrapper_parent ]] || die "operator wrapper parent is absent or a symlink"
+        IFS=' ' read -r wrapper_parent_owner wrapper_parent_mode wrapper_parent_links < <(stat_values "$wrapper_parent")
+        [[ $wrapper_parent_owner == "$runtime_uid" && $wrapper_parent_links -ge 1 ]] \
+            || die "operator wrapper parent identity is invalid"
+        (( (8#$wrapper_parent_mode & 8#022) == 0 )) || die "operator wrapper parent is group/world writable"
+    done
+    for wrapper in "${operator_home_wrappers[@]}"; do
+        [[ ! -e $wrapper && ! -L $wrapper ]] && continue
+        validate_regular "$wrapper" "legacy operator wrapper"
+        IFS=' ' read -r wrapper_owner wrapper_mode wrapper_links < <(stat_values "$wrapper")
+        [[ $wrapper_owner == "$runtime_uid" && $wrapper_links == 1 ]] \
+            || die "legacy operator wrapper is not runtime-owned and single-linked: $wrapper"
+    done
+    validate_root_regular "$state_store_helper" "immutable state-store helper"
+    [[ -x $state_store_helper && $(hash_file "$state_store_helper") == "$state_store_helper_sha256" ]] \
+        || die "immutable state-store helper identity changed"
+    validate_root_regular "$state_store_config" "immutable state-store config"
+    [[ $(stat_values "$state_store_config" | awk '{print $2}') == 400 ]] \
+        || die "immutable state-store config must have exact mode 0400"
+    mapfile -t configured_state_mount_units < <(/usr/bin/python3 -I -E -s "$state_store_helper" unit-names --config "$state_store_config")
+    [[ ${#configured_state_mount_units[@]} == 2 \
+        && ${configured_state_mount_units[0]} == "$state_store_runtime_mount_unit" \
+        && ${configured_state_mount_units[1]} == "$state_store_rollback_mount_unit" ]] \
+        || die "state-store config and supplied mount units disagree"
+    IFS=$'\t' read -r bounded_runtime_state_root state_backing_root state_backing_uuid < <(/usr/bin/python3 -I -E -s - "$state_store_config" <<'PY'
+import json, sys
+value = json.load(open(sys.argv[1], encoding="ascii"))
+print(value["runtime"]["mount"], value["backing"]["target"], value["backing"]["uuid"], sep="\t")
+PY
+)
+    [[ $(readlink -f -- "$state_root") == "$bounded_runtime_state_root" ]] \
+        || die "state-store runtime mount is not the canonical Astrid state root"
+    [[ $state_backing_uuid =~ ^[0-9a-f-]{36}$ ]] || die "state-store backing UUID is malformed"
+    state_device=/dev/disk/by-uuid/$state_backing_uuid
+    [[ -L $state_device ]] || die "stable state-store backing UUID device is absent"
+    state_device_resolved=$(readlink -f -- "$state_device") || die "cannot resolve stable state-store backing device"
+    [[ -b $state_device_resolved ]] || die "stable state-store backing UUID does not resolve to a block device"
+    [[ $(findmnt -rn -T "$state_backing_root" -o UUID | tr '[:upper:]' '[:lower:]') == "$state_backing_uuid" ]] \
+        || die "state-store backing mount no longer has its bound UUID"
+    for unit in "$state_store_runtime_mount_unit" "$state_store_rollback_mount_unit" astrid-edge-state-store-migration-recover.service astrid-edge-state-store-recover.service "$state_store_verify_unit" astrid-edge-state-store-health.service "$state_store_health_timer"; do
+        validate_root_regular "$system_unit_root/$unit" "installed state-store unit"
+    done
+fi
+
+if $dry_run; then
+    printf 'DRY-RUN: migrate exact user stack to root-owned system units as uid=%s gid=%s profile=%s\n' "$runtime_uid" "$runtime_gid" "$profile"
+    printf 'DRY-RUN: preserve state=%s models=%s config=%s; hide SSH/cloud credential trees\n' "$state_root" "$model_root" "$config_root"
+    printf 'DRY-RUN: ollama executable=%s runtime-root=%s models=%s sha256=%s; reset ExecStart/ExecStartPre and verify the pinned digest on every start\n' \
+        "$ollama_binary" "$ollama_runtime_root" "$model_root" "$ollama_binary_sha256"
+    printf 'DRY-RUN: immutable operator reports=%s manifest-sha256=%s; replace exact home wrappers with root-owned immutable launchers\n' \
+        "$OPERATOR_REPORT_ROOT" "$operator_report_manifest_sha256"
+    printf 'DRY-RUN: edge env appliance=%s socket=%s/run/system.sock token=%s/run/system.token workspace=%s cli=%s/astrid self-change=%s/self-change liveness=%s/runtime/core-liveness-recovery.request.json legacy-scheduler=false dedicated-steward=true/120m\n' \
+        "$appliance_id" "$state_root" "$state_root" "$runtime_workspace" "$active_generation_root" "$runtime_workspace" "$runtime_workspace"
+    printf 'DRY-RUN: stop/disable only:'; printf ' %s' "${STACK[@]}"; printf '\n'
+    printf 'DRY-RUN: migrate state through immutable helper=%s into exact bounded mount units %s %s; I/O policy uses backing UUID, never loop identity\n' \
+        "$state_store_helper" "$state_store_runtime_mount_unit" "$state_store_rollback_mount_unit"
+    printf 'DRY-RUN: verify root units transactionally; start=%s; no state or user-unit file mutation\n' "$start_services"
+    exit 0
+fi
+
+if $render_only; then
+    stage=$output_root
+    state_device=$render_state_device
+    web_response_verify_sha256=$render_web_response_verify_sha256
+else
+allowed_root_dropin=$system_unit_root/astrid-edge-runtime.service.d/60-self-evolution-root.conf
+validate_root_regular "$allowed_root_dropin" "self-evolution runtime drop-in"
+[[ $(hash_file "$allowed_root_dropin") == "$self_evolution_dropin_sha256" ]] || die "self-evolution runtime drop-in digest mismatch"
+for root in "$system_unit_root" /run/systemd/system /usr/local/lib/systemd/system /usr/lib/systemd/system /lib/systemd/system; do
+    [[ -d $root ]] || continue
+    for unit in "${STACK[@]}"; do
+        [[ ! -e $root/$unit && ! -L $root/$unit ]] || die "pre-existing system-manager unit collision: $root/$unit"
+        while IFS= read -r root_dropin; do
+            [[ $root_dropin == "$allowed_root_dropin" ]] || die "unreviewed system-manager drop-in collision: $root_dropin"
+        done < <(find "$root/$unit.d" -mindepth 1 -maxdepth 1 -print 2>/dev/null | LC_ALL=C sort)
+        while IFS= read -r enable_link; do
+            [[ -z $enable_link ]] || die "pre-existing system-manager enablement collision: $enable_link"
+        done < <(find "$root" -mindepth 2 -maxdepth 2 -type l -name "$unit" -print 2>/dev/null | LC_ALL=C sort)
+    done
+done
+for unit in "${STACK[@]}"; do
+    [[ $(systemctl show "$unit" --property=LoadState --value 2>/dev/null || true) == not-found ]] || die "system manager already resolves unit name: $unit"
+done
+for unit in "${STACK[@]}"; do
+    [[ $(userctl show "$unit" --property=FragmentPath --value) == "$user_unit_root/$unit" ]] || die "effective user unit is not the reviewed home fragment: $unit"
+    mapfile -t effective_dropins < <(userctl show "$unit" --property=DropInPaths --value | tr ' ' '\n' | sed '/^$/d' | LC_ALL=C sort)
+    mapfile -t reviewed_dropins < <(find "$user_unit_root/$unit.d" -mindepth 1 -maxdepth 1 -type f -name '*.conf' -print 2>/dev/null | LC_ALL=C sort)
+    [[ ${effective_dropins[*]-} == "${reviewed_dropins[*]-}" ]] || die "effective user-manager drop-ins differ from the reviewed private set: $unit"
+done
+if [[ $profile == icp ]]; then
+    [[ $(findmnt -rn -M "$required_mount" -o TARGET) == "$required_mount" ]] || die "ICP SSD is not mounted"
+    [[ $(findmnt -rn -M "$required_mount" -o UUID) == "$required_mount_uuid" ]] || die "ICP SSD UUID mismatch"
+    reviewed_guard=$unit_source_root/wait-for-icp-ssd
+    validate_regular "$reviewed_guard" "reviewed ICP SSD guard"
+    guard_uuid=$(sed -n 's/^readonly DEFAULT_EXPECTED_UUID="\([A-Fa-f0-9-]\{4,64\}\)"$/\1/p' "$reviewed_guard")
+    [[ $guard_uuid == "$required_mount_uuid" ]] || die "supplied ICP UUID differs from the immutable SSD guard"
+fi
+
+# Root units consume these inputs after cutover.  Prove the full appliance
+# profile and service prerequisites before stopping a single user unit.
+validate_regular "$config_root/edge-appliance.env" "edge appliance environment"
+provider_capsule_env=$state_root/home/default/.config/env/astrid-capsule-openai-compat.env.json
+validate_regular "$provider_capsule_env" "local-provider capsule environment"
+IFS=' ' read -r provider_env_owner provider_env_mode provider_env_links < <(stat_values "$provider_capsule_env")
+[[ $provider_env_owner == "$runtime_uid" && $provider_env_mode == 600 && $provider_env_links == 1 ]] \
+    || die "local-provider capsule environment identity is not exact"
+[[ -d $state_root/operator/hindsight && ! -L $state_root/operator/hindsight ]] || die "hindsight state directory is absent"
+if [[ $profile == icp ]]; then
+    validate_regular "$config_root/edge-tuning-authority.env" "ICP tuning authority environment"
+    validate_regular "$config_root/edge-spectral-deferred.env" "ICP spectral deferral environment"
+    validate_root_regular "$runtime_home/.local/libexec/astrid/wait-for-icp-ssd" "ICP SSD guard"
+    [[ -x $runtime_home/.local/libexec/astrid/wait-for-icp-ssd ]] || die "ICP SSD guard is not executable"
+    [[ $(hash_file "$runtime_home/.local/libexec/astrid/wait-for-icp-ssd") == "$(hash_file "$reviewed_guard")" ]] || die "deployed ICP SSD guard differs from reviewed source"
+    [[ ! -e $ICP_SSD_GUARD && ! -L $ICP_SSD_GUARD ]] || die "immutable ICP SSD guard target already exists"
+fi
+
+stage=$(mktemp -d /var/tmp/astrid-edge-system-migration.XXXXXX)
+declare -a installed=() root_enabled=() user_enabled=() user_active=() root_started=() user_guards=()
+declare -a replaced_operator_wrappers=() operator_wrapper_backups=()
+provider_env_changed=false
+state_cutover_started=false
+ollama_digest_stage=$stage/edge-ollama-runtime.sha256
+printf '%s  %s\n' "$ollama_binary_sha256" "$ollama_binary" >"$ollama_digest_stage"
+chmod 0444 "$ollama_digest_stage"
+committed=false
+rollback() {
+    local status=$? index unit
+    trap - EXIT HUP INT TERM
+    if ! $committed; then
+        set +e
+        state_ready_for_user=true
+        [[ -n $completion_marker ]] && rm -f -- "$completion_marker"
+        [[ -n ${marker_pending:-} ]] && rm -f -- "$marker_pending"
+        # Starting a provider may activate dependents through Wants/BindsTo
+        # before the loop records them. Stop the complete fixed root stack so
+        # rollback cannot leave an implicitly activated service behind.
+        for unit in astrid-edge-hindsight.timer astrid-edge-hindsight.service astrid-edge-runtime.service astrid.service astrid-model-warmup.service ollama-cpu.service; do
+            systemctl stop "$unit"
+        done
+        for unit in "${root_enabled[@]}"; do systemctl disable "$unit"; done
+        rm -f -- "$management_marker"
+        for ((index=${#installed[@]}-1; index>=0; index--)); do rm -rf -- "${installed[$index]}"; done
+        if $state_cutover_started; then
+            systemctl stop "$state_store_health_timer" "$state_store_verify_unit" \
+                astrid-edge-state-store-recover.service astrid-edge-state-store-migration-recover.service \
+                "$state_store_runtime_mount_unit" "$state_store_rollback_mount_unit" >/dev/null 2>&1
+            if /usr/bin/python3 -I -E -s "$state_store_helper" abort --config "$state_store_config" >/dev/null 2>&1; then
+                state_cutover_started=false
+            else
+                systemctl start "$state_store_runtime_mount_unit" >/dev/null 2>&1 || state_ready_for_user=false
+                systemctl start "$state_store_rollback_mount_unit" >/dev/null 2>&1 || state_ready_for_user=false
+                systemctl start "$state_store_verify_unit" >/dev/null 2>&1 || state_ready_for_user=false
+                systemctl start "$state_store_health_timer" >/dev/null 2>&1 || state_ready_for_user=false
+            fi
+        fi
+        for ((index=${#replaced_operator_wrappers[@]}-1; index>=0; index--)); do
+            wrapper=${replaced_operator_wrappers[$index]}
+            backup=${operator_wrapper_backups[$index]}
+            chattr -i -- "$wrapper" >/dev/null 2>&1 || true
+            rm -f -- "$wrapper"
+            [[ -n $backup ]] && cp -a -- "$backup" "$wrapper"
+        done
+        if $provider_env_changed; then
+            cp -a -- "$stage/provider-capsule-env.backup" "$provider_capsule_env"
+        fi
+        systemctl daemon-reload
+        for ((index=${#user_guards[@]}-1; index>=0; index--)); do rm -rf -- "${user_guards[$index]}"; done
+        userctl daemon-reload
+        for unit in "${user_enabled[@]}"; do userctl enable "$unit"; done
+        if $state_ready_for_user; then
+            for unit in "${user_active[@]}"; do userctl start "$unit"; done
+        else
+            printf 'error: bounded-state rollback could not expose a verified complete state; user services remain stopped\n' >&2
+        fi
+        printf 'error: system-service migration rolled back; prior user-service state restored\n' >&2
+    fi
+    rm -rf -- "$stage"
+    exit "$status"
+}
+trap rollback EXIT HUP INT TERM
+
+# The accepted ICP runtime ceiling is 112 while its historical capsule env was
+# 128. Normalize the one exact owner-only env file before cutover, retain a
+# transaction backup, and restore it on any later migration failure. AVADO's
+# already-correct 192 value passes through the same deterministic check.
+cp -a -- "$provider_capsule_env" "$stage/provider-capsule-env.backup"
+/usr/bin/python3 -I -E -s - "$provider_capsule_env" "$provider_output_tokens" "$runtime_uid" "$runtime_gid" <<'PY'
+import json, os, pathlib, stat, sys, tempfile
+
+path = pathlib.Path(sys.argv[1])
+expected = int(sys.argv[2])
+uid = int(sys.argv[3])
+gid = int(sys.argv[4])
+before = path.lstat()
+if not stat.S_ISREG(before.st_mode) or stat.S_ISLNK(before.st_mode) or before.st_uid != uid or before.st_gid != gid or before.st_nlink != 1 or stat.S_IMODE(before.st_mode) != 0o600:
+    raise SystemExit("provider capsule env escaped the owner-only contract")
+value = json.loads(path.read_text(encoding="utf-8"))
+if not isinstance(value, dict) or not isinstance(value.get("model"), str) or not value["model"]:
+    raise SystemExit("provider capsule env has no exact model")
+current = value.get("max_output_tokens")
+if not isinstance(current, (str, int)) or isinstance(current, bool) or not str(current).isdigit():
+    raise SystemExit("provider capsule output ceiling is malformed")
+value["max_output_tokens"] = str(expected)
+encoded = (json.dumps(value, sort_keys=True, indent=2, ensure_ascii=True, allow_nan=False) + "\n").encode("ascii")
+parent_fd = os.open(path.parent, os.O_RDONLY | getattr(os, "O_DIRECTORY", 0) | getattr(os, "O_CLOEXEC", 0))
+temporary = None
+try:
+    descriptor, raw = tempfile.mkstemp(prefix=".provider-env.", dir=path.parent)
+    temporary = pathlib.Path(raw)
+    try:
+        os.write(descriptor, encoded)
+        os.fchmod(descriptor, 0o600)
+        os.fchown(descriptor, uid, gid)
+        os.fsync(descriptor)
+    finally:
+        os.close(descriptor)
+    os.replace(temporary, path)
+    temporary = None
+    os.fsync(parent_fd)
+finally:
+    if temporary is not None:
+        temporary.unlink(missing_ok=True)
+    os.close(parent_fd)
+PY
+provider_env_changed=true
+
+if [[ $profile == icp ]]; then
+    install -m 0555 -o root -g root "$reviewed_guard" "$ICP_SSD_GUARD"
+    installed+=("$ICP_SSD_GUARD")
+    validate_root_regular "$ICP_SSD_GUARD" "immutable ICP SSD guard"
+    [[ -x $ICP_SSD_GUARD && $(hash_file "$ICP_SSD_GUARD") == "$(hash_file "$reviewed_guard")" ]] \
+        || die "immutable ICP SSD guard installation failed"
+fi
+
+for unit in "${STACK[@]}"; do
+    userctl is-enabled --quiet "$unit" && user_enabled+=("$unit") || true
+    userctl is-active --quiet "$unit" && user_active+=("$unit") || true
+done
+readonly -a EXPECTED_LIVE=(ollama-cpu.service astrid-model-warmup.service astrid.service astrid-edge-runtime.service astrid-edge-hindsight.timer)
+for unit in "${EXPECTED_LIVE[@]}"; do
+    contains "$unit" "${user_enabled[@]}" || die "required user unit was not enabled before cutover: $unit"
+    contains "$unit" "${user_active[@]}" || die "required user unit was not active before cutover: $unit"
+done
+
+for wrapper in "${operator_home_wrappers[@]}"; do
+    case "${wrapper##*/}" in
+        astrid-at-a-glance) operator_target=$OPERATOR_REPORT_ROOT/astrid-at-a-glance ;;
+        report-edge-appliance) operator_target=$OPERATOR_REPORT_ROOT/report-edge-appliance ;;
+        report-edge-activity) operator_target=$OPERATOR_REPORT_ROOT/report-edge-activity ;;
+        *) die "operator wrapper path escaped the exact allowlist" ;;
+    esac
+    backup=
+    if [[ -e $wrapper || -L $wrapper ]]; then
+        backup=$stage/operator-wrapper-backup.${#replaced_operator_wrappers[@]}
+        cp -a -- "$wrapper" "$backup"
+    fi
+    replaced_operator_wrappers+=("$wrapper")
+    operator_wrapper_backups+=("$backup")
+    operator_home_wrapper "$operator_target" >"$stage/operator-home-wrapper"
+    rm -f -- "$wrapper"
+    install -m 0555 -o root -g root "$stage/operator-home-wrapper" "$wrapper"
+    chattr +i -- "$wrapper" || die "cannot make operator home wrapper immutable: $wrapper"
+    IFS=' ' read -r wrapper_owner wrapper_mode wrapper_links < <(stat_values "$wrapper")
+    [[ $wrapper_owner == 0 && $wrapper_mode == 555 && $wrapper_links == 1 ]] \
+        || die "installed operator home wrapper identity is invalid: $wrapper"
+    wrapper_attributes=$(lsattr -d -- "$wrapper" | awk '{print $1}')
+    [[ $wrapper_attributes == *i* ]] || die "installed operator home wrapper lacks the immutable attribute: $wrapper"
+    [[ $(hash_file "$wrapper") == "$(hash_file "$stage/operator-home-wrapper")" ]] \
+        || die "installed operator home wrapper digest mismatch: $wrapper"
+    ! runuser -u "$runtime_user" -- rm -f -- "$wrapper" >/dev/null 2>&1 \
+        || die "runtime identity can replace immutable operator wrapper: $wrapper"
+done
+
+fi
+mkdir -p "$stage/units"
+for ((index=0; index<${#STACK[@]}; index++)); do
+    unit=${STACK[$index]}
+    raw=$stage/units/$unit.reviewed
+    cp "$source_profile/$unit" "$raw"
+    [[ $(hash_file "$raw") == "${reviewed_hashes[$index]}" ]] || die "unit source changed during staging: $unit"
+    awk '{ if ($0 == "WantedBy=default.target") print "WantedBy=multi-user.target"; else print }' "$raw" >"$stage/units/$unit"
+    rm "$raw"
+    # User-manager %h/%t expansion is not portable to systemd 249's system
+    # manager (%h is /root there). Render the reviewed fragment to explicit,
+    # validated appliance paths before any root unit is installed.
+    /usr/bin/python3 -I -E -s - "$stage/units/$unit" "$runtime_home" "$runtime_uid" <<'PY'
+import pathlib, sys
+
+path = pathlib.Path(sys.argv[1])
+body = path.read_text(encoding="utf-8")
+body = body.replace("%h", sys.argv[2]).replace("%t", f"/run/user/{sys.argv[3]}")
+if "%h" in body or "%t" in body:
+    raise SystemExit("system unit retains a user-manager path specifier")
+path.write_text(body, encoding="utf-8")
+PY
+    chmod 0644 "$stage/units/$unit"
+    if [[ $unit == *.service ]]; then
+        dropin=$stage/units/$unit.d/90-root-runtime-boundary.conf
+        mkdir -p "${dropin%/*}"
+        {
+            printf '[Unit]\n'
+            # Reset all path conditions inherited from the reviewed user unit.
+            # The exact system-manager conditions below are the sole authority.
+            printf 'ConditionPathExists=\nConditionPathIsDirectory=\nConditionPathIsRegular=\nConditionPathIsMountPoint=\n'
+            # Root units are enabled before cutover but cannot start across a
+            # crash until the atomically installed manager marker commits the
+            # handoff. Matching user guards below have the inverse condition.
+            printf 'ConditionPathIsRegular=%s\n' "$management_marker"
+            printf 'Requires=%s\nAfter=%s\n' "$state_store_verify_unit" "$state_store_verify_unit"
+            [[ $profile == icp ]] && printf 'RequiresMountsFor=/media/data\nConditionPathIsMountPoint=/media/data\n'
+            printf 'Requires=astrid-edge-generation-guard.service\nAfter=astrid-edge-generation-guard.service\n'
+            if [[ $unit == astrid-edge-runtime.service ]]; then
+                # ICP's reviewed user unit binds its lifetime to the core.
+                # Under the root manager a narrow, attested core-liveness
+                # restart must leave reservoir sensing and telemetry online.
+                # Reset the inherited BindsTo set and keep only a start-order
+                # preference for the exact core unit.
+                printf 'BindsTo=\nWants=astrid.service\n'
+                printf 'Requires=astrid-edge-web-broker-runtime.socket\nAfter=astrid-edge-web-broker-runtime.socket\n'
+            fi
+            [[ $unit == astrid.service ]] && printf 'Requires=astrid-edge-provider-runtime.socket %s\nAfter=astrid-edge-provider-runtime.socket %s\n' "$WEB_CORE_SOCKET_UNIT" "$WEB_CORE_SOCKET_UNIT"
+            [[ $unit == astrid-model-warmup.service ]] && printf 'ConditionPathExists=\nRequires=astrid-edge-provider-warmup.socket\nAfter=ollama-cpu.service astrid-edge-provider-warmup.socket\n'
+            printf '\n[Service]\nUser=%s\nGroup=%s\n' "$runtime_user" "$(id -gn "$runtime_user")"
+            # Empty assignments discard path-bearing user-unit policy before
+            # the exact root-manager namespace is composed. This prevents an
+            # inherited %h path or an inaccessible ancestor from surviving.
+            printf 'BindPaths=\nBindReadOnlyPaths=\nReadOnlyPaths=\nReadWritePaths=\nInaccessiblePaths=\nTemporaryFileSystem=\nNoExecPaths=\nExecPaths=\n'
+            printf 'UnsetEnvironment=XDG_RUNTIME_DIR DBUS_SESSION_BUS_ADDRESS\n'
+            printf 'Environment=HOME=%s\nEnvironment=ASTRID_HOME=%s\nEnvironment=TMPDIR=%s\n' "$runtime_home" "$state_root" "$runtime_tmp"
+            if [[ $profile == icp ]]; then
+                printf 'ExecCondition=\nExecCondition=%s --systemd-condition --wait-seconds 75 --poll-seconds 2\n' "$ICP_SSD_GUARD"
+            fi
+            case "$unit" in
+                ollama-cpu.service|astrid-model-warmup.service|astrid.service|astrid-edge-runtime.service)
+                    # Discard every candidate/user-home EnvironmentFile and
+                    # consume only the create-once root-validated projection.
+                    # This drop-in sorts after mutable profile fragments.
+                    printf 'EnvironmentFile=\nEnvironmentFile=%s\n' "$active_profile_env" ;;
+            esac
+            case "$unit" in
+                astrid.service|astrid-edge-runtime.service)
+                    # The mutable native processes receive only their exact
+                    # active executables and explicitly re-exposed state.  In
+                    # particular they cannot inspect source, candidate,
+                    # builder, updater, toolchain, rescue keys, or another
+                    # immutable broker's private state through the otherwise
+                    # read-only host mount namespace.
+                    # Empty read-only tmpfs mounts hide each privileged mutable
+                    # root while still allowing later exact BindPaths to
+                    # re-expose the one approved child on systemd 249.
+                    for private_root in "${private_managed_roots[@]}"; do
+                        printf 'TemporaryFileSystem=%s:ro,nosuid,nodev,noexec,size=4M,mode=0755\n' "$private_root"
+                    done ;;
+            esac
+            printf 'LimitCORE=0\nLogRateLimitIntervalSec=30s\nLogRateLimitBurst=200\n'
+            printf 'NoNewPrivileges=yes\nPrivateTmp=yes\nProtectClock=yes\nProtectControlGroups=yes\nProtectHome=tmpfs\nProtectHostname=yes\nProtectKernelLogs=yes\nProtectKernelModules=yes\nProtectKernelTunables=yes\nProtectSystem=strict\nProtectProc=invisible\nProcSubset=pid\n'
+            printf 'TemporaryFileSystem=/media:ro,nosuid,nodev,noexec,size=4M,mode=0755\nTemporaryFileSystem=/mnt:ro,nosuid,nodev,noexec,size=4M,mode=0755\nTemporaryFileSystem=/opt:ro,nosuid,nodev,noexec,size=4M,mode=0755\nTemporaryFileSystem=/srv:ro,nosuid,nodev,noexec,size=4M,mode=0755\n'
+            printf 'InaccessiblePaths=-%s/.ssh -%s/.gnupg -%s/.aws -%s/.config/gcloud -%s/.kube -/run/user\n' "$runtime_home" "$runtime_home" "$runtime_home" "$runtime_home" "$runtime_home"
+            case "$unit" in
+                astrid.service|astrid-edge-runtime.service)
+                    # The mutable generation needs libc identity/CA data, not
+                    # host administration, boot, package-manager, firewall,
+                    # credential, operator, or source trees.  A private /var
+                    # is supplied separately; /proc and /sys stay visible for
+                    # bounded host sensing.
+                    printf 'InaccessiblePaths=-/root -/boot -/usr/local -/usr/src -/etc/ssh -/etc/sudoers -/etc/sudoers.d -/etc/polkit-1 -/etc/apt -/etc/dpkg -/etc/ufw -/etc/firewalld -/etc/nftables.conf -/etc/iptables -/etc/NetworkManager -/etc/netplan -/etc/fstab -/etc/crypttab -/etc/default/grub -/etc/initramfs-tools -/etc/kernel -/etc/ssl/private -/etc/systemd\n' ;;
+            esac
+            printf 'LockPersonality=yes\nRestrictRealtime=yes\nRestrictSUIDSGID=yes\nSystemCallArchitectures=native\n'
+            printf 'SystemCallErrorNumber=EPERM\nSystemCallFilter=~kill tkill tgkill pidfd_send_signal pidfd_getfd kcmp process_vm_readv process_vm_writev ptrace\n'
+            case "$unit" in
+                ollama-cpu.service)
+                    # The user-unit launchers differ by appliance, and AVADO's
+                    # is a symlink into a versioned runtime with required CPU
+                    # shared objects. Pin the resolved executable and expose
+                    # that exact runtime tree read-only. Models alone remain
+                    # writable. Reset candidate-owned start commands so no
+                    # later mutable generation can bypass the immutable hash
+                    # gate or redirect execution to another home path.
+                    #
+                    # Go's runtime uses tgkill for thread preemption and Ollama
+                    # uses signals to reap its own llama runner.  The common
+                    # same-UID isolation filter is correct for mutable Astrid
+                    # processes but would break the root-pinned model server.
+                    # Keep cross-process inspection blocked while permitting
+                    # its own signal lifecycle.  ProcSubset=all exposes CPU and
+                    # memory discovery files; ProtectProc=invisible still hides
+                    # unrelated process details.
+                    printf 'SystemCallFilter=\nSystemCallFilter=~pidfd_getfd kcmp process_vm_readv process_vm_writev ptrace\nProtectProc=invisible\nProcSubset=all\n'
+                    printf 'ExecStartPre=\nExecStartPre=/usr/bin/sha256sum --check --strict --status %s\n' "$OLLAMA_RUNTIME_DIGEST"
+                    printf 'ExecStart=\nExecStart=%s serve\n' "$ollama_binary"
+                    printf 'Environment=OLLAMA_MODELS=%s\n' "$model_root"
+                    printf 'WorkingDirectory=/\nBindReadOnlyPaths=%s\nBindPaths=%s\nReadOnlyPaths=%s\nReadWritePaths=%s\nPrivateNetwork=yes\nRestrictAddressFamilies=AF_UNIX AF_INET AF_INET6\nIPAddressDeny=any\nIPAddressAllow=localhost\nPrivateDevices=yes\n' "$ollama_runtime_root" "$model_root" "$ollama_runtime_root" "$model_root" ;;
+                astrid-model-warmup.service)
+                    printf 'User=astrid-edge-warmup\nGroup=astrid-edge-warmup\nSupplementaryGroups=astrid-edge-provider-warmup-client\n'
+                    printf 'LoadCredential=provider-request.key:/etc/astrid-edge-self-change/model-warmup-provider-request.key\n'
+                    printf 'ExecStart=\nExecStart=/usr/libexec/astrid-edge/immutable/astrid-edge-provider-broker warmup --config /etc/astrid-edge-self-change/provider-broker.json --key /run/credentials/astrid-model-warmup.service/provider-request.key --receipt /var/lib/astrid-edge-model-warmup/receipt.json\n'
+                    printf 'StateDirectory=astrid-edge-model-warmup\nStateDirectoryMode=0700\nWorkingDirectory=/\nReadOnlyPaths=/etc/astrid-edge-self-change/provider-broker.json /usr/libexec/astrid-edge/immutable/astrid-edge-provider-broker\nReadWritePaths=/var/lib/astrid-edge-model-warmup\nPrivateNetwork=yes\nRestrictAddressFamilies=AF_UNIX\nPrivateDevices=yes\n' ;;
+                astrid.service)
+                    printf 'SupplementaryGroups=astrid-edge-provider-runtime-client %s\n' "$WEB_CORE_CLIENT_GROUP"
+                    printf 'LoadCredential=provider-request.key:/etc/astrid-edge-self-change/edge-runtime-provider-request.key\n'
+                    printf 'LoadCredential=web-request.key:%s\nLoadCredential=web-response.pub:%s\n' "$CORE_WEB_REQUEST_KEY" "$WEB_RESPONSE_VERIFY_KEY"
+                    printf 'ExecStart=\n'
+                    printf 'ExecStart=%s/astrid-daemon --workspace %s\n' "$active_generation_root" "$core_workspace"
+                    printf 'Environment=PATH=%s\n' "$active_generation_root"
+                    printf 'NoExecPaths=/\nExecPaths=%s/astrid-daemon /usr/lib /usr/lib64 /lib /lib64\n' "$active_generation_root"
+                    printf 'UnsetEnvironment=ASTRID_LOCAL_HTTP_ALLOWLIST ASTRID_ALLOW_LOCAL_IPS ASTRID_TEST_ALLOW_LOCAL_IP\n'
+                    printf 'Environment=ASTRID_LOCAL_PROVIDER_UNIX_SOCKET=/run/astrid-edge-self-change/provider-runtime.sock\nEnvironment=ASTRID_LOCAL_PROVIDER_CREDENTIAL=/run/credentials/astrid.service/provider-request.key\n'
+                    printf 'Environment=ASTRID_EDGE_CORE_WEB_BROKER_SOCKET=%s\n' "$WEB_CORE_SOCKET"
+                    printf 'Environment=ASTRID_EDGE_CORE_WEB_BROKER_REQUEST_CREDENTIAL=/run/credentials/astrid.service/web-request.key\n'
+                    printf 'Environment=ASTRID_EDGE_CORE_WEB_BROKER_RESPONSE_CREDENTIAL=/run/credentials/astrid.service/web-response.pub\n'
+                    printf 'Environment=ASTRID_EDGE_CORE_WEB_BROKER_RESPONSE_KEY_SHA256=%s\n' "$web_response_verify_sha256"
+                    printf 'Environment=ASTRID_CPU_EDGE_PROCESS_AUTHORITY=disabled\n'
+                    printf 'Environment=ASTRID_EDGE_MAINTENANCE_LEASE_PATH=%s\nEnvironment=ASTRID_EDGE_REFLECTION_LEASE_PATH=%s\nEnvironment=ASTRID_EDGE_MAINTENANCE_CORE_ACK_PATH=%s\nEnvironment=ASTRID_EDGE_GENERATION_BINDING_PATH=%s\n' "$maintenance_lease" "$REFLECTION_LEASE" "$maintenance_core_ack" "$generation_binding"
+                    printf 'MemoryMax=%s\nMemorySwapMax=134217728\nCPUQuota=%s\nTasksMax=256\nLimitFSIZE=536870912\nIOWeight=100\n' "$core_memory_max" "$core_cpu_quota"
+                    printf 'TemporaryFileSystem=/var:ro,nosuid,nodev,noexec,size=4M,mode=0755\n'
+                    printf 'IOReadBandwidthMax=%s %s\nIOWriteBandwidthMax=%s %s\nIOReadIOPSMax=%s 4096\nIOWriteIOPSMax=%s 2048\n' "$state_device" "$io_read_bandwidth" "$state_device" "$io_write_bandwidth" "$state_device" "$state_device"
+                    printf 'WorkingDirectory=%s\nBindReadOnlyPaths=%s\nBindReadOnlyPaths=%s\nBindReadOnlyPaths=%s/astrid-daemon\n' "$runtime_workspace" "$config_root" "$maintenance_root" "$active_generation_root"
+                    printf 'TemporaryFileSystem=/run:ro,nosuid,nodev,noexec,size=16M,mode=0755\nBindReadOnlyPaths=/run/astrid-edge-self-change\nBindReadOnlyPaths=%s\n' "$WEB_CORE_SOCKET"
+                    printf 'BindReadOnlyPaths=-%s/home/default/.config\nBindReadOnlyPaths=-%s/keys\nBindPaths=%s/home/default/edge\nBindPaths=-%s/home/default/.local/audit\nBindPaths=%s/var\nBindPaths=%s/run\nBindPaths=-%s/logs\n' "$state_root" "$state_root" "$state_root" "$state_root" "$state_root" "$state_root" "$state_root"
+                    [[ $profile == icp ]] && printf 'BindReadOnlyPaths=%s\nBindPaths=%s\n' "$core_workspace" "$runtime_tmp"
+                    printf 'BindReadOnlyPaths=%s/installed-capsules:%s\n' "$active_generation_root" "$capsule_root"
+                    printf 'ReadOnlyPaths=%s %s/bin %s %s -%s/keys\nInaccessiblePaths=-%s/operator\nReadWritePaths=%s/home/default/edge -%s/home/default/.local/audit %s/var %s/run -%s/logs' "$config_root" "$state_root" "$active_generation_root" "$maintenance_root" "$state_root" "$state_root" "$state_root" "$state_root" "$state_root" "$state_root" "$state_root"
+                    [[ $profile == icp ]] && printf ' %s' "$runtime_tmp"
+                    printf '\nPrivateNetwork=yes\nRestrictAddressFamilies=AF_UNIX\nPrivateDevices=yes\n' ;;
+                astrid-edge-runtime.service)
+                    if [[ $profile == avado ]]; then
+                        if $render_only; then
+                            audio_feeder_uid=$render_audio_feeder_uid
+                        else
+                            audio_feeder_uid=$(id -u astrid-edge-audio) || die "AVADO audio feeder identity is absent"
+                            getent group "$AUDIO_CLIENT_GROUP" >/dev/null || die "AVADO audio client group is absent"
+                        fi
+                        printf 'SupplementaryGroups=astrid-edge-web-runtime-client %s\n' "$AUDIO_CLIENT_GROUP"
+                        printf 'Environment=%s=%s\n' "$AUDIO_FEEDER_UID_ENV" "$audio_feeder_uid"
+                    else
+                        if ! $render_only; then
+                            ! getent passwd astrid-edge-audio >/dev/null && ! getent group "$AUDIO_CLIENT_GROUP" >/dev/null \
+                                || die "ICP unexpectedly has AVADO audio authority identities"
+                        fi
+                        printf 'SupplementaryGroups=astrid-edge-web-runtime-client\n'
+                        printf 'UnsetEnvironment=%s\n' "$AUDIO_FEEDER_UID_ENV"
+                    fi
+                    # The reviewed appliance profiles predate the root-manager
+                    # migration and intentionally express these paths relative
+                    # to WorkingDirectory=%h.  A system service runs from the
+                    # private edge workspace instead, so inheriting those
+                    # values would silently redirect the daemon socket, token,
+                    # workspace, CLI, and self-change exchange below
+                    # edge/edge.  Bind every path-bearing runtime input to its
+                    # exact absolute root-manager location.  In particular the
+                    # CLI must traverse the root-owned A/B `current` link so a
+                    # promoted daemon and its headless client stay generation
+                    # aligned.
+                    printf 'Environment=ASTRID_EDGE_APPLIANCE_ID=%s\n' "$appliance_id"
+                    printf 'ProtectProc=invisible\nProcSubset=all\n'
+                    printf 'Environment=ASTRID_EDGE_SOCKET=%s/run/system.sock\n' "$state_root"
+                    printf 'Environment=ASTRID_EDGE_TOKEN=%s/run/system.token\n' "$state_root"
+                    printf 'Environment=ASTRID_EDGE_WORKSPACE=%s\n' "$runtime_workspace"
+                    printf 'Environment=ASTRID_EDGE_ASTRID_CLI=%s/astrid\n' "$active_generation_root"
+                    printf 'Environment=ASTRID_EDGE_SELF_CHANGE_ROOT=%s/self-change\n' "$runtime_workspace"
+                    printf 'Environment=ASTRID_EDGE_CORE_LIVENESS_REQUEST_PATH=%s/runtime/core-liveness-recovery.request.json\n' "$runtime_workspace"
+                    printf 'Environment=ASTRID_EDGE_SCHEDULED_INTROSPECTION_ENABLED=false\n'
+                    printf 'Environment=ASTRID_EDGE_DEDICATED_STEWARD_ENABLED=true\n'
+                    printf 'Environment=ASTRID_EDGE_DEDICATED_STEWARD_INTERVAL_MINUTES=120\n'
+                    printf 'EnvironmentFile=%s\n' "$authority_env"
+                    printf 'Environment=ASTRID_EDGE_MAINTENANCE_LEASE_PATH=%s\nEnvironment=ASTRID_EDGE_REFLECTION_LEASE_PATH=%s\nEnvironment=ASTRID_EDGE_MAINTENANCE_EDGE_ACK_PATH=%s\nEnvironment=ASTRID_EDGE_GENERATION_BINDING_PATH=%s\n' "$maintenance_lease" "$REFLECTION_LEASE" "$maintenance_edge_ack" "$generation_binding"
+                    printf 'Environment=ASTRID_EDGE_WEB_BROKER_SOCKET_PATH=/run/astrid-edge-self-change/web-runtime.sock\nEnvironment=ASTRID_EDGE_WEB_BROKER_CONNECT_TIMEOUT_MS=2000\nEnvironment=ASTRID_EDGE_WEB_BROKER_HEADER_TIMEOUT_MS=10000\nEnvironment=ASTRID_EDGE_WEB_BROKER_TOTAL_TIMEOUT_MS=30000\n'
+                    printf 'Environment=ASTRID_EDGE_HOST_NETWORK_POLICY=unavailable_private_network\n'
+                    printf 'MemoryMax=%s\nMemorySwapMax=134217728\nCPUQuota=%s\nTasksMax=128\nLimitFSIZE=536870912\nIOWeight=100\n' "$edge_memory_max" "$edge_cpu_quota"
+                    printf 'IOReadBandwidthMax=%s %s\nIOWriteBandwidthMax=%s %s\nIOReadIOPSMax=%s 2048\nIOWriteIOPSMax=%s 1024\n' "$state_device" "$io_read_bandwidth" "$state_device" "$io_write_bandwidth" "$state_device" "$state_device"
+                    printf 'ExecStart=\nExecStart=%s/astrid-edge-runtime\n' "$active_generation_root"
+                    printf 'NoExecPaths=/\nExecPaths=%s/astrid-edge-runtime %s/astrid /usr/lib /usr/lib64 /lib /lib64\n' "$active_generation_root" "$active_generation_root"
+                    printf 'WorkingDirectory=%s\nBindReadOnlyPaths=%s\nBindReadOnlyPaths=%s\nBindReadOnlyPaths=%s/run\nBindReadOnlyPaths=%s/astrid-edge-runtime\nBindReadOnlyPaths=%s/astrid\nBindPaths=%s\n' "$runtime_workspace" "$config_root" "$maintenance_root" "$state_root" "$active_generation_root" "$active_generation_root" "$runtime_workspace"
+                    printf 'TemporaryFileSystem=/run:ro,nosuid,nodev,noexec,size=16M,mode=0755\nBindReadOnlyPaths=/run/astrid-edge-self-change\n'
+                    [[ $profile == icp ]] && printf 'BindReadOnlyPaths=%s\nBindPaths=%s\n' "$core_workspace" "$runtime_tmp"
+                    printf 'ReadOnlyPaths=%s %s/bin %s %s/run\nInaccessiblePaths=-%s/keys -%s/operator\nReadWritePaths=%s' "$config_root" "$state_root" "$active_generation_root" "$state_root" "$state_root" "$state_root" "$runtime_workspace"
+                    [[ $profile == icp ]] && printf ' %s' "$runtime_tmp"
+                    printf '\nPrivateNetwork=yes\nRestrictAddressFamilies=AF_UNIX AF_INET AF_INET6\nIPAddressDeny=any\nIPAddressAllow=localhost\nPrivateDevices=yes\n' ;;
+                astrid-edge-hindsight.service)
+                    printf 'ExecStart=\nExecStart=/usr/bin/python3 -I -E -s %s record-sealed --config %s\n' "$HINDSIGHT_WRITER" "$HINDSIGHT_CONFIG"
+                    printf 'WorkingDirectory=%s\nBindReadOnlyPaths=%s\nBindReadOnlyPaths=%s\nBindReadOnlyPaths=%s/report_edge_activity.py\nBindReadOnlyPaths=%s\nBindPaths=%s/operator/hindsight\nReadOnlyPaths=%s %s %s %s/report_edge_activity.py %s\nReadWritePaths=%s/operator/hindsight\nPrivateNetwork=yes\nRestrictAddressFamilies=AF_UNIX\nPrivateDevices=yes\n' "$runtime_workspace" "$state_root" "$HINDSIGHT_CONFIG" "$OPERATOR_REPORT_ROOT" "$OPERATOR_REPORT_MANIFEST" "$state_root" "$state_root" "$HINDSIGHT_WRITER" "$HINDSIGHT_CONFIG" "$OPERATOR_REPORT_ROOT" "$OPERATOR_REPORT_MANIFEST" "$state_root"
+                    printf 'NoExecPaths=/\nExecPaths=/usr/bin/python3 %s /usr/lib /usr/lib64 /lib /lib64\n' "$HINDSIGHT_WRITER" ;;
+            esac
+        } >"$dropin"
+        chmod 0644 "$dropin"
+    elif [[ $unit == astrid-edge-hindsight.timer ]]; then
+        dropin=$stage/units/$unit.d/90-root-runtime-boundary.conf
+        mkdir -p "${dropin%/*}"
+        printf '[Unit]\nConditionPathIsRegular=%s\nRequires=%s\nAfter=%s\n' \
+            "$management_marker" "$state_store_verify_unit" "$state_store_verify_unit" >"$dropin"
+        chmod 0644 "$dropin"
+    fi
+done
+
+if [[ $profile == icp ]]; then
+    for unit in ollama-cpu.service astrid-model-warmup.service astrid.service astrid-edge-runtime.service astrid-edge-hindsight.service; do
+        mkdir -p "$stage/units/$unit.d"
+        sed "s|%h/.local/libexec/astrid/wait-for-icp-ssd|$ICP_SSD_GUARD|g" \
+            "$unit_source_root/icp-ssd-required.conf" >"$stage/units/$unit.d/10-ssd-required.conf"
+    done
+    sed "s|%h/.config/astrid/edge-tuning-authority.env|$config_root/edge-tuning-authority.env|g" \
+        "$unit_source_root/astrid-edge-tuning-authority.conf" \
+        >"$stage/units/astrid-edge-runtime.service.d/95-tuning-authority.conf"
+    cat >"$stage/units/astrid-edge-runtime.service.d/96-spectral-deferred.conf" <<EOF
+[Service]
+EnvironmentFile=$config_root/edge-spectral-deferred.env
+EOF
+fi
+if grep -R -n -E -- '%[ht]' "$stage/units" >/dev/null; then
+    die "staged system-manager stack retains a user-manager path specifier"
+fi
+find "$stage/units" -type f -exec chmod 0644 {} +
+if $render_only; then
+    printf 'RENDER-ONLY: production system-manager stack rendered at %s (profile=%s uid=%s gid=%s); no host state changed\n' \
+        "$stage/units" "$profile" "$runtime_uid" "$runtime_gid"
+    exit 0
+fi
+systemd-analyze verify "$stage"/units/*.service "$stage"/units/*.timer
+
+# Install and verify the inert root definitions before interrupting the live
+# user stack.  Persistent enablement also makes a host reboot a deterministic
+# recovery path across an otherwise uncatchable power loss/SIGKILL window.
+[[ $(hash_file "$ollama_binary") == "$ollama_binary_sha256" ]] || die "profile Ollama binary changed before immutable digest installation"
+install -m 0444 -o root -g root "$ollama_digest_stage" "$OLLAMA_RUNTIME_DIGEST"
+installed+=("$OLLAMA_RUNTIME_DIGEST")
+validate_root_regular "$OLLAMA_RUNTIME_DIGEST" "installed Ollama runtime digest"
+IFS=' ' read -r digest_owner digest_mode digest_links < <(stat_values "$OLLAMA_RUNTIME_DIGEST")
+[[ $digest_owner == 0 && $digest_mode == 444 && $digest_links == 1 \
+    && $(<"$OLLAMA_RUNTIME_DIGEST") == "$ollama_binary_sha256  $ollama_binary" ]] \
+    || die "installed Ollama runtime digest contract is not exact"
+for unit in "${STACK[@]}"; do
+    install -m 0644 -o root -g root "$stage/units/$unit" "$system_unit_root/$unit"
+    installed+=("$system_unit_root/$unit")
+    if [[ -d $stage/units/$unit.d ]]; then
+        if [[ ! -d $system_unit_root/$unit.d ]]; then
+            install -d -m 0755 -o root -g root "$system_unit_root/$unit.d"
+            installed+=("$system_unit_root/$unit.d")
+        fi
+        while IFS= read -r dropin; do
+            target=$system_unit_root/$unit.d/${dropin##*/}
+            [[ ! -e $target && ! -L $target ]] || die "system drop-in target already exists: $target"
+            install -m 0644 -o root -g root "$dropin" "$target"
+            installed+=("$target")
+        done < <(find "$stage/units/$unit.d" -type f -print | LC_ALL=C sort)
+    fi
+done
+systemctl daemon-reload
+systemd-analyze verify "${STACK[@]/#/$system_unit_root/}"
+for unit in "${STACK[@]}"; do
+    [[ $(systemctl show "$unit" --property=FragmentPath --value) == "$system_unit_root/$unit" ]] || die "effective system unit is not the newly installed reviewed fragment: $unit"
+    mapfile -t effective_root_dropins < <(systemctl show "$unit" --property=DropInPaths --value | tr ' ' '\n' | sed '/^$/d' | LC_ALL=C sort)
+    mapfile -t expected_root_dropins < <(find "$system_unit_root/$unit.d" -mindepth 1 -maxdepth 1 -type f -name '*.conf' -print 2>/dev/null | LC_ALL=C sort)
+    [[ ${effective_root_dropins[*]-} == "${expected_root_dropins[*]-}" ]] || die "effective system-manager drop-ins include unreviewed global or prefix policy: $unit"
+done
+
+# Seal the exact immutable drop-in membership beneath the operator bootstrap
+# authority before the rescue helper is allowed to validate or mutate any of
+# the six candidate-owned base fragments.  This policy is canonical, durable,
+# root-only, and part of this migration's rollback set.
+installed+=("$unit_policy")
+/usr/bin/python3 -I -E -s - "$system_unit_root" "$rescue_system_unit_root" "$unit_policy" "${STACK[@]}" <<'PY'
+import hashlib, json, os, stat, sys
+from pathlib import Path
+
+system_root = Path(sys.argv[1])
+rescue_system_root = Path(sys.argv[2])
+output = Path(sys.argv[3])
+units = sys.argv[4:]
+expected = [
+    "ollama-cpu.service",
+    "astrid-model-warmup.service",
+    "astrid.service",
+    "astrid-edge-runtime.service",
+    "astrid-edge-hindsight.service",
+    "astrid-edge-hindsight.timer",
+]
+if units != expected:
+    raise SystemExit("mutable unit policy input is not the exact six-unit stack")
+
+dropins = []
+for unit in units:
+    directory = system_root / f"{unit}.d"
+    info = directory.lstat()
+    if not stat.S_ISDIR(info.st_mode) or stat.S_ISLNK(info.st_mode) or info.st_uid != 0 or info.st_mode & 0o022:
+        raise SystemExit(f"unit drop-in directory escaped root policy: {unit}")
+    names = sorted(directory.iterdir(), key=lambda item: item.name)
+    if not names:
+        raise SystemExit(f"unit has no immutable root boundary: {unit}")
+    for path in names:
+        opened = path.lstat()
+        if (
+            path.suffix != ".conf"
+            or not stat.S_ISREG(opened.st_mode)
+            or stat.S_ISLNK(opened.st_mode)
+            or opened.st_uid != 0
+            or opened.st_nlink != 1
+            or opened.st_mode & 0o022
+            or opened.st_size <= 0
+            or opened.st_size > 1024 * 1024
+        ):
+            raise SystemExit(f"unit drop-in escaped immutable policy: {path}")
+        body = path.read_bytes()
+        if len(body) != opened.st_size:
+            raise SystemExit(f"unit drop-in changed during policy capture: {path}")
+        after = path.lstat()
+        if (opened.st_dev, opened.st_ino, opened.st_size, opened.st_mtime_ns, opened.st_ctime_ns) != (
+            after.st_dev, after.st_ino, after.st_size, after.st_mtime_ns, after.st_ctime_ns
+        ):
+            raise SystemExit(f"unit drop-in changed during policy capture: {path}")
+        dropins.append({
+            "path": path.relative_to(system_root).as_posix(),
+            "sha256": hashlib.sha256(body).hexdigest(),
+            "size": len(body),
+        })
+
+paths = {item["path"] for item in dropins}
+for unit in units:
+    if f"{unit}.d/90-root-runtime-boundary.conf" not in paths:
+        raise SystemExit(f"unit policy lacks root runtime boundary: {unit}")
+if "astrid-edge-runtime.service.d/60-self-evolution-root.conf" not in paths:
+    raise SystemExit("unit policy lacks self-evolution runtime boundary")
+value = {
+    "authority": "operator_bootstrap_reviewed_immutable_dropins",
+    "immutable_dropins": sorted(dropins, key=lambda item: item["path"]),
+    "mutable_fragments": units,
+    "schema": "astrid.edge_rescue_helper.unit_policy.v1",
+    "system_unit_root": str(rescue_system_root),
+}
+encoded = json.dumps(value, sort_keys=True, separators=(",", ":"), ensure_ascii=True, allow_nan=False).encode("ascii")
+with output.open("xb") as handle:
+    handle.write(encoded)
+    os.fchmod(handle.fileno(), 0o400)
+    os.fchown(handle.fileno(), 0, 0)
+    handle.flush()
+    os.fsync(handle.fileno())
+PY
+/usr/bin/python3 -I -E -s - "$unit_policy" "${unit_policy%/*}" <<'PY'
+import os, stat, sys
+path, parent = sys.argv[1:]
+descriptor = os.open(path, os.O_RDONLY | getattr(os, "O_CLOEXEC", 0) | getattr(os, "O_NOFOLLOW", 0))
+try:
+    info = os.fstat(descriptor)
+    if not stat.S_ISREG(info.st_mode) or info.st_uid != 0 or info.st_nlink != 1 or stat.S_IMODE(info.st_mode) != 0o400:
+        raise SystemExit("installed unit policy identity failed")
+    os.fsync(descriptor)
+finally:
+    os.close(descriptor)
+directory = os.open(parent, os.O_RDONLY | getattr(os, "O_DIRECTORY", 0) | getattr(os, "O_CLOEXEC", 0))
+try:
+    os.fsync(directory)
+finally:
+    os.close(directory)
+PY
+for unit in "${user_enabled[@]}"; do root_enabled+=("$unit"); systemctl enable "$unit"; done
+
+# The pinned rescue helper proves the source/toolchain/generation identities
+# and that every mutable Astrid ExecStart traverses the root-owned A/B link.
+"$post_install_verifier" --config "$post_install_verifier_config" verify-install >/dev/null
+
+# Install inverse manager guards without changing the reviewed unit fragments.
+# Before the marker exists, only the legacy user units may boot; after its
+# atomic install, only the root units may boot. This closes the power-loss
+# window without granting either manager authority over unrelated services.
+for unit in "${STACK[@]}"; do
+    guard_dir=$user_unit_root/$unit.d
+    guard=$guard_dir/99-system-manager-migrated.conf
+    [[ ! -e $guard && ! -L $guard ]] || die "user-manager migration guard already exists: $guard"
+    if [[ ! -d $guard_dir ]]; then
+        install -d -m 0755 -o "$runtime_uid" -g "$runtime_gid" "$guard_dir"
+        user_guards+=("$guard_dir")
+    fi
+    cat >"$stage/$unit.user-guard" <<EOF
+[Unit]
+ConditionPathExists=!$management_marker
+EOF
+    install -m 0644 -o "$runtime_uid" -g "$runtime_gid" "$stage/$unit.user-guard" "$guard"
+    user_guards+=("$guard")
+done
+userctl daemon-reload
+
+# Stop dependents before providers, and touch no unrelated user unit.
+for unit in astrid-edge-hindsight.timer astrid-edge-runtime.service astrid.service astrid-model-warmup.service ollama-cpu.service astrid-edge-hindsight.service; do userctl stop "$unit"; done
+
+# With all state writers stopped, perform the exact-inventory copy into the two
+# preallocated images.  The mount units invoke immutable crash recovery before
+# exposing either filesystem.  Acceptance is committed only after the copied
+# trees, databases, mount identities, capacity reserves, and inode reserve all
+# pass the full verifier; ordinary future boots then validate the evolving live
+# state rather than comparing it to this installation snapshot.
+state_cutover_started=true
+/usr/bin/python3 -I -E -s "$state_store_helper" migrate --config "$state_store_config"
+systemctl start "$state_store_runtime_mount_unit"
+systemctl start "$state_store_rollback_mount_unit"
+# Initial cutover is the sole operator-authorized creation path that predates
+# any signed generation transition.  Later boots may recreate a missing inode
+# reserve only through the signed rescue-helper transaction reconciler.
+/usr/bin/python3 -I -E -s "$state_store_helper" prepare --config "$state_store_config"
+systemctl start "$state_store_verify_unit"
+/usr/bin/python3 -I -E -s "$state_store_helper" accept --config "$state_store_config"
+systemctl restart "$state_store_verify_unit"
+systemctl start "$state_store_health_timer"
+for unit in "$state_store_runtime_mount_unit" "$state_store_rollback_mount_unit" astrid-edge-state-store-migration-recover.service astrid-edge-state-store-recover.service "$state_store_verify_unit" "$state_store_health_timer"; do
+    systemctl is-active --quiet "$unit" || die "bounded state-store unit did not become active: $unit"
+done
+
+marker_stage=$stage/edge-service-manager.json
+/usr/bin/python3 -I -E -s - "$marker_stage" "$profile" "$runtime_user" "$active_generation_root" "$ollama_binary" "$ollama_binary_sha256" "$ollama_runtime_root" "$model_root" <<'PY'
+import json, os, sys
+path, profile, runtime_user, active_generation, ollama_binary, ollama_sha256, ollama_runtime_root, ollama_model_root = sys.argv[1:]
+value = {
+    "schema": "astrid.edge.service_manager.v2",
+    "manager": "system",
+    "profile": profile,
+    "runtime_user": runtime_user,
+    "active_generation_root": active_generation,
+    "ollama_binary": ollama_binary,
+    "ollama_binary_sha256": ollama_sha256,
+    "ollama_runtime_root": ollama_runtime_root,
+    "ollama_model_root": ollama_model_root,
+    "units": [
+        "ollama-cpu.service",
+        "astrid-model-warmup.service",
+        "astrid.service",
+        "astrid-edge-runtime.service",
+        "astrid-edge-hindsight.service",
+        "astrid-edge-hindsight.timer",
+    ],
+}
+with open(path, "x", encoding="ascii") as handle:
+    json.dump(value, handle, sort_keys=True, separators=(",", ":"), ensure_ascii=True, allow_nan=False)
+    handle.write("\n")
+    handle.flush()
+    os.fsync(handle.fileno())
+PY
+marker_pending=$management_marker.pending.$$
+[[ ! -e $marker_pending && ! -L $marker_pending ]] || die "management marker staging collision"
+install -m 0640 -o root -g "$runtime_gid" "$marker_stage" "$marker_pending"
+mv -T -- "$marker_pending" "$management_marker"
+/usr/bin/python3 -I -E -s - "${management_marker%/*}" <<'PY'
+import os, sys
+descriptor = os.open(sys.argv[1], os.O_RDONLY | getattr(os, "O_DIRECTORY", 0))
+try:
+    os.fsync(descriptor)
+finally:
+    os.close(descriptor)
+PY
+for unit in "${STACK[@]}"; do userctl disable "$unit"; done
+
+for unit in ollama-cpu.service astrid-model-warmup.service astrid.service astrid-edge-runtime.service; do
+    root_started+=("$unit")
+    systemctl start "$unit"
+done
+# Record a new root-manager checkpoint before applying the strict health gate.
+root_started+=(astrid-edge-hindsight.service)
+systemctl start astrid-edge-hindsight.service
+root_started+=(astrid-edge-hindsight.timer)
+systemctl start astrid-edge-hindsight.timer
+
+healthy=false
+for _ in {1..30}; do
+    healthy=true
+    for unit in "${EXPECTED_LIVE[@]}"; do
+        systemctl is-active --quiet "$unit" || healthy=false
+    done
+    for unit in ollama-cpu.service astrid.service astrid-edge-runtime.service; do
+        [[ $(systemctl show "$unit" --property=NRestarts --value) == 0 ]] || healthy=false
+    done
+    $healthy && break
+    sleep 1
+done
+$healthy || die "root-managed Astrid stack did not become healthy after cutover"
+for unit in "${STACK[@]}"; do
+    ! systemctl is-failed --quiet "$unit" || die "root-managed unit entered failed state: $unit"
+done
+sha256sum --check --strict --status "$OLLAMA_RUNTIME_DIGEST" || die "root-managed Ollama binary no longer matches its immutable digest"
+ollama_execstart=$(systemctl show ollama-cpu.service --property=ExecStart --value)
+ollama_execstart_pre=$(systemctl show ollama-cpu.service --property=ExecStartPre --value)
+[[ $ollama_execstart == *"$ollama_binary"* ]] || die "effective root Ollama ExecStart is not profile-bound"
+[[ $ollama_execstart_pre == *"$OLLAMA_RUNTIME_DIGEST"* ]] || die "effective root Ollama digest gate is absent"
+core_pid=$(systemctl show astrid.service --property=MainPID --value)
+edge_pid=$(systemctl show astrid-edge-runtime.service --property=MainPID --value)
+[[ $core_pid =~ ^[1-9][0-9]*$ && $edge_pid =~ ^[1-9][0-9]*$ ]] || die "root-managed runtime process identity is invalid"
+tr '\0' '\n' <"/proc/$core_pid/environ" >"$stage/core.environment"
+tr '\0' '\n' <"/proc/$edge_pid/environ" >"$stage/edge.environment"
+for expected in \
+    "ASTRID_EDGE_CORE_WEB_BROKER_SOCKET=$WEB_CORE_SOCKET" \
+    'ASTRID_EDGE_CORE_WEB_BROKER_REQUEST_CREDENTIAL=/run/credentials/astrid.service/web-request.key' \
+    'ASTRID_EDGE_CORE_WEB_BROKER_RESPONSE_CREDENTIAL=/run/credentials/astrid.service/web-response.pub' \
+    "ASTRID_EDGE_CORE_WEB_BROKER_RESPONSE_KEY_SHA256=$web_response_verify_sha256" \
+    "ASTRID_EDGE_MAINTENANCE_LEASE_PATH=$maintenance_lease" \
+    "ASTRID_EDGE_REFLECTION_LEASE_PATH=$REFLECTION_LEASE" \
+    "ASTRID_EDGE_MAINTENANCE_CORE_ACK_PATH=$maintenance_core_ack" \
+    "ASTRID_EDGE_GENERATION_BINDING_PATH=$generation_binding"; do
+    grep -Fxq "$expected" "$stage/core.environment" || die "core did not receive exact maintenance boundary: $expected"
+done
+for expected in \
+    'ASTRID_EDGE_SELF_CHANGE_ENABLED=false' \
+    "ASTRID_EDGE_MAINTENANCE_LEASE_PATH=$maintenance_lease" \
+    "ASTRID_EDGE_REFLECTION_LEASE_PATH=$REFLECTION_LEASE" \
+    "ASTRID_EDGE_MAINTENANCE_EDGE_ACK_PATH=$maintenance_edge_ack" \
+    "ASTRID_EDGE_GENERATION_BINDING_PATH=$generation_binding" \
+    'ASTRID_EDGE_WEB_BROKER_SOCKET_PATH=/run/astrid-edge-self-change/web-runtime.sock'; do
+    grep -Fxq "$expected" "$stage/edge.environment" || die "edge did not receive exact disabled cutover boundary: $expected"
+done
+
+# Unit liveness is not cognition liveness. Query the active generation's own
+# CLI through the preserved runtime socket and require the exact twenty-capsule
+# graph before making cutover durable. A ten-capsule edge-only graph, a missing
+# provider/ReAct/prompt/session hop, malformed status, or PID/restart movement
+# reaches the existing rollback trap.
+cognition_status=$stage/cognition-status.json
+cognition_graph_healthy=false
+for _ in {1..30}; do
+    if runuser -u "$runtime_user" -- env -i \
+        HOME="$runtime_home" ASTRID_HOME="$astrid_state_root" PATH=/usr/bin:/bin \
+        "$active_generation_root/astrid" --format json status >"$cognition_status" 2>/dev/null \
+        && /usr/bin/python3 -I -E -s - "$cognition_status" <<'PY'
+import json, sys
+
+expected = {
+    "astrid-capsule-agents", "astrid-capsule-cli", "astrid-capsule-context-engine",
+    "astrid-capsule-edge-context", "astrid-capsule-edge-introspector",
+    "astrid-capsule-edge-spectral", "astrid-capsule-fs", "astrid-capsule-hook-bridge",
+    "astrid-capsule-http", "astrid-capsule-identity", "astrid-capsule-memory",
+    "astrid-capsule-openai-compat", "astrid-capsule-prompt-builder",
+    "astrid-capsule-react", "astrid-capsule-registry", "astrid-capsule-router",
+    "astrid-capsule-session", "astrid-capsule-shell", "astrid-capsule-skills",
+    "astrid-capsule-system",
+}
+with open(sys.argv[1], encoding="utf-8") as handle:
+    value = json.load(handle)
+if (
+    not isinstance(value, dict)
+    or set(value) != {"running", "status"}
+    or value["running"] is not True
+    or not isinstance(value["status"], dict)
+):
+    raise SystemExit("structured status envelope is not exact")
+loaded = value["status"].get("loaded_capsules")
+if (
+    not isinstance(loaded, list)
+    or not all(isinstance(name, str) and 0 < len(name) <= 128 for name in loaded)
+    or len(loaded) != len(set(loaded))
+    or len(loaded) != 20
+    or set(loaded) != expected
+):
+    raise SystemExit("exact twenty-capsule cognition graph is not live")
+for required in (
+    "astrid-capsule-openai-compat", "astrid-capsule-react",
+    "astrid-capsule-prompt-builder", "astrid-capsule-session",
+    "astrid-capsule-router", "astrid-capsule-context-engine", "astrid-capsule-system",
+):
+    if required not in loaded:
+        raise SystemExit(f"required cognition hop is absent: {required}")
+PY
+    then
+        cognition_graph_healthy=true
+        break
+    fi
+    sleep 1
+done
+$cognition_graph_healthy || die "root-managed Astrid did not expose the exact twenty-capsule cognition graph"
+[[ $(systemctl show astrid.service --property=MainPID --value) == "$core_pid" ]] \
+    || die "core PID changed during cognition graph verification"
+[[ $(systemctl show astrid.service --property=NRestarts --value) == 0 ]] \
+    || die "core restarted during cognition graph verification"
+"$post_install_verifier" --config "$post_install_verifier_config" health >/dev/null
+
+install -m 0400 -o root -g root /dev/null "$completion_marker"
+committed=true
+rm -rf -- "$stage"
+trap - EXIT HUP INT TERM
+printf 'Migrated the exact CPU-edge stack to root-owned system units running as %s; state paths were preserved and matching user units are disabled.\n' "$runtime_user"

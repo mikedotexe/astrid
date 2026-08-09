@@ -12,7 +12,10 @@ WorkingDirectory=%h
 EnvironmentFile=%h/.config/astrid/edge-appliance.env
 ExecStart=%h/.astrid/bin/warm-ollama-model
 RemainAfterExit=yes
-TimeoutStartSec=660
+# The immutable provider gateway owns the 660-second request deadline.  Keep a
+# full minute outside that deadline so systemd can collect the terminal receipt
+# and run cleanup rather than killing the client at the same boundary.
+TimeoutStartSec=12min
 UMask=0077
 
 [Install]

@@ -1,0 +1,58 @@
+#!/bin/sh
+set -eu
+umask 077
+
+CONFIG=/etc/astrid/edge-self-change.json
+PYTHON=/usr/bin/python3
+SUPERVISOR=/usr/libexec/astrid/edge-self-change-supervisor
+OPERATOR_STATUS=/var/lib/astrid-edge-operator/operator-status.json
+INBOX_PATH_UNIT=astrid-edge-self-change-inbox.path
+ACTION=${0##*/}
+ACTION=${ACTION#astrid-edge-self-change-}
+
+case "$ACTION" in
+    status)
+        test "$#" -eq 0 || { echo "usage: $0" >&2; exit 64; }
+        test -r "$OPERATOR_STATUS" || { echo "operator status is unavailable" >&2; exit 69; }
+        exec /usr/bin/cat "$OPERATOR_STATUS"
+        ;;
+    synthetic)
+        test "$(/usr/bin/id -u)" -eq 0 || { echo "$ACTION requires root" >&2; exit 77; }
+        test "$#" -eq 0 || { echo "usage: $0" >&2; exit 64; }
+        "$PYTHON" -I -E -s "$SUPERVISOR" --config "$CONFIG" --execute request-synthetic
+        exec /usr/bin/systemctl start astrid-edge-self-change-supervisor.service
+        ;;
+    pause|rollback|rescue)
+        test "$(/usr/bin/id -u)" -eq 0 || { echo "$ACTION requires root" >&2; exit 77; }
+        test "$#" -eq 2 && test "$1" = "--reason" && test -n "$2" || {
+            echo "usage: $0 --reason TEXT" >&2
+            exit 64
+        }
+        case "$2" in *[!A-Za-z0-9._,:+=@/-]*|'') echo "unsafe reason" >&2; exit 64;; esac
+        "$PYTHON" -I -E -s "$SUPERVISOR" --config "$CONFIG" --execute "$ACTION" --reason "$2"
+        exec /usr/bin/systemctl stop "$INBOX_PATH_UNIT"
+        ;;
+    resume)
+        test "$(/usr/bin/id -u)" -eq 0 || { echo "$ACTION requires root" >&2; exit 77; }
+        test "$#" -ge 2 && test "$#" -le 3 && test "$1" = "--reason" && test -n "$2" || {
+            echo "usage: $0 --reason TEXT [--ack-rescue]" >&2
+            exit 64
+        }
+        test "$#" -eq 2 || test "$3" = "--ack-rescue" || {
+            echo "usage: $0 --reason TEXT [--ack-rescue]" >&2
+            exit 64
+        }
+        case "$2" in *[!A-Za-z0-9._,:+=@/-]*|'') echo "unsafe reason" >&2; exit 64;; esac
+        if test "$#" -eq 3; then
+            "$PYTHON" -I -E -s "$SUPERVISOR" --config "$CONFIG" --execute resume --reason "$2" --ack-rescue
+        else
+            "$PYTHON" -I -E -s "$SUPERVISOR" --config "$CONFIG" --execute resume --reason "$2"
+        fi
+        /usr/bin/systemctl start "$INBOX_PATH_UNIT"
+        exec /usr/bin/systemctl start astrid-edge-self-change-supervisor.service
+        ;;
+    *)
+        echo "unsupported control name; no candidate or generation selector is accepted" >&2
+        exit 64
+        ;;
+esac

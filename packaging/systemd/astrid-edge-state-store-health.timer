@@ -1,0 +1,12 @@
+[Unit]
+Description=Refresh Astrid CPU-edge bounded-storage health every two minutes
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=2min
+AccuracySec=15s
+Persistent=true
+Unit=astrid-edge-state-store-health.service
+
+[Install]
+WantedBy=timers.target

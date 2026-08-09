@@ -1,0 +1,81 @@
+[Unit]
+Requires=astrid-edge-web-broker-runtime.socket
+After=astrid-edge-web-broker-runtime.socket
+
+[Service]
+# Generated substitutions expose only Astrid's active immutable generation,
+# owned workspace, and model IPC.
+# The mutable runtime cannot see operator homes, SSH material, source, toolchains,
+# release slots, root state, or system units.
+ProtectHome=tmpfs
+ProtectSystem=strict
+# Keep host/operator administration, boot, package, firewall, and credential
+# material outside the mutable runtime namespace.  `/etc/passwd`, CA roots,
+# and loader configuration remain readable for ordinary libc operation; the
+# sensitive subtrees below and the complete host `/var` are absent.
+InaccessiblePaths=/root -/boot -/usr/local -/usr/src -/etc/ssh -/etc/sudoers -/etc/sudoers.d -/etc/polkit-1 -/etc/apt -/etc/dpkg -/etc/ufw -/etc/firewalld -/etc/nftables.conf -/etc/iptables -/etc/NetworkManager -/etc/netplan -/etc/fstab -/etc/crypttab -/etc/default/grub -/etc/initramfs-tools -/etc/kernel -/etc/ssl/private -/etc/systemd
+# Unlike InaccessiblePaths on systemd 249, read-only tmpfs ancestors permit an
+# exact later BindPath to be re-exposed. The installer expands the private-root
+# marker to one empty tmpfs mount per privileged mutable store.
+TemporaryFileSystem=/media:ro,nosuid,nodev,noexec,size=4M,mode=0755
+TemporaryFileSystem=/mnt:ro,nosuid,nodev,noexec,size=4M,mode=0755
+TemporaryFileSystem=/opt:ro,nosuid,nodev,noexec,size=4M,mode=0755
+TemporaryFileSystem=/srv:ro,nosuid,nodev,noexec,size=4M,mode=0755
+@@PRIVATE_MANAGED_ROOT_MOUNTS@@
+TemporaryFileSystem=/var:ro,nosuid,nodev,noexec,size=4M,mode=0755
+BindPaths=@@RUNTIME_WORKSPACE@@
+BindReadOnlyPaths=@@ACTIVE_GENERATION_ROOT@@/astrid-edge-runtime
+BindReadOnlyPaths=@@ACTIVE_GENERATION_ROOT@@/astrid
+BindReadOnlyPaths=@@MODEL_IPC@@
+BindReadOnlyPaths=@@MAINTENANCE_ROOT@@
+# This persistent steward-owned source survives reboot; the alias is
+# read-only inside the mutable runtime namespace and may initially be empty.
+BindReadOnlyPaths=@@SCHEDULED_AUTHORSHIP_ROOT@@:/run/astrid-edge-self-change/scheduled-authorship
+ReadWritePaths=@@RUNTIME_WORKSPACE@@
+ReadOnlyPaths=@@MODEL_IPC@@
+ReadOnlyPaths=@@ACTIVE_GENERATION_ROOT@@/astrid-edge-runtime
+ReadOnlyPaths=@@ACTIVE_GENERATION_ROOT@@/astrid
+ReadOnlyPaths=@@MAINTENANCE_ROOT@@
+EnvironmentFile=/etc/astrid/edge-self-change-authority.env
+LoadCredential=web-broker-request.key:@@RUNTIME_WEB_REQUEST_KEY@@
+LoadCredential=web-broker-response.pub:@@WEB_RESPONSE_VERIFY_KEY@@
+LoadCredential=scheduled-authorship.pub:@@SCHEDULED_AUTHORSHIP_VERIFY_KEY@@
+Environment=ASTRID_EDGE_MAINTENANCE_LEASE_PATH=@@MAINTENANCE_LEASE@@
+Environment=ASTRID_EDGE_REFLECTION_LEASE_PATH=/run/astrid-edge-self-change/reflection.json
+Environment=ASTRID_EDGE_MAINTENANCE_EDGE_ACK_PATH=@@MAINTENANCE_EDGE_ACK@@
+Environment=ASTRID_EDGE_GENERATION_BINDING_PATH=@@GENERATION_BINDING@@
+Environment=ASTRID_EDGE_WEB_BROKER_SOCKET_PATH=/run/astrid-edge-self-change/web-runtime.sock
+Environment=ASTRID_EDGE_WEB_BROKER_REQUEST_KEY_PATH=/run/credentials/astrid-edge-runtime.service/web-broker-request.key
+Environment=ASTRID_EDGE_WEB_BROKER_REQUEST_KEY_SHA256=@@RUNTIME_WEB_REQUEST_KEY_SHA256@@
+Environment=ASTRID_EDGE_WEB_BROKER_RESPONSE_VERIFY_KEY_PATH=/run/credentials/astrid-edge-runtime.service/web-broker-response.pub
+Environment=ASTRID_EDGE_WEB_BROKER_RESPONSE_VERIFY_KEY_SHA256=@@WEB_RESPONSE_VERIFY_KEY_SHA256@@
+Environment=ASTRID_EDGE_SCHEDULED_AUTHORSHIP_ATTESTATION_PATH=/run/astrid-edge-self-change/scheduled-authorship/current.json
+Environment=ASTRID_EDGE_SCHEDULED_AUTHORSHIP_VERIFY_KEY_PATH=/run/credentials/astrid-edge-runtime.service/scheduled-authorship.pub
+Environment=ASTRID_EDGE_SCHEDULED_AUTHORSHIP_VERIFY_KEY_SHA256=@@SCHEDULED_AUTHORSHIP_VERIFY_KEY_SHA256@@
+Environment=ASTRID_EDGE_SCHEDULED_AUTHORSHIP_STEWARD_UID=@@SCHEDULED_AUTHORSHIP_STEWARD_UID@@
+Environment=ASTRID_EDGE_WEB_BROKER_CONNECT_TIMEOUT_MS=2000
+Environment=ASTRID_EDGE_WEB_BROKER_HEADER_TIMEOUT_MS=10000
+Environment=ASTRID_EDGE_WEB_BROKER_TOTAL_TIMEOUT_MS=30000
+# The runtime is deliberately placed in a private network namespace.  Bind the
+# host sensor contract to that fact so loopback-only /proc counters are never
+# mislabeled as physical appliance network activity.
+Environment=ASTRID_EDGE_HOST_NETWORK_POLICY=unavailable_private_network
+NoExecPaths=/
+ExecPaths=@@ACTIVE_GENERATION_ROOT@@/astrid-edge-runtime @@ACTIVE_GENERATION_ROOT@@/astrid /usr/lib /usr/lib64 /lib /lib64
+CapabilityBoundingSet=
+AmbientCapabilities=
+NoNewPrivileges=yes
+PrivateDevices=yes
+PrivateTmp=yes
+ProtectClock=yes
+ProtectControlGroups=yes
+ProtectHostname=yes
+ProtectKernelLogs=yes
+ProtectKernelModules=yes
+ProtectKernelTunables=yes
+ProtectProc=invisible
+ProcSubset=all
+RestrictNamespaces=yes
+RestrictRealtime=yes
+RestrictSUIDSGID=yes
+LockPersonality=yes

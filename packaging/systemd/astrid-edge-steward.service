@@ -1,0 +1,67 @@
+[Unit]
+Description=Astrid CPU-edge coalesced self-change steward pass
+Documentation=https://github.com/unicity-astrid/astrid
+Requires=astrid-edge-web-broker-steward.socket astrid-edge-provider-steward.socket astrid-edge-generation-guard.service
+After=astrid-edge-self-change-supervisor.service astrid-edge-web-broker-steward.socket astrid-edge-provider-steward.socket astrid-edge-generation-guard.service
+
+[Service]
+Type=oneshot
+User=astrid-edge-steward
+Group=@@RUNTIME_GROUP@@
+SupplementaryGroups=astrid-edge-steward astrid-edge-model-lock astrid-edge-provider-steward-client
+LoadCredential=source.key:/etc/astrid/edge-self-evolution-source.key
+LoadCredential=intent.key:/etc/astrid/edge-self-evolution-intent.key
+LoadCredential=web-broker-request.key:/etc/astrid-edge-self-change/steward-web-request.key
+LoadCredential=web-broker-response.pub:/etc/astrid-edge-self-change/web-response.pub
+LoadCredential=provider-request.key:/etc/astrid-edge-self-change/edge-steward-provider-request.key
+ExecStartPre=+/usr/libexec/astrid/astrid-edge-rescue-helper --config /etc/astrid/edge-rescue-helper.json reflection-prepare
+ExecStart=/usr/libexec/astrid/astrid-edge-steward-helper --config /etc/astrid/edge-steward-helper.json --credential-directory /run/credentials/astrid-edge-steward.service
+ExecStopPost=+/usr/libexec/astrid/astrid-edge-rescue-helper --config /etc/astrid/edge-rescue-helper.json reflection-cleanup
+TimeoutStartSec=2h 10min
+TimeoutStopSec=30s
+KillMode=mixed
+UMask=0027
+RuntimeDirectory=astrid-edge-steward
+RuntimeDirectoryMode=0700
+Nice=10
+IOSchedulingClass=idle
+
+NoNewPrivileges=yes
+PrivateDevices=yes
+PrivateNetwork=yes
+PrivateTmp=yes
+ProtectClock=yes
+ProtectControlGroups=yes
+ProtectHome=tmpfs
+ProtectHostname=yes
+ProtectKernelLogs=yes
+ProtectKernelModules=yes
+ProtectKernelTunables=yes
+ProtectSystem=strict
+BindReadOnlyPaths=/run/credentials/astrid-edge-steward.service
+# The generated namespace exposes the root:steward 0440 config. Secret keys
+# arrive through systemd credentials and never require a DAC bypass capability.
+CapabilityBoundingSet=
+AmbientCapabilities=
+LockPersonality=yes
+MemoryDenyWriteExecute=yes
+RestrictAddressFamilies=AF_UNIX
+RestrictRealtime=yes
+RestrictSUIDSGID=yes
+RemoveIPC=yes
+ProtectProc=invisible
+ProcSubset=pid
+SystemCallArchitectures=native
+SystemCallErrorNumber=EPERM
+SystemCallFilter=@system-service
+SystemCallFilter=~@clock @debug @module @mount @obsolete @privileged @raw-io @reboot @swap kill tkill tgkill pidfd_send_signal process_vm_readv process_vm_writev ptrace
+InaccessiblePaths=-/run/user
+NoExecPaths=/
+ExecPaths=/usr/libexec/astrid/astrid-edge-steward-helper /usr/libexec/astrid/astrid-edge-rescue-helper /usr/lib /lib /lib64
+TasksMax=64
+MemoryHigh=402653184
+MemoryMax=536870912
+MemorySwapMax=134217728
+CPUQuota=200%
+IOWeight=50
+LimitFSIZE=67108864

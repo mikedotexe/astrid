@@ -1,0 +1,18 @@
+[Unit]
+Description=Astrid CPU-edge attested core-liveness request watcher
+Documentation=https://github.com/unicity-astrid/astrid
+Requires=astrid-edge-generation-guard.service
+After=local-fs.target astrid-edge-generation-guard.service
+StartLimitIntervalSec=1h
+StartLimitBurst=4
+
+[Path]
+# The mutable edge runtime may create only this non-authoritative request.
+# The root oneshot independently opens, authenticates, rate-limits, consumes,
+# and records it before restarting the exact astrid.service unit.
+PathExists=@@CORE_LIVENESS_REQUEST@@
+Unit=astrid-edge-core-liveness.service
+MakeDirectory=false
+
+[Install]
+WantedBy=multi-user.target

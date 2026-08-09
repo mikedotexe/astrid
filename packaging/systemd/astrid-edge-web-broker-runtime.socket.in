@@ -1,0 +1,20 @@
+[Unit]
+Description=Astrid CPU-edge runtime web-broker socket
+Documentation=https://github.com/unicity-astrid/astrid
+
+[Socket]
+ListenStream=/run/astrid-edge-self-change/web-runtime.sock
+SocketUser=root
+SocketGroup=@@RUNTIME_GROUP@@
+SocketMode=0660
+# Both client-specific sockets share this root-owned directory. It contains no
+# secrets and must be traversable by the distinct runtime and steward groups.
+DirectoryMode=0755
+Accept=no
+Service=astrid-edge-web-broker-runtime.service
+RemoveOnStop=yes
+FlushPending=yes
+Backlog=16
+
+[Install]
+WantedBy=sockets.target

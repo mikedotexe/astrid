@@ -15,7 +15,10 @@ Environment=ASTRID_HOME=%h/.astrid-icp/state
 EnvironmentFile=%h/.config/astrid/edge-appliance.env
 ExecStart=%h/.astrid-icp/state/bin/warm-ollama-model
 RemainAfterExit=yes
-TimeoutStartSec=660
+# The immutable provider gateway owns the 660-second request deadline.  Keep a
+# full minute outside that deadline so systemd can collect the terminal receipt
+# and run cleanup rather than killing the client at the same boundary.
+TimeoutStartSec=12min
 Restart=on-failure
 RestartSec=5
 UMask=0077

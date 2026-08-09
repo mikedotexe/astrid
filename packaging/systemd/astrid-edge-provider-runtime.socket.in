@@ -1,0 +1,18 @@
+[Unit]
+Description=Astrid CPU-edge runtime inference gateway socket
+Documentation=https://github.com/unicity-astrid/astrid
+
+[Socket]
+ListenStream=/run/astrid-edge-self-change/provider-runtime.sock
+SocketUser=root
+SocketGroup=@@PROVIDER_RUNTIME_GROUP@@
+SocketMode=0660
+DirectoryMode=0755
+Accept=no
+Service=astrid-edge-provider-broker@edge-runtime.service
+RemoveOnStop=yes
+FlushPending=yes
+Backlog=8
+
+[Install]
+WantedBy=sockets.target

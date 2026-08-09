@@ -1,0 +1,22 @@
+{
+  "schema": "astrid.edge_candidate_presentation.broker_config.v1",
+  "appliance_id": "@@APPLIANCE_ID@@",
+  "target": "@@TARGET@@",
+  "releases_root": "/opt/astrid-edge-presentation/releases",
+  "active_link": "/opt/astrid-edge-presentation/current",
+  "generation_binding": "/run/astrid-edge-presentation-input/current-generation",
+  "python": {
+    "path": "@@PYTHON_PATH@@",
+    "sha256": "@@PYTHON_SHA256@@"
+  },
+  "policy": {
+    "timeout_ms": 15000,
+    "maximum_request_bytes": 262144,
+    "maximum_projection_bytes": 65536,
+    "maximum_stdout_bytes": 32768,
+    "maximum_stderr_bytes": 8192,
+    "memory_max_bytes": 268435456,
+    "require_cgroup_v2": true,
+    "sandbox_contract": "unprivileged_no_network_no_home_read_only_generation_projection_only_v1"
+  }
+}
