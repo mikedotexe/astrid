@@ -1,0 +1,88 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_minime_sensory_bus_1785630107",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "/Users/v/other/minime/minime/src/sensory_bus.rs",
+      "note": "The complete report-bound source verifies the separate recovery, shaped-retention, persistence, hysteresis, and pruning mechanisms."
+    },
+    {
+      "introspection_id": "introspection_minime_sensory_bus_1785630107",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "/Users/v/other/minime/minime/src/sensory_bus.rs",
+      "note": "dynamic_surge_target_weight uses a bounded smoothstep taper while the source comment retains the earlier self-study as motivation, not causal proof."
+    },
+    {
+      "introspection_id": "introspection_minime_sensory_bus_1785630107",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "/Users/v/other/minime/minime/src/sensory_bus.rs",
+      "note": "semantic_stale_out_of_range_fill_is_sanitized_before_sigmoid pins positive clamping, conservative negative/NaN fallback, and finite extreme sigmoid results."
+    },
+    {
+      "introspection_id": "introspection_minime_sensory_bus_1785630107",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "/Users/v/other/minime/minime/src/sensory_bus.rs",
+      "note": "The source comment now names the implemented 40% release boundary; constants and live behavior are unchanged."
+    },
+    {
+      "introspection_id": "introspection_minime_sensory_bus_1785630107",
+      "claim_id": "c005",
+      "kind": "test",
+      "target": "/Users/v/other/minime/minime/src/sensory_bus.rs",
+      "note": "surge_target_weight_softens_when_fill_is_high already proves the requested strict 0.75 midpoint bounds and passes in both test builds."
+    },
+    {
+      "introspection_id": "introspection_minime_sensory_bus_1785630107",
+      "claim_id": "c006",
+      "kind": "test",
+      "target": "/Users/v/other/minime/minime/src/sensory_bus.rs",
+      "note": "semantic_stale_sigmoid_center_is_approximately_window_midpoint already proves the requested 0.4 midpoint."
+    },
+    {
+      "introspection_id": "introspection_minime_sensory_bus_1785630107",
+      "claim_id": "c007",
+      "kind": "test",
+      "target": "/Users/v/other/minime/minime/src/sensory_bus.rs",
+      "note": "Existing monotonic, one-percent sweep, hold, release, and jitter tests prove continuity across and around the 25%-40% handover."
+    },
+    {
+      "introspection_id": "introspection_minime_sensory_bus_1785630107",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_bcccd5d1a2a19d23c888aadecb2211e3b82059c57c818e901723e670613f5d08.json",
+      "note": "The complete witness binds report bytes, source snapshot, model lineage, process context, and co-timed scalars while keeping direct causation and live authority false."
+    },
+    {
+      "introspection_id": "introspection_minime_sensory_bus_1785630107",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1786098716_sensory_stale_boundary_round/RUN_REPORT.md",
+      "note": "The run packet preserves complete reads, seven claim dispositions, exact tests, selected-but-unprocessed files, and authority boundaries."
+    },
+    {
+      "introspection_id": "introspection_minime_sensory_bus_1785630107",
+      "claim_id": "*",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "Astrid's Unreleased entry records the complete source verification, sibling test response, and no-live-change boundary."
+    },
+    {
+      "introspection_id": "introspection_minime_sensory_bus_1785630107",
+      "claim_id": "*",
+      "kind": "changelog",
+      "target": "/Users/v/other/minime/CHANGELOG.md",
+      "note": "Minime's Unreleased entry records its exact test and comment change without claiming live regulation."
+    },
+    {
+      "introspection_id": "introspection_minime_sensory_bus_1785630107",
+      "claim_id": "*",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "The feedback ledger preserves Astrid's concern, source answer, test response, and operational boundary."
+    }
+  ]
+}

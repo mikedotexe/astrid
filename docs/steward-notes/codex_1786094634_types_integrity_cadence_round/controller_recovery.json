@@ -1,0 +1,14 @@
+{
+  "schema": "steward_controller_recovery_v1",
+  "abandoned_run_id": "run_1786092481376004000_4fea13cea1",
+  "abandoned_event_id": "evt_1786094634971723000_74a1c48f798d",
+  "abandoned_preprojection_id": "projection_1786092482290788000_a092fbffed",
+  "replacement_run_id": "run_1786094634292106000_15557426a5",
+  "replacement_preprojection_id": "projection_1786094635505042000_b31807d036",
+  "incident": "The initial adapter failed while retaining its opaque in-memory credential handle after begin.",
+  "credential_disclosure": false,
+  "repository_or_evidence_writes_during_abandoned_lease": false,
+  "manual_controller_state_edit": false,
+  "recovery": "The lease was allowed to expire naturally. A fresh controller begin performed normal stale-run reconciliation, durably recorded the former run as abandoned, and acquired the replacement run through the credential-confined session adapter.",
+  "authority_boundary": "No token, token hash, controller state override, pause bypass, or mutation authority is recorded or implied."
+}

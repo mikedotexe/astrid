@@ -1,0 +1,75 @@
+{
+  "schema": "steward_test_results_v1",
+  "results": [
+    {
+      "surface": "exact_dash_relation",
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib control_marker_cleanup_preserves_relation_after_dash",
+      "passed": 1,
+      "failed": 0,
+      "status": "passed_after_isolating_relation_from_grouped_syntax"
+    },
+    {
+      "surface": "marker_cleanup_family",
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib control_marker_cleanup",
+      "passed": 44,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "introspection_addressing",
+      "command": "PYTHONDONTWRITEBYTECODE=1 python3 scripts/introspection_addressing_audit.py --self-test",
+      "passed": 42,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "event_store_controller_projector_division_cursor",
+      "command": "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=.:scripts python3 -m unittest scripts.test_evidence_event_store scripts.test_steward_control scripts.test_steward_projection scripts.test_division_ceremony_followup scripts.test_division_ceremony_chronicle scripts.test_division_ceremony_projection scripts.test_claim_family_incremental_projection scripts.test_projection_cursors",
+      "passed": 72,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "anti_drop",
+      "self_tests_passed": 5,
+      "guards_verified": 47,
+      "gaps": 0,
+      "alarms": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "introspection_cadence",
+      "self_tests_passed": 6,
+      "integrity_ok": true,
+      "enabled": false,
+      "pending_or_failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "experiential_epistemics",
+      "self_tests_passed": 2,
+      "lint_valid": true,
+      "checked_record_count": 10553,
+      "issues": 0,
+      "history_rewritten": false,
+      "status": "passed"
+    },
+    {
+      "surface": "formatting",
+      "file_local_insert_compiles": true,
+      "workspace_check": "blocked_by_pre_existing_foreign_formatting",
+      "foreign_paths_or_hunks": [
+        "capsules/spectral-bridge/src/autonomous/next_action/workspace.rs",
+        "pre-existing unrelated wrapping in capsules/spectral-bridge/src/llm/provider/tests.rs"
+      ],
+      "status": "passed_owned_hunk_with_explicit_foreign_wait"
+    }
+  ],
+  "focused_distinct_tests_passed": 44,
+  "focused_failed": 0,
+  "stewardship_self_tests_passed": 127,
+  "stewardship_self_tests_failed": 0,
+  "production_rust_changed_this_run": false,
+  "test_rust_changed_this_run": true,
+  "deployment_attempted": false
+}

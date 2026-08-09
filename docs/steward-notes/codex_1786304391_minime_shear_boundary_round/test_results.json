@@ -1,0 +1,49 @@
+{
+  "schema": "steward_round_test_results_v1",
+  "schema_version": 1,
+  "round_packet": "docs/steward-notes/codex_1786304391_minime_shear_boundary_round/ROUND_PACKET.md",
+  "focused": {
+    "distinct_tests": 6,
+    "target_executions": 7,
+    "failed": 0,
+    "pre_existing_warnings": 4,
+    "production_source_changed": false,
+    "test_source_changed": false
+  },
+  "stewardship": {
+    "unit_checks_passed": 116,
+    "failed": 0,
+    "epistemic_lint_records": 10810,
+    "epistemic_lint_issues": 0,
+    "history_rewrite_detected": false
+  },
+  "runtime": {
+    "live_surface_changed": false,
+    "restart_required": false,
+    "deployment_attempted": false
+  },
+  "pre_finish_evidence_event_store": {
+    "valid": true,
+    "last_global_seq": 749525,
+    "last_event_sha256": "f640f8a60e06974c26c0e0d89c2d0993be46fdaefb82e515f9047b322367edfa",
+    "stream_count": 16,
+    "corrupt_lines": 0
+  },
+  "division": {
+    "cycle_sequence": 23,
+    "completed_rounds_since_followup": 4,
+    "threshold_rounds": 6,
+    "review_due": false,
+    "round_event_id": "division_followup_event_83f13c50777d19369acbc9481969a590",
+    "note_written": false,
+    "chronicle_action_written": false
+  },
+  "controller": {
+    "productive_run_id": "run_1786303792513663000_f451f4af74",
+    "productive_outcome": "cancelled",
+    "productive_post_projection": null,
+    "recovery_run_id": "run_1786305715311036000_8b4c0fc74d",
+    "recovery_pre_projection": "projection_1786305716292456000_017e326c7d",
+    "pause_generation": 305
+  }
+}

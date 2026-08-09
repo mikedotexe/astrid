@@ -1,0 +1,36 @@
+{
+  "introspection_id": "introspection_astrid_llm_1786014425",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The scanner distinguishes exact known model-control markers from quoted, grouped, and relational references while reconstructing a remainder.",
+      "disposition": "Verified from report-bound source lines 1-400 and the prior complete 1,038-line read at the identical source hash.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Multibyte characters or unsupported surrounding symbols may fail reference-syntax recognition and cause marker removal.",
+      "disposition": "Verified as two separate boundaries: UTF-8 scalar traversal is byte-exact, while undeclared delimiter pairs intentionally return no reference syntax. Existing regressions prove both behaviors.",
+      "classification": "exact_duplicate"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The exact grouped pairs ⟦...⟧ and 〚...〛 should preserve an exact marker when they are the nearest non-whitespace characters.",
+      "disposition": "Exact duplicate of the declared restless-group regression, which covers both pairs and passes in the current 47-test marker suite.",
+      "classification": "exact_duplicate"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "The new relation word mirrors should preserve an exact marker in the reconstructed remainder.",
+      "disposition": "Preserved as an explicit Tier 5 live provider-output grammar wait. Mirrors is absent from the deliberately finite relation list; this run does not broaden sanitation behavior.",
+      "classification": "tier_5_wait",
+      "authority": "mike_operator_live_model_output_behavior_approval_required"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "The complete delimiter function should handle context assignment, delimiter depth, and missing nearest characters coherently beyond the report's cutoff.",
+      "disposition": "Verified by reading the function through completion and by exact depth, whitespace, empty-side, unclosed, and mismatched-delimiter regressions. Missing or mismatched pairs return no reference syntax and remain cleanup candidates.",
+      "classification": "verified_existing"
+    }
+  ]
+}

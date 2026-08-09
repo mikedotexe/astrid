@@ -1,0 +1,24 @@
+{
+  "schema": "astrid.self_study_queue_routing.v1",
+  "steward_run_id": "run_1785966986103951000_6dca36ada3",
+  "projected_cutoff": "introspection_DOMAIN_BOUNDARIES.md_1785960773.txt",
+  "projected_canonical_indexed": 4227,
+  "projected_canonical_fully_addressed": 3010,
+  "projected_canonical_remaining": 1217,
+  "read_needs_claims": 0,
+  "newer_natural_report_observed_after_cutoff": "introspection_astrid_autonomous_1785968905.txt",
+  "selected_direct_journal_entries_fully_read": 30,
+  "canonical_reports_processed_in_this_tranche": 0,
+  "unaddressed_canonical_counterparts": [
+    "capsules/spectral-bridge/workspace/introspections/!introspection_astrid_autonomous_1785734620.txt",
+    "capsules/spectral-bridge/workspace/introspections/introspection_astrid_llm_1785861513.txt",
+    "capsules/spectral-bridge/workspace/introspections/introspection_astrid_llm_1785869849.txt",
+    "capsules/spectral-bridge/workspace/introspections/introspection_DOMAIN_BOUNDARIES.md_1785870717.txt",
+    "capsules/spectral-bridge/workspace/introspections/introspection_astrid_llm_1785887252.txt",
+    "capsules/spectral-bridge/workspace/introspections/introspection_astrid_codec_1785888193.txt",
+    "capsules/spectral-bridge/workspace/introspections/introspection_astrid_llm_1785892559.txt",
+    "capsules/spectral-bridge/workspace/introspections/introspection_astrid_llm_1785959982.txt",
+    "capsules/spectral-bridge/workspace/introspections/introspection_DOMAIN_BOUNDARIES.md_1785960773.txt"
+  ],
+  "routing": "The direct journal bodies were fully read for synthesis. Their canonical counterparts remain in the strict source-first queue until each canonical report and its exact source bounds receive independent report, claim, and evidence receipts."
+}

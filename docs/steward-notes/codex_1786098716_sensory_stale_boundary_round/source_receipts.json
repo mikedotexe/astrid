@@ -1,0 +1,38 @@
+{
+  "schema": "steward_source_receipts_v1",
+  "receipts": [
+    {
+      "kind": "canonical_introspection",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_minime_sensory_bus_1785630107.txt",
+      "sha256": "32b918a98cdef0d6a773384133fcefa58d7d096eb2c399080356536de42e95f0",
+      "bytes": 3160,
+      "lines": 36,
+      "read": "complete"
+    },
+    {
+      "kind": "lived_state_witness",
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_bcccd5d1a2a19d23c888aadecb2211e3b82059c57c818e901723e670613f5d08.json",
+      "sha256": "a401087c657f057bc55b91727d941d8ef8a3a3935b94ab3f7daab9e45f8d68ea",
+      "bytes": 22003,
+      "lines": 491,
+      "read": "complete",
+      "direct_causation": false,
+      "live_authority": false
+    },
+    {
+      "kind": "report_bound_source_pre_change",
+      "path": "/Users/v/other/minime/minime/src/sensory_bus.rs",
+      "sha256": "83c0d5c1c761fa05b194f6c84d3083520bb0d664292720cb4651996d1c6fab31",
+      "bytes": 167468,
+      "lines": 4380,
+      "read": "complete",
+      "matches_report_bound_sha256": true
+    },
+    {
+      "kind": "response_source_post_change",
+      "path": "/Users/v/other/minime/minime/src/sensory_bus.rs",
+      "sha256": "3fc6bd2a16bd78c5caa496f2a6dccbc67928da4fbded123998f59a82bcd4aa3a",
+      "change_scope": "one documentation boundary correction and one test-only boundary regression"
+    }
+  ]
+}

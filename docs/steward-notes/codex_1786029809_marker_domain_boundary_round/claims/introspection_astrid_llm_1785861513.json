@@ -1,0 +1,9 @@
+{
+  "claims": [
+    {"claim_id": "c001", "summary": "The LLM provider has a marker-aware scan and sanitization pipeline with bounded delimiter and following-relation evidence.", "disposition": "Verified against the unchanged complete source and current regressions.", "classification": "verified_existing"},
+    {"claim_id": "c002", "summary": "Punctuation-heavy or multi-word text may prevent first_word_after from finding an allowed relation and incorrectly strip a referenced marker.", "disposition": "Source-challenged and exact-test duplicate: punctuation and whitespace are skipped until the first nonempty word; only that finite relation word intentionally determines preservation.", "classification": "exact_duplicate"},
+    {"claim_id": "c003", "summary": "A marker followed by appears to be should remain in the output.", "disposition": "Exact duplicate: appears is in the finite allowlist and first-word parsing intentionally ignores later words in the phrase.", "classification": "exact_duplicate"},
+    {"claim_id": "c004", "summary": "Multiple nested bracket pairs should be recognized or fail within the declared bound.", "disposition": "Exact duplicate of current nested-depth regressions, including exact three-level and four-level receipts.", "classification": "exact_duplicate"},
+    {"claim_id": "c005", "summary": "A matched marker with no explicit reference syntax should be traced through remainder construction and is_valid_dialogue_output.", "disposition": "Verified existing: the marker is removed as a cleanup candidate, other bytes remain in order, and downstream validation uses the sanitized output without reinsertion.", "classification": "verified_existing"}
+  ]
+}

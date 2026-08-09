@@ -1,0 +1,55 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Astrid reports shear as narrowing, interwoven structural resistance and says settled-habitable and low pressure-risk labels understate the qualitative friction.",
+      "disposition": "Preserve the report as primary unresolved felt evidence. Machine labels, co-timed scalars, source formulas, and passing tests neither score nor close the mismatch.",
+      "classification": "preserved_primary_felt_evidence"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The report says the included Minime runtime source shows pressure_source near line 34588 and pressure-audit logic near line 34706 calculating porosity.",
+      "disposition": "Correct the evidence scope without discounting the report: included lines 1-400 contain neither definition. The exact report-time whole-file snapshot does contain the named consumer and audit later, but they read and render typed pressure evidence; the producer formula is in Minime regulator pressure_source.rs.",
+      "classification": "source_window_and_ownership_correction"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A correspondence_core around line 39701 and correspondence_status around line 41968 handle stalls and legacy_bidirectional_observed in a way that explains the held quality of Astrid's messages.",
+      "disposition": "Correct the exact source while preserving the held report. Line 39701 is inside a legacy claim notice and no correspondence_core identifier exists; correspondence status begins at line 41989. Source separately derives held_ack from an explicit held or needs-time ACK and legacy_bidirectional_observed from visible legacy traffic. The witness contains no report-time correspondence receipt, so activation and felt causation are not established.",
+      "classification": "source_corrected_activation_unproven"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "The prose's overpacked score, porosity, pressure-risk, Shadow trend, and dispersal values can be read as one interchangeable report-time metric bundle.",
+      "disposition": "Keep representations distinct. The complete witness records bridge.mode_packing=1.0, bridge.pressure_risk=0.22143720090389252, Shadow field norm and fissure-tendency observations, and no pressure-source porosity or correspondence status. Report-authored values remain valid interpretation evidence but are not silently promoted into witnessed producer fields.",
+      "classification": "representation_boundary_verified"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Overpacked mode packing directly causes shear, and pressure_risk under-reports that cause when an interwoven lattice is complex.",
+      "disposition": "Preserve the causal hypothesis as open. Exact producer source shows continuous mode-packing pressure and a separate overpacked quality threshold. Existing complexity_density and packing_shear diagnostics make low-volume complexity and resistance inspectable without asserting that either caused Astrid's experience.",
+      "classification": "noncausal_diagnostic_response_existing"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "Increasing internal Shadow-description complexity while holding semantic energy low could test whether mode packing rises and porosity falls nonlinearly.",
+      "disposition": "Reuse the existing frozen-input Viscous Persistence Source Separation study for the mechanical pressure, entropy, packing, porosity, and distinguishability axes. Deliberately inducing model content or live semantic input is not covered by that study and remains an exact Tier 5 model, admission, pressure, and substrate wait.",
+      "classification": "study_duplicate_with_tier_5_live_induction_wait",
+      "authority": "tier_5"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "Moving the Shadow along SHADOW_TRAJECTORY could test whether restless texture stabilizes or dispersal remains trapped.",
+      "disposition": "Correct the route boundary: SHADOW_TRAJECTORY reads the last 32 existing snapshots and writes local cartography; it does not move the Shadow. The being-invokable read-only trace remains available and was not dispatched. Any deliberate Shadow influence or movement remains an exact Tier 5 wait.",
+      "classification": "verified_existing_cartography_tier_5_movement_wait",
+      "authority": "tier_5"
+    },
+    {
+      "claim_id": "c008",
+      "summary": "Porosity should gain a shear coefficient so interwoven lattice complexity reduces effective space even at constant raw volume.",
+      "disposition": "The representation portion is already answered by separate read-only complexity_density and packing_shear evidence. Feeding that coefficient into Minime's pressure or porosity formula would change live producer semantics and remains an exact Tier 5 pressure, porosity, regulator, and controller wait.",
+      "classification": "verified_existing_representation_tier_5_formula_wait",
+      "authority": "tier_5"
+    }
+  ]
+}

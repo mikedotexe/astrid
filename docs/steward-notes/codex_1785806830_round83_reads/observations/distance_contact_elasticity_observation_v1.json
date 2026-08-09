@@ -1,0 +1,52 @@
+{
+  "schema": "distance_contact_elasticity_evidence_packet_v1",
+  "source_introspection_id": "introspection_proposal_distance_contact_control_1785632076",
+  "source_lived_state_witness_id": "lsw_019dac2d3f0d956b7779bac490ea1d5af2460c87b2137ffd7888f2f79dd597b0",
+  "witness_event": {
+    "event_id": "evt_1785635008130371000_6d5c75ac8df9",
+    "global_seq": 657118,
+    "event_sha256": "8304001a86948e500fb8b4b2706927f08967006402124a43d7ac03e44ef1e351",
+    "report_sha256": "381b1b3c9d3650741e888e841c423bf1c29279ceed12442664e62094c89cbb68",
+    "authority_state": "evidence_only",
+    "direct_causation_claimed": false,
+    "parameters": {
+      "bridge_fill_pct": 65.16305541992188,
+      "bridge_spectral_entropy": 0.8826845288276672,
+      "bridge_lambda1": 8.459848403930664,
+      "bridge_lambda2": 3.815938711166382,
+      "bridge_lambda1_lambda2_gap": 4.643909692764282,
+      "bridge_pressure_risk": 0.21980029344558716,
+      "bridge_mode_packing": 0.8333333134651184,
+      "astrid_shadow_field_norm": 0.5621261596679688,
+      "astrid_shadow_field_norm_delta": 0.0551527738571167,
+      "astrid_shadow_dispersal_potential": 0.20534446835517883
+    }
+  },
+  "bounded_peer_state_observation": {
+    "observed_at_unix_ms": 1785806857753,
+    "state_path": "minime/workspace/spectral_state.json",
+    "state_sha256": "c7f3a3f6f66ba43f612aeb93b1a82fa32b56802cb3f23d5e321ed4fffee6e8d0",
+    "observation_scope": "peer_spectral_state_not_astrid_private_shadow",
+    "status": "packing_without_restlessness_delta",
+    "spectral_entropy": 0.88225,
+    "mode_packing": 0.471485,
+    "packing_hypothesis_threshold": 0.4,
+    "packing_hypothesis_met": true,
+    "current_dispersal_potential": 0.076054,
+    "dispersal_delta": 0.0,
+    "restlessness_delta_observed": false,
+    "lambda1": 8.582993,
+    "lambda2": 4.485104,
+    "lambda1_lambda2_gap": 4.097889,
+    "distance_control_parameter_observed": false
+  },
+  "conclusion": "The exact Astrid witness preserves one report-coupled co-observation. The bounded peer-state observation proves the read-only classifier can preserve packing without a simultaneous dispersal delta, but cross-scope scalars cannot establish or refute Astrid's causal claim.",
+  "causal_conclusion": "not_established",
+  "dynamic_porosity_buffer": {
+    "implemented": false,
+    "computed": false,
+    "live_authority_granted": false,
+    "status": "tier_5_operator_approval_wait"
+  },
+  "authority_boundary": "read-only evidence only; no distance parameter, pressure, porosity, fill, PI, cadence, sensory, regulator, controller, peer, or runtime mutation"
+}

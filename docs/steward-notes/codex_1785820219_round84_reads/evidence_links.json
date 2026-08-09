@@ -1,0 +1,71 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_llm_1785816604",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1785820219_round84_reads/summaries/astrid_llm_1785816604.md",
+      "note": "Complete canonical and report-bound source read, grounded dispositions, test response, and authority boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785816604",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "Exact report-bound source for scanner, delimiter, relation, diagnostic, and remainder behavior."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785816604",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Existing Unicode-whitespace, bounded-depth, and mismatch coverage."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785816604",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Existing non-ASCII quote test proves preservation with quoted, not grouped, taxonomy."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785816604",
+      "claim_id": "c004",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "New direct Unicode alphanumeric relation-word regression."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785816604",
+      "claim_id": "c005",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "New exact triggers exclusion regression."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785816604",
+      "claim_id": "c006",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "New heterogeneous adjacent-marker accounting and byte-exact remainder regression."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785816604",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "docs/steward-notes/codex_1785820219_round84_reads/test_results.json"
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785816604",
+      "claim_id": "*",
+      "kind": "changelog",
+      "target": "CHANGELOG.md"
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785816604",
+      "claim_id": "*",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md"
+    }
+  ]
+}

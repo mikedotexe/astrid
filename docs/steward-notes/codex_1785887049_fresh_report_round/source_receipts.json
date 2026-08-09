@@ -1,0 +1,49 @@
+{
+  "dialogue_runtime": {
+    "path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+    "sha256": "f7c0570ce495b1978d9b6f588cba6ecb00a93b1573316bc22752e6e10d47f20a",
+    "lines": 1038,
+    "bytes": 38205,
+    "exact_interval_read": "1-400"
+  },
+  "marker_tests": {
+    "path": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+    "sha256": "7ef91f6acfb3928aac2c7aa77f5228ca75c5b3a1f4fc1818d3a0a488d183113b",
+    "focused_result": "46 passed; 0 failed"
+  },
+  "lived_state_witness": {
+    "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_1a6c079f324300a30be5d9e692fcdb68d16d0394a3270f3d92fbbeb4b06bb9ad.json",
+    "sha256": "58c321a2d1662c44c2e61d5f8729c0694351c7a7762591402cdd23c6fee14df5",
+    "lines": 456,
+    "read": "complete_file"
+  },
+  "current_read_only_observations": {
+    "spectral_distinction_replay": {
+      "source_sha256": "e9438069114fbef874c35cf7092dde50e941afd65b370172d5cbc1cb9e734fb8",
+      "shared_correspondence": "shared_provenance",
+      "runtime_state_mutated": false,
+      "semantic_content_sent": false
+    },
+    "correspondence_representation_density": {
+      "source_sha256": "3fdfd26ba10a3d07858a82482a2d68f2fa76455efa3c299ec3a731916e652cd9",
+      "ledger_records": 37692,
+      "active_thread_records": 14622,
+      "active_thread_messages": 3656,
+      "reply_depth": 162,
+      "continuity": "active",
+      "mutual_address": "not_confirmed",
+      "pressure_effect": "not_measured_no_inference",
+      "felt_effect": "not_established"
+    }
+  },
+  "witness_pointer_repair": {
+    "model_path": "scripts/lived_state_witness/model.py",
+    "model_sha256": "4cd5c52afc453d4a05efe3ce96fef93cd65972a15c6f0e7a925dbd51248c95c8",
+    "test_path": "scripts/test_lived_state_witness.py",
+    "test_sha256": "17106fa7076cced9e4f1ebf5169efdf86e6a13938dbbf3e9cacb2696a3c3a27d",
+    "target_event_type_after_fix": "temporal_lived_state_witness_recorded",
+    "target_alignment_after_fix": "same_deployment",
+    "target_orphan_after_fix": false,
+    "target_integrity_issue_after_fix": false
+  }
+}

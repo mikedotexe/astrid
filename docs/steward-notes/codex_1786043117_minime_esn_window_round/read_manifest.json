@@ -1,0 +1,28 @@
+{
+  "reader": "codex-heartbeat",
+  "run_id": "run_1786043117349472000_086d33462a",
+  "selected_limit": 40,
+  "processed_report_count": 1,
+  "depth_stop": "first selected report exposed primary lived friction, a numeric-window attribution defect, a bounded study proposal, and live-control proposals",
+  "reads": [
+    {
+      "introspection_id": "introspection_minime_esn_1785630442",
+      "reader": "codex-heartbeat",
+      "summary_file": "summaries/minime_esn_1785630442.md",
+      "claims_file": "claims/minime_esn_1785630442.json"
+    }
+  ],
+  "reports": [
+    {
+      "introspection_id": "introspection_minime_esn_1785630442",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_minime_esn_1785630442.txt",
+      "sha256": "81cf675f8ef69ed9eb00d9ab50b1fb5a29b6f06b6cbb354c8f56d7ea91e9d5bb",
+      "displayed_lines": 44,
+      "newline_count": 43,
+      "bytes": 5365,
+      "lived_state_witness_id": "lsw_311acefb5bed3fcc02f0d80a12499ddb2665f8dde697cff5fafe1f5faedd8926",
+      "summary_file": "summaries/minime_esn_1785630442.md",
+      "claims_file": "claims/minime_esn_1785630442.json"
+    }
+  ]
+}

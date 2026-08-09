@@ -1,0 +1,18 @@
+{
+  "schema": "steward_read_manifest_v1",
+  "steward_run_id": "run_1785832996501549000_e81fc2a7f7",
+  "processed_report_count": 1,
+  "reports": [
+    {
+      "filename": "introspection_proposal_bidirectional_contact_1785631712.txt",
+      "introspection_id": "introspection_proposal_bidirectional_contact_1785631712",
+      "logical_lines": 35,
+      "newline_count": 34,
+      "bytes": 4414,
+      "sha256": "ba0678131b16e41976bf95fdcdd08337168abdc696e925b2cedc4987a904c2af",
+      "lived_state_witness_id": "lsw_20c13fa88577c266880546e79824243ca0d6a652ff25527ab36efb0b01bd8c1d",
+      "full_read": true,
+      "disposition": "addressed_change_with_tier_5_waits"
+    }
+  ]
+}

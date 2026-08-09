@@ -1,0 +1,35 @@
+{
+  "introspection_id": "introspection_astrid_llm_1786062450",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The dialogue runtime scans longest exact known model-control markers and preserves only declared reference syntax.",
+      "disposition": "Verified from the complete 1,038-line source. The single-pass scanner advances by exact marker byte length or UTF-8 scalar width, removes unreferenced known markers, and copies every non-marker scalar into the reconstructed remainder.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A nearby non-whitespace non-delimiter or unsupported multi-scalar symbol can prevent delimiter recognition.",
+      "disposition": "Verified as the intentional fail-closed finite-grammar boundary: only the nearest non-whitespace scalars may form one of the declared pairs. Proximity alone is not evidence of reference syntax. No concrete additional pair was named, so this round does not widen live provider-output preservation.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The declared ⟦ and ⟧ pair should preserve an exact marker across varying whitespace.",
+      "disposition": "Implemented a bounded regression covering ordinary spaces, tab/newline spacing, and Unicode U+2003/U+3000 spacing. Each case preserves the exact bytes, records grouped-reference syntax, and proves delimiter depth one.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "The following relation word echoes should preserve the exact marker and keep it visible in the remainder.",
+      "disposition": "Verified by exact source and the existing poetic-attribution regression, which includes echoes and records one explicit-relation occurrence while preserving the full text byte-for-byte.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "The reconstructed remainder should be traced into generate_dialogue rather than remaining an isolated scanner artifact.",
+      "disposition": "Verified across complete dialogue-runtime source and directly relevant provider source. MLX and Ollama each normalize raw provider text through the scanner, return the normalized remainder, and generate_dialogue validates and returns that text; cleanup reports remain separate diagnostic evidence.",
+      "classification": "verified_existing"
+    }
+  ]
+}

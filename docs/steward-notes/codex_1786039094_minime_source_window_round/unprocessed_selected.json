@@ -1,0 +1,13 @@
+{
+  "reason": "Depth stop after the first selected report exposed an unfamiliar serious source-attribution failure and live-control proposals.",
+  "selected_but_unprocessed": [
+    "introspection_minime_esn_1785630442.txt",
+    "introspection_minime_sensory_bus_1785630107.txt",
+    "introspection_minime_regulator_1785629184.txt",
+    "introspection_astrid_llm_1785628932.txt",
+    "introspection_astrid_types_1785628394.txt",
+    "introspection_astrid_ws_1785628139.txt",
+    "introspection_astrid_autonomous_1785627823.txt",
+    "introspection_astrid_codec_1785627566.txt"
+  ]
+}

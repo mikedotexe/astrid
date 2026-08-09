@@ -201,6 +201,21 @@ pub(crate) struct ControlMarkerCleanupReport {
     pub preserved_tokens: Vec<PreservedControlMarkerCount>,
 }
 
+#[derive(Debug, Clone)]
+pub(crate) struct ProviderOutputNormalizationV1 {
+    pub text: String,
+    pub cleanup_report: Option<ControlMarkerCleanupReport>,
+}
+
+pub(crate) fn normalize_provider_output_v1(raw_output: &str) -> ProviderOutputNormalizationV1 {
+    let (sanitized_output, cleanup_report) =
+        sanitize_model_control_markers_with_report(raw_output);
+    ProviderOutputNormalizationV1 {
+        text: sanitized_output.trim().to_string(),
+        cleanup_report,
+    }
+}
+
 #[derive(Debug, Clone, Serialize)]
 pub(crate) struct RemovedControlMarkerCount {
     pub token: String,
@@ -382,7 +397,8 @@ struct ControlMarkerCleanupDiagnostic<'a> {
     schema_version: u8,
     timestamp: String,
     label: &'a str,
-    profile: &'static str,
+    provider_route: &'static str,
+    profile: &'a str,
     marker_contract: &'static str,
     common_language_overlap_risk: bool,
     sanitized_output_surface_v3: SanitizedOutputSurfaceV3,
@@ -475,17 +491,19 @@ fn control_marker_cleanup_diagnostic<'a>(
     report: &'a ControlMarkerCleanupReport,
     sanitized_output: &str,
     label: &'a str,
-    profile: MlxProfile,
+    provider_route: &'static str,
+    profile: &'a str,
 ) -> ControlMarkerCleanupDiagnostic<'a> {
     let sanitized_output_surface_v3 = sanitized_output_surface_v3(sanitized_output);
     let control_marker_integrity_check_v2 =
         control_marker_integrity_check_v2(report, &sanitized_output_surface_v3);
     ControlMarkerCleanupDiagnostic {
-        schema: "control_marker_cleanup_v10",
-        schema_version: 10,
+        schema: "control_marker_cleanup_v11",
+        schema_version: 11,
         timestamp: unix_timestamp_string(),
         label,
-        profile: profile.as_str(),
+        provider_route,
+        profile,
         marker_contract:
             "private_typed_exact_known_model_control_marker_with_bounded_matching_delimiter_stack_or_following_relation",
         common_language_overlap_risk: control_marker_language_overlap_risk(report),
@@ -494,6 +512,41 @@ fn control_marker_cleanup_diagnostic<'a>(
         authority: "diagnostic_output_integrity_not_prompt_or_model_control",
         report,
     }
+}
+
+fn record_provider_output_normalization_v1(
+    normalization: &ProviderOutputNormalizationV1,
+    label: &str,
+    provider_route: &'static str,
+    profile: &str,
+) {
+    let Some(report) = normalization.cleanup_report.as_ref() else {
+        return;
+    };
+    if report.removed_total > 0 {
+        warn!(
+            provider_route,
+            removed_total = report.removed_total,
+            preserved_explicit_reference_total = report.preserved_explicit_reference_total,
+            before_chars = report.before_chars,
+            after_chars = report.after_chars,
+            "provider output normalization handled model control markers"
+        );
+    } else {
+        debug!(
+            provider_route,
+            preserved_explicit_reference_total = report.preserved_explicit_reference_total,
+            "provider output normalization preserved explicitly referenced model control markers"
+        );
+    }
+    let diagnostic = control_marker_cleanup_diagnostic(
+        report,
+        &normalization.text,
+        label,
+        provider_route,
+        profile,
+    );
+    append_llm_diagnostic_jsonl("control_marker_cleanup.jsonl", &diagnostic);
 }
 
 #[derive(Debug, Clone, Serialize, PartialEq)]

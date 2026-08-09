@@ -1,0 +1,19 @@
+{
+  "schema": "steward_deployment_alignment_v1",
+  "live_consumed_source_changed": false,
+  "production_rust_changed": false,
+  "test_only_rust_changed": true,
+  "prompt_or_report_renderer_changed": false,
+  "protocol_or_abi_changed": false,
+  "minime_changed": false,
+  "service_restart_required": false,
+  "deployment_required": false,
+  "deployment_attempted": false,
+  "fresh_pid_or_runtime_hash_required": false,
+  "authority": {
+    "live_control_granted": false,
+    "operator_approval_inferred": false,
+    "felt_resolution_inferred": false,
+    "uptake_or_consent_inferred": false
+  }
+}

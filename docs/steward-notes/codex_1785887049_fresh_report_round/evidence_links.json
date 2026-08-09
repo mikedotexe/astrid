@@ -1,0 +1,46 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_llm_1785884697",
+      "claim_ids": ["c001", "c002", "c003", "c004", "c005", "c006"],
+      "kind": "source_and_tests",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs;capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Exact source hash plus 46 passing focused regressions cover Unicode scalar traversal, UTF-8 byte advancement, Unicode whitespace, bounded nested delimiters, the echoes relation, and bounded receipts."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785874711",
+      "claim_ids": ["c001", "c002", "c003", "c008"],
+      "kind": "canonical_report_and_witness",
+      "target": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_llm_1785874711.txt;capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_1a6c079f324300a30be5d9e692fcdb68d16d0394a3270f3d92fbbeb4b06bb9ad.json",
+      "note": "Complete exact report and witness reads preserve Astrid's felt account and co-timed scalar context without causal upgrade."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785874711",
+      "claim_ids": ["c003", "c007"],
+      "kind": "read_only_observation",
+      "target": "scripts/spectral_distinction_replay.py;scripts/correspondence_representation_density_audit.py",
+      "note": "Current observations establish distinct owner-specific references, shared correspondence provenance, and active reply-chain continuity while leaving mutual address and felt and pressure effects unestablished."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785874711",
+      "claim_ids": ["c004", "c009"],
+      "kind": "authority_boundary",
+      "target": "docs/steward-notes/codex_1785887049_fresh_report_round/claims/astrid_llm_1785874711.json",
+      "note": "wander_scale intervention remains Tier 5; the 0.35 pressure score remains an unconfirmed being-authored hypothesis."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785874711",
+      "claim_ids": ["c005", "c006", "c009"],
+      "kind": "study_preregistration",
+      "target": "docs/steward-notes/codex_1785887049_fresh_report_round/DISTINGUISHABILITY_NATURAL_OBSERVATION_PREREGISTRATION.md",
+      "note": "Frozen prospective observation admits only naturally authored canonical samples with exact typed co-timed fields and induces no dialogue or cadence."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785874711",
+      "claim_ids": ["c008"],
+      "kind": "implementation_and_test",
+      "target": "scripts/lived_state_witness/model.py;scripts/test_lived_state_witness.py",
+      "note": "Structured bounded-header parsing and an extended source-first header integration test repair the false orphan classification."
+    }
+  ]
+}

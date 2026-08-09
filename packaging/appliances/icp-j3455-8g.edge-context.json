@@ -1,0 +1,7 @@
+{
+  "inherited_corpus_present": "false",
+  "instance_name": "ICP Astrid",
+  "prompt_profile": "compact",
+  "perception_path": "home://edge/perception/latest.json",
+  "state_path": "home://edge/runtime/spectral_state.json"
+}

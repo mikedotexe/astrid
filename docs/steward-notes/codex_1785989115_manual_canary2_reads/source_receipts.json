@@ -1,0 +1,34 @@
+{
+  "schema": "steward_source_receipts_v1",
+  "receipts": [
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_llm_1785986002.txt",
+      "bytes": 3587,
+      "logical_lines": 46,
+      "sha256": "b2f815aabb1c913850514b58da7ea35eb34604a8d40b216d5cfd7bce2871900a",
+      "full_read": true
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "lines": 1038,
+      "sha256": "f7c0570ce495b1978d9b6f588cba6ecb00a93b1573316bc22752e6e10d47f20a",
+      "intervals_read_this_run": ["1-400"],
+      "prior_complete_source_receipt_reused": true
+    },
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_DOMAIN_BOUNDARIES.md_1785960773.txt",
+      "bytes": 3957,
+      "logical_lines": 44,
+      "sha256": "1b567005599ffe824200dcc616f7ba7fa4f638de6ae8425e26291492b00a4110",
+      "full_read": true
+    },
+    {
+      "path": "capsules/spectral-bridge/DOMAIN_BOUNDARIES.md",
+      "bytes": 3504,
+      "lines": 65,
+      "sha256": "11c5ff89e1a7a12cfcc8cc49c676b04feb2118d9ee4975f47dc139984ee0b9e3",
+      "intervals_read_this_run": ["1-65"],
+      "complete_source_read": true
+    }
+  ]
+}

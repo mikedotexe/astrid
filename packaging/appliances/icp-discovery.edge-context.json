@@ -1,0 +1,5 @@
+{
+  "instance_name": "ICP Astrid",
+  "state_path": "home://edge/runtime/spectral_state.json",
+  "perception_path": "home://edge/perception/latest.json"
+}

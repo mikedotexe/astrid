@@ -1,0 +1,60 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_ws_1786048387",
+      "claim_id": "*",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "The ledger preserves source verification, duplicate lineage, focused tests, and the unchanged Tier 5 scheduling boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1786048387",
+      "claim_id": "*",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "The Unreleased entry records the source-verified duplicate and unchanged live surfaces."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1786048387",
+      "claim_id": "c001",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1785574580_round62_reads/summaries/astrid_ws_1785571286.md",
+      "note": "Exact same-source scheduling-risk disposition retained; observability does not establish absence."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1786048387",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/ws/telemetry_port.rs",
+      "note": "Exact report-bound and handler-continuation source verifies lifecycle, frame handling, sequential integration, and backoff."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1786048387",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/ws/tests.rs",
+      "note": "The integration-health regression verifies distinct pipeline, lock-wait, and lock-hold observations without closing the scheduling concern."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1786048387",
+      "claim_id": "c004",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/ws/tests.rs;capsules/spectral-bridge/tests/mock_ws_integration.rs",
+      "note": "Backoff doubling/reset, initial telemetry admission, and reconnect-after-close regressions passed."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1786048387",
+      "claim_id": "c005",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1785371196_round32_reads/claims/astrid_ws_1785370615.json",
+      "note": "Exact prior worker-offload Tier 5 wait retained with sensory ordering, buffering, backpressure, cancellation, and cadence boundaries."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1786048387",
+      "claim_id": "*",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_51ec9744092d43a1f913db9020525b7975796074694657402f5a0ef8d9e543b0.json",
+      "note": "The full typed witness binds report, source, model-call, process, and co-timed state evidence while keeping causation and authority false."
+    }
+  ]
+}

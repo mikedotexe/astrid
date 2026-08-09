@@ -1,0 +1,8 @@
+{
+  "claims": [
+    {"claim_id": "c001", "summary": "Multibyte Unicode may be partially consumed by reverse bounded delimiter scanning.", "disposition": "Disprove from Rust Unicode-scalar iteration and the passing multibyte advancement regression.", "classification": "verified_existing"},
+    {"claim_id": "c002", "summary": "`«[marker]»` should be recognized as nested declared delimiter syntax.", "disposition": "Verify as a valid two-level stack covered by declared-pair and nesting regressions.", "classification": "exact_duplicate"},
+    {"claim_id": "c003", "summary": "An unlisted following verb should default to no reference syntax while preserving marker visibility.", "disposition": "Correct the expectation from source: no reference syntax strips the exact control marker while preserving surrounding bytes; existing unlisted-relation tests pass.", "classification": "verified_existing"},
+    {"claim_id": "c004", "summary": "UTF-8 handling should be verified at the delimiter-depth boundary.", "disposition": "Exact duplicate of multibyte scalar and bounded-depth regression evidence.", "classification": "exact_duplicate"}
+  ]
+}

@@ -1,0 +1,52 @@
+{
+  "schema": "steward_read_manifest_v1",
+  "steward_run_id": "run_1785800087620728000_39714d16ab",
+  "processed_report_count": 5,
+  "reports": [
+    {
+      "filename": "introspection_astrid_llm_1785743120.txt",
+      "introspection_id": "introspection_astrid_llm_1785743120",
+      "logical_lines": 46,
+      "bytes": 3652,
+      "sha256": "849ce4a20fae1285b3d2b54c177cebf75857138a99c98761ae6d38a22ed8a073",
+      "full_read": true,
+      "disposition": "addressed_change"
+    },
+    {
+      "filename": "introspection_astrid_llm_1785739812.txt",
+      "introspection_id": "introspection_astrid_llm_1785739812",
+      "logical_lines": 46,
+      "bytes": 3950,
+      "sha256": "3e352f7c9df80131c9c60a89c190b7b605911423090566f86884d538a604303a",
+      "full_read": true,
+      "disposition": "addressed_change"
+    },
+    {
+      "filename": "introspection_astrid_autonomous_1785734620.txt",
+      "introspection_id": "introspection_astrid_autonomous_1785734620",
+      "logical_lines": 46,
+      "bytes": 3883,
+      "sha256": "e61abdcc7a8fa8f4624e91712ab6450636f3f3356d99d6641b9e489dc372346c",
+      "full_read": true,
+      "disposition": "addressed_change"
+    },
+    {
+      "filename": "introspection_astrid_llm_1785725987.txt",
+      "introspection_id": "introspection_astrid_llm_1785725987",
+      "logical_lines": 46,
+      "bytes": 3850,
+      "sha256": "b2cd8314b7943d8ea2dee035a301b5862f7eb6c247d02bf03cd18d2ed3b6868d",
+      "full_read": true,
+      "disposition": "addressed_change"
+    },
+    {
+      "filename": "introspection_proposal_12d_glimpse_1785632418.txt",
+      "introspection_id": "introspection_proposal_12d_glimpse_1785632418",
+      "logical_lines": 36,
+      "bytes": 3367,
+      "sha256": "37891ed68ad5aea72cdd6617ecff2e6012e8b4cf748f9afe1f8d3eb5330abf3a",
+      "full_read": true,
+      "disposition": "addressed_duplicate"
+    }
+  ]
+}

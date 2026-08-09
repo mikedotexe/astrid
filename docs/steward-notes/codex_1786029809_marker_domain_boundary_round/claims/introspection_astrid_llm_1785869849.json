@@ -1,0 +1,9 @@
+{
+  "claims": [
+    {"claim_id": "c001", "summary": "The scanner non-destructively distinguishes known control bytes from dialogue and preserves only explicit reference contexts.", "disposition": "Verified against the unchanged complete source and current regressions.", "classification": "verified_existing"},
+    {"claim_id": "c002", "summary": "MAX_EXACT_REFERENCE_DELIMITER_DEPTH measures arbitrary non-whitespace character distance before the marker, so five preceding characters should force None.", "disposition": "Source-challenged: the bound counts matching delimiter pairs around the marker after Unicode whitespace, not arbitrary preceding character distance. The proposed 12345 case does not exercise delimiter depth.", "classification": "verified_existing"},
+    {"claim_id": "c003", "summary": "A marker followed by behaves should be retained by the explicit-relation path.", "disposition": "Exact duplicate of current finite-relation regressions, including behaves as and behaves like.", "classification": "exact_duplicate"},
+    {"claim_id": "c004", "summary": "The sanitizer's behavior when reference_syntax is None needs verification.", "disposition": "Verified existing: an unreferenced known marker is removed, the byte-preserving non-marker remainder remains, and the receipt records none_cleanup_candidate.", "classification": "verified_existing"},
+    {"claim_id": "c005", "summary": "None-reference cleanup may interact incorrectly with final dialogue validation.", "disposition": "Verified from the unchanged downstream path and regressions: validation consumes the sanitized result, rejects marker-only or invalid output, and does not restore removed marker bytes.", "classification": "verified_existing"}
+  ]
+}

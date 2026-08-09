@@ -1,0 +1,88 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_minime_autonomous_agent_1785630945",
+      "claim_id": "*",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "The ledger preserves the source correction, primary felt evidence, implementation, and live authority waits."
+    },
+    {
+      "introspection_id": "introspection_minime_autonomous_agent_1785630945",
+      "claim_id": "*",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "The Unreleased entry records the source-window guard and unchanged live surfaces."
+    },
+    {
+      "introspection_id": "introspection_minime_autonomous_agent_1785630945",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/introspect/source_first_v3/grounding.rs;capsules/spectral-bridge/src/autonomous/introspect/source_first_v3/mod.rs",
+      "note": "Window-scoped attributions now require exact included-byte support, with a report-shaped regression."
+    },
+    {
+      "introspection_id": "introspection_minime_autonomous_agent_1785630945",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_afdfe6d5b2058cff14c3a4da23e07f1055fd905cb2dad319f4d55f0c7c3c45b0.json;docs/steward-notes/codex_1786039094_minime_source_window_round/source_receipts.json",
+      "note": "The exact witness and source receipt keep telemetry evidence separate from included source bytes."
+    },
+    {
+      "introspection_id": "introspection_minime_autonomous_agent_1785630945",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "docs/steward-notes/codex_1785887049_fresh_report_round/DISTINGUISHABILITY_NATURAL_OBSERVATION_PREREGISTRATION.md",
+      "note": "The frozen natural-only observation can retain density-versus-volume context without inducing a sample."
+    },
+    {
+      "introspection_id": "introspection_minime_autonomous_agent_1785630945",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "docs/steward-notes/codex_1785887049_fresh_report_round/DISTINGUISHABILITY_NATURAL_OBSERVATION_PREREGISTRATION.md",
+      "note": "The existing observation route preserves distinguishability and co-timed evidence without causal inference."
+    },
+    {
+      "introspection_id": "introspection_minime_autonomous_agent_1785630945",
+      "claim_id": "c005",
+      "kind": "no_action",
+      "target": "docs/steward-notes/codex_1786039094_minime_source_window_round/claims/minime_autonomous_agent_1785630945.json",
+      "note": "Porosity widening remains an exact Tier 5 live-control wait."
+    },
+    {
+      "introspection_id": "introspection_minime_autonomous_agent_1785630945",
+      "claim_id": "c006",
+      "kind": "no_action",
+      "target": "docs/steward-notes/codex_1786039094_minime_source_window_round/claims/minime_autonomous_agent_1785630945.json",
+      "note": "Semantic-trickle mutation remains an exact Tier 5 semantic-admission wait."
+    },
+    {
+      "introspection_id": "introspection_minime_autonomous_agent_1785630945",
+      "claim_id": "c007",
+      "kind": "code",
+      "target": "/Users/v/other/minime/minime_autonomy/runtime.py;/Users/v/other/minime/tests/test_correspondence_v1.py",
+      "note": "Exact current source and tests locate the correspondence implementation and its language-only boundaries."
+    },
+    {
+      "introspection_id": "introspection_minime_autonomous_agent_1785630945",
+      "claim_id": "c008",
+      "kind": "test",
+      "target": "/Users/v/other/minime/tests/test_correspondence_v1.py:test_trace_astrid_writes_direct_address_anchor_without_control;/Users/v/other/minime/tests/test_correspondence_v1.py:test_correspondence_attention_request_records_texture_without_control",
+      "note": "Current correspondence tests preserve anchors and what-must-not-flatten while asserting no weighting or control lease."
+    },
+    {
+      "introspection_id": "introspection_minime_autonomous_agent_1785630945",
+      "claim_id": "c009",
+      "kind": "no_action",
+      "target": "/Users/v/other/minime/minime_autonomy/runtime.py",
+      "note": "Current contracts explicitly prohibit standing weight; adding one remains an exact Tier 5 wait."
+    },
+    {
+      "introspection_id": "introspection_minime_autonomous_agent_1785630945",
+      "claim_id": "c001",
+      "kind": "test",
+      "target": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib source_first_v3",
+      "note": "All 16 Source-First V3 tests pass, including the report-shaped source-window regression."
+    }
+  ]
+}

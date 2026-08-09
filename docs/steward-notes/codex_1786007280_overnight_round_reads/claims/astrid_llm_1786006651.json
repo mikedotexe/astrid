@@ -1,0 +1,35 @@
+{
+  "introspection_id": "introspection_astrid_llm_1786006651",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The dialogue runtime scans known model-control markers with longest exact matching, preserves a finite set of exact-reference syntaxes, and otherwise removes only the marker bytes while retaining the surrounding remainder.",
+      "disposition": "Verified in the report-bound source window at SHA f7c0570ce495b1978d9b6f588cba6ecb00a93b1573316bc22752e6e10d47f20a and the focused marker regressions. This establishes bounded byte handling, not marker meaning, identity, ownership, felt effect, or runtime activation.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Multiple punctuation or whitespace separators before a later relation word can make first_word_after return an empty string and erase a visibly attributed marker.",
+      "disposition": "Contradicted by exact source and execution. split followed by find(nonempty) skips every empty separator segment, and the exact Astrid-authored `... !!! represents` case preserves the marker and reports following_exact_relation.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A regression should pin marker preservation when multiple punctuation runs separate a known marker from the allowlisted word represents.",
+      "disposition": "Implemented now as control_marker_cleanup_preserves_relation_after_multiple_punctuation_runs. The test passes without changing production parser behavior.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Delimiter nesting deeper than MAX_EXACT_REFERENCE_DELIMITER_DEPTH should retain the marker without confusing the bounded primary delimiter evidence.",
+      "disposition": "Verified as an exact duplicate of control_marker_cleanup_bounds_deeper_delimiter_receipt_without_dropping_token, which preserves the marker and caps the evidence receipt at depth four.",
+      "classification": "addressed_duplicate"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "The downstream generate_dialogue path should be examined to determine how marker-cleanup remainder and matches affect final output construction.",
+      "disposition": "Verified from source. The sanitizer currently supplies a cleaned copy to dialogue quality gates, while successful MLX and repaired Ollama provider text is returned by this module. This read does not infer or authorize provider-neutral output normalization; the existing live-consumed proposal remains an explicit operator wait.",
+      "classification": "verified_existing"
+    }
+  ]
+}

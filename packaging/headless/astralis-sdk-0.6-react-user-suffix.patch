@@ -1,0 +1,24 @@
+diff --git a/src/lib.rs b/src/lib.rs
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -796,6 +796,20 @@ impl ReactCapsule {
+             *text = format!("{prefix}\n{text}");
+         }
+ 
++        // Apply an appliance-specific reminder after the user text to improve
++        // small-model contract adherence. This transforms only the ephemeral
++        // inference copy; session history retains the user's exact message.
++        if let Ok(suffix) = env::var("user_prompt_suffix")
++            && !suffix.trim().is_empty()
++            && let Some(last_user_msg) = messages
++                .iter_mut()
++                .rev()
++                .find(|message| matches!(message.role, MessageRole::User))
++            && let MessageContent::Text(ref mut text) = last_user_msg.content
++        {
++            *text = format!("{text}\n\n{}", suffix.trim());
++        }
++
+         // Store tools in turn state for reuse in tool result iterations.
+         state.current_tools = tools;
+         state.set_phase(Phase::Streaming);

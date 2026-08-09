@@ -1,0 +1,32 @@
+{
+  "schema": "astrid.evidence_store_snapshot.v1",
+  "active_store": "v2",
+  "sequence": 707527,
+  "event_count": 707527,
+  "head_sha256": "b2ddaf92f00a622081e2502bebd2fe37229b3acfa684c08c9bbb67c24fc02f17",
+  "active_stream_count": 16,
+  "stream_counts": {
+    "addressing": 55622,
+    "agency_commons": 3688,
+    "attention_portfolio": 3,
+    "claim_families": 235716,
+    "corridor_v1": 5,
+    "corridor_v2": 112,
+    "felt_contracts": 190710,
+    "felt_mechanism_concordance": 80,
+    "lived_state_witness": 8295,
+    "model_qos": 106557,
+    "reciprocal_uptake": 51363,
+    "representation_contracts": 22989,
+    "sandbox": 2950,
+    "signal_spine": 19641,
+    "steward_control": 9468,
+    "steward_work_selection": 328
+  },
+  "corrupt_lines": 0,
+  "pending_events": 0,
+  "v1_immutable": true,
+  "valid": true,
+  "source_cutoff": "introspection_astrid_llm_1786006651.txt",
+  "source_lag": 0
+}

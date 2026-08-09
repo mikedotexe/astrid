@@ -1,0 +1,25 @@
+{
+  "schema": "astrid.introspection_addressing_counter_snapshot.v1",
+  "steward_run_id": "run_1786032549793840000_79a22e846c",
+  "projection_generation_id": "projection_1786033745711802000_4d530df236",
+  "canonical": {
+    "indexed": 4239,
+    "full_read": 3654,
+    "fully_addressed": 3028,
+    "remaining": 1211,
+    "unread": 585,
+    "pending_action": 213,
+    "watch": 4,
+    "blocked_needs_steward": 409
+  },
+  "all_artifacts": {
+    "indexed": 5854,
+    "pending": 2826
+  },
+  "audit": {
+    "valid": true,
+    "counter_mismatches": 0,
+    "proof_gap_artifacts": 0,
+    "proof_gap_claims": 0
+  }
+}

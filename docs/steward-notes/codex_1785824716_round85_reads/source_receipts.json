@@ -1,0 +1,37 @@
+{
+  "schema": "steward_source_receipts_v1",
+  "receipts": [
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "lines": 1038,
+      "bytes": 38205,
+      "sha256": "f7c0570ce495b1978d9b6f588cba6ecb00a93b1573316bc22752e6e10d47f20a",
+      "full_read": true,
+      "relationship": "exact_hash_reuse_of_round84_complete_source_read"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "sha256": "a8a40bb39a6948001338efa30585197bec7a181eed9062187544f54a0b64cfc5",
+      "intervals": ["1855-1904", "2145-2244", "2439-2451"],
+      "relationship": "normalization_nested_depth_unicode_whitespace_and_creates_exact_regressions"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/fallback_contracts.rs",
+      "sha256": "7f4cf2038ef66086a4c33279ebd84116d3a7aa1d34cc1f4202576fd47d03039f",
+      "relationship": "round82_provider_neutral_normalization_hash_match"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/transport.rs",
+      "sha256": "97475c4af5aba553476d81a0d690d6b3c93147639951776fc81a43b92e134ee4",
+      "relationship": "round82_mlx_and_ollama_downstream_use_hash_match"
+    },
+    {
+      "path": "docs/steward-notes/codex_1785801558_round82_reads/claims/astrid_llm_1785743120.json",
+      "relationship": "exact_prior_downstream_remainder_claim_disposition"
+    },
+    {
+      "path": "docs/steward-notes/codex_1785820219_round84_reads/source_receipts.json",
+      "relationship": "immediately_prior_complete_report_bound_source_receipt"
+    }
+  ]
+}

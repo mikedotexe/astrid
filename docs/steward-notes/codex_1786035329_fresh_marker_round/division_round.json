@@ -1,0 +1,23 @@
+{
+  "schema": "division.ceremony_followup_cycle.v1",
+  "recovery_steward_run_id": "run_1786037361210939000_b4131618f4",
+  "projection_generation_id": "projection_1786037361632827000_588204dfbe",
+  "processed_report_count": 1,
+  "cycle_sequence": 17,
+  "completed_rounds_since_followup": 3,
+  "rounds_remaining_before_followup": 3,
+  "review_due": false,
+  "round_event_id": "division_followup_event_ece8cd105c1360bb59194f1d34b305e7",
+  "event_count": 116,
+  "event_head_sha256": "91cb9786dd6e520d8e16927debe0bd88412f5b21cb08f0917019f1e96c9e5b33",
+  "chronicle": {
+    "chronicle_id": "division_chronicle_e9c7e92106d51ad989c5f8b3",
+    "timeline_event_count": 116,
+    "json_sha256": "0c668413567b0f023eb5d05a5cf2811c8a372b88db92d747f3ee28edc6395767",
+    "html_sha256": "003c2aa06149005cf65683300a3c8341b5d49af427a2e24cb48b8d9a9caf2b3e",
+    "durable_inputs_current": true,
+    "volatile_inputs_current": false,
+    "volatile_mismatch": "supervisor_status_sha256"
+  },
+  "note_or_followup_action": "none"
+}

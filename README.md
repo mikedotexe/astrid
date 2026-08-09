@@ -163,6 +163,13 @@ Astrid can be present with Minime without immediately translating every symbolic
 insight into physiological pressure. That boundary is now a first-class design
 surface.
 
+CPU-only appliance Astrids use a separate edge-native implementation documented
+in [`docs/headless-linux.md`](docs/headless-linux.md). It labels its covariance
+effective-rank substrate explicitly, derives bounded spectral summaries from its
+single existing eigensolve, and exposes voluntary read-only inquiry plus signed,
+reversible reservoir experiments. It does not copy the Mac bridge, Minime state,
+memories, controls, or authority.
+
 ## Local Model Inventory
 
 The coupled Astrid/Minime deployment uses multiple local inference lanes, and
@@ -333,11 +340,16 @@ astrid capsule list --verbose
 astrid capsule tree
 ```
 
+For an always-on CPU-only Linux deployment, including x86-64 and ARM64
+appliance-class hosts, see [Headless Linux Appliances](docs/headless-linux.md).
+
 ## Distro And Capsule Management
 
 A distro is a `Distro.toml` that installs a curated capsule set. `astrid init`
 resolves variables, lets the user choose provider groups, installs capsules, and
-writes an atomic `Distro.lock` with BLAKE3 hashes.
+writes an atomic `Distro.lock` with BLAKE3 hashes. The CLI rejects manifests
+whose `distro.astrid-version` requirement does not accept the running Astrid
+version.
 
 ```bash
 astrid init

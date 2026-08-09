@@ -1,0 +1,18 @@
+{
+  "source_reads": [
+    {
+      "path": "/Users/v/other/minime/minime/src/esn.rs",
+      "sha256": "2227a7256ba98219be683db47c4f49afe0477c0ae5d17cf9226613b20f6b036c",
+      "total_lines": 3222,
+      "report_bound_interval": "1-400",
+      "report_bound_interval_read": "complete",
+      "uncovered_interval_assessed": false
+    },
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_311acefb5bed3fcc02f0d80a12499ddb2665f8dde697cff5fafe1f5faedd8926.json",
+      "sha256": "221e1777bf0b7b0837ef682093c47f8dd2753a38fdfd035ff7df592c9651c06b",
+      "lines": 456,
+      "read": "complete"
+    }
+  ]
+}

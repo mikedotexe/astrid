@@ -1,0 +1,47 @@
+{
+  "schema": "source_first_read_receipts_v1",
+  "steward_run_id": "run_1786035329622809000_f204509aa4",
+  "recovery_steward_run_id": "run_1786037361210939000_b4131618f4",
+  "reports": [
+    {
+      "introspection_id": "introspection_astrid_llm_1786034340",
+      "line_count": 45,
+      "byte_count": 3757,
+      "sha256": "108ec483fe8d577b9514dbe643ed266891d919782f9838a54f2bbae363322253",
+      "witness_id": "lsw_2eeafcbab6ef32a80faecbb3a944094fd33f7d933fd299e96c54c15df8ad6b04",
+      "witness_projection_line_count": 564,
+      "witness_projection_byte_count": 26863,
+      "witness_projection_sha256": "c8019a88ea612fa06d16bb4755f595902706df8c7bd12dd970854eb9e7f47897"
+    }
+  ],
+  "sources": [
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "line_count": 1038,
+      "byte_count": 38205,
+      "sha256": "f7c0570ce495b1978d9b6f588cba6ecb00a93b1573316bc22752e6e10d47f20a",
+      "selected_interval": "1-400",
+      "selected_interval_sha256": "d751baf503a4d7e15aa69d1afbf0da95c615cfe874515b14124b8d789b8275a3",
+      "read_disposition": "The exact selected interval and lines 685-1038 were read in this run. The prior complete 1,038-line read is reused only because the full-file SHA remains byte-identical."
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/fallback_contracts.rs",
+      "sha256": "7f4cf2038ef66086a4c33279ebd84116d3a7aa1d34cc1f4202576fd47d03039f",
+      "selected_interval": "210-219",
+      "read_disposition": "Provider-neutral normalization returns the sanitized string and a separate cleanup report."
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/transport.rs",
+      "sha256": "97475c4af5aba553476d81a0d690d6b3c93147639951776fc81a43b92e134ee4",
+      "selected_intervals": ["650-720", "850-915"],
+      "read_disposition": "Both provider transports normalize raw text before returning it to generate_dialogue."
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "line_count": 3104,
+      "byte_count": 125920,
+      "sha256_after_response": "e6634156e72b7c0e4cc5229379b1bda2aad4e0c64f8792fc1ba7aa56a9146651",
+      "read_disposition": "Existing Unicode-word, quote-pair, finite-relation, malformed-delimiter, and downstream-normalization regressions were read; one exact contains-negative regression was added."
+    }
+  ]
+}

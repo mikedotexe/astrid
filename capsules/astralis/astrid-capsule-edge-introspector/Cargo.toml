@@ -1,0 +1,22 @@
+[workspace]
+
+[package]
+name = "astrid-capsule-edge-introspector"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.94"
+license = "MIT OR Apache-2.0"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+astrid-guest = { path = "../../../crates/astrid-guest" }
+sha2 = "0.10"
+
+[lints.rust]
+unsafe_code = "deny"
+
+[lints.clippy]
+all = { level = "warn", priority = -1 }
+pedantic = { level = "warn", priority = -1 }

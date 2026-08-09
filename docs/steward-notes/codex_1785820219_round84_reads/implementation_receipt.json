@@ -1,0 +1,23 @@
+{
+  "schema": "steward_implementation_receipt_v1",
+  "changes": [
+    {
+      "surface": "control_marker_exact_regressions",
+      "paths": ["capsules/spectral-bridge/src/llm/provider/tests.rs"],
+      "effect": "prove the report-named Unicode relation word, unlisted triggers relation, and heterogeneous adjacent-marker remainder cases",
+      "production_runtime_effect": false,
+      "marker_grammar_changed": false,
+      "provider_behavior_changed": false,
+      "live_authority_granted": false
+    }
+  ],
+  "excluded_paths": [
+    "capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs",
+    "capsules/spectral-bridge/src/autonomous/runtime/tests.rs",
+    "scripts/build_bridge.sh",
+    "scripts/deploy_division_runtime.sh",
+    "scripts/deploy_minime.sh",
+    "/Users/v/other/minime"
+  ],
+  "authority": "test evidence only; no grammar provider model prompt persistence service cpu_runtime peer or live-control authority"
+}

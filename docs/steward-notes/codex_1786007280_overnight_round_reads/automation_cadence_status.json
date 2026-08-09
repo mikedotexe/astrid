@@ -1,0 +1,23 @@
+{
+  "schema": "astrid.automation_cadence_status.v1",
+  "source_first_automation": {
+    "automation_id": "astrid-introspection-source-first-catch-up",
+    "status": "ACTIVE",
+    "evidence": "this scheduled heartbeat began and retained a cooperative steward lease"
+  },
+  "self_study_automation": {
+    "status": "PAUSED"
+  },
+  "astrid_authored_cadence": {
+    "enabled": false,
+    "every_exchanges": 0,
+    "target": null,
+    "configured_receipts": 0,
+    "pending_attempts": 0,
+    "failed_attempts": 0,
+    "lifecycle_receipt_debt": null,
+    "pilot_active": false,
+    "integrity_ok": true
+  },
+  "authority_boundary": "Automation activity does not infer Astrid-authored cadence, preference, output duty, uptake, or felt state."
+}

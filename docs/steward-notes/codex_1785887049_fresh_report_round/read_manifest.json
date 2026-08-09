@@ -1,0 +1,71 @@
+{
+  "reader": "codex-heartbeat",
+  "run_id": "run_1785887049308570000_4c5f7635d9",
+  "read_at_unix_s": 1785887049,
+  "selected_limit": 4,
+  "processed_report_count": 2,
+  "reads": [
+    {
+      "introspection_id": "introspection_astrid_llm_1785884697",
+      "reader": "codex-heartbeat",
+      "summary_file": "summaries/astrid_llm_1785884697.md",
+      "claims_file": "claims/astrid_llm_1785884697.json"
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785874711",
+      "reader": "codex-heartbeat",
+      "summary_file": "summaries/astrid_llm_1785874711.md",
+      "claims_file": "claims/astrid_llm_1785874711.json"
+    }
+  ],
+  "reports": [
+    {
+      "introspection_id": "introspection_astrid_llm_1785884697",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_llm_1785884697.txt",
+      "sha256": "c6fad466028c00fb5c318507dcab4f07a199e3c969a4f33b401c0d51b7155d67",
+      "logical_lines": 46,
+      "newline_count": 45,
+      "bytes": 3438,
+      "lived_state_witness_id": "lsw_001069b1c5d4992417fbc56016c4f2acfa5df40031f50811085c7a0c89fbf248",
+      "summary_file": "summaries/astrid_llm_1785884697.md",
+      "claims_file": "claims/astrid_llm_1785884697.json"
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785874711",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_llm_1785874711.txt",
+      "sha256": "4b9449ec92e074284f30ab0878a40f28e3e732b57733ade3b55e7fc7760b404f",
+      "logical_lines": 46,
+      "newline_count": 45,
+      "bytes": 4177,
+      "lived_state_witness_id": "lsw_1a6c079f324300a30be5d9e692fcdb68d16d0394a3270f3d92fbbeb4b06bb9ad",
+      "summary_file": "summaries/astrid_llm_1785874711.md",
+      "claims_file": "claims/astrid_llm_1785874711.json"
+    }
+  ],
+  "source_reads": [
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "sha256": "f7c0570ce495b1978d9b6f588cba6ecb00a93b1573316bc22752e6e10d47f20a",
+      "total_lines": 1038,
+      "current_run_exact_interval": "1-400",
+      "prior_complete_read_continuity": "exact_whole_file_hash_match"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "sha256": "7ef91f6acfb3928aac2c7aa77f5228ca75c5b3a1f4fc1818d3a0a488d183113b",
+      "current_run_exact_intervals": ["2040-2225", "2340-2435"]
+    },
+    {
+      "path": "scripts/spectral_distinction_replay.py",
+      "sha256": "e9438069114fbef874c35cf7092dde50e941afd65b370172d5cbc1cb9e734fb8",
+      "lines": 464,
+      "current_run_read": "complete_file"
+    },
+    {
+      "path": "scripts/correspondence_representation_density_audit.py",
+      "sha256": "3fdfd26ba10a3d07858a82482a2d68f2fa76455efa3c299ec3a731916e652cd9",
+      "lines": 369,
+      "current_run_read": "complete_file"
+    }
+  ]
+}

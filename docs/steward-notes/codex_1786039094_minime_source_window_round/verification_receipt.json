@@ -1,0 +1,92 @@
+{
+  "schema": "minime_source_window_source_first_round_receipt_v1",
+  "schema_version": 1,
+  "steward_run_id": "run_1786039094498833000_7249c4a446",
+  "pre_projection_generation_id": "projection_1786039095027712000_c309c4591e",
+  "manual_projection_generation_id": "projection_1786041044499461000_54ad18dd40",
+  "pause_generation": 228,
+  "processed_report_count": 1,
+  "processed": {
+    "filename": "introspection_minime_autonomous_agent_1785630945.txt",
+    "sha256": "398db1e98f7e9165bb0376088449ee8084291e81de916597a4b320f82a833a1c",
+    "witness_id": "lsw_afdfe6d5b2058cff14c3a4da23e07f1055fd905cb2dad319f4d55f0c7c3c45b0",
+    "witness_sha256": "928c3029eac96b34cf316364dc534f09cf70ef18543d7c6812a0afc83b0f28f1",
+    "status": "addressed_change",
+    "claim_count": 9,
+    "proof_missing_claims": []
+  },
+  "work_items": [
+    {"claim_id": "c001", "work_item_id": "wi_f459fae61fced1a6", "status": "implemented_awaiting_felt_response"},
+    {"claim_id": "c002", "work_item_id": "wi_affaa81866609e8e", "status": "implemented_awaiting_felt_response"},
+    {"claim_id": "c003", "work_item_id": "wi_ddd32c20c2e8715c", "status": "needs_sandbox", "blocked_by": "prospective_natural_sample"},
+    {"claim_id": "c004", "work_item_id": "wi_b67ff6a8ca403355", "status": "needs_sandbox", "blocked_by": "prospective_natural_sample"},
+    {"claim_id": "c005", "work_item_id": "wi_5aedf40dcbc17ae6", "status": "needs_operator_approval", "agency_tier": 5},
+    {"claim_id": "c006", "work_item_id": "wi_6e7559623d4687e4", "status": "needs_operator_approval", "agency_tier": 5},
+    {"claim_id": "c007", "work_item_id": "wi_16921ef62e1aac8c", "status": "verified_existing"},
+    {"claim_id": "c008", "work_item_id": "wi_a67092fd5055eb11", "status": "verified_existing"},
+    {"claim_id": "c009", "work_item_id": "wi_41fcbff9c3a8fe78", "status": "needs_operator_approval", "agency_tier": 5}
+  ],
+  "canonical_counters": {
+    "indexed": 4240,
+    "full_read": 3656,
+    "fully_addressed": 3030,
+    "remaining": 1210,
+    "blocked_needs_steward": 409,
+    "unread": 584,
+    "read_needs_claims": 0,
+    "counter_status": "consistent"
+  },
+  "evidence_event_store_v2": {
+    "snapshot_phase": "pre_finish",
+    "valid": true,
+    "last_global_seq": 713780,
+    "last_event_sha256": "4d9f514f728183c6919b63ec552b74c67c4efb31699496e8d5270264525ce019",
+    "active_stream_count": 16,
+    "corrupt_lines": 0,
+    "history_rewritten": false,
+    "v1_state": "migration_only_immutable"
+  },
+  "cadence": {
+    "configuration_valid": true,
+    "enabled": false,
+    "configured_receipts": 0,
+    "pending": false,
+    "pilot_active": false,
+    "canonical_median_gap_seconds": 423.0,
+    "duplicate_hash_group_count": 0
+  },
+  "division_before_round_record": {
+    "cycle_sequence": 17,
+    "completed_rounds_since_followup": 3,
+    "rounds_remaining_before_followup": 3,
+    "review_due": false,
+    "event_count": 116,
+    "event_head_sha256": "91cb9786dd6e520d8e16927debe0bd88412f5b21cb08f0917019f1e96c9e5b33"
+  },
+  "division_after_round_record": {
+    "cycle_sequence": 17,
+    "completed_rounds_since_followup": 4,
+    "rounds_remaining_before_followup": 2,
+    "review_due": false,
+    "round_event_id": "division_followup_event_02d989bd1c44dd56a7680e05dcab095a",
+    "event_count": 117,
+    "event_head_sha256": "daf714483330ec7eec8566338909bd54f13a727e32fc6147e47f1e437813ecf1"
+  },
+  "deployment": {
+    "required": true,
+    "performed": false,
+    "preflight_result": "refused_dirty_no_ack",
+    "dirty_build_input_count": 10,
+    "build_started": false,
+    "restart_started": false,
+    "minime_changed": false
+  },
+  "authority": {
+    "porosity_change_authorized": false,
+    "semantic_admission_change_authorized": false,
+    "standing_weight_authorized": false,
+    "cadence_activation_inferred": false,
+    "felt_resolution_claimed": false,
+    "live_control_changed": false
+  }
+}

@@ -1,0 +1,119 @@
+{
+  "schema": "steward_run_verification_receipt_v1",
+  "run_id": "run_1786083251229772000_a3c68c566b",
+  "pause_generation": 243,
+  "projection_generation_ids": {
+    "pre_run_source_first_v3": "projection_1786083252152084000_da1ea057b1",
+    "pre_finish_addressing": "materialized_by_record_read_link_and_close",
+    "post_run_source_first_v3": "pending controller finish"
+  },
+  "processed_reports": [
+    "introspection_astrid_llm_1786079244.txt"
+  ],
+  "processed_report_count": 1,
+  "addressing": {
+    "statuses": {
+      "introspection_astrid_llm_1786079244": "addressed_duplicate"
+    },
+    "claim_count": 5,
+    "evidence_link_count": 16,
+    "proof_gap_count": 0,
+    "fully_addressed": true
+  },
+  "canonical_counter_audit": {
+    "indexed": 4248,
+    "full_read": 3665,
+    "fully_addressed": 3039,
+    "remaining": 1209,
+    "unread": 583,
+    "read_needs_claims": 0,
+    "blocked": 409,
+    "status": "consistent",
+    "mismatches": []
+  },
+  "work_item_summary": {
+    "tier_4": 23,
+    "tier_5": 1578,
+    "needs_steward_grant": 18,
+    "needs_operator_approval": 1610,
+    "tier_mismatch_count": 0
+  },
+  "division_at_begin": {
+    "cycle_sequence": 18,
+    "completed_rounds_since_followup": 4,
+    "rounds_remaining_before_followup": 2,
+    "review_due": false,
+    "last_round_event_id": "division_followup_event_3543915f018daffdf78ca24d8edf8fa7",
+    "event_count": 124,
+    "event_head_sha256": "52377c909be865e2d4b070d52123f4b21aa12a7cc36fda3b6e7e6cbfdfa921de",
+    "note_or_chronicle_action": false
+  },
+  "focused_tests": {
+    "marker_cleanup_passed": 43,
+    "provider_normalization_passed": 2,
+    "normalized_repair_hash_passed": 1,
+    "total_passed": 46,
+    "failed": 0
+  },
+  "stewardship_tests": {
+    "introspection_addressing_passed": 42,
+    "event_store_controller_projector_division_cursor_passed": 72,
+    "anti_drop_self_tests_passed": 5,
+    "anti_drop_guards": 47,
+    "cadence_self_tests_passed": 6,
+    "experiential_self_tests_passed": 2,
+    "total_passed": 127,
+    "failed": 0,
+    "epistemic_lint_checked_records": 10548,
+    "epistemic_lint_issues": 0,
+    "history_rewritten": false
+  },
+  "evidence_event_store_prefinish_snapshot": {
+    "active_store": "v2",
+    "valid": true,
+    "last_global_seq": 719800,
+    "last_event_sha256": "91c44d91aa05376242fa6a97998673a39088b9aa8cdcc9f30b9d2608376579e4",
+    "stream_count": 16,
+    "corrupt_lines": 0,
+    "pending_source_events": 0,
+    "v1_immutable": true,
+    "legacy_source_count": 4
+  },
+  "division_round_record": {
+    "cycle_sequence": 18,
+    "completed_rounds_since_followup": 5,
+    "rounds_remaining_before_followup": 1,
+    "review_due": false,
+    "last_round_event_id": "division_followup_event_22aa95afc00edbc90c87f611a039cf0d",
+    "event_count": 125,
+    "event_head_sha256": "7fd6a415a1be969b6ba106ed35a412ae12a37f42967e382febb6770ab164f0b5",
+    "note_action": false,
+    "chronicle_action": "reprojected_after_round_write",
+    "chronicle_id": "division_chronicle_ad94b0eb192c287d60e75afe",
+    "chronicle_durable_inputs_current": true,
+    "chronicle_volatile_supervisor_status_mismatch": true
+  },
+  "pre_finish_next_queue": [
+    "introspection_minime_sensory_bus_1785630107.txt",
+    "introspection_minime_regulator_1785629184.txt",
+    "introspection_astrid_llm_1785628932.txt"
+  ],
+  "post_cutoff_arrival_pending_finish_projection": "introspection_astrid_llm_1786084556.txt",
+  "restart_required_for_this_run": false,
+  "deployment_attempted": false,
+  "live_authority_granted": false,
+  "finish_outcome": "pending controller finish",
+  "prior_archival_checkpoint": {
+    "commit_sha": "6344ba25e9d33ea051034a866f04d3fba25b3d6a",
+    "quoted_introspection_ref": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_llm_1786076073.txt",
+    "exact_committed_path_count": 12
+  },
+  "current_archival_checkpoint": {
+    "status": "not_due_first_verification_round_after_prior_archive",
+    "current_packet_commit_debt": "docs/steward-notes/codex_1786083251_llm_normalization_verification_round/",
+    "mixed_file_commit_debt": [
+      "CHANGELOG.md",
+      "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md"
+    ]
+  }
+}

@@ -1,0 +1,21 @@
+diff --git a/src/lib.rs b/src/lib.rs
+index 923b101..bfa12a8 100644
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -1364,13 +1364,9 @@ impl ReactLoop {
+                     }
+                 };
+ 
+-                let data = match payload.get("data") {
+-                    Some(d) => d,
+-                    None => {
+-                        log::debug("Skipping IPC message with no data field");
+-                        continue;
+-                    }
+-                };
++                // Astrid 0.5 delivers custom IPC as raw JSON. Older hosts
++                // wrapped the same payload in {"type":"custom","data":...}.
++                let data = payload.get("data").unwrap_or(&payload);
+ 
+                 let messages: Vec<Message> = data
+                     .get("messages")

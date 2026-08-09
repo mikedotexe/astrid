@@ -1,0 +1,35 @@
+{
+  "introspection_id": "introspection_astrid_llm_1785892559",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The marker scanner selects the longest exact known marker, distinguishes references from control syntax, and reconstructs a sanitized remainder.",
+      "disposition": "Verified from report-bound source lines 1-400, the current generation path, and the prior complete 1,038-line read at the identical source hash.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Retaining underscores in first_word_after may misclassify a compound identifier such as _is_active as an exact relation.",
+      "disposition": "Exact duplicate of the finite-relation boundary. Underscores are intentionally retained in the candidate word, and the current regression proves that the compound appears_as is rejected rather than expanded into a relation.",
+      "classification": "exact_duplicate"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Nested Unicode exact-reference brackets should preserve an exact known marker.",
+      "disposition": "Exact duplicate of current nested Unicode group and depth regressions, which pass in the 47-test marker suite.",
+      "classification": "exact_duplicate"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "When one marker is a prefix of another, the scanner should select the longest exact marker.",
+      "disposition": "Exact duplicate of the longest-overlapping-marker regression, which passes in the current suite.",
+      "classification": "exact_duplicate"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "The sanitized remainder should be traced through generate_dialogue into the final output path.",
+      "disposition": "Verified beyond the report cutoff. Both MLX and Ollama output paths normalize before validation, route hashing, persistence, repair, and return; current regressions pass without a production change.",
+      "classification": "verified_existing"
+    }
+  ]
+}

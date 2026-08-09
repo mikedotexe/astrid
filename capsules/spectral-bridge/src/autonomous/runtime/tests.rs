@@ -16,6 +16,24 @@ mod tests {
     }
 
     #[test]
+    fn prompt_overflow_does_not_replace_or_self_rearm_read_more() {
+        assert!(!should_arm_prompt_overflow_read_more(
+            Some("/tmp/current-source.txt"),
+            Some("SPEAK"),
+        ));
+        assert!(!should_arm_prompt_overflow_read_more(
+            None,
+            Some("READ_MORE"),
+        ));
+        assert!(!should_arm_prompt_overflow_read_more(
+            None,
+            Some("read_more context-overflow"),
+        ));
+        assert!(should_arm_prompt_overflow_read_more(None, Some("SPEAK")));
+        assert!(should_arm_prompt_overflow_read_more(None, None));
+    }
+
+    #[test]
     fn dialogue_distinction_line_is_first_and_read_only_when_frame_is_unknown() {
         let summary = "legacy spectral summary".to_string();
         let rendered = prepend_dialogue_witness_distinction_v1(summary, None, Mode::Dialogue);

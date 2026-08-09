@@ -89,18 +89,19 @@ pub(super) fn handle_action(
         },
         "PRECISE" => {
             let prev = conv.response_length;
+            let compact = super::super::self_control_v2::MIN_ACTION_CARRYING_RESPONSE_TOKENS;
             let applied = super::super::self_control_v2::apply_standing_action(
                 conv,
                 SelfControlFamilyV2::Conversation,
                 SelfControlValuesV2 {
-                    response_token_limit: Some(128),
+                    response_token_limit: Some(compact),
                     ..SelfControlValuesV2::default()
                 },
                 "PRECISE",
-                format!("response length: {prev} -> 128 tokens"),
+                format!("response length: {prev} -> {compact} tokens"),
             );
             if applied {
-                info!("Astrid chose PRECISE: tokens -> 128");
+                info!("Astrid chose PRECISE: tokens -> {compact}");
             }
             applied
         },

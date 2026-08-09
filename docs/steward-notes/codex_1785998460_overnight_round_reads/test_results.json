@@ -1,0 +1,26 @@
+{
+  "schema": "astrid.steward_run_test_results.v1",
+  "steward_run_id": "run_1785998460590306000_bcf34df1f6",
+  "results": [
+    {"suite": "source attribution focused regression", "passed": 1, "failed": 0},
+    {"suite": "control-marker cleanup regressions", "passed": 37, "failed": 0},
+    {"suite": "marker-named bridge tests", "passed": 53, "failed": 0},
+    {"suite": "spectral-bridge library", "passed": 1826, "failed": 0},
+    {"suite": "spectral-bridge strict all-target/all-feature Clippy", "passed": 1, "failed": 0},
+    {"suite": "owned Rust file formatting", "passed": 2, "failed": 0},
+    {"suite": "introspection addressing audit", "passed": 42, "failed": 0},
+    {"suite": "source-first projector, Evidence Store, steward control, Division, Chronicle, and cursor", "passed": 71, "failed": 0},
+    {"suite": "anti-drop self-tests", "passed": 5, "failed": 0},
+    {"suite": "anti-drop verification", "passed": 47, "failed": 0, "alarms": 0, "gaps": 0},
+    {"suite": "experiential epistemics self-tests", "passed": 2, "failed": 0},
+    {"suite": "epistemic lint", "records_checked": 10398, "issues": 0}
+  ],
+  "evidence_store_snapshot": {
+    "sequence": 706446,
+    "head_sha256": "4716f9560158c8770fbf47920297620d911d6d6381f685b3a5c8713c1b74498a",
+    "stream_count": 16,
+    "corrupt_lines": 0,
+    "valid": true,
+    "v1_history_rewritten": false
+  }
+}

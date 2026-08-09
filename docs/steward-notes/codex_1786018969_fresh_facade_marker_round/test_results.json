@@ -1,0 +1,85 @@
+{
+  "schema": "steward_test_results_v1",
+  "results": [
+    {
+      "surface": "marker regressions",
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib control_marker",
+      "passed": 47,
+      "failed": 0
+    },
+    {
+      "surface": "complete bridge library",
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib",
+      "passed": 1827,
+      "failed": 0
+    },
+    {
+      "surface": "addressing audit",
+      "command": "python3 scripts/introspection_addressing_audit.py --self-test",
+      "passed": 42,
+      "failed": 0
+    },
+    {
+      "surface": "Evidence Store/controller/projector/Division/cursor",
+      "command": "PYTHONPATH=.:scripts python3 -m unittest scripts.test_evidence_event_store scripts.test_steward_control scripts.test_steward_projection scripts.test_division_ceremony_followup scripts.test_division_ceremony_chronicle scripts.test_division_ceremony_projection scripts.test_claim_family_incremental_projection scripts.test_projection_cursors",
+      "passed": 72,
+      "failed": 0
+    },
+    {
+      "surface": "anti-drop self-test",
+      "command": "python3 scripts/anti_drop_catalog.py --self-test",
+      "passed": 5,
+      "failed": 0
+    },
+    {
+      "surface": "anti-drop live verify",
+      "command": "python3 scripts/anti_drop_catalog.py verify --json",
+      "guards": 47,
+      "gaps": 0,
+      "alarms": 0
+    },
+    {
+      "surface": "cadence audit",
+      "command": "PYTHONPATH=.:scripts python3 -m unittest scripts.test_introspection_cadence_audit",
+      "passed": 6,
+      "failed": 0
+    },
+    {
+      "surface": "cadence live strict audit",
+      "command": "python3 scripts/introspection_cadence_audit.py --strict --json",
+      "valid": true,
+      "enabled": false,
+      "configured_receipts": 0,
+      "pending_attempts": 0
+    },
+    {
+      "surface": "experiential epistemics",
+      "command": "python3 scripts/experiential_epistemics.py self-test",
+      "passed": 2,
+      "failed": 0
+    },
+    {
+      "surface": "epistemic lint",
+      "command": "python3 scripts/experiential_epistemics.py lint --json",
+      "records": 10432,
+      "issues": 0,
+      "history_rewritten": false
+    },
+    {
+      "surface": "Evidence Event Store V2 full-chain verify",
+      "command": "PYTHONDONTWRITEBYTECODE=1 python3 scripts/evidence_event_store.py --json verify",
+      "sequence": 709328,
+      "head": "713d332a63d54999b086d09a20f0457e02421c84a15ca895c508d2efb4f9cb03",
+      "streams": 16,
+      "corrupt_lines": 0,
+      "valid": true
+    }
+  ],
+  "repaired_invocations": [
+    "The repository-root package shorthand did not resolve spectral-bridge; the exact manifest-path commands passed.",
+    "Historical anti-drop and selftest command names were replaced by anti_drop_catalog.py and self-test; the current commands passed.",
+    "The cadence unittest required the repository scripts path; the corrected PYTHONPATH command passed."
+  ],
+  "rust_source_changed": false,
+  "deployment_required": false
+}

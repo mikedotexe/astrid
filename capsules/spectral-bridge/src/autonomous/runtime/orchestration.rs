@@ -1,6 +1,19 @@
 const SEMANTIC_HEARTBEAT_INTERVAL: Duration = Duration::from_secs(7);
 const SEMANTIC_HEARTBEAT_INTENSITY: f32 = 0.30;
 
+fn should_arm_prompt_overflow_read_more(
+    active_read_path: Option<&str>,
+    recent_next_choice: Option<&str>,
+) -> bool {
+    active_read_path.is_none()
+        && !recent_next_choice.is_some_and(|choice| {
+            choice
+                .split_whitespace()
+                .next()
+                .is_some_and(|action| action.eq_ignore_ascii_case("READ_MORE"))
+        })
+}
+
 pub(crate) const fn semantic_heartbeat_constants_v1() -> (u64, f32) {
     (
         SEMANTIC_HEARTBEAT_INTERVAL.as_secs(),
@@ -752,6 +765,11 @@ pub fn spawn_autonomous_loop(
                     // content is visible but doesn't override mode selection.
                     let inbox_forces_dialogue = inbox_content.is_some() && !conv.defer_inbox;
                     let mode = if inbox_forces_dialogue {
+                        next_action::introspection_cadence::observe_due(&mut conv);
+                        next_action::introspection_cadence::defer_pending(
+                            &mut conv,
+                            "unread_direct_correspondence",
+                        );
                         info!("inbox message present — forcing dialogue mode");
                         Mode::Dialogue
                     } else if inbox_content.is_some() {
@@ -1945,7 +1963,12 @@ pub fn spawn_autonomous_loop(
                                     )
                                 ).await {
                                     Ok((result, prompt_overflow)) => {
-                                        if let Some(of) = prompt_overflow {
+                                        if let Some(of) = prompt_overflow
+                                            && should_arm_prompt_overflow_read_more(
+                                                conv.last_read_path.as_deref(),
+                                                conv.recent_next_choices.back().map(String::as_str),
+                                            )
+                                        {
                                             conv.last_read_path = Some(of.path.to_string_lossy().to_string());
                                             conv.last_read_offset = of.offset;
                                             conv.last_read_meaning_summary = Some(format!("Context overflow: {}", of.summary));
@@ -2785,6 +2808,8 @@ pub fn spawn_autonomous_loop(
                             }
                         }
                         Mode::Introspect => {
+                            let _cadence_attempt =
+                                next_action::introspection_cadence::begin_attempt(&mut conv);
                             // Read a source file and ask the LLM to reflect on it.
                             // If Astrid specified a target (INTROSPECT label offset),
                             // use that. Otherwise advance the rotation cursor.
@@ -3264,23 +3289,24 @@ pub fn spawn_autonomous_loop(
                                             false
                                         }
                                     };
-                                    if artifact_written {
-                                        if artifact_kind == "introspection"
-                                            && let Some(context) = prior_evidence_v1.as_ref()
-                                            && let Err(error) =
-                                                introspect::record_prior_evidence_responses_v1(
-                                                    bridge_paths().bridge_workspace(),
-                                                    &artifact_path,
-                                                    &text,
-                                                    context,
-                                                )
-                                        {
-                                            warn!(
-                                                label = %label,
-                                                error = %error,
-                                                "introspect: response receipt persistence failed after canonical artifact write"
-                                            );
-                                        }
+                                    if artifact_written
+                                        && artifact_kind == "introspection"
+                                        && let Some(context) = prior_evidence_v1.as_ref()
+                                        && let Err(error) =
+                                            introspect::record_prior_evidence_responses_v1(
+                                                bridge_paths().bridge_workspace(),
+                                                &artifact_path,
+                                                &text,
+                                                context,
+                                            )
+                                    {
+                                        warn!(
+                                            label = %label,
+                                            error = %error,
+                                            "introspect: response receipt persistence failed after canonical artifact write"
+                                        );
+                                    }
+                                    let witness_outcome = if artifact_written {
                                         match crate::lived_state_witness::finalize_and_submit_v1(
                                             &authorship_v1,
                                             artifact_kind,
@@ -3290,20 +3316,42 @@ pub fn spawn_autonomous_loop(
                                             model_routes_v1,
                                             runtime_context_v1,
                                         ) {
-                                            crate::lived_state_witness::WitnessSubmitResultV1::Accepted => {},
+                                            crate::lived_state_witness::WitnessSubmitResultV1::Accepted => "accepted",
                                             crate::lived_state_witness::WitnessSubmitResultV1::QueueFull => {
                                                 warn!(
                                                     witness_id = authorship_v1.witness_id(),
                                                     "lived-state witness queue saturated; projector will record a capture integrity issue"
                                                 );
+                                                "queue_full"
                                             },
                                             crate::lived_state_witness::WitnessSubmitResultV1::Disconnected => {
                                                 warn!(
                                                     witness_id = authorship_v1.witness_id(),
                                                     "lived-state witness writer unavailable; projector will record a capture integrity issue"
                                                 );
+                                                "disconnected"
                                             },
                                         }
+                                    } else {
+                                        "not_attempted"
+                                    };
+                                    if artifact_kind == "introspection" && artifact_written {
+                                        next_action::introspection_cadence::mark_admitted(
+                                            &mut conv,
+                                            &artifact_path,
+                                            witness_outcome,
+                                        );
+                                    } else {
+                                        let failure_reason = if artifact_written {
+                                            format!("noncanonical_artifact:{artifact_kind}")
+                                        } else {
+                                            format!("artifact_write_failed:{artifact_kind}")
+                                        };
+                                        next_action::introspection_cadence::mark_failed(
+                                            &mut conv,
+                                            failure_reason,
+                                            artifact_written.then_some(artifact_path.as_path()),
+                                        );
                                     }
                                     if review_artifact_fulfills_invitation(
                                         artifact_kind,
@@ -3337,6 +3385,13 @@ pub fn spawn_autonomous_loop(
                                     )
                                 }
                                 None => {
+                                    let cadence_failure_reason = if introspect_notice.is_some() {
+                                        "target_or_source_unavailable"
+                                    } else if source_text.is_none() {
+                                        "source_read_failed"
+                                    } else {
+                                        "model_no_response"
+                                    };
                                     let (text, source) =
                                         introspect_notice.unwrap_or_else(|| {
                                             (
@@ -3371,8 +3426,9 @@ pub fn spawn_autonomous_loop(
                                         "=== ASTRID INTROSPECTION NOTICE ===\nSource: {source}\n{source_scope_header_v1}\nTimestamp: {ts}\nLived-state witness: {}\nFill: {fill_pct:.1}%\nArtifact kind: thin_introspection_output\nVisibility: protected\n\n{text}",
                                         authorship_v1.witness_id()
                                     );
+                                    let artifact_path = introspect_dir.join(&filename);
                                     let artifact_written = std::fs::write(
-                                        introspect_dir.join(&filename),
+                                        &artifact_path,
                                         artifact_bytes.as_bytes(),
                                     )
                                     .is_ok();
@@ -3396,6 +3452,15 @@ pub fn spawn_autonomous_loop(
                                             );
                                         }
                                     }
+                                    next_action::introspection_cadence::mark_failed(
+                                        &mut conv,
+                                        if artifact_written {
+                                            cadence_failure_reason.to_string()
+                                        } else {
+                                            format!("{cadence_failure_reason}:notice_write_failed")
+                                        },
+                                        artifact_written.then_some(artifact_path.as_path()),
+                                    );
                                     ("introspect_notice", text, source)
                                 }
                             }
@@ -4777,7 +4842,7 @@ pub fn spawn_autonomous_loop(
                             "Operator-authored protected action, separate from Astrid's response: {}",
                             operator_action
                         );
-                        let operator_outcome = handle_next_action(
+                        let operator_outcome = handle_operator_next_action(
                             &mut conv,
                             &operator_action,
                             NextActionContext {

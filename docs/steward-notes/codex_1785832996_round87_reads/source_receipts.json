@@ -1,0 +1,52 @@
+{
+  "schema": "steward_source_receipts_v1",
+  "receipts": [
+    {
+      "path": "docs/steward-notes/AI_BEINGS_BIDIRECTIONAL_CONTACT_AND_CORRESPONDENCE_ARCHITECTURE.md",
+      "lines": 1120,
+      "bytes": 64841,
+      "sha256": "4a881317fe978fdadb4e6df66044d90a91103e0aae635f7572246ec2df547f73",
+      "full_read": true,
+      "relationship": "exact_report_bound_source_complete_read"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/autonomous/correspondence_v1/relation_axes.rs",
+      "lines": 139,
+      "bytes": 4680,
+      "sha256": "82f94b761e1609e205360b9a79e7c1e2a60dcc1fabb084498167d418da703126",
+      "full_read": true,
+      "relationship": "runtime_relation_axes_and_exact_reply_chain_regression"
+    },
+    {
+      "path": "scripts/correspondence_relation_axes.py",
+      "lines": 95,
+      "bytes": 3355,
+      "sha256": "c2eefd4cd0d59ca2599190eafac78b613bb5249d2e3673ca861188420364459a",
+      "full_read": true,
+      "relationship": "independent_read_only_relation_axes_projector"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/autonomous/correspondence_v1.rs",
+      "sha256": "29c8e0b2cccd4bf6e29e196a15a08659d628765175cb4198bf6bb70fd29e2c2b",
+      "intervals": ["40-41", "80-86", "4000-4230", "5515-6005", "6570-6935"],
+      "relationship": "six_preview_shared_history_active_thread_clarity_and_affordance_budget_source"
+    },
+    {
+      "path": "scripts/affordance_landing_review.py",
+      "sha256": "c80a4e52a4141500de2505179661982a75129199d1735b3259e1f3bbe74bde62",
+      "relationship": "successful_read_only_live_affordance_exposure_observation"
+    },
+    {
+      "path": "scripts/correspondence_uptake_probe.py",
+      "sha256": "ec8f16567c16a15aa0452c630260cd4beb596c781c2c25902e516d66b977ccf6",
+      "relationship": "successful_read_only_live_continuity_and_relation_axes_observation"
+    },
+    {
+      "path": "scripts/correspondence_representation_density_audit.py",
+      "lines": 369,
+      "bytes": 14866,
+      "sha256": "3fdfd26ba10a3d07858a82482a2d68f2fa76455efa3c299ec3a731916e652cd9",
+      "relationship": "new_read_only_density_and_projection_visibility_audit"
+    }
+  ]
+}

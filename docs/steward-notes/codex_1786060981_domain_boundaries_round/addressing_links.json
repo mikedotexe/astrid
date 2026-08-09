@@ -1,0 +1,60 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1786053541",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/ws.rs;capsules/spectral-bridge/src/autonomous.rs;capsules/spectral-bridge/src/codec.rs;capsules/spectral-bridge/src/llm.rs;capsules/spectral-bridge/src/types.rs;capsules/spectral-bridge/src/action_continuity.rs",
+      "note": "Complete facade reads verify the named compatibility re-exports and current thin ownership boundary."
+    },
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1786053541",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/DOMAIN_BOUNDARIES.md",
+      "note": "The complete source records the behavior-preservation and authority boundary without serving as deployment proof."
+    },
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1786053541",
+      "claim_id": "c003",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1786060981_domain_boundaries_round/summaries/domain_boundaries_1786053541.md",
+      "note": "The exact facade and exception counts preserve exception creep as a bounded architectural watch."
+    },
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1786053541",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/authority_types.rs;capsules/spectral-bridge/src/witness/provenance.rs",
+      "note": "The interpretation type and dispatch signature are structurally incompatible."
+    },
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1786053541",
+      "claim_id": "c004",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/tests/provenance_typestate.rs;capsules/spectral-bridge/tests/ui/interpretation_cannot_dispatch.rs;docs/steward-notes/codex_1786060981_domain_boundaries_round/test_results.json",
+      "note": "The exact compile-fail barrier and all 12 provenance negative cases pass after refreshing five rustc 1.94 diagnostic snapshots."
+    },
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1786053541",
+      "claim_id": "c005",
+      "kind": "test",
+      "target": "docs/steward-notes/codex_1786060981_domain_boundaries_round/test_results.json",
+      "note": "The deterministic six-file line-count audit records exact counts and a passing 1,000-line threshold."
+    },
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1786053541",
+      "claim_id": "*",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "The Unreleased entry records the source-grounded audit, snapshot repair, tests, and unchanged live boundary."
+    },
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1786053541",
+      "claim_id": "*",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "The feedback ledger preserves Astrid's causal contribution and the exact authority boundary."
+    }
+  ]
+}

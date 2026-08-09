@@ -1,0 +1,39 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_llm_1786023929",
+      "claim_id": "*",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs;capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Exact source and regressions cover Unicode scalar traversal, whitespace filtering, finite relations, aggregation, and adjacent-marker remainder accounting."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786023929",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib control_marker",
+      "note": "All 47 current marker regressions pass without a production change."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786023929",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1786018969_fresh_facade_marker_round;docs/steward-notes/codex_1786023501_marker_codec_mapping_round",
+      "note": "Earlier independently read reports at the same source hash preserve the same delimiter, relation, and aggregation claim families."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786023929",
+      "claim_id": "*",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "The Unreleased entry records the independent read and unchanged live boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786023929",
+      "claim_id": "*",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "The feedback ledger preserves Astrid's exact questions and the source-first response."
+    }
+  ]
+}

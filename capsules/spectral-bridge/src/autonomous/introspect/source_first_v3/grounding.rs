@@ -35,6 +35,7 @@ const SOURCE_ATTRIBUTION_MARKERS: &[&str] = &[
     "source establishes",
     "source code establishes",
     "code establishes",
+    "in the source code `",
     "source shows",
     "code shows",
     "source contains",
@@ -47,6 +48,24 @@ const SOURCE_ATTRIBUTION_MARKERS: &[&str] = &[
     "code implements",
     "source declares",
     "code declares",
+    "the source code `",
+    "thing i notice is the",
+    " is instantiated",
+    "i can see the ",
+    "i also see the `",
+    "code identifies",
+    "in the source,",
+    "file defines",
+    "file establishes",
+    "file describes",
+    "file labels",
+    "documentation defines",
+    "documentation establishes",
+    "documentation describes",
+    "documentation labels",
+    "code describes",
+    "code labels",
+    "i see the definition of",
     " defines `",
     " defines the `",
     "i see the `",
@@ -165,26 +184,44 @@ fn challenge_claim(
                 }
             },
             (ClaimKindV2::SourceAttribution, Some(source)) => {
+                let requires_included_bytes = source_attribution_requires_included_bytes(claim);
                 let unsupported = identifiers
                     .iter()
                     .filter(|identifier| {
-                        !source_attribution_supported(identifier, source, evidence)
+                        !source_attribution_supported(
+                            identifier,
+                            source,
+                            evidence,
+                            requires_included_bytes,
+                        )
                     })
                     .cloned()
                     .collect::<Vec<_>>();
                 if unsupported.is_empty() {
                     (
                         ClaimSupportStateV2::Supported,
-                        "every named identifier is present in included source bytes or the whole-source structural map"
-                            .to_string(),
+                        if requires_included_bytes {
+                            "every named identifier is present in the included source bytes named by the claim"
+                                .to_string()
+                        } else {
+                            "every named identifier is present in included source bytes or the whole-source structural map"
+                                .to_string()
+                        },
                     )
                 } else {
                     (
                         ClaimSupportStateV2::Rejected,
-                        format!(
-                            "named identifiers lack included-byte or structural-map support: {}",
-                            unsupported.join(", ")
-                        ),
+                        if requires_included_bytes {
+                            format!(
+                                "named identifiers lack included-byte support for the source window asserted by the claim: {}",
+                                unsupported.join(", ")
+                            )
+                        } else {
+                            format!(
+                                "named identifiers lack included-byte or structural-map support: {}",
+                                unsupported.join(", ")
+                            )
+                        },
                     )
                 }
             },
@@ -253,6 +290,7 @@ fn source_attribution_supported(
     identifier: &str,
     source: &str,
     evidence: &SourceEvidenceV3,
+    requires_included_bytes: bool,
 ) -> bool {
     let lines = token_lines(source, identifier);
     if lines.is_empty() {
@@ -266,11 +304,40 @@ fn source_attribution_supported(
             .any(|interval| interval.contains_line(*line))
     });
     included
-        || evidence
-            .source_map_v3
-            .entries
-            .iter()
-            .any(|entry| entry.label == identifier)
+        || (!requires_included_bytes
+            && evidence
+                .source_map_v3
+                .entries
+                .iter()
+                .any(|entry| entry.label == identifier))
+}
+
+fn source_attribution_requires_included_bytes(claim: &str) -> bool {
+    let lower = claim.to_ascii_lowercase();
+    lower.contains("source window")
+        || lower.contains("included source")
+        || lower.contains("included lines")
+        || lower.contains("early on")
+        || (lower.contains("first ") && lower.contains(" lines"))
+        || (lower.contains("initial ") && lower.contains(" lines"))
+        || contains_numbered_line_window(&lower)
+}
+
+fn contains_numbered_line_window(value: &str) -> bool {
+    value.match_indices("lines ").any(|(start, _)| {
+        let tail = &value[start + "lines ".len()..];
+        let start_digits = tail.bytes().take_while(u8::is_ascii_digit).count();
+        if start_digits == 0 {
+            return false;
+        }
+        let Some(after_dash) = tail[start_digits..].strip_prefix('-') else {
+            return false;
+        };
+        after_dash
+            .as_bytes()
+            .first()
+            .is_some_and(u8::is_ascii_digit)
+    })
 }
 
 fn backticked_identifiers(response: &str) -> Vec<String> {

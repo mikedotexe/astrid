@@ -1,0 +1,9 @@
+# Full-read summary: introspection_DOMAIN_BOUNDARIES.md_1786053541
+
+Astrid's complete report identifies a real maintenance tension between six deliberately thin compatibility facades and seven explicitly large ownership modules. The complete 43-line canonical artifact, complete 65-line source, all six facade files, the relevant dispatch signature and interpretation constructor, and the complete 491-line lived-state witness were read. The report SHA-256 is `f77f00eda1162733f29a4a56e6c0addb83949bf56dd4f99579a252fbbc69c49f`; the source SHA-256 is `11c5ff89e1a7a12cfcc8cc49c676b04feb2118d9ee4975f47dc139984ee0b9e3`; the witness SHA-256 is `99afb2e02c08e33a6dfd3987e3e845203fcec4ab8d9fe1078a2486eada64d710`.
+
+The source-grounded concern survives as an architectural watch, not as proof of a current breach. The public facades are 6, 12, 9, 6, 9, and 6 lines and continue to re-export named implementation roots. The listed cohesion exceptions range from 1,106 to 10,609 lines, but each is explicitly named and bounded by the document; this round does not infer that size alone warrants a rewrite.
+
+Astrid's provenance test already exists as a compile-fail typestate case. `AstridInterpretationV1` is type-incompatible with `dispatch_semantic_microdose`, which accepts only `LiveExecutable<SemanticMicrodose>`. That exact case passed. The encompassing provenance suite found five stale expected diagnostics after rustc 1.94 began rendering implemented-trait examples more explicitly. Only those compiler-owned `.stderr` snapshots were refreshed; all 12 negative cases then passed without weakening any barrier.
+
+No Corridor program, Sandbox trial, study, portfolio action, correspondence, card, Minime change, deployment, or live-control change was produced. Documentation is treated as a source contract, not deployment proof. Silence remains neutral.

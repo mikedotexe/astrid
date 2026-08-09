@@ -1,0 +1,25 @@
+{
+  "reader": "codex-heartbeat",
+  "run_id": "run_1786103946955341000_710d923a6e",
+  "selected_limit": 40,
+  "processed_report_count": 1,
+  "depth_stop": "the queue-head regulator report required a complete 2,220-line gateway-and-child-module read, a complete 456-line witness read, two exact Minime regressions, and cross-repository evidence alignment; the next dialogue report is reserved for a separate complete source-first run",
+  "reads": [
+    {
+      "introspection_id": "introspection_minime_regulator_1785629184",
+      "reader": "codex-heartbeat",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_minime_regulator_1785629184.txt",
+      "sha256": "f7c527e1d63e95686b979018e16d0f60694b6c841d9eb1534402eb73e497ffcf",
+      "displayed_lines": 35,
+      "newline_count": 34,
+      "bytes": 3469,
+      "captured_source_sha256": "46828f4c813eb88aae30212793f698285c696c108dd405604ffb6b5129827d97",
+      "captured_source_window": "complete 24-line file",
+      "complete_source_family_lines": 2220,
+      "complete_source_family_bytes": 84574,
+      "lived_state_witness_id": "lsw_e2f9fbad2d6c657f12f1cf3e90d7de62d363490d597c5a51f26e454fca6a61ab",
+      "summary_file": "summaries/regulator_1785629184.md",
+      "claims_file": "claims/regulator_1785629184.json"
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "schema": "steward_deployment_alignment_v1",
+  "live_consumed_bridge_source_changed": false,
+  "standalone_read_only_audit_added": true,
+  "restart_required": false,
+  "deployment_required": false,
+  "deployment_performed": false,
+  "minime_changed": false,
+  "cpu_runtime_changed": false,
+  "correspondence_dispatched": false,
+  "note": "The new script reads public durable correspondence evidence only. Existing chamber artifacts were observed without mutation; no service alignment is required."
+}

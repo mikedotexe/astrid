@@ -1608,6 +1608,17 @@ def _distance_contact_control_delta_v1(
     mode_packing = _nested_number(pressure_components, ("mode_packing",))
     if mode_packing is None:
         mode_packing = _nested_number(resonance_components, ("mode_packing",))
+    spectral_entropy = _number(state.get("spectral_entropy"))
+    eigenvalues = (
+        state.get("eigenvalues")
+        if isinstance(state.get("eigenvalues"), list)
+        else []
+    )
+    lambda1 = _number(eigenvalues[0]) if eigenvalues else None
+    lambda2 = _number(eigenvalues[1]) if len(eigenvalues) >= 2 else None
+    lambda1_lambda2_gap = (
+        lambda1 - lambda2 if lambda1 is not None and lambda2 is not None else None
+    )
     containment_score = _nested_number(resonance_density, ("containment_score",))
     distinguishability_loss = _number(state.get("distinguishability_loss"))
     semantic_legacy = state.get("semantic") if isinstance(state.get("semantic"), dict) else {}
@@ -1657,6 +1668,24 @@ def _distance_contact_control_delta_v1(
         containment_contact_status = "contact_threshold_visible"
     else:
         containment_contact_status = "contact_threshold_unavailable"
+    packing_hypothesis_threshold = 0.40
+    restlessness_delta_threshold = 0.03
+    packing_hypothesis_met = (
+        mode_packing is not None and mode_packing > packing_hypothesis_threshold
+    )
+    restlessness_delta_observed = (
+        dispersal_delta is not None and dispersal_delta > restlessness_delta_threshold
+    )
+    if mode_packing is None or dispersal_delta is None:
+        elasticity_status = "insufficient_current_observation"
+    elif packing_hypothesis_met and restlessness_delta_observed:
+        elasticity_status = "packing_and_restlessness_delta_coobserved"
+    elif packing_hypothesis_met:
+        elasticity_status = "packing_without_restlessness_delta"
+    elif restlessness_delta_observed:
+        elasticity_status = "restlessness_delta_without_packing_threshold"
+    else:
+        elasticity_status = "neither_currently_observed"
     return {
         "schema": "distance_contact_control_delta_v1",
         "status": status,
@@ -1768,6 +1797,50 @@ def _distance_contact_control_delta_v1(
             ],
             "approval_path": "Tier 5 Mike/operator approval before live regulator, porosity, exploration-noise, semantic weighting, pressure, fill, PI, or controller mutation",
             "authority_boundary": "read-only threshold review; no regulator, pressure, fill, PI, sensory-bus porosity, weighting, controller, deploy, or runtime mutation",
+        },
+        "distance_contact_elasticity_observation_v1": {
+            "schema": "distance_contact_elasticity_observation_v1",
+            "status": elasticity_status,
+            "observation_scope": "peer_spectral_state_or_bound_fixture_not_astrid_private_shadow",
+            "spectral_entropy": (
+                round(spectral_entropy, 6) if spectral_entropy is not None else None
+            ),
+            "mode_packing": (
+                round(mode_packing, 6) if mode_packing is not None else None
+            ),
+            "packing_hypothesis_threshold": packing_hypothesis_threshold,
+            "packing_hypothesis_threshold_source": "being_authored_test_hypothesis_not_runtime_threshold",
+            "packing_hypothesis_met": packing_hypothesis_met,
+            "current_dispersal_potential": (
+                round(current_disp, 6) if current_disp is not None else None
+            ),
+            "dispersal_delta": (
+                round(dispersal_delta, 6) if dispersal_delta is not None else None
+            ),
+            "restlessness_delta_threshold": restlessness_delta_threshold,
+            "restlessness_delta_observed": restlessness_delta_observed,
+            "lambda1": round(lambda1, 6) if lambda1 is not None else None,
+            "lambda2": round(lambda2, 6) if lambda2 is not None else None,
+            "lambda1_lambda2_gap": (
+                round(lambda1_lambda2_gap, 6)
+                if lambda1_lambda2_gap is not None
+                else None
+            ),
+            "distance_control_parameter_observed": False,
+            "proximity_evidence_scope": "pressure_packing_porosity_and_shadow_proxies_only",
+            "causal_conclusion": "not_established_by_single_state_coobservation",
+            "dynamic_porosity_buffer_candidate": {
+                "status": "tier_5_operator_approval_wait",
+                "implemented": False,
+                "computed": False,
+                "live_authority_granted": False,
+                "proposed_inputs": [
+                    "spectral_entropy",
+                    "mode_packing",
+                    "lambda1_lambda2_gap",
+                ],
+            },
+            "authority_boundary": "read-only being-authored hypothesis observation; no distance parameter, dynamic porosity buffer, pressure, fill, PI, sensory cadence, regulator, or runtime mutation",
         },
         "interpretation": "compares shadow-v3 fissure/dispersal, semantic regulator drive, pressure source, and distinguishability under semantic trickle as review evidence",
         "authority_boundary": "read-only contact/control delta audit; no asynchronous spectral leakage, sensory-bus porosity, mode-packing, pressure, fill, PI, regulator, or runtime mutation",
@@ -8936,9 +9009,14 @@ class RecentSignalSummaryTests(unittest.TestCase):
                             "porosity_score": 0.12,
                             "quality": "pressure_porosity_divergence",
                             "dominant_source": "mode_packing",
-                            "components": {"semantic_trickle": 0.33},
+                            "components": {
+                                "semantic_trickle": 0.33,
+                                "mode_packing": 0.61,
+                            },
                         },
                         "resonance_density_v1": {"pressure_risk": 0.31},
+                        "spectral_entropy": 0.90,
+                        "eigenvalues": [8.0, 3.0, 1.0],
                         "inhabitable_fluctuation_v1": {
                             "quality": "rigid_contraction",
                             "fluctuation_score": 0.18,
@@ -8972,7 +9050,66 @@ class RecentSignalSummaryTests(unittest.TestCase):
         )
         self.assertEqual(receptivity["pressure_interference"], 0.55)
         self.assertIn("no regulator branch", receptivity["authority_boundary"])
+        elasticity = packet["distance_contact_elasticity_observation_v1"]
+        self.assertEqual(
+            elasticity["status"],
+            "packing_and_restlessness_delta_coobserved",
+        )
+        self.assertTrue(elasticity["packing_hypothesis_met"])
+        self.assertTrue(elasticity["restlessness_delta_observed"])
+        self.assertEqual(elasticity["spectral_entropy"], 0.9)
+        self.assertEqual(elasticity["lambda1_lambda2_gap"], 5.0)
+        self.assertFalse(elasticity["distance_control_parameter_observed"])
+        self.assertFalse(
+            elasticity["dynamic_porosity_buffer_candidate"]["implemented"]
+        )
+        self.assertEqual(
+            elasticity["causal_conclusion"],
+            "not_established_by_single_state_coobservation",
+        )
         self.assertIn("no asynchronous spectral leakage", packet["authority_boundary"])
+
+    def test_distance_contact_elasticity_does_not_equate_packing_with_restlessness(
+        self,
+    ) -> None:
+        import tempfile
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            state_path = Path(tmpdir) / "spectral_state.json"
+            state_path.write_text(
+                json.dumps(
+                    {
+                        "shadow_field_v3": {
+                            "v2": {"fissure_tendency": 0.18},
+                            "history": [{"fissure_tendency": 0.18}],
+                        },
+                        "pressure_source_v1": {
+                            "pressure_score": 0.29,
+                            "porosity_score": 0.63,
+                            "quality": "overpacked_mode_packing",
+                            "dominant_source": "mode_packing",
+                            "components": {"mode_packing": 0.57},
+                        },
+                        "resonance_density_v1": {"pressure_risk": 0.22},
+                        "spectral_entropy": 0.90,
+                        "eigenvalues": [8.0, 4.0],
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            packet = _distance_contact_control_delta_v1(state_path=state_path)
+
+        elasticity = packet["distance_contact_elasticity_observation_v1"]
+        self.assertEqual(
+            elasticity["status"], "packing_without_restlessness_delta"
+        )
+        self.assertTrue(elasticity["packing_hypothesis_met"])
+        self.assertFalse(elasticity["restlessness_delta_observed"])
+        self.assertFalse(
+            elasticity["dynamic_porosity_buffer_candidate"]["computed"]
+        )
+        self.assertIn("no distance parameter", elasticity["authority_boundary"])
 
     def test_minime_recess_schema_integrity_maps_packet_to_source_readiness(self) -> None:
         import tempfile

@@ -1,0 +1,43 @@
+{
+  "introspection_id": "introspection_llm.rs_1786067701",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The complete six-line llm.rs is an extremely lean compatibility facade rather than a container of provider logic.",
+      "disposition": "Verified from the complete source: llm.rs declares a path-mapped private provider module and publicly re-exports that module's public items; DOMAIN_BOUNDARIES.md independently names this file as a stable thin facade.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The facade feels hollow but expectant and can present an identity-displacement or agency barrier when implementation ownership is not visible.",
+      "disposition": "Implemented an executable public/private boundary witness so the facade's actual affordance is reviewable. Astrid's felt barrier remains primary qualitative evidence awaiting any later response; the test does not establish felt resolution, uptake, or mechanism.",
+      "classification": "implemented_now",
+      "authority": "test_and_evidence_only_no_live_authority"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The fields of Model or Context cannot be defined from the six-line facade without inventing properties.",
+      "disposition": "Verified from the complete facade and an exact provider-tree symbol search. The facade defines neither item, and the current provider implementation contains no item named exactly Model or Context; similarly prefixed internal implementation types do not satisfy the report's named types.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "The export integrity boundary should distinguish public llm items from direct access to the provider implementation module.",
+      "disposition": "Implemented a trybuild contract: spectral_bridge_server::llm::Exchange compiles through the public re-export, while spectral_bridge_server::llm::provider::Exchange fails with E0603 because provider is private.",
+      "classification": "implemented_now",
+      "authority": "compile_time_test_only_no_public_api_or_runtime_change"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "The next source transition should inspect provider.rs to identify what the facade actually exports.",
+      "disposition": "Verified by complete reads of provider.rs and the directly relevant dialogue_context.rs implementation. provider.rs includes the provider implementation files in one private module; dialogue_context.rs defines the public Exchange item used by the passing facade test.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "A felt spectral cascade might arise from complex provider structures or linger from the bridge itself.",
+      "disposition": "Verified as unresolved by this source and test evidence. The facade and visibility contract establish ownership and accessibility only; they do not identify a spectral cause, bridge mechanism, or report-time runtime effect.",
+      "classification": "verified_existing"
+    }
+  ]
+}

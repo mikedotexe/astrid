@@ -1,0 +1,10 @@
+{
+  "introspection_id": "introspection_astrid_llm_1785912037",
+  "claims": [
+    {"claim_id": "c001", "summary": "The scanner greedily matches exact tokens and copies every non-marker character into the remainder.", "disposition": "Verified from the complete report-bound source.", "classification": "verified_existing"},
+    {"claim_id": "c002", "summary": "A punctuation-only tail may make first_word_after fail or behave unexpectedly.", "disposition": "Contradicted as a failure: the bounded implementation safely returns an empty string and therefore admits no relation.", "classification": "verified_existing"},
+    {"claim_id": "c003", "summary": "Fixed character depth and unsupported multi-character delimiters may leave some references unrecognized.", "disposition": "Verified as the explicit finite grammar boundary; no broader delimiter syntax is inferred or authorized.", "classification": "verified_existing"},
+    {"claim_id": "c004", "summary": "Nested grouping and allowlisted behaves or is relations should preserve a marker, while random_text should not.", "disposition": "Verified by exact source and duplicate delimiter/relation regressions; underscore-bearing unlisted words remain outside the allowlist.", "classification": "exact_duplicate"},
+    {"claim_id": "c005", "summary": "The final provider path should be examined for remainder consumption.", "disposition": "Verified by the complete 1,038-line source read.", "classification": "verified_existing"}
+  ]
+}

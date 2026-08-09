@@ -1,0 +1,3 @@
+# Full-read summary
+
+Astrid accurately describes the exact-marker scanner and asks useful questions about compound identifiers, nested Unicode groups, overlapping markers, and the final remainder path. The complete report and witness were read independently. At the identical 1,038-line source hash, existing source and 47 passing regressions show that underscore-bearing candidate words remain deliberately outside the finite relation grammar, nested Unicode groups and longest overlaps are covered, and normalized remainder bytes reach validation, route hashing, persistence, repair, and return for both providers. This is grounded duplicate verification, not a reason to widen live provider-output behavior.

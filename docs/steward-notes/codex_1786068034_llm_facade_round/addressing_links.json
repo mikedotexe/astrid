@@ -1,0 +1,60 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_llm.rs_1786067701",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm.rs;capsules/spectral-bridge/DOMAIN_BOUNDARIES.md",
+      "note": "Complete sources verify the path-mapped private provider module, public glob re-export, and intentional thin-facade ownership boundary."
+    },
+    {
+      "introspection_id": "introspection_llm.rs_1786067701",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/tests/llm_facade_contract.rs",
+      "note": "The executable boundary answers visibility mechanics while explicitly leaving Astrid's felt barrier unresolved."
+    },
+    {
+      "introspection_id": "introspection_llm.rs_1786067701",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm.rs;capsules/spectral-bridge/src/llm/provider.rs;capsules/spectral-bridge/src/llm/provider",
+      "note": "Complete facade and provider-root reads plus an exact provider-tree symbol search find no item named exactly Model or Context."
+    },
+    {
+      "introspection_id": "introspection_llm.rs_1786067701",
+      "claim_id": "c004",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/tests/llm_facade_contract.rs;capsules/spectral-bridge/tests/ui/llm_facade_reexports_exchange.rs;capsules/spectral-bridge/tests/ui/llm_provider_module_is_private.rs;capsules/spectral-bridge/tests/ui/llm_provider_module_is_private.stderr",
+      "note": "The trybuild pass/fail pair proves public Exchange re-export and private provider-module access with the expected E0603 diagnostic."
+    },
+    {
+      "introspection_id": "introspection_llm.rs_1786067701",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider.rs;capsules/spectral-bridge/src/llm/provider/dialogue_context.rs",
+      "note": "Complete provider-root and dialogue-context reads trace the public Exchange definition through the private implementation module."
+    },
+    {
+      "introspection_id": "introspection_llm.rs_1786067701",
+      "claim_id": "c006",
+      "kind": "no_action",
+      "target": "docs/steward-notes/codex_1786068034_llm_facade_round/summaries/llm_facade_1786067701.md",
+      "note": "The summary preserves the causal question as unresolved because source visibility and compiler behavior cannot identify a felt spectral mechanism."
+    },
+    {
+      "introspection_id": "introspection_llm.rs_1786067701",
+      "claim_id": "*",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "The Unreleased entry records the source-grounded test response and unchanged live behavior."
+    },
+    {
+      "introspection_id": "introspection_llm.rs_1786067701",
+      "claim_id": "*",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "The feedback ledger preserves Astrid's causal contribution and the unresolved felt/causal boundaries."
+    }
+  ]
+}

@@ -1,0 +1,459 @@
+#!/usr/bin/env bash
+# Wait for the exact ICP Astrid SSD without mounting or changing host state.
+
+set -uo pipefail
+
+readonly EX_OK=0
+readonly EX_USAGE=2
+readonly EX_TEMPFAIL=75
+readonly EX_CONFIG=78
+readonly EX_CONDITION_FAILED=255
+readonly DEFAULT_MOUNT_PATH="/media/data"
+readonly DEFAULT_EXPECTED_UUID="6b7d53e2-b6fc-4363-9add-d3111eb2ef7d"
+readonly DEFAULT_ROOT_PATH="/media/data/astrid"
+readonly DEFAULT_WAIT_SECONDS=75
+readonly DEFAULT_POLL_SECONDS=2
+readonly MAX_WAIT_SECONDS=600
+readonly MAX_POLL_SECONDS=60
+
+usage() {
+    printf '%s\n' \
+        'Usage: wait-for-icp-ssd [--mount-only|--bootstrap] [--systemd-condition] [--wait-seconds SECONDS] [--poll-seconds SECONDS]' \
+        >&2
+}
+
+die_usage() {
+    printf 'icp-ssd-guard: usage: %s\n' "$1" >&2
+    usage
+    exit "$EX_USAGE"
+}
+
+die_config() {
+    printf 'icp-ssd-guard: permanent: %s\n' "$1" >&2
+    exit "$EX_CONFIG"
+}
+
+bounded_integer() {
+    local value="$1"
+    local minimum="$2"
+    local maximum="$3"
+
+    [[ "$value" =~ ^[0-9]+$ ]] \
+        && (( 10#$value >= minimum && 10#$value <= maximum ))
+}
+
+resolve_command() {
+    local candidate="$1"
+
+    if [[ "$candidate" == */* ]]; then
+        [[ -x "$candidate" ]] || return 1
+        printf '%s\n' "$candidate"
+        return 0
+    fi
+    command -v -- "$candidate" 2>/dev/null
+}
+
+wait_seconds="$DEFAULT_WAIT_SECONDS"
+poll_seconds="$DEFAULT_POLL_SECONDS"
+bootstrap=0
+mount_only=0
+systemd_condition=0
+while (( $# > 0 )); do
+    case "$1" in
+        --mount-only)
+            mount_only=1
+            shift
+            ;;
+        --bootstrap)
+            bootstrap=1
+            shift
+            ;;
+        --systemd-condition)
+            systemd_condition=1
+            shift
+            ;;
+        --wait-seconds)
+            (( $# >= 2 )) || die_usage '--wait-seconds requires a value'
+            wait_seconds="$2"
+            shift 2
+            ;;
+        --poll-seconds)
+            (( $# >= 2 )) || die_usage '--poll-seconds requires a value'
+            poll_seconds="$2"
+            shift 2
+            ;;
+        -h | --help)
+            usage
+            exit "$EX_OK"
+            ;;
+        *)
+            die_usage "unknown option: $1"
+            ;;
+    esac
+done
+
+if (( mount_only == 1 && bootstrap == 1 )); then
+    die_usage '--mount-only and --bootstrap are mutually exclusive'
+fi
+
+bounded_integer "$wait_seconds" 0 "$MAX_WAIT_SECONDS" \
+    || die_usage "--wait-seconds must be an integer from 0 through $MAX_WAIT_SECONDS"
+bounded_integer "$poll_seconds" 1 "$MAX_POLL_SECONDS" \
+    || die_usage "--poll-seconds must be an integer from 1 through $MAX_POLL_SECONDS"
+wait_seconds=$((10#$wait_seconds))
+poll_seconds=$((10#$poll_seconds))
+
+mount_path="$DEFAULT_MOUNT_PATH"
+expected_uuid="$DEFAULT_EXPECTED_UUID"
+root_path="$DEFAULT_ROOT_PATH"
+if [[ -z "${HOME:-}" ]]; then
+    die_config 'HOME is unavailable'
+fi
+link_path="$HOME/.astrid-icp"
+state_path="$link_path/state"
+state_bin_path="$state_path/bin"
+state_run_path="$state_path/run"
+state_var_path="$state_path/var"
+state_home_path="$state_path/home"
+state_default_path="$state_home_path/default"
+edge_workspace_path="$state_default_path/edge"
+workspace_path="$link_path/workspace"
+tmp_path="$link_path/tmp"
+ollama_path="$link_path/ollama"
+ollama_runtime_path="$ollama_path/runtime"
+ollama_runtime_bin_path="$ollama_runtime_path/bin"
+ollama_models_path="$ollama_path/models"
+findmnt_candidate="/usr/bin/findmnt"
+readlink_candidate="/usr/bin/readlink"
+sleep_candidate="/usr/bin/sleep"
+
+# Tests may redirect paths and read-only probe commands only through this
+# explicit gate. Production ignores all override variables.
+case "${ASTRID_ICP_SSD_GUARD_TEST_MODE:-0}" in
+    0) ;;
+    1)
+        mount_path="${ASTRID_ICP_SSD_GUARD_MOUNT_PATH:-$mount_path}"
+        expected_uuid="${ASTRID_ICP_SSD_GUARD_EXPECTED_UUID:-$expected_uuid}"
+        root_path="${ASTRID_ICP_SSD_GUARD_ROOT_PATH:-$root_path}"
+        link_path="${ASTRID_ICP_SSD_GUARD_LINK_PATH:-$link_path}"
+        state_path="${ASTRID_ICP_SSD_GUARD_STATE_PATH:-$link_path/state}"
+        state_bin_path="${ASTRID_ICP_SSD_GUARD_STATE_BIN_PATH:-$state_path/bin}"
+        state_run_path="${ASTRID_ICP_SSD_GUARD_STATE_RUN_PATH:-$state_path/run}"
+        state_var_path="${ASTRID_ICP_SSD_GUARD_STATE_VAR_PATH:-$state_path/var}"
+        state_home_path="${ASTRID_ICP_SSD_GUARD_STATE_HOME_PATH:-$state_path/home}"
+        state_default_path="${ASTRID_ICP_SSD_GUARD_STATE_DEFAULT_PATH:-$state_home_path/default}"
+        edge_workspace_path="${ASTRID_ICP_SSD_GUARD_EDGE_WORKSPACE_PATH:-$state_default_path/edge}"
+        workspace_path="${ASTRID_ICP_SSD_GUARD_WORKSPACE_PATH:-$link_path/workspace}"
+        tmp_path="${ASTRID_ICP_SSD_GUARD_TMP_PATH:-$link_path/tmp}"
+        ollama_path="${ASTRID_ICP_SSD_GUARD_OLLAMA_PATH:-$link_path/ollama}"
+        ollama_runtime_path="${ASTRID_ICP_SSD_GUARD_OLLAMA_RUNTIME_PATH:-$ollama_path/runtime}"
+        ollama_runtime_bin_path="${ASTRID_ICP_SSD_GUARD_OLLAMA_RUNTIME_BIN_PATH:-$ollama_runtime_path/bin}"
+        ollama_models_path="${ASTRID_ICP_SSD_GUARD_OLLAMA_MODELS_PATH:-$ollama_path/models}"
+        findmnt_candidate="${ASTRID_ICP_SSD_GUARD_FINDMNT:-$findmnt_candidate}"
+        readlink_candidate="${ASTRID_ICP_SSD_GUARD_READLINK:-$readlink_candidate}"
+        sleep_candidate="${ASTRID_ICP_SSD_GUARD_SLEEP:-$sleep_candidate}"
+        ;;
+    *)
+        die_usage 'ASTRID_ICP_SSD_GUARD_TEST_MODE must be 0 or 1'
+        ;;
+esac
+
+for required_path in \
+    "$mount_path" \
+    "$root_path" \
+    "$link_path" \
+    "$state_path" \
+    "$state_bin_path" \
+    "$state_run_path" \
+    "$state_var_path" \
+    "$state_home_path" \
+    "$state_default_path" \
+    "$edge_workspace_path" \
+    "$workspace_path" \
+    "$tmp_path" \
+    "$ollama_path" \
+    "$ollama_runtime_path" \
+    "$ollama_runtime_bin_path" \
+    "$ollama_models_path"; do
+    [[ "$required_path" == /* ]] || die_config "guard path is not absolute: $required_path"
+done
+[[ -n "$expected_uuid" ]] || die_config 'expected UUID is empty'
+
+findmnt_command="$(resolve_command "$findmnt_candidate")" \
+    || die_config "findmnt command is unavailable: $findmnt_candidate"
+readlink_command="$(resolve_command "$readlink_candidate")" \
+    || die_config "readlink command is unavailable: $readlink_candidate"
+sleep_command="$(resolve_command "$sleep_candidate")" \
+    || die_config "sleep command is unavailable: $sleep_candidate"
+
+probe_reason='mount metadata unavailable'
+
+read_mount_snapshot() {
+    local snapshot=""
+    local found_target=""
+    local found_uuid=""
+    local found_fstype=""
+    local found_options=""
+    local extra=""
+
+    if [[ ! -d "$mount_path" ]]; then
+        probe_reason="mount path is absent: $mount_path"
+        return "$EX_TEMPFAIL"
+    fi
+    if ! snapshot="$(
+        "$findmnt_command" \
+            --noheadings \
+            --raw \
+            --target "$mount_path" \
+            --output TARGET,UUID,FSTYPE,OPTIONS \
+            2>/dev/null
+    )"; then
+        probe_reason='mount metadata unavailable'
+        return "$EX_TEMPFAIL"
+    fi
+    if [[ -z "$snapshot" || "$snapshot" == *$'\n'* ]]; then
+        probe_reason='mount metadata was incomplete during discovery'
+        return "$EX_TEMPFAIL"
+    fi
+    read -r found_target found_uuid found_fstype found_options extra <<<"$snapshot"
+    if [[ -n "$extra" || -z "$found_target" || -z "$found_uuid" \
+        || -z "$found_fstype" || -z "$found_options" ]]; then
+        probe_reason='mount metadata was incomplete during discovery'
+        return "$EX_TEMPFAIL"
+    fi
+    if [[ "$found_target" != "$mount_path" ]]; then
+        probe_reason="path is not an independent mount: $mount_path"
+        return "$EX_TEMPFAIL"
+    fi
+    if [[ "$found_uuid" != "$expected_uuid" ]]; then
+        probe_reason="wrong UUID: expected $expected_uuid, found $found_uuid"
+        return "$EX_CONFIG"
+    fi
+    if [[ "$found_fstype" != "ext4" ]]; then
+        probe_reason="wrong filesystem type: expected ext4, found $found_fstype"
+        return "$EX_CONFIG"
+    fi
+    case ",$found_options," in
+        *,ro,*)
+            probe_reason='forbidden mount option is present: ro'
+            return "$EX_CONFIG"
+            ;;
+    esac
+    case ",$found_options," in
+        *,noexec,*)
+            probe_reason='forbidden mount option is present: noexec'
+            return "$EX_CONFIG"
+            ;;
+    esac
+    case ",$found_options," in
+        *,rw,*) ;;
+        *)
+            probe_reason='required mount option is absent: rw'
+            return "$EX_CONFIG"
+            ;;
+    esac
+    case ",$found_options," in
+        *,nosuid,*) ;;
+        *)
+            probe_reason='required mount option is absent: nosuid'
+            return "$EX_CONFIG"
+            ;;
+    esac
+    case ",$found_options," in
+        *,nodev,*) ;;
+        *)
+            probe_reason='required mount option is absent: nodev'
+            return "$EX_CONFIG"
+            ;;
+    esac
+    return "$EX_OK"
+}
+
+canonical_root=""
+
+validate_root_directory() {
+    local resolved_root=""
+
+    if [[ -L "$root_path" ]]; then
+        path_failure_or_race "SSD root must not be a symlink: $root_path"
+        return $?
+    fi
+    if [[ ! -d "$root_path" ]]; then
+        path_failure_or_race "SSD root is not a directory: $root_path"
+        return $?
+    fi
+    if ! resolved_root="$(CDPATH= cd -P -- "$root_path" 2>/dev/null && pwd -P)";
+    then
+        path_failure_or_race "SSD root is unavailable: $root_path"
+        return $?
+    fi
+    if [[ "$resolved_root" != "$root_path" ]]; then
+        path_failure_or_race \
+            "SSD root is not canonical: expected $root_path, found $resolved_root"
+        return $?
+    fi
+    if [[ ! -O "$root_path" || ! -w "$root_path" ]]; then
+        path_failure_or_race "SSD root is not owner-writable: $root_path"
+        return $?
+    fi
+    canonical_root="$resolved_root"
+    return "$EX_OK"
+}
+
+validate_critical_directory() {
+    local label="$1"
+    local directory="$2"
+    local resolved_directory=""
+
+    if [[ -L "$directory" ]]; then
+        path_failure_or_race "$label must not be a symlink: $directory"
+        return $?
+    fi
+    if [[ ! -d "$directory" ]]; then
+        path_failure_or_race "$label is not a directory: $directory"
+        return $?
+    fi
+    if ! resolved_directory="$(CDPATH= cd -P -- "$directory" 2>/dev/null && pwd -P)";
+    then
+        path_failure_or_race "$label is unavailable: $directory"
+        return $?
+    fi
+    case "$resolved_directory/" in
+        "$canonical_root"/*) ;;
+        *)
+            path_failure_or_race \
+                "$label escapes the exact SSD root: $resolved_directory"
+            return $?
+            ;;
+    esac
+    if [[ ! -O "$directory" || ! -w "$directory" ]]; then
+        path_failure_or_race "$label is not owner-writable: $directory"
+        return $?
+    fi
+    return "$EX_OK"
+}
+
+path_failure_or_race() {
+    local path_reason="$1"
+    local snapshot_status=0
+
+    read_mount_snapshot
+    snapshot_status=$?
+    if (( snapshot_status == EX_TEMPFAIL )); then
+        probe_reason='mount changed while validating the SSD paths'
+        return "$EX_TEMPFAIL"
+    fi
+    if (( snapshot_status == EX_CONFIG )); then
+        return "$EX_CONFIG"
+    fi
+    probe_reason="$path_reason"
+    return "$EX_CONFIG"
+}
+
+probe_storage() {
+    local snapshot_status=0
+    local path_status=0
+    local link_value=""
+    local link_parent=""
+    local link_candidate=""
+    local resolved_link=""
+
+    read_mount_snapshot
+    snapshot_status=$?
+    (( snapshot_status == EX_OK )) || return "$snapshot_status"
+
+    validate_root_directory
+    path_status=$?
+    (( path_status == EX_OK )) || return "$path_status"
+
+    if (( mount_only == 1 )); then
+        read_mount_snapshot || return $?
+        return "$EX_OK"
+    fi
+
+    if [[ ! -L "$link_path" ]]; then
+        path_failure_or_race "required path is not a symlink: $link_path"
+        return $?
+    fi
+    if ! link_value="$("$readlink_command" "$link_path" 2>/dev/null)" \
+        || [[ -z "$link_value" ]]; then
+        path_failure_or_race "symlink target is unreadable: $link_path"
+        return $?
+    fi
+    if [[ "$link_value" == /* ]]; then
+        link_candidate="$link_value"
+    else
+        link_parent="${link_path%/*}"
+        link_candidate="$link_parent/$link_value"
+    fi
+    if ! resolved_link="$(CDPATH= cd -P -- "$link_candidate" 2>/dev/null && pwd -P)";
+    then
+        path_failure_or_race "symlink target is unavailable: $link_path"
+        return $?
+    fi
+    if [[ "$resolved_link" != "$canonical_root" ]]; then
+        path_failure_or_race \
+            "wrong symlink target: expected $canonical_root, found $resolved_link"
+        return $?
+    fi
+    if [[ ! "$link_path" -ef "$root_path" ]]; then
+        path_failure_or_race 'symlink and SSD root do not share inode identity'
+        return $?
+    fi
+    if (( bootstrap == 1 )); then
+        # Narrow the check-to-exec window: a late unmount or replacement must
+        # not turn a previously verified path walk into a successful probe.
+        read_mount_snapshot || return $?
+        return "$EX_OK"
+    fi
+
+    validate_critical_directory 'state directory' "$state_path" || return $?
+    validate_critical_directory 'state binary directory' "$state_bin_path" || return $?
+    validate_critical_directory 'state run directory' "$state_run_path" || return $?
+    validate_critical_directory 'state database directory' "$state_var_path" || return $?
+    validate_critical_directory 'state home directory' "$state_home_path" || return $?
+    validate_critical_directory 'default workspace root' "$state_default_path" || return $?
+    validate_critical_directory 'edge workspace directory' "$edge_workspace_path" || return $?
+    validate_critical_directory 'workspace directory' "$workspace_path" || return $?
+    validate_critical_directory 'temporary directory' "$tmp_path" || return $?
+    validate_critical_directory 'Ollama directory' "$ollama_path" || return $?
+    validate_critical_directory 'Ollama runtime directory' "$ollama_runtime_path" || return $?
+    validate_critical_directory 'Ollama runtime binary directory' "$ollama_runtime_bin_path" || return $?
+    validate_critical_directory 'Ollama models directory' "$ollama_models_path" || return $?
+    read_mount_snapshot || return $?
+    return "$EX_OK"
+}
+
+started_at=$SECONDS
+while true; do
+    probe_storage
+    probe_status=$?
+    case "$probe_status" in
+        "$EX_OK")
+            printf 'icp-ssd-guard: ready\n'
+            exit "$EX_OK"
+            ;;
+        "$EX_CONFIG")
+            die_config "$probe_reason"
+            ;;
+        "$EX_TEMPFAIL") ;;
+        *)
+            die_config "unexpected probe status: $probe_status"
+            ;;
+    esac
+
+    elapsed=$((SECONDS - started_at))
+    if (( elapsed >= wait_seconds )); then
+        printf 'icp-ssd-guard: timeout: %s\n' "$probe_reason" >&2
+        if (( systemd_condition == 1 )); then
+            exit "$EX_CONDITION_FAILED"
+        fi
+        exit "$EX_TEMPFAIL"
+    fi
+    remaining=$((wait_seconds - elapsed))
+    delay="$poll_seconds"
+    if (( delay > remaining )); then
+        delay="$remaining"
+    fi
+    "$sleep_command" "$delay"
+done

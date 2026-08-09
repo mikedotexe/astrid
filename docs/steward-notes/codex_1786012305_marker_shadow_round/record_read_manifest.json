@@ -1,0 +1,8 @@
+{
+  "reads": [
+    {"introspection_id": "introspection_astrid_llm_1786011534", "reader": "codex-sol", "summary_file": "summaries/introspection_astrid_llm_1786011534.md", "claims_file": "claims/introspection_astrid_llm_1786011534.json"},
+    {"introspection_id": "introspection_astrid_llm_1786002182", "reader": "codex-sol", "summary_file": "summaries/introspection_astrid_llm_1786002182.md", "claims_file": "claims/introspection_astrid_llm_1786002182.json"},
+    {"introspection_id": "introspection_astrid_llm_1785999123", "reader": "codex-sol", "summary_file": "summaries/introspection_astrid_llm_1785999123.md", "claims_file": "claims/introspection_astrid_llm_1785999123.json"},
+    {"introspection_id": "introspection_astrid_llm_1785959982", "reader": "codex-sol", "summary_file": "summaries/introspection_astrid_llm_1785959982.md", "claims_file": "claims/introspection_astrid_llm_1785959982.json"}
+  ]
+}

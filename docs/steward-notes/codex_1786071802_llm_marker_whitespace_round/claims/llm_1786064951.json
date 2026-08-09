@@ -1,0 +1,35 @@
+{
+  "introspection_id": "introspection_astrid_llm_1786064951",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The runtime scans longest exact known model-control markers and decides preservation from nearby exact-reference syntax.",
+      "disposition": "Verified from all 1,038 source lines and closed as an exact source duplicate of the immediately prior marker rounds. The scanner advances by exact marker byte length or one UTF-8 scalar and reconstructs all non-marker bytes in order.",
+      "classification": "exact_duplicate"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Punctuation, newlines, or a punctuation-heavy tail may make first_word_after empty and lose a valid following relation.",
+      "disposition": "Source-corrected and duplicate of existing exact evidence. split plus find(nonempty) skips every punctuation and whitespace segment. An empty result occurs only when no later word exists, where relation preservation intentionally fails closed. Existing regressions prove multiple punctuation runs and newline-separated represents.",
+      "classification": "source_corrected_duplicate"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Japanese corner quotes around an exact marker should be tested as grouped delimiter preservation.",
+      "disposition": "Source-corrected against the declared taxonomy. U+300C/U+300D and U+300E/U+300F are quote pairs and intentionally produce QuotedExactKnownToken, quoted count one, grouped count zero. The exact non-ASCII quote regression already passes.",
+      "classification": "source_corrected_duplicate"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "A newline between an exact marker and represents should preserve the marker.",
+      "disposition": "Exact duplicate of the regression introduced for introspection_astrid_llm_1784849719. control_marker_cleanup_preserves_relation_across_newline preserves the bytes and records following_exact_relation.",
+      "classification": "exact_duplicate"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "The reconstructed remainder and cleanup matches should be traced into generate_dialogue.",
+      "disposition": "Exact duplicate of the immediate prior downstream verification. MLX and Ollama normalize raw text before generate_dialogue validation, return, and persistence. Match records remain separate typed diagnostic evidence and are never concatenated into dialogue output.",
+      "classification": "exact_duplicate"
+    }
+  ]
+}

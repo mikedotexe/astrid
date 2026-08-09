@@ -1,0 +1,233 @@
+name: CPU Edge
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/cpu-edge.yml'
+      - '.github/workflows/release.yml'
+      - 'Cargo.lock'
+      - 'Cargo.toml'
+      - 'capsules/astralis/astrid-capsule-edge-context/**'
+      - 'capsules/astralis/astrid-capsule-edge-introspector/**'
+      - 'capsules/astralis/astrid-capsule-edge-spectral/**'
+      - 'crates/astrid-approval/**'
+      - 'crates/astrid-build/**'
+      - 'crates/astrid-capsule/**'
+      - 'crates/astrid-cli/**'
+      - 'crates/astrid-core/**'
+      - 'crates/astrid-events/**'
+      - 'crates/astrid-guest/**'
+      - 'crates/astrid-kernel/**'
+      - 'crates/astrid-minime-protocol/**'
+      - 'crates/astrid-spectral-core/**'
+      - 'crates/astrid-types/**'
+      - 'docs/headless-linux.md'
+      - 'packaging/appliances/**'
+      - 'packaging/headless/**'
+      - 'packaging/systemd/**'
+      - 'scripts/*edge*'
+      - 'scripts/*headless*'
+      - 'scripts/astrid_at_a_glance.py'
+      - 'scripts/install_essential_capsules.sh'
+      - 'scripts/package_edge_appliance.sh'
+      - 'scripts/test_package_edge_appliance.sh'
+      - 'scripts/test_wait_for_icp_ssd.sh'
+      - 'scripts/verify_edge_capsule_status.py'
+      - 'scripts/warm_ollama_model.sh'
+      - 'services/astrid-edge-runtime/**'
+      - 'wit/**'
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/cpu-edge.yml'
+      - '.github/workflows/release.yml'
+      - 'Cargo.lock'
+      - 'Cargo.toml'
+      - 'capsules/astralis/astrid-capsule-edge-context/**'
+      - 'capsules/astralis/astrid-capsule-edge-introspector/**'
+      - 'capsules/astralis/astrid-capsule-edge-spectral/**'
+      - 'crates/astrid-approval/**'
+      - 'crates/astrid-build/**'
+      - 'crates/astrid-capsule/**'
+      - 'crates/astrid-cli/**'
+      - 'crates/astrid-core/**'
+      - 'crates/astrid-events/**'
+      - 'crates/astrid-guest/**'
+      - 'crates/astrid-kernel/**'
+      - 'crates/astrid-minime-protocol/**'
+      - 'crates/astrid-spectral-core/**'
+      - 'crates/astrid-types/**'
+      - 'docs/headless-linux.md'
+      - 'packaging/appliances/**'
+      - 'packaging/headless/**'
+      - 'packaging/systemd/**'
+      - 'scripts/*edge*'
+      - 'scripts/*headless*'
+      - 'scripts/astrid_at_a_glance.py'
+      - 'scripts/install_essential_capsules.sh'
+      - 'scripts/package_edge_appliance.sh'
+      - 'scripts/test_package_edge_appliance.sh'
+      - 'scripts/test_wait_for_icp_ssd.sh'
+      - 'scripts/verify_edge_capsule_status.py'
+      - 'scripts/warm_ollama_model.sh'
+      - 'services/astrid-edge-runtime/**'
+      - 'wit/**'
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  ubuntu-22-04:
+    name: Ubuntu 22.04 CPU-edge target
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust 1.94 and Component Model target
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: '1.94'
+          targets: wasm32-wasip2
+          components: rustfmt, clippy
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: |
+            . -> target
+            services/astrid-edge-runtime -> services/astrid-edge-runtime/target
+
+      - name: Formatting
+        run: |
+          cargo fmt --all -- --check
+          cargo fmt --manifest-path services/astrid-edge-runtime/Cargo.toml -- --check
+          cargo fmt --manifest-path capsules/astralis/astrid-capsule-edge-spectral/Cargo.toml -- --check
+
+      - name: Strict edge Clippy
+        run: |
+          cargo clippy \
+            -p astrid \
+            -p astrid-capsule \
+            -p astrid-events \
+            -p astrid-guest \
+            -p astrid-kernel \
+            -p astrid-minime-protocol \
+            -p astrid-spectral-core \
+            -p astrid-types \
+            --lib --bins -- -D warnings
+          cargo clippy \
+            --manifest-path services/astrid-edge-runtime/Cargo.toml \
+            --all-targets -- -D warnings
+
+      - name: Core transport and tracing checks
+        run: |
+          ASTRID_AUTO_BUILD_KERNEL=1 cargo test \
+            -p astrid \
+            -p astrid-capsule \
+            -p astrid-events \
+            -p astrid-kernel \
+            -p astrid-types
+
+      - name: Edge runtime tests
+        run: cargo test --manifest-path services/astrid-edge-runtime/Cargo.toml
+
+      - name: Authority boundary and spectral protocol checks
+        run: |
+          cargo test -p astrid-approval
+          cargo test -p astrid-minime-protocol -p astrid-spectral-core
+          cargo test \
+            --manifest-path services/astrid-edge-runtime/Cargo.toml \
+            legacy_control_has_no_external_ingress_authority
+          cargo test \
+            --manifest-path services/astrid-edge-runtime/Cargo.toml \
+            provenance_requires_exact_unrepaired_trace_binding
+
+      - name: Edge capsule builds
+        run: |
+          cargo clippy --manifest-path capsules/astralis/astrid-capsule-edge-context/Cargo.toml --all-targets -- -D warnings
+          cargo clippy --manifest-path capsules/astralis/astrid-capsule-edge-introspector/Cargo.toml --all-targets -- -D warnings
+          cargo build --manifest-path capsules/astralis/astrid-capsule-edge-context/Cargo.toml --target wasm32-wasip2
+          cargo build --manifest-path capsules/astralis/astrid-capsule-edge-introspector/Cargo.toml --target wasm32-wasip2
+          cargo test --manifest-path capsules/astralis/astrid-capsule-edge-spectral/Cargo.toml
+          cargo clippy --manifest-path capsules/astralis/astrid-capsule-edge-spectral/Cargo.toml --all-targets -- -D warnings
+          cargo build --manifest-path capsules/astralis/astrid-capsule-edge-spectral/Cargo.toml --target wasm32-wasip2
+
+      - name: Python observability tests
+        run: |
+          python3 -m unittest \
+            scripts/test_edge_hindsight.py \
+            scripts/test_install_headless_application_capsules.py \
+            scripts/test_report_edge_activity.py \
+            scripts/test_report_edge_appliance.py \
+            scripts/test_retire_edge_autonomy_session.py \
+            scripts/test_reconcile_edge_interrupted_actions.py \
+            scripts/test_migrate_edge_safe_fallback_authorship.py \
+            scripts/test_migrate_edge_transport_sentinels.py \
+            scripts/test_migrate_edge_operator_harness_isolation.py
+          python3 -m py_compile \
+            scripts/astrid_at_a_glance.py \
+            scripts/edge_hindsight.py \
+            scripts/install_headless_application_capsules.py \
+            scripts/report_edge_activity.py \
+            scripts/report_edge_appliance.py \
+            scripts/retire_edge_autonomy_session.py \
+            scripts/reconcile_edge_interrupted_actions.py \
+            scripts/migrate_edge_operator_harness_isolation.py \
+            scripts/verify_edge_capsule_status.py
+
+      - name: Installer dry runs
+        run: |
+          scripts/test_wait_for_icp_ssd.sh
+          cargo build -p astrid
+          cargo build --manifest-path services/astrid-edge-runtime/Cargo.toml
+          scripts/install_headless_linux.sh --binary-dir target/debug --dry-run
+          scripts/install_edge_runtime.sh \
+            --profile generic-cpu \
+            --binary services/astrid-edge-runtime/target/debug/astrid-edge-runtime \
+            --dry-run
+          scripts/install_edge_runtime.sh \
+            --profile avado-i3-16g \
+            --binary services/astrid-edge-runtime/target/debug/astrid-edge-runtime \
+            --observation-only \
+            --dry-run
+          scripts/install_edge_runtime.sh \
+            --profile icp-j3455-8g \
+            --layout icp-ssd \
+            --binary services/astrid-edge-runtime/target/debug/astrid-edge-runtime \
+            --observation-only \
+            --dry-run
+          scripts/install_headless_linux.sh \
+            --binary-dir target/debug \
+            --layout icp-ssd \
+            --dry-run
+
+      - name: Verify appliance archive
+        run: scripts/test_package_edge_appliance.sh
+
+      - name: Verify user units
+        run: |
+          systemd-analyze verify packaging/systemd/*.service packaging/systemd/*.timer
+          systemd-analyze verify packaging/systemd/icp/*.service packaging/systemd/icp/*.timer
+          merged_units="$(mktemp -d)"
+          install -D -m 0755 packaging/systemd/wait-for-icp-ssd \
+            "$HOME/.local/libexec/astrid/wait-for-icp-ssd"
+          cp packaging/systemd/icp/*.service packaging/systemd/icp/*.timer "$merged_units/"
+          for service in \
+            astrid.service \
+            ollama-cpu.service \
+            astrid-model-warmup.service \
+            astrid-edge-runtime.service \
+            astrid-edge-hindsight.service; do
+            mkdir -p "$merged_units/$service.d"
+            cp packaging/systemd/icp-ssd-required.conf \
+              "$merged_units/$service.d/ssd-required.conf"
+          done
+          SYSTEMD_UNIT_PATH="$merged_units:" systemd-analyze verify \
+            astrid.service \
+            ollama-cpu.service \
+            astrid-model-warmup.service \
+            astrid-edge-runtime.service \
+            astrid-edge-hindsight.service \
+            astrid-edge-hindsight.timer

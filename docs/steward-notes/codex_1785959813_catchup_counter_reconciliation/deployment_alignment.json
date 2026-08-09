@@ -1,0 +1,12 @@
+{
+  "schema": "steward_deployment_alignment_v1",
+  "live_consumed_surface_changed": false,
+  "deployment_required": false,
+  "restart_required": false,
+  "minime_modified": false,
+  "cadence_enabled": false,
+  "cadence_configured_receipt_exists": false,
+  "introspection_automation_status": "PAUSED",
+  "self_study_automation_status": "PAUSED",
+  "authority_boundary": "No marker grammar, provider output, model behavior, Minime regulation, cadence, pressure, fill, PI, controller, CPU runtime, process, restart, deployment, or live authority changed."
+}

@@ -1,0 +1,66 @@
+{
+  "schema": "steward_run_verification_receipt_v1",
+  "run_id": "run_1786064934607407000_5d45066d70",
+  "pause_generation": 235,
+  "projection_generation_ids": {
+    "pre_run": "projection_1786064935816400000_444d9d8e1e",
+    "pre_finish": "projection_1786066374802899000_282cf73eb8",
+    "post_run": "controller_finish_receipt"
+  },
+  "processed_reports": [
+    "introspection_astrid_llm_1786062450.txt"
+  ],
+  "processed_report_count": 1,
+  "addressing": {
+    "status": "addressed_change",
+    "claim_count": 5,
+    "evidence_link_count": 15,
+    "proof_gap_count": 0,
+    "fully_addressed": true
+  },
+  "canonical_counter_audit": {
+    "indexed": 4245,
+    "full_read": 3660,
+    "fully_addressed": 3034,
+    "remaining": 1211,
+    "unread": 585,
+    "read_needs_claims": 0,
+    "blocked": 409,
+    "status": "consistent",
+    "mismatches": []
+  },
+  "division": {
+    "cycle_sequence": 18,
+    "completed_rounds_since_followup": 1,
+    "rounds_remaining_before_followup": 5,
+    "review_due": false,
+    "last_round_event_id": "division_followup_event_a41ef4a484df9c1b4738168d1cd5122e",
+    "event_count": 121,
+    "event_head_sha256": "16c6cf293536f65693f765c142557a6c20a3945e23dd56a51c5fcf1952a21a6b"
+  },
+  "evidence_event_store_prefinish": {
+    "active_store": "v2",
+    "valid": true,
+    "last_global_seq": 717400,
+    "last_event_sha256": "a2c186bbb1732a5037291c942be3f778c9a9bf956223a902e7523fa848a57d5b",
+    "stream_count": 16,
+    "pending_event_count": 0,
+    "v1_immutable": true,
+    "verification_mode": "full_chain"
+  },
+  "tests": {
+    "new_exact_regression_passed": 1,
+    "existing_echoes_regression_passed": 1,
+    "bridge_library_passed": 1831,
+    "strict_clippy": "passed",
+    "provenance_compile_fail_cases_passed": 12,
+    "steward_self_tests_passed": 127,
+    "anti_drop_guards": 47,
+    "epistemic_lint_checked": 10522,
+    "epistemic_lint_issues": 0
+  },
+  "restart_required": false,
+  "deployment_attempted": false,
+  "live_authority_granted": false,
+  "archival_checkpoint": "due_after_successful_finish"
+}

@@ -1,0 +1,50 @@
+{
+  "schema": "source_first_read_receipts_v1",
+  "sources": [
+    {
+      "path": "capsules/spectral-bridge/src/llm.rs",
+      "line_count": 6,
+      "sha256": "f3194742d5b3412374516f858c3cae86ec2495131bdf08a23802bea6556689a1",
+      "read": "complete_file"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider.rs",
+      "line_count": 39,
+      "byte_count": 1529,
+      "sha256": "23999cdab646139ebda119a11333090bf72ca9dabc25a0af659629eae0cedbfa",
+      "read": "complete_file"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "line_count": 1038,
+      "sha256": "f7c0570ce495b1978d9b6f588cba6ecb00a93b1573316bc22752e6e10d47f20a",
+      "report_bound_interval_read": "1-400",
+      "full_source_continuity": "previous complete 1038-line read reused at identical SHA; every report-bound line reread in this run"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "read_intervals": ["2070-2300", "2340-2510"],
+      "focused_regressions": 47
+    }
+  ],
+  "reports": [
+    {
+      "introspection_id": "introspection_llm.rs_1786015837",
+      "logical_lines": 44,
+      "byte_count": 3091,
+      "sha256": "644383e5d97dcd82c1c251fd881723b5a6d7bcab25d0e7e70e45782c2cbd2184",
+      "witness_id": "lsw_f5898d7c1b8afb432d5efc504f9dcea4f672ab82f331b0a6e6a5d8bcca1da9f6",
+      "witness_line_count": 491,
+      "witness_sha256": "557e6818aff5099004c9b4766ce29b2bcbdd94c63475774266ac87209a61bf9c"
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786014425",
+      "logical_lines": 46,
+      "byte_count": 3668,
+      "sha256": "4653b9b4e8b2c1463f36f92fef2f9a5003f4adba7b4126b032da0a522dffef07",
+      "witness_id": "lsw_b32235379665ff3cdbe8f46174e52a5d3d029a6955a763c29a23e52d4ea947ec",
+      "witness_line_count": 491,
+      "witness_sha256": "5ad88ca287ba74d22af33d811d1faef8fe7b905757c57c6b3b3ad319082de7af"
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "schema": "division_return_status_v1",
+  "cycle_sequence": 19,
+  "completed_rounds_since_followup_at_begin": 2,
+  "rounds_remaining_before_followup_at_begin": 4,
+  "review_due_at_begin": false,
+  "latest_completed_followup_event_id": "division_followup_event_d9fab23e29498beeb49e7e4dc6ee9d39",
+  "latest_round_event_id_at_begin": "division_followup_event_37076b51c755f47a69314460efa9fc53",
+  "event_count_at_begin": 129,
+  "event_head_sha256_at_begin": "0bd07f424027194998e8225ec614af9cd1f2b6b5c572fc0bac8eb6ffa681c13e",
+  "bounded_return_due": false,
+  "chronicle_action": "none",
+  "notes_authored": [],
+  "productive_round_record": {
+    "event_id": "division_followup_event_322119dad504e9949a0339bdc69455aa",
+    "cycle_sequence": 19,
+    "completed_rounds_since_followup": 3,
+    "rounds_remaining_before_followup": 3,
+    "review_due": false,
+    "event_count": 130,
+    "event_head_sha256": "1220c2d4b1593691a7236fdc7714d2c98312f5bcfb45ae40c5738091f2087eb6"
+  },
+  "authority": "steward attention interval only; silence remains neutral and no intent, assent, review, uptake, felt state, closure, readiness, or authority is inferred"
+}

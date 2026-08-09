@@ -1,0 +1,12 @@
+{
+  "schema": "astrid.evidence_event_store_snapshot.v2",
+  "steward_run_id": "run_1786032549793840000_79a22e846c",
+  "observation_phase": "after_manual_projection_and_division_round_before_finish",
+  "valid": true,
+  "sequence": 712330,
+  "head_sha256": "e9f8b47e5e823797a71bb9d4904ae8fd6a0379e5bc895f915123757b401e8070",
+  "stream_count": 16,
+  "corrupt_lines": 0,
+  "v1_history_rewritten": false,
+  "finish_note": "The controller finish and successful postprojection append later V2 events; their generation and resulting head are reported from the finish receipt."
+}

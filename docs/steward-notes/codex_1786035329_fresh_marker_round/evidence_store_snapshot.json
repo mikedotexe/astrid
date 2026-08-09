@@ -1,0 +1,31 @@
+{
+  "schema": "evidence_event_store_verification_v1",
+  "schema_version": 1,
+  "valid": true,
+  "last_global_seq": 712986,
+  "last_event_sha256": "64ed32a9cf6fbf5f1e14c0e778a66fe917e602d6d547bc6fc693c31cd8b6ab50",
+  "event_count": 712986,
+  "stream_count": 16,
+  "corrupt_lines": 0,
+  "errors": [],
+  "stream_counts": {
+    "addressing": 55903,
+    "agency_commons": 3725,
+    "attention_portfolio": 3,
+    "claim_families": 235894,
+    "corridor_v1": 5,
+    "corridor_v2": 112,
+    "felt_contracts": 191660,
+    "felt_mechanism_concordance": 80,
+    "lived_state_witness": 8311,
+    "model_qos": 109020,
+    "reciprocal_uptake": 51605,
+    "representation_contracts": 23351,
+    "sandbox": 2950,
+    "signal_spine": 20061,
+    "steward_control": 9962,
+    "steward_work_selection": 344
+  },
+  "v1_immutable": true,
+  "snapshot_note": "Controller heartbeats, finish, and postprojection append later V2 events; this is the final pre-seal full-chain snapshot."
+}

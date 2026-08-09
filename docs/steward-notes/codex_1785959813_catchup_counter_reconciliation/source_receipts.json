@@ -1,0 +1,8 @@
+{
+  "dialogue_runtime": {"path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs", "sha256": "f7c0570ce495b1978d9b6f588cba6ecb00a93b1573316bc22752e6e10d47f20a", "lines": 1038, "read": "complete_file"},
+  "llm_facade": {"path": "capsules/spectral-bridge/src/llm.rs", "sha256": "f3194742d5b3412374516f858c3cae86ec2495131bdf08a23802bea6556689a1", "lines": 6, "read": "complete_file"},
+  "provider_root": {"path": "capsules/spectral-bridge/src/llm/provider.rs", "sha256": "23999cdab646139ebda119a11333090bf72ca9dabc25a0af659629eae0cedbfa", "lines": 39, "read": "complete_file"},
+  "marker_tests": {"path": "capsules/spectral-bridge/src/llm/provider/tests.rs", "sha256": "7ef91f6acfb3928aac2c7aa77f5228ca75c5b3a1f4fc1818d3a0a488d183113b", "intervals_read": ["1700-2050", "2051-2350", "2351-2690"], "expected_focused_count": 46},
+  "minime_regulator_tests": {"path": "../minime/minime/src/regulator/core/tests.rs", "sha256": "1276b3a0d967c2409fbb5bc98b0dab405b8772212d5af6f45410d5f1746ac698", "tests": ["resonance_viscosity_index_with_entropy_marks_edge_erosion_load", "resonance_density_from_parts_clamps_extreme_components"], "source_introspection_id": "introspection_minime_regulator_1783550374"},
+  "counter_audit_tool": {"path": "scripts/introspection_addressing_audit.py", "post_edit_sha256": "40d6be3b49e1c654ff6bd88b40740c3ec017e02870f36c66d0c44f15496a2569", "focused_self_tests": 42}
+}

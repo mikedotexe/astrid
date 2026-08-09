@@ -1,0 +1,10 @@
+{
+  "introspection_id": "introspection_astrid_llm_1785956917",
+  "claims": [
+    {"claim_id": "c001", "summary": "The dialogue runtime uses exact marker matching plus local reference syntax to reconstruct the remainder.", "disposition": "Verified from the complete report-bound source.", "classification": "verified_existing"},
+    {"claim_id": "c002", "summary": "UTF-8 characters, whitespace filtering, or the delimiter-depth bound may misclassify a marker reference.", "disposition": "Exact duplicate of source-and-test evidence: offsets advance by UTF-8 character width, delimiter scans use Unicode scalar values, and the four-pair bound is explicit and tested.", "classification": "exact_duplicate"},
+    {"claim_id": "c003", "summary": "A grouped token at the exact four-pair delimiter limit should be tested.", "disposition": "Exact duplicate of the passing exact-four-level delimiter regression.", "classification": "exact_duplicate"},
+    {"claim_id": "c004", "summary": "A marker followed by behaves should be retained, while a marker followed by is not should be removed.", "disposition": "Partly verified and partly contradicted by the finite source grammar: behaves and is are both explicit reference verbs, so a negated statement still names the marker and preserves its bytes.", "classification": "verified_existing"},
+    {"claim_id": "c005", "summary": "The later generate_dialogue path should be examined to see how sanitized remainder enters provider output.", "disposition": "Verified by the complete source read: sanitization precedes output quality checks and provider normalization evidence; no hidden runtime claim is inferred.", "classification": "verified_existing"}
+  ]
+}

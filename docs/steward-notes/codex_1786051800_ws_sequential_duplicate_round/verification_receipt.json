@@ -1,0 +1,113 @@
+{
+  "schema": "astrid_ws_sequential_duplicate_round_receipt_v1",
+  "schema_version": 1,
+  "steward_run_id": "run_1786051800375277000_866df4454d",
+  "pre_projection_generation_id": "projection_1786051801566509000_e4a2001508",
+  "manual_projection_generation_id": "projection_1786055288351474000_e48dd23d89",
+  "post_projection_generation_id": "projection_1786057355500732000_22c61413ed",
+  "finish_outcome": "success",
+  "pause_generation": 233,
+  "archival_pause_generation": 234,
+  "processed_report_count": 1,
+  "processed": {
+    "filename": "introspection_astrid_ws_1786048387.txt",
+    "sha256": "c3280da3f6fbb7c3f34ac4990589a12e8fcccdcd0031673444783a96eb2acd6e",
+    "source_sha256": "42364feb914c957d487f93c440e30837c500971b41814a219d4c3992a12addd7",
+    "witness_id": "lsw_51ec9744092d43a1f913db9020525b7975796074694657402f5a0ef8d9e543b0",
+    "witness_sha256": "ede489d36a686c1ef4a705cb86ee56cef1d87ee5b21dead58a4d75fdeb614a0a",
+    "status": "addressed_duplicate",
+    "fully_addressed": true,
+    "claim_count": 5,
+    "proof_missing_claims": []
+  },
+  "canonical_counters": {
+    "indexed": 4243,
+    "full_read": 3658,
+    "fully_addressed": 3032,
+    "remaining": 1211,
+    "blocked_needs_steward": 409,
+    "unread": 585,
+    "read_needs_claims": 0,
+    "counter_status": "consistent"
+  },
+  "blocked_breakdown": {
+    "active_artifact_count": 409,
+    "historical_absent_artifact_count": 1,
+    "active_full_read_count": 409,
+    "active_claim_complete_artifact_count": 409,
+    "proof_gap_artifact_count": 0,
+    "proof_gap_claim_count": 0,
+    "authority_wait_work_item_count": 280,
+    "awaiting_response_work_item_count": 77,
+    "evidence_work_item_count": 13,
+    "verified_or_closed_evidence_work_item_count": 452
+  },
+  "next_reading_queue": [
+    "introspection_DOMAIN_BOUNDARIES.md_1786053541.txt",
+    "introspection_astrid_llm_1786044160.txt",
+    "introspection_minime_sensory_bus_1785630107.txt"
+  ],
+  "evidence_event_store_v2": {
+    "snapshot_phase": "pre_finish_after_division_return",
+    "valid": true,
+    "last_global_seq": 715922,
+    "last_event_sha256": "2ebcfe0260155bd2ab61cd943d0b501635c574f3d719233a776fbb612d9bab4b",
+    "active_stream_count": 16,
+    "corrupt_lines": 0,
+    "history_rewritten": false,
+    "v1_state": "migration_only_immutable"
+  },
+  "finish_evidence_event_store_v2": {
+    "last_global_seq": 716132,
+    "last_event_sha256": "41f40296099c34cadaa9c482200da310378a9df19914f554947090dd536afe28",
+    "valid": true
+  },
+  "epistemic_lint": {
+    "valid": true,
+    "checked_record_count": 10517,
+    "issue_count": 0,
+    "history_rewritten": false
+  },
+  "cadence": {
+    "configuration_valid": true,
+    "enabled": false,
+    "configured_receipts": 0,
+    "pending": false,
+    "pilot_active": false,
+    "canonical_count": 4243,
+    "canonical_median_gap_seconds": 424.0,
+    "duplicate_hash_group_count": 0
+  },
+  "division": {
+    "cycle_sequence": 18,
+    "completed_rounds_since_followup": 0,
+    "rounds_remaining_before_followup": 6,
+    "review_due": false,
+    "round_event_id": "division_followup_event_d4650536a7b6f0f5b5e5d38390ba77ed",
+    "followup_event_id": "division_followup_event_9863dcc1faa17233342a5b5d7e7aca4a",
+    "event_count": 120,
+    "event_head_sha256": "f87348ea88840bd638fcb2af35c7b246c6d94337b131d2e37d03f79e422ecceb"
+  },
+  "deployment": {
+    "required": false,
+    "performed": false,
+    "reason": "No live-consumed bridge, protocol, prompt, model, telemetry, cadence, Minime, or runtime source changed; the bounded Division notes are file-delivered evidence-only correspondence.",
+    "minime_runtime_changed": false
+  },
+  "actions": {
+    "corridor_program_started": false,
+    "sandbox_trial_started": false,
+    "study_started": false,
+    "portfolio_action_started": false,
+    "division_notes_sent": 2,
+    "closure_card_sent": false,
+    "shadow_action_dispatched": false
+  },
+  "authority": {
+    "worker_or_channel_offload_authorized": false,
+    "sensory_ordering_change_authorized": false,
+    "cadence_activation_inferred": false,
+    "felt_resolution_claimed": false,
+    "live_control_changed": false
+  }
+}

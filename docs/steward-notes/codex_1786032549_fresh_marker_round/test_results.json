@@ -1,0 +1,54 @@
+{
+  "schema": "astrid.steward_run_test_results.v1",
+  "steward_run_id": "run_1786032549793840000_79a22e846c",
+  "results": [
+    {
+      "suite": "model control-marker regressions",
+      "passed": 47,
+      "failed": 0
+    },
+    {
+      "suite": "introspection addressing audit",
+      "passed": 42,
+      "failed": 0
+    },
+    {
+      "suite": "source-first projector, Evidence Store, steward control, Division, Chronicle, claim-family projection, and cursors",
+      "passed": 72,
+      "failed": 0
+    },
+    {
+      "suite": "anti-drop self-tests",
+      "passed": 5,
+      "failed": 0
+    },
+    {
+      "suite": "anti-drop verification",
+      "passed": 47,
+      "failed": 0,
+      "alarms": 0,
+      "gaps": 0
+    },
+    {
+      "suite": "introspection cadence audit",
+      "passed": 6,
+      "failed": 0
+    },
+    {
+      "suite": "experiential epistemics self-tests",
+      "passed": 2,
+      "failed": 0
+    },
+    {
+      "suite": "epistemic lint",
+      "records_checked": 10480,
+      "issues": 0,
+      "history_rewritten": false
+    }
+  ],
+  "command_corrections": [
+    "The first evidence-link invocation used --manifest-file; the command failed before mutation and was rerun successfully with the required --links-file flag.",
+    "The experiential self-test was first invoked with an unsupported --self-test flag; it failed before mutation and passed when rerun with the self-test subcommand.",
+    "The first controller projection request included an unsupported phase field; the request was rejected before projection work and was rerun successfully with the supported project operation."
+  ]
+}

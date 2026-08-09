@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The scanner coordinates longest exact marker matching, bounded delimiter evidence, finite following relations, and byte-preserving remainder construction.",
+      "disposition": "Verified in exact source lines 1-400 and the focused marker regressions; no runtime activation or meaning is inferred.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The phrase functions as a proxy for may fall outside the relation allowlist and lose the marker.",
+      "disposition": "Source-challenged and verified existing: functions is explicitly allowlisted and the exact proxy phrase already has a passing preservation regression.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Mimics should preserve a named marker while is a should strip it.",
+      "disposition": "Partly corrected by exact source: mimics and is are both declared relations, so both preserve an exact marker subject; non-allowlisted verbs such as implies, creates, and triggers are stripped in existing regressions.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "The scanner remainder should be traced through generate_dialogue and final validation.",
+      "disposition": "Exact duplicate of prior complete-source and test evidence showing the sanitized remainder is validated, persisted, hashed, and returned without reinserting removed markers.",
+      "classification": "verified_existing"
+    }
+  ]
+}

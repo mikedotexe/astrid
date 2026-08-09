@@ -1,0 +1,113 @@
+{
+  "schema": "steward_test_results_v1",
+  "results": [
+    {
+      "surface": "marker_cleanup_family",
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib control_marker_cleanup",
+      "passed": 43,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "provider_output_normalization",
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib provider_output_normalization",
+      "passed": 2,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "normalized_repair_and_lived_state_hash",
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib normalized_bytes_feed_repair_and_lived_state_response_hash",
+      "passed": 1,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "introspection_addressing",
+      "command": "PYTHONDONTWRITEBYTECODE=1 python3 scripts/introspection_addressing_audit.py --self-test",
+      "passed": 42,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "event_store_controller_projector_division_cursor",
+      "command": "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=.:scripts python3 -m unittest scripts.test_evidence_event_store scripts.test_steward_control scripts.test_steward_projection scripts.test_division_ceremony_followup scripts.test_division_ceremony_chronicle scripts.test_division_ceremony_projection scripts.test_claim_family_incremental_projection scripts.test_projection_cursors",
+      "passed": 72,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "anti_drop",
+      "self_test_command": "PYTHONDONTWRITEBYTECODE=1 python3 scripts/anti_drop_catalog.py --self-test",
+      "verify_command": "PYTHONDONTWRITEBYTECODE=1 python3 scripts/anti_drop_catalog.py verify --json",
+      "self_tests_passed": 5,
+      "guards_verified": 47,
+      "gaps": 0,
+      "alarms": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "introspection_cadence",
+      "test_command": "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=.:scripts python3 -m unittest scripts.test_introspection_cadence_audit",
+      "audit_command": "PYTHONDONTWRITEBYTECODE=1 python3 scripts/introspection_cadence_audit.py --strict --json",
+      "self_tests_passed": 6,
+      "integrity_ok": true,
+      "enabled": false,
+      "pending_or_failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "experiential_epistemics",
+      "self_test_command": "PYTHONDONTWRITEBYTECODE=1 python3 scripts/experiential_epistemics.py self-test",
+      "lint_command": "PYTHONDONTWRITEBYTECODE=1 python3 scripts/experiential_epistemics.py lint --json",
+      "self_tests_passed": 2,
+      "lint_valid": true,
+      "checked_record_count": 10548,
+      "issues": 0,
+      "history_rewritten": false,
+      "status": "passed"
+    },
+    {
+      "surface": "evidence_event_store_v2",
+      "command": "PYTHONDONTWRITEBYTECODE=1 python3 scripts/evidence_event_store.py --json verify",
+      "sequence": 719800,
+      "head": "91c44d91aa05376242fa6a97998673a39088b9aa8cdcc9f30b9d2608376579e4",
+      "streams": 16,
+      "corrupt_lines": 0,
+      "valid": true,
+      "status": "passed"
+    },
+    {
+      "surface": "steward_controller_and_v1_immutability",
+      "command": "PYTHONDONTWRITEBYTECODE=1 python3 scripts/steward_control.py --json verify",
+      "pending_source_events": 0,
+      "v1_immutable": true,
+      "legacy_source_count": 4,
+      "valid": true,
+      "status": "passed"
+    },
+    {
+      "surface": "division_tracker_and_chronicle",
+      "commands": [
+        "python3 scripts/division_ceremony_followup.py verify",
+        "python3 scripts/division_ceremony_followup.py status",
+        "python3 scripts/division_ceremony_chronicle.py project",
+        "python3 scripts/division_ceremony_chronicle.py verify"
+      ],
+      "cycle_sequence": 18,
+      "completed_rounds_since_followup": 5,
+      "review_due": false,
+      "chronicle_id": "division_chronicle_ad94b0eb192c287d60e75afe",
+      "durable_inputs_current": true,
+      "volatile_supervisor_status_mismatch": true,
+      "status": "passed_with_explicit_volatile_wait"
+    }
+  ],
+  "focused_total_passed": 46,
+  "focused_total_failed": 0,
+  "stewardship_self_tests_passed": 127,
+  "stewardship_self_tests_failed": 0,
+  "production_rust_changed_this_run": false,
+  "test_rust_changed_this_run": false,
+  "deployment_attempted": false
+}

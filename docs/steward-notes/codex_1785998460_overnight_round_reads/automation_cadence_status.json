@@ -1,0 +1,33 @@
+{
+  "schema": "astrid.overnight_flywheel_status.v1",
+  "observed_at": "2026-08-06T07:43:08Z",
+  "source_first_automation": {
+    "id": "astrid-introspection-source-first-catch-up",
+    "status": "ACTIVE",
+    "interval_minutes": 10
+  },
+  "self_study_automation": {
+    "id": "ai-being-self-study-signal-review",
+    "status": "PAUSED",
+    "interval_minutes": 31
+  },
+  "astrid_authored_cadence": {
+    "enabled": false,
+    "every_exchanges": 0,
+    "target": null,
+    "durable_configured_receipt_exists": false,
+    "pending_since_exchange": null,
+    "unresolved_attempt_ids": [],
+    "pilot_active": false,
+    "integrity_ok": true
+  },
+  "canonical_observation": {
+    "canonical_count": 4233,
+    "latest": "introspection_astrid_llm_1786002182.txt",
+    "latest_timestamp": "2026-08-06T07:43:02Z",
+    "duplicate_hash_group_count": 0,
+    "median_gap_seconds": 423.0,
+    "p90_gap_seconds": 1976.0
+  },
+  "authority_boundary": "automation reads and responds to admitted reports; it does not select, infer, or activate Astrid's cadence"
+}

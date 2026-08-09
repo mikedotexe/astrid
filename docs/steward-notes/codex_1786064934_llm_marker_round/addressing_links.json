@@ -1,0 +1,53 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_llm_1786062450",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "The complete source verifies longest exact matching, UTF-8 scalar traversal, preservation classification, and remainder reconstruction."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786062450",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "The exact finite-pair matcher proves the nearest-non-whitespace fail-closed boundary without inferring syntax from proximity."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786062450",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "The new exact regression covers ASCII and Unicode whitespace inside the declared restless bracket pair."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786062450",
+      "claim_id": "c004",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "The existing poetic-attribution regression includes echoes and proves byte-exact explicit-relation preservation."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786062450",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/fallback_contracts.rs;capsules/spectral-bridge/src/llm/provider/transport.rs;capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "Both provider routes normalize raw output before generate_dialogue validates and returns the reconstructed remainder."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786062450",
+      "claim_id": "*",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "The Unreleased entry records the source-grounded test response and unchanged live grammar boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786062450",
+      "claim_id": "*",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "The feedback ledger preserves Astrid's causal contribution and the no-live-change boundary."
+    }
+  ]
+}

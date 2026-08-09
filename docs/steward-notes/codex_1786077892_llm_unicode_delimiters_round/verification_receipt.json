@@ -1,0 +1,115 @@
+{
+  "schema": "steward_run_verification_receipt_v1",
+  "run_id": "run_1786077892966010000_7fb07097fc",
+  "pause_generation": 241,
+  "projection_generation_ids": {
+    "pre_run_source_first_v3": "projection_1786077893887302000_4a130b39a9",
+    "pre_finish_addressing": "materialized_by_record_read_link_and_close",
+    "post_run_source_first_v3": "projection_1786081816384214000_2be99a4929"
+  },
+  "processed_reports": [
+    "introspection_astrid_llm_1786076073.txt"
+  ],
+  "processed_report_count": 1,
+  "addressing": {
+    "statuses": {
+      "introspection_astrid_llm_1786076073": "addressed_change"
+    },
+    "claim_count": 5,
+    "evidence_link_count": 18,
+    "proof_gap_count": 0,
+    "fully_addressed": true
+  },
+  "canonical_counter_audit": {
+    "indexed": 4247,
+    "full_read": 3664,
+    "fully_addressed": 3038,
+    "remaining": 1209,
+    "unread": 583,
+    "read_needs_claims": 0,
+    "blocked": 409,
+    "status": "consistent",
+    "mismatches": []
+  },
+  "work_item_summary": {
+    "tier_4": 23,
+    "tier_5": 1578,
+    "needs_steward_grant": 18,
+    "needs_operator_approval": 1610,
+    "tier_mismatch_count": 0
+  },
+  "division": {
+    "cycle_sequence": 18,
+    "completed_rounds_since_followup": 4,
+    "rounds_remaining_before_followup": 2,
+    "review_due": false,
+    "last_round_event_id": "division_followup_event_3543915f018daffdf78ca24d8edf8fa7",
+    "event_count": 124,
+    "event_head_sha256": "52377c909be865e2d4b070d52123f4b21aa12a7cc36fda3b6e7e6cbfdfa921de",
+    "note_or_chronicle_action": false
+  },
+  "evidence_event_store_prefinish_snapshot": {
+    "active_store": "v2",
+    "valid": true,
+    "last_global_seq": 719076,
+    "last_event_sha256": "ca1661bb789060cd14df9e707c7f1821b90964de8da9c58efc520fbbd5c6a29d",
+    "stream_count": 16,
+    "corrupt_lines": 0,
+    "effective_aggregate_valid": true,
+    "history_rewritten": false,
+    "v1_immutable": true,
+    "legacy_source_count": 4
+  },
+  "evidence_event_store_at_successful_finish": {
+    "active_store": "v2",
+    "valid": true,
+    "last_global_seq": 719586,
+    "last_event_sha256": "659c54a4e21807425aea71ad98aa83a4c442a12aaa74a4b159f046b3e0834f2a",
+    "stream_count": 16,
+    "v1_immutable": true,
+    "legacy_source_count": 4
+  },
+  "post_run_counter_audit": {
+    "canonical_indexed": 4248,
+    "full_read": 3664,
+    "fully_addressed": 3038,
+    "remaining": 1210,
+    "unread": 584,
+    "read_needs_claims": 0,
+    "blocked": 409,
+    "all_artifact_indexed": 5863,
+    "all_artifact_pending": 2825,
+    "status": "consistent",
+    "mismatches": []
+  },
+  "post_run_queue_head": [
+    "introspection_astrid_llm_1786079244.txt",
+    "introspection_minime_sensory_bus_1785630107.txt",
+    "introspection_minime_regulator_1785629184.txt"
+  ],
+  "tests": {
+    "new_exact_regression_passed": 1,
+    "marker_cleanup_family_passed": 43,
+    "bridge_library_passed": 1834,
+    "strict_clippy": "passed",
+    "steward_self_tests_passed": 127,
+    "anti_drop_guards": 47,
+    "epistemic_lint_checked_records": 10543,
+    "epistemic_lint_issues": 0
+  },
+  "restart_required_for_live_alignment": true,
+  "deployment_attempted": false,
+  "live_authority_granted": false,
+  "finish_outcome": "success",
+  "archival_checkpoint": {
+    "status_at_packet_finalization": "stabilization_pause_claimed_candidate_ready",
+    "pause_generation": 242,
+    "active_lease": false,
+    "candidate_file_count": 12,
+    "mixed_file_commit_debt": [
+      "CHANGELOG.md",
+      "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md"
+    ],
+    "commit_sha_recording": "git_history_and_next_run_packet"
+  }
+}

@@ -1,0 +1,103 @@
+{
+  "schema": "steward_test_results_v1",
+  "results": [
+    {
+      "surface": "minime_semantic_stale_family",
+      "command": "cargo test semantic_stale_",
+      "distinct_tests_passed": 21,
+      "executions_passed": 42,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "minime_surge_midpoint",
+      "command": "cargo test surge_target_weight_softens_when_fill_is_high",
+      "distinct_tests_passed": 1,
+      "executions_passed": 2,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "minime_formatting",
+      "command": "cargo fmt --all -- --check",
+      "status": "passed"
+    },
+    {
+      "surface": "minime_library",
+      "command": "cargo test --lib",
+      "passed": 356,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "introspection_addressing",
+      "command": "PYTHONDONTWRITEBYTECODE=1 python3 scripts/introspection_addressing_audit.py --self-test",
+      "passed": 42,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "event_store_controller_projector_division_cursor",
+      "command": "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=.:scripts python3 -m unittest scripts.test_evidence_event_store scripts.test_steward_control scripts.test_steward_projection scripts.test_division_ceremony_followup scripts.test_division_ceremony_chronicle scripts.test_division_ceremony_projection scripts.test_claim_family_incremental_projection scripts.test_projection_cursors",
+      "passed": 72,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "anti_drop",
+      "self_tests_passed": 5,
+      "guards_verified": 47,
+      "gaps": 0,
+      "alarms": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "introspection_cadence",
+      "self_tests_passed": 6,
+      "integrity_ok": true,
+      "enabled": false,
+      "pending_or_failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "experiential_epistemics",
+      "self_tests_passed": 2,
+      "lint_valid": true,
+      "checked_record_count": 10562,
+      "issues": 0,
+      "history_rewritten": false,
+      "status": "passed"
+    },
+    {
+      "surface": "evidence_event_store_v2_pre_finish",
+      "valid": true,
+      "verification_mode": "full_chain",
+      "last_global_seq": 721967,
+      "last_event_sha256": "c4c3e739d9e57374d27f77f35ff35511bb02e19d36447ecf7c1fdc8a1178d0c4",
+      "stream_count": 16,
+      "corrupt_lines": 0,
+      "v1_immutable": true,
+      "legacy_source_count": 4,
+      "status": "passed"
+    },
+    {
+      "surface": "post_run_source_first_v3_and_finish_v2",
+      "projection_generation_id": "projection_1786102524461244000_54b13ed0b3",
+      "valid": true,
+      "last_global_seq": 722577,
+      "last_event_sha256": "d8ac3edaf404e93fa27bab2d6c3a787401ac1362a8e5f6602eadb2593d90e663",
+      "status": "passed"
+    }
+  ],
+  "compiler_warnings": {
+    "count": 4,
+    "scope": "pre-existing sovereign_division dead-code warnings outside the touched sensory-bus source",
+    "new_warning_from_owned_change": false
+  },
+  "production_rust_changed_this_run": false,
+  "test_rust_changed_this_run": true,
+  "minime_library_tests_passed": 356,
+  "stewardship_self_tests_passed": 127,
+  "stewardship_self_tests_failed": 0,
+  "deployment_attempted": false
+}

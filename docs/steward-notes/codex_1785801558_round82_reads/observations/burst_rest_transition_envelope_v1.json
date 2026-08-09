@@ -1,0 +1,116 @@
+{
+  "authority_v1": {
+    "approval_inferred": false,
+    "cadence_change_authorized": false,
+    "controller_change_authorized": false,
+    "felt_cause_inferred": false,
+    "fill_regulation_change_authorized": false,
+    "read_only": true,
+    "relief_inferred": false,
+    "safety_inferred": false,
+    "scheduling_change_authorized": false,
+    "signal_change_authorized": false
+  },
+  "burst_to_first_rest_boundary_v1": {
+    "claimed_change_below_0_3_verified": false,
+    "final_burst_to_first_rest_delta_rms_observed": false,
+    "final_burst_vector_observed_in_status": false,
+    "first_rest_sample_count": 1,
+    "first_rest_samples_with_any_previous_comparison": 0,
+    "reason": "first rest observations initialize previous_rest_features to none; the status therefore lacks an exact final-burst/first-rest vector pair",
+    "rest_episode_count": 1,
+    "state": "insufficient_exact_pair",
+    "threshold_scope": "the report's change metric is unspecified and intra-rest delta_rms is not substituted for the missing cross-boundary pair"
+  },
+  "input_receipt_v1": {
+    "raw_feature_vectors_included": false,
+    "raw_prose_included": false,
+    "source_sha256": "bf19a6ccc8296434121c4c7300afc1992060c40356f1214999fa5931d59c2f2d",
+    "status_sha256": "9c8e1a60b8b86a01957791d4aa676c96201f20d57dec3bf03423c758997287f3",
+    "transition_relevant_source_contract_matches": true,
+    "transition_relevant_source_sha256": "b7ce517fb84b2dd97e760a4e7c0c1ea840e2c4c2e7c591e07c43c083dae8b694",
+    "window_sample_count": 95
+  },
+  "intra_rest_observation_v1": {
+    "all_observed_intra_rest_delta_rms_below_0_3": true,
+    "comparison_count": 9,
+    "cross_boundary_or_felt_safety_inferred": false,
+    "delta_rms_max": 0.1061888262629509,
+    "delta_rms_mean": 0.08499779707441728,
+    "delta_rms_min": 0.015012710355222223,
+    "delta_rms_p95_nearest_rank": 0.1061888262629509,
+    "episode_receipts_v1": [
+      {
+        "episode_index": 0,
+        "first_rest_baseline_state": "no_previous_rest_vector_in_observation",
+        "first_rest_compared_dimension_count": 0,
+        "first_rest_delta_rms_from_previous": null,
+        "first_rest_phase_step": 0,
+        "intra_rest_comparison_count": 9,
+        "intra_rest_delta_rms_max": 0.1061888262629509,
+        "intra_rest_delta_rms_min": 0.015012710355222223,
+        "rest_sample_count": 10
+      }
+    ],
+    "measurement_scope": "consecutive_autonomous_rest_pulses_only"
+  },
+  "low_fill_rest_duration_envelope_v1": {
+    "branch": "max(floor(base_rest_seconds * 0.6), 30)",
+    "current_roll_reachable_base_seconds": [
+      45,
+      47,
+      50,
+      52,
+      55,
+      57,
+      60,
+      62,
+      65,
+      67
+    ],
+    "current_roll_reachable_result_seconds": [
+      30,
+      30,
+      30,
+      31,
+      33,
+      34,
+      36,
+      37,
+      39,
+      40
+    ],
+    "evaluated_fill_pct": 25.0,
+    "fill_recovery_causation_inferred": false,
+    "fill_recovery_observed": false,
+    "nominal_configured_base_seconds": [
+      45,
+      50,
+      55,
+      60,
+      65,
+      70,
+      75,
+      80,
+      85,
+      90
+    ],
+    "nominal_result_seconds": [
+      30,
+      30,
+      33,
+      36,
+      39,
+      42,
+      45,
+      48,
+      51,
+      54
+    ],
+    "observed_rest_samples_at_or_below_30_pct_fill": 0,
+    "rest_shortening_established": true,
+    "scope": "deterministic scheduling envelope only; recovery requires a bounded longitudinal observation with matching low-fill episodes"
+  },
+  "schema": "burst_rest_transition_envelope_audit_v1",
+  "schema_version": 1
+}

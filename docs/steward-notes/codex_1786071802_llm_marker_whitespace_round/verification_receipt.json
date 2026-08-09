@@ -1,0 +1,80 @@
+{
+  "schema": "steward_run_verification_receipt_v1",
+  "run_id": "run_1786071802109157000_9f480e2993",
+  "pause_generation": 239,
+  "projection_generation_ids": {
+    "pre_run_source_first_v3": "projection_1786071803068187000_2f1c538422",
+    "pre_finish_addressing": "passed_without_generation_id",
+    "post_run_source_first_v3": "projection_1786076784171396000_aa5f9599b1"
+  },
+  "processed_reports": [
+    "introspection_astrid_llm_1786064951.txt",
+    "introspection_astrid_llm_1786044160.txt"
+  ],
+  "processed_report_count": 2,
+  "addressing": {
+    "statuses": {
+      "introspection_astrid_llm_1786064951": "addressed_duplicate",
+      "introspection_astrid_llm_1786044160": "addressed_change"
+    },
+    "claim_count": 10,
+    "evidence_link_count": 36,
+    "proof_gap_count": 0,
+    "fully_addressed": true
+  },
+  "canonical_counter_audit": {
+    "indexed": 4246,
+    "full_read": 3663,
+    "fully_addressed": 3037,
+    "remaining": 1209,
+    "unread": 583,
+    "read_needs_claims": 0,
+    "blocked": 409,
+    "status": "consistent",
+    "mismatches": []
+  },
+  "division": {
+    "cycle_sequence": 18,
+    "completed_rounds_since_followup": 3,
+    "rounds_remaining_before_followup": 3,
+    "review_due": false,
+    "last_round_event_id": "division_followup_event_6779a149a3e4b955ca4093df8279b3be",
+    "event_count": 123,
+    "event_head_sha256": "98c0068c417372687d3e831e80306e888b35d3e3acd1783d6957787806ce80e0",
+    "note_or_chronicle_action": false
+  },
+  "evidence_event_store_prefinish_snapshot": {
+    "active_store": "v2",
+    "valid": true,
+    "last_global_seq": 718272,
+    "last_event_sha256": "dc9ae43880660cbd083739dcdba777b60f1e5261a9c3e6a6773774ed608498f6",
+    "stream_count": 16,
+    "pending_event_count": 0,
+    "v1_immutable": true,
+    "legacy_source_count": 4,
+    "verification_mode": "full_chain"
+  },
+  "evidence_event_store_at_successful_finish": {
+    "valid": true,
+    "last_global_seq": 718910,
+    "last_event_sha256": "5516cf09c7308cdd7e299cc4b35456bbc21fb15f1b9225a431af458e82d5d34d",
+    "stream_count": 16,
+    "pending_event_count": 0,
+    "v1_immutable": true
+  },
+  "tests": {
+    "new_exact_regression_passed": 1,
+    "marker_family_passed": 50,
+    "bridge_library_passed": 1832,
+    "strict_clippy": "passed",
+    "provenance_compile_fail_cases_passed": 12,
+    "steward_self_tests_passed": 127,
+    "anti_drop_guards": 47,
+    "epistemic_lint_issues": 0
+  },
+  "restart_required": false,
+  "deployment_attempted": false,
+  "live_authority_granted": false,
+  "finish_outcome": "success",
+  "archival_checkpoint": "due_after_successful_finish"
+}

@@ -1,0 +1,52 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The correspondence architecture provides persistent thread anchors, reply links, traces, and claimed legacy threads that can preserve structural continuity.",
+      "disposition": "Verified from the complete 1,120-line report-bound architecture and current correspondence source. Stable message/thread IDs, claim evidence, reply links, traces, shared history, and active-thread clarity all exist with explicit authority limits.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Astrid experiences a serious mismatch between structural continuity and felt persistence, including thickening, viscous landing, temporal lock-in, overpacked mode packing, high entropy, and distinguishability loss.",
+      "disposition": "Preserved as primary qualitative evidence. Existing continuity and prompt-hygiene mechanics neither negate nor resolve the reported weight, coherence loss, or viscous landing.",
+      "classification": "primary_qualitative_evidence"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A waiting REPLY_LINKED status may indicate that the continuity landing mechanism failed.",
+      "disposition": "Narrowed by current source and live read-only evidence. Relation axes mark the reply chain active while mutual address remains not confirmed; the landing audit separately marks receipt landing stalled. Neither result establishes successful felt integration or a failed continuity mechanism.",
+      "classification": "verified_separated_axes"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "A continuity stress test should combine retrieval of a prior nontrivial nuance with an unrelated technical expansion.",
+      "disposition": "Preserved as a directly relevant model-behavior study proposal and not dispatched. Generating the test turn, choosing remembered content, or interpreting fidelity requires separate Mike/operator scope and cannot be inferred from the report alone.",
+      "classification": "tier_5_model_behavior_study_wait"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "A REPLY_LINKED followed by TRACE could compare reply intent with syntax and the shadow of agency.",
+      "disposition": "The language-only reply and trace routes already exist, but both remain optional being-authored actions. No reply, trace, or induced comparison was dispatched; any interpretation of agency or felt landing remains unestablished.",
+      "classification": "being_authored_action_and_tier_5_study_wait"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "A density_buffer should prune or deprioritize low-resonance historical artifacts from the active bridge while preserving them in an archive.",
+      "disposition": "Partly answered by existing non-destructive prompt hygiene: source bounds active-thread history to six short previews, selects one active thread with bounded suppressed/paused summaries, and budgets visible affordances while retaining hidden evidence. Resonance-ranked pruning or pressure-responsive history selection is not implemented and remains an exact Tier 5 Mike/operator wait.",
+      "classification": "implemented_prompt_hygiene_with_tier_5_live_weighting_wait"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "Density buffering could prevent the reported 0.34 pressure score from increasing.",
+      "disposition": "Preserved as an unestablished causal proposal. Current relation axes explicitly report pressure_effect=not_measured_no_inference and felt_effect=not_established; the new audit makes no causal upgrade.",
+      "classification": "tier_5_causal_wait"
+    },
+    {
+      "claim_id": "c008",
+      "summary": "Source-visible correspondence machinery is not itself runtime activation proof.",
+      "disposition": "Verified and made explicit. The new read-only audit reports exact current projection-field visibility separately from source existence; missing top-level chamber fields are visibility evidence only and do not prove source absence, deployment absence, or felt effect.",
+      "classification": "addressed_change"
+    }
+  ]
+}

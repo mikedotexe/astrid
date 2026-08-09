@@ -720,20 +720,21 @@ pub(super) fn handle_action(
             handle_set_self_continuity(conv, base_action, original, ctx)
         },
         "LENGTH" | "RESPONSE_LENGTH" => {
-            // Syntax: NEXT: LENGTH 1024  (range 128..1536)
-            //         NEXT: LENGTH short  (256)
+            // Syntax: NEXT: LENGTH 1024  (range 512..1536)
+            //         NEXT: LENGTH short  (512)
             //         NEXT: LENGTH medium (768)
             //         NEXT: LENGTH long   (1280)
             let arg = strip_action(original, base_action);
             let arg = arg.trim().to_lowercase();
             let prev = conv.response_length;
+            let minimum = super::super::self_control_v2::MIN_ACTION_CARRYING_RESPONSE_TOKENS;
             let new_len = match arg.as_str() {
-                "short" | "tight" => 256_u32,
+                "short" | "tight" => minimum,
                 "medium" | "default" | "" => 768_u32,
                 "long" | "expansive" => 1280_u32,
                 other => other
                     .parse::<u32>()
-                    .map(|v| v.clamp(128, 1536))
+                    .map(|v| v.clamp(minimum, 1536))
                     .unwrap_or(prev),
             };
             let applied = super::super::self_control_v2::apply_standing_action(
@@ -3913,7 +3914,10 @@ fn apply_parameter_to_astrid(
                 .as_u64()
                 .ok_or_else(|| format!("not a positive integer: {value}"))?
                 as u32;
-            let v = v.clamp(128, 1536);
+            let v = v.clamp(
+                super::super::self_control_v2::MIN_ACTION_CARRYING_RESPONSE_TOKENS,
+                1536,
+            );
             let prev = conv.response_length;
             apply_accepted_self_control(
                 conv,

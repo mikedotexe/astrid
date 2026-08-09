@@ -1,0 +1,15 @@
+{
+  "schema": "steward_test_results_v1",
+  "results": [
+    {"surface": "marker regressions", "command": "cargo test -p spectral-bridge --lib control_marker", "passed": 47, "failed": 0},
+    {"surface": "addressing audit", "command": "python3 scripts/introspection_addressing_audit.py selftest", "passed": 42, "failed": 0},
+    {"surface": "Evidence Store/controller/projector/Division/cursor", "command": "PYTHONPATH=.:scripts python3 -m unittest scripts.test_evidence_event_store scripts.test_steward_control scripts.test_steward_projection scripts.test_division_ceremony_followup scripts.test_division_ceremony_chronicle scripts.test_division_ceremony_projection scripts.test_claim_family_incremental_projection scripts.test_projection_cursors", "passed": 72, "failed": 0},
+    {"surface": "anti-drop selftest", "command": "python3 scripts/introspection_antidrop_audit.py selftest", "passed": 5, "failed": 0},
+    {"surface": "anti-drop live verify", "command": "python3 scripts/introspection_antidrop_audit.py verify", "guards": 47, "gaps": 0, "alarms": 0},
+    {"surface": "cadence audit", "command": "python3 -m unittest scripts.test_introspection_cadence_audit", "passed": 6, "failed": 0},
+    {"surface": "experiential epistemics", "command": "python3 scripts/experiential_epistemics.py selftest", "passed": 2, "failed": 0},
+    {"surface": "epistemic lint", "command": "python3 scripts/experiential_epistemics.py lint", "records": 10411, "issues": 0, "history_rewritten": false}
+  ],
+  "rust_source_changed": false,
+  "deployment_required": false
+}

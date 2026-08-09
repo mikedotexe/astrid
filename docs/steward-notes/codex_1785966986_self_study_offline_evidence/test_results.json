@@ -1,0 +1,25 @@
+{
+  "schema": "astrid.steward_run_test_results.v1",
+  "steward_run_id": "run_1785966986103951000_6dca36ada3",
+  "results": [
+    {"suite": "offline replay campaign", "passed": 7, "failed": 0},
+    {"suite": "dialogue token pressure audit", "passed": 8, "failed": 0},
+    {"suite": "attested expression spectral alignment self-tests", "passed": 3, "failed": 0},
+    {"suite": "Evidence Study Runtime verification", "passed": 1, "failed": 0, "note": "Verified with PYTHONPATH=.:scripts; the first invocation without the repository module path failed import before verification began."},
+    {"suite": "introspection addressing audit", "passed": 42, "failed": 0},
+    {"suite": "Evidence Store, steward control, projector, Division, Chronicle, and cursor", "passed": 72, "failed": 0},
+    {"suite": "anti-drop self-tests", "passed": 5, "failed": 0},
+    {"suite": "anti-drop verification", "passed": 47, "failed": 0, "alarms": 0, "gaps": 0},
+    {"suite": "experiential epistemics self-tests", "passed": 2, "failed": 0},
+    {"suite": "epistemic lint", "records_checked": 10380, "issues": 0}
+  ],
+  "evidence_store_snapshot": {
+    "sequence": 702567,
+    "head_sha256": "27a9a9e82729114c56196b68e6892751a7fd6e8a37f3bd46abd404b15704159d",
+    "stream_count": 16,
+    "corrupt_lines": 0,
+    "valid": true
+  },
+  "rust_changes": false,
+  "deployment_required": false
+}

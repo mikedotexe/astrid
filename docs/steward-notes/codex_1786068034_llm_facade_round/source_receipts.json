@@ -1,0 +1,52 @@
+{
+  "source_reads": [
+    {
+      "path": "capsules/spectral-bridge/src/llm.rs",
+      "sha256": "f3194742d5b3412374516f858c3cae86ec2495131bdf08a23802bea6556689a1",
+      "lines": 6,
+      "bytes": 139,
+      "read": "complete"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider.rs",
+      "sha256": "23999cdab646139ebda119a11333090bf72ca9dabc25a0af659629eae0cedbfa",
+      "lines": 39,
+      "bytes": 1529,
+      "read": "complete"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/dialogue_context.rs",
+      "sha256": "cdc7a6884477587728eb64dd5da1f9b00c9488831a44ceb31290eff5e71a1532",
+      "lines": 284,
+      "bytes": 9761,
+      "read": "complete"
+    },
+    {
+      "path": "capsules/spectral-bridge/DOMAIN_BOUNDARIES.md",
+      "sha256": "11c5ff89e1a7a12cfcc8cc49c676b04feb2118d9ee4975f47dc139984ee0b9e3",
+      "lines": 65,
+      "bytes": 3504,
+      "read": "complete"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/lib.rs",
+      "sha256": "a6fa9f2a4efdd0b133d72deb54ad543cdbe64707466a033c6dc9212783affd21",
+      "lines": 75,
+      "bytes": 1913,
+      "read": "complete"
+    },
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_1cb5bb4feeb22658e9d6e6143139c90a706db4ae35a072b0f8a6afc1bc8b460d.json",
+      "sha256": "8c028279991af574f10944056bf2f5dd41265f225d7f612ff20d6a86eb6733be",
+      "newline_count": 491,
+      "bytes": 22046,
+      "read": "complete",
+      "authority": "evidence_only_no_direct_causation_or_live_authority"
+    }
+  ],
+  "exact_search": {
+    "scope": "capsules/spectral-bridge/src/llm/provider/**/*.rs",
+    "items_named_exactly_Model_or_Context": 0,
+    "note": "similarly prefixed internal implementation types were not promoted to the report's named types"
+  }
+}

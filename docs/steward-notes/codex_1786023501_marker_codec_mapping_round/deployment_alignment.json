@@ -1,0 +1,22 @@
+{
+  "schema": "steward_deployment_alignment_v1",
+  "live_consumed_source_changed": false,
+  "rust_source_changed": false,
+  "build_required": false,
+  "restart_required": false,
+  "deployment_required": false,
+  "bridge_process_changed": false,
+  "minime_source_or_runtime_changed": false,
+  "cadence": {
+    "enabled": false,
+    "durable_configured_receipt_exists": false,
+    "pilot_active": false,
+    "lifecycle_transition_count": 0,
+    "integrity_ok": true
+  },
+  "automation": {
+    "introspection_source_first": "active_current_heartbeat",
+    "self_study": "unchanged"
+  },
+  "authority": "verification_and_evidence_only_no_live_control_or_deployment_authority"
+}

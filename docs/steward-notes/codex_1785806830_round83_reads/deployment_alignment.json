@@ -1,0 +1,12 @@
+{
+  "schema": "steward_deployment_alignment_v1",
+  "live_consumed_surface_changed": false,
+  "restart_required": false,
+  "deployment_performed": false,
+  "minime_source_changed": false,
+  "bridge_source_changed": false,
+  "tooling_surface": "scripts/recent_signal_summary.py",
+  "foreign_dirty_bridge_preserved": true,
+  "prior_provider_deployment_debt_unchanged": "scripts/build_bridge.sh --ack \"provider-neutral output normalization after source-first verification\" --actor codex-heartbeat --restart",
+  "authority_boundary": "read-only steward tooling only; no live bridge, Minime, provider, pressure, porosity, fill, PI, cadence, controller, or runtime alignment required"
+}

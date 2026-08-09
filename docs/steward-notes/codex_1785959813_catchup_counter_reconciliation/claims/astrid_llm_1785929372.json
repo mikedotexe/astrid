@@ -1,0 +1,10 @@
+{
+  "introspection_id": "introspection_astrid_llm_1785929372",
+  "claims": [
+    {"claim_id": "c001", "summary": "The scanner preserves exact marker references under declared syntax and removes unframed marker bytes.", "disposition": "Verified from the complete report-bound source.", "classification": "verified_existing"},
+    {"claim_id": "c002", "summary": "Punctuation-heavy or hyphenated text may confuse delimiter and first-word classification.", "disposition": "Verified as an intentionally finite boundary, with exact tests for punctuation-heavy prose, Unicode words, underscores, declared delimiters, and Markdown non-delimiters.", "classification": "exact_duplicate"},
+    {"claim_id": "c003", "summary": "Delimiter recognition within the configured four-pair bound should be tested.", "disposition": "Exact duplicate of the depth-three, depth-four, whitespace, repeated, and bounded-deeper regressions.", "classification": "exact_duplicate"},
+    {"claim_id": "c004", "summary": "The relation verb echoes should be retained while contains and is_not remain outside the finite grammar.", "disposition": "Verified from the exact allowlist and relation regressions; underscore-bearing words stay whole and unlisted words are rejected.", "classification": "verified_existing"},
+    {"claim_id": "c005", "summary": "Colon or dash punctuation should be admitted between a delimiter and marker reference.", "disposition": "Preserved as an exact live provider-output grammar approval wait; this run does not broaden sanitation behavior.", "classification": "tier_5_wait", "authority": "mike_operator_live_model_output_behavior_approval_required"}
+  ]
+}

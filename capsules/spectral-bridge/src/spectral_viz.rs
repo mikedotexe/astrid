@@ -1493,7 +1493,7 @@ pub fn format_sovereignty_suggestion_line(ctx: &SovereigntyContext) -> Option<St
         SovereigntySuggestion::TemperatureLengthMenu { temp, len, scale } => format!(
             "[Generation-shape sovereign — currently temperature={temp:.2}, length={len}, \
              hebbian_scale={scale:.2}. Alternatives: NEXT: TEMPERATURE <0.10\u{2013}1.50> | \
-             LENGTH <128\u{2013}1536> | SHAPE_LEARN <0.0\u{2013}4.0>.]"
+             LENGTH <512\u{2013}1536> | SHAPE_LEARN <0.0\u{2013}4.0>.]"
         ),
     })
 }

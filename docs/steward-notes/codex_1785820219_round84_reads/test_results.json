@@ -1,0 +1,79 @@
+{
+  "schema": "steward_test_results_v1",
+  "results": [
+    {
+      "command": "cargo test control_marker -- --nocapture",
+      "working_directory": "capsules/spectral-bridge",
+      "status": "passed",
+      "passed": 44,
+      "failed": 0
+    },
+    {
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib",
+      "status": "passed",
+      "passed": 1800,
+      "failed": 0
+    },
+    {
+      "command": "cargo clippy --manifest-path capsules/spectral-bridge/Cargo.toml --lib --tests -- -D warnings",
+      "status": "passed"
+    },
+    {
+      "command": "git diff --check -- capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "status": "passed"
+    },
+    {
+      "command": "cargo +nightly fmt --manifest-path capsules/spectral-bridge/Cargo.toml --all -- --check",
+      "status": "blocked_by_pre_existing_foreign_format_diffs",
+      "unrelated_paths": ["../RASCII/src/camera.rs", "../RASCII/src/image_renderer.rs", "../RASCII/src/lib.rs", "../RASCII/src/main.rs", "capsules/spectral-bridge/src/autonomous/next_action/workspace.rs"],
+      "note": "No formatter write was performed; the owned diff passes git diff --check and strict Clippy."
+    },
+    {
+      "command": "PYTHONDONTWRITEBYTECODE=1 python3 scripts/introspection_addressing_audit.py --self-test",
+      "status": "passed",
+      "passed": 41,
+      "failed": 0
+    },
+    {
+      "command": "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=.:scripts python3 -m unittest scripts.test_evidence_event_store scripts.test_steward_control scripts.test_steward_projection scripts.test_division_ceremony_followup scripts.test_division_ceremony_chronicle scripts.test_division_ceremony_projection scripts.test_claim_family_incremental_projection",
+      "status": "passed",
+      "passed": 68,
+      "failed": 0
+    },
+    {
+      "command": "PYTHONDONTWRITEBYTECODE=1 python3 scripts/anti_drop_catalog.py --self-test",
+      "status": "passed",
+      "passed": 5,
+      "failed": 0
+    },
+    {
+      "command": "PYTHONDONTWRITEBYTECODE=1 python3 scripts/anti_drop_catalog.py verify",
+      "status": "passed",
+      "guards": 47,
+      "gaps": 0,
+      "alarms": 0
+    },
+    {
+      "command": "PYTHONDONTWRITEBYTECODE=1 python3 scripts/experiential_epistemics.py self-test --json",
+      "status": "passed",
+      "passed": 2,
+      "failed": 0
+    },
+    {
+      "command": "PYTHONDONTWRITEBYTECODE=1 python3 scripts/experiential_epistemics.py lint --json",
+      "status": "passed",
+      "checked_record_count": 10266,
+      "issue_count": 0
+    },
+    {
+      "command": "PYTHONDONTWRITEBYTECODE=1 python3 scripts/evidence_event_store.py --json verify",
+      "status": "passed",
+      "last_global_seq": 683604,
+      "last_event_sha256": "e362e61384519e7e36aab216b896a404b117b8816d79650f136fc6a235e682aa",
+      "active_stream_count": 16,
+      "corrupt_lines": 0,
+      "legacy_imported_global_seq": 32278,
+      "history_rewritten": false
+    }
+  ]
+}

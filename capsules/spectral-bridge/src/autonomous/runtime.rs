@@ -80,6 +80,14 @@ pub(crate) fn suppress_astrid_journal_saves_for_test() -> TestAstridJournalSaveG
     TestAstridJournalSaveGuard { previous }
 }
 
+/// Prepare a one-shot, signed state-lineage receipt for the currently built bridge.
+pub fn prepare_self_control_deployment_handoff(
+    operator_actor: &str,
+    operator_ack: &str,
+) -> Result<serde_json::Value, String> {
+    self_control_v2::prepare_deployment_handoff(operator_actor, operator_ack)
+}
+
 include!("runtime/text.rs");
 include!("runtime/continuity.rs");
 include!("runtime/introspection_freshness.rs");

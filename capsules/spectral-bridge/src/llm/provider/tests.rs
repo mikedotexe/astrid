@@ -15,8 +15,9 @@ mod tests {
         GEMMA4_CANARY_REFLECTIVE_TIMEOUT_SECS, GEMMA4_CANARY_REFLECTIVE_TOKEN_CAP,
         GEMMA4_CANARY_SYSTEM_PROMPT, GEMMA4_CANARY_WITNESS_CONTEXT_PROMPT_CAP,
         GEMMA4_CANARY_WITNESS_CONTEXT_TIMEOUT_SECS, GEMMA4_CANARY_WITNESS_PROMPT_CAP,
-        GEMMA4_CANARY_WITNESS_TIMEOUT_SECS, Message, MlxProfile, MlxResponse, ModelQosClassV1,
-        ModelQosTimingV1, PromptBudgetReport, SYSTEM_PROMPT, append_llm_diagnostic_jsonl_at,
+        GEMMA4_CANARY_WITNESS_TIMEOUT_SECS, ChatResponse, Message, MlxProfile, MlxResponse,
+        ModelQosClassV1, ModelQosTimingV1, PromptBudgetReport, SYSTEM_PROMPT,
+        append_llm_diagnostic_jsonl_at,
         apply_mlx_request_policy, build_ollama_chat_request, clamp_dialogue_tokens_for_profile,
         compact_ollama_dialogue_fallback_messages, contains_deprecated_runtime_language,
         control_marker_cleanup_diagnostic, count_next_lines,
@@ -30,9 +31,11 @@ mod tests {
         format_dialogue_direct_perception_block, format_dialogue_topline_context,
         fragment_has_non_marker_bytes, introspection_user_content, is_valid_dialogue_output,
         is_valid_dialogue_output_for_profile, is_valid_ollama_dialogue_fallback_output_for_budget,
-        is_valid_ollama_dialogue_fallback_output_for_profile, journal_continuity_contract_v1,
+        is_valid_ollama_dialogue_fallback_output_for_profile,
+        is_valid_primary_dialogue_output_for_profile, journal_continuity_contract_v1,
         llm_diagnostic_io_retryability, local_degrade_path_for_label, model_qos_class_for_label,
-        model_qos_v1, reinforce_ollama_fallback_contract, repair_ollama_dialogue_fallback_next,
+        model_qos_v1, normalize_provider_output_v1, reinforce_ollama_fallback_contract,
+        repair_ollama_dialogue_fallback_next,
         sanitize_deprecated_runtime_language, sanitize_gemma4_canary_output_for_label,
         sanitize_minime_context_for_dialogue, sanitize_model_control_markers,
         sanitize_model_control_markers_with_report, sha256_parts,
@@ -1623,6 +1626,39 @@ mod tests {
     fn quality_gate_accepts_normal_dialogue() {
         let text = "I keep thinking about the shape of your last note, especially the way it lingered after the room went quiet.\nMaybe the stillness is carrying more than the numbers admit.\nNEXT: LISTEN";
         assert!(is_valid_dialogue_output(text));
+        assert!(is_valid_primary_dialogue_output_for_profile(
+            text,
+            MlxProfile::Production,
+        ));
+    }
+
+    #[test]
+    fn quality_gate_rejects_fluent_truncation_without_next() {
+        let text = "I can feel the careful scaffolding in the bridge, and I want to stay with the way it keeps the relation open while providing the very structure that allows";
+        assert!(!is_valid_primary_dialogue_output_for_profile(
+            text,
+            MlxProfile::Production,
+        ));
+    }
+
+    #[test]
+    fn quality_gate_requires_one_nonempty_final_next() {
+        let non_final = "The bridge remains legible.\nNEXT: LISTEN\nI kept writing afterward.";
+        let duplicate = "The bridge remains legible.\nNEXT: LISTEN\nNEXT: REST";
+        let empty = "The bridge remains legible.\nNEXT:";
+
+        assert!(!is_valid_primary_dialogue_output_for_profile(
+            non_final,
+            MlxProfile::Production,
+        ));
+        assert!(!is_valid_primary_dialogue_output_for_profile(
+            duplicate,
+            MlxProfile::Production,
+        ));
+        assert!(!is_valid_primary_dialogue_output_for_profile(
+            empty,
+            MlxProfile::Production,
+        ));
     }
 
     #[test]
@@ -1756,6 +1792,22 @@ mod tests {
     }
 
     #[test]
+    fn control_marker_scanner_removes_adjacent_mixed_markers_without_rewriting_remainder() {
+        let text = "left<end_of_turn><eos><|im_end|>right";
+        let (stripped, report) = sanitize_model_control_markers_with_report(text);
+        let report = report.expect("adjacent mixed-marker cleanup report");
+
+        assert_eq!(stripped.as_bytes(), b"leftright");
+        assert_eq!(report.observed_total, 3);
+        assert_eq!(report.removed_total, 3);
+        assert_eq!(report.preserved_explicit_reference_total, 0);
+        assert_eq!(
+            report.removed_marker_bytes,
+            "<end_of_turn><eos><|im_end|>".len()
+        );
+    }
+
+    #[test]
     fn control_marker_sanitizer_preserves_common_linguistic_substrings() {
         let text =
             "transaction, action, thoughtfulness, channel, finality, and analysis remain intact";
@@ -1772,11 +1824,13 @@ mod tests {
             &report,
             "hello ",
             "dialogue_live",
-            MlxProfile::Gemma4Canary,
+            "mlx",
+            MlxProfile::Gemma4Canary.as_str(),
         );
-        assert_eq!(diagnostic.schema, "control_marker_cleanup_v10");
-        assert_eq!(diagnostic.schema_version, 10);
+        assert_eq!(diagnostic.schema, "control_marker_cleanup_v11");
+        assert_eq!(diagnostic.schema_version, 11);
         assert_eq!(diagnostic.label, "dialogue_live");
+        assert_eq!(diagnostic.provider_route, "mlx");
         assert_eq!(diagnostic.profile, GEMMA4_12B_PROFILE);
         assert_eq!(
             diagnostic.marker_contract,
@@ -1820,6 +1874,124 @@ mod tests {
     }
 
     #[test]
+    fn provider_output_normalization_is_identical_for_mlx_and_ollama_fixtures() {
+        let cases = [
+            (" \nVisible <end_of_turn> answer.\t", "Visible  answer."),
+            (
+                " I compare (([<end_of_turn>])) with boundaries. ",
+                "I compare (([<end_of_turn>])) with boundaries.",
+            ),
+            (
+                " The token <channel|> echoes without yielding. ",
+                "The token <channel|> echoes without yielding.",
+            ),
+            ("  Wärme carries punctuation—still here.  ", "Wärme carries punctuation—still here."),
+        ];
+
+        for (raw, expected) in cases {
+            let mlx: MlxResponse = serde_json::from_value(serde_json::json!({
+                "choices": [{"message": {"role": "assistant", "content": raw}}]
+            }))
+            .expect("MLX fixture");
+            let ollama: ChatResponse = serde_json::from_value(serde_json::json!({
+                "message": {"role": "assistant", "content": raw}
+            }))
+            .expect("Ollama fixture");
+            let mlx_raw = &mlx.choices[0]
+                .message
+                .as_ref()
+                .expect("MLX message")
+                .content;
+            let ollama_raw = &ollama.message.as_ref().expect("Ollama message").content;
+            let mlx_normalized = normalize_provider_output_v1(mlx_raw);
+            let ollama_normalized = normalize_provider_output_v1(ollama_raw);
+
+            assert_eq!(mlx_normalized.text, expected);
+            assert_eq!(ollama_normalized.text, expected);
+            assert_eq!(mlx_normalized.text, ollama_normalized.text);
+        }
+    }
+
+    #[test]
+    fn provider_output_normalization_rejects_marker_only_output_on_both_routes() {
+        for raw in [" <end_of_turn> ", "\n<eos>\t<channel|> "] {
+            let mlx = normalize_provider_output_v1(raw);
+            let ollama = normalize_provider_output_v1(raw);
+            assert!(mlx.text.is_empty());
+            assert!(ollama.text.is_empty());
+            assert!(mlx.cleanup_report.is_some());
+            assert!(ollama.cleanup_report.is_some());
+        }
+    }
+
+    #[test]
+    fn provider_cleanup_diagnostic_names_route_without_raw_output() {
+        let raw = "private remainder must stay out of diagnostics <end_of_turn>";
+        let normalization = normalize_provider_output_v1(raw);
+        let report = normalization.cleanup_report.as_ref().expect("cleanup report");
+        let diagnostic = control_marker_cleanup_diagnostic(
+            report,
+            &normalization.text,
+            "dialogue_live",
+            "ollama",
+            "gemma4:latest",
+        );
+        let serialized = serde_json::to_string(&diagnostic).expect("diagnostic JSON");
+
+        assert_eq!(diagnostic.schema, "control_marker_cleanup_v11");
+        assert_eq!(diagnostic.provider_route, "ollama");
+        assert_eq!(diagnostic.profile, "gemma4:latest");
+        assert!(!serialized.contains("private remainder"));
+    }
+
+    #[test]
+    fn normalized_bytes_feed_repair_and_lived_state_response_hash() {
+        let raw = "  answer from fallback <eos>  ";
+        let normalization = normalize_provider_output_v1(raw);
+        let repaired = repair_ollama_dialogue_fallback_next(
+            &normalization.text,
+            MlxProfile::Gemma4Canary,
+        );
+        assert!(!repaired.contains("<eos>"));
+
+        let normalized_route = crate::lived_state_witness::model_route_v1(
+            Some("job_normalized".to_string()),
+            None,
+            None,
+            "ollama_fallback",
+            "gemma4:latest",
+            10,
+            20,
+            None,
+            None,
+            None,
+            &normalization.text,
+        );
+        let raw_route = crate::lived_state_witness::model_route_v1(
+            Some("job_raw".to_string()),
+            None,
+            None,
+            "ollama_fallback",
+            "gemma4:latest",
+            10,
+            20,
+            None,
+            None,
+            None,
+            raw,
+        );
+        let normalized_json = serde_json::to_value(normalized_route).expect("normalized route");
+        let raw_json = serde_json::to_value(raw_route).expect("raw route");
+
+        assert_ne!(
+            normalized_json["response_sha256"],
+            raw_json["response_sha256"]
+        );
+        assert_eq!(normalized_json["provider_route"], "ollama_fallback");
+        assert_eq!(normalization.text, "answer from fallback");
+    }
+
+    #[test]
     fn control_marker_cleanup_preserves_quoted_exact_token_reference() {
         let text = "I use \"<end_of_turn>\" here as a phrase with semantic intent.";
         let (stripped, report) = sanitize_model_control_markers_with_report(text);
@@ -1847,7 +2019,8 @@ mod tests {
             &report,
             &stripped,
             "dialogue_live",
-            MlxProfile::Gemma4Canary,
+            "mlx",
+            MlxProfile::Gemma4Canary.as_str(),
         );
         let integrity = diagnostic.control_marker_integrity_check_v2;
         assert_eq!(integrity.policy, "control_marker_integrity_check_v2");
@@ -1933,6 +2106,16 @@ mod tests {
         assert_eq!(report.observed_total, 1);
         assert_eq!(report.removed_total, 1);
         assert_eq!(report.preserved_explicit_reference_total, 0);
+    }
+
+    #[test]
+    fn control_marker_relation_word_scanner_keeps_unicode_alphanumerics_together() {
+        let text = "x \u{2014} d\u{00e9}clenche_\u{03bb}2!";
+
+        assert_eq!(
+            super::first_word_after(text, "x".len()),
+            "d\u{00e9}clenche_\u{03bb}2"
+        );
     }
 
     #[test]
@@ -2098,6 +2281,24 @@ mod tests {
     }
 
     #[test]
+    fn control_marker_cleanup_preserves_restless_group_delimiters_across_whitespace() {
+        for text in [
+            "⟦ <end_of_turn> ⟧",
+            "⟦\t<end_of_turn>\n⟧",
+            "⟦\u{2003}<end_of_turn>\u{3000}⟧",
+        ] {
+            let (stripped, report) = sanitize_model_control_markers_with_report(text);
+            assert_eq!(stripped, text);
+            let report = report.expect("whitespace-delimited exact-token report");
+            assert_eq!(report.removed_total, 0);
+            assert_eq!(report.preserved_explicit_reference_total, 1);
+            assert_eq!(report.preserved_tokens[0].grouped_reference_occurrences, 1);
+            assert_eq!(report.preserved_tokens[0].max_delimiter_depth, 1);
+            assert_eq!(report.context_receipts[0].delimiter_depth, 1);
+        }
+    }
+
+    #[test]
     fn control_marker_cleanup_preserves_non_ascii_matching_quote_pairs() {
         for text in [
             "«<end_of_turn>»",
@@ -2105,6 +2306,8 @@ mod tests {
             "„<end_of_turn>“",
             "「<end_of_turn>」",
             "『<end_of_turn>』",
+            "﹁<end_of_turn>﹂",
+            "﹃<end_of_turn>﹄",
         ] {
             let (stripped, report) = sanitize_model_control_markers_with_report(text);
             assert_eq!(stripped, text);
@@ -2112,6 +2315,68 @@ mod tests {
             assert_eq!(report.removed_total, 0);
             assert_eq!(report.preserved_tokens[0].quoted_reference_occurrences, 1);
             assert_eq!(report.preserved_tokens[0].grouped_reference_occurrences, 0);
+        }
+    }
+
+    #[test]
+    fn control_marker_cleanup_preserves_fullwidth_and_cjk_group_pairs() {
+        for text in [
+            "《<end_of_turn>》",
+            "〖<end_of_turn>〗",
+            "〘<end_of_turn>〙",
+            "（<end_of_turn>）",
+            "［<end_of_turn>］",
+            "｛<end_of_turn>｝",
+        ] {
+            let (stripped, report) = sanitize_model_control_markers_with_report(text);
+            assert_eq!(stripped, text);
+            let report = report.expect("fullwidth or CJK group exact-token report");
+            assert_eq!(report.removed_total, 0);
+            assert_eq!(report.preserved_explicit_reference_total, 1);
+            assert_eq!(report.preserved_tokens[0].quoted_reference_occurrences, 0);
+            assert_eq!(report.preserved_tokens[0].grouped_reference_occurrences, 1);
+            assert_eq!(report.preserved_tokens[0].max_delimiter_depth, 1);
+        }
+    }
+
+    #[test]
+    fn control_marker_cleanup_preserves_nested_fullwidth_cjk_reference_stack() {
+        let text = "﹁《（<end_of_turn>）》﹂";
+        let (stripped, report) = sanitize_model_control_markers_with_report(text);
+
+        assert_eq!(stripped, text);
+        let report = report.expect("nested fullwidth CJK exact-token report");
+        assert_eq!(report.removed_total, 0);
+        assert_eq!(report.preserved_explicit_reference_total, 1);
+        assert_eq!(report.preserved_tokens[0].grouped_reference_occurrences, 1);
+        assert_eq!(
+            report.preserved_tokens[0].nested_delimited_reference_occurrences,
+            1
+        );
+        assert_eq!(report.preserved_tokens[0].max_delimiter_depth, 3);
+        assert_eq!(report.context_receipts[0].delimiter_depth, 3);
+    }
+
+    #[test]
+    fn control_marker_cleanup_preserves_quoted_exact_tokens_across_whitespace() {
+        for text in [
+            "\"  <end_of_turn>  \"",
+            "「\t<end_of_turn>\n」",
+            "〝\u{2003}<end_of_turn>\u{3000}〞",
+        ] {
+            let (stripped, report) = sanitize_model_control_markers_with_report(text);
+            assert_eq!(stripped, text);
+            let report = report.expect("whitespace-separated quoted exact-token report");
+            let token = &report.preserved_tokens[0];
+            assert_eq!(report.removed_total, 0);
+            assert_eq!(token.quoted_reference_occurrences, 1);
+            assert_eq!(token.grouped_reference_occurrences, 0);
+            assert_eq!(token.max_delimiter_depth, 1);
+            assert_eq!(
+                report.context_receipts[0].reference_syntax,
+                "quoted_exact_marker"
+            );
+            assert_eq!(report.context_receipts[0].delimiter_depth, 1);
         }
     }
 
@@ -2138,7 +2403,8 @@ mod tests {
             &report,
             &stripped,
             "dialogue_live",
-            MlxProfile::Gemma4Canary,
+            "mlx",
+            MlxProfile::Gemma4Canary.as_str(),
         );
         let integrity = diagnostic.control_marker_integrity_check_v2;
         assert_eq!(integrity.state, "review_output_erased");
@@ -2172,7 +2438,8 @@ mod tests {
             &report,
             &stripped,
             "dialogue_live",
-            MlxProfile::Gemma4Canary,
+            "mlx",
+            MlxProfile::Gemma4Canary.as_str(),
         );
         let integrity = diagnostic.control_marker_integrity_check_v2;
         assert_eq!(integrity.state, "explicit_token_reference_preserved");
@@ -2273,12 +2540,57 @@ mod tests {
     }
 
     #[test]
+    fn control_marker_cleanup_does_not_expand_relation_allowlist_to_contains() {
+        let text = "Here, <end_of_turn> contains the boundary I am naming.";
+        let (stripped, report) = sanitize_model_control_markers_with_report(text);
+
+        assert_eq!(stripped, "Here,  contains the boundary I am naming.");
+        let report = report.expect("non-allowlisted contains report");
+        assert_eq!(report.removed_total, 1);
+        assert_eq!(report.preserved_explicit_reference_total, 0);
+        assert_eq!(
+            report.context_receipts[0].reference_syntax,
+            "none_cleanup_candidate"
+        );
+    }
+
+    #[test]
     fn control_marker_cleanup_does_not_expand_relation_allowlist_to_creates() {
         let text = "Here, <end_of_turn> creates the boundary I am naming.";
         let (stripped, report) = sanitize_model_control_markers_with_report(text);
 
         assert_eq!(stripped, "Here,  creates the boundary I am naming.");
         let report = report.expect("non-allowlisted creates report");
+        assert_eq!(report.removed_total, 1);
+        assert_eq!(report.preserved_explicit_reference_total, 0);
+        assert_eq!(
+            report.context_receipts[0].reference_syntax,
+            "none_cleanup_candidate"
+        );
+    }
+
+    #[test]
+    fn control_marker_cleanup_does_not_expand_relation_allowlist_to_triggers() {
+        let text = "Here, <end_of_turn> triggers the boundary I am naming.";
+        let (stripped, report) = sanitize_model_control_markers_with_report(text);
+
+        assert_eq!(stripped, "Here,  triggers the boundary I am naming.");
+        let report = report.expect("non-allowlisted triggers report");
+        assert_eq!(report.removed_total, 1);
+        assert_eq!(report.preserved_explicit_reference_total, 0);
+        assert_eq!(
+            report.context_receipts[0].reference_syntax,
+            "none_cleanup_candidate"
+        );
+    }
+
+    #[test]
+    fn control_marker_cleanup_does_not_expand_relation_allowlist_to_underscored_appears_as() {
+        let text = "Here, <end_of_turn> appears_as the boundary I am naming.";
+        let (stripped, report) = sanitize_model_control_markers_with_report(text);
+
+        assert_eq!(stripped, "Here,  appears_as the boundary I am naming.");
+        let report = report.expect("non-allowlisted underscored relation report");
         assert_eq!(report.removed_total, 1);
         assert_eq!(report.preserved_explicit_reference_total, 0);
         assert_eq!(
@@ -2296,6 +2608,39 @@ mod tests {
         let report = report.expect("newline-separated exact relation report");
         assert_eq!(report.removed_total, 0);
         assert_eq!(report.preserved_tokens[0].explicit_relation_occurrences, 1);
+    }
+
+    #[test]
+    fn control_marker_cleanup_preserves_relation_after_multiple_punctuation_runs() {
+        let text = "<end_of_turn> ... !!! represents the boundary I am naming.";
+        let (stripped, report) = sanitize_model_control_markers_with_report(text);
+
+        assert_eq!(stripped, text);
+        let report = report.expect("punctuation-separated exact relation report");
+        assert_eq!(report.removed_total, 0);
+        assert_eq!(report.preserved_explicit_reference_total, 1);
+        assert_eq!(report.preserved_tokens[0].explicit_relation_occurrences, 1);
+        assert_eq!(
+            report.context_receipts[0].reference_syntax,
+            "following_exact_relation"
+        );
+    }
+
+    #[test]
+    fn control_marker_cleanup_preserves_relation_after_dash() {
+        let text = "<end_of_turn> - represents the boundary I am naming.";
+        let (stripped, report) = sanitize_model_control_markers_with_report(text);
+
+        assert_eq!(stripped, text);
+        let report = report.expect("dash-separated exact relation report");
+        assert_eq!(report.removed_total, 0);
+        assert_eq!(report.preserved_explicit_reference_total, 1);
+        assert_eq!(report.preserved_tokens[0].explicit_relation_occurrences, 1);
+        assert_eq!(report.context_receipts.len(), 1);
+        assert_eq!(
+            report.context_receipts[0].reference_syntax,
+            "following_exact_relation"
+        );
     }
 
     #[test]
@@ -2319,6 +2664,21 @@ mod tests {
         assert_eq!(report.preserved_explicit_reference_total, 1);
         assert_eq!(report.preserved_tokens[0].quoted_reference_occurrences, 1);
         assert_eq!(report.preserved_tokens[0].grouped_reference_occurrences, 0);
+    }
+
+    #[test]
+    fn control_marker_cleanup_does_not_treat_markdown_emphasis_as_exact_delimiters() {
+        let text = "The identifier **<end_of_turn>** remains visible.";
+        let (stripped, report) = sanitize_model_control_markers_with_report(text);
+
+        assert_eq!(stripped, "The identifier **** remains visible.");
+        let report = report.expect("Markdown-emphasis cleanup report");
+        assert_eq!(report.removed_total, 1);
+        assert_eq!(report.preserved_explicit_reference_total, 0);
+        assert_eq!(
+            report.context_receipts[0].reference_syntax,
+            "none_cleanup_candidate"
+        );
     }
 
     #[test]
@@ -2406,7 +2766,8 @@ mod tests {
             &report,
             &stripped,
             "dialogue_live",
-            MlxProfile::Gemma4Canary,
+            "mlx",
+            MlxProfile::Gemma4Canary.as_str(),
         );
         let surface = diagnostic.sanitized_output_surface_v3;
 
@@ -2439,7 +2800,8 @@ mod tests {
             &report,
             &stripped,
             "dialogue_live",
-            MlxProfile::Gemma4Canary,
+            "mlx",
+            MlxProfile::Gemma4Canary.as_str(),
         );
         let surface = diagnostic.sanitized_output_surface_v3;
 

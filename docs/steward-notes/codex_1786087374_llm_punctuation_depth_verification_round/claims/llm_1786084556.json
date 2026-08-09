@@ -1,0 +1,29 @@
+{
+  "introspection_id": "introspection_astrid_llm_1786084556",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The dialogue runtime uses a non-semantic exact-marker scanner and finite grammatical reference classifier based on declared delimiters and relation words.",
+      "disposition": "Verified from the complete current 1,048-line source, whose SHA exactly matches the report-bound source.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Complex punctuation, repeated spaces, or nonstandard whitespace may cause first_word_after to miss or falsely detect an otherwise present relation.",
+      "disposition": "The proposed separator mechanism is absent. Unicode alphanumeric/underscore splitting and first-nonempty selection skip arbitrary separator runs; the relation still must be one exact finite word. Existing punctuation, newline, and Unicode-whitespace regressions pass.",
+      "classification": "addressed_duplicate"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A marker followed by represents across a dash should retain following_exact_relation syntax.",
+      "disposition": "Implemented as a literal isolated regression using <end_of_turn> - represents. A bracketed first draft correctly classified grouped syntax, so the final test isolates the requested later-relation path rather than introducing double counting.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Nested bracket references should report delimiter depth correctly against MAX_EXACT_REFERENCE_DELIMITER_DEPTH.",
+      "disposition": "Verified existing and exact duplicate. Current regressions prove two, three, and four levels and preserve a marker inside a deeper stack while capping the evidence receipt at four.",
+      "classification": "addressed_duplicate"
+    }
+  ]
+}

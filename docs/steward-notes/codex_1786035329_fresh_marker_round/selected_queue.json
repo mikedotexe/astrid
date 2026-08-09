@@ -1,0 +1,29 @@
+{
+  "schema": "source_first_selected_queue_v1",
+  "steward_run_id": "run_1786035329622809000_f204509aa4",
+  "recovery_steward_run_id": "run_1786037361210939000_b4131618f4",
+  "preprojection_generation_id": "projection_1786035330118896000_faab54c770",
+  "recovery_preprojection_generation_id": "projection_1786037361632827000_588204dfbe",
+  "ceiling": 40,
+  "selected": [
+    {
+      "position": 1,
+      "introspection_id": "introspection_astrid_llm_1786034340",
+      "filename": "introspection_astrid_llm_1786034340.txt",
+      "sha256": "108ec483fe8d577b9514dbe643ed266891d919782f9838a54f2bbae363322253"
+    }
+  ],
+  "selected_but_unprocessed": [],
+  "next_queue_preview": [
+    "introspection_minime_autonomous_agent_1785630945.txt",
+    "introspection_minime_esn_1785630442.txt",
+    "introspection_minime_sensory_bus_1785630107.txt",
+    "introspection_minime_regulator_1785629184.txt",
+    "introspection_astrid_llm_1785628932.txt",
+    "introspection_astrid_types_1785628394.txt",
+    "introspection_astrid_ws_1785628139.txt",
+    "introspection_astrid_autonomous_1785627823.txt",
+    "introspection_astrid_codec_1785627566.txt"
+  ],
+  "batch_boundary": "Stopped after the fresh queue head because the next source family is the unfamiliar 55,799-line Minime autonomy runtime and warrants an independent bounded source session."
+}

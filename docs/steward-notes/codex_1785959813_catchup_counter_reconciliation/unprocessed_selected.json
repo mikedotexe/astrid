@@ -1,0 +1,10 @@
+{
+  "selected_but_unprocessed": [
+    "introspection_astrid_llm_1785892559.txt"
+  ],
+  "reason": "The authoritative strict queue contained thirteen fresh reports at selection; the approved ceiling was twelve.",
+  "next_queue_context": [
+    "introspection_astrid_codec_1785888193.txt",
+    "introspection_astrid_llm_1785887252.txt"
+  ]
+}

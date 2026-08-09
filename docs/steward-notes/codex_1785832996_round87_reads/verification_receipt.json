@@ -1,0 +1,15 @@
+{
+  "schema": "steward_verification_receipt_v1",
+  "verification": {
+    "surface": "correspondence_representation_density_and_projection_visibility",
+    "production_runtime_code_changed": false,
+    "read_only_audit_added": true,
+    "raw_message_body_emitted": false,
+    "rows_pruned": false,
+    "resonance_ranking_added": false,
+    "focused_tests_pass": true,
+    "live_read_only_observation_pass": true,
+    "live_authority_granted": false
+  },
+  "authority": "read-only public-ledger and derived-metadata observation; no prompt model history selection telemetry pressure fill PI controller reservoir peer Minime CPU runtime or deployment authority"
+}

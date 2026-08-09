@@ -1,0 +1,76 @@
+{
+  "schema": "steward_test_results_v1",
+  "results": [
+    {
+      "surface": "new_fullwidth_cjk_group_regression",
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml control_marker_cleanup_preserves_fullwidth_and_cjk_group_pairs",
+      "passed": 1,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "marker_cleanup_family",
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib control_marker_cleanup",
+      "passed": 43,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "spectral_bridge_library",
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib",
+      "passed": 1834,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "spectral_bridge_clippy",
+      "command": "cargo clippy --manifest-path capsules/spectral-bridge/Cargo.toml --all-targets --all-features -- -D warnings",
+      "status": "passed"
+    },
+    {
+      "surface": "steward_tooling_self_tests",
+      "groups": {
+        "introspection_addressing": 42,
+        "event_store_controller_projector_division_cursor": 72,
+        "anti_drop": 5,
+        "cadence": 6,
+        "experiential_epistemics": 2
+      },
+      "failed": 0,
+      "status": "passed",
+      "invocation_note": "an initial unittest batch omitted PYTHONPATH=scripts and produced five import-loader errors after 54 tests passed; the corrected complete 72-test invocation passed"
+    },
+    {
+      "surface": "anti_drop_live_verify",
+      "guards": 47,
+      "gaps": 0,
+      "alarms": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "cadence_strict_audit",
+      "canonical_reports": 4248,
+      "integrity_ok": true,
+      "cadence_enabled": false,
+      "pending_or_failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "epistemic_lint",
+      "valid": true,
+      "checked_records": 10543,
+      "issues": 0,
+      "history_rewritten": false,
+      "status": "passed"
+    },
+    {
+      "surface": "owned_hunk_format",
+      "status": "passed_by_manual_rustfmt_shape_and_clippy",
+      "whole_file_format_debt": "pre-existing formatting remains elsewhere in both shared files"
+    }
+  ],
+  "production_rust_changed": true,
+  "test_rust_changed": true,
+  "deployment_required_for_live_alignment": true,
+  "deployment_attempted": false
+}

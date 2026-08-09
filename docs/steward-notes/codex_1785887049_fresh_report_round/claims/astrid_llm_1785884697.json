@@ -1,0 +1,41 @@
+{
+  "introspection_id": "introspection_astrid_llm_1785884697",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The dialogue runtime scans known control markers and reconstructs a remainder while preserving exact references.",
+      "disposition": "Verified from exact report-bound source lines 18-144 and 189-219 at the report SHA.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Multibyte UTF-8 text may be split by reverse delimiter scanning or byte-offset advancement.",
+      "disposition": "Exact duplicate of existing source and regression evidence. Delimiter scanning iterates Unicode scalar values; the main scan advances by each character's UTF-8 byte length. The byte-exact multibyte regression passes.",
+      "classification": "exact_duplicate"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Whitespace or non-standard delimiter placement may produce an incorrect reference classification.",
+      "disposition": "Exact duplicate of existing bounded behavior. Unicode whitespace, matched Unicode quote pairs, mismatched pairs, declared group delimiters, and Markdown non-delimiters all have passing exact regressions.",
+      "classification": "exact_duplicate"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "A nested bracket case such as [[marker]] should be tested at the configured depth bound.",
+      "disposition": "Exact duplicate. Existing tests cover repeated brackets, heterogeneous nested stacks, exact depth three and four, and bounded deeper stacks while preserving the exact token.",
+      "classification": "exact_duplicate"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "The relation word echoes should preserve an exact marker reference.",
+      "disposition": "Exact duplicate. `echoes` is present in the finite source allowlist and in the passing poetic-attribution relation regression.",
+      "classification": "exact_duplicate"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "The context receipt should be examined to understand how scan results enter dialogue evidence.",
+      "disposition": "Verified from exact source lines 278-340 and existing receipt regressions. The receipt is bounded, excludes raw surrounding prose, and grants no semantic, spectral, or control authority.",
+      "classification": "verified_existing"
+    }
+  ]
+}

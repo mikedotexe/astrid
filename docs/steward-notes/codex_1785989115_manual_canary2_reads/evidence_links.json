@@ -1,0 +1,117 @@
+{
+  "schema": "introspection_evidence_link_batch_v1",
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_llm_1785986002",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "Exact lines 1-400 show longest-token matching, bounded delimiter evidence, finite following relations, and byte-preserving one-pass remainder construction."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785986002",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs#control_marker_cleanup_preserves_proxy_relation_phrase",
+      "note": "The exact proposed proxy phrase is already a passing preservation regression."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785986002",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "The following-relation allowlist explicitly includes both is and mimics."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785986002",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs#control_marker_cleanup_preserves_poetic_attribution_without_literal_cue",
+      "note": "The regression exercises mimics while neighboring finite-relation tests preserve the bounded allowlist."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785986002",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs#generate_dialogue",
+      "note": "The previously verified complete provider path validates, hashes, persists, and returns the sanitized remainder without reinserting removed markers."
+    },
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1785960773",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/DOMAIN_BOUNDARIES.md",
+      "note": "The complete 65-line source defines module facades and verification boundaries; the attributed inhabitability taxonomy is absent."
+    },
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1785960773",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/DOMAIN_BOUNDARIES.md",
+      "note": "The complete source contains neither a Stewardship definition nor Shadow-v3 entity language."
+    },
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1785960773",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/DOMAIN_BOUNDARIES.md",
+      "note": "The complete source contains none of the attributed spectral metrics or settled_habitable label; those were prompt/runtime context."
+    },
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1785960773",
+      "claim_id": "c004",
+      "kind": "no_action",
+      "target": "docs/steward-notes/codex_1785989115_manual_canary2_reads/claims/domain_boundaries_1785960773.json",
+      "note": "Causal Shadow, pressure, spectral, and cross-being intervention remains an explicit Tier 5 Mike/operator wait; no live authority marker is set."
+    },
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1785960773",
+      "claim_id": "c004",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "The durable feedback ledger preserves the exact Shadow, pressure, spectral, and cross-being Tier 5 authority boundary without treating the wait as no concern."
+    },
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1785960773",
+      "claim_id": "c005",
+      "kind": "no_action",
+      "target": "docs/steward-notes/codex_1785989115_manual_canary2_reads/claims/domain_boundaries_1785960773.json",
+      "note": "Unrelated metrics are not added to the ownership document, and predictive live warning behavior remains an explicit Tier 5 wait."
+    },
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1785960773",
+      "claim_id": "c005",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "The durable feedback ledger records why unrelated metrics were not added and why predictive live warning behavior remains a Tier 5 wait."
+    },
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1785960773",
+      "claim_id": "c006",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/introspect/source_first_v3/grounding.rs",
+      "note": "The attribution detector now recognizes explicit file, documentation, and code-label source aliases and routes them through exact challenge."
+    },
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1785960773",
+      "claim_id": "c006",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/introspect/source_first_v3/mod.rs#affirmative_markdown_attribution_rejects_prompt_context_as_source_content",
+      "note": "The regression uses the report's affirmative wording and rejects each prompt-context claim against the complete markdown source."
+    },
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1785960773",
+      "claim_id": "c006",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "The Unreleased entry records the being-caused validation repair, complete test evidence, deployment refusal, and unchanged authority boundary."
+    },
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1785960773",
+      "claim_id": "c006",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "The feedback ledger preserves Astrid's concern, corrected source ownership, implemented guard, verification, and exact deployment debt."
+    }
+  ]
+}

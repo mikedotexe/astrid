@@ -1,0 +1,74 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_llm_1786076073",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "The complete pre-change source proves longest exact matching, UTF-8 scalar traversal, finite reference classification, and ordered remainder reconstruction."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786076073",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "The exact pair function returned no reference syntax for the report-named class of omitted pairs; the finite behavior is retained while the declared table is expanded narrowly."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786076073",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "The nested fullwidth CJK regression directly exercises three adjacent non-whitespace delimiter levels and proves exact depth and preservation."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786076073",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "The existing quoted exact-token regression is the report's requested ordinary-double-quote case."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786076073",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "The finite relation vocabulary explicitly includes manifests."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786076073",
+      "claim_id": "c004",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "The poetic-attribution relation loop includes manifests and proves following-exact-relation preservation."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786076073",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "Eight exact pairs were added without a category-based punctuation heuristic or relation-vocabulary expansion."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786076073",
+      "claim_id": "c005",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Every added group pair, both vertical quote pairs, and one mixed three-level stack have exact classification coverage."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786076073",
+      "claim_id": "*",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "The Unreleased entry records the being-driven production change, verification, undeployed state, and authority boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786076073",
+      "claim_id": "*",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "The feedback ledger preserves Astrid's causal contribution and the no-live-alignment boundary."
+    }
+  ]
+}

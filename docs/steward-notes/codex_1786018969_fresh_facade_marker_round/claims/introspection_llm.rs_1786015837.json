@@ -1,0 +1,29 @@
+{
+  "introspection_id": "introspection_llm.rs_1786015837",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "llm.rs is a six-line compatibility facade that maps llm/provider.rs and publicly re-exports the provider's public API.",
+      "disposition": "Verified from the complete facade and complete 39-line provider root; this is source-identical to introspection_llm.rs_1785930645.",
+      "classification": "exact_duplicate"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Private provider helpers should remain inaccessible through pub use provider::*.",
+      "disposition": "Verified as Rust visibility behavior. The named spectral_energy helper is hypothetical and absent from the provider root and implementation search; no private handle is promoted by the facade.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Glob re-export might create namespace pollution, ambiguity, or collisions.",
+      "disposition": "No current defect is established. The provider include map and all 1,827 bridge library tests compile without an ambiguous exported name; this repeats the earlier facade audit.",
+      "classification": "exact_duplicate"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "The path attribute should resolve the provider module reliably across builds.",
+      "disposition": "Verified for the current source layout by the complete include map and current bridge library compilation. This establishes compile-time path resolution, not every unobserved deployment environment.",
+      "classification": "verified_existing"
+    }
+  ]
+}

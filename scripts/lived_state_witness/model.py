@@ -17,9 +17,7 @@ except ModuleNotFoundError:
 WITNESS_ID_RE = re.compile(r"^lsw_[0-9a-f]{64}$")
 SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
 REPORT_TIMESTAMP_RE = re.compile(r"_(\d{9,})\.txt$")
-WITNESS_HEADER_RE = re.compile(
-    r"(?m)^Lived-state witness:\s*(lsw_[0-9a-f]{64})\s*$"
-)
+MAX_REPORT_HEADER_LINES = 256
 RECONCILIATION_OUTCOMES = frozenset(
     {
         "same_deployment",
@@ -82,7 +80,7 @@ def canonical_report_paths(workspace: Path) -> list[Path]:
 def report_header(path: Path) -> dict[str, str]:
     metadata: dict[str, str] = {}
     with path.open("r", encoding="utf-8", errors="replace") as handle:
-        for _ in range(40):
+        for _ in range(MAX_REPORT_HEADER_LINES):
             line = handle.readline()
             if not line:
                 break
@@ -98,10 +96,8 @@ def report_header(path: Path) -> dict[str, str]:
 
 
 def witness_pointer(path: Path) -> str | None:
-    with path.open("r", encoding="utf-8", errors="replace") as handle:
-        header = "".join(handle.readline() for _ in range(20))
-    match = WITNESS_HEADER_RE.search(header)
-    return match.group(1) if match else None
+    pointer = report_header(path).get("lived_state_witness")
+    return pointer if pointer and WITNESS_ID_RE.fullmatch(pointer) else None
 
 
 def _privacy_path(value: Any, path: str = "$") -> str | None:

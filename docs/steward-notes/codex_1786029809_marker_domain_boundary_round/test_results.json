@@ -1,0 +1,70 @@
+{
+  "schema": "astrid.steward_run_test_results.v1",
+  "steward_run_id": "run_1786029809705435000_54cb61fe45",
+  "results": [
+    {
+      "suite": "model control-marker regressions",
+      "passed": 47,
+      "failed": 0
+    },
+    {
+      "suite": "source attribution focused regression",
+      "passed": 1,
+      "failed": 0
+    },
+    {
+      "suite": "introspection addressing audit",
+      "passed": 42,
+      "failed": 0
+    },
+    {
+      "suite": "source-first projector, Evidence Store, steward control, Division, Chronicle, claim-family projection, and cursors",
+      "passed": 72,
+      "failed": 0
+    },
+    {
+      "suite": "anti-drop self-tests",
+      "passed": 5,
+      "failed": 0
+    },
+    {
+      "suite": "anti-drop verification",
+      "passed": 47,
+      "failed": 0,
+      "alarms": 0,
+      "gaps": 0
+    },
+    {
+      "suite": "introspection cadence audit",
+      "passed": 6,
+      "failed": 0
+    },
+    {
+      "suite": "experiential epistemics self-tests",
+      "passed": 2,
+      "failed": 0
+    },
+    {
+      "suite": "epistemic lint",
+      "records_checked": 10457,
+      "issues": 0,
+      "history_rewritten": false
+    },
+    {
+      "suite": "manual source-first projection",
+      "passed": 20,
+      "failed": 0,
+      "executed_steps": 19,
+      "reused_steps": 1,
+      "generation_id": "projection_1786031413292581000_741342b8ed"
+    }
+  ],
+  "evidence_store_snapshot": {
+    "sequence": 711852,
+    "head_sha256": "189ce5916bdfd78f5c99ed1b88ac7d339bec79349665a32b70e36a0513e9c471",
+    "stream_count": 16,
+    "corrupt_lines": 0,
+    "valid": true,
+    "v1_history_rewritten": false
+  }
+}

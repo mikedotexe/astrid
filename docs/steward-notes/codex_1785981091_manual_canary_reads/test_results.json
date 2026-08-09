@@ -1,0 +1,81 @@
+{
+  "schema": "steward_test_results_v1",
+  "steward_run_id": "run_1785981091105841000_fc80f0bef1",
+  "results": [
+    {
+      "surface": "marker_regressions",
+      "command": "cargo test control_marker -- --nocapture",
+      "working_directory": "capsules/spectral-bridge",
+      "passed": 46,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "fill_responsive_rest_boundary",
+      "command": "cargo test fill_responsive_rest_keeps_critical_floor_and_band_boundaries -- --nocapture",
+      "working_directory": "capsules/spectral-bridge",
+      "passed": 1,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "burst_rest_transition_envelope_audit",
+      "command": "PYTHONDONTWRITEBYTECODE=1 python3 scripts/burst_rest_transition_envelope_audit.py --self-test --compact",
+      "passed": 8,
+      "failed": 0,
+      "transition_relevant_source_sha256": "e601aa74c2787573f18a919ecf5dc100b795f2fa4ba34f10f3fa645364335674",
+      "status": "passed"
+    },
+    {
+      "surface": "introspection_addressing",
+      "command": "PYTHONDONTWRITEBYTECODE=1 python3 scripts/introspection_addressing_audit.py --self-test",
+      "passed": 42,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "event_control_projection_division_cursor",
+      "command": "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=.:scripts python3 -m unittest scripts.test_evidence_event_store scripts.test_steward_control scripts.test_steward_projection scripts.test_division_ceremony_followup scripts.test_division_ceremony_chronicle scripts.test_division_ceremony_projection scripts.test_claim_family_incremental_projection scripts.test_projection_cursors",
+      "passed": 72,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "anti_drop",
+      "self_tests_passed": 5,
+      "guards_verified": 47,
+      "gaps": 0,
+      "alarms": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "experiential_epistemics",
+      "self_tests_passed": 2,
+      "lint_valid": true,
+      "history_rewritten": false,
+      "status": "passed"
+    },
+    {
+      "surface": "evidence_event_store_v2_live_snapshot",
+      "command": "PYTHONDONTWRITEBYTECODE=1 python3 scripts/evidence_event_store.py --json verify",
+      "sequence": 704292,
+      "head_sha256": "1e1e943c1cfa256be0a028b058711be3a2973f11a1887e9f38cd062ba16c7a1d",
+      "stream_count": 16,
+      "corrupt_lines": 0,
+      "v1_immutable": true,
+      "valid": true,
+      "status": "passed"
+    },
+    {
+      "surface": "introspection_cadence_audit",
+      "command": "python3 scripts/introspection_cadence_audit.py --json --strict --compact",
+      "configuration_valid": true,
+      "enabled": false,
+      "configured_receipts": 0,
+      "pilot_active": false,
+      "status": "passed"
+    }
+  ],
+  "rust_source_changed_by_run": false,
+  "deployment_required": false
+}

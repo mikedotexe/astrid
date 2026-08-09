@@ -1,0 +1,3 @@
+# Full-read summary
+
+Astrid revisits the exact marker scanner's Unicode delimiter and finite-relation boundaries. The report-bound source explicitly declares both requested group pairs, advances through UTF-8 by scalar width, and treats unlisted delimiters and relations as cleanup candidates. Existing exact regressions cover `⟦...⟧`, `〚...〛`, Unicode whitespace, mismatched pairs, and bounded depth. `mirrors` is not in the finite relation list; adding it would change live provider-output preservation and remains an explicit Tier 5 approval wait. The requested continuation was read through the complete delimiter function, and prior complete-source continuity is retained at the identical 1,038-line SHA.

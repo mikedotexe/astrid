@@ -1,0 +1,39 @@
+{
+  "schema": "astrid.introspection_addressing_counter_snapshot.v1",
+  "status": "consistent",
+  "canonical": {
+    "indexed": 4234,
+    "full_read": 3640,
+    "fully_addressed": 3016,
+    "remaining": 1218,
+    "unread": 594,
+    "triaged_pending_action": 213,
+    "triaged_watch": 4,
+    "blocked_needs_steward": 407
+  },
+  "all_present_artifacts": {
+    "indexed": 5848,
+    "full_read": 3640,
+    "fully_addressed": 3016,
+    "remaining": 2832,
+    "unread": 2208
+  },
+  "blocked_needs_steward_breakdown": {
+    "active_artifacts": 407,
+    "historical_absent_artifacts": 1,
+    "active_full_read": 407,
+    "active_claim_complete": 407,
+    "proof_gap_artifacts": 0,
+    "active_blocked_claims": 952,
+    "blocked_claims_with_work_items": 430,
+    "blocked_claims_without_work_items": 522,
+    "partitions": {
+      "authority_waits": {"work_items": 280, "unique_artifacts": 257},
+      "awaiting_response": {"work_items": 77, "unique_artifacts": 50},
+      "evidence_work": {"work_items": 13, "unique_artifacts": 13},
+      "verified_or_closed_evidence": {"work_items": 452, "unique_artifacts": 231}
+    }
+  },
+  "checks_passed": true,
+  "mismatches": []
+}

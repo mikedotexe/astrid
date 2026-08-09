@@ -1,0 +1,56 @@
+{
+  "schema": "introspection_cadence_audit_snapshot_v1",
+  "generated_at": "2026-08-04T19:04:52.925594+00:00",
+  "source_command": "python3 scripts/introspection_cadence_audit.py --compact --strict",
+  "integrity_ok": true,
+  "read_only": true,
+  "configuration": {
+    "schema_version": 1,
+    "enabled": false,
+    "every_exchanges": 0,
+    "target": null,
+    "anchor_completed_exchange": null,
+    "pending_since_exchange": null,
+    "last_attempt_exchange": null,
+    "last_admitted_exchange": null,
+    "last_outcome": null,
+    "pilot_started_at_unix_ms": null,
+    "pilot_runtime_ms": 0,
+    "pilot_cadence_starts": 0,
+    "pilot_hold_reason": null,
+    "lifecycle_receipt_debt": null
+  },
+  "lifecycle_counts": {
+    "configured": 0,
+    "disabled": 0,
+    "rejected": 0,
+    "due": 0,
+    "deferred": 0,
+    "attempted": 0,
+    "admitted": 0,
+    "failed": 0
+  },
+  "canonical_reports": {
+    "count_on_disk": 4207,
+    "latest": "introspection_astrid_llm_1785869849.txt",
+    "median_gap_seconds": 420.5,
+    "p90_gap_seconds": 1909.0,
+    "maximum_gap_seconds": 998926.0,
+    "duplicate_hash_group_count": 0,
+    "target_diversity_count": 73
+  },
+  "pilot": {
+    "active": false,
+    "durable_configured_receipt_exists": false,
+    "maximum_starts": 8,
+    "maximum_runtime_hours": 72,
+    "cadence_triggered_starts": 0,
+    "cumulative_runtime_hours": 0.0
+  },
+  "pending_or_failed": {
+    "pending_since_exchange": null,
+    "failed_attempt_ids": [],
+    "unresolved_attempt_ids": [],
+    "lifecycle_receipt_debt": null
+  }
+}

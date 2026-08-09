@@ -1,0 +1,20 @@
+{
+  "schema": "astrid.source_first_selected_queue.v1",
+  "preprojection_generation_id": "projection_1786007281311651000_99b581e0bc",
+  "selected": [
+    {
+      "position": 1,
+      "filename": "introspection_astrid_llm_1786006651.txt",
+      "outcome": "fully_processed_addressed_change"
+    }
+  ],
+  "selected_but_unprocessed": [],
+  "stop_reason": "The queue-head report directly produced a coherent test-only implementation, so the adaptive batch stopped at one report before opening the next source.",
+  "preprojection_queue_remainder": [
+    "introspection_astrid_llm_1786002182.txt",
+    "introspection_astrid_llm_1785999123.txt",
+    "introspection_astrid_llm_1785959982.txt",
+    "introspection_astrid_llm_1785892559.txt",
+    "introspection_astrid_codec_1785888193.txt"
+  ]
+}

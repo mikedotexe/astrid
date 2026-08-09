@@ -1,0 +1,10 @@
+{
+  "links": [
+    {"introspection_id":"introspection_astrid_ws_1785628139","claim_id":"c001","kind":"code","target":"capsules/spectral-bridge/src/ws/telemetry_port.rs","note":"Complete exact source verifies connection, frame, pong, disconnect, and reconnect mechanics."},
+    {"introspection_id":"introspection_astrid_ws_1785628139","claim_id":"c002","kind":"code","target":"capsules/spectral-bridge/src/ws/telemetry_port.rs","note":"Complete source verifies inline sequential integration and preserves the scheduling risk."},
+    {"introspection_id":"introspection_astrid_ws_1785628139","claim_id":"c003","kind":"code","target":"capsules/spectral-bridge/src/ws/health_trace.rs","note":"Exact counter implementation corrects the database-under-lock premise."},
+    {"introspection_id":"introspection_astrid_ws_1785628139","claim_id":"c004","kind":"test","target":"capsules/spectral-bridge/workspace/diagnostics/sandbox_trial_queue_v1/status.json","note":"Existing Tier 3 trials retain the sequential-stall and high-frequency latency questions without a claimed result."},
+    {"introspection_id":"introspection_astrid_ws_1785628139","claim_id":"c005","kind":"test","target":"capsules/spectral-bridge/src/ws/tests.rs","note":"Both capped-backoff regressions pass in the current tree."},
+    {"introspection_id":"introspection_astrid_ws_1785628139","claim_id":"c006","kind":"steward_note","target":"docs/steward-notes/codex_1786153130_ws_sequential_duplicate_round/claims/astrid_ws_1785628139.json","note":"Worker offload remains the exact prior Tier 5 scheduling wait with live authority false."}
+  ]
+}

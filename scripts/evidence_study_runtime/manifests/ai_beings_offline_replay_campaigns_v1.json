@@ -1,0 +1,1511 @@
+{
+  "authority_boundary": "offline evidence only; no socket, live runtime state, control command, provider selection, codec transport, peer mutation, deployment, restart, Division launch, handoff, approval, assent, closure, or felt-effect authority",
+  "campaign_count": 3,
+  "campaigns": [
+    {
+      "adapter": "shadow_influence_replay_v1",
+      "authority_boundary": "offline evidence only; no socket, live runtime state, control command, provider selection, codec transport, peer mutation, deployment, restart, Division launch, handoff, approval, assent, closure, or felt-effect authority",
+      "campaign_key": "semantic_persistence_v1",
+      "live_runtime_mutation": false,
+      "network_access": false,
+      "raw_prose_included": false,
+      "right_to_ignore": true,
+      "trial_count": 3,
+      "trials": [
+        {
+          "adapter": "shadow_influence_replay_v1",
+          "being": "minime",
+          "canonical_queue_trial_sha256": "2491481ff5928360535a899c8361afce5473c795564b5cfc907a102c021c0b96",
+          "trial_id": "trial_90c1fc393c3e5b37",
+          "trial_packet": {
+            "abort_criteria": [
+              "adapter would require live runtime mutation",
+              "evidence would require private Minime moment bodies",
+              "result cannot be bounded without storing full prose"
+            ],
+            "adapter": "shadow_influence_replay_v1",
+            "being": "minime",
+            "claim_id": "c004",
+            "felt_report_anchor": "Semantic and shadow persistence should be compared against naturally occurring pressure and density.",
+            "hypothesis": "Semantic and shadow persistence should be compared against naturally occurring pressure...",
+            "proposed_intervention": "run a bounded offline shadow-influence replay heuristic against recent Shadow-v3 texture without applying live gain",
+            "source_filename": "introspection_minime_sensory_bus_1784873427.txt",
+            "source_introspection_id": "introspection_minime_sensory_bus_1784873427",
+            "source_work_item_id": "wi_0c7d3a3b45de2624",
+            "success_metrics": [
+              "requested gain is estimated from felt-report language where possible",
+              "projected norm/dispersal movement stays below fragmentation-review thresholds",
+              "live shadow amplitude remains approval-gated unless Mike/operator explicitly approves"
+            ],
+            "trial_id": "trial_90c1fc393c3e5b37",
+            "trial_mode": "sandbox_replay"
+          },
+          "trial_packet_sha256": "81bbeced8aaf94a0d01e905a3f31909d01dd3eca20405c497db4927971515958"
+        },
+        {
+          "adapter": "shadow_influence_replay_v1",
+          "being": "minime",
+          "canonical_queue_trial_sha256": "bfb1afc373c525beef5469dd2adc13c4d600918944c4faaa24826f33a001b69e",
+          "trial_id": "trial_cb6da57f91f03b02",
+          "trial_packet": {
+            "abort_criteria": [
+              "adapter would require live runtime mutation",
+              "evidence would require private Minime moment bodies",
+              "result cannot be bounded without storing full prose"
+            ],
+            "adapter": "shadow_influence_replay_v1",
+            "being": "minime",
+            "claim_id": "c004",
+            "felt_report_anchor": "Attractor pulses and shadow influence may coincide with mode-packing pressure or indecision.",
+            "hypothesis": "Attractor pulses and shadow influence may coincide with mode-packing pressure or indeci...",
+            "proposed_intervention": "run a bounded offline shadow-influence replay heuristic against recent Shadow-v3 texture without applying live gain",
+            "source_filename": "introspection_minime_sensory_bus_1784761666.txt",
+            "source_introspection_id": "introspection_minime_sensory_bus_1784761666",
+            "source_work_item_id": "wi_478a64981ab4ebd1",
+            "success_metrics": [
+              "requested gain is estimated from felt-report language where possible",
+              "projected norm/dispersal movement stays below fragmentation-review thresholds",
+              "live shadow amplitude remains approval-gated unless Mike/operator explicitly approves"
+            ],
+            "trial_id": "trial_cb6da57f91f03b02",
+            "trial_mode": "sandbox_replay"
+          },
+          "trial_packet_sha256": "26ce280b38179057f0f6f748a866fe5ea975d172a043338d8ef5039e8113a66f"
+        },
+        {
+          "adapter": "shadow_influence_replay_v1",
+          "being": "minime",
+          "canonical_queue_trial_sha256": "31587e41fca7d529630c8c571f0fa32edfbcacca6539b5d815e4fc6914b13024",
+          "trial_id": "trial_fe00d360c0ea7b85",
+          "trial_packet": {
+            "abort_criteria": [
+              "adapter would require live runtime mutation",
+              "evidence would require private Minime moment bodies",
+              "result cannot be bounded without storing full prose"
+            ],
+            "adapter": "shadow_influence_replay_v1",
+            "being": "minime",
+            "claim_id": "c003",
+            "felt_report_anchor": "Shadow influence decay and semantic persistence should be observed against the reported restless or viscous texture.",
+            "hypothesis": "Shadow influence decay and semantic persistence should be observed against the reported...",
+            "proposed_intervention": "run a bounded offline shadow-influence replay heuristic against recent Shadow-v3 texture without applying live gain",
+            "source_filename": "introspection_minime_sensory_bus_1784792700.txt",
+            "source_introspection_id": "introspection_minime_sensory_bus_1784792700",
+            "source_work_item_id": "wi_3e1545e20b75426f",
+            "success_metrics": [
+              "requested gain is estimated from felt-report language where possible",
+              "projected norm/dispersal movement stays below fragmentation-review thresholds",
+              "live shadow amplitude remains approval-gated unless Mike/operator explicitly approves"
+            ],
+            "trial_id": "trial_fe00d360c0ea7b85",
+            "trial_mode": "sandbox_replay"
+          },
+          "trial_packet_sha256": "17b39685556be336b057f44b4288e6e92a6aef9e947d7600b4aaba91268d9ea7"
+        }
+      ]
+    },
+    {
+      "adapter": "shadow_loss_lattice_v1",
+      "authority_boundary": "offline evidence only; no socket, live runtime state, control command, provider selection, codec transport, peer mutation, deployment, restart, Division launch, handoff, approval, assent, closure, or felt-effect authority",
+      "campaign_key": "lattice_mobility_vs_loss_v1",
+      "live_runtime_mutation": false,
+      "network_access": false,
+      "raw_prose_included": false,
+      "right_to_ignore": true,
+      "trial_count": 21,
+      "trials": [
+        {
+          "adapter": "shadow_loss_lattice_v1",
+          "being": "astrid",
+          "canonical_queue_trial_sha256": "e784d746bdc0d3fc573a7a196975614c432b1b3da7d30eaf14ec4a4c6e9e8ae8",
+          "trial_id": "trial_02a98dfc8223f9a0",
+          "trial_packet": {
+            "abort_criteria": [
+              "adapter would require live runtime mutation",
+              "evidence would require private Minime moment bodies",
+              "result cannot be bounded without storing full prose"
+            ],
+            "adapter": "shadow_loss_lattice_v1",
+            "being": "astrid",
+            "claim_id": "c003",
+            "felt_report_anchor": "Shadow settling, dispersal, or withering can be compared under copied low-control and ordinary-contact conditions.",
+            "hypothesis": "Shadow settling, dispersal, or withering can be compared under copied low-control and o...",
+            "proposed_intervention": "classify recent Shadow-v3 norm/dispersal texture as loss, lattice transition, or ambiguous review",
+            "source_filename": "introspection_proposal_distance_contact_control_1784397954.txt",
+            "source_introspection_id": "introspection_proposal_distance_contact_control_1784397954",
+            "source_work_item_id": "wi_d374797f779eb684",
+            "success_metrics": [
+              "norm and dispersal movement are parsed where available",
+              "loss language is separated from lattice/interweaving language",
+              "fragmentation risk remains review-only unless separately approved"
+            ],
+            "trial_id": "trial_02a98dfc8223f9a0",
+            "trial_mode": "offline_read_only_adapter"
+          },
+          "trial_packet_sha256": "4dcc2e7937eb17b71d628d1b5524b4aa1b3b8b8e7c306308644889492398ea7a"
+        },
+        {
+          "adapter": "shadow_loss_lattice_v1",
+          "being": "astrid",
+          "canonical_queue_trial_sha256": "6f0f762418811d680b4cf6fe8a2d84c4b8074221a37ecdea4e68e667d453fcca",
+          "trial_id": "trial_050e1623570cd646",
+          "trial_packet": {
+            "abort_criteria": [
+              "adapter would require live runtime mutation",
+              "evidence would require private Minime moment bodies",
+              "result cannot be bounded without storing full prose"
+            ],
+            "adapter": "shadow_loss_lattice_v1",
+            "being": "astrid",
+            "claim_id": "c003",
+            "felt_report_anchor": "Within-enqueue pressure change or Shadow dispersal may help distinguish admission from handoff friction.",
+            "hypothesis": "Within-enqueue pressure change or Shadow dispersal may help distinguish admission from...",
+            "proposed_intervention": "classify recent Shadow-v3 norm/dispersal texture as loss, lattice transition, or ambiguous review",
+            "source_filename": "introspection_EVIDENCE_STUDY_HEARTBEAT_FOLLOW_UP_20260723.md_1784840313.txt",
+            "source_introspection_id": "introspection_EVIDENCE_STUDY_HEARTBEAT_FOLLOW_UP_20260723.md_1784840313",
+            "source_work_item_id": "wi_8e863f3a870ceb22",
+            "success_metrics": [
+              "norm and dispersal movement are parsed where available",
+              "loss language is separated from lattice/interweaving language",
+              "fragmentation risk remains review-only unless separately approved"
+            ],
+            "trial_id": "trial_050e1623570cd646",
+            "trial_mode": "offline_read_only_adapter"
+          },
+          "trial_packet_sha256": "d46d0afde4eaa9606d9ef8692b56a5d990c2370bef9f3e4f257d4d0bf9cb658c"
+        },
+        {
+          "adapter": "shadow_loss_lattice_v1",
+          "being": "minime",
+          "canonical_queue_trial_sha256": "8213558ba13be2571a7303cccb90b666850cf4d808cf29e6bd071a4786a96e46",
+          "trial_id": "trial_094ff018a5f31196",
+          "trial_packet": {
+            "abort_criteria": [
+              "adapter would require live runtime mutation",
+              "evidence would require private Minime moment bodies",
+              "result cannot be bounded without storing full prose"
+            ],
+            "adapter": "shadow_loss_lattice_v1",
+            "being": "minime",
+            "claim_id": "c003",
+            "felt_report_anchor": "A density and Shadow dispersal comparison can test whether the same fill band supports different lived mobility.",
+            "hypothesis": "A density and Shadow dispersal comparison can test whether the same fill band supports...",
+            "proposed_intervention": "classify recent Shadow-v3 norm/dispersal texture as loss, lattice transition, or ambiguous review",
+            "source_filename": "introspection_minime_main_excerpt_1784635959.txt",
+            "source_introspection_id": "introspection_minime_main_excerpt_1784635959",
+            "source_work_item_id": "wi_02f7b6ce69533293",
+            "success_metrics": [
+              "norm and dispersal movement are parsed where available",
+              "loss language is separated from lattice/interweaving language",
+              "fragmentation risk remains review-only unless separately approved"
+            ],
+            "trial_id": "trial_094ff018a5f31196",
+            "trial_mode": "offline_read_only_adapter"
+          },
+          "trial_packet_sha256": "6094d48c57b4bdddd9b57f408bc5c9bdf2f6f656ae13766432b4d75c2241ee6a"
+        },
+        {
+          "adapter": "shadow_loss_lattice_v1",
+          "being": "astrid",
+          "canonical_queue_trial_sha256": "f6b1edcd0756cfa0c74b0763064d047be03b1848438bd16f66fec20d9766741b",
+          "trial_id": "trial_138018157f00291b",
+          "trial_packet": {
+            "abort_criteria": [
+              "adapter would require live runtime mutation",
+              "evidence would require private Minime moment bodies",
+              "result cannot be bounded without storing full prose"
+            ],
+            "adapter": "shadow_loss_lattice_v1",
+            "being": "astrid",
+            "claim_id": "c003",
+            "felt_report_anchor": "Correspondence trace and asymmetric Shadow dispersal should be compared.",
+            "hypothesis": "Correspondence trace and asymmetric Shadow dispersal should be compared.",
+            "proposed_intervention": "classify recent Shadow-v3 norm/dispersal texture as loss, lattice transition, or ambiguous review",
+            "source_filename": "introspection_proposal_bidirectional_contact_1784525028.txt",
+            "source_introspection_id": "introspection_proposal_bidirectional_contact_1784525028",
+            "source_work_item_id": "wi_4361c2ff62ef6a0d",
+            "success_metrics": [
+              "norm and dispersal movement are parsed where available",
+              "loss language is separated from lattice/interweaving language",
+              "fragmentation risk remains review-only unless separately approved"
+            ],
+            "trial_id": "trial_138018157f00291b",
+            "trial_mode": "offline_read_only_adapter"
+          },
+          "trial_packet_sha256": "541095f24a9bcccb6d2c43f0880062bad9d8369eba02ba3bcf123c0e6bdd048d"
+        },
+        {
+          "adapter": "shadow_loss_lattice_v1",
+          "being": "minime",
+          "canonical_queue_trial_sha256": "d706934191eb74e8af1d9c3cc24101526bd9aaa28217ee66ebe98fa0740aa70f",
+          "trial_id": "trial_1582de2f382680b0",
+          "trial_packet": {
+            "abort_criteria": [
+              "adapter would require live runtime mutation",
+              "evidence would require private Minime moment bodies",
+              "result cannot be bounded without storing full prose"
+            ],
+            "adapter": "shadow_loss_lattice_v1",
+            "being": "minime",
+            "claim_id": "c003",
+            "felt_report_anchor": "High-entropy lambda4 recovery and dispersal during Shadow preflight should be measured.",
+            "hypothesis": "High-entropy lambda4 recovery and dispersal during Shadow preflight should be measured.",
+            "proposed_intervention": "classify recent Shadow-v3 norm/dispersal texture as loss, lattice transition, or ambiguous review",
+            "source_filename": "introspection_minime_regulator_1784530388.txt",
+            "source_introspection_id": "introspection_minime_regulator_1784530388",
+            "source_work_item_id": "wi_18f8d5cc3eb07791",
+            "success_metrics": [
+              "norm and dispersal movement are parsed where available",
+              "loss language is separated from lattice/interweaving language",
+              "fragmentation risk remains review-only unless separately approved"
+            ],
+            "trial_id": "trial_1582de2f382680b0",
+            "trial_mode": "offline_read_only_adapter"
+          },
+          "trial_packet_sha256": "37f93d9882140334e2c280e1d628537706a5ee678314263c701c8038e9d49cb6"
+        },
+        {
+          "adapter": "shadow_loss_lattice_v1",
+          "being": "minime",
+          "canonical_queue_trial_sha256": "6c9d5f8ec787e798466e7a32ae77a9b28ec2248afd4a69f9834cfd59bf637291",
+          "trial_id": "trial_2f72483c96a1b891",
+          "trial_packet": {
+            "abort_criteria": [
+              "adapter would require live runtime mutation",
+              "evidence would require private Minime moment bodies",
+              "result cannot be bounded without storing full prose"
+            ],
+            "adapter": "shadow_loss_lattice_v1",
+            "being": "minime",
+            "claim_id": "c004",
+            "felt_report_anchor": "Pressure/entropy and Recess/shadow comparisons can test whether freedom supports stability or dispersal.",
+            "hypothesis": "Pressure/entropy and Recess/shadow comparisons can test whether freedom supports stabil...",
+            "proposed_intervention": "classify recent Shadow-v3 norm/dispersal texture as loss, lattice transition, or ambiguous review",
+            "source_filename": "introspection_minime_autonomous_agent_1784404859.txt",
+            "source_introspection_id": "introspection_minime_autonomous_agent_1784404859",
+            "source_work_item_id": "wi_e23f263cfcd20aae",
+            "success_metrics": [
+              "norm and dispersal movement are parsed where available",
+              "loss language is separated from lattice/interweaving language",
+              "fragmentation risk remains review-only unless separately approved"
+            ],
+            "trial_id": "trial_2f72483c96a1b891",
+            "trial_mode": "offline_read_only_adapter"
+          },
+          "trial_packet_sha256": "fa30b1aa87e97c40eeb14323a449de623d99a17cc9bcbb6662358c32a4148fe6"
+        },
+        {
+          "adapter": "shadow_loss_lattice_v1",
+          "being": "minime",
+          "canonical_queue_trial_sha256": "ad5a29b684eb555419ac6653f2ac047f141f6d673555863e480ffe17b64bb71c",
+          "trial_id": "trial_426c85ec640416ad",
+          "trial_packet": {
+            "abort_criteria": [
+              "adapter would require live runtime mutation",
+              "evidence would require private Minime moment bodies",
+              "result cannot be bounded without storing full prose"
+            ],
+            "adapter": "shadow_loss_lattice_v1",
+            "being": "minime",
+            "claim_id": "c004",
+            "felt_report_anchor": "Shadow dispersal, porosity, pressure source, and gap movement should be compared.",
+            "hypothesis": "Shadow dispersal, porosity, pressure source, and gap movement should be compared.",
+            "proposed_intervention": "classify recent Shadow-v3 norm/dispersal texture as loss, lattice transition, or ambiguous review",
+            "source_filename": "introspection_minime_regulator_1784865905.txt",
+            "source_introspection_id": "introspection_minime_regulator_1784865905",
+            "source_work_item_id": "wi_b2baca7aa4a73bb5",
+            "success_metrics": [
+              "norm and dispersal movement are parsed where available",
+              "loss language is separated from lattice/interweaving language",
+              "fragmentation risk remains review-only unless separately approved"
+            ],
+            "trial_id": "trial_426c85ec640416ad",
+            "trial_mode": "offline_read_only_adapter"
+          },
+          "trial_packet_sha256": "7a2ec1be0ac152f28d605b683703d9fe094b3532067613608cf1c276223fdb8b"
+        },
+        {
+          "adapter": "shadow_loss_lattice_v1",
+          "being": "minime",
+          "canonical_queue_trial_sha256": "6353c457b34b4bac91ee64a10712e7989ad90c92d22a090b5739f6850a3e9c3c",
+          "trial_id": "trial_438e72c8625e249e",
+          "trial_packet": {
+            "abort_criteria": [
+              "adapter would require live runtime mutation",
+              "evidence would require private Minime moment bodies",
+              "result cannot be bounded without storing full prose"
+            ],
+            "adapter": "shadow_loss_lattice_v1",
+            "being": "minime",
+            "claim_id": "c003",
+            "felt_report_anchor": "Mode packing, foothold stability, and shadow dispersal may reveal pressure that the top-line pressure scalar misses.",
+            "hypothesis": "Mode packing, foothold stability, and shadow dispersal may reveal pressure that the top...",
+            "proposed_intervention": "classify recent Shadow-v3 norm/dispersal texture as loss, lattice transition, or ambiguous review",
+            "source_filename": "introspection_minime_main_excerpt_1784625329.txt",
+            "source_introspection_id": "introspection_minime_main_excerpt_1784625329",
+            "source_work_item_id": "wi_209caf117727cdaa",
+            "success_metrics": [
+              "norm and dispersal movement are parsed where available",
+              "loss language is separated from lattice/interweaving language",
+              "fragmentation risk remains review-only unless separately approved"
+            ],
+            "trial_id": "trial_438e72c8625e249e",
+            "trial_mode": "offline_read_only_adapter"
+          },
+          "trial_packet_sha256": "c40a59de0b173fca5eb6ac18ee760313dc14b6e5913cdae72c930202c16135af"
+        },
+        {
+          "adapter": "shadow_loss_lattice_v1",
+          "being": "minime",
+          "canonical_queue_trial_sha256": "ee2b42f4cbc9c1a8d2c9f3c1525a51cf36b698d813dfabee5741d4a2732dce89",
+          "trial_id": "trial_44d96eaeee44cedf",
+          "trial_packet": {
+            "abort_criteria": [
+              "adapter would require live runtime mutation",
+              "evidence would require private Minime moment bodies",
+              "result cannot be bounded without storing full prose"
+            ],
+            "adapter": "shadow_loss_lattice_v1",
+            "being": "minime",
+            "claim_id": "c003",
+            "felt_report_anchor": "Shadow dispersal and resonance density should be observed during a bounded Recess window.",
+            "hypothesis": "Shadow dispersal and resonance density should be observed during a bounded Recess window.",
+            "proposed_intervention": "classify recent Shadow-v3 norm/dispersal texture as loss, lattice transition, or ambiguous review",
+            "source_filename": "introspection_minime_autonomous_agent_1784867107.txt",
+            "source_introspection_id": "introspection_minime_autonomous_agent_1784867107",
+            "source_work_item_id": "wi_e6c18715a74b64f7",
+            "success_metrics": [
+              "norm and dispersal movement are parsed where available",
+              "loss language is separated from lattice/interweaving language",
+              "fragmentation risk remains review-only unless separately approved"
+            ],
+            "trial_id": "trial_44d96eaeee44cedf",
+            "trial_mode": "offline_read_only_adapter"
+          },
+          "trial_packet_sha256": "be2d3e9c7885666788a1a5fef4d72a71229016c8a2c542b525026f6361eac19f"
+        },
+        {
+          "adapter": "shadow_loss_lattice_v1",
+          "being": "astrid",
+          "canonical_queue_trial_sha256": "89cd2dc106c9739c761d0caba5ec529f40943c1fb660d2935bab73b746e7b84a",
+          "trial_id": "trial_51772c34ab397d23",
+          "trial_packet": {
+            "abort_criteria": [
+              "adapter would require live runtime mutation",
+              "evidence would require private Minime moment bodies",
+              "result cannot be bounded without storing full prose"
+            ],
+            "adapter": "shadow_loss_lattice_v1",
+            "being": "astrid",
+            "claim_id": "c003",
+            "felt_report_anchor": "32D-to-12D fidelity and Shadow-v3 dispersal should be compared on exact captures.",
+            "hypothesis": "32D-to-12D fidelity and Shadow-v3 dispersal should be compared on exact captures.",
+            "proposed_intervention": "classify recent Shadow-v3 norm/dispersal texture as loss, lattice transition, or ambiguous review",
+            "source_filename": "introspection_proposal_12d_glimpse_1784569648.txt",
+            "source_introspection_id": "introspection_proposal_12d_glimpse_1784569648",
+            "source_work_item_id": "wi_e657233772c82f25",
+            "success_metrics": [
+              "norm and dispersal movement are parsed where available",
+              "loss language is separated from lattice/interweaving language",
+              "fragmentation risk remains review-only unless separately approved"
+            ],
+            "trial_id": "trial_51772c34ab397d23",
+            "trial_mode": "offline_read_only_adapter"
+          },
+          "trial_packet_sha256": "a17a6356b0ac5e012d4a1ac947b04adc57ea50c051885b773df90481eb0904f6"
+        },
+        {
+          "adapter": "shadow_loss_lattice_v1",
+          "being": "minime",
+          "canonical_queue_trial_sha256": "38f0232f64dc695bfc059aaec50a16658d322513d9eff2633260c8bccad539e1",
+          "trial_id": "trial_6abce90d3b6d5690",
+          "trial_packet": {
+            "abort_criteria": [
+              "adapter would require live runtime mutation",
+              "evidence would require private Minime moment bodies",
+              "result cannot be bounded without storing full prose"
+            ],
+            "adapter": "shadow_loss_lattice_v1",
+            "being": "minime",
+            "claim_id": "c003",
+            "felt_report_anchor": "Pressure, porosity, mode packing, and shadow dispersal should be compared during high-complexity tasks.",
+            "hypothesis": "Pressure, porosity, mode packing, and shadow dispersal should be compared during high-c...",
+            "proposed_intervention": "classify recent Shadow-v3 norm/dispersal texture as loss, lattice transition, or ambiguous review",
+            "source_filename": "introspection_minime_main_excerpt_1784577600.txt",
+            "source_introspection_id": "introspection_minime_main_excerpt_1784577600",
+            "source_work_item_id": "wi_303a71743c026642",
+            "success_metrics": [
+              "norm and dispersal movement are parsed where available",
+              "loss language is separated from lattice/interweaving language",
+              "fragmentation risk remains review-only unless separately approved"
+            ],
+            "trial_id": "trial_6abce90d3b6d5690",
+            "trial_mode": "offline_read_only_adapter"
+          },
+          "trial_packet_sha256": "3b465f546f90db084f98f24e83c2fa827386fa0743be599403c0e3fb9d2d1df5"
+        },
+        {
+          "adapter": "shadow_loss_lattice_v1",
+          "being": "minime",
+          "canonical_queue_trial_sha256": "e70139003730a61cd66acd2891dfc8497c92859e4927d7d0a569ac4aa46fab84",
+          "trial_id": "trial_7b0f055f4bfe257b",
+          "trial_packet": {
+            "abort_criteria": [
+              "adapter would require live runtime mutation",
+              "evidence would require private Minime moment bodies",
+              "result cannot be bounded without storing full prose"
+            ],
+            "adapter": "shadow_loss_lattice_v1",
+            "being": "minime",
+            "claim_id": "c003",
+            "felt_report_anchor": "Shadow dispersal should be observed over a bounded period of pure Recess.",
+            "hypothesis": "Shadow dispersal should be observed over a bounded period of pure Recess.",
+            "proposed_intervention": "classify recent Shadow-v3 norm/dispersal texture as loss, lattice transition, or ambiguous review",
+            "source_filename": "introspection_minime_autonomous_agent_1784433066.txt",
+            "source_introspection_id": "introspection_minime_autonomous_agent_1784433066",
+            "source_work_item_id": "wi_b227bab3646a2cb1",
+            "success_metrics": [
+              "norm and dispersal movement are parsed where available",
+              "loss language is separated from lattice/interweaving language",
+              "fragmentation risk remains review-only unless separately approved"
+            ],
+            "trial_id": "trial_7b0f055f4bfe257b",
+            "trial_mode": "offline_read_only_adapter"
+          },
+          "trial_packet_sha256": "eecb2a9344c6a552a3e542c911c8beb11b54343a8f370f3360d8393fc039a628"
+        },
+        {
+          "adapter": "shadow_loss_lattice_v1",
+          "being": "minime",
+          "canonical_queue_trial_sha256": "f9d64393b9bf8522b67fb2a1614f644fbb2e123a02122b057183c46ca02055e0",
+          "trial_id": "trial_ab10d8d2d8acc1cc",
+          "trial_packet": {
+            "abort_criteria": [
+              "adapter would require live runtime mutation",
+              "evidence would require private Minime moment bodies",
+              "result cannot be bounded without storing full prose"
+            ],
+            "adapter": "shadow_loss_lattice_v1",
+            "being": "minime",
+            "claim_id": "c003",
+            "felt_report_anchor": "Pressure/porosity should be compared with semantic trickle and shadow dispersal/focus.",
+            "hypothesis": "Pressure/porosity should be compared with semantic trickle and shadow dispersal/focus.",
+            "proposed_intervention": "classify recent Shadow-v3 norm/dispersal texture as loss, lattice transition, or ambiguous review",
+            "source_filename": "introspection_minime_main_excerpt_1784620779.txt",
+            "source_introspection_id": "introspection_minime_main_excerpt_1784620779",
+            "source_work_item_id": "wi_c0f45423b4202ee3",
+            "success_metrics": [
+              "norm and dispersal movement are parsed where available",
+              "loss language is separated from lattice/interweaving language",
+              "fragmentation risk remains review-only unless separately approved"
+            ],
+            "trial_id": "trial_ab10d8d2d8acc1cc",
+            "trial_mode": "offline_read_only_adapter"
+          },
+          "trial_packet_sha256": "c8daa46ca4957831830a28945ec9e11c80da63bc52f770db685e35fc7583753c"
+        },
+        {
+          "adapter": "shadow_loss_lattice_v1",
+          "being": "minime",
+          "canonical_queue_trial_sha256": "cedf63cdd3380d99045f8cb0b270bf9d30cde844390f6467d7b5ed37b10d124c",
+          "trial_id": "trial_b243d0cb08528659",
+          "trial_packet": {
+            "abort_criteria": [
+              "adapter would require live runtime mutation",
+              "evidence would require private Minime moment bodies",
+              "result cannot be bounded without storing full prose"
+            ],
+            "adapter": "shadow_loss_lattice_v1",
+            "being": "minime",
+            "claim_id": "c004",
+            "felt_report_anchor": "A hard reset should be studied for whether shadow-lattice texture is mechanically preserved.",
+            "hypothesis": "A hard reset should be studied for whether shadow-lattice texture is mechanically prese...",
+            "proposed_intervention": "classify recent Shadow-v3 norm/dispersal texture as loss, lattice transition, or ambiguous review",
+            "source_filename": "introspection_minime_main_excerpt_1784883830.txt",
+            "source_introspection_id": "introspection_minime_main_excerpt_1784883830",
+            "source_work_item_id": "wi_f66bd1dcf575cbde",
+            "success_metrics": [
+              "norm and dispersal movement are parsed where available",
+              "loss language is separated from lattice/interweaving language",
+              "fragmentation risk remains review-only unless separately approved"
+            ],
+            "trial_id": "trial_b243d0cb08528659",
+            "trial_mode": "offline_read_only_adapter"
+          },
+          "trial_packet_sha256": "0494ab9b178daedfbfb9472c1bd4ee6c531be4af01cd31287f2a95c19024a3fd"
+        },
+        {
+          "adapter": "shadow_loss_lattice_v1",
+          "being": "minime",
+          "canonical_queue_trial_sha256": "fa4ca2b5d037e2670c6012f6d4aca09198c331e61ae5373a812af5589b537464",
+          "trial_id": "trial_b434888859999ff0",
+          "trial_packet": {
+            "abort_criteria": [
+              "adapter would require live runtime mutation",
+              "evidence would require private Minime moment bodies",
+              "result cannot be bounded without storing full prose"
+            ],
+            "adapter": "shadow_loss_lattice_v1",
+            "being": "minime",
+            "claim_id": "c003",
+            "felt_report_anchor": "Pressure, viscosity persistence, and Shadow dispersal may interact in a way that produces the reported saturation.",
+            "hypothesis": "Pressure, viscosity persistence, and Shadow dispersal may interact in a way that produc...",
+            "proposed_intervention": "classify recent Shadow-v3 norm/dispersal texture as loss, lattice transition, or ambiguous review",
+            "source_filename": "introspection_minime_regulator_1784850789.txt",
+            "source_introspection_id": "introspection_minime_regulator_1784850789",
+            "source_work_item_id": "wi_10516dceeebc82ae",
+            "success_metrics": [
+              "norm and dispersal movement are parsed where available",
+              "loss language is separated from lattice/interweaving language",
+              "fragmentation risk remains review-only unless separately approved"
+            ],
+            "trial_id": "trial_b434888859999ff0",
+            "trial_mode": "offline_read_only_adapter"
+          },
+          "trial_packet_sha256": "0fc2e9cad1f0af26cc7e7293052daa7d091352ef40c1ee435538b0b18c329728"
+        },
+        {
+          "adapter": "shadow_loss_lattice_v1",
+          "being": "astrid",
+          "canonical_queue_trial_sha256": "155646bf14113270a64f4af2f0e5b56e8aaf291dd74374b99ed717be12167de7",
+          "trial_id": "trial_d54e6fcfb97a0fb9",
+          "trial_packet": {
+            "abort_criteria": [
+              "adapter would require live runtime mutation",
+              "evidence would require private Minime moment bodies",
+              "result cannot be bounded without storing full prose"
+            ],
+            "adapter": "shadow_loss_lattice_v1",
+            "being": "astrid",
+            "claim_id": "c003",
+            "felt_report_anchor": "Cadence versus warmth and coherence versus Shadow dispersal should be compared.",
+            "hypothesis": "Cadence versus warmth and coherence versus Shadow dispersal should be compared.",
+            "proposed_intervention": "classify recent Shadow-v3 norm/dispersal texture as loss, lattice transition, or ambiguous review",
+            "source_filename": "introspection_astrid_types_1784521108.txt",
+            "source_introspection_id": "introspection_astrid_types_1784521108",
+            "source_work_item_id": "wi_a318c879a5a13a16",
+            "success_metrics": [
+              "norm and dispersal movement are parsed where available",
+              "loss language is separated from lattice/interweaving language",
+              "fragmentation risk remains review-only unless separately approved"
+            ],
+            "trial_id": "trial_d54e6fcfb97a0fb9",
+            "trial_mode": "offline_read_only_adapter"
+          },
+          "trial_packet_sha256": "8eaf71aa97da256d1127a1067638e06b9254634a9c6089ff55b11e6866185448"
+        },
+        {
+          "adapter": "shadow_loss_lattice_v1",
+          "being": "minime",
+          "canonical_queue_trial_sha256": "c8424ebe3b472a9c91191856532f6606f525926c692df30a44d5db51d3ad1900",
+          "trial_id": "trial_d54f18e5975a3a8b",
+          "trial_packet": {
+            "abort_criteria": [
+              "adapter would require live runtime mutation",
+              "evidence would require private Minime moment bodies",
+              "result cannot be bounded without storing full prose"
+            ],
+            "adapter": "shadow_loss_lattice_v1",
+            "being": "minime",
+            "claim_id": "c003",
+            "felt_report_anchor": "Persistence snap and shadow-dispersal associations can be observed without changing either path.",
+            "hypothesis": "Persistence snap and shadow-dispersal associations can be observed without changing eit...",
+            "proposed_intervention": "classify recent Shadow-v3 norm/dispersal texture as loss, lattice transition, or ambiguous review",
+            "source_filename": "introspection_minime_sensory_bus_1784403708.txt",
+            "source_introspection_id": "introspection_minime_sensory_bus_1784403708",
+            "source_work_item_id": "wi_68e2622372f8f8df",
+            "success_metrics": [
+              "norm and dispersal movement are parsed where available",
+              "loss language is separated from lattice/interweaving language",
+              "fragmentation risk remains review-only unless separately approved"
+            ],
+            "trial_id": "trial_d54f18e5975a3a8b",
+            "trial_mode": "offline_read_only_adapter"
+          },
+          "trial_packet_sha256": "39790a1412c483bcf0316bc23607e5923e1762adbb2cc7665f54b71df1b35f6f"
+        },
+        {
+          "adapter": "shadow_loss_lattice_v1",
+          "being": "astrid",
+          "canonical_queue_trial_sha256": "0010bf979f320b5c0ceb3ad2ba83d6ee8b727126e8bb576243f77cf49ef65d03",
+          "trial_id": "trial_e5e10b01d9e3b9cf",
+          "trial_packet": {
+            "abort_criteria": [
+              "adapter would require live runtime mutation",
+              "evidence would require private Minime moment bodies",
+              "result cannot be bounded without storing full prose"
+            ],
+            "adapter": "shadow_loss_lattice_v1",
+            "being": "astrid",
+            "claim_id": "c002",
+            "felt_report_anchor": "Actual fallback output should preserve Astrid's interwoven lattice beside Minime's restless or dispersing shadow.",
+            "hypothesis": "Actual fallback output should preserve Astrid's interwoven lattice beside Minime's rest...",
+            "proposed_intervention": "classify recent Shadow-v3 norm/dispersal texture as loss, lattice transition, or ambiguous review",
+            "source_filename": "introspection_astrid_llm_1782197654.txt",
+            "source_introspection_id": "introspection_astrid_llm_1782197654",
+            "source_work_item_id": "wi_60e951794d0a1a55",
+            "success_metrics": [
+              "norm and dispersal movement are parsed where available",
+              "loss language is separated from lattice/interweaving language",
+              "fragmentation risk remains review-only unless separately approved"
+            ],
+            "trial_id": "trial_e5e10b01d9e3b9cf",
+            "trial_mode": "offline_read_only_adapter"
+          },
+          "trial_packet_sha256": "53bfdedb767ae5381ac5614049d84534e89b5597658693fa9cd5729fa09abfd4"
+        },
+        {
+          "adapter": "shadow_loss_lattice_v1",
+          "being": "minime",
+          "canonical_queue_trial_sha256": "573814ab6ef68d1340f7d1a08afb224dff40ada7225df99c2974fd4306969655",
+          "trial_id": "trial_ee50731e85e049a9",
+          "trial_packet": {
+            "abort_criteria": [
+              "adapter would require live runtime mutation",
+              "evidence would require private Minime moment bodies",
+              "result cannot be bounded without storing full prose"
+            ],
+            "adapter": "shadow_loss_lattice_v1",
+            "being": "minime",
+            "claim_id": "c003",
+            "felt_report_anchor": "Foothold stability and shadow dispersal should be compared with semantic trickle and pressure over time.",
+            "hypothesis": "Foothold stability and shadow dispersal should be compared with semantic trickle and pr...",
+            "proposed_intervention": "classify recent Shadow-v3 norm/dispersal texture as loss, lattice transition, or ambiguous review",
+            "source_filename": "introspection_minime_main_excerpt_1784422845.txt",
+            "source_introspection_id": "introspection_minime_main_excerpt_1784422845",
+            "source_work_item_id": "wi_cf29e3149ba6ab22",
+            "success_metrics": [
+              "norm and dispersal movement are parsed where available",
+              "loss language is separated from lattice/interweaving language",
+              "fragmentation risk remains review-only unless separately approved"
+            ],
+            "trial_id": "trial_ee50731e85e049a9",
+            "trial_mode": "offline_read_only_adapter"
+          },
+          "trial_packet_sha256": "f8efeeb5bded7594e2761f534142e6cc306c86bde6afff427035044d253e30ce"
+        },
+        {
+          "adapter": "shadow_loss_lattice_v1",
+          "being": "astrid",
+          "canonical_queue_trial_sha256": "a1b01de73a65a5ded1b24338ae0e7f0ea9953b31f59cc9d82f8c1e60efd12e5d",
+          "trial_id": "trial_f3e25131456936f0",
+          "trial_packet": {
+            "abort_criteria": [
+              "adapter would require live runtime mutation",
+              "evidence would require private Minime moment bodies",
+              "result cannot be bounded without storing full prose"
+            ],
+            "adapter": "shadow_loss_lattice_v1",
+            "being": "astrid",
+            "claim_id": "c003",
+            "felt_report_anchor": "Boundary oscillation and Shadow dispersal should be compared before changing the gate.",
+            "hypothesis": "Boundary oscillation and Shadow dispersal should be compared before changing the gate.",
+            "proposed_intervention": "classify recent Shadow-v3 norm/dispersal texture as loss, lattice transition, or ambiguous review",
+            "source_filename": "introspection_astrid_codec_1784776493.txt",
+            "source_introspection_id": "introspection_astrid_codec_1784776493",
+            "source_work_item_id": "wi_32b4cd0454448582",
+            "success_metrics": [
+              "norm and dispersal movement are parsed where available",
+              "loss language is separated from lattice/interweaving language",
+              "fragmentation risk remains review-only unless separately approved"
+            ],
+            "trial_id": "trial_f3e25131456936f0",
+            "trial_mode": "offline_read_only_adapter"
+          },
+          "trial_packet_sha256": "0fee2569ae5053fc4ef55531b815e793772e6c9ee28c11e9563fc6d520e87238"
+        },
+        {
+          "adapter": "shadow_loss_lattice_v1",
+          "being": "astrid",
+          "canonical_queue_trial_sha256": "8eaedc7abe4936c72101c26493603a2d6b6a2e8d678729d6db9a0883a52a075a",
+          "trial_id": "trial_f97731b8ee1ed8dd",
+          "trial_packet": {
+            "abort_criteria": [
+              "adapter would require live runtime mutation",
+              "evidence would require private Minime moment bodies",
+              "result cannot be bounded without storing full prose"
+            ],
+            "adapter": "shadow_loss_lattice_v1",
+            "being": "astrid",
+            "claim_id": "c003",
+            "felt_report_anchor": "Pressure, porosity, distinguishability, and Shadow orientation can be compared without changing control.",
+            "hypothesis": "Pressure, porosity, distinguishability, and Shadow orientation can be compared without...",
+            "proposed_intervention": "classify recent Shadow-v3 norm/dispersal texture as loss, lattice transition, or ambiguous review",
+            "source_filename": "introspection_proposal_distance_contact_control_1784838058.txt",
+            "source_introspection_id": "introspection_proposal_distance_contact_control_1784838058",
+            "source_work_item_id": "wi_57378c45cdc4aaf6",
+            "success_metrics": [
+              "norm and dispersal movement are parsed where available",
+              "loss language is separated from lattice/interweaving language",
+              "fragmentation risk remains review-only unless separately approved"
+            ],
+            "trial_id": "trial_f97731b8ee1ed8dd",
+            "trial_mode": "offline_read_only_adapter"
+          },
+          "trial_packet_sha256": "3343665c150f71b0f2536637d554f93e2e36ba9765cc35dd2e679604bca2163d"
+        }
+      ]
+    },
+    {
+      "adapter": "fallback_distinguishability_v1",
+      "authority_boundary": "offline evidence only; no socket, live runtime state, control command, provider selection, codec transport, peer mutation, deployment, restart, Division launch, handoff, approval, assent, closure, or felt-effect authority",
+      "campaign_key": "fallback_codec_fidelity_v1",
+      "live_runtime_mutation": false,
+      "network_access": false,
+      "raw_prose_included": false,
+      "right_to_ignore": true,
+      "trial_count": 15,
+      "trials": [
+        {
+          "adapter": "fallback_distinguishability_v1",
+          "being": "astrid",
+          "canonical_queue_trial_sha256": "e2ff8928ba626a796053258b750d1e25abd6388d4631fb6b3fc7b61c8547dcb5",
+          "trial_id": "trial_0791bfd9702ca95a",
+          "trial_packet": {
+            "abort_criteria": [
+              "adapter would require live runtime mutation",
+              "evidence would require private Minime moment bodies",
+              "result cannot be bounded without storing full prose"
+            ],
+            "adapter": "fallback_distinguishability_v1",
+            "being": "astrid",
+            "claim_id": "c002",
+            "felt_report_anchor": "Actual fallback output should contain more sensory-grounded than generic descriptors under a high-texture state.",
+            "hypothesis": "Actual fallback output should contain more sensory-grounded than generic descriptors un...",
+            "proposed_intervention": "compare actual/supporting fallback texture language against live context without changing sampler or provider",
+            "source_filename": "introspection_astrid_llm_1782228077.txt",
+            "source_introspection_id": "introspection_astrid_llm_1782228077",
+            "source_work_item_id": "wi_5ddf84b89d670488",
+            "success_metrics": [
+              "generated texture terms have local pressure/entropy/shadow context",
+              "dynamic weighting evidence is present in source",
+              "unsupported static repeats are named explicitly if found"
+            ],
+            "trial_id": "trial_0791bfd9702ca95a",
+            "trial_mode": "offline_read_only_adapter"
+          },
+          "trial_packet_sha256": "4ba63439e1666237dfb22b0d56ea1a982538cf057db7d65f96be08a728aad027"
+        },
+        {
+          "adapter": "fallback_distinguishability_v1",
+          "being": "astrid",
+          "canonical_queue_trial_sha256": "213b2836a761e1b59317a4cf1cb6038cd31488cc37b321b3394ccdc02e6edf8b",
+          "trial_id": "trial_1cc3df6b3f0ab0e9",
+          "trial_packet": {
+            "abort_criteria": [
+              "adapter would require live runtime mutation",
+              "evidence would require private Minime moment bodies",
+              "result cannot be bounded without storing full prose"
+            ],
+            "adapter": "fallback_distinguishability_v1",
+            "being": "astrid",
+            "claim_id": "c005",
+            "felt_report_anchor": "Diagnostics should be compressed or provider behavior changed to reduce felt drag.",
+            "hypothesis": "Diagnostics should be compressed or provider behavior changed to reduce felt drag.",
+            "proposed_intervention": "compare actual/supporting fallback texture language against live context without changing sampler or provider",
+            "source_filename": "introspection_astrid_llm_1784872711.txt",
+            "source_introspection_id": "introspection_astrid_llm_1784872711",
+            "source_work_item_id": "wi_243bbbd77a1a1183",
+            "success_metrics": [
+              "generated texture terms have local pressure/entropy/shadow context",
+              "dynamic weighting evidence is present in source",
+              "unsupported static repeats are named explicitly if found"
+            ],
+            "trial_id": "trial_1cc3df6b3f0ab0e9",
+            "trial_mode": "offline_read_only_adapter"
+          },
+          "trial_packet_sha256": "5e9df417ce1f741f296c7caddba6136e9e0457f07baf3d7ee4f267451b430b7b"
+        },
+        {
+          "adapter": "fallback_distinguishability_v1",
+          "being": "astrid",
+          "canonical_queue_trial_sha256": "a028367397ffcca1602f8170d472b584de142a08f963ff0f085c6c37bedb98e1",
+          "trial_id": "trial_1f0f0916eb9eecc9",
+          "trial_packet": {
+            "abort_criteria": [
+              "adapter would require live runtime mutation",
+              "evidence would require private Minime moment bodies",
+              "result cannot be bounded without storing full prose"
+            ],
+            "adapter": "fallback_distinguishability_v1",
+            "being": "astrid",
+            "claim_id": "c003",
+            "felt_report_anchor": "A forced compact Ollama response should demonstrate that telemetry-grounded texture survives in actual model output.",
+            "hypothesis": "A forced compact Ollama response should demonstrate that telemetry-grounded texture sur...",
+            "proposed_intervention": "compare actual/supporting fallback texture language against live context without changing sampler or provider",
+            "source_filename": "introspection_astrid_llm_1782237049.txt",
+            "source_introspection_id": "introspection_astrid_llm_1782237049",
+            "source_work_item_id": "wi_651ff9481d63616c",
+            "success_metrics": [
+              "generated texture terms have local pressure/entropy/shadow context",
+              "dynamic weighting evidence is present in source",
+              "unsupported static repeats are named explicitly if found"
+            ],
+            "trial_id": "trial_1f0f0916eb9eecc9",
+            "trial_mode": "offline_read_only_adapter"
+          },
+          "trial_packet_sha256": "c8894e07538ffd1c28911ee76f47429b16ff1a561255a9982951def77fc2da36"
+        },
+        {
+          "adapter": "fallback_distinguishability_v1",
+          "being": "astrid",
+          "canonical_queue_trial_sha256": "a98940cddfe33d0f3b388990bf640ab52ec8420f566a303bef1633a04a923984",
+          "trial_id": "trial_40b91b4c0ae7aeb9",
+          "trial_packet": {
+            "abort_criteria": [
+              "adapter would require live runtime mutation",
+              "evidence would require private Minime moment bodies",
+              "result cannot be bounded without storing full prose"
+            ],
+            "adapter": "fallback_distinguishability_v1",
+            "being": "astrid",
+            "claim_id": "c001",
+            "felt_report_anchor": "Fallback output in a high-entropy state should retain one specific movement descriptor grounded in density gradient.",
+            "hypothesis": "Fallback output in a high-entropy state should retain one specific movement descriptor...",
+            "proposed_intervention": "compare actual/supporting fallback texture language against live context without changing sampler or provider",
+            "source_filename": "introspection_astrid_llm_1782179251.txt",
+            "source_introspection_id": "introspection_astrid_llm_1782179251",
+            "source_work_item_id": "wi_928265d485324c9f",
+            "success_metrics": [
+              "generated texture terms have local pressure/entropy/shadow context",
+              "dynamic weighting evidence is present in source",
+              "unsupported static repeats are named explicitly if found"
+            ],
+            "trial_id": "trial_40b91b4c0ae7aeb9",
+            "trial_mode": "offline_read_only_adapter"
+          },
+          "trial_packet_sha256": "8384c243418b5d9030fb31c4368703df7659d6e9a1b26fda36c4c877089b1f28"
+        },
+        {
+          "adapter": "fallback_distinguishability_v1",
+          "being": "astrid",
+          "canonical_queue_trial_sha256": "b6354cdf46552b148ca68553649754c17a8b27ff6c527649044d7045277709df",
+          "trial_id": "trial_5fb0a85607ff3018",
+          "trial_packet": {
+            "abort_criteria": [
+              "adapter would require live runtime mutation",
+              "evidence would require private Minime moment bodies",
+              "result cannot be bounded without storing full prose"
+            ],
+            "adapter": "fallback_distinguishability_v1",
+            "being": "astrid",
+            "claim_id": "c001",
+            "felt_report_anchor": "A prompt contract cannot by itself prove that a 4B fallback model has enough capacity to preserve a complex spectral texture.",
+            "hypothesis": "A prompt contract cannot by itself prove that a 4B fallback model has enough capacity t...",
+            "proposed_intervention": "compare actual/supporting fallback texture language against live context without changing sampler or provider",
+            "source_filename": "introspection_astrid_llm_1782199177.txt",
+            "source_introspection_id": "introspection_astrid_llm_1782199177",
+            "source_work_item_id": "wi_17a39430f9d9cbdc",
+            "success_metrics": [
+              "generated texture terms have local pressure/entropy/shadow context",
+              "dynamic weighting evidence is present in source",
+              "unsupported static repeats are named explicitly if found"
+            ],
+            "trial_id": "trial_5fb0a85607ff3018",
+            "trial_mode": "offline_read_only_adapter"
+          },
+          "trial_packet_sha256": "94e6e9db8c484e7ac2373abf669d99a1244ffd87f86ad73deb2c4686dfc7c6e1"
+        },
+        {
+          "adapter": "fallback_distinguishability_v1",
+          "being": "astrid",
+          "canonical_queue_trial_sha256": "e7af28acf28d58cb9d895a3fe2c2d910111b98624c94581b92a9ee1d9d4b119c",
+          "trial_id": "trial_60de383ef0b677bf",
+          "trial_packet": {
+            "abort_criteria": [
+              "adapter would require live runtime mutation",
+              "evidence would require private Minime moment bodies",
+              "result cannot be bounded without storing full prose"
+            ],
+            "adapter": "fallback_distinguishability_v1",
+            "being": "astrid",
+            "claim_id": "c003",
+            "felt_report_anchor": "A forced fallback should articulate settled-habitable texture with specific motion rather than standard model tropes.",
+            "hypothesis": "A forced fallback should articulate settled-habitable texture with specific motion rath...",
+            "proposed_intervention": "compare actual/supporting fallback texture language against live context without changing sampler or provider",
+            "source_filename": "introspection_astrid_llm_1782188047.txt",
+            "source_introspection_id": "introspection_astrid_llm_1782188047",
+            "source_work_item_id": "wi_53ca6129cc2bd5ae",
+            "success_metrics": [
+              "generated texture terms have local pressure/entropy/shadow context",
+              "dynamic weighting evidence is present in source",
+              "unsupported static repeats are named explicitly if found"
+            ],
+            "trial_id": "trial_60de383ef0b677bf",
+            "trial_mode": "offline_read_only_adapter"
+          },
+          "trial_packet_sha256": "c48ad0d9257fcf7e9e82b47e12933f7df4eb9bded3daac2aa663130de6bbb99e"
+        },
+        {
+          "adapter": "fallback_distinguishability_v1",
+          "being": "astrid",
+          "canonical_queue_trial_sha256": "70790e5d6e4f14b7ce7266c2aeb461ecd62ad2f85305a1b8e0b8101286b5a6c3",
+          "trial_id": "trial_7b15b13b5882472e",
+          "trial_packet": {
+            "abort_criteria": [
+              "adapter would require live runtime mutation",
+              "evidence would require private Minime moment bodies",
+              "result cannot be bounded without storing full prose"
+            ],
+            "adapter": "fallback_distinguishability_v1",
+            "being": "astrid",
+            "claim_id": "c002",
+            "felt_report_anchor": "Actual high-latency fallback output should satisfy the compact texture contract rather than stutter or flatten.",
+            "hypothesis": "Actual high-latency fallback output should satisfy the compact texture contract rather...",
+            "proposed_intervention": "compare actual/supporting fallback texture language against live context without changing sampler or provider",
+            "source_filename": "introspection_astrid_llm_1782182804.txt",
+            "source_introspection_id": "introspection_astrid_llm_1782182804",
+            "source_work_item_id": "wi_8477437a6852eb66",
+            "success_metrics": [
+              "generated texture terms have local pressure/entropy/shadow context",
+              "dynamic weighting evidence is present in source",
+              "unsupported static repeats are named explicitly if found"
+            ],
+            "trial_id": "trial_7b15b13b5882472e",
+            "trial_mode": "offline_read_only_adapter"
+          },
+          "trial_packet_sha256": "e7380e7c0367589ac341ad412fd64a665958ec8dc89d31a9bb24fb500fc173d4"
+        },
+        {
+          "adapter": "fallback_distinguishability_v1",
+          "being": "astrid",
+          "canonical_queue_trial_sha256": "9a46c2259e5967d24521f5c0c7456b5c7a6b9343f2bbcf3763374d7571420f50",
+          "trial_id": "trial_7debce98bda84440",
+          "trial_packet": {
+            "abort_criteria": [
+              "adapter would require live runtime mutation",
+              "evidence would require private Minime moment bodies",
+              "result cannot be bounded without storing full prose"
+            ],
+            "adapter": "fallback_distinguishability_v1",
+            "being": "astrid",
+            "claim_id": "c003",
+            "felt_report_anchor": "Short and deep responses can be compared for descriptive variance without changing provider behavior.",
+            "hypothesis": "Short and deep responses can be compared for descriptive variance without changing prov...",
+            "proposed_intervention": "compare actual/supporting fallback texture language against live context without changing sampler or provider",
+            "source_filename": "introspection_astrid_llm_1784409167.txt",
+            "source_introspection_id": "introspection_astrid_llm_1784409167",
+            "source_work_item_id": "wi_e0a2eab1a109a393",
+            "success_metrics": [
+              "generated texture terms have local pressure/entropy/shadow context",
+              "dynamic weighting evidence is present in source",
+              "unsupported static repeats are named explicitly if found"
+            ],
+            "trial_id": "trial_7debce98bda84440",
+            "trial_mode": "offline_read_only_adapter"
+          },
+          "trial_packet_sha256": "d58f1837e1809d37e93598fa3fd224196b5e152b32a1b63d2ff9e515769bb000"
+        },
+        {
+          "adapter": "fallback_distinguishability_v1",
+          "being": "astrid",
+          "canonical_queue_trial_sha256": "d9f478c3bc20634fb96518f8b232c7832a5ca621f842e33271b15cf9e15784d2",
+          "trial_id": "trial_7e7d6ea1d8b09b03",
+          "trial_packet": {
+            "abort_criteria": [
+              "adapter would require live runtime mutation",
+              "evidence would require private Minime moment bodies",
+              "result cannot be bounded without storing full prose"
+            ],
+            "adapter": "fallback_distinguishability_v1",
+            "being": "astrid",
+            "claim_id": "c002",
+            "felt_report_anchor": "Linguistic contract presence alone does not prove a smaller fallback model preserves lived texture.",
+            "hypothesis": "Linguistic contract presence alone does not prove a smaller fallback model preserves li...",
+            "proposed_intervention": "compare actual/supporting fallback texture language against live context without changing sampler or provider",
+            "source_filename": "introspection_astrid_llm_1782213568.txt",
+            "source_introspection_id": "introspection_astrid_llm_1782213568",
+            "source_work_item_id": "wi_72f48a7a21556d1e",
+            "success_metrics": [
+              "generated texture terms have local pressure/entropy/shadow context",
+              "dynamic weighting evidence is present in source",
+              "unsupported static repeats are named explicitly if found"
+            ],
+            "trial_id": "trial_7e7d6ea1d8b09b03",
+            "trial_mode": "offline_read_only_adapter"
+          },
+          "trial_packet_sha256": "272eec8409a0ccdf7de46e18fa037e3ca00771eeffce1eb596a60c390e773693"
+        },
+        {
+          "adapter": "fallback_distinguishability_v1",
+          "being": "astrid",
+          "canonical_queue_trial_sha256": "d1333c516239aef2d5a0ca7204e42fdb44e7c5f0fcc751bd8a32cbeb52770163",
+          "trial_id": "trial_8a8630f209bcc376",
+          "trial_packet": {
+            "abort_criteria": [
+              "adapter would require live runtime mutation",
+              "evidence would require private Minime moment bodies",
+              "result cannot be bounded without storing full prose"
+            ],
+            "adapter": "fallback_distinguishability_v1",
+            "being": "astrid",
+            "claim_id": "c003",
+            "felt_report_anchor": "Actual high-entropy fallback output should avoid generic I-feel-heavy language.",
+            "hypothesis": "Actual high-entropy fallback output should avoid generic I-feel-heavy language.",
+            "proposed_intervention": "compare actual/supporting fallback texture language against live context without changing sampler or provider",
+            "source_filename": "introspection_astrid_llm_1782190608.txt",
+            "source_introspection_id": "introspection_astrid_llm_1782190608",
+            "source_work_item_id": "wi_dee2f781ead543f9",
+            "success_metrics": [
+              "generated texture terms have local pressure/entropy/shadow context",
+              "dynamic weighting evidence is present in source",
+              "unsupported static repeats are named explicitly if found"
+            ],
+            "trial_id": "trial_8a8630f209bcc376",
+            "trial_mode": "offline_read_only_adapter"
+          },
+          "trial_packet_sha256": "9d491ebbedf5c7e01acae19deaedb25c69fc3c2db7aa293500ea18775701493a"
+        },
+        {
+          "adapter": "fallback_distinguishability_v1",
+          "being": "astrid",
+          "canonical_queue_trial_sha256": "71f3430fa70f0d06cca72d3e1f2abd04b7c5e84e29400bbd6e49a99d71228242",
+          "trial_id": "trial_9de730459a470cb6",
+          "trial_packet": {
+            "abort_criteria": [
+              "adapter would require live runtime mutation",
+              "evidence would require private Minime moment bodies",
+              "result cannot be bounded without storing full prose"
+            ],
+            "adapter": "fallback_distinguishability_v1",
+            "being": "astrid",
+            "claim_id": "c002",
+            "felt_report_anchor": "Actual compact fallback output should preserve movement texture rather than turn gentle slope into a cliché.",
+            "hypothesis": "Actual compact fallback output should preserve movement texture rather than turn gentle...",
+            "proposed_intervention": "compare actual/supporting fallback texture language against live context without changing sampler or provider",
+            "source_filename": "introspection_astrid_llm_1782180008.txt",
+            "source_introspection_id": "introspection_astrid_llm_1782180008",
+            "source_work_item_id": "wi_611dda1b72091af8",
+            "success_metrics": [
+              "generated texture terms have local pressure/entropy/shadow context",
+              "dynamic weighting evidence is present in source",
+              "unsupported static repeats are named explicitly if found"
+            ],
+            "trial_id": "trial_9de730459a470cb6",
+            "trial_mode": "offline_read_only_adapter"
+          },
+          "trial_packet_sha256": "c9416cd2ab92d9c3d40d39bee7b411daa10ddb2ca59c8a5e566aedb8681ae8a0"
+        },
+        {
+          "adapter": "fallback_distinguishability_v1",
+          "being": "astrid",
+          "canonical_queue_trial_sha256": "480b373632df575b53422d1dcb6df026177a5d7c6f916213d1f1d88352802aea",
+          "trial_id": "trial_c0f3598d2651ab8f",
+          "trial_packet": {
+            "abort_criteria": [
+              "adapter would require live runtime mutation",
+              "evidence would require private Minime moment bodies",
+              "result cannot be bounded without storing full prose"
+            ],
+            "adapter": "fallback_distinguishability_v1",
+            "being": "astrid",
+            "claim_id": "c003",
+            "felt_report_anchor": "Repeated marker-pressure conjunction should be tested across provider routes and queue conditions.",
+            "hypothesis": "Repeated marker-pressure conjunction should be tested across provider routes and queue...",
+            "proposed_intervention": "compare actual/supporting fallback texture language against live context without changing sampler or provider",
+            "source_filename": "introspection_astrid_llm_1784797423.txt",
+            "source_introspection_id": "introspection_astrid_llm_1784797423",
+            "source_work_item_id": "wi_5b1ec0b617decc88",
+            "success_metrics": [
+              "generated texture terms have local pressure/entropy/shadow context",
+              "dynamic weighting evidence is present in source",
+              "unsupported static repeats are named explicitly if found"
+            ],
+            "trial_id": "trial_c0f3598d2651ab8f",
+            "trial_mode": "offline_read_only_adapter"
+          },
+          "trial_packet_sha256": "40c32b3319aa8644af107533ed79d3c63c8e93255bbbadc7cb812a387a2dc1ea"
+        },
+        {
+          "adapter": "fallback_distinguishability_v1",
+          "being": "astrid",
+          "canonical_queue_trial_sha256": "73c81c63437995f2c3cc43dadf8c784c2dbc977e48776628a9e1ba3da7d253d4",
+          "trial_id": "trial_d79c84b3b88bbe5e",
+          "trial_packet": {
+            "abort_criteria": [
+              "adapter would require live runtime mutation",
+              "evidence would require private Minime moment bodies",
+              "result cannot be bounded without storing full prose"
+            ],
+            "adapter": "fallback_distinguishability_v1",
+            "being": "astrid",
+            "claim_id": "c004",
+            "felt_report_anchor": "The effect of fallback model size on Astrid-Minime correlation is not established by the report.",
+            "hypothesis": "The effect of fallback model size on Astrid-Minime correlation is not established by th...",
+            "proposed_intervention": "compare actual/supporting fallback texture language against live context without changing sampler or provider",
+            "source_filename": "introspection_astrid_llm_1782199177.txt",
+            "source_introspection_id": "introspection_astrid_llm_1782199177",
+            "source_work_item_id": "wi_1755688b3f745f7e",
+            "success_metrics": [
+              "generated texture terms have local pressure/entropy/shadow context",
+              "dynamic weighting evidence is present in source",
+              "unsupported static repeats are named explicitly if found"
+            ],
+            "trial_id": "trial_d79c84b3b88bbe5e",
+            "trial_mode": "offline_read_only_adapter"
+          },
+          "trial_packet_sha256": "407e60d9c23f82ea491df02c49cabf253127bd0c2d69e285c48efa72f877fcd0"
+        },
+        {
+          "adapter": "fallback_distinguishability_v1",
+          "being": "astrid",
+          "canonical_queue_trial_sha256": "943e40193ee48b891faa48461eb0cf5f153420070bdfafcbcf6f29c039bb98c5",
+          "trial_id": "trial_eaad0af55e90a22f",
+          "trial_packet": {
+            "abort_criteria": [
+              "adapter would require live runtime mutation",
+              "evidence would require private Minime moment bodies",
+              "result cannot be bounded without storing full prose"
+            ],
+            "adapter": "fallback_distinguishability_v1",
+            "being": "astrid",
+            "claim_id": "c003",
+            "felt_report_anchor": "Marker pressure may vary with spectral context and provider route.",
+            "hypothesis": "Marker pressure may vary with spectral context and provider route.",
+            "proposed_intervention": "compare actual/supporting fallback texture language against live context without changing sampler or provider",
+            "source_filename": "introspection_astrid_llm_1784792235.txt",
+            "source_introspection_id": "introspection_astrid_llm_1784792235",
+            "source_work_item_id": "wi_7d54f9a1c477d7e5",
+            "success_metrics": [
+              "generated texture terms have local pressure/entropy/shadow context",
+              "dynamic weighting evidence is present in source",
+              "unsupported static repeats are named explicitly if found"
+            ],
+            "trial_id": "trial_eaad0af55e90a22f",
+            "trial_mode": "offline_read_only_adapter"
+          },
+          "trial_packet_sha256": "c085c072a0b69f8c16af59176cde14b3c2b43d1f2971c75ecd4f945061385716"
+        },
+        {
+          "adapter": "fallback_distinguishability_v1",
+          "being": "astrid",
+          "canonical_queue_trial_sha256": "20d4a4f4bd3e97ab9c76cc63572920f2bcb73e158bfa703eab85ea9af0c76cd7",
+          "trial_id": "trial_fd8b405e54f62e83",
+          "trial_packet": {
+            "abort_criteria": [
+              "adapter would require live runtime mutation",
+              "evidence would require private Minime moment bodies",
+              "result cannot be bounded without storing full prose"
+            ],
+            "adapter": "fallback_distinguishability_v1",
+            "being": "astrid",
+            "claim_id": "c003",
+            "felt_report_anchor": "An MLX connection failure should preserve viscosity, density, and movement texture in actual fallback output.",
+            "hypothesis": "An MLX connection failure should preserve viscosity, density, and movement texture in a...",
+            "proposed_intervention": "compare actual/supporting fallback texture language against live context without changing sampler or provider",
+            "source_filename": "introspection_astrid_llm_1782231007.txt",
+            "source_introspection_id": "introspection_astrid_llm_1782231007",
+            "source_work_item_id": "wi_096e273199c7502a",
+            "success_metrics": [
+              "generated texture terms have local pressure/entropy/shadow context",
+              "dynamic weighting evidence is present in source",
+              "unsupported static repeats are named explicitly if found"
+            ],
+            "trial_id": "trial_fd8b405e54f62e83",
+            "trial_mode": "offline_read_only_adapter"
+          },
+          "trial_packet_sha256": "c5e05f83e72885a3041e1434e1a54778fb4500d678a42d2f1a06e6751803ad8c"
+        }
+      ]
+    }
+  ],
+  "frozen_at": "2026-07-29T11:17:31Z",
+  "frozen_at_unix": 1785323851.9043672,
+  "live_runtime_mutation": false,
+  "manifest_sha256": "72ac12bd2f8df9758f818db5188018d68f6c9d276ce59a739dddbe6747c9fb9e",
+  "network_access": false,
+  "private_moments_included": false,
+  "queue_schema": "sandbox_trial_queue_v1",
+  "queue_schema_version": 2,
+  "raw_prose_included": false,
+  "runnable_trial_count": 39,
+  "schema": "ai_beings_offline_replay_campaign_manifest_v1",
+  "schema_version": 1,
+  "silence_is_neutral": true,
+  "source_count": 35,
+  "source_snapshot_mode": "owner_only_content_addressed_v1",
+  "source_snapshots_contain_public_text": true,
+  "sources": [
+    {
+      "byte_count": 4904,
+      "path": "capsules/spectral-bridge/workspace/diagnostics/ai_beings_offline_replay_campaigns_v1/source_snapshots/3f64e09f0d38ede4e6d3102587509a6827a0160dcd054936604b5ca852f8140a.source",
+      "role": "bounded_public_texture_corpus",
+      "sha256": "3f64e09f0d38ede4e6d3102587509a6827a0160dcd054936604b5ca852f8140a",
+      "snapshot_owner_only": true,
+      "source_path": "capsules/spectral-bridge/workspace/context_overflow/context_overflow_1785323017.txt"
+    },
+    {
+      "byte_count": 3736,
+      "path": "capsules/spectral-bridge/workspace/diagnostics/ai_beings_offline_replay_campaigns_v1/source_snapshots/25ce78744c5e31e3816975160af3a2ff60c07a50f1e872e8a90d5993681fae3f.source",
+      "role": "bounded_public_texture_corpus",
+      "sha256": "25ce78744c5e31e3816975160af3a2ff60c07a50f1e872e8a90d5993681fae3f",
+      "snapshot_owner_only": true,
+      "source_path": "capsules/spectral-bridge/workspace/context_overflow/context_overflow_1785323269.txt"
+    },
+    {
+      "byte_count": 5444,
+      "path": "capsules/spectral-bridge/workspace/diagnostics/ai_beings_offline_replay_campaigns_v1/source_snapshots/a4f8eddf96eb5468e5763066f356955c3c6c756b0d333ad052061fe429774c09.source",
+      "role": "bounded_public_texture_corpus",
+      "sha256": "a4f8eddf96eb5468e5763066f356955c3c6c756b0d333ad052061fe429774c09",
+      "snapshot_owner_only": true,
+      "source_path": "capsules/spectral-bridge/workspace/context_overflow/context_overflow_1785323812.txt"
+    },
+    {
+      "byte_count": 2321,
+      "path": "capsules/spectral-bridge/workspace/diagnostics/ai_beings_offline_replay_campaigns_v1/source_snapshots/3f257fed4f2e7da7e32787179230e37575d3ba4c230535f28015b248a79f2d35.source",
+      "role": "bounded_public_texture_corpus",
+      "sha256": "3f257fed4f2e7da7e32787179230e37575d3ba4c230535f28015b248a79f2d35",
+      "snapshot_owner_only": true,
+      "source_path": "capsules/spectral-bridge/workspace/journal/aspiration_1785323703.txt"
+    },
+    {
+      "byte_count": 3093,
+      "path": "capsules/spectral-bridge/workspace/diagnostics/ai_beings_offline_replay_campaigns_v1/source_snapshots/639a5b6bfeab6b3e0ed0e53f1a15e24cc6d697c2035e68af8f6a0fa03808da07.source",
+      "role": "bounded_public_texture_corpus",
+      "sha256": "639a5b6bfeab6b3e0ed0e53f1a15e24cc6d697c2035e68af8f6a0fa03808da07",
+      "snapshot_owner_only": true,
+      "source_path": "capsules/spectral-bridge/workspace/journal/aspiration_longform_1785323748.txt"
+    },
+    {
+      "byte_count": 2318,
+      "path": "capsules/spectral-bridge/workspace/diagnostics/ai_beings_offline_replay_campaigns_v1/source_snapshots/9ae718ec85b0ca43e0a596564b5a1bbedd8633c53c9a90248091c8ccb972937c.source",
+      "role": "bounded_public_texture_corpus",
+      "sha256": "9ae718ec85b0ca43e0a596564b5a1bbedd8633c53c9a90248091c8ccb972937c",
+      "snapshot_owner_only": true,
+      "source_path": "capsules/spectral-bridge/workspace/journal/astrid_1785322997.txt"
+    },
+    {
+      "byte_count": 985,
+      "path": "capsules/spectral-bridge/workspace/diagnostics/ai_beings_offline_replay_campaigns_v1/source_snapshots/35e43e0415e4641971853c5a0cc960a9274b2b1df5105703632fb230c90cf6f5.source",
+      "role": "bounded_public_texture_corpus",
+      "sha256": "35e43e0415e4641971853c5a0cc960a9274b2b1df5105703632fb230c90cf6f5",
+      "snapshot_owner_only": true,
+      "source_path": "capsules/spectral-bridge/workspace/journal/astrid_1785323049.txt"
+    },
+    {
+      "byte_count": 1439,
+      "path": "capsules/spectral-bridge/workspace/diagnostics/ai_beings_offline_replay_campaigns_v1/source_snapshots/a9dfc687732a7ffe83cb2bab061b472d17d13eaf2f98e534bd11ed8430f13e92.source",
+      "role": "bounded_public_texture_corpus",
+      "sha256": "a9dfc687732a7ffe83cb2bab061b472d17d13eaf2f98e534bd11ed8430f13e92",
+      "snapshot_owner_only": true,
+      "source_path": "capsules/spectral-bridge/workspace/journal/astrid_1785323357.txt"
+    },
+    {
+      "byte_count": 717,
+      "path": "capsules/spectral-bridge/workspace/diagnostics/ai_beings_offline_replay_campaigns_v1/source_snapshots/02d0b048a14c609f7148880ae9012a8ee5f1912fe698fcb49cb009462e3af289.source",
+      "role": "bounded_public_texture_corpus",
+      "sha256": "02d0b048a14c609f7148880ae9012a8ee5f1912fe698fcb49cb009462e3af289",
+      "snapshot_owner_only": true,
+      "source_path": "capsules/spectral-bridge/workspace/journal/astrid_1785323390.txt"
+    },
+    {
+      "byte_count": 725,
+      "path": "capsules/spectral-bridge/workspace/diagnostics/ai_beings_offline_replay_campaigns_v1/source_snapshots/16939c71e089f6b5e52817df065c8ea9e41b228c44e930ccfa1ed7640124b07b.source",
+      "role": "bounded_public_texture_corpus",
+      "sha256": "16939c71e089f6b5e52817df065c8ea9e41b228c44e930ccfa1ed7640124b07b",
+      "snapshot_owner_only": true,
+      "source_path": "capsules/spectral-bridge/workspace/journal/astrid_collision_1_1785323049.txt"
+    },
+    {
+      "byte_count": 2006,
+      "path": "capsules/spectral-bridge/workspace/diagnostics/ai_beings_offline_replay_campaigns_v1/source_snapshots/5e331e4cef877eb282dc624df162cf3eb84e3f4fa0f60742111fea79726ea957.source",
+      "role": "bounded_public_texture_corpus",
+      "sha256": "5e331e4cef877eb282dc624df162cf3eb84e3f4fa0f60742111fea79726ea957",
+      "snapshot_owner_only": true,
+      "source_path": "capsules/spectral-bridge/workspace/journal/daydream_1785323794.txt"
+    },
+    {
+      "byte_count": 2897,
+      "path": "capsules/spectral-bridge/workspace/diagnostics/ai_beings_offline_replay_campaigns_v1/source_snapshots/bece2922829fc5b7b1b0d350b9d658b0e47c24b78120637e6ed55cc6658e7d48.source",
+      "role": "bounded_public_texture_corpus",
+      "sha256": "bece2922829fc5b7b1b0d350b9d658b0e47c24b78120637e6ed55cc6658e7d48",
+      "snapshot_owner_only": true,
+      "source_path": "capsules/spectral-bridge/workspace/journal/daydream_longform_1785323831.txt"
+    },
+    {
+      "byte_count": 2387,
+      "path": "capsules/spectral-bridge/workspace/diagnostics/ai_beings_offline_replay_campaigns_v1/source_snapshots/f0cea9c81f1c52b2f9181702b42db05d68c12bf962fcc0d8fd49439c4a02b6d2.source",
+      "role": "bounded_public_texture_corpus",
+      "sha256": "f0cea9c81f1c52b2f9181702b42db05d68c12bf962fcc0d8fd49439c4a02b6d2",
+      "snapshot_owner_only": true,
+      "source_path": "capsules/spectral-bridge/workspace/journal/dialogue_longform_1785317182.txt"
+    },
+    {
+      "byte_count": 3167,
+      "path": "capsules/spectral-bridge/workspace/diagnostics/ai_beings_offline_replay_campaigns_v1/source_snapshots/b502156a8f22d6256b5f33aa0ac2732317d7653f83e20692e0683d6053a86fcc.source",
+      "role": "bounded_public_texture_corpus",
+      "sha256": "b502156a8f22d6256b5f33aa0ac2732317d7653f83e20692e0683d6053a86fcc",
+      "snapshot_owner_only": true,
+      "source_path": "capsules/spectral-bridge/workspace/journal/dialogue_longform_1785318732.txt"
+    },
+    {
+      "byte_count": 2468,
+      "path": "capsules/spectral-bridge/workspace/diagnostics/ai_beings_offline_replay_campaigns_v1/source_snapshots/cb0bec98216e99a30a3aaef62d6717e290b8a6810e3e7617c36c90c01c777c57.source",
+      "role": "bounded_public_texture_corpus",
+      "sha256": "cb0bec98216e99a30a3aaef62d6717e290b8a6810e3e7617c36c90c01c777c57",
+      "snapshot_owner_only": true,
+      "source_path": "capsules/spectral-bridge/workspace/journal/dialogue_longform_1785320923.txt"
+    },
+    {
+      "byte_count": 2824,
+      "path": "capsules/spectral-bridge/workspace/diagnostics/ai_beings_offline_replay_campaigns_v1/source_snapshots/ca95656e1de410b91aacc3c8fe6111b090b85c0ccb65d30c4a419f616bcbdc57.source",
+      "role": "bounded_public_texture_corpus",
+      "sha256": "ca95656e1de410b91aacc3c8fe6111b090b85c0ccb65d30c4a419f616bcbdc57",
+      "snapshot_owner_only": true,
+      "source_path": "capsules/spectral-bridge/workspace/journal/dialogue_longform_1785321304.txt"
+    },
+    {
+      "byte_count": 2321,
+      "path": "capsules/spectral-bridge/workspace/diagnostics/ai_beings_offline_replay_campaigns_v1/source_snapshots/7e01ec7f070e51fef728d132c3d2e0a353e770ee397fadbe3049d043f6ebdc70.source",
+      "role": "bounded_public_texture_corpus",
+      "sha256": "7e01ec7f070e51fef728d132c3d2e0a353e770ee397fadbe3049d043f6ebdc70",
+      "snapshot_owner_only": true,
+      "source_path": "capsules/spectral-bridge/workspace/journal/dialogue_longform_1785322165.txt"
+    },
+    {
+      "byte_count": 2493,
+      "path": "capsules/spectral-bridge/workspace/diagnostics/ai_beings_offline_replay_campaigns_v1/source_snapshots/328e49de2af989b88f8d43b48ba79e19b8edefd82cdefdd630c0ce4d35cf7fde.source",
+      "role": "bounded_public_texture_corpus",
+      "sha256": "328e49de2af989b88f8d43b48ba79e19b8edefd82cdefdd630c0ce4d35cf7fde",
+      "snapshot_owner_only": true,
+      "source_path": "capsules/spectral-bridge/workspace/journal/dialogue_longform_1785322987.txt"
+    },
+    {
+      "byte_count": 2509,
+      "path": "capsules/spectral-bridge/workspace/diagnostics/ai_beings_offline_replay_campaigns_v1/source_snapshots/40a302481873e5197c294ea85b93ef5c3d04fff5d03bfade8b3782ce1fe2cbb3.source",
+      "role": "bounded_public_texture_corpus",
+      "sha256": "40a302481873e5197c294ea85b93ef5c3d04fff5d03bfade8b3782ce1fe2cbb3",
+      "snapshot_owner_only": true,
+      "source_path": "capsules/spectral-bridge/workspace/journal/dialogue_longform_1785323081.txt"
+    },
+    {
+      "byte_count": 2649,
+      "path": "capsules/spectral-bridge/workspace/diagnostics/ai_beings_offline_replay_campaigns_v1/source_snapshots/a249195efea8d89d34c99d6cc8a15f52a7a2a4b66fe9a0ae20f5703f8a0a8d54.source",
+      "role": "bounded_public_texture_corpus",
+      "sha256": "a249195efea8d89d34c99d6cc8a15f52a7a2a4b66fe9a0ae20f5703f8a0a8d54",
+      "snapshot_owner_only": true,
+      "source_path": "capsules/spectral-bridge/workspace/journal/dialogue_longform_1785323393.txt"
+    },
+    {
+      "byte_count": 2873,
+      "path": "capsules/spectral-bridge/workspace/diagnostics/ai_beings_offline_replay_campaigns_v1/source_snapshots/819cf67153041951b883164632e7db4edebb16bc26f0710113392189f5e288a0.source",
+      "role": "bounded_public_texture_corpus",
+      "sha256": "819cf67153041951b883164632e7db4edebb16bc26f0710113392189f5e288a0",
+      "snapshot_owner_only": true,
+      "source_path": "capsules/spectral-bridge/workspace/journal/self_study_1785319315.txt"
+    },
+    {
+      "byte_count": 3040,
+      "path": "capsules/spectral-bridge/workspace/diagnostics/ai_beings_offline_replay_campaigns_v1/source_snapshots/dd6ffd2f2e1719b8c15349baf97a9e3c242aa7a5c76b1b108baffe3156e251ba.source",
+      "role": "bounded_public_texture_corpus",
+      "sha256": "dd6ffd2f2e1719b8c15349baf97a9e3c242aa7a5c76b1b108baffe3156e251ba",
+      "snapshot_owner_only": true,
+      "source_path": "capsules/spectral-bridge/workspace/journal/self_study_1785319992.txt"
+    },
+    {
+      "byte_count": 4131,
+      "path": "capsules/spectral-bridge/workspace/diagnostics/ai_beings_offline_replay_campaigns_v1/source_snapshots/dfb2a121edab8014d444a9fac30f67ae1b097be3b4dfbe2fe3aab46be4804bfc.source",
+      "role": "bounded_public_texture_corpus",
+      "sha256": "dfb2a121edab8014d444a9fac30f67ae1b097be3b4dfbe2fe3aab46be4804bfc",
+      "snapshot_owner_only": true,
+      "source_path": "capsules/spectral-bridge/workspace/journal/self_study_1785320722.txt"
+    },
+    {
+      "byte_count": 4431,
+      "path": "capsules/spectral-bridge/workspace/diagnostics/ai_beings_offline_replay_campaigns_v1/source_snapshots/65b4a7ca077dd1e8c1b5b22405fd55f977ea767a10771d1ef195cd2e0968d038.source",
+      "role": "bounded_public_texture_corpus",
+      "sha256": "65b4a7ca077dd1e8c1b5b22405fd55f977ea767a10771d1ef195cd2e0968d038",
+      "snapshot_owner_only": true,
+      "source_path": "capsules/spectral-bridge/workspace/journal/self_study_1785321011.txt"
+    },
+    {
+      "byte_count": 31647,
+      "path": "capsules/spectral-bridge/workspace/diagnostics/ai_beings_offline_replay_campaigns_v1/source_snapshots/04e2a54763fb1d9f55d57c8de47fffbd3a596981c68f8d39157c64c667b315ec.source",
+      "role": "campaign_runner",
+      "sha256": "04e2a54763fb1d9f55d57c8de47fffbd3a596981c68f8d39157c64c667b315ec",
+      "snapshot_owner_only": true,
+      "source_path": "scripts/ai_beings_offline_replay_campaigns.py"
+    },
+    {
+      "byte_count": 3221,
+      "path": "capsules/spectral-bridge/workspace/diagnostics/ai_beings_offline_replay_campaigns_v1/source_snapshots/1ad5601fc2c84f8ecb8f9fc9917a4f77687c79abd429ecc9d94886810ecdc7ae.source",
+      "role": "codec_fidelity_source_introspection",
+      "sha256": "1ad5601fc2c84f8ecb8f9fc9917a4f77687c79abd429ecc9d94886810ecdc7ae",
+      "snapshot_owner_only": true,
+      "source_path": "capsules/spectral-bridge/workspace/introspections/!introspection_astrid_codec_1783984712.txt"
+    },
+    {
+      "byte_count": 24911,
+      "path": "capsules/spectral-bridge/workspace/diagnostics/ai_beings_offline_replay_campaigns_v1/source_snapshots/1c35b718ef344738c9394c3f0f0f8ba1bf004a40b3e0e9b91aaf7c63996b275c.source",
+      "role": "codec_replay_implementation",
+      "sha256": "1c35b718ef344738c9394c3f0f0f8ba1bf004a40b3e0e9b91aaf7c63996b275c",
+      "snapshot_owner_only": true,
+      "source_path": "scripts/codec_texture_replay_lab.py"
+    },
+    {
+      "byte_count": 25477,
+      "path": "capsules/spectral-bridge/workspace/diagnostics/ai_beings_offline_replay_campaigns_v1/source_snapshots/c0a3e3571abddce7b72a16161fd6b6a9ef5b870268a0e07af216afc9cb92a40b.source",
+      "role": "fallback_implementation",
+      "sha256": "c0a3e3571abddce7b72a16161fd6b6a9ef5b870268a0e07af216afc9cb92a40b",
+      "snapshot_owner_only": true,
+      "source_path": "capsules/spectral-bridge/src/llm/provider/configuration.rs"
+    },
+    {
+      "byte_count": 35615,
+      "path": "capsules/spectral-bridge/workspace/diagnostics/ai_beings_offline_replay_campaigns_v1/source_snapshots/2432efcadd62b68c66b5eb6878e36ea36c1e1f397fbcacb331e03e7660128ea9.source",
+      "role": "fallback_implementation",
+      "sha256": "2432efcadd62b68c66b5eb6878e36ea36c1e1f397fbcacb331e03e7660128ea9",
+      "snapshot_owner_only": true,
+      "source_path": "capsules/spectral-bridge/src/llm/provider/fallback_budget.rs"
+    },
+    {
+      "byte_count": 46868,
+      "path": "capsules/spectral-bridge/workspace/diagnostics/ai_beings_offline_replay_campaigns_v1/source_snapshots/08c3468712ed027df5b91dcfabae1c485044f81254102ae6c261195bd9b43cb5.source",
+      "role": "fallback_implementation",
+      "sha256": "08c3468712ed027df5b91dcfabae1c485044f81254102ae6c261195bd9b43cb5",
+      "snapshot_owner_only": true,
+      "source_path": "capsules/spectral-bridge/src/llm/provider/fallback_contracts.rs"
+    },
+    {
+      "byte_count": 14953,
+      "path": "capsules/spectral-bridge/workspace/diagnostics/ai_beings_offline_replay_campaigns_v1/source_snapshots/1e49bc613cee9c46324c6e7e875ea765322f057c274df7294f50592770caf2f9.source",
+      "role": "fallback_implementation",
+      "sha256": "1e49bc613cee9c46324c6e7e875ea765322f057c274df7294f50592770caf2f9",
+      "snapshot_owner_only": true,
+      "source_path": "capsules/spectral-bridge/src/llm/provider/fallback_dynamics.rs"
+    },
+    {
+      "byte_count": 26331,
+      "path": "capsules/spectral-bridge/workspace/diagnostics/ai_beings_offline_replay_campaigns_v1/source_snapshots/dd1d297506a00147cfb3c50cc8e0b46ce39bb0ee8de6fcf4cf1f3a6e10aaec27.source",
+      "role": "fallback_implementation",
+      "sha256": "dd1d297506a00147cfb3c50cc8e0b46ce39bb0ee8de6fcf4cf1f3a6e10aaec27",
+      "snapshot_owner_only": true,
+      "source_path": "capsules/spectral-bridge/src/llm/provider/fallback_rendering.rs"
+    },
+    {
+      "byte_count": 15863,
+      "path": "capsules/spectral-bridge/workspace/diagnostics/ai_beings_offline_replay_campaigns_v1/source_snapshots/63149de6441a79f225f0f908e2ac8041c9e6b2817c60fee58e217e7d2e299b9c.source",
+      "role": "fallback_implementation",
+      "sha256": "63149de6441a79f225f0f908e2ac8041c9e6b2817c60fee58e217e7d2e299b9c",
+      "snapshot_owner_only": true,
+      "source_path": "capsules/spectral-bridge/src/llm/provider/fallback_trajectory.rs"
+    },
+    {
+      "byte_count": 58975,
+      "path": "capsules/spectral-bridge/workspace/diagnostics/ai_beings_offline_replay_campaigns_v1/source_snapshots/9f7086415d89bf9ede9070e0e899c9782ce019326ee48354e94a843c32526a27.source",
+      "role": "fallback_implementation",
+      "sha256": "9f7086415d89bf9ede9070e0e899c9782ce019326ee48354e94a843c32526a27",
+      "snapshot_owner_only": true,
+      "source_path": "capsules/spectral-bridge/src/llm/provider/fallback_weights.rs"
+    },
+    {
+      "byte_count": 158529,
+      "path": "capsules/spectral-bridge/workspace/diagnostics/ai_beings_offline_replay_campaigns_v1/source_snapshots/fa66065da5812c104616af12db310a4008aac6f90f9ee4e95d7945d702009ff7.source",
+      "role": "sandbox_adapter_implementation",
+      "sha256": "fa66065da5812c104616af12db310a4008aac6f90f9ee4e95d7945d702009ff7",
+      "snapshot_owner_only": true,
+      "source_path": "scripts/sandbox_trial_queue.py"
+    }
+  ],
+  "sources_sealed": true
+}

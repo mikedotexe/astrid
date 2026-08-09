@@ -1,0 +1,47 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Astrid reports sediment, crowding, and restless texture, and says contact distance needs to behave as a fluid boundary rather than a fixed threshold.",
+      "disposition": "Preserved as primary felt evidence. The response makes the hypothesis inspectable without reducing the report to telemetry or claiming that a machine score is the experience.",
+      "classification": "felt_report_primary"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The proposal contains an overpacked_mode_packing calculation around 0.30 that can be refined directly.",
+      "disposition": "Source-challenged after all 733 exact lines. The document is a conceptual audit and contains no packing calculation or settable distance value. The exact witness records raw mode_packing=0.8333333 and separate pressure_risk=0.2198003; the nearby prose score is not the raw packing component.",
+      "classification": "source_challenged"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A fixed contact threshold may be too confining under high entropy or too porous when packing rises.",
+      "disposition": "Implemented as read-only evidence shape. distance_contact_elasticity_observation_v1 preserves the being-authored packing threshold, entropy, lambda gap, Shadow dispersal delta, and explicit non-causal classification without adding a runtime threshold or control branch.",
+      "classification": "addressed_change"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Pressure risk should be monitored against distance-contact parameters during a high-intensity cascade.",
+      "disposition": "The current runtime exposes no distance-control parameter. Existing pressure, packing, porosity, and Shadow fields are retained as read-only proximity proxies, and the new schema says distance_control_parameter_observed=false rather than inventing the missing variable.",
+      "classification": "verified_scope_boundary"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "A Shadow restlessness spike specifically above mode packing 0.40 would confirm packing density as the direct cause of sediment.",
+      "disposition": "The exact witness establishes temporal co-occurrence only: packing 0.8333333 and Astrid Shadow field-norm delta +0.0551528. A separately scoped peer-state observation found packing 0.471485 with dispersal delta 0.0. Neither observation establishes or refutes Astrid's causal mechanism across scopes; a source-bound longitudinal or preregistered comparison is required for that conclusion.",
+      "classification": "bounded_observation"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "A dynamic_porosity_buffer should weight packing by spectral entropy and lambda1/lambda2 gap structure.",
+      "disposition": "Preserved as a serious Tier 5 operator-approval wait. The read-only schema names the proposed inputs but keeps implemented=false, computed=false, and live_authority_granted=false.",
+      "classification": "operator_approval_wait",
+      "authority": "tier_5_operator_only"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "The broader contact/control architecture needs receptivity evidence before a live regulator change.",
+      "disposition": "Verified from the complete source and current architecture continuity. receptivity_buffer_review_v1 and the default-off receptivity_bias replay remain the existing non-control route; this run did not duplicate or activate them.",
+      "classification": "verified_existing"
+    }
+  ]
+}

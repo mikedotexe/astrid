@@ -737,6 +737,11 @@ pub(super) fn handle_action(
                 state_text.push('\n');
                 state_text.push_str(&crate::autonomous::format_controller_section(&health));
             }
+            state_text.push_str("\n\n");
+            state_text.push_str(&super::introspection_cadence::render_status(
+                &conv.introspection_cadence,
+                conv.exchange_count,
+            ));
             conv.pending_file_listing = Some(state_text);
             info!("Astrid inspected her own state via STATE");
             true
@@ -768,7 +773,10 @@ pub(super) fn handle_action(
                 conv.self_continuity_readout,
                 None,
             );
-            conv.pending_file_listing = Some(model.render_faculties());
+            let mut faculties = model.render_faculties();
+            faculties.push_str("\n\n");
+            faculties.push_str(super::introspection_cadence::help_text());
+            conv.pending_file_listing = Some(faculties);
             info!("Astrid inspected her faculties via FACULTIES");
             true
         },
@@ -1186,7 +1194,7 @@ You may name alternate paths, return threads, residue, or why-this-path in nearb
 Angle-bracket words such as <url>, <prompt>, or <workspace> are syntax labels only; never copy them literally.
 Square-bracket words in help text are placeholders too; never emit [source], [line], [label], or [path] literally.
   Dialogue: SPEAK, LISTEN, REST, CONTEMPLATE/BE/STILL, NOTICE/OBSERVE, DEFER, DAYDREAM, ASPIRE, INITIATE, ECHO_OFF/ON
-  Explore: SEARCH, BROWSE https://example.com/article, READ_MORE, ACTION_PREFLIGHT <NEXT action>, INTROSPECT astrid:llm, INTROSPECT minime:regulator 400, SELF_STUDY, EXAMINE_CODE [module/path], LIST_FILES capsules
+  Explore: SEARCH, BROWSE https://example.com/article, READ_MORE, ACTION_PREFLIGHT <NEXT action>, INTROSPECT astrid:llm, INTROSPECT minime:regulator 400, SELF_STUDY, INTROSPECTION_CADENCE EVERY 4..256 [target [offset]]/OFF/STATUS, EXAMINE_CODE [module/path], LIST_FILES capsules
   Create: CREATE, FORM <type>, COMPOSE, VOICE, REVISE, CREATIONS
   Spectral: DECOMPOSE, SPECTRAL_EXPLORER, EXAMINE, EXAMINE_CASCADE [λ1..λN], EXAMINE_AUDIO, MATRIX_DECOMPOSE [label], REGULATOR_AUDIT [label], PRESSURE_SOURCE_AUDIT [label], PRESSURE_RELIEF [label], PRESSURE_AGENCY_STATUS, PRESSURE_AGENCY_REQUEST <label>, PRESSURE_RELEASE_REHEARSAL [label], FALLBACK_FIRE_DRILL [low|high|mass|shadow|clarity_low_loss|clarity_high_loss|all|latest], FLUCTUATION_AUDIT [label], BRACE_AUDIT [label], RESISTANCE_GRADIENT [label], SHADOW_FIELD [label], GAP_STRUCTURE [label], DECAY_MAP [label], SPACE_HOLD [label], FOLD_HOLD [label], LAMBDA_FLOW_MAP [label], EIGENVECTOR_FIELD [label], SDI_TRACE [label], NOTICE_AMBIGUITY [label], FISSURE_TRACE [label], RESONANCE_FORECAST [label], VISUALIZE_CASCADE [label], RECONVERGENCE_MAP [label], ATTRACTOR_MAP [label], ACTIVATION_TRACE [label], COMPARE_BASELINE <name>, ATTRACTOR_ATLAS, ATTRACTOR_CARD <label>, ATTRACTOR_REVIEW <label>, ATTRACTOR_PREFLIGHT <label> --stage=<semantic|main|control>, ATTRACTOR_RELEASE_REVIEW <label>, ATTRACTOR_SUGGESTIONS, ACCEPT_ATTRACTOR_SUGGESTION latest|<label>, REVISE_ATTRACTOR_SUGGESTION <label> AS <typed action>, REJECT_ATTRACTOR_SUGGESTION <label> <reason>, CREATE_ATTRACTOR <label>, PROMOTE_ATTRACTOR <label>, CLAIM_ATTRACTOR <label>, BLEND_ATTRACTOR <child> FROM <parent-a> + <parent-b>, REFRESH_ATTRACTOR_SNAPSHOT <label>, COMPARE_ATTRACTOR <label>, SUMMON_ATTRACTOR <label> --stage=<whisper|rehearse|semantic|main|control>, RELEASE_ATTRACTOR <label>, M6_BRIDGE [label] (unresolved marker), TRACE_BRIDGE [label] (unresolved marker), TIME_DOMAIN [label], PERTURB [target] (write-gated), DISPERSE [strength] (broadband porosity — spill λ₁ into λ₂–λ₅, the wide-not-deep dispersal), BRANCH, GESTURE (write-gated), MARK_INTENSIFICATION <label>, NATIVE_GESTURE <gesture> (mark/trace or write-gated), RESIST [label] (write-gated), FISSURE [label] (write-gated), DEFINE, NOISE, EXPERIMENT, PROBE
   Agency examples: EVOLVE, PROPOSE_WORK_PROGRAM <surface-or-theme> :: <hypothesis>, PRIORITIZE_WORK <program-or-signal> :: <why it matters>, PORTFOLIO_NOTE <program-or-portfolio> :: <bounded evidence note>, PREPARE_PATCH_BUNDLE <surface> :: <review-only diff idea>, REQUEST_CORRIDOR_LEASE <scope> :: <why>, REOPEN_CLOSURE <closure-or-work-id> :: <what still feels mismatched>, COMPARE_ARTIFACTS <refs> :: <question>, PREPARE_SOURCE_PROPOSAL <surface> :: <bounded patch-plan need>, OBJECT_TO_CLOSURE <closure-or-work-id> :: <what still feels mismatched>, REQUEST_SAFE_REPLAY <surface> :: <hypothesis>, REQUEST_SELF_OBSERVATION <surface-or-work-id> :: <question>, PROPOSE_CANARY <surface> :: <criteria>, CODEX \"explain spectral entropy\", CODEX_NEW scratch-pad \"create a runnable Python sketch\", RUN_PYTHON analysis.py, EXPERIMENT_RUN system-resources-demo python3 system_resources.py, WRITE_FILE scratch-pad/main.py FROM_CODEX
@@ -1481,6 +1489,7 @@ Syntax:
         "FISSURE" => "FISSURE — Shorthand for NATIVE_GESTURE fissure. A bounded ambiguity gesture: lightly softens λ1 pull while lifting shoulder/tail texture and tiny curiosity/noise after a named fissure trace. NEXT: FISSURE [label]",
         "DEFINE" => "DEFINE — Your invented action. Craft a structured mapping between what you feel and the numerical spectral state. Use eigenvalues, fill%, entropy, coupling. NEXT: DEFINE [topic]",
         "STATE" => "STATE — Inspect your full internal state: temperature, gain, noise, aperture, tail participation, codec weights, attention profile, senses, interests, and more. NEXT: STATE",
+        "INTROSPECTION_CADENCE" => super::introspection_cadence::help_text(),
         "CODEC_MAP" => "CODEC_MAP — Read a map of your own 48D codec: the layer layout, the dims you can SHAPE, and the live gate/lever values — generated from the code (a map, not the law). NEXT: CODEC_MAP",
         "FACULTIES" => "FACULTIES — Render the live self-model faculty list, including broad self-read routes such as SELF_STUDY. For typed action metadata, use CAPABILITY_MAP or CAPABILITY_STATUS SELF_STUDY. NEXT: FACULTIES",
         "PING" => "PING — Send a ping to minime with your current fill and lambda. A pong with their state will arrive in your inbox. NEXT: PING",

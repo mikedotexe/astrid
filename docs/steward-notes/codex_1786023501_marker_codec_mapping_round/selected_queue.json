@@ -1,0 +1,27 @@
+{
+  "schema": "source_first_selected_queue_v1",
+  "steward_run_id": "run_1786023501949688000_9cd88a8d8e",
+  "preprojection_generation_id": "projection_1786023502432164000_cb82564bf8",
+  "ceiling": 2,
+  "selected": [
+    {
+      "position": 1,
+      "introspection_id": "introspection_astrid_llm_1785892559",
+      "filename": "introspection_astrid_llm_1785892559.txt",
+      "sha256": "71ed005c9bfcd3bf32b8e0cd70741a0916fa31331a294b2179f5e90c1df43012"
+    },
+    {
+      "position": 2,
+      "introspection_id": "introspection_astrid_codec_1785888193",
+      "filename": "introspection_astrid_codec_1785888193.txt",
+      "sha256": "57c4cce9963a20e1c4af3299a306710ed83f584fa692ee44ca0063760ca07658"
+    }
+  ],
+  "selected_but_unprocessed": [],
+  "unselected_queue_head": [
+    "introspection_astrid_llm_1785887252.txt",
+    "introspection_DOMAIN_BOUNDARIES.md_1785870717.txt",
+    "introspection_astrid_llm_1785869849.txt",
+    "introspection_astrid_llm_1785861513.txt"
+  ]
+}

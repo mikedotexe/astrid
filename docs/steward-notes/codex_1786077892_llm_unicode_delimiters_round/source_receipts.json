@@ -1,0 +1,29 @@
+{
+  "source_reads": [
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "sha256_before_change": "f7c0570ce495b1978d9b6f588cba6ecb00a93b1573316bc22752e6e10d47f20a",
+      "lines_before_change": 1038,
+      "bytes_before_change": 38205,
+      "read": "complete",
+      "sha256_after_change": "8f3c16091b532cba5879726de058ba16af2469f3cea8698d4ece1016fc04f2af",
+      "lines_after_change": 1048,
+      "bytes_after_change": 38557
+    },
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_9be888642e3104d6684a2c2fbee75eb793935cd8d65ddaca19f8dedbc3ba59bb.json",
+      "sha256": "9e785581930be926fb526d1fde549f1b3a9f81587aff99b3fef0fbe44c478c96",
+      "newline_count": 491,
+      "bytes": 22158,
+      "read": "complete",
+      "authority": "evidence_only_no_direct_causation_or_live_authority"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "sha256_after_change": "5064415de87975dfcd028045eafb2ea657980ecd3391afba8d4e7ea022438060",
+      "lines_after_change": 3186,
+      "bytes_after_change": 129538,
+      "read_scope": "complete directly relevant marker-cleanup test family plus exact new regressions"
+    }
+  ]
+}

@@ -1,0 +1,103 @@
+{
+  "schema": "steward_run_verification_receipt_v1",
+  "steward_run": {
+    "run_id": "run_1786103946955341000_710d923a6e",
+    "actor": "codex-heartbeat",
+    "outcome": "success",
+    "finished_at": "2026-08-07T13:26:20.175344+00:00",
+    "pause_generation_at_begin": 249,
+    "pre_projection_generation_id": "projection_1786103947918302000_87ccaaaccd",
+    "post_projection_generation_id": "projection_1786108816799817000_dcf78f7413"
+  },
+  "successful_finish_store_boundary": {
+    "active_store": "v2",
+    "last_global_seq": 723496,
+    "last_event_sha256": "361014ef6238270282ab942a2ace220f59dbeeff52f98c69cdfa6f6c2579f542",
+    "stream_count": 16,
+    "valid": true,
+    "v1_immutable": true,
+    "legacy_source_count": 4
+  },
+  "post_finish_archival_verification": {
+    "pause_generation": 250,
+    "last_global_seq": 723499,
+    "last_event_sha256": "a658501e1528086b59f858448aabd7e011147660f36d0c81f734f358c61fee52",
+    "stream_count": 16,
+    "corrupt_lines": 0,
+    "valid": true,
+    "history_rewritten": false
+  },
+  "canonical_counters_after_post_projection": {
+    "indexed": 4252,
+    "full_read": 3669,
+    "fully_addressed": 3043,
+    "remaining": 1209,
+    "unread": 583,
+    "read_needs_claims": 0,
+    "blocked_needs_steward": 409,
+    "audit_status": "consistent",
+    "mismatch_count": 0
+  },
+  "division": {
+    "cycle_sequence": 19,
+    "completed_rounds_since_followup": 3,
+    "rounds_remaining_before_followup": 3,
+    "review_due": false,
+    "round_event_id": "division_followup_event_322119dad504e9949a0339bdc69455aa",
+    "chronicle_action": "none",
+    "note_paths": []
+  },
+  "archival_checkpoint": {
+    "minime": {
+      "status": "committed",
+      "commit_sha": "fa0fbf1e16dff936c3ec180a7285d4af4a0abd93",
+      "committed_paths": [
+        "CHANGELOG.md",
+        "minime/src/regulator/core/tests.rs"
+      ],
+      "pushed": false
+    },
+    "astrid": {
+      "status": "candidate_pending_own_commit",
+      "candidate_paths": [
+        "CHANGELOG.md",
+        "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+        "docs/steward-notes/codex_1786103946_regulator_pressure_viscosity_round/RUN_REPORT.md",
+        "docs/steward-notes/codex_1786103946_regulator_pressure_viscosity_round/addressing_links.json",
+        "docs/steward-notes/codex_1786103946_regulator_pressure_viscosity_round/claims/regulator_1785629184.json",
+        "docs/steward-notes/codex_1786103946_regulator_pressure_viscosity_round/deployment_alignment.json",
+        "docs/steward-notes/codex_1786103946_regulator_pressure_viscosity_round/division_return.json",
+        "docs/steward-notes/codex_1786103946_regulator_pressure_viscosity_round/read_manifest.json",
+        "docs/steward-notes/codex_1786103946_regulator_pressure_viscosity_round/source_receipts.json",
+        "docs/steward-notes/codex_1786103946_regulator_pressure_viscosity_round/summaries/regulator_1785629184.md",
+        "docs/steward-notes/codex_1786103946_regulator_pressure_viscosity_round/test_results.json",
+        "docs/steward-notes/codex_1786103946_regulator_pressure_viscosity_round/unprocessed_selected.json",
+        "docs/steward-notes/codex_1786103946_regulator_pressure_viscosity_round/verification_receipt.json"
+      ],
+      "mixed_worktree_paths": [
+        "CHANGELOG.md",
+        "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md"
+      ],
+      "separation_method": "index-only exact hunks; worktree foreign bytes unchanged"
+    }
+  },
+  "quoted_introspection_reference": {
+    "path": "capsules/spectral-bridge/workspace/introspections/introspection_minime_regulator_1785629184.txt",
+    "introspection_id": "introspection_minime_regulator_1785629184",
+    "lived_state_witness_id": "lsw_e2f9fbad2d6c657f12f1cf3e90d7de62d363490d597c5a51f26e454fca6a61ab",
+    "sha256": "f7c527e1d63e95686b979018e16d0f60694b6c841d9eb1534402eb73e497ffcf"
+  },
+  "staged_state_verification": {
+    "minime_format": "passed",
+    "minime_library_tests_passed": 358,
+    "minime_library_tests_failed": 0,
+    "initial_archive_format_invocation": "repository root had no Cargo.toml; changed no files",
+    "corrected_archive_format_invocation": "passed from /Users/v/other/minime/minime"
+  },
+  "deployment": {
+    "attempted": false,
+    "restart_required": false,
+    "live_consumed_source_changed": false
+  },
+  "authority": "evidence and test archival only; no felt result, approval, deployment, dispatch, or live-control authority"
+}

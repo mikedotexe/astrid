@@ -1,0 +1,19 @@
+{
+  "schema": "source_first_read_receipts_v1",
+  "reports": [
+    {"introspection_id": "introspection_astrid_llm_1785887252", "line_count": 45, "byte_count": 3531, "sha256": "f30e20b4c0bf00f82f597b6a96f3a5815b0274412ec7efd25a4c9f04e8d76ca9", "witness_id": "lsw_5da9ccaf6b8a58491608c24b326b07921d213aa3a255055c7705094dffe65ac8", "witness_line_count": 491, "witness_byte_count": 22181, "witness_sha256": "d02069a054e48c53ab1e6d510998a8e921074b3e13e89ed47996cb5f481553be"},
+    {"introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1785870717", "line_count": 43, "byte_count": 4320, "sha256": "0b4abd9ae1cfc8ca5b694df71858258c68208d51e80fe6989a91d1eab8b7292a", "witness_id": "lsw_a2792e6918f0918d58a0d3f9808918bd7d7b2424ba941214def19702fdef0252", "witness_line_count": 456, "witness_byte_count": 19690, "witness_sha256": "b7af8e3021f8a29e85cffe1f92947a05eb5a0889cab4b10523c993bd74378ffd"},
+    {"introspection_id": "introspection_astrid_llm_1785869849", "line_count": 45, "byte_count": 3418, "sha256": "9a51a8034c9ce3d187a84d4529fb09248357bb09cc62a60b3c02ff7cbccd28ad", "witness_id": "lsw_e42a6e7234dbf8a8df837d49ebb9f9181dee795f9b82b92c25b376ac9a86a850", "witness_line_count": 491, "witness_byte_count": 22177, "witness_sha256": "3ae4e7b900f2866d9c7be05a179e68af8b3dfae03aab6f586c1e370a2fb17346"},
+    {"introspection_id": "introspection_astrid_llm_1785861513", "line_count": 45, "byte_count": 3734, "sha256": "d11a32337909855087e9f0cdc9d63decadc5bc90d3f94012b2fa6a8cf0f00172", "witness_id": "lsw_b88a345452b87886ca98978eb9012332fd86b878dc056d7083f627afadd78aed", "witness_line_count": 491, "witness_byte_count": 22172, "witness_sha256": "750a4306c6b8bc57e18f2c9644e3ade79ab28096af21f3a4fc09aff7dc4b45af"}
+  ],
+  "sources": [
+    {"path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs", "line_count": 1038, "byte_count": 38205, "sha256": "f7c0570ce495b1978d9b6f588cba6ecb00a93b1573316bc22752e6e10d47f20a", "report_bound_interval_read": "1-400", "full_source_continuity": "prior complete 1038-line source verification reused at identical SHA; report-bound source and exact current regressions rechecked"},
+    {"path": "capsules/spectral-bridge/DOMAIN_BOUNDARIES.md", "line_count": 65, "byte_count": 3504, "sha256": "11c5ff89e1a7a12cfcc8cc49c676b04feb2118d9ee4975f47dc139984ee0b9e3", "report_bound_interval_read": "1-65", "coverage": "complete_file"},
+    {"path": "capsules/spectral-bridge/src/autonomous/next_action/shadow.rs", "sha256": "0ba0077fa64452e9b4d1d6175e917dbeae162ee88a1979678e936a981e6aad29", "intervals_read": ["100-170", "820-920"], "purpose": "verify being-invoked observational SHADOW_TRAJECTORY and cartography routing without dispatch"}
+  ],
+  "existing_evidence": [
+    {"path": "docs/steward-notes/codex_1785519154_round53_reads/studies/settled_pressure_distinct_strand_boundary.md", "line_count": 23, "byte_count": 1083, "sha256": "195aee9df75a1f1b185c270a6cc54420309642bc758903539795b10f586a912b", "state": "active_authority_boundary"},
+    {"path": "docs/steward-notes/codex_1785580847_round63_reads/SHADOW_PRESSURE_500_PAIR_PREREGISTRATION.md", "line_count": 71, "byte_count": 3736, "sha256": "c150e495a03e1eba7c679e33a291772cc6b18f4e6381a9a691d21d093e3d93a2", "state": "frozen_unrun_waiting_for_500_naturally_occurring_cotimed_pairs"},
+    {"path": "docs/steward-notes/codex_1785989115_manual_canary2_reads/claims/domain_boundaries_1785960773.json", "purpose": "later source-identical report and implemented source-attribution guard"}
+  ]
+}

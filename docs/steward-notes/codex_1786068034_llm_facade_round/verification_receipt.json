@@ -1,0 +1,86 @@
+{
+  "schema": "steward_run_verification_receipt_v1",
+  "run_id": "run_1786068034771533000_dbe53b832e",
+  "pause_generation": 237,
+  "projection_generation_ids": {
+    "pre_run": "projection_1786068035724907000_3c6f2fae97",
+    "pre_finish": "projection_1786069902005558000_8cbb3d0ddf",
+    "post_run": "projection_1786070674500619000_ed6d0ce600"
+  },
+  "processed_reports": [
+    "introspection_llm.rs_1786067701.txt"
+  ],
+  "processed_report_count": 1,
+  "addressing": {
+    "status": "addressed_change",
+    "claim_count": 6,
+    "evidence_link_count": 18,
+    "proof_gap_count": 0,
+    "fully_addressed": true
+  },
+  "canonical_counter_audit": {
+    "indexed": 4246,
+    "full_read": 3661,
+    "fully_addressed": 3035,
+    "remaining": 1211,
+    "unread": 585,
+    "read_needs_claims": 0,
+    "blocked": 409,
+    "status": "consistent",
+    "mismatches": []
+  },
+  "division": {
+    "cycle_sequence": 18,
+    "completed_rounds_since_followup": 2,
+    "rounds_remaining_before_followup": 4,
+    "review_due": false,
+    "last_round_event_id": "division_followup_event_349beca217a914bffd8edbdf01eb205b",
+    "event_count": 122,
+    "event_head_sha256": "118d045950db14c0cee38e3a63a95ef51788b1864a54e4b97364d759533f0d9b",
+    "note_or_chronicle_action": "none_required"
+  },
+  "evidence_event_store_prefinish": {
+    "active_store": "v2",
+    "valid": true,
+    "last_global_seq": 717989,
+    "last_event_sha256": "fb349941a0016af251e23c10386b989deef97ef4d42d2157ea433be2aa811db2",
+    "stream_count": 16,
+    "corrupt_lines": 0,
+    "pending_event_count": 0,
+    "v1_immutable": true,
+    "v1_source_count": 4,
+    "verification_mode": "full_chain"
+  },
+  "tests": {
+    "facade_contract_passed": 1,
+    "facade_compile_pass_cases": 1,
+    "facade_compile_fail_cases": 1,
+    "bridge_library_passed": 1831,
+    "strict_clippy": "passed",
+    "steward_self_tests_passed": 127,
+    "anti_drop_guards": 47,
+    "cadence_integrity": "valid_and_off",
+    "epistemic_lint_checked": 10527,
+    "epistemic_lint_issues": 0
+  },
+  "restart_required": false,
+  "deployment_attempted": false,
+  "live_authority_granted": false,
+  "controller_finish_outcome": "success",
+  "controller_finish_evidence": {
+    "last_global_seq": 718094,
+    "last_event_sha256": "6a3fe95b3a63a8e0b45eb905c5c35ca80ccfa0913f935940d0eaf954551d4bdd",
+    "valid": true
+  },
+  "post_finish_control_status": {
+    "pause_generation": 238,
+    "active_lease": false,
+    "active_projection": false,
+    "last_global_seq": 718097,
+    "last_event_sha256": "e07400530a13d63198c0f548fdb5b8ea02bca564058830c4c80484b734deb368",
+    "stream_count": 16,
+    "v1_immutable": true,
+    "source_lag": 0
+  },
+  "archival_checkpoint": "stabilization_claimed_candidate_review_in_progress"
+}

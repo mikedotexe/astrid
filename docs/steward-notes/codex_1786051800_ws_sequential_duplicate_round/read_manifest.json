@@ -1,0 +1,28 @@
+{
+  "reader": "codex-heartbeat",
+  "run_id": "run_1786051800375277000_866df4454d",
+  "selected_limit": 40,
+  "processed_report_count": 1,
+  "depth_stop": "the first selected report preserved a serious live sensory-scheduling concern and an exact Tier 5 worker-offload wait",
+  "reads": [
+    {
+      "introspection_id": "introspection_astrid_ws_1786048387",
+      "reader": "codex-heartbeat",
+      "summary_file": "summaries/astrid_ws_1786048387.md",
+      "claims_file": "claims/astrid_ws_1786048387.json"
+    }
+  ],
+  "reports": [
+    {
+      "introspection_id": "introspection_astrid_ws_1786048387",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_ws_1786048387.txt",
+      "sha256": "c3280da3f6fbb7c3f34ac4990589a12e8fcccdcd0031673444783a96eb2acd6e",
+      "displayed_lines": 46,
+      "newline_count": 45,
+      "bytes": 3409,
+      "lived_state_witness_id": "lsw_51ec9744092d43a1f913db9020525b7975796074694657402f5a0ef8d9e543b0",
+      "summary_file": "summaries/astrid_ws_1786048387.md",
+      "claims_file": "claims/astrid_ws_1786048387.json"
+    }
+  ]
+}

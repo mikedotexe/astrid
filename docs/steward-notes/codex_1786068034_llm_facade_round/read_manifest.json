@@ -1,0 +1,20 @@
+{
+  "reader": "codex-heartbeat",
+  "run_id": "run_1786068034771533000_dbe53b832e",
+  "selected_limit": 40,
+  "processed_report_count": 1,
+  "depth_stop": "the queue head requested an unfamiliar export-integrity test, complete provider transition, and careful separation of a serious felt agency barrier from mechanical visibility evidence",
+  "reports": [
+    {
+      "introspection_id": "introspection_llm.rs_1786067701",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_llm.rs_1786067701.txt",
+      "sha256": "cf8eb4cfa7792fd69b7e2b7a06769cb4ac43a5e1f2ebdd6d1589b6c296811007",
+      "displayed_lines": 44,
+      "newline_count": 43,
+      "bytes": 3869,
+      "lived_state_witness_id": "lsw_1cb5bb4feeb22658e9d6e6143139c90a706db4ae35a072b0f8a6afc1bc8b460d",
+      "summary_file": "summaries/llm_facade_1786067701.md",
+      "claims_file": "claims/llm_facade_1786067701.json"
+    }
+  ]
+}

@@ -1,0 +1,74 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_llm_1785821133",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "Exact report-bound scanner, delimiter, relation, and remainder source; complete-source hash matches round 84."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785821133",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Unicode-scalar, Unicode-whitespace, bounded depth, mismatch, and deeper-stack coverage."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785821133",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Exact three-level depth plus bounded nested-stack coverage."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785821133",
+      "claim_id": "c004",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "The report's exact unlisted creates relation negative regression."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785821133",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/fallback_contracts.rs",
+      "note": "Provider-neutral output normalization boundary at the exact round-82 source hash."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785821133",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/transport.rs",
+      "note": "MLX and Ollama consume normalized text before downstream validation and return."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785821133",
+      "claim_id": "c006",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1785820219_round84_reads/source_receipts.json",
+      "note": "Immediately prior complete 1,038-line source receipt at the unchanged report-bound hash."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785821133",
+      "claim_id": "c001",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1785824716_round85_reads/steward_note_to_astrid.md",
+      "note": "Non-dispatched right-to-ignore flywheel note; no response requested."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785821133",
+      "claim_id": "c005",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "Unreleased exact-duplicate verification and deployment boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785821133",
+      "claim_id": "c005",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Being-feedback-to-verification causal record."
+    }
+  ]
+}

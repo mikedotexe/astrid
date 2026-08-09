@@ -1,0 +1,34 @@
+{
+  "schema": "source_first_read_receipts_v1",
+  "reports": [
+    {
+      "introspection_id": "introspection_astrid_llm_1786023929",
+      "logical_lines": 45,
+      "byte_count": 3604,
+      "sha256": "6211edd64e8117b975ba697b9d40bd5cfc713f601c69ec14a34925309b4928bc",
+      "witness_id": "lsw_241d1c39c6b0e8f20a66db08be631a833bb2ea861e052a4272d808416f9f54cb",
+      "witness_line_count": 491,
+      "witness_byte_count": 22184,
+      "witness_sha256": "950357070354597d9b5c20704aee431bc8d0705be41a04bbffbf29e335ede5f5"
+    }
+  ],
+  "sources": [
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "line_count": 1038,
+      "sha256": "f7c0570ce495b1978d9b6f588cba6ecb00a93b1573316bc22752e6e10d47f20a",
+      "report_bound_interval_read": "1-400",
+      "continuation_interval_read": "401-520",
+      "full_source_continuity": "previous complete 1038-line read reused at identical SHA; every report-bound line and the requested aggregation continuation were reread in this run"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "sha256": "2d057f1a9bc6718ecc86447ebc5631bdef6ea0e08d234ea6e05f247c984b1fcd",
+      "read_intervals": [
+        "1740-1890",
+        "2110-2515"
+      ],
+      "focused_regressions": 47
+    }
+  ]
+}

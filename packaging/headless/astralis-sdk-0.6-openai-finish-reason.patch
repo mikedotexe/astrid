@@ -1,0 +1,27 @@
+diff --git a/src/lib.rs b/src/lib.rs
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -319,7 +319,7 @@ impl OpenAICompatProvider {
+             }
+         }
+ 
+-        // Handle finish reason: emit ToolCallEnd for all active tool calls.
++        // Handle finish reason: close tool calls, then complete the stream.
+         if let Some(ref reason) = choice.finish_reason
+             && reason == "tool_calls"
+         {
+@@ -330,5 +330,14 @@ impl OpenAICompatProvider {
+             active_tools.clear();
+         }
+ 
++        // Some OpenAI-compatible servers, including Ollama when max_tokens is
++        // reached, send a finish_reason but omit the trailing `data: [DONE]`.
++        // Treat any terminal finish reason as completion. A later [DONE] is
++        // harmless because React ignores duplicate completion after the turn
++        // has returned to Idle.
++        if choice.finish_reason.is_some() {
++            Self::publish_stream(request_id, StreamEvent::Done)?;
++        }
++
+         Ok(())
+     }

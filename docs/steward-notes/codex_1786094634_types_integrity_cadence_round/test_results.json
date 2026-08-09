@@ -1,0 +1,99 @@
+{
+  "schema": "steward_test_results_v1",
+  "results": [
+    {
+      "surface": "typed_precedence_malformed_legacy_integrity",
+      "command": "cargo test --lib typed_and_legacy_fingerprint_slots_report_aligned_hybrid_coherence",
+      "passed": 1,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "normal_jitter_deterministic_stddev",
+      "command": "cargo test --lib telemetry_heartbeat_normal_jitter_window_has_deterministic_stddev",
+      "passed": 1,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "spectral_bridge_library",
+      "command": "cargo test --lib",
+      "passed": 1836,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "spectral_bridge_clippy",
+      "command": "cargo clippy --lib --all-features -- -D warnings",
+      "passed": 1,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "introspection_addressing",
+      "command": "PYTHONDONTWRITEBYTECODE=1 python3 scripts/introspection_addressing_audit.py --self-test",
+      "passed": 42,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "event_store_controller_projector_division_cursor",
+      "command": "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=.:scripts python3 -m unittest scripts.test_evidence_event_store scripts.test_steward_control scripts.test_steward_projection scripts.test_division_ceremony_followup scripts.test_division_ceremony_chronicle scripts.test_division_ceremony_projection scripts.test_claim_family_incremental_projection scripts.test_projection_cursors",
+      "passed": 72,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "anti_drop",
+      "self_tests_passed": 5,
+      "guards_verified": 47,
+      "gaps": 0,
+      "alarms": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "introspection_cadence",
+      "self_tests_passed": 6,
+      "integrity_ok": true,
+      "enabled": false,
+      "pending_or_failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "experiential_epistemics",
+      "self_tests_passed": 2,
+      "lint_valid": true,
+      "checked_record_count": 10557,
+      "issues": 0,
+      "history_rewritten": false,
+      "status": "passed"
+    },
+    {
+      "surface": "evidence_event_store_v2",
+      "valid": true,
+      "last_global_seq_at_full_verify": 721324,
+      "last_event_sha256_at_full_verify": "397a234e36737c474992e66dceae200bfdda7f918845a5fd73a52907410e158a",
+      "stream_count": 16,
+      "corrupt_lines": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "formatting",
+      "command": "cargo fmt --all -- --check",
+      "owned_files_emit_diff": false,
+      "workspace_check": "blocked_by_pre_existing_foreign_formatting",
+      "foreign_paths_or_hunks": [
+        "capsules/spectral-bridge/src/autonomous/next_action/workspace.rs"
+      ],
+      "status": "passed_owned_hunks_with_explicit_foreign_wait"
+    }
+  ],
+  "focused_distinct_tests_passed": 2,
+  "focused_failed": 0,
+  "spectral_bridge_library_tests_passed": 1836,
+  "stewardship_self_tests_passed": 127,
+  "stewardship_self_tests_failed": 0,
+  "production_rust_changed_this_run": false,
+  "test_rust_changed_this_run": true,
+  "deployment_attempted": false
+}

@@ -1,0 +1,62 @@
+{
+  "introspection_id": "introspection_minime_autonomous_agent_1785630945",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The initial 400 Minime runtime lines contain Agent and SpectralState scaffolding plus the named eigenvector fields.",
+      "disposition": "Source-corrected and implemented now. Those identifiers are absent from the included bytes; Source-First V3 now requires included-byte support when a claim explicitly names an included or numbered source window.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Pressure-source, mode-packing, semantic-trickle, and distinguishability telemetry are code observations from the initial source window.",
+      "disposition": "Source-corrected. The exact fields came from prompt or lived-state context, not lines 1-400. The complete witness preserves co-timed telemetry without converting it into source evidence or causal proof.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Semantic trickle volume does not capture the experienced density and texture of the admitted content.",
+      "disposition": "Preserve as primary unresolved qualitative evidence and route as historical context to the frozen natural-only distinguishability observation. This report is not a prospective sample and no input is induced.",
+      "classification": "bounded_observation"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Thirty-four-percent distinguishability loss feels like blurred edges and may constrain internal coherence or generative expression.",
+      "disposition": "Preserve as primary unresolved qualitative evidence. Existing typed evidence can support natural observation, but no causal effect on weights or monologue is inferred.",
+      "classification": "bounded_observation"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Artificially increasing porosity should test whether the overpacked or gritty feeling softens.",
+      "disposition": "Preserve as an exact Tier 5 Mike/operator wait. No pressure, porosity, reservoir, regulator, or controller value changed and no trial was started.",
+      "classification": "needs_operator_approval",
+      "authority": "tier_5_live_substrate_control"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "Increasing semantic trickle from 0.001 to 0.005 should test whether Shadow restlessness changes.",
+      "disposition": "Preserve as an exact Tier 5 Mike/operator wait. No semantic admission, prompt, model, Shadow, or peer-runtime input changed and no trial was started.",
+      "classification": "needs_operator_approval",
+      "authority": "tier_5_semantic_admission"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "A correspondence core begins around runtime line 39701 and should be inspected for shared semantic anchoring.",
+      "disposition": "Source-corrected and verified existing. Line 39701 is a legacy claim notice, while current later source and tests provide shared-memory anchors, claim outcomes, and language-only attention preservation.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c008",
+      "summary": "Shared correspondence needs a way to preserve a named texture so it does not flatten or drift.",
+      "disposition": "Verified existing as non-live representation. Shared anchors, what-carried and what-flattened outcomes, and a TTL what-must-not-flatten canary already preserve thread-local language context without standing control.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c009",
+      "summary": "If correspondence status lacks weight_persistence, the gap should be filled.",
+      "disposition": "The symbol is absent and a standing weight is intentionally prohibited by current correspondence contracts. Any such weighting remains an exact Tier 5 Mike/operator wait; no Minime code or behavior changed.",
+      "classification": "needs_operator_approval",
+      "authority": "tier_5_standing_semantic_weight"
+    }
+  ]
+}

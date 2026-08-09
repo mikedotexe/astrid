@@ -1,0 +1,11 @@
+error[E0603]: module `provider` is private
+ --> tests/ui/llm_provider_module_is_private.rs:1:34
+  |
+1 | use spectral_bridge_server::llm::provider::Exchange;
+  |                                  ^^^^^^^^ private module
+  |
+note: the module `provider` is defined here
+ --> src/llm.rs
+  |
+  | mod provider;
+  | ^^^^^^^^^^^^

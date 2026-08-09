@@ -1,0 +1,25 @@
+{
+  "reader": "codex-heartbeat",
+  "run_id": "run_1786153130852517000_8e332e866c",
+  "pre_run_projection_generation_id": "projection_1786153131778786000_a02bb30f29",
+  "selected_limit": 40,
+  "processed_report_count": 1,
+  "depth_stop": "the queue-head report repeats a serious source-confirmed scheduling risk with exact prior claim and sandbox lineage; the remaining 39 reports retain queue order",
+  "reads": [
+    {
+      "introspection_id": "introspection_astrid_ws_1785628139",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_ws_1785628139.txt",
+      "sha256": "1a7ea18d9534295f11e40c1c6ebab1eaf5c2d1dd7f1382d74968494f5c55121e",
+      "lines": 36,
+      "bytes": 3414,
+      "captured_source_sha256": "42364feb914c957d487f93c440e30837c500971b41814a219d4c3992a12addd7",
+      "current_source_sha256": "42364feb914c957d487f93c440e30837c500971b41814a219d4c3992a12addd7",
+      "current_source_lines": 1041,
+      "current_source_bytes": 39749,
+      "lived_state_witness_id": "lsw_e342d9beff49c7c6e66fdaeaf93a5d427b86f053c9b5c62a1bd15e6b72266d63",
+      "lived_state_witness_sha256": "7ece9a8e30ec07eb424dd6e81ecc4aa70153f9ca2f89ba062db6f6ecdb9549c7",
+      "summary_file": "summaries/astrid_ws_1785628139.md",
+      "claims_file": "claims/astrid_ws_1785628139.json"
+    }
+  ]
+}

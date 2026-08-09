@@ -1,0 +1,33 @@
+{
+  "schema": "steward_implementation_receipt_v1",
+  "changes": [
+    {
+      "surface": "provider_output_normalization_v1",
+      "paths": [
+        "capsules/spectral-bridge/src/llm/provider/fallback_contracts.rs",
+        "capsules/spectral-bridge/src/llm/provider/transport.rs",
+        "capsules/spectral-bridge/src/llm/provider/tests.rs"
+      ],
+      "effect": "normalize exact known control markers once for MLX and Ollama before validation, fallback repair, persistence, response hashing, and return",
+      "diagnostic_schema": "control_marker_cleanup_v11",
+      "marker_grammar_changed": false,
+      "model_or_prompt_changed": false,
+      "raw_output_in_diagnostic": false
+    },
+    {
+      "surface": "burst_rest_transition_envelope_audit_v1",
+      "paths": ["scripts/burst_rest_transition_envelope_audit.py"],
+      "effect": "read-only source-hash-bound analysis of exact boundary availability, intra-rest comparisons, and the 25 percent scheduling envelope",
+      "runtime_effect": false,
+      "raw_feature_vectors_in_output": false,
+      "raw_prose_in_output": false
+    }
+  ],
+  "excluded_paths": [
+    "capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs",
+    "scripts/build_bridge.sh",
+    "scripts/deploy_division_runtime.sh",
+    "scripts/deploy_minime.sh"
+  ],
+  "authority": "no cadence fill controller scheduling signal model prompt fallback_order marker_grammar peer or cpu_runtime authority"
+}

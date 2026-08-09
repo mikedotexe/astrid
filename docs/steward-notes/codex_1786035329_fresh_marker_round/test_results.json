@@ -1,0 +1,104 @@
+{
+  "schema": "astrid.steward_run_test_results.v1",
+  "processing_steward_run_id": "run_1786035329622809000_f204509aa4",
+  "recovery_steward_run_id": "run_1786037361210939000_b4131618f4",
+  "results": [
+    {
+      "suite": "model control-marker regressions",
+      "passed": 48,
+      "failed": 0,
+      "rerun_under_recovery_lease": true
+    },
+    {
+      "suite": "complete spectral-bridge library",
+      "passed": 1828,
+      "failed": 0
+    },
+    {
+      "suite": "Rust formatting",
+      "passed": true
+    },
+    {
+      "suite": "strict all-target/all-feature Clippy",
+      "passed": true,
+      "warnings": 0
+    },
+    {
+      "suite": "introspection addressing audit",
+      "passed": 42,
+      "failed": 0
+    },
+    {
+      "suite": "source-first projector, Evidence Store, steward control, Division, Chronicle, claim-family projection, and cursors",
+      "passed": 72,
+      "failed": 0
+    },
+    {
+      "suite": "anti-drop self-tests",
+      "passed": 5,
+      "failed": 0
+    },
+    {
+      "suite": "anti-drop verification",
+      "passed": 47,
+      "failed": 0,
+      "alarms": 0,
+      "gaps": 0
+    },
+    {
+      "suite": "introspection cadence audit",
+      "passed": 6,
+      "failed": 0,
+      "strict_live_valid": true,
+      "enabled": false,
+      "configured_receipts": 0,
+      "pending_attempts": 0
+    },
+    {
+      "suite": "experiential epistemics self-tests",
+      "passed": 2,
+      "failed": 0
+    },
+    {
+      "suite": "epistemic lint",
+      "records_checked": 10485,
+      "issues": 0,
+      "history_rewritten": false
+    },
+    {
+      "suite": "manual source-first projection",
+      "generation_id": "projection_1786036968536204000_fb75e7cc73",
+      "status": "passed",
+      "completed_steps": 20,
+      "executed_steps": 19,
+      "reused_steps": 1,
+      "authority_scan_passed": true,
+      "counter_audit_valid": true
+    },
+    {
+      "suite": "recovery source-first preprojection",
+      "generation_id": "projection_1786037361632827000_588204dfbe",
+      "status": "passed"
+    },
+    {
+      "suite": "Evidence Event Store V2 full-chain verification",
+      "valid": true,
+      "streams": 16,
+      "corrupt_lines": 0
+    },
+    {
+      "suite": "steward controller verification",
+      "valid": true,
+      "v1_immutable": true,
+      "cutoff_current": true,
+      "timestamp_lag": 0
+    }
+  ],
+  "controller_recovery": {
+    "processing_run_outcome": "cancelled",
+    "reason": "The credential-confined session adapter reached its wall-clock limit after the manual projection had returned passed.",
+    "durable_work_lost": false,
+    "recovery_action": "A fresh controller lease preprojected the durable evidence, reread the report, reran the focused regression, verified V2 and controller integrity, and carried the round to completion."
+  },
+  "deployment_required": false
+}

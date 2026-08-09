@@ -1,0 +1,19 @@
+{
+  "schema": "steward_deployment_alignment_v1",
+  "live_consumed_source_changed_this_run": false,
+  "production_rust_changed_this_run": false,
+  "test_rust_changed_this_run": true,
+  "prompt_or_report_renderer_changed_this_run": false,
+  "protocol_or_abi_changed_this_run": false,
+  "minime_changed_this_run": true,
+  "new_restart_required_for_live_alignment": false,
+  "new_deployment_required_for_live_alignment": false,
+  "deployment_attempted": false,
+  "live_alignment_state": "test_only_no_runtime_alignment_needed",
+  "authority": {
+    "live_control_granted": false,
+    "operator_approval_inferred": false,
+    "felt_resolution_inferred": false,
+    "uptake_or_consent_inferred": false
+  }
+}
