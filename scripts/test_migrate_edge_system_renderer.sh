@@ -396,9 +396,102 @@ render_profile icp
 if command -v systemd-analyze >/dev/null 2>&1; then
     [[ $SUPPORT_UNIT_ROOT == /* && -d $SUPPORT_UNIT_ROOT && ! -L $SUPPORT_UNIT_ROOT ]] \
         || fail "systemd-analyze is available; --support-unit-root must name the rendered immutable support-unit directory"
-    systemd --version | sed -n '1p'
+    verify_root=$TEMP/systemd-verify
+    verify_exec_root=$verify_root/executables
+    verify_support_root=$verify_root/support
+    mkdir -m 0700 -p "$verify_exec_root" "$verify_support_root"
+    cp -R "$SUPPORT_UNIT_ROOT/." "$verify_support_root/"
+
+    declare -a VERIFY_RENDERED_ROOTS=()
     for rendered in "${RENDERED_ROOTS[@]}"; do
-        SYSTEMD_UNIT_PATH="$rendered:$SUPPORT_UNIT_ROOT:" systemd-analyze verify \
+        verify_rendered=$verify_root/$(basename "$(dirname "$rendered")")
+        mkdir -m 0700 "$verify_rendered"
+        cp -R "$rendered/." "$verify_rendered/"
+        VERIFY_RENDERED_ROOTS+=("$verify_rendered")
+    done
+
+    # systemd 249 insists that direct Exec*= paths exist during static
+    # verification. Discover only commands under the three reviewed appliance
+    # prefixes, reject any other absent absolute executable, and remap those
+    # commands into this test's private root. Unit text outside the copies is
+    # never changed and the runner's /opt and /usr/libexec stay untouched.
+    mapfile -t fixture_commands < <(python3 - \
+        "$verify_support_root" "${VERIFY_RENDERED_ROOTS[@]}" <<'PY'
+import os
+import pathlib
+import shlex
+import sys
+
+approved = (
+    "/opt/astrid-edge/releases/current/",
+    "/usr/libexec/astrid/",
+    "/usr/libexec/astrid-edge/immutable/",
+)
+expected = {
+    "/opt/astrid-edge/releases/current/astrid-daemon",
+    "/opt/astrid-edge/releases/current/astrid-edge-runtime",
+    "/usr/libexec/astrid-edge/immutable/astrid-edge-presentation-broker",
+    "/usr/libexec/astrid-edge/immutable/astrid-edge-provider-broker",
+    "/usr/libexec/astrid-edge/immutable/astrid-edge-web-broker",
+    "/usr/libexec/astrid-edge/immutable/wait-for-icp-ssd",
+    "/usr/libexec/astrid/astrid-edge-rescue-helper",
+    "/usr/libexec/astrid/astrid-edge-steward-helper",
+}
+commands = set()
+for raw_root in sys.argv[1:]:
+    root = pathlib.Path(raw_root)
+    for path in sorted(item for item in root.rglob("*") if item.is_file()):
+        for raw_line in path.read_text(encoding="utf-8").splitlines():
+            line = raw_line.strip()
+            if not line.startswith((
+                "ExecCondition=",
+                "ExecStart=",
+                "ExecStartPre=",
+                "ExecStartPost=",
+                "ExecReload=",
+                "ExecStop=",
+                "ExecStopPost=",
+            )):
+                continue
+            value = line.split("=", 1)[1]
+            while value and value[0] in "-+!:@":
+                value = value[1:]
+            words = shlex.split(value)
+            if not words:
+                continue
+            executable = words[0]
+            if executable.startswith(approved):
+                commands.add(executable)
+            elif executable.startswith("/") and not os.access(executable, os.X_OK):
+                raise SystemExit(
+                    f"unapproved missing absolute executable in rendered unit: {executable}"
+                )
+if commands != expected:
+    raise SystemExit(
+        "rendered unit command allowlist changed:\n"
+        f"expected={sorted(expected)!r}\nactual={sorted(commands)!r}"
+    )
+for command in sorted(commands):
+    print(command)
+PY
+    )
+    ((${#fixture_commands[@]} > 0)) || fail "rendered unit executable fixture set is empty"
+    for command in "${fixture_commands[@]}"; do
+        install -D -m 0755 /usr/bin/true "$verify_exec_root$command"
+    done
+    for unit_root in "$verify_support_root" "${VERIFY_RENDERED_ROOTS[@]}"; do
+        while IFS= read -r -d '' unit; do
+            sed -i \
+                -e "s|$ACTIVE_GENERATION_ROOT/|$verify_exec_root$ACTIVE_GENERATION_ROOT/|g" \
+                -e "s|/usr/libexec/astrid/|$verify_exec_root/usr/libexec/astrid/|g" \
+                -e "s|/usr/libexec/astrid-edge/immutable/|$verify_exec_root/usr/libexec/astrid-edge/immutable/|g" \
+                "$unit"
+        done < <(find "$unit_root" -type f -print0)
+    done
+
+    systemd --version | sed -n '1p'
+    for rendered in "${VERIFY_RENDERED_ROOTS[@]}"; do
+        SYSTEMD_UNIT_PATH="$rendered:$verify_support_root:" systemd-analyze verify \
             ollama-cpu.service \
             astrid-model-warmup.service \
             astrid.service \

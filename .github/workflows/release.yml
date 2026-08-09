@@ -307,17 +307,7 @@ jobs:
           assert manifest["self_evolution"]["activation"] == "ab_probation_with_automatic_rollback"
           PY
           test "$(find "$bundle/capsules" -maxdepth 1 -type f -name '*.capsule' | wc -l)" -eq 20
-          systemd-analyze verify \
-            "$bundle"/packaging/systemd/*.service \
-            "$bundle"/packaging/systemd/*.timer
-          rendered_core_liveness="$(mktemp --suffix=.path)"
-          sed 's|@@CORE_LIVENESS_REQUEST@@|/var/lib/astrid-edge/workspace/runtime/core-liveness-recovery.request.json|g' \
-            "$bundle/packaging/systemd/astrid-edge-core-liveness.path.in" \
-            >"$rendered_core_liveness"
-          SYSTEMD_UNIT_PATH="$bundle/packaging/systemd:" systemd-analyze verify "$rendered_core_liveness"
-          systemd-analyze verify \
-            "$bundle"/packaging/systemd/icp/*.service \
-            "$bundle"/packaging/systemd/icp/*.timer
+          scripts/verify_edge_systemd_units.sh --unit-root "$bundle/packaging/systemd"
 
       - name: Build integrity-bound offline source and native toolchain inputs
         if: matrix.target == 'x86_64-unknown-linux-gnu'
