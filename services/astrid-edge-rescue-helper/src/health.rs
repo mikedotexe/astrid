@@ -1644,13 +1644,23 @@ mod tests {
             .is_err()
         );
 
-        fs::remove_file(&path).unwrap();
+        // Create the replacement while the truncated original is still
+        // linked, then install it atomically. Unlinking first permits ext4 to
+        // recycle the just-freed inode, defeating a fixture intended to model
+        // a distinct file identity.
+        let replacement = temp.path().join("replacement.jsonl");
         fs::write(
-            &path,
+            &replacement,
             "{\"recorded_at_unix_ms\":1000,\"fill_ratio\":0.68}\n",
         )
         .unwrap();
-        fs::set_permissions(&path, fs::Permissions::from_mode(0o600)).unwrap();
+        fs::set_permissions(&replacement, fs::Permissions::from_mode(0o600)).unwrap();
+        let replacement_metadata = fs::metadata(&replacement).unwrap();
+        assert_ne!(
+            (replacement_metadata.dev(), replacement_metadata.ino()),
+            (expected.device, expected.inode)
+        );
+        fs::rename(&replacement, &path).unwrap();
         assert!(
             tail_fills(
                 &path,

@@ -1791,14 +1791,14 @@ mod tests {
 
     #[cfg(target_os = "linux")]
     #[test]
-    fn mid_command_health_breach_kills_process_group_and_escaped_descendants() {
-        let _guard = system_runner_test_guard();
-        let Some(executable) = trusted_python_fixture() else {
+    fn mid_command_health_breach_worker() {
+        let Ok(pid_file) = std::env::var("ASTRID_EDGE_HEALTH_BREACH_WORKER_PID_FILE") else {
             return;
         };
-        let directory = tempfile::tempdir().unwrap();
-        let pid_file = directory.path().join("escaped.pid");
-        let artifact = directory.path().join("late-artifact");
+        let artifact = std::env::var("ASTRID_EDGE_HEALTH_BREACH_WORKER_ARTIFACT").unwrap();
+        let Some(executable) = trusted_python_fixture() else {
+            panic!("trusted Python fixture disappeared after parent validation");
+        };
         let script = concat!(
             "import os,time\n",
             "child=os.fork()\n",
@@ -1822,10 +1822,10 @@ mod tests {
                     label: "mid-command-health-abort",
                     executable,
                     arguments: vec!["-c".to_owned(), script.to_owned()],
-                    current_dir: directory.path().to_path_buf(),
+                    current_dir: Path::new(&pid_file).parent().unwrap().to_path_buf(),
                     environment: BTreeMap::from([
-                        ("ARTIFACT".to_owned(), artifact.display().to_string()),
-                        ("PID_FILE".to_owned(), pid_file.display().to_string()),
+                        ("ARTIFACT".to_owned(), artifact.clone()),
+                        ("PID_FILE".to_owned(), pid_file.clone()),
                     ]),
                     timeout: Duration::from_secs(30),
                     run_as_uid: None,
@@ -1841,8 +1841,48 @@ mod tests {
                 },
             )
             .unwrap_err();
-        assert_eq!(error.kind(), ErrorKind::DeferredInfrastructure);
+        assert_eq!(
+            error.kind(),
+            ErrorKind::DeferredInfrastructure,
+            "unexpected cleanup classification: {}",
+            error.message()
+        );
         assert!(error.message().contains("after execution began"));
+        let escaped_pid = std::fs::read_to_string(pid_file)
+            .unwrap()
+            .trim()
+            .parse::<u32>()
+            .unwrap();
+        assert!(!Path::new(&format!("/proc/{escaped_pid}")).exists());
+        std::thread::sleep(Duration::from_millis(1_100));
+        assert!(!Path::new(&artifact).exists());
+    }
+
+    #[cfg(target_os = "linux")]
+    #[test]
+    fn mid_command_health_breach_kills_process_group_and_escaped_descendants() {
+        let _guard = system_runner_test_guard();
+        if trusted_python_fixture().is_none() {
+            return;
+        }
+        let directory = tempfile::tempdir().unwrap();
+        let pid_file = directory.path().join("escaped.pid");
+        let artifact = directory.path().join("late-artifact");
+        let output = std::process::Command::new(std::env::current_exe().unwrap())
+            .args([
+                "--exact",
+                "native::tests::mid_command_health_breach_worker",
+                "--nocapture",
+            ])
+            .env("ASTRID_EDGE_HEALTH_BREACH_WORKER_ARTIFACT", &artifact)
+            .env("ASTRID_EDGE_HEALTH_BREACH_WORKER_PID_FILE", &pid_file)
+            .output()
+            .unwrap();
+        assert!(
+            output.status.success(),
+            "isolated health-breach worker failed: {}",
+            String::from_utf8_lossy(&output.stderr)
+        );
         let escaped_pid = std::fs::read_to_string(&pid_file)
             .unwrap()
             .trim()
