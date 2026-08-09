@@ -103,7 +103,13 @@ impl Fixture {
         owned_text: &str,
         provider: impl FnOnce(TcpListener) + Send + 'static,
     ) -> Self {
-        let temporary = TempDir::new().unwrap();
+        // The model-lock contract validates every ancestor. Linux's default
+        // temporary root is `/tmp` (mode 1777), while macOS commonly supplies
+        // a private per-user temporary ancestor. Keep the fixture beneath the
+        // checked-out, owner-controlled tree so both platforms exercise the
+        // same production ancestry invariant.
+        let fixture_parent = fs::canonicalize(env!("CARGO_MANIFEST_DIR")).unwrap();
+        let temporary = tempfile::tempdir_in(fixture_parent).unwrap();
         let root = temporary.path().canonicalize().unwrap();
         let listener = TcpListener::bind("127.0.0.1:0").unwrap();
         let port = listener.local_addr().unwrap().port();

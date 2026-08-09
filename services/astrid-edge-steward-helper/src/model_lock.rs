@@ -96,7 +96,23 @@ mod tests {
     use std::fs::{self, hard_link};
     use std::os::unix::fs::{MetadataExt, PermissionsExt, symlink};
 
-    use super::{validate_identity, validate_metadata};
+    use super::{validate_identity, validate_metadata, validate_parent};
+
+    #[test]
+    fn rejects_world_writable_parent_ancestor() {
+        let fixture_parent = fs::canonicalize(env!("CARGO_MANIFEST_DIR")).unwrap();
+        let temporary = tempfile::tempdir_in(fixture_parent).unwrap();
+        let unsafe_parent = temporary.path().join("unsafe-model-lock-parent");
+        fs::create_dir(&unsafe_parent).unwrap();
+        let required_uid = fs::metadata(&unsafe_parent).unwrap().uid();
+        fs::set_permissions(&unsafe_parent, fs::Permissions::from_mode(0o707)).unwrap();
+
+        let error = validate_parent(&unsafe_parent, required_uid).unwrap_err();
+        assert_eq!(
+            error.to_string(),
+            "shared model lock parent traverses a linked or writable directory"
+        );
+    }
 
     #[test]
     fn rejects_links_world_access_and_replacement() {
