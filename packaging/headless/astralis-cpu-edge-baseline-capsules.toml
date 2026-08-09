@@ -51,7 +51,7 @@ source_blob_capsule_toml = "cb9cac0ce036ac36a4a8afdc07ed3e3a3c6a4e4b"
 source_blob_lib_rs = "fbde32a6b371c8dbfdf4344ce8a12256b204fcc4"
 source_blob_cargo_lock = "4cd774968a723a3d1df2b3099fc36d03af1b6297"
 steps = [
-  { kind = "patch", file = "packaging/headless/astralis-sdk-0.7-registry-clippy.patch", sha256 = "0048cc368873ad3486a9952efb22a08212218211afe06dad7ae503008a261816", expect_path = "src/lib.rs", expect_before = "2fbf3733022dc1b087e4c9bbe049188845d68ca6", expect_after = "fbde32a6b371c8dbfdf4344ce8a12256b204fcc4" },
+  { kind = "patch", file = "packaging/headless/astralis-sdk-0.7-registry-clippy.patch", sha256 = "413538c219bc6ec1593eeb7162446d9326ee4ed172d15861bb13d9e3a5dd8a31", expect_path = "src/lib.rs", expect_before = "2fbf3733022dc1b087e4c9bbe049188845d68ca6", expect_after = "fbde32a6b371c8dbfdf4344ce8a12256b204fcc4" },
 ]
 
 [[capsule]]
