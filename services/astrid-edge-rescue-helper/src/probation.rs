@@ -1616,8 +1616,18 @@ mod tests {
             )
             .is_err()
         );
-        fs::remove_file(&path).unwrap();
-        fs::write(&path, prefix).unwrap();
+        // Materialize the replacement while the original inode is still
+        // linked, then atomically install it. An unlink-then-create fixture can
+        // immediately reuse the just-freed inode on ext4, making two distinct
+        // files deliberately indistinguishable to an inode-bound verifier.
+        let replacement = temp.path().join("replacement.jsonl");
+        fs::write(&replacement, prefix).unwrap();
+        let replacement_metadata = fs::metadata(&replacement).unwrap();
+        assert_ne!(
+            (replacement_metadata.dev(), replacement_metadata.ino()),
+            (metadata.dev(), metadata.ino())
+        );
+        fs::rename(&replacement, &path).unwrap();
         assert!(
             verify_exact_prefix(
                 &path,

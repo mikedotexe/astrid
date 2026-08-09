@@ -1511,10 +1511,31 @@ mod tests {
     use crate::{Error, ErrorKind};
     use std::collections::BTreeMap;
     use std::path::Path;
-    use std::sync::Mutex;
+    use std::sync::{Mutex, MutexGuard, PoisonError};
     use std::time::Duration;
 
     static SYSTEM_RUNNER_TEST_LOCK: Mutex<()> = Mutex::new(());
+
+    fn system_runner_test_guard() -> MutexGuard<'static, ()> {
+        SYSTEM_RUNNER_TEST_LOCK
+            .lock()
+            .unwrap_or_else(PoisonError::into_inner)
+    }
+
+    #[cfg(target_os = "linux")]
+    fn trusted_python_fixture() -> Option<TrustedExecutable> {
+        // Distribution convenience paths such as `/usr/bin/python3` may be
+        // symlinks even though their package-owned targets satisfy the
+        // immutable runner policy. Resolve the fixture before constructing the
+        // trusted identity; production still rejects configured symlinks.
+        let path = std::fs::canonicalize("/usr/bin/python3").ok()?;
+        let executable = TrustedExecutable {
+            sha256: sha256_file(&path, 64 * 1024 * 1024).ok()?,
+            path,
+        };
+        executable.verify().ok()?;
+        Some(executable)
+    }
 
     #[test]
     fn command_arguments_are_bounded_and_non_binary() {
@@ -1576,7 +1597,7 @@ mod tests {
 
     #[test]
     fn direct_native_fixture_runs_without_a_shell() {
-        let _guard = SYSTEM_RUNNER_TEST_LOCK.lock().unwrap();
+        let _guard = system_runner_test_guard();
         let path = Path::new("/usr/bin/true");
         if !path.exists() {
             return;
@@ -1604,7 +1625,7 @@ mod tests {
 
     #[test]
     fn pre_spawn_health_failure_is_deferred_without_executing_candidate() {
-        let _guard = SYSTEM_RUNNER_TEST_LOCK.lock().unwrap();
+        let _guard = system_runner_test_guard();
         let touch = Path::new("/usr/bin/touch");
         if !touch.exists() {
             return;
@@ -1650,7 +1671,7 @@ mod tests {
 
     #[test]
     fn dropped_identity_has_no_inherited_supplementary_groups_when_run_as_root() {
-        let _guard = SYSTEM_RUNNER_TEST_LOCK.lock().unwrap();
+        let _guard = system_runner_test_guard();
         if nix::unistd::geteuid().as_raw() != 0 {
             return;
         }
@@ -1688,12 +1709,8 @@ mod tests {
             return;
         };
         let artifact = std::env::var("ASTRID_EDGE_DESCENDANT_WORKER_ARTIFACT").unwrap();
-        let python = Path::new("/usr/bin/python3");
-        assert!(python.exists());
-        let executable = TrustedExecutable {
-            path: python.to_path_buf(),
-            sha256: sha256_file(python, 64 * 1024 * 1024).unwrap(),
-        };
+        let executable = trusted_python_fixture()
+            .expect("trusted Python fixture disappeared after parent validation");
         let script = concat!(
             "import os,time;exec(\"",
             "path=os.environ['PID_FILE']\\n",
@@ -1737,9 +1754,8 @@ mod tests {
     #[cfg(target_os = "linux")]
     #[test]
     fn successful_command_cannot_leave_a_setsid_double_fork_descendant() {
-        let _guard = SYSTEM_RUNNER_TEST_LOCK.lock().unwrap();
-        let python = Path::new("/usr/bin/python3");
-        if !python.exists() {
+        let _guard = system_runner_test_guard();
+        if trusted_python_fixture().is_none() {
             return;
         }
         let directory = tempfile::tempdir().unwrap();
@@ -1776,11 +1792,10 @@ mod tests {
     #[cfg(target_os = "linux")]
     #[test]
     fn mid_command_health_breach_kills_process_group_and_escaped_descendants() {
-        let _guard = SYSTEM_RUNNER_TEST_LOCK.lock().unwrap();
-        let python = Path::new("/usr/bin/python3");
-        if !python.exists() {
+        let _guard = system_runner_test_guard();
+        let Some(executable) = trusted_python_fixture() else {
             return;
-        }
+        };
         let directory = tempfile::tempdir().unwrap();
         let pid_file = directory.path().join("escaped.pid");
         let artifact = directory.path().join("late-artifact");
@@ -1799,10 +1814,6 @@ mod tests {
             " with open(os.environ['ARTIFACT'],'w') as f: f.write('escaped')\n",
             " time.sleep(60)\n",
         );
-        let executable = TrustedExecutable {
-            path: python.to_path_buf(),
-            sha256: sha256_file(python, 64 * 1024 * 1024).unwrap(),
-        };
         let mut runner = SystemRunner;
         let mut checks = 0_u8;
         let error = runner
@@ -1847,7 +1858,7 @@ mod tests {
     fn dropped_builder_identity_can_reach_exact_absolute_build_leaves() {
         use std::os::unix::fs::PermissionsExt as _;
 
-        let _guard = SYSTEM_RUNNER_TEST_LOCK.lock().unwrap();
+        let _guard = system_runner_test_guard();
         if nix::unistd::geteuid().as_raw() != 0 {
             return;
         }
