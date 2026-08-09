@@ -1,0 +1,67 @@
+{
+  "source_reads": [
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_minime_autonomous_agent_1785625272.txt",
+      "sha256": "bad304ac3a9b64612d071509b457bc47f7f6e15c1ff5ec6e294fd856f95ab311",
+      "lines": 36,
+      "read": "complete"
+    },
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_571ed5c981b34ec8befcd21cc76886e57c0292b8267fad54fb10c4936d488061.json",
+      "sha256": "b2834d822c0cf9cbc41fcedfe8163eb93b3226b21daed6c0146b07677e42e19c",
+      "lines": 456,
+      "read": "complete",
+      "authority": "evidence_only_no_direct_causation_or_live_authority"
+    },
+    {
+      "path": "/Users/v/other/minime/minime_autonomy/runtime.py",
+      "repository_object": "HEAD:minime_autonomy/runtime.py",
+      "sha256": "a160cb870ecd156ee8154cf76e69322cb50fac30dca71ad46dedbbe4c8e52ce4",
+      "lines": 55799,
+      "report_bound_interval": "1-400",
+      "report_bound_interval_read": "complete",
+      "focused_verification_intervals": [
+        "34570-34785",
+        "35530-35725",
+        "39650-39770",
+        "40120-40450",
+        "41940-42090"
+      ],
+      "whole_source_identifier_search": "complete_for_report_named_identifiers",
+      "relation": "report-time source restored byte-exactly from HEAD; current foreign-modified worktree source was not substituted or edited"
+    },
+    {
+      "path": "/Users/v/other/minime/minime_autonomy/runtime.py",
+      "worktree_sha256": "52bcc7c27b9ba9a2a40fd4a1abe661720e4378dffcf0d543be6355431fdeff43",
+      "worktree_lines": 55833,
+      "read_scope": "identity and dirty-tree boundary only",
+      "relation": "foreign-modified current source left untouched"
+    },
+    {
+      "path": "/Users/v/other/minime/minime/src/regulator/core/pressure_source.rs",
+      "sha256": "9ecc4ca80629bd5519790b5a64bc5f5891bbbdc1c424d93d7d5e0bee611501d1",
+      "lines": 440,
+      "read_scope": "current formula interval 1-140 plus prior complete-source receipt at the same exact hash",
+      "prior_complete_receipt": "docs/steward-notes/codex_1786103946_regulator_pressure_viscosity_round/source_receipts.json"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/ws/compatibility_projection.rs",
+      "sha256": "b844d08b3791d7f8f60d506e98ff7bdb5ce4255ee4c76f808677ef7f75c30aaa",
+      "lines": 657,
+      "read_scope": "complexity_density_v1 and complexity_density_state_v1 definitions"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/autonomous/next_action/protected_diagnostics.rs",
+      "sha256": "d29a519122b0b76e3d2b71be2e9e7cf81bb3eee2e9e176f6cb0452f0d4592ea7",
+      "lines": 3085,
+      "read_scope": "resistance-gradient pressure, geometry, temporal, and packing_shear construction"
+    },
+    {
+      "path": "docs/steward-notes/codex_1785408097_round41_reads/STUDY_PREREGISTRATION.md",
+      "sha256": "5cc969eae80091c81e3db70830a3d2f2cf00a1f400fd8fe8f836c8ba083bd9e0",
+      "lines": 64,
+      "read": "complete",
+      "relation": "existing frozen-input Viscous Persistence Source Separation V1 route"
+    }
+  ]
+}

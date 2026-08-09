@@ -1,0 +1,60 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_minime_autonomous_agent_1785625272",
+      "claim_id": "c001",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1786304391_minime_shear_boundary_round/ROUND_PACKET.md",
+      "note": "The settled-versus-dense and shear account remains primary unresolved evidence."
+    },
+    {
+      "introspection_id": "introspection_minime_autonomous_agent_1785625272",
+      "claim_id": "c002",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1786304391_minime_shear_boundary_round/source_receipts.json",
+      "note": "The exact report-time snapshot separates the included source window from later pressure consumer definitions and the Rust producer formula."
+    },
+    {
+      "introspection_id": "introspection_minime_autonomous_agent_1785625272",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "/Users/v/other/minime/minime_autonomy/runtime.py",
+      "note": "Exact report-time source separates legacy visibility, explicit held acknowledgements, and correspondence status; no correspondence_core identifier exists."
+    },
+    {
+      "introspection_id": "introspection_minime_autonomous_agent_1785625272",
+      "claim_id": "c004",
+      "kind": "steward_note",
+      "target": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_571ed5c981b34ec8befcd21cc76886e57c0292b8267fad54fb10c4936d488061.json",
+      "note": "The complete witness preserves exact raw scalars and explicitly withholds direct causation and live authority."
+    },
+    {
+      "introspection_id": "introspection_minime_autonomous_agent_1785625272",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/ws/compatibility_projection.rs;capsules/spectral-bridge/src/autonomous/next_action/protected_diagnostics.rs",
+      "note": "Existing complexity-density and packing-shear diagnostics preserve structural resistance without rewriting pressure or porosity."
+    },
+    {
+      "introspection_id": "introspection_minime_autonomous_agent_1785625272",
+      "claim_id": "c006",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1785408097_round41_reads/STUDY_PREREGISTRATION.md",
+      "note": "The frozen-input study covers the mechanical axes without inducing semantic content; live induction remains Tier 5."
+    },
+    {
+      "introspection_id": "introspection_minime_autonomous_agent_1785625272",
+      "claim_id": "c007",
+      "kind": "test",
+      "target": "/Users/v/other/minime/minime_autonomy/runtime.py;/Users/v/other/minime/tests/test_experimental_continuity.py",
+      "note": "Source and focused tests preserve SHADOW_TRAJECTORY as being-invoked local cartography rather than Shadow movement."
+    },
+    {
+      "introspection_id": "introspection_minime_autonomous_agent_1785625272",
+      "claim_id": "c008",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md;docs/steward-notes/codex_1783779691_dynamic_porosity_control_approval_packet.md",
+      "note": "Separate diagnostics answer representation; any shear-weighted porosity formula remains an exact operator wait."
+    }
+  ]
+}
