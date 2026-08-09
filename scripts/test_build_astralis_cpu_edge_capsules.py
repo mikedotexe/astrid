@@ -40,6 +40,16 @@ class AstralisCpuEdgeCapsuleBuildTests(unittest.TestCase):
         )
         self.assertEqual(terminal[0]["expect_after"], react.raw["source_blob_lib_rs"])
 
+    def test_every_rust_subprocess_uses_the_reviewed_toolchain(self) -> None:
+        supplied = {"PATH": "/bin", "RUSTUP_TOOLCHAIN": "untrusted-override"}
+        cargo = builder.command_environment(["cargo", "build"], supplied)
+        rustc = builder.command_environment(["rustc", "--version"], None)
+        self.assertIsNot(cargo, supplied)
+        self.assertEqual(cargo["PATH"], "/bin")
+        self.assertEqual(cargo["RUSTUP_TOOLCHAIN"], builder.PINNED_RUST_TOOLCHAIN)
+        self.assertEqual(rustc["RUSTUP_TOOLCHAIN"], builder.PINNED_RUST_TOOLCHAIN)
+        self.assertIsNone(builder.command_environment(["git", "status"], None))
+
     def test_exact_upstream_baseline_recipe_is_fully_pinned(self) -> None:
         spec, recipes = builder.load_and_verify_spec(builder.DEFAULT_BASELINE_SPEC)
         self.assertEqual(spec["sdk_version"], "0.7.1")

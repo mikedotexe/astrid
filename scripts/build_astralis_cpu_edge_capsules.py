@@ -54,6 +54,7 @@ DEFAULT_BASELINE_SPEC = (
 HEX_40 = re.compile(r"[0-9a-f]{40}\Z")
 HEX_64 = re.compile(r"[0-9a-f]{64}\Z")
 SDK_PACKAGES = ("astrid-sdk", "astrid-sdk-macros", "astrid-sys")
+PINNED_RUST_TOOLCHAIN = "1.94.1"
 
 
 class BuildError(RuntimeError):
@@ -120,8 +121,10 @@ def load_and_verify_spec(spec_path: Path, repo_root: Path = REPO_ROOT) -> tuple[
 
     if spec.get("schema_version") != 1:
         raise BuildError("capsule recipe schema_version must be 1")
-    if spec.get("rust_toolchain") != "1.94.1":
-        raise BuildError("capsule recipe must pin rust_toolchain 1.94.1")
+    if spec.get("rust_toolchain") != PINNED_RUST_TOOLCHAIN:
+        raise BuildError(
+            f"capsule recipe must pin rust_toolchain {PINNED_RUST_TOOLCHAIN}"
+        )
     if spec.get("rust_target") != "wasm32-wasip2":
         raise BuildError("capsule recipe must target wasm32-wasip2")
     source_policy = spec.get("source_policy")
@@ -295,6 +298,18 @@ def verify_react_provenance_route(recipes: Iterable[Recipe]) -> None:
         raise BuildError("React terminal provenance postimage is not the reviewed source blob")
 
 
+def command_environment(
+    command: list[str], env: dict[str, str] | None
+) -> dict[str, str] | None:
+    """Pin Rust subprocesses even below an upstream rust-toolchain override."""
+
+    if not command or command[0] not in {"cargo", "rustc"}:
+        return env
+    result = os.environ.copy() if env is None else env.copy()
+    result["RUSTUP_TOOLCHAIN"] = PINNED_RUST_TOOLCHAIN
+    return result
+
+
 def run(command: list[str], *, cwd: Path | None = None, env: dict[str, str] | None = None) -> str:
     """Run one subprocess and return stripped stdout."""
 
@@ -304,7 +319,7 @@ def run(command: list[str], *, cwd: Path | None = None, env: dict[str, str] | No
         result = subprocess.run(
             command,
             cwd=cwd,
-            env=env,
+            env=command_environment(command, env),
             check=True,
             text=True,
             stdout=subprocess.PIPE,
