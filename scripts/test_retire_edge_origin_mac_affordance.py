@@ -28,7 +28,10 @@ class OriginMacRetirementTests(unittest.TestCase):
     def workspace(
         self,
     ) -> tuple[Path, Path, Path, tempfile.TemporaryDirectory[str]]:
-        temporary = tempfile.TemporaryDirectory()
+        # The production migration deliberately rejects any group/world-writable
+        # ancestor.  Linux defaults TemporaryDirectory to /tmp (mode 1777), so
+        # keep this security fixture below the owner-controlled checkout.
+        temporary = tempfile.TemporaryDirectory(dir=Path(__file__).resolve().parent)
         root = Path(temporary.name).resolve()
         workspace = root / "home" / "default"
         operator = root / "operator"
@@ -201,6 +204,21 @@ class OriginMacRetirementTests(unittest.TestCase):
         with mock.patch.object(MODULE.os, "geteuid", return_value=0):
             with self.assertRaisesRegex(MODULE.MigrationError, "authority-controlled"):
                 MODULE.migrate(workspace, operator, retirement, runtime_gid=123)
+
+    def test_world_writable_ancestry_is_rejected(self) -> None:
+        workspace, _operator, _retirement, temporary = self.workspace()
+        self.addCleanup(temporary.cleanup)
+        unsafe_parent = workspace.parent / "unsafe-parent"
+        unsafe_parent.mkdir()
+        unsafe_parent.chmod(0o707)
+
+        with self.assertRaisesRegex(MODULE.MigrationError, "authority-controlled"):
+            MODULE.open_absolute_directory(
+                unsafe_parent,
+                label="test unsafe parent",
+                authority_uid=os.geteuid(),
+                require_controlled_ancestry=True,
+            )
 
     def test_retirement_must_share_workspace_filesystem(self) -> None:
         workspace, operator, retirement, temporary = self.workspace()

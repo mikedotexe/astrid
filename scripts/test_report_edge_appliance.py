@@ -2094,7 +2094,12 @@ class FillSummaryTests(unittest.TestCase):
         self.assertNotIn("\x1b", safe["summary"])
 
     def test_origin_mac_retirement_receipt_is_exact_scope_and_hash_bound(self) -> None:
-        with tempfile.TemporaryDirectory() as temporary:
+        # The retirement migration verifies every ancestor and correctly
+        # rejects Linux's world-writable /tmp.  Exercise it below the private
+        # checkout instead of weakening that production invariant.
+        with tempfile.TemporaryDirectory(
+            dir=Path(__file__).resolve().parent
+        ) as temporary:
             root = Path(temporary).resolve()
             workspace = root / "home/default"
             operator = root / "operator"
