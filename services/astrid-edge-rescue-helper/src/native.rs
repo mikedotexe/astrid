@@ -1516,6 +1516,26 @@ mod tests {
 
     static SYSTEM_RUNNER_TEST_LOCK: Mutex<()> = Mutex::new(());
 
+    // Keep the fixed argument free of literal control characters while still
+    // giving Python an indented program through its own string parser. The
+    // immutable runner intentionally rejects raw newlines in argv, including
+    // in test fixtures.
+    const HEALTH_BREACH_PYTHON: &str = concat!(
+        "import os,time;exec(\"",
+        "child=os.fork()\\n",
+        "if child:\\n",
+        " time.sleep(60)\\n",
+        "else:\\n",
+        " os.setsid()\\n",
+        " grand=os.fork()\\n",
+        " if grand: os._exit(0)\\n",
+        " with open(os.environ['PID_FILE'],'w') as f:\\n",
+        "  f.write(str(os.getpid())); f.flush(); os.fsync(f.fileno())\\n",
+        " time.sleep(1)\\n",
+        " with open(os.environ['ARTIFACT'],'w') as f: f.write('escaped')\\n",
+        " time.sleep(60)\")",
+    );
+
     fn system_runner_test_guard() -> MutexGuard<'static, ()> {
         SYSTEM_RUNNER_TEST_LOCK
             .lock()
@@ -1540,6 +1560,10 @@ mod tests {
     #[test]
     fn command_arguments_are_bounded_and_non_binary() {
         assert!(require_safe_arguments(&["--offline".to_owned()]).is_ok());
+        assert!(
+            require_safe_arguments(&["-c".to_owned(), HEALTH_BREACH_PYTHON.to_owned()]).is_ok()
+        );
+        assert!(!HEALTH_BREACH_PYTHON.contains('\n'));
         assert!(require_safe_arguments(&["bad\0argument".to_owned()]).is_err());
         assert!(require_safe_arguments(&vec!["x".to_owned(); 129]).is_err());
     }
@@ -1799,21 +1823,6 @@ mod tests {
         let Some(executable) = trusted_python_fixture() else {
             panic!("trusted Python fixture disappeared after parent validation");
         };
-        let script = concat!(
-            "import os,time\n",
-            "child=os.fork()\n",
-            "if child:\n",
-            " time.sleep(60)\n",
-            "else:\n",
-            " os.setsid()\n",
-            " grand=os.fork()\n",
-            " if grand: os._exit(0)\n",
-            " with open(os.environ['PID_FILE'],'w') as f:\n",
-            "  f.write(str(os.getpid())); f.flush(); os.fsync(f.fileno())\n",
-            " time.sleep(1)\n",
-            " with open(os.environ['ARTIFACT'],'w') as f: f.write('escaped')\n",
-            " time.sleep(60)\n",
-        );
         let mut runner = SystemRunner;
         let mut checks = 0_u8;
         let error = runner
@@ -1821,7 +1830,7 @@ mod tests {
                 &CommandSpec {
                     label: "mid-command-health-abort",
                     executable,
-                    arguments: vec!["-c".to_owned(), script.to_owned()],
+                    arguments: vec!["-c".to_owned(), HEALTH_BREACH_PYTHON.to_owned()],
                     current_dir: Path::new(&pid_file).parent().unwrap().to_path_buf(),
                     environment: BTreeMap::from([
                         ("ARTIFACT".to_owned(), artifact.clone()),
