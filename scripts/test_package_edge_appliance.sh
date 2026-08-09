@@ -3,6 +3,10 @@
 
 set -euo pipefail
 
+# Every installer probe below supplies an isolated HOME and exercises its
+# default XDG root.  Never inherit a hosted runner's independent config path.
+unset XDG_CONFIG_HOME
+
 script_dir="$(CDPATH= cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 test_root="$(mktemp -d)"
 trap 'rm -rf -- "$test_root"' EXIT
