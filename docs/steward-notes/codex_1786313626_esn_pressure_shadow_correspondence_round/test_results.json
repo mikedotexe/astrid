@@ -1,0 +1,57 @@
+{
+  "schema": "steward_round_test_results_v1",
+  "schema_version": 1,
+  "round_packet": "docs/steward-notes/codex_1786313626_esn_pressure_shadow_correspondence_round/ROUND_PACKET.md",
+  "minime": {
+    "command": "cargo test --manifest-path /Users/v/other/minime/minime/Cargo.toml -q",
+    "library_passed": 360,
+    "binary_passed": 340,
+    "protocol_fixture_passed": 4,
+    "failed": 0,
+    "pre_existing_warnings": 4
+  },
+  "bridge": {
+    "shadow_trajectory_passed": 2,
+    "failed": 0
+  },
+  "stewardship": {
+    "introspection_addressing_passed": 42,
+    "evidence_event_store_tests_passed": 13,
+    "steward_control_tests_passed": 27,
+    "steward_projection_tests_passed": 14,
+    "projection_cursor_tests_passed": 4,
+    "claim_family_incremental_projection_passed": 1,
+    "experiential_self_tests_passed": 2,
+    "integrity_total_passed": 103,
+    "division_followup_self_test_passed": 1,
+    "division_followup_tests_passed": 3,
+    "division_chronicle_tests_passed": 10,
+    "division_projection_self_test_passed": 1,
+    "epistemic_lint_checked_records": 10835,
+    "epistemic_lint_issues": 0,
+    "failed": 0
+  },
+  "pre_write_evidence_event_store": {
+    "valid": true,
+    "last_global_seq": 750496,
+    "last_event_sha256": "4555e5147defe02edc45ebfbcc0f7ea0c12091c24bae90aa0ba45f3bfc63b9ce",
+    "stream_count": 16,
+    "corrupt_lines": 0,
+    "v1_immutable": true
+  },
+  "post_return_evidence_event_store": {
+    "valid": true,
+    "last_global_seq": 750931,
+    "last_event_sha256": "cb493a12624e8ecccf28ffedf833782831954c65440e0b54b7f010d0c4ec0a55",
+    "stream_count": 16,
+    "corrupt_lines": 0,
+    "v1_immutable": true
+  },
+  "runtime": {
+    "production_source_changed": false,
+    "test_source_changed": false,
+    "live_surface_changed": false,
+    "restart_required": false,
+    "deployment_attempted": false
+  }
+}

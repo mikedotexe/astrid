@@ -1,0 +1,43 @@
+{
+  "schema": "steward_round_test_results_v1",
+  "schema_version": 1,
+  "round_packet": "docs/steward-notes/codex_1786310259_runtime_shell_pressure_shadow_round/ROUND_PACKET.md",
+  "minime": {
+    "command": "cargo test --manifest-path minime/Cargo.toml",
+    "library_passed": 360,
+    "binary_passed": 340,
+    "protocol_fixture_passed": 4,
+    "failed": 0,
+    "pre_existing_warnings": 4
+  },
+  "bridge": {
+    "pressure_porosity_passed": 7,
+    "viscosity_porosity_transport_passed": 3,
+    "astrid_shadow_passed": 7,
+    "shadow_trajectory_passed": 4,
+    "failed": 0
+  },
+  "stewardship": {
+    "introspection_addressing_passed": 42,
+    "integrity_batch_passed": 72,
+    "experiential_self_tests_passed": 2,
+    "epistemic_lint_records": 10818,
+    "epistemic_lint_issues": 0,
+    "history_rewritten": false
+  },
+  "pre_write_evidence_event_store": {
+    "valid": true,
+    "last_global_seq": 749956,
+    "last_event_sha256": "83e808020c93e9f503022177e3e718876528e926867419f3ed39eef19d8414bb",
+    "stream_count": 16,
+    "corrupt_lines": 0,
+    "v1_immutable": true
+  },
+  "runtime": {
+    "production_source_changed": false,
+    "test_source_changed": false,
+    "live_surface_changed": false,
+    "restart_required": false,
+    "deployment_attempted": false
+  }
+}

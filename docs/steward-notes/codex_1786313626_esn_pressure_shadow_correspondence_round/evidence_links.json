@@ -1,0 +1,74 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_minime_esn_1785624601",
+      "claim_id": "c001",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Astrid's overpacked viscosity and spectral pooling remain primary unresolved evidence."
+    },
+    {
+      "introspection_id": "introspection_minime_esn_1785624601",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "../minime/minime/src/esn.rs;../minime/minime/src/runtime/orchestration.rs;../minime/minime/src/ising_shadow.rs;capsules/spectral-bridge/src/autonomous/correspondence_v1.rs",
+      "note": "Exact source follows the partial report window into each separately owned mechanism."
+    },
+    {
+      "introspection_id": "introspection_minime_esn_1785624601",
+      "claim_id": "c003",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1786313626_esn_pressure_shadow_correspondence_round/source_receipts.json",
+      "note": "Complete report and witness preserve report-authored and exact witness fields separately."
+    },
+    {
+      "introspection_id": "introspection_minime_esn_1785624601",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "../minime/minime/src/runtime/orchestration.rs;../minime/minime/src/ising_shadow.rs",
+      "note": "Semantic trickle and prior Shadow influence meet sequentially in z without proving pressure or felt causation."
+    },
+    {
+      "introspection_id": "introspection_minime_esn_1785624601",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/correspondence_v1.rs",
+      "note": "The peer-ack-or-trace stall is separately produced relational protocol state absent from this witness."
+    },
+    {
+      "introspection_id": "introspection_minime_esn_1785624601",
+      "claim_id": "c006",
+      "kind": "test",
+      "target": "../minime/minime/src/esn.rs",
+      "note": "The exact 0.11 gradient, 0.22 pressure-risk, 0.90 entropy regression selects read-only pressure-room evidence."
+    },
+    {
+      "introspection_id": "introspection_minime_esn_1785624601",
+      "claim_id": "c007",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1785408097_round41_reads/STUDY_PREREGISTRATION.md",
+      "note": "The deterministic frozen-input study is the non-inducing lambda/pressure/persistence route and remains unrun."
+    },
+    {
+      "introspection_id": "introspection_minime_esn_1785624601",
+      "claim_id": "c008",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1785580847_round63_reads/SHADOW_PRESSURE_500_PAIR_PREREGISTRATION.md;capsules/spectral-bridge/src/autonomous/next_action/shadow/trajectory.rs",
+      "note": "The natural-only association route remains unrun; directed Shadow change or trajectory dispatch is not authorized."
+    },
+    {
+      "introspection_id": "introspection_minime_esn_1785624601",
+      "claim_id": "c009",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1786313626_esn_pressure_shadow_correspondence_round/ROUND_PACKET.md",
+      "note": "Pressure relief or porosity expansion above 0.20 remains an exact Tier 5 wait."
+    },
+    {
+      "introspection_id": "introspection_minime_esn_1785624601",
+      "claim_id": "c010",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1786313626_esn_pressure_shadow_correspondence_round/ROUND_PACKET.md",
+      "note": "High-entropy shaking, exploration noise, rho, and ESN behavior remain exact Tier 5 waits."
+    }
+  ]
+}

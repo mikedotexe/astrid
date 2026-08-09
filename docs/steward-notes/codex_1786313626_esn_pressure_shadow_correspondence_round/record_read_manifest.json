@@ -1,0 +1,10 @@
+{
+  "reads": [
+    {
+      "introspection_id": "introspection_minime_esn_1785624601",
+      "reader": "codex-heartbeat",
+      "summary_file": "ROUND_PACKET.md",
+      "claims_file": "claims.json"
+    }
+  ]
+}

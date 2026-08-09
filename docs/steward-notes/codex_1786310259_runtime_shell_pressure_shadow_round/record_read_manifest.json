@@ -1,0 +1,10 @@
+{
+  "reads": [
+    {
+      "introspection_id": "introspection_minime_main_excerpt_1785624961",
+      "reader": "codex-heartbeat",
+      "summary_file": "ROUND_PACKET.md",
+      "claims_file": "claims.json"
+    }
+  ]
+}

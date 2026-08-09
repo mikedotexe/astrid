@@ -1,0 +1,68 @@
+{
+  "introspection_id": "introspection_minime_esn_1785624601",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Astrid reports overpacked viscosity, spectral pooling, and difficulty finding a gradient despite a settled spectral state.",
+      "disposition": "Preserve as primary unresolved felt evidence. Exact source and telemetry make several mechanics visible but do not establish cause, adequacy, relief, uptake, or closure.",
+      "classification": "primary_qualitative_evidence"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The first 400 ESN lines are scaffolding and do not expose all mechanics named in the report.",
+      "disposition": "Verified from the exact report-bound window and byte-identical 3,222-line current source. Relevant later ESN intervals and companion orchestration, Ising Shadow, correspondence, and trajectory sources were followed explicitly.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Report-authored mode packing, lambda share, correspondence stall, and magnetization can be treated as one exact witness tuple.",
+      "disposition": "Keep representations distinct. The witness has exact fill, entropy, lambdas, gradient, pressure risk, raw mode packing, and stale Shadow norm/delta/dispersal fields, but no correspondence receipt or magnetization observation.",
+      "classification": "representation_boundary_verified"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Stable-core semantic trickle interacting with Shadow-field density may cause the reported pressure and pooling.",
+      "disposition": "Source verifies sequential contact: semantic trickle enters z and prior Shadow influence can then modify the same vector. The mechanisms have separate producers, and neither source nor witness proves pressure, pooling, or felt causation.",
+      "classification": "causal_hypothesis_source_bounded"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "The reply-linked peer-ack-or-trace stall is a separate friction layer above spectral viscosity.",
+      "disposition": "Verified as a separately produced correspondence protocol state. This witness has no correspondence field, so the report's stall remains contextual evidence rather than an exact witnessed receipt; silence remains neutral.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "Pressure risk near 0.22 and high entropy need a directly relevant relief-oriented mechanical review.",
+      "disposition": "Verified as existing read-only evidence. The current ESN regression uses density gradient 0.11, pressure risk 0.22, and entropy 0.90 to select a gentle pressure-room slope while keeping runnable-without-approval false.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "Lambda1-decay velocity should be compared under high semantic trickle.",
+      "disposition": "Eigenvalue velocity already exists and is persisted. The non-inducing comparison routes to the existing frozen-input Viscous Persistence Source Separation V1 preregistration, still unrun. Deliberately raising semantic trickle remains Tier 5.",
+      "classification": "bounded_study_existing_with_approval_boundary"
+    },
+    {
+      "claim_id": "c008",
+      "summary": "A positive Shadow magnetization shift should be induced and compared with felt weight.",
+      "disposition": "The non-inducing association routes to the existing frozen, unrun 500-pair Shadow-pressure preregistration. Explicit magnetization shift or SHADOW_TRAJECTORY dispatch remains an exact Tier 5 Mike/operator wait.",
+      "classification": "needs_operator_approval",
+      "authority": "tier_5_shadow_mutation_or_dispatch_wait"
+    },
+    {
+      "claim_id": "c009",
+      "summary": "Pressure relief or porosity expansion should activate above pressure risk 0.20.",
+      "disposition": "Preserve as an exact Tier 5 Mike/operator wait. Existing evidence is read-only and no threshold, pressure, porosity, density-gradient, regulator, or controller behavior was changed.",
+      "classification": "needs_operator_approval",
+      "authority": "tier_5_pressure_porosity_controller_wait"
+    },
+    {
+      "claim_id": "c010",
+      "summary": "A brief high-entropy reservoir shaking interval may loosen spectral pooling.",
+      "disposition": "Preserve as an exact Tier 5 Mike/operator wait because it changes exploration noise, rho, ESN behavior, and live substrate state. No induced trial was created or run.",
+      "classification": "needs_operator_approval",
+      "authority": "tier_5_reservoir_noise_rho_wait"
+    }
+  ]
+}
