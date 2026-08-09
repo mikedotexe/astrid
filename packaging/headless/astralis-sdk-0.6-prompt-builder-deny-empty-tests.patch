@@ -1,5 +1,5 @@
 diff --git a/src/lib.rs b/src/lib.rs
-index 60711ff..a4035f1 100644
+index eebb1f3..ef9d78d 100644
 --- a/src/lib.rs
 +++ b/src/lib.rs
 @@ -511,6 +511,18 @@ fn should_expose_tools(request: &AssembleRequest, config: &Config) -> bool {
@@ -21,7 +21,7 @@ index 60711ff..a4035f1 100644
  fn collect_tool_schemas(
      tool_allowlist: &std::collections::HashSet<String>,
  ) -> Vec<serde_json::Value> {
-@@ -570,8 +582,4 @@ fn collect_tool_schemas(
+@@ -570,10 +582,6 @@ fn collect_tool_schemas(
      let discovered_count = all_tools.len();
      // An empty model tool allowlist exposes no schemas. Private capsules must
      // never become model-visible because a profile omitted configuration.
@@ -31,8 +31,11 @@ index 60711ff..a4035f1 100644
 -            .is_some_and(|name| tool_allowlist.contains(name))
 -    });
 +    all_tools = select_allowlisted_tool_schemas(all_tools, tool_allowlist);
+-
++
+     if tool_allowlist.is_empty() {
 diff --git a/src/tests.rs b/src/tests.rs
-index daf5417..b43a9ec 100644
+index daf5417..c3bb50a 100644
 --- a/src/tests.rs
 +++ b/src/tests.rs
 @@ -1 +1,18 @@

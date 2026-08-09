@@ -141,9 +141,13 @@ jobs:
           restore-keys: |
             quickjs-kernel-${{ env.QUICKJS_KERNEL_VERSION }}-${{ runner.os }}-
 
+      - name: Build test companion binary
+        run: cargo build -p astrid --bin astrid-build
+
       - name: Run tests
         env:
           ASTRID_AUTO_BUILD_KERNEL: "1"
+          ASTRID_BUILD_BIN: ${{ github.workspace }}/target/debug/astrid-build
         run: cargo test --workspace
 
   msrv:

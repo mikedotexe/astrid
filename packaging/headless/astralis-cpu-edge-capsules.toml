@@ -42,7 +42,7 @@ lock_sha256 = "f61d739c6011f74775fbb7186844a4274bc8c282ae8ff06be8bf915b67d26b86"
 source_blob_cargo_toml = "0d1745b90925cfac2c5bfa595869530d258927ac"
 source_blob_capsule_toml = "a45edb5ce1cd699bcb4943bd3d5b0eca464c21b7"
 source_blob_lib_rs = "a4035f15b096b97b6b7ae68544142e0486d94e0f"
-source_blob_tests_rs = "b43a9ecee48aae9629e12752924e6c22a3199782"
+source_blob_tests_rs = "c3bb50a638e5f806a423331e84cf8f0a7f431a2f"
 steps = [
   { kind = "patch", file = "packaging/headless/astralis-sdk-0.6-prompt-builder-exact-abi.patch", sha256 = "ad59c70cc60b1f68ab055fb4d719db366518cc77a2b8c644188b382620e615bf" },
   { kind = "patch", file = "packaging/headless/astralis-sdk-0.6-prompt-builder-daemon.patch", sha256 = "6e938e5d6e7f1d693763ecc407c8a11de6f96584a5a48842c37ac0df39ba96c3" },
@@ -52,7 +52,7 @@ steps = [
   { kind = "patch", file = "packaging/headless/astralis-sdk-0.6-prompt-builder-explicit-web-tools.patch", sha256 = "98ac4ca05f7c9bd73f6029e8f9a58eb931b6be13ddd17288b9953f67ff009591" },
   { kind = "patch", file = "packaging/headless/astralis-sdk-0.6-prompt-builder-test-only-legacy.patch", sha256 = "e0df61f925dc952593bf4a5e5a4d4156e65912609e9726f4839ec01408a3ab6f" },
   { kind = "patch", file = "packaging/headless/astralis-sdk-0.6-prompt-builder-host-tests.patch", sha256 = "f16271f5e960dba24e5b26dd1ac573cc3dad4d5a0bd9278ca8c2ff0d6a994d35" },
-  { kind = "patch", file = "packaging/headless/astralis-sdk-0.6-prompt-builder-deny-empty-tests.patch", sha256 = "87933fdedbdcc584513aef7225312b7066f0fb97cf345f082fdc50c9d25e4665" },
+  { kind = "patch", file = "packaging/headless/astralis-sdk-0.6-prompt-builder-deny-empty-tests.patch", sha256 = "1e84b57f1d1e2054b5b3a0129b270a01e7af15c0497d03a177c19def0fc28734" },
   { kind = "rustfmt" },
 ]
 
