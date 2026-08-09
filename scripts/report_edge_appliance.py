@@ -12,16 +12,30 @@ from __future__ import annotations
 import argparse
 import datetime as dt
 import hashlib
+import importlib.util
 import json
 import math
 import os
+import pwd
 import re
+import stat
 import subprocess
+import sys
 import time
+import unicodedata
 import urllib.request
 import uuid
 from pathlib import Path
 from typing import Any
+
+
+SERVICE_MANAGER_MARKER = Path("/etc/astrid/edge-service-manager.json")
+TRUSTED_COMMANDS = {
+    "journalctl": "/usr/bin/journalctl",
+    "ps": "/usr/bin/ps",
+    "systemctl": "/usr/bin/systemctl",
+}
+SYSTEM_SERVICE_MANAGER = False
 
 
 LOCAL_HEADER_PATTERN = re.compile(
@@ -73,18 +87,153 @@ CURRENT_CAPSULE_MANIFEST_NAME = "headless-application-capsules.current.json"
 CURRENT_CAPSULE_SIDECAR_NAME = "headless-application-capsules.current.sha256"
 REACT_CAPSULE_ID = "astrid-capsule-react"
 SHA256_PATTERN = re.compile(r"[0-9a-f]{64}")
+SCHEDULED_INTROSPECTION_STATE_SCHEMA = (
+    "astrid_edge_scheduled_introspection_state_v1"
+)
+SCHEDULED_INTROSPECTION_RECEIPT_SCHEMA = (
+    "astrid_edge_scheduled_introspection_v1"
+)
+SCHEDULED_INTROSPECTION_CONTINUITY_SCHEMA = (
+    "astrid_edge_scheduled_introspection_continuity_v1"
+)
+SCHEDULED_INTROSPECTION_PROVENANCE = "model_authored_runtime_scheduled"
+SCHEDULED_INTROSPECTION_ADMISSION_SCHEMA = (
+    "astrid.edge.scheduled_introspection.admission.v1"
+)
+SCHEDULED_AUTHORSHIP_CORE_SCHEMA = (
+    "astrid.edge.scheduled_authorship.attestation.v1"
+)
+SCHEDULED_AUTHORSHIP_ENVELOPE_SCHEMA = (
+    "astrid.edge.scheduled_authorship.attestation_envelope.v1"
+)
+SCHEDULED_AUTHORSHIP_VERIFY_KEY = Path(
+    "/etc/astrid/edge-scheduled-authorship.pub"
+)
+SCHEDULED_INTROSPECTION_LEDGER_PATHS = (
+    "introspections/scheduled/receipts.jsonl",
+    "introspection/scheduled/receipts.jsonl",
+)
+SELF_CHANGE_OPERATOR_STATUS_PATH = Path(
+    "/var/lib/astrid-edge-operator/operator-status.json"
+)
+PATCH_EXPORT_SUMMARY_SCHEMA = (
+    "astrid.edge.steward_helper.owner_patch_export_summary_envelope.v1"
+)
+PATCH_EXPORT_SUMMARY_CORE_SCHEMA = (
+    "astrid.edge.steward_helper.owner_patch_export_summary.v1"
+)
+CANDIDATE_PRESENTATION_INPUT_SCHEMA = (
+    "astrid.edge_candidate_presentation.input.v1"
+)
+CANDIDATE_PRESENTATION_CONTENT_SCHEMA = (
+    "astrid.edge_candidate_presentation.content.v1"
+)
+CANDIDATE_PRESENTATION_INPUT_MAX_BYTES = 256 * 1024
+
+
+def terminal_safe_text(value: Any) -> str:
+    """Neutralize controls in the line-oriented owner report surface."""
+
+    return "".join(
+        " "
+        if unicodedata.category(character) in {"Cc", "Cf", "Cs", "Zl", "Zp"}
+        else character
+        for character in str(value)
+    )
 
 
 def emit(name: str, value: Any) -> None:
     if isinstance(value, bool):
         value = str(value).lower()
-    print(f"{name}={value}")
+    safe_name = " ".join(terminal_safe_text(name).split())
+    safe_value = " ".join(terminal_safe_text(value).split())
+    print(f"{safe_name}={safe_value}")
+
+
+def candidate_presentation() -> int:
+    """Render only broker-supplied sanitized facts as untrusted JSON."""
+
+    parser = argparse.ArgumentParser(add_help=False)
+    parser.add_argument("--candidate-presentation", action="store_true")
+    parser.add_argument("--input-stdin", action="store_true")
+    parser.add_argument("--window-minutes", type=int, required=True)
+    parser.add_argument("--limit", type=int, required=True)
+    parser.add_argument("--format", choices=("json",), required=True)
+    args = parser.parse_args()
+    if not args.candidate_presentation or not args.input_stdin:
+        parser.error("the active-generation presentation requires broker stdin")
+    raw = sys.stdin.buffer.read(CANDIDATE_PRESENTATION_INPUT_MAX_BYTES + 1)
+    if len(raw) > CANDIDATE_PRESENTATION_INPUT_MAX_BYTES:
+        parser.error("broker projection exceeds its bound")
+    try:
+        projection = json.loads(raw)
+    except (UnicodeError, json.JSONDecodeError) as error:
+        parser.error(f"broker projection is invalid: {error}")
+    if (
+        not isinstance(projection, dict)
+        or projection.get("schema") != CANDIDATE_PRESENTATION_INPUT_SCHEMA
+        or not isinstance(projection.get("facts"), list)
+    ):
+        parser.error("broker projection has the wrong schema")
+    lines = []
+    for fact in projection["facts"][:128]:
+        if not isinstance(fact, dict):
+            continue
+        key = " ".join(terminal_safe_text(fact.get("key", "")).split())
+        value = " ".join(terminal_safe_text(fact.get("value", "")).split())
+        if key and value:
+            lines.append(f"{key}={value}"[:240])
+    sections = [
+        {"heading": f"Sanitized facts {index + 1}", "lines": lines[index:index + 16]}
+        for index in range(0, len(lines), 16)
+    ][:12]
+    result = {
+        "schema": CANDIDATE_PRESENTATION_CONTENT_SCHEMA,
+        "view": "appliance",
+        "title": "Active-generation appliance view",
+        "summary": (
+            f"Candidate report arranged {len(lines)} sanitized immutable-report facts; "
+            "this is untrusted presentation, not health evidence."
+        ),
+        "sections": sections,
+    }
+    print(json.dumps(result, sort_keys=True, separators=(",", ":")))
+    return 0
 
 
 def read_json(path: Path) -> dict[str, Any]:
     try:
         value = json.loads(path.read_text())
     except (OSError, json.JSONDecodeError):
+        return {}
+    return value if isinstance(value, dict) else {}
+
+
+def read_self_change_operator_status(
+    path: Path = SELF_CHANGE_OPERATOR_STATUS_PATH,
+    *,
+    test_only_allow_unprivileged_owner: bool = False,
+) -> dict[str, Any]:
+    """Verify the shared bounded operator projection, never private ledgers."""
+
+    source = Path(__file__).resolve().with_name("report_edge_activity.py")
+    if not source.is_file():
+        return {}
+    spec = importlib.util.spec_from_file_location(
+        "astrid_edge_activity_projection_reader", source
+    )
+    if spec is None or spec.loader is None:
+        return {}
+    module = importlib.util.module_from_spec(spec)
+    try:
+        spec.loader.exec_module(module)
+        value = module.read_self_change_operator_status(
+            path,
+            test_only_allow_unprivileged_owner=(
+                test_only_allow_unprivileged_owner
+            ),
+        )
+    except (OSError, ValueError, AttributeError):
         return {}
     return value if isinstance(value, dict) else {}
 
@@ -283,6 +432,994 @@ def read_json_lines(path: Path) -> list[dict[str, Any]]:
         if isinstance(value, dict):
             values.append(value)
     return values
+
+
+# Minimal, dependency-free RFC 8032 verifier for owner-facing observability.
+# Runtime continuity uses ed25519-dalek; this independent implementation lets
+# the immutable Python report reject forged workspace presentation copies on a
+# stock Ubuntu installation without installing a crypto package.
+_ED25519_P = 2**255 - 19
+_ED25519_L = 2**252 + 27742317777372353535851937790883648493
+_ED25519_D = (-121665 * pow(121666, _ED25519_P - 2, _ED25519_P)) % _ED25519_P
+_ED25519_I = pow(2, (_ED25519_P - 1) // 4, _ED25519_P)
+_ED25519_IDENTITY = (0, 1, 1, 0)
+
+
+def _ed25519_recover_x(y: int, sign: int) -> int | None:
+    if y >= _ED25519_P:
+        return None
+    y_squared = y * y % _ED25519_P
+    x_squared = (y_squared - 1) * pow(
+        (_ED25519_D * y_squared + 1) % _ED25519_P,
+        _ED25519_P - 2,
+        _ED25519_P,
+    ) % _ED25519_P
+    x = pow(x_squared, (_ED25519_P + 3) // 8, _ED25519_P)
+    if (x * x - x_squared) % _ED25519_P:
+        x = x * _ED25519_I % _ED25519_P
+    if (x * x - x_squared) % _ED25519_P:
+        return None
+    if x & 1 != sign:
+        x = _ED25519_P - x
+    if x == 0 and sign:
+        return None
+    return x
+
+
+def _ed25519_decode(encoded: bytes) -> tuple[int, int, int, int] | None:
+    if len(encoded) != 32:
+        return None
+    value = int.from_bytes(encoded, "little")
+    y = value & ((1 << 255) - 1)
+    x = _ed25519_recover_x(y, value >> 255)
+    if x is None:
+        return None
+    return (x, y, 1, x * y % _ED25519_P)
+
+
+def _ed25519_add(
+    left: tuple[int, int, int, int], right: tuple[int, int, int, int]
+) -> tuple[int, int, int, int]:
+    x1, y1, z1, t1 = left
+    x2, y2, z2, t2 = right
+    a = (y1 - x1) * (y2 - x2) % _ED25519_P
+    b = (y1 + x1) * (y2 + x2) % _ED25519_P
+    c = 2 * _ED25519_D * t1 * t2 % _ED25519_P
+    d = 2 * z1 * z2 % _ED25519_P
+    e = b - a
+    f = d - c
+    g = d + c
+    h = b + a
+    return (
+        e * f % _ED25519_P,
+        g * h % _ED25519_P,
+        f * g % _ED25519_P,
+        e * h % _ED25519_P,
+    )
+
+
+def _ed25519_double(point: tuple[int, int, int, int]) -> tuple[int, int, int, int]:
+    x, y, z, _t = point
+    a = x * x % _ED25519_P
+    b = y * y % _ED25519_P
+    c = 2 * z * z % _ED25519_P
+    d = -a % _ED25519_P
+    e = ((x + y) * (x + y) - a - b) % _ED25519_P
+    g = (d + b) % _ED25519_P
+    f = (g - c) % _ED25519_P
+    h = (d - b) % _ED25519_P
+    return (
+        e * f % _ED25519_P,
+        g * h % _ED25519_P,
+        f * g % _ED25519_P,
+        e * h % _ED25519_P,
+    )
+
+
+def _ed25519_scalar(
+    point: tuple[int, int, int, int], scalar: int
+) -> tuple[int, int, int, int]:
+    result = _ED25519_IDENTITY
+    current = point
+    while scalar:
+        if scalar & 1:
+            result = _ed25519_add(result, current)
+        current = _ed25519_double(current)
+        scalar >>= 1
+    return result
+
+
+def _ed25519_equal(
+    left: tuple[int, int, int, int], right: tuple[int, int, int, int]
+) -> bool:
+    return (
+        (left[0] * right[2] - right[0] * left[2]) % _ED25519_P == 0
+        and (left[1] * right[2] - right[1] * left[2]) % _ED25519_P == 0
+    )
+
+
+_ED25519_BASE_Y = 4 * pow(5, _ED25519_P - 2, _ED25519_P) % _ED25519_P
+_ED25519_BASE_X = _ed25519_recover_x(_ED25519_BASE_Y, 0)
+if _ED25519_BASE_X is None:  # pragma: no cover - fixed field constants
+    raise RuntimeError("invalid Ed25519 base point constants")
+_ED25519_BASE = (
+    _ED25519_BASE_X,
+    _ED25519_BASE_Y,
+    1,
+    _ED25519_BASE_X * _ED25519_BASE_Y % _ED25519_P,
+)
+
+
+def verify_ed25519(public_key: bytes, message: bytes, signature: bytes) -> bool:
+    if len(public_key) != 32 or len(signature) != 64:
+        return False
+    public = _ed25519_decode(public_key)
+    encoded_r = signature[:32]
+    r_point = _ed25519_decode(encoded_r)
+    scalar = int.from_bytes(signature[32:], "little")
+    if public is None or r_point is None or scalar >= _ED25519_L:
+        return False
+    if _ed25519_equal(_ed25519_scalar(public, 8), _ED25519_IDENTITY):
+        return False
+    if _ed25519_equal(_ed25519_scalar(r_point, 8), _ED25519_IDENTITY):
+        return False
+    challenge = int.from_bytes(
+        hashlib.sha512(encoded_r + public_key + message).digest(), "little"
+    ) % _ED25519_L
+    return _ed25519_equal(
+        _ed25519_scalar(_ED25519_BASE, scalar),
+        _ed25519_add(r_point, _ed25519_scalar(public, challenge)),
+    )
+
+
+def canonical_json_bytes(value: Any) -> bytes:
+    return json.dumps(
+        value,
+        sort_keys=True,
+        separators=(",", ":"),
+        ensure_ascii=True,
+        allow_nan=False,
+    ).encode("ascii")
+
+
+def scheduled_authorship_attestations(
+    workspace: Path,
+    verify_key_path: Path = SCHEDULED_AUTHORSHIP_VERIFY_KEY,
+) -> tuple[list[dict[str, Any]], int, str]:
+    try:
+        key_metadata = verify_key_path.lstat()
+        public_key = verify_key_path.read_bytes()
+    except OSError:
+        return [], 0, "verify_key_absent"
+    if (
+        verify_key_path.is_symlink()
+        or not stat.S_ISREG(key_metadata.st_mode)
+        or key_metadata.st_nlink != 1
+        or key_metadata.st_mode & 0o022
+        or len(public_key) != 32
+    ):
+        return [], 0, "verify_key_invalid"
+    key_sha256 = hashlib.sha256(public_key).hexdigest()
+    expected_key_id = f"ed25519:{key_sha256[:16]}"
+    root = workspace / "introspections/scheduled"
+    try:
+        paths = sorted(root.glob("authorship_attestation_due-*.json"))[-256:]
+    except OSError:
+        return [], 0, "attestation_directory_unreadable"
+    valid: list[dict[str, Any]] = []
+    invalid = 0
+    envelope_fields = {"schema", "core", "auth"}
+    core_fields = {
+        "schema",
+        "appliance_id",
+        "due_nonce",
+        "due_at_unix_ms",
+        "started_at_unix_ms",
+        "completed_at_unix_ms",
+        "terminal_status",
+        "model",
+        "prompt_sha256",
+        "response_sha256",
+        "reflection_path",
+        "reflection_sha256",
+        "reflection_metadata_sha256",
+        "continuity_projection_sha256",
+        "state_projection_sha256",
+        "terminal_receipt_sha256",
+        "context_provenance_sha256",
+        "candidate_id",
+        "candidate_digest",
+        "trace",
+        "provenance",
+        "authority",
+    }
+    auth_fields = {"algorithm", "key_id", "signature"}
+    for path in paths:
+        try:
+            metadata = path.lstat()
+            raw = path.read_bytes()
+            envelope = json.loads(raw)
+            core = envelope.get("core")
+            auth = envelope.get("auth")
+            signature_text = auth.get("signature") if isinstance(auth, dict) else None
+            signature = bytes.fromhex(signature_text) if isinstance(signature_text, str) else b""
+            unsigned = {
+                "schema": SCHEDULED_AUTHORSHIP_ENVELOPE_SCHEMA,
+                "core": core,
+            }
+            due_nonce = (
+                str(core.get("due_nonce") or "")
+                if isinstance(core, dict)
+                else ""
+            )
+            due_match = re.fullmatch(r"due-([0-9]{5,20})", due_nonce)
+            due_at = core.get("due_at_unix_ms") if isinstance(core, dict) else None
+            started_at = (
+                core.get("started_at_unix_ms") if isinstance(core, dict) else None
+            )
+            completed_at = (
+                core.get("completed_at_unix_ms") if isinstance(core, dict) else None
+            )
+            ordered_times = (
+                due_match is not None
+                and isinstance(due_at, int)
+                and not isinstance(due_at, bool)
+                and isinstance(started_at, int)
+                and not isinstance(started_at, bool)
+                and isinstance(completed_at, int)
+                and not isinstance(completed_at, bool)
+                and due_at == int(due_match.group(1)) * 1_000
+                and started_at >= due_at
+                and completed_at >= started_at
+            )
+            reflection_path = (
+                Path(str(core.get("reflection_path") or ""))
+                if isinstance(core, dict)
+                else Path()
+            )
+            reflection_path_valid = (
+                not reflection_path.is_absolute()
+                and len(reflection_path.parts) == 3
+                and reflection_path.parts[:2] == ("introspections", "scheduled")
+                and ".." not in reflection_path.parts
+                and reflection_path.name.startswith(f"reflection_{due_nonce}_")
+                and reflection_path.suffix == ".md"
+            )
+            candidate_id = core.get("candidate_id") if isinstance(core, dict) else None
+            candidate_digest = (
+                core.get("candidate_digest") if isinstance(core, dict) else None
+            )
+            candidate_link_valid = (candidate_id is None) == (candidate_digest is None)
+            if candidate_id is not None:
+                candidate_link_valid = (
+                    candidate_link_valid
+                    and valid_trace_label(candidate_id, required=True)
+                    and SHA256_PATTERN.fullmatch(str(candidate_digest or "")) is not None
+                )
+            if (
+                path.is_symlink()
+                or not stat.S_ISREG(metadata.st_mode)
+                or metadata.st_nlink != 1
+                or metadata.st_mode & 0o022
+                or len(raw) > 32 * 1024
+                or not isinstance(envelope, dict)
+                or set(envelope) != envelope_fields
+                or envelope.get("schema") != SCHEDULED_AUTHORSHIP_ENVELOPE_SCHEMA
+                or not isinstance(core, dict)
+                or set(core) != core_fields
+                or core.get("schema") != SCHEDULED_AUTHORSHIP_CORE_SCHEMA
+                or core.get("terminal_status") != "authored_completed"
+                or core.get("provenance") != SCHEDULED_INTROSPECTION_PROVENANCE
+                or core.get("authority")
+                != "immutable_steward_signed_exact_authorship_join"
+                or not valid_trace_label(core.get("appliance_id"), required=True)
+                or not valid_trace_label(core.get("model"), required=True)
+                or not ordered_times
+                or not reflection_path_valid
+                or not candidate_link_valid
+                or not isinstance(auth, dict)
+                or set(auth) != auth_fields
+                or auth.get("algorithm") != "ed25519"
+                or auth.get("key_id") != expected_key_id
+                or not isinstance(signature_text, str)
+                or not re.fullmatch(r"[0-9a-f]{128}", signature_text)
+                or any(
+                    SHA256_PATTERN.fullmatch(str(core.get(field) or "")) is None
+                    for field in (
+                        "prompt_sha256",
+                        "response_sha256",
+                        "reflection_sha256",
+                        "reflection_metadata_sha256",
+                        "continuity_projection_sha256",
+                        "state_projection_sha256",
+                        "terminal_receipt_sha256",
+                        "context_provenance_sha256",
+                    )
+                )
+                or core.get("reflection_sha256") != core.get("response_sha256")
+                or not valid_trace(core)
+                or not verify_ed25519(
+                    public_key, canonical_json_bytes(unsigned), signature
+                )
+            ):
+                invalid += 1
+                continue
+        except (OSError, UnicodeError, ValueError, TypeError, json.JSONDecodeError):
+            invalid += 1
+            continue
+        valid.append(core | {"attestation_path": path.name, "key_id": expected_key_id})
+    valid.sort(
+        key=lambda value: (
+            int(value.get("completed_at_unix_ms", 0) or 0),
+            str(value.get("due_nonce") or ""),
+        )
+    )
+    return valid, invalid, "verified" if valid else "no_valid_attestations"
+
+
+def bounded_private_text(data: bytes, maximum: int) -> tuple[str, bool]:
+    """Return a one-line owner-view excerpt without terminal control bytes."""
+    decoded = data.decode("utf-8", errors="replace")
+    safe = terminal_safe_text(decoded)
+    compacted = " ".join(safe.split())
+    return compacted[:maximum], len(compacted) > maximum
+
+
+def scheduled_introspection_receipts(
+    workspace: Path,
+) -> list[tuple[dict[str, Any], tuple[str, ...], int]]:
+    """Merge current and legacy ledgers without counting exact copies twice."""
+    merged: dict[str, tuple[dict[str, Any], list[str], int]] = {}
+    sequence = 0
+    for relative in SCHEDULED_INTROSPECTION_LEDGER_PATHS:
+        for receipt in read_json_lines(workspace / relative):
+            sequence += 1
+            try:
+                identity = json.dumps(
+                    receipt,
+                    sort_keys=True,
+                    separators=(",", ":"),
+                    ensure_ascii=True,
+                    allow_nan=False,
+                )
+            except (TypeError, ValueError):
+                identity = f"noncanonical:{relative}:{sequence}"
+            existing = merged.get(identity)
+            if existing is None:
+                merged[identity] = (receipt, [relative], 1)
+                continue
+            value, sources, occurrences = existing
+            if relative not in sources:
+                sources.append(relative)
+            merged[identity] = (value, sources, occurrences + 1)
+    rows = [
+        (receipt, tuple(sources), occurrences)
+        for receipt, sources, occurrences in merged.values()
+    ]
+    rows.sort(
+        key=lambda row: (
+            int(row[0].get("completed_at_unix_ms", 0) or 0),
+            json.dumps(row[0], sort_keys=True, default=str),
+        )
+    )
+    return rows
+
+
+def read_patch_export_summaries(workspace: Path) -> list[dict[str, Any]]:
+    """Read only bounded, body-free, hash-linked candidate summaries."""
+    root = workspace / "self-change/patch-outbox"
+    try:
+        paths = sorted(root.glob("candidate-change-*.summary.json"))
+    except OSError:
+        return []
+    summaries: list[dict[str, Any]] = []
+    for path in paths:
+        try:
+            if path.is_symlink() or not path.is_file() or path.stat().st_size > 16 * 1024:
+                continue
+            envelope = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, UnicodeError, json.JSONDecodeError):
+            continue
+        if not isinstance(envelope, dict) or set(envelope) != {
+            "schema",
+            "core",
+            "core_sha256",
+            "auth",
+        }:
+            continue
+        core = envelope.get("core")
+        auth = envelope.get("auth")
+        if (
+            envelope.get("schema") != PATCH_EXPORT_SUMMARY_SCHEMA
+            or not isinstance(core, dict)
+            or core.get("schema") != PATCH_EXPORT_SUMMARY_CORE_SCHEMA
+            or core.get("source_bodies_retained") is not False
+            or core.get("authority")
+            != "reporting_summary_only_never_reingested_or_authorizing"
+            or not isinstance(auth, dict)
+            or auth.get("algorithm") != "hmac-sha256"
+            or not SHA256_PATTERN.fullmatch(str(envelope.get("core_sha256") or ""))
+        ):
+            continue
+        try:
+            encoded = json.dumps(
+                core,
+                sort_keys=True,
+                separators=(",", ":"),
+                ensure_ascii=True,
+                allow_nan=False,
+            ).encode("ascii")
+        except (TypeError, ValueError, UnicodeEncodeError):
+            continue
+        if hashlib.sha256(encoded).hexdigest() != envelope["core_sha256"]:
+            continue
+        paths_value = core.get("touched_paths")
+        counts = ("file_count", "added_lines", "removed_lines", "changed_lines")
+        if (
+            not isinstance(paths_value, list)
+            or not 0 < len(paths_value) <= 25
+            or any(
+                not isinstance(value, str)
+                or not value
+                or len(value) > 240
+                or value.startswith("/")
+                or ".." in Path(value).parts
+                for value in paths_value
+            )
+            or any(
+                isinstance(core.get(name), bool)
+                or not isinstance(core.get(name), int)
+                or not 0 <= int(core[name]) <= 100_000
+                for name in counts
+            )
+            or core["file_count"] != len(paths_value)
+            or core["changed_lines"] > 4_000
+        ):
+            continue
+        summaries.append(core | {"summary_path": path.name})
+    return summaries
+
+
+def configured_self_change_root(
+    workspace: Path, profile: dict[str, str], home: Path
+) -> Path:
+    configured = profile.get("ASTRID_EDGE_SELF_CHANGE_ROOT", "").strip()
+    if configured:
+        path = Path(configured)
+        return path if path.is_absolute() else home / path
+    state_root = (
+        workspace.parents[2]
+        if workspace.name == "edge"
+        and workspace.parent.name == "default"
+        and workspace.parent.parent.name == "home"
+        else workspace
+    )
+    default = state_root / "self-change"
+    legacy = workspace / "self-change"
+    if any(
+        (default / relative).exists()
+        for relative in ("status.json", "state.json", "ledgers")
+    ):
+        return default
+    return legacy
+
+
+def unix_timestamp_ms(value: Any) -> int:
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        return 0
+    integer = int(value)
+    if integer <= 0:
+        return 0
+    return integer * 1_000 if integer < 100_000_000_000 else integer
+
+
+def scheduled_introspection_summary(
+    workspace: Path,
+    cutoff_ms: int,
+    now_ms: int,
+    verify_key_path: Path = SCHEDULED_AUTHORSHIP_VERIFY_KEY,
+) -> dict[str, Any]:
+    verified_projection: dict[str, Any] = {}
+    isolated = workspace / "runtime/scheduled-introspection/projection"
+    state = read_json(isolated / "state.json")
+    if not state:
+        state = read_json(workspace / "runtime/scheduled_introspection_state.json")
+    continuity = read_json(isolated / "continuity.json")
+    if not continuity:
+        continuity = read_json(
+            workspace / "runtime/scheduled_introspection_continuity.json"
+        )
+    sourced_receipts = scheduled_introspection_receipts(workspace)
+    receipts = [item for item, _sources, _occurrences in sourced_receipts]
+    attestations, invalid_attestations, attestation_status = (
+        scheduled_authorship_attestations(workspace, verify_key_path)
+    )
+    attested_receipt_hashes = {
+        str(item["terminal_receipt_sha256"]): item for item in attestations
+    }
+    window = [
+        item
+        for item in receipts
+        if int(item.get("completed_at_unix_ms", 0) or 0) >= cutoff_ms
+    ]
+    admission = read_json(
+        workspace / "runtime/scheduled-introspection/admission/state.json"
+    )
+
+    def continuity_integrity() -> tuple[bool, str]:
+        required = {
+            "schema",
+            "appliance_id",
+            "model",
+            "due_nonce",
+            "recorded_at_unix_ms",
+            "summary",
+            "summary_sha256",
+            "response_sha256",
+            "prompt_sha256",
+            "reflection_path",
+            "trace",
+            "provenance",
+            "authority",
+            "context_provenance",
+            "context_provenance_sha256",
+            "candidate_authoring_eligible",
+            "reflection_lane",
+            "taint_causes",
+        }
+        if not continuity:
+            return False, "absent"
+        if (
+            set(continuity) != required
+            or continuity.get("schema")
+            != SCHEDULED_INTROSPECTION_CONTINUITY_SCHEMA
+            or continuity.get("provenance")
+            != SCHEDULED_INTROSPECTION_PROVENANCE
+            or continuity.get("authority")
+            != "bounded_continuity_projection_not_voluntary_journal"
+            or not valid_trace(continuity)
+            or not isinstance(continuity.get("summary"), str)
+            or not 0 < len(continuity["summary"]) <= 320
+            or not SHA256_PATTERN.fullmatch(
+                str(continuity.get("summary_sha256") or "")
+            )
+            or hashlib.sha256(continuity["summary"].encode()).hexdigest()
+            != continuity["summary_sha256"]
+            or any(
+                SHA256_PATTERN.fullmatch(str(continuity.get(field) or ""))
+                is None
+                for field in ("response_sha256", "prompt_sha256")
+            )
+        ):
+            return False, "projection_invalid"
+        relative = Path(str(continuity.get("reflection_path") or ""))
+        if (
+            relative.is_absolute()
+            or len(relative.parts) != 3
+            or relative.parts[:2] != ("introspections", "scheduled")
+            or ".." in relative.parts
+            or not relative.name.startswith("reflection_due-")
+            or relative.suffix != ".md"
+        ):
+            return False, "reflection_path_invalid"
+        reflection = workspace / relative
+        sidecar = reflection.with_suffix(".json")
+        try:
+            if (
+                reflection.is_symlink()
+                or sidecar.is_symlink()
+                or not reflection.is_file()
+                or not sidecar.is_file()
+                or reflection.stat().st_size > 64 * 1024
+                or sidecar.stat().st_size > 16 * 1024
+            ):
+                return False, "reflection_files_invalid"
+            response = reflection.read_bytes()
+            metadata_bytes = sidecar.read_bytes()
+            metadata = json.loads(metadata_bytes)
+        except (OSError, UnicodeError, json.JSONDecodeError):
+            return False, "reflection_files_unreadable"
+        trace = continuity["trace"]
+        expected_metadata = {
+            "schema": "astrid.edge.scheduled_introspection.model_reflection.v1",
+            "provenance": SCHEDULED_INTROSPECTION_PROVENANCE,
+            "appliance_id": continuity["appliance_id"],
+            "due_nonce": continuity["due_nonce"],
+            "trace_id": trace["trace_id"],
+            "session_id": trace["session_id"],
+            "turn_id": trace["turn_id"],
+            "model": continuity["model"],
+            "prompt_sha256": continuity["prompt_sha256"],
+            "response_sha256": continuity["response_sha256"],
+            "exact_response_path": reflection.name,
+            "context_provenance": continuity["context_provenance"],
+            "context_provenance_sha256": continuity[
+                "context_provenance_sha256"
+            ],
+            "reflection_lane": continuity["reflection_lane"],
+            "taint_causes": continuity["taint_causes"],
+        }
+        if (
+            not isinstance(metadata, dict)
+            or metadata != expected_metadata
+            or hashlib.sha256(response).hexdigest()
+            != continuity["response_sha256"]
+        ):
+            return False, "reflection_hash_or_metadata_mismatch"
+        try:
+            continuity_sha256 = hashlib.sha256(
+                canonical_json_bytes(continuity)
+            ).hexdigest()
+            state_sha256 = hashlib.sha256(canonical_json_bytes(state)).hexdigest()
+            metadata_sha256 = hashlib.sha256(metadata_bytes).hexdigest()
+        except (TypeError, ValueError, UnicodeEncodeError):
+            return False, "projection_not_canonical"
+        matching = [
+            item
+            for item in attestations
+            if item.get("continuity_projection_sha256") == continuity_sha256
+            and item.get("state_projection_sha256") == state_sha256
+            and item.get("reflection_metadata_sha256") == metadata_sha256
+            and item.get("reflection_sha256")
+            == hashlib.sha256(response).hexdigest()
+            and item.get("response_sha256") == continuity.get("response_sha256")
+            and item.get("prompt_sha256") == continuity.get("prompt_sha256")
+            and item.get("due_nonce") == continuity.get("due_nonce")
+            and item.get("model") == continuity.get("model")
+            and item.get("appliance_id") == continuity.get("appliance_id")
+            and item.get("reflection_path") == continuity.get("reflection_path")
+            and item.get("trace") == continuity.get("trace")
+        ]
+        if len(matching) != 1:
+            return False, "immutable_authorship_attestation_join_failed"
+        verified_projection["authorship_attestation"] = matching[0]
+        excerpt, truncated = bounded_private_text(response, 800)
+        verified_projection["reflection_excerpt"] = excerpt
+        verified_projection["reflection_excerpt_truncated"] = truncated
+        return True, "projection_artifact_sidecar_hash_verified"
+
+    continuity_valid, continuity_validation = continuity_integrity()
+    admission_valid = (
+        continuity_valid
+        and admission.get("schema") == SCHEDULED_INTROSPECTION_ADMISSION_SCHEMA
+        and admission.get("continuity_admitted") is True
+        and admission.get("provenance") == SCHEDULED_INTROSPECTION_PROVENANCE
+        and admission.get("authority")
+        == "runtime_verified_projection_observational_only"
+        and admission.get("last_response_sha256")
+        == continuity.get("response_sha256")
+        and admission.get("last_summary_sha256")
+        == continuity.get("summary_sha256")
+        and admission.get("last_trace_id")
+        == continuity.get("trace", {}).get("trace_id")
+        and admission.get("last_due_nonce") == continuity.get("due_nonce")
+    )
+
+    def is_authored(item: dict[str, Any]) -> bool:
+        try:
+            receipt_sha256 = hashlib.sha256(canonical_json_bytes(item)).hexdigest()
+        except (TypeError, ValueError, UnicodeEncodeError):
+            return False
+        attestation = attested_receipt_hashes.get(receipt_sha256)
+        return (
+            attestation is not None
+            and item.get("schema") == SCHEDULED_INTROSPECTION_RECEIPT_SCHEMA
+            and item.get("status") == "authored_completed"
+            and item.get("provenance") == SCHEDULED_INTROSPECTION_PROVENANCE
+            and (
+                item.get("continuity_projection_written") is True
+                or item.get("continuity_admitted") is True
+            )
+            and isinstance(item.get("response_sha256"), str)
+            and SHA256_PATTERN.fullmatch(str(item["response_sha256"])) is not None
+            and valid_trace(item)
+            and item.get("due_nonce") == attestation.get("due_nonce")
+            and item.get("response_sha256") == attestation.get("response_sha256")
+            and item.get("prompt_sha256") == attestation.get("prompt_sha256")
+            and item.get("trace") == attestation.get("trace")
+        )
+
+    latest = receipts[-1] if receipts else {}
+    latest_sources = sourced_receipts[-1][1] if sourced_receipts else ()
+    completed_at = int(state.get("last_completed_at_unix_ms", 0) or 0)
+    reflections = workspace / "introspections/scheduled"
+    try:
+        reflection_count = sum(
+            path.is_file() and not path.is_symlink()
+            for path in reflections.glob("reflection_*.md")
+        )
+    except OSError:
+        reflection_count = 0
+    return {
+        "state_present": bool(state),
+        "state_schema": state.get("schema", "none"),
+        "state_schema_supported": state.get("schema")
+        == SCHEDULED_INTROSPECTION_STATE_SCHEMA,
+        "running": state.get("running", False),
+        "last_status": state.get("last_status", "none"),
+        "last_started_at_unix_ms": state.get("last_started_at_unix_ms", 0) or 0,
+        "last_completed_at_unix_ms": completed_at,
+        "last_completed_age_ms": (
+            max(0, now_ms - completed_at) if completed_at else "unavailable"
+        ),
+        "next_due_at_unix_ms": state.get("next_due_at_unix_ms", 0) or 0,
+        "total_attempts": state.get("total_attempts", 0),
+        "total_authored": state.get("total_authored", 0),
+        "consecutive_failures": state.get("consecutive_failures", 0),
+        "window_receipts": len(window),
+        "window_current_ledger_records": sum(
+            SCHEDULED_INTROSPECTION_LEDGER_PATHS[0] in sources
+            for item, sources, _occurrences in sourced_receipts
+            if int(item.get("completed_at_unix_ms", 0) or 0) >= cutoff_ms
+        ),
+        "window_legacy_ledger_records": sum(
+            SCHEDULED_INTROSPECTION_LEDGER_PATHS[1] in sources
+            for item, sources, _occurrences in sourced_receipts
+            if int(item.get("completed_at_unix_ms", 0) or 0) >= cutoff_ms
+        ),
+        "window_exact_duplicates_merged": sum(
+            occurrences - 1
+            for item, _sources, occurrences in sourced_receipts
+            if int(item.get("completed_at_unix_ms", 0) or 0) >= cutoff_ms
+        ),
+        "window_authored": sum(is_authored(item) for item in window),
+        "window_non_authored_excluded": sum(not is_authored(item) for item in window),
+        "window_transport_recoveries": sum(
+            item.get("status") == "transport_recovery" for item in window
+        ),
+        "latest_receipt_status": latest.get("status", "none"),
+        "latest_receipt_provenance": latest.get("provenance", "none"),
+        "latest_receipt_source_ledger": latest_sources[0] if latest_sources else "none",
+        "latest_receipt_source_ledgers": ",".join(latest_sources) or "none",
+        "latest_reflection_path": latest.get("reflection_path")
+        or state.get("last_artifact_path")
+        or "none",
+        "latest_response_sha256": latest.get("response_sha256")
+        or state.get("last_response_sha256")
+        or "none",
+        "latest_candidate_id": latest.get("candidate_id") or "none",
+        "latest_candidate_digest": latest.get("candidate_digest") or "none",
+        "continuity_present": bool(continuity),
+        "continuity_schema": continuity.get("schema", "none"),
+        "continuity_schema_supported": continuity.get("schema")
+        == SCHEDULED_INTROSPECTION_CONTINUITY_SCHEMA,
+        "continuity_provenance": continuity.get("provenance", "none"),
+        "continuity_summary": (
+            bounded_private_text(str(continuity.get("summary")).encode(), 320)[0]
+            if continuity_valid
+            else "unavailable"
+        ),
+        "continuity_reflection_path": continuity.get("reflection_path") or "none",
+        "continuity_integrity_valid": continuity_valid,
+        "continuity_validation": continuity_validation,
+        "continuity_actual_admitted": admission_valid,
+        "authorship_attestation_status": attestation_status,
+        "authorship_attestations_valid": len(attestations),
+        "authorship_attestations_invalid": invalid_attestations,
+        "authorship_attestation_key_id": (
+            attestations[-1].get("key_id", "none") if attestations else "none"
+        ),
+        "authorship_attestation_path": (
+            attestations[-1].get("attestation_path", "none")
+            if attestations
+            else "none"
+        ),
+        "continuity_admission_state_schema": admission.get("schema", "none"),
+        "continuity_admitted_at_unix_ms": admission.get(
+            "admitted_at_unix_ms", 0
+        )
+        if admission_valid
+        else 0,
+        "verified_reflection_excerpt": verified_projection.get(
+            "reflection_excerpt", "unavailable"
+        ),
+        "verified_reflection_excerpt_truncated": verified_projection.get(
+            "reflection_excerpt_truncated", False
+        ),
+        "reflection_text_authority": (
+            "owner_private_hash_verified_model_authored_runtime_scheduled"
+            if continuity_valid
+            else "unavailable"
+        ),
+        "reflection_artifact_count": reflection_count,
+    }
+
+
+def self_change_summary(
+    workspace: Path,
+    root: Path,
+    cutoff_ms: int,
+    operator_status_path: Path = SELF_CHANGE_OPERATOR_STATUS_PATH,
+    *,
+    test_only_allow_unprivileged_operator_status: bool = False,
+) -> dict[str, Any]:
+    operator = read_self_change_operator_status(
+        operator_status_path,
+        test_only_allow_unprivileged_owner=(
+            test_only_allow_unprivileged_operator_status
+        ),
+    )
+    state_source = (
+        "immutable_operator_projection_hash_verified"
+        if operator
+        else "unavailable"
+    )
+    pipeline_phase = str(operator.get("pipeline_phase") or "unavailable")
+    intents_root = workspace / "self-change/outbox"
+    try:
+        intent_paths = sorted(intents_root.glob("intent_*.json"))
+    except OSError:
+        intent_paths = []
+    intents = [value for path in intent_paths if (value := read_json(path))]
+    latest_intent = intents[-1] if intents else {}
+    patch_summaries = read_patch_export_summaries(workspace)
+    latest_patch = patch_summaries[-1] if patch_summaries else {}
+    lifecycle = operator.get("lifecycle")
+    lifecycle = lifecycle if isinstance(lifecycle, dict) else {}
+    events = lifecycle.get("events")
+    events = events if isinstance(events, list) else []
+
+    def latest(facet: str) -> dict[str, Any]:
+        return next(
+            (
+                value
+                for value in reversed(events)
+                if facet in (value.get("facets") or [])
+            ),
+            {},
+        )
+
+    latest_reflection = latest("reflection")
+    latest_candidate = latest("candidate")
+    latest_build = latest("build")
+    latest_test = latest("test")
+    latest_invariant = latest("invariant")
+    latest_shadow = latest("shadow")
+    latest_activation = latest("activation")
+    latest_restart = latest("restart")
+    latest_probation = latest("probation")
+    latest_rollback = latest("rollback")
+    window_records = [
+        value
+        for value in events
+        if unix_timestamp_ms(value.get("recorded_at")) >= cutoff_ms
+    ]
+    ledger_heads = lifecycle.get("ledger_heads")
+    ledger_heads = ledger_heads if isinstance(ledger_heads, dict) else {}
+    restart = operator.get("restart_expectation")
+    restart = restart if isinstance(restart, dict) else {}
+    return {
+        "root": str(root),
+        "private_root_read": False,
+        "private_ledger_policy": "0600_secret_not_read_by_operator_reports",
+        "status_present": False,
+        "status_schema": "private_not_read",
+        "operator_status_present": bool(operator),
+        "operator_status_schema": operator.get("schema", "none"),
+        "operator_status_generated_at_unix_s": operator.get("generated_at", 0),
+        "operator_status_provenance": operator.get("provenance", "none"),
+        "operator_pipeline_phase": operator.get("pipeline_phase", "unavailable"),
+        "expected_restart_phase": restart.get("phase", "unavailable"),
+        "expected_restart_maximum_seconds": restart.get(
+            "maximum_seconds", "unavailable"
+        ),
+        "expected_restart_basis": restart.get("basis", "unavailable"),
+        "operator_latest_transition_operation": (
+            operator.get("latest_transition", {}).get("operation", "none")
+            if isinstance(operator.get("latest_transition"), dict)
+            else "none"
+        ),
+        "operator_latest_transition_status": (
+            operator.get("latest_transition", {}).get("status", "none")
+            if isinstance(operator.get("latest_transition"), dict)
+            else "none"
+        ),
+        "state_present": bool(operator),
+        "projection_core_sha256": operator.get("projection_core_sha256", "none"),
+        "lifecycle_projection_schema": lifecycle.get("schema", "none"),
+        "lifecycle_projection_included": lifecycle.get("included", 0),
+        "lifecycle_projection_total": lifecycle.get("total", 0),
+        "lifecycle_projection_truncated": lifecycle.get("truncated", False),
+        "state_source": state_source,
+        "state_integrity": (
+            "narrow_projection_sha256_verified_filesystem_origin_observational"
+            if state_source == "immutable_operator_projection_hash_verified"
+            else "not_reverified_by_read_only_report"
+        ),
+        "state_schema": operator.get("schema", "none"),
+        "state_revision": operator.get("state_revision", 0),
+        "mode": operator.get("mode", "unavailable"),
+        "paused_reason": "not_projected",
+        "active_generation": operator.get("active_generation") or "none",
+        "previous_generation": operator.get("previous_generation") or "none",
+        "due_status": "pending" if pipeline_phase == "due" else "none",
+        "due_not_before_unix_s": 0,
+        "due_reasons": "not_projected",
+        "inflight_status": pipeline_phase if pipeline_phase not in {"idle", "due"} else "none",
+        "inflight_build_id": latest_build.get("build_id", "none"),
+        "inflight_from_generation": latest_activation.get("from_generation", "none"),
+        "inflight_to_generation": latest_activation.get("generation_id", "none"),
+        "probation_status": "active" if pipeline_phase == "probation" else "none",
+        "probation_build_id": latest_probation.get("build_id", "none"),
+        "probation_generation_id": latest_probation.get("generation_id", "none"),
+        "probation_not_before_unix_s": 0,
+        "probation_health_checks": 0,
+        "intent_total": len(intents),
+        "intent_window": sum(
+            unix_timestamp_ms(item.get("recorded_at_unix_ms")) >= cutoff_ms
+            for item in intents
+        ),
+        "latest_intent_candidate_id": latest_intent.get("candidate_id", "none"),
+        "latest_intent_candidate_digest": latest_intent.get("candidate_digest", "none"),
+        "latest_intent_provenance": latest_intent.get("provenance", "none"),
+        "patch_export_summary_total": len(patch_summaries),
+        "patch_export_summary_window": sum(
+            unix_timestamp_ms(item.get("recorded_at")) >= cutoff_ms
+            for item in patch_summaries
+        ),
+        "latest_patch_candidate_id": latest_patch.get("candidate_id", "none"),
+        "latest_patch_terminal_status": latest_patch.get("terminal_status", "none"),
+        "latest_patch_file_count": latest_patch.get("file_count", 0),
+        "latest_patch_changed_lines": latest_patch.get("changed_lines", 0),
+        "latest_patch_touched_paths": ",".join(latest_patch.get("touched_paths", [])),
+        "latest_patch_source_bodies_retained": latest_patch.get(
+            "source_bodies_retained", "not_applicable"
+        ),
+        "latest_reflection_status": latest_reflection.get("status", "none"),
+        "latest_reflection_response_sha256": latest_reflection.get(
+            "response_sha256", "none"
+        ),
+        "latest_candidate_status": latest_candidate.get("status", "none"),
+        "latest_candidate_id": latest_candidate.get("candidate_id", "none"),
+        "latest_candidate_sha256": latest_candidate.get("candidate_sha256", "none"),
+        "latest_terminal_reason_sha256": latest_candidate.get(
+            "terminal_reason_sha256", "none"
+        ),
+        "latest_terminal_authority": latest_candidate.get(
+            "terminal_authority", "none"
+        ),
+        "latest_build_status": latest_build.get("status", "none"),
+        "latest_build_id": latest_build.get("build_id", "none"),
+        "latest_tests_status": latest_test.get("status", "none"),
+        "latest_tests_sha256": latest_test.get("tests_sha256", "none"),
+        "latest_invariant_status": latest_invariant.get("status", "none"),
+        "latest_invariant_candidate_replay_sha256": latest_invariant.get(
+            "invariant_candidate_replay_sha256", "none"
+        ),
+        "latest_invariant_package_replay_sha256": latest_invariant.get(
+            "invariant_package_replay_sha256", "none"
+        ),
+        "latest_shadow_status": latest_shadow.get("shadow_status", "none"),
+        "latest_shadow_evidence_sha256": latest_shadow.get(
+            "shadow_evidence_sha256", "none"
+        ),
+        "latest_activation_status": latest_activation.get("status", "none"),
+        "latest_activation_generation": latest_activation.get(
+            "generation_id", "none"
+        ),
+        "latest_restart_status": latest_restart.get("status", "none"),
+        "latest_probation_status": latest_probation.get("status", "none"),
+        "latest_rollback_status": latest_rollback.get("status", "none"),
+        "window_lifecycle_records": len(window_records),
+        **{
+            f"ledger_{name}_records": sum(
+                value.get("source_ledger") == name for value in events
+            )
+            for name in ("candidate", "build", "activation", "operator")
+        },
+        **{
+            f"ledger_{name}_legacy_records": 0
+            for name in ("candidate", "build", "activation", "operator")
+        },
+        **{
+            f"ledger_{name}_reported_valid": (
+                "projection_hash_verified"
+                if operator and ledger_heads.get(name) is not None
+                else "unavailable"
+            )
+            for name in ("candidate", "build", "activation", "operator")
+        },
+    }
 
 
 def normalized_uuid(value: Any) -> str | None:
@@ -683,11 +1820,17 @@ def command(
     *arguments: str, environment: dict[str, str] | None = None
 ) -> str:
     try:
+        if not arguments or arguments[0] not in TRUSTED_COMMANDS:
+            return ""
+        exact_arguments = (TRUSTED_COMMANDS[arguments[0]], *arguments[1:])
         command_environment = os.environ.copy()
+        command_environment["PATH"] = "/usr/bin:/bin"
+        for unsafe_name in ("PYTHONHOME", "PYTHONPATH", "PYTHONSTARTUP"):
+            command_environment.pop(unsafe_name, None)
         if environment is not None:
             command_environment.update(environment)
         return subprocess.run(
-            arguments,
+            exact_arguments,
             check=False,
             capture_output=True,
             text=True,
@@ -696,6 +1839,31 @@ def command(
         ).stdout.strip()
     except (OSError, subprocess.TimeoutExpired):
         return ""
+
+
+def system_service_manager_enabled(
+    marker: Path = SERVICE_MANAGER_MARKER,
+) -> bool:
+    try:
+        metadata = marker.stat(follow_symlinks=False)
+        if (
+            not stat.S_ISREG(metadata.st_mode)
+            or metadata.st_uid != 0
+            or metadata.st_nlink != 1
+            or stat.S_IMODE(metadata.st_mode) & 0o022
+        ):
+            return False
+        value = json.loads(marker.read_text(encoding="ascii"))
+        runtime_name = pwd.getpwuid(os.getuid()).pw_name
+    except (KeyError, OSError, UnicodeError, json.JSONDecodeError):
+        return False
+    return (
+        isinstance(value, dict)
+        and value.get("schema")
+        in {"astrid.edge.service_manager.v1", "astrid.edge.service_manager.v2"}
+        and value.get("manager") == "system"
+        and value.get("runtime_user") == runtime_name
+    )
 
 
 def loaded_capsules_from_status(raw: str) -> list[str] | None:
@@ -729,17 +1897,11 @@ def completed_session_retirements(
 
 
 def service_value(service: str, field: str) -> str:
-    return (
-        command(
-            "systemctl",
-            "--user",
-            "show",
-            service,
-            f"--property={field}",
-            "--value",
-        )
-        or "unknown"
-    )
+    arguments = ["systemctl"]
+    if not SYSTEM_SERVICE_MANAGER:
+        arguments.append("--user")
+    arguments.extend(("show", service, f"--property={field}", "--value"))
+    return command(*arguments) or "unknown"
 
 
 def profile_values(path: Path) -> dict[str, str]:
@@ -860,12 +2022,21 @@ def local_provider_header_latencies(astrid_root: Path, cutoff_ms: int) -> list[i
 
 
 def main() -> int:
+    global SYSTEM_SERVICE_MANAGER  # noqa: PLW0603 -- one process-local report mode.
+    if "--candidate-presentation" in sys.argv[1:]:
+        return candidate_presentation()
     parser = argparse.ArgumentParser()
     parser.add_argument("--window-minutes", type=int, default=20)
     parser.add_argument("--workspace", type=Path)
+    parser.add_argument(
+        "--scheduled-authorship-verify-key",
+        type=Path,
+        default=SCHEDULED_AUTHORSHIP_VERIFY_KEY,
+    )
     args = parser.parse_args()
     if args.window_minutes < 1:
         parser.error("--window-minutes must be positive")
+    SYSTEM_SERVICE_MANAGER = system_service_manager_enabled()
 
     home = Path.home()
     workspace = args.workspace or home / ".astrid/home/default/edge"
@@ -881,7 +2052,7 @@ def main() -> int:
     cutoff_ms = now_ms - args.window_minutes * 60_000
     state = read_json(state_path)
 
-    emit("report_version", 15)
+    emit("report_version", 16)
     emit("instance_name", profile.get("ASTRID_EDGE_INSTANCE_NAME", "edge Astrid"))
     emit("hostname", os.uname().nodename)
     for label, service in (
@@ -1019,6 +2190,32 @@ def main() -> int:
     emit(
         "research_action_web_search",
         profile.get("ASTRID_EDGE_RESEARCH_ACTION_WEB_SEARCH", ""),
+    )
+    emit(
+        "scheduled_introspection_enabled",
+        profile.get("ASTRID_EDGE_SCHEDULED_INTROSPECTION_ENABLED", "false"),
+    )
+    emit(
+        "scheduled_introspection_interval_minutes",
+        profile.get("ASTRID_EDGE_SCHEDULED_INTROSPECTION_INTERVAL_MINUTES", ""),
+    )
+    emit(
+        "scheduled_introspection_initial_delay_seconds",
+        profile.get(
+            "ASTRID_EDGE_SCHEDULED_INTROSPECTION_INITIAL_DELAY_SECONDS", ""
+        ),
+    )
+    emit(
+        "scheduled_introspection_timeout_seconds",
+        profile.get("ASTRID_EDGE_SCHEDULED_INTROSPECTION_TIMEOUT_SECONDS", ""),
+    )
+    emit(
+        "scheduled_introspection_prompt_max_chars",
+        profile.get("ASTRID_EDGE_SCHEDULED_INTROSPECTION_PROMPT_MAX_CHARS", ""),
+    )
+    emit(
+        "self_change_enabled",
+        profile.get("ASTRID_EDGE_SELF_CHANGE_ENABLED", "false"),
     )
     emit(
         "perceptual_notebook_enabled",
@@ -1955,6 +3152,21 @@ def main() -> int:
             summary.get("match_count", 0),
         )
 
+    scheduled_summary = scheduled_introspection_summary(
+        workspace, cutoff_ms, now_ms, args.scheduled_authorship_verify_key
+    )
+    for field, value in scheduled_summary.items():
+        emit(f"scheduled_introspection_{field}", value)
+
+    resolved_self_change_root = configured_self_change_root(
+        workspace, profile, home
+    )
+    change_summary = self_change_summary(
+        workspace, resolved_self_change_root, cutoff_ms
+    )
+    for field, value in change_summary.items():
+        emit(f"self_change_{field}", value)
+
     window_actions = [
         item
         for item in action_receipts
@@ -1993,6 +3205,11 @@ def main() -> int:
         *window_recoveries,
         *all_web_receipts,
         *all_introspection,
+        *[
+            item
+            for item, _sources, _occurrences in scheduled_introspection_receipts(workspace)
+            if int(item.get("completed_at_unix_ms", 0) or 0) >= cutoff_ms
+        ],
         *spectral_rollups,
         *tuning_receipts,
     ]
@@ -2106,6 +3323,20 @@ def main() -> int:
         for item in all_introspection
     )
     recent_activity.extend(
+        (
+            int(item.get("completed_at_unix_ms", 0)),
+            "scheduled_introspection",
+            {
+                **item,
+                "_source_ledger": sources[0],
+                "_source_ledgers": list(sources),
+                "_exact_duplicate_count": occurrences - 1,
+            },
+        )
+        for item, sources, occurrences in scheduled_introspection_receipts(workspace)
+        if int(item.get("completed_at_unix_ms", 0) or 0) >= cutoff_ms
+    )
+    recent_activity.extend(
         (int(item.get("recorded_at_unix_ms", 0)), "perception", item)
         for item in observation_rows
         if int(item.get("recorded_at_unix_ms", 0) or 0) >= cutoff_ms
@@ -2124,6 +3355,10 @@ def main() -> int:
         emit(f"recent_activity_{index}_recorded_at_unix_ms", recorded_at)
         emit(f"recent_activity_{index}_kind", kind)
         emit(
+            f"recent_activity_{index}_source_ledger",
+            item.get("_source_ledger", "not_applicable"),
+        )
+        emit(
             f"recent_activity_{index}_trace_id",
             trace.get("trace_id", "unattributed") if isinstance(trace, dict) else "unattributed",
         )
@@ -2135,6 +3370,7 @@ def main() -> int:
             or item.get("summary")
             or item.get("phase")
             or item.get("mode_identity_state")
+            or item.get("reflection_path")
             or item.get("status")
             or "unknown",
         )
@@ -2174,15 +3410,13 @@ def main() -> int:
     )
 
     since = f"{args.window_minutes} minutes ago"
-    logs = command(
-        "journalctl",
-        "--user",
-        "-u",
-        "astrid.service",
-        "--since",
-        since,
-        "--no-pager",
+    journal_arguments = ["journalctl"]
+    if not SYSTEM_SERVICE_MANAGER:
+        journal_arguments.append("--user")
+    journal_arguments.extend(
+        ("-u", "astrid.service", "--since", since, "--no-pager")
     )
+    logs = command(*journal_arguments)
     log_path = astrid_root / f"log/astrid.{time.strftime('%Y-%m-%d', time.gmtime())}.log"
     try:
         cutoff_iso = time.strftime(

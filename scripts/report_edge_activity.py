@@ -14,13 +14,18 @@ import datetime as dt
 import hashlib
 import json
 import math
+import os
+import re
+import stat
+import sys
 import time
+import unicodedata
 import uuid
 from pathlib import Path
 from typing import Any, Iterable, NamedTuple
 
-SCHEMA = "astrid_edge_activity_report_v2"
-AUTHORSHIP_ATTRIBUTION_VERSION = 6
+SCHEMA = "astrid_edge_activity_report_v3"
+AUTHORSHIP_ATTRIBUTION_VERSION = 7
 STALE_WEB_CALL_MS = 5 * 60_000
 STALE_INTROSPECTION_CALL_MS = 5 * 60_000
 TRANSPORT_AUTHORSHIP_CORRECTION_REASON = (
@@ -55,6 +60,74 @@ RESPONSE_PROVENANCE_COUNTER_KEYS = (
     "transport_recovery_non_authored",
 )
 REQUEST_HEADER_LATENCY_SOURCE_V1 = "kernel_http_host_trace_v1"
+SCHEDULED_INTROSPECTION_RECEIPT_SCHEMA = (
+    "astrid_edge_scheduled_introspection_v1"
+)
+SCHEDULED_INTROSPECTION_PROVENANCE = "model_authored_runtime_scheduled"
+SCHEDULED_INTROSPECTION_ADMISSION_SCHEMA = (
+    "astrid.edge.scheduled_introspection.admission.v1"
+)
+SCHEDULED_INTROSPECTION_LEDGER_PATHS = (
+    "introspections/scheduled/receipts.jsonl",
+    "introspection/scheduled/receipts.jsonl",
+)
+SELF_CHANGE_OPERATOR_STATUS_PATH = Path(
+    "/var/lib/astrid-edge-operator/operator-status.json"
+)
+SELF_CHANGE_OPERATOR_STATUS_SCHEMA = (
+    "astrid.edge_self_change.operator_status_envelope.v1"
+)
+SELF_CHANGE_OPERATOR_CORE_SCHEMA = "astrid.edge_self_change.operator_status.v3"
+LEGACY_SELF_CHANGE_OPERATOR_CORE_SCHEMAS = frozenset(
+    {
+        "astrid.edge_self_change.operator_status.v1",
+        "astrid.edge_self_change.operator_status.v2",
+    }
+)
+SELF_CHANGE_OPERATOR_EVENT_SCHEMA = (
+    "astrid.edge_self_change.operator_lifecycle_event.v1"
+)
+SELF_CHANGE_OPERATOR_LIFECYCLE_SCHEMA = (
+    "astrid.edge_self_change.operator_lifecycle.v1"
+)
+SELF_CHANGE_OPERATOR_PROVENANCE = "immutable_supervisor_sanitized_projection"
+SELF_CHANGE_EVENT_PROVENANCE = (
+    "immutable_supervisor_signed_ledger_sanitized_metadata"
+)
+SELF_CHANGE_EVENT_AUTHORITY = "observation_only_not_deployment_or_astrid_authorship"
+SELF_CHANGE_OPERATOR_MAX_BYTES = 256 * 1024
+SELF_CHANGE_OPERATOR_MAX_EVENTS = 64
+SELF_CHANGE_FACETS = frozenset(
+    {
+        "reflection",
+        "candidate",
+        "build",
+        "test",
+        "invariant",
+        "shadow",
+        "activation",
+        "restart",
+        "probation",
+        "rollback",
+        "operator",
+    }
+)
+PATCH_EXPORT_SUMMARY_SCHEMA = (
+    "astrid.edge.steward_helper.owner_patch_export_summary_envelope.v1"
+)
+PATCH_EXPORT_SUMMARY_CORE_SCHEMA = (
+    "astrid.edge.steward_helper.owner_patch_export_summary.v1"
+)
+INDIRECT_SHADOW_GATE_EVIDENCE = (
+    "indirect_package_replay_sha256_commitment_not_independently_reinspectable"
+)
+CANDIDATE_PRESENTATION_INPUT_SCHEMA = (
+    "astrid.edge_candidate_presentation.input.v1"
+)
+CANDIDATE_PRESENTATION_CONTENT_SCHEMA = (
+    "astrid.edge_candidate_presentation.content.v1"
+)
+CANDIDATE_PRESENTATION_INPUT_MAX_BYTES = 256 * 1024
 
 
 class RunAuthorship(NamedTuple):
@@ -321,12 +394,710 @@ def read_json_lines(path: Path) -> list[dict[str, Any]]:
     return values
 
 
+def scheduled_introspection_receipts(
+    workspace: Path,
+) -> list[tuple[dict[str, Any], tuple[str, ...], int]]:
+    """Merge current and legacy ledgers without counting exact copies twice."""
+    merged: dict[str, tuple[dict[str, Any], list[str], int]] = {}
+    sequence = 0
+    for relative in SCHEDULED_INTROSPECTION_LEDGER_PATHS:
+        for receipt in read_json_lines(workspace / relative):
+            sequence += 1
+            try:
+                identity = json.dumps(
+                    receipt,
+                    sort_keys=True,
+                    separators=(",", ":"),
+                    ensure_ascii=True,
+                    allow_nan=False,
+                )
+            except (TypeError, ValueError):
+                identity = f"noncanonical:{relative}:{sequence}"
+            existing = merged.get(identity)
+            if existing is None:
+                merged[identity] = (receipt, [relative], 1)
+                continue
+            value, sources, occurrences = existing
+            if relative not in sources:
+                sources.append(relative)
+            merged[identity] = (value, sources, occurrences + 1)
+    rows = [
+        (receipt, tuple(sources), occurrences)
+        for receipt, sources, occurrences in merged.values()
+    ]
+    rows.sort(
+        key=lambda row: (
+            int(row[0].get("completed_at_unix_ms", 0) or 0),
+            json.dumps(row[0], sort_keys=True, default=str),
+        )
+    )
+    return rows
+
+
 def read_json(path: Path) -> dict[str, Any]:
     try:
         value = json.loads(path.read_text())
     except (OSError, json.JSONDecodeError):
         return {}
     return value if isinstance(value, dict) else {}
+
+
+def self_change_operator_status_path(workspace: Path) -> Path:
+    """Return the sole root-owned production projection path.
+
+    ``workspace`` remains in the signature for API compatibility, but never
+    influences this trust decision. Tests inject a separate path explicitly
+    through ``collect_events`` and opt into its non-root fixture allowance.
+    """
+
+    del workspace
+    return SELF_CHANGE_OPERATOR_STATUS_PATH
+
+
+def read_self_change_operator_status(
+    path: Path = SELF_CHANGE_OPERATOR_STATUS_PATH,
+    *,
+    test_only_allow_unprivileged_owner: bool = False,
+) -> dict[str, Any]:
+    """Read one bounded, hash-bound immutable-supervisor operator projection."""
+
+    if path != SELF_CHANGE_OPERATOR_STATUS_PATH and not test_only_allow_unprivileged_owner:
+        return {}
+    expected_uid = os.geteuid() if test_only_allow_unprivileged_owner else 0
+
+    try:
+        parent = path.parent.lstat()
+        before = path.lstat()
+        if (
+            not stat.S_ISDIR(parent.st_mode)
+            or stat.S_ISLNK(parent.st_mode)
+            or parent.st_uid != expected_uid
+            or parent.st_mode & 0o022
+            or parent.st_mode & stat.S_ISGID == 0
+            or not stat.S_ISREG(before.st_mode)
+            or stat.S_ISLNK(before.st_mode)
+            or before.st_nlink != 1
+            or before.st_uid != expected_uid
+            or before.st_gid != parent.st_gid
+            or stat.S_IMODE(before.st_mode) != 0o640
+            or before.st_size > SELF_CHANGE_OPERATOR_MAX_BYTES
+        ):
+            return {}
+        descriptor = os.open(path, os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0))
+        try:
+            opened = os.fstat(descriptor)
+            data = os.read(descriptor, SELF_CHANGE_OPERATOR_MAX_BYTES + 1)
+            after = os.fstat(descriptor)
+        finally:
+            os.close(descriptor)
+        current = path.lstat()
+    except OSError:
+        return {}
+    identity = lambda value: (
+        value.st_dev,
+        value.st_ino,
+        value.st_size,
+        value.st_mtime_ns,
+    )
+    if (
+        len(data) > SELF_CHANGE_OPERATOR_MAX_BYTES
+        or len(data) != before.st_size
+        or identity(before) != identity(opened)
+        or identity(opened) != identity(after)
+        or identity(after) != identity(current)
+    ):
+        return {}
+    try:
+        envelope = json.loads(data)
+    except (UnicodeError, json.JSONDecodeError):
+        return {}
+    if not isinstance(envelope, dict) or set(envelope) != {
+        "schema",
+        "core",
+        "core_sha256",
+    }:
+        return {}
+    core = envelope.get("core")
+    if (
+        envelope.get("schema") != SELF_CHANGE_OPERATOR_STATUS_SCHEMA
+        or not isinstance(core, dict)
+        or core.get("provenance") != SELF_CHANGE_OPERATOR_PROVENANCE
+        or core.get("authority") != "observation_only_not_deployment_authority"
+        or not valid_response_sha256(envelope.get("core_sha256"))
+    ):
+        return {}
+    try:
+        encoded = json.dumps(
+            core,
+            sort_keys=True,
+            separators=(",", ":"),
+            ensure_ascii=True,
+            allow_nan=False,
+        ).encode("ascii")
+    except (TypeError, ValueError, UnicodeEncodeError):
+        return {}
+    if hashlib.sha256(encoded).hexdigest() != envelope["core_sha256"]:
+        return {}
+    if core.get("schema") in LEGACY_SELF_CHANGE_OPERATOR_CORE_SCHEMAS:
+        if not _valid_legacy_self_change_operator(core):
+            return {}
+        return core | {"projection_core_sha256": envelope["core_sha256"]}
+    if not _valid_self_change_operator_v3(core):
+        return {}
+    return core | {"projection_core_sha256": envelope["core_sha256"]}
+
+
+def _valid_legacy_self_change_operator(core: dict[str, Any]) -> bool:
+    base = {
+        "schema",
+        "appliance_id",
+        "generated_at",
+        "state_revision",
+        "mode",
+        "active_generation",
+        "previous_generation",
+        "pipeline_phase",
+        "latest_transition",
+        "provenance",
+        "authority",
+    }
+    expected = (
+        base
+        if core.get("schema") == "astrid.edge_self_change.operator_status.v1"
+        else base | {"restart_expectation"}
+    )
+    return (
+        set(core) == expected
+        and isinstance(core.get("latest_transition"), dict)
+        and (
+            core.get("schema") == "astrid.edge_self_change.operator_status.v1"
+            or _valid_restart_expectation(core.get("restart_expectation"))
+        )
+    )
+
+
+def _valid_self_change_operator_v3(core: dict[str, Any]) -> bool:
+    if set(core) != {
+        "schema",
+        "appliance_id",
+        "generated_at",
+        "state_revision",
+        "mode",
+        "active_generation",
+        "previous_generation",
+        "pipeline_phase",
+        "latest_transition",
+        "restart_expectation",
+        "lifecycle",
+        "provenance",
+        "authority",
+    } or core.get("schema") != SELF_CHANGE_OPERATOR_CORE_SCHEMA:
+        return False
+    restart = core.get("restart_expectation")
+    lifecycle = core.get("lifecycle")
+    transition = core.get("latest_transition")
+    if (
+        any(
+            not _valid_operator_label(core.get(name), required=True)
+            for name in (
+                "appliance_id",
+                "mode",
+                "active_generation",
+                "previous_generation",
+                "pipeline_phase",
+            )
+        )
+        or isinstance(core.get("generated_at"), bool)
+        or not isinstance(core.get("generated_at"), int)
+        or core["generated_at"] < 0
+        or isinstance(core.get("state_revision"), bool)
+        or not isinstance(core.get("state_revision"), int)
+        or core["state_revision"] < 0
+        or not isinstance(transition, dict)
+        or set(transition) != {"operation", "status"}
+        or not _valid_operator_label(transition.get("operation"), required=True)
+        or not _valid_operator_label(transition.get("status"), required=True)
+        or not _valid_restart_expectation(restart)
+        or not isinstance(lifecycle, dict)
+        or set(lifecycle)
+        != {
+            "schema",
+            "events",
+            "included",
+            "total",
+            "truncated",
+            "maximum_events",
+            "ledger_heads",
+        }
+        or lifecycle.get("schema") != SELF_CHANGE_OPERATOR_LIFECYCLE_SCHEMA
+        or lifecycle.get("maximum_events") != SELF_CHANGE_OPERATOR_MAX_EVENTS
+        or isinstance(lifecycle.get("included"), bool)
+        or not isinstance(lifecycle.get("included"), int)
+        or isinstance(lifecycle.get("total"), bool)
+        or not isinstance(lifecycle.get("total"), int)
+        or not 0 <= lifecycle["included"] <= SELF_CHANGE_OPERATOR_MAX_EVENTS
+        or lifecycle["total"] < lifecycle["included"]
+        or lifecycle.get("truncated") is not (
+            lifecycle["total"] > lifecycle["included"]
+        )
+        or not isinstance(lifecycle.get("events"), list)
+        or len(lifecycle["events"]) != lifecycle["included"]
+        or not _valid_ledger_heads(lifecycle.get("ledger_heads"))
+    ):
+        return False
+    events = lifecycle["events"]
+    if not all(_valid_operator_event(event) for event in events):
+        return False
+    identities = [
+        (event["source_ledger"], event["event_id"], event["record_sha256"])
+        for event in events
+    ]
+    ordering = [
+        (event["recorded_at"], event["sequence"], event["source_ledger"])
+        for event in events
+    ]
+    return len(identities) == len(set(identities)) and ordering == sorted(ordering)
+
+
+def _valid_restart_expectation(value: Any) -> bool:
+    return (
+        isinstance(value, dict)
+        and set(value) == {"phase", "maximum_seconds", "basis"}
+        and value.get("phase") in {"none", "activation", "rollback"}
+        and not isinstance(value.get("maximum_seconds"), bool)
+        and isinstance(value.get("maximum_seconds"), int)
+        and 0 <= value["maximum_seconds"] <= 7_200
+        and (value["phase"] == "none") == (value["maximum_seconds"] == 0)
+        and value.get("basis")
+        == "immutable_command_profile_timeout_upper_bound"
+    )
+
+
+def _valid_ledger_heads(value: Any) -> bool:
+    return (
+        isinstance(value, dict)
+        and set(value) == {"candidate", "build", "activation", "operator"}
+        and all(item is None or valid_response_sha256(item) for item in value.values())
+    )
+
+
+def _valid_operator_event(value: Any) -> bool:
+    exact = {
+        "schema", "recorded_at", "source_ledger", "sequence", "event_id",
+        "status", "facets", "record_sha256", "candidate_id", "candidate_sha256",
+        "build_id", "generation_id", "from_generation", "trace_id", "session_id",
+        "turn_id", "response_sha256", "terminal_declaration_sha256",
+        "terminal_reason_sha256", "terminal_authority", "automatic_retry",
+        "tests_sha256", "bundle_sha256", "manifest_sha256",
+        "invariant_candidate_replay_sha256", "invariant_package_replay_sha256",
+        "shadow_evidence_sha256", "shadow_status", "command_profile",
+        "command_executable_sha256", "command_argv_sha256", "command_stdout_sha256",
+        "command_stderr_sha256", "command_exit_code", "command_timed_out",
+        "provenance", "authority", "authored", "fallback",
+    }
+    if not isinstance(value, dict) or set(value) != exact:
+        return False
+    facets = value.get("facets")
+    labels = (
+        "event_id", "status", "candidate_id", "build_id", "generation_id",
+        "from_generation", "trace_id", "session_id", "turn_id", "command_profile",
+    )
+    hashes = (
+        "record_sha256", "candidate_sha256", "response_sha256",
+        "terminal_declaration_sha256", "terminal_reason_sha256", "tests_sha256",
+        "bundle_sha256", "manifest_sha256", "invariant_candidate_replay_sha256",
+        "invariant_package_replay_sha256", "shadow_evidence_sha256",
+        "command_executable_sha256", "command_argv_sha256", "command_stdout_sha256",
+        "command_stderr_sha256",
+    )
+    if (
+        value.get("schema") != SELF_CHANGE_OPERATOR_EVENT_SCHEMA
+        or value.get("source_ledger") not in {"candidate", "build", "activation", "operator"}
+        or not isinstance(value.get("recorded_at"), int)
+        or isinstance(value.get("recorded_at"), bool)
+        or value["recorded_at"] < 0
+        or not isinstance(value.get("sequence"), int)
+        or isinstance(value.get("sequence"), bool)
+        or value["sequence"] < 0
+        or not isinstance(facets, list)
+        or not facets
+        or any(not isinstance(item, str) for item in facets)
+        or facets != sorted(set(facets))
+        or not set(facets).issubset(SELF_CHANGE_FACETS)
+        or any(
+            not _valid_operator_label(item, required=False)
+            for item in (value.get(name) for name in labels)
+        )
+        or any(item is not None and not valid_response_sha256(item) for item in (value.get(name) for name in hashes))
+        or value.get("provenance") != SELF_CHANGE_EVENT_PROVENANCE
+        or value.get("authority") != SELF_CHANGE_EVENT_AUTHORITY
+        or value.get("authored") is not False
+        or value.get("fallback") is not False
+        or not valid_response_sha256(value.get("record_sha256"))
+        or not _valid_operator_label(value.get("event_id"), required=True)
+        or not _valid_operator_label(value.get("status"), required=True)
+    ):
+        return False
+    shadow_status = value.get("shadow_status")
+    if shadow_status is not None and shadow_status != (
+        "package_replay_hash_only_no_detailed_shadow_claim"
+    ):
+        return False
+    if value.get("shadow_evidence_sha256") is None and shadow_status is not None:
+        return False
+    exit_code = value.get("command_exit_code")
+    if exit_code is not None and (
+        isinstance(exit_code, bool) or not isinstance(exit_code, int) or not -255 <= exit_code <= 255
+    ):
+        return False
+    command_timed_out = value.get("command_timed_out")
+    if command_timed_out is not None and type(command_timed_out) is not bool:
+        return False
+    terminal = value.get("status") == "scheduled_intent_terminal_rejected"
+    terminal_fields_are_exact = (
+        value.get("terminal_reason_sha256") is not None
+        and value.get("terminal_authority")
+        == "terminal_exact_candidate_rejection_no_promotion"
+        and value.get("automatic_retry") is False
+    )
+    terminal_fields_are_absent = (
+        value.get("terminal_reason_sha256") is None
+        and value.get("terminal_authority") is None
+        and value.get("automatic_retry") is None
+    )
+    return terminal_fields_are_exact if terminal else terminal_fields_are_absent
+
+
+def _valid_operator_label(value: Any, *, required: bool) -> bool:
+    if value is None:
+        return not required
+    return (
+        isinstance(value, str)
+        and re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]{0,127}", value) is not None
+    )
+
+
+def read_patch_export_summaries(workspace: Path) -> list[dict[str, Any]]:
+    """Read only the signed export's bounded body-free companion record."""
+    root = workspace / "self-change/patch-outbox"
+    try:
+        paths = sorted(root.glob("candidate-change-*.summary.json"))
+    except OSError:
+        return []
+    summaries: list[dict[str, Any]] = []
+    for path in paths:
+        try:
+            if path.is_symlink() or not path.is_file() or path.stat().st_size > 16 * 1024:
+                continue
+            envelope = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, UnicodeError, json.JSONDecodeError):
+            continue
+        if not isinstance(envelope, dict) or set(envelope) != {
+            "schema",
+            "core",
+            "core_sha256",
+            "auth",
+        }:
+            continue
+        core = envelope.get("core")
+        auth = envelope.get("auth")
+        if (
+            envelope.get("schema") != PATCH_EXPORT_SUMMARY_SCHEMA
+            or not isinstance(core, dict)
+            or core.get("schema") != PATCH_EXPORT_SUMMARY_CORE_SCHEMA
+            or core.get("source_bodies_retained") is not False
+            or core.get("authority")
+            != "reporting_summary_only_never_reingested_or_authorizing"
+            or not isinstance(auth, dict)
+            or auth.get("algorithm") != "hmac-sha256"
+            or not valid_response_sha256(envelope.get("core_sha256"))
+        ):
+            continue
+        try:
+            encoded = json.dumps(
+                core,
+                sort_keys=True,
+                separators=(",", ":"),
+                ensure_ascii=True,
+                allow_nan=False,
+            ).encode("ascii")
+        except (TypeError, ValueError, UnicodeEncodeError):
+            continue
+        if hashlib.sha256(encoded).hexdigest() != envelope["core_sha256"]:
+            continue
+        touched = core.get("touched_paths")
+        counts = ("file_count", "added_lines", "removed_lines", "changed_lines")
+        if (
+            not isinstance(touched, list)
+            or not 0 < len(touched) <= 25
+            or any(
+                not isinstance(value, str)
+                or not value
+                or len(value) > 240
+                or value.startswith("/")
+                or ".." in Path(value).parts
+                for value in touched
+            )
+            or any(
+                isinstance(core.get(name), bool)
+                or not isinstance(core.get(name), int)
+                or not 0 <= int(core[name]) <= 100_000
+                for name in counts
+            )
+            or core["file_count"] != len(touched)
+            or core["changed_lines"] > 4_000
+        ):
+            continue
+        summaries.append(core | {"summary_path": path.name})
+    return summaries
+
+
+def appliance_state_root(workspace: Path) -> Path:
+    """Return the state root only for the canonical ``home/default/edge`` layout."""
+    try:
+        if (
+            workspace.name == "edge"
+            and workspace.parent.name == "default"
+            and workspace.parent.parent.name == "home"
+        ):
+            return workspace.parents[2]
+    except IndexError:
+        pass
+    return workspace
+
+
+def unix_timestamp_ms(value: Any) -> int:
+    """Normalize supervisor seconds while retaining existing millisecond ledgers."""
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        return 0
+    integer = int(value)
+    if integer <= 0:
+        return 0
+    return integer * 1_000 if integer < 100_000_000_000 else integer
+
+
+def self_change_ledger_events(
+    workspace: Path,
+    operator_status_path: Path = SELF_CHANGE_OPERATOR_STATUS_PATH,
+    *,
+    test_only_allow_unprivileged_operator_status: bool = False,
+) -> list[dict[str, Any]]:
+    """Project supervisor metadata without exposing patches or command output."""
+    events: list[dict[str, Any]] = []
+    outbox = workspace / "self-change/outbox"
+    try:
+        intents = sorted(outbox.glob("intent_*.json"))
+    except OSError:
+        intents = []
+    for path in intents:
+        intent = read_json(path)
+        if not intent:
+            continue
+        authored_intent = (
+            intent.get("provenance") == "exact_model_scheduled_introspection"
+            and valid_trace(intent)
+            and valid_response_sha256(intent.get("response_sha256"))
+            and valid_response_sha256(intent.get("candidate_digest"))
+        )
+        event = base_event(
+            intent,
+            "self_change",
+            unix_timestamp_ms(intent.get("recorded_at_unix_ms")),
+            "self-change/outbox/intent_*.json",
+        )
+        event.update(
+            {
+                "lifecycle_kind": "intent",
+                "status": "intent_only",
+                "candidate_id": intent.get("candidate_id"),
+                "candidate_digest": intent.get("candidate_digest"),
+                "response_sha256": intent.get("response_sha256"),
+                "provenance": intent.get("provenance", "legacy_unattributed"),
+                "authority": intent.get("authority"),
+                "artifact_path": f"self-change/outbox/{path.name}",
+                "authored": authored_intent,
+                "fallback": False,
+                "authorship_class": (
+                    SCHEDULED_INTROSPECTION_PROVENANCE
+                    if authored_intent
+                    else "legacy_self_change_intent_non_authored"
+                ),
+            }
+        )
+        events.append(event)
+
+    for summary in read_patch_export_summaries(workspace):
+        event = base_event(
+            {},
+            "self_change",
+            unix_timestamp_ms(summary.get("recorded_at")),
+            f"self-change/patch-outbox/{summary['summary_path']}",
+        )
+        event.update(
+            {
+                "lifecycle_kind": "patch_export",
+                "status": summary.get("terminal_status"),
+                "candidate_id": summary.get("candidate_id"),
+                "candidate_digest": summary.get("candidate_sha256"),
+                "source_id": summary.get("source_id"),
+                "generation_id": summary.get("base_generation"),
+                "file_count": summary.get("file_count"),
+                "added_lines": summary.get("added_lines"),
+                "removed_lines": summary.get("removed_lines"),
+                "changed_lines": summary.get("changed_lines"),
+                "touched_paths": summary.get("touched_paths"),
+                "source_bodies_retained": False,
+                "record_sha256": summary.get("full_export_sha256"),
+                "authored": False,
+                "fallback": False,
+                "authorship_class": "immutable_patch_export_summary_non_authored",
+                "integrity": "core_sha256_verified_signature_present_not_reverified",
+                "authority": summary.get("authority"),
+            }
+        )
+        event["trace_attribution"] = "immutable_supervisor_event"
+        events.append(event)
+
+    operator = read_self_change_operator_status(
+        operator_status_path,
+        test_only_allow_unprivileged_owner=(
+            test_only_allow_unprivileged_operator_status
+        ),
+    )
+    lifecycle = operator.get("lifecycle")
+    projected = lifecycle.get("events") if isinstance(lifecycle, dict) else []
+    for item in projected if isinstance(projected, list) else []:
+        facets = list(item["facets"])
+        lifecycle_kind = next(
+            (
+                name
+                for name in (
+                    "reflection", "candidate", "build", "test", "invariant",
+                    "shadow", "activation", "restart", "probation", "rollback",
+                    "operator",
+                )
+                if name in facets
+            ),
+            "operator",
+        )
+        event = base_event(
+            {},
+            "self_change",
+            unix_timestamp_ms(item.get("recorded_at")),
+            "self-change/operator-status.json",
+        )
+        event.update(
+            {
+                "lifecycle_kind": lifecycle_kind,
+                "lifecycle_facets": facets,
+                "status": item.get("status"),
+                "sequence": item.get("sequence"),
+                "event_id": item.get("event_id"),
+                "record_sha256": item.get("record_sha256"),
+                "projection_core_sha256": operator.get("projection_core_sha256"),
+                "projected_source_ledger": item.get("source_ledger"),
+                "candidate_id": item.get("candidate_id"),
+                "candidate_digest": item.get("candidate_sha256"),
+                "build_id": item.get("build_id"),
+                "generation_id": item.get("generation_id"),
+                "from_generation": item.get("from_generation"),
+                "tests_sha256": item.get("tests_sha256"),
+                "bundle_sha256": item.get("bundle_sha256"),
+                "manifest_sha256": item.get("manifest_sha256"),
+                "invariant_candidate_replay_sha256": item.get(
+                    "invariant_candidate_replay_sha256"
+                ),
+                "invariant_package_replay_sha256": item.get(
+                    "invariant_package_replay_sha256"
+                ),
+                "shadow_evidence_sha256": item.get("shadow_evidence_sha256"),
+                "shadow_status": item.get("shadow_status"),
+                "package_replay_sha256_present": (
+                    item.get("invariant_package_replay_sha256") is not None
+                ),
+                "shadow_gate_evidence": (
+                    INDIRECT_SHADOW_GATE_EVIDENCE
+                    if item.get("shadow_evidence_sha256") is not None
+                    else None
+                ),
+                "trace_id": item.get("trace_id"),
+                "session_id": item.get("session_id"),
+                "turn_id": item.get("turn_id"),
+                "response_sha256": item.get("response_sha256"),
+                "terminal_declaration_sha256": item.get(
+                    "terminal_declaration_sha256"
+                ),
+                "terminal_reason_sha256": item.get("terminal_reason_sha256"),
+                "terminal_authority": item.get("terminal_authority"),
+                "automatic_retry": item.get("automatic_retry"),
+                "command_profile": item.get("command_profile"),
+                "command_executable_sha256": item.get("command_executable_sha256"),
+                "command_argv_sha256": item.get("command_argv_sha256"),
+                "command_stdout_sha256": item.get("command_stdout_sha256"),
+                "command_stderr_sha256": item.get("command_stderr_sha256"),
+                "command_exit_code": item.get("command_exit_code"),
+                "command_timed_out": item.get("command_timed_out"),
+                "authored": False,
+                "fallback": False,
+                "authorship_class": "immutable_supervisor_metadata_non_authored",
+                "provenance": item.get("provenance"),
+                "authority": item.get("authority"),
+                "integrity": (
+                    "operator_projection_core_sha256_verified_root_filesystem_origin_"
+                    "signed_ledger_record_hash_projected"
+                ),
+            }
+        )
+        event["trace_attribution"] = "immutable_supervisor_event"
+        events.append(event)
+    return events
+
+
+def event_authorship_class(event: dict[str, Any]) -> str:
+    explicit = event.get("authorship_class")
+    if isinstance(explicit, str) and explicit:
+        return explicit
+    kind = str(event.get("kind") or "")
+    if event.get("trace_attribution") == "operator_harness" or kind == "operator_inquiry":
+        return "operator_harness_non_authored"
+    if kind == "turn":
+        return (
+            "model_authored_autonomy_turn"
+            if event.get("authored") is True
+            else "fallback_or_transport_non_authored"
+        )
+    if kind == "action":
+        if event.get("authored") is not True:
+            return "fallback_or_executor_non_authored"
+        declared = str(event.get("declared_next") or "").lstrip().upper()
+        return (
+            "voluntary_model_authored_journal"
+            if declared.startswith("JOURNAL")
+            else "voluntary_model_authored_action"
+        )
+    if kind == "peer" and event.get("authored") is True:
+        return "voluntary_model_authored_action_result"
+    if kind == "thread" and event.get("authored") is True:
+        return "voluntary_model_authored_continuity"
+    if kind in {
+        "web_request",
+        "web_result",
+        "introspection_request",
+        "introspection_result",
+        "perception",
+        "study",
+        "spectral_rollup",
+        "spectral_activity_link",
+        "spectral_receipt",
+        "tuning",
+        "duplication_advisory",
+    }:
+        if event.get("origin") == "operator_harness":
+            return "operator_harness_non_authored"
+        return "machine_evidence_non_authored"
+    if event.get("fallback") is True:
+        return "fallback_or_transport_non_authored"
+    return "operational_metadata_non_authored"
 
 
 def transport_authorship_corrections(
@@ -548,7 +1319,13 @@ def base_event(
     }
 
 
-def collect_events(workspace: Path, now_ms: int) -> list[dict[str, Any]]:
+def collect_events(
+    workspace: Path,
+    now_ms: int,
+    operator_status_path: Path = SELF_CHANGE_OPERATOR_STATUS_PATH,
+    *,
+    test_only_allow_unprivileged_operator_status: bool = False,
+) -> list[dict[str, Any]]:
     runs = read_json_lines(workspace / "autonomous/runs.jsonl")
     transport_corrections = transport_authorship_corrections(workspace)
     action_dispatches = read_json_lines(workspace / "actions/dispatches.jsonl")
@@ -570,6 +1347,7 @@ def collect_events(workspace: Path, now_ms: int) -> list[dict[str, Any]]:
     threads = read_json_lines(workspace / "autonomous/thread_state.jsonl")
     web = read_json_lines(workspace / "web/receipts.jsonl")
     introspection = read_json_lines(workspace / "introspection/receipts.jsonl")
+    scheduled_introspection = scheduled_introspection_receipts(workspace)
     perception = read_json_lines(workspace / "perception/observations.jsonl")
     studies = read_json_lines(workspace / "studies/receipts.jsonl")
     spectral_rollups = read_json_lines(workspace / "spectral/rollups.jsonl")
@@ -580,6 +1358,13 @@ def collect_events(workspace: Path, now_ms: int) -> list[dict[str, Any]]:
     ]
     duplicate_notices = read_json_lines(workspace / "research/duplication_notices.jsonl")
     peer = read_json_lines(workspace / "peer/receipts.jsonl")
+    self_change_events = self_change_ledger_events(
+        workspace,
+        operator_status_path,
+        test_only_allow_unprivileged_operator_status=(
+            test_only_allow_unprivileged_operator_status
+        ),
+    )
 
     exact_run_candidates: dict[tuple[str, str], list[dict[str, Any]]] = {}
     for run in runs:
@@ -1267,6 +2052,88 @@ def collect_events(workspace: Path, now_ms: int) -> list[dict[str, Any]]:
         )
         events.append(event)
 
+    scheduled_admission = read_json(
+        workspace / "runtime/scheduled-introspection/admission/state.json"
+    )
+    for receipt, source_ledgers, occurrences in scheduled_introspection:
+        if receipt.get("schema") not in {
+            SCHEDULED_INTROSPECTION_RECEIPT_SCHEMA,
+            None,
+        }:
+            continue
+        status = str(receipt.get("status") or "unknown")
+        provenance = str(receipt.get("provenance") or "legacy_unattributed")
+        authored = (
+            status == "authored_completed"
+            and provenance == SCHEDULED_INTROSPECTION_PROVENANCE
+            and (
+                receipt.get("continuity_projection_written") is True
+                or receipt.get("continuity_admitted") is True
+            )
+            and valid_response_sha256(receipt.get("response_sha256"))
+            and valid_trace(receipt)
+        )
+        actually_admitted = (
+            authored
+            and scheduled_admission.get("schema")
+            == SCHEDULED_INTROSPECTION_ADMISSION_SCHEMA
+            and scheduled_admission.get("continuity_admitted") is True
+            and scheduled_admission.get("provenance")
+            == SCHEDULED_INTROSPECTION_PROVENANCE
+            and scheduled_admission.get("authority")
+            == "runtime_verified_projection_observational_only"
+            and scheduled_admission.get("last_response_sha256")
+            == receipt.get("response_sha256")
+            and scheduled_admission.get("last_trace_id")
+            == receipt.get("trace", {}).get("trace_id")
+        )
+        event = base_event(
+            receipt,
+            "scheduled_introspection",
+            int(receipt.get("completed_at_unix_ms", 0) or 0),
+            source_ledgers[0],
+        )
+        event.update(
+            {
+                "status": status,
+                "provenance": provenance,
+                "authored": authored,
+                "fallback": status
+                in {"transport_recovery", "failed", "interrupted"}
+                or provenance
+                in {
+                    "local_safe_fallback",
+                    "local_format_repair",
+                    "non_authored_transport_or_executor_failure",
+                },
+                "authorship_class": (
+                    SCHEDULED_INTROSPECTION_PROVENANCE
+                    if authored
+                    else "scheduled_introspection_non_authored_excluded"
+                ),
+                "prompt_chars": receipt.get("prompt_chars"),
+                "response_sha256": receipt.get("response_sha256"),
+                "reflection_path": receipt.get("reflection_path"),
+                "continuity_projected": receipt.get(
+                    "continuity_projection_written"
+                )
+                is True
+                or receipt.get("continuity_admitted") is True,
+                "continuity_admitted": actually_admitted,
+                "source_ledgers": list(source_ledgers),
+                "exact_duplicate_count": occurrences - 1,
+                "introspection_tool": receipt.get("introspection_tool"),
+                "introspection_result_sha256": receipt.get(
+                    "introspection_result_sha256"
+                ),
+                "candidate_id": receipt.get("candidate_id"),
+                "candidate_digest": receipt.get("candidate_digest"),
+                "next_due_at_unix_ms": receipt.get("next_due_at_unix_ms"),
+                "authority": receipt.get("authority"),
+            }
+        )
+        events.append(event)
+
     for observation in perception:
         event = base_event(
             observation,
@@ -1290,6 +2157,11 @@ def collect_events(workspace: Path, now_ms: int) -> list[dict[str, Any]]:
         )
         event["trace_attribution"] = "machine_observation_not_ipc_trace"
         events.append(event)
+
+    events.extend(self_change_events)
+
+    for event in events:
+        event["authorship_class"] = event_authorship_class(event)
 
     return sorted(
         (event for event in events if event["timestamp_unix_ms"] > 0),
@@ -1343,10 +2215,73 @@ def parse_time(value: str) -> int:
     return int(parsed.timestamp() * 1_000)
 
 
+def terminal_safe_text(value: Any) -> str:
+    """Neutralize terminal controls without mutating structured event data."""
+
+    return "".join(
+        " "
+        if unicodedata.category(character) in {"Cc", "Cf", "Cs", "Zl", "Zp"}
+        else character
+        for character in str(value)
+    )
+
+
+def candidate_presentation() -> int:
+    """Render only broker-supplied activity summaries as untrusted JSON."""
+
+    value = argparse.ArgumentParser(add_help=False)
+    value.add_argument("--candidate-presentation", action="store_true")
+    value.add_argument("--input-stdin", action="store_true")
+    value.add_argument("--window-minutes", type=int, required=True)
+    value.add_argument("--limit", type=int, required=True)
+    value.add_argument("--format", choices=("json",), required=True)
+    args = value.parse_args()
+    if not args.candidate_presentation or not args.input_stdin:
+        value.error("the active-generation presentation requires broker stdin")
+    raw = sys.stdin.buffer.read(CANDIDATE_PRESENTATION_INPUT_MAX_BYTES + 1)
+    if len(raw) > CANDIDATE_PRESENTATION_INPUT_MAX_BYTES:
+        value.error("broker projection exceeds its bound")
+    try:
+        projection = json.loads(raw)
+    except (UnicodeError, json.JSONDecodeError) as error:
+        value.error(f"broker projection is invalid: {error}")
+    if (
+        not isinstance(projection, dict)
+        or projection.get("schema") != CANDIDATE_PRESENTATION_INPUT_SCHEMA
+        or not isinstance(projection.get("recent_activity"), list)
+    ):
+        value.error("broker projection has the wrong schema")
+    lines = []
+    for event in projection["recent_activity"][:64]:
+        if not isinstance(event, dict):
+            continue
+        kind = " ".join(terminal_safe_text(event.get("kind", "")).split())
+        status = " ".join(terminal_safe_text(event.get("status", "")).split())
+        summary = " ".join(terminal_safe_text(event.get("summary", "")).split())
+        if kind and status and summary:
+            lines.append(f"{kind} [{status}] {summary}"[:240])
+    sections = [
+        {"heading": f"Sanitized activity {index + 1}", "lines": lines[index:index + 16]}
+        for index in range(0, len(lines), 16)
+    ][:12]
+    result = {
+        "schema": CANDIDATE_PRESENTATION_CONTENT_SCHEMA,
+        "view": "activity",
+        "title": "Active-generation activity view",
+        "summary": (
+            f"Candidate report arranged {len(lines)} sanitized immutable-report events; "
+            "this is untrusted presentation, not causal or authorship evidence."
+        ),
+        "sections": sections,
+    }
+    print(json.dumps(result, sort_keys=True, separators=(",", ":")))
+    return 0
+
+
 def short(value: Any, maximum: int = 120) -> str:
     if value in (None, ""):
         return "-"
-    text = " ".join(str(value).split())
+    text = " ".join(terminal_safe_text(value).split())
     return text if len(text) <= maximum else f"{text[: maximum - 1]}…"
 
 
@@ -1378,6 +2313,8 @@ def text_lines(events: list[dict[str, Any]]) -> list[str]:
                 "thread": 1,
                 "introspection_request": 2,
                 "introspection_result": 3,
+                "scheduled_introspection": 1,
+                "self_change": 1,
                 "perception": 1,
                 "study": 1,
                 "duplication_advisory": 1,
@@ -1474,6 +2411,40 @@ def text_lines(events: list[dict[str, Any]]) -> list[str]:
                 f"query={short(event.get('query'))} "
                 f"matches={event.get('result_count', '-')}"
             )
+        elif kind == "scheduled_introspection":
+            detail = (
+                f"status={event.get('status')} authored={str(event.get('authored')).lower()} "
+                f"provenance={event.get('provenance')} "
+                f"continuity={str(event.get('continuity_admitted')).lower()} "
+                f"reflection={short(event.get('reflection_path'), 100)} "
+                f"candidate={short(event.get('candidate_id'), 54)} "
+                f"ledgers={short(','.join(event.get('source_ledgers') or []), 110)} "
+                f"duplicates={event.get('exact_duplicate_count', 0)}"
+            )
+        elif kind == "self_change":
+            detail = (
+                f"lifecycle={event.get('lifecycle_kind')} status={event.get('status')} "
+                f"facets={short(','.join(event.get('lifecycle_facets') or []), 90)} "
+                f"candidate={short(event.get('candidate_id'), 54)} "
+                f"build={short(event.get('build_id'), 54)} "
+                f"generation={short(event.get('generation_id'), 54)} "
+                f"authority={short(event.get('authority') or event.get('integrity'), 90)}"
+            )
+            if event.get("shadow_gate_evidence"):
+                detail += (
+                    " shadow_gate="
+                    f"{short(event.get('shadow_gate_evidence'), 90)}"
+                )
+            if event.get("terminal_reason_sha256"):
+                detail += (
+                    " terminal_reason_sha256="
+                    f"{short(event.get('terminal_reason_sha256'), 20)}"
+                )
+            if event.get("lifecycle_kind") == "patch_export":
+                detail += (
+                    f" files={event.get('file_count')} changed_lines={event.get('changed_lines')}"
+                    f" paths={short(','.join(event.get('touched_paths') or []), 120)}"
+                )
         elif kind == "perception":
             detail = (
                 "machine-observed authored=false "
@@ -1545,8 +2516,9 @@ def text_lines(events: list[dict[str, Any]]) -> list[str]:
         attribution = event.get("trace_attribution")
         if attribution != "first_class":
             detail += f" attribution={attribution}"
+        detail += f" class={event.get('authorship_class')}"
         lines.append(f"{prefix}{common} {detail}")
-    return lines
+    return [terminal_safe_text(line) for line in lines]
 
 
 def response_provenance_counts(events: Iterable[dict[str, Any]]) -> dict[str, int]:
@@ -1597,6 +2569,8 @@ def parser() -> argparse.ArgumentParser:
             "thread",
             "introspection_request",
             "introspection_result",
+            "scheduled_introspection",
+            "self_change",
             "perception",
             "study",
             "operator_inquiry",
@@ -1654,6 +2628,8 @@ def render(args: argparse.Namespace, already_seen: set[str]) -> set[str]:
 
 
 def main() -> int:
+    if "--candidate-presentation" in sys.argv[1:]:
+        return candidate_presentation()
     args = parser().parse_args()
     if args.window_minutes < 1:
         raise SystemExit("--window-minutes must be positive")

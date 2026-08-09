@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import sqlite3
@@ -51,6 +52,163 @@ class EdgeHindsightTest(unittest.TestCase):
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text("".join(json.dumps(value) + "\n" for value in values))
         path.chmod(0o600)
+
+    def write_self_change_ledger(
+        self, name: str, values: list[tuple[str, dict[str, object]]]
+    ) -> None:
+        previous = "0" * 64
+        records: list[dict[str, object]] = []
+        for sequence, (kind, payload) in enumerate(values, 1):
+            core = {
+                "sequence": sequence,
+                "previous_hash": previous,
+                "event_id": f"{name}-{sequence}",
+                "kind": kind,
+                "recorded_at": 1_700_000_000 + sequence,
+                "payload": payload,
+            }
+            record_hash = hashlib.sha256(
+                json.dumps(core, sort_keys=True, separators=(",", ":")).encode()
+            ).hexdigest()
+            records.append(
+                {
+                    "schema": "astrid.edge_self_change.ledger_record.v1",
+                    "ledger": name,
+                    "core": core,
+                    "record_hash": record_hash,
+                    "auth": {
+                        "algorithm": "hmac-sha256",
+                        "key_id": "test-key",
+                        "signature": "0" * 64,
+                    },
+                }
+            )
+            previous = record_hash
+        path = self.root / "self-change/ledgers" / f"{name}.jsonl"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text("".join(json.dumps(value) + "\n" for value in records))
+        path.chmod(0o600)
+
+    @staticmethod
+    def operator_event(**overrides: object) -> dict[str, object]:
+        value: dict[str, object] = {
+            "schema": "astrid.edge_self_change.operator_lifecycle_event.v1",
+            "recorded_at": 1_700_000_001,
+            "source_ledger": "candidate",
+            "sequence": 1,
+            "event_id": "candidate-1",
+            "status": "candidate_recorded",
+            "facets": ["candidate"],
+            "record_sha256": "1" * 64,
+            "candidate_id": "candidate-one",
+            "candidate_sha256": "2" * 64,
+            "build_id": None,
+            "generation_id": None,
+            "from_generation": None,
+            "trace_id": None,
+            "session_id": None,
+            "turn_id": None,
+            "response_sha256": None,
+            "terminal_declaration_sha256": None,
+            "terminal_reason_sha256": None,
+            "terminal_authority": None,
+            "automatic_retry": None,
+            "tests_sha256": None,
+            "bundle_sha256": None,
+            "manifest_sha256": None,
+            "invariant_candidate_replay_sha256": None,
+            "invariant_package_replay_sha256": None,
+            "shadow_evidence_sha256": None,
+            "shadow_status": None,
+            "command_profile": None,
+            "command_executable_sha256": None,
+            "command_argv_sha256": None,
+            "command_stdout_sha256": None,
+            "command_stderr_sha256": None,
+            "command_exit_code": None,
+            "command_timed_out": None,
+            "provenance": "immutable_supervisor_signed_ledger_sanitized_metadata",
+            "authority": "observation_only_not_deployment_or_astrid_authorship",
+            "authored": False,
+            "fallback": False,
+        }
+        value.update(overrides)
+        return value
+
+    def write_operator_projection(
+        self,
+        events: list[dict[str, object]],
+        *,
+        total: int | None = None,
+    ) -> Path:
+        root = self.root / "self-change"
+        root.mkdir(parents=True, exist_ok=True)
+        root.chmod(0o2750)
+        heads = {name: None for name in ("candidate", "build", "activation", "operator")}
+        for event in events:
+            heads[str(event["source_ledger"])] = event["record_sha256"]
+        total = len(events) if total is None else total
+        core = {
+            "schema": "astrid.edge_self_change.operator_status.v3",
+            "appliance_id": "avado-test",
+            "generated_at": 1_700_000_010,
+            "state_revision": 7,
+            "mode": "running",
+            "active_generation": "generation-one",
+            "previous_generation": "generation-zero",
+            "pipeline_phase": "idle",
+            "latest_transition": {"operation": "supervise", "status": "completed"},
+            "restart_expectation": {
+                "phase": "none",
+                "maximum_seconds": 0,
+                "basis": "immutable_command_profile_timeout_upper_bound",
+            },
+            "lifecycle": {
+                "schema": "astrid.edge_self_change.operator_lifecycle.v1",
+                "events": events,
+                "included": len(events),
+                "total": total,
+                "truncated": total > len(events),
+                "maximum_events": 64,
+                "ledger_heads": heads,
+            },
+            "provenance": "immutable_supervisor_sanitized_projection",
+            "authority": "observation_only_not_deployment_authority",
+        }
+        encoded = json.dumps(
+            core,
+            sort_keys=True,
+            separators=(",", ":"),
+            ensure_ascii=True,
+            allow_nan=False,
+        ).encode("ascii")
+        path = root / "operator-status.json"
+        path.write_text(
+            json.dumps(
+                {
+                    "schema": "astrid.edge_self_change.operator_status_envelope.v1",
+                    "core": core,
+                    "core_sha256": hashlib.sha256(encoded).hexdigest(),
+                }
+            ),
+            encoding="utf-8",
+        )
+        path.chmod(0o640)
+        return path
+
+    def record_with_operator_projection(self, path: Path) -> dict[str, object]:
+        activity_module = hindsight.load_activity_module()
+        collect = activity_module.collect_events
+        activity_module.collect_events = lambda workspace, current_ms: collect(
+            workspace,
+            current_ms,
+            path,
+            test_only_allow_unprivileged_operator_status=True,
+        )
+        with mock.patch.object(
+            hindsight, "load_activity_module", return_value=activity_module
+        ):
+            return hindsight.record(self.record_args())
 
     def fixture(self) -> None:
         trace = {
@@ -210,6 +368,258 @@ class EdgeHindsightTest(unittest.TestCase):
             operator_root=None,
             bucket_minutes=15,
         )
+
+    def sealed_writer_config(self) -> dict[str, object]:
+        state_root = Path("/var/lib/astrid-edge-runtime")
+        return {
+            "schema": hindsight.SEALED_WRITER_CONFIG_SCHEMA,
+            "appliance_id": "avado-i3",
+            "workspace": str(state_root / "home/default/edge"),
+            "state_root": str(state_root),
+            "operator_root": str(state_root / "operator/hindsight"),
+            "bucket_minutes": hindsight.DEFAULT_BUCKET_MINUTES,
+            "writer_path": "/usr/libexec/astrid-edge/immutable/edge_hindsight.py",
+            "writer_sha256": "a" * 64,
+            "activity_report_path": str(
+                hindsight.IMMUTABLE_ACTIVITY_REPORT_PATH
+            ),
+            "activity_report_sha256": "b" * 64,
+            "operator_report_manifest_path": str(
+                hindsight.IMMUTABLE_OPERATOR_REPORT_MANIFEST_PATH
+            ),
+            "operator_report_manifest_sha256": "c" * 64,
+        }
+
+    def test_sealed_writer_config_has_exact_root_authored_bounds(self) -> None:
+        config = self.sealed_writer_config()
+        parsed = hindsight.parse_sealed_writer_config(config)
+        self.assertEqual(parsed["appliance_id"], "avado-i3")
+        self.assertEqual(
+            parsed["workspace"], Path("/var/lib/astrid-edge-runtime/home/default/edge")
+        )
+        self.assertEqual(
+            parsed["operator_root"],
+            Path("/var/lib/astrid-edge-runtime/operator/hindsight"),
+        )
+
+        invalid_values = (
+            {**config, "unexpected": True},
+            {**config, "schema": "astrid.edge.hindsight_writer.config.v1"},
+            {**config, "appliance_id": "../peer"},
+            {**config, "bucket_minutes": True},
+            {**config, "bucket_minutes": 30},
+            {**config, "workspace": "/var/lib/peer/home/default/edge"},
+            {**config, "operator_root": "/var/lib/peer/operator/hindsight"},
+            {**config, "writer_path": "relative/edge_hindsight.py"},
+            {**config, "writer_path": "/usr/libexec/../bin/edge_hindsight.py"},
+            {**config, "writer_sha256": "A" * 64},
+            {**config, "writer_sha256": "a" * 63},
+            {
+                **config,
+                "activity_report_path": "/var/lib/astrid-edge-runtime/bin/report_edge_activity.py",
+            },
+            {**config, "activity_report_sha256": "B" * 64},
+            {**config, "activity_report_sha256": "b" * 63},
+            {
+                **config,
+                "operator_report_manifest_path": "/tmp/MANIFEST.sha256",
+            },
+            {**config, "operator_report_manifest_sha256": "C" * 64},
+            {**config, "operator_report_manifest_sha256": "c" * 63},
+        )
+        for invalid in invalid_values:
+            with self.subTest(invalid=invalid):
+                with self.assertRaises(ValueError):
+                    hindsight.parse_sealed_writer_config(invalid)
+
+    def test_record_sealed_uses_only_verified_configured_roots(self) -> None:
+        configured = hindsight.parse_sealed_writer_config(self.sealed_writer_config())
+        sentinel = {
+            "artifacts_written": 0,
+            "fill_rollups_written": 0,
+            "operator_root": str(configured["operator_root"]),
+        }
+        with (
+            mock.patch.object(
+                hindsight, "load_sealed_writer_config", return_value=configured
+            ) as loader,
+            mock.patch.object(
+                hindsight,
+                "load_verified_activity_module",
+                return_value=object(),
+            ) as activity_loader,
+            mock.patch.object(
+                hindsight, "exclusive_collector_lock"
+            ) as collector_lock,
+            mock.patch.object(
+                hindsight, "record_locked", return_value=sentinel
+            ) as recorder,
+        ):
+            result = hindsight.record_sealed(Path("/immutable/config.json"))
+
+        self.assertIs(result, sentinel)
+        loader.assert_called_once_with(Path("/immutable/config.json"))
+        activity_loader.assert_called_once_with(configured)
+        collector_lock.assert_called_once_with(configured["operator_root"])
+        arguments = recorder.call_args.args[0]
+        self.assertEqual(arguments.workspace, configured["workspace"])
+        self.assertEqual(arguments.state_root, configured["state_root"])
+        self.assertEqual(arguments.operator_root, configured["operator_root"])
+        self.assertEqual(arguments.bucket_minutes, hindsight.DEFAULT_BUCKET_MINUTES)
+        self.assertIs(recorder.call_args.args[1], activity_loader.return_value)
+
+    def test_sealed_writer_loader_binds_canonical_config_to_running_digest(self) -> None:
+        writer_path = Path(hindsight.__file__).resolve()
+        writer = writer_path.read_bytes()
+        value = {
+            **self.sealed_writer_config(),
+            "writer_path": str(writer_path),
+            "writer_sha256": hashlib.sha256(writer).hexdigest(),
+        }
+        payload = hindsight.canonical_bytes(value) + b"\n"
+        with mock.patch.object(
+            hindsight, "stable_root_read", side_effect=(payload, writer)
+        ):
+            loaded = hindsight.load_sealed_writer_config(Path("/immutable/config.json"))
+        self.assertEqual(loaded["writer_path"], writer_path)
+
+        value["writer_sha256"] = "0" * 64
+        payload = hindsight.canonical_bytes(value)
+        with (
+            mock.patch.object(
+                hindsight, "stable_root_read", side_effect=(payload, writer)
+            ),
+            self.assertRaisesRegex(ValueError, "writer digest mismatch"),
+        ):
+            hindsight.load_sealed_writer_config(Path("/immutable/config.json"))
+
+        with (
+            mock.patch.object(hindsight, "stable_root_read", return_value=b"{} \n"),
+            self.assertRaisesRegex(ValueError, "not canonical"),
+        ):
+            hindsight.load_sealed_writer_config(Path("/immutable/config.json"))
+
+    def verified_activity_fixture(
+        self, source: bytes = b"MARKER = 'verified-root-report'\n"
+    ) -> tuple[dict[str, object], bytes, bytes]:
+        source_sha256 = hashlib.sha256(source).hexdigest()
+        manifest = (
+            f"{source_sha256}  {hindsight.IMMUTABLE_ACTIVITY_REPORT_PATH}\n"
+        ).encode()
+        config = hindsight.parse_sealed_writer_config(
+            {
+                **self.sealed_writer_config(),
+                "activity_report_sha256": source_sha256,
+                "operator_report_manifest_sha256": hashlib.sha256(
+                    manifest
+                ).hexdigest(),
+            }
+        )
+        return config, source, manifest
+
+    def test_sealed_activity_report_executes_only_manifest_bound_bytes(self) -> None:
+        config, source, manifest = self.verified_activity_fixture()
+
+        def stable_read(
+            path: Path, *, expected_mode: int, maximum_bytes: int
+        ) -> bytes:
+            self.assertEqual(expected_mode, 0o444)
+            if path == hindsight.IMMUTABLE_ACTIVITY_REPORT_PATH:
+                self.assertEqual(maximum_bytes, hindsight.MAX_ACTIVITY_REPORT_BYTES)
+                return source
+            self.assertEqual(
+                path, hindsight.IMMUTABLE_OPERATOR_REPORT_MANIFEST_PATH
+            )
+            self.assertEqual(
+                maximum_bytes, hindsight.MAX_OPERATOR_REPORT_MANIFEST_BYTES
+            )
+            return manifest
+
+        with mock.patch.object(
+            hindsight, "stable_root_read", side_effect=stable_read
+        ):
+            module = hindsight.load_verified_activity_module(config)
+
+        self.assertEqual(module.MARKER, "verified-root-report")
+        self.assertEqual(
+            module.__file__, str(hindsight.IMMUTABLE_ACTIVITY_REPORT_PATH)
+        )
+
+    def test_sealed_activity_report_rejects_source_or_manifest_drift(self) -> None:
+        config, source, manifest = self.verified_activity_fixture()
+        cases = (
+            (
+                b"MARKER = 'tampered'\n",
+                manifest,
+                "activity report digest mismatch",
+            ),
+            (
+                source,
+                manifest + b"# drift\n",
+                "operator manifest digest mismatch",
+            ),
+            (
+                source,
+                (
+                    f"{'0' * 64}  {hindsight.IMMUTABLE_ACTIVITY_REPORT_PATH}\n"
+                ).encode(),
+                "activity report manifest binding mismatch",
+            ),
+        )
+        for observed_source, observed_manifest, message in cases:
+            with self.subTest(message=message):
+                adjusted = dict(config)
+                if message == "activity report manifest binding mismatch":
+                    adjusted["operator_report_manifest_sha256"] = hashlib.sha256(
+                        observed_manifest
+                    ).hexdigest()
+                with (
+                    mock.patch.object(
+                        hindsight,
+                        "stable_root_read",
+                        side_effect=(observed_source, observed_manifest),
+                    ),
+                    self.assertRaisesRegex(ValueError, message),
+                ):
+                    hindsight.load_verified_activity_module(adjusted)
+
+    def test_sealed_activity_module_rejects_loaded_identity_mutation(self) -> None:
+        source = b"__file__ = '/tmp/substituted.py'\n"
+        config, _, manifest = self.verified_activity_fixture(source)
+        with (
+            mock.patch.object(
+                hindsight, "stable_root_read", side_effect=(source, manifest)
+            ),
+            self.assertRaisesRegex(ValueError, "identity changed during load"),
+        ):
+            hindsight.load_verified_activity_module(config)
+
+    def test_operator_manifest_rejects_malformed_and_duplicate_bindings(self) -> None:
+        path = hindsight.IMMUTABLE_ACTIVITY_REPORT_PATH
+        digest = "a" * 64
+        invalid = (
+            b"",
+            f"{digest}  {path}".encode(),
+            f"{digest} *{path}\n".encode(),
+            f"{digest}  /usr/libexec/../tmp/report.py\n".encode(),
+            f"{digest}  {path}\n{digest}  {path}\n".encode(),
+            b"\xff\n",
+        )
+        for value in invalid:
+            with self.subTest(value=value):
+                with self.assertRaises(ValueError):
+                    hindsight.parse_operator_report_manifest(value)
+
+    def test_unsealed_activity_loader_never_falls_back_to_state_root(self) -> None:
+        immutable_writer = Path(self.temporary.name) / "immutable/edge_hindsight.py"
+        mutable_report = Path(self.temporary.name) / "state/bin/report_edge_activity.py"
+        immutable_writer.parent.mkdir(parents=True)
+        mutable_report.parent.mkdir(parents=True)
+        immutable_writer.write_text("# writer\n")
+        mutable_report.write_text("MUTABLE_FALLBACK = True\n")
+
+        with mock.patch.object(hindsight, "__file__", str(immutable_writer)):
+            self.assertIsNone(hindsight.load_activity_module())
 
     def test_record_distinguishes_authorship_and_hash_chains_every_surface(self) -> None:
         self.fixture()
@@ -530,7 +940,7 @@ class EdgeHindsightTest(unittest.TestCase):
             projection, (str(hindsight.ATTRIBUTION_PROJECTION_VERSION),)
         )
 
-    def test_schema_v3_projection_adds_turn_and_integrity_columns_in_place(self) -> None:
+    def test_installed_projection_adds_new_columns_in_place(self) -> None:
         database_path = Path(self.temporary.name) / "legacy.sqlite3"
         connection = sqlite3.connect(database_path)
         try:
@@ -567,6 +977,34 @@ class EdgeHindsightTest(unittest.TestCase):
                     response_sha256 TEXT,
                     payload_json TEXT NOT NULL
                 );
+                CREATE TABLE self_change_events (
+                    event_id TEXT PRIMARY KEY,
+                    recorded_at_unix_ms INTEGER NOT NULL,
+                    lifecycle_kind TEXT NOT NULL,
+                    lifecycle_facets_json TEXT NOT NULL,
+                    status TEXT,
+                    candidate_id TEXT,
+                    candidate_digest TEXT,
+                    build_id TEXT,
+                    generation_id TEXT,
+                    from_generation TEXT,
+                    tests_sha256 TEXT,
+                    bundle_sha256 TEXT,
+                    shadow_evidence_sha256 TEXT,
+                    shadow_evidence_in_tests_bundle INTEGER NOT NULL,
+                    manifest_sha256 TEXT,
+                    record_sha256 TEXT,
+                    response_sha256 TEXT,
+                    terminal_declaration_sha256 TEXT,
+                    trace_id TEXT,
+                    session_id TEXT,
+                    chain_id TEXT,
+                    turn_id TEXT,
+                    source_ledger TEXT NOT NULL,
+                    authority TEXT,
+                    integrity TEXT,
+                    metadata_json TEXT NOT NULL
+                );
                 """
             )
             hindsight.prepare_hindsight_database(connection)
@@ -580,6 +1018,12 @@ class EdgeHindsightTest(unittest.TestCase):
                 row[1]
                 for row in connection.execute(
                     "PRAGMA table_info(tuning_events)"
+                ).fetchall()
+            }
+            self_change_columns = {
+                row[1]
+                for row in connection.execute(
+                    "PRAGMA table_info(self_change_events)"
                 ).fetchall()
             }
             schema_version = connection.execute(
@@ -597,6 +1041,12 @@ class EdgeHindsightTest(unittest.TestCase):
                 "payload_hash_valid",
                 "signature_present_not_verified",
             }.issubset(tuning_columns)
+        )
+        self.assertTrue(
+            {
+                "package_replay_sha256_present",
+                "shadow_gate_evidence",
+            }.issubset(self_change_columns)
         )
         self.assertEqual(schema_version, (str(hindsight.DATABASE_SCHEMA_VERSION),))
 
@@ -734,6 +1184,352 @@ class EdgeHindsightTest(unittest.TestCase):
             )
         )
         self.assertFalse(report["integrity"]["overall_valid"])
+
+    def test_current_scheduled_introspection_ledger_is_checkpointed_exactly(self) -> None:
+        self.fixture()
+        self.write_jsonl(
+            "introspections/scheduled/receipts.jsonl",
+            [
+                {
+                    "completed_at_unix_ms": 1_700_000_000_700,
+                    "status": "authored_completed",
+                }
+            ],
+        )
+        hindsight.record(self.record_args())
+        latest = hindsight.read_json(self.root / "operator/hindsight/latest.json")
+        summary = latest["ledgers"]["introspections/scheduled/receipts.jsonl"]
+        self.assertTrue(summary["present"])
+        self.assertEqual(summary["invalid_json_lines"], 0)
+        self.assertEqual(
+            hindsight.checkpoint_prefix_status(self.workspace, latest)[
+                "introspections/scheduled/receipts.jsonl"
+            ],
+            "unchanged_and_verified",
+        )
+        ledger = self.workspace / "introspections/scheduled/receipts.jsonl"
+        ledger.write_text(
+            ledger.read_text().replace("authored_completed", "altered__completed")
+        )
+        self.assertEqual(
+            hindsight.checkpoint_prefix_status(self.workspace, latest)[
+                "introspections/scheduled/receipts.jsonl"
+            ],
+            "checkpointed_prefix_changed",
+        )
+
+    def test_scheduled_reflection_projection_merges_ledgers_and_excludes_text(self) -> None:
+        trace = {
+            "schema_version": 1,
+            "trace_id": "00000000-0000-4000-8000-000000000101",
+            "span_id": "00000000-0000-4000-8000-000000000102",
+            "turn_id": "00000000-0000-4000-8000-000000000103",
+            "session_id": "scheduled-session",
+        }
+        receipt = {
+            "schema": "astrid_edge_scheduled_introspection_v1",
+            "completed_at_unix_ms": 1_700_000_000_700,
+            "status": "authored_completed",
+            "provenance": "model_authored_runtime_scheduled",
+            "continuity_projection_written": True,
+            "response_sha256": "a" * 64,
+            "reflection_path": "introspections/scheduled/reflection_1700000000700.md",
+            "prompt_chars": 840,
+            "candidate_id": "candidate-one",
+            "candidate_digest": "b" * 64,
+            "introspection_tool": "read_owned_continuity",
+            "introspection_result_sha256": "c" * 64,
+            "trace": trace,
+            "prompt": "SECRET_PROMPT_BODY_MUST_NOT_ENTER_HINDSIGHT",
+            "response": "SECRET_RESPONSE_BODY_MUST_NOT_ENTER_HINDSIGHT",
+            "source": "SECRET_SOURCE_BODY_MUST_NOT_ENTER_HINDSIGHT",
+            "diff": "SECRET_DIFF_MUST_NOT_ENTER_HINDSIGHT",
+            "build_log": "SECRET_BUILD_LOG_MUST_NOT_ENTER_HINDSIGHT",
+            "test_log": "SECRET_TEST_LOG_MUST_NOT_ENTER_HINDSIGHT",
+        }
+        self.write_jsonl("introspections/scheduled/receipts.jsonl", [receipt])
+        self.write_jsonl("introspection/scheduled/receipts.jsonl", [receipt])
+        admission = self.workspace / "runtime/scheduled-introspection/admission/state.json"
+        admission.parent.mkdir(parents=True, exist_ok=True)
+        admission.write_text(
+            json.dumps(
+                {
+                    "schema": "astrid.edge.scheduled_introspection.admission.v1",
+                    "continuity_admitted": True,
+                    "provenance": "model_authored_runtime_scheduled",
+                    "authority": "runtime_verified_projection_observational_only",
+                    "last_response_sha256": "a" * 64,
+                    "last_trace_id": trace["trace_id"],
+                }
+            )
+        )
+
+        hindsight.record(self.record_args())
+        database_path = self.root / "operator/hindsight/hindsight.sqlite3"
+        first = hindsight.query_hindsight_database(
+            database_path, 1_700_000_000_000, 1_700_000_001_000, 100
+        )
+        self.assertEqual(first["scheduled_reflection_count"], 1)
+        self.assertEqual(len(first["scheduled_reflections"]), 1)
+        projected = first["scheduled_reflections"][0]
+        self.assertTrue(projected["authored"])
+        self.assertTrue(projected["continuity_admitted"])
+        self.assertEqual(projected["exact_duplicate_count"], 1)
+        self.assertEqual(
+            projected["source_ledgers"],
+            [
+                "introspection/scheduled/receipts.jsonl",
+                "introspections/scheduled/receipts.jsonl",
+            ],
+        )
+        forbidden = {
+            "prompt",
+            "response",
+            "source",
+            "diff",
+            "build_log",
+            "test_log",
+        }
+        self.assertTrue(forbidden.isdisjoint(projected))
+
+        connection = sqlite3.connect(database_path)
+        try:
+            rows_before = connection.execute(
+                "SELECT event_id, metadata_json FROM scheduled_reflections "
+                "ORDER BY recorded_at_unix_ms, event_id"
+            ).fetchall()
+            raw_metadata = "\n".join(row[1] for row in rows_before)
+        finally:
+            connection.close()
+        self.assertNotIn("SECRET_", raw_metadata)
+        hindsight.sync_hindsight_database(
+            self.root / "operator/hindsight", self.workspace, 1_700_000_001_000
+        )
+        connection = sqlite3.connect(database_path)
+        try:
+            rows_after = connection.execute(
+                "SELECT event_id, metadata_json FROM scheduled_reflections "
+                "ORDER BY recorded_at_unix_ms, event_id"
+            ).fetchall()
+        finally:
+            connection.close()
+        self.assertEqual(rows_after, rows_before)
+        self.assertEqual(database_path.stat().st_mode & 0o777, 0o600)
+
+    def test_self_change_lifecycle_uses_sanitized_projection_and_persists_tail(self) -> None:
+        events = [
+            self.operator_event(),
+            self.operator_event(
+                recorded_at=1_700_000_002,
+                source_ledger="operator",
+                event_id="reflection-1",
+                status="steward_profile_completed",
+                facets=["reflection"],
+                record_sha256="3" * 64,
+                response_sha256="4" * 64,
+            ),
+            self.operator_event(
+                recorded_at=1_700_000_003,
+                source_ledger="build",
+                event_id="build-1",
+                status="build_recorded",
+                facets=["build", "invariant", "shadow", "test"],
+                record_sha256="5" * 64,
+                build_id="build-one",
+                generation_id="generation-one",
+                tests_sha256="6" * 64,
+                bundle_sha256="7" * 64,
+                invariant_candidate_replay_sha256="8" * 64,
+                invariant_package_replay_sha256="9" * 64,
+                shadow_evidence_sha256="9" * 64,
+                shadow_status="package_replay_hash_only_no_detailed_shadow_claim",
+                command_profile="build",
+                command_executable_sha256="a" * 64,
+                command_argv_sha256="b" * 64,
+                command_stdout_sha256="c" * 64,
+                command_stderr_sha256="d" * 64,
+                command_exit_code=0,
+                command_timed_out=False,
+            ),
+            self.operator_event(
+                recorded_at=1_700_000_004,
+                source_ledger="activation",
+                event_id="activation-1",
+                status="activation_completed",
+                facets=["activation", "restart"],
+                record_sha256="e" * 64,
+                build_id="build-one",
+                generation_id="generation-one",
+            ),
+            self.operator_event(
+                recorded_at=1_700_000_005,
+                source_ledger="activation",
+                sequence=2,
+                event_id="probation-1",
+                status="probation_started",
+                facets=["activation", "probation", "restart"],
+                record_sha256="f" * 64,
+                build_id="build-one",
+                generation_id="generation-one",
+            ),
+            self.operator_event(
+                recorded_at=1_700_000_006,
+                source_ledger="activation",
+                sequence=3,
+                event_id="rollback-1",
+                status="rollback_reconciled_after_restart",
+                facets=["restart", "rollback"],
+                record_sha256="0" * 64,
+                generation_id="generation-zero",
+                from_generation="generation-one",
+            ),
+            self.operator_event(
+                recorded_at=1_700_000_007,
+                source_ledger="activation",
+                sequence=4,
+                event_id="terminal-rejection-1",
+                status="scheduled_intent_terminal_rejected",
+                facets=["candidate"],
+                record_sha256="1" * 64,
+                terminal_reason_sha256="2" * 64,
+                terminal_authority="terminal_exact_candidate_rejection_no_promotion",
+                automatic_retry=False,
+            ),
+        ]
+        operator_projection = self.write_operator_projection(events)
+        private = self.root / "self-change/ledgers/build.jsonl"
+        private.parent.mkdir(parents=True, exist_ok=True)
+        private.write_text(
+            "SECRET_PROMPT SECRET_RESPONSE SECRET_DIFF SECRET_BUILD_LOG",
+            encoding="utf-8",
+        )
+        private.chmod(0o000)
+        try:
+            self.record_with_operator_projection(operator_projection)
+        finally:
+            private.chmod(0o600)
+        operator = self.root / "operator/hindsight"
+        database_path = operator / "hindsight.sqlite3"
+        view = hindsight.query_hindsight_database(
+            database_path, 1_700_000_000_000, 1_700_000_010_000, 100
+        )
+        facets = {
+            facet
+            for event in view["self_change_events"]
+            for facet in event["lifecycle_facets"]
+        }
+        self.assertTrue(
+            {
+                "reflection",
+                "candidate",
+                "build",
+                "test",
+                "invariant",
+                "shadow",
+                "activation",
+                "restart",
+                "probation",
+                "rollback",
+            }.issubset(facets)
+        )
+        for event in view["self_change_events"]:
+            self.assertFalse(event["authored"])
+            self.assertNotIn("SECRET_", json.dumps(event, sort_keys=True))
+        build_recorded = next(
+            event
+            for event in view["self_change_events"]
+            if event["status"] == "build_recorded"
+        )
+        self.assertEqual(build_recorded["tests_sha256"], "6" * 64)
+        self.assertEqual(build_recorded["bundle_sha256"], "7" * 64)
+        self.assertTrue(build_recorded["package_replay_sha256_present"])
+        self.assertEqual(
+            build_recorded["shadow_gate_evidence"],
+            "indirect_package_replay_sha256_commitment_not_independently_reinspectable",
+        )
+        self.assertEqual(build_recorded["shadow_evidence_sha256"], "9" * 64)
+        self.assertEqual(
+            build_recorded["invariant_candidate_replay_sha256"], "8" * 64
+        )
+        terminal = next(
+            event
+            for event in view["self_change_events"]
+            if event["status"] == "scheduled_intent_terminal_rejected"
+        )
+        self.assertEqual(terminal["terminal_reason_sha256"], "2" * 64)
+        self.assertEqual(
+            terminal["terminal_authority"],
+            "terminal_exact_candidate_rejection_no_promotion",
+        )
+        connection = sqlite3.connect(database_path)
+        try:
+            stored_flags = connection.execute(
+                "SELECT shadow_evidence_in_tests_bundle, "
+                "package_replay_sha256_present, shadow_gate_evidence "
+                "FROM self_change_events WHERE status = 'build_recorded'"
+            ).fetchone()
+            raw_metadata = "\n".join(
+                row[0]
+                for row in connection.execute(
+                    "SELECT metadata_json FROM self_change_events ORDER BY event_id"
+                ).fetchall()
+            )
+        finally:
+            connection.close()
+        self.assertEqual(
+            stored_flags,
+            (
+                0,
+                1,
+                "indirect_package_replay_sha256_commitment_not_independently_reinspectable",
+            ),
+        )
+        self.assertNotIn("SECRET_", raw_metadata)
+        latest = hindsight.read_json(operator / "latest.json")
+        self.assertNotIn("self-change/ledgers/build.jsonl", latest["ledgers"])
+
+        # A later bounded tail omits the first record. Hindsight retains the
+        # already accepted stable record identity instead of re-reading the
+        # private ledger or dropping history.
+        operator_projection = self.write_operator_projection(events[1:], total=65)
+        self.record_with_operator_projection(operator_projection)
+        retained = hindsight.query_hindsight_database(
+            database_path, 1_700_000_000_000, 1_700_000_010_000, 100
+        )
+        self.assertEqual(len(retained["self_change_events"]), len(events))
+
+        # A later verified evidence projection may enrich the same immutable
+        # signed-ledger record. It must replace that event's metadata rather
+        # than create a second identity.
+        enriched = [dict(event) for event in events[1:]]
+        enriched_build = next(
+            event for event in enriched if event["status"] == "build_recorded"
+        )
+        enriched_build["tests_sha256"] = "a" * 64
+        enriched_build["manifest_sha256"] = "b" * 64
+        original_build = next(
+            event
+            for event in retained["self_change_events"]
+            if event["status"] == "build_recorded"
+        )
+        operator_projection = self.write_operator_projection(enriched, total=65)
+        self.record_with_operator_projection(operator_projection)
+        repeated = hindsight.query_hindsight_database(
+            database_path, 1_700_000_000_000, 1_700_000_010_000, 100
+        )
+        self.assertEqual(len(repeated["self_change_events"]), len(events))
+        self.assertEqual(
+            len({event["event_id"] for event in repeated["self_change_events"]}),
+            len(events),
+        )
+        updated_build = next(
+            event
+            for event in repeated["self_change_events"]
+            if event["status"] == "build_recorded"
+        )
+        self.assertEqual(updated_build["event_id"], original_build["event_id"])
+        self.assertEqual(updated_build["tests_sha256"], "a" * 64)
+        self.assertEqual(updated_build["manifest_sha256"], "b" * 64)
 
     def test_interrupted_action_correction_is_non_authored_exact_attribution(self) -> None:
         trace = {
@@ -1095,6 +1891,61 @@ class EdgeHindsightTest(unittest.TestCase):
         self.assertEqual(verified["continuity_status"], "verified")
         self.assertTrue(verified["continuity_from_previous_checkpoint_valid"])
         self.assertEqual(verified["current_epoch_integrity_violation_count"], 0)
+
+    def test_text_projection_neutralizes_controls_without_mutating_json_data(self) -> None:
+        hostile = "artifact\x1b]52;c;Zm9v\x07\x1b[2J\x9b31m\u202ereversed"
+        report = {
+            "integrity": {
+                "checkpoint_present": False,
+                "checkpoint_age_seconds": None,
+                "overall_valid": False,
+                "checkpointed_ledger_prefixes_valid": False,
+                "continuity_epoch": "test",
+                "continuity_status": "missing",
+                "current_epoch_integrity_violation_count": 0,
+                "pending_tail_observation_count": 0,
+                "legacy_race_compatible_unresolved_violation_count": 0,
+                "historical_ledger_integrity_violation_count": 0,
+                "chains": {},
+            },
+            "durable_sources": {
+                "historical_query_source": "test",
+                "activity_event_count_in_range": 1,
+                "activity_events_returned": 1,
+                "artifact_file_count_in_range": 0,
+                "artifact_files_returned": 0,
+                "fill_rollup_count_in_range": 0,
+                "spectral_rollup_count_in_range": 0,
+                "spectral_receipt_count_in_range": 0,
+                "tuning_event_count_in_range": 0,
+                "scheduled_reflection_count_in_range": 0,
+                "self_change_event_count_in_range": 0,
+                "state_database": {},
+                "audit_database": {},
+                "operator_hindsight_database": {},
+            },
+            "fill": {"summary": {"sample_count": 0}},
+            "spectral": {"summary": {"rollup_count": 0}, "receipts": [], "tuning_events": []},
+            "self_evolution": {"summary": {}, "scheduled_reflections": [], "lifecycle_events": []},
+            "activity": [
+                {
+                    "timestamp_unix_ms": 1_700_000_000_000,
+                    "kind": "web_result",
+                    "authored": False,
+                    "summary": hostile,
+                }
+            ],
+            "artifacts": [],
+            "range": {"since_unix_ms": 1, "until_unix_ms": 2},
+            "workspace": hostile,
+            "authority_note": hostile,
+        }
+
+        rendered = hindsight.render_text(report)
+
+        for control in ("\x1b", "\x07", "\x9b", "\u202e"):
+            self.assertNotIn(control, rendered)
+        self.assertEqual(report["workspace"], hostile)
 
 
 if __name__ == "__main__":

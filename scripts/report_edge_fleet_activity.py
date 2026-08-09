@@ -10,6 +10,7 @@ import json
 import shlex
 import subprocess
 import time
+import unicodedata
 from typing import Any
 
 SCHEMA = "astrid_edge_fleet_activity_report_v1"
@@ -17,12 +18,12 @@ PRESETS = {
     "avado-icp": {
         "avado": {
             "ssh": "avado",
-            "viewer": "/home/avado/.astrid/bin/report-edge-activity",
+            "viewer": "/usr/libexec/astrid-edge/operator/report-edge-activity",
             "workspace": "/home/avado/.astrid/home/default/edge",
         },
         "icp": {
             "ssh": "icp",
-            "viewer": "/home/nativeplanet/.astrid-icp/state/bin/report-edge-activity",
+            "viewer": "/usr/libexec/astrid-edge/operator/report-edge-activity",
             "workspace": "/home/nativeplanet/.astrid-icp/state/home/default/edge",
         },
     }
@@ -119,10 +120,21 @@ def iso_time(timestamp_ms: int) -> str:
     ).isoformat(timespec="milliseconds").replace("+00:00", "Z")
 
 
+def terminal_safe_text(value: Any) -> str:
+    """Neutralize controls in fleet text output while preserving JSON data."""
+
+    return "".join(
+        " "
+        if unicodedata.category(character) in {"Cc", "Cf", "Cs", "Zl", "Zp"}
+        else character
+        for character in str(value)
+    )
+
+
 def short(value: Any, maximum: int = 100) -> str:
     if value in (None, ""):
         return "-"
-    text = " ".join(str(value).split())
+    text = " ".join(terminal_safe_text(value).split())
     return text if len(text) <= maximum else f"{text[: maximum - 1]}…"
 
 
@@ -160,7 +172,7 @@ def text_line(event: dict[str, Any]) -> str:
         detail = f"status={event.get('status')} reason={short(event.get('reason'))}"
     if event.get("trace_attribution") != "first_class":
         detail += f" attribution={event.get('trace_attribution')}"
-    return f"{common} {detail}"
+    return terminal_safe_text(f"{common} {detail}")
 
 
 def fetch(args: argparse.Namespace) -> dict[str, Any]:
@@ -211,8 +223,10 @@ def render(report: dict[str, Any], args: argparse.Namespace, seen: set[str]) -> 
         if not seen or fresh:
             for host in report["hosts"]:
                 print(
-                    f"# {host['appliance']} clock_skew_ms={host['clock_skew_ms']} "
-                    f"error={host['error'] or 'none'}"
+                    terminal_safe_text(
+                        f"# {host['appliance']} clock_skew_ms={host['clock_skew_ms']} "
+                        f"error={host['error'] or 'none'}"
+                    )
                 )
         for event in fresh:
             print(text_line(event), flush=True)

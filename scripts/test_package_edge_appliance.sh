@@ -9,8 +9,9 @@ trap 'rm -rf -- "$test_root"' EXIT
 
 binary_dir="$test_root/bin"
 capsule_dir="$test_root/capsules"
+external_capsule_dir="$test_root/external-capsules"
 output_dir="$test_root/output"
-install -d -m 0755 "$binary_dir" "$capsule_dir" "$output_dir"
+install -d -m 0755 "$binary_dir" "$capsule_dir" "$external_capsule_dir" "$output_dir"
 
 python3 - "$binary_dir" <<'PY'
 import pathlib
@@ -22,32 +23,73 @@ header = bytearray(64)
 header[:4] = b"\x7fELF"
 header[4:7] = bytes((2, 1, 1))  # ELF64, little-endian, current version.
 struct.pack_into("<HHI", header, 16, 2, 62, 1)  # Executable, x86-64.
-for name in ("astrid", "astrid-daemon", "astrid-build", "astrid-edge-runtime"):
+for name in (
+    "astrid",
+    "astrid-daemon",
+    "astrid-build",
+    "astrid-edge-runtime",
+    "astrid-edge-steward-helper",
+    "astrid-edge-rescue-helper",
+    "astrid-edge-web-broker",
+    "astrid-edge-provider-broker",
+    "astrid-edge-presentation-broker",
+    "astrid-edge-checkpoint",
+):
     path = root / name
     path.write_bytes(header)
     path.chmod(0o755)
 PY
 
-for capsule in \
-    astrid-capsule-cli \
-    astrid-capsule-fs \
-    astrid-capsule-http \
-    astrid-capsule-shell \
-    astrid-capsule-skills \
-    astrid-capsule-agents \
-    astrid-capsule-memory \
-    astrid-capsule-edge-context \
-    astrid-capsule-edge-introspector \
-    astrid-capsule-edge-spectral; do
-    printf 'fixture:%s\n' "$capsule" > "$capsule_dir/$capsule.capsule"
-done
+python3 - "$capsule_dir" "$external_capsule_dir" <<'PY'
+import io
+import pathlib
+import tarfile
+import sys
+
+local = [
+    "astrid-capsule-cli", "astrid-capsule-fs", "astrid-capsule-http",
+    "astrid-capsule-shell", "astrid-capsule-skills", "astrid-capsule-agents",
+    "astrid-capsule-memory", "astrid-capsule-edge-context",
+    "astrid-capsule-edge-introspector", "astrid-capsule-edge-spectral",
+]
+external = [
+    "astrid-capsule-context-engine", "astrid-capsule-hook-bridge",
+    "astrid-capsule-identity", "astrid-capsule-openai-compat",
+    "astrid-capsule-prompt-builder", "astrid-capsule-react",
+    "astrid-capsule-registry", "astrid-capsule-router",
+    "astrid-capsule-session", "astrid-capsule-system",
+]
+
+def add_file(archive: tarfile.TarFile, name: str, content: bytes) -> None:
+    info = tarfile.TarInfo(name)
+    info.mode = 0o644
+    info.size = len(content)
+    archive.addfile(info, io.BytesIO(content))
+
+for root, names in ((pathlib.Path(sys.argv[1]), local), (pathlib.Path(sys.argv[2]), external)):
+    for capsule in names:
+        manifest = (
+            f'[package]\nname = "{capsule}"\nversion = "0.1.0"\n\n'
+            '[[component]]\nid = "main"\nfile = "component.wasm"\ntype = "executable"\n'
+        ).encode()
+        with tarfile.open(root / f"{capsule}.capsule", "w:gz") as archive:
+            add_file(archive, "Capsule.toml", manifest)
+            add_file(archive, "component.wasm", b"\x00asm\x0d\x00\x01\x00")
+PY
 
 if "$script_dir/package_edge_appliance.sh" \
     --version test \
     --target unsupported-linux-target \
     --core-binary-dir "$binary_dir" \
     --edge-binary "$binary_dir/astrid-edge-runtime" \
+    --steward-helper "$binary_dir/astrid-edge-steward-helper" \
+    --rescue-helper "$binary_dir/astrid-edge-rescue-helper" \
+    --web-broker "$binary_dir/astrid-edge-web-broker" \
+    --provider-broker "$binary_dir/astrid-edge-provider-broker" \
+    --presentation-broker "$binary_dir/astrid-edge-presentation-broker" \
+    --checkpoint-helper "$binary_dir/astrid-edge-checkpoint" \
     --capsule-dir "$capsule_dir" \
+    --external-capsule-dir "$external_capsule_dir" \
     --output-dir "$output_dir" >/dev/null 2>&1; then
     printf 'error: unsupported CPU-edge target was accepted\n' >&2
     exit 1
@@ -57,7 +99,14 @@ if "$script_dir/package_edge_appliance.sh" \
     --target aarch64-unknown-linux-gnu \
     --core-binary-dir "$binary_dir" \
     --edge-binary "$binary_dir/astrid-edge-runtime" \
+    --steward-helper "$binary_dir/astrid-edge-steward-helper" \
+    --rescue-helper "$binary_dir/astrid-edge-rescue-helper" \
+    --web-broker "$binary_dir/astrid-edge-web-broker" \
+    --provider-broker "$binary_dir/astrid-edge-provider-broker" \
+    --presentation-broker "$binary_dir/astrid-edge-presentation-broker" \
+    --checkpoint-helper "$binary_dir/astrid-edge-checkpoint" \
     --capsule-dir "$capsule_dir" \
+    --external-capsule-dir "$external_capsule_dir" \
     --output-dir "$output_dir" >/dev/null 2>&1; then
     printf 'error: x86-64 binaries were accepted for an ARM64 archive\n' >&2
     exit 1
@@ -67,18 +116,94 @@ if "$script_dir/package_edge_appliance.sh" \
     --target x86_64-unknown-linux-gnu \
     --core-binary-dir "$binary_dir" \
     --edge-binary "$binary_dir/astrid-edge-runtime" \
+    --steward-helper "$binary_dir/astrid-edge-steward-helper" \
+    --rescue-helper "$binary_dir/astrid-edge-rescue-helper" \
+    --web-broker "$binary_dir/astrid-edge-web-broker" \
+    --provider-broker "$binary_dir/astrid-edge-provider-broker" \
+    --presentation-broker "$binary_dir/astrid-edge-presentation-broker" \
+    --checkpoint-helper "$binary_dir/astrid-edge-checkpoint" \
     --capsule-dir "$capsule_dir" \
+    --external-capsule-dir "$external_capsule_dir" \
     --output-dir "$output_dir" >/dev/null 2>&1; then
     printf 'error: unsafe CPU-edge version was accepted\n' >&2
     exit 1
 fi
+
+missing_external="$external_capsule_dir/astrid-capsule-session.capsule"
+mv "$missing_external" "$test_root/astrid-capsule-session.capsule"
+if "$script_dir/package_edge_appliance.sh" \
+    --version test \
+    --target x86_64-unknown-linux-gnu \
+    --core-binary-dir "$binary_dir" \
+    --edge-binary "$binary_dir/astrid-edge-runtime" \
+    --steward-helper "$binary_dir/astrid-edge-steward-helper" \
+    --rescue-helper "$binary_dir/astrid-edge-rescue-helper" \
+    --web-broker "$binary_dir/astrid-edge-web-broker" \
+    --provider-broker "$binary_dir/astrid-edge-provider-broker" \
+    --presentation-broker "$binary_dir/astrid-edge-presentation-broker" \
+    --checkpoint-helper "$binary_dir/astrid-edge-checkpoint" \
+    --capsule-dir "$capsule_dir" \
+    --external-capsule-dir "$external_capsule_dir" \
+    --output-dir "$output_dir" >/dev/null 2>&1; then
+    printf 'error: missing external pinned-source capsule was accepted\n' >&2
+    exit 1
+fi
+mv "$test_root/astrid-capsule-session.capsule" "$missing_external"
+cp "$missing_external" "$external_capsule_dir/unapproved.capsule"
+if "$script_dir/package_edge_appliance.sh" \
+    --version test \
+    --target x86_64-unknown-linux-gnu \
+    --core-binary-dir "$binary_dir" \
+    --edge-binary "$binary_dir/astrid-edge-runtime" \
+    --steward-helper "$binary_dir/astrid-edge-steward-helper" \
+    --rescue-helper "$binary_dir/astrid-edge-rescue-helper" \
+    --web-broker "$binary_dir/astrid-edge-web-broker" \
+    --provider-broker "$binary_dir/astrid-edge-provider-broker" \
+    --presentation-broker "$binary_dir/astrid-edge-presentation-broker" \
+    --checkpoint-helper "$binary_dir/astrid-edge-checkpoint" \
+    --capsule-dir "$capsule_dir" \
+    --external-capsule-dir "$external_capsule_dir" \
+    --output-dir "$output_dir" >/dev/null 2>&1; then
+    printf 'error: extra external pinned-source capsule was accepted\n' >&2
+    exit 1
+fi
+rm "$external_capsule_dir/unapproved.capsule"
+cp "$missing_external" "$test_root/original-session.capsule"
+rm "$missing_external"
+cp "$capsule_dir/astrid-capsule-http.capsule" "$missing_external"
+if "$script_dir/package_edge_appliance.sh" \
+    --version test \
+    --target x86_64-unknown-linux-gnu \
+    --core-binary-dir "$binary_dir" \
+    --edge-binary "$binary_dir/astrid-edge-runtime" \
+    --steward-helper "$binary_dir/astrid-edge-steward-helper" \
+    --rescue-helper "$binary_dir/astrid-edge-rescue-helper" \
+    --web-broker "$binary_dir/astrid-edge-web-broker" \
+    --provider-broker "$binary_dir/astrid-edge-provider-broker" \
+    --presentation-broker "$binary_dir/astrid-edge-presentation-broker" \
+    --checkpoint-helper "$binary_dir/astrid-edge-checkpoint" \
+    --capsule-dir "$capsule_dir" \
+    --external-capsule-dir "$external_capsule_dir" \
+    --output-dir "$output_dir" >/dev/null 2>&1; then
+    printf 'error: substituted external pinned-source capsule identity was accepted\n' >&2
+    exit 1
+fi
+rm "$missing_external"
+mv "$test_root/original-session.capsule" "$missing_external"
 
 "$script_dir/package_edge_appliance.sh" \
     --version test \
     --target x86_64-unknown-linux-gnu \
     --core-binary-dir "$binary_dir" \
     --edge-binary "$binary_dir/astrid-edge-runtime" \
+    --steward-helper "$binary_dir/astrid-edge-steward-helper" \
+    --rescue-helper "$binary_dir/astrid-edge-rescue-helper" \
+    --web-broker "$binary_dir/astrid-edge-web-broker" \
+    --provider-broker "$binary_dir/astrid-edge-provider-broker" \
+    --presentation-broker "$binary_dir/astrid-edge-presentation-broker" \
+    --checkpoint-helper "$binary_dir/astrid-edge-checkpoint" \
     --capsule-dir "$capsule_dir" \
+    --external-capsule-dir "$external_capsule_dir" \
     --output-dir "$output_dir"
 
 archive="$output_dir/astrid-cpu-edge-test-x86_64-unknown-linux-gnu.tar.gz"
@@ -87,6 +212,87 @@ extract_dir="$test_root/extracted"
 install -d -m 0755 "$extract_dir"
 tar -C "$extract_dir" -xzf "$archive"
 bundle="$extract_dir/astrid-cpu-edge-test-x86_64-unknown-linux-gnu"
+repository_root="$(CDPATH= cd -- "$script_dir/.." && pwd)"
+if find "$bundle" \( -type d -name __pycache__ -o -type f \( -name '*.pyc' -o -name '*.pyo' \) \) -print -quit | grep -q .; then
+    printf 'error: interpreter cache entered the CPU-edge archive\n' >&2
+    exit 1
+fi
+if find "$bundle" -type l -print -quit | grep -q .; then
+    printf 'error: symlink entered the CPU-edge archive\n' >&2
+    exit 1
+fi
+if find "$bundle" -type f \( -name '*.key' -o -name '*.db' -o -name '*.sqlite' -o -name '*.log' -o -name '*.gguf' -o -name '*.safetensors' \) -print -quit | grep -q .; then
+    printf 'error: credential, state, or model artifact entered the CPU-edge archive\n' >&2
+    exit 1
+fi
+test -x "$bundle/astrid-edge-steward-helper"
+test -x "$bundle/astrid-edge-rescue-helper"
+test -x "$bundle/astrid-edge-web-broker"
+test -x "$bundle/astrid-edge-provider-broker"
+test -x "$bundle/astrid-edge-presentation-broker"
+test -x "$bundle/astrid-edge-checkpoint"
+for immutable_script in \
+    build_edge_self_change_source_bundle.py \
+    build_edge_self_change_supervisor_zipapp.py \
+    build_edge_self_change_toolchain_bundle.py \
+    edge_audio_feeder.py \
+    edge_hindsight.py \
+    edge_self_change_supervisor.py \
+    install_edge_self_evolution_root.sh; do
+    test -x "$bundle/scripts/$immutable_script"
+done
+test -x "$bundle/scripts/install_edge_self_evolution_root.sh"
+test -x "$bundle/scripts/build_edge_self_change_source_bundle.py"
+test -x "$bundle/scripts/build_edge_self_change_toolchain_bundle.py"
+test -x "$bundle/scripts/build_edge_self_change_supervisor_zipapp.py"
+test -x "$bundle/scripts/edge_audio_feeder.py"
+test -f "$bundle/docs/cpu-edge-self-evolution.md"
+test -f "$bundle/packaging/systemd/astrid-edge-core-liveness.service"
+test -f "$bundle/packaging/systemd/astrid-edge-core-liveness.path.in"
+test -f "$bundle/packaging/systemd/astrid-edge-presentation-broker.socket.in"
+test -f "$bundle/packaging/systemd/astrid-edge-presentation-broker@.service.in"
+test -f "$bundle/packaging/headless/edge-presentation-broker.json.in"
+test -f "$bundle/packaging/headless/edge-audio-feeder.json.in"
+test -f "$bundle/packaging/headless/edge-hindsight-writer.json.in"
+test -f "$bundle/packaging/systemd/astrid-edge-audio-feeder.service"
+test -f "$bundle/packaging/systemd/astrid-edge-audio-feeder.socket.in"
+test ! -e "$bundle/packaging/systemd/icp/astrid-edge-audio-feeder.service"
+test ! -e "$bundle/packaging/systemd/icp/astrid-edge-audio-feeder.socket"
+grep -Fq \
+    'ExecStart=/usr/bin/python3 -I -E -s /usr/libexec/astrid-edge/immutable/edge_audio_feeder.py --config /etc/astrid-edge-self-change/audio-feeder.json' \
+    "$bundle/packaging/systemd/astrid-edge-audio-feeder.service"
+grep -Fqx 'SocketUser=root' \
+    "$bundle/packaging/systemd/astrid-edge-audio-feeder.socket.in"
+grep -Fqx 'SocketGroup=@AUDIO_CLIENT_GROUP@' \
+    "$bundle/packaging/systemd/astrid-edge-audio-feeder.socket.in"
+grep -Fq 'unit_source_root/../../scripts/edge_audio_feeder.py' \
+    "$bundle/scripts/install_edge_self_evolution_root.sh"
+grep -Fq 'ICP contains an AVADO-only audio feeder artifact' \
+    "$bundle/scripts/install_edge_self_evolution_root.sh"
+test -f "$bundle/scripts/edge_self_change/supervisor.py"
+# The generic archive is the only installation input. Prove that every
+# root-owned unit/template, immutable configuration asset, and supervisor
+# module from the release source is present exactly once in that archive.
+find "$repository_root/packaging/systemd" -type f \
+    ! -name '*.pyc' ! -name '*.pyo' -print \
+    | sed "s|^$repository_root/||" | sort >"$test_root/expected-systemd-assets"
+find "$bundle/packaging/systemd" -type f -print \
+    | sed "s|^$bundle/||" | sort >"$test_root/actual-systemd-assets"
+cmp "$test_root/expected-systemd-assets" "$test_root/actual-systemd-assets"
+find "$repository_root/packaging/headless" -type f \
+    ! -name introspection-AGENTS.md \
+    ! -name introspection-memory.md \
+    -print | sed "s|^$repository_root/||" | sort \
+    >"$test_root/expected-headless-assets"
+find "$bundle/packaging/headless" -type f -print \
+    | sed "s|^$bundle/||" | sort >"$test_root/actual-headless-assets"
+cmp "$test_root/expected-headless-assets" "$test_root/actual-headless-assets"
+find "$repository_root/scripts/edge_self_change" -type f \
+    ! -name '*.pyc' ! -name '*.pyo' -print \
+    | sed "s|^$repository_root/||" | sort >"$test_root/expected-supervisor-modules"
+find "$bundle/scripts/edge_self_change" -type f -print \
+    | sed "s|^$bundle/||" | sort >"$test_root/actual-supervisor-modules"
+cmp "$test_root/expected-supervisor-modules" "$test_root/actual-supervisor-modules"
 test -x "$bundle/scripts/build_astralis_cpu_edge_capsules.py"
 test -x "$bundle/scripts/install_essential_capsules.sh"
 test -x "$bundle/scripts/install_headless_application_capsules.py"
@@ -100,7 +306,7 @@ for transactional_installer in \
 done
 test -x "$bundle/scripts/relay_edge_peer_review.py"
 test -f "$bundle/capsules/astrid-capsule-edge-spectral.capsule"
-test "$(find "$bundle/capsules" -maxdepth 1 -type f -name '*.capsule' | wc -l | tr -d ' ')" -eq 10
+test "$(find "$bundle/capsules" -maxdepth 1 -type f -name '*.capsule' | wc -l | tr -d ' ')" -eq 20
 test ! -e "$bundle/packaging/headless/introspection-AGENTS.md"
 test ! -e "$bundle/packaging/headless/introspection-memory.md"
 test -x "$bundle/packaging/systemd/wait-for-icp-ssd"
@@ -142,6 +348,10 @@ grep -Fqx 'EnvironmentFile=%h/.config/astrid/edge-appliance.env' \
 grep -Fqx 'EnvironmentFile=%h/.config/astrid/edge-appliance.env' \
     "$bundle/packaging/systemd/icp/astrid.service"
 grep -Fqx 'BindsTo=ollama-cpu.service' \
+    "$bundle/packaging/systemd/icp/astrid-model-warmup.service"
+grep -Fqx 'TimeoutStartSec=12min' \
+    "$bundle/packaging/systemd/astrid-model-warmup.service"
+grep -Fqx 'TimeoutStartSec=12min' \
     "$bundle/packaging/systemd/icp/astrid-model-warmup.service"
 grep -Fqx 'Environment=ASTRID_HOME=%h/.astrid-icp/state' \
     "$bundle/packaging/systemd/icp/astrid-model-warmup.service"
@@ -211,15 +421,25 @@ for capsule in \
     astrid-capsule-memory \
     astrid-capsule-edge-context \
     astrid-capsule-edge-introspector \
-    astrid-capsule-edge-spectral; do
+    astrid-capsule-edge-spectral \
+    astrid-capsule-context-engine \
+    astrid-capsule-hook-bridge \
+    astrid-capsule-identity \
+    astrid-capsule-openai-compat \
+    astrid-capsule-prompt-builder \
+    astrid-capsule-react \
+    astrid-capsule-registry \
+    astrid-capsule-router \
+    astrid-capsule-session \
+    astrid-capsule-system; do
     required_arguments+=(--required "$capsule")
 done
-valid_status='{"status":{"loaded_capsules":["astrid-capsule-cli","astrid-capsule-fs","astrid-capsule-http","astrid-capsule-shell","astrid-capsule-skills","astrid-capsule-agents","astrid-capsule-memory","astrid-capsule-edge-context","astrid-capsule-edge-introspector","astrid-capsule-edge-spectral","base-01","base-02","base-03","base-04","base-05","base-06","base-07","base-08","base-09","base-10"]}}'
+valid_status='{"status":{"loaded_capsules":["astrid-capsule-cli","astrid-capsule-fs","astrid-capsule-http","astrid-capsule-shell","astrid-capsule-skills","astrid-capsule-agents","astrid-capsule-memory","astrid-capsule-edge-context","astrid-capsule-edge-introspector","astrid-capsule-edge-spectral","astrid-capsule-context-engine","astrid-capsule-hook-bridge","astrid-capsule-identity","astrid-capsule-openai-compat","astrid-capsule-prompt-builder","astrid-capsule-react","astrid-capsule-registry","astrid-capsule-router","astrid-capsule-session","astrid-capsule-system"]}}'
 printf '%s\n' "$valid_status" \
     | python3 "$bundle/scripts/verify_edge_capsule_status.py" \
         --expected-total 20 \
         "${required_arguments[@]}"
-invalid_status='{"status":{"loaded_capsules":["astrid-capsule-cli","astrid-capsule-fs","astrid-capsule-http","astrid-capsule-shell","astrid-capsule-skills","astrid-capsule-agents","astrid-capsule-memory","astrid-capsule-edge-context","astrid-capsule-edge-introspector","astrid-capsule-edge-spectral","base-01","base-02","base-03","base-04","base-05","base-06","base-07","base-08","base-09"]}}'
+invalid_status='{"status":{"loaded_capsules":["astrid-capsule-cli","astrid-capsule-fs","astrid-capsule-http","astrid-capsule-shell","astrid-capsule-skills","astrid-capsule-agents","astrid-capsule-memory","astrid-capsule-edge-context","astrid-capsule-edge-introspector","astrid-capsule-edge-spectral"]}}'
 if printf '%s\n' "$invalid_status" \
     | python3 "$bundle/scripts/verify_edge_capsule_status.py" \
         --expected-total 20 \
@@ -789,16 +1009,85 @@ import pathlib
 import sys
 
 manifest = json.loads(pathlib.Path(sys.argv[1]).read_text(encoding="utf-8"))
-assert manifest["schema"] == "astrid_cpu_edge_build_manifest_v2"
-assert manifest["bundle_format"] == "cpu-edge.2"
+assert manifest["schema"] == "astrid_cpu_edge_build_manifest_v3"
+assert manifest["bundle_format"] == "cpu-edge.3"
 assert manifest["target"] == "x86_64-unknown-linux-gnu"
 assert manifest["binary_format"] == "elf64-little-endian"
 assert manifest["binary_architecture_verified"] is True
 assert manifest["source_tree_state"] in {"clean", "dirty", "unavailable"}
-assert manifest["essential_capsule_count"] == 10
+assert manifest["essential_capsule_count"] == 20
+assert manifest["local_source_capsule_count"] == 10
+assert manifest["external_pinned_source_capsule_count"] == 10
+assert manifest["rebuildable_capsule_count"] == 20
+assert manifest["packaged_capsule_count"] == 20
 assert manifest["expected_loaded_capsule_count"] == 20
+assert len(manifest["capsule_archives"]) == 20
+assert {record["class"] for record in manifest["capsule_archives"]} == {
+    "local_repository_source", "external_pinned_source"
+}
 assert manifest["incremental_installed_code_bytes"] <= 20 * 1024 * 1024
 assert manifest["authority"] == "release_build_manifest_not_appliance_state_or_astrid_memory"
+assert manifest["self_evolution"]["mac_minime_bridge_scope"] == "excluded"
+required_assets = {
+    "scripts/edge_audio_feeder.py",
+    "packaging/headless/edge-audio-feeder.json.in",
+    "packaging/headless/edge-hindsight-writer.json.in",
+    "packaging/systemd/astrid-edge-audio-feeder.service",
+    "packaging/systemd/astrid-edge-audio-feeder.socket.in",
+}
+assert required_assets <= set(manifest["files_before_inventory"])
+PY
+
+generation_archive="$output_dir/astrid-edge-generation-test-x86_64-unknown-linux-gnu.tar.gz"
+sha256sum -c "$generation_archive.sha256"
+generation_extract="$test_root/generation"
+install -d -m 0755 "$generation_extract"
+tar -C "$generation_extract" -xzf "$generation_archive"
+test -f "$generation_extract/astrid-edge-generation/.astrid-edge-generation.json"
+python3 - "$generation_extract/astrid-edge-generation" <<'PY'
+import json, pathlib, sys
+
+root = pathlib.Path(sys.argv[1])
+assert {path.name for path in root.iterdir()} == {
+    ".astrid-edge-generation.json",
+    "astrid",
+    "astrid-build",
+    "astrid-daemon",
+    "astrid-edge-runtime",
+    "capsules",
+    "packaging",
+    "scripts",
+}
+assert {path.name for path in (root / "scripts").iterdir()} == {
+    "astrid_at_a_glance.py",
+    "edge_hindsight.py",
+    "report_edge_activity.py",
+    "report_edge_appliance.py",
+    "report_edge_appliance.sh",
+    "report_edge_fleet_activity.py",
+    "warm_ollama_model.sh",
+}
+assert len(tuple((root / "capsules").glob("*.capsule"))) == 20
+for forbidden in (
+    "astrid-edge-steward-helper",
+    "astrid-edge-rescue-helper",
+    "astrid-edge-web-broker",
+    "astrid-edge-provider-broker",
+    "astrid-edge-presentation-broker",
+    "astrid-edge-checkpoint",
+    "docs",
+    "source-snapshot",
+):
+    assert not (root / forbidden).exists(), forbidden
+manifest = json.loads((root / ".astrid-edge-generation.json").read_text(encoding="ascii"))
+assert manifest["schema"] == "astrid.edge_self_change.initial_generation.v1"
+assert manifest["appliance_id"] == "portable-bootstrap-non-authorizing"
+assert manifest["authority"] == "operator_packaged_initial_generation_not_model_candidate"
+assert {item["path"] for item in manifest["inventory"]} == {
+    path.relative_to(root).as_posix()
+    for path in root.rglob("*")
+    if path.is_file() and path.name != ".astrid-edge-generation.json"
+}
 PY
 
 printf 'CPU-edge package verification passed.\n'

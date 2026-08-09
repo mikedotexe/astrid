@@ -342,6 +342,9 @@ astrid capsule tree
 
 For an always-on CPU-only Linux deployment, including x86-64 and ARM64
 appliance-class hosts, see [Headless Linux Appliances](docs/headless-linux.md).
+The optional immutable two-hour introspection and offline A/B update boundary
+is described in
+[CPU-edge scheduled introspection and self-evolution](docs/cpu-edge-self-evolution.md).
 
 ## Distro And Capsule Management
 

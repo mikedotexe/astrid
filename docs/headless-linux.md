@@ -144,6 +144,26 @@ settled statistics exclude each boot's first 30 seconds. The controller targets
 to a named hardware profile only after preserving the probe, an on-device model
 benchmark, and a stable fill report.
 
+### Dedicated introspection and self-evolution
+
+AVADO and ICP can optionally install a root-owned two-hour reflection steward
+and offline A/B update boundary. This is deliberately separate from ordinary
+voluntary `SELF_STUDY`: a due reflection is invoked programmatically, while any
+code submission must still be exact model output bound to the scheduled turn
+and current source generation. The mutable runtime cannot attest itself,
+invoke build commands, clear the maintenance lease, edit the rescue root, or
+select a release slot.
+
+The complete authority model, source/edit limits, offline build gates,
+probation, rollback behavior, operator controls, and staged AVADO-then-ICP
+rollout are documented in
+[`cpu-edge-self-evolution.md`](cpu-edge-self-evolution.md). Independent CPU-edge
+source bundles exclude the Mac Astrid, Minime, spectral bridge, their services,
+and all cross-instance memory. Before any bundled installer runs as root, the
+trusted operator host must verify the complete archive's GitHub OIDC/Sigstore
+attestation against the exact repository, release workflow, tag, and commit;
+the archive's adjacent checksum is integrity metadata, not publisher identity.
+
 ### Correlated activity
 
 Post-upgrade socket input receives an observational trace root. ReAct,
@@ -295,7 +315,10 @@ timestamps alone are never treated as causation. Transport fallback and local
 safe repair remain non-authored in both views. Activity report v2 overlays
 legacy transport corrections only through exact transcript paths or an exact
 response-hash-plus-session join; a response hash by itself is reusable text
-identity and never establishes event identity. Hindsight refreshes its
+identity and never establishes event identity. The preset invokes the exact
+root-owned `/usr/libexec/astrid-edge/operator/report-edge-activity` launcher on
+both appliances; it never executes a report from either mutable home or state
+tree. Hindsight refreshes its
 rebuildable attribution projection when that contract changes, so stale
 false-authorship rows cannot survive alongside the corrected event.
 
@@ -440,7 +463,8 @@ Provider, Prompt Builder, router, and ReAct capsules come from the compatible
 Astralis application set rather than the ten in-tree essentials. Never replace
 one of these by copying an unpacked directory over the live tree. Use the
 external-capsule transaction installer with the exact archive produced by the
-audited SDK build:
+audited SDK build. Run this operator-side build with Python 3.11 or newer; the
+builder is not an appliance runtime dependency:
 
 ```bash
 python3 scripts/build_astralis_cpu_edge_capsules.py \
@@ -604,10 +628,13 @@ turn. The five visible tools support public read-only web contact and the
 provenance-marked local corpus. Direct writes, shell execution, and skills
 execution are not model-facing.
 
-The restored in-tree tool capsules return complete JSON schemas from
-`tool.v1.request.describe`, as expected by Prompt Builder, while retaining
-their response-topic publication for compatibility. The HTTP capsule provides
-two read-only tools. `search_web` sends a bounded UTF-8 query to a fixed public
+The ordinary in-tree tool capsules return complete JSON schemas from
+`tool.v1.request.describe`, as expected by Prompt Builder. Private edge
+introspection and spectral capsules are stricter: their manifests expose only
+direct Action-executor request/result topics and contain no global describe
+route. Their model-hidden status is therefore enforced at the capsule IPC
+boundary, independent of prompt filtering. The HTTP capsule provides two
+read-only tools. `search_web` sends a bounded UTF-8 query to a fixed public
 search origin and returns up to eight cleaned titles, snippets, and URLs;
 `fetch_url` accepts only `GET` and `HEAD`, defaults response text to 16,000
 characters, and hard-caps it at 32,000. The host blocks private, loopback,
@@ -764,9 +791,10 @@ identity. Up to two activity links may be carried only when exact trace,
 session, chain, or response identifiers exist; truncation is explicit, and
 timestamp proximity is never substituted.
 
-The model-hidden `astrid-capsule-edge-spectral` has only five read grants: the
+The model-hidden `astrid-capsule-edge-spectral` has only five read grants—the
 atomic state plus current/previous bounded rollup and activity-receipt
-projections. It has no network, process, shell, write, or control authority.
+projections—and no global tool-description subscription or publication. It has
+no network, process, shell, write, or control authority.
 Astrid voluntarily reaches it with:
 
 ```text
@@ -886,13 +914,16 @@ integrity states rather than inferred success.
 
 An accepted, model-authored `SELF_STUDY <question>` invokes the separately
 installed `astrid-capsule-edge-introspector` through the Action executor. The
-capsule is absent from ordinary model tool schemas and has no network, process,
-shell, or write capability. Its four tools can list fixed owned artifact
-classes, read one basename, perform a case-insensitive literal search, or
-return bounded working-thread and verified-evidence summaries. Traversal,
-absolute paths, hidden files, unsupported extensions, oversized arguments,
-recovery records, and paths outside `home://edge` fail closed; the host also
-canonicalizes paths before capability checks to prevent symlink escape.
+capsule has no global describe route, so its absence from ordinary model tool
+schemas is enforced independently of prompt filtering; it also has no network,
+process, shell, or write capability. Its five tools can list fixed owned
+artifact classes, read one basename, perform a case-insensitive literal search,
+rank bounded owned evidence for a question, or return bounded working-thread
+and verified-evidence summaries. Traversal, absolute paths, hidden files,
+unsupported extensions, oversized arguments, recovery records, symlink
+components, hardlinks, and paths outside `home://edge` fail closed. Bounded
+whole-file and JSONL-tail reads are captured by the host without following
+links; JSONL tails read at most 64 KiB and preserve complete-record alignment.
 Requested and completed phases are correlated in the owner-only
 `edge/introspection/receipts.jsonl` ledger with trace/session/chain identity and
 the exact parent response hash. Receipts retain sanitized arguments, result

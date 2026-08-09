@@ -8,9 +8,13 @@ import hashlib
 import importlib.util
 import io
 import json
+import os
 from pathlib import Path
+import stat
 import tempfile
+import types
 import unittest
+from unittest import mock
 
 
 SCRIPT = Path(__file__).with_name("report_edge_appliance.py")
@@ -18,6 +22,154 @@ SPEC = importlib.util.spec_from_file_location("report_edge_appliance", SCRIPT)
 assert SPEC is not None and SPEC.loader is not None
 REPORT = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(REPORT)
+GLANCE_SCRIPT = Path(__file__).with_name("astrid_at_a_glance.py")
+GLANCE_SPEC = importlib.util.spec_from_file_location(
+    "astrid_at_a_glance", GLANCE_SCRIPT
+)
+assert GLANCE_SPEC is not None and GLANCE_SPEC.loader is not None
+GLANCE = importlib.util.module_from_spec(GLANCE_SPEC)
+GLANCE_SPEC.loader.exec_module(GLANCE)
+
+
+def operator_lifecycle_event(**overrides: object) -> dict[str, object]:
+    value: dict[str, object] = {
+        "schema": "astrid.edge_self_change.operator_lifecycle_event.v1",
+        "recorded_at": 1,
+        "source_ledger": "candidate",
+        "sequence": 1,
+        "event_id": "candidate-one",
+        "status": "candidate_recorded",
+        "facets": ["candidate"],
+        "record_sha256": "1" * 64,
+        "candidate_id": "candidate-2",
+        "candidate_sha256": "a" * 64,
+        "build_id": None,
+        "generation_id": None,
+        "from_generation": None,
+        "trace_id": None,
+        "session_id": None,
+        "turn_id": None,
+        "response_sha256": None,
+        "terminal_declaration_sha256": None,
+        "terminal_reason_sha256": None,
+        "terminal_authority": None,
+        "automatic_retry": None,
+        "tests_sha256": None,
+        "bundle_sha256": None,
+        "manifest_sha256": None,
+        "invariant_candidate_replay_sha256": None,
+        "invariant_package_replay_sha256": None,
+        "shadow_evidence_sha256": None,
+        "shadow_status": None,
+        "command_profile": None,
+        "command_executable_sha256": None,
+        "command_argv_sha256": None,
+        "command_stdout_sha256": None,
+        "command_stderr_sha256": None,
+        "command_exit_code": None,
+        "command_timed_out": None,
+        "provenance": "immutable_supervisor_signed_ledger_sanitized_metadata",
+        "authority": "observation_only_not_deployment_or_astrid_authorship",
+        "authored": False,
+        "fallback": False,
+    }
+    value.update(overrides)
+    return value
+
+
+def write_operator_projection(
+    path: Path,
+    events: list[dict[str, object]],
+    *,
+    pipeline_phase: str = "idle",
+    restart_phase: str = "none",
+    restart_seconds: int = 0,
+) -> dict[str, object]:
+    path.parent.chmod(0o2750)
+    heads = {name: None for name in ("candidate", "build", "activation", "operator")}
+    for event in events:
+        heads[str(event["source_ledger"])] = event["record_sha256"]
+    core: dict[str, object] = {
+        "schema": "astrid.edge_self_change.operator_status.v3",
+        "appliance_id": "avado-test",
+        "generated_at": 2,
+        "state_revision": 7,
+        "mode": "running",
+        "active_generation": "generation-2",
+        "previous_generation": "generation-1",
+        "pipeline_phase": pipeline_phase,
+        "latest_transition": {"operation": "activate", "status": "started"},
+        "restart_expectation": {
+            "phase": restart_phase,
+            "maximum_seconds": restart_seconds,
+            "basis": "immutable_command_profile_timeout_upper_bound",
+        },
+        "lifecycle": {
+            "schema": "astrid.edge_self_change.operator_lifecycle.v1",
+            "events": events,
+            "included": len(events),
+            "total": len(events),
+            "truncated": False,
+            "maximum_events": 64,
+            "ledger_heads": heads,
+        },
+        "provenance": "immutable_supervisor_sanitized_projection",
+        "authority": "observation_only_not_deployment_authority",
+    }
+    encoded = json.dumps(
+        core,
+        sort_keys=True,
+        separators=(",", ":"),
+        ensure_ascii=True,
+        allow_nan=False,
+    ).encode("ascii")
+    path.write_text(
+        json.dumps(
+            {
+                "schema": "astrid.edge_self_change.operator_status_envelope.v1",
+                "core": core,
+                "core_sha256": hashlib.sha256(encoded).hexdigest(),
+            }
+        ),
+        encoding="utf-8",
+    )
+    path.chmod(0o640)
+    return core
+
+
+def _encode_ed25519_point(point: tuple[int, int, int, int]) -> bytes:
+    """Encode one extended Edwards point for deterministic test signatures."""
+    x, y, z, _t = point
+    inverse = pow(z, REPORT._ED25519_P - 2, REPORT._ED25519_P)
+    affine_x = x * inverse % REPORT._ED25519_P
+    affine_y = y * inverse % REPORT._ED25519_P
+    encoded = affine_y | ((affine_x & 1) << 255)
+    return encoded.to_bytes(32, "little")
+
+
+def _sign_ed25519(seed: bytes, message: bytes) -> tuple[bytes, bytes]:
+    """Create a deterministic Ed25519 signature without a test dependency."""
+    expanded = hashlib.sha512(seed).digest()
+    scalar_bytes = bytearray(expanded[:32])
+    scalar_bytes[0] &= 248
+    scalar_bytes[31] &= 63
+    scalar_bytes[31] |= 64
+    scalar = int.from_bytes(scalar_bytes, "little")
+    public = _encode_ed25519_point(
+        REPORT._ed25519_scalar(REPORT._ED25519_BASE, scalar)
+    )
+    nonce = int.from_bytes(hashlib.sha512(expanded[32:] + message).digest(), "little")
+    nonce %= REPORT._ED25519_L
+    encoded_r = _encode_ed25519_point(
+        REPORT._ed25519_scalar(REPORT._ED25519_BASE, nonce)
+    )
+    challenge = int.from_bytes(
+        hashlib.sha512(encoded_r + public + message).digest(), "little"
+    ) % REPORT._ED25519_L
+    signature = encoded_r + ((nonce + challenge * scalar) % REPORT._ED25519_L).to_bytes(
+        32, "little"
+    )
+    return public, signature
 
 
 class FillSummaryTests(unittest.TestCase):
@@ -683,6 +835,874 @@ class FillSummaryTests(unittest.TestCase):
             self.assertEqual(
                 REPORT.local_provider_header_latencies(root, cutoff), [126708]
             )
+
+    def test_scheduled_introspection_summary_separates_exact_authorship_from_fallback(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            workspace = Path(temporary)
+            (workspace / "runtime").mkdir()
+            (workspace / "runtime/scheduled-introspection/admission").mkdir(
+                parents=True
+            )
+            (workspace / "introspection/scheduled").mkdir(parents=True)
+            (workspace / "introspections/scheduled").mkdir(parents=True)
+            trace = {
+                "schema_version": 1,
+                "trace_id": "00000000-0000-4000-8000-000000000001",
+                "span_id": "00000000-0000-4000-8000-000000000002",
+                "turn_id": "00000000-0000-4000-8000-000000000003",
+                "session_id": "scheduled-session",
+                "chain_id": None,
+            }
+            reflection_path = "introspections/scheduled/reflection_due-700.md"
+            reflection_body = b"I noticed a bounded pattern.\nI will inspect it carefully."
+            response_sha256 = hashlib.sha256(reflection_body).hexdigest()
+            prompt_sha256 = "b" * 64
+            continuity_summary = "A bounded pattern merits careful inspection."
+            context_provenance = {
+                "schema": "astrid.edge.scheduled_context_provenance.v1",
+                "candidate_authoring_eligible": True,
+                "untrusted_external_content": False,
+                "taint_causes": [],
+            }
+            context_provenance_sha256 = hashlib.sha256(
+                REPORT.canonical_json_bytes(context_provenance)
+            ).hexdigest()
+            (workspace / "runtime/scheduled_introspection_state.json").write_text(
+                json.dumps(
+                    {
+                        "schema": "astrid_edge_scheduled_introspection_state_v1",
+                        "running": False,
+                        "last_status": "transport_recovery",
+                        "last_completed_at_unix_ms": 800,
+                        "next_due_at_unix_ms": 2_000,
+                        "total_attempts": 2,
+                        "total_authored": 1,
+                        "consecutive_failures": 1,
+                    }
+                )
+            )
+            (workspace / "runtime/scheduled_introspection_continuity.json").write_text(
+                json.dumps(
+                    {
+                        "schema": "astrid_edge_scheduled_introspection_continuity_v1",
+                        "appliance_id": "avado-test",
+                        "model": "qwen-test",
+                        "due_nonce": "due-700",
+                        "recorded_at_unix_ms": 700,
+                        "summary": continuity_summary,
+                        "summary_sha256": hashlib.sha256(
+                            continuity_summary.encode()
+                        ).hexdigest(),
+                        "response_sha256": response_sha256,
+                        "prompt_sha256": prompt_sha256,
+                        "trace": trace,
+                        "provenance": "model_authored_runtime_scheduled",
+                        "authority": (
+                            "bounded_continuity_projection_not_voluntary_journal"
+                        ),
+                        "reflection_path": reflection_path,
+                        "context_provenance": context_provenance,
+                        "context_provenance_sha256": context_provenance_sha256,
+                        "candidate_authoring_eligible": True,
+                        "reflection_lane": "candidate_authoring_eligible",
+                        "taint_causes": [],
+                    }
+                )
+            )
+            (
+                workspace
+                / "runtime/scheduled-introspection/admission/state.json"
+            ).write_text(
+                json.dumps(
+                    {
+                        "schema": "astrid.edge.scheduled_introspection.admission.v1",
+                        "continuity_admitted": True,
+                        "provenance": "model_authored_runtime_scheduled",
+                        "authority": "runtime_verified_projection_observational_only",
+                        "last_response_sha256": response_sha256,
+                        "last_summary_sha256": hashlib.sha256(
+                            continuity_summary.encode()
+                        ).hexdigest(),
+                        "last_trace_id": trace["trace_id"],
+                        "last_due_nonce": "due-700",
+                        "admitted_at_unix_ms": 710,
+                    }
+                )
+            )
+            receipts = [
+                {
+                    "schema": "astrid_edge_scheduled_introspection_v1",
+                    "completed_at_unix_ms": 700,
+                    "status": "authored_completed",
+                    "provenance": "model_authored_runtime_scheduled",
+                    "continuity_admitted": True,
+                    "response_sha256": response_sha256,
+                    "reflection_path": reflection_path,
+                    "trace": trace,
+                },
+                {
+                    "schema": "astrid_edge_scheduled_introspection_v1",
+                    "completed_at_unix_ms": 800,
+                    "status": "transport_recovery",
+                    "provenance": "local_safe_fallback",
+                    "continuity_admitted": False,
+                    "response_sha256": None,
+                    "reflection_path": None,
+                },
+            ]
+            (workspace / "introspections/scheduled/receipts.jsonl").write_text(
+                "".join(json.dumps(value) + "\n" for value in receipts)
+            )
+            (workspace / "introspection/scheduled/receipts.jsonl").write_text(
+                "".join(json.dumps(value) + "\n" for value in receipts)
+            )
+            reflection = workspace / reflection_path
+            reflection.write_bytes(reflection_body)
+            reflection.with_suffix(".json").write_text(
+                json.dumps(
+                    {
+                        "schema": "astrid.edge.scheduled_introspection.model_reflection.v1",
+                        "provenance": "model_authored_runtime_scheduled",
+                        "appliance_id": "avado-test",
+                        "due_nonce": "due-700",
+                        "trace_id": trace["trace_id"],
+                        "session_id": trace["session_id"],
+                        "turn_id": trace["turn_id"],
+                        "model": "qwen-test",
+                        "prompt_sha256": prompt_sha256,
+                        "response_sha256": response_sha256,
+                        "exact_response_path": reflection.name,
+                        "context_provenance": context_provenance,
+                        "context_provenance_sha256": context_provenance_sha256,
+                        "reflection_lane": "candidate_authoring_eligible",
+                        "taint_causes": [],
+                    }
+                )
+            )
+
+            summary = REPORT.scheduled_introspection_summary(
+                workspace, cutoff_ms=500, now_ms=1_000
+            )
+
+        self.assertTrue(summary["state_present"])
+        self.assertEqual(summary["window_receipts"], 2)
+        self.assertEqual(summary["window_current_ledger_records"], 2)
+        self.assertEqual(summary["window_legacy_ledger_records"], 2)
+        self.assertEqual(summary["window_exact_duplicates_merged"], 2)
+        self.assertEqual(
+            summary["latest_receipt_source_ledgers"],
+            "introspections/scheduled/receipts.jsonl,"
+            "introspection/scheduled/receipts.jsonl",
+        )
+        self.assertEqual(summary["window_authored"], 0)
+        self.assertEqual(summary["window_non_authored_excluded"], 2)
+        self.assertEqual(summary["window_transport_recoveries"], 1)
+        self.assertEqual(summary["continuity_provenance"], "model_authored_runtime_scheduled")
+        self.assertFalse(summary["continuity_integrity_valid"])
+        self.assertFalse(summary["continuity_actual_admitted"])
+        self.assertEqual(summary["continuity_summary"], "unavailable")
+        self.assertEqual(
+            summary["continuity_validation"],
+            "immutable_authorship_attestation_join_failed",
+        )
+        self.assertEqual(summary["authorship_attestation_status"], "verify_key_absent")
+        self.assertEqual(
+            summary["verified_reflection_excerpt"],
+            "unavailable",
+        )
+        self.assertEqual(
+            summary["reflection_text_authority"],
+            "unavailable",
+        )
+        self.assertEqual(summary["reflection_artifact_count"], 1)
+
+    def test_ed25519_verifier_matches_rfc8032_and_rejects_tampering(self) -> None:
+        public_key = bytes.fromhex(
+            "d75a980182b10ab7d54bfed3c964073a"
+            "0ee172f3daa62325af021a68f707511a"
+        )
+        signature = bytes.fromhex(
+            "e5564300c360ac729086e2cc806e828a"
+            "84877f1eb8e5d974d873e06522490155"
+            "5fb8821590a33bacc61e39701cf9b46bd"
+            "25bf5f0595bbe24655141438e7a100b"
+        )
+        self.assertTrue(REPORT.verify_ed25519(public_key, b"", signature))
+        self.assertFalse(REPORT.verify_ed25519(public_key, b"changed", signature))
+        self.assertFalse(
+            REPORT.verify_ed25519(public_key, b"", signature[:-1] + b"\x00")
+        )
+
+    def test_scheduled_introspection_requires_signed_exact_authorship_join(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            workspace = Path(temporary) / "workspace"
+            projection = workspace / "runtime/scheduled-introspection/projection"
+            admission_root = workspace / "runtime/scheduled-introspection/admission"
+            artifacts = workspace / "introspections/scheduled"
+            projection.mkdir(parents=True)
+            admission_root.mkdir(parents=True)
+            artifacts.mkdir(parents=True)
+            key_path = Path(temporary) / "scheduled-authorship.pub"
+            public_key, _unused = _sign_ed25519(b"scheduled-authorship-test-seed", b"")
+            key_path.write_bytes(public_key)
+
+            due_nonce = "due-10000"
+            started_at = 10_000_001
+            completed_at = 10_000_700
+            trace = {
+                "schema_version": 1,
+                "trace_id": "10000000-0000-4000-8000-000000000001",
+                "span_id": "10000000-0000-4000-8000-000000000002",
+                "turn_id": "10000000-0000-4000-8000-000000000003",
+                "session_id": "scheduled-session-10000",
+            }
+            reflection_path = (
+                "introspections/scheduled/"
+                "reflection_due-10000_10000000-0000-4000-8000-000000000003.md"
+            )
+            reflection_body = b"I verified a local pattern without claiming causation."
+            response_sha256 = hashlib.sha256(reflection_body).hexdigest()
+            prompt_sha256 = "a" * 64
+            summary_text = "A verified local pattern remains non-causal evidence."
+            context_provenance = {
+                "schema": "astrid.edge.context_provenance.v1",
+                "candidate_authoring_eligible": True,
+                "untrusted_external_content": False,
+                "taint_causes": [],
+            }
+            context_provenance_sha256 = hashlib.sha256(
+                REPORT.canonical_json_bytes(context_provenance)
+            ).hexdigest()
+            continuity = {
+                "schema": REPORT.SCHEDULED_INTROSPECTION_CONTINUITY_SCHEMA,
+                "appliance_id": "avado-test",
+                "model": "qwen-test",
+                "due_nonce": due_nonce,
+                "recorded_at_unix_ms": completed_at,
+                "summary": summary_text,
+                "summary_sha256": hashlib.sha256(summary_text.encode()).hexdigest(),
+                "response_sha256": response_sha256,
+                "prompt_sha256": prompt_sha256,
+                "reflection_path": reflection_path,
+                "trace": trace,
+                "provenance": REPORT.SCHEDULED_INTROSPECTION_PROVENANCE,
+                "authority": "bounded_continuity_projection_not_voluntary_journal",
+                "context_provenance": context_provenance,
+                "context_provenance_sha256": context_provenance_sha256,
+                "candidate_authoring_eligible": True,
+                "reflection_lane": "candidate_authoring_eligible",
+                "taint_causes": [],
+            }
+            state = {
+                "schema": REPORT.SCHEDULED_INTROSPECTION_STATE_SCHEMA,
+                "running": False,
+                "last_status": "authored_completed",
+                "last_started_at_unix_ms": started_at,
+                "last_completed_at_unix_ms": completed_at,
+                "next_due_at_unix_ms": completed_at + 7_200_000,
+                "total_attempts": 1,
+                "total_authored": 1,
+                "consecutive_failures": 0,
+            }
+            metadata = {
+                "schema": "astrid.edge.scheduled_introspection.model_reflection.v1",
+                "provenance": REPORT.SCHEDULED_INTROSPECTION_PROVENANCE,
+                "appliance_id": continuity["appliance_id"],
+                "due_nonce": due_nonce,
+                "trace_id": trace["trace_id"],
+                "session_id": trace["session_id"],
+                "turn_id": trace["turn_id"],
+                "model": continuity["model"],
+                "prompt_sha256": prompt_sha256,
+                "response_sha256": response_sha256,
+                "exact_response_path": Path(reflection_path).name,
+                "context_provenance": context_provenance,
+                "context_provenance_sha256": context_provenance_sha256,
+                "reflection_lane": "candidate_authoring_eligible",
+                "taint_causes": [],
+            }
+            receipt = {
+                "schema": REPORT.SCHEDULED_INTROSPECTION_RECEIPT_SCHEMA,
+                "appliance": "avado-test",
+                "due_nonce": due_nonce,
+                "due_at_unix_ms": 10_000_000,
+                "started_at_unix_ms": started_at,
+                "completed_at_unix_ms": completed_at,
+                "status": "authored_completed",
+                "provenance": REPORT.SCHEDULED_INTROSPECTION_PROVENANCE,
+                "model_id": "qwen-test",
+                "prompt_sha256": prompt_sha256,
+                "response_sha256": response_sha256,
+                "reflection_path": reflection_path,
+                "continuity_projection_written": True,
+                "trace": trace,
+            }
+            continuity_bytes = REPORT.canonical_json_bytes(continuity)
+            state_bytes = REPORT.canonical_json_bytes(state)
+            metadata_bytes = REPORT.canonical_json_bytes(metadata)
+            receipt_bytes = REPORT.canonical_json_bytes(receipt)
+            (projection / "continuity.json").write_bytes(continuity_bytes)
+            (projection / "state.json").write_bytes(state_bytes)
+            reflection = workspace / reflection_path
+            reflection.write_bytes(reflection_body)
+            reflection.with_suffix(".json").write_bytes(metadata_bytes)
+            (artifacts / "receipts.jsonl").write_bytes(receipt_bytes + b"\n")
+            (admission_root / "state.json").write_text(
+                json.dumps(
+                    {
+                        "schema": REPORT.SCHEDULED_INTROSPECTION_ADMISSION_SCHEMA,
+                        "continuity_admitted": True,
+                        "provenance": REPORT.SCHEDULED_INTROSPECTION_PROVENANCE,
+                        "authority": "runtime_verified_projection_observational_only",
+                        "last_response_sha256": response_sha256,
+                        "last_summary_sha256": continuity["summary_sha256"],
+                        "last_trace_id": trace["trace_id"],
+                        "last_due_nonce": due_nonce,
+                        "admitted_at_unix_ms": completed_at + 1,
+                    }
+                )
+            )
+            core = {
+                "schema": REPORT.SCHEDULED_AUTHORSHIP_CORE_SCHEMA,
+                "appliance_id": "avado-test",
+                "due_nonce": due_nonce,
+                "due_at_unix_ms": 10_000_000,
+                "started_at_unix_ms": started_at,
+                "completed_at_unix_ms": completed_at,
+                "terminal_status": "authored_completed",
+                "model": "qwen-test",
+                "prompt_sha256": prompt_sha256,
+                "response_sha256": response_sha256,
+                "reflection_path": reflection_path,
+                "reflection_sha256": response_sha256,
+                "reflection_metadata_sha256": hashlib.sha256(metadata_bytes).hexdigest(),
+                "continuity_projection_sha256": hashlib.sha256(
+                    continuity_bytes
+                ).hexdigest(),
+                "state_projection_sha256": hashlib.sha256(state_bytes).hexdigest(),
+                "terminal_receipt_sha256": hashlib.sha256(receipt_bytes).hexdigest(),
+                "context_provenance_sha256": context_provenance_sha256,
+                "candidate_id": None,
+                "candidate_digest": None,
+                "trace": trace,
+                "provenance": REPORT.SCHEDULED_INTROSPECTION_PROVENANCE,
+                "authority": "immutable_steward_signed_exact_authorship_join",
+            }
+            unsigned = {
+                "schema": REPORT.SCHEDULED_AUTHORSHIP_ENVELOPE_SCHEMA,
+                "core": core,
+            }
+            _public, signature = _sign_ed25519(
+                b"scheduled-authorship-test-seed",
+                REPORT.canonical_json_bytes(unsigned),
+            )
+            envelope = unsigned | {
+                "auth": {
+                    "algorithm": "ed25519",
+                    "key_id": (
+                        "ed25519:" + hashlib.sha256(public_key).hexdigest()[:16]
+                    ),
+                    "signature": signature.hex(),
+                }
+            }
+            attestation = artifacts / (
+                f"authorship_attestation_{due_nonce}_{response_sha256}.json"
+            )
+            attestation.write_bytes(REPORT.canonical_json_bytes(envelope))
+
+            summary = REPORT.scheduled_introspection_summary(
+                workspace,
+                cutoff_ms=10_000_000,
+                now_ms=10_001_000,
+                verify_key_path=key_path,
+            )
+
+            self.assertEqual(summary["window_authored"], 1)
+            self.assertEqual(summary["window_non_authored_excluded"], 0)
+            self.assertTrue(summary["continuity_integrity_valid"])
+            self.assertTrue(summary["continuity_actual_admitted"])
+            self.assertEqual(summary["authorship_attestation_status"], "verified")
+            self.assertEqual(summary["authorship_attestations_valid"], 1)
+            self.assertEqual(summary["authorship_attestations_invalid"], 0)
+            self.assertEqual(summary["continuity_summary"], summary_text)
+
+            envelope["core"]["response_sha256"] = "f" * 64
+            attestation.write_bytes(REPORT.canonical_json_bytes(envelope))
+            rejected = REPORT.scheduled_introspection_summary(
+                workspace,
+                cutoff_ms=10_000_000,
+                now_ms=10_001_000,
+                verify_key_path=key_path,
+            )
+
+        self.assertEqual(rejected["window_authored"], 0)
+        self.assertFalse(rejected["continuity_integrity_valid"])
+        self.assertEqual(rejected["authorship_attestations_valid"], 0)
+        self.assertEqual(rejected["authorship_attestations_invalid"], 1)
+
+    def test_self_change_summary_uses_only_sanitized_operator_projection(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            workspace = Path(temporary) / "workspace"
+            root = Path(temporary) / "supervisor"
+            operator_path = Path(temporary) / "operator-status.json"
+            (workspace / "self-change/outbox").mkdir(parents=True)
+            (workspace / "self-change/patch-outbox").mkdir(parents=True)
+            (root / "ledgers").mkdir(parents=True)
+            private = root / "ledgers/build.jsonl"
+            private.write_text("SECRET_PRIVATE_BUILD_LEDGER", encoding="utf-8")
+            private.chmod(0o000)
+            (workspace / "self-change/outbox/intent_1_a.json").write_text(
+                json.dumps(
+                    {
+                        "recorded_at_unix_ms": 1_100,
+                        "candidate_id": "candidate-2",
+                        "candidate_digest": "a" * 64,
+                        "provenance": "exact_model_scheduled_introspection",
+                        "source_body": "must never render",
+                    }
+                )
+            )
+            patch_core = {
+                "schema": "astrid.edge.steward_helper.owner_patch_export_summary.v1",
+                "recorded_at": 2,
+                "appliance_id": "avado-astrid",
+                "candidate_id": "candidate-2",
+                "candidate_sha256": "a" * 64,
+                "patch_sha256": "b" * 64,
+                "source_id": "source-1",
+                "base_generation": "generation-1",
+                "terminal_status": "accepted",
+                "terminal_reason_sha256": "c" * 64,
+                "touched_paths": ["scripts/report_edge_appliance.py"],
+                "file_count": 1,
+                "added_lines": 8,
+                "removed_lines": 3,
+                "changed_lines": 11,
+                "full_export_sha256": "d" * 64,
+                "source_bodies_retained": False,
+                "authority": "reporting_summary_only_never_reingested_or_authorizing",
+            }
+            encoded = json.dumps(
+                patch_core,
+                sort_keys=True,
+                separators=(",", ":"),
+                ensure_ascii=True,
+                allow_nan=False,
+            ).encode("ascii")
+            patch_path = (
+                workspace
+                / "self-change/patch-outbox"
+                / f"candidate-change-candidate-2-{'a' * 64}.summary.json"
+            )
+            patch_path.write_text(
+                json.dumps(
+                    {
+                        "schema": "astrid.edge.steward_helper.owner_patch_export_summary_envelope.v1",
+                        "core": patch_core,
+                        "core_sha256": hashlib.sha256(encoded).hexdigest(),
+                        "auth": {
+                            "algorithm": "hmac-sha256",
+                            "key_id": "key-1",
+                            "signature": "e" * 64,
+                        },
+                    }
+                )
+            )
+
+            events = [
+                operator_lifecycle_event(),
+                operator_lifecycle_event(
+                    recorded_at=2,
+                    source_ledger="operator",
+                    sequence=1,
+                    event_id="reflection-one",
+                    status="steward_profile_completed",
+                    facets=["reflection"],
+                    record_sha256="2" * 64,
+                    response_sha256="f" * 64,
+                ),
+                operator_lifecycle_event(
+                    recorded_at=3,
+                    source_ledger="build",
+                    sequence=1,
+                    event_id="build-one",
+                    status="build_recorded",
+                    facets=["build", "invariant", "shadow", "test"],
+                    record_sha256="3" * 64,
+                    build_id="build-2",
+                    generation_id="generation-2",
+                    tests_sha256="4" * 64,
+                    bundle_sha256="5" * 64,
+                    invariant_candidate_replay_sha256="6" * 64,
+                    invariant_package_replay_sha256="7" * 64,
+                    shadow_evidence_sha256="7" * 64,
+                    shadow_status="package_replay_hash_only_no_detailed_shadow_claim",
+                ),
+                operator_lifecycle_event(
+                    recorded_at=4,
+                    source_ledger="activation",
+                    sequence=1,
+                    event_id="probation-one",
+                    status="probation_started",
+                    facets=["activation", "probation", "restart"],
+                    record_sha256="8" * 64,
+                    build_id="build-2",
+                    generation_id="generation-2",
+                ),
+                operator_lifecycle_event(
+                    recorded_at=5,
+                    source_ledger="activation",
+                    sequence=2,
+                    event_id="rollback-one",
+                    status="rolled_back",
+                    facets=["restart", "rollback"],
+                    record_sha256="9" * 64,
+                    generation_id="generation-1",
+                    from_generation="generation-2",
+                ),
+            ]
+            write_operator_projection(
+                operator_path,
+                events,
+                pipeline_phase="probation",
+                restart_phase="activation",
+                restart_seconds=3_600,
+            )
+            try:
+                summary = REPORT.self_change_summary(
+                    workspace,
+                    root,
+                    cutoff_ms=500,
+                    operator_status_path=operator_path,
+                    test_only_allow_unprivileged_operator_status=True,
+                )
+            finally:
+                private.chmod(0o600)
+
+        self.assertEqual(summary["mode"], "running")
+        self.assertEqual(summary["state_revision"], 7)
+        self.assertEqual(summary["probation_status"], "active")
+        self.assertEqual(summary["latest_intent_candidate_id"], "candidate-2")
+        self.assertEqual(summary["latest_build_status"], "build_recorded")
+        self.assertEqual(summary["latest_reflection_status"], "steward_profile_completed")
+        self.assertEqual(summary["latest_reflection_response_sha256"], "f" * 64)
+        self.assertEqual(summary["latest_tests_sha256"], "4" * 64)
+        self.assertEqual(summary["latest_shadow_evidence_sha256"], "7" * 64)
+        self.assertEqual(summary["latest_probation_status"], "probation_started")
+        self.assertEqual(summary["latest_rollback_status"], "rolled_back")
+        self.assertEqual(summary["expected_restart_phase"], "activation")
+        self.assertEqual(summary["expected_restart_maximum_seconds"], 3_600)
+        self.assertEqual(
+            summary["expected_restart_basis"],
+            "immutable_command_profile_timeout_upper_bound",
+        )
+        self.assertEqual(summary["patch_export_summary_total"], 1)
+        self.assertEqual(summary["latest_patch_candidate_id"], "candidate-2")
+        self.assertEqual(summary["latest_patch_changed_lines"], 11)
+        self.assertFalse(summary["latest_patch_source_bodies_retained"])
+        self.assertEqual(summary["ledger_candidate_legacy_records"], 0)
+        self.assertEqual(summary["ledger_build_reported_valid"], "projection_hash_verified")
+        self.assertFalse(summary["private_root_read"])
+        self.assertEqual(
+            summary["private_ledger_policy"],
+            "0600_secret_not_read_by_operator_reports",
+        )
+        self.assertNotIn("must never render", json.dumps(summary))
+        self.assertNotIn("SECRET_PRIVATE", json.dumps(summary))
+
+    def test_operator_self_change_projection_is_narrow_and_hash_verified(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            path = Path(temporary) / "operator-status.json"
+            core = write_operator_projection(
+                path,
+                [operator_lifecycle_event()],
+                pipeline_phase="probation",
+            )
+            self.assertEqual(REPORT.read_self_change_operator_status(path), {})
+            self.assertEqual(
+                REPORT.read_self_change_operator_status(
+                    path, test_only_allow_unprivileged_owner=True
+                )["pipeline_phase"],
+                "probation",
+            )
+
+            legacy_v2 = {key: value for key, value in core.items() if key != "lifecycle"}
+            legacy_v2["schema"] = "astrid.edge_self_change.operator_status.v2"
+            encoded = json.dumps(
+                legacy_v2,
+                sort_keys=True,
+                separators=(",", ":"),
+                ensure_ascii=True,
+                allow_nan=False,
+            ).encode("ascii")
+            envelope = {
+                "schema": "astrid.edge_self_change.operator_status_envelope.v1",
+                "core": legacy_v2,
+                "core_sha256": hashlib.sha256(encoded).hexdigest(),
+            }
+            path.write_text(json.dumps(envelope), encoding="utf-8")
+            path.chmod(0o640)
+
+            self.assertEqual(
+                REPORT.read_self_change_operator_status(
+                    path, test_only_allow_unprivileged_owner=True
+                )["pipeline_phase"],
+                "probation",
+            )
+            legacy = dict(legacy_v2)
+            legacy["schema"] = "astrid.edge_self_change.operator_status.v1"
+            legacy.pop("restart_expectation")
+            legacy_encoded = json.dumps(
+                legacy,
+                sort_keys=True,
+                separators=(",", ":"),
+                ensure_ascii=True,
+                allow_nan=False,
+            ).encode("ascii")
+            path.write_text(
+                json.dumps(
+                    {
+                        "schema": (
+                            "astrid.edge_self_change.operator_status_envelope.v1"
+                        ),
+                        "core": legacy,
+                        "core_sha256": hashlib.sha256(
+                            legacy_encoded
+                        ).hexdigest(),
+                    }
+                ),
+                encoding="utf-8",
+            )
+            path.chmod(0o640)
+            self.assertEqual(
+                REPORT.read_self_change_operator_status(
+                    path, test_only_allow_unprivileged_owner=True
+                )["pipeline_phase"],
+                "probation",
+            )
+
+            path.write_text(json.dumps(envelope), encoding="utf-8")
+            path.chmod(0o640)
+            envelope["core"]["pipeline_phase"] = "accepted"
+            path.write_text(json.dumps(envelope), encoding="utf-8")
+            path.chmod(0o640)
+            self.assertEqual(
+                REPORT.read_self_change_operator_status(
+                    path, test_only_allow_unprivileged_owner=True
+                ),
+                {},
+            )
+
+            write_operator_projection(path, [operator_lifecycle_event()])
+            path.chmod(0o600)
+            self.assertEqual(
+                REPORT.read_self_change_operator_status(
+                    path, test_only_allow_unprivileged_owner=True
+                ),
+                {},
+            )
+
+    def test_configured_self_change_root_resolves_relative_to_appliance_home(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            home = Path(temporary)
+            workspace = home / ".astrid-icp/state/home/default/edge"
+            workspace.mkdir(parents=True)
+            resolved = REPORT.configured_self_change_root(
+                workspace,
+                {
+                    "ASTRID_EDGE_SELF_CHANGE_ROOT": (
+                        ".astrid-icp/state/self-change"
+                    )
+                },
+                home,
+            )
+        self.assertEqual(
+            resolved, home / ".astrid-icp/state/self-change"
+        )
+
+    def test_at_a_glance_hides_verified_source_bodies(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            workspace = Path(temporary)
+            research = workspace / "research"
+            research.mkdir()
+            (research / "source_1.md").write_text(
+                "secret fetched source body must never render"
+            )
+            (research / "research_1.md").write_text("Astrid-authored synthesis")
+
+            artifacts = GLANCE.newest_artifacts(workspace, maximum=2)
+
+        rendered = "\n".join(artifacts)
+        self.assertIn("source_1.md — verified source artifact (body hidden)", rendered)
+        self.assertNotIn("secret fetched source body", rendered)
+        self.assertIn("Astrid-authored synthesis", rendered)
+
+    def test_at_a_glance_artifacts_reject_links_and_oversized_content(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            workspace = root / "workspace"
+            research = workspace / "research"
+            research.mkdir(parents=True)
+            outside = root / "operator-secret.txt"
+            outside.write_text("operator secret must not render", encoding="utf-8")
+            (research / "escape.md").symlink_to(outside)
+            os.link(outside, research / "hardlink.md")
+            (research / "oversized.md").write_bytes(
+                b"x" * (GLANCE.ARTIFACT_READ_MAX_BYTES + 1)
+            )
+            (research / "valid.md").write_text(
+                "bounded Astrid-owned artifact", encoding="utf-8"
+            )
+            outside_directory = root / "outside-journal"
+            outside_directory.mkdir()
+            (outside_directory / "entry.md").write_text(
+                "directory escape must not render", encoding="utf-8"
+            )
+            (workspace / "journal").symlink_to(
+                outside_directory, target_is_directory=True
+            )
+
+            artifacts = GLANCE.newest_artifacts(workspace, maximum=10)
+
+        rendered = "\n".join(artifacts)
+        self.assertIn("research/valid.md — bounded Astrid-owned artifact", rendered)
+        for forbidden in (
+            "escape.md",
+            "hardlink.md",
+            "oversized.md",
+            "operator secret",
+            "directory escape",
+        ):
+            self.assertNotIn(forbidden, rendered)
+
+    def test_at_a_glance_allows_trusted_workspace_ancestor_symlink(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            real_workspace = root / "ssd/workspace"
+            (real_workspace / "journal").mkdir(parents=True)
+            (real_workspace / "journal/entry.md").write_text(
+                "SSD-backed owned artifact", encoding="utf-8"
+            )
+            workspace_link = root / "workspace"
+            workspace_link.symlink_to(real_workspace, target_is_directory=True)
+
+            artifacts = GLANCE.newest_artifacts(workspace_link, maximum=1)
+
+        self.assertEqual(
+            artifacts,
+            ["journal/entry.md — SSD-backed owned artifact"],
+        )
+
+    def test_at_a_glance_rejects_artifact_changed_during_bounded_read(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            directory = Path(temporary)
+            artifact = directory / "entry.md"
+            artifact.write_text("stable before race", encoding="utf-8")
+            before = artifact.stat()
+            changed = types.SimpleNamespace(
+                st_dev=before.st_dev,
+                st_ino=before.st_ino,
+                st_mode=before.st_mode,
+                st_nlink=before.st_nlink,
+                st_uid=before.st_uid,
+                st_gid=before.st_gid,
+                st_size=before.st_size,
+                st_mtime_ns=before.st_mtime_ns + 1,
+                st_ctime_ns=before.st_ctime_ns,
+            )
+            directory_descriptor = os.open(
+                directory,
+                os.O_RDONLY | getattr(os, "O_DIRECTORY", 0),
+            )
+            try:
+                with mock.patch.object(
+                    GLANCE.os,
+                    "fstat",
+                    side_effect=(before, changed),
+                ):
+                    body = GLANCE._read_stable_artifact(
+                        directory_descriptor, "entry.md", before
+                    )
+            finally:
+                os.close(directory_descriptor)
+
+        self.assertIsNone(body)
+
+    def test_operator_reports_use_only_the_immutable_launcher_root(self) -> None:
+        self.assertEqual(
+            GLANCE.IMMUTABLE_OPERATOR_ROOT,
+            Path("/usr/libexec/astrid-edge/operator"),
+        )
+        self.assertEqual(
+            GLANCE.workspace_for(Path("/home/avado")),
+            ("AVADO", Path("/home/avado/.astrid/home/default/edge")),
+        )
+
+    def test_system_manager_marker_requires_root_owned_exact_identity(self) -> None:
+        marker = mock.Mock()
+        marker.stat.return_value = types.SimpleNamespace(
+            st_mode=stat.S_IFREG | 0o640,
+            st_uid=0,
+            st_nlink=1,
+        )
+        marker.read_text.return_value = json.dumps(
+            {
+                "schema": "astrid.edge.service_manager.v2",
+                "manager": "system",
+                "runtime_user": "avado",
+            }
+        )
+        with mock.patch.object(
+            REPORT.pwd,
+            "getpwuid",
+            return_value=types.SimpleNamespace(pw_name="avado"),
+        ):
+            self.assertTrue(REPORT.system_service_manager_enabled(marker))
+            marker.stat.return_value = types.SimpleNamespace(
+                st_mode=stat.S_IFREG | 0o660,
+                st_uid=0,
+                st_nlink=1,
+            )
+            self.assertFalse(REPORT.system_service_manager_enabled(marker))
+
+    def test_report_subprocesses_ignore_mutable_path_and_python_imports(self) -> None:
+        completed = types.SimpleNamespace(stdout="active\n")
+        with mock.patch.dict(
+            REPORT.os.environ,
+            {"PATH": "/tmp/hostile", "PYTHONPATH": "/tmp/inject"},
+            clear=True,
+        ), mock.patch.object(
+            REPORT.subprocess, "run", return_value=completed
+        ) as run:
+            self.assertEqual(
+                REPORT.command("systemctl", "show", "astrid.service"),
+                "active",
+            )
+        arguments = run.call_args.args[0]
+        environment = run.call_args.kwargs["env"]
+        self.assertEqual(arguments[0], "/usr/bin/systemctl")
+        self.assertEqual(environment["PATH"], "/usr/bin:/bin")
+        self.assertNotIn("PYTHONPATH", environment)
+
+    def test_owner_text_surfaces_neutralize_terminal_controls(self) -> None:
+        hostile = "value\x1b]52;c;Zm9v\x07\x1b[2J\x9b31m\u202ereversed"
+        with mock.patch("sys.stdout", new_callable=io.StringIO) as output:
+            REPORT.emit("field", hostile + "\ninjected=value")
+        rendered = output.getvalue()
+        self.assertEqual(rendered.count("\n"), 1)
+        for control in ("\x1b", "\x07", "\x9b", "\u202e"):
+            self.assertNotIn(control, rendered)
+            self.assertNotIn(control, GLANCE.compact(hostile))
+
+        decoded = {"summary": hostile}
+        self.assertEqual(decoded["summary"], hostile)
+        safe = GLANCE.terminal_safe_value(decoded)
+        self.assertEqual(decoded["summary"], hostile)
+        self.assertNotIn("\x1b", safe["summary"])
 
 
 if __name__ == "__main__":

@@ -25,15 +25,17 @@ import contextlib
 import datetime as dt
 import fcntl
 import hashlib
-import importlib.machinery
 import importlib.util
 import json
 import math
 import os
+import re
 import sqlite3
 import stat
 import sys
 import time
+import types
+import unicodedata
 import uuid
 from pathlib import Path
 from typing import Any, Iterable, Iterator
@@ -45,14 +47,28 @@ FILL_SCHEMA = "astrid_edge_hindsight_fill_rollup_v1"
 REPORT_SCHEMA = "astrid_edge_hindsight_report_v1"
 LEGACY_STATE_SCHEMA = "astrid_edge_hindsight_collector_state_v1"
 STATE_SCHEMA = "astrid_edge_hindsight_collector_state_v2"
-DATABASE_SCHEMA_VERSION = 4
+DATABASE_SCHEMA_VERSION = 5
 ARTIFACT_ATTRIBUTION_VERSION = 4
 ATTRIBUTION_PROJECTION_VERSION = 4
 SPECTRAL_TUNING_PROJECTION_VERSION = 2
+SELF_EVOLUTION_PROJECTION_VERSION = 3
+SEALED_WRITER_CONFIG_SCHEMA = "astrid.edge.hindsight_writer.config.v2"
+MAX_SEALED_WRITER_CONFIG_BYTES = 32 * 1024
+MAX_OPERATOR_REPORT_MANIFEST_BYTES = 256 * 1024
+MAX_ACTIVITY_REPORT_BYTES = 16 * 1024 * 1024
+IMMUTABLE_ACTIVITY_REPORT_PATH = Path(
+    "/usr/libexec/astrid-edge/operator/report_edge_activity.py"
+)
+IMMUTABLE_OPERATOR_REPORT_MANIFEST_PATH = Path(
+    "/usr/libexec/astrid-edge/operator/MANIFEST.sha256"
+)
 LEDGER_HASH_SCOPE = "exact_open_file_prefix_v1"
 DEFAULT_BUCKET_MINUTES = 15
 MAX_EXCERPT_CHARS = 480
 MAX_TRACE_LABEL_CHARS = 96
+INDIRECT_SHADOW_GATE_EVIDENCE = (
+    "indirect_package_replay_sha256_commitment_not_independently_reinspectable"
+)
 
 ACTIVITY_LEDGERS = (
     "actions/dispatches.jsonl",
@@ -65,6 +81,8 @@ ACTIVITY_LEDGERS = (
     "autonomous/thread_state.jsonl",
     "web/receipts.jsonl",
     "introspection/receipts.jsonl",
+    "introspections/scheduled/receipts.jsonl",
+    "introspection/scheduled/receipts.jsonl",
     "perception/observations.jsonl",
     "studies/receipts.jsonl",
     "spectral/rollups.jsonl",
@@ -198,6 +216,260 @@ def sha256_file(path: Path, maximum_bytes: int | None = None) -> str:
             if remaining is not None:
                 remaining -= len(chunk)
     return digest.hexdigest()
+
+
+def validate_root_regular(
+    path: Path, *, expected_mode: int, maximum_bytes: int
+) -> os.stat_result:
+    """Verify one immutable root-owned path and every ancestor without links."""
+    if not path.is_absolute():
+        raise ValueError("sealed hindsight path must be absolute")
+    cursor = Path("/")
+    for component in path.parts[1:]:
+        cursor /= component
+        metadata = cursor.lstat()
+        if stat.S_ISLNK(metadata.st_mode):
+            raise ValueError("sealed hindsight path contains a symlink")
+        if cursor != path and (
+            not stat.S_ISDIR(metadata.st_mode)
+            or metadata.st_uid != 0
+            or stat.S_IMODE(metadata.st_mode) & 0o022
+        ):
+            raise ValueError("sealed hindsight ancestors are not immutable")
+    metadata = path.lstat()
+    if (
+        not stat.S_ISREG(metadata.st_mode)
+        or metadata.st_uid != 0
+        or metadata.st_nlink != 1
+        or stat.S_IMODE(metadata.st_mode) != expected_mode
+        or metadata.st_size > maximum_bytes
+    ):
+        raise ValueError("sealed hindsight file identity is invalid")
+    return metadata
+
+
+def stable_root_read(path: Path, *, expected_mode: int, maximum_bytes: int) -> bytes:
+    before = validate_root_regular(
+        path, expected_mode=expected_mode, maximum_bytes=maximum_bytes
+    )
+    descriptor = os.open(
+        path,
+        os.O_RDONLY | os.O_CLOEXEC | getattr(os, "O_NOFOLLOW", 0),
+    )
+    try:
+        opened = os.fstat(descriptor)
+        if (opened.st_dev, opened.st_ino) != (before.st_dev, before.st_ino):
+            raise ValueError("sealed hindsight file changed while opening")
+        chunks: list[bytes] = []
+        remaining = maximum_bytes + 1
+        while remaining:
+            chunk = os.read(descriptor, min(remaining, 1024 * 1024))
+            if not chunk:
+                break
+            chunks.append(chunk)
+            remaining -= len(chunk)
+    finally:
+        os.close(descriptor)
+    after = validate_root_regular(
+        path, expected_mode=expected_mode, maximum_bytes=maximum_bytes
+    )
+    identity = lambda value: (
+        value.st_dev,
+        value.st_ino,
+        value.st_size,
+        value.st_mtime_ns,
+        value.st_ctime_ns,
+    )
+    payload = b"".join(chunks)
+    if identity(before) != identity(after) or len(payload) > maximum_bytes:
+        raise ValueError("sealed hindsight file changed while reading")
+    return payload
+
+
+def parse_sealed_writer_config(value: Any) -> dict[str, Any]:
+    """Validate one exact root-authored writer binding without touching disk."""
+    if not isinstance(value, dict) or set(value) != {
+        "schema",
+        "appliance_id",
+        "workspace",
+        "state_root",
+        "operator_root",
+        "bucket_minutes",
+        "writer_path",
+        "writer_sha256",
+        "activity_report_path",
+        "activity_report_sha256",
+        "operator_report_manifest_path",
+        "operator_report_manifest_sha256",
+    }:
+        raise ValueError("sealed hindsight configuration fields are not exact")
+    appliance_id = value.get("appliance_id")
+    writer_sha256 = value.get("writer_sha256")
+    activity_report_sha256 = value.get("activity_report_sha256")
+    operator_report_manifest_sha256 = value.get(
+        "operator_report_manifest_sha256"
+    )
+    bucket_minutes = value.get("bucket_minutes")
+    paths = {
+        name: value.get(name)
+        for name in (
+            "workspace",
+            "state_root",
+            "operator_root",
+            "writer_path",
+            "activity_report_path",
+            "operator_report_manifest_path",
+        )
+    }
+    if (
+        value.get("schema") != SEALED_WRITER_CONFIG_SCHEMA
+        or not isinstance(appliance_id, str)
+        or not re.fullmatch(r"[a-z0-9][a-z0-9._-]{0,63}", appliance_id)
+        or type(bucket_minutes) is not int
+        or bucket_minutes != DEFAULT_BUCKET_MINUTES
+        or not isinstance(writer_sha256, str)
+        or len(writer_sha256) != 64
+        or any(character not in "0123456789abcdef" for character in writer_sha256)
+        or not isinstance(activity_report_sha256, str)
+        or len(activity_report_sha256) != 64
+        or any(
+            character not in "0123456789abcdef"
+            for character in activity_report_sha256
+        )
+        or not isinstance(operator_report_manifest_sha256, str)
+        or len(operator_report_manifest_sha256) != 64
+        or any(
+            character not in "0123456789abcdef"
+            for character in operator_report_manifest_sha256
+        )
+        or any(
+            not isinstance(item, str)
+            or not item.startswith("/")
+            or item.startswith("//")
+            or "\x00" in item
+            or item != os.path.normpath(item)
+            for item in paths.values()
+        )
+    ):
+        raise ValueError("sealed hindsight configuration escaped immutable bounds")
+    resolved = {name: Path(item) for name, item in paths.items()}
+    if resolved["workspace"] != resolved["state_root"] / "home/default/edge" or resolved[
+        "operator_root"
+    ] != resolved["state_root"] / "operator/hindsight":
+        raise ValueError("sealed hindsight roots are not exactly derived")
+    if resolved["activity_report_path"] != IMMUTABLE_ACTIVITY_REPORT_PATH:
+        raise ValueError("sealed hindsight activity report path is not exact")
+    if (
+        resolved["operator_report_manifest_path"]
+        != IMMUTABLE_OPERATOR_REPORT_MANIFEST_PATH
+    ):
+        raise ValueError("sealed hindsight operator manifest path is not exact")
+    return {
+        "appliance_id": appliance_id,
+        "bucket_minutes": bucket_minutes,
+        "writer_sha256": writer_sha256,
+        "activity_report_sha256": activity_report_sha256,
+        "operator_report_manifest_sha256": operator_report_manifest_sha256,
+        **resolved,
+    }
+
+
+def load_sealed_writer_config(path: Path) -> dict[str, Any]:
+    payload = stable_root_read(
+        path,
+        expected_mode=0o440,
+        maximum_bytes=MAX_SEALED_WRITER_CONFIG_BYTES,
+    )
+    canonical_payload = payload[:-1] if payload.endswith(b"\n") else payload
+    if b"\n" in canonical_payload:
+        raise ValueError("sealed hindsight configuration is not one JSON line")
+    value = strict_json_loads(canonical_payload)
+    if canonical_bytes(value) != canonical_payload:
+        raise ValueError("sealed hindsight configuration is not canonical")
+    config = parse_sealed_writer_config(value)
+    writer_path = config["writer_path"]
+    writer = stable_root_read(
+        writer_path,
+        expected_mode=0o444,
+        maximum_bytes=16 * 1024 * 1024,
+    )
+    if hashlib.sha256(writer).hexdigest() != config["writer_sha256"]:
+        raise ValueError("sealed hindsight writer digest mismatch")
+    if writer_path.resolve() != Path(__file__).resolve():
+        raise ValueError("sealed hindsight config does not bind the running writer")
+    return config
+
+
+def parse_operator_report_manifest(payload: bytes) -> dict[Path, str]:
+    """Parse one root-authored sha256sum inventory without path inference."""
+    if not payload or not payload.endswith(b"\n"):
+        raise ValueError("sealed hindsight operator manifest is not newline terminated")
+    try:
+        text = payload.decode("ascii")
+    except UnicodeDecodeError as error:
+        raise ValueError("sealed hindsight operator manifest is not ASCII") from error
+    entries: dict[Path, str] = {}
+    for line in text.splitlines():
+        match = re.fullmatch(r"([0-9a-f]{64})  (/[^\x00-\x1f\x7f]+)", line)
+        if match is None:
+            raise ValueError("sealed hindsight operator manifest record is malformed")
+        candidate = match.group(2)
+        if candidate.startswith("//") or candidate != os.path.normpath(candidate):
+            raise ValueError("sealed hindsight operator manifest path is not canonical")
+        path = Path(candidate)
+        if path in entries:
+            raise ValueError("sealed hindsight operator manifest has duplicate paths")
+        entries[path] = match.group(1)
+    return entries
+
+
+def verified_activity_report_source(config: dict[str, Any]) -> bytes:
+    """Return the exact root-owned activity source bound by config and manifest."""
+    report_path = config["activity_report_path"]
+    manifest_path = config["operator_report_manifest_path"]
+    report = stable_root_read(
+        report_path,
+        expected_mode=0o444,
+        maximum_bytes=MAX_ACTIVITY_REPORT_BYTES,
+    )
+    manifest = stable_root_read(
+        manifest_path,
+        expected_mode=0o444,
+        maximum_bytes=MAX_OPERATOR_REPORT_MANIFEST_BYTES,
+    )
+    report_sha256 = hashlib.sha256(report).hexdigest()
+    manifest_sha256 = hashlib.sha256(manifest).hexdigest()
+    if report_sha256 != config["activity_report_sha256"]:
+        raise ValueError("sealed hindsight activity report digest mismatch")
+    if manifest_sha256 != config["operator_report_manifest_sha256"]:
+        raise ValueError("sealed hindsight operator manifest digest mismatch")
+    entries = parse_operator_report_manifest(manifest)
+    if entries.get(report_path) != report_sha256:
+        raise ValueError("sealed hindsight activity report manifest binding mismatch")
+    return report
+
+
+def module_from_verified_source(path: Path, payload: bytes) -> Any:
+    """Execute only already-verified bytes, closing the hash/import TOCTOU gap."""
+    name = "astrid_edge_activity_for_hindsight"
+    module = types.ModuleType(name)
+    module.__file__ = str(path)
+    module.__package__ = ""
+    module.__loader__ = None
+    module.__spec__ = importlib.util.spec_from_loader(
+        name, loader=None, origin=str(path)
+    )
+    code = compile(payload, str(path), "exec", dont_inherit=True)
+    exec(code, module.__dict__)  # noqa: S102 - source is root-owned and digest-bound.
+    if module.__file__ != str(path):
+        raise ValueError("sealed hindsight activity module identity changed during load")
+    return module
+
+
+def load_verified_activity_module(config: dict[str, Any]) -> Any:
+    return module_from_verified_source(
+        config["activity_report_path"], verified_activity_report_source(config)
+    )
 
 
 def sha256_open_prefix(handle: Any, prefix_bytes: int) -> tuple[str, int]:
@@ -416,6 +688,289 @@ def trace_summary(value: dict[str, Any]) -> dict[str, Any] | None:
     return result
 
 
+def metadata_label(value: Any, maximum: int = 240) -> str | None:
+    """Return bounded printable metadata, never free-form model or tool text."""
+    if not isinstance(value, str) or not value or len(value) > maximum:
+        return None
+    if any(ord(character) < 0x20 or ord(character) == 0x7F for character in value):
+        return None
+    return value
+
+
+def metadata_sha256(value: Any) -> str | None:
+    label = metadata_label(value, 64)
+    if label is None or len(label) != 64:
+        return None
+    return label if all(character in "0123456789abcdef" for character in label) else None
+
+
+def metadata_integer(value: Any, *, maximum: int = 2**63 - 1) -> int | None:
+    if isinstance(value, bool) or not isinstance(value, int) or not 0 <= value <= maximum:
+        return None
+    return value
+
+
+def scheduled_reflection_projection(event: dict[str, Any]) -> dict[str, Any] | None:
+    """Project one scheduled reflection without retaining any authored text."""
+    if event.get("kind") != "scheduled_introspection":
+        return None
+    timestamp = metadata_integer(event.get("timestamp_unix_ms"))
+    if timestamp in {None, 0}:
+        return None
+    source_values = event.get("source_ledgers")
+    if not isinstance(source_values, list):
+        source_values = [event.get("source_ledger")]
+    source_ledgers = sorted(
+        {
+            str(value)
+            for value in source_values
+            if value
+            in {
+                "introspections/scheduled/receipts.jsonl",
+                "introspection/scheduled/receipts.jsonl",
+            }
+        }
+    )
+    if not source_ledgers:
+        return None
+    reflection_path = normalize_relative_path(event.get("reflection_path"))
+    projected = {
+        "schema": "astrid_edge_hindsight_scheduled_reflection_v1",
+        "timestamp_unix_ms": timestamp,
+        "status": metadata_label(event.get("status"), 80),
+        "authored": event.get("authored") is True,
+        "fallback": event.get("fallback") is True,
+        "provenance": metadata_label(event.get("provenance"), 120),
+        "authorship_class": metadata_label(event.get("authorship_class"), 120),
+        "continuity_projected": event.get("continuity_projected") is True,
+        "continuity_admitted": event.get("continuity_admitted") is True,
+        "trace_id": normalized_uuid(event.get("trace_id")),
+        "span_id": normalized_uuid(event.get("span_id")),
+        "parent_span_id": normalized_uuid(event.get("parent_span_id")),
+        "session_id": metadata_label(event.get("session_id"), MAX_TRACE_LABEL_CHARS),
+        "chain_id": metadata_label(event.get("chain_id"), MAX_TRACE_LABEL_CHARS),
+        "turn_id": normalized_uuid(event.get("turn_id")),
+        "response_sha256": metadata_sha256(event.get("response_sha256")),
+        "reflection_path": reflection_path,
+        "prompt_chars": metadata_integer(event.get("prompt_chars"), maximum=1_000_000),
+        "introspection_tool": metadata_label(event.get("introspection_tool"), 80),
+        "introspection_result_sha256": metadata_sha256(
+            event.get("introspection_result_sha256")
+        ),
+        "candidate_id": metadata_label(event.get("candidate_id"), 128),
+        "candidate_digest": metadata_sha256(event.get("candidate_digest")),
+        "next_due_at_unix_ms": metadata_integer(event.get("next_due_at_unix_ms")),
+        "source_ledgers": source_ledgers,
+        "exact_duplicate_count": metadata_integer(
+            event.get("exact_duplicate_count"), maximum=1_000_000
+        )
+        or 0,
+        "authority": metadata_label(event.get("authority"), 160),
+    }
+    event_id = hashlib.sha256(canonical_bytes(projected)).hexdigest()
+    return {**projected, "event_id": event_id}
+
+
+def self_change_lifecycle_facets(event: dict[str, Any]) -> list[str]:
+    projected = event.get("lifecycle_facets")
+    allowed = {
+        "reflection",
+        "candidate",
+        "build",
+        "test",
+        "tests",
+        "invariant",
+        "shadow",
+        "activation",
+        "restart",
+        "probation",
+        "rollback",
+        "operator",
+    }
+    if (
+        isinstance(projected, list)
+        and projected
+        and projected == sorted(set(projected))
+        and set(projected).issubset(allowed)
+    ):
+        return list(projected)
+    declared = str(event.get("lifecycle_kind") or "").lower()
+    status = str(event.get("status") or "").lower()
+    combined = f"{declared} {status}"
+    facets: set[str] = set()
+    if declared in {"candidate", "intent", "patch_export"} or "candidate" in combined:
+        facets.add("candidate")
+    if declared == "build" or "build" in combined:
+        facets.add("build")
+    if "test" in combined or metadata_sha256(event.get("tests_sha256")):
+        facets.add("tests")
+    if (
+        "shadow" in combined
+        or metadata_sha256(event.get("shadow_evidence_sha256"))
+    ):
+        facets.add("shadow")
+    if declared == "activation" or "activation" in combined or "switch" in combined:
+        facets.add("activation")
+    if any(token in combined for token in ("restart", "crash", "recovery", "reconciled")):
+        facets.add("restart")
+    if declared == "probation" or "probation" in combined:
+        facets.add("probation")
+    if declared == "rollback" or "rollback" in combined or "rolled_back" in combined:
+        facets.add("rollback")
+    if not facets and declared in {"operator"}:
+        facets.add(declared)
+    return sorted(facets)
+
+
+def self_change_projection(event: dict[str, Any]) -> dict[str, Any] | None:
+    """Retain only bounded lifecycle metadata from the sanitized activity view."""
+    if event.get("kind") != "self_change":
+        return None
+    timestamp = metadata_integer(event.get("timestamp_unix_ms"))
+    source_ledger = normalize_relative_path(event.get("source_ledger"))
+    if (
+        timestamp in {None, 0}
+        or source_ledger is None
+        or not source_ledger.startswith("self-change/")
+    ):
+        return None
+    facets = self_change_lifecycle_facets(event)
+    projected = {
+        "schema": "astrid_edge_hindsight_self_change_event_v2",
+        "timestamp_unix_ms": timestamp,
+        "lifecycle_kind": metadata_label(event.get("lifecycle_kind"), 80)
+        or (facets[0] if facets else "unknown"),
+        "lifecycle_facets": facets,
+        "status": metadata_label(event.get("status"), 120),
+        "candidate_id": metadata_label(event.get("candidate_id"), 128),
+        "candidate_digest": metadata_sha256(
+            event.get("candidate_digest") or event.get("candidate_sha256")
+        ),
+        "build_id": metadata_label(event.get("build_id"), 128),
+        "generation_id": metadata_label(event.get("generation_id"), 128),
+        "from_generation": metadata_label(event.get("from_generation"), 128),
+        "tests_sha256": metadata_sha256(event.get("tests_sha256")),
+        "bundle_sha256": metadata_sha256(event.get("bundle_sha256")),
+        "shadow_evidence_sha256": metadata_sha256(
+            event.get("shadow_evidence_sha256")
+        ),
+        "package_replay_sha256_present": (
+            event.get("package_replay_sha256_present") is True
+        ),
+        "shadow_gate_evidence": (
+            INDIRECT_SHADOW_GATE_EVIDENCE
+            if event.get("package_replay_sha256_present") is True
+            else None
+        ),
+        "manifest_sha256": metadata_sha256(event.get("manifest_sha256")),
+        "invariant_candidate_replay_sha256": metadata_sha256(
+            event.get("invariant_candidate_replay_sha256")
+        ),
+        "invariant_package_replay_sha256": metadata_sha256(
+            event.get("invariant_package_replay_sha256")
+        ),
+        "shadow_status": metadata_label(event.get("shadow_status"), 120),
+        "record_sha256": metadata_sha256(event.get("record_sha256")),
+        "projection_core_sha256": metadata_sha256(
+            event.get("projection_core_sha256")
+        ),
+        "response_sha256": metadata_sha256(event.get("response_sha256")),
+        "terminal_declaration_sha256": metadata_sha256(
+            event.get("terminal_declaration_sha256")
+        ),
+        "trace_id": normalized_uuid(event.get("trace_id")),
+        "session_id": metadata_label(event.get("session_id"), MAX_TRACE_LABEL_CHARS),
+        "chain_id": metadata_label(event.get("chain_id"), MAX_TRACE_LABEL_CHARS),
+        "turn_id": normalized_uuid(event.get("turn_id")),
+        "terminal_reason_sha256": metadata_sha256(
+            event.get("terminal_reason_sha256")
+        ),
+        "terminal_authority": metadata_label(
+            event.get("terminal_authority"), 160
+        ),
+        "automatic_retry": (
+            event.get("automatic_retry")
+            if isinstance(event.get("automatic_retry"), bool)
+            else None
+        ),
+        "provenance": metadata_label(event.get("provenance"), 120),
+        "authorship_class": metadata_label(event.get("authorship_class"), 120),
+        "authority": metadata_label(event.get("authority"), 160),
+        "integrity": metadata_label(event.get("integrity"), 160),
+        "command_profile": metadata_label(event.get("command_profile"), 80),
+        "command_executable_sha256": metadata_sha256(
+            event.get("command_executable_sha256")
+        ),
+        "command_argv_sha256": metadata_sha256(event.get("command_argv_sha256")),
+        "command_stdout_sha256": metadata_sha256(
+            event.get("command_stdout_sha256")
+        ),
+        "command_stderr_sha256": metadata_sha256(
+            event.get("command_stderr_sha256")
+        ),
+        "command_exit_code": metadata_integer(event.get("command_exit_code"), maximum=255),
+        "command_timed_out": (
+            event.get("command_timed_out")
+            if isinstance(event.get("command_timed_out"), bool)
+            else None
+        ),
+        "health_checks": metadata_integer(event.get("health_checks"), maximum=1_000_000),
+        "automatic": event.get("automatic") if isinstance(event.get("automatic"), bool) else None,
+        "file_count": metadata_integer(event.get("file_count"), maximum=100_000),
+        "changed_lines": metadata_integer(event.get("changed_lines"), maximum=100_000),
+        "source_ledger": source_ledger,
+        "projected_source_ledger": metadata_label(
+            event.get("projected_source_ledger"), 32
+        ),
+        "source_event_id": metadata_label(event.get("event_id"), 128),
+        "authored": False,
+    }
+    if (
+        projected["projected_source_ledger"] is not None
+        and projected["source_event_id"] is not None
+        and projected["record_sha256"] is not None
+    ):
+        # The operator envelope is a moving, bounded tail and may enrich an
+        # already projected record with later verified build evidence.  Bind
+        # identity only to immutable signed-ledger material so a restart,
+        # envelope rewrite, or later enrichment updates one row instead of
+        # duplicating or aliasing the lifecycle event.
+        event_identity = {
+            "schema": projected["schema"],
+            "source_ledger": projected["source_ledger"],
+            "projected_source_ledger": projected["projected_source_ledger"],
+            "source_event_id": projected["source_event_id"],
+            "record_sha256": projected["record_sha256"],
+        }
+    else:
+        event_identity = {
+            key: value
+            for key, value in projected.items()
+            if key != "projection_core_sha256"
+        }
+    event_id = hashlib.sha256(canonical_bytes(event_identity)).hexdigest()
+    return {**projected, "event_id": event_id}
+
+
+def self_evolution_projections(
+    events: Iterable[dict[str, Any]],
+) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    scheduled: dict[str, dict[str, Any]] = {}
+    lifecycle: dict[str, dict[str, Any]] = {}
+    for event in events:
+        reflection = scheduled_reflection_projection(event)
+        if reflection is not None:
+            scheduled[reflection["event_id"]] = reflection
+        change = self_change_projection(event)
+        if change is not None:
+            lifecycle[change["event_id"]] = change
+
+    def order(value: dict[str, Any]) -> tuple[int, str]:
+        return int(value["timestamp_unix_ms"]), str(value["event_id"])
+
+    return sorted(scheduled.values(), key=order), sorted(lifecycle.values(), key=order)
+
+
 def action_authority(declared_next: Any, decision_source: Any) -> tuple[str, bool]:
     declaration = str(declared_next or "").strip()
     verb = declaration.split(maxsplit=1)[0].upper() if declaration else ""
@@ -460,9 +1015,12 @@ def action_authority(declared_next: Any, decision_source: Any) -> tuple[str, boo
     return "executor_action_outcome_unclassified_authorship", False
 
 
-def attribution_index(workspace: Path) -> dict[str, dict[str, Any]]:
+def attribution_index(
+    workspace: Path, activity_module: Any | None = None
+) -> dict[str, dict[str, Any]]:
     index: dict[str, dict[str, Any]] = {}
-    activity_module = load_activity_module(infer_state_root(workspace))
+    if activity_module is None:
+        activity_module = load_activity_module()
     transport_corrections = (
         activity_module.transport_authorship_corrections(workspace)
         if activity_module is not None
@@ -626,6 +1184,7 @@ def scan_artifacts(
     workspace: Path,
     state: dict[str, Any],
     observed_at: int,
+    activity_module: Any | None = None,
 ) -> tuple[list[dict[str, Any]], dict[str, Any]]:
     prior = state.get("artifact_inventory")
     prior = prior if isinstance(prior, dict) else {}
@@ -634,7 +1193,7 @@ def scan_artifacts(
     )
     current: dict[str, Any] = {}
     records: list[dict[str, Any]] = []
-    attribution = attribution_index(workspace)
+    attribution = attribution_index(workspace, activity_module)
     initial_inventory = not bool(prior)
     for relative, path, metadata in artifact_files(workspace):
         fingerprint = f"{metadata.st_size}:{metadata.st_mtime_ns}"
@@ -971,11 +1530,18 @@ def audit_alert_count(state_root: Path) -> int:
     return total
 
 
-def activity_events(workspace: Path, current_ms: int) -> list[dict[str, Any]]:
-    module = load_activity_module(infer_state_root(workspace))
+def activity_events(
+    workspace: Path, current_ms: int, activity_module: Any | None = None
+) -> list[dict[str, Any]]:
+    module = activity_module if activity_module is not None else load_activity_module()
     if module is None:
         return []
     return list(module.collect_events(workspace, current_ms))
+
+
+def checkpoint_ledger_paths(workspace: Path) -> dict[str, Path]:
+    """Resolve every append-only activity source without recording host paths."""
+    return {relative: workspace / relative for relative in ACTIVITY_LEDGERS}
 
 
 def ensure_database_column(
@@ -1115,6 +1681,68 @@ def prepare_hindsight_database(connection: sqlite3.Connection) -> None:
             ON spectral_receipts(recorded_at_unix_ms);
         CREATE INDEX IF NOT EXISTS spectral_receipts_trace
             ON spectral_receipts(trace_id, recorded_at_unix_ms);
+        CREATE TABLE IF NOT EXISTS scheduled_reflections (
+            event_id TEXT PRIMARY KEY,
+            recorded_at_unix_ms INTEGER NOT NULL,
+            status TEXT,
+            authored INTEGER NOT NULL,
+            fallback INTEGER NOT NULL,
+            provenance TEXT,
+            authorship_class TEXT,
+            continuity_projected INTEGER NOT NULL,
+            continuity_admitted INTEGER NOT NULL,
+            trace_id TEXT,
+            session_id TEXT,
+            chain_id TEXT,
+            turn_id TEXT,
+            response_sha256 TEXT,
+            reflection_path TEXT,
+            candidate_id TEXT,
+            candidate_digest TEXT,
+            source_ledgers_json TEXT NOT NULL,
+            exact_duplicate_count INTEGER NOT NULL,
+            metadata_json TEXT NOT NULL
+        );
+        CREATE INDEX IF NOT EXISTS scheduled_reflections_time
+            ON scheduled_reflections(recorded_at_unix_ms, event_id);
+        CREATE INDEX IF NOT EXISTS scheduled_reflections_trace
+            ON scheduled_reflections(trace_id, recorded_at_unix_ms);
+        CREATE TABLE IF NOT EXISTS self_change_events (
+            event_id TEXT PRIMARY KEY,
+            recorded_at_unix_ms INTEGER NOT NULL,
+            lifecycle_kind TEXT NOT NULL,
+            lifecycle_facets_json TEXT NOT NULL,
+            status TEXT,
+            candidate_id TEXT,
+            candidate_digest TEXT,
+            build_id TEXT,
+            generation_id TEXT,
+            from_generation TEXT,
+            tests_sha256 TEXT,
+            bundle_sha256 TEXT,
+            shadow_evidence_sha256 TEXT,
+            shadow_evidence_in_tests_bundle INTEGER NOT NULL DEFAULT 0,
+            package_replay_sha256_present INTEGER NOT NULL DEFAULT 0,
+            shadow_gate_evidence TEXT,
+            manifest_sha256 TEXT,
+            record_sha256 TEXT,
+            response_sha256 TEXT,
+            terminal_declaration_sha256 TEXT,
+            trace_id TEXT,
+            session_id TEXT,
+            chain_id TEXT,
+            turn_id TEXT,
+            source_ledger TEXT NOT NULL,
+            authority TEXT,
+            integrity TEXT,
+            metadata_json TEXT NOT NULL
+        );
+        CREATE INDEX IF NOT EXISTS self_change_events_time
+            ON self_change_events(recorded_at_unix_ms, event_id);
+        CREATE INDEX IF NOT EXISTS self_change_events_candidate
+            ON self_change_events(candidate_id, recorded_at_unix_ms);
+        CREATE INDEX IF NOT EXISTS self_change_events_build
+            ON self_change_events(build_id, recorded_at_unix_ms);
         CREATE TABLE IF NOT EXISTS checkpoints (
             record_sha256 TEXT PRIMARY KEY,
             recorded_at_unix_ms INTEGER NOT NULL,
@@ -1142,6 +1770,12 @@ def prepare_hindsight_database(connection: sqlite3.Connection) -> None:
             "signature_present_not_verified",
             "INTEGER",
         ),
+        (
+            "self_change_events",
+            "package_replay_sha256_present",
+            "INTEGER NOT NULL DEFAULT 0",
+        ),
+        ("self_change_events", "shadow_gate_evidence", "TEXT"),
     ):
         ensure_database_column(connection, table, column, declaration)
     connection.executescript(
@@ -1177,6 +1811,7 @@ def sync_hindsight_database(
     operator_root: Path,
     workspace: Path,
     current_ms: int,
+    activity_module: Any | None = None,
 ) -> dict[str, Any]:
     path = operator_root / "hindsight.sqlite3"
     connection = sqlite3.connect(path, timeout=30)
@@ -1224,9 +1859,48 @@ def sync_hindsight_database(
                 str(SPECTRAL_TUNING_PROJECTION_VERSION),
             ),
         )
-        for event in activity_events(workspace, current_ms):
+        observed_events = activity_events(workspace, current_ms, activity_module)
+        scheduled_reflections, self_change_events = self_evolution_projections(
+            observed_events
+        )
+        prior_self_evolution_projection = connection.execute(
+            "SELECT value FROM metadata WHERE key = ?",
+            ("self_evolution_projection_version",),
+        ).fetchone()
+        projection_migrated = (
+            prior_self_evolution_projection is None
+            or prior_self_evolution_projection[0]
+            != str(SELF_EVOLUTION_PROJECTION_VERSION)
+        )
+        # Scheduled receipts remain append-only workspace ledgers and can be
+        # rebuilt. The root operator projection intentionally carries only a
+        # bounded lifecycle tail, so accepted lifecycle rows accumulate by
+        # stable event identity instead of disappearing when that tail moves.
+        connection.execute("DELETE FROM scheduled_reflections")
+        if projection_migrated:
+            connection.execute("DELETE FROM self_change_events")
+        connection.execute(
+            "INSERT OR REPLACE INTO metadata(key, value) VALUES(?, ?)",
+            (
+                "self_evolution_projection_version",
+                str(SELF_EVOLUTION_PROJECTION_VERSION),
+            ),
+        )
+        for event in observed_events:
             payload = json.dumps(event, sort_keys=True, separators=(",", ":"))
-            event_id = hashlib.sha256(payload.encode()).hexdigest()
+            if event.get("kind") == "self_change" and metadata_sha256(
+                event.get("record_sha256")
+            ):
+                activity_identity = {
+                    "kind": "self_change",
+                    "source_ledger": event.get("source_ledger"),
+                    "projected_source_ledger": event.get("projected_source_ledger"),
+                    "event_id": event.get("event_id"),
+                    "record_sha256": event.get("record_sha256"),
+                }
+                event_id = hashlib.sha256(canonical_bytes(activity_identity)).hexdigest()
+            else:
+                event_id = hashlib.sha256(payload.encode()).hexdigest()
             connection.execute(
                 """
                 INSERT OR IGNORE INTO activity_events(
@@ -1253,6 +1927,94 @@ def sync_hindsight_database(
                     event.get("declared_next"),
                     str(event.get("source_ledger", "unknown")),
                     payload,
+                ),
+            )
+        for value in scheduled_reflections:
+            metadata_json = json.dumps(
+                value, sort_keys=True, separators=(",", ":")
+            )
+            connection.execute(
+                """
+                INSERT INTO scheduled_reflections(
+                    event_id, recorded_at_unix_ms, status, authored, fallback,
+                    provenance, authorship_class, continuity_projected,
+                    continuity_admitted, trace_id, session_id, chain_id,
+                    turn_id, response_sha256, reflection_path, candidate_id,
+                    candidate_digest, source_ledgers_json,
+                    exact_duplicate_count, metadata_json
+                ) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    value["event_id"],
+                    value["timestamp_unix_ms"],
+                    value["status"],
+                    int(value["authored"]),
+                    int(value["fallback"]),
+                    value["provenance"],
+                    value["authorship_class"],
+                    int(value["continuity_projected"]),
+                    int(value["continuity_admitted"]),
+                    value["trace_id"],
+                    value["session_id"],
+                    value["chain_id"],
+                    value["turn_id"],
+                    value["response_sha256"],
+                    value["reflection_path"],
+                    value["candidate_id"],
+                    value["candidate_digest"],
+                    json.dumps(value["source_ledgers"], separators=(",", ":")),
+                    value["exact_duplicate_count"],
+                    metadata_json,
+                ),
+            )
+        for value in self_change_events:
+            metadata_json = json.dumps(
+                value, sort_keys=True, separators=(",", ":")
+            )
+            connection.execute(
+                """
+                INSERT OR REPLACE INTO self_change_events(
+                    event_id, recorded_at_unix_ms, lifecycle_kind,
+                    lifecycle_facets_json, status, candidate_id,
+                    candidate_digest, build_id, generation_id, from_generation,
+                    tests_sha256, bundle_sha256, shadow_evidence_sha256,
+                    shadow_evidence_in_tests_bundle,
+                    package_replay_sha256_present, shadow_gate_evidence,
+                    manifest_sha256,
+                    record_sha256, response_sha256,
+                    terminal_declaration_sha256, trace_id, session_id, chain_id,
+                    turn_id, source_ledger, authority, integrity, metadata_json
+                ) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    value["event_id"],
+                    value["timestamp_unix_ms"],
+                    value["lifecycle_kind"],
+                    json.dumps(value["lifecycle_facets"], separators=(",", ":")),
+                    value["status"],
+                    value["candidate_id"],
+                    value["candidate_digest"],
+                    value["build_id"],
+                    value["generation_id"],
+                    value["from_generation"],
+                    value["tests_sha256"],
+                    value["bundle_sha256"],
+                    value["shadow_evidence_sha256"],
+                    0,
+                    int(value["package_replay_sha256_present"]),
+                    value["shadow_gate_evidence"],
+                    value["manifest_sha256"],
+                    value["record_sha256"],
+                    value["response_sha256"],
+                    value["terminal_declaration_sha256"],
+                    value["trace_id"],
+                    value["session_id"],
+                    value["chain_id"],
+                    value["turn_id"],
+                    value["source_ledger"],
+                    value["authority"],
+                    value["integrity"],
+                    metadata_json,
                 ),
             )
         for value in json_lines(operator_root / "artifacts.jsonl"):
@@ -1459,6 +2221,8 @@ def sync_hindsight_database(
                 "spectral_rollups",
                 "spectral_receipts",
                 "tuning_events",
+                "scheduled_reflections",
+                "self_change_events",
                 "checkpoints",
             )
         }
@@ -1513,6 +2277,8 @@ def hindsight_database_status(path: Path) -> dict[str, Any]:
                     "spectral_rollups",
                     "spectral_receipts",
                     "tuning_events",
+                    "scheduled_reflections",
+                    "self_change_events",
                     "checkpoints",
                 )
             }
@@ -1553,12 +2319,17 @@ def hindsight_database_status(path: Path) -> dict[str, Any]:
             != ATTRIBUTION_PROJECTION_VERSION
             or metadata_integer("spectral_tuning_projection_version")
             != SPECTRAL_TUNING_PROJECTION_VERSION
+            or metadata_integer("self_evolution_projection_version")
+            != SELF_EVOLUTION_PROJECTION_VERSION
         ),
         "attribution_projection_version": metadata_integer(
             "attribution_projection_version"
         ),
         "spectral_tuning_projection_version": metadata_integer(
             "spectral_tuning_projection_version"
+        ),
+        "self_evolution_projection_version": metadata_integer(
+            "self_evolution_projection_version"
         ),
         "last_sync_unix_ms": metadata_integer("last_sync_unix_ms"),
     }
@@ -1637,6 +2408,38 @@ def query_hindsight_database(
             """,
             (start_ms, end_ms, limit),
         ).fetchall()
+        scheduled_reflection_payloads = connection.execute(
+            """
+            SELECT metadata_json FROM scheduled_reflections
+            WHERE recorded_at_unix_ms BETWEEN ? AND ?
+            ORDER BY recorded_at_unix_ms, event_id
+            LIMIT ?
+            """,
+            (start_ms, end_ms, limit),
+        ).fetchall()
+        self_change_payloads = connection.execute(
+            """
+            SELECT metadata_json FROM self_change_events
+            WHERE recorded_at_unix_ms BETWEEN ? AND ?
+            ORDER BY recorded_at_unix_ms, event_id
+            LIMIT ?
+            """,
+            (start_ms, end_ms, limit),
+        ).fetchall()
+        scheduled_reflection_count = int(
+            connection.execute(
+                "SELECT count(*) FROM scheduled_reflections "
+                "WHERE recorded_at_unix_ms BETWEEN ? AND ?",
+                (start_ms, end_ms),
+            ).fetchone()[0]
+        )
+        self_change_event_count = int(
+            connection.execute(
+                "SELECT count(*) FROM self_change_events "
+                "WHERE recorded_at_unix_ms BETWEEN ? AND ?",
+                (start_ms, end_ms),
+            ).fetchone()[0]
+        )
         last_sync_row = connection.execute(
             "SELECT value FROM metadata WHERE key = 'last_sync_unix_ms'"
         ).fetchone()
@@ -1664,6 +2467,10 @@ def query_hindsight_database(
         "tuning_events": [
             flatten_signed_tuning(value) for value in payloads(tuning_payloads)
         ],
+        "scheduled_reflections": payloads(scheduled_reflection_payloads),
+        "self_change_events": payloads(self_change_payloads),
+        "scheduled_reflection_count": scheduled_reflection_count,
+        "self_change_event_count": self_change_event_count,
         "last_sync_unix_ms": int(last_sync_row[0]) if last_sync_row else 0,
         "latest_activity_timestamp_unix_ms": latest_activity_timestamp,
     }
@@ -1686,7 +2493,24 @@ def record(args: argparse.Namespace) -> dict[str, Any]:
         return record_locked(args)
 
 
-def record_locked(args: argparse.Namespace) -> dict[str, Any]:
+def record_sealed(config_path: Path) -> dict[str, Any]:
+    """Record through one immutable writer/path/digest binding."""
+    config = load_sealed_writer_config(config_path)
+    activity_module = load_verified_activity_module(config)
+    args = argparse.Namespace(
+        workspace=config["workspace"],
+        state_root=config["state_root"],
+        operator_root=config["operator_root"],
+        bucket_minutes=config["bucket_minutes"],
+        format="json",
+    )
+    with exclusive_collector_lock(config["operator_root"]):
+        return record_locked(args, activity_module)
+
+
+def record_locked(
+    args: argparse.Namespace, activity_module: Any | None = None
+) -> dict[str, Any]:
     workspace = args.workspace.expanduser().resolve()
     state_root = (args.state_root or infer_state_root(workspace)).expanduser().resolve()
     operator_root = (args.operator_root or state_root / "operator/hindsight").expanduser().resolve()
@@ -1772,7 +2596,9 @@ def record_locked(args: argparse.Namespace) -> dict[str, Any]:
         integrity_violations = integrity_violations[-100:]
         epoch_integrity_violations = epoch_integrity_violations[-100:]
 
-    artifact_records, artifact_inventory = scan_artifacts(workspace, state, observed_at)
+    artifact_records, artifact_inventory = scan_artifacts(
+        workspace, state, observed_at, activity_module
+    )
     artifact_hash, artifacts_written = append_chained(
         operator_root / "artifacts.jsonl",
         artifact_records,
@@ -1787,8 +2613,8 @@ def record_locked(args: argparse.Namespace) -> dict[str, Any]:
     )
 
     ledgers = {
-        relative: ledger_summary(workspace / relative)
-        for relative in ACTIVITY_LEDGERS
+        relative: ledger_summary(path)
+        for relative, path in checkpoint_ledger_paths(workspace).items()
     }
     existing_syntax_violations = {
         (str(value.get("ledger")), str(value.get("snapshot_sha256")))
@@ -1889,7 +2715,7 @@ def record_locked(args: argparse.Namespace) -> dict[str, Any]:
         state.get("checkpoint_record_sha256"),
     )
     operator_database = sync_hindsight_database(
-        operator_root, workspace, observed_at
+        operator_root, workspace, observed_at, activity_module
     )
     state = {
         "schema": STATE_SCHEMA,
@@ -1985,13 +2811,14 @@ def checkpoint_prefix_status(workspace: Path, latest: dict[str, Any]) -> dict[st
     ledgers = latest.get("ledgers")
     if not isinstance(ledgers, dict):
         return results
+    paths = checkpoint_ledger_paths(workspace)
     for relative, prior in ledgers.items():
         if not isinstance(prior, dict) or not prior.get("present"):
             continue
         if prior.get("hash_scope") != LEDGER_HASH_SCOPE:
             results[str(relative)] = "unsupported_legacy_hash_scope"
             continue
-        path = workspace / str(relative)
+        path = paths.get(str(relative), workspace / str(relative))
         try:
             prior_size = int(prior["size_bytes"])
             prior_inode = int(prior["inode"])
@@ -2023,24 +2850,16 @@ def checkpoint_prefix_status(workspace: Path, latest: dict[str, Any]) -> dict[st
     return results
 
 
-def load_activity_module(state_root: Path) -> Any:
-    directory = Path(__file__).resolve().parent
-    candidates = (
-        directory / "report_edge_activity.py",
-        directory / "report-edge-activity",
-        state_root / "bin/report_edge_activity.py",
-        state_root / "bin/report-edge-activity",
-    )
-    source = next((path for path in candidates if path.is_file()), None)
-    if source is None:
+def load_activity_module() -> Any:
+    """Load only the co-installed development reporter outside sealed mode."""
+    source = Path(__file__).resolve().parent / "report_edge_activity.py"
+    if not source.is_file():
         return None
-    loader = importlib.machinery.SourceFileLoader("astrid_edge_activity_for_hindsight", str(source))
-    spec = importlib.util.spec_from_loader(loader.name, loader)
-    if spec is None:
+    try:
+        payload = source.read_bytes()
+    except OSError:
         return None
-    module = importlib.util.module_from_spec(spec)
-    loader.exec_module(module)
-    return module
+    return module_from_verified_source(source, payload)
 
 
 def iso_time(timestamp_ms: int | None) -> str:
@@ -2064,10 +2883,21 @@ def parse_time(value: str) -> int:
     return int(parsed.timestamp() * 1000)
 
 
+def terminal_safe_text(value: Any) -> str:
+    """Neutralize terminal controls without changing JSON report values."""
+
+    return "".join(
+        " "
+        if unicodedata.category(character) in {"Cc", "Cf", "Cs", "Zl", "Zp"}
+        else character
+        for character in str(value)
+    )
+
+
 def short(value: Any, maximum: int = 128) -> str:
     if value in (None, ""):
         return "-"
-    text = " ".join(str(value).split())
+    text = " ".join(terminal_safe_text(value).split())
     return text if len(text) <= maximum else f"{text[: maximum - 1]}…"
 
 
@@ -2147,6 +2977,32 @@ def spectral_summary(records: list[dict[str, Any]]) -> dict[str, Any]:
     return result
 
 
+def self_evolution_summary(
+    scheduled: list[dict[str, Any]], lifecycle: list[dict[str, Any]]
+) -> dict[str, Any]:
+    statuses: dict[str, int] = {}
+    facets: dict[str, int] = {}
+    for value in scheduled:
+        status = str(value.get("status") or "unknown")
+        statuses[status] = statuses.get(status, 0) + 1
+    for value in lifecycle:
+        for facet in value.get("lifecycle_facets") or []:
+            label = str(facet)
+            facets[label] = facets.get(label, 0) + 1
+    return {
+        "scheduled_reflection_count": len(scheduled),
+        "scheduled_authored_count": sum(
+            value.get("authored") is True for value in scheduled
+        ),
+        "scheduled_fallback_count": sum(
+            value.get("fallback") is True for value in scheduled
+        ),
+        "scheduled_status_counts": dict(sorted(statuses.items())),
+        "self_change_event_count": len(lifecycle),
+        "lifecycle_facet_counts": dict(sorted(facets.items())),
+    }
+
+
 def build_report(args: argparse.Namespace) -> dict[str, Any]:
     workspace = args.workspace.expanduser().resolve()
     state_root = (args.state_root or infer_state_root(workspace)).expanduser().resolve()
@@ -2167,12 +3023,14 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
         == ATTRIBUTION_PROJECTION_VERSION
         and operator_database.get("spectral_tuning_projection_version")
         == SPECTRAL_TUNING_PROJECTION_VERSION
+        and operator_database.get("self_evolution_projection_version")
+        == SELF_EVOLUTION_PROJECTION_VERSION
     ):
         database_view = query_hindsight_database(
             database_path, start_ms, end_ms, args.limit
         )
 
-    activity_module = load_activity_module(state_root)
+    activity_module = load_activity_module()
     if database_view is not None:
         activities = list(database_view["activity"])
         latest_indexed_activity = int(
@@ -2266,6 +3124,29 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
             <= int(value.get("recorded_at_unix_ms", 0) or 0)
             <= end_ms
         ][-args.limit :]
+
+    if database_view is not None:
+        scheduled_reflections = list(database_view["scheduled_reflections"])
+        self_change_events = list(database_view["self_change_events"])
+        scheduled_reflection_count = int(
+            database_view["scheduled_reflection_count"]
+        )
+        self_change_event_count = int(database_view["self_change_event_count"])
+    else:
+        observed_events = activity_events(workspace, current_ms, activity_module)
+        all_scheduled, all_self_change = self_evolution_projections(observed_events)
+        scheduled_reflections = [
+            value
+            for value in all_scheduled
+            if start_ms <= int(value["timestamp_unix_ms"]) <= end_ms
+        ][-args.limit :]
+        self_change_events = [
+            value
+            for value in all_self_change
+            if start_ms <= int(value["timestamp_unix_ms"]) <= end_ms
+        ][-args.limit :]
+        scheduled_reflection_count = len(scheduled_reflections)
+        self_change_event_count = len(self_change_events)
         tuning_events = [
             flatten_signed_tuning(value)
             for value in json_lines(workspace / "tuning/receipts.jsonl")
@@ -2288,7 +3169,8 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
         "fill_rollups": verify_chain(operator_root / "fill_rollups.jsonl"),
     }
     current_ledger_syntax = {
-        relative: ledger_summary(workspace / relative) for relative in ACTIVITY_LEDGERS
+        relative: ledger_summary(path)
+        for relative, path in checkpoint_ledger_paths(workspace).items()
     }
     current_ledger_syntax_issues = {
         relative: {
@@ -2370,6 +3252,8 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
             "spectral_rollup_count_in_range": len(spectral_records),
             "spectral_receipt_count_in_range": len(spectral_receipts),
             "tuning_event_count_in_range": len(tuning_events),
+            "scheduled_reflection_count_in_range": scheduled_reflection_count,
+            "self_change_event_count_in_range": self_change_event_count,
             "state_database": latest.get("state_database") or database_inventory(state_root / "var/state.db"),
             "audit_database": latest.get("audit_database") or database_inventory(state_root / "home/default/.local/audit"),
             "operator_hindsight_database": operator_database,
@@ -2381,6 +3265,16 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
             "receipts": spectral_receipts,
             "tuning_events": tuning_events,
             "authority": "deterministic_machine_derivation_not_authorship_or_causal_proof",
+        },
+        "self_evolution": {
+            "summary": self_evolution_summary(
+                scheduled_reflections, self_change_events
+            ),
+            "scheduled_reflections": scheduled_reflections,
+            "lifecycle_events": self_change_events,
+            "authority": (
+                "metadata_hashes_and_provenance_only_no_prompt_response_source_diff_or_logs"
+            ),
         },
         "activity": activities,
         "artifacts": artifacts,
@@ -2402,6 +3296,7 @@ def render_text(report: dict[str, Any]) -> str:
         "Chains: " + ", ".join(f"{name}={'valid' if value['valid'] else 'INVALID'}({value['records']})" for name, value in integrity["chains"].items()),
         f"Query source={sources['historical_query_source']}; activity events={sources['activity_event_count_in_range']} (showing {sources['activity_events_returned']}); artifact files={sources['artifact_file_count_in_range']} (showing {sources['artifact_files_returned']}); fill rollups={sources['fill_rollup_count_in_range']}",
         f"Spectral rollups={sources.get('spectral_rollup_count_in_range', 0)}; spectral receipts={sources.get('spectral_receipt_count_in_range', 0)}; tuning lifecycle events={sources.get('tuning_event_count_in_range', 0)}",
+        f"Scheduled reflections={sources.get('scheduled_reflection_count_in_range', 0)}; self-change lifecycle events={sources.get('self_change_event_count_in_range', 0)}",
     ]
     state_db = sources["state_database"]
     audit_db = sources["audit_database"]
@@ -2462,6 +3357,35 @@ def render_text(report: dict[str, Any]) -> str:
             f"status={event.get('status')} id={event.get('tuning_id') or event.get('experiment_id')} "
             f"candidate={event.get('candidate_id')} parameter={event.get('parameter')}"
         )
+    evolution = report.get("self_evolution", {})
+    evolution_summary = evolution.get("summary", {})
+    lines.extend(["", "## Scheduled reflection and self-change"])
+    lines.append(
+        "scheduled={} authored={} fallback={} lifecycle_facets={} authority={}".format(
+            evolution_summary.get("scheduled_reflection_count", 0),
+            evolution_summary.get("scheduled_authored_count", 0),
+            evolution_summary.get("scheduled_fallback_count", 0),
+            evolution_summary.get("lifecycle_facet_counts", {}),
+            evolution.get("authority"),
+        )
+    )
+    for event in evolution.get("scheduled_reflections", []):
+        lines.append(
+            f"{iso_time(int(event.get('timestamp_unix_ms', 0) or 0))} "
+            f"SCHEDULED_REFLECTION status={event.get('status')} "
+            f"authored={str(event.get('authored')).lower()} "
+            f"continuity={str(event.get('continuity_admitted')).lower()} "
+            f"candidate={event.get('candidate_id')} "
+            f"response={str(event.get('response_sha256') or '-')[:16]}"
+        )
+    for event in evolution.get("lifecycle_events", []):
+        lines.append(
+            f"{iso_time(int(event.get('timestamp_unix_ms', 0) or 0))} "
+            f"SELF_CHANGE facets={','.join(event.get('lifecycle_facets') or []) or '-'} "
+            f"status={event.get('status')} candidate={event.get('candidate_id')} "
+            f"build={event.get('build_id')} generation={event.get('generation_id')} "
+            f"shadow_gate={event.get('shadow_gate_evidence') or '-'}"
+        )
     lines.extend(["", "## Causal activity"])
     for event in report["activity"]:
         timestamp = iso_time(int(event.get("timestamp_unix_ms", 0) or 0))
@@ -2489,13 +3413,17 @@ def render_text(report: dict[str, Any]) -> str:
             report["authority_note"],
         ]
     )
-    return "\n".join(lines)
+    return "\n".join(terminal_safe_text(line) for line in lines)
 
 
 def parser() -> argparse.ArgumentParser:
     result = argparse.ArgumentParser(description=__doc__)
     subparsers = result.add_subparsers(dest="command")
     record_parser = subparsers.add_parser("record", help="append an owner-only integrity checkpoint")
+    sealed_parser = subparsers.add_parser(
+        "record-sealed", help="append through one immutable root-owned writer binding"
+    )
+    sealed_parser.add_argument("--config", type=Path, required=True)
     report_parser = subparsers.add_parser("report", help="render a read-only retrospective report")
     for subparser in (record_parser, report_parser):
         subparser.add_argument("--workspace", type=Path, required=True)
@@ -2522,7 +3450,13 @@ def default_workspace() -> Path | None:
 
 def main() -> int:
     arguments = sys.argv[1:]
-    if not arguments or arguments[0] not in {"record", "report", "-h", "--help"}:
+    if not arguments or arguments[0] not in {
+        "record",
+        "record-sealed",
+        "report",
+        "-h",
+        "--help",
+    }:
         workspace = default_workspace()
         if workspace is None:
             raise SystemExit("no default edge workspace found; use report --workspace PATH")
@@ -2539,9 +3473,23 @@ def main() -> int:
             print(json.dumps(output, sort_keys=True))
         else:
             print(
-                f"hindsight checkpoint recorded: artifacts={output['artifacts_written']} "
-                f"fill_rollups={output['fill_rollups_written']} root={output['operator_root']}"
+                terminal_safe_text(
+                    f"hindsight checkpoint recorded: artifacts={output['artifacts_written']} "
+                    f"fill_rollups={output['fill_rollups_written']} root={output['operator_root']}"
+                )
             )
+        return 0
+    if args.command == "record-sealed":
+        try:
+            output = record_sealed(args.config)
+        except (OSError, ValueError) as error:
+            raise SystemExit(str(error)) from error
+        print(
+            terminal_safe_text(
+                f"sealed hindsight checkpoint recorded: artifacts={output['artifacts_written']} "
+                f"fill_rollups={output['fill_rollups_written']}"
+            )
+        )
         return 0
     if args.window_minutes < 1 or args.limit < 1:
         raise SystemExit("--window-minutes and --limit must be positive")

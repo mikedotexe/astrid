@@ -7,9 +7,16 @@ on:
       - '.github/workflows/release.yml'
       - 'Cargo.lock'
       - 'Cargo.toml'
+      - 'capsules/astralis/astrid-capsule-agents/**'
+      - 'capsules/astralis/astrid-capsule-cli/**'
       - 'capsules/astralis/astrid-capsule-edge-context/**'
       - 'capsules/astralis/astrid-capsule-edge-introspector/**'
       - 'capsules/astralis/astrid-capsule-edge-spectral/**'
+      - 'capsules/astralis/astrid-capsule-fs/**'
+      - 'capsules/astralis/astrid-capsule-http/**'
+      - 'capsules/astralis/astrid-capsule-memory/**'
+      - 'capsules/astralis/astrid-capsule-shell/**'
+      - 'capsules/astralis/astrid-capsule-skills/**'
       - 'crates/astrid-approval/**'
       - 'crates/astrid-build/**'
       - 'crates/astrid-capsule/**'
@@ -22,10 +29,12 @@ on:
       - 'crates/astrid-spectral-core/**'
       - 'crates/astrid-types/**'
       - 'docs/headless-linux.md'
+      - 'docs/cpu-edge-self-evolution.md'
       - 'packaging/appliances/**'
       - 'packaging/headless/**'
       - 'packaging/systemd/**'
       - 'scripts/*edge*'
+      - 'scripts/edge_self_change/**'
       - 'scripts/*headless*'
       - 'scripts/astrid_at_a_glance.py'
       - 'scripts/install_essential_capsules.sh'
@@ -35,6 +44,12 @@ on:
       - 'scripts/verify_edge_capsule_status.py'
       - 'scripts/warm_ollama_model.sh'
       - 'services/astrid-edge-runtime/**'
+      - 'services/astrid-edge-rescue-helper/**'
+      - 'services/astrid-edge-steward-helper/**'
+      - 'services/astrid-edge-web-broker/**'
+      - 'services/astrid-edge-provider-broker/**'
+      - 'services/astrid-edge-presentation-broker/**'
+      - 'services/astrid-edge-checkpoint/**'
       - 'wit/**'
   push:
     branches: [main]
@@ -43,9 +58,16 @@ on:
       - '.github/workflows/release.yml'
       - 'Cargo.lock'
       - 'Cargo.toml'
+      - 'capsules/astralis/astrid-capsule-agents/**'
+      - 'capsules/astralis/astrid-capsule-cli/**'
       - 'capsules/astralis/astrid-capsule-edge-context/**'
       - 'capsules/astralis/astrid-capsule-edge-introspector/**'
       - 'capsules/astralis/astrid-capsule-edge-spectral/**'
+      - 'capsules/astralis/astrid-capsule-fs/**'
+      - 'capsules/astralis/astrid-capsule-http/**'
+      - 'capsules/astralis/astrid-capsule-memory/**'
+      - 'capsules/astralis/astrid-capsule-shell/**'
+      - 'capsules/astralis/astrid-capsule-skills/**'
       - 'crates/astrid-approval/**'
       - 'crates/astrid-build/**'
       - 'crates/astrid-capsule/**'
@@ -58,10 +80,12 @@ on:
       - 'crates/astrid-spectral-core/**'
       - 'crates/astrid-types/**'
       - 'docs/headless-linux.md'
+      - 'docs/cpu-edge-self-evolution.md'
       - 'packaging/appliances/**'
       - 'packaging/headless/**'
       - 'packaging/systemd/**'
       - 'scripts/*edge*'
+      - 'scripts/edge_self_change/**'
       - 'scripts/*headless*'
       - 'scripts/astrid_at_a_glance.py'
       - 'scripts/install_essential_capsules.sh'
@@ -71,6 +95,12 @@ on:
       - 'scripts/verify_edge_capsule_status.py'
       - 'scripts/warm_ollama_model.sh'
       - 'services/astrid-edge-runtime/**'
+      - 'services/astrid-edge-rescue-helper/**'
+      - 'services/astrid-edge-steward-helper/**'
+      - 'services/astrid-edge-web-broker/**'
+      - 'services/astrid-edge-provider-broker/**'
+      - 'services/astrid-edge-presentation-broker/**'
+      - 'services/astrid-edge-checkpoint/**'
       - 'wit/**'
 
 permissions:
@@ -84,26 +114,59 @@ jobs:
     name: Ubuntu 22.04 CPU-edge target
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+
+      - name: Attest Ubuntu 22.04 bootstrap prerequisites
+        run: |
+          systemd --version | sed -n '1p' | grep -Eq '^systemd 249([[:space:]]|$)'
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            acl \
+            e2fsprogs \
+            passwd \
+            util-linux
+          for command in \
+            blkid chattr dumpe2fs fallocate findmnt getfacl getent groupadd \
+            install ldconfig losetup lsattr mkfs.ext4 passwd python3 readlink \
+            runuser setfacl setpriv sha256sum systemctl systemd-analyze \
+            systemd-escape systemd-run tar useradd usermod; do
+            command -v "$command" >/dev/null
+          done
 
       - name: Install Rust 1.94 and Component Model target
-        uses: dtolnay/rust-toolchain@stable
+        uses: dtolnay/rust-toolchain@4360b52568e2003a75bf9bc1d59f33a8e3fc893c # stable
         with:
           toolchain: '1.94'
           targets: wasm32-wasip2
           components: rustfmt, clippy
 
-      - uses: Swatinem/rust-cache@v2
+      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2
         with:
           workspaces: |
             . -> target
             services/astrid-edge-runtime -> services/astrid-edge-runtime/target
+            services/astrid-edge-rescue-helper -> services/astrid-edge-rescue-helper/target
+            services/astrid-edge-steward-helper -> services/astrid-edge-steward-helper/target
+            services/astrid-edge-web-broker -> services/astrid-edge-web-broker/target
+            services/astrid-edge-provider-broker -> services/astrid-edge-provider-broker/target
+            services/astrid-edge-presentation-broker -> services/astrid-edge-presentation-broker/target
+            services/astrid-edge-checkpoint -> services/astrid-edge-checkpoint/target
 
       - name: Formatting
         run: |
           cargo fmt --all -- --check
           cargo fmt --manifest-path services/astrid-edge-runtime/Cargo.toml -- --check
-          cargo fmt --manifest-path capsules/astralis/astrid-capsule-edge-spectral/Cargo.toml -- --check
+          cargo fmt --manifest-path services/astrid-edge-rescue-helper/Cargo.toml -- --check
+          cargo fmt --manifest-path services/astrid-edge-steward-helper/Cargo.toml -- --check
+          cargo fmt --manifest-path services/astrid-edge-web-broker/Cargo.toml -- --check
+          cargo fmt --manifest-path services/astrid-edge-provider-broker/Cargo.toml -- --check
+          cargo fmt --manifest-path services/astrid-edge-presentation-broker/Cargo.toml -- --check
+          cargo fmt --manifest-path services/astrid-edge-checkpoint/Cargo.toml -- --check
+          for capsule in agents cli edge-context edge-introspector edge-spectral fs http memory shell skills; do
+            cargo fmt --manifest-path "capsules/astralis/astrid-capsule-$capsule/Cargo.toml" -- --check
+          done
 
       - name: Strict edge Clippy
         run: |
@@ -119,7 +182,28 @@ jobs:
             --lib --bins -- -D warnings
           cargo clippy \
             --manifest-path services/astrid-edge-runtime/Cargo.toml \
-            --all-targets -- -D warnings
+            --all-targets --all-features --locked -- -D warnings
+          cargo clippy \
+            --manifest-path services/astrid-edge-rescue-helper/Cargo.toml \
+            --all-targets --all-features --locked -- -D warnings
+          cargo clippy \
+            --manifest-path services/astrid-edge-steward-helper/Cargo.toml \
+            --all-targets --all-features --locked -- -D warnings
+          cargo clippy \
+            --manifest-path services/astrid-edge-web-broker/Cargo.toml \
+            --all-targets --all-features --locked -- -D warnings
+          cargo clippy \
+            --manifest-path services/astrid-edge-provider-broker/Cargo.toml \
+            --all-targets --all-features --locked -- \
+            -D warnings -D clippy::arithmetic_side_effects
+          cargo clippy \
+            --manifest-path services/astrid-edge-presentation-broker/Cargo.toml \
+            --all-targets --all-features --locked -- \
+            -D warnings -D clippy::arithmetic_side_effects
+          cargo clippy \
+            --manifest-path services/astrid-edge-checkpoint/Cargo.toml \
+            --all-targets --all-features --locked -- \
+            -D warnings -D clippy::arithmetic_side_effects
 
       - name: Core transport and tracing checks
         run: |
@@ -131,7 +215,16 @@ jobs:
             -p astrid-types
 
       - name: Edge runtime tests
-        run: cargo test --manifest-path services/astrid-edge-runtime/Cargo.toml
+        run: cargo test --manifest-path services/astrid-edge-runtime/Cargo.toml --all-targets --all-features --locked
+
+      - name: Immutable self-evolution helper tests
+        run: |
+          cargo test --manifest-path services/astrid-edge-rescue-helper/Cargo.toml --all-targets --all-features --locked
+          cargo test --manifest-path services/astrid-edge-steward-helper/Cargo.toml --all-targets --all-features --locked
+          cargo test --manifest-path services/astrid-edge-web-broker/Cargo.toml --all-targets --all-features --locked
+          cargo test --manifest-path services/astrid-edge-provider-broker/Cargo.toml --all-targets --all-features --locked
+          cargo test --manifest-path services/astrid-edge-presentation-broker/Cargo.toml --all-targets --all-features --locked
+          cargo test --manifest-path services/astrid-edge-checkpoint/Cargo.toml --all-targets --all-features --locked
 
       - name: Authority boundary and spectral protocol checks
         run: |
@@ -144,20 +237,24 @@ jobs:
             --manifest-path services/astrid-edge-runtime/Cargo.toml \
             provenance_requires_exact_unrepaired_trace_binding
 
-      - name: Edge capsule builds
+      - name: Ten essential CPU-edge capsule checks and builds
         run: |
-          cargo clippy --manifest-path capsules/astralis/astrid-capsule-edge-context/Cargo.toml --all-targets -- -D warnings
-          cargo clippy --manifest-path capsules/astralis/astrid-capsule-edge-introspector/Cargo.toml --all-targets -- -D warnings
-          cargo build --manifest-path capsules/astralis/astrid-capsule-edge-context/Cargo.toml --target wasm32-wasip2
-          cargo build --manifest-path capsules/astralis/astrid-capsule-edge-introspector/Cargo.toml --target wasm32-wasip2
-          cargo test --manifest-path capsules/astralis/astrid-capsule-edge-spectral/Cargo.toml
-          cargo clippy --manifest-path capsules/astralis/astrid-capsule-edge-spectral/Cargo.toml --all-targets -- -D warnings
-          cargo build --manifest-path capsules/astralis/astrid-capsule-edge-spectral/Cargo.toml --target wasm32-wasip2
+          for capsule in agents cli edge-context edge-introspector edge-spectral fs http memory shell skills; do
+            manifest="capsules/astralis/astrid-capsule-$capsule/Cargo.toml"
+            cargo test --manifest-path "$manifest" --all-targets --all-features --locked
+            cargo clippy --manifest-path "$manifest" --all-targets --all-features --locked -- -D warnings -D clippy::arithmetic_side_effects
+            cargo build --manifest-path "$manifest" --target wasm32-wasip2 --locked
+          done
 
-      - name: Python observability tests
+      - name: Python 3.10 appliance runtime and observability tests
         run: |
+          python3 -c 'import sys; assert sys.version_info[:2] == (3, 10), sys.version'
           python3 -m unittest \
+            scripts/test_edge_audio_feeder.py \
+            scripts/test_edge_builder_store.py \
             scripts/test_edge_hindsight.py \
+            scripts/test_edge_state_store.py \
+            scripts/test_edge_probation_health_systemd.py \
             scripts/test_install_headless_application_capsules.py \
             scripts/test_report_edge_activity.py \
             scripts/test_report_edge_appliance.py \
@@ -165,16 +262,31 @@ jobs:
             scripts/test_reconcile_edge_interrupted_actions.py \
             scripts/test_migrate_edge_safe_fallback_authorship.py \
             scripts/test_migrate_edge_transport_sentinels.py \
-            scripts/test_migrate_edge_operator_harness_isolation.py
+            scripts/test_migrate_edge_operator_harness_isolation.py \
+            scripts/test_build_edge_self_change_supervisor_zipapp.py \
+            scripts/test_build_edge_self_change_toolchain_bundle.py \
+            scripts/test_package_edge_self_evolution_bootstrap.py \
+            scripts/test_edge_self_change_supervisor.py \
+            scripts/test_edge_candidate_presentation.py \
+            scripts/test_edge_presentation_broker_systemd.py \
+            scripts/test_edge_release_workflow.py \
+            scripts/test_verify_edge_self_evolution_release.py
           python3 -m py_compile \
             scripts/astrid_at_a_glance.py \
+            scripts/edge_audio_feeder.py \
             scripts/edge_hindsight.py \
             scripts/install_headless_application_capsules.py \
             scripts/report_edge_activity.py \
             scripts/report_edge_appliance.py \
+            scripts/report_edge_fleet_activity.py \
             scripts/retire_edge_autonomy_session.py \
             scripts/reconcile_edge_interrupted_actions.py \
             scripts/migrate_edge_operator_harness_isolation.py \
+            scripts/build_edge_self_change_supervisor_zipapp.py \
+            scripts/build_edge_self_change_toolchain_bundle.py \
+            scripts/edge_self_change_supervisor.py \
+            scripts/package_edge_self_evolution_bootstrap.py \
+            scripts/verify_edge_self_evolution_release.py \
             scripts/verify_edge_capsule_status.py
 
       - name: Installer dry runs
@@ -202,14 +314,200 @@ jobs:
             --binary-dir target/debug \
             --layout icp-ssd \
             --dry-run
+          scripts/test_install_edge_self_evolution_root.sh
+          scripts/test_install_edge_self_evolution_bundle.sh
 
       - name: Verify appliance archive
         run: scripts/test_package_edge_appliance.sh
 
-      - name: Verify user units
+      - name: Verify user and immutable-root units
         run: |
-          systemd-analyze verify packaging/systemd/*.service packaging/systemd/*.timer
+          mapfile -t base_units < <(find packaging/systemd -maxdepth 1 -type f \
+            \( -name '*.service' -o -name '*.timer' \) \
+            ! -name 'astrid-edge-self-change-supervisor.service' \
+            ! -name 'astrid-edge-self-change-probation-health.service' \
+            ! -name 'astrid-edge-self-change-probation-health.timer' \
+            ! -name 'astrid-edge-generation-guard.service' \
+            ! -name 'astrid-edge-core-liveness.service' \
+            ! -name 'astrid-edge-steward.service' \
+            ! -name 'astrid-edge-steward.timer' \
+            ! -name 'astrid-edge-web-broker-*.service' \
+            ! -name 'astrid-edge-provider-broker@.service' \
+            ! -name 'astrid-edge-presentation-broker@.service.in' \
+            ! -name 'astrid-edge-audio-feeder.service' \
+            ! -name 'astrid-edge-state-store-health.service' \
+            ! -name 'astrid-edge-state-store-health.timer' \
+            -print | sort)
+          systemd-analyze verify "${base_units[@]}"
           systemd-analyze verify packaging/systemd/icp/*.service packaging/systemd/icp/*.timer
+          immutable_units="$(mktemp -d)"
+          cp \
+            packaging/systemd/astrid-edge-self-change-supervisor.service \
+            packaging/systemd/astrid-edge-self-change-probation-health.service \
+            packaging/systemd/astrid-edge-self-change-probation-health.timer \
+            packaging/systemd/astrid-edge-generation-guard.service \
+            packaging/systemd/astrid-edge-core-liveness.service \
+            packaging/systemd/astrid-edge-steward.timer \
+            packaging/systemd/astrid-edge-web-broker-core.service \
+            packaging/systemd/astrid-edge-web-broker-runtime.service \
+            packaging/systemd/astrid-edge-web-broker-steward.service \
+            packaging/systemd/astrid-edge-provider-broker@.service \
+            packaging/systemd/astrid-edge-audio-feeder.service \
+            packaging/systemd/astrid-edge-state-store-health.service \
+            packaging/systemd/astrid-edge-state-store-health.timer \
+            packaging/systemd/ollama-cpu.service \
+            "$immutable_units/"
+          sed 's|@@RUNTIME_GROUP@@|root|g' \
+            packaging/systemd/astrid-edge-steward.service \
+            >"$immutable_units/astrid-edge-steward.service"
+          sed \
+            -e 's|@@RELEASE_PARENT@@|/opt/astrid-edge|g' \
+            -e 's|@@GENERATION_FILE@@|/var/lib/astrid-edge/current-generation|g' \
+            packaging/systemd/astrid-edge-presentation-broker@.service.in \
+            >"$immutable_units/astrid-edge-presentation-broker@.service"
+          sed 's|@@RUNTIME_GROUP@@|root|g' \
+            packaging/systemd/astrid-edge-presentation-broker.socket.in \
+            >"$immutable_units/astrid-edge-presentation-broker.socket"
+          sed 's|@@RUNTIME_GROUP@@|root|g' \
+            packaging/systemd/astrid-edge-web-broker-runtime.socket.in \
+            >"$immutable_units/astrid-edge-web-broker-runtime.socket"
+          sed 's|@@CORE_GROUP@@|root|g' \
+            packaging/systemd/astrid-edge-web-broker-core.socket.in \
+            >"$immutable_units/astrid-edge-web-broker-core.socket"
+          sed 's|@@STEWARD_GROUP@@|root|g' \
+            packaging/systemd/astrid-edge-web-broker-steward.socket.in \
+            >"$immutable_units/astrid-edge-web-broker-steward.socket"
+          sed 's|@@PROVIDER_RUNTIME_GROUP@@|root|g' \
+            packaging/systemd/astrid-edge-provider-runtime.socket.in \
+            >"$immutable_units/astrid-edge-provider-runtime.socket"
+          sed 's|@@PROVIDER_STEWARD_GROUP@@|root|g' \
+            packaging/systemd/astrid-edge-provider-steward.socket.in \
+            >"$immutable_units/astrid-edge-provider-steward.socket"
+          sed 's|@@PROVIDER_WARMUP_GROUP@@|root|g' \
+            packaging/systemd/astrid-edge-provider-warmup.socket.in \
+            >"$immutable_units/astrid-edge-provider-warmup.socket"
+          sed 's|@AUDIO_CLIENT_GROUP@|root|g' \
+            packaging/systemd/astrid-edge-audio-feeder.socket.in \
+            >"$immutable_units/astrid-edge-audio-feeder.socket"
+          sed 's|@@CORE_LIVENESS_REQUEST@@|/var/lib/astrid-edge/workspace/runtime/core-liveness-recovery.request.json|g' \
+            packaging/systemd/astrid-edge-core-liveness.path.in \
+            >"$immutable_units/astrid-edge-core-liveness.path"
+          builder_root=/var/lib/astrid-edge-builder
+          builder_image=/var/lib/astrid-edge-builder.ext4
+          builder_mount_unit="$(systemd-escape --path --suffix=mount "$builder_root")"
+          builder_mount_unit_sed=${builder_mount_unit//\\/\\\\}
+          sed \
+            -e 's|@@ACTIVE_GENERATION_ROOT@@|/opt/astrid-edge/current|g' \
+            -e 's|@@BUILDER_IMAGE_PARENT@@|/var/lib|g' \
+            -e "s|@@BUILDER_IMAGE@@|$builder_image|g" \
+            -e "s|@@BUILDER_ROOT@@|$builder_root|g" \
+            packaging/systemd/root/astrid-edge-builder-store.mount.in \
+            >"$immutable_units/$builder_mount_unit"
+          sed \
+            -e 's|@@ACTIVE_GENERATION_ROOT@@|/opt/astrid-edge/current|g' \
+            -e "s|@@BUILDER_MOUNT_UNIT@@|$builder_mount_unit_sed|g" \
+            -e "s|@@BUILDER_IMAGE@@|$builder_image|g" \
+            -e "s|@@BUILDER_ROOT@@|$builder_root|g" \
+            packaging/systemd/astrid-edge-builder-store-verify.service.in \
+            >"$immutable_units/astrid-edge-builder-store-verify.service"
+          state_backing_root=/var/lib/astrid-edge-state
+          state_migration_root="$state_backing_root/migration"
+          runtime_image="$state_backing_root/runtime.ext4"
+          rollback_image="$state_backing_root/rollback.ext4"
+          runtime_state_root=/var/lib/astrid-edge-runtime-state
+          rollback_state_root=/var/lib/astrid-edge-rollback-state
+          runtime_mount_unit="$(systemd-escape --path --suffix=mount "$runtime_state_root")"
+          rollback_mount_unit="$(systemd-escape --path --suffix=mount "$rollback_state_root")"
+          sed \
+            -e 's|@@ACTIVE_GENERATION_ROOT@@|/opt/astrid-edge/current|g' \
+            -e "s|@@BACKING_ROOT@@|$state_backing_root|g" \
+            -e "s|@@MIGRATION_ROOT@@|$state_migration_root|g" \
+            -e "s|@@RUNTIME_IMAGE@@|$runtime_image|g" \
+            -e "s|@@ROLLBACK_IMAGE@@|$rollback_image|g" \
+            -e "s|@@RUNTIME_MOUNT_PARENT@@|$runtime_state_root|g" \
+            -e "s|@@ROLLBACK_MOUNT_PARENT@@|$rollback_state_root|g" \
+            -e "s|@@RUNTIME_MOUNT_UNIT@@|$runtime_mount_unit|g" \
+            -e "s|@@ROLLBACK_MOUNT_UNIT@@|$rollback_mount_unit|g" \
+            packaging/systemd/astrid-edge-state-store-migration-recover.service.in \
+            >"$immutable_units/astrid-edge-state-store-migration-recover.service"
+          sed \
+            -e 's|@@ACTIVE_GENERATION_ROOT@@|/opt/astrid-edge/current|g' \
+            -e "s|@@RUNTIME_IMAGE_PARENT@@|$state_backing_root|g" \
+            -e "s|@@RUNTIME_IMAGE@@|$runtime_image|g" \
+            -e "s|@@RUNTIME_STATE_ROOT@@|$runtime_state_root|g" \
+            packaging/systemd/root/astrid-edge-state-store-runtime.mount.in \
+            >"$immutable_units/$runtime_mount_unit"
+          sed \
+            -e 's|@@ACTIVE_GENERATION_ROOT@@|/opt/astrid-edge/current|g' \
+            -e "s|@@ROLLBACK_IMAGE_PARENT@@|$state_backing_root|g" \
+            -e "s|@@ROLLBACK_IMAGE@@|$rollback_image|g" \
+            -e "s|@@ROLLBACK_STATE_ROOT@@|$rollback_state_root|g" \
+            packaging/systemd/root/astrid-edge-state-store-rollback.mount.in \
+            >"$immutable_units/$rollback_mount_unit"
+          sed \
+            -e 's|@@ACTIVE_GENERATION_ROOT@@|/opt/astrid-edge/current|g' \
+            -e "s|@@BACKING_ROOT@@|$state_backing_root|g" \
+            -e "s|@@RUNTIME_IMAGE@@|$runtime_image|g" \
+            -e "s|@@ROLLBACK_IMAGE@@|$rollback_image|g" \
+            -e "s|@@RUNTIME_STATE_ROOT@@|$runtime_state_root|g" \
+            -e "s|@@ROLLBACK_STATE_ROOT@@|$rollback_state_root|g" \
+            -e "s|@@RUNTIME_MOUNT_UNIT@@|$runtime_mount_unit|g" \
+            -e "s|@@ROLLBACK_MOUNT_UNIT@@|$rollback_mount_unit|g" \
+            packaging/systemd/astrid-edge-state-store-recover.service.in \
+            >"$immutable_units/astrid-edge-state-store-recover.service"
+          sed \
+            -e 's|@@ACTIVE_GENERATION_ROOT@@|/opt/astrid-edge/current|g' \
+            -e "s|@@MIGRATION_ROOT@@|$state_migration_root|g" \
+            -e "s|@@RUNTIME_IMAGE@@|$runtime_image|g" \
+            -e "s|@@ROLLBACK_IMAGE@@|$rollback_image|g" \
+            -e "s|@@RUNTIME_STATE_ROOT@@|$runtime_state_root|g" \
+            -e "s|@@ROLLBACK_STATE_ROOT@@|$rollback_state_root|g" \
+            -e "s|@@RUNTIME_MOUNT_UNIT@@|$runtime_mount_unit|g" \
+            -e "s|@@ROLLBACK_MOUNT_UNIT@@|$rollback_mount_unit|g" \
+            packaging/systemd/astrid-edge-state-store-verify.service.in \
+            >"$immutable_units/astrid-edge-state-store-verify.service"
+          if rg -n '@@[A-Z0-9_]+@@|@AUDIO_CLIENT_GROUP@' "$immutable_units"; then
+            echo 'unresolved immutable unit placeholder' >&2
+            exit 1
+          fi
+          test ! -e packaging/systemd/icp/astrid-edge-audio-feeder.service
+          test ! -e packaging/systemd/icp/astrid-edge-audio-feeder.socket
+          SYSTEMD_UNIT_PATH="$immutable_units:" systemd-analyze verify \
+            astrid-edge-self-change-supervisor.service \
+            astrid-edge-self-change-probation-health.service \
+            astrid-edge-self-change-probation-health.timer \
+            astrid-edge-generation-guard.service \
+            astrid-edge-core-liveness.service \
+            astrid-edge-core-liveness.path \
+            astrid-edge-steward.service \
+            astrid-edge-steward.timer \
+            astrid-edge-web-broker-core.socket \
+            astrid-edge-web-broker-core.service \
+            astrid-edge-web-broker-runtime.socket \
+            astrid-edge-web-broker-runtime.service \
+            astrid-edge-web-broker-steward.socket \
+            astrid-edge-web-broker-steward.service \
+            astrid-edge-provider-runtime.socket \
+            astrid-edge-provider-broker@edge-runtime.service \
+            astrid-edge-provider-steward.socket \
+            astrid-edge-provider-broker@edge-steward.service \
+            astrid-edge-provider-warmup.socket \
+            astrid-edge-provider-broker@model-warmup.service \
+            astrid-edge-audio-feeder.socket \
+            astrid-edge-audio-feeder.service \
+            astrid-edge-presentation-broker.socket \
+            astrid-edge-presentation-broker@0.service \
+            "$builder_mount_unit" \
+            astrid-edge-builder-store-verify.service \
+            astrid-edge-state-store-migration-recover.service \
+            astrid-edge-state-store-recover.service \
+            "$runtime_mount_unit" \
+            "$rollback_mount_unit" \
+            astrid-edge-state-store-verify.service \
+            astrid-edge-state-store-health.service \
+            astrid-edge-state-store-health.timer
+          scripts/test_migrate_edge_system_renderer.sh \
+            --support-unit-root "$immutable_units"
           merged_units="$(mktemp -d)"
           install -D -m 0755 packaging/systemd/wait-for-icp-ssd \
             "$HOME/.local/libexec/astrid/wait-for-icp-ssd"
@@ -231,3 +529,23 @@ jobs:
             astrid-edge-runtime.service \
             astrid-edge-hindsight.service \
             astrid-edge-hindsight.timer
+
+  operator-source-bundle-python-3-11:
+    name: Operator source-bundle builder (Python 3.11)
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: '3.11'
+
+      - name: Fail-closed source-bundle builder tests
+        run: |
+          python3 -c 'import sys; assert sys.version_info[:2] == (3, 11), sys.version'
+          python3 -m unittest scripts/test_build_edge_self_change_source_bundle.py
+          python3 -m py_compile \
+            scripts/build_edge_self_change_source_bundle.py \
+            scripts/test_build_edge_self_change_source_bundle.py

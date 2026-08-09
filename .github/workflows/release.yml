@@ -6,7 +6,7 @@ on:
       - 'v[0-9]+.*'
 
 permissions:
-  contents: write
+  contents: read
 
 env:
   CARGO_TERM_COLOR: always
@@ -34,10 +34,16 @@ jobs:
             os: ubuntu-22.04
             archive: tar.gz
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: '3.11'
 
       - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
+        uses: dtolnay/rust-toolchain@4360b52568e2003a75bf9bc1d59f33a8e3fc893c # stable
         with:
           toolchain: "1.94"
           targets: ${{ matrix.target }}
@@ -48,7 +54,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y gcc-aarch64-linux-gnu
 
-      - uses: Swatinem/rust-cache@v2
+      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2
         with:
           key: ${{ matrix.target }}
 
@@ -82,50 +88,93 @@ jobs:
           echo "ASSET=${DIR}.tar.gz" >> "$GITHUB_ENV"
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: binary-${{ matrix.target }}
           path: ${{ env.ASSET }}
 
   edge-appliance:
     name: CPU edge appliance (${{ matrix.target }})
-    runs-on: ubuntu-22.04
+    # The offline toolchain is executed and attested before packaging, so each
+    # CPU architecture is built on a native Ubuntu 22.04 runner.  No emulated
+    # or cross-host compiler is published as an appliance-local toolchain.
+    runs-on: ${{ matrix.os }}
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+      artifact-metadata: write
     strategy:
       fail-fast: false
       matrix:
-        target:
-          - x86_64-unknown-linux-gnu
-          - aarch64-unknown-linux-gnu
+        include:
+          - target: x86_64-unknown-linux-gnu
+            os: ubuntu-22.04
+            jobs: 4
+          - target: aarch64-unknown-linux-gnu
+            os: ubuntu-22.04-arm
+            jobs: 4
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: '3.11'
 
       - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
+        uses: dtolnay/rust-toolchain@4360b52568e2003a75bf9bc1d59f33a8e3fc893c # stable
         with:
           toolchain: "1.94"
           targets: ${{ matrix.target }},wasm32-wasip2
+          components: rustfmt, clippy
 
-      - name: Install Linux ARM linker
-        if: matrix.target == 'aarch64-unknown-linux-gnu'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y gcc-aarch64-linux-gnu
-
-      - uses: Swatinem/rust-cache@v2
+      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2
         with:
           key: edge-${{ matrix.target }}
 
       - name: Build host capsule packager and target binaries
         env:
-          CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER: aarch64-linux-gnu-gcc
           ASTRID_EDGE_SOURCE_COMMIT: ${{ github.sha }}
         run: |
           cargo build --release -p astrid
           cargo build --release --target "${{ matrix.target }}" -p astrid
           cargo build \
             --release \
+            --locked \
             --target "${{ matrix.target }}" \
             --manifest-path services/astrid-edge-runtime/Cargo.toml
+          cargo build \
+            --release \
+            --locked \
+            --target "${{ matrix.target }}" \
+            --manifest-path services/astrid-edge-steward-helper/Cargo.toml
+          cargo build \
+            --release \
+            --locked \
+            --target "${{ matrix.target }}" \
+            --manifest-path services/astrid-edge-rescue-helper/Cargo.toml
+          cargo build \
+            --release \
+            --locked \
+            --target "${{ matrix.target }}" \
+            --manifest-path services/astrid-edge-web-broker/Cargo.toml
+          cargo build \
+            --release \
+            --locked \
+            --target "${{ matrix.target }}" \
+            --manifest-path services/astrid-edge-provider-broker/Cargo.toml
+          cargo build \
+            --release \
+            --locked \
+            --target "${{ matrix.target }}" \
+            --manifest-path services/astrid-edge-presentation-broker/Cargo.toml
+          cargo build \
+            --release \
+            --locked \
+            --target "${{ matrix.target }}" \
+            --manifest-path services/astrid-edge-checkpoint/Cargo.toml
 
       - name: Build version-matched essential capsules
         run: |
@@ -147,6 +196,22 @@ jobs:
               "capsules/astralis/$capsule"
           done
 
+      - name: Rebuild pinned external cognition capsules and mutable source inputs
+        run: |
+          python3 scripts/build_astralis_cpu_edge_capsules.py \
+            --jobs "${{ matrix.jobs }}" \
+            --output-dir dist/external-compat \
+            --source-output-dir dist/external-compat-source
+          python3 scripts/build_astralis_cpu_edge_capsules.py \
+            --spec packaging/headless/astralis-cpu-edge-baseline-capsules.toml \
+            --jobs "${{ matrix.jobs }}" \
+            --output-dir dist/external-baseline \
+            --source-output-dir dist/external-baseline-source
+          mkdir -p dist/carried
+          cp dist/external-compat/*.capsule dist/carried/
+          cp dist/external-baseline/*.capsule dist/carried/
+          test "$(find dist/carried -maxdepth 1 -type f -name '*.capsule' | wc -l)" -eq 10
+
       - name: Assemble CPU-edge archive
         run: |
           scripts/package_edge_appliance.sh \
@@ -154,17 +219,29 @@ jobs:
             --target "${{ matrix.target }}" \
             --core-binary-dir "target/${{ matrix.target }}/release" \
             --edge-binary "services/astrid-edge-runtime/target/${{ matrix.target }}/release/astrid-edge-runtime" \
+            --steward-helper "services/astrid-edge-steward-helper/target/${{ matrix.target }}/release/astrid-edge-steward-helper" \
+            --rescue-helper "services/astrid-edge-rescue-helper/target/${{ matrix.target }}/release/astrid-edge-rescue-helper" \
+            --web-broker "services/astrid-edge-web-broker/target/${{ matrix.target }}/release/astrid-edge-web-broker" \
+            --provider-broker "services/astrid-edge-provider-broker/target/${{ matrix.target }}/release/astrid-edge-provider-broker" \
+            --presentation-broker "services/astrid-edge-presentation-broker/target/${{ matrix.target }}/release/astrid-edge-presentation-broker" \
+            --checkpoint-helper "services/astrid-edge-checkpoint/target/${{ matrix.target }}/release/astrid-edge-checkpoint" \
             --capsule-dir dist/essential \
+            --external-capsule-dir dist/carried \
             --output-dir dist
           asset="dist/astrid-cpu-edge-${GITHUB_REF_NAME#v}-${{ matrix.target }}.tar.gz"
+          generation_asset="dist/astrid-edge-generation-${GITHUB_REF_NAME#v}-${{ matrix.target }}.tar.gz"
           test -f "$asset"
           test -f "${asset}.sha256"
+          test -f "$generation_asset"
+          test -f "${generation_asset}.sha256"
           echo "ASSET=$asset" >> "$GITHUB_ENV"
+          echo "GENERATION_ASSET=$generation_asset" >> "$GITHUB_ENV"
 
       - name: Verify release packaging and archive inventory
         run: |
           scripts/test_package_edge_appliance.sh
           sha256sum -c "${ASSET}.sha256"
+          sha256sum -c "${GENERATION_ASSET}.sha256"
           verify_root="$(mktemp -d)"
           trap 'rm -rf -- "$verify_root"' EXIT
           tar -C "$verify_root" -xzf "$ASSET"
@@ -183,43 +260,171 @@ jobs:
           import sys
 
           manifest = json.loads(pathlib.Path(sys.argv[1]).read_text(encoding="utf-8"))
-          assert manifest["schema"] == "astrid_cpu_edge_build_manifest_v2"
-          assert manifest["bundle_format"] == "cpu-edge.2"
+          assert manifest["schema"] == "astrid_cpu_edge_build_manifest_v3"
+          assert manifest["bundle_format"] == "cpu-edge.3"
           assert manifest["target"] == sys.argv[2]
           assert manifest["version"] == sys.argv[3]
           assert manifest["binary_architecture_verified"] is True
-          assert manifest["essential_capsule_count"] == 10
+          assert manifest["essential_capsule_count"] == 20
+          assert manifest["local_source_capsule_count"] == 10
+          assert manifest["external_pinned_source_capsule_count"] == 10
+          assert manifest["rebuildable_capsule_count"] == 20
+          assert manifest["packaged_capsule_count"] == 20
           assert manifest["expected_loaded_capsule_count"] == 20
+          assert len(manifest["capsule_archives"]) == 20
           assert manifest["incremental_installed_code_bytes"] <= 20 * 1024 * 1024
+          assert manifest["self_evolution"]["activation"] == "ab_probation_with_automatic_rollback"
           PY
-          test "$(find "$bundle/capsules" -maxdepth 1 -type f -name '*.capsule' | wc -l)" -eq 10
+          test "$(find "$bundle/capsules" -maxdepth 1 -type f -name '*.capsule' | wc -l)" -eq 20
           systemd-analyze verify \
             "$bundle"/packaging/systemd/*.service \
             "$bundle"/packaging/systemd/*.timer
+          rendered_core_liveness="$(mktemp --suffix=.path)"
+          sed 's|@@CORE_LIVENESS_REQUEST@@|/var/lib/astrid-edge/workspace/runtime/core-liveness-recovery.request.json|g' \
+            "$bundle/packaging/systemd/astrid-edge-core-liveness.path.in" \
+            >"$rendered_core_liveness"
+          SYSTEMD_UNIT_PATH="$bundle/packaging/systemd:" systemd-analyze verify "$rendered_core_liveness"
           systemd-analyze verify \
             "$bundle"/packaging/systemd/icp/*.service \
             "$bundle"/packaging/systemd/icp/*.timer
 
+      - name: Build integrity-bound offline source and native toolchain inputs
+        if: matrix.target == 'x86_64-unknown-linux-gnu'
+        run: |
+          install -d -m 0700 dist/self-evolution
+          head -c 32 /dev/urandom >dist/self-evolution/portable-source.key
+          chmod 0600 dist/self-evolution/portable-source.key
+          python3 scripts/build_edge_self_change_supervisor_zipapp.py \
+            --source scripts/edge_self_change \
+            --output dist/self-evolution/edge-self-change-supervisor.pyz
+
+          clean_source="$RUNNER_TEMP/cpu-edge-signed-source"
+          git worktree add --detach "$clean_source" "$GITHUB_SHA"
+          trap 'git worktree remove --force "$clean_source" >/dev/null 2>&1 || true' EXIT
+          test -f crates/astrid-openclaw/kernel/engine.wasm
+          install -D -m 0644 \
+            crates/astrid-openclaw/kernel/engine.wasm \
+            "$clean_source/crates/astrid-openclaw/kernel/engine.wasm"
+
+          sync_args=()
+          for manifest in \
+            services/astrid-edge-runtime/Cargo.toml \
+            services/astrid-edge-checkpoint/Cargo.toml \
+            services/astrid-edge-presentation-broker/Cargo.toml \
+            services/astrid-edge-provider-broker/Cargo.toml \
+            services/astrid-edge-rescue-helper/Cargo.toml \
+            services/astrid-edge-steward-helper/Cargo.toml \
+            services/astrid-edge-web-broker/Cargo.toml; do
+            sync_args+=(--sync "$clean_source/$manifest")
+          done
+          for capsule in \
+            astrid-capsule-agents astrid-capsule-cli \
+            astrid-capsule-edge-context astrid-capsule-edge-introspector \
+            astrid-capsule-edge-spectral astrid-capsule-fs \
+            astrid-capsule-http astrid-capsule-memory \
+            astrid-capsule-shell astrid-capsule-skills; do
+            sync_args+=(--sync "$clean_source/capsules/astralis/$capsule/Cargo.toml")
+          done
+          while IFS= read -r -d '' manifest; do
+            sync_args+=(--sync "$manifest")
+          done < <(find \
+            "$GITHUB_WORKSPACE/dist/external-compat-source" \
+            "$GITHUB_WORKSPACE/dist/external-baseline-source" \
+            -type f -name Cargo.toml -print0 | sort -z)
+          cargo vendor \
+            --manifest-path "$clean_source/Cargo.toml" \
+            --locked \
+            --versioned-dirs \
+            "${sync_args[@]}" \
+            dist/self-evolution/vendor \
+            >dist/self-evolution/vendor-config.toml
+          rustc -Vv >dist/self-evolution/rustc-version.txt
+          python3 scripts/build_edge_self_change_source_bundle.py build \
+            --repo "$clean_source" \
+            --vendor-dir dist/self-evolution/vendor \
+            --cargo-lock "$clean_source/Cargo.lock" \
+            --rustc-metadata dist/self-evolution/rustc-version.txt \
+            --external-capsule-source-dir dist/external-compat-source \
+            --external-capsule-source-dir dist/external-baseline-source \
+            --signing-key dist/self-evolution/portable-source.key \
+            --output dist/self-evolution/portable-source.tar.gz
+          python3 scripts/build_edge_self_change_source_bundle.py verify \
+            --bundle dist/self-evolution/portable-source.tar.gz \
+            --signing-key dist/self-evolution/portable-source.key
+
+          toolchain_root="$(readlink -f "$(rustc --print sysroot)")"
+          python3 scripts/build_edge_self_change_toolchain_bundle.py build \
+            --toolchain-dir "$toolchain_root" \
+            --target "${{ matrix.target }}" \
+            --signing-key dist/self-evolution/portable-source.key \
+            --output dist/self-evolution/pinned-toolchain.tar.gz
+          python3 scripts/build_edge_self_change_toolchain_bundle.py verify \
+            --bundle dist/self-evolution/pinned-toolchain.tar.gz \
+            --signing-key dist/self-evolution/portable-source.key
+          git worktree remove --force "$clean_source"
+          trap - EXIT
+
+      - name: Assemble and verify complete self-evolution bootstrap
+        if: matrix.target == 'x86_64-unknown-linux-gnu'
+        run: |
+          python3 scripts/package_edge_self_evolution_bootstrap.py \
+            --version "${GITHUB_REF_NAME#v}" \
+            --target "${{ matrix.target }}" \
+            --appliance-archive "$ASSET" \
+            --generation-archive "$GENERATION_ASSET" \
+            --source-bundle dist/self-evolution/portable-source.tar.gz \
+            --toolchain-bundle dist/self-evolution/pinned-toolchain.tar.gz \
+            --source-signing-key dist/self-evolution/portable-source.key \
+            --supervisor dist/self-evolution/edge-self-change-supervisor.pyz \
+            --installer scripts/install_edge_self_evolution_bundle.sh \
+            --output-dir dist
+          bootstrap="dist/astrid-edge-self-evolution-${GITHUB_REF_NAME#v}-${{ matrix.target }}.tar.gz"
+          test -f "$bootstrap"
+          test -f "${bootstrap}.sha256"
+          sha256sum -c "${bootstrap}.sha256"
+          verify_root="$(mktemp -d)"
+          trap 'rm -rf -- "$verify_root"' EXIT
+          tar -C "$verify_root" -xzf "$bootstrap"
+          root="$verify_root/astrid-edge-self-evolution-${GITHUB_REF_NAME#v}-${{ matrix.target }}"
+          (cd "$root" && sha256sum --check --strict SHA256SUMS)
+          "$root/install" --help
+          echo "BOOTSTRAP_ASSET=$bootstrap" >> "$GITHUB_ENV"
+          echo "BOOTSTRAP_NAME=$(basename "$bootstrap")" >> "$GITHUB_ENV"
+
+      - name: Attest complete self-evolution bootstrap provenance
+        if: matrix.target == 'x86_64-unknown-linux-gnu'
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4
+        with:
+          subject-path: ${{ env.BOOTSTRAP_ASSET }}
+          subject-name: ${{ env.BOOTSTRAP_NAME }}
+
       - name: Upload CPU-edge archive
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: edge-${{ matrix.target }}
           path: |
             ${{ env.ASSET }}
             ${{ env.ASSET }}.sha256
+            ${{ env.GENERATION_ASSET }}
+            ${{ env.GENERATION_ASSET }}.sha256
+            dist/astrid-edge-self-evolution-*.tar.gz
+            dist/astrid-edge-self-evolution-*.tar.gz.sha256
 
   # ── Create the GitHub release with all binaries ───────────────────
   github-release:
     name: GitHub Release
     needs: [build, edge-appliance]
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           fetch-depth: 0
+          persist-credentials: false
 
       - name: Download all binary artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
           path: artifacts
           pattern: '*'
@@ -274,7 +479,7 @@ jobs:
           cat SHA256SUMS.txt
 
       - name: Create release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2
         with:
           files: |
             artifacts/*.tar.gz
