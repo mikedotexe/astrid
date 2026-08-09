@@ -1,6 +1,6 @@
 [Unit]
 Description=Astrid agent runtime
-Documentation=https://github.com/unicity-astrid/astrid
+Documentation=https://github.com/mikedotexe/astrid
 Wants=network-online.target astrid-model-warmup.service
 After=network-online.target astrid-model-warmup.service
 StartLimitIntervalSec=60

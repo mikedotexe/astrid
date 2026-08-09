@@ -1,6 +1,6 @@
 [Unit]
 Description=Checkpoint Astrid edge activity for owner-only hindsight
-Documentation=https://github.com/unicity-astrid/astrid
+Documentation=https://github.com/mikedotexe/astrid
 After=astrid-edge-runtime.service
 ConditionPathIsDirectory=%h/.astrid/home/default/edge
 

@@ -1,6 +1,6 @@
 [Unit]
 Description=Astrid CPU-edge attested core-liveness request watcher
-Documentation=https://github.com/unicity-astrid/astrid
+Documentation=https://github.com/mikedotexe/astrid
 Requires=astrid-edge-generation-guard.service
 After=local-fs.target astrid-edge-generation-guard.service
 StartLimitIntervalSec=1h

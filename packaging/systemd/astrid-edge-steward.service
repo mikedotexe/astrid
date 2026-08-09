@@ -1,6 +1,6 @@
 [Unit]
 Description=Astrid CPU-edge coalesced self-change steward pass
-Documentation=https://github.com/unicity-astrid/astrid
+Documentation=https://github.com/mikedotexe/astrid
 Requires=astrid-edge-web-broker-steward.socket astrid-edge-provider-steward.socket astrid-edge-generation-guard.service
 After=astrid-edge-self-change-supervisor.service astrid-edge-web-broker-steward.socket astrid-edge-provider-steward.socket astrid-edge-generation-guard.service
 

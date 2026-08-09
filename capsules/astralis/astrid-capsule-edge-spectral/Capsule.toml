@@ -3,7 +3,7 @@ name = "astrid-capsule-edge-spectral"
 version = "0.1.0"
 description = "Private bounded spectral observation tools for one CPU-edge Astrid"
 authors = ["Unicity Labs <info@unicity-labs.com>"]
-astrid-version = ">=0.5.1"
+astrid-version = ">=0.5.2"
 
 [[component]]
 id = "edge-spectral"

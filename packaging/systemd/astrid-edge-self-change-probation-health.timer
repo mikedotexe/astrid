@@ -1,6 +1,6 @@
 [Unit]
 Description=Sample active Astrid CPU-edge probation every five minutes
-Documentation=https://github.com/unicity-astrid/astrid
+Documentation=https://github.com/mikedotexe/astrid
 # The sampled service owns the fail-closed preflight checks so timer and direct
 # invocations share one authority boundary.
 

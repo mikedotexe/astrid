@@ -1,6 +1,6 @@
 [Unit]
 Description=Astrid CPU-edge fail-closed self-change supervisor
-Documentation=https://github.com/unicity-astrid/astrid
+Documentation=https://github.com/mikedotexe/astrid
 Requires=astrid-edge-generation-guard.service
 After=local-fs.target astrid-edge-generation-guard.service
 Before=astrid-edge-steward.service

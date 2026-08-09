@@ -1,6 +1,6 @@
 [Unit]
 Description=Astrid CPU-edge attested core-liveness recovery
-Documentation=https://github.com/unicity-astrid/astrid
+Documentation=https://github.com/mikedotexe/astrid
 Requires=astrid-edge-generation-guard.service
 After=astrid-edge-generation-guard.service
 

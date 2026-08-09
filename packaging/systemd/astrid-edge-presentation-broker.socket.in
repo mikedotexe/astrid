@@ -1,6 +1,6 @@
 [Unit]
 Description=Astrid CPU-edge candidate presentation broker socket
-Documentation=https://github.com/unicity-astrid/astrid
+Documentation=https://github.com/mikedotexe/astrid
 
 [Socket]
 ListenStream=/run/astrid-edge-presentation/broker.sock

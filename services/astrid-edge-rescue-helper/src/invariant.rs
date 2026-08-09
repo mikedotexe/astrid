@@ -1114,7 +1114,7 @@ fn validate_installable_unit_semantics(path: &str, text: &str) -> Result<()> {
             ("Unit", "Description") => safe_description(value),
             ("Unit", "Documentation") => matches!(
                 value,
-                "https://github.com/unicity-astrid/astrid"
+                "https://github.com/mikedotexe/astrid"
                     | "https://docs.ollama.com/api"
                     | "https://docs.ollama.com/linux"
             ),

@@ -97,7 +97,7 @@ fn before_prompt_build() -> astrid_guest::CapsuleResult {
     let compact = sys::get_config("prompt_profile")
         .is_ok_and(|value| value.trim().eq_ignore_ascii_case(COMPACT_PROFILE));
     let inherited_corpus_present =
-        sys::get_config("inherited_corpus_present").map_or(true, |value| config_is_true(&value));
+        sys::get_config("inherited_corpus_present").is_ok_and(|value| config_is_true(&value));
     let mut context = match read_context(&state_path) {
         Ok(state) if compact => {
             format_compact_context(Some(&state), &instance_name, inherited_corpus_present)

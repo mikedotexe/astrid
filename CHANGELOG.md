@@ -1394,7 +1394,9 @@ Changelog tracking starts with 0.2.0. Prior versions were not tracked.
 ### Security
 
 - Retires only exact-hash-known stale `origin-mac` prompt affordances while preserving historical authored prose and keeping the quarantined corpus inaccessible; self-profiles now state that inherited corpus access is unavailable, and introspection rejects `origin-mac` references.
+- Makes inherited-corpus availability fail closed in every CPU-edge context profile and binds CLI self-update, service documentation, source-install instructions, and immutable release checks to the same `mikedotexe/astrid` release origin.
 - Pins release verification to `mikedotexe/astrid`, its exact GitHub-hosted release workflow, tag, commit, artifact digest, and OIDC/Sigstore identity before any root installation is allowed.
+- Tracks the reviewed QuickJS WASM kernel, exact BLAKE3/SHA-256 identities, and BSD notice as signed release inputs; release and CPU-edge CI reject missing or mismatched kernels rather than silently packaging a placeholder or ambient build artifact.
 - Keeps Mac Astrid, Minime, the live spectral bridge, peer state, host administration, arbitrary shell, package management, and external-write authority outside the CPU-edge mutable boundary.
 
 ### Changed
@@ -1580,7 +1582,8 @@ Changelog tracking starts with 0.2.0. Prior versions were not tracked.
 Initial tracked release. See the [repository history](https://github.com/unicity-astrid/astrid/commits/v0.2.0)
 for changes included in this version.
 
-[Unreleased]: https://github.com/unicity-astrid/astrid/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/mikedotexe/astrid/compare/v0.5.2...HEAD
+[0.5.2]: https://github.com/mikedotexe/astrid/releases/tag/v0.5.2
 [0.4.0]: https://github.com/unicity-astrid/astrid/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/unicity-astrid/astrid/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/unicity-astrid/astrid/releases/tag/v0.2.0

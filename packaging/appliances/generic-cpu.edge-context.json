@@ -1,4 +1,5 @@
 {
+  "inherited_corpus_present": "false",
   "instance_name": "edge Astrid",
   "perception_path": "home://edge/perception/latest.json",
   "state_path": "home://edge/runtime/spectral_state.json"

@@ -1,6 +1,6 @@
 [Unit]
 Description=Astrid CPU-edge immutable local-model gateway (%i)
-Documentation=https://github.com/unicity-astrid/astrid
+Documentation=https://github.com/mikedotexe/astrid
 Requires=ollama-cpu.service
 After=ollama-cpu.service
 JoinsNamespaceOf=ollama-cpu.service

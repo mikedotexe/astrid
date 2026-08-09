@@ -1,6 +1,6 @@
 [Unit]
 Description=Astrid CPU-edge core-scoped bounded web broker
-Documentation=https://github.com/unicity-astrid/astrid
+Documentation=https://github.com/mikedotexe/astrid
 Requires=astrid-edge-web-broker-core.socket
 After=astrid-edge-web-broker-core.socket network-online.target
 Wants=network-online.target

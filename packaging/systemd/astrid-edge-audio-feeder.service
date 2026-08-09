@@ -1,6 +1,6 @@
 [Unit]
 Description=Astrid CPU-edge immutable direct-ALSA numeric feature feeder
-Documentation=https://github.com/unicity-astrid/astrid
+Documentation=https://github.com/mikedotexe/astrid
 Requires=astrid-edge-audio-feeder.socket
 After=astrid-edge-audio-feeder.socket sound.target
 

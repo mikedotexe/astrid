@@ -1,6 +1,6 @@
 [Unit]
 Description=Astrid CPU-edge steward web-broker socket
-Documentation=https://github.com/unicity-astrid/astrid
+Documentation=https://github.com/mikedotexe/astrid
 
 [Socket]
 ListenStream=/run/astrid-edge-self-change/web-steward.sock

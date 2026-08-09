@@ -1,6 +1,6 @@
 [Unit]
 Description=Astrid CPU edge reservoir and sovereign NEXT executor
-Documentation=https://github.com/unicity-astrid/astrid
+Documentation=https://github.com/mikedotexe/astrid
 Wants=astrid.service
 After=astrid.service
 

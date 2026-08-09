@@ -1,6 +1,6 @@
 [Unit]
 Description=Poll persisted Astrid CPU-edge reflection due state (two-hour execution floor)
-Documentation=https://github.com/unicity-astrid/astrid
+Documentation=https://github.com/mikedotexe/astrid
 # The invoked supervisor service performs fail-closed preflight checks. Keeping
 # them on the service also covers direct/manual starts of the same immutable path.
 

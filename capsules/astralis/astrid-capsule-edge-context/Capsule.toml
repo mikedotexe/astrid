@@ -3,7 +3,7 @@ name = "astrid-capsule-edge-context"
 version = "0.1.0"
 description = "Injects read-only CPU reservoir context and the sovereign NEXT action contract"
 authors = ["Unicity Labs <info@unicity-labs.com>"]
-astrid-version = ">=0.5.1"
+astrid-version = ">=0.5.2"
 
 [[component]]
 id = "edge-context"
@@ -23,7 +23,7 @@ state_path = { type = "string", request = "Reservoir state path in the principal
 perception_path = { type = "string", request = "Latest deterministic machine observation path", default = "home://edge/perception/latest.json" }
 instance_name = { type = "string", request = "Independent appliance instance name", default = "edge Astrid" }
 prompt_profile = { type = "string", request = "Prompt detail profile: detailed or compact", default = "detailed" }
-inherited_corpus_present = { type = "string", request = "Whether a separate read-only inherited introspection corpus is installed", default = "true" }
+inherited_corpus_present = { type = "string", request = "Whether a separate read-only inherited introspection corpus is installed", default = "false" }
 
 [[interceptor]]
 event = "prompt_builder.v1.hook.before_build"

@@ -1,6 +1,6 @@
 [Unit]
 Description=Wake the immutable Astrid CPU-edge supervisor for a published candidate
-Documentation=https://github.com/unicity-astrid/astrid
+Documentation=https://github.com/mikedotexe/astrid
 Requires=astrid-edge-generation-guard.service
 After=astrid-edge-generation-guard.service
 

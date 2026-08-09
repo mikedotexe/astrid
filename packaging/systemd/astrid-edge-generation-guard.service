@@ -1,6 +1,6 @@
 [Unit]
 Description=Astrid CPU-edge immutable active-generation boot guard
-Documentation=https://github.com/unicity-astrid/astrid
+Documentation=https://github.com/mikedotexe/astrid
 After=local-fs.target
 Before=astrid-model-warmup.service astrid.service astrid-edge-runtime.service astrid-edge-hindsight.service
 # These are deliberately service preflights, rather than unit conditions: a

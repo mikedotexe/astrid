@@ -1,6 +1,6 @@
 [Unit]
 Description=Astrid CPU-edge steward inference gateway socket
-Documentation=https://github.com/unicity-astrid/astrid
+Documentation=https://github.com/mikedotexe/astrid
 
 [Socket]
 ListenStream=/run/astrid-edge-self-change/provider-steward.sock

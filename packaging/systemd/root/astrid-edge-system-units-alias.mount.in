@@ -1,6 +1,6 @@
 [Unit]
 Description=Astrid CPU-edge private system-unit activation alias
-Documentation=https://github.com/unicity-astrid/astrid
+Documentation=https://github.com/mikedotexe/astrid
 RequiresMountsFor=@@UPDATER_ROOT@@
 Before=astrid-edge-generation-guard.service astrid-edge-self-change-supervisor.service astrid-edge-self-change-probation-health.service
 

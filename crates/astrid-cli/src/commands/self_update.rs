@@ -1,6 +1,6 @@
 //! Self-update command — download and install newer versions of the Astrid CLI.
 //!
-//! Checks GitHub releases for the `unicity-astrid/astrid` repo, compares
+//! Checks GitHub releases for the `mikedotexe/astrid` repo, compares
 //! against the running binary's version, downloads the appropriate platform
 //! binary, and swaps it in place.
 //!
@@ -13,9 +13,8 @@ use anyhow::{Context, bail};
 
 use crate::theme::Theme;
 
-/// GitHub org/repo for the core Astrid release.
-const GITHUB_ORG: &str = "unicity-astrid";
-const GITHUB_REPO: &str = "astrid";
+/// Exact GitHub repository trusted for core Astrid releases.
+const GITHUB_REPOSITORY: &str = "mikedotexe/astrid";
 
 /// Current binary version (set at compile time).
 const CURRENT_VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -59,6 +58,10 @@ fn now_epoch() -> u64 {
         .unwrap_or(0)
 }
 
+fn latest_release_api_url() -> String {
+    format!("https://api.github.com/repos/{GITHUB_REPOSITORY}/releases/latest")
+}
+
 /// Check for a newer version (cached, background-safe).
 ///
 /// Returns `Some(version)` if an update is available, `None` if up-to-date
@@ -93,7 +96,7 @@ pub(crate) fn check_for_update_cached() -> Option<String> {
         },
     };
 
-    let url = format!("https://api.github.com/repos/{GITHUB_ORG}/{GITHUB_REPO}/releases/latest");
+    let url = latest_release_api_url();
     let response = match client.get(&url).send() {
         Ok(r) => r,
         Err(e) => {
@@ -158,7 +161,7 @@ pub(crate) async fn print_update_banner() {
 fn fetch_latest_release(
     client: &reqwest::blocking::Client,
 ) -> anyhow::Result<(String, serde_json::Value)> {
-    let url = format!("https://api.github.com/repos/{GITHUB_ORG}/{GITHUB_REPO}/releases/latest");
+    let url = latest_release_api_url();
     let response = client
         .get(&url)
         .send()
@@ -452,4 +455,18 @@ pub(crate) fn ensure_path_setup() -> anyhow::Result<()> {
     );
 
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn self_update_release_origin_is_exact_fork_repository() {
+        assert_eq!(GITHUB_REPOSITORY, "mikedotexe/astrid");
+        assert_eq!(
+            latest_release_api_url(),
+            "https://api.github.com/repos/mikedotexe/astrid/releases/latest"
+        );
+    }
 }
