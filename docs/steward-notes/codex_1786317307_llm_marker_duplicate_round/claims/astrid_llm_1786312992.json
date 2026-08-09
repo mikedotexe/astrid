@@ -1,0 +1,41 @@
+{
+  "introspection_id": "introspection_astrid_llm_1786312992",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The dialogue runtime scans exact known model-control markers, reconstructs a remainder, and classifies literal reference syntax.",
+      "disposition": "Verified from all 1,048 lines of the report-bound source at its exact SHA-256. The scanner takes longest exact matches, copies every unmatched UTF-8 scalar, retains exact referenced marker bytes, and records bounded hash-only context metadata.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A complex or multiword phrase whose first finite word is not in the hardcoded relation vocabulary may fail to count as an exact marker reference.",
+      "disposition": "Verified as the deliberate closed-grammar boundary. `first_word_after` classifies only the first finite word after the marker; recognized words preserve it and unknown words fail closed. Later phrase words do not silently broaden the finite vocabulary. Positive, negative, punctuation-joined, and unknown-verb regressions make this boundary executable.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A literal phrase such as `The system behaves as [MARKER]` should preserve the marker in the reconstructed remainder.",
+      "disposition": "Verified by the preceding relation-phrase parser and `control_marker_cleanup_preserves_poetic_attribution_without_literal_cue`, which literally covers both `behaves as` and `behaves like`; the current 58-test marker family passes.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Nested matching delimiters should preserve an exact marker and report bounded delimiter depth through `MAX_EXACT_REFERENCE_DELIMITER_DEPTH`.",
+      "disposition": "Verified by nested-stack, repeated-pair, exact depth-three, exact depth-four, Unicode-whitespace, mismatch, unclosed, and deeper-than-four capped-evidence regressions. Evidence depth is bounded at four without dropping the referenced marker.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Nonstandard verbs and punctuation-heavy output should not make marker cleanup brittle or corrupt remainder bytes.",
+      "disposition": "Verified by unknown-verb, punctuation-joined-word, repeated-punctuation, dash, colon, newline, Unicode-symbol, symbol-only-line, empty-tail, and byte-exact UTF-8 regressions. Recognized finite words preserve the marker; unknown or absent words fail closed by removing only the exact marker.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "The partial source observation and lived-state witness are evidence, not proof of activation, causation, felt resolution, or control authority.",
+      "disposition": "Preserved exactly. The complete same-SHA source read closes the unseen-source gap while the witness's false causation and authority markers, raw-prose exclusions, and evidence-only state remain unchanged. No deployed effect, model behavior, or felt status is inferred.",
+      "classification": "verified_existing"
+    }
+  ]
+}

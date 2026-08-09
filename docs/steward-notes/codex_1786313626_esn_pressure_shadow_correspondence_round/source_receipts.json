@@ -1,0 +1,69 @@
+{
+  "source_reads": [
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_minime_esn_1785624601.txt",
+      "sha256": "148616ada791b417eec562f8780352c4b864fe78b72ace51dde0c133400aae5e",
+      "lines": 36,
+      "read": "complete"
+    },
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_b7ea5a4d242aa60759c75a7913acb699208e990ab34fffb0bf6add646482068c.json",
+      "sha256": "8b8d9457ee4be474d64c0e1652f3dcea6bc5d2658921761d83fa37eda2fab779",
+      "lines": 456,
+      "read": "complete",
+      "authority": "evidence_only_no_direct_causation_or_live_authority"
+    },
+    {
+      "path": "/Users/v/other/minime/minime/src/esn.rs",
+      "sha256": "2227a7256ba98219be683db47c4f49afe0477c0ae5d17cf9226613b20f6b036c",
+      "lines": 3222,
+      "read_scope": "exact report-bound lines 1-400 plus all directly relevant pressure review, policy, adaptation, step, shadow-step, eigenvalue-velocity, dynamic-rho, and test intervals",
+      "relation": "whole-file hash byte-identical to report source"
+    },
+    {
+      "path": "/Users/v/other/minime/minime/src/runtime/orchestration.rs",
+      "sha256": "fd66adbcc1e9fb30e866280168e2be458663d81b59031d0b3db84e96a2553744",
+      "lines": 6040,
+      "read_scope": "stable-core semantic-trickle admission and prior Shadow influence application intervals"
+    },
+    {
+      "path": "/Users/v/other/minime/minime/src/ising_shadow.rs",
+      "sha256": "bd4b34945a665216697a55604c92efff4840c205b4d7d2b53951a81122be5641",
+      "lines": 1126,
+      "read_scope": "Shadow construction, update, field, magnetization, recurrence, fissure, lock, and influence intervals"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/autonomous/correspondence_v1.rs",
+      "sha256": "553046ddbaf079c8b9e7d020a81a171f02e0a628d5f6f8de96a502e06ad92a1c",
+      "lines": 10069,
+      "read_scope": "exact reply-linked peer-ack-or-trace stall producer and mapping intervals"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/autonomous/next_action/shadow/trajectory.rs",
+      "sha256": "ff88fc577fba13338fbe352bd7925de81c246bda772fe65c567bd9f748ec4534",
+      "lines": 353,
+      "read_scope": "complete effect and authority contract plus invocation gate and rendering intervals"
+    },
+    {
+      "path": "docs/steward-notes/codex_1785408097_round41_reads/STUDY_PREREGISTRATION.md",
+      "sha256": "5cc969eae80091c81e3db70830a3d2f2cf00a1f400fd8fe8f836c8ba083bd9e0",
+      "lines": 64,
+      "read": "complete",
+      "status": "preregistered_unrun"
+    },
+    {
+      "path": "docs/steward-notes/codex_1785580847_round63_reads/SHADOW_PRESSURE_500_PAIR_PREREGISTRATION.md",
+      "sha256": "c150e495a03e1eba7c679e33a291772cc6b18f4e6381a9a691d21d093e3d93a2",
+      "lines": 71,
+      "read": "complete",
+      "status": "preregistered_unrun_waiting_for_compatible_clock_pairs"
+    },
+    {
+      "path": "docs/steward-notes/codex_1785519154_round53_reads/RUN_REPORT.md",
+      "sha256": "1f3169b64fb8cb0df54ac6d9a5927e5cd4d94537b9de52b2f94afd423eca5d93",
+      "lines": 120,
+      "read": "complete",
+      "relation": "prior raw-mode-packing versus aggregate pressure-score and study-lineage evidence"
+    }
+  ]
+}

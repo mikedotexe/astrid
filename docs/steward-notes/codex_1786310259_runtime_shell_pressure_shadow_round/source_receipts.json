@@ -1,0 +1,81 @@
+{
+  "source_reads": [
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_minime_main_excerpt_1785624961.txt",
+      "sha256": "f23eaea636f8fc13338560fa6bffb8bec919345970d027b60fc41ab277e3f332",
+      "lines": 34,
+      "read": "complete"
+    },
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_4489d14e1504ae107a75534e22170387c8dddc3f10db1dfd715fbe65e55a8c5f.json",
+      "sha256": "83eb6d9aa19eaea14d76c613341979cf4735c5f4d931f55866be484cd715046a",
+      "lines": 456,
+      "read": "complete",
+      "authority": "evidence_only_no_direct_causation_or_live_authority"
+    },
+    {
+      "path": "/Users/v/other/minime/minime/src/runtime.rs",
+      "sha256": "f3d22a0d980385125f87dddfe1e06d0b00421a7577fe458fae7e1eb4b62fa8c5",
+      "lines": 74,
+      "read": "complete",
+      "relation": "byte-identical to report-bound complete source"
+    },
+    {
+      "path": "/Users/v/other/minime/minime/src/runtime/adapters.rs",
+      "sha256": "6cdbe6e6f72a5221312a5d8d488669d3269b980ca7c58eb5f72a705c59713f56",
+      "lines": 113,
+      "read": "complete"
+    },
+    {
+      "path": "/Users/v/other/minime/minime/src/runtime/telemetry_evidence.rs",
+      "sha256": "84a380b34332daad1740ae18c21eb74f825742f49d1d296f7274248bffbd8918",
+      "lines": 329,
+      "read": "complete"
+    },
+    {
+      "path": "/Users/v/other/minime/minime/src/runtime/orchestration.rs",
+      "sha256": "fd66adbcc1e9fb30e866280168e2be458663d81b59031d0b3db84e96a2553744",
+      "lines": 6040,
+      "read_scope": "exact pressure producer call, persistence, packet, spectral-state, Shadow metric persistence, and named-identifier intervals"
+    },
+    {
+      "path": "/Users/v/other/minime/minime/src/regulator/core/pressure_source.rs",
+      "sha256": "9ecc4ca80629bd5519790b5a64bc5f5891bbbdc1c424d93d7d5e0bee611501d1",
+      "lines": 440,
+      "read_scope": "current pressure, porosity, profile, and threshold intervals plus prior complete-source receipt at the same hash",
+      "prior_complete_receipt": "docs/steward-notes/codex_1786304391_minime_shear_boundary_round/source_receipts.json"
+    },
+    {
+      "path": "/Users/v/other/minime/minime/src/pressure_texture.rs",
+      "sha256": "9aba76020c797f02bfba37a15580a31940dc5ba3807f6eecbb9a1cc431d46823",
+      "lines": 252,
+      "read": "complete"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/ws/bridge_state.rs",
+      "sha256": "0e6d0603d4b9737a8f65e56b10fcb3e17c0ba15ac9155685ed22b093db8d2117",
+      "lines": 1554,
+      "read_scope": "pressure-source analysis and pressure-porosity readiness types, constants, and complete implementation intervals"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/types/schema/transport_evidence.rs",
+      "sha256": "eac5e6a626a23231dd488de1bf169b0ef12b95c0563aa1e61e1f7e6d07bf6d95",
+      "lines": 752,
+      "read_scope": "complete viscosity-porosity transport implementation"
+    },
+    {
+      "path": "docs/steward-notes/codex_1785887049_fresh_report_round/DISTINGUISHABILITY_NATURAL_OBSERVATION_PREREGISTRATION.md",
+      "sha256": "5aa4d5cd3c2e4dfc2bb11d9880c027a3c8a2eb8dae21f49b75aa3bb4dbdf0b50",
+      "lines": 61,
+      "read": "complete",
+      "status": "preregistered_not_started_current_report_historical_not_prospective_sample"
+    },
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_llm_1786180312.txt",
+      "sha256": "13cfe4fff96421667102f5f01cd87aacbf63f116eb2bfa89deb19ebc10762026",
+      "lines": 47,
+      "read": "complete",
+      "relation": "exact prior claim-family evidence for changing Astrid fissure tendency beside stable Minime foothold"
+    }
+  ]
+}

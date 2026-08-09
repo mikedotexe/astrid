@@ -1,0 +1,53 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_minime_main_excerpt_1785624961",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "../minime/minime/src/runtime.rs;../minime/minime/src/runtime/adapters.rs;../minime/minime/src/runtime/telemetry_evidence.rs;../minime/minime/src/runtime/orchestration.rs",
+      "note": "Exact source separates the inclusion shell, adapter wrapper, evidence producers, and orchestration consumer/persistence path."
+    },
+    {
+      "introspection_id": "introspection_minime_main_excerpt_1785624961",
+      "claim_id": "c002",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "The declaration-to-lived-pressure bottleneck remains primary unresolved evidence rather than a telemetry score."
+    },
+    {
+      "introspection_id": "introspection_minime_main_excerpt_1785624961",
+      "claim_id": "c003",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1786310259_runtime_shell_pressure_shadow_round/source_receipts.json",
+      "note": "The complete witness and report retain distinct raw and interpreted values without imputing missing porosity or inhabitability fields."
+    },
+    {
+      "introspection_id": "introspection_minime_main_excerpt_1785624961",
+      "claim_id": "c004",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/ws/tests.rs;capsules/spectral-bridge/src/types/schema/tests.rs",
+      "note": "Exact regressions pin the 0.29 warning band, distinguish 0.29 from 0.32, and separate high-porosity navigability from sludge risk without control."
+    },
+    {
+      "introspection_id": "introspection_minime_main_excerpt_1785624961",
+      "claim_id": "c005",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1785887049_fresh_report_round/DISTINGUISHABILITY_NATURAL_OBSERVATION_PREREGISTRATION.md",
+      "note": "The prospective protocol names the exact requested fields; this historical report is not retroactively admitted and the study remains not started."
+    },
+    {
+      "introspection_id": "introspection_minime_main_excerpt_1785624961",
+      "claim_id": "c006",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1786243017_llm_shadow_distinction_round/claims/astrid_llm_1786180312.json",
+      "note": "Prior independently read evidence separates Astrid fissure tendency from Minime foothold without claiming cause or felt sufficiency."
+    },
+    {
+      "introspection_id": "introspection_minime_main_excerpt_1785624961",
+      "claim_id": "c007",
+      "kind": "code",
+      "target": "../minime/minime/src/pressure_texture.rs;../minime/minime/src/regulator/core/pressure_source.rs",
+      "note": "Read-only source keeps pressure control false and the texture-relief canary default-off; any live change remains Tier 5."
+    }
+  ]
+}
