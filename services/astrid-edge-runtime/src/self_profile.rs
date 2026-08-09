@@ -25,6 +25,7 @@ struct SelfProfile<'a> {
     action_vocabulary: &'static [&'static str],
     sensors: Sensors,
     reservoir: Reservoir,
+    continuity: Continuity,
     build: Build,
     known_limitations: &'static [&'static str],
     authority: &'static str,
@@ -82,6 +83,14 @@ struct Reservoir {
     spectral_inquiry_gateway: &'static str,
     tuning_standing_authority_enabled: bool,
     tunable_parameters: &'static [&'static str],
+}
+
+#[derive(Serialize)]
+struct Continuity {
+    inquiry_thread_schema: &'static str,
+    scheduled_authorship: &'static str,
+    inherited_corpus_access: &'static str,
+    cross_appliance_memory: bool,
 }
 
 #[derive(Serialize)]
@@ -174,6 +183,12 @@ fn build_profile<'a>(config: &'a Config, snapshot: &ReservoirSnapshot) -> SelfPr
             "READ_SOURCE",
             "REVISE",
             "CHECK",
+            "OPEN_THREAD",
+            "BRANCH_THREAD",
+            "RESUME_THREAD",
+            "PAUSE_THREAD",
+            "CLOSE_THREAD",
+            "UPDATE_BELIEF",
         ],
         sensors: Sensors {
             host_auxiliary_fresh: snapshot.aux_fresh,
@@ -210,6 +225,12 @@ fn build_profile<'a>(config: &'a Config, snapshot: &ReservoirSnapshot) -> SelfPr
             tuning_standing_authority_enabled: config.reservoir_tuning_enabled,
             tunable_parameters: &["input_gain", "exploration_scale", "regulation_strength"],
         },
+        continuity: Continuity {
+            inquiry_thread_schema: "astrid_edge_thread_state_v7",
+            scheduled_authorship: "signed_authored_inquiry_not_hidden_chain_of_thought",
+            inherited_corpus_access: "unavailable_operator_quarantine_outside_workspace",
+            cross_appliance_memory: false,
+        },
         build: Build {
             package_version: env!("CARGO_PKG_VERSION"),
             source_revision: option_env!("ASTRID_EDGE_SOURCE_COMMIT").unwrap_or("unrecorded"),
@@ -225,6 +246,7 @@ fn build_profile<'a>(config: &'a Config, snapshot: &ReservoirSnapshot) -> SelfPr
             "no cross-appliance memory or direct peer credentials",
             "timeout and recovery text is excluded from authored continuity",
             "scheduled introspection is model-authored but externally timed and is not a voluntary journal",
+            "Mac, Minime, peer, and origin-mac corpora are unavailable to this appliance",
             "self-change intent never grants shell access and requires immutable-supervisor validation",
         ],
         authority: "deterministic_sanitized_self_description_not_astrid_authorship",
@@ -287,6 +309,11 @@ mod tests {
         assert!(!profile.reservoir.fill_target_mutable);
         assert!(profile.action_vocabulary.contains(&"TUNE_RESERVOIR"));
         assert!(profile.action_vocabulary.contains(&"VALIDATE_TUNING"));
+        assert!(profile.action_vocabulary.contains(&"OPEN_THREAD"));
+        assert_eq!(
+            profile.continuity.inherited_corpus_access,
+            "unavailable_operator_quarantine_outside_workspace"
+        );
     }
 
     #[test]

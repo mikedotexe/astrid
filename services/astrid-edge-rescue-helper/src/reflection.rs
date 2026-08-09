@@ -1,5 +1,6 @@
 //! Root-only scheduled-reflection admission, drain verification, and cleanup.
 
+use std::collections::{BTreeMap, BTreeSet};
 use std::fs::{self, File, OpenOptions};
 use std::io::{Read as _, Write as _};
 use std::os::unix::fs::{MetadataExt as _, OpenOptionsExt as _, PermissionsExt as _};
@@ -18,7 +19,7 @@ use crate::{Error, Result};
 pub const LEASE_PATH: &str = "/run/astrid-edge-self-change/reflection.json";
 pub const ADMISSION_PATH: &str = "/run/astrid-edge-self-change/reflection-admission.json";
 pub const LEASE_SCHEMA: &str = "astrid.edge_scheduled_reflection.lease.v1";
-pub const ADMISSION_SCHEMA: &str = "astrid.edge_scheduled_reflection.admission.v2";
+pub const ADMISSION_SCHEMA: &str = "astrid.edge_programmatic_reflection.admission.v3";
 const ACK_SCHEMA: &str = "astrid.edge.maintenance_ack.v2";
 const LEASE_KIND: &str = "scheduled_reflection";
 const LEASE_OWNER: &str = "immutable_astrid_edge_reflection_guard";
@@ -27,6 +28,7 @@ const HANDOFF_SCHEMA: &str = "astrid.edge.steward_helper.supervisor_handoff_trig
 const HANDOFF_PROVENANCE: &str = "exact_model_intent_already_published";
 const HANDOFF_AUTHORITY: &str = "trigger_only_no_candidate_or_deployment_authority";
 const MAXIMUM_BYTES: u64 = 64 * 1024;
+const MAXIMUM_INTEGRATION_STATE_BYTES: u64 = 16 * 1024 * 1024;
 const MAXIMUM_HANDOFF_BYTES: u64 = 8 * 1024;
 const MAXIMUM_PENDING_HANDOFFS: usize = 64;
 const LEASE_LIFETIME_MS: u64 = 3 * 60 * 60 * 1_000;
@@ -65,7 +67,9 @@ struct AdmissionMarker {
     edge_ack_sha256: String,
     model_lock_device: u64,
     model_lock_inode: u64,
-    scheduled_due_nonce_sha256: Option<String>,
+    reflection_kind: String,
+    reflection_due_nonce_sha256: Option<String>,
+    reflection_trigger_nonce_sha256: Option<String>,
     model_start_authority: String,
     authority: String,
 }
@@ -109,6 +113,90 @@ struct ScheduleStateV2 {
     model_start_count: u64,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+struct IntegrationEvidenceRecord {
+    evidence_id: String,
+    kind: String,
+    epistemic_status: String,
+    reference: String,
+    summary: String,
+    source: String,
+    captured_at_unix_ms: u64,
+    sha256: String,
+    eligible_for_belief_update: bool,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+struct IntegrationActiveTrigger {
+    trigger_nonce: String,
+    due_nonce: String,
+    generation: u64,
+    created_at_unix_ms: u64,
+    last_attempt_at_unix_ms: Option<u64>,
+    evidence: Vec<IntegrationEvidenceRecord>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+struct IntegrationConsumedEvidence {
+    evidence_id: String,
+    sha256: String,
+    consumed_at_unix_ms: u64,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+struct IntegrationRejectedEvidence {
+    record_sha256: String,
+    evidence_id: Option<String>,
+    reason: String,
+    source_revision: u64,
+    first_seen_at_unix_ms: u64,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+struct IntegrationAmbiguousTrigger {
+    trigger_nonce: String,
+    due_nonce: String,
+    provider_started_at_unix_ms: u64,
+    terminalized_at_unix_ms: u64,
+    evidence: Vec<IntegrationConsumedEvidence>,
+    status: String,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+struct IntegrationScheduledAbsorption {
+    scheduled_nonce: String,
+    prepared_at_unix_ms: u64,
+    evidence: Vec<IntegrationEvidenceRecord>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+struct IntegrationStateV1 {
+    schema: String,
+    generation: u64,
+    pending: Vec<IntegrationEvidenceRecord>,
+    quiet_until_unix_ms: u64,
+    active: Option<IntegrationActiveTrigger>,
+    consumed: Vec<IntegrationConsumedEvidence>,
+    rejected: Vec<IntegrationRejectedEvidence>,
+    ambiguous: Vec<IntegrationAmbiguousTrigger>,
+    scheduled_absorption: Option<IntegrationScheduledAbsorption>,
+    last_completed_at_unix_ms: Option<u64>,
+    last_finished_trigger_nonce: Option<String>,
+    last_finished_due_nonce: Option<String>,
+    last_absorbed_scheduled_nonce: Option<String>,
+    utc_day: u64,
+    starts_today: u8,
+    last_source_revision: Option<u64>,
+    last_source_sha256: Option<String>,
+}
+
 #[derive(Debug)]
 struct GuardPaths {
     lease: PathBuf,
@@ -120,6 +208,7 @@ struct GuardPaths {
     core_ack: PathBuf,
     edge_ack: PathBuf,
     schedule: PathBuf,
+    evidence_integration: PathBuf,
 }
 
 #[derive(Debug)]
@@ -147,10 +236,26 @@ struct AckProof {
 #[derive(Debug, Clone, PartialEq, Eq)]
 enum ScheduleAdmission {
     NotDue,
-    ModelStart { due_nonce: Option<String> },
-    PreparedRecovery { due_nonce: String },
-    LegacyMigration { due_nonce: String },
-    Cooling { due_nonce: String },
+    ModelStart {
+        due_nonce: String,
+    },
+    PreparedRecovery {
+        due_nonce: String,
+    },
+    LegacyMigration {
+        due_nonce: String,
+    },
+    Cooling {
+        due_nonce: String,
+    },
+    EvidenceModelStart {
+        due_nonce: String,
+        trigger_nonce: String,
+    },
+    EvidencePreparedRecovery {
+        due_nonce: String,
+        trigger_nonce: String,
+    },
 }
 
 impl ScheduleAdmission {
@@ -160,13 +265,36 @@ impl ScheduleAdmission {
 
     fn due_nonce_sha256(&self) -> Option<String> {
         match self {
-            Self::NotDue | Self::ModelStart { due_nonce: None } => None,
-            Self::ModelStart {
-                due_nonce: Some(value),
-            }
+            Self::NotDue => None,
+            Self::ModelStart { due_nonce: value }
             | Self::PreparedRecovery { due_nonce: value }
             | Self::LegacyMigration { due_nonce: value }
-            | Self::Cooling { due_nonce: value } => Some(sha256(value.as_bytes())),
+            | Self::Cooling { due_nonce: value }
+            | Self::EvidenceModelStart {
+                due_nonce: value, ..
+            }
+            | Self::EvidencePreparedRecovery {
+                due_nonce: value, ..
+            } => Some(sha256(value.as_bytes())),
+        }
+    }
+
+    fn trigger_nonce_sha256(&self) -> Option<String> {
+        match self {
+            Self::EvidenceModelStart { trigger_nonce, .. }
+            | Self::EvidencePreparedRecovery { trigger_nonce, .. } => {
+                Some(sha256(trigger_nonce.as_bytes()))
+            },
+            _ => None,
+        }
+    }
+
+    fn reflection_kind(&self) -> &'static str {
+        match self {
+            Self::EvidenceModelStart { .. } | Self::EvidencePreparedRecovery { .. } => {
+                "evidence_integration"
+            },
+            _ => "scheduled",
         }
     }
 
@@ -175,6 +303,10 @@ impl ScheduleAdmission {
             Self::ModelStart { .. } => "root_schedule_model_start_allowed",
             Self::PreparedRecovery { .. } => "root_schedule_prepared_recovery_only",
             Self::LegacyMigration { .. } => "root_schedule_legacy_migration_only",
+            Self::EvidenceModelStart { .. } => "root_evidence_integration_model_start_allowed",
+            Self::EvidencePreparedRecovery { .. } => {
+                "root_evidence_integration_prepared_recovery_only"
+            },
             Self::NotDue | Self::Cooling { .. } => "root_schedule_not_due",
         }
     }
@@ -197,6 +329,7 @@ impl GuardPaths {
             core_ack: config.drain.maintenance_core_acknowledgement.clone(),
             edge_ack: config.drain.maintenance_edge_acknowledgement.clone(),
             schedule: steward_state.join("schedule.json"),
+            evidence_integration: steward_state.join("evidence-integration.json"),
         })
     }
 }
@@ -275,7 +408,12 @@ fn prepare_inner(
 ) -> Result<GuardResult> {
     validate_context(context)?;
     validate_shared_parent(&paths.lease, root_uid)?;
-    let schedule = schedule_admission(config, &paths.schedule, context.now_ms / 1_000)?;
+    let scheduled = schedule_admission(config, &paths.schedule, context.now_ms / 1_000)?;
+    let schedule = if scheduled.is_due() {
+        scheduled
+    } else {
+        evidence_integration_admission(config, &paths.evidence_integration, context.now_ms)?
+    };
     if !schedule.is_due() {
         if paths.lease.exists()
             || paths.lease.is_symlink()
@@ -355,7 +493,9 @@ fn prepare_inner(
                 edge_ack_sha256: proof.edge_sha256,
                 model_lock_device: metadata.dev(),
                 model_lock_inode: metadata.ino(),
-                scheduled_due_nonce_sha256: schedule.due_nonce_sha256(),
+                reflection_kind: schedule.reflection_kind().to_owned(),
+                reflection_due_nonce_sha256: schedule.due_nonce_sha256(),
+                reflection_trigger_nonce_sha256: schedule.trigger_nonce_sha256(),
                 model_start_authority: schedule.model_start_authority().to_owned(),
                 authority: "root_verified_drain_and_model_lock_handoff_not_activation_authority"
                     .to_owned(),
@@ -785,7 +925,11 @@ fn schedule_admission(config: &Config, path: &Path, now: u64) -> Result<Schedule
     let metadata = match fs::symlink_metadata(path) {
         Ok(metadata) => metadata,
         Err(error) if error.kind() == std::io::ErrorKind::NotFound => {
-            return Ok(ScheduleAdmission::ModelStart { due_nonce: None });
+            // The unprivileged helper must first materialize its exact
+            // canonical due slot.  A later timer invocation may then bind the
+            // root admission to that nonce; bootstrap never receives an
+            // unbound model start.
+            return Ok(ScheduleAdmission::NotDue);
         },
         Err(error) => return Err(error.into()),
     };
@@ -805,6 +949,416 @@ fn schedule_admission(config: &Config, path: &Path, now: u64) -> Result<Schedule
         return Ok(ScheduleAdmission::NotDue);
     }
     Ok(admission)
+}
+
+#[allow(
+    clippy::too_many_lines,
+    reason = "the immutable root independently validates the complete steward-owned trigger state before granting model authority"
+)]
+fn evidence_integration_admission(
+    config: &Config,
+    path: &Path,
+    now_ms: u64,
+) -> Result<ScheduleAdmission> {
+    let Some(state) = read_evidence_integration_state(
+        path,
+        config.identities.steward_uid,
+        config.identities.steward_gid,
+        config.identities.runtime_gid,
+    )?
+    else {
+        return Ok(ScheduleAdmission::NotDue);
+    };
+    validate_integration_state(&config.appliance_id, &state, now_ms)?;
+
+    let mut recoveries = Vec::new();
+    if let Some(active) = &state.active
+        && active.last_attempt_at_unix_ms.is_some()
+        && exact_prepared_transaction_exists(config, path, &active.due_nonce)?
+    {
+        recoveries.push((active.due_nonce.clone(), active.trigger_nonce.clone()));
+    }
+    if let (Some(trigger_nonce), Some(due_nonce)) = (
+        state.last_finished_trigger_nonce.as_ref(),
+        state.last_finished_due_nonce.as_ref(),
+    ) && exact_prepared_transaction_exists(config, path, due_nonce)?
+    {
+        recoveries.push((due_nonce.clone(), trigger_nonce.clone()));
+    }
+    if recoveries.len() > 1 {
+        return Err(Error::new(
+            "multiple evidence-integration recoveries seek one root admission",
+        ));
+    }
+    if let Some((due_nonce, trigger_nonce)) = recoveries.pop() {
+        return Ok(ScheduleAdmission::EvidencePreparedRecovery {
+            due_nonce,
+            trigger_nonce,
+        });
+    }
+
+    let Some(active) = &state.active else {
+        return Ok(ScheduleAdmission::NotDue);
+    };
+    if active.last_attempt_at_unix_ms.is_some() {
+        // A durable provider-start marker without a signed prepared response is
+        // ambiguity, never permission to make another possibly duplicate call.
+        return Ok(ScheduleAdmission::NotDue);
+    }
+    if state.utc_day != integration_utc_day(now_ms) || state.starts_today >= 12 {
+        return Ok(ScheduleAdmission::NotDue);
+    }
+    Ok(ScheduleAdmission::EvidenceModelStart {
+        due_nonce: active.due_nonce.clone(),
+        trigger_nonce: active.trigger_nonce.clone(),
+    })
+}
+
+fn read_evidence_integration_state(
+    path: &Path,
+    owner_user_id: u32,
+    owner_group_id: u32,
+    reader_group_id: u32,
+) -> Result<Option<IntegrationStateV1>> {
+    let metadata = match fs::symlink_metadata(path) {
+        Ok(metadata) => metadata,
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => {
+            return Ok(None);
+        },
+        Err(error) => return Err(error.into()),
+    };
+    let parent = path
+        .parent()
+        .ok_or_else(|| Error::new("evidence-integration state root is absent"))?;
+    let parent_metadata = fs::symlink_metadata(parent)?;
+    if !parent_metadata.is_dir()
+        || parent_metadata.file_type().is_symlink()
+        || parent_metadata.uid() != owner_user_id
+        || parent_metadata.gid() != owner_group_id
+        || parent_metadata.mode() & 0o777 != 0o700
+        || !metadata.is_file()
+        || metadata.file_type().is_symlink()
+        || metadata.nlink() != 1
+        || metadata.uid() != owner_user_id
+        || metadata.gid() != reader_group_id
+        || metadata.mode() & 0o777 != 0o600
+        || metadata.len() > MAXIMUM_INTEGRATION_STATE_BYTES
+    {
+        return Err(Error::new(
+            "evidence-integration state identity or bound failed",
+        ));
+    }
+    let bytes = read_regular(path, MAXIMUM_INTEGRATION_STATE_BYTES)?;
+    let state: IntegrationStateV1 = serde_json::from_slice(&bytes)?;
+    if canonical_json(&state)? != bytes {
+        return Err(Error::new(
+            "evidence-integration state is not exact canonical JSON",
+        ));
+    }
+    Ok(Some(state))
+}
+
+#[allow(
+    clippy::too_many_lines,
+    reason = "one exact validator keeps the immutable integration-admission contract reviewable"
+)]
+fn validate_integration_state(
+    appliance_id: &str,
+    state: &IntegrationStateV1,
+    now_ms: u64,
+) -> Result<()> {
+    const STATE_SCHEMA: &str = "astrid.edge.steward_helper.evidence_integration_state.v1";
+    const MAX_PENDING: usize = 128;
+    const MAX_CONSUMED: usize = 65_536;
+    const MAX_REJECTED: usize = 4_096;
+    const MAX_AMBIGUOUS: usize = 4_096;
+    const MAX_TRIGGER_EVIDENCE: usize = 6;
+    const MINIMUM_INTERVAL_MS: u64 = 60 * 60 * 1_000;
+
+    if state.schema != STATE_SCHEMA
+        || state.pending.len() > MAX_PENDING
+        || state.consumed.len() > MAX_CONSUMED
+        || state.rejected.len() > MAX_REJECTED
+        || state.ambiguous.len() > MAX_AMBIGUOUS
+        || state.starts_today > 12
+        || state.utc_day > integration_utc_day(now_ms).saturating_add(1)
+        || state
+            .last_completed_at_unix_ms
+            .is_some_and(|value| value == 0 || value > now_ms.saturating_add(60_000))
+        || state.last_finished_trigger_nonce.is_some() != state.last_finished_due_nonce.is_some()
+        || state
+            .last_source_sha256
+            .as_ref()
+            .is_some_and(|value| !is_lower_hex(value, 64))
+        || state.last_source_revision == Some(0)
+    {
+        return Err(Error::new("evidence-integration root state is invalid"));
+    }
+    for value in [
+        state.last_finished_trigger_nonce.as_deref(),
+        state.last_absorbed_scheduled_nonce.as_deref(),
+    ]
+    .into_iter()
+    .flatten()
+    {
+        if !valid_identifier(value) {
+            return Err(Error::new(
+                "evidence-integration retained identifier is invalid",
+            ));
+        }
+    }
+    if state
+        .last_finished_due_nonce
+        .as_ref()
+        .is_some_and(|value| !valid_integration_due_nonce(value))
+    {
+        return Err(Error::new(
+            "evidence-integration retained due nonce is invalid",
+        ));
+    }
+
+    let mut identities = BTreeMap::<String, String>::new();
+    for record in &state.pending {
+        validate_integration_evidence(record, now_ms)?;
+        insert_unique_integration_identity(&mut identities, record)?;
+    }
+    if let Some(active) = &state.active {
+        if active.generation != state.generation
+            || active.created_at_unix_ms == 0
+            || active.created_at_unix_ms > now_ms.saturating_add(60_000)
+            || active.evidence.is_empty()
+            || active.evidence.len() > MAX_TRIGGER_EVIDENCE
+            || !valid_identifier(&active.trigger_nonce)
+            || !valid_integration_due_nonce(&active.due_nonce)
+            || active
+                .last_attempt_at_unix_ms
+                .is_some_and(|value| value == 0 || value > now_ms.saturating_add(60_000))
+        {
+            return Err(Error::new("active evidence-integration trigger is invalid"));
+        }
+        for record in &active.evidence {
+            validate_integration_evidence(record, now_ms)?;
+            insert_unique_integration_identity(&mut identities, record)?;
+        }
+        let (trigger_nonce, due_nonce) =
+            derive_integration_identity(appliance_id, active.generation, &active.evidence)?;
+        if active.trigger_nonce != trigger_nonce || active.due_nonce != due_nonce {
+            return Err(Error::new(
+                "active evidence-integration identity derivation failed",
+            ));
+        }
+        if active.last_attempt_at_unix_ms.is_none()
+            && (state.quiet_until_unix_ms > active.created_at_unix_ms
+                || active
+                    .evidence
+                    .iter()
+                    .any(|record| record.captured_at_unix_ms > active.created_at_unix_ms)
+                || state.last_completed_at_unix_ms.is_some_and(|last| {
+                    active.created_at_unix_ms < last.saturating_add(MINIMUM_INTERVAL_MS)
+                }))
+        {
+            return Err(Error::new(
+                "fresh evidence-integration trigger violates cadence",
+            ));
+        }
+    }
+
+    let mut consumed_ids = BTreeSet::new();
+    for record in &state.consumed {
+        if !valid_short_identifier(&record.evidence_id)
+            || !is_lower_hex(&record.sha256, 64)
+            || record.consumed_at_unix_ms == 0
+            || record.consumed_at_unix_ms > now_ms.saturating_add(60_000)
+            || !consumed_ids.insert(record.evidence_id.as_str())
+            || identities
+                .insert(record.evidence_id.clone(), record.sha256.clone())
+                .is_some()
+        {
+            return Err(Error::new(
+                "consumed evidence-integration identity is invalid",
+            ));
+        }
+    }
+    let active_ids = state.active.as_ref().map_or_else(BTreeSet::new, |active| {
+        active
+            .evidence
+            .iter()
+            .map(|record| record.evidence_id.as_str())
+            .collect()
+    });
+    for record in &state.rejected {
+        if !is_lower_hex(&record.record_sha256, 64)
+            || record
+                .evidence_id
+                .as_ref()
+                .is_some_and(|value| !valid_short_identifier(value))
+            || record
+                .evidence_id
+                .as_deref()
+                .is_some_and(|value| active_ids.contains(value))
+            || record.reason.is_empty()
+            || record.reason.chars().count() > 160
+            || record.reason.chars().any(char::is_control)
+            || record.source_revision == 0
+            || record.first_seen_at_unix_ms == 0
+            || record.first_seen_at_unix_ms > now_ms.saturating_add(60_000)
+        {
+            return Err(Error::new(
+                "rejected evidence-integration record is invalid",
+            ));
+        }
+    }
+    let mut ambiguous_triggers = BTreeSet::new();
+    for record in &state.ambiguous {
+        if !valid_identifier(&record.trigger_nonce)
+            || !valid_integration_due_nonce(&record.due_nonce)
+            || record.provider_started_at_unix_ms == 0
+            || record.terminalized_at_unix_ms < record.provider_started_at_unix_ms
+            || record.terminalized_at_unix_ms > now_ms.saturating_add(60_000)
+            || record.evidence.is_empty()
+            || record.evidence.len() > MAX_TRIGGER_EVIDENCE
+            || record.status != "provider_started_delivery_authorship_unknown_non_authored"
+            || !ambiguous_triggers.insert(record.trigger_nonce.as_str())
+        {
+            return Err(Error::new(
+                "ambiguous evidence-integration record is invalid",
+            ));
+        }
+        for evidence in &record.evidence {
+            if !valid_short_identifier(&evidence.evidence_id)
+                || !is_lower_hex(&evidence.sha256, 64)
+                || evidence.consumed_at_unix_ms != record.terminalized_at_unix_ms
+                || identities
+                    .insert(evidence.evidence_id.clone(), evidence.sha256.clone())
+                    .is_some()
+            {
+                return Err(Error::new(
+                    "ambiguous evidence-integration identity is invalid",
+                ));
+            }
+        }
+    }
+    if let Some(snapshot) = &state.scheduled_absorption {
+        if !valid_identifier(&snapshot.scheduled_nonce)
+            || snapshot.prepared_at_unix_ms == 0
+            || snapshot.prepared_at_unix_ms > now_ms.saturating_add(60_000)
+            || snapshot.evidence.len() > MAX_TRIGGER_EVIDENCE
+        {
+            return Err(Error::new(
+                "scheduled evidence-integration absorption is invalid",
+            ));
+        }
+        for record in &snapshot.evidence {
+            validate_integration_evidence(record, now_ms)?;
+            let occurrences = state
+                .pending
+                .iter()
+                .chain(
+                    state
+                        .active
+                        .iter()
+                        .flat_map(|active| active.evidence.iter()),
+                )
+                .filter(|candidate| {
+                    candidate.evidence_id == record.evidence_id && candidate.sha256 == record.sha256
+                })
+                .count();
+            if occurrences != 1 {
+                return Err(Error::new(
+                    "scheduled evidence snapshot lacks one exact backing record",
+                ));
+            }
+        }
+    }
+    Ok(())
+}
+
+fn validate_integration_evidence(record: &IntegrationEvidenceRecord, now_ms: u64) -> Result<()> {
+    const ELIGIBLE_KINDS: &[&str] = &[
+        "verified_source",
+        "deterministic_measurement",
+        "deterministic_check",
+        "completed_study",
+        "spectral_observation",
+        "reservoir_tuning_result",
+        "owned_self_study_result",
+        "owned_artifact_read",
+        "cited_synthesis",
+        "verified_peer_packet",
+    ];
+    if !valid_short_identifier(&record.evidence_id)
+        || !ELIGIBLE_KINDS.contains(&record.kind.as_str())
+        || !valid_identifier(&record.epistemic_status)
+        || !is_lower_hex(&record.sha256, 64)
+        || !record.eligible_for_belief_update
+        || record.captured_at_unix_ms == 0
+        || record.captured_at_unix_ms > now_ms.saturating_add(60_000)
+    {
+        return Err(Error::new("integration evidence identity is invalid"));
+    }
+    for (value, maximum) in [
+        (&record.reference, 512),
+        (&record.summary, 480),
+        (&record.source, 256),
+    ] {
+        if value.is_empty()
+            || value.trim() != value
+            || value.chars().count() > maximum
+            || value.chars().any(char::is_control)
+        {
+            return Err(Error::new("integration evidence text is invalid"));
+        }
+    }
+    Ok(())
+}
+
+fn insert_unique_integration_identity(
+    identities: &mut BTreeMap<String, String>,
+    record: &IntegrationEvidenceRecord,
+) -> Result<()> {
+    if identities
+        .insert(record.evidence_id.clone(), record.sha256.clone())
+        .is_some()
+    {
+        return Err(Error::new("integration evidence identity is duplicated"));
+    }
+    Ok(())
+}
+
+fn derive_integration_identity(
+    appliance_id: &str,
+    generation: u64,
+    evidence: &[IntegrationEvidenceRecord],
+) -> Result<(String, String)> {
+    let mut preimage = b"astrid.edge.evidence-integration.trigger.v1\0".to_vec();
+    preimage.extend_from_slice(appliance_id.as_bytes());
+    preimage.push(0);
+    preimage.extend_from_slice(&generation.to_be_bytes());
+    preimage.push(0);
+    preimage.extend_from_slice(&canonical_json(&evidence)?);
+    let digest = sha256(&preimage);
+    let numeric = u64::from_str_radix(&digest[..16], 16)
+        .map_err(|_| Error::new("integration trigger digest is invalid"))?
+        | 0x8000_0000_0000_0000;
+    Ok((
+        format!("evidence-integration-{digest}"),
+        format!("due-{numeric}"),
+    ))
+}
+
+fn valid_short_identifier(value: &str) -> bool {
+    value.len() <= 96 && valid_identifier(value)
+}
+
+fn valid_integration_due_nonce(value: &str) -> bool {
+    valid_identifier(value)
+        && value.strip_prefix("due-").is_some_and(|suffix| {
+            (5..=20).contains(&suffix.len()) && suffix.bytes().all(|byte| byte.is_ascii_digit())
+        })
+}
+
+const fn integration_utc_day(now_ms: u64) -> u64 {
+    now_ms / (24 * 60 * 60 * 1_000)
 }
 
 fn schedule_content_admission(bytes: &[u8], now: u64) -> Result<ScheduleAdmission> {
@@ -837,9 +1391,7 @@ fn schedule_content_admission(bytes: &[u8], now: u64) -> Result<ScheduleAdmissio
             if state.pending_due_at_unix_seconds.is_some() {
                 Ok(ScheduleAdmission::LegacyMigration { due_nonce })
             } else {
-                Ok(ScheduleAdmission::ModelStart {
-                    due_nonce: Some(due_nonce),
-                })
+                Ok(ScheduleAdmission::ModelStart { due_nonce })
             }
         } else {
             Ok(ScheduleAdmission::NotDue)
@@ -883,9 +1435,7 @@ fn schedule_content_admission(bytes: &[u8], now: u64) -> Result<ScheduleAdmissio
     if now < state.next_model_eligible_at_unix_seconds {
         return Ok(ScheduleAdmission::Cooling { due_nonce });
     }
-    Ok(ScheduleAdmission::ModelStart {
-        due_nonce: Some(due_nonce),
-    })
+    Ok(ScheduleAdmission::ModelStart { due_nonce })
 }
 
 fn exact_prepared_transaction_exists(
@@ -1211,22 +1761,42 @@ fn read_exact_marker(
         || !is_lower_hex(&marker.core_ack_sha256, 64)
         || !is_lower_hex(&marker.edge_ack_sha256, 64)
         || marker
-            .scheduled_due_nonce_sha256
+            .reflection_due_nonce_sha256
+            .as_ref()
+            .is_none_or(|value| !is_lower_hex(value, 64))
+        || marker
+            .reflection_trigger_nonce_sha256
             .as_ref()
             .is_some_and(|value| !is_lower_hex(value, 64))
-        || !matches!(
-            marker.model_start_authority.as_str(),
-            "root_schedule_model_start_allowed"
-                | "root_schedule_prepared_recovery_only"
-                | "root_schedule_legacy_migration_only"
-        )
-        || (marker.model_start_authority != "root_schedule_model_start_allowed"
-            && marker.scheduled_due_nonce_sha256.is_none())
+        || !valid_reflection_authority(&marker)
         || marker.drain_barrier_sequence == 0
     {
         return Err(Error::new("reflection admission marker is malformed"));
     }
     Ok(Some((marker, bytes)))
+}
+
+fn valid_reflection_authority(marker: &AdmissionMarker) -> bool {
+    match marker.reflection_kind.as_str() {
+        "scheduled" => {
+            marker.reflection_trigger_nonce_sha256.is_none()
+                && matches!(
+                    marker.model_start_authority.as_str(),
+                    "root_schedule_model_start_allowed"
+                        | "root_schedule_prepared_recovery_only"
+                        | "root_schedule_legacy_migration_only"
+                )
+        },
+        "evidence_integration" => {
+            marker.reflection_trigger_nonce_sha256.is_some()
+                && matches!(
+                    marker.model_start_authority.as_str(),
+                    "root_evidence_integration_model_start_allowed"
+                        | "root_evidence_integration_prepared_recovery_only"
+                )
+        },
+        _ => false,
+    }
 }
 
 fn validate_lease_content(lease: &ReflectionLease) -> Result<()> {
@@ -1526,10 +2096,12 @@ const fn no_follow_cloexec() -> i32 {
 mod tests {
     use super::{
         ADMISSION_SCHEMA, AdmissionMarker, CORE_ACK_KEYS, HANDOFF_AUTHORITY, HANDOFF_PROVENANCE,
-        HANDOFF_SCHEMA, LEASE_KIND, LEASE_SCHEMA, PendingSupervisorHandoff, ReflectionLease,
-        has_exact_object_keys, is_lower_hex, promote_pending_supervisor_handoffs,
-        require_prior_boot_artifacts, schedule_content_admission, validate_lease_content,
-        validate_marker_binding,
+        HANDOFF_SCHEMA, IntegrationActiveTrigger, IntegrationEvidenceRecord, IntegrationStateV1,
+        LEASE_KIND, LEASE_SCHEMA, PendingSupervisorHandoff, ReflectionLease,
+        derive_integration_identity, has_exact_object_keys, integration_utc_day, is_lower_hex,
+        promote_pending_supervisor_handoffs, read_evidence_integration_state,
+        require_prior_boot_artifacts, schedule_content_admission, valid_reflection_authority,
+        validate_integration_state, validate_lease_content, validate_marker_binding,
     };
     use std::fs;
     use std::os::unix::fs::PermissionsExt as _;
@@ -1568,7 +2140,9 @@ mod tests {
             edge_ack_sha256: "e".repeat(64),
             model_lock_device: 1,
             model_lock_inode: 2,
-            scheduled_due_nonce_sha256: Some("f".repeat(64)),
+            reflection_kind: "scheduled".to_owned(),
+            reflection_due_nonce_sha256: Some("f".repeat(64)),
+            reflection_trigger_nonce_sha256: None,
             model_start_authority: "root_schedule_model_start_allowed".to_owned(),
             authority: "root_verified_drain_and_model_lock_handoff_not_activation_authority"
                 .to_owned(),
@@ -1606,6 +2180,53 @@ mod tests {
         (temp, inbox, bytes, uid, gid)
     }
 
+    fn integration_evidence(now_ms: u64) -> IntegrationEvidenceRecord {
+        IntegrationEvidenceRecord {
+            evidence_id: "evidence-1".to_owned(),
+            kind: "verified_source".to_owned(),
+            epistemic_status: "verified_external_evidence".to_owned(),
+            reference: "research/source-example.md".to_owned(),
+            summary: "A bounded verified source changed the open inquiry.".to_owned(),
+            source: "runtime_v7_exact_evidence".to_owned(),
+            captured_at_unix_ms: now_ms.saturating_sub(6 * 60 * 1_000),
+            sha256: "a".repeat(64),
+            eligible_for_belief_update: true,
+        }
+    }
+
+    fn integration_state(appliance_id: &str, now_ms: u64) -> IntegrationStateV1 {
+        let evidence = vec![integration_evidence(now_ms)];
+        let generation = 7;
+        let (trigger_nonce, due_nonce) =
+            derive_integration_identity(appliance_id, generation, &evidence).unwrap();
+        IntegrationStateV1 {
+            schema: "astrid.edge.steward_helper.evidence_integration_state.v1".to_owned(),
+            generation,
+            pending: Vec::new(),
+            quiet_until_unix_ms: now_ms.saturating_sub(60_000),
+            active: Some(IntegrationActiveTrigger {
+                trigger_nonce,
+                due_nonce,
+                generation,
+                created_at_unix_ms: now_ms.saturating_sub(30_000),
+                last_attempt_at_unix_ms: None,
+                evidence,
+            }),
+            consumed: Vec::new(),
+            rejected: Vec::new(),
+            ambiguous: Vec::new(),
+            scheduled_absorption: None,
+            last_completed_at_unix_ms: None,
+            last_finished_trigger_nonce: None,
+            last_finished_due_nonce: None,
+            last_absorbed_scheduled_nonce: None,
+            utc_day: integration_utc_day(now_ms),
+            starts_today: 0,
+            last_source_revision: Some(1),
+            last_source_sha256: Some("b".repeat(64)),
+        }
+    }
+
     #[test]
     fn reflection_schema_is_distinct_and_nonce_bound() {
         let lease = valid_lease();
@@ -1621,6 +2242,116 @@ mod tests {
         let value = serde_json::to_value(marker).unwrap();
         assert_eq!(value["lease_kind"], LEASE_KIND);
         assert!(is_lower_hex(value["core_ack_sha256"].as_str().unwrap(), 64));
+    }
+
+    #[test]
+    fn admission_v3_binds_kind_due_trigger_and_authority() {
+        let scheduled = valid_marker();
+        assert!(valid_reflection_authority(&scheduled));
+
+        let mut evidence = scheduled.clone();
+        evidence.reflection_kind = "evidence_integration".to_owned();
+        evidence.reflection_trigger_nonce_sha256 = Some("0".repeat(64));
+        evidence.model_start_authority = "root_evidence_integration_model_start_allowed".to_owned();
+        assert!(valid_reflection_authority(&evidence));
+
+        evidence.reflection_trigger_nonce_sha256 = None;
+        assert!(!valid_reflection_authority(&evidence));
+        evidence.reflection_trigger_nonce_sha256 = Some("0".repeat(64));
+        evidence.model_start_authority = "root_schedule_model_start_allowed".to_owned();
+        assert!(!valid_reflection_authority(&evidence));
+    }
+
+    #[test]
+    fn root_independently_rederives_fresh_evidence_trigger() {
+        let now_ms = 1_900_000_000_000;
+        let state = integration_state("avado-astrid", now_ms);
+        validate_integration_state("avado-astrid", &state, now_ms).unwrap();
+
+        let mut wrong_appliance = state;
+        assert!(validate_integration_state("icp-astrid", &wrong_appliance, now_ms).is_err());
+        wrong_appliance.active.as_mut().unwrap().trigger_nonce =
+            format!("evidence-integration-{}", "c".repeat(64));
+        assert!(validate_integration_state("avado-astrid", &wrong_appliance, now_ms).is_err());
+    }
+
+    #[test]
+    fn root_rejects_integration_cadence_replay_and_untrusted_evidence() {
+        let now_ms = 1_900_000_000_000;
+        let mut state = integration_state("avado-astrid", now_ms);
+        state.quiet_until_unix_ms = now_ms;
+        assert!(validate_integration_state("avado-astrid", &state, now_ms).is_err());
+
+        let mut state = integration_state("avado-astrid", now_ms);
+        state
+            .pending
+            .push(state.active.as_ref().unwrap().evidence[0].clone());
+        assert!(validate_integration_state("avado-astrid", &state, now_ms).is_err());
+
+        let mut state = integration_state("avado-astrid", now_ms);
+        state.active.as_mut().unwrap().evidence[0].eligible_for_belief_update = false;
+        assert!(validate_integration_state("avado-astrid", &state, now_ms).is_err());
+
+        let mut state = integration_state("avado-astrid", now_ms);
+        state.active.as_mut().unwrap().evidence[0].kind = "search_candidate".to_owned();
+        assert!(validate_integration_state("avado-astrid", &state, now_ms).is_err());
+    }
+
+    #[test]
+    fn integration_state_unknown_fields_and_noncanonical_bytes_fail() {
+        let now_ms = 1_900_000_000_000;
+        let state = integration_state("avado-astrid", now_ms);
+        let canonical = super::canonical_json(&state).unwrap();
+        let parsed: IntegrationStateV1 = serde_json::from_slice(&canonical).unwrap();
+        assert_eq!(super::canonical_json(&parsed).unwrap(), canonical);
+
+        let mut value: serde_json::Value = serde_json::from_slice(&canonical).unwrap();
+        value["unexpected"] = serde_json::json!(true);
+        assert!(serde_json::from_value::<IntegrationStateV1>(value).is_err());
+
+        let mut whitespace = canonical;
+        whitespace.push(b'\n');
+        let parsed: IntegrationStateV1 = serde_json::from_slice(&whitespace).unwrap();
+        assert_ne!(super::canonical_json(&parsed).unwrap(), whitespace);
+    }
+
+    #[test]
+    fn integration_state_file_rejects_links_modes_and_noncanonical_replacement() {
+        let temporary = tempfile::tempdir().unwrap();
+        let root = temporary.path().join("steward-state");
+        fs::create_dir(&root).unwrap();
+        fs::set_permissions(&root, fs::Permissions::from_mode(0o700)).unwrap();
+        let path = root.join("evidence-integration.json");
+        let bytes =
+            super::canonical_json(&integration_state("avado-astrid", 1_900_000_000_000)).unwrap();
+        fs::write(&path, &bytes).unwrap();
+        fs::set_permissions(&path, fs::Permissions::from_mode(0o600)).unwrap();
+        let uid = nix::unistd::geteuid().as_raw();
+        let gid = nix::unistd::getegid().as_raw();
+        assert!(
+            read_evidence_integration_state(&path, uid, gid, gid)
+                .unwrap()
+                .is_some()
+        );
+
+        let hardlink = root.join("evidence-integration-hardlink.json");
+        fs::hard_link(&path, &hardlink).unwrap();
+        assert!(read_evidence_integration_state(&path, uid, gid, gid).is_err());
+        fs::remove_file(&hardlink).unwrap();
+
+        let symlink = root.join("evidence-integration-symlink.json");
+        std::os::unix::fs::symlink(&path, &symlink).unwrap();
+        assert!(read_evidence_integration_state(&symlink, uid, gid, gid).is_err());
+        fs::remove_file(&symlink).unwrap();
+
+        fs::set_permissions(&path, fs::Permissions::from_mode(0o640)).unwrap();
+        assert!(read_evidence_integration_state(&path, uid, gid, gid).is_err());
+        fs::set_permissions(&path, fs::Permissions::from_mode(0o600)).unwrap();
+
+        let mut noncanonical = bytes;
+        noncanonical.push(b'\n');
+        fs::write(&path, noncanonical).unwrap();
+        assert!(read_evidence_integration_state(&path, uid, gid, gid).is_err());
     }
 
     #[test]

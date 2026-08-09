@@ -12,6 +12,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import report_edge_activity as activity
@@ -220,6 +221,204 @@ class EdgeActivityTest(unittest.TestCase):
         self.assertEqual(action["trace_attribution"], "exact_response_session_join")
         self.assertIsNone(web["trace_id"])
         self.assertEqual(web["trace_attribution"], "legacy_unattributed")
+
+    def test_verified_inquiry_train_preserves_epistemic_provenance_classes(self) -> None:
+        class VerifiedTrain:
+            REPORT_SCHEMA = "astrid_edge_inquiry_train_report_v1"
+
+            @staticmethod
+            def collect_train(_workspace: Path, **_keywords: object) -> dict[str, object]:
+                return {
+                    "schema": VerifiedTrain.REPORT_SCHEMA,
+                    "integrity": "full_signed_hash_chain_verified",
+                    "events": [
+                        {
+                            "timestamp_unix_ms": 200,
+                            "kind": "inquiry_step",
+                            "step_id": "inquiry-step-one",
+                            "thread_id": "thread-one",
+                            "trace_id": EdgeActivityTest.TRACE_ONE,
+                            "turn_id": EdgeActivityTest.TURN_ONE,
+                            "authored": True,
+                            "fallback": False,
+                            "authorship_class": "astrid_authored_scheduled_inquiry_step",
+                            "provenance_class": "astrid_authored",
+                            "source_ledger": "immutable-steward/inquiry/segments",
+                        },
+                        {
+                            "timestamp_unix_ms": 201,
+                            "kind": "evidence_arrival",
+                            "evidence_id": "study-one",
+                            "authored": False,
+                            "fallback": False,
+                            "authorship_class": "machine_or_executor_evidence_not_astrid_authorship",
+                            "provenance_class": "machine_evidence",
+                            "source_ledger": "autonomous/thread_state.jsonl",
+                        },
+                    ],
+                }
+
+        events = activity.collect_events(
+            self.workspace,
+            1_000,
+            train_module=VerifiedTrain,
+            train_inquiry_root=self.workspace / "ignored",
+            train_verify_key=self.workspace / "ignored.pub",
+            train_appliance_id="avado-edge",
+        )
+        inquiry = next(event for event in events if event["kind"] == "inquiry_step")
+        evidence = next(event for event in events if event["kind"] == "evidence_arrival")
+        self.assertEqual(inquiry["train_integrity"], "full_signed_hash_chain_verified")
+        self.assertEqual(inquiry["trace_attribution"], "first_class")
+        self.assertEqual(inquiry["provenance_class"], "astrid_authored")
+        self.assertFalse(evidence["authored"])
+        self.assertEqual(evidence["trace_attribution"], "signed_identifier_only")
+
+    def test_scheduled_receipts_join_historical_admissions_by_exact_id(self) -> None:
+        trace_one = self.trace(self.TRACE_ONE, self.SPAN_RESULT)
+        trace_two = self.trace(
+            "00000000-0000-4000-8000-000000000081",
+            "00000000-0000-4000-8000-000000000082",
+            turn_id="00000000-0000-4000-8000-000000000083",
+        )
+        receipts = []
+        train_events = []
+        for index, (trace, admission_status) in enumerate(
+            ((trace_one, "acknowledged"), (trace_two, "failed")), start=1
+        ):
+            response_sha256 = str(index) * 64
+            step_id = f"inquiry-step-{index}"
+            admission_id = f"inquiry-admission-{index}"
+            signed_entry_id = f"inquiry-entry-{index}"
+            receipts.append(
+                {
+                    "schema": "astrid_edge_scheduled_introspection_v2",
+                    "completed_at_unix_ms": 300 + index,
+                    "status": "model_authored_structured",
+                    "provenance": "model_authored_runtime_scheduled",
+                    "continuity_projection_written": True,
+                    "response_sha256": response_sha256,
+                    "step_id": step_id,
+                    "admission_id": admission_id,
+                    "signed_entry_id": signed_entry_id,
+                    "trace": trace,
+                }
+            )
+            train_events.extend(
+                [
+                    {
+                        "timestamp_unix_ms": 200 + index,
+                        "kind": "inquiry_step",
+                        "step_id": step_id,
+                        "thread_id": f"thread-{index}",
+                        "trace_id": trace["trace_id"],
+                        "turn_id": trace["turn_id"],
+                        "response_sha256": response_sha256,
+                        "signed_entry_id": signed_entry_id,
+                        "admission_id": admission_id,
+                        "authored": True,
+                        "fallback": False,
+                        "train_integrity": "full_signed_hash_chain_verified",
+                    },
+                    {
+                        "timestamp_unix_ms": 250 + index,
+                        "kind": "semantic_admission",
+                        "status": admission_status,
+                        "admission_id": admission_id,
+                        "signed_entry_id": signed_entry_id,
+                        "response_sha256": response_sha256,
+                        "trace_id": trace["trace_id"],
+                        "authored": False,
+                        "fallback": False,
+                        "authority": (
+                            "exact_append_only_semantic_admission_receipt_"
+                            "not_astrid_authorship"
+                        ),
+                    },
+                ]
+            )
+
+        class VerifiedTrain:
+            REPORT_SCHEMA = "astrid_edge_inquiry_train_report_v1"
+
+            @staticmethod
+            def collect_train(
+                _workspace: Path, **_keywords: object
+            ) -> dict[str, object]:
+                return {
+                    "schema": VerifiedTrain.REPORT_SCHEMA,
+                    "integrity": "full_signed_hash_chain_verified",
+                    "events": train_events,
+                }
+
+        self.write_lines("introspections/scheduled/receipts.jsonl", receipts)
+        events = activity.collect_events(
+            self.workspace, 1_000, train_module=VerifiedTrain
+        )
+        scheduled = {
+            event["admission_id"]: event
+            for event in events
+            if event["kind"] == "scheduled_introspection"
+        }
+
+        self.assertTrue(scheduled["inquiry-admission-1"]["continuity_admitted"])
+        self.assertEqual(
+            scheduled["inquiry-admission-1"]["reservoir_admission_status"],
+            "acknowledged",
+        )
+        self.assertTrue(scheduled["inquiry-admission-2"]["continuity_admitted"])
+        self.assertEqual(
+            scheduled["inquiry-admission-2"]["reservoir_admission_status"],
+            "failed",
+        )
+
+    def test_invalid_train_surfaces_only_fail_closed_integrity_evidence(self) -> None:
+        class InvalidTrain:
+            REPORT_SCHEMA = "astrid_edge_inquiry_train_report_v1"
+
+            @staticmethod
+            def collect_train(_workspace: Path, **_keywords: object) -> dict[str, object]:
+                return {
+                    "schema": InvalidTrain.REPORT_SCHEMA,
+                    "integrity": "invalid_protected_history",
+                    "events": [
+                        {
+                            "timestamp_unix_ms": 220,
+                            "kind": "integrity_violation",
+                            "status": "invalid_protected_history",
+                            "authored": False,
+                            "fallback": False,
+                            "path": "/protected/segment-1.jsonl",
+                            "reason": "signature mismatch",
+                            "authority": "fail_closed_no_authorship_or_continuity_claim",
+                        },
+                        {
+                            "timestamp_unix_ms": 221,
+                            "kind": "inquiry_step",
+                            "authored": True,
+                        },
+                    ],
+                }
+
+        events = activity.inquiry_train_events(
+            self.workspace, train_module=InvalidTrain
+        )
+        self.assertEqual(len(events), 1)
+        self.assertEqual(events[0]["kind"], "integrity_violation")
+        self.assertFalse(events[0]["authored"])
+        self.assertEqual(events[0]["trace_attribution"], "sealed_integrity_failure")
+
+    def test_hindsight_injected_train_module_bypasses_ambient_sibling_import(self) -> None:
+        marker = object()
+        with (
+            mock.patch.dict(activity.__dict__, {"_SEALED_TRAIN_MODULE": marker}),
+            mock.patch.object(
+                activity.importlib.util,
+                "spec_from_file_location",
+                side_effect=AssertionError("ambient train import was attempted"),
+            ),
+        ):
+            self.assertIs(activity.load_train_module(), marker)
 
     def test_ambiguous_response_session_join_remains_unattributed(self) -> None:
         second_trace = "00000000-0000-4000-8000-000000000031"
@@ -482,7 +681,7 @@ class EdgeActivityTest(unittest.TestCase):
         with contextlib.redirect_stdout(output):
             activity.render(args, set())
         report = json.loads(output.getvalue())
-        self.assertEqual(report["authorship_attribution_version"], 7)
+        self.assertEqual(report["authorship_attribution_version"], 8)
         self.assertEqual(
             [event["response_provenance"] for event in report["events"]],
             [
@@ -1164,7 +1363,7 @@ class EdgeActivityTest(unittest.TestCase):
             "autonomous/thread_state.jsonl",
             [
                 {
-                    "schema": "astrid_edge_thread_state_v2",
+                    "schema": "astrid_edge_thread_state_v7",
                     "updated_at_unix_ms": 300,
                     "thread_id": "chain-one",
                     "status": "active",
@@ -1199,7 +1398,9 @@ class EdgeActivityTest(unittest.TestCase):
         self.assertEqual(thread["question"], "bounded question")
         self.assertEqual(thread["findings"], ["one bounded finding"])
         self.assertEqual(thread["open_questions"], ["what remains unknown"])
-        self.assertIn("THREAD", "\n".join(activity.text_lines(events)))
+        rendered = "\n".join(activity.text_lines(events))
+        self.assertIn("THREAD", rendered)
+        self.assertIn("epistemic=v7_authored_inquiry_train", rendered)
 
     def test_introspection_and_perception_remain_non_authored_and_body_free(self) -> None:
         self.write_lines(
@@ -1740,6 +1941,85 @@ class EdgeActivityTest(unittest.TestCase):
         self.assertEqual(profiles["icp"]["viewer"], immutable_viewer)
         for profile in profiles.values():
             self.assertNotIn("/home/", profile["viewer"])
+
+    def test_fleet_nonzero_sealed_viewer_is_explicitly_untrusted(self) -> None:
+        args = type(
+            "Args",
+            (),
+            {
+                "window_minutes": 60,
+                "limit": 20,
+                "since": None,
+                "until": None,
+                "trace_id": None,
+                "session_id": None,
+                "chain_id": None,
+                "thread_id": None,
+                "step_id": None,
+                "kind": [],
+            },
+        )()
+        clock = type("Completed", (), {"stdout": "1700000000000\n", "returncode": 0})()
+        failed = type(
+            "Completed",
+            (),
+            {"stdout": "", "stderr": "sealed viewer unavailable", "returncode": 127},
+        )()
+        with mock.patch.object(
+            fleet_activity.subprocess, "run", side_effect=[clock, failed]
+        ):
+            result = fleet_activity.read_host(
+                "avado", fleet_activity.PRESETS["avado-icp"]["avado"], args
+            )
+        self.assertEqual(result["events"], [])
+        self.assertEqual(
+            result["error"],
+            "pre-bootstrap/untrusted-report-surface: sealed viewer unavailable",
+        )
+
+    def test_fleet_integrity_filter_is_accepted_and_forwarded_exactly(self) -> None:
+        parsed = activity.parser().parse_args(["--kind", "integrity_violation"])
+        self.assertEqual(parsed.kind, ["integrity_violation"])
+        args = type(
+            "Args",
+            (),
+            {
+                "window_minutes": 60,
+                "limit": 20,
+                "since": None,
+                "until": None,
+                "trace_id": None,
+                "session_id": None,
+                "chain_id": None,
+                "thread_id": None,
+                "step_id": None,
+                "kind": ["integrity_violation"],
+            },
+        )()
+        clock = type("Completed", (), {"stdout": "1700000000000\n", "returncode": 0})()
+        remote = type(
+            "Completed",
+            (),
+            {
+                "stdout": json.dumps(
+                    {
+                        "schema": fleet_activity.EXPECTED_REMOTE_SCHEMA,
+                        "events": [],
+                    }
+                ),
+                "stderr": "",
+                "returncode": 0,
+            },
+        )()
+        with mock.patch.object(
+            fleet_activity.subprocess, "run", side_effect=[clock, remote]
+        ) as run:
+            result = fleet_activity.read_host(
+                "avado", fleet_activity.PRESETS["avado-icp"]["avado"], args
+            )
+        self.assertIsNone(result["error"])
+        remote_command = run.call_args_list[1].args[0][2]
+        self.assertIn("--kind integrity_violation", remote_command)
 
 
 if __name__ == "__main__":

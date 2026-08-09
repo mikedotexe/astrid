@@ -16,6 +16,7 @@ from pathlib import Path
 from typing import Any
 
 IMMUTABLE_OPERATOR_ROOT = Path("/usr/libexec/astrid-edge/operator")
+INQUIRY_TRAIN_SCHEMA = "astrid_edge_inquiry_train_report_v1"
 ARTIFACT_READ_MAX_BYTES = 64 * 1024
 ARTIFACT_SCAN_MAX_PER_DIRECTORY = 256
 ARTIFACT_SCAN_MAX_TOTAL = 2_048
@@ -197,6 +198,42 @@ def activity(report: Path, workspace: Path, minutes: int, limit: int) -> list[st
         for line in result.stdout.splitlines()
         if line.strip()
     ]
+
+
+def inquiry_train(
+    report: Path, _workspace: Path, minutes: int, limit: int
+) -> dict[str, Any]:
+    command = [
+        str(report),
+        "--window-minutes",
+        str(minutes),
+        "--limit",
+        str(limit),
+        "--format",
+        "json",
+    ]
+    try:
+        result = subprocess.run(command, capture_output=True, text=True, timeout=30)
+        value = json.loads(result.stdout)
+    except (OSError, subprocess.TimeoutExpired, UnicodeError, json.JSONDecodeError):
+        return {
+            "schema": INQUIRY_TRAIN_SCHEMA,
+            "integrity": "pre-bootstrap/untrusted-report-surface",
+            "events": [],
+        }
+    if (
+        not isinstance(value, dict)
+        or value.get("schema") != INQUIRY_TRAIN_SCHEMA
+        or not isinstance(value.get("events"), list)
+        or result.returncode
+        not in ({0} if value.get("integrity") != "invalid_protected_history" else {2})
+    ):
+        return {
+            "schema": INQUIRY_TRAIN_SCHEMA,
+            "integrity": "pre-bootstrap/untrusted-report-surface",
+            "events": [],
+        }
+    return terminal_safe_value(value)
 
 
 def compact(value: Any, fallback: str = "—", maximum: int = 180) -> str:
@@ -431,7 +468,9 @@ def thread_evolution(workspace: Path, maximum: int = 6) -> list[str]:
         open_questions = len(record.get("open_questions") or [])
         event = compact(record.get("event"), "revision", 48)
         epistemic = (
-            "v6_spectral_typed"
+            "v7_authored_inquiry_train"
+            if record.get("schema") == "astrid_edge_thread_state_v7"
+            else "v6_spectral_typed"
             if record.get("schema") == "astrid_edge_thread_state_v6"
             else "v5_retained_typed"
             if record.get("schema") == "astrid_edge_thread_state_v5"
@@ -455,6 +494,9 @@ def render(minutes: int, limit: int) -> None:
     name, workspace = workspace_for(home)
     values = report_values(
         IMMUTABLE_OPERATOR_ROOT / "report-edge-appliance", workspace, minutes
+    )
+    train = inquiry_train(
+        IMMUTABLE_OPERATOR_ROOT / "astrid-train", workspace, minutes, limit
     )
     thread = read_json(workspace / "autonomous/thread_state.json")
     state_root = workspace.parents[2]
@@ -536,6 +578,19 @@ def render(minutes: int, limit: int) -> None:
         )
     )
     print(
+        "TRAIN    integrity={} steps={} window={} thread={} belief={} delivery={}".format(
+            train.get("integrity", "unavailable"),
+            train.get("inquiry_step_count", "0"),
+            sum(
+                isinstance(item, dict) and item.get("kind") == "inquiry_step"
+                for item in train.get("events", [])
+            ),
+            values.get("inquiry_train_latest_thread_id", "none"),
+            values.get("inquiry_train_latest_belief_operation", "none"),
+            values.get("inquiry_train_latest_reservoir_delivery", "none"),
+        )
+    )
+    print(
         "SPECTRAL substrate={} metric={} rollups={} entropy={} turnover={} tuning={}/{}".format(
             values.get("spectral_substrate_kind", "legacy_unknown"),
             values.get("spectral_fill_metric", "legacy_unknown"),
@@ -561,6 +616,76 @@ def render(minutes: int, limit: int) -> None:
     print("  scheduled introspection = model_authored_runtime_scheduled; runtime chose only the cadence")
     print("  machine evidence = tools, studies, perception, spectral derivations; not Astrid-authored")
     print("  fallback/recovery and operator harness = explicitly non-authored")
+    print("  authored inquiry train = signed final intellectual record, never hidden chain-of-thought")
+    print("  clean source review = separate context and authority; rich inquiry never authors a patch")
+
+    print("\nAUTHORED INQUIRY TRAIN (signed intellectual record; not hidden chain-of-thought)")
+    train_events = [item for item in train.get("events", []) if isinstance(item, dict)]
+    inquiry_steps = [item for item in train_events if item.get("kind") == "inquiry_step"]
+    print(
+        "  integrity={} steps={} degraded={}".format(
+            train.get("integrity", "unavailable"),
+            train.get("inquiry_step_count", 0),
+            compact(train.get("degraded_reason"), "none", 160),
+        )
+    )
+    if train.get("integrity") == "invalid_protected_history":
+        invalid = [
+            item
+            for item in train.get("invalid_records", [])
+            if isinstance(item, dict)
+        ]
+        print(
+            "  FAIL-CLOSED invalid-records={} no-authorship-claim=true".format(
+                len(invalid)
+            )
+        )
+        for item in invalid[-3:]:
+            print(
+                "  invalid path={} reason={}".format(
+                    compact(item.get("path"), maximum=140),
+                    compact(item.get("reason"), maximum=180),
+                )
+            )
+    if inquiry_steps:
+        latest_step = inquiry_steps[-1]
+        print(
+            "  latest step={} thread={} operation={} confidence={}".format(
+                compact(latest_step.get("step_id"), maximum=52),
+                compact(latest_step.get("thread_id"), maximum=52),
+                latest_step.get("thread_operation", "none"),
+                latest_step.get("confidence", "none"),
+            )
+        )
+        print("  observed    " + compact(latest_step.get("observation"), maximum=240))
+        print("  interpreted " + compact(latest_step.get("interpretation"), maximum=240))
+        print("  uncertain   " + compact(latest_step.get("uncertainty"), maximum=200))
+        print("  decided     " + compact(latest_step.get("decision"), maximum=240))
+    else:
+        print("  No verified structured inquiry step is visible yet.")
+    evidence = [item for item in train_events if item.get("kind") == "evidence_arrival"]
+    beliefs = [item for item in train_events if item.get("kind") == "belief_revision"]
+    admissions = [item for item in train_events if item.get("kind") == "semantic_admission"]
+    print(
+        "  evidence={} belief-revisions={} admissions={} latest-delivery={}".format(
+            len(evidence),
+            len(beliefs),
+            len(admissions),
+            admissions[-1].get("status", "none") if admissions else "none",
+        )
+    )
+    print("  Exact hash-verified prose: ~/astrid-train --full")
+
+    print("\nMAC-CORPUS AFFORDANCE RETIREMENT")
+    print(
+        "  status={} valid={} retired={} history-modified={} quarantine-modified={}".format(
+            values.get("origin_mac_affordance_retirement_status", "absent"),
+            values.get("origin_mac_affordance_retirement_valid", "false"),
+            values.get("origin_mac_affordance_retirement_retired_count", "0"),
+            values.get("origin_mac_affordance_retirement_historical_authored_files_modified", "unknown"),
+            values.get("origin_mac_affordance_retirement_operator_quarantine_modified", "unknown"),
+        )
+    )
 
     print("\nSCHEDULED INTROSPECTION (owner-private verified excerpt)")
     if values.get("scheduled_introspection_state_present") != "true":
@@ -749,7 +874,30 @@ def render(minutes: int, limit: int) -> None:
         )
 
     print("\nWORKING THREAD")
-    if not thread.get("thread_id"):
+    v7_threads = [
+        item for item in thread.get("threads", []) if isinstance(item, dict)
+    ]
+    active_v7 = next(
+        (item for item in v7_threads if item.get("status") == "active"), None
+    )
+    if thread.get("schema") == "astrid_edge_thread_state_v7" and active_v7:
+        print(
+            "  {}  status={}  last-step={}".format(
+                compact(active_v7.get("thread_id")),
+                active_v7.get("status", "unknown"),
+                compact(active_v7.get("last_step_id"), maximum=52),
+            )
+        )
+        print("  question    " + compact(active_v7.get("question"), maximum=220))
+        print(
+            "  parked={} beliefs={} pending-evidence={} legacy-archived={}".format(
+                sum(item.get("status") in {"open", "paused"} for item in v7_threads),
+                len(thread.get("beliefs", [])),
+                len(thread.get("pending_evidence_ids", [])),
+                len(thread.get("legacy_unscoped_archived", [])),
+            )
+        )
+    elif not thread.get("thread_id"):
         print("  No structured thread yet — waiting for a genuinely authored stateful Action.")
     else:
         print(
@@ -833,7 +981,7 @@ def render(minutes: int, limit: int) -> None:
     else:
         print("  No owner-only hindsight checkpoint has been recorded yet.")
     print("\nPaths: " + str(workspace))
-    print("Tip: run `~/astrid-hindsight --since 2026-07-30T00:00:00Z --include-excerpts` for a retrospective view.")
+    print("Tip: use `~/astrid-train` for the signed train, `~/astrid-train --full` for exact prose, or `~/astrid-hindsight --since 2026-07-30T00:00:00Z --include-excerpts` for a retrospective view.")
 
 
 def main() -> int:

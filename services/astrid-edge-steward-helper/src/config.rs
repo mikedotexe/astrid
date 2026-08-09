@@ -40,6 +40,10 @@ pub struct Config {
     pub attestor_key: PathBuf,
     pub attestor_key_sha256: String,
     pub state_root: PathBuf,
+    /// Immutable, steward-owned inquiry history exposed read-only to the
+    /// runtime group.  This is deliberately separate from `state_root`, whose
+    /// remaining contents stay owner-only.
+    pub inquiry_history_root: PathBuf,
     pub supervisor_inbox: PathBuf,
     pub supervisor_status: PathBuf,
     pub current_generation: PathBuf,
@@ -350,6 +354,7 @@ impl Config {
             &self.source_signing_key,
             &self.attestor_key,
             &self.state_root,
+            &self.inquiry_history_root,
             &self.supervisor_inbox,
             &self.supervisor_status,
             &self.current_generation,
@@ -382,6 +387,19 @@ impl Config {
             "active generation releases root",
         )?;
         if self.state_root == self.supervisor_inbox
+            || self.inquiry_history_root == self.state_root
+            || self.inquiry_history_root.starts_with(&self.state_root)
+            || self.state_root.starts_with(&self.inquiry_history_root)
+            || self.inquiry_history_root.starts_with(&self.workspace_root)
+            || self.workspace_root.starts_with(&self.inquiry_history_root)
+            || self.inquiry_history_root.starts_with(&self.source_root)
+            || self.source_root.starts_with(&self.inquiry_history_root)
+            || self
+                .inquiry_history_root
+                .starts_with(&self.supervisor_inbox)
+            || self
+                .supervisor_inbox
+                .starts_with(&self.inquiry_history_root)
             || self.state_root.starts_with(&self.source_root)
             || self.source_root.starts_with(&self.state_root)
             || self.attestor_key.starts_with(&self.state_root)
@@ -391,7 +409,7 @@ impl Config {
             || self.active_generation_link.starts_with(&self.source_root)
         {
             return Err(Error::new(
-                "authority, source, and mutable roots must be separate",
+                "authority, source, history, and mutable roots must be separate",
             ));
         }
         if self.maintenance_lease

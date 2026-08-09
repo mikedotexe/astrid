@@ -29,6 +29,13 @@ GLANCE_SPEC = importlib.util.spec_from_file_location(
 assert GLANCE_SPEC is not None and GLANCE_SPEC.loader is not None
 GLANCE = importlib.util.module_from_spec(GLANCE_SPEC)
 GLANCE_SPEC.loader.exec_module(GLANCE)
+RETIRE_SCRIPT = Path(__file__).with_name("retire_edge_origin_mac_affordance.py")
+RETIRE_SPEC = importlib.util.spec_from_file_location(
+    "retire_edge_origin_mac_affordance_for_report", RETIRE_SCRIPT
+)
+assert RETIRE_SPEC is not None and RETIRE_SPEC.loader is not None
+RETIRE = importlib.util.module_from_spec(RETIRE_SPEC)
+RETIRE_SPEC.loader.exec_module(RETIRE)
 
 
 def operator_lifecycle_event(**overrides: object) -> dict[str, object]:
@@ -447,7 +454,11 @@ class FillSummaryTests(unittest.TestCase):
         first = dispatch("requested", turn_one, "a" * 64, trace_one)
         action_receipts = [
             {
-                "schema": "astrid_edge_action_receipt_v4",
+                "schema": (
+                    "astrid_edge_action_receipt_v5"
+                    if turn_id == turn_two
+                    else "astrid_edge_action_receipt_v4"
+                ),
                 "response_sha256": response_hash,
                 "session_id": "session-one",
                 "trace": trace(
@@ -1244,6 +1255,384 @@ class FillSummaryTests(unittest.TestCase):
         self.assertEqual(rejected["authorship_attestations_valid"], 0)
         self.assertEqual(rejected["authorship_attestations_invalid"], 1)
 
+    def test_v2_evidence_integration_attestation_uses_trigger_provenance(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            workspace = Path(temporary) / "workspace"
+            artifacts = workspace / "introspections/scheduled"
+            artifacts.mkdir(parents=True)
+            key_path = Path(temporary) / "scheduled-authorship.pub"
+            public_key, _unused = _sign_ed25519(b"v2-evidence-attestation", b"")
+            key_path.write_bytes(public_key)
+            due_nonce = "due-9223372036854776000"
+            response_sha256 = "1" * 64
+            trigger_nonce = "evidence-integration-" + "2" * 64
+            trace = {
+                "schema_version": 1,
+                "trace_id": "20000000-0000-4000-8000-000000000001",
+                "turn_id": "20000000-0000-4000-8000-000000000002",
+                "span_id": "20000000-0000-4000-8000-000000000003",
+                "session_id": "integration-session",
+            }
+            core = {
+                "schema": REPORT.SCHEDULED_AUTHORSHIP_CORE_SCHEMA_V2,
+                "appliance_id": "avado-test",
+                "due_nonce": due_nonce,
+                "trigger_kind": "evidence_integration",
+                "trigger_nonce": trigger_nonce,
+                "due_at_unix_ms": None,
+                "started_at_unix_ms": 20_000_000,
+                "completed_at_unix_ms": 20_001_000,
+                "terminal_status": "model_authored_structured",
+                "model": "qwen-test",
+                "prompt_sha256": "3" * 64,
+                "response_sha256": response_sha256,
+                "reflection_path": (
+                    f"introspections/scheduled/reflection_{due_nonce}_"
+                    f"{trace['turn_id']}.md"
+                ),
+                "reflection_sha256": response_sha256,
+                "reflection_metadata_sha256": "4" * 64,
+                "continuity_projection_sha256": "5" * 64,
+                "inquiry_current_projection_sha256": "6" * 64,
+                "signed_entry_id": "inquiry-entry-one",
+                "step_id": "inquiry-step-one",
+                "admission_id": "inquiry-admission-one",
+                "inquiry_step_sha256": "7" * 64,
+                "inquiry_declaration_sha256": "8" * 64,
+                "state_projection_sha256": "9" * 64,
+                "terminal_receipt_sha256": "a" * 64,
+                "context_provenance_sha256": "b" * 64,
+                "candidate_id": None,
+                "candidate_digest": None,
+                "trace": trace,
+                "provenance": (
+                    REPORT.EVIDENCE_INTEGRATION_INTROSPECTION_PROVENANCE
+                ),
+                "authority": "immutable_steward_signed_exact_authorship_join",
+            }
+            unsigned = {
+                "schema": REPORT.SCHEDULED_AUTHORSHIP_ENVELOPE_SCHEMA_V2,
+                "core": core,
+            }
+            _public, signature = _sign_ed25519(
+                b"v2-evidence-attestation",
+                REPORT.canonical_json_bytes(unsigned),
+            )
+            envelope = unsigned | {
+                "auth": {
+                    "algorithm": "ed25519",
+                    "key_id": (
+                        "ed25519:" + hashlib.sha256(public_key).hexdigest()[:16]
+                    ),
+                    "signature": signature.hex(),
+                }
+            }
+            path = artifacts / (
+                f"authorship_attestation_{due_nonce}_{response_sha256}.json"
+            )
+            path.write_bytes(REPORT.canonical_json_bytes(envelope))
+            attestations, invalid, status = REPORT.scheduled_authorship_attestations(
+                workspace, key_path
+            )
+            self.assertEqual(status, "verified")
+            self.assertEqual(invalid, 0)
+            self.assertEqual(len(attestations), 1)
+            self.assertEqual(
+                attestations[0]["provenance"],
+                REPORT.EVIDENCE_INTEGRATION_INTROSPECTION_PROVENANCE,
+            )
+
+            envelope["core"]["provenance"] = REPORT.SCHEDULED_INTROSPECTION_PROVENANCE
+            tampered_unsigned = {
+                "schema": REPORT.SCHEDULED_AUTHORSHIP_ENVELOPE_SCHEMA_V2,
+                "core": envelope["core"],
+            }
+            _public, signature = _sign_ed25519(
+                b"v2-evidence-attestation",
+                REPORT.canonical_json_bytes(tampered_unsigned),
+            )
+            envelope["auth"]["signature"] = signature.hex()
+            path.write_bytes(REPORT.canonical_json_bytes(envelope))
+            attestations, invalid, status = REPORT.scheduled_authorship_attestations(
+                workspace, key_path
+            )
+            self.assertEqual(attestations, [])
+            self.assertEqual(invalid, 1)
+            self.assertEqual(status, "no_valid_attestations")
+
+    def test_v2_semantic_admission_requires_exact_ack_state(self) -> None:
+        trace_id = "30000000-0000-4000-8000-000000000001"
+        continuity = {
+            "trigger_kind": "evidence_integration",
+            "signed_entry_id": "inquiry-entry-one",
+            "admission_id": "inquiry-admission-one",
+            "response_sha256": "1" * 64,
+            "summary_sha256": "2" * 64,
+            "due_nonce": "due-9223372036854776001",
+            "trace": {"trace_id": trace_id},
+        }
+        admission = {
+            "schema": REPORT.SCHEDULED_INTROSPECTION_ADMISSION_SCHEMA_V2,
+            "continuity_admitted": True,
+            "admitted_at_unix_ms": 1_000,
+            "signed_entry_id": continuity["signed_entry_id"],
+            "admission_id": continuity["admission_id"],
+            "last_response_sha256": continuity["response_sha256"],
+            "last_summary_sha256": continuity["summary_sha256"],
+            "last_trace_id": trace_id,
+            "last_due_nonce": continuity["due_nonce"],
+            "reservoir_delivery": "acknowledged",
+            "queued_at_unix_ms": 1_001,
+            "terminal_at_unix_ms": 1_002,
+            "reservoir_generation": "reservoir-generation-one",
+            "reservoir_sequence": 0,
+            "vector_sha256": "3" * 64,
+            "source_class": "evidence_integration",
+            "migrated_legacy_schema": None,
+            "provenance": REPORT.EVIDENCE_INTEGRATION_INTROSPECTION_PROVENANCE,
+            "authority": "verified_signed_inquiry_observational_only",
+        }
+        self.assertTrue(
+            REPORT.valid_v2_semantic_admission(
+                admission, continuity, continuity_valid=True
+            )
+        )
+        malformed = dict(admission, reservoir_sequence=None)
+        self.assertFalse(
+            REPORT.valid_v2_semantic_admission(
+                malformed, continuity, continuity_valid=True
+            )
+        )
+        queued = dict(
+            admission,
+            reservoir_delivery="queued",
+            terminal_at_unix_ms=None,
+            reservoir_generation=None,
+            reservoir_sequence=None,
+        )
+        self.assertTrue(
+            REPORT.valid_v2_semantic_admission(
+                queued, continuity, continuity_valid=True
+            )
+        )
+        self.assertFalse(
+            REPORT.valid_v2_semantic_admission(
+                dict(queued, reservoir_generation="forged"),
+                continuity,
+                continuity_valid=True,
+            )
+        )
+
+    def test_v2_summary_attributes_evidence_integration_and_exact_ack(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            workspace = Path(temporary)
+            projection = workspace / "runtime/scheduled-introspection/projection"
+            artifacts = workspace / "introspections/scheduled"
+            projection.mkdir(parents=True)
+            artifacts.mkdir(parents=True)
+            due_nonce = "due-9223372036854776002"
+            trigger_nonce = "evidence-integration-" + "4" * 64
+            trace = {
+                "schema_version": 1,
+                "trace_id": "40000000-0000-4000-8000-000000000001",
+                "turn_id": "40000000-0000-4000-8000-000000000002",
+                "span_id": "40000000-0000-4000-8000-000000000003",
+                "session_id": "integration-session-two",
+            }
+            reflection_path = (
+                f"introspections/scheduled/reflection_{due_nonce}_"
+                f"{trace['turn_id']}.md"
+            )
+            reflection_bytes = b"Integrated exact evidence into a bounded inquiry."
+            sidecar_bytes = b'{"schema":"test-sidecar"}'
+            current_bytes = b'{"schema":"test-current"}'
+            response_sha256 = hashlib.sha256(reflection_bytes).hexdigest()
+            summary_text = "Exact evidence was integrated without automatic belief change."
+            summary_sha256 = hashlib.sha256(summary_text.encode()).hexdigest()
+            signed_entry_id = "inquiry-entry-evidence-two"
+            step_id = "inquiry-step-evidence-two"
+            admission_id = "inquiry-admission-evidence-two"
+            continuity = {
+                "schema": REPORT.SCHEDULED_INTROSPECTION_CONTINUITY_SCHEMA_V2,
+                "appliance_id": "avado-test",
+                "model": "qwen-test",
+                "trigger_kind": "evidence_integration",
+                "trigger_nonce": trigger_nonce,
+                "due_nonce": due_nonce,
+                "recorded_at_unix_ms": 40_001_000,
+                "summary": summary_text,
+                "summary_sha256": summary_sha256,
+                "response_sha256": response_sha256,
+                "prompt_sha256": "5" * 64,
+                "reflection_path": reflection_path,
+                "signed_entry_id": signed_entry_id,
+                "step_id": step_id,
+                "admission_id": admission_id,
+                "inquiry_current_projection_sha256": hashlib.sha256(
+                    current_bytes
+                ).hexdigest(),
+                "trace": trace,
+                "provenance": (
+                    REPORT.EVIDENCE_INTEGRATION_INTROSPECTION_PROVENANCE
+                ),
+                "authority": (
+                    "bounded_signed_inquiry_continuity_projection_not_code_or_action_authority"
+                ),
+            }
+            state = {
+                "schema": REPORT.SCHEDULED_INTROSPECTION_STATE_SCHEMA_V2,
+                "running": False,
+                "last_status": "model_authored_structured",
+                "last_started_at_unix_ms": 40_000_000,
+                "last_completed_at_unix_ms": 40_001_000,
+                "next_due_at_unix_ms": 47_200_000,
+                "total_attempts": 1,
+                "total_authored": 1,
+                "total_structured": 1,
+                "total_unstructured": 0,
+                "consecutive_failures": 0,
+            }
+            receipt = {
+                "schema": REPORT.SCHEDULED_INTROSPECTION_RECEIPT_SCHEMA_V2,
+                "status": "model_authored_structured",
+                "completed_at_unix_ms": 40_001_000,
+                "trigger_kind": "evidence_integration",
+                "trigger_nonce": trigger_nonce,
+                "due_nonce": due_nonce,
+                "provenance": (
+                    REPORT.EVIDENCE_INTEGRATION_INTROSPECTION_PROVENANCE
+                ),
+                "prompt_sha256": continuity["prompt_sha256"],
+                "response_sha256": response_sha256,
+                "reflection_path": reflection_path,
+                "trace": trace,
+                "continuity_projection_written": True,
+                "reservoir_admission_eligible": True,
+                "continuity_admitted": False,
+                "signed_entry_id": signed_entry_id,
+                "step_id": step_id,
+                "admission_id": admission_id,
+                "inquiry_step_sha256": "6" * 64,
+                "inquiry_declaration_sha256": "7" * 64,
+                "inquiry_current_projection_sha256": hashlib.sha256(
+                    current_bytes
+                ).hexdigest(),
+                "continuity_projection_sha256": hashlib.sha256(
+                    REPORT.canonical_json_bytes(continuity)
+                ).hexdigest(),
+            }
+            attestation = {
+                "schema": REPORT.SCHEDULED_AUTHORSHIP_CORE_SCHEMA_V2,
+                "terminal_status": "model_authored_structured",
+                "terminal_receipt_sha256": hashlib.sha256(
+                    REPORT.canonical_json_bytes(receipt)
+                ).hexdigest(),
+                "trigger_kind": "evidence_integration",
+                "trigger_nonce": trigger_nonce,
+                "due_nonce": due_nonce,
+                "provenance": (
+                    REPORT.EVIDENCE_INTEGRATION_INTROSPECTION_PROVENANCE
+                ),
+                "prompt_sha256": continuity["prompt_sha256"],
+                "response_sha256": response_sha256,
+                "reflection_path": reflection_path,
+                "reflection_sha256": response_sha256,
+                "reflection_metadata_sha256": hashlib.sha256(
+                    sidecar_bytes
+                ).hexdigest(),
+                "trace": trace,
+                "continuity_projection_sha256": receipt[
+                    "continuity_projection_sha256"
+                ],
+                "state_projection_sha256": hashlib.sha256(
+                    REPORT.canonical_json_bytes(state)
+                ).hexdigest(),
+                "signed_entry_id": signed_entry_id,
+                "step_id": step_id,
+                "admission_id": admission_id,
+                "inquiry_step_sha256": receipt["inquiry_step_sha256"],
+                "inquiry_declaration_sha256": receipt[
+                    "inquiry_declaration_sha256"
+                ],
+                "inquiry_current_projection_sha256": receipt[
+                    "inquiry_current_projection_sha256"
+                ],
+                "key_id": "ed25519:test",
+                "attestation_path": "attestation.json",
+            }
+            admission = {
+                "schema": REPORT.SCHEDULED_INTROSPECTION_ADMISSION_SCHEMA_V2,
+                "continuity_admitted": True,
+                "admitted_at_unix_ms": 40_001_001,
+                "signed_entry_id": signed_entry_id,
+                "admission_id": admission_id,
+                "last_response_sha256": response_sha256,
+                "last_summary_sha256": summary_sha256,
+                "last_trace_id": trace["trace_id"],
+                "last_due_nonce": due_nonce,
+                "reservoir_delivery": "acknowledged",
+                "queued_at_unix_ms": 40_001_002,
+                "terminal_at_unix_ms": 40_001_003,
+                "reservoir_generation": "reservoir-two",
+                "reservoir_sequence": 9,
+                "vector_sha256": "8" * 64,
+                "source_class": "evidence_integration",
+                "migrated_legacy_schema": None,
+                "provenance": (
+                    REPORT.EVIDENCE_INTEGRATION_INTROSPECTION_PROVENANCE
+                ),
+                "authority": "verified_signed_inquiry_observational_only",
+            }
+            reflection = workspace / reflection_path
+            reflection.write_bytes(reflection_bytes)
+            reflection.with_suffix(".json").write_bytes(sidecar_bytes)
+            (projection / "inquiry-current.json").write_bytes(current_bytes)
+            train_report = {
+                "integrity": "full_signed_hash_chain_verified",
+                "events": [
+                    {
+                        "kind": "inquiry_step",
+                        "step_id": step_id,
+                        "signed_entry_id": signed_entry_id,
+                        "response_sha256": response_sha256,
+                        "declaration_sha256": receipt[
+                            "inquiry_declaration_sha256"
+                        ],
+                        "trigger_kind": "evidence_integration",
+                    }
+                ],
+            }
+            summary = REPORT.scheduled_introspection_summary_v2(
+                workspace,
+                cutoff_ms=40_000_000,
+                now_ms=40_002_000,
+                state=state,
+                continuity=continuity,
+                sourced_receipts=[
+                    (
+                        receipt,
+                        ("introspections/scheduled/receipts.jsonl",),
+                        1,
+                    )
+                ],
+                admission=admission,
+                attestations=[attestation],
+                invalid_attestations=0,
+                attestation_status="verified",
+                train_report=train_report,
+            )
+        self.assertEqual(summary["window_authored"], 1)
+        self.assertEqual(summary["window_authored_scheduled"], 0)
+        self.assertEqual(summary["window_authored_evidence_integrations"], 1)
+        self.assertTrue(summary["continuity_integrity_valid"])
+        self.assertTrue(summary["continuity_actual_admitted"])
+        self.assertEqual(summary["reservoir_delivery"], "acknowledged")
+        self.assertEqual(summary["continuity_trigger_kind"], "evidence_integration")
+        self.assertEqual(
+            summary["reflection_text_authority"],
+            "owner_private_hash_verified_model_authored_runtime_evidence_integration",
+        )
+
     def test_self_change_summary_uses_only_sanitized_operator_projection(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             workspace = Path(temporary) / "workspace"
@@ -1703,6 +2092,159 @@ class FillSummaryTests(unittest.TestCase):
         safe = GLANCE.terminal_safe_value(decoded)
         self.assertEqual(decoded["summary"], hostile)
         self.assertNotIn("\x1b", safe["summary"])
+
+    def test_origin_mac_retirement_receipt_is_exact_scope_and_hash_bound(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary).resolve()
+            workspace = root / "home/default"
+            operator = root / "operator"
+            retirement = root / "retirement"
+            workspace.mkdir(parents=True)
+            legacy = (
+                Path(__file__).parents[1]
+                / "packaging/headless/introspection-memory.md"
+            ).read_bytes()
+            digest = hashlib.sha256(legacy).hexdigest()
+            (workspace / "MEMORY.md").write_bytes(legacy)
+            RETIRE.migrate(workspace, operator, retirement)
+            path = operator / RETIRE.OPERATOR_RECEIPT_NAME
+            valid = REPORT.origin_mac_retirement_summary(
+                path, root_uid=os.geteuid(), root_gid=os.getegid()
+            )
+            self.assertTrue(valid["valid"])
+            self.assertEqual(valid["retired_count"], 1)
+            self.assertEqual(valid["already_retired_count"], 1)
+            self.assertEqual(valid["artifacts_verified"], 1)
+            self.assertTrue(valid["transaction_valid"])
+            self.assertEqual(valid["status"], "verified_exact_scope_already_retired")
+            current = workspace / "AGENTS.md"
+            current.write_text("A newly revised appliance-local prompt.\n")
+            still_valid = REPORT.origin_mac_retirement_summary(
+                path, root_uid=os.geteuid(), root_gid=os.getegid()
+            )
+            self.assertTrue(still_valid["valid"])
+            current.write_text("Read introspections/origin-mac/reintroduced.md\n")
+            reintroduced = REPORT.origin_mac_retirement_summary(
+                path, root_uid=os.geteuid(), root_gid=os.getegid()
+            )
+            self.assertFalse(reintroduced["valid"])
+            self.assertEqual(
+                reintroduced["status"], "invalid_current_origin_mac_affordance"
+            )
+            current.write_text("A safely revised appliance-local prompt.\n")
+            artifact = retirement / f"MEMORY.md.{digest}"
+            artifact.chmod(0o600)
+            artifact.write_bytes(b"tampered")
+            invalid = REPORT.origin_mac_retirement_summary(
+                path, root_uid=os.geteuid(), root_gid=os.getegid()
+            )
+            self.assertFalse(invalid["valid"])
+            self.assertEqual(invalid["status"], "invalid_durable_retirement")
+
+    def test_inquiry_train_summary_keeps_authored_and_machine_events_distinct(self) -> None:
+        report = {
+            "schema": REPORT.INQUIRY_TRAIN_REPORT_SCHEMA,
+            "integrity": "full_signed_hash_chain_verified",
+            "appliance_id": "avado-edge",
+            "key_id": "ed25519:test",
+            "events": [
+                {
+                    "timestamp_unix_ms": 1_000,
+                    "kind": "inquiry_step",
+                    "step_id": "step-one",
+                    "thread_id": "thread-one",
+                    "thread_operation": "open",
+                    "confidence": "tentative",
+                    "observation": "A bounded observation.",
+                    "interpretation": "A bounded interpretation.",
+                    "uncertainty": "A bounded uncertainty.",
+                    "decision": "A bounded decision.",
+                    "belief_operation": "propose",
+                    "belief_id": "belief-one",
+                    "trigger_kind": "scheduled",
+                },
+                {
+                    "timestamp_unix_ms": 1_001,
+                    "kind": "evidence_arrival",
+                    "evidence_id": "evidence-one",
+                    "authored": False,
+                },
+                {
+                    "timestamp_unix_ms": 1_002,
+                    "kind": "semantic_admission",
+                    "status": "acknowledged",
+                    "authored": False,
+                },
+            ],
+        }
+        summary = REPORT.inquiry_train_summary(report, cutoff_ms=900)
+        self.assertEqual(summary["window_inquiry_step_count"], 1)
+        self.assertEqual(summary["window_evidence_arrival_count"], 1)
+        self.assertEqual(summary["latest_step_id"], "step-one")
+        self.assertEqual(summary["latest_reservoir_delivery"], "acknowledged")
+
+    def test_inquiry_train_summary_exposes_fail_closed_path(self) -> None:
+        report = {
+            "schema": REPORT.INQUIRY_TRAIN_REPORT_SCHEMA,
+            "integrity": "invalid_protected_history",
+            "invalid_records": [
+                {
+                    "path": "/protected/segment.jsonl",
+                    "reason": "torn tail",
+                }
+            ],
+            "events": [
+                {
+                    "timestamp_unix_ms": 1_000,
+                    "kind": "integrity_violation",
+                    "authored": False,
+                }
+            ],
+        }
+        summary = REPORT.inquiry_train_summary(report, cutoff_ms=900)
+        self.assertEqual(summary["invalid_record_count"], 1)
+        self.assertEqual(
+            summary["latest_invalid_path"], "/protected/segment.jsonl"
+        )
+        self.assertEqual(summary["latest_invalid_reason"], "torn tail")
+        self.assertEqual(summary["window_integrity_violation_count"], 1)
+
+    def test_at_a_glance_train_requires_exact_sealed_schema(self) -> None:
+        completed = types.SimpleNamespace(
+            returncode=0,
+            stdout=json.dumps({"schema": "older", "events": []}),
+        )
+        with mock.patch.object(
+            GLANCE.subprocess, "run", return_value=completed
+        ) as run:
+            result = GLANCE.inquiry_train(
+                Path("/sealed/astrid-train"), Path("/workspace"), 60, 20
+            )
+        self.assertNotIn("--workspace", run.call_args.args[0])
+        self.assertEqual(
+            result["integrity"], "pre-bootstrap/untrusted-report-surface"
+        )
+
+    def test_at_a_glance_preserves_sealed_fail_closed_diagnostics(self) -> None:
+        completed = types.SimpleNamespace(
+            returncode=2,
+            stdout=json.dumps(
+                {
+                    "schema": GLANCE.INQUIRY_TRAIN_SCHEMA,
+                    "integrity": "invalid_protected_history",
+                    "invalid_records": [
+                        {"path": "/protected/head.json", "reason": "bad signature"}
+                    ],
+                    "events": [],
+                }
+            ),
+        )
+        with mock.patch.object(GLANCE.subprocess, "run", return_value=completed):
+            result = GLANCE.inquiry_train(
+                Path("/sealed/astrid-train"), Path("/workspace"), 60, 20
+            )
+        self.assertEqual(result["integrity"], "invalid_protected_history")
+        self.assertEqual(result["invalid_records"][0]["path"], "/protected/head.json")
 
 
 if __name__ == "__main__":

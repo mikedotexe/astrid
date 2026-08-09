@@ -12,14 +12,19 @@ use serde_json::Value;
 use crate::attestation::HmacSigner;
 use crate::config::Config;
 use crate::context_provenance::ContextProvenance;
+use crate::inquiry::InquiryClassification;
 use crate::util::{atomic_private_write, canonical_json, read_stable_regular, sha256};
 use crate::{Error, Result};
 
-pub(crate) const CORE_SCHEMA: &str = "astrid.edge.steward_helper.authored_transaction.v1";
-const ENVELOPE_SCHEMA: &str = "astrid.edge.steward_helper.authored_transaction_envelope.v1";
-pub(crate) const COMPLETION_SCHEMA: &str = "astrid.edge.steward_helper.authored_completion.v2";
+pub(crate) const CORE_SCHEMA: &str = "astrid.edge.steward_helper.authored_transaction.v2";
+pub(crate) const SCHEDULED_AUTHORITY: &str =
+    "rich_authored_response_with_optional_separate_clean_source_review_idempotent_publication";
+pub(crate) const EVIDENCE_INTEGRATION_AUTHORITY: &str =
+    "evidence_integration_authored_response_no_web_source_candidate_build_or_deployment_authority";
+const ENVELOPE_SCHEMA: &str = "astrid.edge.steward_helper.authored_transaction_envelope.v2";
+pub(crate) const COMPLETION_SCHEMA: &str = "astrid.edge.steward_helper.authored_completion.v4";
 const COMPLETION_ENVELOPE_SCHEMA: &str =
-    "astrid.edge.steward_helper.authored_completion_envelope.v2";
+    "astrid.edge.steward_helper.authored_completion_envelope.v4";
 const MAX_TRANSACTION_BYTES: u64 = 2 * 1024 * 1024;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -49,6 +54,8 @@ pub struct CandidatePublication {
 pub struct SourceReviewOutcome {
     pub schema: String,
     pub status: String,
+    pub trace_id: Option<String>,
+    pub session_id: Option<String>,
     pub turn_id: Option<String>,
     pub span_id: Option<String>,
     pub prompt_sha256: Option<String>,
@@ -75,6 +82,8 @@ pub struct AuthoredTransaction {
     pub started_at_unix_ms: u64,
     pub appliance_id: String,
     pub model: String,
+    pub trigger_kind: String,
+    pub trigger_nonce: String,
     pub due_nonce: String,
     pub trace_id: String,
     pub session_id: String,
@@ -86,6 +95,7 @@ pub struct AuthoredTransaction {
     pub response_sha256: String,
     pub summary: String,
     pub summary_sha256: String,
+    pub inquiry: InquiryClassification,
     pub tools_used: Vec<String>,
     #[serde(default)]
     pub provider_calls: u8,
@@ -118,12 +128,21 @@ struct CompletionCore {
     schema: String,
     appliance_id: String,
     due_nonce: String,
+    trigger_kind: String,
+    trigger_nonce: String,
     trace_id: String,
     session_id: String,
     turn_id: String,
     response_sha256: String,
     transaction_sha256: String,
     completed_at_unix_ms: u64,
+    inquiry_status: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    source_review_trace_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    source_review_session_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    source_review_span_id: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     source_review_status: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -237,12 +256,27 @@ pub fn write_completion(
         schema: COMPLETION_SCHEMA.to_owned(),
         appliance_id: config.appliance_id.clone(),
         due_nonce: transaction.due_nonce.clone(),
+        trigger_kind: transaction.trigger_kind.clone(),
+        trigger_nonce: transaction.trigger_nonce.clone(),
         trace_id: transaction.trace_id.clone(),
         session_id: transaction.session_id.clone(),
         turn_id: transaction.turn_id.clone(),
         response_sha256: transaction.response_sha256.clone(),
         transaction_sha256: sha256(&transaction_bytes),
         completed_at_unix_ms: transaction.completed_at_unix_ms,
+        inquiry_status: transaction.inquiry.status.clone(),
+        source_review_trace_id: transaction
+            .source_review
+            .as_ref()
+            .and_then(|review| review.trace_id.clone()),
+        source_review_session_id: transaction
+            .source_review
+            .as_ref()
+            .and_then(|review| review.session_id.clone()),
+        source_review_span_id: transaction
+            .source_review
+            .as_ref()
+            .and_then(|review| review.span_id.clone()),
         source_review_status: transaction
             .source_review
             .as_ref()
@@ -266,8 +300,8 @@ pub fn write_completion(
                 base_generation: candidate.base_generation.clone(),
             }
         }),
-        status: "authored_completed".to_owned(),
-        provenance: "model_authored_runtime_scheduled".to_owned(),
+        status: transaction.inquiry.status.clone(),
+        provenance: crate::inquiry::authored_provenance(&transaction.trigger_kind).to_owned(),
     };
     let core_bytes = canonical_json(&core)?;
     let envelope = CompletionEnvelope {
@@ -312,8 +346,17 @@ pub fn verify_completion(config: &Config, signer: &HmacSigner, due_nonce: &str) 
         || envelope.core.schema != COMPLETION_SCHEMA
         || envelope.core.appliance_id != config.appliance_id
         || envelope.core.due_nonce != due_nonce
-        || envelope.core.status != "authored_completed"
-        || envelope.core.provenance != "model_authored_runtime_scheduled"
+        || !matches!(
+            envelope.core.status.as_str(),
+            "model_authored_structured" | "model_authored_unstructured"
+        )
+        || envelope.core.inquiry_status != envelope.core.status
+        || !matches!(
+            envelope.core.trigger_kind.as_str(),
+            "scheduled" | "evidence_integration"
+        )
+        || envelope.core.provenance
+            != crate::inquiry::authored_provenance(&envelope.core.trigger_kind)
         || envelope.core.completed_at_unix_ms == 0
         || envelope.core_sha256 != sha256(&core_bytes)
         || envelope.auth.algorithm != "hmac-sha256"
@@ -327,6 +370,7 @@ pub fn verify_completion(config: &Config, signer: &HmacSigner, due_nonce: &str) 
     }
     for (value, label) in [
         (&envelope.core.due_nonce, "completion due nonce"),
+        (&envelope.core.trigger_nonce, "completion trigger nonce"),
         (&envelope.core.trace_id, "completion trace id"),
         (&envelope.core.session_id, "completion session id"),
         (&envelope.core.turn_id, "completion turn id"),
@@ -344,11 +388,14 @@ pub fn verify_completion(config: &Config, signer: &HmacSigner, due_nonce: &str) 
     }
     if let Some(transaction) = load(config, signer, due_nonce)?
         && (envelope.core.trace_id != transaction.trace_id
+            || envelope.core.trigger_kind != transaction.trigger_kind
+            || envelope.core.trigger_nonce != transaction.trigger_nonce
             || envelope.core.session_id != transaction.session_id
             || envelope.core.turn_id != transaction.turn_id
             || envelope.core.response_sha256 != transaction.response_sha256
             || envelope.core.transaction_sha256 != sha256(&canonical_json(&transaction)?)
             || envelope.core.completed_at_unix_ms != transaction.completed_at_unix_ms
+            || envelope.core.inquiry_status != transaction.inquiry.status
             || !completion_source_review_matches(
                 &envelope.core,
                 transaction.source_review.as_ref(),
@@ -398,12 +445,18 @@ fn completion_source_review_matches(
 ) -> bool {
     match review {
         None => {
-            completion.source_review_status.is_none()
+            completion.source_review_trace_id.is_none()
+                && completion.source_review_session_id.is_none()
+                && completion.source_review_span_id.is_none()
+                && completion.source_review_status.is_none()
                 && completion.source_review_turn_id.is_none()
                 && completion.source_review_response_sha256.is_none()
         },
         Some(review) => {
-            completion.source_review_status.as_deref() == Some(review.status.as_str())
+            completion.source_review_trace_id.as_deref() == review.trace_id.as_deref()
+                && completion.source_review_session_id.as_deref() == review.session_id.as_deref()
+                && completion.source_review_span_id.as_deref() == review.span_id.as_deref()
+                && completion.source_review_status.as_deref() == Some(review.status.as_str())
                 && completion.source_review_turn_id.as_deref() == review.turn_id.as_deref()
                 && completion.source_review_response_sha256.as_deref()
                     == review.response_sha256.as_deref()
@@ -443,6 +496,12 @@ pub fn retire_prepared(config: &Config, due_nonce: &str) -> Result<()> {
 
 #[allow(clippy::too_many_lines)] // One fail-closed validation surface for the signed transaction schema.
 pub(crate) fn validate(config: &Config, transaction: &AuthoredTransaction) -> Result<()> {
+    let expected_provenance = crate::inquiry::authored_provenance(&transaction.trigger_kind);
+    let expected_authority = match transaction.trigger_kind.as_str() {
+        "scheduled" => SCHEDULED_AUTHORITY,
+        "evidence_integration" => EVIDENCE_INTEGRATION_AUTHORITY,
+        _ => "invalid",
+    };
     if transaction.schema != CORE_SCHEMA
         || transaction.appliance_id != config.appliance_id
         || transaction.model != config.model
@@ -458,20 +517,49 @@ pub(crate) fn validate(config: &Config, transaction: &AuthoredTransaction) -> Re
         || transaction.prompt_chars == 0
         || transaction.tools_used.len() > 8
         || transaction.provider_calls > 8
-        || transaction.provenance != "model_authored_runtime_scheduled"
-        || transaction.authority
-            != "rich_authored_response_with_optional_separate_clean_source_review_idempotent_publication"
+        || transaction.provenance != expected_provenance
+        || transaction.authority != expected_authority
     {
         return Err(Error::new("authored transaction content is invalid"));
     }
     for (value, label) in [
         (&transaction.due_nonce, "due nonce"),
+        (&transaction.trigger_nonce, "trigger nonce"),
         (&transaction.trace_id, "trace id"),
         (&transaction.session_id, "session id"),
         (&transaction.turn_id, "turn id"),
         (&transaction.span_id, "span id"),
     ] {
         crate::util::validate_identifier(value, label)?;
+    }
+    if !matches!(
+        transaction.trigger_kind.as_str(),
+        "scheduled" | "evidence_integration"
+    ) || transaction.inquiry.status
+        != if transaction.inquiry.is_structured() {
+            "model_authored_structured"
+        } else {
+            "model_authored_unstructured"
+        }
+        || (transaction.inquiry.is_structured() && transaction.inquiry.failure_class.is_some())
+        || (!transaction.inquiry.is_structured() && transaction.inquiry.failure_class.is_none())
+        || (!transaction.inquiry.is_structured()
+            && (transaction.source_review.is_some()
+                || transaction.candidate.is_some()
+                || transaction.unattested_proposal_binding.is_some()))
+        || (transaction.trigger_kind == "evidence_integration"
+            && (transaction.inquiry.source_review_requested()
+                || transaction.source_review.is_some()
+                || transaction.candidate.is_some()
+                || transaction.unattested_proposal_binding.is_some()
+                || transaction.provider_calls > 2
+                || transaction.tools_used.len() > 1
+                || transaction
+                    .tools_used
+                    .iter()
+                    .any(|tool| !matches!(tool.as_str(), "inspect_owned" | "read_owned"))))
+    {
+        return Err(Error::new("authored inquiry classification is invalid"));
     }
     for tool in &transaction.tools_used {
         crate::util::validate_identifier(tool, "tool name")?;
@@ -529,8 +617,10 @@ pub(crate) fn validate(config: &Config, transaction: &AuthoredTransaction) -> Re
         ] {
             crate::util::validate_hex64(value, label)?;
         }
-        if candidate.trace_id != transaction.trace_id
-            || candidate.session_id != transaction.session_id
+        if Some(candidate.trace_id.as_str()) != review.trace_id.as_deref()
+            || Some(candidate.session_id.as_str()) != review.session_id.as_deref()
+            || candidate.trace_id == transaction.trace_id
+            || candidate.session_id == transaction.session_id
             || Some(candidate.turn_id.as_str()) != review.turn_id.as_deref()
             || Some(candidate.response_sha256.as_str()) != review.response_sha256.as_deref()
             || review
@@ -543,15 +633,30 @@ pub(crate) fn validate(config: &Config, transaction: &AuthoredTransaction) -> Re
                 != Some("astrid.edge.steward_helper.intent_binding_receipt.v1")
             || candidate
                 .binding
+                .get("source_review_relation")
+                .and_then(Value::as_str)
+                != Some("separate_clean_source_review")
+            || candidate
+                .binding
+                .get("rich_request_turn_id")
+                .and_then(Value::as_str)
+                != Some(transaction.turn_id.as_str())
+            || candidate
+                .binding
+                .get("rich_request_response_sha256")
+                .and_then(Value::as_str)
+                != Some(transaction.response_sha256.as_str())
+            || candidate
+                .binding
                 .get("appliance_id")
                 .and_then(Value::as_str)
                 != Some(transaction.appliance_id.as_str())
             || candidate.binding.get("due_nonce").and_then(Value::as_str)
                 != Some(transaction.due_nonce.as_str())
             || candidate.binding.get("trace_id").and_then(Value::as_str)
-                != Some(transaction.trace_id.as_str())
+                != Some(candidate.trace_id.as_str())
             || candidate.binding.get("session_id").and_then(Value::as_str)
-                != Some(transaction.session_id.as_str())
+                != Some(candidate.session_id.as_str())
             || candidate.binding.get("turn_id").and_then(Value::as_str)
                 != Some(candidate.turn_id.as_str())
             || candidate.binding.get("model").and_then(Value::as_str)
@@ -623,7 +728,7 @@ fn validate_source_review_shape(review: &SourceReviewOutcome) -> Result<()> {
         )
         || review.tools_used.len() > 8
         || review.authority
-            != "fresh_clean_context_no_rich_owned_or_web_content_candidate_authority_only_when_attested"
+            != "separate_clean_source_review_fresh_context_candidate_authority_only_when_attested"
     {
         return Err(Error::new("source-review outcome is invalid"));
     }
@@ -634,7 +739,15 @@ fn validate_source_review_shape(review: &SourceReviewOutcome) -> Result<()> {
     for tool in &review.tools_used {
         crate::util::validate_identifier(tool, "source-review tool")?;
     }
-    for value in [&review.turn_id, &review.span_id].into_iter().flatten() {
+    for value in [
+        &review.trace_id,
+        &review.session_id,
+        &review.turn_id,
+        &review.span_id,
+    ]
+    .into_iter()
+    .flatten()
+    {
         crate::util::validate_identifier(value, "source-review identifier")?;
     }
     for value in [&review.prompt_sha256, &review.response_sha256]
@@ -647,11 +760,15 @@ fn validate_source_review_shape(review: &SourceReviewOutcome) -> Result<()> {
 }
 
 fn validate_source_review_start(review: &SourceReviewOutcome) -> Result<()> {
-    let started = review.turn_id.is_some()
+    let started = review.trace_id.is_some()
+        && review.session_id.is_some()
+        && review.turn_id.is_some()
         && review.span_id.is_some()
         && review.prompt_sha256.is_some()
         && review.prompt_chars > 0;
-    let partially_started = review.turn_id.is_some()
+    let partially_started = review.trace_id.is_some()
+        || review.session_id.is_some()
+        || review.turn_id.is_some()
         || review.span_id.is_some()
         || review.prompt_sha256.is_some()
         || review.prompt_chars > 0;
@@ -846,6 +963,8 @@ mod tests {
             started_at_unix_ms: 1,
             appliance_id: "avado-test".to_owned(),
             model: "model-test".to_owned(),
+            trigger_kind: "scheduled".to_owned(),
+            trigger_nonce: "due-10000".to_owned(),
             due_nonce: "due-10000".to_owned(),
             trace_id: "11111111-1111-4111-8111-111111111111".to_owned(),
             session_id: "session-one".to_owned(),
@@ -857,6 +976,7 @@ mod tests {
             response,
             summary_sha256: crate::util::sha256(summary.as_bytes()),
             summary,
+            inquiry: crate::inquiry::InquiryClassification::partial_generation(),
             tools_used: Vec::new(),
             provider_calls: 1,
             prompt_tokens: 1,
@@ -911,6 +1031,7 @@ mod tests {
             "attestor_key": root.join("intent.key"),
             "attestor_key_sha256": "d".repeat(64),
             "state_root": root.join("state"),
+            "inquiry_history_root": root.join("candidate/inquiry-history"),
             "supervisor_inbox": root.join("inbox"),
             "supervisor_status": root.join("status"),
             "current_generation": root.join("supervisor/current-generation"),

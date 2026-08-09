@@ -19,8 +19,8 @@
     "result_limit": 5
   },
   "context_tokens": 4096,
-  "output_tokens": 192,
-  "source_authoring_output_tokens": 256,
+  "output_tokens": 384,
+  "source_authoring_output_tokens": 384,
   "model_lock": "/home/avado/.astrid/home/default/edge/runtime/model.lock",
   "workspace_root": "/home/avado/.astrid/home/default/edge",
   "workspace_uid": 1000,
@@ -35,6 +35,7 @@
   "attestor_key": "/etc/astrid-edge-self-change/intent-attestation.key",
   "attestor_key_sha256": "1111111111111111111111111111111111111111111111111111111111111111",
   "state_root": "/var/lib/astrid-edge-steward-helper",
+  "inquiry_history_root": "/var/lib/astrid-edge-inquiry-history",
   "supervisor_inbox": "/var/lib/astrid-edge-self-change/inbox",
   "supervisor_status": "/var/lib/astrid-edge-self-change/steward-status.json",
   "current_generation": "/var/lib/astrid-edge-self-change/current-generation",

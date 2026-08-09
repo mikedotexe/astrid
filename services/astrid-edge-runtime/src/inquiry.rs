@@ -22,7 +22,13 @@ use crate::{
 };
 
 mod stats;
+mod train;
 use stats::{autocorrelation, bounded_cross_correlation, correlation_pairs, linear_slope};
+pub(crate) use train::{
+    InquiryAdmissionOutcome, InquiryBeliefOperation, InquiryThreadOperation, MAX_INQUIRY_THREADS,
+    MAX_PARKED_INQUIRY_THREADS, MAX_THREAD_STARTS_PER_DAY, ThreadAction, VerifiedInquiryStepInput,
+    bounded_identifier, parse_thread_action,
+};
 
 const REGISTRY_SCHEMA: &str = "astrid_edge_study_registry_v1";
 const RECEIPT_SCHEMA: &str = "astrid_edge_study_receipt_v1";

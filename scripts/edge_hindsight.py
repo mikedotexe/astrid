@@ -47,17 +47,22 @@ FILL_SCHEMA = "astrid_edge_hindsight_fill_rollup_v1"
 REPORT_SCHEMA = "astrid_edge_hindsight_report_v1"
 LEGACY_STATE_SCHEMA = "astrid_edge_hindsight_collector_state_v1"
 STATE_SCHEMA = "astrid_edge_hindsight_collector_state_v2"
-DATABASE_SCHEMA_VERSION = 5
+DATABASE_SCHEMA_VERSION = 6
 ARTIFACT_ATTRIBUTION_VERSION = 4
-ATTRIBUTION_PROJECTION_VERSION = 4
+ATTRIBUTION_PROJECTION_VERSION = 5
 SPECTRAL_TUNING_PROJECTION_VERSION = 2
 SELF_EVOLUTION_PROJECTION_VERSION = 3
+INQUIRY_PROJECTION_VERSION = 1
 SEALED_WRITER_CONFIG_SCHEMA = "astrid.edge.hindsight_writer.config.v2"
 MAX_SEALED_WRITER_CONFIG_BYTES = 32 * 1024
 MAX_OPERATOR_REPORT_MANIFEST_BYTES = 256 * 1024
 MAX_ACTIVITY_REPORT_BYTES = 16 * 1024 * 1024
+MAX_TRAIN_REPORT_BYTES = 4 * 1024 * 1024
 IMMUTABLE_ACTIVITY_REPORT_PATH = Path(
     "/usr/libexec/astrid-edge/operator/report_edge_activity.py"
+)
+IMMUTABLE_TRAIN_REPORT_PATH = Path(
+    "/usr/libexec/astrid-edge/operator/astrid_train.py"
 )
 IMMUTABLE_OPERATOR_REPORT_MANIFEST_PATH = Path(
     "/usr/libexec/astrid-edge/operator/MANIFEST.sha256"
@@ -83,6 +88,7 @@ ACTIVITY_LEDGERS = (
     "introspection/receipts.jsonl",
     "introspections/scheduled/receipts.jsonl",
     "introspection/scheduled/receipts.jsonl",
+    "runtime/scheduled-introspection/admission/receipts.jsonl",
     "perception/observations.jsonl",
     "studies/receipts.jsonl",
     "spectral/rollups.jsonl",
@@ -423,8 +429,10 @@ def parse_operator_report_manifest(payload: bytes) -> dict[Path, str]:
     return entries
 
 
-def verified_activity_report_source(config: dict[str, Any]) -> bytes:
-    """Return the exact root-owned activity source bound by config and manifest."""
+def verified_activity_report_sources(
+    config: dict[str, Any]
+) -> tuple[bytes, bytes]:
+    """Return exact activity and train sources bound by one sealed manifest."""
     report_path = config["activity_report_path"]
     manifest_path = config["operator_report_manifest_path"]
     report = stable_root_read(
@@ -446,12 +454,36 @@ def verified_activity_report_source(config: dict[str, Any]) -> bytes:
     entries = parse_operator_report_manifest(manifest)
     if entries.get(report_path) != report_sha256:
         raise ValueError("sealed hindsight activity report manifest binding mismatch")
+    train_path = report_path.with_name("astrid_train.py")
+    if train_path != IMMUTABLE_TRAIN_REPORT_PATH:
+        raise ValueError("sealed hindsight train dependency path is not exact")
+    expected_train_sha256 = entries.get(train_path)
+    if expected_train_sha256 is None:
+        raise ValueError("sealed hindsight train dependency manifest binding is absent")
+    train = stable_root_read(
+        train_path,
+        expected_mode=0o444,
+        maximum_bytes=MAX_TRAIN_REPORT_BYTES,
+    )
+    if hashlib.sha256(train).hexdigest() != expected_train_sha256:
+        raise ValueError("sealed hindsight train dependency digest mismatch")
+    return report, train
+
+
+def verified_activity_report_source(config: dict[str, Any]) -> bytes:
+    """Compatibility wrapper returning the report after all dependencies verify."""
+    report, _train = verified_activity_report_sources(config)
     return report
 
 
-def module_from_verified_source(path: Path, payload: bytes) -> Any:
+def module_from_verified_source(
+    path: Path,
+    payload: bytes,
+    *,
+    name: str = "astrid_edge_activity_for_hindsight",
+    injected: dict[str, Any] | None = None,
+) -> Any:
     """Execute only already-verified bytes, closing the hash/import TOCTOU gap."""
-    name = "astrid_edge_activity_for_hindsight"
     module = types.ModuleType(name)
     module.__file__ = str(path)
     module.__package__ = ""
@@ -459,6 +491,8 @@ def module_from_verified_source(path: Path, payload: bytes) -> Any:
     module.__spec__ = importlib.util.spec_from_loader(
         name, loader=None, origin=str(path)
     )
+    if injected:
+        module.__dict__.update(injected)
     code = compile(payload, str(path), "exec", dont_inherit=True)
     exec(code, module.__dict__)  # noqa: S102 - source is root-owned and digest-bound.
     if module.__file__ != str(path):
@@ -467,8 +501,16 @@ def module_from_verified_source(path: Path, payload: bytes) -> Any:
 
 
 def load_verified_activity_module(config: dict[str, Any]) -> Any:
+    activity_source, train_source = verified_activity_report_sources(config)
+    train_module = module_from_verified_source(
+        IMMUTABLE_TRAIN_REPORT_PATH,
+        train_source,
+        name="astrid_edge_train_for_hindsight",
+    )
     return module_from_verified_source(
-        config["activity_report_path"], verified_activity_report_source(config)
+        config["activity_report_path"],
+        activity_source,
+        injected={"_SEALED_TRAIN_MODULE": train_module},
     )
 
 
@@ -1743,6 +1785,92 @@ def prepare_hindsight_database(connection: sqlite3.Connection) -> None:
             ON self_change_events(candidate_id, recorded_at_unix_ms);
         CREATE INDEX IF NOT EXISTS self_change_events_build
             ON self_change_events(build_id, recorded_at_unix_ms);
+        CREATE TABLE IF NOT EXISTS inquiry_steps (
+            step_id TEXT PRIMARY KEY,
+            recorded_at_unix_ms INTEGER NOT NULL,
+            signed_entry_id TEXT NOT NULL,
+            thread_id TEXT NOT NULL,
+            parent_step_id TEXT,
+            thread_operation TEXT NOT NULL,
+            confidence TEXT NOT NULL,
+            belief_operation TEXT,
+            belief_id TEXT,
+            trace_id TEXT,
+            session_id TEXT,
+            turn_id TEXT,
+            response_sha256 TEXT NOT NULL,
+            declaration_sha256 TEXT NOT NULL,
+            entry_sha256 TEXT,
+            train_integrity TEXT NOT NULL,
+            metadata_json TEXT NOT NULL
+        );
+        CREATE INDEX IF NOT EXISTS inquiry_steps_time
+            ON inquiry_steps(recorded_at_unix_ms, step_id);
+        CREATE INDEX IF NOT EXISTS inquiry_steps_thread
+            ON inquiry_steps(thread_id, recorded_at_unix_ms);
+        CREATE INDEX IF NOT EXISTS inquiry_steps_trace
+            ON inquiry_steps(trace_id, recorded_at_unix_ms);
+        CREATE TABLE IF NOT EXISTS inquiry_evidence (
+            evidence_id TEXT PRIMARY KEY,
+            recorded_at_unix_ms INTEGER NOT NULL,
+            thread_id TEXT,
+            evidence_kind TEXT,
+            epistemic_status TEXT,
+            eligible_for_belief_update INTEGER NOT NULL,
+            evidence_sha256 TEXT,
+            trace_id TEXT,
+            turn_id TEXT,
+            metadata_json TEXT NOT NULL
+        );
+        CREATE INDEX IF NOT EXISTS inquiry_evidence_time
+            ON inquiry_evidence(recorded_at_unix_ms, evidence_id);
+        CREATE INDEX IF NOT EXISTS inquiry_evidence_thread
+            ON inquiry_evidence(thread_id, recorded_at_unix_ms);
+        CREATE TABLE IF NOT EXISTS inquiry_belief_revisions (
+            revision_id TEXT PRIMARY KEY,
+            recorded_at_unix_ms INTEGER NOT NULL,
+            belief_id TEXT NOT NULL,
+            thread_id TEXT,
+            operation TEXT NOT NULL,
+            evidence_ids_json TEXT NOT NULL,
+            prior_revision_id TEXT,
+            response_sha256 TEXT,
+            source TEXT,
+            metadata_json TEXT NOT NULL
+        );
+        CREATE INDEX IF NOT EXISTS inquiry_beliefs_time
+            ON inquiry_belief_revisions(recorded_at_unix_ms, revision_id);
+        CREATE INDEX IF NOT EXISTS inquiry_beliefs_identity
+            ON inquiry_belief_revisions(belief_id, recorded_at_unix_ms);
+        CREATE TABLE IF NOT EXISTS inquiry_thread_transitions (
+            event_id TEXT PRIMARY KEY,
+            recorded_at_unix_ms INTEGER NOT NULL,
+            thread_id TEXT,
+            step_id TEXT,
+            parent_step_id TEXT,
+            transition TEXT,
+            trace_id TEXT,
+            turn_id TEXT,
+            metadata_json TEXT NOT NULL
+        );
+        CREATE INDEX IF NOT EXISTS inquiry_transitions_time
+            ON inquiry_thread_transitions(recorded_at_unix_ms, event_id);
+        CREATE INDEX IF NOT EXISTS inquiry_transitions_thread
+            ON inquiry_thread_transitions(thread_id, recorded_at_unix_ms);
+        CREATE TABLE IF NOT EXISTS semantic_admissions (
+            admission_id TEXT PRIMARY KEY,
+            recorded_at_unix_ms INTEGER NOT NULL,
+            signed_entry_id TEXT,
+            delivery_status TEXT NOT NULL,
+            source_class TEXT,
+            reservoir_generation TEXT,
+            reservoir_sequence INTEGER,
+            vector_sha256 TEXT,
+            trace_id TEXT,
+            metadata_json TEXT NOT NULL
+        );
+        CREATE INDEX IF NOT EXISTS semantic_admissions_time
+            ON semantic_admissions(recorded_at_unix_ms, admission_id);
         CREATE TABLE IF NOT EXISTS checkpoints (
             record_sha256 TEXT PRIMARY KEY,
             recorded_at_unix_ms INTEGER NOT NULL,
@@ -1886,6 +2014,27 @@ def sync_hindsight_database(
                 str(SELF_EVOLUTION_PROJECTION_VERSION),
             ),
         )
+        prior_inquiry_projection = connection.execute(
+            "SELECT value FROM metadata WHERE key = ?",
+            ("inquiry_projection_version",),
+        ).fetchone()
+        inquiry_projection_migrated = (
+            prior_inquiry_projection is None
+            or prior_inquiry_projection[0] != str(INQUIRY_PROJECTION_VERSION)
+        )
+        if inquiry_projection_migrated:
+            for table in (
+                "inquiry_steps",
+                "inquiry_evidence",
+                "inquiry_belief_revisions",
+                "inquiry_thread_transitions",
+                "semantic_admissions",
+            ):
+                connection.execute(f'DELETE FROM "{table}"')
+        connection.execute(
+            "INSERT OR REPLACE INTO metadata(key, value) VALUES(?, ?)",
+            ("inquiry_projection_version", str(INQUIRY_PROJECTION_VERSION)),
+        )
         for event in observed_events:
             payload = json.dumps(event, sort_keys=True, separators=(",", ":"))
             if event.get("kind") == "self_change" and metadata_sha256(
@@ -1929,6 +2078,141 @@ def sync_hindsight_database(
                     payload,
                 ),
             )
+            kind = event.get("kind")
+            timestamp = int(event.get("timestamp_unix_ms", 0) or 0)
+            if kind == "inquiry_step" and event.get("step_id"):
+                connection.execute(
+                    """
+                    INSERT OR REPLACE INTO inquiry_steps(
+                        step_id, recorded_at_unix_ms, signed_entry_id,
+                        thread_id, parent_step_id, thread_operation,
+                        confidence, belief_operation, belief_id, trace_id,
+                        session_id, turn_id, response_sha256,
+                        declaration_sha256, entry_sha256, train_integrity,
+                        metadata_json
+                    ) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    """,
+                    (
+                        event.get("step_id"),
+                        timestamp,
+                        event.get("signed_entry_id"),
+                        event.get("thread_id"),
+                        event.get("parent_step_id"),
+                        event.get("thread_operation"),
+                        event.get("confidence"),
+                        event.get("belief_operation"),
+                        event.get("belief_id"),
+                        event.get("trace_id"),
+                        event.get("session_id"),
+                        event.get("turn_id"),
+                        event.get("response_sha256"),
+                        event.get("declaration_sha256"),
+                        event.get("entry_sha256"),
+                        event.get("train_integrity", "unavailable"),
+                        payload,
+                    ),
+                )
+            elif kind == "evidence_arrival" and event.get("evidence_id"):
+                connection.execute(
+                    """
+                    INSERT OR REPLACE INTO inquiry_evidence(
+                        evidence_id, recorded_at_unix_ms, thread_id,
+                        evidence_kind, epistemic_status,
+                        eligible_for_belief_update, evidence_sha256,
+                        trace_id, turn_id, metadata_json
+                    ) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    """,
+                    (
+                        event.get("evidence_id"),
+                        timestamp,
+                        event.get("thread_id"),
+                        event.get("evidence_kind"),
+                        event.get("status"),
+                        int(bool(event.get("eligible_for_belief_update"))),
+                        event.get("sha256"),
+                        event.get("trace_id"),
+                        event.get("turn_id"),
+                        payload,
+                    ),
+                )
+            elif kind == "belief_revision" and event.get("revision_id"):
+                connection.execute(
+                    """
+                    INSERT OR REPLACE INTO inquiry_belief_revisions(
+                        revision_id, recorded_at_unix_ms, belief_id,
+                        thread_id, operation, evidence_ids_json,
+                        prior_revision_id, response_sha256, source,
+                        metadata_json
+                    ) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    """,
+                    (
+                        event.get("revision_id"),
+                        timestamp,
+                        event.get("belief_id"),
+                        event.get("thread_id"),
+                        event.get("operation"),
+                        json.dumps(event.get("evidence_ids") or [], separators=(",", ":")),
+                        event.get("prior_revision_id"),
+                        event.get("response_sha256"),
+                        event.get("source"),
+                        payload,
+                    ),
+                )
+            elif kind == "thread_transition":
+                transition_identity = {
+                    "thread_id": event.get("thread_id"),
+                    "step_id": event.get("step_id") or event.get("last_step_id"),
+                    "parent_step_id": event.get("parent_step_id"),
+                    "transition": event.get("status") or event.get("event"),
+                    "timestamp_unix_ms": timestamp,
+                    "source_ledger": event.get("source_ledger"),
+                }
+                transition_id = hashlib.sha256(
+                    canonical_bytes(transition_identity)
+                ).hexdigest()
+                connection.execute(
+                    """
+                    INSERT OR REPLACE INTO inquiry_thread_transitions(
+                        event_id, recorded_at_unix_ms, thread_id, step_id,
+                        parent_step_id, transition, trace_id, turn_id,
+                        metadata_json
+                    ) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    """,
+                    (
+                        transition_id,
+                        timestamp,
+                        event.get("thread_id"),
+                        event.get("step_id") or event.get("last_step_id"),
+                        event.get("parent_step_id"),
+                        event.get("status") or event.get("event"),
+                        event.get("trace_id"),
+                        event.get("turn_id"),
+                        payload,
+                    ),
+                )
+            elif kind == "semantic_admission" and event.get("admission_id"):
+                connection.execute(
+                    """
+                    INSERT OR REPLACE INTO semantic_admissions(
+                        admission_id, recorded_at_unix_ms, signed_entry_id,
+                        delivery_status, source_class, reservoir_generation,
+                        reservoir_sequence, vector_sha256, trace_id,
+                        metadata_json
+                    ) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    """,
+                    (
+                        event.get("admission_id"),
+                        timestamp,
+                        event.get("signed_entry_id"),
+                        event.get("status", "unknown"),
+                        event.get("source_class"),
+                        event.get("reservoir_generation"),
+                        event.get("reservoir_sequence"),
+                        event.get("vector_sha256"),
+                        event.get("trace_id"),
+                        payload,
+                    ),
+                )
         for value in scheduled_reflections:
             metadata_json = json.dumps(
                 value, sort_keys=True, separators=(",", ":")
@@ -2223,6 +2507,11 @@ def sync_hindsight_database(
                 "tuning_events",
                 "scheduled_reflections",
                 "self_change_events",
+                "inquiry_steps",
+                "inquiry_evidence",
+                "inquiry_belief_revisions",
+                "inquiry_thread_transitions",
+                "semantic_admissions",
                 "checkpoints",
             )
         }
@@ -2237,6 +2526,8 @@ def sync_hindsight_database(
         "spectral_tuning_projection_version": (
             SPECTRAL_TUNING_PROJECTION_VERSION
         ),
+        "self_evolution_projection_version": SELF_EVOLUTION_PROJECTION_VERSION,
+        "inquiry_projection_version": INQUIRY_PROJECTION_VERSION,
         "path": str(path),
         "quick_check": quick_check,
         "owner_only": stat.S_IMODE(path.stat().st_mode) & 0o077 == 0,
@@ -2279,6 +2570,11 @@ def hindsight_database_status(path: Path) -> dict[str, Any]:
                     "tuning_events",
                     "scheduled_reflections",
                     "self_change_events",
+                    "inquiry_steps",
+                    "inquiry_evidence",
+                    "inquiry_belief_revisions",
+                    "inquiry_thread_transitions",
+                    "semantic_admissions",
                     "checkpoints",
                 )
             }
@@ -2321,6 +2617,8 @@ def hindsight_database_status(path: Path) -> dict[str, Any]:
             != SPECTRAL_TUNING_PROJECTION_VERSION
             or metadata_integer("self_evolution_projection_version")
             != SELF_EVOLUTION_PROJECTION_VERSION
+            or metadata_integer("inquiry_projection_version")
+            != INQUIRY_PROJECTION_VERSION
         ),
         "attribution_projection_version": metadata_integer(
             "attribution_projection_version"
@@ -2330,6 +2628,9 @@ def hindsight_database_status(path: Path) -> dict[str, Any]:
         ),
         "self_evolution_projection_version": metadata_integer(
             "self_evolution_projection_version"
+        ),
+        "inquiry_projection_version": metadata_integer(
+            "inquiry_projection_version"
         ),
         "last_sync_unix_ms": metadata_integer("last_sync_unix_ms"),
     }
@@ -2440,6 +2741,39 @@ def query_hindsight_database(
                 (start_ms, end_ms),
             ).fetchone()[0]
         )
+        inquiry_payloads: dict[str, list[tuple[str]]] = {}
+        inquiry_counts: dict[str, int] = {}
+        for label, table in (
+            ("steps", "inquiry_steps"),
+            ("evidence", "inquiry_evidence"),
+            ("belief_revisions", "inquiry_belief_revisions"),
+            ("thread_transitions", "inquiry_thread_transitions"),
+            ("semantic_admissions", "semantic_admissions"),
+        ):
+            inquiry_counts[label] = int(
+                connection.execute(
+                    f'SELECT count(*) FROM "{table}" WHERE recorded_at_unix_ms BETWEEN ? AND ?',
+                    (start_ms, end_ms),
+                ).fetchone()[0]
+            )
+            inquiry_payloads[label] = connection.execute(
+                f'SELECT metadata_json FROM "{table}" WHERE recorded_at_unix_ms BETWEEN ? AND ? '
+                "ORDER BY recorded_at_unix_ms, rowid LIMIT ?",
+                (start_ms, end_ms, limit),
+            ).fetchall()
+        inquiry_counts["integrity_violations"] = int(
+            connection.execute(
+                "SELECT count(*) FROM activity_events "
+                "WHERE kind = 'integrity_violation' AND timestamp_unix_ms BETWEEN ? AND ?",
+                (start_ms, end_ms),
+            ).fetchone()[0]
+        )
+        inquiry_payloads["integrity_violations"] = connection.execute(
+            "SELECT payload_json FROM activity_events "
+            "WHERE kind = 'integrity_violation' AND timestamp_unix_ms BETWEEN ? AND ? "
+            "ORDER BY timestamp_unix_ms, event_id LIMIT ?",
+            (start_ms, end_ms, limit),
+        ).fetchall()
         last_sync_row = connection.execute(
             "SELECT value FROM metadata WHERE key = 'last_sync_unix_ms'"
         ).fetchone()
@@ -2471,6 +2805,10 @@ def query_hindsight_database(
         "self_change_events": payloads(self_change_payloads),
         "scheduled_reflection_count": scheduled_reflection_count,
         "self_change_event_count": self_change_event_count,
+        "inquiry_counts": inquiry_counts,
+        "inquiry": {
+            label: payloads(rows) for label, rows in inquiry_payloads.items()
+        },
         "last_sync_unix_ms": int(last_sync_row[0]) if last_sync_row else 0,
         "latest_activity_timestamp_unix_ms": latest_activity_timestamp,
     }
@@ -3025,6 +3363,8 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
         == SPECTRAL_TUNING_PROJECTION_VERSION
         and operator_database.get("self_evolution_projection_version")
         == SELF_EVOLUTION_PROJECTION_VERSION
+        and operator_database.get("inquiry_projection_version")
+        == INQUIRY_PROJECTION_VERSION
     ):
         database_view = query_hindsight_database(
             database_path, start_ms, end_ms, args.limit
@@ -3132,6 +3472,8 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
             database_view["scheduled_reflection_count"]
         )
         self_change_event_count = int(database_view["self_change_event_count"])
+        inquiry_view = dict(database_view.get("inquiry") or {})
+        inquiry_counts = dict(database_view.get("inquiry_counts") or {})
     else:
         observed_events = activity_events(workspace, current_ms, activity_module)
         all_scheduled, all_self_change = self_evolution_projections(observed_events)
@@ -3147,6 +3489,15 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
         ][-args.limit :]
         scheduled_reflection_count = len(scheduled_reflections)
         self_change_event_count = len(self_change_events)
+        inquiry_view = {
+            "steps": [value for value in activities if value.get("kind") == "inquiry_step"],
+            "evidence": [value for value in activities if value.get("kind") == "evidence_arrival"],
+            "belief_revisions": [value for value in activities if value.get("kind") == "belief_revision"],
+            "thread_transitions": [value for value in activities if value.get("kind") == "thread_transition"],
+            "semantic_admissions": [value for value in activities if value.get("kind") == "semantic_admission"],
+            "integrity_violations": [value for value in activities if value.get("kind") == "integrity_violation"],
+        }
+        inquiry_counts = {key: len(value) for key, value in inquiry_view.items()}
         tuning_events = [
             flatten_signed_tuning(value)
             for value in json_lines(workspace / "tuning/receipts.jsonl")
@@ -3254,6 +3605,7 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
             "tuning_event_count_in_range": len(tuning_events),
             "scheduled_reflection_count_in_range": scheduled_reflection_count,
             "self_change_event_count_in_range": self_change_event_count,
+            "inquiry_counts_in_range": inquiry_counts,
             "state_database": latest.get("state_database") or database_inventory(state_root / "var/state.db"),
             "audit_database": latest.get("audit_database") or database_inventory(state_root / "home/default/.local/audit"),
             "operator_hindsight_database": operator_database,
@@ -3274,6 +3626,13 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
             "lifecycle_events": self_change_events,
             "authority": (
                 "metadata_hashes_and_provenance_only_no_prompt_response_source_diff_or_logs"
+            ),
+        },
+        "inquiry": {
+            **inquiry_view,
+            "counts": inquiry_counts,
+            "authority": (
+                "signed_authored_intellectual_record_and_typed_evidence_not_hidden_chain_of_thought_or_code_authority"
             ),
         },
         "activity": activities,
@@ -3385,6 +3744,43 @@ def render_text(report: dict[str, Any]) -> str:
             f"status={event.get('status')} candidate={event.get('candidate_id')} "
             f"build={event.get('build_id')} generation={event.get('generation_id')} "
             f"shadow_gate={event.get('shadow_gate_evidence') or '-'}"
+        )
+    inquiry = report.get("inquiry", {})
+    lines.extend(["", "## Authored inquiry train"])
+    lines.append(
+        f"counts={inquiry.get('counts', {})} authority={inquiry.get('authority')}"
+    )
+    for event in inquiry.get("steps", []):
+        lines.append(
+            f"{iso_time(int(event.get('timestamp_unix_ms', 0) or 0))} "
+            f"INQUIRY_STEP step={short(event.get('step_id'), 48)} "
+            f"thread={short(event.get('thread_id'), 48)} "
+            f"operation={event.get('thread_operation')} confidence={event.get('confidence')} "
+            f"decision={short(event.get('decision'), 180)}"
+        )
+    for event in inquiry.get("evidence", []):
+        lines.append(
+            f"{iso_time(int(event.get('timestamp_unix_ms', 0) or 0))} "
+            f"EVIDENCE id={short(event.get('evidence_id'), 48)} "
+            f"kind={event.get('evidence_kind')} eligible={str(event.get('eligible_for_belief_update')).lower()}"
+        )
+    for event in inquiry.get("belief_revisions", []):
+        lines.append(
+            f"{iso_time(int(event.get('timestamp_unix_ms', 0) or 0))} "
+            f"BELIEF revision={short(event.get('revision_id'), 48)} "
+            f"belief={short(event.get('belief_id'), 48)} operation={event.get('operation')}"
+        )
+    for event in inquiry.get("semantic_admissions", []):
+        lines.append(
+            f"{iso_time(int(event.get('timestamp_unix_ms', 0) or 0))} "
+            f"SEMANTIC_ADMISSION id={short(event.get('admission_id'), 48)} "
+            f"delivery={event.get('status')} generation={short(event.get('reservoir_generation'), 40)}"
+        )
+    for event in inquiry.get("integrity_violations", []):
+        lines.append(
+            f"{iso_time(int(event.get('timestamp_unix_ms', 0) or 0))} "
+            f"TRAIN_INTEGRITY_INVALID path={short(event.get('path'), 120)} "
+            f"reason={short(event.get('reason'), 180)} no_authorship_claim=true"
         )
     lines.extend(["", "## Causal activity"])
     for event in report["activity"]:

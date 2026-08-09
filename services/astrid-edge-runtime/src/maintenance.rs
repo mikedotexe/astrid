@@ -1117,7 +1117,7 @@ fn unix_millis() -> u64 {
 
 #[cfg(target_os = "linux")]
 const fn libc_o_nofollow_cloexec() -> i32 {
-    0o00400000 | 0o02000000
+    0o00_400_000 | 0o02_000_000
 }
 
 #[cfg(not(target_os = "linux"))]

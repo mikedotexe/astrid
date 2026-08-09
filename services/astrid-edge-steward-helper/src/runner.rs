@@ -31,7 +31,11 @@ use crate::util::{
 use crate::{Error, RECEIPT_SCHEMA, REFLECTION_SCHEMA, Result};
 
 const MAX_MODEL_STEPS: usize = 8;
+const MAX_RICH_MODEL_STEPS: u8 = 3;
+const MAX_CLEAN_MODEL_STEPS: u8 = 5;
 const DEFAULT_QUESTION: &str = "What do my recent experience, evidence, source, and limitations suggest I should understand or improve next?";
+const CLEAN_REVIEW_QUESTION: &str = "Inspect the exact signed CPU-edge source and build evidence. Decide independently whether a bounded change is warranted; decline if it is not.";
+type ReflectionValidator = fn(&Config, &str, &str, Option<&str>) -> Result<()>;
 
 #[derive(Debug, Clone, Default)]
 pub struct RunRequest {
@@ -55,6 +59,55 @@ pub struct RunResult {
     pub intent_path: Option<String>,
     /// Candidate ID bound to the intent, if one was emitted.
     pub candidate_id: Option<String>,
+}
+
+#[derive(Debug, Clone)]
+enum ReflectionTrigger {
+    Scheduled { due_nonce: String, automatic: bool },
+    Evidence(crate::integration::Trigger),
+}
+
+impl ReflectionTrigger {
+    fn due_nonce(&self) -> &str {
+        match self {
+            Self::Scheduled { due_nonce, .. } => due_nonce,
+            Self::Evidence(trigger) => &trigger.due_nonce,
+        }
+    }
+
+    fn trigger_kind(&self) -> &'static str {
+        match self {
+            Self::Scheduled { .. } => "scheduled",
+            Self::Evidence(_) => "evidence_integration",
+        }
+    }
+
+    fn admission_trigger_nonce(&self) -> Option<&str> {
+        match self {
+            Self::Scheduled { .. } => None,
+            Self::Evidence(trigger) => Some(&trigger.trigger_nonce),
+        }
+    }
+
+    fn automatic_schedule(&self) -> bool {
+        matches!(
+            self,
+            Self::Scheduled {
+                automatic: true,
+                ..
+            }
+        )
+    }
+
+    fn automatic_reflection(&self) -> bool {
+        !matches!(
+            self,
+            Self::Scheduled {
+                automatic: false,
+                ..
+            }
+        )
+    }
 }
 
 #[derive(Debug)]
@@ -291,7 +344,7 @@ struct CleanReview {
 
 const SOURCE_REVIEW_OUTCOME_SCHEMA: &str = "astrid.edge.steward_helper.source_review_outcome.v1";
 const SOURCE_REVIEW_AUTHORITY: &str =
-    "fresh_clean_context_no_rich_owned_or_web_content_candidate_authority_only_when_attested";
+    "separate_clean_source_review_fresh_context_candidate_authority_only_when_attested";
 
 /// Run one fail-closed scheduled reflection.
 ///
@@ -316,40 +369,149 @@ pub fn run_once_without_root_guard_for_test(
     config: &Config,
     request: RunRequest,
 ) -> Result<RunResult> {
-    run_once_with_reflection_validator(config, request, |_| Ok(()), |_, _| Ok(()))
+    run_once_with_reflection_validator(config, request, |_, _, _, _| Ok(()), |_, _, _, _| Ok(()))
 }
 
 #[allow(clippy::too_many_lines)] // Scheduling, coalescing, gate, and lock form one fail-closed admission transaction.
 fn run_once_with_reflection_validator(
     config: &Config,
     request: RunRequest,
-    require_reflection: fn(&Config) -> Result<()>,
-    require_model_start: fn(&Config, &str) -> Result<()>,
+    require_reflection: ReflectionValidator,
+    require_model_start: ReflectionValidator,
 ) -> Result<RunResult> {
     config.validate()?;
     ensure_private_dir(&config.state_root)?;
-    let (due_nonce, automatic_schedule, model_floor_until) =
-        match crate::schedule::decide(config, request.due_nonce)? {
+    let signer = HmacSigner::from_file(&config.attestor_key)?;
+    let now_ms = unix_millis();
+    let retained_integration = if request.due_nonce.is_none() {
+        crate::integration::retained(config, now_ms)?
+    } else {
+        None
+    };
+    let last_finished_integration = if request.due_nonce.is_none() {
+        crate::integration::last_finished(config, now_ms)?
+    } else {
+        None
+    };
+    let mut prepared_integration = None;
+    for trigger in retained_integration
+        .iter()
+        .chain(last_finished_integration.iter())
+    {
+        if let Some(transaction) =
+            crate::authored_transaction::load(config, &signer, &trigger.due_nonce)?
+        {
+            if transaction.trigger_kind != "evidence_integration"
+                || transaction.trigger_nonce != trigger.trigger_nonce
+            {
+                return Err(Error::new(
+                    "retained integration trigger conflicts with prepared authorship",
+                ));
+            }
+            if prepared_integration.replace(trigger.clone()).is_some() {
+                return Err(Error::new(
+                    "multiple evidence-integration recoveries are simultaneously prepared",
+                ));
+            }
+        }
+    }
+    if prepared_integration.is_none()
+        && let Some(trigger) = &retained_integration
+        && crate::integration::provider_started(config, &trigger.trigger_nonce, now_ms)?
+    {
+        let model_lock = crate::model_lock::open(config)?;
+        if model_lock.try_lock_exclusive().is_err() {
+            return Ok(RunResult {
+                status: "deferred: evidence integration provider call remains active".to_owned(),
+                due_nonce: trigger.due_nonce.clone(),
+                trace_id: None,
+                reflection_path: None,
+                intent_path: None,
+                candidate_id: None,
+            });
+        }
+        let terminalized =
+            crate::integration::terminalize_started_unknown(config, &trigger.trigger_nonce, now_ms);
+        let _ = FileExt::unlock(&model_lock);
+        let terminalized = terminalized?;
+        if terminalized {
+            record_terminal_receipt(
+                config,
+                &trigger.due_nonce,
+                None,
+                "provider_started_delivery_authorship_unknown_non_authored",
+                "provider start was durable but no exact signed authored transaction survived; this trigger will never be retried",
+                &[],
+                None,
+                None,
+            )?;
+            return Ok(RunResult {
+                status: "provider_started_delivery_authorship_unknown_non_authored".to_owned(),
+                due_nonce: trigger.due_nonce.clone(),
+                trace_id: None,
+                reflection_path: None,
+                intent_path: None,
+                candidate_id: None,
+            });
+        }
+    }
+    let (reflection_trigger, model_floor_until) = if let Some(trigger) = prepared_integration {
+        (ReflectionTrigger::Evidence(trigger), None)
+    } else {
+        match crate::schedule::decide(config, request.due_nonce.clone())? {
             crate::schedule::Decision::NotDue {
                 next_due_at_unix_seconds,
-            } => {
-                return Ok(RunResult {
-                    status: format!("not_due_until:{next_due_at_unix_seconds}"),
-                    due_nonce: format!("due-{next_due_at_unix_seconds}"),
-                    trace_id: None,
-                    reflection_path: None,
-                    intent_path: None,
-                    candidate_id: None,
-                });
+            } => match crate::integration::consider(config, now_ms)? {
+                crate::integration::Decision::Due(trigger) => {
+                    (ReflectionTrigger::Evidence(trigger), None)
+                },
+                crate::integration::Decision::Deferred {
+                    status,
+                    until_unix_ms,
+                    due_nonce,
+                } => {
+                    return Ok(RunResult {
+                        status: format!("{status}:{until_unix_ms}"),
+                        due_nonce,
+                        trace_id: None,
+                        reflection_path: None,
+                        intent_path: None,
+                        candidate_id: None,
+                    });
+                },
+                crate::integration::Decision::None => {
+                    return Ok(RunResult {
+                        status: format!("not_due_until:{next_due_at_unix_seconds}"),
+                        due_nonce: format!("due-{next_due_at_unix_seconds}"),
+                        trace_id: None,
+                        reflection_path: None,
+                        intent_path: None,
+                        candidate_id: None,
+                    });
+                },
             },
             crate::schedule::Decision::ModelFloor {
                 nonce,
                 next_model_eligible_at_unix_seconds,
-            } => (nonce, true, Some(next_model_eligible_at_unix_seconds)),
-            crate::schedule::Decision::Due { nonce, automatic } => (nonce, automatic, None),
-        };
+            } => (
+                ReflectionTrigger::Scheduled {
+                    due_nonce: nonce,
+                    automatic: true,
+                },
+                Some(next_model_eligible_at_unix_seconds),
+            ),
+            crate::schedule::Decision::Due { nonce, automatic } => (
+                ReflectionTrigger::Scheduled {
+                    due_nonce: nonce,
+                    automatic,
+                },
+                None,
+            ),
+        }
+    };
+    let due_nonce = reflection_trigger.due_nonce().to_owned();
+    let automatic_schedule = reflection_trigger.automatic_schedule();
     validate_due_nonce(&due_nonce)?;
-    let signer = HmacSigner::from_file(&config.attestor_key)?;
     let completed = pre_provider_step(
         config,
         &due_nonce,
@@ -364,16 +526,25 @@ fn run_once_with_reflection_validator(
         "prepared authored transaction validation failed before any provider call",
         crate::authored_transaction::load(config, &signer, &due_nonce),
     )?;
-    let rich_checkpoint = pre_provider_step(
-        config,
-        &due_nonce,
-        "rich_checkpoint_integrity_failed_non_authored",
-        "rich reflection checkpoint validation failed before any provider call",
-        crate::source_review::load_rich(config, &signer, &due_nonce),
-    )?;
+    let rich_checkpoint = if reflection_trigger.trigger_kind() == "scheduled" {
+        pre_provider_step(
+            config,
+            &due_nonce,
+            "rich_checkpoint_integrity_failed_non_authored",
+            "rich reflection checkpoint validation failed before any provider call",
+            crate::source_review::load_rich(config, &signer, &due_nonce),
+        )?
+    } else {
+        None
+    };
     if let Some(transaction) = prepared {
-        if let Err(error) = require_reflection(config) {
-            if automatic_schedule && crate::reflection::artifacts_absent()? {
+        if let Err(error) = require_reflection(
+            config,
+            reflection_trigger.trigger_kind(),
+            &due_nonce,
+            reflection_trigger.admission_trigger_nonce(),
+        ) {
+            if reflection_trigger.automatic_reflection() && crate::reflection::artifacts_absent()? {
                 return Ok(root_admission_boundary_deferral(
                     due_nonce,
                     Some(transaction.trace_id),
@@ -402,14 +573,19 @@ fn run_once_with_reflection_validator(
         }
         let result = finalize_authored_transaction(config, &signer, &transaction);
         let _ = FileExt::unlock(&model_lock);
-        if result.is_ok() {
+        if result.is_ok() && reflection_trigger.trigger_kind() == "scheduled" {
             crate::schedule::complete(config, &due_nonce, automatic_schedule)?;
         }
         return result;
     }
     if let Some(transaction) = rich_checkpoint {
-        if let Err(error) = require_reflection(config) {
-            if automatic_schedule && crate::reflection::artifacts_absent()? {
+        if let Err(error) = require_reflection(
+            config,
+            reflection_trigger.trigger_kind(),
+            &due_nonce,
+            reflection_trigger.admission_trigger_nonce(),
+        ) {
+            if reflection_trigger.automatic_reflection() && crate::reflection::artifacts_absent()? {
                 return Ok(root_admission_boundary_deferral(
                     due_nonce,
                     Some(transaction.trace_id),
@@ -465,8 +641,13 @@ fn run_once_with_reflection_validator(
             candidate_id: None,
         });
     }
-    if let Err(error) = require_reflection(config) {
-        if automatic_schedule && crate::reflection::artifacts_absent()? {
+    if let Err(error) = require_reflection(
+        config,
+        reflection_trigger.trigger_kind(),
+        &due_nonce,
+        reflection_trigger.admission_trigger_nonce(),
+    ) {
+        if reflection_trigger.automatic_reflection() && crate::reflection::artifacts_absent()? {
             return Ok(root_admission_boundary_deferral(due_nonce, None));
         }
         return Err(error);
@@ -479,51 +660,53 @@ fn run_once_with_reflection_validator(
     )? {
         return Ok(deferred);
     }
-    let lifecycle = pre_provider_step(
-        config,
-        &due_nonce,
-        "candidate_lifecycle_validation_failed_non_authored",
-        "candidate/supervisor lifecycle validation failed before any provider call",
-        crate::lifecycle::reconcile(config),
-    )?;
-    match lifecycle {
-        crate::lifecycle::LifecycleCheck::Deferred { reason } => {
-            record_receipt(
-                config,
-                &receipt_core(
-                    &due_nonce,
-                    None,
-                    "deferred_candidate_lifecycle",
-                    &reason,
-                    &[],
-                    None,
-                    None,
-                ),
-            )?;
-            return Ok(RunResult {
-                status: format!("deferred: {reason}"),
-                due_nonce,
-                trace_id: None,
-                reflection_path: None,
-                intent_path: None,
-                candidate_id: None,
-            });
-        },
-        crate::lifecycle::LifecycleCheck::Reconciled { candidate_id } => {
-            record_receipt(
-                config,
-                &receipt_core(
-                    &due_nonce,
-                    None,
-                    "candidate_terminal_reconciled",
-                    &candidate_id,
-                    &[],
-                    None,
-                    None,
-                ),
-            )?;
-        },
-        crate::lifecycle::LifecycleCheck::Ready => {},
+    if reflection_trigger.trigger_kind() == "scheduled" {
+        let lifecycle = pre_provider_step(
+            config,
+            &due_nonce,
+            "candidate_lifecycle_validation_failed_non_authored",
+            "candidate/supervisor lifecycle validation failed before any provider call",
+            crate::lifecycle::reconcile(config),
+        )?;
+        match lifecycle {
+            crate::lifecycle::LifecycleCheck::Deferred { reason } => {
+                record_receipt(
+                    config,
+                    &receipt_core(
+                        &due_nonce,
+                        None,
+                        "deferred_candidate_lifecycle",
+                        &reason,
+                        &[],
+                        None,
+                        None,
+                    ),
+                )?;
+                return Ok(RunResult {
+                    status: format!("deferred: {reason}"),
+                    due_nonce,
+                    trace_id: None,
+                    reflection_path: None,
+                    intent_path: None,
+                    candidate_id: None,
+                });
+            },
+            crate::lifecycle::LifecycleCheck::Reconciled { candidate_id } => {
+                record_receipt(
+                    config,
+                    &receipt_core(
+                        &due_nonce,
+                        None,
+                        "candidate_terminal_reconciled",
+                        &candidate_id,
+                        &[],
+                        None,
+                        None,
+                    ),
+                )?;
+            },
+            crate::lifecycle::LifecycleCheck::Ready => {},
+        }
     }
     if completed {
         crate::schedule::complete(config, &due_nonce, automatic_schedule)?;
@@ -536,9 +719,12 @@ fn run_once_with_reflection_validator(
             candidate_id: None,
         });
     }
-    let question = request
-        .question
-        .unwrap_or_else(|| DEFAULT_QUESTION.to_owned());
+    let question = match &reflection_trigger {
+        ReflectionTrigger::Scheduled { .. } => request
+            .question
+            .unwrap_or_else(|| DEFAULT_QUESTION.to_owned()),
+        ReflectionTrigger::Evidence(trigger) => trigger.question(),
+    };
     if question.trim().is_empty()
         || question.trim() != question
         || question.chars().count() > 240
@@ -595,7 +781,12 @@ fn run_once_with_reflection_validator(
             candidate_id: None,
         });
     }
-    if let Err(error) = require_reflection(config) {
+    if let Err(error) = require_reflection(
+        config,
+        reflection_trigger.trigger_kind(),
+        &due_nonce,
+        reflection_trigger.admission_trigger_nonce(),
+    ) {
         record_terminal_receipt(
             config,
             &due_nonce,
@@ -618,19 +809,30 @@ fn run_once_with_reflection_validator(
         let _ = FileExt::unlock(&model_lock);
         return Ok(deferred);
     }
-    let result = run_locked(
-        config,
-        &due_nonce,
-        &question,
-        gate.thermal_celsius,
-        automatic_schedule,
-        require_reflection,
-        require_model_start,
-    );
+    let result = match &reflection_trigger {
+        ReflectionTrigger::Scheduled { .. } => run_locked(
+            config,
+            &due_nonce,
+            &question,
+            gate.thermal_celsius,
+            automatic_schedule,
+            require_reflection,
+            require_model_start,
+        ),
+        ReflectionTrigger::Evidence(trigger) => run_evidence_locked(
+            config,
+            trigger,
+            &question,
+            gate.thermal_celsius,
+            require_reflection,
+            require_model_start,
+        ),
+    };
     let _ = FileExt::unlock(&model_lock);
     if result
         .as_ref()
         .is_ok_and(|completed| completed.status == "authored_completed")
+        && reflection_trigger.trigger_kind() == "scheduled"
     {
         crate::schedule::complete(config, &due_nonce, automatic_schedule)?;
     }
@@ -724,6 +926,8 @@ fn pending_source_review() -> SourceReviewOutcome {
     SourceReviewOutcome {
         schema: SOURCE_REVIEW_OUTCOME_SCHEMA.to_owned(),
         status: "requested_pending_clean".to_owned(),
+        trace_id: None,
+        session_id: None,
         turn_id: None,
         span_id: None,
         prompt_sha256: None,
@@ -739,27 +943,6 @@ fn pending_source_review() -> SourceReviewOutcome {
         context_provenance: ContextProvenance::clean(),
         authority: SOURCE_REVIEW_AUTHORITY.to_owned(),
     }
-}
-
-fn parse_source_review_request(response: &str) -> Result<bool> {
-    let lines = response.lines().collect::<Vec<_>>();
-    let markers = lines
-        .iter()
-        .enumerate()
-        .filter(|(_, line)| line.starts_with("SOURCE_REVIEW:"))
-        .collect::<Vec<_>>();
-    if markers.is_empty() {
-        return Ok(false);
-    }
-    if markers.len() == 1
-        && markers[0].0 == lines.len().saturating_sub(1)
-        && *markers[0].1 == "SOURCE_REVIEW: REQUEST"
-    {
-        return Ok(true);
-    }
-    Err(Error::new(
-        "source review request must be the exact final non-authorizing marker",
-    ))
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -790,6 +973,8 @@ fn clean_failure(
         outcome: SourceReviewOutcome {
             schema: SOURCE_REVIEW_OUTCOME_SCHEMA.to_owned(),
             status: "failed_non_authored".to_owned(),
+            trace_id: start.map(|value| value.trace_id.clone()),
+            session_id: start.map(|value| value.session_id.clone()),
             turn_id: start.map(|value| value.turn_id.clone()),
             span_id: start.map(|value| value.span_id.clone()),
             prompt_sha256: start.map(|value| value.prompt_sha256.clone()),
@@ -813,13 +998,12 @@ fn clean_failure(
 #[allow(clippy::too_many_arguments, clippy::too_many_lines)]
 fn run_clean_source_review(
     config: &Config,
-    question: &str,
     snapshot: &SourceSnapshot,
     active_generation: &str,
     candidate: &CandidateManager<'_>,
     rich: &AuthoredTransaction,
     signer: &HmacSigner,
-    require_reflection: fn(&Config) -> Result<()>,
+    require_reflection: ReflectionValidator,
     combined_provider_calls: &mut usize,
 ) -> Result<CleanReview> {
     if *combined_provider_calls >= MAX_MODEL_STEPS {
@@ -891,7 +1075,7 @@ fn run_clean_source_review(
             );
         },
     };
-    let supervisor_status = match crate::prompt::supervisor_status(config) {
+    let supervisor_status = match crate::prompt::supervisor_status_for_clean(config) {
         Ok(value) => value,
         Err(error) => {
             return clean_failure(
@@ -956,7 +1140,7 @@ fn run_clean_source_review(
     let prompt = match crate::prompt::build_clean(
         config,
         &rich.due_nonce,
-        question,
+        CLEAN_REVIEW_QUESTION,
         active_generation,
         snapshot,
         &candidate_status,
@@ -982,6 +1166,8 @@ fn run_clean_source_review(
             );
         },
     };
+    let trace_id = Uuid::new_v4().to_string();
+    let session_id = format!("session-{}", Uuid::new_v4().simple());
     let turn_id = Uuid::new_v4().to_string();
     let span_id = Uuid::new_v4().to_string();
     let prompt_sha256 = sha256(prompt.as_bytes());
@@ -989,6 +1175,8 @@ fn run_clean_source_review(
     let start = crate::source_review::CleanStart::new(
         config,
         rich,
+        trace_id.clone(),
+        session_id.clone(),
         turn_id.clone(),
         span_id.clone(),
         prompt_sha256.clone(),
@@ -1002,8 +1190,8 @@ fn run_clean_source_review(
         "schema": "astrid.edge.steward_helper.clean_source_proposal_binding.v1",
         "appliance_id": config.appliance_id,
         "due_nonce": rich.due_nonce,
-        "trace_id": rich.trace_id,
-        "session_id": rich.session_id,
+        "trace_id": trace_id,
+        "session_id": session_id,
         "turn_id": turn_id,
         "model": config.model,
         "prompt_sha256": prompt_sha256,
@@ -1047,8 +1235,9 @@ fn run_clean_source_review(
     let mut tool_flow = ToolFlowPolicy::clean();
     let mut unattested_submission = UnattestedSubmission::new(candidate, &proposal_binding);
     let mut final_response = None;
-    while *combined_provider_calls < MAX_MODEL_STEPS {
-        if let Err(error) = require_reflection(config) {
+    while *combined_provider_calls < MAX_MODEL_STEPS && lane_provider_calls < MAX_CLEAN_MODEL_STEPS
+    {
+        if let Err(error) = require_reflection(config, "scheduled", &rich.due_nonce, None) {
             return clean_failure(
                 config,
                 rich,
@@ -1109,6 +1298,20 @@ fn run_clean_source_review(
             completion_tokens.saturating_add(response.completion_tokens.unwrap_or(0));
         provider_elapsed_ms = provider_elapsed_ms.saturating_add(response.elapsed_ms);
         let model_response_sha256 = sha256(response.content.as_bytes());
+        if response.finish == crate::provider::ProviderFinish::Length {
+            return clean_failure(
+                config,
+                rich,
+                Some(&start),
+                tools_used,
+                lane_provider_calls,
+                prompt_tokens,
+                completion_tokens,
+                provider_elapsed_ms,
+                Some(model_response_sha256),
+                "clean provider reached its output ceiling before a terminal response",
+            );
+        }
         let output = match parse_model_output(&response.content) {
             Ok(value) => value,
             Err(error) => {
@@ -1160,8 +1363,8 @@ fn run_clean_source_review(
                     &tool,
                     &proposal_binding,
                     &rich.due_nonce,
-                    &rich.trace_id,
-                    &rich.session_id,
+                    &trace_id,
+                    &session_id,
                     &turn_id,
                     &model_response_sha256,
                     &clean_context_sha256,
@@ -1269,6 +1472,8 @@ fn run_clean_source_review(
             outcome: SourceReviewOutcome {
                 schema: SOURCE_REVIEW_OUTCOME_SCHEMA.to_owned(),
                 status: "completed_no_candidate".to_owned(),
+                trace_id: Some(trace_id),
+                session_id: Some(session_id),
                 turn_id: Some(turn_id),
                 span_id: Some(span_id),
                 prompt_sha256: Some(prompt_sha256),
@@ -1290,8 +1495,8 @@ fn run_clean_source_review(
     };
     let submitted = match candidate.submitted_for_terminal(
         &rich.due_nonce,
-        &rich.trace_id,
-        &rich.session_id,
+        &trace_id,
+        &session_id,
         &turn_id,
         &clean_context_sha256,
         &proposal_binding,
@@ -1318,10 +1523,12 @@ fn run_clean_source_review(
     let prepared = match prepare_intent(
         config,
         &rich.due_nonce,
-        &rich.trace_id,
-        &rich.session_id,
+        &trace_id,
+        &session_id,
         &turn_id,
         &response_sha256,
+        &rich.turn_id,
+        &rich.response_sha256,
         &snapshot.source_id,
         &terminal,
         submitted,
@@ -1369,6 +1576,8 @@ fn run_clean_source_review(
         outcome: SourceReviewOutcome {
             schema: SOURCE_REVIEW_OUTCOME_SCHEMA.to_owned(),
             status: "candidate_attested".to_owned(),
+            trace_id: Some(trace_id),
+            session_id: Some(session_id),
             turn_id: Some(turn_id),
             span_id: Some(span_id),
             prompt_sha256: Some(prompt_sha256),
@@ -1425,6 +1634,8 @@ fn recover_rich_checkpoint(
     transaction.source_review = Some(SourceReviewOutcome {
         schema: SOURCE_REVIEW_OUTCOME_SCHEMA.to_owned(),
         status: "interrupted_by_restart_non_authored".to_owned(),
+        trace_id: clean_start.as_ref().map(|value| value.trace_id.clone()),
+        session_id: clean_start.as_ref().map(|value| value.session_id.clone()),
         turn_id: clean_start.as_ref().map(|value| value.turn_id.clone()),
         span_id: clean_start.as_ref().map(|value| value.span_id.clone()),
         prompt_sha256: clean_start
@@ -1464,6 +1675,371 @@ fn recover_rich_checkpoint(
     Ok(transaction)
 }
 
+#[allow(clippy::too_many_arguments, clippy::too_many_lines)]
+fn run_evidence_locked(
+    config: &Config,
+    trigger: &crate::integration::Trigger,
+    question: &str,
+    thermal: u16,
+    require_reflection: ReflectionValidator,
+    require_model_start: ReflectionValidator,
+) -> Result<RunResult> {
+    let due_nonce = &trigger.due_nonce;
+    let signer = HmacSigner::from_file(&config.attestor_key)?;
+    let system = crate::prompt::evidence_system_instruction();
+    let message_budget = pre_provider_step(
+        config,
+        due_nonce,
+        "prompt_budget_validation_failed_non_authored",
+        "configured evidence-integration context could not reserve output and chat framing",
+        crate::prompt::message_budget_chars(config),
+    )?;
+    let prompt_budget = pre_provider_step(
+        config,
+        due_nonce,
+        "prompt_budget_validation_failed_non_authored",
+        "evidence-integration system context exhausted its immutable input budget",
+        crate::prompt::initial_prompt_budget(message_budget, system.chars().count()),
+    )?;
+    let owned_projection = pre_provider_step(
+        config,
+        due_nonce,
+        "owned_evidence_validation_failed_non_authored",
+        "mandatory programmatic introspection failed before evidence integration",
+        owned::project_required(&config.owned_inputs, &config.workspace_root, question),
+    )?;
+    let trigger_projection = trigger.prompt_projection();
+    let mut context_provenance = ContextProvenance::clean();
+    context_provenance
+        .mark_untrusted("programmatic_owned_projection", &owned_projection.digest()?)?;
+    context_provenance.mark_untrusted(
+        "verified_evidence_trigger_projection",
+        &sha256(&canonical_json(&trigger_projection)?),
+    )?;
+    let prompt = pre_provider_step(
+        config,
+        due_nonce,
+        "prompt_budget_validation_failed_non_authored",
+        "bounded evidence-integration prompt construction failed",
+        crate::prompt::build_evidence(
+            config,
+            due_nonce,
+            question,
+            thermal,
+            &owned_projection,
+            &trigger_projection,
+            prompt_budget,
+        ),
+    )?;
+    if let Some(deferred) = maintenance_deferral(
+        config,
+        due_nonce,
+        "deferred_evidence_integration_maintenance",
+        crate::maintenance::inspect(config),
+    )? {
+        return Ok(deferred);
+    }
+    require_reflection(
+        config,
+        "evidence_integration",
+        due_nonce,
+        Some(&trigger.trigger_nonce),
+    )?;
+    let started_at_unix_ms = unix_millis();
+    let trace_id = Uuid::new_v4().to_string();
+    let session_id = format!("session-{}", Uuid::new_v4().simple());
+    let turn_id = Uuid::new_v4().to_string();
+    let span_id = Uuid::new_v4().to_string();
+    let prompt_chars = prompt.chars().count();
+    let prompt_sha256 = sha256(prompt.as_bytes());
+    let mut messages = vec![
+        Message {
+            role: "system".to_owned(),
+            content: system,
+        },
+        Message {
+            role: "user".to_owned(),
+            content: prompt,
+        },
+    ];
+    crate::prompt::ensure_message_budget(&messages, message_budget)?;
+    pre_provider_step(
+        config,
+        due_nonce,
+        "root_model_start_authority_failed_non_authored",
+        "root admission did not authorize this exact evidence-integration trigger",
+        require_model_start(
+            config,
+            "evidence_integration",
+            due_nonce,
+            Some(&trigger.trigger_nonce),
+        ),
+    )?;
+
+    let provider = Provider::new(config);
+    let mut tools_used = Vec::new();
+    let mut final_response = None;
+    let mut partial_generation = false;
+    let mut prompt_tokens = 0_u64;
+    let mut completion_tokens = 0_u64;
+    let mut provider_elapsed_ms = 0_u64;
+    let mut provider_calls = 0_u8;
+    while provider_calls < 2 {
+        if let Err(error) = require_reflection(
+            config,
+            "evidence_integration",
+            due_nonce,
+            Some(&trigger.trigger_nonce),
+        ) {
+            if provider_calls > 0 {
+                crate::integration::finish(config, &trigger.trigger_nonce, None, unix_millis())?;
+            }
+            return Err(error);
+        }
+        let maintenance = crate::maintenance::inspect(config);
+        if !maintenance.is_clear() {
+            if provider_calls > 0 {
+                crate::integration::finish(config, &trigger.trigger_nonce, None, unix_millis())?;
+            }
+            if let Some(interrupted) = maintenance_interruption(
+                config,
+                due_nonce,
+                &trace_id,
+                &tools_used,
+                &prompt_sha256,
+                maintenance,
+            )? {
+                return Ok(interrupted);
+            }
+            return Err(Error::new(
+                "non-clear maintenance failed to produce an interruption",
+            ));
+        }
+        if provider_calls == 0 {
+            pre_provider_step(
+                config,
+                due_nonce,
+                "evidence_integration_start_failed_non_authored",
+                "evidence integration could not durably bind its provider start",
+                crate::integration::begin_attempt(config, &trigger.trigger_nonce, unix_millis()),
+            )?;
+            inject_evidence_provider_start_crash_for_test(config)?;
+        }
+        provider_calls = provider_calls.saturating_add(1);
+        let response = match provider.generate(&messages) {
+            Ok(response) => response,
+            Err(error) => {
+                crate::integration::terminalize_started_unknown(
+                    config,
+                    &trigger.trigger_nonce,
+                    unix_millis(),
+                )?;
+                record_terminal_receipt(
+                    config,
+                    due_nonce,
+                    Some(&trace_id),
+                    "provider_started_delivery_authorship_unknown_non_authored",
+                    &bounded_failure_class(&error),
+                    &tools_used,
+                    Some(&prompt_sha256),
+                    None,
+                )?;
+                return Ok(RunResult {
+                    status: "provider_started_delivery_authorship_unknown_non_authored".to_owned(),
+                    due_nonce: due_nonce.clone(),
+                    trace_id: Some(trace_id),
+                    reflection_path: None,
+                    intent_path: None,
+                    candidate_id: None,
+                });
+            },
+        };
+        prompt_tokens = prompt_tokens.saturating_add(response.prompt_tokens.unwrap_or(0));
+        completion_tokens =
+            completion_tokens.saturating_add(response.completion_tokens.unwrap_or(0));
+        provider_elapsed_ms = provider_elapsed_ms.saturating_add(response.elapsed_ms);
+        let model_response_sha256 = sha256(response.content.as_bytes());
+        if response.finish == crate::provider::ProviderFinish::Length {
+            partial_generation = true;
+            final_response = Some(response.content);
+            break;
+        }
+        let output = match parse_model_output(&response.content) {
+            Ok(output) => output,
+            Err(error) => {
+                crate::integration::finish(config, &trigger.trigger_nonce, None, unix_millis())?;
+                record_terminal_receipt(
+                    config,
+                    due_nonce,
+                    Some(&trace_id),
+                    "malformed_model_output_non_authored",
+                    "evidence integration returned malformed tool-shaped output",
+                    &tools_used,
+                    Some(&prompt_sha256),
+                    Some(&model_response_sha256),
+                )?;
+                return Err(error);
+            },
+        };
+        match output {
+            ModelOutput::Final(content) => {
+                final_response = Some(content);
+                break;
+            },
+            ModelOutput::Tool(tool) => {
+                if !tools_used.is_empty() || provider_calls >= 2 {
+                    crate::integration::finish(
+                        config,
+                        &trigger.trigger_nonce,
+                        None,
+                        unix_millis(),
+                    )?;
+                    record_terminal_receipt(
+                        config,
+                        due_nonce,
+                        Some(&trace_id),
+                        "tool_authority_rejected_non_authored",
+                        "evidence integration exceeded its one-owned-tool or two-exchange bound",
+                        &tools_used,
+                        Some(&prompt_sha256),
+                        Some(&model_response_sha256),
+                    )?;
+                    return Ok(RunResult {
+                        status: "tool_authority_rejected_non_authored".to_owned(),
+                        due_nonce: due_nonce.clone(),
+                        trace_id: Some(trace_id),
+                        reflection_path: None,
+                        intent_path: None,
+                        candidate_id: None,
+                    });
+                }
+                let result = match execute_owned_tool(config, &tool) {
+                    Ok(value) => value,
+                    Err(error) => {
+                        crate::integration::finish(
+                            config,
+                            &trigger.trigger_nonce,
+                            None,
+                            unix_millis(),
+                        )?;
+                        record_terminal_receipt(
+                            config,
+                            due_nonce,
+                            Some(&trace_id),
+                            "tool_authority_rejected_non_authored",
+                            &tool_failure_class(&error),
+                            &tools_used,
+                            Some(&prompt_sha256),
+                            Some(&model_response_sha256),
+                        )?;
+                        return Err(error);
+                    },
+                };
+                context_provenance
+                    .mark_untrusted(&tool.name, &sha256(&canonical_json(&result)?))?;
+                tools_used.push(tool.name.clone());
+                crate::prompt::replace_with_latest_tool_context(
+                    &mut messages,
+                    &tool.name,
+                    &tool.arguments,
+                    &result,
+                    message_budget,
+                )?;
+            },
+        }
+    }
+    let Some(response) = final_response else {
+        crate::integration::finish(config, &trigger.trigger_nonce, None, unix_millis())?;
+        return Ok(RunResult {
+            status: "tool_loop_exhausted_non_authored".to_owned(),
+            due_nonce: due_nonce.clone(),
+            trace_id: Some(trace_id),
+            reflection_path: None,
+            intent_path: None,
+            candidate_id: None,
+        });
+    };
+    let response_sha256 = sha256(response.as_bytes());
+    let mut inquiry = if partial_generation {
+        crate::inquiry::InquiryClassification::partial_generation()
+    } else {
+        crate::inquiry::classify(&response)
+    };
+    if inquiry.source_review_requested() {
+        inquiry = crate::inquiry::InquiryClassification::forced_unstructured(
+            "source_review_request_forbidden_in_evidence_integration",
+        );
+    } else if inquiry.structured().is_some_and(|structured| {
+        structured.step.evidence_ids.iter().any(|evidence_id| {
+            !trigger
+                .evidence
+                .iter()
+                .any(|record| record.evidence_id == *evidence_id)
+        })
+    }) {
+        inquiry = crate::inquiry::InquiryClassification::forced_unstructured(
+            "inquiry_evidence_id_not_bound_to_integration_trigger",
+        );
+    }
+    let summary = inquiry.structured().map_or_else(
+        || bounded_summary(&response),
+        |structured| crate::inquiry::summary(&structured.step),
+    );
+    let prepared_at_unix_ms = unix_millis();
+    let transaction = AuthoredTransaction {
+        schema: crate::authored_transaction::CORE_SCHEMA.to_owned(),
+        prepared_at_unix_ms,
+        completed_at_unix_ms: prepared_at_unix_ms,
+        started_at_unix_ms,
+        appliance_id: config.appliance_id.clone(),
+        model: config.model.clone(),
+        trigger_kind: "evidence_integration".to_owned(),
+        trigger_nonce: trigger.trigger_nonce.clone(),
+        due_nonce: due_nonce.clone(),
+        trace_id: trace_id.clone(),
+        session_id,
+        turn_id,
+        span_id,
+        prompt_sha256,
+        prompt_chars,
+        response,
+        response_sha256,
+        summary_sha256: sha256(summary.as_bytes()),
+        summary,
+        inquiry,
+        tools_used,
+        provider_calls,
+        prompt_tokens,
+        completion_tokens,
+        provider_elapsed_ms,
+        context_provenance,
+        source_review: None,
+        candidate: None,
+        unattested_proposal_binding: None,
+        provenance: crate::inquiry::authored_provenance("evidence_integration").to_owned(),
+        authority: crate::authored_transaction::EVIDENCE_INTEGRATION_AUTHORITY.to_owned(),
+    };
+    if let Err(error) = crate::authored_transaction::prepare(config, &signer, &transaction) {
+        crate::integration::terminalize_started_unknown(
+            config,
+            &trigger.trigger_nonce,
+            unix_millis(),
+        )?;
+        record_terminal_receipt(
+            config,
+            due_nonce,
+            Some(&trace_id),
+            "authored_transaction_prepare_failed_non_authored",
+            "complete evidence-integration response could not enter the signed transaction boundary",
+            &transaction.tools_used,
+            Some(&transaction.prompt_sha256),
+            Some(&transaction.response_sha256),
+        )?;
+        return Err(error);
+    }
+    finalize_authored_transaction(config, &signer, &transaction)
+}
+
 #[allow(clippy::too_many_lines)] // One auditable model/attestation transaction boundary.
 fn run_locked(
     config: &Config,
@@ -1471,8 +2047,8 @@ fn run_locked(
     question: &str,
     thermal: u16,
     automatic_schedule: bool,
-    require_reflection: fn(&Config) -> Result<()>,
-    require_model_start: fn(&Config, &str) -> Result<()>,
+    require_reflection: ReflectionValidator,
+    require_model_start: ReflectionValidator,
 ) -> Result<RunResult> {
     let signer = HmacSigner::from_file(&config.attestor_key)?;
     let (snapshot, active_generation) = pre_provider_step(
@@ -1521,6 +2097,13 @@ fn run_locked(
         "system context or tool-result reserve exhausted the immutable model input budget",
         crate::prompt::initial_prompt_budget(message_budget, system_chars),
     )?;
+    let scheduled_evidence = pre_provider_step(
+        config,
+        due_nonce,
+        "evidence_absorption_snapshot_failed_non_authored",
+        "exact pending-evidence snapshot failed before the scheduled provider call",
+        crate::integration::prepare_scheduled(config, due_nonce, unix_millis()),
+    )?;
     let owned_projection = pre_provider_step(
         config,
         due_nonce,
@@ -1531,6 +2114,10 @@ fn run_locked(
     let mut rich_context_provenance = ContextProvenance::clean();
     rich_context_provenance
         .mark_untrusted("programmatic_owned_projection", &owned_projection.digest()?)?;
+    rich_context_provenance.mark_untrusted(
+        "scheduled_pending_evidence_snapshot",
+        &sha256(&canonical_json(&scheduled_evidence)?),
+    )?;
     let candidate_status = pre_provider_step(
         config,
         due_nonce,
@@ -1558,6 +2145,7 @@ fn run_locked(
             &active_generation,
             &snapshot,
             &owned_projection,
+            &scheduled_evidence,
             &candidate_status,
             &supervisor_status,
             prompt_budget,
@@ -1571,7 +2159,7 @@ fn run_locked(
     )? {
         return Ok(deferred);
     }
-    if let Err(error) = require_reflection(config) {
+    if let Err(error) = require_reflection(config, "scheduled", due_nonce, None) {
         record_terminal_receipt(
             config,
             due_nonce,
@@ -1632,7 +2220,7 @@ fn run_locked(
         due_nonce,
         "root_model_start_authority_failed_non_authored",
         "root admission did not authorize a fresh model start for this exact due slot",
-        require_model_start(config, due_nonce),
+        require_model_start(config, "scheduled", due_nonce, None),
     )?;
     pre_provider_step(
         config,
@@ -1643,14 +2231,15 @@ fn run_locked(
     )?;
     let mut tools_used = Vec::new();
     let mut final_response = None;
+    let mut partial_generation = false;
     let mut prompt_tokens = 0_u64;
     let mut completion_tokens = 0_u64;
     let mut provider_elapsed_ms = 0_u64;
     let mut combined_provider_calls = 0_usize;
     let mut rich_provider_calls = 0_u8;
     let mut tool_flow = ToolFlowPolicy::rich(rich_context_provenance);
-    while combined_provider_calls < MAX_MODEL_STEPS {
-        if let Err(error) = require_reflection(config) {
+    while combined_provider_calls < MAX_MODEL_STEPS && rich_provider_calls < MAX_RICH_MODEL_STEPS {
+        if let Err(error) = require_reflection(config, "scheduled", due_nonce, None) {
             record_terminal_receipt(
                 config,
                 due_nonce,
@@ -1691,7 +2280,7 @@ fn run_locked(
                 return Err(error);
             },
         };
-        if let Err(error) = require_reflection(config) {
+        if let Err(error) = require_reflection(config, "scheduled", due_nonce, None) {
             record_terminal_receipt(
                 config,
                 due_nonce,
@@ -1719,6 +2308,11 @@ fn run_locked(
             completion_tokens.saturating_add(response.completion_tokens.unwrap_or(0));
         provider_elapsed_ms = provider_elapsed_ms.saturating_add(response.elapsed_ms);
         let model_response_sha256 = sha256(response.content.as_bytes());
+        if response.finish == crate::provider::ProviderFinish::Length {
+            partial_generation = true;
+            final_response = Some(response.content);
+            break;
+        }
         let output = match parse_model_output(&response.content) {
             Ok(output) => output,
             Err(error) => {
@@ -1817,7 +2411,7 @@ fn run_locked(
             due_nonce,
             Some(&trace_id),
             "tool_loop_exhausted_non_authored",
-            "no terminal reflection within eight direct model completions",
+            "no terminal rich reflection within three direct model completions",
             &tools_used,
             Some(&prompt_sha256),
             None,
@@ -1843,8 +2437,16 @@ fn run_locked(
     }
     let response_sha256 = sha256(response.as_bytes());
     let context_provenance = tool_flow.provenance().clone();
-    let source_review_requested = parse_source_review_request(&response)?;
-    let summary = bounded_summary(&response);
+    let inquiry = if partial_generation {
+        crate::inquiry::InquiryClassification::partial_generation()
+    } else {
+        crate::inquiry::classify(&response)
+    };
+    let source_review_requested = inquiry.source_review_requested();
+    let summary = inquiry.structured().map_or_else(
+        || bounded_summary(&response),
+        |structured| crate::inquiry::summary(&structured.step),
+    );
     let prepared_at_unix_ms = unix_millis();
     let mut transaction = AuthoredTransaction {
         schema: crate::authored_transaction::CORE_SCHEMA.to_owned(),
@@ -1853,6 +2455,8 @@ fn run_locked(
         started_at_unix_ms,
         appliance_id: config.appliance_id.clone(),
         model: config.model.clone(),
+        trigger_kind: "scheduled".to_owned(),
+        trigger_nonce: due_nonce.to_owned(),
         due_nonce: due_nonce.to_owned(),
         trace_id: trace_id.clone(),
         session_id: session_id.clone(),
@@ -1864,6 +2468,7 @@ fn run_locked(
         response_sha256,
         summary_sha256: sha256(summary.as_bytes()),
         summary,
+        inquiry,
         tools_used,
         provider_calls: rich_provider_calls,
         prompt_tokens,
@@ -1873,17 +2478,14 @@ fn run_locked(
         source_review: source_review_requested.then(pending_source_review),
         candidate: None,
         unattested_proposal_binding: None,
-        provenance: "model_authored_runtime_scheduled".to_owned(),
-        authority:
-            "rich_authored_response_with_optional_separate_clean_source_review_idempotent_publication"
-                .to_owned(),
+        provenance: crate::inquiry::authored_provenance("scheduled").to_owned(),
+        authority: crate::authored_transaction::SCHEDULED_AUTHORITY.to_owned(),
     };
     let mut prepared_proposal_binding = None;
     if source_review_requested {
         crate::source_review::persist_rich(config, &signer, &transaction)?;
         let clean = run_clean_source_review(
             config,
-            question,
             &snapshot,
             &active_generation,
             &candidate,
@@ -1928,6 +2530,8 @@ fn finalize_authored_transaction(
     let reflection_path = persist_reflection(
         config,
         &transaction.due_nonce,
+        &transaction.trigger_kind,
+        &transaction.trigger_nonce,
         &transaction.trace_id,
         &transaction.session_id,
         &transaction.turn_id,
@@ -1935,16 +2539,45 @@ fn finalize_authored_transaction(
         &transaction.response_sha256,
         &transaction.response,
         &transaction.context_provenance,
+        &transaction.inquiry,
     )?;
     inject_finalize_crash_for_test(config, "reflection")?;
-    persist_summary(
-        config,
-        &transaction.due_nonce,
-        &transaction.trace_id,
-        &transaction.response_sha256,
-        &transaction.summary,
-        &transaction.context_provenance,
-    )?;
+    let inquiry_projection = if let Some(inquiry) = transaction.inquiry.structured() {
+        Some(crate::inquiry::persist(
+            config,
+            signer,
+            &crate::inquiry::PersistInput {
+                appliance_id: &transaction.appliance_id,
+                trigger_kind: &transaction.trigger_kind,
+                due_nonce: &transaction.due_nonce,
+                trigger_nonce: &transaction.trigger_nonce,
+                recorded_at_unix_ms: transaction.completed_at_unix_ms,
+                trace_id: &transaction.trace_id,
+                session_id: &transaction.session_id,
+                turn_id: &transaction.turn_id,
+                span_id: &transaction.span_id,
+                prompt_sha256: &transaction.prompt_sha256,
+                response_sha256: &transaction.response_sha256,
+                context_provenance: &transaction.context_provenance,
+                reflection_path: &reflection_path,
+                reflection_sha256: &transaction.response_sha256,
+                inquiry,
+            },
+        )?)
+    } else {
+        None
+    };
+    inject_finalize_crash_for_test(config, "inquiry")?;
+    if transaction.inquiry.is_structured() && transaction.trigger_kind == "scheduled" {
+        persist_summary(
+            config,
+            &transaction.due_nonce,
+            &transaction.trace_id,
+            &transaction.response_sha256,
+            &transaction.summary,
+            &transaction.context_provenance,
+        )?;
+    }
     inject_finalize_crash_for_test(config, "summary")?;
 
     // Authorship is durably certified before any candidate authority artifact becomes visible.
@@ -2109,6 +2742,8 @@ fn finalize_authored_transaction(
         config,
         signer,
         &transaction.due_nonce,
+        &transaction.trigger_kind,
+        &transaction.trigger_nonce,
         transaction.started_at_unix_ms,
         &transaction.trace_id,
         &transaction.session_id,
@@ -2125,6 +2760,9 @@ fn finalize_authored_transaction(
         transaction.completed_at_unix_ms,
         &transaction.span_id,
         &transaction.context_provenance,
+        &transaction.inquiry,
+        inquiry_projection.as_ref(),
+        transaction.source_review.as_ref(),
     )?;
     inject_finalize_crash_for_test(config, "scheduled_projection")?;
     let detail = serde_json::json!({
@@ -2135,6 +2773,12 @@ fn finalize_authored_transaction(
         "provider_calls": transaction.provider_calls,
         "provider_elapsed_ms": transaction.provider_elapsed_ms,
         "direct_provider_provenance": "ExactModel",
+        "inquiry_status": transaction.inquiry.status,
+        "inquiry_failure_class": transaction.inquiry.failure_class,
+        "signed_entry_id": inquiry_projection.as_ref().map(|value| &value.signed_entry_id),
+        "step_id": inquiry_projection.as_ref().map(|value| &value.step_id),
+        "admission_id": inquiry_projection.as_ref().map(|value| &value.admission_id),
+        "inquiry_current_projection_sha256": inquiry_projection.as_ref().map(|value| &value.sha256),
         "intent_emitted": intent_path.is_some(),
         "maintenance_handoff": handoff_status,
         "supervisor_handoff": supervisor_handoff,
@@ -2142,8 +2786,11 @@ fn finalize_authored_transaction(
         "context_provenance_sha256": transaction.context_provenance.digest()?,
         "reflection_lane": transaction.context_provenance.reflection_lane(),
         "taint_causes": transaction.context_provenance.taint_causes(),
+        "source_review_relation": transaction.source_review.as_ref().map(|_| "separate_clean_source_review"),
         "source_review": transaction.source_review.as_ref().map(|review| serde_json::json!({
             "status": review.status,
+            "trace_id": review.trace_id,
+            "session_id": review.session_id,
             "turn_id": review.turn_id,
             "response_sha256": review.response_sha256,
             "tools_used": review.tools_used,
@@ -2156,7 +2803,7 @@ fn finalize_authored_transaction(
         config,
         &transaction.due_nonce,
         Some(&transaction.trace_id),
-        "authored_completed",
+        &transaction.inquiry.status,
         &serde_json::to_string(&detail)?,
         &transaction.tools_used,
         Some(&transaction.prompt_sha256),
@@ -2164,7 +2811,40 @@ fn finalize_authored_transaction(
         transaction.completed_at_unix_ms / 1_000,
     )?;
     inject_finalize_crash_for_test(config, "terminal_receipt")?;
-    crate::source_review::retire(config, &transaction.due_nonce)?;
+    match transaction.trigger_kind.as_str() {
+        "evidence_integration" => crate::integration::finish(
+            config,
+            &transaction.trigger_nonce,
+            transaction
+                .inquiry
+                .structured()
+                .map(|structured| structured.step.evidence_ids.as_slice()),
+            transaction.completed_at_unix_ms,
+        )?,
+        "scheduled" if transaction.inquiry.is_structured() => {
+            crate::integration::absorb_scheduled(
+                config,
+                &transaction.trigger_nonce,
+                transaction
+                    .inquiry
+                    .structured()
+                    .map_or(&[], |structured| structured.step.evidence_ids.as_slice()),
+                transaction.completed_at_unix_ms,
+            )?;
+        },
+        "scheduled" => {
+            crate::integration::release_scheduled(
+                config,
+                &transaction.trigger_nonce,
+                transaction.completed_at_unix_ms,
+            )?;
+        },
+        _ => return Err(Error::new("authored transaction trigger kind is invalid")),
+    }
+    inject_finalize_crash_for_test(config, "integration_completion")?;
+    if transaction.trigger_kind == "scheduled" {
+        crate::source_review::retire(config, &transaction.due_nonce)?;
+    }
     crate::authored_transaction::retire_prepared(config, &transaction.due_nonce)?;
     inject_finalize_crash_for_test(config, "retirement")?;
     Ok(RunResult {
@@ -2232,6 +2912,67 @@ fn inject_post_submit_crash_for_test(config: &Config) -> Result<()> {
     {
         let _ = config;
         Ok(())
+    }
+}
+
+/// Simulate an uncatchable stop after the durable evidence provider-start
+/// marker but before any request bytes can be proven absent. Recovery must
+/// terminalize the trigger as ambiguous and never call the provider.
+fn inject_evidence_provider_start_crash_for_test(config: &Config) -> Result<()> {
+    #[cfg(debug_assertions)]
+    {
+        let path = config
+            .state_root
+            .join("test-only-evidence-provider-start-crash");
+        if !path.exists() {
+            if path.is_symlink() {
+                return Err(Error::new(
+                    "test evidence provider-start crash marker is a broken symlink",
+                ));
+            }
+            return Ok(());
+        }
+        std::fs::remove_file(&path)?;
+        std::fs::File::open(&config.state_root)?.sync_all()?;
+        Err(Error::new(
+            "test-only injected crash after evidence provider-start persistence",
+        ))
+    }
+    #[cfg(not(debug_assertions))]
+    {
+        let _ = config;
+        Ok(())
+    }
+}
+
+/// Evidence integrations deliberately use a separate dispatcher. Keeping
+/// source, web, candidate, build, and deployment cases out of this match makes
+/// their absence an authorization property rather than a prompt convention.
+fn execute_owned_tool(config: &Config, tool: &ToolCall) -> Result<Value> {
+    match tool.name.as_str() {
+        "inspect_owned" => {
+            exact_argument_keys(&tool.arguments, &["question", "limit"])?;
+            let question = string_argument(&tool.arguments, "question", 1, 240)?;
+            let limit = usize_argument(&tool.arguments, "limit", 1, 20)?;
+            Ok(serde_json::to_value(owned::inspect(
+                &config.owned_inputs,
+                &question,
+                limit,
+            )?)?)
+        },
+        "read_owned" => {
+            exact_argument_keys(&tool.arguments, &["kind", "basename"])?;
+            let kind = string_argument(&tool.arguments, "kind", 1, 128)?;
+            let basename = string_argument(&tool.arguments, "basename", 1, 128)?;
+            Ok(serde_json::to_value(owned::read_basename(
+                &config.owned_inputs,
+                &kind,
+                &basename,
+            )?)?)
+        },
+        _ => Err(Error::new(
+            "evidence integration requested a tool outside owned-artifact authority",
+        )),
     }
 }
 
@@ -2450,6 +3191,8 @@ fn prepare_intent(
     session_id: &str,
     turn_id: &str,
     response_sha256: &str,
+    rich_turn_id: &str,
+    rich_response_sha256: &str,
     source_id: &str,
     terminal: &Terminal,
     submitted: Option<SubmittedCandidate>,
@@ -2509,6 +3252,9 @@ fn prepare_intent(
         "turn_id": turn_id,
         "model": config.model,
         "response_sha256": response_sha256,
+        "source_review_relation": "separate_clean_source_review",
+        "rich_request_turn_id": rich_turn_id,
+        "rich_request_response_sha256": rich_response_sha256,
         "terminal_declaration_sha256": intent.terminal_declaration_sha256,
         "candidate_sha256": intent.candidate_sha256,
         "patch_sha256": submitted.patch_sha256,
@@ -2541,6 +3287,8 @@ fn prepare_intent(
 fn persist_reflection(
     config: &Config,
     due_nonce: &str,
+    trigger_kind: &str,
+    trigger_nonce: &str,
     trace_id: &str,
     session_id: &str,
     turn_id: &str,
@@ -2548,21 +3296,27 @@ fn persist_reflection(
     response_sha256: &str,
     response: &str,
     context_provenance: &ContextProvenance,
+    inquiry: &crate::inquiry::InquiryClassification,
 ) -> Result<PathBuf> {
     let directory = config.workspace_root.join("introspections/scheduled");
     let path = directory.join(format!("reflection_{due_nonce}_{turn_id}.md"));
     workspace_write_exact(config, &path, response.as_bytes())?;
     let metadata = serde_json::json!({
         "schema": REFLECTION_SCHEMA,
-        "provenance": "model_authored_runtime_scheduled",
+        "provenance": crate::inquiry::authored_provenance(trigger_kind),
         "appliance_id": config.appliance_id,
         "due_nonce": due_nonce,
+        "trigger_kind": trigger_kind,
+        "trigger_nonce": trigger_nonce,
         "trace_id": trace_id,
         "session_id": session_id,
         "turn_id": turn_id,
         "model": config.model,
         "prompt_sha256": prompt_sha256,
         "response_sha256": response_sha256,
+        "authorship_status": inquiry.status,
+        "inquiry_failure_class": inquiry.failure_class,
+        "structured_inquiry": inquiry.is_structured(),
         "exact_response_path": path.file_name().and_then(|name| name.to_str()),
         "context_provenance": context_provenance,
         "context_provenance_sha256": context_provenance.digest()?,
@@ -2598,7 +3352,11 @@ fn persist_summary(
 fn bounded_summary(response: &str) -> String {
     let without_terminal = response
         .lines()
-        .filter(|line| !line.starts_with("CHANGESET: SUBMIT ") && *line != "SOURCE_REVIEW: REQUEST")
+        .filter(|line| {
+            !line.starts_with("CHANGESET: SUBMIT ")
+                && !line.starts_with("INQUIRY_STEP:")
+                && !line.starts_with("SOURCE_REVIEW:")
+        })
         .collect::<Vec<_>>()
         .join(" ");
     bounded_text(
@@ -2933,9 +3691,8 @@ fn tool_failure_class(error: &Error) -> String {
 #[cfg(test)]
 mod tests {
     use super::{
-        EmittedIntent, ModelOutput, ToolFlowPolicy, parse_model_output,
-        parse_source_review_request, parse_terminal, publish_supervisor_handoff_trigger,
-        validate_due_nonce,
+        EmittedIntent, ModelOutput, ToolFlowPolicy, parse_model_output, parse_terminal,
+        publish_supervisor_handoff_trigger, validate_due_nonce,
     };
     use crate::context_provenance::ContextProvenance;
     use std::path::PathBuf;
@@ -2982,17 +3739,6 @@ mod tests {
                 "CHANGESET: SUBMIT candidate-a {hash} :: \u{202e}ambiguous"
             ))
             .is_err()
-        );
-    }
-
-    #[test]
-    fn source_review_handoff_marker_is_exact_and_final() {
-        assert!(parse_source_review_request("reflection\nSOURCE_REVIEW: REQUEST").unwrap());
-        assert!(!parse_source_review_request("reflection only").unwrap());
-        assert!(parse_source_review_request("SOURCE_REVIEW: maybe").is_err());
-        assert!(parse_source_review_request("SOURCE_REVIEW: REQUEST\ntrailing").is_err());
-        assert!(
-            parse_source_review_request("SOURCE_REVIEW: REQUEST\nSOURCE_REVIEW: REQUEST").is_err()
         );
     }
 

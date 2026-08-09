@@ -236,12 +236,20 @@ stopped-state snapshot, and immediately before either generation switch. Only
 the periodically refreshed `acknowledged_at_unix_ms` may differ; disappearance
 or any substantive change aborts and restores the prior selection.
 
-## Scheduled-reflection admission
+## Programmatic-reflection admission
 
-Scheduled reflection uses a separate root protocol and cannot borrow
+Scheduled and evidence-integration reflection use a separate root protocol and cannot borrow
 generation-transition authority. `astrid-edge-steward.service` first invokes
-the root helper's fixed `reflection-prepare` profile. When the private steward
-schedule is due, the helper serializes on the same root-owned maintenance
+the root helper's fixed `reflection-prepare` profile. Root gives priority to an
+exact due two-hour schedule slot. When that schedule is not due, it may instead
+admit one exact fresh or prepared-recovery trigger from the canonical
+steward-owned `evidence-integration.json`. Root independently verifies the
+file's inode, ownership, mode, 16 MiB bound, complete schema, one-to-six typed
+evidence records, five-minute quiet and sixty-minute completion floors, daily
+quota, identity uniqueness, appliance-bound trigger derivation, and provider-
+start ambiguity state. Missing initial schedule state receives no unbound
+bootstrap authority; the steward materializes the due nonce and a later timer
+invocation may admit it. When either reflection kind is due, root serializes on the same root-owned maintenance
 mutex as activation, rejects either generation-transition lease or any prior
 reflection artifact, and creates
 `/run/astrid-edge-self-change/reflection.json` with schema
@@ -260,9 +268,14 @@ model lock and revalidates both ACKs, live runtime UIDs/start ticks,
 active-generation executables, and the unchanged lease. Only then may it write
 the distinct root/steward-group `0440` admission marker
 `reflection-admission.json` with schema
-`astrid.edge_scheduled_reflection.admission.v2`. The unprivileged steward
+`astrid.edge_programmatic_reflection.admission.v3`. The marker declares
+`scheduled` or `evidence_integration`, binds the exact due-nonce hash and, for
+integration, the exact trigger-nonce hash, and distinguishes fresh-model from
+prepared-recovery authority. A provider-started integration without a signed
+prepared response never receives a second model-start admission. The unprivileged steward
 accepts only that exact current-boot, current-invocation, current-generation
-lease/marker pair and rechecks it before and after every provider call.
+lease/marker pair and exact trigger binding, and rechecks it before and after
+every provider call.
 
 The shared runtime parent is deliberately `root:root 0755`. This grants only
 directory traversal: neither the runtime nor steward UID can create, unlink,

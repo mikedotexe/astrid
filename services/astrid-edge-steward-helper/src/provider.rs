@@ -102,9 +102,16 @@ pub struct Message {
 #[derive(Debug, Clone)]
 pub struct ProviderResponse {
     pub content: String,
+    pub finish: ProviderFinish,
     pub prompt_tokens: Option<u64>,
     pub completion_tokens: Option<u64>,
     pub elapsed_ms: u64,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ProviderFinish {
+    Stop,
+    Length,
 }
 
 #[derive(Debug, Clone)]
@@ -273,33 +280,46 @@ impl<'a> Provider<'a> {
                 .into_iter()
                 .next()
                 .ok_or_else(|| Error::new("provider response omitted its first choice"))?;
-            if choice.finish_reason.as_deref() != Some("stop")
-                || choice.message.role != "assistant"
-                || choice.message.content.is_empty()
-            {
+            let finish = match choice.finish_reason.as_deref() {
+                Some("stop") => ProviderFinish::Stop,
+                Some("length") => ProviderFinish::Length,
+                _ => {
+                    return Err(Error::new(
+                        "provider response is partial or not an assistant completion",
+                    ));
+                },
+            };
+            if choice.message.role != "assistant" || choice.message.content.is_empty() {
                 return Err(Error::new(
                     "provider response is partial or not an assistant completion",
                 ));
             }
             Ok(ProviderResponse {
                 content: choice.message.content,
+                finish,
                 prompt_tokens: response.usage.as_ref().map(|usage| usage.prompt_tokens),
                 completion_tokens: response.usage.as_ref().map(|usage| usage.completion_tokens),
                 elapsed_ms: u64::try_from(started.elapsed().as_millis()).unwrap_or(u64::MAX),
             })
         } else {
             let response: OllamaResponse = serde_json::from_slice(&body)?;
-            if !response.done
-                || response.done_reason.as_deref() != Some("stop")
-                || response.message.role != "assistant"
-                || response.message.content.is_empty()
-            {
+            let finish = match (response.done, response.done_reason.as_deref()) {
+                (true, Some("stop")) => ProviderFinish::Stop,
+                (true, Some("length")) => ProviderFinish::Length,
+                _ => {
+                    return Err(Error::new(
+                        "provider response is partial or not an assistant completion",
+                    ));
+                },
+            };
+            if response.message.role != "assistant" || response.message.content.is_empty() {
                 return Err(Error::new(
                     "provider response is partial or not an assistant completion",
                 ));
             }
             Ok(ProviderResponse {
                 content: response.message.content,
+                finish,
                 prompt_tokens: response.prompt_eval_count,
                 completion_tokens: response.eval_count,
                 elapsed_ms: u64::try_from(started.elapsed().as_millis()).unwrap_or(u64::MAX),

@@ -90,25 +90,57 @@ SHA256_PATTERN = re.compile(r"[0-9a-f]{64}")
 SCHEDULED_INTROSPECTION_STATE_SCHEMA = (
     "astrid_edge_scheduled_introspection_state_v1"
 )
+SCHEDULED_INTROSPECTION_STATE_SCHEMA_V2 = (
+    "astrid_edge_scheduled_introspection_state_v2"
+)
 SCHEDULED_INTROSPECTION_RECEIPT_SCHEMA = (
     "astrid_edge_scheduled_introspection_v1"
+)
+SCHEDULED_INTROSPECTION_RECEIPT_SCHEMA_V2 = (
+    "astrid_edge_scheduled_introspection_v2"
 )
 SCHEDULED_INTROSPECTION_CONTINUITY_SCHEMA = (
     "astrid_edge_scheduled_introspection_continuity_v1"
 )
+SCHEDULED_INTROSPECTION_CONTINUITY_SCHEMA_V2 = (
+    "astrid_edge_scheduled_introspection_continuity_v2"
+)
 SCHEDULED_INTROSPECTION_PROVENANCE = "model_authored_runtime_scheduled"
+EVIDENCE_INTEGRATION_INTROSPECTION_PROVENANCE = (
+    "model_authored_runtime_evidence_integration"
+)
 SCHEDULED_INTROSPECTION_ADMISSION_SCHEMA = (
     "astrid.edge.scheduled_introspection.admission.v1"
+)
+SCHEDULED_INTROSPECTION_ADMISSION_SCHEMA_V2 = (
+    "astrid.edge.inquiry.semantic_admission.v2"
 )
 SCHEDULED_AUTHORSHIP_CORE_SCHEMA = (
     "astrid.edge.scheduled_authorship.attestation.v1"
 )
+SCHEDULED_AUTHORSHIP_CORE_SCHEMA_V2 = (
+    "astrid.edge.scheduled_authorship.attestation.v2"
+)
 SCHEDULED_AUTHORSHIP_ENVELOPE_SCHEMA = (
     "astrid.edge.scheduled_authorship.attestation_envelope.v1"
+)
+SCHEDULED_AUTHORSHIP_ENVELOPE_SCHEMA_V2 = (
+    "astrid.edge.scheduled_authorship.attestation_envelope.v2"
 )
 SCHEDULED_AUTHORSHIP_VERIFY_KEY = Path(
     "/etc/astrid/edge-scheduled-authorship.pub"
 )
+
+
+def introspection_provenance(trigger_kind: Any) -> str | None:
+    """Return the exact authored provenance for a v2 reflection trigger."""
+
+    return {
+        "scheduled": SCHEDULED_INTROSPECTION_PROVENANCE,
+        "evidence_integration": EVIDENCE_INTEGRATION_INTROSPECTION_PROVENANCE,
+    }.get(trigger_kind)
+
+
 SCHEDULED_INTROSPECTION_LEDGER_PATHS = (
     "introspections/scheduled/receipts.jsonl",
     "introspection/scheduled/receipts.jsonl",
@@ -116,6 +148,14 @@ SCHEDULED_INTROSPECTION_LEDGER_PATHS = (
 SELF_CHANGE_OPERATOR_STATUS_PATH = Path(
     "/var/lib/astrid-edge-operator/operator-status.json"
 )
+ORIGIN_MAC_RETIREMENT_PATH = Path(
+    "/var/lib/astrid-edge-operator/origin-mac-affordance-retirement.json"
+)
+ORIGIN_MAC_RETIREMENT_SCHEMA = "astrid.edge.origin_mac_affordance_retirement.v2"
+ORIGIN_MAC_RETIREMENT_TRANSACTION_SCHEMA = (
+    "astrid.edge.origin_mac_affordance_retirement.transaction.v1"
+)
+INQUIRY_TRAIN_REPORT_SCHEMA = "astrid_edge_inquiry_train_report_v1"
 PATCH_EXPORT_SUMMARY_SCHEMA = (
     "astrid.edge.steward_helper.owner_patch_export_summary_envelope.v1"
 )
@@ -577,9 +617,588 @@ def canonical_json_bytes(value: Any) -> bytes:
         value,
         sort_keys=True,
         separators=(",", ":"),
-        ensure_ascii=True,
+        ensure_ascii=False,
         allow_nan=False,
-    ).encode("ascii")
+    ).encode("utf-8")
+
+
+def load_inquiry_train_report(workspace: Path) -> dict[str, Any]:
+    """Load the colocated sealed verifier and return its bounded projection."""
+
+    path = Path(__file__).with_name("astrid_train.py")
+    try:
+        spec = importlib.util.spec_from_file_location("astrid_train_sealed", path)
+        if spec is None or spec.loader is None:
+            return {
+                "schema": INQUIRY_TRAIN_REPORT_SCHEMA,
+                "integrity": "unavailable",
+                "degraded_reason": "sealed_train_module_unavailable",
+                "events": [],
+            }
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        report = module.collect_train(workspace, full=False)
+    except (OSError, RuntimeError, TypeError, ValueError, json.JSONDecodeError) as error:
+        return {
+            "schema": INQUIRY_TRAIN_REPORT_SCHEMA,
+            "integrity": "invalid",
+            "degraded_reason": terminal_safe_text(error),
+            "events": [],
+        }
+    if not isinstance(report, dict) or report.get("schema") != INQUIRY_TRAIN_REPORT_SCHEMA:
+        return {
+            "schema": INQUIRY_TRAIN_REPORT_SCHEMA,
+            "integrity": "invalid",
+            "degraded_reason": "sealed_train_schema_mismatch",
+            "events": [],
+        }
+    return report
+
+
+def inquiry_train_summary(
+    report: dict[str, Any], cutoff_ms: int
+) -> dict[str, Any]:
+    events = report.get("events")
+    events = events if isinstance(events, list) else []
+    events = [item for item in events if isinstance(item, dict)]
+    window = [
+        item
+        for item in events
+        if int(item.get("timestamp_unix_ms", 0) or 0) >= cutoff_ms
+    ]
+    steps = [item for item in events if item.get("kind") == "inquiry_step"]
+    latest = steps[-1] if steps else {}
+    invalid_records = report.get("invalid_records")
+    invalid_records = invalid_records if isinstance(invalid_records, list) else []
+    invalid_records = [item for item in invalid_records if isinstance(item, dict)]
+    degraded_records = report.get("degraded_records")
+    degraded_records = degraded_records if isinstance(degraded_records, list) else []
+    degraded_records = [item for item in degraded_records if isinstance(item, dict)]
+    result: dict[str, Any] = {
+        "schema": report.get("schema", "none"),
+        "integrity": report.get("integrity", "unavailable"),
+        "degraded_reason": report.get("degraded_reason") or "none",
+        "degraded_record_count": len(degraded_records),
+        "latest_degraded_path": (
+            degraded_records[-1].get("path", "none") if degraded_records else "none"
+        ),
+        "invalid_record_count": len(invalid_records),
+        "latest_invalid_path": (
+            invalid_records[-1].get("path", "none") if invalid_records else "none"
+        ),
+        "latest_invalid_reason": (
+            invalid_records[-1].get("reason", "none") if invalid_records else "none"
+        ),
+        "appliance_id": report.get("appliance_id", "unavailable"),
+        "key_id": report.get("key_id", "unavailable"),
+        "total_steps": len(steps),
+        "window_events": len(window),
+        "window_steps": sum(item.get("kind") == "inquiry_step" for item in window),
+        "latest_step_id": latest.get("step_id") or "none",
+        "latest_thread_id": latest.get("thread_id") or "none",
+        "latest_thread_operation": latest.get("thread_operation") or "none",
+        "latest_parent_step_id": latest.get("parent_step_id") or "none",
+        "latest_confidence": latest.get("confidence") or "none",
+        "latest_observation": latest.get("observation") or "none",
+        "latest_interpretation": latest.get("interpretation") or "none",
+        "latest_uncertainty": latest.get("uncertainty") or "none",
+        "latest_decision": latest.get("decision") or "none",
+        "latest_belief_operation": latest.get("belief_operation") or "none",
+        "latest_belief_id": latest.get("belief_id") or "none",
+        "latest_trigger_kind": latest.get("trigger_kind") or "none",
+    }
+    for kind in (
+        "inquiry_step",
+        "thread_transition",
+        "evidence_arrival",
+        "integrity_violation",
+        "belief_revision",
+        "model_tool_request",
+        "clean_source_review",
+        "semantic_admission",
+    ):
+        result[f"window_{kind}_count"] = sum(
+            item.get("kind") == kind for item in window
+        )
+    admissions = [
+        item for item in events if item.get("kind") == "semantic_admission"
+    ]
+    result["latest_reservoir_delivery"] = (
+        admissions[-1].get("status", "unknown") if admissions else "none"
+    )
+    return result
+
+
+def origin_mac_retirement_summary(
+    path: Path = ORIGIN_MAC_RETIREMENT_PATH,
+    *,
+    root_uid: int = 0,
+    root_gid: int = 0,
+) -> dict[str, Any]:
+    """Verify the durable correction, not merely its operator projection."""
+
+    default = {
+        "present": False,
+        "valid": False,
+        "status": "absent",
+        "retired_count": 0,
+        "already_retired_count": 0,
+        "artifacts_verified": 0,
+        "transaction_valid": False,
+        "historical_authored_files_modified": "unknown",
+        "operator_quarantine_modified": "unknown",
+        "receipt_sha256": "none",
+        "failure": "none",
+    }
+
+    def invalid(status: str, failure: str) -> dict[str, Any]:
+        return {
+            **default,
+            "present": True,
+            "status": status,
+            "failure": failure,
+        }
+
+    def canonical_bytes(value: dict[str, Any]) -> bytes:
+        return json.dumps(
+            value,
+            sort_keys=True,
+            separators=(",", ":"),
+            ensure_ascii=True,
+            allow_nan=False,
+        ).encode("ascii")
+
+    def read_exact_regular(
+        candidate: Path,
+        *,
+        expected_uid: int,
+        expected_gid: int | None,
+        expected_mode: int,
+        maximum: int = 128 * 1024,
+    ) -> tuple[dict[str, Any], bytes, os.stat_result]:
+        before = candidate.lstat()
+        if (
+            candidate.is_symlink()
+            or not stat.S_ISREG(before.st_mode)
+            or before.st_nlink != 1
+            or before.st_uid != expected_uid
+            or (expected_gid is not None and before.st_gid != expected_gid)
+            or stat.S_IMODE(before.st_mode) != expected_mode
+            or before.st_size < 0
+            or before.st_size > maximum
+        ):
+            raise ValueError("identity")
+        descriptor = os.open(
+            candidate,
+            os.O_RDONLY
+            | getattr(os, "O_NOFOLLOW", 0)
+            | getattr(os, "O_CLOEXEC", 0),
+        )
+        try:
+            opened = os.fstat(descriptor)
+            if (
+                opened.st_dev,
+                opened.st_ino,
+                opened.st_size,
+                opened.st_mode,
+                opened.st_nlink,
+                opened.st_uid,
+                opened.st_gid,
+            ) != (
+                before.st_dev,
+                before.st_ino,
+                before.st_size,
+                before.st_mode,
+                before.st_nlink,
+                before.st_uid,
+                before.st_gid,
+            ):
+                raise ValueError("identity")
+            raw = b""
+            while len(raw) <= maximum:
+                block = os.read(descriptor, min(65_536, maximum + 1 - len(raw)))
+                if not block:
+                    break
+                raw += block
+        finally:
+            os.close(descriptor)
+        after = candidate.lstat()
+        if (
+            after.st_dev,
+            after.st_ino,
+            after.st_size,
+            after.st_mode,
+            after.st_nlink,
+            after.st_uid,
+            after.st_gid,
+        ) != (
+            before.st_dev,
+            before.st_ino,
+            before.st_size,
+            before.st_mode,
+            before.st_nlink,
+            before.st_uid,
+            before.st_gid,
+        ) or len(raw) != before.st_size:
+            raise ValueError("changed")
+        value = json.loads(raw)
+        if not isinstance(value, dict):
+            raise ValueError("schema")
+        return value, raw, before
+
+    def controlled_directory(candidate: Path, mode: int) -> os.stat_result:
+        raw = str(candidate)
+        if not candidate.is_absolute() or raw != os.path.normpath(raw):
+            raise ValueError("path")
+        cursor = Path("/")
+        for part in candidate.parts[1:]:
+            cursor /= part
+            metadata = cursor.lstat()
+            if (
+                cursor.is_symlink()
+                or not stat.S_ISDIR(metadata.st_mode)
+                or metadata.st_uid not in {0, root_uid}
+                or metadata.st_mode & 0o022
+            ):
+                raise ValueError("ancestry")
+        metadata = candidate.lstat()
+        if (
+            metadata.st_uid != root_uid
+            or metadata.st_gid != root_gid
+            or stat.S_IMODE(metadata.st_mode) != mode
+        ):
+            raise ValueError("identity")
+        return metadata
+
+    def valid_hash_binding(value: dict[str, Any], field: str) -> bool:
+        claimed = value.get(field)
+        core = {key: item for key, item in value.items() if key != field}
+        try:
+            return (
+                isinstance(claimed, str)
+                and SHA256_PATTERN.fullmatch(claimed) is not None
+                and hashlib.sha256(canonical_bytes(core)).hexdigest() == claimed
+            )
+        except (TypeError, ValueError, UnicodeEncodeError):
+            return False
+
+    try:
+        value, projection_raw, _ = read_exact_regular(
+            path,
+            expected_uid=root_uid,
+            expected_gid=None,
+            expected_mode=0o640,
+        )
+    except FileNotFoundError:
+        return default
+    except (OSError, UnicodeError, json.JSONDecodeError, ValueError):
+        return invalid("invalid_identity_or_schema", "operator_projection")
+    if value.get("schema") != ORIGIN_MAC_RETIREMENT_SCHEMA or not valid_hash_binding(
+        value, "receipt_sha256"
+    ):
+        return invalid("invalid_receipt_binding", "operator_projection_hash")
+
+    retirement_raw = value.get("retirement_root")
+    workspace_raw = value.get("workspace_root")
+    if not isinstance(retirement_raw, str) or not isinstance(workspace_raw, str):
+        return invalid("invalid_receipt_binding", "root_paths")
+    retirement = Path(retirement_raw)
+    workspace = Path(workspace_raw)
+    try:
+        retirement_metadata = controlled_directory(retirement, 0o700)
+        if (
+            not workspace.is_absolute()
+            or str(workspace) != os.path.normpath(str(workspace))
+        ):
+            raise ValueError("workspace_path")
+        workspace_cursor = Path("/")
+        for part in workspace.parts[1:]:
+            workspace_cursor /= part
+            component = workspace_cursor.lstat()
+            if workspace_cursor.is_symlink() or not stat.S_ISDIR(component.st_mode):
+                raise ValueError("workspace_ancestry")
+        workspace_metadata = workspace.lstat()
+        if (
+            workspace.is_symlink()
+            or not stat.S_ISDIR(workspace_metadata.st_mode)
+            or workspace_metadata.st_dev != retirement_metadata.st_dev
+        ):
+            raise ValueError("workspace")
+        transaction, transaction_raw, _ = read_exact_regular(
+            retirement / "transaction.json",
+            expected_uid=root_uid,
+            expected_gid=root_gid,
+            expected_mode=0o600,
+        )
+        canonical_receipt, canonical_raw, _ = read_exact_regular(
+            retirement / "receipt.json",
+            expected_uid=root_uid,
+            expected_gid=root_gid,
+            expected_mode=0o600,
+        )
+    except (OSError, UnicodeError, json.JSONDecodeError, ValueError):
+        return invalid("invalid_durable_retirement", "transaction_or_canonical_receipt")
+    if (
+        transaction.get("schema") != ORIGIN_MAC_RETIREMENT_TRANSACTION_SCHEMA
+        or not valid_hash_binding(transaction, "transaction_sha256")
+        or transaction_raw != canonical_bytes(transaction) + b"\n"
+        or canonical_receipt != value
+        or canonical_raw != projection_raw
+        or canonical_raw != canonical_bytes(value) + b"\n"
+        or value.get("transaction_schema")
+        != ORIGIN_MAC_RETIREMENT_TRANSACTION_SCHEMA
+        or value.get("transaction_sha256") != transaction.get("transaction_sha256")
+        or transaction.get("workspace_root") != workspace_raw
+        or transaction.get("retirement_root") != retirement_raw
+    ):
+        return invalid("invalid_durable_retirement", "transaction_receipt_binding")
+
+    outcomes = value.get("outcomes")
+    inventory = value.get("artifact_inventory")
+    if not isinstance(outcomes, list) or not isinstance(inventory, list):
+        return invalid("invalid_receipt_binding", "collections")
+    valid = (
+        value.get("scope") == "exact_prompt_context_candidates_only"
+        and value.get("completion_status") == "durable_retirement_committed"
+        and value.get("historical_authored_files_modified") is False
+        and value.get("operator_quarantine_modified") is False
+        and value.get("authority")
+        == "root_bootstrap_migration_no_authorship_or_memory_claim"
+        and all(isinstance(item, dict) for item in outcomes)
+        and all(isinstance(item, dict) for item in inventory)
+        and transaction.get("scope") == "exact_prompt_context_candidates_only"
+        and transaction.get("known_legacy_sha256")
+        == value.get("known_legacy_sha256")
+        and transaction.get("outcomes") == outcomes
+    )
+    if not valid:
+        return invalid("invalid_receipt_binding", "scope_or_authority")
+
+    transaction_items = transaction.get("items")
+    known_hashes = value.get("known_legacy_sha256")
+    if (
+        not isinstance(transaction_items, list)
+        or not isinstance(known_hashes, list)
+        or any(
+            not isinstance(item, str) or SHA256_PATTERN.fullmatch(item) is None
+            for item in known_hashes
+        )
+    ):
+        return invalid("invalid_durable_retirement", "transaction_inventory")
+    item_by_path = {
+        item.get("path"): item
+        for item in transaction_items
+        if isinstance(item, dict) and isinstance(item.get("path"), str)
+    }
+    inventory_by_path = {
+        item.get("path"): item
+        for item in inventory
+        if isinstance(item, dict) and isinstance(item.get("path"), str)
+    }
+    if (
+        len(item_by_path) != len(transaction_items)
+        or len(inventory_by_path) != len(inventory)
+        or set(item_by_path) != set(inventory_by_path)
+    ):
+        return invalid("invalid_durable_retirement", "inventory_paths")
+
+    allowlisted_candidates = (
+        "AGENTS.md",
+        "MEMORY.md",
+        "memory.md",
+        "edge/AGENTS.md",
+        "edge/MEMORY.md",
+        "edge/memory.md",
+    )
+
+    def read_current_candidate(relative: str) -> bytes | None:
+        parts = Path(relative).parts
+        if (
+            not parts
+            or Path(relative).is_absolute()
+            or any(part in {"", ".", ".."} for part in parts)
+        ):
+            raise ValueError("relative")
+        cursor = workspace
+        for part in parts[:-1]:
+            cursor /= part
+            try:
+                metadata = cursor.lstat()
+            except FileNotFoundError:
+                return None
+            if cursor.is_symlink() or not stat.S_ISDIR(metadata.st_mode):
+                raise ValueError("source_parent")
+        candidate = cursor / parts[-1]
+        try:
+            before = candidate.lstat()
+        except FileNotFoundError:
+            return None
+        if (
+            candidate.is_symlink()
+            or not stat.S_ISREG(before.st_mode)
+            or before.st_nlink != 1
+            or before.st_size < 0
+            or before.st_size > 128 * 1024
+        ):
+            raise ValueError("source_identity")
+        descriptor = os.open(
+            candidate,
+            os.O_RDONLY
+            | getattr(os, "O_NOFOLLOW", 0)
+            | getattr(os, "O_CLOEXEC", 0),
+        )
+        try:
+            opened = os.fstat(descriptor)
+            if (
+                opened.st_dev,
+                opened.st_ino,
+                opened.st_size,
+                opened.st_nlink,
+            ) != (
+                before.st_dev,
+                before.st_ino,
+                before.st_size,
+                before.st_nlink,
+            ):
+                raise ValueError("source_changed")
+            data = b""
+            while len(data) <= 128 * 1024:
+                block = os.read(
+                    descriptor, min(65_536, 128 * 1024 + 1 - len(data))
+                )
+                if not block:
+                    break
+                data += block
+        finally:
+            os.close(descriptor)
+        after = candidate.lstat()
+        if (
+            after.st_dev,
+            after.st_ino,
+            after.st_size,
+            after.st_nlink,
+        ) != (
+            before.st_dev,
+            before.st_ino,
+            before.st_size,
+            before.st_nlink,
+        ) or len(data) != before.st_size:
+            raise ValueError("source_changed")
+        return data
+
+    artifacts_verified = 0
+    already_retired = 0
+    current_affordance = False
+    allowed_entries = {"transaction.json", "receipt.json"}
+    try:
+        for relative, item in item_by_path.items():
+            inventory_item = inventory_by_path[relative]
+            if (
+                set(inventory_item)
+                != {"path", "name", "sha256", "size", "uid", "gid", "mode"}
+                or inventory_item.get("name") != item.get("destination")
+                or inventory_item.get("sha256") != item.get("sha256")
+                or inventory_item.get("size") != item.get("size")
+                or inventory_item.get("uid") != 0
+                or inventory_item.get("gid") != 0
+                or inventory_item.get("mode") != "0600"
+                or item.get("sha256") not in known_hashes
+            ):
+                raise ValueError("inventory")
+            name = inventory_item["name"]
+            if not isinstance(name, str) or Path(name).name != name:
+                raise ValueError("artifact_name")
+            allowed_entries.add(name)
+            artifact = retirement / name
+            before = artifact.lstat()
+            if (
+                artifact.is_symlink()
+                or not stat.S_ISREG(before.st_mode)
+                or before.st_nlink != 1
+                or before.st_uid != root_uid
+                or before.st_gid != root_gid
+                or stat.S_IMODE(before.st_mode) != 0o600
+                or before.st_size != inventory_item["size"]
+                or before.st_size < 0
+                or before.st_size > 128 * 1024
+            ):
+                raise ValueError("artifact_identity")
+            descriptor = os.open(
+                artifact,
+                os.O_RDONLY
+                | getattr(os, "O_NOFOLLOW", 0)
+                | getattr(os, "O_CLOEXEC", 0),
+            )
+            try:
+                opened = os.fstat(descriptor)
+                data = b""
+                while len(data) <= 128 * 1024:
+                    block = os.read(
+                        descriptor, min(65_536, 128 * 1024 + 1 - len(data))
+                    )
+                    if not block:
+                        break
+                    data += block
+            finally:
+                os.close(descriptor)
+            after = artifact.lstat()
+            if (
+                (opened.st_dev, opened.st_ino, opened.st_size, opened.st_nlink)
+                != (before.st_dev, before.st_ino, before.st_size, before.st_nlink)
+                or (after.st_dev, after.st_ino, after.st_size, after.st_nlink)
+                != (before.st_dev, before.st_ino, before.st_size, before.st_nlink)
+                or hashlib.sha256(data).hexdigest() != inventory_item["sha256"]
+            ):
+                raise ValueError("artifact_digest")
+            artifacts_verified += 1
+            if read_current_candidate(relative) is not None:
+                raise ValueError("source_reappeared")
+            already_retired += 1
+        for relative in allowlisted_candidates:
+            data = read_current_candidate(relative)
+            if data is not None and (
+                b"introspections/origin-mac" in data
+                or b"origin-mac" in data.lower()
+            ):
+                current_affordance = True
+        if set(os.listdir(retirement)) != allowed_entries:
+            raise ValueError("unexpected_retirement_entry")
+    except (OSError, ValueError, TypeError):
+        return invalid("invalid_durable_retirement", "artifact_or_source_verification")
+    if current_affordance:
+        return invalid(
+            "invalid_current_origin_mac_affordance",
+            "current_allowlisted_candidate_advertises_origin_mac",
+        )
+
+    retired_count = sum(
+        item.get("status") == "retired_exact_known_legacy_affordance"
+        for item in outcomes
+        if isinstance(item, dict)
+    )
+    if retired_count != len(inventory):
+        return invalid("invalid_durable_retirement", "outcome_inventory_count")
+    return {
+        "present": True,
+        "valid": True,
+        "status": (
+            "verified_exact_scope_already_retired"
+            if retired_count
+            else "verified_exact_scope_no_legacy_affordance"
+        ),
+        "retired_count": retired_count,
+        "already_retired_count": already_retired,
+        "artifacts_verified": artifacts_verified,
+        "transaction_valid": True,
+        "historical_authored_files_modified": value.get(
+            "historical_authored_files_modified", "unknown"
+        ),
+        "operator_quarantine_modified": value.get(
+            "operator_quarantine_modified", "unknown"
+        ),
+        "receipt_sha256": value["receipt_sha256"],
+        "failure": "none",
+    }
 
 
 def scheduled_authorship_attestations(
@@ -609,7 +1228,7 @@ def scheduled_authorship_attestations(
     valid: list[dict[str, Any]] = []
     invalid = 0
     envelope_fields = {"schema", "core", "auth"}
-    core_fields = {
+    core_fields_v1 = {
         "schema",
         "appliance_id",
         "due_nonce",
@@ -633,6 +1252,16 @@ def scheduled_authorship_attestations(
         "provenance",
         "authority",
     }
+    core_fields_v2 = core_fields_v1 | {
+        "trigger_kind",
+        "trigger_nonce",
+        "inquiry_current_projection_sha256",
+        "signed_entry_id",
+        "step_id",
+        "admission_id",
+        "inquiry_step_sha256",
+        "inquiry_declaration_sha256",
+    }
     auth_fields = {"algorithm", "key_id", "signature"}
     for path in paths:
         try:
@@ -643,10 +1272,17 @@ def scheduled_authorship_attestations(
             auth = envelope.get("auth")
             signature_text = auth.get("signature") if isinstance(auth, dict) else None
             signature = bytes.fromhex(signature_text) if isinstance(signature_text, str) else b""
-            unsigned = {
-                "schema": SCHEDULED_AUTHORSHIP_ENVELOPE_SCHEMA,
-                "core": core,
-            }
+            is_v2 = (
+                isinstance(core, dict)
+                and envelope.get("schema") == SCHEDULED_AUTHORSHIP_ENVELOPE_SCHEMA_V2
+                and core.get("schema") == SCHEDULED_AUTHORSHIP_CORE_SCHEMA_V2
+            )
+            envelope_schema = (
+                SCHEDULED_AUTHORSHIP_ENVELOPE_SCHEMA_V2
+                if is_v2
+                else SCHEDULED_AUTHORSHIP_ENVELOPE_SCHEMA
+            )
+            unsigned = {"schema": envelope_schema, "core": core}
             due_nonce = (
                 str(core.get("due_nonce") or "")
                 if isinstance(core, dict)
@@ -660,18 +1296,40 @@ def scheduled_authorship_attestations(
             completed_at = (
                 core.get("completed_at_unix_ms") if isinstance(core, dict) else None
             )
-            ordered_times = (
+            trigger_kind = core.get("trigger_kind") if is_v2 else "scheduled"
+            trigger_nonce = core.get("trigger_nonce") if is_v2 else due_nonce
+            expected_provenance = introspection_provenance(trigger_kind)
+            base_time_order = (
                 due_match is not None
-                and isinstance(due_at, int)
-                and not isinstance(due_at, bool)
                 and isinstance(started_at, int)
                 and not isinstance(started_at, bool)
+                and started_at > 0
                 and isinstance(completed_at, int)
                 and not isinstance(completed_at, bool)
-                and due_at == int(due_match.group(1)) * 1_000
-                and started_at >= due_at
                 and completed_at >= started_at
             )
+            if trigger_kind == "scheduled":
+                trigger_and_time_valid = (
+                    base_time_order
+                    and trigger_nonce == due_nonce
+                    and isinstance(due_at, int)
+                    and not isinstance(due_at, bool)
+                    and due_at == int(due_match.group(1)) * 1_000
+                    and started_at >= due_at
+                )
+            elif trigger_kind == "evidence_integration":
+                trigger_and_time_valid = (
+                    is_v2
+                    and base_time_order
+                    and due_at is None
+                    and isinstance(trigger_nonce, str)
+                    and re.fullmatch(
+                        r"evidence-integration-[0-9a-f]{64}", trigger_nonce
+                    )
+                    is not None
+                )
+            else:
+                trigger_and_time_valid = False
             reflection_path = (
                 Path(str(core.get("reflection_path") or ""))
                 if isinstance(core, dict)
@@ -704,17 +1362,27 @@ def scheduled_authorship_attestations(
                 or len(raw) > 32 * 1024
                 or not isinstance(envelope, dict)
                 or set(envelope) != envelope_fields
-                or envelope.get("schema") != SCHEDULED_AUTHORSHIP_ENVELOPE_SCHEMA
+                or envelope.get("schema") != envelope_schema
                 or not isinstance(core, dict)
-                or set(core) != core_fields
-                or core.get("schema") != SCHEDULED_AUTHORSHIP_CORE_SCHEMA
-                or core.get("terminal_status") != "authored_completed"
-                or core.get("provenance") != SCHEDULED_INTROSPECTION_PROVENANCE
+                or set(core) != (core_fields_v2 if is_v2 else core_fields_v1)
+                or core.get("schema")
+                != (
+                    SCHEDULED_AUTHORSHIP_CORE_SCHEMA_V2
+                    if is_v2
+                    else SCHEDULED_AUTHORSHIP_CORE_SCHEMA
+                )
+                or core.get("terminal_status")
+                not in (
+                    {"model_authored_structured", "model_authored_unstructured"}
+                    if is_v2
+                    else {"authored_completed"}
+                )
+                or core.get("provenance") != expected_provenance
                 or core.get("authority")
                 != "immutable_steward_signed_exact_authorship_join"
                 or not valid_trace_label(core.get("appliance_id"), required=True)
                 or not valid_trace_label(core.get("model"), required=True)
-                or not ordered_times
+                or not trigger_and_time_valid
                 or not reflection_path_valid
                 or not candidate_link_valid
                 or not isinstance(auth, dict)
@@ -730,10 +1398,45 @@ def scheduled_authorship_attestations(
                         "response_sha256",
                         "reflection_sha256",
                         "reflection_metadata_sha256",
-                        "continuity_projection_sha256",
                         "state_projection_sha256",
                         "terminal_receipt_sha256",
                         "context_provenance_sha256",
+                    )
+                )
+                or (
+                    is_v2
+                    and core.get("terminal_status") == "model_authored_structured"
+                    and any(
+                        SHA256_PATTERN.fullmatch(str(core.get(field) or "")) is None
+                        for field in (
+                            "continuity_projection_sha256",
+                            "inquiry_current_projection_sha256",
+                            "inquiry_step_sha256",
+                            "inquiry_declaration_sha256",
+                        )
+                    )
+                )
+                or (
+                    not is_v2
+                    and SHA256_PATTERN.fullmatch(
+                        str(core.get("continuity_projection_sha256") or "")
+                    )
+                    is None
+                )
+                or (
+                    is_v2
+                    and core.get("terminal_status") == "model_authored_unstructured"
+                    and any(
+                        core.get(field) is not None
+                        for field in (
+                            "continuity_projection_sha256",
+                            "inquiry_current_projection_sha256",
+                            "signed_entry_id",
+                            "step_id",
+                            "admission_id",
+                            "inquiry_step_sha256",
+                            "inquiry_declaration_sha256",
+                        )
                     )
                 )
                 or core.get("reflection_sha256") != core.get("response_sha256")
@@ -763,6 +1466,94 @@ def bounded_private_text(data: bytes, maximum: int) -> tuple[str, bool]:
     safe = terminal_safe_text(decoded)
     compacted = " ".join(safe.split())
     return compacted[:maximum], len(compacted) > maximum
+
+
+def valid_v2_semantic_admission(
+    admission: dict[str, Any],
+    continuity: dict[str, Any],
+    *,
+    continuity_valid: bool,
+) -> bool:
+    """Verify exact typed delivery state for one signed inquiry admission."""
+
+    fields = {
+        "schema",
+        "continuity_admitted",
+        "admitted_at_unix_ms",
+        "signed_entry_id",
+        "admission_id",
+        "last_response_sha256",
+        "last_summary_sha256",
+        "last_trace_id",
+        "last_due_nonce",
+        "reservoir_delivery",
+        "queued_at_unix_ms",
+        "terminal_at_unix_ms",
+        "reservoir_generation",
+        "reservoir_sequence",
+        "vector_sha256",
+        "source_class",
+        "migrated_legacy_schema",
+        "provenance",
+        "authority",
+    }
+    trigger_kind = continuity.get("trigger_kind")
+    expected_provenance = introspection_provenance(trigger_kind)
+    expected_source_class = {
+        "scheduled": "scheduled_inquiry",
+        "evidence_integration": "evidence_integration",
+    }.get(trigger_kind)
+
+    def positive_integer(value: Any) -> bool:
+        return isinstance(value, int) and not isinstance(value, bool) and value > 0
+
+    admitted_at = admission.get("admitted_at_unix_ms")
+    queued_at = admission.get("queued_at_unix_ms")
+    terminal_at = admission.get("terminal_at_unix_ms")
+    status = admission.get("reservoir_delivery")
+    generation = admission.get("reservoir_generation")
+    sequence = admission.get("reservoir_sequence")
+    if (
+        not continuity_valid
+        or set(admission) != fields
+        or admission.get("schema") != SCHEDULED_INTROSPECTION_ADMISSION_SCHEMA_V2
+        or admission.get("continuity_admitted") is not True
+        or expected_provenance is None
+        or expected_source_class is None
+        or not valid_trace_label(admission.get("signed_entry_id"), required=True)
+        or not valid_trace_label(admission.get("admission_id"), required=True)
+        or admission.get("signed_entry_id") != continuity.get("signed_entry_id")
+        or admission.get("admission_id") != continuity.get("admission_id")
+        or admission.get("last_response_sha256") != continuity.get("response_sha256")
+        or admission.get("last_summary_sha256") != continuity.get("summary_sha256")
+        or admission.get("last_trace_id")
+        != continuity.get("trace", {}).get("trace_id")
+        or admission.get("last_due_nonce") != continuity.get("due_nonce")
+        or not positive_integer(admitted_at)
+        or not positive_integer(queued_at)
+        or queued_at < admitted_at
+        or SHA256_PATTERN.fullmatch(str(admission.get("vector_sha256") or ""))
+        is None
+        or admission.get("source_class") != expected_source_class
+        or admission.get("migrated_legacy_schema") is not None
+        or admission.get("provenance") != expected_provenance
+        or admission.get("authority")
+        != "verified_signed_inquiry_observational_only"
+        or status not in {"queued", "acknowledged", "delivery_unknown", "failed"}
+    ):
+        return False
+    if status == "queued":
+        return terminal_at is None and generation is None and sequence is None
+    if not positive_integer(terminal_at) or terminal_at < queued_at:
+        return False
+    if status == "acknowledged":
+        return (
+            valid_trace_label(generation, required=True)
+            and isinstance(sequence, int)
+            and not isinstance(sequence, bool)
+            and sequence >= 0
+        )
+    return generation is None and sequence is None
 
 
 def scheduled_introspection_receipts(
@@ -913,11 +1704,305 @@ def unix_timestamp_ms(value: Any) -> int:
     return integer * 1_000 if integer < 100_000_000_000 else integer
 
 
+def scheduled_introspection_summary_v2(
+    workspace: Path,
+    cutoff_ms: int,
+    now_ms: int,
+    state: dict[str, Any],
+    continuity: dict[str, Any],
+    sourced_receipts: list[tuple[dict[str, Any], tuple[str, ...], int]],
+    admission: dict[str, Any],
+    attestations: list[dict[str, Any]],
+    invalid_attestations: int,
+    attestation_status: str,
+    train_report: dict[str, Any],
+) -> dict[str, Any]:
+    """Summarize the v2 authored-inquiry contract without weakening v1."""
+
+    receipts = [item for item, _sources, _occurrences in sourced_receipts]
+    window = [
+        item
+        for item in receipts
+        if int(item.get("completed_at_unix_ms", 0) or 0) >= cutoff_ms
+    ]
+    attested_receipts: dict[str, dict[str, Any]] = {
+        str(item.get("terminal_receipt_sha256")): item
+        for item in attestations
+        if item.get("schema") == SCHEDULED_AUTHORSHIP_CORE_SCHEMA_V2
+    }
+    train_events = train_report.get("events")
+    train_events = train_events if isinstance(train_events, list) else []
+    train_steps = {
+        str(item.get("step_id")): item
+        for item in train_events
+        if isinstance(item, dict) and item.get("kind") == "inquiry_step"
+    }
+
+    def receipt_attestation(item: dict[str, Any]) -> dict[str, Any] | None:
+        try:
+            digest = hashlib.sha256(canonical_json_bytes(item)).hexdigest()
+        except (TypeError, ValueError, UnicodeEncodeError):
+            return None
+        attestation = attested_receipts.get(digest)
+        if attestation is None:
+            return None
+        structured = item.get("status") == "model_authored_structured"
+        unstructured = item.get("status") == "model_authored_unstructured"
+        expected_provenance = introspection_provenance(item.get("trigger_kind"))
+        common = (
+            item.get("schema") == SCHEDULED_INTROSPECTION_RECEIPT_SCHEMA_V2
+            and (structured or unstructured)
+            and expected_provenance is not None
+            and item.get("provenance") == expected_provenance
+            and item.get("trigger_kind") == attestation.get("trigger_kind")
+            and item.get("trigger_nonce") == attestation.get("trigger_nonce")
+            and item.get("provenance") == attestation.get("provenance")
+            and item.get("due_nonce") == attestation.get("due_nonce")
+            and item.get("prompt_sha256") == attestation.get("prompt_sha256")
+            and item.get("response_sha256") == attestation.get("response_sha256")
+            and item.get("reflection_path") == attestation.get("reflection_path")
+            and item.get("trace") == attestation.get("trace")
+            and item.get("status") == attestation.get("terminal_status")
+            and valid_trace(item)
+        )
+        if not common:
+            return None
+        fields = (
+            "signed_entry_id",
+            "step_id",
+            "admission_id",
+            "inquiry_step_sha256",
+            "inquiry_declaration_sha256",
+            "inquiry_current_projection_sha256",
+            "continuity_projection_sha256",
+        )
+        if structured:
+            step = train_steps.get(str(item.get("step_id") or ""))
+            if (
+                train_report.get("integrity") != "full_signed_hash_chain_verified"
+                or item.get("continuity_projection_written") is not True
+                or item.get("reservoir_admission_eligible") is not True
+                or item.get("continuity_admitted") is not False
+                or any(item.get(field) != attestation.get(field) for field in fields)
+                or step is None
+                or step.get("signed_entry_id") != item.get("signed_entry_id")
+                or step.get("response_sha256") != item.get("response_sha256")
+                or step.get("declaration_sha256")
+                != item.get("inquiry_declaration_sha256")
+            ):
+                return None
+        elif (
+            item.get("continuity_projection_written") is not False
+            or item.get("reservoir_admission_eligible") is not False
+            or item.get("continuity_admitted") is not False
+            or any(item.get(field) is not None for field in fields)
+        ):
+            return None
+        return attestation
+
+    authored = [(item, receipt_attestation(item)) for item in window]
+    authored = [(item, proof) for item, proof in authored if proof is not None]
+
+    continuity_validation = "absent"
+    continuity_valid = False
+    verified_excerpt = "unavailable"
+    excerpt_truncated = False
+    if continuity:
+        try:
+            continuity_digest = hashlib.sha256(
+                canonical_json_bytes(continuity)
+            ).hexdigest()
+            state_digest = hashlib.sha256(canonical_json_bytes(state)).hexdigest()
+        except (TypeError, ValueError, UnicodeEncodeError):
+            continuity_digest = state_digest = "invalid"
+        matching = [
+            item
+            for item in attestations
+            if item.get("schema") == SCHEDULED_AUTHORSHIP_CORE_SCHEMA_V2
+            and item.get("terminal_status") == "model_authored_structured"
+            and item.get("continuity_projection_sha256") == continuity_digest
+            and item.get("state_projection_sha256") == state_digest
+            and item.get("step_id") == continuity.get("step_id")
+            and item.get("signed_entry_id") == continuity.get("signed_entry_id")
+            and item.get("admission_id") == continuity.get("admission_id")
+            and item.get("response_sha256") == continuity.get("response_sha256")
+            and item.get("prompt_sha256") == continuity.get("prompt_sha256")
+            and item.get("trace") == continuity.get("trace")
+            and item.get("trigger_kind") == continuity.get("trigger_kind")
+            and item.get("trigger_nonce") == continuity.get("trigger_nonce")
+            and item.get("provenance") == continuity.get("provenance")
+        ]
+        relative = Path(str(continuity.get("reflection_path") or ""))
+        reflection = workspace / relative
+        sidecar = reflection.with_suffix(".json")
+        current_path = (
+            workspace
+            / "runtime/scheduled-introspection/projection/inquiry-current.json"
+        )
+        try:
+            reflection_bytes = reflection.read_bytes()
+            sidecar_bytes = sidecar.read_bytes()
+            current_bytes = current_path.read_bytes()
+        except OSError:
+            reflection_bytes = sidecar_bytes = current_bytes = b""
+        proof = matching[0] if len(matching) == 1 else {}
+        step = train_steps.get(str(continuity.get("step_id") or ""))
+        expected_provenance = introspection_provenance(
+            continuity.get("trigger_kind")
+        )
+        if (
+            continuity.get("schema") == SCHEDULED_INTROSPECTION_CONTINUITY_SCHEMA_V2
+            and expected_provenance is not None
+            and continuity.get("provenance") == expected_provenance
+            and valid_trace_label(continuity.get("trigger_nonce"), required=True)
+            and continuity.get("authority")
+            == "bounded_signed_inquiry_continuity_projection_not_code_or_action_authority"
+            and train_report.get("integrity") == "full_signed_hash_chain_verified"
+            and len(matching) == 1
+            and step is not None
+            and step.get("signed_entry_id") == continuity.get("signed_entry_id")
+            and step.get("response_sha256") == continuity.get("response_sha256")
+            and step.get("trigger_kind") == continuity.get("trigger_kind")
+            and not relative.is_absolute()
+            and ".." not in relative.parts
+            and len(relative.parts) == 3
+            and hashlib.sha256(reflection_bytes).hexdigest()
+            == proof.get("reflection_sha256")
+            and hashlib.sha256(sidecar_bytes).hexdigest()
+            == proof.get("reflection_metadata_sha256")
+            and hashlib.sha256(current_bytes).hexdigest()
+            == proof.get("inquiry_current_projection_sha256")
+            and hashlib.sha256(
+                str(continuity.get("summary") or "").encode()
+            ).hexdigest()
+            == continuity.get("summary_sha256")
+        ):
+            continuity_valid = True
+            continuity_validation = "signed_inquiry_chain_artifact_and_projection_join_verified"
+            verified_excerpt, excerpt_truncated = bounded_private_text(
+                reflection_bytes, 800
+            )
+        else:
+            continuity_validation = "signed_inquiry_continuity_join_failed"
+
+    admission_valid = valid_v2_semantic_admission(
+        admission,
+        continuity,
+        continuity_valid=continuity_valid,
+    )
+    latest = receipts[-1] if receipts else {}
+    latest_sources = sourced_receipts[-1][1] if sourced_receipts else ()
+    completed_at = int(state.get("last_completed_at_unix_ms", 0) or 0)
+    reflections = workspace / "introspections/scheduled"
+    try:
+        reflection_count = sum(
+            path.is_file() and not path.is_symlink()
+            for path in reflections.glob("reflection_*.md")
+        )
+    except OSError:
+        reflection_count = 0
+    return {
+        "state_present": bool(state),
+        "state_schema": state.get("schema", "none"),
+        "state_schema_supported": True,
+        "running": state.get("running", False),
+        "last_status": state.get("last_status", "none"),
+        "last_started_at_unix_ms": state.get("last_started_at_unix_ms", 0) or 0,
+        "last_completed_at_unix_ms": completed_at,
+        "last_completed_age_ms": max(0, now_ms - completed_at) if completed_at else "unavailable",
+        "next_due_at_unix_ms": state.get("next_due_at_unix_ms", 0) or 0,
+        "total_attempts": state.get("total_attempts", 0),
+        "total_authored": state.get("total_authored", 0),
+        "total_structured": state.get("total_structured", 0),
+        "total_unstructured": state.get("total_unstructured", 0),
+        "consecutive_failures": state.get("consecutive_failures", 0),
+        "window_receipts": len(window),
+        "window_authored": len(authored),
+        "window_authored_structured": sum(
+            item.get("status") == "model_authored_structured" for item, _ in authored
+        ),
+        "window_authored_unstructured": sum(
+            item.get("status") == "model_authored_unstructured" for item, _ in authored
+        ),
+        "window_authored_scheduled": sum(
+            item.get("trigger_kind") == "scheduled" for item, _ in authored
+        ),
+        "window_authored_evidence_integrations": sum(
+            item.get("trigger_kind") == "evidence_integration"
+            for item, _ in authored
+        ),
+        "window_non_authored_excluded": len(window) - len(authored),
+        "window_transport_recoveries": sum(
+            item.get("status") == "transport_recovery" for item in window
+        ),
+        "window_current_ledger_records": sum(
+            SCHEDULED_INTROSPECTION_LEDGER_PATHS[0] in sources
+            for item, sources, _occurrences in sourced_receipts
+            if int(item.get("completed_at_unix_ms", 0) or 0) >= cutoff_ms
+        ),
+        "window_legacy_ledger_records": sum(
+            SCHEDULED_INTROSPECTION_LEDGER_PATHS[1] in sources
+            for item, sources, _occurrences in sourced_receipts
+            if int(item.get("completed_at_unix_ms", 0) or 0) >= cutoff_ms
+        ),
+        "window_exact_duplicates_merged": sum(
+            occurrences - 1
+            for item, _sources, occurrences in sourced_receipts
+            if int(item.get("completed_at_unix_ms", 0) or 0) >= cutoff_ms
+        ),
+        "latest_receipt_status": latest.get("status", "none"),
+        "latest_trigger_kind": latest.get("trigger_kind", "none"),
+        "latest_trigger_nonce": latest.get("trigger_nonce", "none"),
+        "latest_receipt_provenance": latest.get("provenance", "none"),
+        "latest_receipt_source_ledger": latest_sources[0] if latest_sources else "none",
+        "latest_receipt_source_ledgers": ",".join(latest_sources) or "none",
+        "latest_reflection_path": latest.get("reflection_path") or state.get("last_artifact_path") or "none",
+        "latest_response_sha256": latest.get("response_sha256") or state.get("last_response_sha256") or "none",
+        "latest_signed_entry_id": latest.get("signed_entry_id") or "none",
+        "latest_step_id": latest.get("step_id") or "none",
+        "latest_admission_id": latest.get("admission_id") or "none",
+        "latest_candidate_id": latest.get("candidate_id") or "none",
+        "latest_candidate_digest": latest.get("candidate_digest") or "none",
+        "continuity_present": bool(continuity),
+        "continuity_schema": continuity.get("schema", "none"),
+        "continuity_schema_supported": continuity.get("schema") == SCHEDULED_INTROSPECTION_CONTINUITY_SCHEMA_V2,
+        "continuity_provenance": continuity.get("provenance", "none"),
+        "continuity_trigger_kind": continuity.get("trigger_kind", "none"),
+        "continuity_summary": continuity.get("summary", "unavailable") if continuity_valid else "unavailable",
+        "continuity_reflection_path": continuity.get("reflection_path") or "none",
+        "continuity_integrity_valid": continuity_valid,
+        "continuity_validation": continuity_validation,
+        "continuity_actual_admitted": admission_valid,
+        "reservoir_delivery": admission.get("reservoir_delivery", "none") if admission_valid else "unverified",
+        "reservoir_generation": admission.get("reservoir_generation") or "none" if admission_valid else "unverified",
+        "reservoir_sequence": admission.get("reservoir_sequence") if admission_valid else "unverified",
+        "reservoir_vector_sha256": admission.get("vector_sha256") or "none" if admission_valid else "unverified",
+        "authorship_attestation_status": attestation_status,
+        "authorship_attestations_valid": len(attestations),
+        "authorship_attestations_invalid": invalid_attestations,
+        "authorship_attestation_key_id": attestations[-1].get("key_id", "none") if attestations else "none",
+        "authorship_attestation_path": attestations[-1].get("attestation_path", "none") if attestations else "none",
+        "continuity_admission_state_schema": admission.get("schema", "none"),
+        "continuity_admitted_at_unix_ms": admission.get("admitted_at_unix_ms", 0) if admission_valid else 0,
+        "verified_reflection_excerpt": verified_excerpt,
+        "verified_reflection_excerpt_truncated": excerpt_truncated,
+        "reflection_text_authority": (
+            f"owner_private_hash_verified_{continuity.get('provenance')}"
+            if continuity_valid
+            else "unavailable"
+        ),
+        "reflection_artifact_count": reflection_count,
+        "inquiry_train_integrity": train_report.get("integrity", "unavailable"),
+    }
+
+
 def scheduled_introspection_summary(
     workspace: Path,
     cutoff_ms: int,
     now_ms: int,
     verify_key_path: Path = SCHEDULED_AUTHORSHIP_VERIFY_KEY,
+    *,
+    test_only_inquiry_report: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     verified_projection: dict[str, Any] = {}
     isolated = workspace / "runtime/scheduled-introspection/projection"
@@ -945,6 +2030,20 @@ def scheduled_introspection_summary(
     admission = read_json(
         workspace / "runtime/scheduled-introspection/admission/state.json"
     )
+    if state.get("schema") == SCHEDULED_INTROSPECTION_STATE_SCHEMA_V2:
+        return scheduled_introspection_summary_v2(
+            workspace,
+            cutoff_ms,
+            now_ms,
+            state,
+            continuity,
+            sourced_receipts,
+            admission,
+            attestations,
+            invalid_attestations,
+            attestation_status,
+            test_only_inquiry_report or load_inquiry_train_report(workspace),
+        )
 
     def continuity_integrity() -> tuple[bool, str]:
         required = {
@@ -1668,7 +2767,8 @@ def action_receipt_dispatch_key(item: dict[str, Any]) -> DispatchCorrelationKey 
     """Bind an Action child span to the exact dispatch span that parented it."""
     trace = item.get("trace")
     if (
-        item.get("schema") != "astrid_edge_action_receipt_v4"
+        item.get("schema")
+        not in {"astrid_edge_action_receipt_v4", "astrid_edge_action_receipt_v5"}
         or not valid_trace(item)
         or not isinstance(trace, dict)
         or (turn_id := normalized_uuid(trace.get("turn_id"))) is None
@@ -2052,9 +3152,12 @@ def main() -> int:
     cutoff_ms = now_ms - args.window_minutes * 60_000
     state = read_json(state_path)
 
-    emit("report_version", 16)
+    emit("report_version", 17)
     emit("instance_name", profile.get("ASTRID_EDGE_INSTANCE_NAME", "edge Astrid"))
     emit("hostname", os.uname().nodename)
+    origin_mac_retirement = origin_mac_retirement_summary()
+    for field, value in origin_mac_retirement.items():
+        emit(f"origin_mac_affordance_retirement_{field}", value)
     for label, service in (
         ("astrid", "astrid.service"),
         ("edge", "astrid-edge-runtime.service"),
@@ -2658,6 +3761,24 @@ def main() -> int:
             ),
         )
     emit("thread_state_updated_at_unix_ms", thread.get("updated_at_unix_ms", 0))
+    inquiry_threads = [
+        item for item in thread.get("threads", []) if isinstance(item, dict)
+    ]
+    inquiry_beliefs = [
+        item for item in thread.get("beliefs", []) if isinstance(item, dict)
+    ]
+    if thread.get("schema") == "astrid_edge_thread_state_v7":
+        emit("thread_state_v7_active_threads_count", sum(item.get("status") == "active" for item in inquiry_threads))
+        emit("thread_state_v7_open_threads_count", sum(item.get("status") == "open" for item in inquiry_threads))
+        emit("thread_state_v7_paused_threads_count", sum(item.get("status") == "paused" for item in inquiry_threads))
+        emit("thread_state_v7_recent_closed_threads_count", len(thread.get("recent_closed_threads", [])))
+        emit("thread_state_v7_belief_revisions_count", len(inquiry_beliefs))
+        emit("thread_state_v7_distinct_beliefs_count", len({str(item.get("belief_id")) for item in inquiry_beliefs if item.get("belief_id")}))
+        emit("thread_state_v7_pending_evidence_count", len(thread.get("pending_evidence_ids", [])))
+        emit("thread_state_v7_last_admitted_inquiry_step_id", thread.get("last_admitted_inquiry_step_id") or "none")
+        emit("thread_state_v7_last_inquiry_ledger_hash", thread.get("last_inquiry_ledger_hash") or "none")
+        emit("thread_state_v7_thread_starts_today", thread.get("thread_starts_today", 0))
+        emit("thread_state_v7_legacy_unscoped_archived_count", len(thread.get("legacy_unscoped_archived", [])))
     started = int(autonomy.get("last_started_at_unix_ms") or 0)
     age = max(0, now_ms - started) if autonomy.get("last_status") == "running" else 0
     emit("autonomy_current_turn_age_ms", age)
@@ -3152,8 +4273,17 @@ def main() -> int:
             summary.get("match_count", 0),
         )
 
+    inquiry_report = load_inquiry_train_report(workspace)
+    train_summary = inquiry_train_summary(inquiry_report, cutoff_ms)
+    for field, value in train_summary.items():
+        emit(f"inquiry_train_{field}", value)
+
     scheduled_summary = scheduled_introspection_summary(
-        workspace, cutoff_ms, now_ms, args.scheduled_authorship_verify_key
+        workspace,
+        cutoff_ms,
+        now_ms,
+        args.scheduled_authorship_verify_key,
+        test_only_inquiry_report=inquiry_report,
     )
     for field, value in scheduled_summary.items():
         emit(f"scheduled_introspection_{field}", value)
@@ -3210,10 +4340,23 @@ def main() -> int:
             for item, _sources, _occurrences in scheduled_introspection_receipts(workspace)
             if int(item.get("completed_at_unix_ms", 0) or 0) >= cutoff_ms
         ],
+        *[
+            item
+            for item in inquiry_report.get("events", [])
+            if isinstance(item, dict)
+            and int(item.get("timestamp_unix_ms", 0) or 0) >= cutoff_ms
+        ],
         *spectral_rollups,
         *tuning_receipts,
     ]
-    traced_records = sum(isinstance(item.get("trace"), dict) for item in trace_records)
+    traced_records = sum(
+        isinstance(item.get("trace"), dict)
+        or (
+            isinstance(item.get("trace_id"), str)
+            and isinstance(item.get("turn_id"), str)
+        )
+        for item in trace_records
+    )
     emit("activity_window_records", len(trace_records))
     emit("activity_window_traced_records", traced_records)
     emit("activity_window_untraced_records", len(trace_records) - traced_records)
@@ -3337,6 +4480,16 @@ def main() -> int:
         if int(item.get("completed_at_unix_ms", 0) or 0) >= cutoff_ms
     )
     recent_activity.extend(
+        (
+            int(item.get("timestamp_unix_ms", 0)),
+            str(item.get("kind") or "inquiry"),
+            item,
+        )
+        for item in inquiry_report.get("events", [])
+        if isinstance(item, dict)
+        and int(item.get("timestamp_unix_ms", 0) or 0) >= cutoff_ms
+    )
+    recent_activity.extend(
         (int(item.get("recorded_at_unix_ms", 0)), "perception", item)
         for item in observation_rows
         if int(item.get("recorded_at_unix_ms", 0) or 0) >= cutoff_ms
@@ -3360,7 +4513,9 @@ def main() -> int:
         )
         emit(
             f"recent_activity_{index}_trace_id",
-            trace.get("trace_id", "unattributed") if isinstance(trace, dict) else "unattributed",
+            trace.get("trace_id", "unattributed")
+            if isinstance(trace, dict)
+            else item.get("trace_id", "unattributed"),
         )
         emit(
             f"recent_activity_{index}_detail",
@@ -3371,6 +4526,9 @@ def main() -> int:
             or item.get("phase")
             or item.get("mode_identity_state")
             or item.get("reflection_path")
+            or item.get("observation")
+            or item.get("claim")
+            or item.get("evidence_id")
             or item.get("status")
             or "unknown",
         )

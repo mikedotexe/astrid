@@ -15,6 +15,7 @@ mod reservoir;
 mod scheduled_admission;
 mod scheduled_introspection;
 mod self_profile;
+mod semantic_envelope;
 mod spectral;
 mod trace;
 mod tuning;

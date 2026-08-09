@@ -162,17 +162,57 @@ fn project_prior_reflection(workspace_root: &Path, question: &str) -> Result<Req
         })
         .collect::<Vec<_>>();
     entries.sort_by_key(|(_, metadata)| Reverse(metadata.mtime()));
-    let Some((path, _)) = entries.into_iter().next() else {
+    let mut selected = None;
+    for (path, _) in entries {
+        let sidecar = path.with_extension("json");
+        if !sidecar.exists() {
+            if sidecar.is_symlink() {
+                return Err(Error::new(
+                    "prior scheduled reflection metadata is a broken symlink",
+                ));
+            }
+            continue;
+        }
+        let metadata = fs::symlink_metadata(&sidecar)?;
+        if !metadata.is_file() || metadata.file_type().is_symlink() || metadata.nlink() != 1 {
+            return Err(Error::new(
+                "prior scheduled reflection metadata identity is unsafe",
+            ));
+        }
+        let value: Value = serde_json::from_slice(&read_stable_regular(&sidecar, 16 * 1024)?)?;
+        if value.get("schema").and_then(Value::as_str)
+            != Some("astrid.edge.scheduled_introspection.model_reflection.v2")
+            || value.get("authorship_status").and_then(Value::as_str)
+                != Some("model_authored_structured")
+            || value.get("structured_inquiry").and_then(Value::as_bool) != Some(true)
+        {
+            continue;
+        }
+        let bytes = read_stable_regular(&path, PRIOR_REFLECTION_MAX_BYTES)?;
+        if value.get("response_sha256").and_then(Value::as_str) != Some(sha256(&bytes).as_str()) {
+            return Err(Error::new(
+                "prior scheduled reflection metadata hash is invalid",
+            ));
+        }
+        selected = Some((path, bytes));
+        break;
+    }
+    let Some((path, bytes)) = selected else {
         return Ok(RequiredCategory {
             kind: "prior_scheduled_reflection".to_owned(),
-            status: "unavailable_first_scheduled_reflection",
+            status: "unavailable_no_structured_scheduled_reflection",
             basename: None,
             excerpt: None,
             content_sha256: None,
         });
     };
-    let bytes = read_stable_regular(&path, PRIOR_REFLECTION_MAX_BYTES)?;
     let text = String::from_utf8_lossy(&bytes);
+    // The prose is the authored reflection surface. The terminal declaration
+    // is already available as a signed bounded projection and must not win
+    // question-aware excerpt selection merely because it repeats schema keys.
+    let authored_prose = text
+        .rsplit_once("\nINQUIRY_STEP: ")
+        .map_or(text.as_ref(), |(prose, _)| prose);
     let question_terms = terms(question)?;
     Ok(RequiredCategory {
         kind: "prior_scheduled_reflection".to_owned(),
@@ -182,7 +222,7 @@ fn project_prior_reflection(workspace_root: &Path, question: &str) -> Result<Req
             .and_then(|name| name.to_str())
             .map(str::to_owned),
         excerpt: Some(bounded_text(
-            &best_excerpt(&text, &question_terms),
+            &best_excerpt(authored_prose, &question_terms),
             PROMPT_EXCERPT_CHARS,
         )),
         content_sha256: Some(sha256(&bytes)),

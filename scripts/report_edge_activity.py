@@ -12,6 +12,7 @@ from __future__ import annotations
 import argparse
 import datetime as dt
 import hashlib
+import importlib.util
 import json
 import math
 import os
@@ -24,8 +25,8 @@ import uuid
 from pathlib import Path
 from typing import Any, Iterable, NamedTuple
 
-SCHEMA = "astrid_edge_activity_report_v3"
-AUTHORSHIP_ATTRIBUTION_VERSION = 7
+SCHEMA = "astrid_edge_activity_report_v4"
+AUTHORSHIP_ATTRIBUTION_VERSION = 8
 STALE_WEB_CALL_MS = 5 * 60_000
 STALE_INTROSPECTION_CALL_MS = 5 * 60_000
 TRANSPORT_AUTHORSHIP_CORRECTION_REASON = (
@@ -63,7 +64,16 @@ REQUEST_HEADER_LATENCY_SOURCE_V1 = "kernel_http_host_trace_v1"
 SCHEDULED_INTROSPECTION_RECEIPT_SCHEMA = (
     "astrid_edge_scheduled_introspection_v1"
 )
+SCHEDULED_INTROSPECTION_RECEIPT_SCHEMA_V2 = (
+    "astrid_edge_scheduled_introspection_v2"
+)
 SCHEDULED_INTROSPECTION_PROVENANCE = "model_authored_runtime_scheduled"
+SCHEDULED_INTROSPECTION_PROVENANCES = frozenset(
+    {
+        SCHEDULED_INTROSPECTION_PROVENANCE,
+        "model_authored_runtime_evidence_integration",
+    }
+)
 SCHEDULED_INTROSPECTION_ADMISSION_SCHEMA = (
     "astrid.edge.scheduled_introspection.admission.v1"
 )
@@ -440,6 +450,114 @@ def read_json(path: Path) -> dict[str, Any]:
     except (OSError, json.JSONDecodeError):
         return {}
     return value if isinstance(value, dict) else {}
+
+
+def load_train_module() -> Any | None:
+    """Load the sibling sealed inquiry viewer without ambient import paths."""
+
+    injected = globals().get("_SEALED_TRAIN_MODULE")
+    if injected is not None:
+        return injected
+
+    source = Path(__file__).resolve().with_name("astrid_train.py")
+    if not source.is_file() or source.is_symlink():
+        return None
+    specification = importlib.util.spec_from_file_location(
+        "astrid_edge_sealed_train_report", source
+    )
+    if specification is None or specification.loader is None:
+        return None
+    module = importlib.util.module_from_spec(specification)
+    try:
+        specification.loader.exec_module(module)
+    except (ImportError, OSError, RuntimeError):
+        return None
+    return module
+
+
+def inquiry_train_events(
+    workspace: Path,
+    *,
+    train_module: Any | None = None,
+    inquiry_root: Path | None = None,
+    verify_key: Path | None = None,
+    appliance_id: str | None = None,
+) -> list[dict[str, Any]]:
+    """Return only independently verified train events.
+
+    A missing, unreadable, or invalid train is not converted into legacy
+    attribution.  The dedicated viewer reports that integrity failure; the
+    general activity surface simply omits unverified intellectual records.
+    Test-only path injection remains an explicit function argument and is not
+    exposed by the sealed activity CLI.
+    """
+
+    module = train_module if train_module is not None else load_train_module()
+    if module is None:
+        return []
+    keywords: dict[str, Any] = {"full": False}
+    if inquiry_root is not None:
+        keywords["inquiry_root"] = inquiry_root
+    if verify_key is not None:
+        keywords["verify_key"] = verify_key
+    if appliance_id is not None:
+        keywords["appliance_id"] = appliance_id
+    try:
+        report = module.collect_train(workspace, **keywords)
+    except (OSError, RuntimeError, ValueError, json.JSONDecodeError):
+        return []
+    if not isinstance(report, dict) or report.get("schema") != getattr(
+        module, "REPORT_SCHEMA", ""
+    ):
+        return []
+    events = report.get("events")
+    if not isinstance(events, list):
+        return []
+    if report.get("integrity") == "invalid_protected_history":
+        return [
+            {
+                **raw,
+                "train_integrity": "invalid_protected_history",
+                "trace_attribution": "sealed_integrity_failure",
+            }
+            for raw in events
+            if isinstance(raw, dict)
+            and raw.get("kind") == "integrity_violation"
+            and raw.get("authored") is False
+            and raw.get("authority") == "fail_closed_no_authorship_or_continuity_claim"
+        ]
+    if report.get("integrity") not in {
+        "full_signed_hash_chain_verified",
+        "degraded_individually_attested_no_full_chain_claim",
+    }:
+        return []
+    accepted: list[dict[str, Any]] = []
+    allowed = {
+        "belief_revision",
+        "clean_source_review",
+        "evidence_arrival",
+        "integrity_violation",
+        "inquiry_step",
+        "model_tool_request",
+        "scheduled_reflection",
+        "semantic_admission",
+        "thread_transition",
+    }
+    for raw in events:
+        if not isinstance(raw, dict) or raw.get("kind") not in allowed:
+            continue
+        timestamp = raw.get("timestamp_unix_ms")
+        if isinstance(timestamp, bool) or not isinstance(timestamp, int) or timestamp <= 0:
+            continue
+        event = dict(raw)
+        event["train_integrity"] = report.get("integrity")
+        event["trace_attribution"] = (
+            "first_class"
+            if normalized_uuid(event.get("trace_id")) is not None
+            else "signed_identifier_only"
+        )
+        accepted.append(event)
+    return accepted
 
 
 def self_change_operator_status_path(workspace: Path) -> Path:
@@ -1325,6 +1443,10 @@ def collect_events(
     operator_status_path: Path = SELF_CHANGE_OPERATOR_STATUS_PATH,
     *,
     test_only_allow_unprivileged_operator_status: bool = False,
+    train_module: Any | None = None,
+    train_inquiry_root: Path | None = None,
+    train_verify_key: Path | None = None,
+    train_appliance_id: str | None = None,
 ) -> list[dict[str, Any]]:
     runs = read_json_lines(workspace / "autonomous/runs.jsonl")
     transport_corrections = transport_authorship_corrections(workspace)
@@ -1365,6 +1487,43 @@ def collect_events(
             test_only_allow_unprivileged_operator_status
         ),
     )
+    train_events = inquiry_train_events(
+        workspace,
+        train_module=train_module,
+        inquiry_root=train_inquiry_root,
+        verify_key=train_verify_key,
+        appliance_id=train_appliance_id,
+    )
+    verified_train_steps = {
+        (str(item.get("step_id")), str(item.get("response_sha256")))
+        for item in train_events
+        if item.get("kind") == "inquiry_step"
+        and item.get("train_integrity")
+        in {
+            "full_signed_hash_chain_verified",
+            "degraded_individually_attested_no_full_chain_claim",
+        }
+    }
+    verified_unstructured_reflections = {
+        str(item.get("response_sha256"))
+        for item in train_events
+        if item.get("kind") == "scheduled_reflection"
+        and item.get("status") == "model_authored_unstructured"
+    }
+    semantic_admission_index: dict[str, dict[str, Any]] = {}
+    for item in train_events:
+        admission_id = item.get("admission_id")
+        if (
+            item.get("kind") != "semantic_admission"
+            or not isinstance(admission_id, str)
+            or not admission_id
+        ):
+            continue
+        previous = semantic_admission_index.get(admission_id)
+        if previous is None or int(item.get("timestamp_unix_ms", 0) or 0) >= int(
+            previous.get("timestamp_unix_ms", 0) or 0
+        ):
+            semantic_admission_index[admission_id] = item
 
     exact_run_candidates: dict[tuple[str, str], list[dict[str, Any]]] = {}
     for run in runs:
@@ -2056,24 +2215,56 @@ def collect_events(
         workspace / "runtime/scheduled-introspection/admission/state.json"
     )
     for receipt, source_ledgers, occurrences in scheduled_introspection:
-        if receipt.get("schema") not in {
+        receipt_schema = receipt.get("schema")
+        if receipt_schema not in {
             SCHEDULED_INTROSPECTION_RECEIPT_SCHEMA,
+            SCHEDULED_INTROSPECTION_RECEIPT_SCHEMA_V2,
             None,
         }:
             continue
         status = str(receipt.get("status") or "unknown")
         provenance = str(receipt.get("provenance") or "legacy_unattributed")
+        authored_status = status == "authored_completed" or (
+            receipt_schema == SCHEDULED_INTROSPECTION_RECEIPT_SCHEMA_V2
+            and status
+            in {"model_authored_structured", "model_authored_unstructured"}
+        )
+        structured = status in {"authored_completed", "model_authored_structured"}
+        v2_authorship_verified = (
+            receipt_schema != SCHEDULED_INTROSPECTION_RECEIPT_SCHEMA_V2
+            or (
+                structured
+                and (str(receipt.get("step_id")), str(receipt.get("response_sha256")))
+                in verified_train_steps
+            )
+            or (
+                status == "model_authored_unstructured"
+                and str(receipt.get("response_sha256"))
+                in verified_unstructured_reflections
+            )
+        )
         authored = (
-            status == "authored_completed"
-            and provenance == SCHEDULED_INTROSPECTION_PROVENANCE
+            authored_status
+            and provenance in SCHEDULED_INTROSPECTION_PROVENANCES
+            and (
+                receipt_schema == SCHEDULED_INTROSPECTION_RECEIPT_SCHEMA_V2
+                or receipt.get("reflection_path")
+            )
+            and (
+                not structured
+                or receipt.get("continuity_projection_written") is True
+                or receipt.get("continuity_admitted") is True
+            )
             and (
                 receipt.get("continuity_projection_written") is True
                 or receipt.get("continuity_admitted") is True
+                or not structured
             )
             and valid_response_sha256(receipt.get("response_sha256"))
             and valid_trace(receipt)
+            and v2_authorship_verified
         )
-        actually_admitted = (
+        legacy_admitted = (
             authored
             and scheduled_admission.get("schema")
             == SCHEDULED_INTROSPECTION_ADMISSION_SCHEMA
@@ -2087,6 +2278,28 @@ def collect_events(
             and scheduled_admission.get("last_trace_id")
             == receipt.get("trace", {}).get("trace_id")
         )
+        exact_inquiry_admission = semantic_admission_index.get(
+            str(receipt.get("admission_id") or "")
+        )
+        inquiry_admitted = (
+            authored
+            and structured
+            and exact_inquiry_admission is not None
+            and exact_inquiry_admission.get("response_sha256")
+            == receipt.get("response_sha256")
+            and exact_inquiry_admission.get("trace_id")
+            == receipt.get("trace", {}).get("trace_id")
+            and exact_inquiry_admission.get("signed_entry_id")
+            == receipt.get("signed_entry_id")
+            and exact_inquiry_admission.get("admission_id")
+            == receipt.get("admission_id")
+            and exact_inquiry_admission.get("authority")
+            in {
+                "exact_append_only_semantic_admission_receipt_not_astrid_authorship",
+                "current_state_without_matching_receipt_delivery_unknown_no_ack_claim",
+            }
+        )
+        actually_admitted = legacy_admitted or inquiry_admitted
         event = base_event(
             receipt,
             "scheduled_introspection",
@@ -2120,6 +2333,17 @@ def collect_events(
                 is True
                 or receipt.get("continuity_admitted") is True,
                 "continuity_admitted": actually_admitted,
+                "inquiry_status": receipt.get("inquiry_status"),
+                "inquiry_failure_class": receipt.get("inquiry_failure_class"),
+                "signed_entry_id": receipt.get("signed_entry_id"),
+                "step_id": receipt.get("step_id"),
+                "admission_id": receipt.get("admission_id"),
+                "reservoir_admission_status": (
+                    exact_inquiry_admission.get("status")
+                    if inquiry_admitted
+                    else receipt.get("reservoir_admission_status")
+                ),
+                "source_review_relation": receipt.get("source_review_relation"),
                 "source_ledgers": list(source_ledgers),
                 "exact_duplicate_count": occurrences - 1,
                 "introspection_tool": receipt.get("introspection_tool"),
@@ -2159,6 +2383,7 @@ def collect_events(
         events.append(event)
 
     events.extend(self_change_events)
+    events.extend(train_events)
 
     for event in events:
         event["authorship_class"] = event_authorship_class(event)
@@ -2189,6 +2414,8 @@ def selected(
         and (not args.trace_id or event.get("trace_id") == args.trace_id)
         and (not args.session_id or event.get("session_id") == args.session_id)
         and (not args.chain_id or event.get("chain_id") == args.chain_id)
+        and (not args.thread_id or event.get("thread_id") == args.thread_id)
+        and (not args.step_id or event.get("step_id") == args.step_id)
         and (not kinds or event.get("kind") in kinds)
     ]
     return values[-args.limit :] if args.limit else values
@@ -2421,6 +2648,68 @@ def text_lines(events: list[dict[str, Any]]) -> list[str]:
                 f"ledgers={short(','.join(event.get('source_ledgers') or []), 110)} "
                 f"duplicates={event.get('exact_duplicate_count', 0)}"
             )
+        elif kind == "inquiry_step":
+            detail = (
+                f"step={short(event.get('step_id'), 42)} "
+                f"thread={short(event.get('thread_id'), 42)} "
+                f"operation={event.get('thread_operation')} "
+                f"confidence={event.get('confidence')} "
+                f"observed={short(event.get('observation'))} "
+                f"interpreted={short(event.get('interpretation'))} "
+                f"uncertain={short(event.get('uncertainty'))} "
+                f"decided={short(event.get('decision'))} "
+                f"integrity={event.get('train_integrity')}"
+            )
+        elif kind == "evidence_arrival":
+            detail = (
+                f"evidence={short(event.get('evidence_id'), 54)} "
+                f"type={event.get('evidence_kind')} status={event.get('status')} "
+                f"belief-eligible={str(event.get('eligible_for_belief_update')).lower()} "
+                f"summary={short(event.get('summary'))}"
+            )
+        elif kind == "belief_revision":
+            detail = (
+                f"belief={short(event.get('belief_id'), 54)} "
+                f"revision={short(event.get('revision_id'), 54)} "
+                f"operation={event.get('operation')} "
+                f"evidence={short(','.join(event.get('evidence_ids') or []), 100)} "
+                f"claim={short(event.get('claim'))}"
+            )
+        elif kind == "thread_transition":
+            detail = (
+                f"thread={short(event.get('thread_id'), 54)} "
+                f"transition={event.get('status')} "
+                f"step={short(event.get('step_id') or event.get('last_step_id'), 42)} "
+                f"parent={short(event.get('parent_step_id'), 42)}"
+            )
+        elif kind == "semantic_admission":
+            detail = (
+                f"admission={short(event.get('admission_id'), 54)} "
+                f"status={event.get('status')} source={event.get('source_class')} "
+                f"generation={short(event.get('reservoir_generation'), 40)} "
+                f"sequence={event.get('reservoir_sequence')}"
+            )
+        elif kind == "model_tool_request":
+            detail = (
+                f"tool={event.get('tool_name')} step={short(event.get('step_id'), 42)} "
+                "authored=false relation=model-requested-machine-execution"
+            )
+        elif kind == "scheduled_reflection":
+            detail = (
+                "authored=true structured=false continuity=false "
+                f"response={short(event.get('response_sha256'), 32)}"
+            )
+        elif kind == "clean_source_review":
+            detail = (
+                f"status={event.get('status')} candidate={short(event.get('candidate_id'), 54)} "
+                "authored=false relation=separate-clean-review-not-rich-reflection-patch"
+            )
+        elif kind == "integrity_violation":
+            detail = (
+                "authored=false fail_closed=true "
+                f"path={short(event.get('path'), 120)} "
+                f"reason={short(event.get('reason'), 180)}"
+            )
         elif kind == "self_change":
             detail = (
                 f"lifecycle={event.get('lifecycle_kind')} status={event.get('status')} "
@@ -2453,11 +2742,18 @@ def text_lines(events: list[dict[str, Any]]) -> list[str]:
                 f"summary={short(event.get('summary'))}"
             )
         elif kind == "thread":
+            epistemic = {
+                "astrid_edge_thread_state_v7": "v7_authored_inquiry_train",
+                "astrid_edge_thread_state_v6": "v6_spectral_typed",
+                "astrid_edge_thread_state_v5": "v5_retained_typed",
+                "astrid_edge_thread_state_v4": "v4_inquiry",
+                "astrid_edge_thread_state_v3": "v3_typed",
+            }.get(str(event.get("schema")), "legacy_unclassified")
             detail = (
                 f"id={short(event.get('thread_id'), 48)} status={event.get('status')} "
                 f"event={event.get('event')} question={short(event.get('question'))} "
                 f"focus={short(event.get('focus'))} "
-                f"epistemic={'v6_spectral_typed' if event.get('schema') == 'astrid_edge_thread_state_v6' else 'v5_retained_typed' if event.get('schema') == 'astrid_edge_thread_state_v5' else 'v4_inquiry' if event.get('schema') == 'astrid_edge_thread_state_v4' else 'v3_typed' if event.get('schema') == 'astrid_edge_thread_state_v3' else 'legacy_unclassified'} "
+                f"epistemic={epistemic} "
                 f"claims={len(event.get('authored_claims') or [])} "
                 f"findings={len(event.get('findings') or [])} "
                 f"open={len(event.get('open_questions') or [])} "
@@ -2553,6 +2849,8 @@ def parser() -> argparse.ArgumentParser:
     value.add_argument("--trace-id")
     value.add_argument("--session-id")
     value.add_argument("--chain-id")
+    value.add_argument("--thread-id")
+    value.add_argument("--step-id")
     value.add_argument(
         "--kind",
         action="append",
@@ -2579,6 +2877,15 @@ def parser() -> argparse.ArgumentParser:
             "spectral_rollup",
             "spectral_receipt",
             "tuning",
+            "inquiry_step",
+            "evidence_arrival",
+            "integrity_violation",
+            "belief_revision",
+            "thread_transition",
+            "semantic_admission",
+            "model_tool_request",
+            "scheduled_reflection",
+            "clean_source_review",
         ),
     )
     value.add_argument("--follow", action="store_true")

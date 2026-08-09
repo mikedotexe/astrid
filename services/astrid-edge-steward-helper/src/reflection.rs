@@ -1,4 +1,4 @@
-//! Exact read-only validation of root-granted scheduled-reflection admission.
+//! Exact read-only validation of root-granted programmatic-reflection admission.
 
 use std::fs;
 use std::os::unix::fs::{MetadataExt as _, PermissionsExt as _};
@@ -14,7 +14,7 @@ use crate::{Error, Result};
 const LEASE_PATH: &str = "/run/astrid-edge-self-change/reflection.json";
 const ADMISSION_PATH: &str = "/run/astrid-edge-self-change/reflection-admission.json";
 const LEASE_SCHEMA: &str = "astrid.edge_scheduled_reflection.lease.v1";
-const ADMISSION_SCHEMA: &str = "astrid.edge_scheduled_reflection.admission.v2";
+const ADMISSION_SCHEMA: &str = "astrid.edge_programmatic_reflection.admission.v3";
 const LEASE_KIND: &str = "scheduled_reflection";
 const LEASE_OWNER: &str = "immutable_astrid_edge_reflection_guard";
 const MAXIMUM_BYTES: u64 = 64 * 1024;
@@ -53,36 +53,97 @@ struct AdmissionMarker {
     edge_ack_sha256: String,
     model_lock_device: u64,
     model_lock_inode: u64,
-    scheduled_due_nonce_sha256: Option<String>,
+    reflection_kind: String,
+    reflection_due_nonce_sha256: Option<String>,
+    reflection_trigger_nonce_sha256: Option<String>,
     model_start_authority: String,
     authority: String,
 }
 
 /// Require an exact root-created admission bound to this service invocation,
 /// boot, generation, lease, and model-lock inode.
-pub fn require(config: &Config) -> Result<()> {
-    load(config).map(drop)
-}
-
-/// Require that the root admission grants a fresh model start, not merely
-/// recovery of an exact already-prepared authored transaction.
-pub fn require_model_start(config: &Config, due_nonce: &str) -> Result<()> {
-    validate_identifier(due_nonce, "scheduled due nonce")?;
+pub fn require(
+    config: &Config,
+    reflection_kind: &str,
+    due_nonce: &str,
+    trigger_nonce: Option<&str>,
+) -> Result<()> {
+    validate_expected_reflection(reflection_kind, due_nonce, trigger_nonce)?;
     let marker = load(config)?;
-    if !marker_authorizes_model_start(&marker, due_nonce) {
+    if !marker_matches(&marker, reflection_kind, due_nonce, trigger_nonce) {
         return Err(Error::new(
-            "root admission does not authorize a fresh model start for this due slot",
+            "root admission does not match the exact reflection trigger",
         ));
     }
     Ok(())
 }
 
-fn marker_authorizes_model_start(marker: &AdmissionMarker, due_nonce: &str) -> bool {
-    marker.model_start_authority == "root_schedule_model_start_allowed"
-        && marker
-            .scheduled_due_nonce_sha256
-            .as_ref()
-            .is_none_or(|expected| expected == &sha256(due_nonce.as_bytes()))
+/// Require that the root admission grants a fresh model start, not merely
+/// recovery of an exact already-prepared authored transaction.
+pub fn require_model_start(
+    config: &Config,
+    reflection_kind: &str,
+    due_nonce: &str,
+    trigger_nonce: Option<&str>,
+) -> Result<()> {
+    validate_expected_reflection(reflection_kind, due_nonce, trigger_nonce)?;
+    let marker = load(config)?;
+    if !marker_authorizes_model_start(&marker, reflection_kind, due_nonce, trigger_nonce) {
+        return Err(Error::new(
+            "root admission does not authorize a fresh model start for this exact reflection trigger",
+        ));
+    }
+    Ok(())
+}
+
+fn validate_expected_reflection(
+    reflection_kind: &str,
+    due_nonce: &str,
+    trigger_nonce: Option<&str>,
+) -> Result<()> {
+    validate_identifier(due_nonce, "reflection due nonce")?;
+    match (reflection_kind, trigger_nonce) {
+        ("scheduled", None) => Ok(()),
+        ("evidence_integration", Some(trigger_nonce)) => {
+            validate_identifier(trigger_nonce, "evidence-integration trigger nonce")
+        },
+        _ => Err(Error::new(
+            "reflection kind and trigger binding are invalid",
+        )),
+    }
+}
+
+fn marker_matches(
+    marker: &AdmissionMarker,
+    reflection_kind: &str,
+    due_nonce: &str,
+    trigger_nonce: Option<&str>,
+) -> bool {
+    marker.reflection_kind == reflection_kind
+        && marker.reflection_due_nonce_sha256.as_deref()
+            == Some(sha256(due_nonce.as_bytes()).as_str())
+        && match trigger_nonce {
+            Some(trigger_nonce) => {
+                marker.reflection_trigger_nonce_sha256.as_deref()
+                    == Some(sha256(trigger_nonce.as_bytes()).as_str())
+            },
+            None => marker.reflection_trigger_nonce_sha256.is_none(),
+        }
+}
+
+fn marker_authorizes_model_start(
+    marker: &AdmissionMarker,
+    reflection_kind: &str,
+    due_nonce: &str,
+    trigger_nonce: Option<&str>,
+) -> bool {
+    marker_matches(marker, reflection_kind, due_nonce, trigger_nonce)
+        && marker.model_start_authority
+            == match reflection_kind {
+                "scheduled" => "root_schedule_model_start_allowed",
+                "evidence_integration" => "root_evidence_integration_model_start_allowed",
+                _ => return false,
+            }
 }
 
 /// Report only the exact no-artifact state used to distinguish the harmless
@@ -167,17 +228,14 @@ fn require_at(
         || validate_hex64(&marker.core_ack_sha256, "core ACK hash").is_err()
         || validate_hex64(&marker.edge_ack_sha256, "edge ACK hash").is_err()
         || marker
-            .scheduled_due_nonce_sha256
+            .reflection_due_nonce_sha256
             .as_ref()
-            .is_some_and(|value| validate_hex64(value, "scheduled due nonce hash").is_err())
-        || !matches!(
-            marker.model_start_authority.as_str(),
-            "root_schedule_model_start_allowed"
-                | "root_schedule_prepared_recovery_only"
-                | "root_schedule_legacy_migration_only"
-        )
-        || (marker.model_start_authority != "root_schedule_model_start_allowed"
-            && marker.scheduled_due_nonce_sha256.is_none())
+            .is_none_or(|value| validate_hex64(value, "reflection due nonce hash").is_err())
+        || marker
+            .reflection_trigger_nonce_sha256
+            .as_ref()
+            .is_some_and(|value| validate_hex64(value, "reflection trigger nonce hash").is_err())
+        || !valid_marker_authority_shape(&marker)
         || marker.authority != "root_verified_drain_and_model_lock_handoff_not_activation_authority"
         || !lock.is_file()
         || lock.file_type().is_symlink()
@@ -188,10 +246,35 @@ fn require_at(
         || marker.model_lock_inode != lock.ino()
     {
         return Err(Error::new(
-            "scheduled-reflection admission is absent, stale, or inexact",
+            "programmatic-reflection admission is absent, stale, or inexact",
         ));
     }
     Ok(marker)
+}
+
+fn valid_marker_authority_shape(marker: &AdmissionMarker) -> bool {
+    match marker.reflection_kind.as_str() {
+        "scheduled" => {
+            marker.reflection_due_nonce_sha256.is_some()
+                && marker.reflection_trigger_nonce_sha256.is_none()
+                && matches!(
+                    marker.model_start_authority.as_str(),
+                    "root_schedule_model_start_allowed"
+                        | "root_schedule_prepared_recovery_only"
+                        | "root_schedule_legacy_migration_only"
+                )
+        },
+        "evidence_integration" => {
+            marker.reflection_due_nonce_sha256.is_some()
+                && marker.reflection_trigger_nonce_sha256.is_some()
+                && matches!(
+                    marker.model_start_authority.as_str(),
+                    "root_evidence_integration_model_start_allowed"
+                        | "root_evidence_integration_prepared_recovery_only"
+                )
+        },
+        _ => false,
+    }
 }
 
 fn read_owned(path: &Path, uid: u32, gid: u32, mode: u32) -> Result<Vec<u8>> {
@@ -265,7 +348,7 @@ fn unix_millis() -> u64 {
 mod tests {
     use super::{
         ADMISSION_SCHEMA, AdmissionMarker, LEASE_KIND, LEASE_SCHEMA, ReflectionLease,
-        marker_authorizes_model_start,
+        marker_authorizes_model_start, marker_matches, valid_marker_authority_shape,
     };
 
     #[test]
@@ -330,14 +413,100 @@ mod tests {
             edge_ack_sha256: "e".repeat(64),
             model_lock_device: 1,
             model_lock_inode: 2,
-            scheduled_due_nonce_sha256: Some(super::sha256(due_nonce.as_bytes())),
+            reflection_kind: "scheduled".to_owned(),
+            reflection_due_nonce_sha256: Some(super::sha256(due_nonce.as_bytes())),
+            reflection_trigger_nonce_sha256: None,
             model_start_authority: "root_schedule_model_start_allowed".to_owned(),
             authority: "root_verified_drain_and_model_lock_handoff_not_activation_authority"
                 .to_owned(),
         };
-        assert!(marker_authorizes_model_start(&marker, due_nonce));
-        assert!(!marker_authorizes_model_start(&marker, "due-12346"));
+        assert!(valid_marker_authority_shape(&marker));
+        assert!(marker_authorizes_model_start(
+            &marker,
+            "scheduled",
+            due_nonce,
+            None
+        ));
+        assert!(!marker_authorizes_model_start(
+            &marker,
+            "scheduled",
+            "due-12346",
+            None
+        ));
         marker.model_start_authority = "root_schedule_prepared_recovery_only".to_owned();
-        assert!(!marker_authorizes_model_start(&marker, due_nonce));
+        assert!(valid_marker_authority_shape(&marker));
+        assert!(!marker_authorizes_model_start(
+            &marker,
+            "scheduled",
+            due_nonce,
+            None
+        ));
+    }
+
+    #[test]
+    fn evidence_admission_requires_exact_kind_due_trigger_and_start_authority() {
+        let due_nonce = "due-9223372036854775808";
+        let trigger_nonce = format!("evidence-integration-{}", "f".repeat(64));
+        let mut marker = AdmissionMarker {
+            schema: ADMISSION_SCHEMA.to_owned(),
+            lease_schema: LEASE_SCHEMA.to_owned(),
+            lease_kind: LEASE_KIND.to_owned(),
+            lease_id: "reflection-example".to_owned(),
+            lease_nonce_sha256: "a".repeat(64),
+            lease_payload_sha256: "b".repeat(64),
+            generation_id: "generation-1".to_owned(),
+            host_boot_id: "11111111-1111-4111-8111-111111111111".to_owned(),
+            service_invocation_id: "c".repeat(32),
+            admitted_at_unix_ms: 1,
+            drain_barrier_sequence: 1,
+            core_ack_sha256: "d".repeat(64),
+            edge_ack_sha256: "e".repeat(64),
+            model_lock_device: 1,
+            model_lock_inode: 2,
+            reflection_kind: "evidence_integration".to_owned(),
+            reflection_due_nonce_sha256: Some(super::sha256(due_nonce.as_bytes())),
+            reflection_trigger_nonce_sha256: Some(super::sha256(trigger_nonce.as_bytes())),
+            model_start_authority: "root_evidence_integration_model_start_allowed".to_owned(),
+            authority: "root_verified_drain_and_model_lock_handoff_not_activation_authority"
+                .to_owned(),
+        };
+        assert!(valid_marker_authority_shape(&marker));
+        assert!(marker_matches(
+            &marker,
+            "evidence_integration",
+            due_nonce,
+            Some(&trigger_nonce)
+        ));
+        assert!(marker_authorizes_model_start(
+            &marker,
+            "evidence_integration",
+            due_nonce,
+            Some(&trigger_nonce)
+        ));
+        assert!(!marker_authorizes_model_start(
+            &marker,
+            "scheduled",
+            due_nonce,
+            None
+        ));
+        assert!(!marker_authorizes_model_start(
+            &marker,
+            "evidence_integration",
+            due_nonce,
+            Some("evidence-integration-wrong")
+        ));
+        marker.model_start_authority =
+            "root_evidence_integration_prepared_recovery_only".to_owned();
+        assert!(valid_marker_authority_shape(&marker));
+        assert!(!marker_authorizes_model_start(
+            &marker,
+            "evidence_integration",
+            due_nonce,
+            Some(&trigger_nonce)
+        ));
+        marker.reflection_trigger_nonce_sha256 = None;
+        assert!(!valid_marker_authority_shape(&marker));
+        marker.reflection_kind = "scheduled".to_owned();
+        assert!(!valid_marker_authority_shape(&marker));
     }
 }

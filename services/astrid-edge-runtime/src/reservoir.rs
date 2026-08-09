@@ -6,7 +6,7 @@
 //! but must not create a second decomposition or expose actuator authority.
 
 use std::{
-    collections::BTreeMap,
+    collections::{BTreeMap, VecDeque},
     fs::{self, OpenOptions},
     io::Write as _,
     os::unix::fs::{MetadataExt as _, OpenOptionsExt as _, PermissionsExt as _},
@@ -29,7 +29,10 @@ use serde_json::{Value, json};
 use sha2::{Digest as _, Sha256};
 use tokio::sync::{broadcast, mpsc, oneshot, watch};
 
-use crate::config::Config;
+use crate::{
+    config::Config,
+    semantic_envelope::{ACK_SCHEMA, SemanticAdmissionAckV1, SemanticEnvelopeV1},
+};
 
 const RESERVOIR_DIM: usize = 128;
 const RESERVOIR_DIM_F32: f32 = 128.0;
@@ -59,6 +62,7 @@ pub const HOST_AUX_FEATURE_NAMES: [&str; AUX_DIM] = [
 const SEMANTIC_DIM: usize = 48;
 const SEMANTIC_INPUT_SCALE: f32 = 0.12;
 const SEMANTIC_INPUT_DECAY: f32 = 0.92;
+const MAX_SCHEDULED_ADMISSION_ACKS_PER_GENERATION: usize = 2_048;
 const AUX_INPUT_SCALE: f32 = 0.25;
 const INPUT_DIM: usize = VIDEO_DIM + AUDIO_DIM + AUX_DIM + SEMANTIC_DIM;
 const VIDEO_OFFSET: usize = 0;
@@ -82,6 +86,13 @@ pub enum SensoryIngress {
         availability: Option<Vec<bool>>,
     },
     Semantic(Vec<f32>),
+    /// Private runtime-only ingress. External sockets cannot construct this
+    /// variant, and the reservoir validates its complete typed envelope before
+    /// applying or acknowledging the vector.
+    ScheduledSemantic {
+        envelope: Box<SemanticEnvelopeV1>,
+        reply: oneshot::Sender<anyhow::Result<SemanticAdmissionAckV1>>,
+    },
 }
 
 /// The complete private tuning surface accepted by the CPU-edge reservoir.
@@ -224,6 +235,8 @@ pub struct ReservoirSnapshot {
     pub regulation_strength: f32,
     pub leak: f32,
     pub semantic_fresh: bool,
+    /// Counts only; public telemetry never carries semantic content or IDs.
+    pub semantic_source_counts: BTreeMap<String, u64>,
     pub audio_fresh: bool,
     pub video_fresh: bool,
     pub aux_fresh: bool,
@@ -255,6 +268,10 @@ struct Reservoir {
     regulation_strength: f32,
     leak: f32,
     semantic_age_ticks: u64,
+    semantic_source_counts: BTreeMap<String, u64>,
+    scheduled_admission_acks: BTreeMap<String, SemanticAdmissionAckV1>,
+    scheduled_admission_order: VecDeque<String>,
+    appliance_id: String,
     video_age_ticks: u64,
     audio_age_ticks: u64,
     aux_age_ticks: u64,
@@ -308,6 +325,10 @@ impl Reservoir {
             regulation_strength: 1.0,
             leak: 0.55,
             semantic_age_ticks: u64::MAX,
+            semantic_source_counts: BTreeMap::new(),
+            scheduled_admission_acks: BTreeMap::new(),
+            scheduled_admission_order: VecDeque::new(),
+            appliance_id: config.appliance_id.clone(),
             video_age_ticks: u64::MAX,
             audio_age_ticks: u64::MAX,
             aux_age_ticks: u64::MAX,
@@ -373,8 +394,69 @@ impl Reservoir {
                     *value *= SEMANTIC_INPUT_SCALE;
                 }
                 self.semantic_age_ticks = 0;
+                self.increment_semantic_source("ordinary_untyped");
+            },
+            SensoryIngress::ScheduledSemantic { envelope, reply } => {
+                let result = self.ingest_scheduled_semantic(&envelope);
+                let _ = reply.send(result);
             },
         }
+    }
+
+    fn ingest_scheduled_semantic(
+        &mut self,
+        envelope: &SemanticEnvelopeV1,
+    ) -> anyhow::Result<SemanticAdmissionAckV1> {
+        envelope.validate(&self.appliance_id)?;
+        if let Some(prior) = self.scheduled_admission_acks.get(&envelope.admission_id) {
+            anyhow::ensure!(
+                prior.signed_entry_id == envelope.signed_entry_id
+                    && prior.source_class == envelope.source_class
+                    && prior.vector_sha256 == envelope.vector_sha256(),
+                "semantic admission replay conflicts with its exact accepted envelope"
+            );
+            return Ok(prior.clone());
+        }
+        assign_lane(
+            &mut self.input,
+            SEMANTIC_OFFSET,
+            SEMANTIC_DIM,
+            &envelope.vector,
+        );
+        for value in &mut self.input[SEMANTIC_OFFSET..SEMANTIC_OFFSET + SEMANTIC_DIM] {
+            *value *= SEMANTIC_INPUT_SCALE;
+        }
+        self.semantic_age_ticks = 0;
+        self.increment_semantic_source(envelope.source_class.as_str());
+        let acknowledgment = SemanticAdmissionAckV1 {
+            schema: ACK_SCHEMA.to_owned(),
+            admission_id: envelope.admission_id.clone(),
+            signed_entry_id: envelope.signed_entry_id.clone(),
+            source_class: envelope.source_class,
+            reservoir_generation: self.generation_id.clone(),
+            reservoir_sequence: self.sample_sequence,
+            vector_sha256: envelope.vector_sha256(),
+            accepted_at_unix_ms: unix_millis(),
+            status: "accepted".to_owned(),
+        };
+        self.scheduled_admission_order
+            .push_back(envelope.admission_id.clone());
+        self.scheduled_admission_acks
+            .insert(envelope.admission_id.clone(), acknowledgment.clone());
+        while self.scheduled_admission_order.len() > MAX_SCHEDULED_ADMISSION_ACKS_PER_GENERATION {
+            if let Some(expired) = self.scheduled_admission_order.pop_front() {
+                self.scheduled_admission_acks.remove(&expired);
+            }
+        }
+        Ok(acknowledgment)
+    }
+
+    fn increment_semantic_source(&mut self, source: &str) {
+        let count = self
+            .semantic_source_counts
+            .entry(source.to_owned())
+            .or_insert(0);
+        *count = count.saturating_add(1);
     }
 
     fn apply_tuning(&mut self, parameters: &TuningParameters) -> anyhow::Result<TuningParameters> {
@@ -674,6 +756,7 @@ impl Reservoir {
                 "input_gain": self.input_gain,
                 "regulation_strength": self.regulation_strength,
                 "semantic_fresh": semantic_fresh,
+                "semantic_source_counts": self.semantic_source_counts,
                 "audio_fresh": audio_fresh,
                 "audio_source": self.audio_source,
                 "video_fresh": video_fresh,
@@ -819,6 +902,7 @@ impl Reservoir {
             regulation_strength: self.regulation_strength,
             leak: self.leak,
             semantic_fresh,
+            semantic_source_counts: self.semantic_source_counts.clone(),
             audio_fresh,
             video_fresh,
             aux_fresh,
@@ -1093,6 +1177,7 @@ fn persist_snapshot(
         "aux_features": snapshot.aux_features,
         "authority": "deterministic_machine_spectral_state_not_astrid_authorship_or_causal_proof",
     });
+    value["semantic_source_counts"] = json!(snapshot.semantic_source_counts);
     let record_sha256 = format!("{:x}", Sha256::digest(serde_json::to_vec(&value)?));
     value["record_sha256"] = json!(record_sha256);
     let mut temporary = open_private_regular(&temporary_path, true)?;
@@ -1119,6 +1204,7 @@ fn persist_snapshot(
             "target_fill_pct": snapshot.fill_target * 100.0,
             "effective_dimensionality": snapshot.effective_dimensionality,
             "semantic_fresh": snapshot.semantic_fresh,
+            "semantic_source_counts": snapshot.semantic_source_counts,
             "audio_fresh": snapshot.audio_fresh,
             "aux_fresh": snapshot.aux_fresh,
             "authority": "read_only_cpu_esn_fill_telemetry",
@@ -1207,7 +1293,16 @@ mod tests {
         Config, FILL_EMA_ALPHA_PPM, Reservoir, ReservoirSnapshot, SensoryIngress, SpectralMode,
         TuningParameters, persist_snapshot,
     };
-    use crate::{codec::encode_text, config::AutonomyPromptProfile};
+    use crate::{
+        codec::{SEMANTIC_DIM, encode_text},
+        config::AutonomyPromptProfile,
+        semantic_envelope::{
+            CODEC_VERSION, ENVELOPE_SCHEMA, SemanticEnvelopeV1, SemanticSourceClassV1,
+            SemanticTraceV1, derive_admission_id,
+        },
+    };
+    use sha2::{Digest as _, Sha256};
+    use uuid::Uuid;
 
     fn config() -> Config {
         Config {
@@ -1312,6 +1407,62 @@ mod tests {
     }
 
     #[test]
+    fn typed_scheduled_semantic_is_validated_applied_and_exactly_acknowledged() {
+        let mut reservoir = Reservoir::new(&config());
+        let signed_entry_id =
+            "inquiry-entry-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+        let envelope = SemanticEnvelopeV1 {
+            schema: ENVELOPE_SCHEMA.to_owned(),
+            source_class: SemanticSourceClassV1::ScheduledInquiry,
+            signed_entry_id: signed_entry_id.to_owned(),
+            admission_id: derive_admission_id("test-edge", signed_entry_id),
+            summary_sha256: format!("{:x}", Sha256::digest(b"bounded summary")),
+            codec_version: CODEC_VERSION.to_owned(),
+            trace: SemanticTraceV1 {
+                schema_version: 1,
+                trace_id: Uuid::from_u128(1).to_string(),
+                turn_id: Uuid::from_u128(2).to_string(),
+                span_id: Uuid::from_u128(3).to_string(),
+                session_id: "scheduled-session-1".to_owned(),
+                chain_id: None,
+            },
+            vector: vec![0.2; SEMANTIC_DIM],
+        };
+        let expected_vector_sha256 = envelope.vector_sha256();
+        let ack = reservoir
+            .ingest_scheduled_semantic(&envelope)
+            .expect("typed admission");
+        assert_eq!(ack.admission_id, envelope.admission_id);
+        assert_eq!(ack.vector_sha256, expected_vector_sha256);
+        assert_eq!(ack.reservoir_generation, reservoir.generation_id);
+        assert_eq!(
+            reservoir.semantic_source_counts.get("scheduled_inquiry"),
+            Some(&1)
+        );
+
+        let replay_ack = reservoir
+            .ingest_scheduled_semantic(&envelope)
+            .expect("idempotent typed admission replay");
+        assert_eq!(replay_ack, ack);
+        assert_eq!(
+            reservoir.semantic_source_counts.get("scheduled_inquiry"),
+            Some(&1)
+        );
+
+        let mut conflicting = envelope.clone();
+        conflicting.vector[0] = 0.3;
+        assert!(reservoir.ingest_scheduled_semantic(&conflicting).is_err());
+
+        let mut spoofed = envelope;
+        spoofed.admission_id = derive_admission_id("different-appliance", signed_entry_id);
+        assert!(reservoir.ingest_scheduled_semantic(&spoofed).is_err());
+        assert_eq!(
+            reservoir.semantic_source_counts.get("scheduled_inquiry"),
+            Some(&1)
+        );
+    }
+
+    #[test]
     fn semantic_event_perturbs_without_collapsing_settled_fill() {
         let mut reservoir = Reservoir::new(&config());
         for tick in 0..1_200 {
@@ -1370,8 +1521,8 @@ mod tests {
             "assistant",
             "Audio is fresh physical ALSA capture. CPU and RAM interoception are fresh. Video is \
              unavailable. This reservoir telemetry belongs to the local edge echo-state \
-             system, while the Mac introspection corpus is separate read-only documentary \
-             material rather than live state. NEXT: LISTEN",
+             system. Mac and peer introspection corpora are unavailable; operator quarantine is \
+             outside this appliance workspace. NEXT: LISTEN",
         )));
 
         let mut minimum = 1.0_f32;

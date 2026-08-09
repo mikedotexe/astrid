@@ -25,6 +25,18 @@ use crate::{Error, ErrorKind, Result};
 
 const MAX_BUILD_FILE: u64 = 512 * 1024 * 1024;
 const MAX_RETAINED_TERMINAL_BUILDS: usize = 4;
+const IMMUTABLE_PYTHON_REPLAY_SUITES: &[(&str, &str)] = &[
+    ("python-inquiry-train-tests", "test_astrid_train.py"),
+    ("python-hindsight-tests", "test_edge_hindsight.py"),
+    (
+        "python-activity-report-tests",
+        "test_report_edge_activity.py",
+    ),
+    (
+        "python-appliance-report-tests",
+        "test_report_edge_appliance.py",
+    ),
+];
 const SEALED_BUILD_ENTRIES: &[&str] = &[
     "build.json",
     "bundle",
@@ -989,17 +1001,7 @@ impl<'a, R: CandidateRunner> Builder<'a, R> {
             // immutable inspection tool a permanent build veto.  The fixed
             // list below is part of the rescue policy and cannot be widened or
             // replaced by candidate-authored commands.
-            for (label, pattern) in [
-                ("python-hindsight-tests", "test_edge_hindsight.py"),
-                (
-                    "python-activity-report-tests",
-                    "test_report_edge_activity.py",
-                ),
-                (
-                    "python-appliance-report-tests",
-                    "test_report_edge_appliance.py",
-                ),
-            ] {
+            for &(label, pattern) in IMMUTABLE_PYTHON_REPLAY_SUITES {
                 plan.push(BuildStep::candidate(CommandSpec {
                     label,
                     executable: self.config.executables.python.clone(),
@@ -2091,10 +2093,10 @@ fn unix_seconds() -> u64 {
 #[cfg(test)]
 mod tests {
     use super::{
-        BuildStep, ExecutionBoundary, Impact, capsule_command_labels, classify,
-        enforce_trusted_host_quiescence, recover_gc_tombstones, require_candidate_gate_success,
-        same_filesystem, selected_capsules, terminal_gc_selection, validate_offline_command_plan,
-        write_or_verify_manifest,
+        BuildStep, ExecutionBoundary, IMMUTABLE_PYTHON_REPLAY_SUITES, Impact,
+        capsule_command_labels, classify, enforce_trusted_host_quiescence, recover_gc_tombstones,
+        require_candidate_gate_success, same_filesystem, selected_capsules, terminal_gc_selection,
+        validate_offline_command_plan, write_or_verify_manifest,
     };
     use crate::config::TrustedExecutable;
     use crate::invariant::REBUILDABLE_CAPSULES;
@@ -2270,6 +2272,14 @@ mod tests {
         assert!(impacts.contains(&Impact::Python));
         assert!(impacts.contains(&Impact::Unit));
         assert!(!impacts.contains(&Impact::Edge));
+    }
+
+    #[test]
+    fn immutable_python_replay_includes_the_sealed_inquiry_contract() {
+        assert!(
+            IMMUTABLE_PYTHON_REPLAY_SUITES
+                .contains(&("python-inquiry-train-tests", "test_astrid_train.py"))
+        );
     }
 
     #[test]

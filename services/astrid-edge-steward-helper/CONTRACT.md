@@ -14,20 +14,22 @@ candidate-intent-<envelope_id>.json
 schema = astrid.edge_self_change.completed_intent_envelope.v1
 root keys = schema, intent_envelope, authored_completion, auth
 intent_envelope.schema = astrid.edge_self_change.intent_attestor_envelope.v1
-authored_completion.schema = astrid.edge.steward_helper.authored_completion_envelope.v2
-authored_completion.core.schema = astrid.edge.steward_helper.authored_completion.v2
+authored_completion.schema = astrid.edge.steward_helper.authored_completion_envelope.v4
+authored_completion.core.schema = astrid.edge.steward_helper.authored_completion.v4
 all auth keys = algorithm, key_id, signature
 all auth.algorithm = hmac-sha256
 ```
 
 The nested v1 intent envelope retains exact root keys `schema`, `core`, and `auth`; its core keys
 remain `envelope_id`, `created_at`, `candidate_sha256`, `candidate`, and `intent`. The signed
-completion core binds appliance, due nonce, trace/session/turn, response and retained transaction
-hashes, completion time, and an exact candidate-publication object containing envelope ID/hash,
-intent ID, terminal declaration hash, candidate ID/hash, and base generation. Its exact status is
-`authored_completed` with provenance `model_authored_runtime_scheduled`. The completion HMAC signs
-its canonical core. The outer HMAC signs the canonical three-field unsigned wrapper. Both use the
-same pinned per-appliance attestor key.
+completion core binds appliance, trigger kind/nonce, due nonce, the rich trace/session/turn, structured inquiry status,
+rich response and retained transaction hashes, completion time, the distinct clean-review
+trace/session/turn and response, and an exact candidate-publication object containing envelope
+ID/hash, intent ID, terminal declaration hash, candidate ID/hash, and base generation. A
+candidate-bearing proof has exact `status=inquiry_status=model_authored_structured` with provenance
+`model_authored_runtime_scheduled`. The completion HMAC signs its canonical core. The outer HMAC
+signs the canonical three-field unsigned wrapper. Both use the same pinned per-appliance attestor
+key.
 
 The candidate is exactly `astrid.edge_self_change.candidate.v1` with `candidate_id`, `base_generation`, `proposal_sha256`, `patch_sha256`, sorted `changed_paths`, `created_at`, and `privilege_envelope=proposal-only:no-execution:v1`.
 
@@ -49,25 +51,30 @@ Before lifecycle reconciliation, again immediately after acquiring the shared mo
 
 The lease path must be the `maintenance.json` sibling of the root-controlled current-generation binding. Because the lease is created dynamically, the steward's mount namespace receives the supervisor state directory read-only rather than an optional single-file bind that could miss a post-start acquisition. Maintenance deferral leaves the original due nonce pending, so repeated timer polls coalesce and never create a catch-up storm.
 
-## Root-issued reflection admission
+## Root-issued programmatic reflection admission
 
-A due scheduled pass additionally requires the distinct root-created
+A due scheduled or evidence-integration pass additionally requires the distinct root-created
 `astrid.edge_scheduled_reflection.lease.v1` and
-`astrid.edge_scheduled_reflection.admission.v2` files. The steward validates
+`astrid.edge_programmatic_reflection.admission.v3` files. The steward validates
 root/runtime-group and root/steward-group `0440` DAC, the root:root `0755`
 parent, exact boot, systemd `INVOCATION_ID`, active generation, nonce-bound
 lease ID and payload hash, equal ACK barrier sequence, ACK hashes, and the
 persistent model-lock device/inode. The marker also binds the exact due nonce
-and distinguishes fresh-model authority from prepared-transaction recovery.
-The latter can complete exact signed authored state during the two-hour floor
-but fails the separate model-start check. The admission marker is not the IPC
-barrier: that independently uses `astrid.edge.maintenance_barrier.v2`.
+hash, `reflection_kind=scheduled|evidence_integration`, and, for evidence only,
+the exact steward-derived trigger-nonce hash. Scheduled fresh-model authority is
+`root_schedule_model_start_allowed`; evidence fresh-model authority is
+`root_evidence_integration_model_start_allowed`. Their distinct prepared-recovery
+authorities can complete exact signed authored state but always fail the separate
+model-start check. Missing helper schedule state receives no unbound bootstrap
+authority: the first poll materializes the canonical due slot and the next root
+invocation binds it exactly. The admission marker is not the IPC barrier: that
+independently uses `astrid.edge.maintenance_barrier.v2`.
 
-The steward rechecks this exact pair after the due decision, after acquiring
+The steward rechecks this exact pair with kind, due, and optional trigger identity after the due decision, after acquiring
 the model lock, before the first provider request, and before and after every
 provider step. Missing, expired, linked, foreign-owned, unknown-field, changed,
-or cross-kind evidence fails closed and cannot create authored output. The
-root unit's `ExecStopPost=+` removes only evidence for the same invocation.
+cross-kind, cross-due, or cross-trigger evidence fails closed and cannot create
+authored output. The root unit's `ExecStopPost=+` removes only evidence for the same invocation.
 Neither the reflection lease nor marker can be interpreted as generation
 activation authority.
 
@@ -92,10 +99,12 @@ not substring matching.
 The rich pass may use only bounded owned introspection plus the optional immutable read-only web
 broker. Source inspection and every candidate operation are rejected at the native authorization
 boundary. Its exact complete response is durably checkpointed and remains the scheduled authored
-reflection even if later source review fails. Only one exact final line, `SOURCE_REVIEW: REQUEST`,
-requests a clean source-review pass; embedded, repeated, or non-final markers do not.
+reflection even if later source review fails. Only the exact final two-line inquiry/source-review
+terminal can request a clean source-review pass; embedded, repeated, malformed, or non-final
+markers do not.
 
-The clean pass retains the same due nonce, trace, and session, but receives a new turn/span and a
+The clean pass retains only the same due nonce and rich-transaction hash linkage. It receives a
+fresh trace/session/turn/span and a
 fresh prompt containing only revalidated signed source/build/generation facts and the fixed review
 question. It may use only bounded source/build/generation inspection and candidate tools. Owned
 artifacts, continuity, machine observations, and web tools are rejected. Candidate authority binds
@@ -109,20 +118,111 @@ the rich response authored, labels the clean outcome non-authored, reopens any p
 never recalls the model for that due slot. Private records expose hashes, lane, bounded tool names,
 and terminal status; untrusted bodies never become candidate authority.
 
-In addition to its signed private receipts, the helper emits the existing reporting projection:
+When the regular two-hour slot is not due, the helper reads only exact v7 continuity evidence IDs
+and matching records. Eligible records wait for a five-minute quiet period, coalesce six at a time,
+and observe a sixty-minute floor plus twelve starts per UTC day. Each record is decoded and
+validated independently: malformed, missing/non-lowercase hashes, unknown, duplicate, or
+ineligible records are skipped into durable owner-only rejection state while valid siblings may
+proceed. Consumed and ambiguous fingerprints survive removal from the bounded v7 projection.
 
-- `workspace/runtime/scheduled-introspection/projection/state.json`, schema `astrid_edge_scheduled_introspection_state_v1`;
-- `workspace/runtime/scheduled-introspection/projection/continuity.json`, schema `astrid_edge_scheduled_introspection_continuity_v1`;
-- `workspace/introspections/scheduled/receipts.jsonl`, schema `astrid_edge_scheduled_introspection_v1`; and
+### Frozen rescue admission contract for evidence integration
+
+The helper's exact durable admission surface is
+`<configured state_root>/evidence-integration.json` (production:
+`<candidate_root>/evidence-integration.json`). Its parent is a non-linked directory owned by
+`astrid-edge-steward:astrid-edge-steward`, mode `0700`. The canonical JSON file is an atomic,
+single-linked regular file owned by `astrid-edge-steward`, created with the service's configured
+runtime primary group, mode `0600`, and capped at 16 MiB. Root may read it; no runtime, model,
+builder, updater, or peer identity may do so. A missing file means no steward-derived evidence
+trigger exists.
+
+The frozen schema is `astrid.edge.steward_helper.evidence_integration_state.v1`, with exactly these
+root fields: `schema`, `generation`, `pending`, `quiet_until_unix_ms`, `active`, `consumed`,
+`rejected`, `ambiguous`, `scheduled_absorption`, `last_completed_at_unix_ms`,
+`last_finished_trigger_nonce`, `last_finished_due_nonce`, `last_absorbed_scheduled_nonce`,
+`utc_day`, `starts_today`, `last_source_revision`, and `last_source_sha256`. The immutable rescue
+helper must reject a noncanonical document, wrong schema, unsafe inode/ownership/mode, oversized
+file, or unknown/missing field. Only `active != null` with `last_attempt_at_unix_ms = null` is a
+fresh-model admission candidate. `last_attempt_at_unix_ms != null` is delivery/authorship
+ambiguity or retained finalization state and must never receive fresh-model authority.
+
+`active` has exactly `trigger_nonce`, `due_nonce`, `generation`, `created_at_unix_ms`,
+`last_attempt_at_unix_ms`, and `evidence`. `evidence` contains one through six exact records, each
+with exactly `evidence_id`, `kind`, `epistemic_status`, `reference`, `summary`, `source`,
+`captured_at_unix_ms`, lowercase `sha256`, and `eligible_for_belief_update=true`. IDs use the
+basename-safe identifier grammar; hashes are exactly 64 lowercase hexadecimal bytes; the kind is
+one of the ten eligible kinds named in `integration.rs`; timestamps are nonzero and no more than
+60 seconds in the future. A fresh active record is rejected if `starts_today >= 12`, its UTC-day
+state is invalid, duplicates another active ID, or its evidence identity collides with any pending,
+consumed, or ambiguous record.
+
+The rescue helper independently rederives the active identity. Its SHA-256 preimage is the literal
+domain bytes `astrid.edge.evidence-integration.trigger.v1\\0`, followed by the configured appliance
+ID bytes, one NUL byte, the unsigned 64-bit `generation` in network byte order, one NUL byte, and
+canonical JSON of the exact ordered evidence array. The lowercase digest `d` yields
+`trigger_nonce = evidence-integration-<d>`. Parse `d[0..16]` as unsigned hexadecimal, set its high
+bit, and render that value in decimal as `due_nonce = due-<value>`. The rescue admission binds both
+nonces, trigger kind `evidence_integration`, appliance, boot/invocation, generation, model lock, and
+the existing ACK barrier; it does not reinterpret the evidence or grant any Action, source,
+candidate, build, or deployment authority. This contract exists so a second timer invocation can
+admit the already-derived active trigger even though the ordinary two-hour schedule is not due.
+
+A regular scheduled reflection snapshots at most one coalesced six-record set before constructing
+its rich prompt. That exact `scheduled_absorption` snapshot is durable, included in the prompt and
+context-provenance hash, and is the only evidence a structured scheduled completion may consume.
+Evidence arriving after the snapshot stays pending. Unstructured authorship releases the snapshot
+without consuming anything; provider failure retains it for the same scheduled nonce.
+
+An evidence integration has at most two provider exchanges and one `inspect_owned` or
+`read_owned` call. Its native dispatcher contains no web, source, candidate, build, or deployment
+case. It must end in `SOURCE_REVIEW: NONE`; exact `REQUEST` is retained but forced to
+`model_authored_unstructured` with no inquiry, continuity, reservoir, source-review, or candidate
+effect. The provider-start marker is written immediately before the first request. If no signed
+prepared authored transaction survives a crash or transport ambiguity, the immutable state moves
+that trigger into `provider_started_delivery_authorship_unknown_non_authored`; neither that nonce
+nor its exact evidence fingerprints are automatically retried. A prepared response always resumes
+finalization without another model call, including a crash after evidence state advanced.
+
+Every complete rich response must end in exactly two unique final lines:
+
+```text
+INQUIRY_STEP: <single-line exact JSON>
+SOURCE_REVIEW: NONE
+```
+
+A regular scheduled pass may use exact `SOURCE_REVIEW: REQUEST`. Unknown fields, missing or
+duplicate markers, invalid bounds or parentage, output-ceiling completion, and any repaired shape
+remain exact retained prose with `model_authored_unstructured`; they create no inquiry entry,
+continuity projection, reservoir eligibility, or source-review request. Valid steps are signed with
+the domain-separated scheduled-authorship Ed25519 key into 4 MiB append-only segments under the
+configured `inquiry_history_root`. The signed entry binds appliance, trigger/due nonce,
+trace/session/turn/span, prompt/response/context/reflection/declaration hashes, the prior ledger
+hash, and separate mechanical and semantic parentage. `head.json` is signed and crash-recoverable;
+the runtime receives only the bounded signed `inquiry-current.json` projection.
+
+In addition to its signed private receipts, the helper emits the reporting projection:
+
+- `workspace/runtime/scheduled-introspection/projection/state.json`, schema `astrid_edge_scheduled_introspection_state_v2`;
+- `workspace/runtime/scheduled-introspection/projection/continuity.json`, schema `astrid_edge_scheduled_introspection_continuity_v2` (structured responses only);
+- `workspace/runtime/scheduled-introspection/projection/inquiry-current.json`, schema `astrid.edge.inquiry.current.v1` (structured responses only);
+- `workspace/introspections/scheduled/receipts.jsonl`, schema `astrid_edge_scheduled_introspection_v2`; and
 - `workspace/introspections/scheduled/reflection_<due>_<turn>.md` plus a provenance sidecar.
 
-An authored receipt has `status=authored_completed`, `provenance=model_authored_runtime_scheduled`, `continuity_admitted=true`, a UUID trace/turn/span, and an exact lowercase response SHA-256. The reflection file is the exact model response. The continuity file contains only a deterministic maximum-320-character summary plus appliance/model/due/prompt/response/summary hashes and trace linkage. Failures and partial generations remain only signed non-authored helper receipts and cannot populate these authored projections. The helper owns only the `projection` sibling; runtime admission state is a distinct runtime-owned sibling invisible to the helper.
+An authored receipt distinguishes `model_authored_structured` from
+`model_authored_unstructured`, uses trigger-specific `model_authored_runtime_scheduled` or
+`model_authored_runtime_evidence_integration` provenance, binds the
+trace/session/turn/span and exact lowercase response SHA-256, and states continuity and reservoir
+eligibility honestly. The reflection file is always the exact complete model response. Only a
+structured response creates the deterministic maximum-320-character continuity summary and signed
+current inquiry. Failures and transport partials remain signed non-authored helper receipts and
+cannot populate authored projections. The helper owns only the `projection` sibling; runtime
+admission state is a distinct runtime-owned sibling invisible to the helper.
 
 Completion advances from the original cadence anchor to the first two-hour boundary strictly after
 completion. A distinct two-hour model-start floor still applies after any attempted generation, so
 long reflections neither drift the schedule by `completion + 2h` nor permit immediate retries.
 
-The installer, not the helper, creates the projection, scheduled-introspection, and patch-outbox directories as steward:`runtime` mode `0750`. The helper runs with `Group=runtime` and `UMask=0027`, emits only steward:`runtime` mode `0640` files there, and rejects ownership or mode drift. This gives runtime read access without granting it write access; the helper never creates, chmods, or chowns these shared directories.
+The installer, not the helper, creates the projection, scheduled-introspection, and patch-outbox directories as steward:`runtime` mode `0750`. The helper runs with `Group=runtime` and `UMask=0027`, emits only steward:`runtime` mode `0640` files there, and rejects ownership or mode drift. Separately, the configured inquiry-history root is steward-owned with runtime group; the helper enforces directories `0750` and signed segment/head/lock files `0640`, with no group write, while general helper state remains `0700`. This gives the sealed runtime viewer a fixed read-only history surface without exposing the remaining private steward state.
 
 ## Candidate patch body
 
@@ -137,10 +237,12 @@ configuration, operator state, or runtime secrets.
 
 ## Architecture-health note for large modules
 
-`candidate.rs`, `runner.rs`, `source.rs`, and `web.rs` intentionally exceed the repository's 1,000-line
+`candidate.rs`, `integration.rs`, `runner.rs`, `source.rs`, and `web.rs` intentionally exceed the repository's 1,000-line
 review signal. `candidate.rs` is one authenticated, crash-recoverable draft/edit/prepare/publish
 state machine; its line-hunk and edit-distance helpers remain adjacent to the exact limits they
-attest. `runner.rs` retains the gate/lock/provider/tool/attestation/finalization ordering as one
+attest. `integration.rs` keeps exact v7 decoding, cadence, permanent evidence fingerprints,
+provider-start ambiguity, and their state-machine tests together so retry authority cannot diverge.
+`runner.rs` retains the gate/lock/provider/tool/attestation/finalization ordering as one
 auditable crash-safety invariant; pure prompt construction and context accounting were extracted
 to `prompt.rs`. `source.rs` is the signed bootstrap/derived source lineage verifier and
 keeps visibility, inspect-only/mutable role classification, vendor/lock policy, and tree sealing

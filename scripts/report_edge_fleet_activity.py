@@ -13,7 +13,8 @@ import time
 import unicodedata
 from typing import Any
 
-SCHEMA = "astrid_edge_fleet_activity_report_v1"
+SCHEMA = "astrid_edge_fleet_activity_report_v2"
+EXPECTED_REMOTE_SCHEMA = "astrid_edge_activity_report_v4"
 PRESETS = {
     "avado-icp": {
         "avado": {
@@ -54,7 +55,7 @@ def read_host(
         viewer.extend(["--since", args.since])
     if args.until:
         viewer.extend(["--until", args.until])
-    for name in ("trace_id", "session_id", "chain_id"):
+    for name in ("trace_id", "session_id", "chain_id", "thread_id", "step_id"):
         value = getattr(args, name)
         if value:
             viewer.extend([f"--{name.replace('_', '-')}", value])
@@ -86,20 +87,27 @@ def read_host(
         timeout=30,
     )
     if result.returncode != 0:
+        detail = result.stderr.strip() or f"ssh exited {result.returncode}"
         return {
             "appliance": appliance,
             "clock_skew_ms": skew_ms,
-            "error": result.stderr.strip() or f"ssh exited {result.returncode}",
+            "error": f"pre-bootstrap/untrusted-report-surface: {detail}",
             "events": [],
         }
     try:
         report = json.loads(result.stdout)
-        events = report.get("events", [])
-    except json.JSONDecodeError as error:
+        if (
+            not isinstance(report, dict)
+            or report.get("schema") != EXPECTED_REMOTE_SCHEMA
+            or not isinstance(report.get("events"), list)
+        ):
+            raise ValueError("remote report schema is not the sealed activity-v4 contract")
+        events = report["events"]
+    except (json.JSONDecodeError, ValueError) as error:
         return {
             "appliance": appliance,
             "clock_skew_ms": skew_ms,
-            "error": f"invalid remote activity JSON: {error}",
+            "error": f"pre-bootstrap/untrusted-report-surface: {error}",
             "events": [],
         }
     values = []
@@ -167,6 +175,37 @@ def text_line(event: dict[str, Any]) -> str:
             f"tool={event.get('tool_name')} status={event.get('status')} "
             f"origin={event.get('origin')} "
             f"subject={short(event.get('query') or event.get('url'))}"
+        )
+    elif kind == "inquiry_step":
+        detail = (
+            f"step={short(event.get('step_id'), 42)} thread={short(event.get('thread_id'), 42)} "
+            f"op={event.get('thread_operation')} confidence={event.get('confidence')} "
+            f"decision={short(event.get('decision'))}"
+        )
+    elif kind == "evidence_arrival":
+        detail = (
+            f"evidence={short(event.get('evidence_id'), 48)} type={event.get('evidence_kind')} "
+            f"belief-eligible={str(event.get('eligible_for_belief_update')).lower()}"
+        )
+    elif kind == "belief_revision":
+        detail = (
+            f"belief={short(event.get('belief_id'), 48)} op={event.get('operation')} "
+            f"claim={short(event.get('claim'))}"
+        )
+    elif kind == "scheduled_reflection":
+        detail = (
+            "authored=true structured=false continuity=false "
+            f"response={short(event.get('response_sha256'), 32)}"
+        )
+    elif kind == "thread_transition":
+        detail = (
+            f"thread={short(event.get('thread_id'), 48)} transition={event.get('status')} "
+            f"step={short(event.get('step_id') or event.get('last_step_id'), 42)}"
+        )
+    elif kind == "semantic_admission":
+        detail = (
+            f"admission={short(event.get('admission_id'), 48)} status={event.get('status')} "
+            f"generation={short(event.get('reservoir_generation'), 40)}"
         )
     else:
         detail = f"status={event.get('status')} reason={short(event.get('reason'))}"
@@ -242,6 +281,8 @@ def main() -> int:
     parser.add_argument("--trace-id")
     parser.add_argument("--session-id")
     parser.add_argument("--chain-id")
+    parser.add_argument("--thread-id")
+    parser.add_argument("--step-id")
     parser.add_argument(
         "--kind",
         action="append",
@@ -252,6 +293,29 @@ def main() -> int:
             "web_request",
             "web_result",
             "recovery",
+            "session_retirement",
+            "thread",
+            "introspection_request",
+            "introspection_result",
+            "scheduled_introspection",
+            "self_change",
+            "perception",
+            "study",
+            "operator_inquiry",
+            "duplication_advisory",
+            "peer",
+            "spectral_rollup",
+            "spectral_receipt",
+            "tuning",
+            "inquiry_step",
+            "evidence_arrival",
+            "integrity_violation",
+            "belief_revision",
+            "thread_transition",
+            "semantic_admission",
+            "model_tool_request",
+            "scheduled_reflection",
+            "clean_source_review",
         ),
     )
     parser.add_argument("--follow", action="store_true")

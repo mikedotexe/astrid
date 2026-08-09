@@ -7,16 +7,18 @@ use serde_json::Value;
 use uuid::Uuid;
 
 use crate::attestation::HmacSigner;
+use crate::authored_transaction::SourceReviewOutcome;
 use crate::config::Config;
 use crate::context_provenance::ContextProvenance;
+use crate::inquiry::{InquiryClassification, ProjectionReceipt};
 use crate::util::{canonical_json, read_stable_regular, sha256};
 use crate::{Error, Result};
 
-const CONTINUITY_SCHEMA: &str = "astrid_edge_scheduled_introspection_continuity_v1";
-const STATE_SCHEMA: &str = "astrid_edge_scheduled_introspection_state_v1";
-const RECEIPT_SCHEMA: &str = "astrid_edge_scheduled_introspection_v1";
-const AUTHORSHIP_CORE_SCHEMA: &str = "astrid.edge.scheduled_authorship.attestation.v1";
-const AUTHORSHIP_ENVELOPE_SCHEMA: &str = "astrid.edge.scheduled_authorship.attestation_envelope.v1";
+const CONTINUITY_SCHEMA: &str = "astrid_edge_scheduled_introspection_continuity_v2";
+const STATE_SCHEMA: &str = "astrid_edge_scheduled_introspection_state_v2";
+const RECEIPT_SCHEMA: &str = "astrid_edge_scheduled_introspection_v2";
+const AUTHORSHIP_CORE_SCHEMA: &str = "astrid.edge.scheduled_authorship.attestation.v2";
+const AUTHORSHIP_ENVELOPE_SCHEMA: &str = "astrid.edge.scheduled_authorship.attestation_envelope.v2";
 
 fn projection_root(config: &Config) -> PathBuf {
     config
@@ -210,6 +212,8 @@ pub fn project_scheduled_contract(
     config: &Config,
     signer: &HmacSigner,
     due_nonce: &str,
+    trigger_kind: &str,
+    trigger_nonce: &str,
     started_at_unix_ms: u64,
     trace_id: &str,
     session_id: &str,
@@ -226,10 +230,29 @@ pub fn project_scheduled_contract(
     completed_at_unix_ms: u64,
     span_id: &str,
     context_provenance: &ContextProvenance,
+    inquiry: &InquiryClassification,
+    inquiry_projection: Option<&ProjectionReceipt>,
+    source_review: Option<&SourceReviewOutcome>,
 ) -> Result<()> {
     context_provenance.validate()?;
-    let next_due_at_unix_ms =
-        crate::schedule::prepare_completion_projection(config, due_nonce)?.saturating_mul(1_000);
+    if inquiry.source_review_requested() != source_review.is_some() {
+        return Err(Error::new(
+            "scheduled source-review projection does not match the authored request",
+        ));
+    }
+    let inquiry_step_sha256 = inquiry
+        .structured()
+        .map(|value| canonical_json(&value.step).map(|bytes| sha256(&bytes)))
+        .transpose()?;
+    let next_due_at_unix_ms = if trigger_kind == "scheduled" {
+        crate::schedule::prepare_completion_projection(config, due_nonce)?.saturating_mul(1_000)
+    } else if trigger_kind == "evidence_integration" {
+        crate::schedule::next_due_at(config)?.saturating_mul(1_000)
+    } else {
+        return Err(Error::new("scheduled projection trigger kind is invalid"));
+    };
+    let due_at_unix_ms = (trigger_kind == "scheduled").then(|| due_slot_millis(due_nonce));
+    let provenance = crate::inquiry::authored_provenance(trigger_kind);
     let context_provenance_sha256 = context_provenance.digest()?;
     let relative_reflection = reflection_path
         .strip_prefix(&config.workspace_root)
@@ -243,33 +266,48 @@ pub fn project_scheduled_contract(
         "span_id": span_id,
         "session_id": session_id
     });
-    let continuity = serde_json::json!({
-        "schema": CONTINUITY_SCHEMA,
-        "appliance_id": config.appliance_id,
-        "model": config.model,
-        "due_nonce": due_nonce,
-        "recorded_at_unix_ms": completed_at_unix_ms,
-        "summary": summary,
-        "summary_sha256": sha256(summary.as_bytes()),
-        "response_sha256": response_sha256,
-        "prompt_sha256": prompt_sha256,
-        "reflection_path": relative_reflection,
-        "trace": trace,
-        "provenance": "model_authored_runtime_scheduled",
-        "authority": "bounded_continuity_projection_not_voluntary_journal",
-        "context_provenance": context_provenance,
-        "context_provenance_sha256": context_provenance_sha256,
-        "candidate_authoring_eligible": context_provenance.candidate_authoring_eligible(),
-        "reflection_lane": context_provenance.reflection_lane(),
-        "taint_causes": context_provenance.taint_causes()
-    });
     let projection = projection_root(config);
-    let continuity_bytes = canonical_json(&continuity)?;
-    workspace_write(
-        config,
-        &projection.join("continuity.json"),
-        &continuity_bytes,
-    )?;
+    let continuity_bytes = if inquiry.is_structured() {
+        let inquiry_projection = inquiry_projection.ok_or_else(|| {
+            Error::new("structured inquiry is missing its signed current projection")
+        })?;
+        let continuity = serde_json::json!({
+            "schema": CONTINUITY_SCHEMA,
+            "appliance_id": config.appliance_id,
+            "model": config.model,
+            "trigger_kind": trigger_kind,
+            "trigger_nonce": trigger_nonce,
+            "due_nonce": due_nonce,
+            "recorded_at_unix_ms": completed_at_unix_ms,
+            "summary": summary,
+            "summary_sha256": sha256(summary.as_bytes()),
+            "response_sha256": response_sha256,
+            "prompt_sha256": prompt_sha256,
+            "reflection_path": relative_reflection,
+            "signed_entry_id": inquiry_projection.signed_entry_id,
+            "step_id": inquiry_projection.step_id,
+            "admission_id": inquiry_projection.admission_id,
+            "inquiry_current_projection_sha256": inquiry_projection.sha256,
+            "trace": trace,
+            "provenance": provenance,
+            "authority": "bounded_signed_inquiry_continuity_projection_not_code_or_action_authority",
+            "context_provenance": context_provenance,
+            "context_provenance_sha256": context_provenance_sha256,
+            "candidate_authoring_eligible": false,
+            "reflection_lane": context_provenance.reflection_lane(),
+            "taint_causes": context_provenance.taint_causes()
+        });
+        let bytes = canonical_json(&continuity)?;
+        workspace_write(config, &projection.join("continuity.json"), &bytes)?;
+        Some(bytes)
+    } else {
+        if inquiry_projection.is_some() {
+            return Err(Error::new(
+                "unstructured inquiry unexpectedly carries a current projection",
+            ));
+        }
+        None
+    };
     let state_path = projection.join("state.json");
     let previous = if state_path.exists() {
         serde_json::from_slice::<Value>(&read_stable_regular(&state_path, 128 * 1024)?)?
@@ -278,7 +316,7 @@ pub fn project_scheduled_contract(
     };
     let same_transaction = previous.get("due_nonce").and_then(Value::as_str) == Some(due_nonce)
         && previous.get("last_response_sha256").and_then(Value::as_str) == Some(response_sha256)
-        && previous.get("last_status").and_then(Value::as_str) == Some("authored_completed");
+        && previous.get("last_status").and_then(Value::as_str) == Some(inquiry.status.as_str());
     let attempts = previous
         .get("total_attempts")
         .and_then(Value::as_u64)
@@ -289,17 +327,29 @@ pub fn project_scheduled_contract(
         .and_then(Value::as_u64)
         .unwrap_or(0)
         .saturating_add(u64::from(!same_transaction));
+    let structured = previous
+        .get("total_structured")
+        .and_then(Value::as_u64)
+        .unwrap_or(0)
+        .saturating_add(u64::from(!same_transaction && inquiry.is_structured()));
+    let unstructured = previous
+        .get("total_unstructured")
+        .and_then(Value::as_u64)
+        .unwrap_or(0)
+        .saturating_add(u64::from(!same_transaction && !inquiry.is_structured()));
     let state = serde_json::json!({
         "schema": STATE_SCHEMA,
         "next_due_at_unix_ms": next_due_at_unix_ms,
         "last_started_at_unix_ms": started_at_unix_ms,
         "last_completed_at_unix_ms": completed_at_unix_ms,
-        "last_status": "authored_completed",
+        "last_status": inquiry.status,
         "last_trace": trace,
         "last_response_sha256": response_sha256,
         "last_artifact_path": relative_reflection,
         "total_attempts": attempts,
         "total_authored": authored,
+        "total_structured": structured,
+        "total_unstructured": unstructured,
         "consecutive_failures": 0,
         "running": false,
         "due_nonce": due_nonce,
@@ -311,23 +361,66 @@ pub fn project_scheduled_contract(
     });
     let state_bytes = canonical_json(&state)?;
     workspace_write(config, &state_path, &state_bytes)?;
+    let source_review_projection = source_review.map(|review| {
+        let trace = match (
+            review.trace_id.as_deref(),
+            review.turn_id.as_deref(),
+            review.span_id.as_deref(),
+            review.session_id.as_deref(),
+        ) {
+            (Some(trace_id), Some(turn_id), Some(span_id), Some(session_id)) => {
+                Some(serde_json::json!({
+                    "schema_version": 1,
+                    "trace_id": trace_id,
+                    "turn_id": turn_id,
+                    "span_id": span_id,
+                    "session_id": session_id
+                }))
+            },
+            _ => None,
+        };
+        serde_json::json!({
+            "status": review.status,
+            "trace": trace,
+            "response_sha256": review.response_sha256,
+            "prompt_sha256": review.prompt_sha256,
+            "candidate_attested": review.status == "candidate_attested",
+            "failure_class": review.failure_class,
+            "authority": review.authority
+        })
+    });
     let receipt = serde_json::json!({
         "schema": RECEIPT_SCHEMA,
         "appliance": config.appliance_id,
         "due_nonce": due_nonce,
-        "due_at_unix_ms": due_slot_millis(due_nonce),
+        "due_at_unix_ms": due_at_unix_ms,
         "started_at_unix_ms": started_at_unix_ms,
         "completed_at_unix_ms": completed_at_unix_ms,
-        "status": "authored_completed",
-        "provenance": "model_authored_runtime_scheduled",
+        "status": inquiry.status,
+        "trigger_kind": trigger_kind,
+        "trigger_nonce": trigger_nonce,
+        "inquiry_status": inquiry.status,
+        "inquiry_failure_class": inquiry.failure_class,
+        "provenance": provenance,
         "model_id": config.model,
         "prompt_sha256": prompt_sha256,
         "prompt_chars": prompt_chars,
         "response_sha256": response_sha256,
         "reflection_path": relative_reflection,
         "continuity_admitted": false,
-        "continuity_projection_written": true,
-        "continuity_admission_status": "pending_runtime_verification",
+        "signed_entry_id": inquiry_projection.map(|value| &value.signed_entry_id),
+        "step_id": inquiry_projection.map(|value| &value.step_id),
+        "admission_id": inquiry_projection.map(|value| &value.admission_id),
+        "inquiry_step_sha256": inquiry_step_sha256,
+        "inquiry_declaration_sha256": inquiry.structured().map(|value| value.declaration_sha256.clone()),
+        "inquiry_current_projection_sha256": inquiry_projection.map(|value| &value.sha256),
+        "continuity_projection_sha256": continuity_bytes.as_ref().map(|bytes| sha256(bytes)),
+        "continuity_projection_written": continuity_bytes.is_some(),
+        "continuity_admission_status": if inquiry.is_structured() { "pending_runtime_verification" } else { "not_admitted_model_authored_unstructured" },
+        "reservoir_admission_eligible": inquiry.is_structured(),
+        "reservoir_admission_status": if inquiry.is_structured() { "pending_runtime_ack" } else { "not_eligible_model_authored_unstructured" },
+        "source_review_relation": inquiry.structured().filter(|value| value.source_review.requested()).map(|_| "separate_clean_source_review"),
+        "source_review": source_review_projection,
         "introspection_tool": "immutable_native_bounded_tool_loop",
         "introspection_result_sha256": sha256(summary.as_bytes()),
         "candidate_id": candidate_id,
@@ -341,7 +434,11 @@ pub fn project_scheduled_contract(
         "candidate_authoring_eligible": context_provenance.candidate_authoring_eligible(),
         "reflection_lane": context_provenance.reflection_lane(),
         "taint_causes": context_provenance.taint_causes(),
-        "authority": "scheduler_controls_cadence_model_authors_content_immutable_steward_attests_candidates"
+        "authority": if trigger_kind == "scheduled" {
+            "scheduler_controls_cadence_model_authors_content_immutable_steward_attests_candidates"
+        } else {
+            "evidence_scheduler_controls_cadence_model_authors_interpretation_no_source_or_candidate_authority"
+        }
     });
     let receipt_bytes = canonical_json(&receipt)?;
     let mut line = receipt_bytes.clone();
@@ -357,13 +454,17 @@ pub fn project_scheduled_contract(
         config,
         signer,
         due_nonce,
+        trigger_kind,
+        trigger_nonce,
         started_at_unix_ms,
         completed_at_unix_ms,
         &trace,
         prompt_sha256,
         response_sha256,
         &relative_reflection,
-        &continuity_bytes,
+        inquiry,
+        inquiry_projection,
+        continuity_bytes.as_deref(),
         &state_bytes,
         &receipt_bytes,
         &context_provenance_sha256,
@@ -377,13 +478,17 @@ fn write_authorship_attestation(
     config: &Config,
     signer: &HmacSigner,
     due_nonce: &str,
+    trigger_kind: &str,
+    trigger_nonce: &str,
     started_at_unix_ms: u64,
     completed_at_unix_ms: u64,
     trace: &Value,
     prompt_sha256: &str,
     response_sha256: &str,
     relative_reflection: &str,
-    continuity_bytes: &[u8],
+    inquiry: &InquiryClassification,
+    inquiry_projection: Option<&ProjectionReceipt>,
+    continuity_bytes: Option<&[u8]>,
     state_bytes: &[u8],
     receipt_bytes: &[u8],
     context_provenance_sha256: &str,
@@ -396,31 +501,52 @@ fn write_authorship_attestation(
     let metadata = read_stable_regular(&reflection_metadata, 16 * 1_024)?;
     if sha256(&response) != response_sha256 {
         return Err(Error::new(
-            "scheduled reflection changed before immutable authorship attestation",
+            "authored reflection changed before immutable authorship attestation",
+        ));
+    }
+    let structured = inquiry.structured();
+    let inquiry_step_sha256 = structured
+        .map(|value| canonical_json(&value.step).map(|bytes| sha256(&bytes)))
+        .transpose()?;
+    if inquiry.is_structured() != inquiry_projection.is_some()
+        || inquiry.is_structured() != continuity_bytes.is_some()
+        || inquiry_projection
+            .is_some_and(|projection| projection.sha256 != sha256(&projection.bytes))
+    {
+        return Err(Error::new(
+            "authorship attestation has a partial inquiry binding",
         ));
     }
     let core = serde_json::json!({
         "schema": AUTHORSHIP_CORE_SCHEMA,
         "appliance_id": config.appliance_id,
         "due_nonce": due_nonce,
-        "due_at_unix_ms": due_slot_millis(due_nonce),
+        "trigger_kind": trigger_kind,
+        "trigger_nonce": trigger_nonce,
+        "due_at_unix_ms": (trigger_kind == "scheduled").then(|| due_slot_millis(due_nonce)),
         "started_at_unix_ms": started_at_unix_ms,
         "completed_at_unix_ms": completed_at_unix_ms,
-        "terminal_status": "authored_completed",
+        "terminal_status": inquiry.status,
         "model": config.model,
         "prompt_sha256": prompt_sha256,
         "response_sha256": response_sha256,
         "reflection_path": relative_reflection,
         "reflection_sha256": sha256(&response),
         "reflection_metadata_sha256": sha256(&metadata),
-        "continuity_projection_sha256": sha256(continuity_bytes),
+        "continuity_projection_sha256": continuity_bytes.map(sha256),
+        "inquiry_current_projection_sha256": inquiry_projection.map(|value| value.sha256.clone()),
+        "signed_entry_id": inquiry_projection.map(|value| value.signed_entry_id.clone()),
+        "step_id": inquiry_projection.map(|value| value.step_id.clone()),
+        "admission_id": inquiry_projection.map(|value| value.admission_id.clone()),
+        "inquiry_step_sha256": inquiry_step_sha256,
+        "inquiry_declaration_sha256": structured.map(|value| value.declaration_sha256.clone()),
         "state_projection_sha256": sha256(state_bytes),
         "terminal_receipt_sha256": sha256(receipt_bytes),
         "context_provenance_sha256": context_provenance_sha256,
         "candidate_id": candidate_id,
         "candidate_digest": candidate_digest,
         "trace": trace,
-        "provenance": "model_authored_runtime_scheduled",
+        "provenance": crate::inquiry::authored_provenance(trigger_kind),
         "authority": "immutable_steward_signed_exact_authorship_join"
     });
     let unsigned = serde_json::json!({

@@ -1,7 +1,7 @@
 use std::collections::BTreeMap;
 use std::path::Path;
 
-use ed25519_dalek::{Signer as _, SigningKey};
+use ed25519_dalek::{Signature, Signer as _, SigningKey, Verifier as _};
 use serde::Serialize;
 use serde_json::Value;
 use sha2::{Digest, Sha256};
@@ -18,8 +18,8 @@ pub const INTENT_SCHEMA: &str = "astrid.edge_self_change.scheduled_model_intent.
 pub const ENVELOPE_SCHEMA: &str = "astrid.edge_self_change.intent_attestor_envelope.v1";
 pub const COMPLETED_ENVELOPE_SCHEMA: &str = "astrid.edge_self_change.completed_intent_envelope.v1";
 const COMPLETION_ENVELOPE_SCHEMA: &str =
-    "astrid.edge.steward_helper.authored_completion_envelope.v2";
-const COMPLETION_SCHEMA: &str = "astrid.edge.steward_helper.authored_completion.v2";
+    "astrid.edge.steward_helper.authored_completion_envelope.v4";
+const COMPLETION_SCHEMA: &str = "astrid.edge.steward_helper.authored_completion.v4";
 
 #[derive(Debug, Clone)]
 pub struct HmacSigner {
@@ -76,6 +76,21 @@ impl HmacSigner {
         )
     }
 
+    /// Verify one scheduled-authorship signature using only the derived public
+    /// half. Ledger replay and current-projection recovery use the same check
+    /// that the mutable runtime performs with the exported verifying key.
+    #[must_use]
+    pub fn verify_scheduled_authorship(&self, message: &[u8], encoded: &str) -> bool {
+        let Some(bytes) = decode_lower_hex::<64>(encoded) else {
+            return false;
+        };
+        let signature = Signature::from_bytes(&bytes);
+        self.scheduled_authorship_signing_key()
+            .verifying_key()
+            .verify(message, &signature)
+            .is_ok()
+    }
+
     /// Stable public identifier for scheduled-authorship attestations.
     #[must_use]
     pub fn scheduled_authorship_key_id(&self) -> String {
@@ -104,6 +119,28 @@ fn lower_hex(bytes: &[u8]) -> String {
             encoded
         },
     )
+}
+
+fn decode_lower_hex<const N: usize>(value: &str) -> Option<[u8; N]> {
+    if value.len() != N.saturating_mul(2)
+        || !value
+            .bytes()
+            .all(|byte| matches!(byte, b'0'..=b'9' | b'a'..=b'f'))
+    {
+        return None;
+    }
+    let mut output = [0_u8; N];
+    for (index, pair) in value.as_bytes().chunks_exact(2).enumerate() {
+        let digit = |byte: u8| match byte {
+            b'0'..=b'9' => byte.checked_sub(b'0'),
+            b'a'..=b'f' => byte.checked_sub(b'a')?.checked_add(10),
+            _ => None,
+        };
+        output[index] = digit(pair[0])?
+            .checked_mul(16)?
+            .checked_add(digit(pair[1])?)?;
+    }
+    Some(output)
 }
 
 #[must_use]
@@ -347,12 +384,15 @@ fn exact_completion_core(completion_core_value: &Value) -> Result<&serde_json::M
         "candidate_publication",
         "completed_at_unix_ms",
         "due_nonce",
+        "inquiry_status",
         "provenance",
         "response_sha256",
         "schema",
         "session_id",
         "status",
         "trace_id",
+        "trigger_kind",
+        "trigger_nonce",
         "transaction_sha256",
         "turn_id",
     ];
@@ -361,28 +401,40 @@ fn exact_completion_core(completion_core_value: &Value) -> Result<&serde_json::M
         "candidate_publication",
         "completed_at_unix_ms",
         "due_nonce",
+        "inquiry_status",
         "provenance",
         "response_sha256",
         "schema",
         "session_id",
+        "source_review_session_id",
         "source_review_response_sha256",
+        "source_review_span_id",
         "source_review_status",
+        "source_review_trace_id",
         "source_review_turn_id",
         "status",
         "trace_id",
+        "trigger_kind",
+        "trigger_nonce",
         "transaction_sha256",
         "turn_id",
     ];
     let has_source_review_fields = [
+        "source_review_session_id",
         "source_review_response_sha256",
+        "source_review_span_id",
         "source_review_status",
+        "source_review_trace_id",
         "source_review_turn_id",
     ]
     .iter()
     .all(|field| completion_core_value.get(field).is_some());
     let has_partial_source_review_fields = [
+        "source_review_session_id",
         "source_review_response_sha256",
+        "source_review_span_id",
         "source_review_status",
+        "source_review_trace_id",
         "source_review_turn_id",
     ]
     .iter()
@@ -411,9 +463,13 @@ fn validate_completion_core(
     let has_source_review_fields = core.contains_key("source_review_status");
     let completion_core_sha256 = sha256(&canonical_json(completion_core_value)?);
     if string_field(core, "schema", "completion core")? != COMPLETION_SCHEMA
-        || string_field(core, "status", "completion core")? != "authored_completed"
+        || string_field(core, "status", "completion core")? != "model_authored_structured"
+        || string_field(core, "inquiry_status", "completion core")? != "model_authored_structured"
         || string_field(core, "provenance", "completion core")?
             != "model_authored_runtime_scheduled"
+        || string_field(core, "trigger_kind", "completion core")? != "scheduled"
+        || string_field(core, "trigger_nonce", "completion core")?
+            != string_field(core, "due_nonce", "completion core")?
         || core
             .get("completed_at_unix_ms")
             .and_then(Value::as_u64)
@@ -496,8 +552,8 @@ fn validate_authorship_joins(
 ) -> Result<()> {
     for (completion_field, intent_field) in [
         ("appliance_id", "appliance_id"),
-        ("trace_id", "trace_id"),
-        ("session_id", "session_id"),
+        ("source_review_trace_id", "trace_id"),
+        ("source_review_session_id", "session_id"),
         ("source_review_turn_id", "turn_id"),
         ("source_review_response_sha256", "response_sha256"),
     ] {

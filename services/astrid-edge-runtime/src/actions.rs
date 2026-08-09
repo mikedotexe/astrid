@@ -110,6 +110,7 @@ enum SovereignAction {
         adoption_id: String,
         reason: String,
     },
+    Thread(inquiry::ThreadAction),
     Synthesize {
         evidence_ids: Vec<String>,
         claim: String,
@@ -507,6 +508,7 @@ async fn execute_candidate_with_studies(
         parsed.as_ref(),
         declaration.as_deref(),
         local_safe_fallback,
+        local_format_repair,
         action_trace.as_ref(),
         &response_sha256,
         snapshot,
@@ -552,7 +554,7 @@ async fn execute_candidate_with_studies(
     };
     let declared_next = declaration;
     let receipt = ActionReceipt {
-        schema: "astrid_edge_action_receipt_v4",
+        schema: "astrid_edge_action_receipt_v5",
         recorded_at_unix_ms: timestamp,
         session_id: candidate.session_id.clone(),
         response_sha256: response_sha256.clone(),
@@ -906,13 +908,14 @@ fn open_private_action_append(path: &Path) -> anyhow::Result<fs::File> {
     Ok(file)
 }
 
-#[allow(clippy::too_many_arguments)] // One audited Action execution boundary.
+#[allow(clippy::too_many_arguments, clippy::too_many_lines)] // One audited Action execution boundary.
 async fn execute_interpreted_action(
     config: &Config,
     timestamp: u64,
     action: Option<&SovereignAction>,
     declaration: Option<&str>,
     local_safe_fallback: bool,
+    local_format_repair: bool,
     trace: Option<&IpcTraceContextV1>,
     response_sha256: &str,
     snapshot: &ReservoirSnapshot,
@@ -1014,7 +1017,19 @@ async fn execute_interpreted_action(
             | SovereignAction::AdoptTuning { .. }
             | SovereignAction::RevertTuning { .. }),
         ) => execute_tuning_action(action, tuning_tx, tuning_provenance).await,
-        _ => execute_action(config, timestamp, action, declaration, local_safe_fallback),
+        _ => execute_action(
+            config,
+            timestamp,
+            action,
+            declaration,
+            local_safe_fallback,
+            local_format_repair,
+            !local_safe_fallback
+                && !local_format_repair
+                && trace.is_some_and(IpcTraceContextV1::is_supported)
+                && response_sha256.len() == 64
+                && response_sha256.bytes().all(|byte| byte.is_ascii_hexdigit()),
+        ),
     }
 }
 
@@ -1144,6 +1159,8 @@ fn execute_action(
     action: Option<&SovereignAction>,
     declaration: Option<&str>,
     local_safe_fallback: bool,
+    local_format_repair: bool,
+    exact_inquiry_authority: bool,
 ) -> anyhow::Result<ActionExecution> {
     let (status, outcome, artifact_path) = match action {
         Some(SovereignAction::Listen) if local_safe_fallback => {
@@ -1201,6 +1218,21 @@ fn execute_action(
             | SovereignAction::AdoptTuning { .. }
             | SovereignAction::RevertTuning { .. },
         ) => anyhow::bail!("reservoir tuning Actions must execute through the private manager"),
+        Some(SovereignAction::Thread(_))
+            if local_safe_fallback || local_format_repair || !exact_inquiry_authority =>
+        {
+            (
+                "declined",
+                "inquiry_transition_requires_exact_unrepaired_traced_authorship",
+                None,
+            )
+        },
+        Some(SovereignAction::Thread(action)) => {
+            match crate::autonomy::validate_inquiry_action(config, action, timestamp) {
+                Ok(()) => ("executed", "inquiry_thread_transition_accepted", None),
+                Err(reason) => ("declined", reason, None),
+            }
+        },
         Some(SovereignAction::Synthesize {
             evidence_ids,
             claim,
@@ -1430,6 +1462,9 @@ fn parse_action(declaration: &str) -> Option<SovereignAction> {
                 }
             })
         },
+        "OPEN_THREAD" | "BRANCH_THREAD" | "RESUME_THREAD" | "PAUSE_THREAD" | "CLOSE_THREAD"
+        | "UPDATE_BELIEF" => inquiry::parse_thread_action(&verb.to_ascii_uppercase(), argument)
+            .map(SovereignAction::Thread),
         "SYNTHESIZE" => parse_synthesis(argument),
         "SHARE" => parse_share(argument),
         "PLAN" => bounded_argument(argument).map(SovereignAction::Plan),
@@ -1516,6 +1551,12 @@ fn action_validation_reason(declaration: &str) -> Option<&'static str> {
             | "VALIDATE_TUNING"
             | "ADOPT_TUNING"
             | "REVERT_TUNING"
+            | "OPEN_THREAD"
+            | "BRANCH_THREAD"
+            | "RESUME_THREAD"
+            | "PAUSE_THREAD"
+            | "CLOSE_THREAD"
+            | "UPDATE_BELIEF"
             | "SYNTHESIZE"
             | "SHARE"
             | "PLAN"
@@ -1551,6 +1592,14 @@ fn action_validation_reason(declaration: &str) -> Option<&'static str> {
         "VALIDATE_TUNING" => Some("validate_tuning_requires_candidate_id_double_colon_question"),
         "ADOPT_TUNING" => Some("adopt_tuning_requires_candidate_id_double_colon_reason"),
         "REVERT_TUNING" => Some("revert_tuning_requires_adoption_id_double_colon_reason"),
+        "OPEN_THREAD" => Some("open_thread_requires_a_bounded_question"),
+        "BRANCH_THREAD" => Some("branch_thread_requires_thread_id_double_colon_question"),
+        "RESUME_THREAD" => Some("resume_thread_requires_an_exact_thread_id"),
+        "PAUSE_THREAD" => Some("pause_thread_requires_thread_id_double_colon_reason"),
+        "CLOSE_THREAD" => Some("close_thread_requires_thread_id_double_colon_conclusion"),
+        "UPDATE_BELIEF" => Some(
+            "update_belief_requires_belief_id_with_eligible_evidence_ids_double_colon_status_double_colon_claim",
+        ),
         "SYNTHESIZE" => Some("synthesis_requires_one_to_six_evidence_ids_double_colon_claim"),
         "SHARE" => Some("share_requires_shareable_artifact_id_double_colon_note"),
         "REVISE" => {
@@ -2252,6 +2301,7 @@ mod tests {
     use crate::{
         actions::ActionCandidate,
         config::{AutonomyPromptProfile, Config},
+        inquiry,
         reservoir::ReservoirSnapshot,
         trace::IpcTraceContextV1,
     };
@@ -2401,6 +2451,38 @@ mod tests {
             ))
         );
         assert!(matches!(
+            parse_action("OPEN_THREAD What remains unexplained?"),
+            Some(SovereignAction::Thread(inquiry::ThreadAction::Open { .. }))
+        ));
+        assert!(matches!(
+            parse_action("BRANCH_THREAD thread-1 :: Test the narrower mechanism"),
+            Some(SovereignAction::Thread(
+                inquiry::ThreadAction::Branch { .. }
+            ))
+        ));
+        assert!(matches!(
+            parse_action("RESUME_THREAD thread-1"),
+            Some(SovereignAction::Thread(
+                inquiry::ThreadAction::Resume { .. }
+            ))
+        ));
+        assert!(matches!(
+            parse_action("PAUSE_THREAD thread-1 :: Await a completed study"),
+            Some(SovereignAction::Thread(inquiry::ThreadAction::Pause { .. }))
+        ));
+        assert!(matches!(
+            parse_action("CLOSE_THREAD thread-1 :: The bounded question is resolved"),
+            Some(SovereignAction::Thread(inquiry::ThreadAction::Close { .. }))
+        ));
+        assert!(matches!(
+            parse_action(
+                "UPDATE_BELIEF belief-1 WITH source_1.md,study_2.md :: revised :: Narrower claim"
+            ),
+            Some(SovereignAction::Thread(
+                inquiry::ThreadAction::UpdateBelief { .. }
+            ))
+        ));
+        assert!(matches!(
             parse_action(
                 "SYNTHESIZE source_1.md,measurement_2.md :: The evidence supports a bounded association."
             ),
@@ -2452,6 +2534,11 @@ mod tests {
         assert_eq!(parse_action("READ_SOURCE 0"), None);
         assert_eq!(parse_action("READ_SOURCE 4"), None);
         assert_eq!(parse_action("READ_SOURCE https://example.com"), None);
+        assert_eq!(parse_action("RESUME_THREAD ../outside"), None);
+        assert_eq!(
+            parse_action("UPDATE_BELIEF belief-1 WITH search/result :: supported :: nope"),
+            None
+        );
         assert_eq!(
             parse_action(&format!(
                 "JOURNAL {}",
@@ -2722,12 +2809,49 @@ mod tests {
         .await
         .unwrap();
         let receipt: serde_json::Value = serde_json::from_str(&result.receipt_json).unwrap();
+        assert_eq!(receipt["schema"], "astrid_edge_action_receipt_v5");
         assert_eq!(
             receipt["decision_source"],
             "local_format_repair_preserved_astrid_declaration"
         );
         assert_eq!(receipt["status"], "executed");
         assert_eq!(receipt["outcome"], "notice_written");
+        fs::remove_dir_all(workspace).unwrap();
+    }
+
+    #[tokio::test]
+    async fn formatting_repair_cannot_change_inquiry_lifecycle() {
+        let workspace = std::env::temp_dir().join(format!(
+            "astrid-edge-thread-format-repair-{}",
+            super::unix_millis()
+        ));
+        let mut config = test_config(&workspace);
+        config.autonomy_enabled = false;
+        config.prepare_workspace().unwrap();
+        let result = execute_candidate(
+            &config,
+            &ActionCandidate {
+                session_id: "thread-format-repair".to_string(),
+                response: format!(
+                    "A bounded observation.\n\n{FORMAT_NEXT_REPAIR_MARKER}\n\
+                     NEXT: OPEN_THREAD should repaired syntax create authority?"
+                ),
+                trace: None,
+                tuning_authority_turn_id: None,
+                tuning_authority_source: None,
+                maintenance_permit: None,
+            },
+            &ReservoirSnapshot::default(),
+        )
+        .await
+        .unwrap();
+        let receipt: serde_json::Value = serde_json::from_str(&result.receipt_json).unwrap();
+        assert_eq!(receipt["status"], "declined");
+        assert_eq!(
+            receipt["outcome"],
+            "inquiry_transition_requires_exact_unrepaired_traced_authorship"
+        );
+        assert!(!workspace.join("autonomous/thread_state.json").exists());
         fs::remove_dir_all(workspace).unwrap();
     }
 

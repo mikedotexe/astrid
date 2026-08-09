@@ -169,6 +169,7 @@ INSPECT_ONLY_SCRIPT_NAMES = frozenset(
         "build_edge_self_change_source_bundle.py",
         "build_edge_self_change_supervisor_zipapp.py",
         "build_edge_self_change_toolchain_bundle.py",
+        "astrid_train.py",
         "edge_audio_feeder.py",
         "edge_hindsight.py",
         "edge_self_change_supervisor.py",
@@ -190,7 +191,12 @@ MUTABLE_LIVE_REPORTS = frozenset(
     {"astrid_at_a_glance.py", "report_edge_activity.py", "report_edge_appliance.py"}
 )
 BUILD_REQUIRED_REPORT_TESTS = frozenset(
-    {"test_edge_hindsight.py", "test_report_edge_activity.py", "test_report_edge_appliance.py"}
+    {
+        "test_astrid_train.py",
+        "test_edge_hindsight.py",
+        "test_report_edge_activity.py",
+        "test_report_edge_appliance.py",
+    }
 )
 
 class BundleError(RuntimeError):

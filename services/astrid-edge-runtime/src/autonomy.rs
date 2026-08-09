@@ -44,7 +44,8 @@ const AUTONOMY_SCHEMA: &str = "astrid_edge_autonomy_state_v3";
 const LEGACY_AUTONOMY_V2_SCHEMA: &str = "astrid_edge_autonomy_state_v2";
 const LEGACY_AUTONOMY_V1_SCHEMA: &str = "astrid_edge_autonomy_state_v1";
 const RUN_SCHEMA: &str = "astrid_edge_autonomy_run_v4";
-const THREAD_STATE_SCHEMA: &str = "astrid_edge_thread_state_v6";
+const THREAD_STATE_SCHEMA: &str = "astrid_edge_thread_state_v7";
+const LEGACY_THREAD_STATE_V6_SCHEMA: &str = "astrid_edge_thread_state_v6";
 const LEGACY_THREAD_STATE_V5_SCHEMA: &str = "astrid_edge_thread_state_v5";
 const LEGACY_THREAD_STATE_V4_SCHEMA: &str = "astrid_edge_thread_state_v4";
 const LEGACY_THREAD_STATE_V3_SCHEMA: &str = "astrid_edge_thread_state_v3";
@@ -60,6 +61,7 @@ const MAX_THREAD_EVIDENCE: usize = 12;
 const MAX_THREAD_FINDINGS: usize = 4;
 const MAX_THREAD_OPEN_QUESTIONS: usize = 4;
 const MAX_THREAD_NEXT_OPTIONS: usize = 4;
+const MAX_RECENT_INQUIRY_ADMISSION_EVENTS: usize = 16;
 const HEADLESS_TRACE_RECEIPT_PREFIX: &str = "[astrid-headless-trace] ";
 const HEADLESS_PROVENANCE_RECEIPT_PREFIX: &str = "[astrid-headless-provenance] ";
 const HEADLESS_PROVIDER_METRICS_RECEIPT_PREFIX: &str = "[astrid-headless-provider-metrics] ";
@@ -182,15 +184,98 @@ struct ThreadState {
     event: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     trace: Option<IpcTraceContextV1>,
+    /// v7 keeps lifecycle state separate from the legacy one-thread compatibility
+    /// projection above. Only active/open/paused threads live here.
+    threads: Vec<InquiryThreadRecord>,
+    recent_closed_threads: Vec<InquiryThreadRecord>,
+    beliefs: Vec<BeliefRevisionRecord>,
+    pending_evidence_ids: Vec<String>,
+    /// Last semantically admitted inquiry step. This cursor never advances for
+    /// a signed entry whose thread/evidence/belief operation was rejected.
+    last_admitted_inquiry_step_id: Option<String>,
+    last_inquiry_ledger_hash: Option<String>,
+    /// Last cryptographically verified signed-ledger entry, whether or not its
+    /// requested semantics were admitted into working continuity.
+    last_verified_inquiry_step_id: Option<String>,
+    last_verified_inquiry_ledger_hash: Option<String>,
+    last_verified_inquiry_segment: Option<u64>,
+    last_verified_inquiry_entry_index: Option<u64>,
+    last_verified_inquiry_outcome: Option<String>,
+    last_verified_inquiry_rejection_reason: Option<String>,
+    verified_inquiry_gap_count: u64,
+    recent_inquiry_admission_events: Vec<InquiryAdmissionEvent>,
+    thread_budget_utc_day: u64,
+    thread_starts_today: u32,
+    legacy_unscoped_archived: Vec<LegacyThreadArchive>,
+}
+
+#[derive(Debug, Clone, Default, Deserialize, Serialize)]
+#[serde(default)]
+struct InquiryThreadRecord {
+    thread_id: String,
+    parent_thread_id: Option<String>,
+    status: String,
+    question: String,
+    opened_at_unix_ms: u64,
+    updated_at_unix_ms: u64,
+    last_step_id: Option<String>,
+    last_action_response_sha256: Option<String>,
+    disposition_note: Option<String>,
+}
+
+#[derive(Debug, Clone, Default, Deserialize, Serialize)]
+#[serde(default)]
+struct BeliefRevisionRecord {
+    revision_id: String,
+    belief_id: String,
+    thread_id: Option<String>,
+    operation: String,
+    claim: String,
+    evidence_ids: Vec<String>,
+    prior_revision_id: Option<String>,
+    recorded_at_unix_ms: u64,
+    response_sha256: String,
+    source: String,
+}
+
+#[derive(Debug, Clone, Default, Deserialize, Serialize)]
+#[serde(default)]
+struct InquiryAdmissionEvent {
+    step_id: String,
+    entry_hash: String,
+    predecessor_hash: Option<String>,
+    ledger_segment: u64,
+    ledger_entry_index: u64,
+    outcome: String,
+    reason: Option<String>,
+    verified_gap: bool,
+    gap_from_segment: Option<u64>,
+    gap_from_entry_index: Option<u64>,
+    gap_from_entry_hash: Option<String>,
+    recorded_at_unix_ms: u64,
+}
+
+#[derive(Debug, Clone, Default, Deserialize, Serialize)]
+#[serde(default)]
+struct LegacyThreadArchive {
+    source_schema: String,
+    legacy_thread_id: Option<String>,
+    legacy_status: String,
+    status: String,
+    question: Option<String>,
+    revision: u64,
+    response_sha256: Option<String>,
+    projection_sha256: String,
 }
 
 /// A bounded provenance pointer into an artifact or completed tool receipt.
 /// It deliberately contains metadata and hashes, never fetched bodies or
 /// request headers, so the thread can resume research without becoming a
 /// second transcript or an instruction-injection surface.
-#[derive(Debug, Clone, Default, Deserialize, Serialize)]
+#[derive(Debug, Clone, Default, Deserialize, Serialize, PartialEq, Eq)]
 #[serde(default)]
 struct ThreadEvidence {
+    evidence_id: String,
     kind: String,
     epistemic_status: String,
     reference: String,
@@ -198,7 +283,18 @@ struct ThreadEvidence {
     source: String,
     captured_at_unix_ms: u64,
     sha256: Option<String>,
+    eligible_for_belief_update: bool,
+    /// Exact causal trace carried by the producing Action/tool/result receipt.
+    /// Legacy or otherwise unbound evidence leaves this absent; the enclosing
+    /// thread snapshot trace must never be substituted for it.
+    trace: Option<IpcTraceContextV1>,
+    /// Exact authored response that caused the evidence-producing Action.
+    /// Machine evidence without an authenticated Action parent leaves this
+    /// absent rather than inferring parentage from time or nearby activity.
+    parent_response_sha256: Option<String>,
 }
+
+static THREAD_STATE_MUTEX: std::sync::Mutex<()> = std::sync::Mutex::new(());
 
 #[derive(Debug, Clone)]
 struct VerifiedTuningResult {
@@ -206,6 +302,8 @@ struct VerifiedTuningResult {
     summary: String,
     captured_at_unix_ms: u64,
     payload_sha256: String,
+    trace: IpcTraceContextV1,
+    parent_response_sha256: String,
 }
 
 #[derive(Debug, Default, Deserialize)]
@@ -508,6 +606,15 @@ pub async fn run(
                 }
             },
             _ = poll.tick() => {
+                match reconcile_async_study_evidence(&config, unix_millis()) {
+                    Ok(true) => eprintln!(
+                        "edge inquiry: durably reconciled exact completed-study evidence"
+                    ),
+                    Ok(false) => {},
+                    Err(error) => eprintln!(
+                        "edge inquiry: completed-study evidence reconciliation deferred: {error:#}"
+                    ),
+                }
                 if let Err(error) = poll_due_turn(
                     &config,
                     &snapshots,
@@ -530,7 +637,7 @@ fn initialize_autonomy_state(config: &Config) -> anyhow::Result<AutonomyState> {
     let mut state = load_state(config).context("validate existing scheduler state")?;
     let now = unix_millis();
     if migrate_thread_state_on_start(config, now).context("validate working-thread state")? {
-        eprintln!("edge working thread migrated to spectral evidence v6");
+        eprintln!("edge working thread migrated to v7 with legacy claims archived unscoped");
     }
     normalize_session_generations(&mut state);
     match reconcile_pending_receipt_acknowledgements(config, &mut state) {
@@ -1099,8 +1206,323 @@ fn clear_pending_action_dispatch(state: &mut AutonomyState) {
     state.pending_action_response_provenance = None;
 }
 
+pub(crate) fn validate_inquiry_action(
+    config: &Config,
+    action: &inquiry::ThreadAction,
+    now: u64,
+) -> Result<(), &'static str> {
+    let _guard = THREAD_STATE_MUTEX
+        .lock()
+        .map_err(|_| "inquiry_state_lock_unavailable")?;
+    let mut thread = load_thread_state_checked(config).map_err(|_| "inquiry_state_unavailable")?;
+    roll_thread_budget(&mut thread, now);
+    validate_inquiry_action_against(&thread, action)
+}
+
+fn validate_inquiry_action_against(
+    state: &ThreadState,
+    action: &inquiry::ThreadAction,
+) -> Result<(), &'static str> {
+    match action {
+        inquiry::ThreadAction::Open { .. } => {
+            if state.threads.len() >= inquiry::MAX_INQUIRY_THREADS {
+                return Err("inquiry_open_thread_limit_reached");
+            }
+            if state.thread_starts_today >= inquiry::MAX_THREAD_STARTS_PER_DAY {
+                return Err("inquiry_daily_thread_start_limit_reached");
+            }
+        },
+        inquiry::ThreadAction::Branch { thread_id, .. } => {
+            if state.threads.len() >= inquiry::MAX_INQUIRY_THREADS {
+                return Err("inquiry_open_thread_limit_reached");
+            }
+            if state.thread_starts_today >= inquiry::MAX_THREAD_STARTS_PER_DAY {
+                return Err("inquiry_daily_thread_start_limit_reached");
+            }
+            if !state
+                .threads
+                .iter()
+                .any(|thread| thread.thread_id == *thread_id)
+            {
+                return Err("inquiry_branch_source_thread_not_found");
+            }
+        },
+        inquiry::ThreadAction::Resume { thread_id } => {
+            let Some(thread) = state
+                .threads
+                .iter()
+                .find(|thread| thread.thread_id == *thread_id)
+            else {
+                return Err("inquiry_resume_thread_not_found");
+            };
+            if thread.status == "active" {
+                return Err("inquiry_thread_already_active");
+            }
+        },
+        inquiry::ThreadAction::Pause { thread_id, .. } => {
+            let Some(thread) = state
+                .threads
+                .iter()
+                .find(|thread| thread.thread_id == *thread_id)
+            else {
+                return Err("inquiry_thread_not_found");
+            };
+            let parked = state
+                .threads
+                .iter()
+                .filter(|thread| thread.status != "active")
+                .count();
+            if thread.status == "active" && parked >= inquiry::MAX_PARKED_INQUIRY_THREADS {
+                return Err("inquiry_parked_thread_limit_reached");
+            }
+        },
+        inquiry::ThreadAction::Close { thread_id, .. } => {
+            if !state
+                .threads
+                .iter()
+                .any(|thread| thread.thread_id == *thread_id)
+            {
+                return Err("inquiry_thread_not_found");
+            }
+        },
+        inquiry::ThreadAction::UpdateBelief {
+            belief_id,
+            evidence_ids,
+            ..
+        } => {
+            let Some(belief) = latest_belief_revision(state, belief_id) else {
+                return Err("inquiry_belief_not_found");
+            };
+            let active_thread_id = active_thread(state).map(|thread| thread.thread_id.as_str());
+            if belief.thread_id.as_deref() != active_thread_id {
+                return Err("inquiry_belief_is_not_in_the_active_thread");
+            }
+            if !evidence_ids.iter().all(|identifier| {
+                state.evidence_records.iter().any(|record| {
+                    record.eligible_for_belief_update && record.evidence_id == *identifier
+                })
+            }) {
+                return Err("inquiry_belief_evidence_is_missing_or_ineligible");
+            }
+        },
+    }
+    Ok(())
+}
+
+fn roll_thread_budget(state: &mut ThreadState, now: u64) {
+    let utc_day = now / 86_400_000;
+    if state.thread_budget_utc_day != utc_day {
+        state.thread_budget_utc_day = utc_day;
+        state.thread_starts_today = 0;
+    }
+}
+
+fn active_thread(state: &ThreadState) -> Option<&InquiryThreadRecord> {
+    state
+        .threads
+        .iter()
+        .find(|thread| thread.status == "active")
+}
+
+fn active_thread_mut(state: &mut ThreadState) -> Option<&mut InquiryThreadRecord> {
+    state
+        .threads
+        .iter_mut()
+        .find(|thread| thread.status == "active")
+}
+
+fn latest_belief_revision<'a>(
+    state: &'a ThreadState,
+    belief_id: &str,
+) -> Option<&'a BeliefRevisionRecord> {
+    state
+        .beliefs
+        .iter()
+        .rev()
+        .find(|revision| revision.belief_id == belief_id)
+}
+
+fn park_active_thread(state: &mut ThreadState, note: &str, now: u64) {
+    if let Some(active) = active_thread_mut(state) {
+        active.status = "paused".to_string();
+        active.updated_at_unix_ms = now;
+        active.disposition_note = Some(bounded_thread_text(note));
+    }
+}
+
+fn next_thread_id(outcome: &ActionOutcome) -> String {
+    format!(
+        "thread-{}-{}",
+        outcome.recorded_at_unix_ms,
+        outcome
+            .response_sha256
+            .get(..12)
+            .unwrap_or(&outcome.response_sha256)
+    )
+}
+
+#[allow(clippy::too_many_lines)] // One explicit transition keeps quotas, parking, and provenance atomic.
+fn apply_inquiry_action_transition(
+    state: &mut ThreadState,
+    action: &inquiry::ThreadAction,
+    outcome: &ActionOutcome,
+) -> anyhow::Result<()> {
+    roll_thread_budget(state, outcome.recorded_at_unix_ms);
+    validate_inquiry_action_against(state, action).map_err(|reason| anyhow::anyhow!("{reason}"))?;
+    let now = outcome.recorded_at_unix_ms;
+    match action {
+        inquiry::ThreadAction::Open { question } => {
+            park_active_thread(state, "parked_by_open_thread", now);
+            state.threads.push(InquiryThreadRecord {
+                thread_id: next_thread_id(outcome),
+                status: "active".to_string(),
+                question: bounded_thread_text(question),
+                opened_at_unix_ms: now,
+                updated_at_unix_ms: now,
+                last_action_response_sha256: Some(outcome.response_sha256.clone()),
+                ..InquiryThreadRecord::default()
+            });
+            state.thread_starts_today = state.thread_starts_today.saturating_add(1);
+        },
+        inquiry::ThreadAction::Branch {
+            thread_id,
+            question,
+        } => {
+            park_active_thread(state, "parked_by_branch_thread", now);
+            state.threads.push(InquiryThreadRecord {
+                thread_id: next_thread_id(outcome),
+                parent_thread_id: Some(thread_id.clone()),
+                status: "active".to_string(),
+                question: bounded_thread_text(question),
+                opened_at_unix_ms: now,
+                updated_at_unix_ms: now,
+                last_action_response_sha256: Some(outcome.response_sha256.clone()),
+                ..InquiryThreadRecord::default()
+            });
+            state.thread_starts_today = state.thread_starts_today.saturating_add(1);
+        },
+        inquiry::ThreadAction::Resume { thread_id } => {
+            park_active_thread(state, "parked_by_resume_thread", now);
+            let thread = state
+                .threads
+                .iter_mut()
+                .find(|thread| thread.thread_id == *thread_id)
+                .context("validated resumed inquiry thread disappeared")?;
+            thread.status = "active".to_string();
+            thread.updated_at_unix_ms = now;
+            thread.disposition_note = Some("resumed_by_exact_action".to_string());
+            thread.last_action_response_sha256 = Some(outcome.response_sha256.clone());
+        },
+        inquiry::ThreadAction::Pause { thread_id, reason } => {
+            let thread = state
+                .threads
+                .iter_mut()
+                .find(|thread| thread.thread_id == *thread_id)
+                .context("validated paused inquiry thread disappeared")?;
+            thread.status = "paused".to_string();
+            thread.updated_at_unix_ms = now;
+            thread.disposition_note = Some(bounded_thread_text(reason));
+            thread.last_action_response_sha256 = Some(outcome.response_sha256.clone());
+        },
+        inquiry::ThreadAction::Close {
+            thread_id,
+            conclusion,
+        } => {
+            let index = state
+                .threads
+                .iter()
+                .position(|thread| thread.thread_id == *thread_id)
+                .context("validated closed inquiry thread disappeared")?;
+            let mut closed = state.threads.remove(index);
+            closed.status = "closed".to_string();
+            closed.updated_at_unix_ms = now;
+            closed.disposition_note = Some(bounded_thread_text(conclusion));
+            closed.last_action_response_sha256 = Some(outcome.response_sha256.clone());
+            state.recent_closed_threads.push(closed);
+            if state.recent_closed_threads.len() > inquiry::MAX_PARKED_INQUIRY_THREADS {
+                let excess = state
+                    .recent_closed_threads
+                    .len()
+                    .saturating_sub(inquiry::MAX_PARKED_INQUIRY_THREADS);
+                state.recent_closed_threads.drain(..excess);
+            }
+        },
+        inquiry::ThreadAction::UpdateBelief {
+            belief_id,
+            evidence_ids,
+            disposition,
+            claim,
+        } => {
+            let prior = latest_belief_revision(state, belief_id)
+                .context("validated inquiry belief disappeared")?;
+            let prior_revision_id = Some(prior.revision_id.clone());
+            let thread_id = prior.thread_id.clone();
+            state.beliefs.push(BeliefRevisionRecord {
+                revision_id: format!(
+                    "belief-revision-{}-{}",
+                    now,
+                    outcome
+                        .response_sha256
+                        .get(..12)
+                        .unwrap_or(&outcome.response_sha256)
+                ),
+                belief_id: belief_id.clone(),
+                thread_id,
+                operation: disposition.as_str().to_string(),
+                claim: bounded_thread_text(claim),
+                evidence_ids: evidence_ids.clone(),
+                prior_revision_id,
+                recorded_at_unix_ms: now,
+                response_sha256: outcome.response_sha256.clone(),
+                source: "exact_unrepaired_update_belief_action".to_string(),
+            });
+            state
+                .pending_evidence_ids
+                .retain(|identifier| !evidence_ids.contains(identifier));
+        },
+    }
+    Ok(())
+}
+
+fn sync_legacy_active_projection(state: &mut ThreadState) {
+    let active = active_thread(state).cloned();
+    if let Some(active) = active {
+        state.thread_id = Some(active.thread_id);
+        state.status = "active".to_string();
+        state.question = Some(active.question.clone());
+        state.focus = Some(active.question.clone());
+        state.open_questions = vec![active.question];
+        let current_belief = state
+            .beliefs
+            .iter()
+            .rev()
+            .find(|belief| belief.thread_id.as_deref() == state.thread_id.as_deref())
+            .map(|belief| belief.claim.clone());
+        state.hypothesis.clone_from(&current_belief);
+    } else {
+        state.thread_id = None;
+        state.status = "no_active_thread".to_string();
+        state.question = None;
+        state.focus = None;
+        state.open_questions.clear();
+        state.hypothesis = None;
+    }
+}
+
 #[allow(clippy::too_many_lines)] // One bounded state transition keeps thread provenance together.
 fn update_thread_state(
+    config: &Config,
+    state: &AutonomyState,
+    outcome: &ActionOutcome,
+) -> anyhow::Result<Option<String>> {
+    let _guard = THREAD_STATE_MUTEX
+        .lock()
+        .map_err(|error| anyhow::anyhow!("working-thread transaction lock poisoned: {error}"))?;
+    update_thread_state_locked(config, state, outcome)
+}
+
+#[allow(clippy::too_many_lines)] // One bounded state transition keeps thread provenance together.
+fn update_thread_state_locked(
     config: &Config,
     state: &AutonomyState,
     outcome: &ActionOutcome,
@@ -1135,37 +1557,36 @@ fn update_thread_state(
     let now = outcome.recorded_at_unix_ms;
 
     if matches!(verb.as_str(), "LISTEN" | "REST") {
-        if thread.status != "active" {
-            return Ok(None);
-        }
-        thread.status = "paused".to_string();
-        thread.last_action = Some(bounded_thread_text(declaration));
-        thread.latest_note = Some(format!("thread paused by {verb}"));
-        thread.next_options.clear();
-        thread.response_sha256 = Some(outcome.response_sha256.clone());
-        thread.session_id = Some(outcome.session_id.clone());
-        thread.updated_at_unix_ms = now;
-        thread.event = format!("closed_by_{}", verb.to_ascii_lowercase());
-        thread.trace.clone_from(&outcome.trace);
-    } else if is_stateful_action_verb(&verb) {
-        let continuing = thread.thread_id.is_some()
-            && matches!(thread.status.as_str(), "active" | "paused")
-            && now.saturating_sub(thread.updated_at_unix_ms) <= 86_400_000;
-        if !continuing {
-            thread = ThreadState {
-                schema: THREAD_STATE_SCHEMA.to_string(),
-                revision: 0,
-                thread_id: state
-                    .active_chain_id
-                    .clone()
-                    .or_else(|| Some(format!("thread-{}", outcome.recorded_at_unix_ms))),
-                status: "active".to_string(),
-                chain_id: state.active_chain_id.clone(),
-                ..ThreadState::default()
-            };
-        }
+        // LISTEN and REST govern immediate Action-chain pacing only. Inquiry
+        // disposition is explicit and therefore remains unchanged.
+        return Ok(None);
+    }
+    if let Some(thread_action) = inquiry::parse_thread_action(&verb, argument) {
+        anyhow::ensure!(
+            outcome.decision_source == "astrid_declared"
+                && outcome
+                    .trace
+                    .as_ref()
+                    .is_some_and(IpcTraceContextV1::is_supported)
+                && outcome.response_sha256.len() == 64
+                && outcome
+                    .response_sha256
+                    .bytes()
+                    .all(|byte| byte.is_ascii_hexdigit()),
+            "inquiry transition requires exact unrepaired traced model authorship"
+        );
+        apply_inquiry_action_transition(&mut thread, &thread_action, outcome)?;
         thread.schema = THREAD_STATE_SCHEMA.to_string();
-        thread.status = "active".to_string();
+        thread.chain_id.clone_from(&state.active_chain_id);
+        thread.session_id = Some(outcome.session_id.clone());
+        thread.last_action = Some(bounded_thread_text(declaration));
+        thread.response_sha256 = Some(outcome.response_sha256.clone());
+        thread.updated_at_unix_ms = now;
+        thread.event = format!("action_{verb}");
+        thread.trace.clone_from(&outcome.trace);
+        sync_legacy_active_projection(&mut thread);
+    } else if is_stateful_action_verb(&verb) {
+        thread.schema = THREAD_STATE_SCHEMA.to_string();
         thread.chain_id.clone_from(&state.active_chain_id);
         thread.session_id = Some(outcome.session_id.clone());
         thread.last_action = Some(bounded_thread_text(declaration));
@@ -1232,6 +1653,7 @@ fn update_thread_state(
                 push_thread_evidence_record(
                     &mut thread,
                     ThreadEvidence {
+                        evidence_id: String::new(),
                         kind: kind.to_string(),
                         epistemic_status: epistemic_status.to_string(),
                         reference,
@@ -1241,6 +1663,13 @@ fn update_thread_state(
                         sha256: verified_receipt_artifact_path(config, path)
                             .and_then(|path| fs::read(path).ok())
                             .map(|bytes| format!("{:x}", Sha256::digest(bytes))),
+                        eligible_for_belief_update: verified,
+                        trace: outcome
+                            .trace
+                            .as_ref()
+                            .filter(|trace| trace.is_supported())
+                            .cloned(),
+                        parent_response_sha256: Some(outcome.response_sha256.clone()),
                     },
                 );
             }
@@ -1270,6 +1699,7 @@ fn update_thread_state(
                 push_thread_evidence_record(
                     &mut thread,
                     ThreadEvidence {
+                        evidence_id: String::new(),
                         kind: "search_candidate".to_string(),
                         epistemic_status: if status == "success" {
                             "discovery_only_not_verified_evidence".to_string()
@@ -1293,6 +1723,9 @@ fn update_thread_state(
                             .get("result_sha256")
                             .and_then(serde_json::Value::as_str)
                             .map(str::to_string),
+                        eligible_for_belief_update: false,
+                        trace: exact_evidence_trace(&web),
+                        parent_response_sha256: Some(outcome.response_sha256.clone()),
                     },
                 );
             }
@@ -1311,6 +1744,7 @@ fn update_thread_state(
                 push_thread_evidence_record(
                     &mut thread,
                     ThreadEvidence {
+                        evidence_id: String::new(),
                         kind: "spectral_observation".to_string(),
                         epistemic_status:
                             "verified_machine_spectral_evidence_not_astrid_authorship_or_causal_proof"
@@ -1333,6 +1767,54 @@ fn update_thread_state(
                             .get("result_sha256")
                             .and_then(serde_json::Value::as_str)
                             .map(str::to_string),
+                        eligible_for_belief_update: true,
+                        trace: exact_evidence_trace(&spectral),
+                        parent_response_sha256: Some(outcome.response_sha256.clone()),
+                    },
+                );
+            }
+            if verb == "SELF_STUDY"
+                && !argument.to_ascii_lowercase().starts_with("spectral:")
+                && let Some(introspection) = matching_completed_tool_receipt(
+                    &config.workspace.join("introspection/receipts.jsonl"),
+                    &receipt,
+                    "astrid_edge_introspection_receipt_v1",
+                )
+            {
+                let status = introspection
+                    .get("status")
+                    .and_then(serde_json::Value::as_str)
+                    .unwrap_or("unknown");
+                let reference = introspection
+                    .get("call_id")
+                    .and_then(serde_json::Value::as_str)
+                    .map_or_else(|| "self-study-result".to_string(), bounded_thread_text);
+                push_thread_evidence_record(
+                    &mut thread,
+                    ThreadEvidence {
+                        evidence_id: String::new(),
+                        kind: "owned_self_study_result".to_string(),
+                        epistemic_status: if status == "success" {
+                            "verified_private_owned_text_retrieval_not_claim_truth".to_string()
+                        } else {
+                            "failed_private_retrieval_not_evidence".to_string()
+                        },
+                        reference,
+                        summary: bounded_thread_text(&format!(
+                            "private introspection status={status}"
+                        )),
+                        source: "private_introspector_exact_trace_and_response_hash".to_string(),
+                        captured_at_unix_ms: introspection
+                            .get("completed_at_unix_ms")
+                            .and_then(serde_json::Value::as_u64)
+                            .unwrap_or(now),
+                        sha256: introspection
+                            .get("result_sha256")
+                            .and_then(serde_json::Value::as_str)
+                            .map(str::to_string),
+                        eligible_for_belief_update: status == "success",
+                        trace: exact_evidence_trace(&introspection),
+                        parent_response_sha256: Some(outcome.response_sha256.clone()),
                     },
                 );
             }
@@ -1351,6 +1833,7 @@ fn update_thread_state(
             push_thread_evidence_record(
                 &mut thread,
                 ThreadEvidence {
+                    evidence_id: String::new(),
                     kind: "reservoir_tuning_result".to_string(),
                     epistemic_status:
                         "verified_signed_machine_tuning_evidence_not_astrid_authorship_or_causal_proof"
@@ -1360,6 +1843,9 @@ fn update_thread_state(
                     source: "private_tuning_manager_exact_authored_parent".to_string(),
                     captured_at_unix_ms: tuning.captured_at_unix_ms,
                     sha256: Some(tuning.payload_sha256),
+                    eligible_for_belief_update: true,
+                    trace: Some(tuning.trace),
+                    parent_response_sha256: Some(tuning.parent_response_sha256),
                 },
             );
         }
@@ -1369,6 +1855,26 @@ fn update_thread_state(
         if verb == "PROPOSE" && !argument.is_empty() {
             thread.hypothesis = Some(bounded_thread_text(argument));
             push_thread_value(&mut thread.hypotheses, argument, MAX_THREAD_FINDINGS);
+            let belief_id = format!(
+                "belief-{}-{}",
+                now,
+                outcome
+                    .response_sha256
+                    .get(..12)
+                    .unwrap_or(&outcome.response_sha256)
+            );
+            thread.beliefs.push(BeliefRevisionRecord {
+                revision_id: format!("{belief_id}-r1"),
+                belief_id,
+                thread_id: active_thread(&thread).map(|active| active.thread_id.clone()),
+                operation: "propose".to_string(),
+                claim: bounded_thread_text(argument),
+                evidence_ids: Vec::new(),
+                prior_revision_id: None,
+                recorded_at_unix_ms: now,
+                response_sha256: outcome.response_sha256.clone(),
+                source: "authored_propose_action".to_string(),
+            });
         }
         if matches!(verb.as_str(), "MEASURE" | "STUDY") && !argument.is_empty() {
             push_thread_value(&mut thread.methods, argument, MAX_THREAD_FINDINGS);
@@ -1398,11 +1904,17 @@ fn update_thread_state(
         {
             push_thread_value(&mut thread.provenance_hashes, &hash, MAX_THREAD_EVIDENCE);
         }
+        if let Some(active) = active_thread_mut(&mut thread) {
+            active.updated_at_unix_ms = now;
+            active.last_action_response_sha256 = Some(outcome.response_sha256.clone());
+        }
+        sync_legacy_active_projection(&mut thread);
     } else {
         return Ok(None);
     }
 
     thread.revision = thread.revision.saturating_add(1);
+    validate_thread_state_v7(&thread)?;
     persist_thread_state(config, &thread)?;
     append_thread_projection_once(config, &thread, outcome)?;
     Ok(Some(compact_thread_summary(&thread)))
@@ -1468,10 +1980,33 @@ fn push_thread_value(values: &mut Vec<String>, value: &str, maximum: usize) {
     }
 }
 
-fn push_thread_evidence_record(thread: &mut ThreadState, record: ThreadEvidence) {
-    thread
+fn exact_evidence_trace(receipt: &serde_json::Value) -> Option<IpcTraceContextV1> {
+    receipt
+        .get("trace")
+        .cloned()
+        .and_then(|value| serde_json::from_value::<IpcTraceContextV1>(value).ok())
+        .filter(IpcTraceContextV1::is_supported)
+}
+
+fn push_thread_evidence_record(thread: &mut ThreadState, mut record: ThreadEvidence) -> bool {
+    if record.evidence_id.is_empty() {
+        record.evidence_id = evidence_identifier(&record);
+    }
+    if record.eligible_for_belief_update
+        && !record.sha256.as_deref().is_some_and(is_exact_lower_sha256)
+    {
+        // Legacy or malformed evidence remains visible as provenance, but can
+        // never authorize a belief transition or wedge the v7 projection.
+        record.eligible_for_belief_update = false;
+    }
+    let prior_index = thread
         .evidence_records
-        .retain(|item| !(item.kind == record.kind && item.reference == record.reference));
+        .iter()
+        .position(|item| item.kind == record.kind && item.reference == record.reference);
+    if prior_index.is_some_and(|index| thread.evidence_records[index] == record) {
+        return false;
+    }
+    let prior = prior_index.map(|index| thread.evidence_records.remove(index));
     if thread.evidence_records.len() >= MAX_THREAD_EVIDENCE {
         let incoming_priority = thread_evidence_priority(&record);
         let lowest_priority = thread
@@ -1481,17 +2016,73 @@ fn push_thread_evidence_record(thread: &mut ThreadState, record: ThreadEvidence)
             .min()
             .unwrap_or(incoming_priority);
         if incoming_priority < lowest_priority {
-            return;
+            if let Some(prior) = prior {
+                thread.evidence_records.push(prior);
+            }
+            return false;
         }
         if let Some(index) = thread
             .evidence_records
             .iter()
             .position(|item| thread_evidence_priority(item) == lowest_priority)
         {
-            thread.evidence_records.remove(index);
+            let evicted = thread.evidence_records.remove(index);
+            if !thread.evidence_records.iter().any(|remaining| {
+                remaining.eligible_for_belief_update && remaining.evidence_id == evicted.evidence_id
+            }) {
+                thread
+                    .pending_evidence_ids
+                    .retain(|identifier| identifier != &evicted.evidence_id);
+            }
         }
     }
+    let prior_same_identity = prior
+        .as_ref()
+        .is_some_and(|prior| prior.evidence_id == record.evidence_id);
+    if let Some(prior) = prior.as_ref()
+        && prior.evidence_id != record.evidence_id
+        && !thread.evidence_records.iter().any(|remaining| {
+            remaining.eligible_for_belief_update && remaining.evidence_id == prior.evidence_id
+        })
+    {
+        thread
+            .pending_evidence_ids
+            .retain(|identifier| identifier != &prior.evidence_id);
+    }
+    if !record.eligible_for_belief_update {
+        thread
+            .pending_evidence_ids
+            .retain(|identifier| identifier != &record.evidence_id);
+    } else if !prior_same_identity && !thread.pending_evidence_ids.contains(&record.evidence_id) {
+        thread.pending_evidence_ids.push(record.evidence_id.clone());
+    }
+    let changed = prior.as_ref() != Some(&record);
     thread.evidence_records.push(record);
+    changed
+}
+
+fn evidence_identifier(record: &ThreadEvidence) -> String {
+    if inquiry::bounded_identifier(&record.reference).is_some() {
+        return record.reference.clone();
+    }
+    if let Some(sha256) = record.sha256.as_deref()
+        && sha256.len() == 64
+        && sha256.bytes().all(|byte| byte.is_ascii_hexdigit())
+    {
+        return sha256.to_ascii_lowercase();
+    }
+    let digest = format!(
+        "{:x}",
+        Sha256::digest(format!("{}\0{}", record.kind, record.reference).as_bytes())
+    );
+    format!("evidence-{}", digest.get(..16).unwrap_or(digest.as_str()))
+}
+
+fn is_exact_lower_sha256(value: &str) -> bool {
+    value.len() == 64
+        && value
+            .bytes()
+            .all(|byte| byte.is_ascii_digit() || matches!(byte, b'a'..=b'f'))
 }
 
 fn thread_evidence_priority(record: &ThreadEvidence) -> u8 {
@@ -1502,6 +2093,7 @@ fn thread_evidence_priority(record: &ThreadEvidence) -> u8 {
         | "completed_study"
         | "spectral_observation"
         | "reservoir_tuning_result"
+        | "owned_self_study_result"
         | "scheduled_introspection"
         | "cited_synthesis"
         | "verified_peer_packet" => 3,
@@ -1606,7 +2198,7 @@ fn artifact_evidence_classification(
         "owned_artifact_read" => (
             "owned_artifact_read",
             "content_provenance_only_not_claim_truth",
-            false,
+            true,
         ),
         _ => (
             "authored_artifact",
@@ -1618,26 +2210,50 @@ fn artifact_evidence_classification(
 
 fn compact_thread_summary(thread: &ThreadState) -> String {
     let Some(thread_id) = thread.thread_id.as_deref() else {
-        return "none".to_string();
+        let parked = thread
+            .threads
+            .iter()
+            .rev()
+            .take(3)
+            .map(|thread| thread.thread_id.as_str())
+            .collect::<Vec<_>>()
+            .join(",");
+        return format!(
+            "NEXT affordances: OPEN_THREAD <question>; RESUME_THREAD <thread-id>. inquiry=none; parked={}",
+            if parked.is_empty() { "none" } else { &parked }
+        );
     };
-    let focus = thread.focus.as_deref().unwrap_or("unspecified");
     let action = thread.last_action.as_deref().unwrap_or("none");
-    let evidence = if thread.evidence.is_empty() {
+    let pending = thread
+        .pending_evidence_ids
+        .iter()
+        .rev()
+        .take(3)
+        .map(String::as_str)
+        .collect::<Vec<_>>()
+        .join(",");
+    let belief = thread
+        .beliefs
+        .iter()
+        .rev()
+        .find(|belief| belief.thread_id.as_deref() == Some(thread_id))
+        .map_or("none", |belief| belief.belief_id.as_str());
+    let evidence = if pending.is_empty() {
         "none".to_string()
     } else {
-        thread.evidence.join(" | ")
+        pending
+    };
+    let update = if belief == "none" || evidence == "none" {
+        String::new()
+    } else {
+        format!(
+            "UPDATE_BELIEF {belief} WITH {evidence} :: <supported|weakened|revised|suspended|unresolved> :: <claim>; "
+        )
     };
     let summary = format!(
-        "{thread_id} status={} question={} focus={} claims={} findings={} open={} conclusion={} last={} verified-evidence={} uncertainty={}",
-        thread.status,
+        "NEXT affordances: {update}BRANCH_THREAD {thread_id} :: <question>; PAUSE_THREAD {thread_id} :: <reason>; CLOSE_THREAD {thread_id} :: <conclusion>. q={}; last={}; uncertainty={}",
         thread.question.as_deref().unwrap_or("none"),
-        focus,
-        thread.authored_claims.len(),
-        thread.findings.len(),
-        thread.open_questions.len(),
-        thread.conclusion.as_deref().unwrap_or("none"),
         action,
-        evidence,
         thread.uncertainty.as_deref().unwrap_or("none"),
     );
     summary.chars().take(MAX_THREAD_SUMMARY_CHARS).collect()
@@ -1655,20 +2271,27 @@ fn load_thread_state(config: &Config) -> ThreadState {
 }
 
 fn load_thread_state_checked(config: &Config) -> anyhow::Result<ThreadState> {
+    let mut state = load_thread_state_without_async_evidence(config)?;
+    merge_completed_study_evidence(config, &mut state);
+    normalize_thread_evidence_eligibility(&mut state);
+    validate_thread_state_v7(&state)?;
+    Ok(state)
+}
+
+fn load_thread_state_without_async_evidence(config: &Config) -> anyhow::Result<ThreadState> {
     let path = config.workspace.join("autonomous/thread_state.json");
     let Some(bytes) = read_optional_regular_state(&path)? else {
-        let mut thread = ThreadState {
+        return Ok(ThreadState {
             schema: THREAD_STATE_SCHEMA.to_string(),
             ..ThreadState::default()
-        };
-        merge_scheduled_introspection_evidence(config, &mut thread);
-        return Ok(thread);
+        });
     };
     let state = serde_json::from_slice::<ThreadState>(&bytes)
         .map_err(|error| anyhow::anyhow!("decode {}: {error}", path.display()))?;
     if !matches!(
         state.schema.as_str(),
         THREAD_STATE_SCHEMA
+            | LEGACY_THREAD_STATE_V6_SCHEMA
             | LEGACY_THREAD_STATE_V5_SCHEMA
             | LEGACY_THREAD_STATE_V4_SCHEMA
             | LEGACY_THREAD_STATE_V3_SCHEMA
@@ -1678,56 +2301,1030 @@ fn load_thread_state_checked(config: &Config) -> anyhow::Result<ThreadState> {
         anyhow::bail!("unsupported thread schema {:?}", state.schema);
     }
     let mut state = migrate_thread_state(state);
-    merge_scheduled_introspection_evidence(config, &mut state);
+    normalize_thread_evidence_eligibility(&mut state);
+    validate_thread_state_v7(&state)?;
     Ok(state)
 }
 
-/// Merge the separately owned, verified scheduled projection into the
-/// in-memory thread view. The scheduled task never writes the ordinary thread
-/// files, avoiding a second concurrent writer. A later ordinary Action may
-/// persist this already-deduplicated typed pointer as part of its normal
-/// single-writer transaction.
-fn merge_scheduled_introspection_evidence(config: &Config, thread: &mut ThreadState) {
-    let Some(projection) = crate::scheduled_admission::latest_verified_projection(config) else {
-        return;
-    };
-    merge_verified_scheduled_projection(thread, &projection);
+fn normalize_thread_evidence_eligibility(state: &mut ThreadState) {
+    for record in &mut state.evidence_records {
+        if record.eligible_for_belief_update
+            && !record.sha256.as_deref().is_some_and(is_exact_lower_sha256)
+        {
+            record.eligible_for_belief_update = false;
+        }
+    }
+    let mut retained = std::collections::BTreeSet::new();
+    state.pending_evidence_ids.retain(|identifier| {
+        inquiry::bounded_identifier(identifier).is_some()
+            && retained.insert(identifier.clone())
+            && state.evidence_records.iter().any(|record| {
+                record.evidence_id == *identifier
+                    && record.eligible_for_belief_update
+                    && record.sha256.as_deref().is_some_and(is_exact_lower_sha256)
+            })
+    });
 }
 
-fn merge_verified_scheduled_projection(
-    thread: &mut ThreadState,
-    projection: &crate::scheduled_admission::VerifiedProjection,
-) {
-    push_thread_evidence_record(
-        thread,
-        ThreadEvidence {
-            kind: "scheduled_introspection".to_string(),
-            epistemic_status:
-                "verified_model_authored_runtime_scheduled_not_voluntary_action_or_journal"
-                    .to_string(),
-            reference: projection.due_nonce.clone(),
-            summary: bounded_thread_text(&projection.summary),
-            source: format!(
-                "model_authored_runtime_scheduled;trace_id={};summary_sha256={}",
-                projection.trace_id, projection.summary_sha256
-            ),
-            captured_at_unix_ms: projection.recorded_at_unix_ms,
-            sha256: Some(projection.response_sha256.clone()),
+fn validate_thread_state_v7(state: &ThreadState) -> anyhow::Result<()> {
+    anyhow::ensure!(
+        state.schema == THREAD_STATE_SCHEMA,
+        "working-thread projection was not migrated to v7"
+    );
+    validate_inquiry_cursor_state(state)?;
+    anyhow::ensure!(
+        state.threads.len() <= inquiry::MAX_INQUIRY_THREADS,
+        "working-thread projection exceeds the open/paused thread limit"
+    );
+    let mut active = 0_usize;
+    let mut identifiers = std::collections::BTreeSet::new();
+    for thread in &state.threads {
+        anyhow::ensure!(
+            inquiry::bounded_identifier(&thread.thread_id).is_some()
+                && identifiers.insert(thread.thread_id.as_str()),
+            "working-thread projection contains an invalid or duplicate thread identifier"
+        );
+        anyhow::ensure!(
+            matches!(thread.status.as_str(), "active" | "open" | "paused"),
+            "working-thread projection contains an invalid live status"
+        );
+        if thread.status == "active" {
+            active = active.saturating_add(1);
+        }
+    }
+    anyhow::ensure!(
+        active <= 1,
+        "working-thread projection has multiple active threads"
+    );
+    anyhow::ensure!(
+        state.threads.len().saturating_sub(active) <= inquiry::MAX_PARKED_INQUIRY_THREADS,
+        "working-thread projection exceeds the twelve parked-thread limit"
+    );
+    anyhow::ensure!(
+        state.pending_evidence_ids.iter().all(|identifier| {
+            inquiry::bounded_identifier(identifier).is_some()
+                && state.evidence_records.iter().any(|record| {
+                    record.evidence_id == *identifier
+                        && record.eligible_for_belief_update
+                        && record.sha256.as_deref().is_some_and(is_exact_lower_sha256)
+                })
+        }),
+        "working-thread projection contains an invalid or ineligible pending evidence identifier"
+    );
+    anyhow::ensure!(
+        state.evidence_records.iter().all(|record| {
+            !record.eligible_for_belief_update
+                || record.sha256.as_deref().is_some_and(is_exact_lower_sha256)
+        }),
+        "working-thread projection contains eligible evidence without an exact lowercase sha256"
+    );
+    anyhow::ensure!(
+        state.evidence_records.iter().all(|record| {
+            record
+                .trace
+                .as_ref()
+                .is_none_or(IpcTraceContextV1::is_supported)
+                && record
+                    .parent_response_sha256
+                    .as_deref()
+                    .is_none_or(is_exact_lower_sha256)
+        }),
+        "working-thread projection contains malformed evidence lineage"
+    );
+    for belief in &state.beliefs {
+        anyhow::ensure!(
+            inquiry::bounded_identifier(&belief.belief_id).is_some()
+                && inquiry::bounded_identifier(&belief.revision_id).is_some(),
+            "working-thread projection contains an invalid belief identifier"
+        );
+    }
+    Ok(())
+}
+
+fn validate_inquiry_cursor_state(state: &ThreadState) -> anyhow::Result<()> {
+    match (
+        state.last_verified_inquiry_step_id.as_deref(),
+        state.last_verified_inquiry_ledger_hash.as_deref(),
+        state.last_verified_inquiry_segment,
+        state.last_verified_inquiry_entry_index,
+        state.last_verified_inquiry_outcome.as_deref(),
+    ) {
+        (None, None, None, None, None) => anyhow::ensure!(
+            state.last_verified_inquiry_rejection_reason.is_none(),
+            "empty verified inquiry cursor retains a rejection reason"
+        ),
+        (Some(step_id), Some(entry_hash), Some(segment), Some(entry_index), Some(outcome)) => {
+            anyhow::ensure!(
+                inquiry::bounded_identifier(step_id).is_some()
+                    && is_exact_lower_sha256(entry_hash)
+                    && segment > 0
+                    && entry_index > 0,
+                "verified inquiry cursor identity is invalid"
+            );
+            anyhow::ensure!(
+                matches!(outcome, "admitted" | "semantic_rejected"),
+                "verified inquiry cursor outcome is invalid"
+            );
+            if outcome == "semantic_rejected" {
+                anyhow::ensure!(
+                    state
+                        .last_verified_inquiry_rejection_reason
+                        .as_deref()
+                        .is_some_and(|reason| {
+                            !reason.is_empty()
+                                && reason.chars().count() <= MAX_THREAD_TEXT_CHARS
+                                && !reason.chars().any(char::is_control)
+                        }),
+                    "rejected verified inquiry cursor lacks a bounded reason"
+                );
+            } else {
+                anyhow::ensure!(
+                    state.last_verified_inquiry_rejection_reason.is_none(),
+                    "admitted verified inquiry cursor retains a rejection reason"
+                );
+            }
         },
+        _ => anyhow::bail!("verified inquiry cursor is incomplete"),
+    }
+    match (
+        state.last_admitted_inquiry_step_id.as_deref(),
+        state.last_inquiry_ledger_hash.as_deref(),
+    ) {
+        (None, None) => {},
+        (Some(step_id), Some(entry_hash)) => anyhow::ensure!(
+            inquiry::bounded_identifier(step_id).is_some() && is_exact_lower_sha256(entry_hash),
+            "semantic inquiry cursor identity is invalid"
+        ),
+        _ => anyhow::bail!("semantic inquiry cursor is incomplete"),
+    }
+    anyhow::ensure!(
+        state.recent_inquiry_admission_events.len() <= MAX_RECENT_INQUIRY_ADMISSION_EVENTS,
+        "working-thread projection exceeds recent inquiry admission event bound"
+    );
+    for event in &state.recent_inquiry_admission_events {
+        anyhow::ensure!(
+            inquiry::bounded_identifier(&event.step_id).is_some()
+                && is_exact_lower_sha256(&event.entry_hash)
+                && event
+                    .predecessor_hash
+                    .as_deref()
+                    .is_none_or(is_exact_lower_sha256)
+                && event.ledger_segment > 0
+                && event.ledger_entry_index > 0
+                && matches!(event.outcome.as_str(), "admitted" | "semantic_rejected")
+                && event
+                    .gap_from_entry_hash
+                    .as_deref()
+                    .is_none_or(is_exact_lower_sha256),
+            "working-thread projection contains a malformed inquiry admission event"
+        );
+        anyhow::ensure!(
+            event.reason.as_deref().is_none_or(|reason| {
+                !reason.is_empty()
+                    && reason.chars().count() <= MAX_THREAD_TEXT_CHARS
+                    && !reason.chars().any(char::is_control)
+            }) && ((event.outcome == "semantic_rejected") == event.reason.is_some()),
+            "working-thread projection contains an invalid inquiry admission reason"
+        );
+        if !event.verified_gap {
+            anyhow::ensure!(
+                event.gap_from_segment.is_none()
+                    && event.gap_from_entry_index.is_none()
+                    && event.gap_from_entry_hash.is_none(),
+                "non-gap inquiry admission retains gap metadata"
+            );
+        }
+    }
+    Ok(())
+}
+
+/// Reconcile asynchronous study completion by exact durable receipt and artifact hash.
+/// The operator harness is deliberately excluded; a timestamp-near result is never joined.
+fn merge_completed_study_evidence(config: &Config, thread: &mut ThreadState) -> bool {
+    let path = config.workspace.join("studies/receipts.jsonl");
+    let Some(lines) = bounded_ledger_tail(&path, 512 * 1_024) else {
+        return false;
+    };
+    let mut changed = false;
+    for line in lines {
+        let Ok(receipt) = serde_json::from_str::<serde_json::Value>(&line) else {
+            continue;
+        };
+        if receipt.get("schema").and_then(serde_json::Value::as_str)
+            != Some("astrid_edge_study_receipt_v1")
+            || receipt.get("phase").and_then(serde_json::Value::as_str) != Some("completed")
+            || receipt.get("status").and_then(serde_json::Value::as_str) != Some("completed")
+            || receipt.get("origin").and_then(serde_json::Value::as_str) != Some("astrid_action")
+        {
+            continue;
+        }
+        if !completed_study_has_exact_action_parent(config, &receipt) {
+            continue;
+        }
+        let Some(trace) = exact_evidence_trace(&receipt) else {
+            continue;
+        };
+        let Some(parent_response_sha256) = receipt
+            .get("parent_response_sha256")
+            .and_then(serde_json::Value::as_str)
+            .filter(|digest| is_exact_lower_sha256(digest))
+            .map(str::to_string)
+        else {
+            continue;
+        };
+        let Some(relative) = receipt
+            .get("artifact_path")
+            .and_then(serde_json::Value::as_str)
+        else {
+            continue;
+        };
+        let uri = format!("home://edge/{relative}");
+        let Some(artifact) = verified_receipt_artifact_path(config, &uri) else {
+            continue;
+        };
+        let Some(expected_sha256) = receipt
+            .get("artifact_sha256")
+            .and_then(serde_json::Value::as_str)
+            .filter(|digest| {
+                digest.len() == 64 && digest.bytes().all(|byte| byte.is_ascii_hexdigit())
+            })
+        else {
+            continue;
+        };
+        let Ok(bytes) = fs::read(&artifact) else {
+            continue;
+        };
+        let actual_sha256 = format!("{:x}", Sha256::digest(bytes));
+        if !actual_sha256.eq_ignore_ascii_case(expected_sha256) {
+            continue;
+        }
+        let study_id = receipt
+            .get("study_id")
+            .and_then(serde_json::Value::as_str)
+            .and_then(inquiry::bounded_identifier)
+            .unwrap_or_else(|| bounded_basename(relative));
+        changed |= push_thread_evidence_record(
+            thread,
+            ThreadEvidence {
+                evidence_id: study_id.clone(),
+                kind: "completed_study".to_string(),
+                epistemic_status: "verified_machine_study_not_astrid_authorship_or_causal_proof"
+                    .to_string(),
+                reference: bounded_basename(relative),
+                summary: bounded_thread_text(&format!(
+                    "{study_id} completed with exact artifact hash"
+                )),
+                source: "asynchronous_study_completion_exact_receipt_and_hash".to_string(),
+                captured_at_unix_ms: receipt
+                    .get("recorded_at_unix_ms")
+                    .and_then(serde_json::Value::as_u64)
+                    .unwrap_or_default(),
+                sha256: Some(actual_sha256),
+                eligible_for_belief_update: true,
+                trace: Some(trace),
+                parent_response_sha256: Some(parent_response_sha256),
+            },
+        );
+    }
+    changed
+}
+
+fn completed_study_has_exact_action_parent(
+    config: &Config,
+    study_receipt: &serde_json::Value,
+) -> bool {
+    let Some(parent_response_sha256) = study_receipt
+        .get("parent_response_sha256")
+        .and_then(serde_json::Value::as_str)
+        .filter(|digest| is_exact_lower_sha256(digest))
+    else {
+        return false;
+    };
+    let Some(study_trace) = study_receipt
+        .get("trace")
+        .cloned()
+        .and_then(|value| serde_json::from_value::<IpcTraceContextV1>(value).ok())
+        .filter(IpcTraceContextV1::is_supported)
+    else {
+        return false;
+    };
+    let Some(lines) = bounded_ledger_tail(
+        &config.workspace.join("actions/receipts.jsonl"),
+        512 * 1_024,
+    ) else {
+        return false;
+    };
+    lines
+        .into_iter()
+        .filter_map(|line| serde_json::from_str::<serde_json::Value>(&line).ok())
+        .filter(|action| {
+            matches!(
+                action.get("schema").and_then(serde_json::Value::as_str),
+                Some("astrid_edge_action_receipt_v4" | "astrid_edge_action_receipt_v5")
+            ) && matches!(
+                action
+                    .get("decision_source")
+                    .and_then(serde_json::Value::as_str),
+                Some("astrid_declared" | "local_format_repair_preserved_astrid_declaration")
+            ) && action.get("status").and_then(serde_json::Value::as_str) == Some("executed")
+                && action.get("outcome").and_then(serde_json::Value::as_str)
+                    == Some("persistent_study_started")
+                && action
+                    .get("declared_next")
+                    .and_then(serde_json::Value::as_str)
+                    .is_some_and(|declaration| declaration.starts_with("STUDY "))
+                && action
+                    .get("response_sha256")
+                    .and_then(serde_json::Value::as_str)
+                    == Some(parent_response_sha256)
+                && action
+                    .get("trace")
+                    .cloned()
+                    .and_then(|value| serde_json::from_value::<IpcTraceContextV1>(value).ok())
+                    .is_some_and(|action_trace| trace_is_direct_child(&action_trace, &study_trace))
+        })
+        .take(2)
+        .count()
+        == 1
+}
+
+fn reconcile_async_study_evidence(config: &Config, now: u64) -> anyhow::Result<bool> {
+    // The scheduled-admission and autonomy workers start independently. Ensure
+    // legacy claims receive their exact owner-only archive before either worker
+    // can make the first v7 evidence transition.
+    migrate_thread_state_on_start(config, now)?;
+    let _guard = THREAD_STATE_MUTEX
+        .lock()
+        .map_err(|error| anyhow::anyhow!("working-thread reconciliation lock poisoned: {error}"))?;
+    let mut state = load_thread_state_without_async_evidence(config)?;
+    let prior = state.evidence_records.clone();
+    if !merge_completed_study_evidence(config, &mut state) {
+        return Ok(false);
+    }
+    let arrived = state
+        .evidence_records
+        .iter()
+        .filter(|record| !prior.contains(record))
+        .collect::<Vec<_>>();
+    let event_material = arrived
+        .iter()
+        .map(|record| {
+            format!(
+                "{}:{}",
+                record.evidence_id,
+                record.sha256.as_deref().unwrap_or("no-hash")
+            )
+        })
+        .collect::<Vec<_>>()
+        .join("\n");
+    let event_digest = format!("{:x}", Sha256::digest(event_material.as_bytes()));
+    state.revision = state.revision.saturating_add(1);
+    state.updated_at_unix_ms = arrived
+        .iter()
+        .map(|record| record.captured_at_unix_ms)
+        .max()
+        .filter(|captured| *captured > 0)
+        .unwrap_or(now);
+    state.event = format!(
+        "evidence_arrival_completed_study_{}",
+        event_digest.get(..16).unwrap_or(event_digest.as_str())
+    );
+    validate_thread_state_v7(&state)?;
+    // Append first with an exact-state deduplication check. If the subsequent
+    // atomic-head write is interrupted, the next reconciliation recreates the
+    // same deterministic state, observes the append, and completes the head.
+    append_thread_state_exact_once(config, &state)?;
+    persist_thread_state(config, &state)?;
+    Ok(true)
+}
+
+fn append_thread_state_exact_once(config: &Config, state: &ThreadState) -> anyhow::Result<()> {
+    let path = config.workspace.join("autonomous/thread_state.jsonl");
+    let encoded = serde_json::to_string(state)?;
+    if bounded_ledger_tail(&path, 512 * 1_024)
+        .is_some_and(|lines| lines.iter().any(|line| line == &encoded))
+    {
+        return Ok(());
+    }
+    append_thread_state(config, state)
+}
+
+fn bounded_ledger_tail(path: &Path, maximum_bytes: u64) -> Option<Vec<String>> {
+    let metadata = fs::symlink_metadata(path).ok()?;
+    if !metadata.file_type().is_file() || metadata.file_type().is_symlink() {
+        return None;
+    }
+    let mut file = fs::File::open(path).ok()?;
+    let start = metadata.len().saturating_sub(maximum_bytes);
+    file.seek(SeekFrom::Start(start)).ok()?;
+    let mut bytes = Vec::new();
+    file.read_to_end(&mut bytes).ok()?;
+    if start > 0 {
+        let newline = bytes.iter().position(|byte| *byte == b'\n')?;
+        bytes.drain(..=newline);
+    }
+    String::from_utf8(bytes)
+        .ok()
+        .map(|content| content.lines().map(str::to_string).collect())
+}
+
+/// Transactionally admit one already steward-verified inquiry step. This boundary
+/// deliberately accepts a typed value rather than a raw signed document: signature,
+/// reflection, and ledger verification remain the immutable steward admission task.
+#[derive(Debug, Clone, Copy)]
+struct VerifiedCursorAdvance {
+    verified_gap: bool,
+    gap_from_segment: Option<u64>,
+    gap_from_entry_index: Option<u64>,
+}
+
+#[derive(Debug, Clone, Copy)]
+enum VerifiedCursorDisposition {
+    Replay,
+    Advance(VerifiedCursorAdvance),
+}
+
+pub(crate) fn ingest_verified_inquiry_step(
+    config: &Config,
+    input: &inquiry::VerifiedInquiryStepInput,
+) -> anyhow::Result<inquiry::InquiryAdmissionOutcome> {
+    validate_verified_inquiry_step_input(input)?;
+    // Root-owned scheduled admission can race autonomy startup. Archive an old
+    // v5/v6 projection before the first signed v7 step is allowed to replace it.
+    migrate_thread_state_on_start(config, input.recorded_at_unix_ms)?;
+    let _guard = THREAD_STATE_MUTEX
+        .lock()
+        .map_err(|error| anyhow::anyhow!("working-thread admission lock poisoned: {error}"))?;
+    let mut state = load_thread_state_without_async_evidence(config)?;
+    let disposition = assess_verified_inquiry_cursor(&state, input)?;
+    if matches!(disposition, VerifiedCursorDisposition::Replay) {
+        // Repair a crash after the atomic head but before the append-only
+        // history write; exact-state deduplication makes this idempotent.
+        append_thread_state_exact_once(config, &state)?;
+        return replay_admission_outcome(&state, input);
+    }
+    let VerifiedCursorDisposition::Advance(advance) = disposition else {
+        unreachable!("replay returned above")
+    };
+
+    let mut candidate = state.clone();
+    roll_thread_budget(&mut candidate, input.recorded_at_unix_ms);
+    let semantic_result = apply_verified_inquiry_thread_operation(&mut candidate, input)
+        .and_then(|()| apply_verified_inquiry_belief_operation(&mut candidate, input));
+    if let Err(error) = semantic_result {
+        let reason = bounded_thread_text(&format!("{error:#}"));
+        advance_verified_inquiry_cursor(
+            &mut state,
+            input,
+            advance,
+            "semantic_rejected",
+            Some(&reason),
+        );
+        state.revision = state.revision.saturating_add(1);
+        state.updated_at_unix_ms = input.recorded_at_unix_ms;
+        state.event = if advance.verified_gap {
+            "inquiry_step_semantically_rejected_after_verified_gap".to_string()
+        } else {
+            "inquiry_step_semantically_rejected".to_string()
+        };
+        validate_thread_state_v7(&state)?;
+        persist_thread_state(config, &state)?;
+        append_thread_state_exact_once(config, &state)?;
+        return Ok(inquiry::InquiryAdmissionOutcome::SemanticallyRejected {
+            step_id: input.step_id.clone(),
+            reason,
+            verified_gap: advance.verified_gap,
+        });
+    }
+
+    state = candidate;
+    for evidence_id in &input.evidence_ids {
+        state
+            .pending_evidence_ids
+            .retain(|pending| pending != evidence_id);
+    }
+    state.last_admitted_inquiry_step_id = Some(input.step_id.clone());
+    state.last_inquiry_ledger_hash = Some(input.entry_hash.clone());
+    advance_verified_inquiry_cursor(&mut state, input, advance, "admitted", None);
+    state.response_sha256 = Some(input.response_sha256.clone());
+    state.updated_at_unix_ms = input.recorded_at_unix_ms;
+    state.event = if advance.verified_gap {
+        format!("inquiry_step_{}_admitted_after_verified_gap", input.trigger)
+    } else {
+        format!("inquiry_step_{}_admitted", input.trigger)
+    };
+    state.trace = Some(input.trace.clone());
+    state.latest_note = Some(bounded_thread_text(&input.decision));
+    state.uncertainty = Some(bounded_thread_text(&input.uncertainty));
+    push_thread_value(
+        &mut state.authored_claims,
+        &input.interpretation,
+        MAX_THREAD_FINDINGS,
     );
     push_thread_value(
-        &mut thread.provenance_hashes,
-        &projection.response_sha256,
+        &mut state.provenance_hashes,
+        &input.reflection_sha256,
         MAX_THREAD_EVIDENCE,
     );
     push_thread_value(
-        &mut thread.provenance_hashes,
-        &projection.summary_sha256,
+        &mut state.provenance_hashes,
+        &input.declaration_sha256,
         MAX_THREAD_EVIDENCE,
     );
+    sync_legacy_active_projection(&mut state);
+    state.revision = state.revision.saturating_add(1);
+    validate_thread_state_v7(&state)?;
+    persist_thread_state(config, &state)?;
+    append_thread_state_exact_once(config, &state)?;
+    Ok(inquiry::InquiryAdmissionOutcome::Admitted {
+        summary: compact_thread_summary(&state),
+        verified_gap: advance.verified_gap,
+    })
+}
+
+fn assess_verified_inquiry_cursor(
+    state: &ThreadState,
+    input: &inquiry::VerifiedInquiryStepInput,
+) -> anyhow::Result<VerifiedCursorDisposition> {
+    let cursor = match (
+        state.last_verified_inquiry_step_id.as_deref(),
+        state.last_verified_inquiry_ledger_hash.as_deref(),
+        state.last_verified_inquiry_segment,
+        state.last_verified_inquiry_entry_index,
+    ) {
+        (None, None, None, None) => None,
+        (Some(step_id), Some(entry_hash), Some(segment), Some(entry_index)) => {
+            Some((step_id, entry_hash, segment, entry_index))
+        },
+        _ => anyhow::bail!("verified inquiry cursor is incomplete"),
+    };
+    let Some((current_step_id, current_hash, current_segment, current_index)) = cursor else {
+        let genesis = input.ledger_segment == 1 && input.ledger_entry_index == 1;
+        if genesis {
+            anyhow::ensure!(
+                input.mechanical_predecessor_hash.is_none(),
+                "first verified inquiry ledger entry has a predecessor"
+            );
+        }
+        return Ok(VerifiedCursorDisposition::Advance(VerifiedCursorAdvance {
+            verified_gap: !genesis,
+            gap_from_segment: None,
+            gap_from_entry_index: None,
+        }));
+    };
+    let current_position = (current_segment, current_index);
+    let incoming_position = (input.ledger_segment, input.ledger_entry_index);
+    match incoming_position.cmp(&current_position) {
+        std::cmp::Ordering::Less => {
+            anyhow::bail!("verified inquiry projection is an older rollback")
+        },
+        std::cmp::Ordering::Equal => {
+            anyhow::ensure!(
+                input.entry_hash == current_hash && input.step_id == current_step_id,
+                "verified inquiry replay conflicts at the current ledger position"
+            );
+            return Ok(VerifiedCursorDisposition::Replay);
+        },
+        std::cmp::Ordering::Greater => {},
+    }
+    anyhow::ensure!(
+        input.entry_hash != current_hash && input.step_id != current_step_id,
+        "newer inquiry ledger position replays an older entry identity"
+    );
+    let same_segment_successor = input.ledger_segment == current_segment
+        && input.ledger_entry_index == current_index.saturating_add(1);
+    let next_segment_successor =
+        input.ledger_segment == current_segment.saturating_add(1) && input.ledger_entry_index == 1;
+    let direct_successor = same_segment_successor || next_segment_successor;
+    if direct_successor {
+        anyhow::ensure!(
+            input.mechanical_predecessor_hash.as_deref() == Some(current_hash),
+            "adjacent inquiry ledger entry does not extend the verified cursor"
+        );
+    }
+    Ok(VerifiedCursorDisposition::Advance(VerifiedCursorAdvance {
+        verified_gap: !direct_successor,
+        gap_from_segment: (!direct_successor).then_some(current_segment),
+        gap_from_entry_index: (!direct_successor).then_some(current_index),
+    }))
+}
+
+fn replay_admission_outcome(
+    state: &ThreadState,
+    input: &inquiry::VerifiedInquiryStepInput,
+) -> anyhow::Result<inquiry::InquiryAdmissionOutcome> {
+    match state.last_verified_inquiry_outcome.as_deref() {
+        Some("admitted") => Ok(inquiry::InquiryAdmissionOutcome::AdmittedReplay),
+        Some("semantic_rejected") => {
+            let reason = state
+                .last_verified_inquiry_rejection_reason
+                .clone()
+                .context("rejected inquiry replay has no durable rejection reason")?;
+            Ok(inquiry::InquiryAdmissionOutcome::RejectedReplay {
+                step_id: input.step_id.clone(),
+                reason,
+            })
+        },
+        _ => anyhow::bail!("verified inquiry replay has no durable terminal outcome"),
+    }
+}
+
+fn advance_verified_inquiry_cursor(
+    state: &mut ThreadState,
+    input: &inquiry::VerifiedInquiryStepInput,
+    advance: VerifiedCursorAdvance,
+    outcome: &str,
+    reason: Option<&str>,
+) {
+    let gap_from_entry_hash = advance
+        .verified_gap
+        .then(|| state.last_verified_inquiry_ledger_hash.clone())
+        .flatten();
+    state.last_verified_inquiry_step_id = Some(input.step_id.clone());
+    state.last_verified_inquiry_ledger_hash = Some(input.entry_hash.clone());
+    state.last_verified_inquiry_segment = Some(input.ledger_segment);
+    state.last_verified_inquiry_entry_index = Some(input.ledger_entry_index);
+    state.last_verified_inquiry_outcome = Some(outcome.to_string());
+    state.last_verified_inquiry_rejection_reason = reason.map(bounded_thread_text);
+    if advance.verified_gap {
+        state.verified_inquiry_gap_count = state.verified_inquiry_gap_count.saturating_add(1);
+    }
+    state
+        .recent_inquiry_admission_events
+        .push(InquiryAdmissionEvent {
+            step_id: input.step_id.clone(),
+            entry_hash: input.entry_hash.clone(),
+            predecessor_hash: input.mechanical_predecessor_hash.clone(),
+            ledger_segment: input.ledger_segment,
+            ledger_entry_index: input.ledger_entry_index,
+            outcome: outcome.to_string(),
+            reason: reason.map(bounded_thread_text),
+            verified_gap: advance.verified_gap,
+            gap_from_segment: advance.gap_from_segment,
+            gap_from_entry_index: advance.gap_from_entry_index,
+            gap_from_entry_hash,
+            recorded_at_unix_ms: input.recorded_at_unix_ms,
+        });
+    if state.recent_inquiry_admission_events.len() > MAX_RECENT_INQUIRY_ADMISSION_EVENTS {
+        let excess = state
+            .recent_inquiry_admission_events
+            .len()
+            .saturating_sub(MAX_RECENT_INQUIRY_ADMISSION_EVENTS);
+        state.recent_inquiry_admission_events.drain(..excess);
+    }
+}
+
+#[allow(clippy::too_many_lines)] // All signed step bounds are reviewed together at one boundary.
+fn validate_verified_inquiry_step_input(
+    input: &inquiry::VerifiedInquiryStepInput,
+) -> anyhow::Result<()> {
+    anyhow::ensure!(input.trace.is_supported(), "inquiry step trace is invalid");
+    anyhow::ensure!(
+        input.ledger_segment > 0 && input.ledger_entry_index > 0,
+        "inquiry ledger position is invalid"
+    );
+    for identifier in [input.step_id.as_str(), input.entry_hash.as_str()] {
+        anyhow::ensure!(
+            inquiry::bounded_identifier(identifier).is_some(),
+            "inquiry step contains an unsafe or oversized identifier"
+        );
+    }
+    if let Some(identifier) = input.parent_step_id.as_deref() {
+        anyhow::ensure!(
+            inquiry::bounded_identifier(identifier).is_some(),
+            "inquiry semantic parent identifier is invalid"
+        );
+    }
+    if let Some(digest) = input.mechanical_predecessor_hash.as_deref() {
+        anyhow::ensure!(
+            is_exact_lower_sha256(digest),
+            "inquiry mechanical predecessor hash is malformed"
+        );
+    }
+    if let Some(identifier) = input.thread_id.as_deref() {
+        anyhow::ensure!(
+            inquiry::bounded_identifier(identifier).is_some(),
+            "inquiry thread identifier is invalid"
+        );
+    }
+    if let Some(identifier) = input.belief_id.as_deref() {
+        anyhow::ensure!(
+            inquiry::bounded_identifier(identifier).is_some(),
+            "inquiry belief identifier is invalid"
+        );
+    }
+    if let Some(claim) = input.belief_claim.as_deref() {
+        anyhow::ensure!(
+            !claim.trim().is_empty()
+                && claim.chars().count() <= 480
+                && !claim.chars().any(char::is_control),
+            "inquiry belief claim is empty, oversized, or contains control characters"
+        );
+    }
+    anyhow::ensure!(
+        input.evidence_ids.len() <= 6
+            && input
+                .evidence_ids
+                .iter()
+                .all(|identifier| inquiry::bounded_identifier(identifier).is_some()),
+        "inquiry step evidence identifiers are invalid"
+    );
+    anyhow::ensure!(
+        input
+            .evidence_ids
+            .iter()
+            .collect::<std::collections::BTreeSet<_>>()
+            .len()
+            == input.evidence_ids.len(),
+        "inquiry step contains duplicate evidence identifiers"
+    );
+    for (text, maximum) in [
+        (input.observation.as_str(), 480_usize),
+        (input.interpretation.as_str(), 480),
+        (input.uncertainty.as_str(), 320),
+        (input.decision.as_str(), 480),
+    ] {
+        anyhow::ensure!(
+            !text.trim().is_empty()
+                && text.chars().count() <= maximum
+                && !text.chars().any(char::is_control),
+            "inquiry step text is empty, oversized, or contains control characters"
+        );
+    }
+    for optional in [input.counterpoint.as_deref(), input.next_test.as_deref()]
+        .into_iter()
+        .flatten()
+    {
+        anyhow::ensure!(
+            !optional.trim().is_empty()
+                && optional.chars().count() <= 320
+                && !optional.chars().any(char::is_control),
+            "inquiry optional text is empty, oversized, or contains control characters"
+        );
+    }
+    anyhow::ensure!(
+        matches!(
+            input.confidence.as_str(),
+            "tentative" | "moderate" | "strong"
+        ),
+        "inquiry confidence is unsupported"
+    );
+    anyhow::ensure!(
+        matches!(input.trigger.as_str(), "scheduled" | "evidence_integration"),
+        "inquiry trigger is unsupported"
+    );
+    for digest in [
+        input.entry_hash.as_str(),
+        input.response_sha256.as_str(),
+        input.reflection_sha256.as_str(),
+        input.declaration_sha256.as_str(),
+    ] {
+        anyhow::ensure!(
+            is_exact_lower_sha256(digest),
+            "inquiry cryptographic binding is malformed"
+        );
+    }
+    Ok(())
+}
+
+fn exact_inquiry_evidence_exists(state: &ThreadState, identifier: &str) -> bool {
+    state.evidence_records.iter().any(|record| {
+        record.eligible_for_belief_update
+            && record.evidence_id == identifier
+            && record.sha256.as_deref().is_some_and(is_exact_lower_sha256)
+    })
+}
+
+#[allow(clippy::too_many_lines)] // Signed thread admission is one fail-closed state transition.
+fn apply_verified_inquiry_thread_operation(
+    state: &mut ThreadState,
+    input: &inquiry::VerifiedInquiryStepInput,
+) -> anyhow::Result<()> {
+    let thread_id = input.thread_id.as_deref();
+    match input.thread_operation {
+        inquiry::InquiryThreadOperation::Continue => {
+            let active =
+                active_thread_mut(state).context("continued inquiry has no active thread")?;
+            anyhow::ensure!(
+                thread_id == Some(active.thread_id.as_str()),
+                "continued inquiry thread identifier does not match the active thread"
+            );
+            anyhow::ensure!(
+                input.parent_step_id.as_deref() == active.last_step_id.as_deref(),
+                "continued inquiry semantic parent does not match the active thread"
+            );
+            active.last_step_id = Some(input.step_id.clone());
+            active.updated_at_unix_ms = input.recorded_at_unix_ms;
+        },
+        inquiry::InquiryThreadOperation::Open => {
+            anyhow::ensure!(
+                state.threads.len() < inquiry::MAX_INQUIRY_THREADS
+                    && state.thread_starts_today < inquiry::MAX_THREAD_STARTS_PER_DAY,
+                "scheduled inquiry thread limit reached"
+            );
+            let thread_id =
+                thread_id.context("opened inquiry lacks its exact thread identifier")?;
+            anyhow::ensure!(
+                !state
+                    .threads
+                    .iter()
+                    .any(|thread| thread.thread_id == thread_id),
+                "opened inquiry thread identifier already exists"
+            );
+            anyhow::ensure!(
+                input.parent_step_id.is_none(),
+                "opened inquiry unexpectedly declared a semantic parent"
+            );
+            park_active_thread(state, "parked_by_scheduled_open", input.recorded_at_unix_ms);
+            state.threads.push(InquiryThreadRecord {
+                thread_id: thread_id.to_string(),
+                status: "active".to_string(),
+                question: bounded_thread_text(&input.decision),
+                opened_at_unix_ms: input.recorded_at_unix_ms,
+                updated_at_unix_ms: input.recorded_at_unix_ms,
+                last_step_id: Some(input.step_id.clone()),
+                last_action_response_sha256: Some(input.response_sha256.clone()),
+                disposition_note: Some("opened_by_signed_scheduled_step".to_string()),
+                ..InquiryThreadRecord::default()
+            });
+            state.thread_starts_today = state.thread_starts_today.saturating_add(1);
+        },
+        inquiry::InquiryThreadOperation::Branch => {
+            anyhow::ensure!(
+                state.threads.len() < inquiry::MAX_INQUIRY_THREADS
+                    && state.thread_starts_today < inquiry::MAX_THREAD_STARTS_PER_DAY,
+                "scheduled inquiry branch limit reached"
+            );
+            let thread_id =
+                thread_id.context("branched inquiry lacks its new thread identifier")?;
+            let parent_step_id = input
+                .parent_step_id
+                .as_deref()
+                .context("branched inquiry lacks its exact semantic parent step")?;
+            let parent_thread_id = state
+                .threads
+                .iter()
+                .find(|thread| thread.last_step_id.as_deref() == Some(parent_step_id))
+                .map(|thread| thread.thread_id.clone())
+                .context("branched inquiry semantic parent is not an exact current thread head")?;
+            park_active_thread(
+                state,
+                "parked_by_scheduled_branch",
+                input.recorded_at_unix_ms,
+            );
+            state.threads.push(InquiryThreadRecord {
+                thread_id: thread_id.to_string(),
+                parent_thread_id: Some(parent_thread_id),
+                status: "active".to_string(),
+                question: bounded_thread_text(&input.decision),
+                opened_at_unix_ms: input.recorded_at_unix_ms,
+                updated_at_unix_ms: input.recorded_at_unix_ms,
+                last_step_id: Some(input.step_id.clone()),
+                last_action_response_sha256: Some(input.response_sha256.clone()),
+                disposition_note: Some("branched_by_signed_scheduled_step".to_string()),
+            });
+            state.thread_starts_today = state.thread_starts_today.saturating_add(1);
+        },
+        inquiry::InquiryThreadOperation::Pause => {
+            let thread_id = thread_id.context("paused inquiry lacks its thread identifier")?;
+            let thread = state
+                .threads
+                .iter_mut()
+                .find(|thread| thread.thread_id == thread_id)
+                .context("paused inquiry thread does not exist")?;
+            anyhow::ensure!(
+                input.parent_step_id.as_deref() == thread.last_step_id.as_deref(),
+                "paused inquiry semantic parent does not match its thread head"
+            );
+            thread.status = "paused".to_string();
+            thread.last_step_id = Some(input.step_id.clone());
+            thread.updated_at_unix_ms = input.recorded_at_unix_ms;
+            thread.disposition_note = Some(bounded_thread_text(&input.decision));
+        },
+        inquiry::InquiryThreadOperation::Close => {
+            let thread_id = thread_id.context("closed inquiry lacks its thread identifier")?;
+            let index = state
+                .threads
+                .iter()
+                .position(|thread| thread.thread_id == thread_id)
+                .context("closed inquiry thread does not exist")?;
+            anyhow::ensure!(
+                input.parent_step_id.as_deref() == state.threads[index].last_step_id.as_deref(),
+                "closed inquiry semantic parent does not match its thread head"
+            );
+            let mut closed = state.threads.remove(index);
+            closed.status = "closed".to_string();
+            closed.last_step_id = Some(input.step_id.clone());
+            closed.updated_at_unix_ms = input.recorded_at_unix_ms;
+            closed.disposition_note = Some(bounded_thread_text(&input.decision));
+            state.recent_closed_threads.push(closed);
+            if state.recent_closed_threads.len() > inquiry::MAX_PARKED_INQUIRY_THREADS {
+                let excess = state
+                    .recent_closed_threads
+                    .len()
+                    .saturating_sub(inquiry::MAX_PARKED_INQUIRY_THREADS);
+                state.recent_closed_threads.drain(..excess);
+            }
+        },
+    }
+    anyhow::ensure!(
+        input
+            .evidence_ids
+            .iter()
+            .all(|identifier| exact_inquiry_evidence_exists(state, identifier)),
+        "signed inquiry references unavailable or ineligible evidence"
+    );
+    Ok(())
+}
+
+fn apply_verified_inquiry_belief_operation(
+    state: &mut ThreadState,
+    input: &inquiry::VerifiedInquiryStepInput,
+) -> anyhow::Result<()> {
+    let Some(operation) = input.belief_operation.as_ref() else {
+        anyhow::ensure!(
+            input.belief_id.is_none() && input.belief_claim.is_none(),
+            "inquiry belief fields exist without a belief operation"
+        );
+        return Ok(());
+    };
+    if operation == &inquiry::InquiryBeliefOperation::Unchanged {
+        anyhow::ensure!(
+            input.belief_id.is_none() && input.belief_claim.is_none(),
+            "unchanged inquiry belief unexpectedly declares an identifier or claim"
+        );
+        return Ok(());
+    }
+    let thread_id = active_thread(state).map(|thread| thread.thread_id.clone());
+    let declared_belief_id = input
+        .belief_id
+        .as_deref()
+        .context("scheduled belief transition lacks its exact model-declared belief identifier")?;
+    let declared_claim = input
+        .belief_claim
+        .as_deref()
+        .context("scheduled belief transition lacks its exact model-declared claim")?;
+    let (belief_id, prior_revision_id) = if operation == &inquiry::InquiryBeliefOperation::Propose {
+        anyhow::ensure!(
+            latest_belief_revision(state, declared_belief_id).is_none(),
+            "scheduled belief proposal reuses an existing belief identifier"
+        );
+        (declared_belief_id.to_string(), None)
+    } else {
+        let prior = latest_belief_revision(state, declared_belief_id)
+            .context("scheduled belief transition names no current belief")?;
+        anyhow::ensure!(
+            prior.thread_id == thread_id,
+            "scheduled belief transition names a belief outside the active thread"
+        );
+        (prior.belief_id.clone(), Some(prior.revision_id.clone()))
+    };
+    if !matches!(
+        operation,
+        inquiry::InquiryBeliefOperation::Propose | inquiry::InquiryBeliefOperation::Unchanged
+    ) {
+        anyhow::ensure!(
+            !input.evidence_ids.is_empty(),
+            "scheduled belief transition requires exact eligible evidence"
+        );
+    }
+    let operation_name = match operation {
+        inquiry::InquiryBeliefOperation::Unchanged => "unchanged",
+        inquiry::InquiryBeliefOperation::Propose => "propose",
+        inquiry::InquiryBeliefOperation::Support => "support",
+        inquiry::InquiryBeliefOperation::Weaken => "weaken",
+        inquiry::InquiryBeliefOperation::Revise => "revise",
+        inquiry::InquiryBeliefOperation::Suspend => "suspend",
+        inquiry::InquiryBeliefOperation::Resolve => "resolve",
+    };
+    let revision_digest = format!(
+        "{:x}",
+        Sha256::digest(format!("{}\0{}", input.step_id, input.entry_hash).as_bytes())
+    );
+    state.beliefs.push(BeliefRevisionRecord {
+        revision_id: format!(
+            "belief-revision-{}",
+            revision_digest
+                .get(..20)
+                .unwrap_or(revision_digest.as_str())
+        ),
+        belief_id,
+        thread_id,
+        operation: operation_name.to_string(),
+        claim: bounded_thread_text(declared_claim),
+        evidence_ids: input.evidence_ids.clone(),
+        prior_revision_id,
+        recorded_at_unix_ms: input.recorded_at_unix_ms,
+        response_sha256: input.response_sha256.clone(),
+        source: format!("signed_{}_inquiry_step", input.trigger),
+    });
+    Ok(())
 }
 
 fn migrate_thread_state_on_start(config: &Config, now: u64) -> anyhow::Result<bool> {
+    let _guard = THREAD_STATE_MUTEX
+        .lock()
+        .map_err(|error| anyhow::anyhow!("working-thread migration lock poisoned: {error}"))?;
     let path = config.workspace.join("autonomous/thread_state.json");
     let Some(bytes) = read_optional_regular_state(&path)? else {
         return Ok(false);
@@ -1739,7 +3336,8 @@ fn migrate_thread_state_on_start(config: &Config, now: u64) -> anyhow::Result<bo
     }
     if !matches!(
         raw.schema.as_str(),
-        LEGACY_THREAD_STATE_V1_SCHEMA
+        LEGACY_THREAD_STATE_V6_SCHEMA
+            | LEGACY_THREAD_STATE_V1_SCHEMA
             | LEGACY_THREAD_STATE_V2_SCHEMA
             | LEGACY_THREAD_STATE_V3_SCHEMA
             | LEGACY_THREAD_STATE_V4_SCHEMA
@@ -1747,51 +3345,96 @@ fn migrate_thread_state_on_start(config: &Config, now: u64) -> anyhow::Result<bo
     ) {
         anyhow::bail!("unsupported thread schema {:?}", raw.schema);
     }
+    let legacy_sha256 = format!("{:x}", Sha256::digest(&bytes));
+    persist_legacy_thread_snapshot(config, &bytes, now, &legacy_sha256)?;
     let mut migrated = migrate_thread_state(raw);
+    if let Some(archive) = migrated.legacy_unscoped_archived.last_mut() {
+        archive.projection_sha256.clone_from(&legacy_sha256);
+    }
     migrated.revision = migrated.revision.saturating_add(1);
     migrated.updated_at_unix_ms = now;
-    migrated.event = "migrated_to_v6_spectral_typed_evidence".to_string();
+    migrated.event = "migrated_to_v7_legacy_unscoped_archived".to_string();
     persist_thread_state(config, &migrated)?;
     append_thread_state(config, &migrated)?;
     Ok(true)
 }
 
 fn migrate_thread_state(mut thread: ThreadState) -> ThreadState {
-    let legacy_untyped = matches!(
-        thread.schema.as_str(),
-        LEGACY_THREAD_STATE_V1_SCHEMA | LEGACY_THREAD_STATE_V2_SCHEMA
-    );
     if matches!(
         thread.schema.as_str(),
-        LEGACY_THREAD_STATE_V1_SCHEMA
+        LEGACY_THREAD_STATE_V6_SCHEMA
+            | LEGACY_THREAD_STATE_V1_SCHEMA
             | LEGACY_THREAD_STATE_V2_SCHEMA
             | LEGACY_THREAD_STATE_V3_SCHEMA
             | LEGACY_THREAD_STATE_V4_SCHEMA
             | LEGACY_THREAD_STATE_V5_SCHEMA
     ) {
+        let source_schema = thread.schema.clone();
+        let projection_sha256 = serde_json::to_vec(&thread)
+            .map(|bytes| format!("{:x}", Sha256::digest(bytes)))
+            .unwrap_or_default();
+        thread.legacy_unscoped_archived.push(LegacyThreadArchive {
+            source_schema,
+            legacy_thread_id: thread.thread_id.clone(),
+            legacy_status: thread.status.clone(),
+            status: "legacy_unscoped_archived".to_string(),
+            question: thread.question.clone().or_else(|| thread.focus.clone()),
+            revision: thread.revision,
+            response_sha256: thread.response_sha256.clone(),
+            projection_sha256,
+        });
         thread.schema = THREAD_STATE_SCHEMA.to_string();
-        if let Some(hypothesis) = thread.hypothesis.clone() {
-            push_thread_value(&mut thread.hypotheses, &hypothesis, MAX_THREAD_FINDINGS);
-        }
-        if thread.question.is_none() {
-            thread.question.clone_from(&thread.focus);
-        }
-        for finding in std::mem::take(&mut thread.findings) {
-            push_thread_value(&mut thread.authored_claims, &finding, MAX_THREAD_FINDINGS);
-        }
-        if thread.authored_claims.is_empty()
-            && let Some(note) = thread.latest_note.as_deref()
-        {
-            push_thread_value(&mut thread.authored_claims, note, MAX_THREAD_FINDINGS);
-        }
-        if legacy_untyped {
-            for evidence in &mut thread.evidence_records {
-                evidence.epistemic_status = "legacy_unclassified_not_verified_evidence".to_string();
-            }
-            thread.evidence.clear();
-        }
+        thread.threads.clear();
+        thread.recent_closed_threads.clear();
+        thread.beliefs.clear();
+        thread.pending_evidence_ids.clear();
+        thread.last_admitted_inquiry_step_id = None;
+        thread.last_inquiry_ledger_hash = None;
+        thread.last_verified_inquiry_step_id = None;
+        thread.last_verified_inquiry_ledger_hash = None;
+        thread.last_verified_inquiry_segment = None;
+        thread.last_verified_inquiry_entry_index = None;
+        thread.last_verified_inquiry_outcome = None;
+        thread.last_verified_inquiry_rejection_reason = None;
+        thread.verified_inquiry_gap_count = 0;
+        thread.recent_inquiry_admission_events.clear();
+        thread.thread_id = None;
+        thread.status = "no_active_thread".to_string();
+        thread.focus = None;
+        thread.question = None;
+        thread.hypothesis = None;
+        thread.hypotheses.clear();
+        thread.methods.clear();
+        thread.study_ids.clear();
+        thread.counterquestions.clear();
+        thread.syntheses.clear();
+        thread.unresolved_uncertainties.clear();
+        thread.provenance_hashes.clear();
+        thread.latest_note = None;
+        thread.authored_claims.clear();
+        thread.findings.clear();
+        thread.open_questions.clear();
+        thread.conclusion = None;
+        thread.uncertainty = None;
+        thread.evidence.clear();
+        thread.evidence_records.clear();
+        thread.next_options.clear();
     }
     thread
+}
+
+fn persist_legacy_thread_snapshot(
+    config: &Config,
+    bytes: &[u8],
+    now: u64,
+    sha256: &str,
+) -> anyhow::Result<()> {
+    let suffix = sha256.get(..16).unwrap_or(sha256);
+    let path = config.workspace.join(format!(
+        "autonomous/legacy_thread_state_{now}_{suffix}.json"
+    ));
+    write_private_new_durable(&path, bytes)
+        .context("preserve exact legacy working-thread projection before v7 migration")
 }
 
 fn persist_thread_state(config: &Config, thread: &ThreadState) -> anyhow::Result<()> {
@@ -2039,6 +3682,12 @@ fn is_stateful_action_verb(verb: &str) -> bool {
             | "VALIDATE_TUNING"
             | "ADOPT_TUNING"
             | "REVERT_TUNING"
+            | "OPEN_THREAD"
+            | "BRANCH_THREAD"
+            | "RESUME_THREAD"
+            | "PAUSE_THREAD"
+            | "CLOSE_THREAD"
+            | "UPDATE_BELIEF"
             | "SYNTHESIZE"
             | "SHARE"
             | "PLAN"
@@ -2651,10 +4300,15 @@ fn build_prompt(
          sovereign NEXT action chosen from LISTEN; REST; JOURNAL <text>; REMEMBER <text>; \
          SELF_STUDY <question>; PROPOSE <proposal>; NOTICE <observation>; DAYDREAM <thread>; \
          ASPIRE <aim>; RESEARCH <question>; MEASURE <local or spectral metric question>; STUDY <metric> [WITH <metric>] OVER <1|3|6|12|24|48h> :: <question>; CANCEL_STUDY <study-id>; TUNE_RESERVOIR <input_gain|exploration_scale|regulation_strength>=<decimal> FOR <5m|15m|60m> :: <hypothesis>; CANCEL_TUNING <tuning-id>; VALIDATE_TUNING <candidate-id> :: <question>; ADOPT_TUNING <candidate-id> :: <reason>; REVERT_TUNING <adoption-id> :: <reason>; SYNTHESIZE <evidence-id>[,<evidence-id>...] :: <claim>; SHARE <artifact-id> :: <note>; PLAN <intent>; DRAFT <content>; \
-         READ <artifact-id>; READ_SOURCE <result-id>; REVISE <artifact-id> :: <revision>; or \
+         READ <artifact-id>; READ_SOURCE <result-id>; REVISE <artifact-id> :: <revision>; \
+         OPEN_THREAD <question>; BRANCH_THREAD <thread-id> :: <question>; RESUME_THREAD \
+         <thread-id>; PAUSE_THREAD <thread-id> :: <reason>; CLOSE_THREAD <thread-id> :: \
+         <conclusion>; UPDATE_BELIEF <belief-id> WITH <evidence-id>[,<evidence-id>...] :: \
+         <supported|weakened|revised|suspended|unresolved> :: <claim>; or \
          CHECK <artifact-id>. A successful stateful action \
          schedules another evidence-bearing continuation while the chain remains below its hard \
-         step limit. LISTEN or REST deliberately closes an active chain. Repetition is valid and \
+         step limit. LISTEN or REST deliberately closes an active Action chain without pausing or \
+         closing the inquiry. Repetition is valid and \
          no policy will redirect your choice merely to create variety. Use SELF_STUDY spectral: \
          <question> for private spectral inspection. Tuning may be policy-declined and remains \
          bounded, reversible, evidence-gated, and unable to change the fixed 68% target. All \
@@ -3326,9 +4980,8 @@ fn verified_tuning_result(
                 .unwrap_or(false),
         )
     };
-    if !tuning_result_has_exact_authored_parent(config, &payload_value, result_kind) {
-        return None;
-    }
+    let (trace, parent_response_sha256) =
+        tuning_result_exact_authored_lineage(config, &payload_value, result_kind)?;
 
     let sample_count = payload
         .get("sample_count")
@@ -3352,6 +5005,8 @@ fn verified_tuning_result(
         summary: bounded_thread_text(&summary),
         captured_at_unix_ms: completed_at_unix_ms,
         payload_sha256,
+        trace,
+        parent_response_sha256,
     })
 }
 
@@ -3390,32 +5045,26 @@ fn verified_signed_tuning_payload(
     Some((payload, payload_sha256))
 }
 
-fn tuning_result_has_exact_authored_parent(
+fn tuning_result_exact_authored_lineage(
     config: &Config,
     payload: &serde_json::Value,
     result_kind: &str,
-) -> bool {
-    let Some(parent_hash) = payload
+) -> Option<(IpcTraceContextV1, String)> {
+    let parent_hash = payload
         .get("parent_response_sha256")
         .and_then(serde_json::Value::as_str)
-        .filter(|value| value.len() == 64 && value.bytes().all(|byte| byte.is_ascii_hexdigit()))
-    else {
-        return false;
-    };
-    let Some(result_trace) = payload
+        .filter(|value| is_exact_lower_sha256(value))?;
+    let result_trace = payload
         .get("trace")
         .cloned()
         .and_then(|value| serde_json::from_value::<IpcTraceContextV1>(value).ok())
-        .filter(IpcTraceContextV1::is_supported)
-    else {
-        return false;
-    };
+        .filter(IpcTraceContextV1::is_supported)?;
     if payload
         .get("session_id")
         .and_then(serde_json::Value::as_str)
         != result_trace.session_id.as_deref()
     {
-        return false;
+        return None;
     }
     let expected_verb = if result_kind == "trial" {
         "TUNE_RESERVOIR"
@@ -3423,21 +5072,18 @@ fn tuning_result_has_exact_authored_parent(
         "VALIDATE_TUNING"
     };
     let Ok(content) = fs::read_to_string(config.workspace.join("actions/receipts.jsonl")) else {
-        return false;
+        return None;
     };
-    content.lines().rev().any(|line| {
+    content.lines().rev().find_map(|line| {
         let Ok(action) = serde_json::from_str::<serde_json::Value>(line) else {
-            return false;
+            return None;
         };
-        let Some(action_trace) = action
+        let action_trace = action
             .get("trace")
             .cloned()
             .and_then(|value| serde_json::from_value::<IpcTraceContextV1>(value).ok())
-            .filter(IpcTraceContextV1::is_supported)
-        else {
-            return false;
-        };
-        action
+            .filter(IpcTraceContextV1::is_supported)?;
+        (action
             .get("decision_source")
             .and_then(serde_json::Value::as_str)
             == Some("astrid_declared")
@@ -3453,7 +5099,8 @@ fn tuning_result_has_exact_authored_parent(
                 == Some(expected_verb)
             && action_trace.trace_id == result_trace.trace_id
             && action_trace.session_id == result_trace.session_id
-            && action_trace.chain_id == result_trace.chain_id
+            && action_trace.chain_id == result_trace.chain_id)
+            .then(|| (result_trace.clone(), parent_hash.to_string()))
     })
 }
 
@@ -4769,27 +6416,33 @@ fn unix_millis() -> u64 {
 #[cfg(test)]
 mod tests {
     use super::{
-        AUTONOMY_SCHEMA, AutonomyState, HeadlessResponseProvenance, LegacyAutonomyState,
-        MAX_COMPACT_PROMPT_CHARS, THREAD_STATE_SCHEMA, ThreadEvidence, ThreadState, TurnResult,
-        action_outcome_already_processed, apply_action_outcome, artifact_evidence_classification,
-        build_prompt, compact_spectral_continuation, enqueue_action_candidate, execute_due_turn,
+        AUTONOMY_SCHEMA, AutonomyState, BeliefRevisionRecord, HeadlessResponseProvenance,
+        InquiryThreadRecord, LegacyAutonomyState, MAX_COMPACT_PROMPT_CHARS, THREAD_STATE_SCHEMA,
+        ThreadEvidence, ThreadState, TurnResult, action_outcome_already_processed,
+        apply_action_outcome, artifact_evidence_classification, build_prompt,
+        compact_spectral_continuation, enqueue_action_candidate, execute_due_turn,
         failure_backoff_minutes, final_next_declaration, finish_turn_result,
-        initialize_autonomy_state, is_autonomous_prompt, is_stateful_action_verb,
-        last_authored_response_excerpt, latest_salient_perception, latest_verified_tuning_result,
-        load_state, load_thread_state, load_thread_state_checked,
+        ingest_verified_inquiry_step, initialize_autonomy_state, is_autonomous_prompt,
+        is_stateful_action_verb, last_authored_response_excerpt, latest_salient_perception,
+        latest_verified_tuning_result, load_state, load_thread_state, load_thread_state_checked,
         maintenance_lease_payload_blocks_turn, mark_orphaned_turn_interrupted,
-        matching_completed_tool_receipt, merge_verified_scheduled_projection, migrate_legacy_state,
-        migrate_thread_state_on_start, migrate_v2_state, parse_headless_provenance_receipt,
-        parse_headless_trace_receipt, parse_provider_metrics, persist_state, poll_due_turn,
-        process_action_outcome, push_thread_evidence_record,
+        matching_completed_tool_receipt, migrate_legacy_state, migrate_thread_state_on_start,
+        migrate_v2_state, parse_headless_provenance_receipt, parse_headless_trace_receipt,
+        parse_provider_metrics, persist_state, poll_due_turn, process_action_outcome,
+        push_thread_evidence_record, reconcile_async_study_evidence,
         reconcile_pending_receipt_acknowledgements, record_transport_recovery,
         replay_pending_action_dispatch, roll_daily_budget, rotate_model_session_if_full, run,
         session_name_for_turn, supervised_headless_idle_timeout_seconds, update_thread_state,
-        write_core_liveness_request, write_private_new_durable,
+        validate_inquiry_action_against, validate_thread_state_v7, write_core_liveness_request,
+        write_private_new_durable,
     };
     use crate::{
         actions::ActionOutcome,
         config::{AutonomyInitiativeProfile, AutonomyPromptProfile, Config},
+        inquiry::{
+            InquiryAdmissionOutcome, InquiryBeliefOperation, InquiryThreadOperation,
+            VerifiedInquiryStepInput,
+        },
         reservoir::ReservoirSnapshot,
         trace::{AutonomyTraceRegistry, IpcTraceContextV1},
     };
@@ -5614,6 +7267,60 @@ mod tests {
         }
     }
 
+    fn traced_outcome(declared_next: &str, digest_character: char) -> ActionOutcome {
+        let mut outcome = outcome(declared_next, digest_character);
+        outcome.trace = Some(IpcTraceContextV1::root(
+            Uuid::new_v4(),
+            outcome.session_id.clone(),
+            None,
+        ));
+        outcome
+    }
+
+    fn verified_step(
+        step_id: &str,
+        entry_character: char,
+        predecessor: Option<String>,
+        operation: InquiryThreadOperation,
+        thread_id: Option<String>,
+        parent_step_id: Option<String>,
+    ) -> VerifiedInquiryStepInput {
+        VerifiedInquiryStepInput {
+            step_id: step_id.to_string(),
+            entry_hash: entry_character.to_string().repeat(64),
+            mechanical_predecessor_hash: predecessor,
+            ledger_segment: 1,
+            ledger_entry_index: step_id
+                .strip_prefix("step-")
+                .and_then(|suffix| suffix.parse().ok())
+                .unwrap_or(1),
+            parent_step_id,
+            thread_operation: operation,
+            thread_id,
+            observation: "A bounded local observation.".to_string(),
+            interpretation: "The observation supports a tentative interpretation.".to_string(),
+            uncertainty: "Additional evidence remains necessary.".to_string(),
+            decision: "Continue the bounded inquiry.".to_string(),
+            counterpoint: Some("A scheduler effect remains plausible.".to_string()),
+            next_test: Some("Compare against the completed study.".to_string()),
+            evidence_ids: Vec::new(),
+            confidence: "tentative".to_string(),
+            belief_operation: Some(InquiryBeliefOperation::Unchanged),
+            belief_id: None,
+            belief_claim: None,
+            trigger: "scheduled".to_string(),
+            recorded_at_unix_ms: super::unix_millis(),
+            trace: IpcTraceContextV1::root(
+                Uuid::new_v4(),
+                "scheduled-inquiry-test".to_string(),
+                None,
+            ),
+            response_sha256: "b".repeat(64),
+            reflection_sha256: "c".repeat(64),
+            declaration_sha256: "d".repeat(64),
+        }
+    }
+
     fn write_completed_action_transaction(
         config: &Config,
         dispatch_trace: &IpcTraceContextV1,
@@ -6107,7 +7814,7 @@ mod tests {
     }
 
     #[test]
-    fn working_thread_capsule_survives_actions_and_pauses_without_forcing_choice() {
+    fn working_thread_v7_requires_explicit_lifecycle_and_listen_preserves_it() {
         let mut config = config();
         config.workspace =
             std::env::temp_dir().join(format!("astrid-edge-thread-state-{}", super::unix_millis()));
@@ -6117,11 +7824,11 @@ mod tests {
             active_chain_step: 1,
             ..AutonomyState::default()
         };
-        let research = outcome("RESEARCH an unresolved reservoir question", 'a');
-        let summary = update_thread_state(&config, &state, &research)
+        let opened = traced_outcome("OPEN_THREAD an unresolved reservoir question", 'a');
+        let summary = update_thread_state(&config, &state, &opened)
             .unwrap()
             .unwrap();
-        assert!(summary.contains("chain-thread-test"));
+        assert!(summary.contains("thread-"));
         let persisted = load_thread_state(&config);
         assert_eq!(persisted.status, "active");
         assert_eq!(
@@ -6134,6 +7841,9 @@ mod tests {
         );
         assert_eq!(persisted.open_questions.len(), 1);
         assert_eq!(persisted.evidence.len(), 0);
+
+        let research = outcome("RESEARCH an unresolved reservoir question", 'f');
+        update_thread_state(&config, &state, &research).unwrap();
 
         let journal = outcome("JOURNAL first local observation", 'c');
         update_thread_state(&config, &state, &journal).unwrap();
@@ -6148,27 +7858,574 @@ mod tests {
             load_thread_state(&config).hypothesis.as_deref(),
             Some("the reservoir preserves distinct threads")
         );
+        assert_eq!(load_thread_state(&config).beliefs.len(), 1);
 
         let listen = outcome("LISTEN", 'b');
         state.active_chain_id = None;
         state.last_chain_transition = Some("closed_by_listen".to_string());
         update_thread_state(&config, &state, &listen).unwrap();
-        let paused = load_thread_state(&config);
-        assert_eq!(paused.status, "paused");
-        assert_eq!(paused.last_action.as_deref(), Some("LISTEN"));
-        let thread_id = paused.thread_id.clone();
+        let unchanged = load_thread_state(&config);
+        assert_eq!(unchanged.status, "active");
+        assert_ne!(unchanged.last_action.as_deref(), Some("LISTEN"));
+        let thread_id = unchanged.thread_id.clone().unwrap();
+        let paused_action = traced_outcome(
+            &format!("PAUSE_THREAD {thread_id} :: waiting for stronger evidence"),
+            '1',
+        );
+        update_thread_state(&config, &state, &paused_action).unwrap();
+        assert_eq!(load_thread_state(&config).status, "no_active_thread");
+        let resume_action = traced_outcome(&format!("RESUME_THREAD {thread_id}"), '2');
+        update_thread_state(&config, &state, &resume_action).unwrap();
         state.active_chain_id = Some("a-later-execution-chain".to_string());
         let resumed = outcome("MEASURE whether the rhythm matches scheduler cadence", 'e');
         update_thread_state(&config, &state, &resumed).unwrap();
         let resumed = load_thread_state(&config);
-        assert_eq!(resumed.thread_id, thread_id);
+        assert_eq!(resumed.thread_id.as_deref(), Some(thread_id.as_str()));
         assert_eq!(resumed.status, "active");
         assert_eq!(
             fs::read_to_string(config.workspace.join("autonomous/thread_state.jsonl"))
                 .unwrap()
                 .lines()
                 .count(),
-            5
+            7
+        );
+        fs::remove_dir_all(config.workspace).unwrap();
+    }
+
+    #[test]
+    fn inquiry_thread_limits_fail_closed() {
+        let now = super::unix_millis();
+        let mut state = ThreadState {
+            schema: THREAD_STATE_SCHEMA.to_string(),
+            thread_budget_utc_day: now / 86_400_000,
+            thread_starts_today: crate::inquiry::MAX_THREAD_STARTS_PER_DAY,
+            ..ThreadState::default()
+        };
+        let open = crate::inquiry::parse_thread_action("OPEN_THREAD", "one more question").unwrap();
+        assert_eq!(
+            validate_inquiry_action_against(&state, &open),
+            Err("inquiry_daily_thread_start_limit_reached")
+        );
+
+        state.thread_starts_today = 0;
+        state.threads.push(InquiryThreadRecord {
+            thread_id: "thread-active".to_string(),
+            status: "active".to_string(),
+            ..InquiryThreadRecord::default()
+        });
+        for index in 0..crate::inquiry::MAX_PARKED_INQUIRY_THREADS {
+            state.threads.push(InquiryThreadRecord {
+                thread_id: format!("thread-parked-{index}"),
+                status: "paused".to_string(),
+                ..InquiryThreadRecord::default()
+            });
+        }
+        assert!(validate_thread_state_v7(&state).is_ok());
+        assert_eq!(
+            validate_inquiry_action_against(&state, &open),
+            Err("inquiry_open_thread_limit_reached")
+        );
+        let pause_full = crate::inquiry::parse_thread_action(
+            "PAUSE_THREAD",
+            "thread-active :: preserve this line of inquiry",
+        )
+        .unwrap();
+        assert_eq!(
+            validate_inquiry_action_against(&state, &pause_full),
+            Err("inquiry_parked_thread_limit_reached")
+        );
+    }
+
+    #[test]
+    fn belief_evidence_identifiers_and_retention_fail_closed() {
+        let mut state = ThreadState {
+            schema: THREAD_STATE_SCHEMA.to_string(),
+            threads: vec![InquiryThreadRecord {
+                thread_id: "thread-active".to_string(),
+                status: "active".to_string(),
+                ..InquiryThreadRecord::default()
+            }],
+            ..ThreadState::default()
+        };
+        state.beliefs.push(BeliefRevisionRecord {
+            revision_id: "belief-1-r1".to_string(),
+            belief_id: "belief-1".to_string(),
+            thread_id: Some("thread-active".to_string()),
+            operation: "propose".to_string(),
+            claim: "A bounded claim".to_string(),
+            ..BeliefRevisionRecord::default()
+        });
+        state.evidence_records.push(ThreadEvidence {
+            evidence_id: "source-verified".to_string(),
+            reference: "source-evidence.md".to_string(),
+            sha256: Some("a".repeat(64)),
+            eligible_for_belief_update: true,
+            ..ThreadEvidence::default()
+        });
+        let update = crate::inquiry::parse_thread_action(
+            "UPDATE_BELIEF",
+            "belief-1 WITH source-verified :: supported :: A supported claim",
+        )
+        .unwrap();
+        assert!(validate_inquiry_action_against(&state, &update).is_ok());
+        for alias in ["source-evidence.md".to_string(), "a".repeat(64)] {
+            let aliased_update = crate::inquiry::parse_thread_action(
+                "UPDATE_BELIEF",
+                &format!("belief-1 WITH {alias} :: supported :: An ambiguously identified claim"),
+            )
+            .unwrap();
+            assert_eq!(
+                validate_inquiry_action_against(&state, &aliased_update),
+                Err("inquiry_belief_evidence_is_missing_or_ineligible")
+            );
+        }
+        let ineligible_update = crate::inquiry::parse_thread_action(
+            "UPDATE_BELIEF",
+            "belief-1 WITH search-only :: supported :: An unsupported claim",
+        )
+        .unwrap();
+        assert_eq!(
+            validate_inquiry_action_against(&state, &ineligible_update),
+            Err("inquiry_belief_evidence_is_missing_or_ineligible")
+        );
+
+        let mut malformed_parent = state.clone();
+        malformed_parent.evidence_records[0].parent_response_sha256 = Some("A".repeat(64));
+        assert!(validate_thread_state_v7(&malformed_parent).is_err());
+        let mut malformed_trace = state.clone();
+        let mut unsupported = IpcTraceContextV1::root(
+            Uuid::new_v4(),
+            "malformed-evidence-lineage".to_string(),
+            None,
+        );
+        unsupported.schema_version = 2;
+        malformed_trace.evidence_records[0].trace = Some(unsupported);
+        assert!(validate_thread_state_v7(&malformed_trace).is_err());
+
+        let mut full = ThreadState {
+            schema: THREAD_STATE_SCHEMA.to_string(),
+            ..ThreadState::default()
+        };
+        for index in 0..super::MAX_THREAD_EVIDENCE {
+            push_thread_evidence_record(
+                &mut full,
+                ThreadEvidence {
+                    evidence_id: format!("verified-{index}"),
+                    kind: "verified_source".to_string(),
+                    reference: format!("source-{index}.md"),
+                    sha256: Some(format!("{:064x}", index.saturating_add(1))),
+                    eligible_for_belief_update: true,
+                    ..ThreadEvidence::default()
+                },
+            );
+        }
+        assert!(!push_thread_evidence_record(
+            &mut full,
+            ThreadEvidence {
+                evidence_id: "lower-priority-read".to_string(),
+                kind: "owned_artifact_read".to_string(),
+                reference: "draft.md".to_string(),
+                sha256: Some("f".repeat(64)),
+                eligible_for_belief_update: true,
+                ..ThreadEvidence::default()
+            }
+        ));
+        assert!(
+            !full
+                .pending_evidence_ids
+                .iter()
+                .any(|identifier| identifier == "lower-priority-read")
+        );
+    }
+
+    #[test]
+    fn signed_inquiry_steps_admit_in_exact_ledger_and_semantic_parent_order() {
+        let mut config = config();
+        config.workspace = std::env::temp_dir().join(format!(
+            "astrid-edge-signed-inquiry-{}",
+            super::unix_millis()
+        ));
+        config.prepare_workspace().unwrap();
+        let opened = verified_step(
+            "step-1",
+            'a',
+            None,
+            InquiryThreadOperation::Open,
+            Some("thread-signed".to_string()),
+            None,
+        );
+        assert!(matches!(
+            ingest_verified_inquiry_step(&config, &opened).unwrap(),
+            InquiryAdmissionOutcome::Admitted {
+                verified_gap: false,
+                ..
+            }
+        ));
+        fs::remove_file(config.workspace.join("autonomous/thread_state.jsonl")).unwrap();
+        assert_eq!(
+            ingest_verified_inquiry_step(&config, &opened).unwrap(),
+            InquiryAdmissionOutcome::AdmittedReplay
+        );
+        assert_eq!(
+            fs::read_to_string(config.workspace.join("autonomous/thread_state.jsonl"))
+                .unwrap()
+                .lines()
+                .count(),
+            1
+        );
+        let mut continued = verified_step(
+            "step-2",
+            'e',
+            Some("a".repeat(64)),
+            InquiryThreadOperation::Continue,
+            Some("thread-signed".to_string()),
+            Some("step-1".to_string()),
+        );
+        continued.belief_operation = Some(InquiryBeliefOperation::Propose);
+        continued.belief_id = Some("belief-signed".to_string());
+        continued.belief_claim = Some("A tentative signed belief.".to_string());
+        assert!(matches!(
+            ingest_verified_inquiry_step(&config, &continued).unwrap(),
+            InquiryAdmissionOutcome::Admitted {
+                verified_gap: false,
+                ..
+            }
+        ));
+        let state = load_thread_state(&config);
+        assert_eq!(
+            state.last_admitted_inquiry_step_id.as_deref(),
+            Some("step-2")
+        );
+        let expected_entry_hash = "e".repeat(64);
+        assert_eq!(
+            state.last_inquiry_ledger_hash.as_deref(),
+            Some(expected_entry_hash.as_str())
+        );
+        assert_eq!(state.beliefs.len(), 1);
+        assert_eq!(state.beliefs[0].source, "signed_scheduled_inquiry_step");
+        assert!(
+            state
+                .evidence_records
+                .iter()
+                .all(|record| record.kind != "scheduled_introspection")
+        );
+
+        let wrong_predecessor = verified_step(
+            "step-3",
+            'f',
+            Some("0".repeat(64)),
+            InquiryThreadOperation::Continue,
+            Some("thread-signed".to_string()),
+            Some("step-2".to_string()),
+        );
+        assert!(ingest_verified_inquiry_step(&config, &wrong_predecessor).is_err());
+        fs::remove_dir_all(config.workspace).unwrap();
+    }
+
+    #[test]
+    fn semantic_rejection_advances_only_verified_cursor_and_does_not_strand_successor() {
+        let mut config = config();
+        config.workspace = std::env::temp_dir().join(format!(
+            "astrid-edge-inquiry-rejection-liveness-{}",
+            super::unix_millis()
+        ));
+        config.prepare_workspace().unwrap();
+        let rejected = verified_step(
+            "step-1",
+            'a',
+            None,
+            InquiryThreadOperation::Continue,
+            Some("thread-absent".to_string()),
+            None,
+        );
+        let rejection = ingest_verified_inquiry_step(&config, &rejected).unwrap();
+        assert!(matches!(
+            rejection,
+            InquiryAdmissionOutcome::SemanticallyRejected {
+                verified_gap: false,
+                ..
+            }
+        ));
+        assert!(!rejection.reservoir_eligible());
+        assert!(matches!(
+            ingest_verified_inquiry_step(&config, &rejected).unwrap(),
+            InquiryAdmissionOutcome::RejectedReplay { .. }
+        ));
+        let rejected_state = load_thread_state(&config);
+        assert_eq!(
+            rejected_state.last_verified_inquiry_step_id.as_deref(),
+            Some("step-1")
+        );
+        assert!(rejected_state.last_admitted_inquiry_step_id.is_none());
+        assert_eq!(rejected_state.event, "inquiry_step_semantically_rejected");
+
+        let admitted = verified_step(
+            "step-2",
+            'b',
+            Some("a".repeat(64)),
+            InquiryThreadOperation::Open,
+            Some("thread-recovered".to_string()),
+            None,
+        );
+        let admission = ingest_verified_inquiry_step(&config, &admitted).unwrap();
+        assert!(matches!(
+            admission,
+            InquiryAdmissionOutcome::Admitted {
+                verified_gap: false,
+                ..
+            }
+        ));
+        assert!(admission.reservoir_eligible());
+        let recovered = load_thread_state(&config);
+        assert_eq!(
+            recovered.last_verified_inquiry_step_id.as_deref(),
+            Some("step-2")
+        );
+        assert_eq!(
+            recovered.last_admitted_inquiry_step_id.as_deref(),
+            Some("step-2")
+        );
+        assert_eq!(recovered.recent_inquiry_admission_events.len(), 2);
+        fs::remove_dir_all(config.workspace).unwrap();
+    }
+
+    #[test]
+    fn newer_signed_projection_gaps_are_explicit_and_never_infer_missing_semantics() {
+        let mut config = config();
+        config.workspace = std::env::temp_dir().join(format!(
+            "astrid-edge-inquiry-gap-liveness-{}",
+            super::unix_millis()
+        ));
+        config.prepare_workspace().unwrap();
+        let opened = verified_step(
+            "step-1",
+            'a',
+            None,
+            InquiryThreadOperation::Open,
+            Some("thread-gap".to_string()),
+            None,
+        );
+        ingest_verified_inquiry_step(&config, &opened).unwrap();
+        let gap_three = verified_step(
+            "step-3",
+            'c',
+            Some("b".repeat(64)),
+            InquiryThreadOperation::Continue,
+            Some("thread-gap".to_string()),
+            Some("step-1".to_string()),
+        );
+        assert!(matches!(
+            ingest_verified_inquiry_step(&config, &gap_three).unwrap(),
+            InquiryAdmissionOutcome::Admitted {
+                verified_gap: true,
+                ..
+            }
+        ));
+        let gap_five = verified_step(
+            "step-5",
+            'e',
+            Some("d".repeat(64)),
+            InquiryThreadOperation::Continue,
+            Some("thread-gap".to_string()),
+            Some("step-3".to_string()),
+        );
+        assert!(matches!(
+            ingest_verified_inquiry_step(&config, &gap_five).unwrap(),
+            InquiryAdmissionOutcome::Admitted {
+                verified_gap: true,
+                ..
+            }
+        ));
+        let state = load_thread_state(&config);
+        assert_eq!(state.verified_inquiry_gap_count, 2);
+        assert_eq!(state.recent_inquiry_admission_events.len(), 3);
+        assert_eq!(
+            state
+                .threads
+                .iter()
+                .find(|thread| thread.thread_id == "thread-gap")
+                .and_then(|thread| thread.last_step_id.as_deref()),
+            Some("step-5")
+        );
+        assert!(
+            state
+                .recent_inquiry_admission_events
+                .iter()
+                .all(|event| !matches!(event.step_id.as_str(), "step-2" | "step-4"))
+        );
+        fs::remove_dir_all(config.workspace).unwrap();
+    }
+
+    #[test]
+    fn older_projection_after_newer_cursor_is_rejected_as_rollback() {
+        let mut config = config();
+        config.workspace = std::env::temp_dir().join(format!(
+            "astrid-edge-inquiry-rollback-{}",
+            super::unix_millis()
+        ));
+        config.prepare_workspace().unwrap();
+        let opened = verified_step(
+            "step-1",
+            'a',
+            None,
+            InquiryThreadOperation::Open,
+            Some("thread-rollback".to_string()),
+            None,
+        );
+        ingest_verified_inquiry_step(&config, &opened).unwrap();
+        let continued = verified_step(
+            "step-2",
+            'b',
+            Some("a".repeat(64)),
+            InquiryThreadOperation::Continue,
+            Some("thread-rollback".to_string()),
+            Some("step-1".to_string()),
+        );
+        ingest_verified_inquiry_step(&config, &continued).unwrap();
+        let rollback = ingest_verified_inquiry_step(&config, &opened).unwrap_err();
+        assert!(rollback.to_string().contains("older rollback"));
+        let state = load_thread_state(&config);
+        assert_eq!(
+            state.last_verified_inquiry_step_id.as_deref(),
+            Some("step-2")
+        );
+        assert_eq!(state.recent_inquiry_admission_events.len(), 2);
+        fs::remove_dir_all(config.workspace).unwrap();
+    }
+
+    #[test]
+    fn completed_astrid_study_reconciles_as_pending_evidence_but_operator_harness_does_not() {
+        let mut config = config();
+        config.workspace = std::env::temp_dir().join(format!(
+            "astrid-edge-study-reconcile-{}",
+            super::unix_millis()
+        ));
+        config.prepare_workspace().unwrap();
+        let relative = "studies/results/study_123_result.md";
+        let artifact = config.workspace.join(relative);
+        fs::create_dir_all(artifact.parent().unwrap()).unwrap();
+        fs::write(&artifact, "bounded deterministic result").unwrap();
+        let digest = format!("{:x}", Sha256::digest(fs::read(&artifact).unwrap()));
+        let parent_response_sha256 = "9".repeat(64);
+        let action_trace =
+            IpcTraceContextV1::root(Uuid::new_v4(), "study-action-session".to_string(), None);
+        let study_trace = action_trace.child();
+        fs::write(
+            config.workspace.join("actions/receipts.jsonl"),
+            format!(
+                "{}\n",
+                serde_json::json!({
+                    "schema": "astrid_edge_action_receipt_v5",
+                    "decision_source": "astrid_declared",
+                    "status": "executed",
+                    "outcome": "persistent_study_started",
+                    "declared_next": "STUDY fill OVER 1h :: bounded question",
+                    "response_sha256": parent_response_sha256.clone(),
+                    "trace": action_trace.clone()
+                })
+            ),
+        )
+        .unwrap();
+        fs::write(
+            config.workspace.join("studies/receipts.jsonl"),
+            format!(
+                "{}\n{}\n",
+                serde_json::json!({
+                    "schema": "astrid_edge_study_receipt_v1",
+                    "phase": "completed",
+                    "status": "completed",
+                    "study_id": "study_123",
+                    "artifact_path": relative,
+                    "artifact_sha256": digest,
+                    "recorded_at_unix_ms": 123,
+                    "origin": "astrid_action",
+                    "parent_response_sha256": parent_response_sha256.clone(),
+                    "trace": study_trace.clone()
+                }),
+                serde_json::json!({
+                    "schema": "astrid_edge_study_receipt_v1",
+                    "phase": "completed",
+                    "status": "completed",
+                    "study_id": "operator_study_456",
+                    "artifact_path": relative,
+                    "artifact_sha256": digest,
+                    "recorded_at_unix_ms": 124,
+                    "origin": "operator_harness"
+                })
+            ),
+        )
+        .unwrap();
+        assert!(reconcile_async_study_evidence(&config, 200).unwrap());
+        assert!(!reconcile_async_study_evidence(&config, 201).unwrap());
+        let state = load_thread_state(&config);
+        assert_eq!(state.pending_evidence_ids, vec!["study_123"]);
+        let completed = state
+            .evidence_records
+            .iter()
+            .find(|evidence| evidence.kind == "completed_study")
+            .unwrap();
+        assert_eq!(completed.trace.as_ref(), Some(&study_trace));
+        assert_eq!(
+            completed.parent_response_sha256.as_deref(),
+            Some(parent_response_sha256.as_str())
+        );
+        assert_eq!(
+            state
+                .evidence_records
+                .iter()
+                .filter(|evidence| evidence.kind == "completed_study")
+                .count(),
+            1
+        );
+        assert_eq!(
+            fs::read_to_string(config.workspace.join("autonomous/thread_state.jsonl"))
+                .unwrap()
+                .lines()
+                .count(),
+            1
+        );
+        fs::remove_dir_all(config.workspace).unwrap();
+    }
+
+    #[test]
+    fn malformed_legacy_evidence_hashes_become_ineligible_without_wedging_v7() {
+        let mut config = config();
+        config.workspace = std::env::temp_dir().join(format!(
+            "astrid-edge-malformed-legacy-evidence-{}",
+            super::unix_millis()
+        ));
+        config.prepare_workspace().unwrap();
+        fs::write(
+            config.workspace.join("autonomous/thread_state.json"),
+            serde_json::json!({
+                "schema": THREAD_STATE_SCHEMA,
+                "pending_evidence_ids": ["uppercase-hash", "missing-hash"],
+                "evidence_records": [
+                    {
+                        "evidence_id": "uppercase-hash",
+                        "kind": "verified_source",
+                        "reference": "source-upper.md",
+                        "sha256": "A".repeat(64),
+                        "eligible_for_belief_update": true
+                    },
+                    {
+                        "evidence_id": "missing-hash",
+                        "kind": "owned_artifact_read",
+                        "reference": "draft.md",
+                        "eligible_for_belief_update": true
+                    }
+                ]
+            })
+            .to_string(),
+        )
+        .unwrap();
+        let state = load_thread_state_checked(&config).unwrap();
+        assert!(state.pending_evidence_ids.is_empty());
+        assert!(
+            state
+                .evidence_records
+                .iter()
+                .all(|record| !record.eligible_for_belief_update)
         );
         fs::remove_dir_all(config.workspace).unwrap();
     }
@@ -6203,8 +8460,9 @@ mod tests {
             "scheduled_self_directed_turn",
             &AutonomyState::default(),
         );
-        assert!(prompt.contains("chain-prompt-test"));
-        assert!(prompt.contains("compare local evidence"));
+        assert!(prompt.contains("OPEN_THREAD <question>"));
+        assert!(!prompt.contains("chain-prompt-test"));
+        assert!(!prompt.contains("compare local evidence"));
         assert!(prompt.chars().count() <= MAX_COMPACT_PROMPT_CHARS);
 
         let mut fallback = outcome("LISTEN", 'c');
@@ -6224,7 +8482,7 @@ mod tests {
     }
 
     #[test]
-    fn legacy_thread_capsule_migrates_to_v6_without_inventing_evidence() {
+    fn legacy_thread_capsule_migrates_to_v7_as_unscoped_archive() {
         let mut config = config();
         config.workspace = std::env::temp_dir().join(format!(
             "astrid-edge-thread-migration-{}",
@@ -6247,21 +8505,39 @@ mod tests {
         .unwrap();
         let migrated = load_thread_state(&config);
         assert_eq!(migrated.schema, THREAD_STATE_SCHEMA);
-        assert_eq!(migrated.question.as_deref(), Some("legacy question"));
-        assert_eq!(migrated.authored_claims, vec!["legacy observation"]);
+        assert!(migrated.question.is_none());
+        assert!(migrated.authored_claims.is_empty());
         assert!(migrated.findings.is_empty());
         assert_eq!(migrated.evidence_records.len(), 0);
+        assert_eq!(migrated.legacy_unscoped_archived.len(), 1);
+        assert_eq!(
+            migrated.legacy_unscoped_archived[0].status,
+            "legacy_unscoped_archived"
+        );
+        assert_eq!(
+            migrated.legacy_unscoped_archived[0].question.as_deref(),
+            Some("legacy question")
+        );
         assert!(migrate_thread_state_on_start(&config, 123).unwrap());
         assert!(!migrate_thread_state_on_start(&config, 124).unwrap());
         let persisted = load_thread_state(&config);
         assert_eq!(persisted.schema, THREAD_STATE_SCHEMA);
         assert_eq!(persisted.revision, 8);
-        assert_eq!(persisted.event, "migrated_to_v6_spectral_typed_evidence");
+        assert_eq!(persisted.event, "migrated_to_v7_legacy_unscoped_archived");
+        assert!(
+            fs::read_dir(config.workspace.join("autonomous"))
+                .unwrap()
+                .flatten()
+                .any(|entry| entry
+                    .file_name()
+                    .to_string_lossy()
+                    .starts_with("legacy_thread_state_123_"))
+        );
         fs::remove_dir_all(config.workspace).unwrap();
     }
 
     #[test]
-    fn v5_thread_migration_preserves_typed_evidence_exactly() {
+    fn v5_thread_migration_preserves_exact_snapshot_without_projecting_claims() {
         let mut config = config();
         config.workspace = std::env::temp_dir().join(format!(
             "astrid-edge-thread-v5-migration-{}",
@@ -6292,13 +8568,13 @@ mod tests {
         let migrated = load_thread_state(&config);
         assert_eq!(migrated.schema, THREAD_STATE_SCHEMA);
         assert_eq!(migrated.revision, 5);
-        assert_eq!(migrated.evidence_records.len(), 1);
-        assert_eq!(migrated.evidence_records[0].kind, "verified_source");
+        assert!(migrated.evidence_records.is_empty());
+        assert_eq!(migrated.legacy_unscoped_archived.len(), 1);
         assert_eq!(
-            migrated.evidence_records[0].epistemic_status,
-            "bounded_untrusted_external_source"
+            migrated.legacy_unscoped_archived[0].source_schema,
+            "astrid_edge_thread_state_v5"
         );
-        assert_eq!(migrated.event, "migrated_to_v6_spectral_typed_evidence");
+        assert_eq!(migrated.event, "migrated_to_v7_legacy_unscoped_archived");
         assert!(!migrate_thread_state_on_start(&config, 124).unwrap());
         fs::remove_dir_all(config.workspace).unwrap();
     }
@@ -7276,40 +9552,6 @@ mod tests {
                 .iter()
                 .all(|record| record.kind == "verified_source")
         );
-    }
-
-    #[test]
-    fn scheduled_projection_merges_idempotently_as_typed_bounded_continuity() {
-        let projection = crate::scheduled_admission::VerifiedProjection {
-            summary: "A bounded scheduled reflection distinguishes evidence from interpretation."
-                .to_string(),
-            summary_sha256: "a".repeat(64),
-            response_sha256: "b".repeat(64),
-            trace_id: Uuid::from_u128(1).to_string(),
-            due_nonce: "due-12345".to_string(),
-            recorded_at_unix_ms: 42,
-        };
-        let mut thread = ThreadState::default();
-        merge_verified_scheduled_projection(&mut thread, &projection);
-        merge_verified_scheduled_projection(&mut thread, &projection);
-        let records = thread
-            .evidence_records
-            .iter()
-            .filter(|record| record.kind == "scheduled_introspection")
-            .collect::<Vec<_>>();
-        assert_eq!(records.len(), 1);
-        assert_eq!(records[0].reference, "due-12345");
-        assert_eq!(
-            records[0].sha256.as_deref(),
-            Some(projection.response_sha256.as_str())
-        );
-        assert!(records[0].source.contains(&projection.trace_id));
-        assert!(records[0].source.contains(&projection.summary_sha256));
-        assert_eq!(
-            records[0].summary.chars().count(),
-            projection.summary.chars().count()
-        );
-        assert_eq!(thread.provenance_hashes.len(), 2);
     }
 
     #[test]

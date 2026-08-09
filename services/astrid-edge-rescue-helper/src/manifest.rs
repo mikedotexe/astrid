@@ -1415,6 +1415,7 @@ fn is_inspect_only_immutable_source(path: &str) -> bool {
         "scripts/build_edge_self_change_source_bundle.py"
             | "scripts/build_edge_self_change_supervisor_zipapp.py"
             | "scripts/build_edge_self_change_toolchain_bundle.py"
+            | "scripts/astrid_train.py"
             | "scripts/edge_audio_feeder.py"
             | "scripts/edge_hindsight.py"
             | "scripts/edge_self_change_supervisor.py"
@@ -2066,6 +2067,14 @@ mod tests {
         assert!(valid_source_origin(
             "source/packaging/systemd/astrid-edge-presentation-broker.socket.in",
             INSPECT_ONLY_ORIGIN
+        ));
+        assert!(valid_source_origin(
+            "source/scripts/astrid_train.py",
+            INSPECT_ONLY_ORIGIN
+        ));
+        assert!(!valid_source_origin(
+            "source/scripts/astrid_train.py",
+            "mutable_edge_report"
         ));
         assert!(!valid_source_origin(
             "source/services/astrid-edge-rescue-helper/src/main.rs",

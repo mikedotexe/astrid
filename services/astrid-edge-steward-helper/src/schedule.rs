@@ -96,6 +96,12 @@ pub fn prepare_completion_projection(config: &Config, nonce: &str) -> Result<u64
     prepare_completion_at(&schedule_path, &completion_plan_path(config), nonce, now)
 }
 
+/// Return the currently scheduled cadence boundary without consuming or
+/// preparing it. Evidence integrations use this only for truthful reporting.
+pub fn next_due_at(config: &Config) -> Result<u64> {
+    Ok(load(&schedule_path(config), unix_seconds())?.next_due_at_unix_seconds)
+}
+
 /// Atomically consume one automatic model-start slot immediately before the
 /// first provider write. A failed, malformed, or partial response leaves the
 /// original due nonce pending, but cannot begin another model call for two

@@ -1,4 +1,5 @@
 #![deny(unsafe_code)]
+#![recursion_limit = "256"]
 
 mod attestation;
 mod authored_transaction;
@@ -9,6 +10,10 @@ mod context_provenance;
 mod evidence;
 mod gate;
 mod handoff;
+mod inquiry;
+#[cfg(test)]
+mod inquiry_tests;
+mod integration;
 mod lifecycle;
 mod maintenance;
 mod model_lock;
@@ -48,8 +53,8 @@ pub fn scheduled_authorship_verifying_key_hex(config: &Config) -> Result<String>
 }
 
 pub const CONFIG_SCHEMA: &str = "astrid.edge.steward_helper.config.v1";
-pub const RECEIPT_SCHEMA: &str = "astrid.edge.scheduled_introspection.helper_receipt.v1";
-pub const REFLECTION_SCHEMA: &str = "astrid.edge.scheduled_introspection.model_reflection.v1";
+pub const RECEIPT_SCHEMA: &str = "astrid.edge.scheduled_introspection.helper_receipt.v2";
+pub const REFLECTION_SCHEMA: &str = "astrid.edge.scheduled_introspection.model_reflection.v2";
 
 #[derive(Debug)]
 pub struct Error(String);

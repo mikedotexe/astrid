@@ -17,6 +17,8 @@ from unittest import mock
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import edge_hindsight as hindsight
 
+VERIFIED_TRAIN_SOURCE = b"TRAIN_MARKER = 'verified-root-train'\n"
+
 
 class EdgeHindsightTest(unittest.TestCase):
     def setUp(self) -> None:
@@ -503,7 +505,9 @@ class EdgeHindsightTest(unittest.TestCase):
         self, source: bytes = b"MARKER = 'verified-root-report'\n"
     ) -> tuple[dict[str, object], bytes, bytes]:
         source_sha256 = hashlib.sha256(source).hexdigest()
+        train_sha256 = hashlib.sha256(VERIFIED_TRAIN_SOURCE).hexdigest()
         manifest = (
+            f"{train_sha256}  {hindsight.IMMUTABLE_TRAIN_REPORT_PATH}\n"
             f"{source_sha256}  {hindsight.IMMUTABLE_ACTIVITY_REPORT_PATH}\n"
         ).encode()
         config = hindsight.parse_sealed_writer_config(
@@ -527,6 +531,9 @@ class EdgeHindsightTest(unittest.TestCase):
             if path == hindsight.IMMUTABLE_ACTIVITY_REPORT_PATH:
                 self.assertEqual(maximum_bytes, hindsight.MAX_ACTIVITY_REPORT_BYTES)
                 return source
+            if path == hindsight.IMMUTABLE_TRAIN_REPORT_PATH:
+                self.assertEqual(maximum_bytes, hindsight.MAX_TRAIN_REPORT_BYTES)
+                return VERIFIED_TRAIN_SOURCE
             self.assertEqual(
                 path, hindsight.IMMUTABLE_OPERATOR_REPORT_MANIFEST_PATH
             )
@@ -543,6 +550,9 @@ class EdgeHindsightTest(unittest.TestCase):
         self.assertEqual(module.MARKER, "verified-root-report")
         self.assertEqual(
             module.__file__, str(hindsight.IMMUTABLE_ACTIVITY_REPORT_PATH)
+        )
+        self.assertEqual(
+            module._SEALED_TRAIN_MODULE.TRAIN_MARKER, "verified-root-train"
         )
 
     def test_sealed_activity_report_rejects_source_or_manifest_drift(self) -> None:
@@ -588,9 +598,43 @@ class EdgeHindsightTest(unittest.TestCase):
         config, _, manifest = self.verified_activity_fixture(source)
         with (
             mock.patch.object(
-                hindsight, "stable_root_read", side_effect=(source, manifest)
+                hindsight,
+                "stable_root_read",
+                side_effect=(source, manifest, VERIFIED_TRAIN_SOURCE),
             ),
             self.assertRaisesRegex(ValueError, "identity changed during load"),
+        ):
+            hindsight.load_verified_activity_module(config)
+
+    def test_sealed_activity_report_rejects_unbound_or_drifting_train_dependency(self) -> None:
+        config, source, manifest = self.verified_activity_fixture()
+        missing_train_manifest = (
+            f"{hashlib.sha256(source).hexdigest()}  "
+            f"{hindsight.IMMUTABLE_ACTIVITY_REPORT_PATH}\n"
+        ).encode()
+        missing_config = {
+            **config,
+            "operator_report_manifest_sha256": hashlib.sha256(
+                missing_train_manifest
+            ).hexdigest(),
+        }
+        with (
+            mock.patch.object(
+                hindsight,
+                "stable_root_read",
+                side_effect=(source, missing_train_manifest),
+            ),
+            self.assertRaisesRegex(ValueError, "train dependency manifest binding is absent"),
+        ):
+            hindsight.load_verified_activity_module(missing_config)
+
+        with (
+            mock.patch.object(
+                hindsight,
+                "stable_root_read",
+                side_effect=(source, manifest, b"TRAIN_MARKER = 'tampered'\n"),
+            ),
+            self.assertRaisesRegex(ValueError, "train dependency digest mismatch"),
         ):
             hindsight.load_verified_activity_module(config)
 
@@ -1049,6 +1093,101 @@ class EdgeHindsightTest(unittest.TestCase):
             }.issubset(self_change_columns)
         )
         self.assertEqual(schema_version, (str(hindsight.DATABASE_SCHEMA_VERSION),))
+
+    def test_v6_database_projects_inquiry_evidence_beliefs_and_acknowledgments(self) -> None:
+        operator = self.root / "operator/hindsight"
+        operator.mkdir(parents=True)
+        timestamp = 1_700_000_000_100
+        common = {
+            "trace_id": "00000000-0000-4000-8000-000000000001",
+            "turn_id": "00000000-0000-4000-8000-000000000002",
+            "session_id": "scheduled-session",
+            "source_ledger": "immutable-steward/inquiry/segments",
+        }
+        events = [
+            {
+                **common,
+                "timestamp_unix_ms": timestamp,
+                "kind": "inquiry_step",
+                "status": "verified",
+                "authored": True,
+                "fallback": False,
+                "step_id": "inquiry-step-one",
+                "signed_entry_id": "inquiry-entry-one",
+                "thread_id": "thread-one",
+                "parent_step_id": None,
+                "thread_operation": "open",
+                "confidence": "tentative",
+                "belief_operation": "propose",
+                "belief_id": "belief-one",
+                "response_sha256": "a" * 64,
+                "declaration_sha256": "b" * 64,
+                "entry_sha256": "c" * 64,
+                "train_integrity": "full_signed_hash_chain_verified",
+            },
+            {
+                **common,
+                "timestamp_unix_ms": timestamp + 1,
+                "kind": "evidence_arrival",
+                "evidence_id": "evidence-one",
+                "thread_id": "thread-one",
+                "evidence_kind": "verified_source",
+                "status": "verified",
+                "eligible_for_belief_update": True,
+                "sha256": "d" * 64,
+            },
+            {
+                **common,
+                "timestamp_unix_ms": timestamp + 2,
+                "kind": "belief_revision",
+                "revision_id": "belief-revision-one",
+                "belief_id": "belief-one",
+                "thread_id": "thread-one",
+                "operation": "support",
+                "evidence_ids": ["evidence-one"],
+                "prior_revision_id": None,
+                "response_sha256": "e" * 64,
+                "source": "scheduled_inquiry",
+            },
+            {
+                **common,
+                "timestamp_unix_ms": timestamp + 3,
+                "kind": "thread_transition",
+                "thread_id": "thread-one",
+                "step_id": "inquiry-step-one",
+                "parent_step_id": None,
+                "status": "open",
+            },
+            {
+                **common,
+                "timestamp_unix_ms": timestamp + 4,
+                "kind": "semantic_admission",
+                "admission_id": "inquiry-admission-one",
+                "signed_entry_id": "inquiry-entry-one",
+                "status": "acknowledged",
+                "source_class": "scheduled_inquiry",
+                "reservoir_generation": "reservoir-one",
+                "reservoir_sequence": 8,
+                "vector_sha256": "f" * 64,
+            },
+        ]
+        module = SimpleNamespace(collect_events=lambda _workspace, _now: events)
+        result = hindsight.sync_hindsight_database(
+            operator, self.workspace, timestamp + 10, module
+        )
+        self.assertEqual(result["schema_version"], 6)
+        self.assertEqual(result["row_counts"]["inquiry_steps"], 1)
+        self.assertEqual(result["row_counts"]["inquiry_evidence"], 1)
+        self.assertEqual(result["row_counts"]["inquiry_belief_revisions"], 1)
+        self.assertEqual(result["row_counts"]["semantic_admissions"], 1)
+        view = hindsight.query_hindsight_database(
+            operator / "hindsight.sqlite3", timestamp - 1, timestamp + 20, 20
+        )
+        self.assertEqual(view["inquiry_counts"]["steps"], 1)
+        self.assertEqual(
+            view["inquiry"]["semantic_admissions"][0]["status"],
+            "acknowledged",
+        )
 
     def test_spectral_projection_upgrade_removes_mixed_tuning_rows(self) -> None:
         self.fixture()

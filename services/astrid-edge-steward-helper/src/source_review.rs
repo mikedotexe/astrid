@@ -64,6 +64,8 @@ impl CleanStart {
     pub(crate) fn new(
         config: &Config,
         rich: &AuthoredTransaction,
+        trace_id: String,
+        session_id: String,
         turn_id: String,
         span_id: String,
         prompt_sha256: String,
@@ -74,8 +76,8 @@ impl CleanStart {
             schema: CLEAN_START_SCHEMA.to_owned(),
             appliance_id: config.appliance_id.clone(),
             due_nonce: rich.due_nonce.clone(),
-            trace_id: rich.trace_id.clone(),
-            session_id: rich.session_id.clone(),
+            trace_id,
+            session_id,
             turn_id,
             span_id,
             prompt_sha256,
@@ -154,8 +156,8 @@ pub(crate) fn mark_clean_started(
     validate_clean_start(config, start)?;
     let checkpoint = load_rich(config, signer, &start.due_nonce)?
         .ok_or_else(|| Error::new("clean start lacks a rich checkpoint"))?;
-    if start.trace_id != checkpoint.trace_id
-        || start.session_id != checkpoint.session_id
+    if start.trace_id == checkpoint.trace_id
+        || start.session_id == checkpoint.session_id
         || start.rich_transaction_sha256 != sha256(&canonical_json(&checkpoint)?)
     {
         return Err(Error::new("clean start does not bind the rich checkpoint"));
@@ -182,8 +184,8 @@ pub(crate) fn load_clean_start(
         validate_clean_start(config, start)?;
         let checkpoint = load_rich(config, signer, due_nonce)?
             .ok_or_else(|| Error::new("clean start survived without its rich checkpoint"))?;
-        if start.trace_id != checkpoint.trace_id
-            || start.session_id != checkpoint.session_id
+        if start.trace_id == checkpoint.trace_id
+            || start.session_id == checkpoint.session_id
             || start.rich_transaction_sha256 != sha256(&canonical_json(&checkpoint)?)
         {
             return Err(Error::new("clean start checkpoint binding failed"));
