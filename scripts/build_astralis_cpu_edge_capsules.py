@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Rebuild the pinned Astralis compatibility capsules for CPU-edge Astrid.
+"""Rebuild pinned external Astralis capsules for CPU-edge Astrid.
 
 The upstream capsules are external repositories. This runner makes the local
 compatibility layer reviewable: it checks every patch and lockfile hash, checks
@@ -18,18 +18,39 @@ import json
 import os
 import re
 import shutil
+import stat
 import subprocess
 import sys
 import tarfile
 import tempfile
-import tomllib
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Iterable
 
 
+MINIMUM_PYTHON = (3, 11)
+
+
+def require_supported_python(version_info: Any = sys.version_info) -> None:
+    """Fail before importing ``tomllib`` on appliance Python 3.10."""
+
+    if tuple(version_info[:2]) < MINIMUM_PYTHON:
+        raise SystemExit(
+            "build_astralis_cpu_edge_capsules.py is an operator-side builder "
+            "and requires Python 3.11 or newer; it is never invoked by the "
+            "Python 3.10 appliance runtime"
+        )
+
+
+require_supported_python()
+import tomllib  # noqa: E402 - guarded standard-library dependency
+
+
 REPO_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_SPEC = REPO_ROOT / "packaging/headless/astralis-cpu-edge-capsules.toml"
+DEFAULT_BASELINE_SPEC = (
+    REPO_ROOT / "packaging/headless/astralis-cpu-edge-baseline-capsules.toml"
+)
 HEX_40 = re.compile(r"[0-9a-f]{40}\Z")
 HEX_64 = re.compile(r"[0-9a-f]{64}\Z")
 SDK_PACKAGES = ("astrid-sdk", "astrid-sdk-macros", "astrid-sys")
@@ -103,8 +124,16 @@ def load_and_verify_spec(spec_path: Path, repo_root: Path = REPO_ROOT) -> tuple[
         raise BuildError("capsule recipe must pin rust_toolchain 1.94.1")
     if spec.get("rust_target") != "wasm32-wasip2":
         raise BuildError("capsule recipe must target wasm32-wasip2")
-    if spec.get("sdk_version") != "0.6.0":
-        raise BuildError("capsule recipe must pin SDK 0.6.0")
+    source_policy = spec.get("source_policy")
+    if source_policy not in {
+        "reviewed_patch_replay",
+        "exact_upstream_snapshot",
+        "pinned_upstream_patch_replay",
+    }:
+        raise BuildError("capsule recipe has an unsupported source_policy")
+    sdk_version = spec.get("sdk_version")
+    if sdk_version not in {"0.6.0", "0.7.1"}:
+        raise BuildError("capsule recipe must pin an approved exact SDK version")
 
     raw_capsules = spec.get("capsule")
     if not isinstance(raw_capsules, list) or not raw_capsules:
@@ -149,17 +178,36 @@ def load_and_verify_spec(spec_path: Path, repo_root: Path = REPO_ROOT) -> tuple[
         ):
             raise BuildError(f"{capsule_id}: source_blob_tests_rs must be a Git blob id")
 
-        lock = checked_repo_path(repo_root, str(raw.get("lockfile", "")))
         expected_lock_hash = raw.get("lock_sha256")
         if not isinstance(expected_lock_hash, str) or not HEX_64.fullmatch(expected_lock_hash):
             raise BuildError(f"{capsule_id}: invalid lock_sha256")
-        if sha256_file(lock) != expected_lock_hash:
-            raise BuildError(f"{capsule_id}: pinned Cargo.lock hash mismatch")
-        verify_sdk_lock(lock, str(spec["sdk_version"]), capsule_id)
+        if source_policy == "reviewed_patch_replay":
+            lock = checked_repo_path(repo_root, str(raw.get("lockfile", "")))
+            if sha256_file(lock) != expected_lock_hash:
+                raise BuildError(f"{capsule_id}: pinned Cargo.lock hash mismatch")
+            verify_sdk_lock(lock, str(sdk_version), capsule_id)
+            if "source_blob_cargo_lock" in raw:
+                raise BuildError(
+                    f"{capsule_id}: patch replay must use its tracked reviewed lockfile"
+                )
+        else:
+            if "lockfile" in raw:
+                raise BuildError(
+                    f"{capsule_id}: exact upstream snapshot cannot replace Cargo.lock"
+                )
+            lock_blob = raw.get("source_blob_cargo_lock")
+            if not isinstance(lock_blob, str) or not HEX_40.fullmatch(lock_blob):
+                raise BuildError(
+                    f"{capsule_id}: source_blob_cargo_lock must be a Git blob id"
+                )
 
         steps = raw.get("steps")
-        if not isinstance(steps, list) or not steps:
+        if not isinstance(steps, list):
+            raise BuildError(f"{capsule_id}: patch sequence is not a list")
+        if source_policy == "reviewed_patch_replay" and not steps:
             raise BuildError(f"{capsule_id}: patch sequence is empty")
+        if source_policy == "exact_upstream_snapshot" and steps:
+            raise BuildError(f"{capsule_id}: exact upstream snapshot cannot apply patches")
         for step in steps:
             if not isinstance(step, dict) or step.get("kind") not in {"patch", "rustfmt"}:
                 raise BuildError(f"{capsule_id}: invalid build step")
@@ -202,7 +250,8 @@ def load_and_verify_spec(spec_path: Path, repo_root: Path = REPO_ROOT) -> tuple[
                 raise BuildError(f"{capsule_id}: blob expectation lacks expect_path")
         recipes.append(recipe)
 
-    verify_react_provenance_route(recipes)
+    if source_policy == "reviewed_patch_replay":
+        verify_react_provenance_route(recipes)
     return spec, recipes
 
 
@@ -391,6 +440,50 @@ def deterministic_capsule(output: Path, capsule_toml: Path, wasm: Path) -> None:
     os.replace(temporary, output)
 
 
+def export_source_snapshot(source: Path, destination: Path, capsule_id: str) -> list[dict[str, Any]]:
+    """Export the exact bounded source needed for later offline self-builds."""
+
+    if destination.exists() or destination.is_symlink():
+        raise BuildError(f"refusing to replace external source snapshot: {destination}")
+    allowed_top = {"Cargo.toml", "Cargo.lock", "Capsule.toml", "build.rs"}
+    allowed_src_suffixes = {".rs", ".md", ".json", ".toml", ".txt"}
+    selected: list[Path] = []
+    for candidate in sorted(source.rglob("*")):
+        relative = candidate.relative_to(source)
+        if any(part.startswith(".") or part in {"target", ".git"} for part in relative.parts):
+            continue
+        if relative.as_posix() in allowed_top or (
+            relative.parts[0] == "src" and relative.suffix in allowed_src_suffixes
+        ):
+            selected.append(relative)
+    required = {Path("Cargo.toml"), Path("Cargo.lock"), Path("Capsule.toml"), Path("src/lib.rs")}
+    if not required.issubset(selected):
+        raise BuildError(f"{capsule_id}: source snapshot lacks required build inputs")
+    inventory: list[dict[str, Any]] = []
+    for relative in selected:
+        source_path = source / relative
+        metadata = source_path.lstat()
+        if (
+            source_path.is_symlink()
+            or not stat.S_ISREG(metadata.st_mode)
+            or metadata.st_nlink != 1
+        ):
+            raise BuildError(f"{capsule_id}: source snapshot contains linked/special content")
+        destination_path = destination / relative
+        destination_path.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(source_path, destination_path)
+        os.chmod(destination_path, 0o644)
+        inventory.append(
+            {
+                "path": f"{capsule_id}/{relative.as_posix()}",
+                "mode": "0644",
+                "size": metadata.st_size,
+                "sha256": sha256_file(source_path),
+            }
+        )
+    return inventory
+
+
 def build_one(
     recipe: Recipe,
     *,
@@ -402,6 +495,7 @@ def build_one(
     offline: bool,
     jobs: int,
     host_target: str,
+    source_output_root: Path | None,
 ) -> dict[str, Any]:
     """Prepare, test, lint, compile, and archive one capsule."""
 
@@ -424,8 +518,18 @@ def build_one(
             recipe.capsule_id,
         )
 
-    lock_source = checked_repo_path(repo_root, str(recipe.raw["lockfile"]))
-    shutil.copyfile(lock_source, source / "Cargo.lock")
+    if spec["source_policy"] == "reviewed_patch_replay":
+        lock_source = checked_repo_path(repo_root, str(recipe.raw["lockfile"]))
+        shutil.copyfile(lock_source, source / "Cargo.lock")
+    else:
+        check_blob(
+            source,
+            "Cargo.lock",
+            str(recipe.raw["source_blob_cargo_lock"]),
+            recipe.capsule_id,
+        )
+        if sha256_file(source / "Cargo.lock") != recipe.raw["lock_sha256"]:
+            raise BuildError(f"{recipe.capsule_id}: upstream Cargo.lock hash mismatch")
     verify_sdk_lock(source / "Cargo.lock", str(spec["sdk_version"]), recipe.capsule_id)
 
     cargo_env = os.environ.copy()
@@ -463,6 +567,15 @@ def build_one(
 
     archive = output_root / f"{recipe.package}.capsule"
     deterministic_capsule(archive, source / "Capsule.toml", wasm)
+    source_inventory = (
+        export_source_snapshot(
+            source,
+            source_output_root / recipe.capsule_id,
+            recipe.capsule_id,
+        )
+        if source_output_root is not None
+        else []
+    )
     return {
         "id": recipe.capsule_id,
         "package": recipe.package,
@@ -482,12 +595,18 @@ def build_one(
                 if "source_blob_tests_rs" in recipe.raw
                 else {}
             ),
+            **(
+                {"Cargo.lock": recipe.raw["source_blob_cargo_lock"]}
+                if "source_blob_cargo_lock" in recipe.raw
+                else {}
+            ),
         },
         "patches": [
             {"file": step["file"], "sha256": step["sha256"]}
             for step in recipe.raw["steps"]
             if step["kind"] == "patch"
         ],
+        "source_inventory": source_inventory,
     }
 
 
@@ -531,6 +650,11 @@ def parser() -> argparse.ArgumentParser:
     result.add_argument("--source-root", type=Path)
     result.add_argument("--work-dir", type=Path)
     result.add_argument(
+        "--source-output-dir",
+        type=Path,
+        help="export a deterministic, manifest-bound source snapshot for offline self-builds",
+    )
+    result.add_argument(
         "--output-dir", type=Path, default=REPO_ROOT / "dist/astralis-cpu-edge"
     )
     result.add_argument("--jobs", type=int, default=4)
@@ -562,6 +686,13 @@ def main(argv: list[str] | None = None) -> int:
         verify_output_surface(output, recipes)
         output.mkdir(parents=True, exist_ok=True)
         source_root = args.source_root.resolve() if args.source_root else None
+        source_output_root = (
+            args.source_output_dir.resolve() if args.source_output_dir else None
+        )
+        if source_output_root is not None:
+            if source_output_root.exists() or source_output_root.is_symlink():
+                raise BuildError("--source-output-dir must not already exist")
+            source_output_root.mkdir(parents=True)
         if args.work_dir:
             work_root = args.work_dir.resolve()
             work_root.mkdir(parents=True, exist_ok=True)
@@ -581,6 +712,7 @@ def main(argv: list[str] | None = None) -> int:
                     offline=args.offline,
                     jobs=args.jobs,
                     host_target=toolchain["host"],
+                    source_output_root=source_output_root,
                 )
                 for recipe in recipes
             ]
@@ -594,6 +726,7 @@ def main(argv: list[str] | None = None) -> int:
             "rust_toolchain": toolchain,
             "target": spec["rust_target"],
             "sdk_version": spec["sdk_version"],
+            "source_policy": spec["source_policy"],
             "capsules": built,
         }
         manifest_bytes = (json.dumps(manifest, indent=2, sort_keys=True) + "\n").encode()
@@ -602,6 +735,29 @@ def main(argv: list[str] | None = None) -> int:
         temporary_manifest.write_bytes(manifest_bytes)
         os.chmod(temporary_manifest, 0o644)
         os.replace(temporary_manifest, manifest_path)
+        if source_output_root is not None:
+            source_manifest = {
+                "schema": "astrid.cpu_edge.external_capsule_sources.v1",
+                "recipe": str(args.spec.resolve().relative_to(repo_root)),
+                "rust_toolchain": spec["rust_toolchain"],
+                "target": spec["rust_target"],
+                "sdk_version": spec["sdk_version"],
+                "source_policy": spec["source_policy"],
+                "capsules": [
+                    {
+                        "id": item["id"],
+                        "package": item["package"],
+                        "revision": item["revision"],
+                        "files": item["source_inventory"],
+                    }
+                    for item in built
+                ],
+            }
+            source_manifest_path = source_output_root / "SOURCE-MANIFEST.json"
+            source_manifest_path.write_bytes(
+                (json.dumps(source_manifest, indent=2, sort_keys=True) + "\n").encode()
+            )
+            os.chmod(source_manifest_path, 0o644)
         print(f"wrote {manifest_path}")
         return 0
     except BuildError as error:

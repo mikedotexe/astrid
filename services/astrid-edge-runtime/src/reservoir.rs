@@ -14,6 +14,7 @@ use std::{
     time::{Duration, Instant, SystemTime, UNIX_EPOCH},
 };
 
+use anyhow::Context as _;
 use astrid_minime_protocol::{
     EigenPacketV1, ModalityStatus, SpectralDenominatorV1, SpectralSubstrateV1, SpectrumCoverageV1,
 };
@@ -411,7 +412,9 @@ impl Reservoir {
         self.active_tuning_lease = Some(ActiveTuningLease {
             lease_id: lease_id.to_string(),
             baseline: baseline.clone(),
-            expires_at: Instant::now() + Duration::from_millis(lease_duration_ms),
+            expires_at: Instant::now()
+                .checked_add(Duration::from_millis(lease_duration_ms))
+                .context("private reservoir tuning lease deadline overflow")?,
         });
         Ok(applied)
     }
@@ -426,7 +429,9 @@ impl Reservoir {
         if active.lease_id != lease_id {
             anyhow::bail!("private reservoir tuning lease identifier mismatch");
         }
-        active.expires_at = Instant::now() + Duration::from_millis(lease_duration_ms);
+        active.expires_at = Instant::now()
+            .checked_add(Duration::from_millis(lease_duration_ms))
+            .context("private reservoir tuning lease deadline overflow")?;
         Ok(())
     }
 
@@ -509,15 +514,16 @@ impl Reservoir {
         );
 
         for row in 0..RESERVOIR_DIM {
-            let recurrent_offset = row * RESERVOIR_DIM;
-            let input_offset = row * INPUT_DIM;
+            let recurrent_offset = row.saturating_mul(RESERVOIR_DIM);
+            let input_offset = row.saturating_mul(INPUT_DIM);
             let recurrent_drive = self.recurrent
-                [recurrent_offset..recurrent_offset + RESERVOIR_DIM]
+                [recurrent_offset..recurrent_offset.saturating_add(RESERVOIR_DIM)]
                 .iter()
                 .zip(&self.state)
                 .map(|(weight, state)| weight * state)
                 .sum::<f32>();
-            let sensory_drive = self.input_weights[input_offset..input_offset + INPUT_DIM]
+            let sensory_drive = self.input_weights
+                [input_offset..input_offset.saturating_add(INPUT_DIM)]
                 .iter()
                 .zip(&self.input)
                 .map(|(weight, input)| weight * input)
@@ -540,11 +546,11 @@ impl Reservoir {
             let row_delta = self.state[row] - self.running_mean[row];
             for column in 0..=row {
                 let column_delta = self.state[column] - self.running_mean[column];
-                let index = row * RESERVOIR_DIM + column;
+                let index = row.saturating_mul(RESERVOIR_DIM).saturating_add(column);
                 let value = (1.0 - cov_alpha) * self.covariance[index]
                     + cov_alpha * row_delta * column_delta;
                 self.covariance[index] = value;
-                self.covariance[column * RESERVOIR_DIM + row] = value;
+                self.covariance[column.saturating_mul(RESERVOIR_DIM).saturating_add(row)] = value;
             }
         }
 
@@ -915,7 +921,7 @@ pub async fn run(
 
 fn assign_lane(target: &mut [f32], offset: usize, width: usize, features: &[f32]) {
     for index in 0..width {
-        target[offset + index] = features
+        target[offset.saturating_add(index)] = features
             .get(index)
             .copied()
             .filter(|value| value.is_finite())
@@ -925,7 +931,7 @@ fn assign_lane(target: &mut [f32], offset: usize, width: usize, features: &[f32]
 }
 
 fn decay_lane(target: &mut [f32], offset: usize, width: usize, keep: f32) {
-    for value in &mut target[offset..offset + width] {
+    for value in &mut target[offset..offset.saturating_add(width)] {
         *value *= keep;
     }
 }
@@ -935,8 +941,10 @@ fn scale_spectral_radius(matrix: &mut [f32], target: f32) {
     let mut next = vec![0.0; RESERVOIR_DIM];
     let mut norm = 1.0;
     for _ in 0..80 {
-        for row in 0..RESERVOIR_DIM {
-            next[row] = matrix[row * RESERVOIR_DIM..(row + 1) * RESERVOIR_DIM]
+        for (row, next_value) in next.iter_mut().enumerate().take(RESERVOIR_DIM) {
+            let row_start = row.saturating_mul(RESERVOIR_DIM);
+            let row_end = row.saturating_add(1).saturating_mul(RESERVOIR_DIM);
+            *next_value = matrix[row_start..row_end]
                 .iter()
                 .zip(&vector)
                 .map(|(weight, value)| weight * value)
@@ -984,7 +992,9 @@ fn ticks_to_millis(ticks: u64, tick_hz: u32) -> Option<u64> {
     if ticks == u64::MAX {
         None
     } else {
-        Some(ticks.saturating_mul(1_000) / u64::from(tick_hz.max(1)))
+        ticks
+            .saturating_mul(1_000)
+            .checked_div(u64::from(tick_hz.max(1)))
     }
 }
 
@@ -1201,6 +1211,7 @@ mod tests {
 
     fn config() -> Config {
         Config {
+            appliance_id: "test-edge".to_string(),
             instance_name: "Test edge Astrid".to_string(),
             telemetry_addr: "127.0.0.1:7878".parse().unwrap(),
             sensory_addr: "127.0.0.1:7879".parse().unwrap(),
@@ -1208,6 +1219,12 @@ mod tests {
             astrid_token: "/tmp/astrid.token".into(),
             workspace: "/tmp/astrid-edge-test".into(),
             astrid_cli: "/tmp/astrid".into(),
+            local_model_id: "test-model".to_string(),
+            maintenance_lease_path: "/tmp/astrid-edge-test-maintenance.json".into(),
+            reflection_lease_path: "/run/astrid-edge-self-change/reflection.json".into(),
+            maintenance_edge_ack_path: None,
+            generation_binding_path: None,
+            core_liveness_request_path: None,
             autonomy_enabled: false,
             autonomy_interval_minutes: 30,
             autonomy_event_driven: false,
@@ -1225,7 +1242,28 @@ mod tests {
             autonomy_journal_authored_turns: false,
             autonomy_initiative_profile: crate::config::AutonomyInitiativeProfile::Disabled,
             research_action_web_search: false,
+            web_broker_socket_path: None,
+            web_broker_request_key_path: None,
+            web_broker_request_key_sha256: None,
+            web_broker_response_verify_key_path: None,
+            web_broker_response_verify_key_sha256: None,
+            web_broker_connect_timeout_ms: 2_000,
+            web_broker_header_timeout_ms: 10_000,
+            web_broker_total_timeout_ms: 30_000,
             introspection_harness: None,
+            scheduled_introspection_enabled: false,
+            scheduled_introspection_interval_minutes: 120,
+            scheduled_introspection_initial_delay_seconds: 300,
+            scheduled_introspection_timeout_seconds: 1_200,
+            scheduled_introspection_prompt_max_chars: 3_200,
+            dedicated_steward_enabled: false,
+            dedicated_steward_interval_minutes: 120,
+            scheduled_authorship_attestation_path: None,
+            scheduled_authorship_verify_key_path: None,
+            scheduled_authorship_verify_key_sha256: None,
+            scheduled_authorship_steward_uid: None,
+            self_change_enabled: false,
+            self_change_root: "/tmp/astrid-self-change-test".into(),
             study_harness: None,
             inquiry_harness: None,
             perceptual_notebook_enabled: false,

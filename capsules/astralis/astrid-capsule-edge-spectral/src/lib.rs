@@ -81,12 +81,20 @@ type ToolHandler = fn(&Value) -> Result<String, String>;
 impl astrid_guest::Guest for EdgeSpectralCapsule {
     fn astrid_hook_trigger(action: String, payload: Vec<u8>) -> astrid_guest::CapsuleResult {
         match action.as_str() {
-            "tool_execute_read_spectral_now" => handle_tool(&payload, read_spectral_now),
-            "tool_execute_read_spectral_window" => handle_tool(&payload, read_spectral_window),
-            "tool_execute_correlate_spectral_activity" => {
-                handle_tool(&payload, correlate_spectral_activity)
+            "tool_execute_read_spectral_now" => {
+                handle_tool(&payload, "read_spectral_now", read_spectral_now)
             },
-            "tool_describe" => describe(),
+            "tool_execute_read_spectral_window" => {
+                handle_tool(&payload, "read_spectral_window", read_spectral_window)
+            },
+            "tool_execute_correlate_spectral_activity" => handle_tool(
+                &payload,
+                "correlate_spectral_activity",
+                correlate_spectral_activity,
+            ),
+            action if action.starts_with("tool_execute_") => {
+                capsule_result::deny("unadvertised spectral tool denied")
+            },
             _ => capsule_result::continue_empty(),
         }
     }
@@ -98,11 +106,18 @@ impl astrid_guest::Guest for EdgeSpectralCapsule {
     fn astrid_upgrade() {}
 }
 
-fn handle_tool(payload: &[u8], handler: ToolHandler) -> astrid_guest::CapsuleResult {
+fn handle_tool(
+    payload: &[u8],
+    expected_tool: &str,
+    handler: ToolHandler,
+) -> astrid_guest::CapsuleResult {
     let request = match tool::parse_request(payload) {
         Ok(request) => request,
         Err(error) => return capsule_result::deny(error),
     };
+    if request.tool_name != expected_tool {
+        return capsule_result::deny("tool action and request identity mismatch");
+    }
     match handler(&request.arguments) {
         Ok(content) => tool::publish_success(&request.call_id, &request.tool_name, content),
         Err(error) => tool::publish_error(&request.call_id, &request.tool_name, error),
@@ -918,67 +933,6 @@ fn known_string<'a>(value: &'a Value, pointers: &[&str]) -> Option<&'a str> {
     pointers
         .iter()
         .find_map(|pointer| value.pointer(pointer).and_then(Value::as_str))
-}
-
-fn describe() -> astrid_guest::CapsuleResult {
-    let payload = json!({
-        "capsule": "astrid-capsule-edge-spectral",
-        "visibility": "model_hidden_action_executor_only",
-        "tools": [
-            {
-                "name": "read_spectral_now",
-                "description": "Read a bounded sanitized snapshot of this appliance's CPU-edge spectral state.",
-                "input_schema": {
-                    "type": "object",
-                    "properties": {},
-                    "additionalProperties": false
-                }
-            },
-            {
-                "name": "read_spectral_window",
-                "description": "Summarize a bounded recent spectral window without returning raw packets.",
-                "input_schema": {
-                    "type": "object",
-                    "properties": {
-                        "minutes": {"type": "integer", "enum": VALID_WINDOWS}
-                    },
-                    "required": ["minutes"],
-                    "additionalProperties": false
-                }
-            },
-            {
-                "name": "correlate_spectral_activity",
-                "description": "Find only exact identifier-linked spectral activity; timestamps never establish attribution.",
-                "input_schema": {
-                    "type": "object",
-                    "properties": {
-                        "trace_id": {"type": "string", "maxLength": 36},
-                        "session_id": {"type": "string", "maxLength": MAX_CAUSAL_ID_CHARS},
-                        "chain_id": {"type": "string", "maxLength": MAX_CAUSAL_ID_CHARS},
-                        "response_sha256": {"type": "string", "maxLength": 64},
-                        "limit": {"type": "integer", "minimum": 1, "maximum": MAX_CORRELATIONS}
-                    },
-                    "additionalProperties": false
-                }
-            }
-        ],
-        "limits": {
-            "rollup_record_bytes": ROLLUP_MAX_BYTES,
-            "recent_rollups_per_day": MAX_ROLLUPS_PER_DAY,
-            "maximum_loaded_rollups": MAX_ROLLUPS,
-            "activity_receipt_record_bytes": ACTIVITY_RECEIPT_MAX_BYTES,
-            "maximum_loaded_activity_receipts": MAX_ACTIVITY_RECEIPTS,
-            "activity_refs_per_rollup": MAX_ACTIVITY_REFS_PER_ROLLUP,
-            "correlation_matches": MAX_CORRELATIONS,
-            "current_projection": RECENT_ROLLUPS_CURRENT_PATH,
-            "previous_projection": RECENT_ROLLUPS_PREVIOUS_PATH,
-            "activity_current_projection": ACTIVITY_RECEIPTS_CURRENT_PATH,
-            "activity_previous_projection": ACTIVITY_RECEIPTS_PREVIOUS_PATH,
-            "authoritative_history_access": false
-        },
-        "authority": "private_read_only_no_network_write_process_shell_or_control"
-    });
-    capsule_result::continue_json(&payload)
 }
 
 astrid_guest::export!(EdgeSpectralCapsule with_types_in astrid_guest::bindings);

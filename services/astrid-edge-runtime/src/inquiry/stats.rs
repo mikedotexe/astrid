@@ -38,7 +38,9 @@ pub(super) fn bounded_cross_correlation(
     let left = values.iter().map(|value| value.0).collect::<Vec<_>>();
     let right = values.iter().map(|value| value.1).collect::<Vec<_>>();
     let maximum_lag = maximum_lag.min(values.len().saturating_sub(3));
-    (-(i32::try_from(maximum_lag).ok()?)..=i32::try_from(maximum_lag).ok()?)
+    let maximum_lag = i32::try_from(maximum_lag).ok()?;
+    let minimum_lag = maximum_lag.checked_neg()?;
+    (minimum_lag..=maximum_lag)
         .filter_map(|lag| {
             if lag >= 0 {
                 let lag = usize::try_from(lag).ok()?;
@@ -46,8 +48,15 @@ pub(super) fn bounded_cross_correlation(
                     .map(|value| (i32::try_from(lag).unwrap_or(i32::MAX), value))
             } else {
                 let lag = usize::try_from(lag.unsigned_abs()).ok()?;
-                correlation(&left[lag..], &right[..right.len().saturating_sub(lag)])
-                    .map(|value| (-i32::try_from(lag).unwrap_or(i32::MAX), value))
+                correlation(&left[lag..], &right[..right.len().saturating_sub(lag)]).map(|value| {
+                    (
+                        i32::try_from(lag)
+                            .unwrap_or(i32::MAX)
+                            .checked_neg()
+                            .unwrap_or(i32::MIN),
+                        value,
+                    )
+                })
             }
         })
         .max_by(|left, right| left.1.abs().total_cmp(&right.1.abs()))

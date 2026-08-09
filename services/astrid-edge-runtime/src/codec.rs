@@ -24,7 +24,7 @@ pub fn encode_text(label: &str, text: &str) -> Vec<f32> {
 
         for offset in 0..4 {
             let index = usize::from(digest[offset]) % 40;
-            let sign = if digest[offset + 4] & 1 == 0 {
+            let sign = if digest[offset.saturating_add(4)] & 1 == 0 {
                 1.0
             } else {
                 -1.0

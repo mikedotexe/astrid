@@ -1,0 +1,43 @@
+{
+  "schema": "astrid.edge.introspection_conformance.v1",
+  "question": {
+    "text": "What have I noticed about HEAT, heat, and memory?",
+    "expected_terms": ["noticed", "heat", "memory"]
+  },
+  "typed_provenance": [
+    {
+      "excluded": false,
+      "value": {
+        "status": "executed",
+        "decision_source": "astrid_declared",
+        "declared_next": "JOURNAL recovery can be studied honestly",
+        "recovery_reason": null
+      }
+    },
+    {
+      "excluded": true,
+      "value": {"status": "transport_recovery"}
+    },
+    {
+      "excluded": true,
+      "value": {
+        "status": "executed",
+        "decision_source": "local_safe_fallback"
+      }
+    },
+    {
+      "excluded": true,
+      "value": {
+        "status": "executed",
+        "response_provenance": "executor_generated"
+      }
+    },
+    {
+      "excluded": true,
+      "value": {
+        "status": "executed",
+        "recovery_reason": "provider_timeout"
+      }
+    }
+  ]
+}

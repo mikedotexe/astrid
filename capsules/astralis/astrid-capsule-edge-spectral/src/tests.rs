@@ -261,11 +261,22 @@ fn manifest_grants_only_five_fixed_read_paths_and_ipc() {
         "process =",
         "shell =",
         "consciousness.v1.control",
+        "tool.v1.request.describe",
+        "tool.v1.response.describe",
+        "tool_describe",
     ] {
         assert!(
             !manifest.contains(forbidden),
             "unexpected authority: {forbidden}"
         );
+    }
+    for expected in [
+        "tool.v1.execute.read_spectral_now",
+        "tool.v1.execute.read_spectral_window",
+        "tool.v1.execute.correlate_spectral_activity",
+        "tool.v1.execute.*.result",
+    ] {
+        assert!(manifest.contains(expected), "missing route: {expected}");
     }
 }
 

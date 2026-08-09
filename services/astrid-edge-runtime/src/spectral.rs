@@ -763,7 +763,7 @@ mod tests {
         ReservoirSnapshot {
             generation_id: "generation-test".to_string(),
             sequence: t_ms.saturating_add(1),
-            recorded_at_unix_ms: 1_000 + t_ms.saturating_mul(1_000),
+            recorded_at_unix_ms: 1_000_u64.saturating_add(t_ms.saturating_mul(1_000)),
             t_ms,
             fill_ratio: 0.68,
             effective_dimensionality: 87.0,

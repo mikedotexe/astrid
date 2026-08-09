@@ -14,6 +14,10 @@ IDs, Rust 1.94.1, `wasm32-wasip2`, and one reviewed Cargo lockfile per capsule.
 The three ABI-sensitive crates (`astrid-sdk`, `astrid-sdk-macros`, and
 `astrid-sys`) must each occur exactly once at 0.6.0.
 
+This is an operator-side provisioning tool and requires Python 3.11 or newer
+for the standard-library `tomllib`. It is not imported or executed by the
+Python 3.10 appliance runtime.
+
 Run the offline integrity checks without contacting upstream or compiling:
 
 ```bash

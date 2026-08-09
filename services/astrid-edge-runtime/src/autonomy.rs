@@ -11,7 +11,6 @@ use std::{
     io::{Read as _, Seek as _, SeekFrom, Write as _},
     os::unix::fs::{MetadataExt as _, OpenOptionsExt as _, PermissionsExt as _},
     path::Path,
-    process::Stdio,
     sync::Arc,
     time::{Duration, SystemTime, UNIX_EPOCH},
 };
@@ -21,19 +20,20 @@ use ed25519_dalek::{Signature, Verifier as _, VerifyingKey};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest as _, Sha256};
 use tokio::{
-    process::Command,
     sync::{mpsc, watch},
     time::{MissedTickBehavior, timeout},
 };
 
 use crate::{
     actions::{
-        ActionDispatchEvidence, ActionOutcome, model_authored_prefix_before_format_repair,
-        model_authored_prefix_before_safe_fallback, transport_recovery_reason,
+        ActionDispatchEvidence, ActionOutcome, ActionOutcomeDelivery,
+        model_authored_prefix_before_format_repair, model_authored_prefix_before_safe_fallback,
+        transport_recovery_reason,
     },
     codec::encode_text,
     config::{AutonomyInitiativeProfile, AutonomyPromptProfile, Config},
     inquiry,
+    maintenance::WorkTracker,
     reservoir::{ReservoirSnapshot, SensoryIngress},
     trace::{AutonomyTraceMatch, AutonomyTraceRegistry, IpcTraceContextV1},
 };
@@ -51,7 +51,6 @@ const LEGACY_THREAD_STATE_V3_SCHEMA: &str = "astrid_edge_thread_state_v3";
 const LEGACY_THREAD_STATE_V2_SCHEMA: &str = "astrid_edge_thread_state_v2";
 const LEGACY_THREAD_STATE_V1_SCHEMA: &str = "astrid_edge_thread_state_v1";
 const LOOP_POLL_SECONDS: u64 = 10;
-const MAX_CAPTURE_BYTES: usize = 128 * 1024;
 const MAX_CONTINUITY_RESPONSE_CHARS: usize = 1_200;
 const MAX_COMPACT_CONTINUITY_CHARS: usize = 360;
 const MAX_COMPACT_PROMPT_CHARS: usize = 1_400;
@@ -61,8 +60,6 @@ const MAX_THREAD_EVIDENCE: usize = 12;
 const MAX_THREAD_FINDINGS: usize = 4;
 const MAX_THREAD_OPEN_QUESTIONS: usize = 4;
 const MAX_THREAD_NEXT_OPTIONS: usize = 4;
-const ASTRID_SERVICE: &str = "astrid.service";
-const SERVICE_RECOVERY_TIMEOUT: Duration = Duration::from_secs(45);
 const HEADLESS_TRACE_RECEIPT_PREFIX: &str = "[astrid-headless-trace] ";
 const HEADLESS_PROVENANCE_RECEIPT_PREFIX: &str = "[astrid-headless-provenance] ";
 const HEADLESS_PROVIDER_METRICS_RECEIPT_PREFIX: &str = "[astrid-headless-provider-metrics] ";
@@ -71,12 +68,11 @@ const KERNEL_HTTP_HOST_PRODUCER_KIND: &str = "kernel_host";
 const KERNEL_HTTP_HOST_PRODUCER_ID: &str = "wasm_http_stream";
 const REQUEST_HEADER_LATENCY_SOURCE_V1: &str = "kernel_http_host_trace_v1";
 const LOCAL_PROVIDER_TURN_METRICS_MAX_ENTRIES: usize = 16;
-const HEADLESS_IDLE_TIMEOUT_EXIT_CODE: i32 = 53;
 const HEADLESS_SUPERVISOR_MARGIN_SECONDS: u64 = 30;
 
 #[derive(Debug, Clone, Copy, Deserialize, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
-enum HeadlessResponseProvenance {
+pub(crate) enum HeadlessResponseProvenance {
     #[serde(rename = "model_authored")]
     ExactModel,
     #[serde(rename = "model_authored_with_local_safe_fallback")]
@@ -86,7 +82,7 @@ enum HeadlessResponseProvenance {
 }
 
 impl HeadlessResponseProvenance {
-    const fn grants_exact_model_authority(self) -> bool {
+    pub(crate) const fn grants_exact_model_authority(self) -> bool {
         matches!(self, Self::ExactModel)
     }
 }
@@ -279,11 +275,11 @@ struct AutonomyRunReceipt<'a> {
     authority: &'static str,
 }
 
-struct TurnResult {
-    response: String,
-    stderr: String,
-    canonical_trace: IpcTraceContextV1,
-    response_provenance: HeadlessResponseProvenance,
+pub(crate) struct TurnResult {
+    pub(crate) response: String,
+    pub(crate) stderr: String,
+    pub(crate) canonical_trace: IpcTraceContextV1,
+    pub(crate) response_provenance: HeadlessResponseProvenance,
 }
 
 #[derive(Debug, Default)]
@@ -345,9 +341,9 @@ struct HeadlessProviderRequestAttemptV1 {
 }
 
 #[derive(Debug)]
-struct TurnFailure {
-    message: String,
-    transport_recovery: bool,
+pub(crate) struct TurnFailure {
+    pub(crate) message: String,
+    pub(crate) transport_recovery: bool,
 }
 
 struct TurnCompletion {
@@ -414,18 +410,36 @@ struct RecoveryReceipt<'a> {
     authority: &'static str,
 }
 
+#[derive(Serialize)]
+struct CoreLivenessRequest<'a> {
+    schema: &'static str,
+    appliance_id: &'a str,
+    generation_id: &'a str,
+    requested_at_unix_ms: u64,
+    nonce: Uuid,
+    reason: &'a str,
+    trace: &'a IpcTraceContextV1,
+    authority: &'static str,
+}
+
 pub(crate) fn is_autonomous_prompt(text: &str) -> bool {
     text.trim_start().starts_with(PROMPT_MARKER)
 }
 
+#[allow(
+    clippy::too_many_arguments,
+    reason = "the scheduler receives independently owned channels plus one shared inference lease"
+)]
 pub async fn run(
     config: Arc<Config>,
     snapshots: watch::Receiver<ReservoirSnapshot>,
     human_activity: watch::Receiver<u64>,
     ingress_tx: mpsc::Sender<SensoryIngress>,
-    mut action_outcomes: mpsc::Receiver<ActionOutcome>,
+    mut action_outcomes: mpsc::Receiver<ActionOutcomeDelivery>,
     action_tx: mpsc::Sender<crate::actions::ActionCandidate>,
     autonomy_trace_registry: Arc<AutonomyTraceRegistry>,
+    model_turn_lock: Arc<tokio::sync::Mutex<()>>,
+    maintenance_work: Arc<WorkTracker>,
 ) {
     let mut state = match initialize_autonomy_state(&config) {
         Ok(state) => state,
@@ -439,25 +453,31 @@ pub async fn run(
         std::future::pending::<()>().await;
         return;
     }
-    if state.action_dispatch_pending
-        && let Err(error) = replay_pending_action_dispatch(&config, &state, &action_tx).await
-    {
-        set_operator_pause(
-            &mut state,
-            &format!("action_dispatch_replay_requires_operator_review: {error:#}"),
-            unix_millis(),
-        );
-        if let Err(persist_error) = persist_state(&config, &state) {
-            eprintln!(
-                "edge autonomy failed closed: Action replay and durable pause both failed: {error:#}; {persist_error:#}"
-            );
-            return;
+    while state.action_dispatch_pending {
+        match replay_pending_action_dispatch(&config, &state, &action_tx, &maintenance_work).await {
+            Ok(true) => break,
+            Ok(false) => {
+                tokio::time::sleep(Duration::from_secs(LOOP_POLL_SECONDS)).await;
+            },
+            Err(error) => {
+                set_operator_pause(
+                    &mut state,
+                    &format!("action_dispatch_replay_requires_operator_review: {error:#}"),
+                    unix_millis(),
+                );
+                if let Err(persist_error) = persist_state(&config, &state) {
+                    eprintln!(
+                        "edge autonomy failed closed: Action replay and durable pause both failed: {error:#}; {persist_error:#}"
+                    );
+                    return;
+                }
+                eprintln!(
+                    "edge autonomy durably operator-paused after Action replay validation failed: {error:#}"
+                );
+                std::future::pending::<()>().await;
+                return;
+            },
         }
-        eprintln!(
-            "edge autonomy durably operator-paused after Action replay validation failed: {error:#}"
-        );
-        std::future::pending::<()>().await;
-        return;
     }
     eprintln!(
         "edge autonomy enabled: interval={}m event_driven={} event_heartbeat={}m follow_up={}m \
@@ -476,11 +496,11 @@ pub async fn run(
     poll.set_missed_tick_behavior(MissedTickBehavior::Skip);
     loop {
         tokio::select! {
-            Some(outcome) = action_outcomes.recv() => {
+            Some(delivery) = action_outcomes.recv() => {
                 if let Err(error) = process_action_outcome(
                     &config,
                     &mut state,
-                    &outcome,
+                    &delivery.outcome,
                     &ingress_tx,
                 ).await {
                     eprintln!("edge autonomy failed closed: {error:#}");
@@ -495,6 +515,8 @@ pub async fn run(
                     &mut state,
                     &action_tx,
                     &autonomy_trace_registry,
+                    &model_turn_lock,
+                    &maintenance_work,
                 ).await {
                     eprintln!("edge autonomy failed closed: {error:#}");
                     return;
@@ -653,7 +675,8 @@ async fn replay_pending_action_dispatch(
     config: &Config,
     state: &AutonomyState,
     action_tx: &mpsc::Sender<crate::actions::ActionCandidate>,
-) -> anyhow::Result<()> {
+    maintenance_work: &Arc<WorkTracker>,
+) -> anyhow::Result<bool> {
     let trace = state
         .pending_action_trace
         .clone()
@@ -692,17 +715,48 @@ async fn replay_pending_action_dispatch(
     let exact_model_authority = state
         .pending_action_response_provenance
         .is_some_and(HeadlessResponseProvenance::grants_exact_model_authority);
-    action_tx
-        .send(crate::actions::ActionCandidate {
+    enqueue_action_candidate(
+        config,
+        action_tx,
+        crate::actions::ActionCandidate {
             session_id,
             response,
             trace: Some(trace),
             tuning_authority_turn_id: exact_model_authority.then_some(turn_id),
             tuning_authority_source: exact_model_authority
                 .then_some("scheduler_verified_authored_turn"),
-        })
+            maintenance_permit: None,
+        },
+        maintenance_work,
+        true,
+    )
+    .await
+}
+
+/// Enqueue one authored Action while holding an exact local work permit across
+/// the entire bounded-channel handoff. Restart replay is deferred when a root
+/// lease already exists because it has no overlapping ancestor turn permit.
+async fn enqueue_action_candidate(
+    config: &Config,
+    action_tx: &mpsc::Sender<crate::actions::ActionCandidate>,
+    mut candidate: crate::actions::ActionCandidate,
+    maintenance_work: &Arc<WorkTracker>,
+    defer_during_maintenance: bool,
+) -> anyhow::Result<bool> {
+    anyhow::ensure!(
+        candidate.maintenance_permit.is_none(),
+        "Action candidate already carries a maintenance permit"
+    );
+    let action_permit = maintenance_work.begin_action()?;
+    if defer_during_maintenance && maintenance_lease_blocks_turn(config) {
+        return Ok(false);
+    }
+    candidate.maintenance_permit = Some(action_permit);
+    action_tx
+        .send(candidate)
         .await
-        .map_err(|_| anyhow::anyhow!("Action executor closed during durable outbox replay"))
+        .map_err(|_| anyhow::anyhow!("Action executor closed during exact authored handoff"))?;
+    Ok(true)
 }
 
 fn defer_for_human_quiescence(
@@ -726,6 +780,11 @@ fn defer_for_human_quiescence(
     Ok(true)
 }
 
+#[allow(
+    clippy::too_many_arguments,
+    clippy::too_many_lines,
+    reason = "one scheduler transaction keeps every preflight gate and exact work permit visibly ordered"
+)]
 async fn poll_due_turn(
     config: &Config,
     snapshots: &watch::Receiver<ReservoirSnapshot>,
@@ -733,10 +792,19 @@ async fn poll_due_turn(
     state: &mut AutonomyState,
     action_tx: &mpsc::Sender<crate::actions::ActionCandidate>,
     autonomy_trace_registry: &AutonomyTraceRegistry,
+    model_turn_lock: &tokio::sync::Mutex<()>,
+    maintenance_work: &Arc<WorkTracker>,
 ) -> anyhow::Result<()> {
     let now = unix_millis();
     roll_daily_budget(state, now);
     if state.action_dispatch_pending {
+        return Ok(());
+    }
+    if maintenance_lease_blocks_turn(config) {
+        if state.last_status.as_deref() != Some("waiting_for_immutable_maintenance_lease") {
+            state.last_status = Some("waiting_for_immutable_maintenance_lease".to_string());
+            persist_state(config, state).context("maintenance deferral state was not durable")?;
+        }
         return Ok(());
     }
     if state.attempts_today >= config.autonomy_max_turns_per_day {
@@ -818,6 +886,21 @@ async fn poll_due_turn(
         return Ok(());
     }
 
+    let _model_turn_lease = model_turn_lock.lock().await;
+    // Invalidate any prior edge ACK before dispatch. The immutable provider
+    // gateway is the sole ordinary-inference owner of the cross-process model
+    // lock; holding it here would deadlock the daemon-hosted provider capsule.
+    // Maintenance/reflection admission is rechecked by that gateway at the
+    // exact AF_UNIX request boundary.
+    let _maintenance_permit = maintenance_work.begin_model_turn()?;
+    if maintenance_lease_blocks_turn(config) {
+        if state.last_status.as_deref() != Some("waiting_for_immutable_maintenance_lease") {
+            state.last_status = Some("waiting_for_immutable_maintenance_lease".to_string());
+            persist_state(config, state)
+                .context("post-model-lock maintenance deferral was not durable")?;
+        }
+        return Ok(());
+    }
     execute_due_turn(
         config,
         &snapshot,
@@ -826,8 +909,20 @@ async fn poll_due_turn(
         salient_perception_to_consume,
         action_tx,
         autonomy_trace_registry,
+        maintenance_work,
     )
     .await
+}
+
+/// Treat every present but malformed or unreadable root lease as active. The
+/// mutable runtime has no authority to clear, repair, or reinterpret it.
+fn maintenance_lease_blocks_turn(config: &Config) -> bool {
+    crate::maintenance::lease_blocks_new_work(config)
+}
+
+#[cfg(test)]
+fn maintenance_lease_payload_blocks_turn(value: &serde_json::Value, now: u64) -> bool {
+    crate::maintenance::lease_payload_blocks_new_work(value, now)
 }
 
 /// Return the timestamp of the newest observation with an exogenous host,
@@ -1407,6 +1502,7 @@ fn thread_evidence_priority(record: &ThreadEvidence) -> u8 {
         | "completed_study"
         | "spectral_observation"
         | "reservoir_tuning_result"
+        | "scheduled_introspection"
         | "cited_synthesis"
         | "verified_peer_packet" => 3,
         "search_candidate" => 2,
@@ -1561,10 +1657,12 @@ fn load_thread_state(config: &Config) -> ThreadState {
 fn load_thread_state_checked(config: &Config) -> anyhow::Result<ThreadState> {
     let path = config.workspace.join("autonomous/thread_state.json");
     let Some(bytes) = read_optional_regular_state(&path)? else {
-        return Ok(ThreadState {
+        let mut thread = ThreadState {
             schema: THREAD_STATE_SCHEMA.to_string(),
             ..ThreadState::default()
-        });
+        };
+        merge_scheduled_introspection_evidence(config, &mut thread);
+        return Ok(thread);
     };
     let state = serde_json::from_slice::<ThreadState>(&bytes)
         .map_err(|error| anyhow::anyhow!("decode {}: {error}", path.display()))?;
@@ -1579,7 +1677,54 @@ fn load_thread_state_checked(config: &Config) -> anyhow::Result<ThreadState> {
     ) {
         anyhow::bail!("unsupported thread schema {:?}", state.schema);
     }
-    Ok(migrate_thread_state(state))
+    let mut state = migrate_thread_state(state);
+    merge_scheduled_introspection_evidence(config, &mut state);
+    Ok(state)
+}
+
+/// Merge the separately owned, verified scheduled projection into the
+/// in-memory thread view. The scheduled task never writes the ordinary thread
+/// files, avoiding a second concurrent writer. A later ordinary Action may
+/// persist this already-deduplicated typed pointer as part of its normal
+/// single-writer transaction.
+fn merge_scheduled_introspection_evidence(config: &Config, thread: &mut ThreadState) {
+    let Some(projection) = crate::scheduled_admission::latest_verified_projection(config) else {
+        return;
+    };
+    merge_verified_scheduled_projection(thread, &projection);
+}
+
+fn merge_verified_scheduled_projection(
+    thread: &mut ThreadState,
+    projection: &crate::scheduled_admission::VerifiedProjection,
+) {
+    push_thread_evidence_record(
+        thread,
+        ThreadEvidence {
+            kind: "scheduled_introspection".to_string(),
+            epistemic_status:
+                "verified_model_authored_runtime_scheduled_not_voluntary_action_or_journal"
+                    .to_string(),
+            reference: projection.due_nonce.clone(),
+            summary: bounded_thread_text(&projection.summary),
+            source: format!(
+                "model_authored_runtime_scheduled;trace_id={};summary_sha256={}",
+                projection.trace_id, projection.summary_sha256
+            ),
+            captured_at_unix_ms: projection.recorded_at_unix_ms,
+            sha256: Some(projection.response_sha256.clone()),
+        },
+    );
+    push_thread_value(
+        &mut thread.provenance_hashes,
+        &projection.response_sha256,
+        MAX_THREAD_EVIDENCE,
+    );
+    push_thread_value(
+        &mut thread.provenance_hashes,
+        &projection.summary_sha256,
+        MAX_THREAD_EVIDENCE,
+    );
 }
 
 fn migrate_thread_state_on_start(config: &Config, now: u64) -> anyhow::Result<bool> {
@@ -1914,6 +2059,7 @@ fn chain_id(outcome: &ActionOutcome) -> String {
 }
 
 #[allow(
+    clippy::too_many_arguments,
     clippy::too_many_lines,
     reason = "one turn transaction keeps state, receipt durability, and Action dispatch suppression visibly ordered"
 )]
@@ -1925,6 +2071,7 @@ async fn execute_due_turn(
     salient_perception_to_consume: Option<u64>,
     action_tx: &mpsc::Sender<crate::actions::ActionCandidate>,
     autonomy_trace_registry: &AutonomyTraceRegistry,
+    maintenance_work: &Arc<WorkTracker>,
 ) -> anyhow::Result<()> {
     let prior_state = state.clone();
     rotate_model_session_if_full(config, state);
@@ -1984,7 +2131,14 @@ async fn execute_due_turn(
         return Err(error).context("scheduler trace registration failed; inference suppressed");
     }
 
-    let result = run_turn(config, &prompt, &session_name, &trace).await;
+    let result = run_turn(
+        config,
+        &prompt,
+        &session_name,
+        &trace,
+        config.autonomy_timeout_seconds,
+    )
+    .await;
     let provider_metrics = result.as_ref().map_or_else(
         |_| ProviderMetrics::default(),
         |turn| parse_provider_metrics(&turn.stderr, &turn.canonical_trace),
@@ -2084,6 +2238,9 @@ async fn execute_due_turn(
         let exact_model_authority = completion
             .response_provenance
             .is_some_and(HeadlessResponseProvenance::grants_exact_model_authority);
+        // Acquire the Action permit before the model-turn permit held by the
+        // caller can be released. This overlap makes the entire causal handoff
+        // one indivisible maintenance-work interval, including channel wait.
         let candidate = crate::actions::ActionCandidate {
             session_id: completion_trace
                 .session_id
@@ -2096,11 +2253,12 @@ async fn execute_due_turn(
                 .flatten(),
             tuning_authority_source: exact_model_authority
                 .then_some("scheduler_verified_authored_turn"),
+            maintenance_permit: None,
         };
-        action_tx
-            .send(candidate)
-            .await
-            .map_err(|_| anyhow::anyhow!("Action executor closed after durable authored turn"))?;
+        anyhow::ensure!(
+            enqueue_action_candidate(config, action_tx, candidate, maintenance_work, false).await?,
+            "live authored Action handoff was unexpectedly deferred"
+        );
     }
     eprintln!(
         "edge autonomous turn: status={} next={} fill={:.1}% next_due_ms={}",
@@ -2436,7 +2594,11 @@ fn build_prompt(
     let introspection_continuation =
         compact_introspection_continuation(config, receipt_value.as_ref());
     let read_continuation = compact_read_continuation(config, receipt_value.as_ref());
-    let thread_continuity = compact_thread_summary(&load_thread_state(config));
+    let thread_continuity = format!(
+        "{}; scheduled_introspection={}",
+        compact_thread_summary(&load_thread_state(config)),
+        latest_scheduled_introspection_summary(config)
+    );
     let active_study = inquiry::active_summary(config);
     let validation_continuation = compact_action_validation_continuation(receipt_value.as_ref());
     let authored_continuity = last_authored_response_excerpt(config, state)
@@ -2550,7 +2712,11 @@ fn build_compact_prompt(
     .unwrap_or_default();
     let continuity =
         last_authored_response_excerpt(config, state).unwrap_or_else(|| "none".to_string());
-    let thread_continuity = compact_thread_summary(&load_thread_state(config));
+    let thread_continuity = format!(
+        "{}; scheduled={}",
+        compact_thread_summary(&load_thread_state(config)),
+        latest_scheduled_introspection_summary(config)
+    );
     let active_study = inquiry::active_summary(config);
     let continuity =
         format!("thread={thread_continuity}\nstudy={active_study}\nauthored={continuity}");
@@ -3315,11 +3481,11 @@ fn decode_hex_array<const N: usize>(value: &str) -> Option<[u8; N]> {
     Some(decoded)
 }
 
-const fn hex_nibble(value: u8) -> Option<u8> {
+fn hex_nibble(value: u8) -> Option<u8> {
     match value {
-        b'0'..=b'9' => Some(value - b'0'),
-        b'a'..=b'f' => Some(value - b'a' + 10),
-        b'A'..=b'F' => Some(value - b'A' + 10),
+        b'0'..=b'9' => value.checked_sub(b'0'),
+        b'a'..=b'f' => value.checked_sub(b'a')?.checked_add(10),
+        b'A'..=b'F' => value.checked_sub(b'A')?.checked_add(10),
         _ => None,
     }
 }
@@ -3538,86 +3704,56 @@ fn session_name_for_turn(state: &AutonomyState) -> String {
     )
 }
 
-async fn run_turn(
+pub(crate) async fn run_turn(
     config: &Config,
     prompt: &str,
     session_name: &str,
     trace: &IpcTraceContextV1,
+    timeout_seconds: u64,
 ) -> Result<TurnResult, TurnFailure> {
-    let mut command = Command::new(&config.astrid_cli);
-    command.arg("--trace-id").arg(trace.trace_id.to_string());
-    if let Some(chain_id) = trace.chain_id.as_deref() {
-        command.arg("--trace-chain-id").arg(chain_id);
-    }
-    let headless_idle_timeout_seconds =
-        supervised_headless_idle_timeout_seconds(config.autonomy_timeout_seconds);
-    command
-        .arg("--headless-idle-timeout-seconds")
-        .arg(headless_idle_timeout_seconds.to_string());
-    let child = command
-        .arg("-p")
-        .arg(prompt)
-        .arg("--session")
-        .arg(session_name)
-        .arg("--print-session")
-        .stdin(Stdio::null())
-        .stdout(Stdio::piped())
-        .stderr(Stdio::piped())
-        .kill_on_drop(true)
-        .spawn()
-        .map_err(|error| TurnFailure {
-            message: format!("failed to start Astrid CLI: {error}"),
-            transport_recovery: false,
-        })?;
-    let output = if let Ok(output) = timeout(
-        Duration::from_secs(config.autonomy_timeout_seconds),
-        child.wait_with_output(),
+    let idle_timeout =
+        Duration::from_secs(supervised_headless_idle_timeout_seconds(timeout_seconds));
+    let direct = match timeout(
+        Duration::from_secs(timeout_seconds),
+        crate::ipc::execute_direct_headless_turn(config, prompt, session_name, trace, idle_timeout),
     )
     .await
     {
-        output.map_err(|error| TurnFailure {
-            message: format!("failed to collect Astrid CLI output: {error}"),
-            transport_recovery: false,
-        })?
-    } else {
-        if let Err(error) =
-            recover_astrid_service(config, "edge_model_turn_timeout", Some(trace)).await
-        {
-            eprintln!("edge Astrid service recovery failed: {error}");
-        }
-        return Err(TurnFailure {
-            message: format!(
-                "model turn exceeded {}s; Astrid service recovery requested",
-                config.autonomy_timeout_seconds
-            ),
-            transport_recovery: true,
-        });
+        Ok(Ok(result)) => result,
+        Ok(Err(error)) => {
+            if let Err(recovery_error) =
+                recover_astrid_service(config, "edge_headless_idle_timeout", Some(trace))
+            {
+                eprintln!("edge Astrid service recovery failed: {recovery_error}");
+            }
+            return Err(TurnFailure {
+                message: format!("direct authenticated headless turn failed: {error:#}"),
+                transport_recovery: true,
+            });
+        },
+        Err(_) => {
+            if let Err(error) =
+                recover_astrid_service(config, "edge_model_turn_timeout", Some(trace))
+            {
+                eprintln!("edge Astrid service recovery failed: {error}");
+            }
+            return Err(TurnFailure {
+                message: format!(
+                    "model turn exceeded {timeout_seconds}s; Astrid service recovery requested"
+                ),
+                transport_recovery: true,
+            });
+        },
     };
-    let stdout = bounded_utf8(&output.stdout);
-    let stderr = bounded_utf8(&output.stderr);
-    if !output.status.success() {
-        let transport_recovery = headless_exit_is_transport_recovery(output.status.code());
-        if transport_recovery
-            && let Err(error) =
-                recover_astrid_service(config, "edge_headless_idle_timeout", Some(trace)).await
-        {
-            eprintln!("edge Astrid service recovery failed: {error}");
-        }
-        return Err(TurnFailure {
-            message: format!(
-                "Astrid CLI exited {}: {}",
-                output.status,
-                stderr.chars().take(2_000).collect::<String>()
-            ),
-            transport_recovery,
-        });
-    }
-    let response = stdout.trim_end().to_string();
-    if response.is_empty() {
-        return Err(TurnFailure {
-            message: "Astrid CLI returned an empty autonomous response".to_string(),
-            transport_recovery: false,
-        });
+    let mut stderr = format!(
+        "{HEADLESS_TRACE_RECEIPT_PREFIX}{}\n{HEADLESS_PROVENANCE_RECEIPT_PREFIX}{}\n",
+        serde_json::to_string(&direct.canonical_trace).unwrap_or_default(),
+        serde_json::to_string(&direct.response_provenance).unwrap_or_default()
+    );
+    if let Some(metrics) = direct.provider_metrics_receipt.as_ref() {
+        stderr.push_str(HEADLESS_PROVIDER_METRICS_RECEIPT_PREFIX);
+        stderr.push_str(&serde_json::to_string(metrics).unwrap_or_default());
+        stderr.push('\n');
     }
     let canonical_trace =
         parse_headless_trace_receipt(&stderr, trace).map_err(|error| TurnFailure {
@@ -3630,7 +3766,7 @@ async fn run_turn(
             transport_recovery: true,
         })?;
     Ok(TurnResult {
-        response,
+        response: direct.response.trim_end().to_string(),
         stderr,
         canonical_trace,
         response_provenance,
@@ -3641,10 +3777,6 @@ fn supervised_headless_idle_timeout_seconds(supervisor_timeout_seconds: u64) -> 
     supervisor_timeout_seconds
         .saturating_sub(HEADLESS_SUPERVISOR_MARGIN_SECONDS)
         .max(30)
-}
-
-fn headless_exit_is_transport_recovery(exit_code: Option<i32>) -> bool {
-    exit_code == Some(HEADLESS_IDLE_TIMEOUT_EXIT_CODE)
 }
 
 fn parse_headless_trace_receipt(
@@ -3690,35 +3822,14 @@ fn parse_headless_provenance_receipt(stderr: &str) -> anyhow::Result<HeadlessRes
     serde_json::from_str(encoded).context("decode canonical headless terminal provenance receipt")
 }
 
-async fn recover_astrid_service(
+fn recover_astrid_service(
     config: &Config,
     reason: &str,
     trace: Option<&IpcTraceContextV1>,
 ) -> anyhow::Result<()> {
     let started_at = unix_millis();
-    let output = timeout(
-        SERVICE_RECOVERY_TIMEOUT,
-        Command::new("systemctl")
-            .arg("--user")
-            .arg("restart")
-            .arg(ASTRID_SERVICE)
-            .stdin(Stdio::null())
-            .stdout(Stdio::piped())
-            .stderr(Stdio::piped())
-            .output(),
-    )
-    .await
-    .map_err(|_| anyhow::anyhow!("restart of {ASTRID_SERVICE} exceeded 45s"))??;
-    if !output.status.success() {
-        anyhow::bail!(
-            "restart of {ASTRID_SERVICE} exited {}: {}",
-            output.status,
-            bounded_utf8(&output.stderr)
-                .chars()
-                .take(2_000)
-                .collect::<String>()
-        );
-    }
+    let trace = trace.context("transport recovery requires an exact trace")?;
+    let status = write_core_liveness_request(config, reason, trace)?;
     let completed_at = unix_millis();
     append_recovery_receipt(
         config,
@@ -3727,16 +3838,131 @@ async fn recover_astrid_service(
             started_at_unix_ms: started_at,
             completed_at_unix_ms: completed_at,
             reason,
-            status: "service_restarted",
-            trace,
-            authority: "local_transport_liveness_recovery_only",
+            status,
+            trace: Some(trace),
+            authority: "mutable_runtime_request_only_immutable_root_broker_decides_exact_core_restart",
         },
     )?;
     eprintln!(
-        "edge Astrid service recovered: reason={reason} elapsed_ms={}",
+        "edge Astrid immutable liveness recovery requested: reason={reason} status={status} elapsed_ms={}",
         completed_at.saturating_sub(started_at)
     );
     Ok(())
+}
+
+fn write_core_liveness_request<'a>(
+    config: &Config,
+    reason: &'a str,
+    trace: &'a IpcTraceContextV1,
+) -> anyhow::Result<&'static str> {
+    if !matches!(
+        reason,
+        "edge_model_turn_timeout" | "edge_headless_idle_timeout"
+    ) {
+        anyhow::bail!("unsupported core liveness recovery reason");
+    }
+    if !trace.is_supported() {
+        anyhow::bail!("core liveness recovery trace is invalid");
+    }
+    let request_path = config
+        .core_liveness_request_path
+        .as_deref()
+        .context("immutable core liveness recovery boundary is not configured")?;
+    let expected = config
+        .workspace
+        .join("runtime/core-liveness-recovery.request.json");
+    if request_path != expected {
+        anyhow::bail!("core liveness request path escaped the exact runtime workspace");
+    }
+    if request_path.exists() {
+        validate_existing_private_regular(request_path)?;
+        return Ok("immutable_core_liveness_request_already_pending");
+    }
+    let generation_path = config
+        .generation_binding_path
+        .as_deref()
+        .context("root-owned generation binding is unavailable")?;
+    let generation_id = read_bounded_generation_id(generation_path)?;
+    let request = CoreLivenessRequest {
+        schema: "astrid.edge_core_liveness_request.v1",
+        appliance_id: &config.appliance_id,
+        generation_id: &generation_id,
+        requested_at_unix_ms: unix_millis(),
+        nonce: Uuid::new_v4(),
+        reason,
+        trace,
+        authority: "mutable_runtime_liveness_request_not_authorship_or_restart_authority",
+    };
+    let parent = request_path
+        .parent()
+        .context("core liveness request has no parent")?;
+    let parent_metadata = fs::symlink_metadata(parent)?;
+    if !parent_metadata.is_dir() || parent_metadata.file_type().is_symlink() {
+        anyhow::bail!("core liveness request parent is not a regular directory");
+    }
+    let temporary = parent.join(format!(
+        ".core-liveness-recovery.{}.{}.tmp",
+        std::process::id(),
+        Uuid::new_v4()
+    ));
+    let result = (|| -> anyhow::Result<()> {
+        let mut file = OpenOptions::new()
+            .write(true)
+            .create_new(true)
+            .mode(0o640)
+            .custom_flags(nix::libc::O_NOFOLLOW | nix::libc::O_CLOEXEC)
+            .open(&temporary)?;
+        serde_json::to_writer(&mut file, &request)?;
+        file.write_all(b"\n")?;
+        file.set_permissions(fs::Permissions::from_mode(0o640))?;
+        file.sync_all()?;
+        fs::rename(&temporary, request_path)?;
+        fs::set_permissions(request_path, fs::Permissions::from_mode(0o640))?;
+        sync_parent(request_path)
+    })();
+    if result.is_err() {
+        let _ = fs::remove_file(&temporary);
+    }
+    result?;
+    Ok("immutable_core_liveness_request_published")
+}
+
+fn read_bounded_generation_id(path: &Path) -> anyhow::Result<String> {
+    let before = fs::symlink_metadata(path)?;
+    let mut file = OpenOptions::new()
+        .read(true)
+        .custom_flags(nix::libc::O_NOFOLLOW | nix::libc::O_CLOEXEC)
+        .open(path)?;
+    let opened = file.metadata()?;
+    if !before.is_file()
+        || before.file_type().is_symlink()
+        || before.nlink() != 1
+        || before.dev() != opened.dev()
+        || before.ino() != opened.ino()
+        || before.len() > 128
+    {
+        anyhow::bail!("root-owned generation binding identity is invalid");
+    }
+    let mut bytes = Vec::with_capacity(129);
+    (&mut file).take(129).read_to_end(&mut bytes)?;
+    let after = file.metadata()?;
+    if bytes.len() > 128
+        || opened.dev() != after.dev()
+        || opened.ino() != after.ino()
+        || opened.len() != after.len()
+    {
+        anyhow::bail!("root-owned generation binding changed during recovery request");
+    }
+    let value = std::str::from_utf8(&bytes)?.trim();
+    if value.is_empty()
+        || value.len() > 96
+        || !value.bytes().all(
+            |byte| matches!(byte, b'a'..=b'z' | b'A'..=b'Z' | b'0'..=b'9' | b'-' | b'_' | b'.'),
+        )
+    {
+        anyhow::bail!("root-owned generation identifier is invalid");
+    }
+    Ok(value.to_owned())
 }
 
 fn persist_transcript(
@@ -3954,6 +4180,13 @@ fn last_authored_response_excerpt(config: &Config, state: &AutonomyState) -> Opt
     })
 }
 
+fn latest_scheduled_introspection_summary(config: &Config) -> String {
+    crate::scheduled_admission::latest_verified_summary(config).map_or_else(
+        || "none".to_string(),
+        |summary| bounded_chars(&summary, 220),
+    )
+}
+
 fn tail_line(path: &std::path::Path) -> Option<String> {
     let content = fs::read_to_string(path).ok()?;
     content
@@ -3978,11 +4211,6 @@ fn failure_backoff_minutes(consecutive_failures: u32) -> u64 {
     5_u64
         .saturating_mul(2_u64.saturating_pow(consecutive_failures.saturating_sub(1).min(4)))
         .min(60)
-}
-
-fn bounded_utf8(bytes: &[u8]) -> String {
-    let start = bytes.len().saturating_sub(MAX_CAPTURE_BYTES);
-    String::from_utf8_lossy(&bytes[start..]).into_owned()
 }
 
 fn parse_provider_metrics(stderr: &str, canonical_trace: &IpcTraceContextV1) -> ProviderMetrics {
@@ -4544,18 +4772,20 @@ mod tests {
         AUTONOMY_SCHEMA, AutonomyState, HeadlessResponseProvenance, LegacyAutonomyState,
         MAX_COMPACT_PROMPT_CHARS, THREAD_STATE_SCHEMA, ThreadEvidence, ThreadState, TurnResult,
         action_outcome_already_processed, apply_action_outcome, artifact_evidence_classification,
-        build_prompt, compact_spectral_continuation, execute_due_turn, failure_backoff_minutes,
-        final_next_declaration, finish_turn_result, headless_exit_is_transport_recovery,
+        build_prompt, compact_spectral_continuation, enqueue_action_candidate, execute_due_turn,
+        failure_backoff_minutes, final_next_declaration, finish_turn_result,
         initialize_autonomy_state, is_autonomous_prompt, is_stateful_action_verb,
         last_authored_response_excerpt, latest_salient_perception, latest_verified_tuning_result,
-        load_state, load_thread_state, load_thread_state_checked, mark_orphaned_turn_interrupted,
-        matching_completed_tool_receipt, migrate_legacy_state, migrate_thread_state_on_start,
-        migrate_v2_state, parse_headless_provenance_receipt, parse_headless_trace_receipt,
-        parse_provider_metrics, persist_state, poll_due_turn, process_action_outcome,
-        push_thread_evidence_record, reconcile_pending_receipt_acknowledgements,
-        record_transport_recovery, replay_pending_action_dispatch, roll_daily_budget,
-        rotate_model_session_if_full, run, session_name_for_turn,
-        supervised_headless_idle_timeout_seconds, update_thread_state, write_private_new_durable,
+        load_state, load_thread_state, load_thread_state_checked,
+        maintenance_lease_payload_blocks_turn, mark_orphaned_turn_interrupted,
+        matching_completed_tool_receipt, merge_verified_scheduled_projection, migrate_legacy_state,
+        migrate_thread_state_on_start, migrate_v2_state, parse_headless_provenance_receipt,
+        parse_headless_trace_receipt, parse_provider_metrics, persist_state, poll_due_turn,
+        process_action_outcome, push_thread_evidence_record,
+        reconcile_pending_receipt_acknowledgements, record_transport_recovery,
+        replay_pending_action_dispatch, roll_daily_budget, rotate_model_session_if_full, run,
+        session_name_for_turn, supervised_headless_idle_timeout_seconds, update_thread_state,
+        write_core_liveness_request, write_private_new_durable,
     };
     use crate::{
         actions::ActionOutcome,
@@ -4571,11 +4801,12 @@ mod tests {
     use std::os::unix::fs::PermissionsExt as _;
     use std::sync::Arc;
     use std::time::Duration;
-    use tokio::sync::{mpsc, watch};
+    use tokio::sync::{Mutex, mpsc, watch};
     use uuid::Uuid;
 
     fn config() -> Config {
         Config {
+            appliance_id: "test-edge".to_string(),
             instance_name: "Test edge Astrid".to_string(),
             telemetry_addr: "127.0.0.1:7878".parse().unwrap(),
             sensory_addr: "127.0.0.1:7879".parse().unwrap(),
@@ -4583,6 +4814,15 @@ mod tests {
             astrid_token: "/tmp/astrid.token".into(),
             workspace: "/tmp/astrid-edge-autonomy-test".into(),
             astrid_cli: "/tmp/astrid".into(),
+            local_model_id: "test-model".to_string(),
+            maintenance_lease_path: std::env::temp_dir().join(format!(
+                "astrid-edge-test-maintenance-{}.json",
+                Uuid::new_v4()
+            )),
+            reflection_lease_path: "/run/astrid-edge-self-change/reflection.json".into(),
+            maintenance_edge_ack_path: None,
+            generation_binding_path: None,
+            core_liveness_request_path: None,
             autonomy_enabled: true,
             autonomy_interval_minutes: 15,
             autonomy_event_driven: false,
@@ -4600,7 +4840,28 @@ mod tests {
             autonomy_journal_authored_turns: true,
             autonomy_initiative_profile: AutonomyInitiativeProfile::Disabled,
             research_action_web_search: false,
+            web_broker_socket_path: None,
+            web_broker_request_key_path: None,
+            web_broker_request_key_sha256: None,
+            web_broker_response_verify_key_path: None,
+            web_broker_response_verify_key_sha256: None,
+            web_broker_connect_timeout_ms: 2_000,
+            web_broker_header_timeout_ms: 10_000,
+            web_broker_total_timeout_ms: 30_000,
             introspection_harness: None,
+            scheduled_introspection_enabled: false,
+            scheduled_introspection_interval_minutes: 120,
+            scheduled_introspection_initial_delay_seconds: 300,
+            scheduled_introspection_timeout_seconds: 1_200,
+            scheduled_introspection_prompt_max_chars: 3_200,
+            dedicated_steward_enabled: false,
+            dedicated_steward_interval_minutes: 120,
+            scheduled_authorship_attestation_path: None,
+            scheduled_authorship_verify_key_path: None,
+            scheduled_authorship_verify_key_sha256: None,
+            scheduled_authorship_steward_uid: None,
+            self_change_enabled: false,
+            self_change_root: "/tmp/astrid-self-change-test".into(),
             study_harness: None,
             inquiry_harness: None,
             perceptual_notebook_enabled: false,
@@ -4697,6 +4958,57 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn model_to_action_handoff_has_no_zero_work_queue_gap() {
+        let config = config();
+        let maintenance_work = Arc::new(crate::maintenance::WorkTracker::default());
+        let model_permit = maintenance_work.begin_model_turn().unwrap();
+        let (action_tx, mut action_rx) = mpsc::channel(1);
+        action_tx
+            .send(crate::actions::ActionCandidate {
+                session_id: "filler".to_string(),
+                response: "LISTEN".to_string(),
+                trace: None,
+                tuning_authority_turn_id: None,
+                tuning_authority_source: None,
+                maintenance_permit: None,
+            })
+            .await
+            .unwrap();
+
+        let handoff = enqueue_action_candidate(
+            &config,
+            &action_tx,
+            crate::actions::ActionCandidate {
+                session_id: "authored".to_string(),
+                response: "JOURNAL queue handoff".to_string(),
+                trace: None,
+                tuning_authority_turn_id: None,
+                tuning_authority_source: None,
+                maintenance_permit: None,
+            },
+            &maintenance_work,
+            false,
+        );
+        tokio::pin!(handoff);
+        tokio::select! {
+            biased;
+            result = &mut handoff => panic!("handoff unexpectedly completed: {result:?}"),
+            () = tokio::time::sleep(Duration::from_millis(20)) => {},
+        }
+        assert_eq!(maintenance_work.work_counts(), (1, 1, 0));
+
+        drop(model_permit);
+        assert_eq!(maintenance_work.work_counts(), (0, 1, 0));
+        drop(action_rx.recv().await.unwrap());
+        assert!(handoff.await.unwrap());
+        let delivered = action_rx.recv().await.unwrap();
+        assert!(delivered.maintenance_permit.is_some());
+        assert_eq!(maintenance_work.work_counts(), (0, 1, 0));
+        drop(delivered);
+        assert_eq!(maintenance_work.work_counts(), (0, 0, 0));
+    }
+
+    #[tokio::test]
     async fn startup_durably_pauses_for_an_unacknowledged_run_receipt() {
         let mut config = config();
         config.workspace = std::env::temp_dir().join(format!(
@@ -4730,6 +5042,8 @@ mod tests {
                     outcome_rx,
                     action_tx,
                     Arc::new(AutonomyTraceRegistry::default()),
+                    Arc::new(Mutex::new(())),
+                    Arc::new(crate::maintenance::WorkTracker::default()),
                 ),
             )
             .await
@@ -4802,9 +5116,24 @@ mod tests {
         assert!(persisted.action_dispatch_pending);
 
         let (action_tx, mut action_rx) = mpsc::channel(1);
-        replay_pending_action_dispatch(&config, &persisted, &action_tx)
-            .await
-            .unwrap();
+        let maintenance_work = Arc::new(crate::maintenance::WorkTracker::default());
+        // Any present root-lease object, including one malformed from the
+        // mutable process's perspective, defers a restart replay without
+        // losing its durable pending state or creating a queue-gap permit.
+        fs::write(&config.maintenance_lease_path, b"{}").unwrap();
+        assert!(
+            !replay_pending_action_dispatch(&config, &persisted, &action_tx, &maintenance_work)
+                .await
+                .unwrap()
+        );
+        assert_eq!(maintenance_work.work_counts(), (0, 0, 0));
+        assert!(action_rx.try_recv().is_err());
+        fs::remove_file(&config.maintenance_lease_path).unwrap();
+        assert!(
+            replay_pending_action_dispatch(&config, &persisted, &action_tx, &maintenance_work)
+                .await
+                .unwrap()
+        );
         let replayed = action_rx.recv().await.unwrap();
         assert_eq!(replayed.response, response);
         assert_eq!(replayed.tuning_authority_turn_id, trace.turn_id);
@@ -4909,6 +5238,7 @@ mod tests {
         };
         let (action_tx, mut action_rx) = mpsc::channel(1);
         let registry = AutonomyTraceRegistry::default();
+        let maintenance_work = Arc::new(crate::maintenance::WorkTracker::default());
         let result = execute_due_turn(
             &config,
             &ReservoirSnapshot::default(),
@@ -4917,6 +5247,7 @@ mod tests {
             Some(456),
             &action_tx,
             &registry,
+            &maintenance_work,
         )
         .await;
 
@@ -4977,12 +5308,86 @@ mod tests {
     }
 
     #[test]
-    fn headless_idle_deadline_precedes_the_outer_supervisor_and_is_transport_recovery() {
+    fn direct_headless_idle_deadline_precedes_the_outer_supervisor() {
         assert_eq!(supervised_headless_idle_timeout_seconds(720), 690);
         assert_eq!(supervised_headless_idle_timeout_seconds(60), 30);
-        assert!(headless_exit_is_transport_recovery(Some(53)));
-        assert!(!headless_exit_is_transport_recovery(Some(1)));
-        assert!(!headless_exit_is_transport_recovery(None));
+    }
+
+    #[test]
+    fn transport_recovery_publishes_one_exact_generation_bound_root_request() {
+        let root = std::env::temp_dir().join(format!(
+            "astrid-edge-core-liveness-request-{}",
+            Uuid::new_v4()
+        ));
+        let workspace = root.join("state/home/default/edge");
+        fs::create_dir_all(workspace.join("runtime")).unwrap();
+        let generation = root.join("supervisor/current-generation");
+        fs::create_dir_all(generation.parent().unwrap()).unwrap();
+        fs::write(&generation, b"generation-a\n").unwrap();
+        let mut config = config();
+        config.appliance_id = "avado-edge".to_string();
+        config.workspace.clone_from(&workspace);
+        config.generation_binding_path = Some(generation);
+        config.core_liveness_request_path =
+            Some(workspace.join("runtime/core-liveness-recovery.request.json"));
+        let trace = IpcTraceContextV1::root(
+            Uuid::new_v4(),
+            "edge-autonomous-test".to_string(),
+            Some("chain-a".to_string()),
+        );
+
+        assert_eq!(
+            write_core_liveness_request(&config, "edge_model_turn_timeout", &trace).unwrap(),
+            "immutable_core_liveness_request_published"
+        );
+        let path = config.core_liveness_request_path.as_ref().unwrap();
+        assert_eq!(
+            fs::metadata(path).unwrap().permissions().mode() & 0o777,
+            0o640
+        );
+        let value: serde_json::Value = serde_json::from_slice(&fs::read(path).unwrap()).unwrap();
+        assert_eq!(value["schema"], "astrid.edge_core_liveness_request.v1");
+        assert_eq!(value["appliance_id"], "avado-edge");
+        assert_eq!(value["generation_id"], "generation-a");
+        assert_eq!(value["reason"], "edge_model_turn_timeout");
+        assert_eq!(value["trace"]["trace_id"], trace.trace_id.to_string());
+        assert_eq!(
+            write_core_liveness_request(&config, "edge_headless_idle_timeout", &trace).unwrap(),
+            "immutable_core_liveness_request_already_pending"
+        );
+        assert!(write_core_liveness_request(&config, "model_requested_restart", &trace).is_err());
+        let _ = fs::remove_dir_all(root);
+    }
+
+    #[test]
+    fn immutable_maintenance_payload_fails_closed_and_expires_at_its_deadline() {
+        let now = 1_000_000;
+        let nonce = "a".repeat(64);
+        let nonce_hash = format!("{:x}", Sha256::digest(nonce.as_bytes()));
+        let lease = |expires_at_unix_ms| {
+            serde_json::json!({
+                "schema": "astrid.edge_self_change.maintenance_lease.v2",
+                "created_at_unix_ms": now - 1,
+                "expires_at_unix_ms": expires_at_unix_ms,
+                "reason": "test",
+                "owner": "immutable_astrid_edge_rescue_helper",
+                "lease_id": format!("lease-{}", &nonce_hash[..24]),
+                "nonce": nonce.clone(),
+            })
+        };
+        assert!(maintenance_lease_payload_blocks_turn(
+            &serde_json::json!({"schema": "unknown"}),
+            now
+        ));
+        assert!(maintenance_lease_payload_blocks_turn(
+            &lease(now + 60_000),
+            now
+        ));
+        assert!(!maintenance_lease_payload_blocks_turn(&lease(now), now));
+        assert!(maintenance_lease_payload_blocks_turn(
+            &lease(now + 48 * 60 * 60 * 1_000 + 1),
+            now
+        ));
     }
 
     fn single_provider_receipt(canonical: &IpcTraceContextV1) -> (serde_json::Value, Uuid) {
@@ -5451,6 +5856,8 @@ mod tests {
         let (human_tx, human_rx) = watch::channel(0_u64);
         let (action_tx, mut action_rx) = mpsc::channel(1);
         let registry = AutonomyTraceRegistry::default();
+        let model_turn_lock = Mutex::new(());
+        let maintenance_work = Arc::new(crate::maintenance::WorkTracker::default());
 
         // Reservoir warm-up is transient and must not consume the invitation.
         poll_due_turn(
@@ -5460,6 +5867,8 @@ mod tests {
             &mut state,
             &action_tx,
             &registry,
+            &model_turn_lock,
+            &maintenance_work,
         )
         .await
         .unwrap();
@@ -5481,6 +5890,8 @@ mod tests {
             &mut state,
             &action_tx,
             &registry,
+            &model_turn_lock,
+            &maintenance_work,
         )
         .await
         .unwrap();
@@ -5502,6 +5913,8 @@ mod tests {
             &mut state,
             &action_tx,
             &registry,
+            &model_turn_lock,
+            &maintenance_work,
         )
         .await
         .unwrap();
@@ -5527,6 +5940,8 @@ mod tests {
             &mut state,
             &action_tx,
             &registry,
+            &model_turn_lock,
+            &maintenance_work,
         )
         .await
         .unwrap();
@@ -5550,6 +5965,8 @@ mod tests {
             &mut state,
             &action_tx,
             &registry,
+            &model_turn_lock,
+            &maintenance_work,
         )
         .await
         .unwrap();
@@ -5568,6 +5985,8 @@ mod tests {
             &mut state,
             &action_tx,
             &registry,
+            &model_turn_lock,
+            &maintenance_work,
         )
         .await
         .unwrap();
@@ -5593,6 +6012,8 @@ mod tests {
             &mut state,
             &action_tx,
             &registry,
+            &model_turn_lock,
+            &maintenance_work,
         )
         .await
         .unwrap();
@@ -6855,6 +7276,40 @@ mod tests {
                 .iter()
                 .all(|record| record.kind == "verified_source")
         );
+    }
+
+    #[test]
+    fn scheduled_projection_merges_idempotently_as_typed_bounded_continuity() {
+        let projection = crate::scheduled_admission::VerifiedProjection {
+            summary: "A bounded scheduled reflection distinguishes evidence from interpretation."
+                .to_string(),
+            summary_sha256: "a".repeat(64),
+            response_sha256: "b".repeat(64),
+            trace_id: Uuid::from_u128(1).to_string(),
+            due_nonce: "due-12345".to_string(),
+            recorded_at_unix_ms: 42,
+        };
+        let mut thread = ThreadState::default();
+        merge_verified_scheduled_projection(&mut thread, &projection);
+        merge_verified_scheduled_projection(&mut thread, &projection);
+        let records = thread
+            .evidence_records
+            .iter()
+            .filter(|record| record.kind == "scheduled_introspection")
+            .collect::<Vec<_>>();
+        assert_eq!(records.len(), 1);
+        assert_eq!(records[0].reference, "due-12345");
+        assert_eq!(
+            records[0].sha256.as_deref(),
+            Some(projection.response_sha256.as_str())
+        );
+        assert!(records[0].source.contains(&projection.trace_id));
+        assert!(records[0].source.contains(&projection.summary_sha256));
+        assert_eq!(
+            records[0].summary.chars().count(),
+            projection.summary.chars().count()
+        );
+        assert_eq!(thread.provenance_hashes.len(), 2);
     }
 
     #[test]

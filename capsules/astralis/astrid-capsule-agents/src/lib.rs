@@ -47,6 +47,7 @@ astrid_guest::export!(AgentsCapsule);
 #[cfg(test)]
 mod tests {
     use super::*;
+    use astrid_guest::Guest as _;
 
     #[test]
     fn ignores_unknown_actions() {

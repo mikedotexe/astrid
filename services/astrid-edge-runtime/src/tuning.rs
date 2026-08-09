@@ -3340,15 +3340,16 @@ fn verified_receipts(config: &Config, key: &SigningKey) -> Result<Vec<Value>> {
         .lines()
         .enumerate()
         .map(|(index, line)| {
+            let line_number = index.saturating_add(1);
             if line.is_empty() {
                 bail!("tuning receipt ledger contains an empty record");
             }
             let envelope: Value = serde_json::from_str(line)
-                .with_context(|| format!("invalid tuning receipt at line {}", index + 1))?;
+                .with_context(|| format!("invalid tuning receipt at line {line_number}"))?;
             let payload = verify_signed_envelope(&envelope, key)
-                .with_context(|| format!("unverified tuning receipt at line {}", index + 1))?;
+                .with_context(|| format!("unverified tuning receipt at line {line_number}"))?;
             if payload.get("schema").and_then(Value::as_str) != Some(RECEIPT_SCHEMA) {
-                bail!("tuning receipt at line {} has an unknown schema", index + 1);
+                bail!("tuning receipt at line {line_number} has an unknown schema");
             }
             Ok(payload)
         })

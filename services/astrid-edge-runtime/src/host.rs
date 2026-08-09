@@ -1,22 +1,35 @@
 use std::{
     f32::consts::PI,
     fs,
-    io::{ErrorKind, Read as _},
+    io::{BufRead as _, BufReader, ErrorKind, Read as _},
+    os::unix::net::UnixStream,
     path::Path,
-    process::{Command, Stdio},
     thread,
     time::{Duration, Instant, SystemTime, UNIX_EPOCH},
 };
 
+use serde::Deserialize;
 use tokio::sync::mpsc;
 
 use crate::reservoir::SensoryIngress;
 
 const AUDIO_FEATURE_DIM: usize = 8;
-const AUDIO_SPECTRUM_SAMPLES: usize = 256;
-const AUDIO_MEL_BANDS: usize = 16;
-const AUDIO_MFCCS: usize = 4;
-const AUDIO_CHUNKS_PER_SECOND: usize = 10;
+const AUDIO_FEEDER_SOCKET: &str = "/run/astrid-edge-self-change/audio-features.sock";
+const AUDIO_FEEDER_SCHEMA: &str = "astrid.edge.audio_features.v1";
+const AUDIO_FEEDER_SOURCE: &str = "physical_alsa_numeric_feeder";
+const AUDIO_FEEDER_MAXIMUM_LINE_BYTES: u64 = 1_024;
+
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+struct AudioFeatureFrame {
+    schema: String,
+    sequence: u64,
+    sample_rate: u32,
+    channels: u16,
+    device: String,
+    source: String,
+    features: Vec<f32>,
+}
 
 #[derive(Clone, Copy, Default)]
 struct CpuSample {
@@ -26,13 +39,55 @@ struct CpuSample {
 
 #[derive(Clone, Copy, Default)]
 struct IoSample {
-    disk_read: u64,
-    disk_write: u64,
-    network_receive: u64,
-    network_transmit: u64,
+    disk: Option<CounterPair>,
+    network: Option<CounterPair>,
 }
 
-const HOST_AUX_SOURCE: &str = "linux_proc_sys_cpu_memory_load_disk_network_thermal_clock";
+#[derive(Clone, Copy, Default)]
+struct CounterPair {
+    first: u64,
+    second: u64,
+}
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum NetworkPolicy {
+    PhysicalDeviceOnly,
+    UnavailablePrivateNetwork,
+    UnavailableInvalidPolicy,
+}
+
+impl NetworkPolicy {
+    fn from_environment() -> Self {
+        match std::env::var("ASTRID_EDGE_HOST_NETWORK_POLICY") {
+            Err(std::env::VarError::NotPresent) => Self::PhysicalDeviceOnly,
+            Ok(value) if value == "physical_device_only" => Self::PhysicalDeviceOnly,
+            Ok(value) if value == "unavailable_private_network" => Self::UnavailablePrivateNetwork,
+            Ok(_) | Err(std::env::VarError::NotUnicode(_)) => Self::UnavailableInvalidPolicy,
+        }
+    }
+
+    const fn source(self, network_available: bool) -> &'static str {
+        match (self, network_available) {
+            (Self::PhysicalDeviceOnly, true) => {
+                "linux_proc_sys_host_cpu_memory_load_disk_thermal_clock_network_physical_device"
+            },
+            (Self::PhysicalDeviceOnly, false) => {
+                "linux_proc_sys_host_cpu_memory_load_disk_thermal_clock_network_unavailable_no_physical_device"
+            },
+            (Self::UnavailablePrivateNetwork, _) => {
+                "linux_proc_sys_host_cpu_memory_load_disk_thermal_clock_network_unavailable_private_namespace"
+            },
+            (Self::UnavailableInvalidPolicy, _) => {
+                "linux_proc_sys_host_cpu_memory_load_disk_thermal_clock_network_unavailable_invalid_policy"
+            },
+        }
+    }
+
+    const fn permits_proc_network(self) -> bool {
+        matches!(self, Self::PhysicalDeviceOnly)
+    }
+}
+
 const DISK_RATE_SCALE_BYTES_PER_SECOND: f32 = 4.0 * 1024.0 * 1024.0;
 const NETWORK_RATE_SCALE_BYTES_PER_SECOND: f32 = 1024.0 * 1024.0;
 
@@ -49,8 +104,9 @@ pub async fn run(ingress_tx: mpsc::Sender<SensoryIngress>) {
 
 #[allow(clippy::cast_precision_loss)] // /proc counters become bounded ratios.
 async fn run_interoception(ingress_tx: mpsc::Sender<SensoryIngress>) {
+    let network_policy = NetworkPolicy::from_environment();
     let mut previous_cpu = read_cpu().unwrap_or_default();
-    let mut previous_io = read_io().unwrap_or_default();
+    let mut previous_io = read_io(network_policy);
     let mut previous_io_at = Instant::now();
     let mut interval = tokio::time::interval(Duration::from_millis(500));
 
@@ -69,52 +125,35 @@ async fn run_interoception(ingress_tx: mpsc::Sender<SensoryIngress>) {
         });
         let memory_used = read_memory_used();
         let load = read_normalized_load();
-        let current_io = read_io();
+        let current_io = read_io(network_policy);
         let now = Instant::now();
         let elapsed = now.saturating_duration_since(previous_io_at);
-        let (disk_read, disk_write, network_receive, network_transmit) =
-            current_io.map_or((0.0, 0.0, 0.0, 0.0), |sample| {
-                let rates = (
-                    normalize_counter_rate(
-                        sample.disk_read.saturating_sub(previous_io.disk_read),
-                        elapsed,
-                        DISK_RATE_SCALE_BYTES_PER_SECOND,
-                    ),
-                    normalize_counter_rate(
-                        sample.disk_write.saturating_sub(previous_io.disk_write),
-                        elapsed,
-                        DISK_RATE_SCALE_BYTES_PER_SECOND,
-                    ),
-                    normalize_counter_rate(
-                        sample
-                            .network_receive
-                            .saturating_sub(previous_io.network_receive),
-                        elapsed,
-                        NETWORK_RATE_SCALE_BYTES_PER_SECOND,
-                    ),
-                    normalize_counter_rate(
-                        sample
-                            .network_transmit
-                            .saturating_sub(previous_io.network_transmit),
-                        elapsed,
-                        NETWORK_RATE_SCALE_BYTES_PER_SECOND,
-                    ),
-                );
-                previous_io = sample;
-                previous_io_at = now;
-                rates
-            });
+        let (disk_read, disk_write) = normalized_pair_rate(
+            current_io.disk,
+            previous_io.disk,
+            elapsed,
+            DISK_RATE_SCALE_BYTES_PER_SECOND,
+        );
+        let (network_receive, network_transmit) = normalized_pair_rate(
+            current_io.network,
+            previous_io.network,
+            elapsed,
+            NETWORK_RATE_SCALE_BYTES_PER_SECOND,
+        );
+        previous_io = current_io;
+        previous_io_at = now;
         let thermal = read_thermal_normalized();
         let (daily_sine, daily_cosine) = daily_phase();
-        let io_available = current_io.is_some();
+        let disk_available = current_io.disk.is_some();
+        let network_available = current_io.network.is_some();
         let availability = vec![
             current_cpu.is_some(),
             memory_used.is_some(),
             load.is_some(),
-            io_available,
-            io_available,
-            io_available,
-            io_available,
+            disk_available,
+            disk_available,
+            network_available,
+            network_available,
             thermal.is_some(),
             true,
             true,
@@ -134,7 +173,7 @@ async fn run_interoception(ingress_tx: mpsc::Sender<SensoryIngress>) {
         if ingress_tx
             .send(SensoryIngress::Aux {
                 features,
-                source: HOST_AUX_SOURCE.to_string(),
+                source: network_policy.source(network_available).to_string(),
                 availability: Some(availability),
             })
             .await
@@ -155,222 +194,159 @@ fn audio_capture_loop(ingress_tx: &mpsc::Sender<SensoryIngress>) {
     let sample_rate =
         environment_u32("ASTRID_EDGE_AUDIO_SAMPLE_RATE", 16_000).clamp(8_000, 192_000);
     let channels = environment_u16("ASTRID_EDGE_AUDIO_CHANNELS", 1).clamp(1, 8);
-    let source = format!("physical_alsa:{device}:{sample_rate}hz:{channels}ch");
+    let Some(expected_peer_uid) = std::env::var("ASTRID_EDGE_AUDIO_FEEDER_UID")
+        .ok()
+        .and_then(|value| value.parse::<u32>().ok())
+        .filter(|uid| *uid > 0)
+    else {
+        eprintln!("edge physical audio disabled: immutable feeder UID is absent");
+        return;
+    };
+    let source = format!("{AUDIO_FEEDER_SOURCE}:{device}:{sample_rate}hz:{channels}ch");
 
     loop {
-        match capture_audio(ingress_tx, &device, sample_rate, channels, &source) {
+        match receive_audio_features(
+            ingress_tx,
+            expected_peer_uid,
+            sample_rate,
+            channels,
+            &source,
+        ) {
             Ok(()) => return,
             Err(error) => {
-                eprintln!("edge physical audio unavailable ({source}): {error}; retrying in 10s");
+                eprintln!(
+                    "edge physical audio feeder unavailable ({source}): {error}; retrying in 10s"
+                );
                 thread::sleep(Duration::from_secs(10));
             },
         }
     }
 }
 
-fn capture_audio(
+fn receive_audio_features(
     ingress_tx: &mpsc::Sender<SensoryIngress>,
-    device: &str,
+    expected_peer_uid: u32,
     sample_rate: u32,
     channels: u16,
     source: &str,
 ) -> std::io::Result<()> {
-    let mut child = Command::new("arecord")
-        .args([
-            "-D",
-            device,
-            "-q",
-            "-t",
-            "raw",
-            "-f",
-            "S16_LE",
-            "-r",
-            &sample_rate.to_string(),
-            "-c",
-            &channels.to_string(),
-        ])
-        .stdin(Stdio::null())
-        .stdout(Stdio::piped())
-        .stderr(Stdio::inherit())
-        .spawn()?;
-    let Some(mut stdout) = child.stdout.take() else {
-        return Err(std::io::Error::other("arecord stdout was not piped"));
-    };
-    eprintln!("edge physical audio connected: {source}");
-
-    let frames_per_chunk = usize::try_from(sample_rate).unwrap_or(44_100) / AUDIO_CHUNKS_PER_SECOND;
-    let bytes_per_frame = usize::from(channels).saturating_mul(size_of::<i16>());
-    let mut bytes = vec![0_u8; frames_per_chunk.saturating_mul(bytes_per_frame)];
+    let stream = UnixStream::connect(AUDIO_FEEDER_SOCKET)?;
+    stream.set_read_timeout(Some(Duration::from_secs(3)))?;
+    validate_audio_peer(&stream, expected_peer_uid)?;
+    let mut reader = BufReader::with_capacity(2_048, stream);
+    let mut last_sequence = None;
+    eprintln!("edge physical audio numeric feeder connected: {source}");
 
     loop {
-        match stdout.read_exact(&mut bytes) {
-            Ok(()) => {},
+        let mut line = Vec::new();
+        let read = match std::io::Read::by_ref(&mut reader)
+            .take(AUDIO_FEEDER_MAXIMUM_LINE_BYTES.saturating_add(1))
+            .read_until(b'\n', &mut line)
+        {
+            Ok(read) => read,
             Err(error) if error.kind() == ErrorKind::Interrupted => continue,
-            Err(error) => {
-                let _ = child.kill();
-                let _ = child.wait();
-                return Err(error);
-            },
+            Err(error) => return Err(error),
+        };
+        if read == 0 {
+            return Err(std::io::Error::new(
+                ErrorKind::UnexpectedEof,
+                "audio feeder closed the feature stream",
+            ));
         }
-        let samples = decode_mono_s16le(&bytes, channels);
-        let features = extract_audio_features(&samples, sample_rate);
+        if u64::try_from(line.len()).unwrap_or(u64::MAX) > AUDIO_FEEDER_MAXIMUM_LINE_BYTES
+            || !line.ends_with(b"\n")
+        {
+            return Err(std::io::Error::new(
+                ErrorKind::InvalidData,
+                "audio feeder frame exceeded the immutable line bound",
+            ));
+        }
+        line.pop();
+        let frame: AudioFeatureFrame = serde_json::from_slice(&line)
+            .map_err(|error| std::io::Error::new(ErrorKind::InvalidData, error))?;
+        validate_audio_frame(
+            &frame,
+            last_sequence,
+            &device_from_source(source)?,
+            sample_rate,
+            channels,
+        )?;
+        last_sequence = Some(frame.sequence);
         if ingress_tx
             .blocking_send(SensoryIngress::Audio {
-                features: features.to_vec(),
+                features: frame.features,
                 source: source.to_string(),
             })
             .is_err()
         {
-            let _ = child.kill();
-            let _ = child.wait();
             return Ok(());
         }
     }
 }
 
-fn decode_mono_s16le(bytes: &[u8], channels: u16) -> Vec<f32> {
-    let channels = usize::from(channels.max(1));
-    let sample_count = bytes.len() / size_of::<i16>();
-    let frame_count = sample_count / channels;
-    let mut mono = Vec::with_capacity(frame_count);
-    for frame in 0..frame_count {
-        let mut sum = 0.0_f32;
-        for channel in 0..channels {
-            let sample_index = frame.saturating_mul(channels).saturating_add(channel);
-            let byte_index = sample_index.saturating_mul(size_of::<i16>());
-            let sample = i16::from_le_bytes([bytes[byte_index], bytes[byte_index + 1]]);
-            sum += f32::from(sample) / 32_768.0;
-        }
-        mono.push(sum / f32::from(u16::try_from(channels).unwrap_or(u16::MAX)));
-    }
-    mono
-}
-
-#[allow(clippy::cast_precision_loss)]
-fn extract_audio_features(samples: &[f32], sample_rate: u32) -> [f32; AUDIO_FEATURE_DIM] {
-    if samples.is_empty() {
-        return [0.0; AUDIO_FEATURE_DIM];
-    }
-    let sample_count = samples.len() as f32;
-    let rms = (samples.iter().map(|sample| sample * sample).sum::<f32>() / sample_count).sqrt();
-    let normalized_rms = (((rms + 1.0e-10).ln().max(-6.0) + 6.0) / 6.0).clamp(0.0, 1.0);
-    let zero_crossings = samples
-        .windows(2)
-        .filter(|pair| (pair[0] >= 0.0) != (pair[1] >= 0.0))
-        .count();
-    let zcr = zero_crossings as f32 / samples.len().saturating_sub(1).max(1) as f32;
-
-    let spectrum_input = spectrum_window(samples);
-    let magnitudes = magnitude_spectrum(&spectrum_input);
-    let magnitude_total = magnitudes.iter().sum::<f32>();
-    let nyquist = sample_rate as f32 / 2.0;
-    let frequency_step = sample_rate as f32 / AUDIO_SPECTRUM_SAMPLES as f32;
-    let centroid_hz = if magnitude_total <= f32::EPSILON {
-        0.0
-    } else {
-        magnitudes
+fn validate_audio_frame(
+    frame: &AudioFeatureFrame,
+    last_sequence: Option<u64>,
+    device: &str,
+    sample_rate: u32,
+    channels: u16,
+) -> std::io::Result<()> {
+    if frame.schema != AUDIO_FEEDER_SCHEMA
+        || frame.source != AUDIO_FEEDER_SOURCE
+        || frame.device != device
+        || frame.sample_rate != sample_rate
+        || frame.channels != channels
+        || frame.features.len() != AUDIO_FEATURE_DIM
+        || frame
+            .features
             .iter()
-            .enumerate()
-            .map(|(bin, magnitude)| bin as f32 * frequency_step * magnitude)
-            .sum::<f32>()
-            / magnitude_total
-    };
-    let bandwidth_hz = if magnitude_total <= f32::EPSILON {
-        0.0
-    } else {
-        (magnitudes
-            .iter()
-            .enumerate()
-            .map(|(bin, magnitude)| {
-                let delta = bin as f32 * frequency_step - centroid_hz;
-                magnitude * delta * delta
-            })
-            .sum::<f32>()
-            / magnitude_total)
-            .sqrt()
-    };
-    let cepstral = cepstral_coefficients(&magnitudes, sample_rate);
-
-    [
-        normalized_rms,
-        (centroid_hz / nyquist).clamp(0.0, 1.0),
-        (bandwidth_hz / nyquist).clamp(0.0, 1.0),
-        zcr.clamp(0.0, 1.0),
-        cepstral[0],
-        cepstral[1],
-        cepstral[2],
-        cepstral[3],
-    ]
+            .any(|value| !value.is_finite() || !(-1.0..=1.0).contains(value))
+        || last_sequence.is_some_and(|previous| frame.sequence <= previous)
+    {
+        return Err(std::io::Error::new(
+            ErrorKind::InvalidData,
+            "audio feeder frame failed the exact numeric contract",
+        ));
+    }
+    Ok(())
 }
 
-#[allow(clippy::cast_precision_loss)]
-fn spectrum_window(samples: &[f32]) -> [f32; AUDIO_SPECTRUM_SAMPLES] {
-    let mut window = [0.0_f32; AUDIO_SPECTRUM_SAMPLES];
-    let final_source_index = samples.len().saturating_sub(1);
-    let final_target_index = AUDIO_SPECTRUM_SAMPLES.saturating_sub(1);
-    for (index, value) in window.iter_mut().enumerate() {
-        let source_index = index.saturating_mul(final_source_index) / final_target_index.max(1);
-        let hann = 0.5 - 0.5 * (2.0 * PI * index as f32 / final_target_index.max(1) as f32).cos();
-        *value = samples[source_index] * hann;
-    }
-    window
+fn device_from_source(source: &str) -> std::io::Result<String> {
+    let prefix = format!("{AUDIO_FEEDER_SOURCE}:");
+    source
+        .strip_prefix(&prefix)
+        .and_then(|value| value.rsplit_once(':'))
+        .and_then(|(value, _channels)| value.rsplit_once(':'))
+        .map(|(device, _rate)| device.to_owned())
+        .filter(|device| !device.is_empty())
+        .ok_or_else(|| {
+            std::io::Error::new(
+                ErrorKind::InvalidInput,
+                "audio source did not preserve the configured device",
+            )
+        })
 }
 
-#[allow(clippy::cast_precision_loss)]
-fn magnitude_spectrum(samples: &[f32; AUDIO_SPECTRUM_SAMPLES]) -> Vec<f32> {
-    let mut magnitudes = Vec::with_capacity(AUDIO_SPECTRUM_SAMPLES / 2 + 1);
-    for bin in 0..=AUDIO_SPECTRUM_SAMPLES / 2 {
-        let mut real = 0.0_f32;
-        let mut imaginary = 0.0_f32;
-        for (index, sample) in samples.iter().enumerate() {
-            let angle = 2.0 * PI * bin as f32 * index as f32 / AUDIO_SPECTRUM_SAMPLES as f32;
-            real += sample * angle.cos();
-            imaginary -= sample * angle.sin();
-        }
-        magnitudes.push((real * real + imaginary * imaginary).sqrt());
+#[cfg(target_os = "linux")]
+fn validate_audio_peer(stream: &UnixStream, expected_uid: u32) -> std::io::Result<()> {
+    let credentials =
+        nix::sys::socket::getsockopt(stream, nix::sys::socket::sockopt::PeerCredentials)
+            .map_err(std::io::Error::other)?;
+    if credentials.uid() != expected_uid || credentials.pid() <= 0 {
+        return Err(std::io::Error::new(
+            ErrorKind::PermissionDenied,
+            "audio feeder Unix peer identity is unauthorized",
+        ));
     }
-    magnitudes
+    Ok(())
 }
 
-#[allow(
-    clippy::cast_precision_loss,
-    clippy::cast_possible_truncation,
-    clippy::cast_sign_loss
-)]
-fn cepstral_coefficients(magnitudes: &[f32], sample_rate: u32) -> [f32; AUDIO_MFCCS] {
-    let mut energies = [0.0_f32; AUDIO_MEL_BANDS];
-    let mut counts = [0_u16; AUDIO_MEL_BANDS];
-    let nyquist = sample_rate as f32 / 2.0;
-    let maximum_mel = hz_to_mel(nyquist);
-    for (bin, magnitude) in magnitudes.iter().enumerate().skip(1) {
-        let frequency = bin as f32 * sample_rate as f32 / AUDIO_SPECTRUM_SAMPLES as f32;
-        let mel_position = hz_to_mel(frequency) / maximum_mel * AUDIO_MEL_BANDS as f32;
-        let band = (mel_position.floor() as usize).min(AUDIO_MEL_BANDS - 1);
-        energies[band] += magnitude * magnitude;
-        counts[band] = counts[band].saturating_add(1);
-    }
-    for (energy, count) in energies.iter_mut().zip(counts) {
-        *energy = (*energy / f32::from(count.max(1)) + 1.0e-8).ln();
-    }
-
-    let mut coefficients = [0.0_f32; AUDIO_MFCCS];
-    for (coefficient, value) in coefficients.iter_mut().enumerate() {
-        let raw = energies
-            .iter()
-            .enumerate()
-            .map(|(band, energy)| {
-                let phase = PI * coefficient as f32 * (band as f32 + 0.5) / AUDIO_MEL_BANDS as f32;
-                energy * phase.cos()
-            })
-            .sum::<f32>()
-            / AUDIO_MEL_BANDS as f32;
-        *value = (raw / 4.0).tanh();
-    }
-    coefficients
-}
-
-fn hz_to_mel(frequency: f32) -> f32 {
-    2_595.0 * (1.0 + frequency / 700.0).log10()
+#[cfg(not(target_os = "linux"))]
+fn validate_audio_peer(_stream: &UnixStream, _expected_uid: u32) -> std::io::Result<()> {
+    Err(std::io::Error::new(
+        ErrorKind::Unsupported,
+        "audio feeder peer credentials require Linux",
+    ))
 }
 
 fn environment_u32(name: &str, fallback: u32) -> u32 {
@@ -434,27 +410,29 @@ fn read_normalized_load() -> Option<f32> {
     Some((load / processors.max(1.0)).clamp(0.0, 1.0))
 }
 
-fn read_io() -> Option<IoSample> {
+fn read_io(network_policy: NetworkPolicy) -> IoSample {
     let disk = fs::read_to_string("/proc/diskstats")
         .ok()
         .and_then(|content| {
             parse_disk_counters(&content, |name| Path::new("/sys/block").join(name).is_dir())
-        });
-    let network = fs::read_to_string("/proc/net/dev")
-        .ok()
-        .and_then(|content| parse_network_counters(&content));
-    match (disk, network) {
-        (None, None) => None,
-        (disk, network) => {
-            let disk = disk.unwrap_or_default();
-            let network = network.unwrap_or_default();
-            Some(IoSample {
-                disk_read: disk.0,
-                disk_write: disk.1,
-                network_receive: network.0,
-                network_transmit: network.1,
+        })
+        .map(|(first, second)| CounterPair { first, second });
+    let network = network_policy.permits_proc_network().then(|| {
+        fs::read_to_string("/proc/net/dev")
+            .ok()
+            .and_then(|content| {
+                parse_network_counters(&content, |name| {
+                    Path::new("/sys/class/net")
+                        .join(name)
+                        .join("device")
+                        .exists()
+                })
             })
-        },
+            .map(|(first, second)| CounterPair { first, second })
+    });
+    IoSample {
+        disk,
+        network: network.flatten(),
     }
 }
 
@@ -485,7 +463,10 @@ fn parse_disk_counters(
     })
 }
 
-fn parse_network_counters(content: &str) -> Option<(u64, u64)> {
+fn parse_network_counters(
+    content: &str,
+    is_physical_device: impl Fn(&str) -> bool,
+) -> Option<(u64, u64)> {
     let mut found = false;
     let mut received = 0_u64;
     let mut transmitted = 0_u64;
@@ -493,7 +474,8 @@ fn parse_network_counters(content: &str) -> Option<(u64, u64)> {
         let Some((interface, counters)) = line.split_once(':') else {
             continue;
         };
-        if interface.trim() == "lo" {
+        let interface = interface.trim();
+        if interface == "lo" || !is_physical_device(interface) {
             continue;
         }
         let fields = counters.split_whitespace().collect::<Vec<_>>();
@@ -508,6 +490,25 @@ fn parse_network_counters(content: &str) -> Option<(u64, u64)> {
         transmitted = transmitted.saturating_add(tx);
     }
     found.then_some((received, transmitted))
+}
+
+fn normalized_pair_rate(
+    current: Option<CounterPair>,
+    previous: Option<CounterPair>,
+    elapsed: Duration,
+    scale: f32,
+) -> (f32, f32) {
+    let (Some(current), Some(previous)) = (current, previous) else {
+        return (0.0, 0.0);
+    };
+    (
+        normalize_counter_rate(current.first.saturating_sub(previous.first), elapsed, scale),
+        normalize_counter_rate(
+            current.second.saturating_sub(previous.second),
+            elapsed,
+            scale,
+        ),
+    )
 }
 
 #[allow(clippy::cast_precision_loss)]
@@ -547,48 +548,33 @@ fn daily_phase() -> (f32, f32) {
 #[cfg(test)]
 mod tests {
     use super::{
-        decode_mono_s16le, extract_audio_features, normalize_counter_rate, parse_disk_counters,
-        parse_network_counters,
+        AUDIO_FEATURE_DIM, AUDIO_FEEDER_SCHEMA, AUDIO_FEEDER_SOURCE, AudioFeatureFrame,
+        CounterPair, NetworkPolicy, device_from_source, normalize_counter_rate,
+        normalized_pair_rate, parse_disk_counters, parse_network_counters, validate_audio_frame,
     };
     use std::time::Duration;
 
     #[test]
-    fn stereo_pcm_is_mixed_to_mono() {
-        let bytes = [
-            0x00, 0x40, 0x00, 0x00, // 0.5 left, silence right
-            0x00, 0x00, 0x00, 0xc0, // silence left, -0.5 right
-        ];
-        let mono = decode_mono_s16le(&bytes, 2);
-        assert_eq!(mono.len(), 2);
-        assert!((mono[0] - 0.25).abs() < 0.001);
-        assert!((mono[1] + 0.25).abs() < 0.001);
-    }
-
-    #[test]
-    fn audio_features_are_bounded_and_distinguish_tone_from_silence() {
-        let silence = vec![0.0_f32; 4_410];
-        let tone = (0_u16..4_410)
-            .map(|index| {
-                let phase = 2.0 * std::f32::consts::PI * 440.0 * f32::from(index) / 44_100.0;
-                0.4 * phase.sin()
-            })
-            .collect::<Vec<_>>();
-        let silence_features = extract_audio_features(&silence, 44_100);
-        let tone_features = extract_audio_features(&tone, 44_100);
-
-        assert!(
-            tone_features
-                .iter()
-                .all(|value| value.is_finite() && (-1.0..=1.0).contains(value))
+    fn audio_feature_frames_are_exact_bounded_and_monotonic() {
+        let frame = AudioFeatureFrame {
+            schema: AUDIO_FEEDER_SCHEMA.to_owned(),
+            sequence: 2,
+            sample_rate: 16_000,
+            channels: 1,
+            device: "hw:1,0".to_owned(),
+            source: AUDIO_FEEDER_SOURCE.to_owned(),
+            features: vec![0.25; AUDIO_FEATURE_DIM],
+        };
+        assert!(validate_audio_frame(&frame, Some(1), "hw:1,0", 16_000, 1).is_ok());
+        assert!(validate_audio_frame(&frame, Some(2), "hw:1,0", 16_000, 1).is_err());
+        assert_eq!(
+            device_from_source("physical_alsa_numeric_feeder:hw:1,0:16000hz:1ch").unwrap(),
+            "hw:1,0"
         );
-        assert!(tone_features[0] > silence_features[0]);
-        assert!(tone_features[1] > silence_features[1]);
-        assert!(
-            tone_features
-                .iter()
-                .zip(silence_features)
-                .any(|(tone, silence)| (tone - silence).abs() > 0.001)
-        );
+
+        let mut malformed = frame;
+        malformed.features[0] = f32::NAN;
+        assert!(validate_audio_frame(&malformed, None, "hw:1,0", 16_000, 1).is_err());
     }
 
     #[test]
@@ -609,7 +595,33 @@ Inter-| Receive | Transmit\n\
  lo: 100 0 0 0 0 0 0 0 200 0 0 0 0 0 0 0\n\
 eth0: 300 0 0 0 0 0 0 0 400 0 0 0 0 0 0 0\n\
 wlan0: 500 0 0 0 0 0 0 0 600 0 0 0 0 0 0 0";
-        assert_eq!(parse_network_counters(fixture), Some((800, 1_000)));
+        assert_eq!(
+            parse_network_counters(fixture, |name| matches!(name, "eth0" | "wlan0")),
+            Some((800, 1_000))
+        );
+        assert_eq!(parse_network_counters(fixture, |_| false), None);
+    }
+
+    #[test]
+    fn private_network_is_explicitly_unavailable_and_independent_of_disk() {
+        let policy = NetworkPolicy::UnavailablePrivateNetwork;
+        assert!(!policy.permits_proc_network());
+        assert_eq!(
+            policy.source(false),
+            "linux_proc_sys_host_cpu_memory_load_disk_thermal_clock_network_unavailable_private_namespace"
+        );
+        let disk = Some(CounterPair {
+            first: 2_048,
+            second: 4_096,
+        });
+        let prior = Some(CounterPair {
+            first: 1_024,
+            second: 2_048,
+        });
+        let disk_rates = normalized_pair_rate(disk, prior, Duration::from_secs(1), 1_024.0);
+        let network_rates = normalized_pair_rate(None, None, Duration::from_secs(1), 1_024.0);
+        assert!(disk_rates.0 > 0.0 && disk_rates.1 > 0.0);
+        assert_eq!(network_rates, (0.0, 0.0));
     }
 
     #[test]

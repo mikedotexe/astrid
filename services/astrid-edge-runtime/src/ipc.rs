@@ -35,6 +35,7 @@ use crate::{
     autonomy::is_autonomous_prompt,
     codec::encode_text,
     config::Config,
+    maintenance::WorkTracker,
     notebook::ActivityEvent,
     reservoir::SensoryIngress,
     trace::{
@@ -55,10 +56,28 @@ const SOURCE_FETCH_MAX_CHARS: u64 = 64 * 1_024;
 const EDGE_EXECUTOR_SOURCE_ID: &str = "a57d1d30-0000-4000-8000-000000000001";
 const CANONICAL_AGENT_RESPONSE_TOPIC: &str = "agent.v1.response";
 const REACT_CAPSULE_ID: &str = "astrid-capsule-react";
+const EDGE_INTROSPECTOR_CAPSULE_ID: &str = "astrid-capsule-edge-introspector";
+const EDGE_SPECTRAL_CAPSULE_ID: &str = "astrid-capsule-edge-spectral";
+const HTTP_CAPSULE_ID: &str = "astrid-capsule-http";
 const OPERATOR_INQUIRY_SESSION_SEED: &[u8] = b"edge-operator-inquiry-harness-v1";
+const OPERATOR_INTROSPECTION_SESSION_SEED: &[u8] = b"edge-operator-introspection-harness-v1";
+const SCHEDULED_INTROSPECTION_SESSION_SEED: &[u8] = b"edge-scheduled-introspection-v1";
+const DIRECT_HEADLESS_MAX_RESPONSE_BYTES: usize = 128 * 1_024;
 static WEB_CALL_SEQUENCE: AtomicU64 = AtomicU64::new(1);
 static INTROSPECTION_CALL_SEQUENCE: AtomicU64 = AtomicU64::new(1);
 static SPECTRAL_CALL_SEQUENCE: AtomicU64 = AtomicU64::new(1);
+
+/// Exact result of one in-process, authenticated headless turn.
+///
+/// This replaces the former mutable `astrid` CLI subprocess while preserving
+/// the same kernel-attested trace, terminal provenance, and host-owned
+/// provider-metrics evidence.
+pub(crate) struct DirectHeadlessTurn {
+    pub(crate) response: String,
+    pub(crate) canonical_trace: IpcTraceContextV1,
+    pub(crate) response_provenance: String,
+    pub(crate) provider_metrics_receipt: Option<Value>,
+}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum SpectralQuery {
@@ -167,6 +186,39 @@ struct SpectralReceipt {
     authority: String,
 }
 
+/// Accept a private capsule result only when the kernel-attested producer,
+/// exact result topic, call identity, and one-hop causal lineage all match the
+/// request. Call IDs are observable routing labels, not authentication.
+fn verified_capsule_tool_result(
+    message: &Value,
+    call_id: &str,
+    tool_name: &str,
+    capsule_id: &str,
+    request_trace: &IpcTraceContextV1,
+) -> Option<IpcTraceContextV1> {
+    let expected_topic = format!("tool.v1.execute.{tool_name}.result");
+    if message.get("topic").and_then(Value::as_str) != Some(expected_topic.as_str()) {
+        return None;
+    }
+    let payload = message.get("payload")?;
+    if payload.get("type").and_then(Value::as_str) != Some("tool_execute_result")
+        || payload.get("call_id").and_then(Value::as_str) != Some(call_id)
+    {
+        return None;
+    }
+    let producer = message_producer(message)?;
+    if producer.kind != "wasm_capsule" || producer.id != capsule_id {
+        return None;
+    }
+    let result_trace = message_trace(message)?;
+    (result_trace.trace_id == request_trace.trace_id
+        && result_trace.turn_id == request_trace.turn_id
+        && result_trace.parent_span_id == Some(request_trace.span_id)
+        && result_trace.session_id == request_trace.session_id
+        && result_trace.chain_id == request_trace.chain_id)
+        .then_some(result_trace)
+}
+
 /// Execute one model-hidden, read-only edge-spectral capsule query.
 ///
 /// The caller must supply the exact trace and terminal authored response hash
@@ -232,14 +284,17 @@ pub async fn execute_spectral_query(
     )
     .await?;
 
-    let result_message = tokio::time::timeout(SPECTRAL_TIMEOUT, async {
+    let (result_message, result_trace) = tokio::time::timeout(SPECTRAL_TIMEOUT, async {
         loop {
             let message = read_frame(&mut stream).await?;
-            let payload = message.get("payload").unwrap_or(&Value::Null);
-            if payload.get("type").and_then(Value::as_str) == Some("tool_execute_result")
-                && payload.get("call_id").and_then(Value::as_str) == Some(call_id.as_str())
-            {
-                return Ok::<Value, anyhow::Error>(message);
+            if let Some(result_trace) = verified_capsule_tool_result(
+                &message,
+                &call_id,
+                tool_name,
+                EDGE_SPECTRAL_CAPSULE_ID,
+                &trace,
+            ) {
+                return Ok::<(Value, IpcTraceContextV1), anyhow::Error>((message, result_trace));
             }
         }
     })
@@ -278,7 +333,7 @@ pub async fn execute_spectral_query(
         source_topic: format!("tool.v1.execute.{tool_name}.result"),
         origin: bounded_text(origin, 80),
         parent_response_sha256: parent_response_sha256.to_ascii_lowercase(),
-        trace: message_trace(&result_message).unwrap_or_else(|| trace.child()),
+        trace: result_trace,
         authority: "verified_private_spectral_result_not_model_authorship_or_causal_proof"
             .to_string(),
     };
@@ -300,6 +355,7 @@ pub async fn execute_introspection_search(
     parent_response_sha256: Option<&str>,
     origin: &str,
 ) -> Result<Value> {
+    validate_introspection_origin(origin, parent_trace, parent_response_sha256)?;
     let query = bounded_text(question.trim(), 160);
     if query.is_empty() {
         bail!("self-study question is empty");
@@ -309,9 +365,11 @@ pub async fn execute_introspection_search(
         unix_millis(),
         INTROSPECTION_CALL_SEQUENCE.fetch_add(1, Ordering::Relaxed)
     );
-    let trace = parent_trace.map(IpcTraceContextV1::child);
+    let trace = parent_trace
+        .context("private introspection requires a supported exact trace")?
+        .child();
     let requested_at_unix_ms = unix_millis();
-    let arguments = json!({"query": query, "limit": 8});
+    let arguments = json!({"question": query, "limit": 8});
     let requested = IntrospectionReceipt {
         schema: INTROSPECTION_RECEIPT_SCHEMA.to_string(),
         phase: "requested".to_string(),
@@ -320,15 +378,15 @@ pub async fn execute_introspection_search(
         completed_at_unix_ms: None,
         latency_ms: None,
         call_id: call_id.clone(),
-        tool_name: "search_owned_text".to_string(),
+        tool_name: "inspect_owned_question".to_string(),
         arguments: arguments.clone(),
         status: "requested".to_string(),
         result_summary: None,
         result_sha256: None,
-        source_topic: "tool.v1.execute.search_owned_text".to_string(),
+        source_topic: "tool.v1.execute.inspect_owned_question".to_string(),
         origin: bounded_text(origin, 80),
         parent_response_sha256: parent_response_sha256.map(ToOwned::to_owned),
-        trace: trace.clone(),
+        trace: Some(trace.clone()),
         authority: "private_read_only_introspection_request_not_model_authorship".to_string(),
     };
     append_introspection_receipt(config, &requested)?;
@@ -339,7 +397,7 @@ pub async fn execute_introspection_search(
     authenticate(&mut stream, &config.astrid_token).await?;
     write_frame(
         &mut stream,
-        &introspection_search_request(&call_id, &query, trace.as_ref()),
+        &introspection_search_request(&call_id, &query, Some(&trace)),
     )
     .await?;
     eprintln!(
@@ -347,14 +405,17 @@ pub async fn execute_introspection_search(
         query.chars().count()
     );
 
-    let result_message = tokio::time::timeout(INTROSPECTION_TIMEOUT, async {
+    let (result_message, result_trace) = tokio::time::timeout(INTROSPECTION_TIMEOUT, async {
         loop {
             let message = read_frame(&mut stream).await?;
-            let payload = message.get("payload").unwrap_or(&Value::Null);
-            if payload.get("type").and_then(Value::as_str) == Some("tool_execute_result")
-                && payload.get("call_id").and_then(Value::as_str) == Some(call_id.as_str())
-            {
-                return Ok::<Value, anyhow::Error>(message);
+            if let Some(result_trace) = verified_capsule_tool_result(
+                &message,
+                &call_id,
+                "inspect_owned_question",
+                EDGE_INTROSPECTOR_CAPSULE_ID,
+                &trace,
+            ) {
+                return Ok::<(Value, IpcTraceContextV1), anyhow::Error>((message, result_trace));
             }
         }
     })
@@ -382,15 +443,15 @@ pub async fn execute_introspection_search(
         completed_at_unix_ms: Some(completed_at_unix_ms),
         latency_ms: Some(completed_at_unix_ms.saturating_sub(requested_at_unix_ms)),
         call_id: call_id.clone(),
-        tool_name: "search_owned_text".to_string(),
+        tool_name: "inspect_owned_question".to_string(),
         arguments,
         status: if is_error { "error" } else { "success" }.to_string(),
         result_summary: Some(summarize_introspection_result(&parsed, content, is_error)),
         result_sha256: Some(format!("{:x}", Sha256::digest(content.as_bytes()))),
-        source_topic: "tool.v1.execute.search_owned_text.result".to_string(),
+        source_topic: "tool.v1.execute.inspect_owned_question.result".to_string(),
         origin: bounded_text(origin, 80),
         parent_response_sha256: parent_response_sha256.map(ToOwned::to_owned),
-        trace: message_trace(&result_message).or_else(|| trace.map(|value| value.child())),
+        trace: Some(result_trace),
         authority: "verified_private_read_only_result_not_astrid_authorship".to_string(),
     };
     append_introspection_receipt(config, &completed)?;
@@ -402,6 +463,44 @@ pub async fn execute_introspection_search(
     }
     eprintln!("private SELF_STUDY search completed: call_id={call_id}");
     Ok(parsed)
+}
+
+fn validate_introspection_origin(
+    origin: &str,
+    parent_trace: Option<&IpcTraceContextV1>,
+    parent_response_sha256: Option<&str>,
+) -> Result<()> {
+    let trace = parent_trace.context("private introspection requires a supported exact trace")?;
+    if !trace.is_supported() {
+        bail!("private introspection requires a supported exact trace");
+    }
+    match origin {
+        "action_executor_self_study" => {
+            let response_sha256 = parent_response_sha256
+                .context("authored SELF_STUDY requires its exact parent response hash")?;
+            if response_sha256.len() != 64
+                || !response_sha256.bytes().all(|byte| byte.is_ascii_hexdigit())
+            {
+                bail!("authored SELF_STUDY requires an exact 64-character response hash");
+            }
+        },
+        "operator_harness" => {
+            if trace.session_id.as_deref() != Some(operator_introspection_session_id().as_str())
+                || parent_response_sha256.is_some()
+            {
+                bail!("operator introspection harness trace/provenance is invalid");
+            }
+        },
+        "scheduled_introspection_prefetch" => {
+            if trace.session_id.as_deref() != Some(scheduled_introspection_session_id().as_str())
+                || parent_response_sha256.is_some()
+            {
+                bail!("scheduled introspection prefetch trace/provenance is invalid");
+            }
+        },
+        _ => bail!("unsupported private introspection origin"),
+    }
+    Ok(())
 }
 
 pub async fn execute_research_search(
@@ -466,6 +565,9 @@ async fn execute_one_research_search(
         trace: trace.clone(),
     };
     append_web_receipt(config, &requested_web_receipt(&call_id, &pending))?;
+    if config.web_broker_socket_path.is_some() {
+        return execute_immutable_broker_search(config, &call_id, &pending, query).await;
+    }
     let mut stream = UnixStream::connect(&config.astrid_socket)
         .await
         .with_context(|| format!("connect {}", config.astrid_socket.display()))?;
@@ -477,19 +579,28 @@ async fn execute_one_research_search(
         query.chars().count()
     );
 
-    let result = tokio::time::timeout(RESEARCH_SEARCH_TIMEOUT, async {
+    let request_trace = trace
+        .as_ref()
+        .context("IPC web fallback requires an exact request trace")?;
+    let result_message = tokio::time::timeout(RESEARCH_SEARCH_TIMEOUT, async {
         loop {
             let message = read_frame(&mut stream).await?;
-            let payload = message.get("payload").unwrap_or(&Value::Null);
-            if payload.get("type").and_then(Value::as_str) == Some("tool_execute_result")
-                && payload.get("call_id").and_then(Value::as_str) == Some(call_id.as_str())
+            if verified_capsule_tool_result(
+                &message,
+                &call_id,
+                "search_web",
+                HTTP_CAPSULE_ID,
+                request_trace,
+            )
+            .is_some()
             {
-                return Ok::<Value, anyhow::Error>(payload.clone());
+                return Ok::<Value, anyhow::Error>(message);
             }
         }
     })
     .await
     .with_context(|| format!("read-only research search timed out for {call_id}"))??;
+    let result = result_message.get("payload").unwrap_or(&Value::Null);
 
     let is_error = result
         .get("result")
@@ -559,6 +670,10 @@ pub async fn execute_source_fetch(
         trace: trace.clone(),
     };
     append_web_receipt(config, &requested_web_receipt(&call_id, &pending))?;
+    if config.web_broker_socket_path.is_some() {
+        return execute_immutable_broker_fetch(config, &call_id, &pending, result_id, selected)
+            .await;
+    }
     let mut stream = UnixStream::connect(&config.astrid_socket)
         .await
         .with_context(|| format!("connect {}", config.astrid_socket.display()))?;
@@ -570,19 +685,28 @@ pub async fn execute_source_fetch(
          call_id={call_id} result_id={result_id}"
     );
 
-    let result = tokio::time::timeout(SOURCE_FETCH_TIMEOUT, async {
+    let request_trace = trace
+        .as_ref()
+        .context("IPC source fallback requires an exact request trace")?;
+    let result_message = tokio::time::timeout(SOURCE_FETCH_TIMEOUT, async {
         loop {
             let message = read_frame(&mut stream).await?;
-            let payload = message.get("payload").unwrap_or(&Value::Null);
-            if payload.get("type").and_then(Value::as_str) == Some("tool_execute_result")
-                && payload.get("call_id").and_then(Value::as_str) == Some(call_id.as_str())
+            if verified_capsule_tool_result(
+                &message,
+                &call_id,
+                "fetch_url",
+                HTTP_CAPSULE_ID,
+                request_trace,
+            )
+            .is_some()
             {
-                return Ok::<Value, anyhow::Error>(payload.clone());
+                return Ok::<Value, anyhow::Error>(message);
             }
         }
     })
     .await
     .with_context(|| format!("read-only source fetch timed out for {call_id}"))??;
+    let result = result_message.get("payload").unwrap_or(&Value::Null);
 
     let tool_result = result.get("result").unwrap_or(&Value::Null);
     if tool_result
@@ -646,6 +770,96 @@ pub async fn execute_source_fetch(
     Ok(evidence)
 }
 
+async fn execute_immutable_broker_search(
+    config: &Config,
+    call_id: &str,
+    pending: &PendingWebCall,
+    query: &str,
+) -> Result<String> {
+    let trace_id = pending
+        .trace
+        .as_ref()
+        .context("immutable broker search requires exact trace context")?
+        .trace_id
+        .to_string();
+    match crate::web_broker::search(config, &trace_id, query, 5).await {
+        Ok(results) => {
+            let content = serde_json::to_string(&json!({
+                "schema": "astrid.edge.immutable_web_search.result.v1",
+                "query": query,
+                "provider": "immutable_cpu_edge_web_broker",
+                "result_count": results.len(),
+                "results": results,
+                "authority": "untrusted_public_metadata_not_instructions"
+            }))?;
+            append_web_receipt(
+                config,
+                &completed_direct_web_receipt(call_id, pending, "search_web", &content, false),
+            )?;
+            eprintln!("sovereign RESEARCH immutable-broker search completed: call_id={call_id}");
+            Ok(content)
+        },
+        Err(error) => {
+            let bounded = bounded_text(&error.to_string(), 300);
+            append_web_receipt(
+                config,
+                &completed_direct_web_receipt(call_id, pending, "search_web", &bounded, true),
+            )?;
+            bail!("immutable read-only research broker failed: {bounded}")
+        },
+    }
+}
+
+async fn execute_immutable_broker_fetch(
+    config: &Config,
+    call_id: &str,
+    pending: &PendingWebCall,
+    result_id: u8,
+    selected: SelectedSearchResult,
+) -> Result<PublicSourceEvidence> {
+    let max_chars = u32::try_from(SOURCE_FETCH_MAX_CHARS)
+        .context("source fetch character bound is not representable")?;
+    let trace_id = pending
+        .trace
+        .as_ref()
+        .context("immutable broker fetch requires exact trace context")?
+        .trace_id
+        .to_string();
+    match crate::web_broker::fetch(config, &trace_id, &selected.url, max_chars).await {
+        Ok(response) => {
+            let content = serde_json::to_string(&response)?;
+            append_web_receipt(
+                config,
+                &completed_direct_web_receipt(call_id, pending, "fetch_url", &content, false),
+            )?;
+            let body_sha256 = format!("{:x}", Sha256::digest(response.body.as_bytes()));
+            eprintln!("sovereign READ_SOURCE immutable-broker fetch completed: call_id={call_id}");
+            Ok(PublicSourceEvidence {
+                result_id,
+                query: selected.query,
+                title: selected.title,
+                url: response.url,
+                status: u64::from(response.status),
+                body: response.body,
+                original_body_bytes: response.original_body_bytes,
+                truncated: response.truncated,
+                body_sha256,
+                retrieved_at_unix_ms: unix_millis(),
+                relevance_score: f64::from(selected.relevance_score_millis) / 1_000.0,
+                source_class: selected.source_class,
+            })
+        },
+        Err(error) => {
+            let bounded = bounded_text(&error.to_string(), 300);
+            append_web_receipt(
+                config,
+                &completed_direct_web_receipt(call_id, pending, "fetch_url", &bounded, true),
+            )?;
+            bail!("immutable read-only source broker failed: {bounded}")
+        },
+    }
+}
+
 /// Exercise the production search/ranking path without touching Astrid's
 /// workspace, continuity, reservoir, or authorship ledgers.
 pub(crate) async fn execute_operator_inquiry_search(
@@ -688,16 +902,20 @@ pub(crate) async fn execute_operator_inquiry_search(
             parent_response_sha256: None,
             trace: Some(call_trace.clone()),
         };
-        let request = research_search_request(&call_id, query, Some(&call_trace));
-        let content = execute_operator_web_call(
-            config,
-            &call_id,
-            pending,
-            request,
-            RESEARCH_SEARCH_TIMEOUT,
-            receipt_path,
-        )
-        .await?;
+        let content = if config.web_broker_socket_path.is_some() {
+            execute_operator_broker_search(config, &call_id, &pending, query, receipt_path).await?
+        } else {
+            let request = research_search_request(&call_id, query, Some(&call_trace));
+            execute_operator_web_call(
+                config,
+                &call_id,
+                pending,
+                request,
+                RESEARCH_SEARCH_TIMEOUT,
+                receipt_path,
+            )
+            .await?
+        };
         let value = serde_json::from_str::<Value>(&content)
             .context("decode operator inquiry search result")?;
         for ranked in ranked_search_results(&value, &original_query) {
@@ -739,6 +957,14 @@ pub(crate) async fn execute_operator_inquiry_search(
 
 pub(crate) fn operator_inquiry_session_id() -> String {
     Uuid::new_v5(&Uuid::NAMESPACE_URL, OPERATOR_INQUIRY_SESSION_SEED).to_string()
+}
+
+pub(crate) fn operator_introspection_session_id() -> String {
+    Uuid::new_v5(&Uuid::NAMESPACE_URL, OPERATOR_INTROSPECTION_SESSION_SEED).to_string()
+}
+
+pub(crate) fn scheduled_introspection_session_id() -> String {
+    Uuid::new_v5(&Uuid::NAMESPACE_URL, SCHEDULED_INTROSPECTION_SESSION_SEED).to_string()
 }
 
 /// Fetch one exact candidate selected by the isolated operator harness.
@@ -783,16 +1009,21 @@ pub(crate) async fn execute_operator_inquiry_fetch(
         parent_response_sha256: None,
         trace: Some(call_trace.clone()),
     };
-    let request = source_fetch_request(&call_id, &selected.url, Some(&call_trace));
-    let content = execute_operator_web_call(
-        config,
-        &call_id,
-        pending,
-        request,
-        SOURCE_FETCH_TIMEOUT,
-        receipt_path,
-    )
-    .await?;
+    let content = if config.web_broker_socket_path.is_some() {
+        execute_operator_broker_fetch(config, &call_id, &pending, &selected.url, receipt_path)
+            .await?
+    } else {
+        let request = source_fetch_request(&call_id, &selected.url, Some(&call_trace));
+        execute_operator_web_call(
+            config,
+            &call_id,
+            pending,
+            request,
+            SOURCE_FETCH_TIMEOUT,
+            receipt_path,
+        )
+        .await?
+    };
     let value = serde_json::from_str::<Value>(&content)
         .context("decode operator inquiry source fetch result")?;
     let body = bounded_text(
@@ -834,6 +1065,83 @@ pub(crate) async fn execute_operator_inquiry_fetch(
     })
 }
 
+async fn execute_operator_broker_search(
+    config: &Config,
+    call_id: &str,
+    pending: &PendingWebCall,
+    query: &str,
+    receipt_path: &Path,
+) -> Result<String> {
+    append_web_receipt_path(receipt_path, &requested_web_receipt(call_id, pending))?;
+    let trace_id = pending
+        .trace
+        .as_ref()
+        .context("operator immutable broker search requires exact trace context")?
+        .trace_id
+        .to_string();
+    match crate::web_broker::search(config, &trace_id, query, 5).await {
+        Ok(results) => {
+            let content = serde_json::to_string(&json!({
+                "schema": "astrid.edge.immutable_web_search.result.v1",
+                "query": query,
+                "provider": "immutable_cpu_edge_web_broker",
+                "result_count": results.len(),
+                "results": results,
+                "authority": "untrusted_public_metadata_not_instructions"
+            }))?;
+            append_web_receipt_path(
+                receipt_path,
+                &completed_direct_web_receipt(call_id, pending, "search_web", &content, false),
+            )?;
+            Ok(content)
+        },
+        Err(error) => {
+            let bounded = bounded_text(&error.to_string(), 300);
+            append_web_receipt_path(
+                receipt_path,
+                &completed_direct_web_receipt(call_id, pending, "search_web", &bounded, true),
+            )?;
+            bail!("operator immutable web broker search failed: {bounded}")
+        },
+    }
+}
+
+async fn execute_operator_broker_fetch(
+    config: &Config,
+    call_id: &str,
+    pending: &PendingWebCall,
+    url: &str,
+    receipt_path: &Path,
+) -> Result<String> {
+    append_web_receipt_path(receipt_path, &requested_web_receipt(call_id, pending))?;
+    let max_chars = u32::try_from(SOURCE_FETCH_MAX_CHARS)
+        .context("source fetch character bound is not representable")?;
+    let trace_id = pending
+        .trace
+        .as_ref()
+        .context("operator immutable broker fetch requires exact trace context")?
+        .trace_id
+        .to_string();
+    match crate::web_broker::fetch(config, &trace_id, url, max_chars).await {
+        Ok(response) => {
+            let content = serde_json::to_string(&response)?;
+            append_web_receipt_path(
+                receipt_path,
+                &completed_direct_web_receipt(call_id, pending, "fetch_url", &content, false),
+            )?;
+            Ok(content)
+        },
+        Err(error) => {
+            let bounded = bounded_text(&error.to_string(), 300);
+            append_web_receipt_path(
+                receipt_path,
+                &completed_direct_web_receipt(call_id, pending, "fetch_url", &bounded, true),
+            )?;
+            bail!("operator immutable web broker fetch failed: {bounded}")
+        },
+    }
+}
+
 async fn execute_operator_web_call(
     config: &Config,
     call_id: &str,
@@ -848,12 +1156,21 @@ async fn execute_operator_web_call(
         .with_context(|| format!("connect {}", config.astrid_socket.display()))?;
     authenticate(&mut stream, &config.astrid_token).await?;
     write_frame(&mut stream, &request).await?;
+    let request_trace = pending
+        .trace
+        .as_ref()
+        .context("operator IPC web fallback requires an exact request trace")?;
     let result_message = tokio::time::timeout(call_timeout, async {
         loop {
             let message = read_frame(&mut stream).await?;
-            let payload = message.get("payload").unwrap_or(&Value::Null);
-            if payload.get("type").and_then(Value::as_str) == Some("tool_execute_result")
-                && payload.get("call_id").and_then(Value::as_str) == Some(call_id)
+            if verified_capsule_tool_result(
+                &message,
+                call_id,
+                &pending.tool_name,
+                HTTP_CAPSULE_ID,
+                request_trace,
+            )
+            .is_some()
             {
                 return Ok::<Value, anyhow::Error>(message);
             }
@@ -916,13 +1233,13 @@ fn introspection_search_request(
     trace: Option<&IpcTraceContextV1>,
 ) -> Value {
     json!({
-        "topic": "tool.v1.execute.search_owned_text",
+        "topic": "tool.v1.execute.inspect_owned_question",
         "payload": {
             "type": "tool_execute_request",
             "call_id": call_id,
-            "tool_name": "search_owned_text",
+            "tool_name": "inspect_owned_question",
             "arguments": {
-                "query": query,
+                "question": query,
                 "limit": 8
             }
         },
@@ -1105,6 +1422,7 @@ pub async fn run(
     human_activity_tx: watch::Sender<u64>,
     activity_tx: broadcast::Sender<ActivityEvent>,
     autonomy_trace_registry: Arc<AutonomyTraceRegistry>,
+    maintenance_work: Arc<WorkTracker>,
 ) {
     let mut backoff = Duration::from_secs(1);
     loop {
@@ -1115,6 +1433,7 @@ pub async fn run(
             &human_activity_tx,
             &activity_tx,
             &autonomy_trace_registry,
+            &maintenance_work,
         )
         .await
         {
@@ -1122,7 +1441,10 @@ pub async fn run(
             Err(error) => eprintln!("Astrid IPC observer unavailable: {error}"),
         }
         tokio::time::sleep(backoff).await;
-        backoff = (backoff * 2).min(Duration::from_secs(30));
+        backoff = backoff
+            .checked_mul(2)
+            .unwrap_or(Duration::MAX)
+            .min(Duration::from_secs(30));
         if config.astrid_socket.exists() {
             backoff = Duration::from_secs(1);
         }
@@ -1137,35 +1459,60 @@ async fn observe_once(
     human_activity_tx: &watch::Sender<u64>,
     activity_tx: &broadcast::Sender<ActivityEvent>,
     autonomy_trace_registry: &AutonomyTraceRegistry,
+    maintenance_work: &Arc<WorkTracker>,
 ) -> Result<()> {
     let mut stream = UnixStream::connect(&config.astrid_socket)
         .await
         .with_context(|| format!("connect {}", config.astrid_socket.display()))?;
     authenticate(&mut stream, &config.astrid_token).await?;
+    maintenance_work.ipc_authenticated();
+    let _ipc_epoch = IpcObservationEpoch(Arc::clone(maintenance_work));
     eprintln!("Astrid IPC observer authenticated");
     let (mut pending_web_calls, mut completed_web_calls) = load_web_call_state(config);
 
     loop {
         let message = read_frame(&mut stream).await?;
+        if message.get("topic").and_then(Value::as_str) == Some("system.v1.maintenance_barrier") {
+            match parse_maintenance_barrier(&message) {
+                Ok((sequence, lease_schema, lease_kind, lease_id, lease_payload_sha256)) => {
+                    maintenance_work.observe_barrier(
+                        sequence,
+                        &lease_schema,
+                        &lease_kind,
+                        &lease_id,
+                        &lease_payload_sha256,
+                    );
+                },
+                Err(error) => {
+                    maintenance_work.reject_ipc_sequence();
+                    eprintln!("invalid kernel maintenance barrier poisoned exactness: {error:#}");
+                },
+            }
+            continue;
+        }
         let Some(payload) = message.get("payload") else {
             continue;
         };
         match payload.get("type").and_then(Value::as_str) {
             Some("user_input") => {
                 if let Some(text) = mirrored_user_text(&message) {
-                    if !is_autonomous_prompt(text) {
+                    let scheduled_introspection =
+                        crate::scheduled_introspection::is_scheduled_introspection_prompt(text);
+                    if !is_autonomous_prompt(text) && !scheduled_introspection {
                         let _ = human_activity_tx.send(unix_millis());
                     }
-                    let _ = activity_tx.send(ActivityEvent {
-                        kind: "completed_user_input",
-                        artifact_basename: None,
-                        trace: message_trace(&message),
-                        response_sha256: None,
-                    });
-                    ingress_tx
-                        .send(SensoryIngress::Semantic(encode_text("user", text)))
-                        .await
-                        .map_err(|_| anyhow::anyhow!("reservoir ingress closed"))?;
+                    if !scheduled_introspection {
+                        let _ = activity_tx.send(ActivityEvent {
+                            kind: "completed_user_input",
+                            artifact_basename: None,
+                            trace: message_trace(&message),
+                            response_sha256: None,
+                        });
+                        ingress_tx
+                            .send(SensoryIngress::Semantic(encode_text("user", text)))
+                            .await
+                            .map_err(|_| anyhow::anyhow!("reservoir ingress closed"))?;
+                    }
                 }
             },
             Some("agent_response") => {
@@ -1204,7 +1551,8 @@ async fn observe_once(
                 // Streaming transport fragments are not independent experiences.
                 // Admit the completed assistant turn once; recurrence carries its
                 // temporal echo after the terminal event.
-                if let Some(final_text) = final_agent_response_text(payload)
+                if !is_scheduled_introspection_message(&message)
+                    && let Some(final_text) = final_agent_response_text(payload)
                     && let Some(experience_text) = agent_response_experience_text(final_text)
                 {
                     let _ = activity_tx.send(ActivityEvent {
@@ -1249,6 +1597,7 @@ async fn observe_once(
                             trace,
                             tuning_authority_turn_id,
                             tuning_authority_source,
+                            maintenance_permit: Some(maintenance_work.begin_action()?),
                         })
                         .await
                         .map_err(|_| anyhow::anyhow!("action executor closed"))?;
@@ -1269,21 +1618,23 @@ async fn observe_once(
                             .and_then(Value::as_str)
                             .map(ToOwned::to_owned)
                     });
-                let _ = activity_tx.send(ActivityEvent {
-                    kind: "completed_tool_result",
-                    artifact_basename: None,
-                    trace: message_trace(&message),
-                    response_sha256: parent_response_sha256,
-                });
-                let bounded = serde_json::to_string(payload)
-                    .unwrap_or_default()
-                    .chars()
-                    .take(8_192)
-                    .collect::<String>();
-                ingress_tx
-                    .send(SensoryIngress::Semantic(encode_text("tool", &bounded)))
-                    .await
-                    .map_err(|_| anyhow::anyhow!("reservoir ingress closed"))?;
+                if !is_scheduled_introspection_message(&message) {
+                    let _ = activity_tx.send(ActivityEvent {
+                        kind: "completed_tool_result",
+                        artifact_basename: None,
+                        trace: message_trace(&message),
+                        response_sha256: parent_response_sha256,
+                    });
+                    let bounded = serde_json::to_string(payload)
+                        .unwrap_or_default()
+                        .chars()
+                        .take(8_192)
+                        .collect::<String>();
+                    ingress_tx
+                        .send(SensoryIngress::Semantic(encode_text("tool", &bounded)))
+                        .await
+                        .map_err(|_| anyhow::anyhow!("reservoir ingress closed"))?;
+                }
                 if let Some(receipt) = completed_web_receipt(
                     &message,
                     payload,
@@ -1321,6 +1672,105 @@ async fn observe_once(
             _ => {},
         }
     }
+}
+
+struct IpcObservationEpoch(Arc<WorkTracker>);
+
+impl Drop for IpcObservationEpoch {
+    fn drop(&mut self) {
+        self.0.ipc_disconnected();
+    }
+}
+
+fn parse_maintenance_barrier(message: &Value) -> Result<(u64, String, String, String, String)> {
+    let sequence = message
+        .get("seq")
+        .and_then(Value::as_u64)
+        .filter(|sequence| *sequence > 0)
+        .context("barrier sequence is absent")?;
+    let producer = message
+        .get("producer")
+        .and_then(Value::as_object)
+        .context("barrier producer attestation is absent")?;
+    anyhow::ensure!(
+        producer.get("schema_version").and_then(Value::as_u64) == Some(1)
+            && producer.get("kind").and_then(Value::as_str) == Some("kernel_host")
+            && producer.get("id").and_then(Value::as_str) == Some("maintenance_gate")
+            && producer.len() == 3,
+        "barrier producer attestation is not canonical"
+    );
+    let payload = message
+        .get("payload")
+        .and_then(Value::as_object)
+        .context("barrier payload is absent")?;
+    let allowed = [
+        "type",
+        "schema",
+        "lease_schema",
+        "lease_kind",
+        "lease_id",
+        "lease_payload_sha256",
+        "authority",
+    ];
+    anyhow::ensure!(
+        payload.keys().all(|key| allowed.contains(&key.as_str())) && payload.len() == allowed.len(),
+        "barrier payload fields are not exact"
+    );
+    anyhow::ensure!(
+        payload.get("type").and_then(Value::as_str) == Some("raw_json")
+            && payload.get("schema").and_then(Value::as_str)
+                == Some("astrid.edge.maintenance_barrier.v2")
+            && payload.get("authority").and_then(Value::as_str)
+                == Some("kernel_ordered_drain_barrier_not_action_authority"),
+        "barrier schema or authority is invalid"
+    );
+    let lease_schema = payload
+        .get("lease_schema")
+        .and_then(Value::as_str)
+        .context("barrier lease schema is absent")?;
+    let lease_kind = payload
+        .get("lease_kind")
+        .and_then(Value::as_str)
+        .context("barrier lease kind is absent")?;
+    anyhow::ensure!(
+        matches!(
+            (lease_schema, lease_kind),
+            (
+                "astrid.edge_self_change.maintenance_lease.v2",
+                "generation_transition"
+            ) | (
+                "astrid.edge_scheduled_reflection.lease.v1",
+                "scheduled_reflection"
+            )
+        ),
+        "barrier lease schema and kind are not an exact supported pair"
+    );
+    let lease_id = payload
+        .get("lease_id")
+        .and_then(Value::as_str)
+        .filter(|value| {
+            !value.is_empty() && value.len() <= 64 && !value.chars().any(char::is_control)
+        })
+        .context("barrier lease identity is invalid")?;
+    let lease_payload_sha256 = payload
+        .get("lease_payload_sha256")
+        .and_then(Value::as_str)
+        .filter(|value| is_lower_hex(value, 64))
+        .context("barrier lease hash is invalid")?;
+    Ok((
+        sequence,
+        lease_schema.to_owned(),
+        lease_kind.to_owned(),
+        lease_id.to_owned(),
+        lease_payload_sha256.to_owned(),
+    ))
+}
+
+fn is_lower_hex(value: &str, length: usize) -> bool {
+    value.len() == length
+        && value
+            .bytes()
+            .all(|byte| matches!(byte, b'0'..=b'9' | b'a'..=b'f'))
 }
 
 fn is_kernel_attested_react_response(message: &Value) -> bool {
@@ -1415,6 +1865,8 @@ fn pending_web_call(
                     let harness_session = operator_inquiry_session_id();
                     if session == harness_session {
                         "operator_harness"
+                    } else if session == scheduled_introspection_session_id() {
+                        "scheduled_introspection_tool"
                     } else {
                         "interactive_native_tool"
                     }
@@ -1437,7 +1889,16 @@ fn pending_web_call(
 fn is_operator_inquiry_message(message: &Value) -> bool {
     message_trace(message)
         .and_then(|trace| trace.session_id)
-        .is_some_and(|session_id| session_id == operator_inquiry_session_id())
+        .is_some_and(|session_id| {
+            session_id == operator_inquiry_session_id()
+                || session_id == operator_introspection_session_id()
+        })
+}
+
+fn is_scheduled_introspection_message(message: &Value) -> bool {
+    message_trace(message)
+        .and_then(|trace| trace.session_id)
+        .is_some_and(|session_id| session_id == scheduled_introspection_session_id())
 }
 
 fn read_autonomy_trace_id(config: &Config) -> Option<String> {
@@ -1638,6 +2099,35 @@ fn completed_web_receipt(
     })
 }
 
+fn completed_direct_web_receipt(
+    call_id: &str,
+    pending: &PendingWebCall,
+    tool_name: &str,
+    content: &str,
+    is_error: bool,
+) -> WebToolReceipt {
+    let completed_at_unix_ms = unix_millis();
+    WebToolReceipt {
+        schema: WEB_RECEIPT_SCHEMA.to_string(),
+        phase: "completed".to_string(),
+        recorded_at_unix_ms: completed_at_unix_ms,
+        requested_at_unix_ms: pending.requested_at_unix_ms,
+        completed_at_unix_ms: Some(completed_at_unix_ms),
+        latency_ms: Some(completed_at_unix_ms.saturating_sub(pending.requested_at_unix_ms)),
+        call_id: bounded_text(call_id, 160),
+        tool_name: tool_name.to_string(),
+        arguments: pending.arguments.clone(),
+        status: if is_error { "error" } else { "success" }.to_string(),
+        result_summary: Some(summarize_web_result(tool_name, content, is_error)),
+        result_sha256: Some(format!("{:x}", Sha256::digest(content.as_bytes()))),
+        source_topic: format!("immutable.web_broker.v1.{tool_name}"),
+        origin: pending.origin.clone(),
+        parent_response_sha256: pending.parent_response_sha256.clone(),
+        trace: pending.trace.as_ref().map(IpcTraceContextV1::child),
+        authority: "immutable_read_only_web_broker_result_not_model_authorship".to_string(),
+    }
+}
+
 fn requested_web_receipt(call_id: &str, call: &PendingWebCall) -> WebToolReceipt {
     WebToolReceipt {
         schema: WEB_RECEIPT_SCHEMA.to_string(),
@@ -1812,7 +2302,10 @@ fn ranked_search_results(value: &Value, original_query: &str) -> Vec<Value> {
                 .filter(|term| candidate_terms.contains(term))
                 .count();
             let denominator = query_tokens.len().max(1);
-            let base = overlap.saturating_mul(1_000) / denominator;
+            let base = overlap
+                .saturating_mul(1_000)
+                .checked_div(denominator)
+                .unwrap_or_default();
             let source_class = classify_source(url);
             let bonus = match source_class {
                 "primary_or_scholarly" => 100,
@@ -1954,8 +2447,9 @@ fn summarize_introspection_result(value: &Value, content: &str, is_error: bool) 
         .collect::<Vec<_>>();
     json!({
         "schema": value.get("schema").and_then(Value::as_str).unwrap_or(""),
-        "query": value
-            .get("query")
+        "question": value
+            .get("question")
+            .or_else(|| value.get("query"))
             .and_then(Value::as_str)
             .map(|query| bounded_text(query, 160))
             .unwrap_or_default(),
@@ -2343,6 +2837,325 @@ fn agent_response_experience_text(text: &str) -> Option<&str> {
     }
 }
 
+/// Execute one scheduled model turn over the already-authenticated native
+/// daemon socket without spawning the mutable CLI binary.
+pub(crate) async fn execute_direct_headless_turn(
+    config: &Config,
+    prompt: &str,
+    session_name: &str,
+    requested_trace: &IpcTraceContextV1,
+    idle_timeout: Duration,
+) -> Result<DirectHeadlessTurn> {
+    let session_id = Uuid::new_v5(&Uuid::NAMESPACE_URL, session_name.as_bytes());
+    let session_id_text = session_id.to_string();
+    if !requested_trace.is_supported()
+        || requested_trace.session_id.as_deref() != Some(session_id_text.as_str())
+    {
+        bail!("direct headless session does not match the scheduler trace");
+    }
+
+    let mut stream = UnixStream::connect(&config.astrid_socket)
+        .await
+        .with_context(|| format!("connect {}", config.astrid_socket.display()))?;
+    authenticate(&mut stream, &config.astrid_token).await?;
+    write_frame(
+        &mut stream,
+        &direct_user_input(prompt, session_id, requested_trace),
+    )
+    .await?;
+
+    let mut response = String::new();
+    let mut canonical_trace: Option<IpcTraceContextV1> = None;
+    loop {
+        let message = tokio::time::timeout(idle_timeout, read_frame(&mut stream))
+            .await
+            .context("direct headless IPC idle deadline expired")??;
+        if message_trace(&message).is_none_or(|trace| trace.trace_id != requested_trace.trace_id) {
+            continue;
+        }
+        let Some(payload) = message.get("payload") else {
+            continue;
+        };
+        match payload.get("type").and_then(Value::as_str) {
+            Some("approval_required") => {
+                deny_direct_headless_approval(&mut stream, payload, session_id).await?;
+            },
+            Some("agent_response") => {
+                let Some(attested) = direct_canonical_response_trace(
+                    &message,
+                    payload,
+                    &session_id_text,
+                    requested_trace,
+                ) else {
+                    continue;
+                };
+                if canonical_trace
+                    .as_ref()
+                    .is_some_and(|prior| prior.turn_id != attested.turn_id)
+                {
+                    bail!("kernel-attested direct response changed turn identity");
+                }
+                canonical_trace = Some(attested.clone());
+                if let Some(text) = payload.get("text").and_then(Value::as_str) {
+                    if response.len().saturating_add(text.len())
+                        > DIRECT_HEADLESS_MAX_RESPONSE_BYTES
+                    {
+                        bail!("direct headless response exceeded its immutable bound");
+                    }
+                    response.push_str(text);
+                }
+                if payload.get("is_final").and_then(Value::as_bool) != Some(true) {
+                    continue;
+                }
+                if response.trim().is_empty() {
+                    bail!("direct headless response was empty");
+                }
+                let provenance = payload
+                    .get("response_provenance")
+                    .and_then(Value::as_str)
+                    .filter(|value| {
+                        matches!(
+                            *value,
+                            "model_authored"
+                                | "model_authored_with_local_safe_fallback"
+                                | "model_authored_with_local_format_repair"
+                        )
+                    })
+                    .context("direct headless terminal provenance is absent or non-authored")?;
+                let provider_metrics_receipt = direct_provider_metrics_receipt(&message, &attested);
+                let _ = write_frame(
+                    &mut stream,
+                    &direct_disconnect(session_id, Some(requested_trace)),
+                )
+                .await;
+                return Ok(DirectHeadlessTurn {
+                    response,
+                    canonical_trace: attested,
+                    response_provenance: provenance.to_string(),
+                    provider_metrics_receipt,
+                });
+            },
+            _ => {},
+        }
+    }
+}
+
+fn direct_user_input(prompt: &str, session_id: Uuid, trace: &IpcTraceContextV1) -> Value {
+    direct_message(
+        "user.v1.prompt",
+        &json!({
+            "type": "user_input",
+            "text": prompt,
+            "session_id": session_id.to_string(),
+            "context": null
+        }),
+        session_id,
+        Some(trace),
+    )
+}
+
+fn direct_disconnect(session_id: Uuid, trace: Option<&IpcTraceContextV1>) -> Value {
+    direct_message(
+        "client.v1.disconnect",
+        &json!({"type": "disconnect", "reason": "edge-direct-headless"}),
+        session_id,
+        trace,
+    )
+}
+
+fn direct_message(
+    topic: &str,
+    payload: &Value,
+    source_id: Uuid,
+    trace: Option<&IpcTraceContextV1>,
+) -> Value {
+    json!({
+        "topic": topic,
+        "payload": payload,
+        "signature": null,
+        "source_id": source_id,
+        "timestamp": Utc::now().to_rfc3339_opts(SecondsFormat::Millis, true),
+        "seq": 0,
+        "trace": trace,
+        "local_provider_metrics": null
+    })
+}
+
+async fn deny_direct_headless_approval(
+    stream: &mut UnixStream,
+    payload: &Value,
+    session_id: Uuid,
+) -> Result<()> {
+    let request_id = payload
+        .get("request_id")
+        .and_then(Value::as_str)
+        .filter(|value| {
+            !value.is_empty()
+                && value.len() <= 256
+                && !value.chars().any(char::is_control)
+                && !value.contains('/')
+                && !value.contains('\\')
+        })
+        .context("direct headless approval request identifier is invalid")?;
+    write_frame(
+        stream,
+        &direct_message(
+            &format!("astrid.v1.approval.response.{request_id}"),
+            &json!({
+                "type": "approval_response",
+                "request_id": request_id,
+                "decision": "deny",
+                "reason": "CPU-edge direct headless mode",
+                "boundary_id": null
+            }),
+            session_id,
+            None,
+        ),
+    )
+    .await
+}
+
+fn direct_canonical_response_trace(
+    message: &Value,
+    payload: &Value,
+    session_id: &str,
+    requested: &IpcTraceContextV1,
+) -> Option<IpcTraceContextV1> {
+    if !is_kernel_attested_react_response(message)
+        || payload.get("type").and_then(Value::as_str) != Some("agent_response")
+        || payload.get("session_id").and_then(Value::as_str) != Some(session_id)
+    {
+        return None;
+    }
+    let trace = message_trace(message)?;
+    (trace.trace_id == requested.trace_id
+        && trace.turn_id.is_some()
+        && trace.session_id.as_deref() == Some(session_id)
+        && trace.chain_id == requested.chain_id)
+        .then_some(trace)
+}
+
+fn direct_provider_metrics_receipt(
+    message: &Value,
+    canonical_trace: &IpcTraceContextV1,
+) -> Option<Value> {
+    let metrics = message.get("local_provider_metrics")?.as_object()?;
+    if metrics.keys().any(|key| {
+        !matches!(
+            key.as_str(),
+            "schema_version"
+                | "producer"
+                | "request_count"
+                | "successful_header_count"
+                | "requests"
+        )
+    }) {
+        return None;
+    }
+    if metrics.get("schema_version").and_then(Value::as_u64) != Some(1) {
+        return None;
+    }
+    let producer = metrics.get("producer")?.as_object()?;
+    if producer
+        .keys()
+        .any(|key| !matches!(key.as_str(), "schema_version" | "kind" | "id"))
+    {
+        return None;
+    }
+    if producer.get("schema_version").and_then(Value::as_u64) != Some(1)
+        || producer.get("kind").and_then(Value::as_str) != Some("kernel_host")
+        || producer.get("id").and_then(Value::as_str) != Some("wasm_http_stream")
+    {
+        return None;
+    }
+    let request_count = metrics.get("request_count")?.as_u64()?;
+    let successful_header_count = metrics.get("successful_header_count")?.as_u64()?;
+    let raw_requests = metrics.get("requests")?.as_array()?;
+    if request_count == 0
+        || request_count > 16
+        || successful_header_count > request_count
+        || usize::try_from(request_count).ok()? != raw_requests.len()
+    {
+        return None;
+    }
+    let requests = sanitized_direct_provider_requests(raw_requests, successful_header_count)?;
+    let single = if request_count == 1 && successful_header_count == 1 {
+        let request = requests.first()?.as_object()?;
+        Some((
+            request.get("request_id")?.clone(),
+            request.get("request_header_latency_ms")?.clone(),
+        ))
+    } else {
+        None
+    };
+    let mut receipt = json!({
+        "schema_version": 1,
+        "trace": canonical_trace,
+        "producer": producer,
+        "request_count": request_count,
+        "successful_header_count": successful_header_count,
+        "requests": requests
+    });
+    if let Some((request_id, latency)) = single {
+        receipt["request_id"] = request_id;
+        receipt["request_header_latency_ms"] = latency;
+    }
+    Some(receipt)
+}
+
+fn sanitized_direct_provider_requests(
+    raw_requests: &[Value],
+    successful_header_count: u64,
+) -> Option<Vec<Value>> {
+    let mut requests = Vec::with_capacity(raw_requests.len());
+    let mut attempt_ids = HashSet::new();
+    let mut observed_successful_headers = 0_u64;
+    for raw_request in raw_requests {
+        let request = raw_request.as_object()?;
+        if request.keys().any(|key| {
+            !matches!(
+                key.as_str(),
+                "attempt_id" | "request_id" | "outcome" | "request_header_latency_ms"
+            )
+        }) {
+            return None;
+        }
+        let attempt_id = Uuid::parse_str(request.get("attempt_id")?.as_str()?).ok()?;
+        let request_id = Uuid::parse_str(request.get("request_id")?.as_str()?).ok()?;
+        if attempt_id.is_nil() || request_id.is_nil() || !attempt_ids.insert(attempt_id) {
+            return None;
+        }
+        let outcome = request.get("outcome")?.as_str()?;
+        let latency = request
+            .get("request_header_latency_ms")
+            .and_then(Value::as_u64);
+        match (outcome, latency) {
+            ("successful_headers", Some(_)) => {
+                observed_successful_headers = observed_successful_headers.checked_add(1)?;
+            },
+            (
+                "non_success_status" | "unknown_peer" | "non_loopback_peer" | "timeout"
+                | "transport_error" | "cancelled",
+                None,
+            ) => {},
+            _ => return None,
+        }
+        let mut sanitized = json!({
+            "attempt_id": attempt_id,
+            "request_id": request_id,
+            "outcome": outcome
+        });
+        if let Some(latency) = latency {
+            sanitized["request_header_latency_ms"] = json!(latency);
+        }
+        requests.push(sanitized);
+    }
+    if observed_successful_headers != successful_header_count {
+        return None;
+    }
+    Some(requests)
+}
+
 async fn authenticate(stream: &mut UnixStream, token_path: &Path) -> Result<()> {
     let token = tokio::fs::read_to_string(token_path)
         .await
@@ -2392,13 +3205,15 @@ mod tests {
     use super::{
         AgentResponseProvenance, SelectedSearchResult, SpectralQuery,
         agent_response_experience_text, agent_response_provenance, completed_web_receipt,
+        direct_canonical_response_trace, direct_provider_metrics_receipt, direct_user_input,
         final_agent_response_text, introspection_search_request, is_kernel_attested_react_response,
         is_operator_inquiry_message, latest_search_result, load_web_call_state,
         message_uses_autonomy_trace, mirrored_user_text, operator_inquiry_session_id,
-        pending_web_call, ranked_search_results, requested_web_receipt, research_search_request,
-        source_fetch_request, spectral_tool_arguments, spectral_tool_request,
-        summarize_introspection_result, summarize_spectral_result,
-        terminal_agent_response_is_current, web_tool_name_from_result_topic,
+        parse_maintenance_barrier, pending_web_call, ranked_search_results, requested_web_receipt,
+        research_search_request, source_fetch_request, spectral_tool_arguments,
+        spectral_tool_request, summarize_introspection_result, summarize_spectral_result,
+        terminal_agent_response_is_current, verified_capsule_tool_result,
+        web_tool_name_from_result_topic,
     };
     use crate::{
         config::Config,
@@ -2409,6 +3224,172 @@ mod tests {
     use sha2::Digest as _;
     use std::collections::{HashMap, HashSet};
     use uuid::Uuid;
+
+    #[test]
+    fn direct_headless_user_input_binds_the_exact_scheduler_session_and_trace() {
+        let session_id = Uuid::new_v5(&Uuid::NAMESPACE_URL, b"edge-autonomy-session-g7");
+        let trace = IpcTraceContextV1::root(
+            Uuid::new_v4(),
+            session_id.to_string(),
+            Some("chain-2".to_string()),
+        );
+        let message = direct_user_input("bounded prompt", session_id, &trace);
+
+        assert_eq!(message["topic"], "user.v1.prompt");
+        assert_eq!(message["source_id"], session_id.to_string());
+        assert_eq!(message["payload"]["type"], "user_input");
+        assert_eq!(message["payload"]["text"], "bounded prompt");
+        assert_eq!(message["payload"]["session_id"], session_id.to_string());
+        assert_eq!(message["trace"]["trace_id"], trace.trace_id.to_string());
+        assert_eq!(message["trace"]["session_id"], session_id.to_string());
+        assert_eq!(message["trace"]["chain_id"], "chain-2");
+        assert!(message.get("producer").is_none());
+        assert!(message.get("principal").is_none());
+    }
+
+    #[test]
+    fn direct_headless_accepts_only_canonical_react_output_with_exact_identity() {
+        let session_id = Uuid::new_v5(&Uuid::NAMESPACE_URL, b"edge-autonomy-session-g8");
+        let requested = IpcTraceContextV1::root(
+            Uuid::new_v4(),
+            session_id.to_string(),
+            Some("chain-3".to_string()),
+        );
+        let mut canonical_trace = requested.child();
+        canonical_trace.turn_id = Some(Uuid::new_v4());
+        let canonical = json!({
+            "topic": "agent.v1.response",
+            "seq": 42,
+            "timestamp": chrono::Utc::now().to_rfc3339(),
+            "producer": {
+                "schema_version": 1,
+                "kind": "wasm_capsule",
+                "id": "astrid-capsule-react"
+            },
+            "trace": canonical_trace,
+            "payload": {
+                "type": "agent_response",
+                "session_id": session_id,
+                "text": "NEXT: LISTEN",
+                "is_final": true,
+                "response_provenance": "model_authored"
+            }
+        });
+        assert_eq!(
+            direct_canonical_response_trace(
+                &canonical,
+                &canonical["payload"],
+                &session_id.to_string(),
+                &requested,
+            ),
+            serde_json::from_value(canonical["trace"].clone()).ok()
+        );
+
+        for (field, replacement) in [
+            ("trace_id", json!(Uuid::new_v4())),
+            ("session_id", json!(Uuid::new_v4().to_string())),
+            ("chain_id", json!("foreign-chain")),
+        ] {
+            let mut wrong = canonical.clone();
+            wrong["trace"][field] = replacement;
+            assert!(
+                direct_canonical_response_trace(
+                    &wrong,
+                    &wrong["payload"],
+                    &session_id.to_string(),
+                    &requested,
+                )
+                .is_none(),
+                "accepted mismatched {field}"
+            );
+        }
+
+        let mut forged = canonical.clone();
+        forged["producer"]["kind"] = json!("native_socket_client");
+        assert!(
+            direct_canonical_response_trace(
+                &forged,
+                &forged["payload"],
+                &session_id.to_string(),
+                &requested,
+            )
+            .is_none()
+        );
+    }
+
+    #[test]
+    fn direct_provider_metrics_are_body_free_and_bound_to_the_canonical_trace() {
+        let trace =
+            IpcTraceContextV1::root(Uuid::new_v4(), "edge-autonomy-session".to_string(), None);
+        let attempt_id = Uuid::new_v4();
+        let request_id = Uuid::new_v4();
+        let message = json!({
+            "local_provider_metrics": {
+                "schema_version": 1,
+                "producer": {
+                    "schema_version": 1,
+                    "kind": "kernel_host",
+                    "id": "wasm_http_stream"
+                },
+                "request_count": 1,
+                "successful_header_count": 1,
+                "requests": [{
+                    "attempt_id": attempt_id,
+                    "request_id": request_id,
+                    "outcome": "successful_headers",
+                    "request_header_latency_ms": 17,
+                }]
+            }
+        });
+        let receipt = direct_provider_metrics_receipt(&message, &trace).unwrap();
+        assert_eq!(receipt["trace"]["trace_id"], trace.trace_id.to_string());
+        assert_eq!(receipt["request_id"], request_id.to_string());
+        assert_eq!(receipt["request_header_latency_ms"], 17);
+
+        let mut body_bearing = message.clone();
+        body_bearing["local_provider_metrics"]["requests"][0]["response_body"] =
+            json!("must-not-be-copied");
+        assert!(direct_provider_metrics_receipt(&body_bearing, &trace).is_none());
+
+        let mut malformed = message;
+        malformed["local_provider_metrics"]["producer"]["kind"] = json!("mutable_runtime");
+        assert!(direct_provider_metrics_receipt(&malformed, &trace).is_none());
+    }
+
+    #[test]
+    fn maintenance_barrier_requires_exact_kernel_attestation() {
+        let barrier = json!({
+            "topic": "system.v1.maintenance_barrier",
+            "seq": 42,
+            "producer": {
+                "schema_version": 1,
+                "kind": "kernel_host",
+                "id": "maintenance_gate"
+            },
+            "payload": {
+                "type": "raw_json",
+                "schema": "astrid.edge.maintenance_barrier.v2",
+                "lease_schema": "astrid.edge_scheduled_reflection.lease.v1",
+                "lease_kind": "scheduled_reflection",
+                "lease_id": "lease-example",
+                "lease_payload_sha256": "a".repeat(64),
+                "authority": "kernel_ordered_drain_barrier_not_action_authority"
+            }
+        });
+        assert_eq!(
+            parse_maintenance_barrier(&barrier).unwrap(),
+            (
+                42,
+                "astrid.edge_scheduled_reflection.lease.v1".to_string(),
+                "scheduled_reflection".to_string(),
+                "lease-example".to_string(),
+                "a".repeat(64)
+            )
+        );
+        let mut forged = barrier;
+        forged["producer"]["kind"] = json!("native_socket_client");
+        assert!(parse_maintenance_barrier(&forged).is_err());
+    }
 
     #[test]
     fn research_search_request_is_bounded_and_read_only() {
@@ -2444,13 +3425,22 @@ mod tests {
         );
         let request =
             introspection_search_request("edge-introspection-1", &"x".repeat(160), Some(&trace));
-        assert_eq!(request["topic"], "tool.v1.execute.search_owned_text");
+        assert_eq!(request["topic"], "tool.v1.execute.inspect_owned_question");
+        assert_eq!(request["payload"]["tool_name"], "inspect_owned_question");
         assert_eq!(request["payload"]["arguments"]["limit"], 8);
+        assert_eq!(
+            request["payload"]["arguments"]["question"]
+                .as_str()
+                .unwrap()
+                .chars()
+                .count(),
+            160
+        );
         assert!(request["payload"]["arguments"].get("path").is_none());
 
         let body = json!({
-            "schema": "astrid_edge_owned_text_search_v1",
-            "query": "heat",
+            "schema": "astrid_edge_owned_question_inspection_v1",
+            "question": "heat",
             "files_considered": 3,
             "match_count": 1,
             "matches": [{
@@ -2768,6 +3758,111 @@ mod tests {
         let mut foreign_capsule = canonical;
         foreign_capsule["producer"]["id"] = json!("astrid-capsule-edge-spectral");
         assert!(!is_kernel_attested_react_response(&foreign_capsule));
+    }
+
+    #[test]
+    fn private_tool_results_require_exact_capsule_topic_and_child_lineage() {
+        let request_trace = IpcTraceContextV1::root(
+            Uuid::new_v4(),
+            "private-tool-session".to_string(),
+            Some("private-tool-chain".to_string()),
+        );
+        let result_trace = request_trace.child();
+        let exact = json!({
+            "topic": "tool.v1.execute.inspect_owned_question.result",
+            "producer": {
+                "schema_version": 1,
+                "kind": "wasm_capsule",
+                "id": "astrid-capsule-edge-introspector"
+            },
+            "trace": result_trace,
+            "payload": {
+                "type": "tool_execute_result",
+                "call_id": "predictable-call-id",
+                "result": {"content": "{}", "is_error": false}
+            }
+        });
+        assert!(
+            verified_capsule_tool_result(
+                &exact,
+                "predictable-call-id",
+                "inspect_owned_question",
+                "astrid-capsule-edge-introspector",
+                &request_trace,
+            )
+            .is_some()
+        );
+
+        let mut wrong_topic = exact.clone();
+        wrong_topic["topic"] = json!("tool.v1.execute.read_owned_artifact.result");
+        assert!(
+            verified_capsule_tool_result(
+                &wrong_topic,
+                "predictable-call-id",
+                "inspect_owned_question",
+                "astrid-capsule-edge-introspector",
+                &request_trace,
+            )
+            .is_none()
+        );
+
+        let mut wrong_producer = exact.clone();
+        wrong_producer["producer"]["id"] = json!("astrid-capsule-fs");
+        assert!(
+            verified_capsule_tool_result(
+                &wrong_producer,
+                "predictable-call-id",
+                "inspect_owned_question",
+                "astrid-capsule-edge-introspector",
+                &request_trace,
+            )
+            .is_none()
+        );
+
+        let mut socket_spoof = exact.clone();
+        socket_spoof["producer"]["kind"] = json!("native_socket_client");
+        assert!(
+            verified_capsule_tool_result(
+                &socket_spoof,
+                "predictable-call-id",
+                "inspect_owned_question",
+                "astrid-capsule-edge-introspector",
+                &request_trace,
+            )
+            .is_none()
+        );
+
+        for field in ["trace_id", "session_id", "chain_id", "parent_span_id"] {
+            let mut wrong_lineage = exact.clone();
+            wrong_lineage["trace"][field] = match field {
+                "trace_id" | "parent_span_id" => json!(Uuid::new_v4()),
+                "session_id" => json!("foreign-session"),
+                "chain_id" => json!("foreign-chain"),
+                _ => unreachable!("bounded test fixture"),
+            };
+            assert!(
+                verified_capsule_tool_result(
+                    &wrong_lineage,
+                    "predictable-call-id",
+                    "inspect_owned_question",
+                    "astrid-capsule-edge-introspector",
+                    &request_trace,
+                )
+                .is_none(),
+                "accepted wrong {field}"
+            );
+        }
+
+        assert!(
+            verified_capsule_tool_result(
+                &exact,
+                "different-call-id",
+                "inspect_owned_question",
+                "astrid-capsule-edge-introspector",
+                &request_trace,
+            )
+            .is_none()
+        );
     }
 
     #[test]

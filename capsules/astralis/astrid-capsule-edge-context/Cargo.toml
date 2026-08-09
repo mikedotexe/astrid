@@ -12,3 +12,17 @@ crate-type = ["cdylib"]
 
 [dependencies]
 astrid-guest = { path = "../../../crates/astrid-guest" }
+
+[profile.release]
+codegen-units = 1
+lto = "thin"
+panic = "abort"
+strip = "symbols"
+
+[lints.rust]
+unsafe_code = "deny"
+
+[lints.clippy]
+all = { level = "warn", priority = -1 }
+pedantic = { level = "warn", priority = -1 }
+arithmetic_side_effects = "deny"

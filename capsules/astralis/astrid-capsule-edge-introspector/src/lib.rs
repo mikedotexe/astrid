@@ -1,4 +1,8 @@
-use astrid_guest::{capsule_result, fs, serde_json, tool};
+use std::{cmp::Reverse, collections::BTreeSet};
+
+use astrid_guest::{
+    bindings::astrid::capsule::types::FileEntryKind, capsule_result, fs, serde_json, tool,
+};
 use serde_json::{Value, json};
 use sha2::{Digest as _, Sha256};
 
@@ -6,10 +10,21 @@ const HOME_ROOT: &str = "home://edge";
 const MAX_BASENAMES: usize = 50;
 const MAX_READ_CHARS: usize = 8_000;
 const MAX_QUERY_CHARS: usize = 160;
+const MAX_QUESTION_TERMS: usize = 8;
 const MAX_FILES_SEARCHED: usize = 128;
 const MAX_FILE_BYTES_CONSIDERED: usize = 64 * 1024;
 const MAX_MATCHES: usize = 20;
 const MAX_EXCERPT_CHARS: usize = 240;
+const MAX_SCALAR_CHARS: usize = 320;
+const MAX_ACTION_CHARS: usize = 640;
+const MAX_IDENTIFIER_CHARS: usize = 128;
+
+const QUESTION_STOPWORDS: &[&str] = &[
+    "a", "about", "am", "an", "and", "are", "as", "at", "be", "been", "being", "by", "did", "do",
+    "does", "for", "from", "had", "has", "have", "how", "i", "in", "is", "it", "me", "my", "of",
+    "on", "or", "that", "the", "their", "them", "there", "these", "this", "those", "to", "was",
+    "were", "what", "when", "where", "which", "who", "why", "with",
+];
 
 const OWNED_KINDS: [(&str, &str); 19] = [
     ("journal", "journal"),
@@ -35,16 +50,38 @@ const OWNED_KINDS: [(&str, &str); 19] = [
 
 struct EdgeIntrospectorCapsule;
 
+#[derive(Debug, Eq, PartialEq)]
+struct QuestionMatch {
+    kind: &'static str,
+    basename: String,
+    excerpt: String,
+    matched_terms: Vec<String>,
+    score: u16,
+}
+
 type ToolHandler = fn(&Value) -> Result<String, String>;
 
 impl astrid_guest::Guest for EdgeIntrospectorCapsule {
     fn astrid_hook_trigger(action: String, payload: Vec<u8>) -> astrid_guest::CapsuleResult {
         match action.as_str() {
-            "tool_execute_list_owned_artifacts" => handle_tool(&payload, list_owned_artifacts),
-            "tool_execute_read_owned_artifact" => handle_tool(&payload, read_owned_artifact),
-            "tool_execute_search_owned_text" => handle_tool(&payload, search_owned_text),
-            "tool_execute_read_owned_continuity" => handle_tool(&payload, read_owned_continuity),
-            "tool_describe" => describe(),
+            "tool_execute_list_owned_artifacts" => {
+                handle_tool(&payload, "list_owned_artifacts", list_owned_artifacts)
+            },
+            "tool_execute_read_owned_artifact" => {
+                handle_tool(&payload, "read_owned_artifact", read_owned_artifact)
+            },
+            "tool_execute_search_owned_text" => {
+                handle_tool(&payload, "search_owned_text", search_owned_text)
+            },
+            "tool_execute_inspect_owned_question" => {
+                handle_tool(&payload, "inspect_owned_question", inspect_owned_question)
+            },
+            "tool_execute_read_owned_continuity" => {
+                handle_tool(&payload, "read_owned_continuity", read_owned_continuity)
+            },
+            action if action.starts_with("tool_execute_") => {
+                capsule_result::deny("unadvertised introspection tool denied")
+            },
             _ => capsule_result::continue_empty(),
         }
     }
@@ -56,11 +93,18 @@ impl astrid_guest::Guest for EdgeIntrospectorCapsule {
     fn astrid_upgrade() {}
 }
 
-fn handle_tool(payload: &[u8], handler: ToolHandler) -> astrid_guest::CapsuleResult {
+fn handle_tool(
+    payload: &[u8],
+    expected_tool: &str,
+    handler: ToolHandler,
+) -> astrid_guest::CapsuleResult {
     let request = match tool::parse_request(payload) {
         Ok(request) => request,
         Err(error) => return capsule_result::deny(error),
     };
+    if request.tool_name != expected_tool {
+        return capsule_result::deny("tool action and request identity mismatch");
+    }
     match handler(&request.arguments) {
         Ok(content) => tool::publish_success(&request.call_id, &request.tool_name, content),
         Err(error) => tool::publish_error(&request.call_id, &request.tool_name, error),
@@ -68,9 +112,10 @@ fn handle_tool(payload: &[u8], handler: ToolHandler) -> astrid_guest::CapsuleRes
 }
 
 fn list_owned_artifacts(args: &Value) -> Result<String, String> {
+    require_exact_argument_keys(args, &["kind", "limit"])?;
     let kind = tool::required_string_arg(args, "kind")?;
     let directory = owned_directory(&kind)?;
-    let limit = bounded_limit(args, MAX_BASENAMES);
+    let limit = bounded_limit(args, MAX_BASENAMES)?;
     let mut entries = safe_entries(&kind, directory)?;
     entries.sort();
     entries.reverse();
@@ -86,13 +131,14 @@ fn list_owned_artifacts(args: &Value) -> Result<String, String> {
 }
 
 fn read_owned_artifact(args: &Value) -> Result<String, String> {
+    require_exact_argument_keys(args, &["kind", "basename", "limit"])?;
     let kind = tool::required_string_arg(args, "kind")?;
     let basename = tool::required_string_arg(args, "basename")?;
     validate_basename(&basename)?;
     if !kind_allows_basename(&kind, &basename) {
         return Err("artifact basename does not belong to the selected kind".to_string());
     }
-    let maximum = bounded_limit(args, MAX_READ_CHARS);
+    let maximum = bounded_limit(args, MAX_READ_CHARS)?;
     let path = format!("{}/{}/{}", HOME_ROOT, owned_directory(&kind)?, basename);
     let content = read_bounded_file(&path, MAX_FILE_BYTES_CONSIDERED)?;
     let truncated = content.chars().count() > maximum;
@@ -110,18 +156,11 @@ fn read_owned_artifact(args: &Value) -> Result<String, String> {
 }
 
 fn search_owned_text(args: &Value) -> Result<String, String> {
+    require_exact_argument_keys(args, &["query", "kinds", "limit"])?;
     let query = tool::required_string_arg(args, "query")?;
-    let query = query.trim();
-    if query.is_empty()
-        || query.chars().count() > MAX_QUERY_CHARS
-        || query.chars().any(char::is_control)
-    {
-        return Err(format!(
-            "query must contain 1-{MAX_QUERY_CHARS} non-control characters"
-        ));
-    }
+    let query = validate_query(&query)?;
     let selected = selected_kinds(args)?;
-    let maximum = bounded_limit(args, MAX_MATCHES);
+    let maximum = bounded_limit(args, MAX_MATCHES)?;
     let query_lower = query.to_lowercase();
     let mut searched = 0_usize;
     let mut matches = Vec::new();
@@ -169,14 +208,99 @@ fn search_owned_text(args: &Value) -> Result<String, String> {
     .map_err(|error| error.to_string())
 }
 
-fn read_owned_continuity(_args: &Value) -> Result<String, String> {
+fn inspect_owned_question(args: &Value) -> Result<String, String> {
+    require_exact_argument_keys(args, &["question", "kinds", "limit"])?;
+    let question = tool::required_string_arg(args, "question")?;
+    let question = validate_query(&question)?;
+    let terms = question_terms(question)?;
+    let selected = selected_kinds(args)?;
+    let maximum = bounded_limit(args, MAX_MATCHES)?;
+    let normalized_question = terms.join(" ");
+    let mut searched = 0_usize;
+    let mut matches = Vec::new();
+
+    for (kind, directory) in selected {
+        let mut entries = safe_entries(kind, directory)?;
+        entries.sort();
+        entries.reverse();
+        for basename in entries {
+            if searched >= MAX_FILES_SEARCHED {
+                break;
+            }
+            searched = searched.saturating_add(1);
+            let path = format!("{HOME_ROOT}/{directory}/{basename}");
+            let Ok(content) = read_bounded_file(&path, MAX_FILE_BYTES_CONSIDERED) else {
+                continue;
+            };
+            if let Some((excerpt, matched_terms, score)) =
+                best_question_line(&content, &terms, &normalized_question)
+            {
+                matches.push(QuestionMatch {
+                    kind,
+                    basename,
+                    excerpt,
+                    matched_terms,
+                    score,
+                });
+            }
+        }
+        if searched >= MAX_FILES_SEARCHED {
+            break;
+        }
+    }
+
+    matches.sort_by_key(|entry| {
+        (
+            Reverse(entry.score),
+            Reverse(entry.matched_terms.len()),
+            entry.kind,
+            entry.basename.clone(),
+            entry.excerpt.clone(),
+        )
+    });
+    matches.truncate(maximum);
+    let rendered = matches
+        .iter()
+        .map(|entry| {
+            json!({
+                "kind": entry.kind,
+                "basename": entry.basename,
+                "excerpt": entry.excerpt,
+                "matched_terms": entry.matched_terms,
+                "score": entry.score,
+            })
+        })
+        .collect::<Vec<_>>();
+
+    serde_json::to_string(&json!({
+        "schema": "astrid_edge_owned_question_inspection_v1",
+        "question": question,
+        "normalized_terms": terms,
+        "files_considered": searched,
+        "match_count": rendered.len(),
+        "matches": rendered,
+        "limits": {
+            "question_chars": MAX_QUERY_CHARS,
+            "terms": MAX_QUESTION_TERMS,
+            "files": MAX_FILES_SEARCHED,
+            "bytes_per_file": MAX_FILE_BYTES_CONSIDERED,
+            "matches": maximum,
+            "excerpt_chars": MAX_EXCERPT_CHARS
+        },
+        "authority": "deterministic_private_read_only_retrieval_not_astrid_authorship_or_finding"
+    }))
+    .map_err(|error| error.to_string())
+}
+
+fn read_owned_continuity(args: &Value) -> Result<String, String> {
+    require_exact_argument_keys(args, &[])?;
     let current = read_json_if_allowed("home://edge/autonomous/thread_state.json", |value| {
-        !contains_recovery(value)
-    })
+        !is_recovery_record(value)
+    })?
     .map(|value| sanitize_thread(&value));
     let revisions = read_jsonl_tail("home://edge/autonomous/thread_state.jsonl", 8, |value| {
-        !contains_recovery(value)
-    })
+        !is_recovery_record(value)
+    })?
     .into_iter()
     .map(|value| sanitize_thread(&value))
     .collect::<Vec<_>>();
@@ -184,12 +308,12 @@ fn read_owned_continuity(_args: &Value) -> Result<String, String> {
         "home://edge/actions/receipts.jsonl",
         6,
         valid_action_evidence,
-    );
+    )?;
     evidence.extend(read_jsonl_tail(
         "home://edge/web/receipts.jsonl",
         6,
         valid_web_evidence,
-    ));
+    )?);
     evidence.sort_by_key(recorded_at);
     if evidence.len() > 6 {
         evidence = evidence.split_off(evidence.len().saturating_sub(6));
@@ -212,7 +336,12 @@ fn read_owned_continuity(_args: &Value) -> Result<String, String> {
 fn safe_entries(kind: &str, directory: &str) -> Result<Vec<String>, String> {
     let path = format!("{HOME_ROOT}/{directory}");
     let mut entries = fs::readdir(&path)?;
-    entries.retain(|entry| validate_basename(entry).is_ok() && kind_allows_basename(kind, entry));
+    entries.retain(|entry| {
+        validate_basename(entry).is_ok()
+            && kind_allows_basename(kind, entry)
+            && is_bounded_regular_file(&format!("{path}/{entry}"), MAX_FILE_BYTES_CONSIDERED)
+                .unwrap_or(false)
+    });
     Ok(entries)
 }
 
@@ -221,16 +350,42 @@ fn kind_allows_basename(kind: &str, basename: &str) -> bool {
 }
 
 fn read_bounded_file(path: &str, maximum_bytes: usize) -> Result<String, String> {
-    if fs::is_dir(path).unwrap_or(false) {
-        return Err("directories cannot be read as artifacts".to_string());
+    let maximum = u64::try_from(maximum_bytes)
+        .map_err(|_| "artifact byte bound cannot be represented".to_string())?;
+    let read = fs::read_bounded_nofollow(path, maximum)?;
+    let length = u64::try_from(read.data.len())
+        .map_err(|_| "artifact length cannot be represented".to_string())?;
+    if read.offset != 0 || read.captured_size != length || read.data.len() > maximum_bytes {
+        return Err(format!(
+            "artifact read violated the stable {maximum_bytes}-byte whole-file contract"
+        ));
     }
-    let content = fs::read_text(path)?;
-    if content.len() > maximum_bytes {
+    Ok(String::from_utf8_lossy(&read.data).into_owned())
+}
+
+fn ensure_bounded_regular_file(path: &str, maximum_bytes: usize) -> Result<(), String> {
+    let stat = fs::lstat_nofollow(path)?;
+    if stat.kind != FileEntryKind::RegularFile || stat.hard_link_count != 1 {
+        return Err(
+            "artifacts must be non-symlink regular files with exactly one hard link".to_string(),
+        );
+    }
+    validate_file_size(stat.size, maximum_bytes)
+}
+
+fn validate_file_size(size: u64, maximum_bytes: usize) -> Result<(), String> {
+    let size = usize::try_from(size)
+        .map_err(|_| "artifact size cannot be represented on this platform".to_string())?;
+    if size > maximum_bytes {
         return Err(format!(
             "artifact exceeds the {maximum_bytes}-byte read limit"
         ));
     }
-    Ok(content)
+    Ok(())
+}
+
+fn is_bounded_regular_file(path: &str, maximum_bytes: usize) -> Result<bool, String> {
+    ensure_bounded_regular_file(path, maximum_bytes).map(|()| true)
 }
 
 fn owned_directory(kind: &str) -> Result<&'static str, String> {
@@ -238,6 +393,16 @@ fn owned_directory(kind: &str) -> Result<&'static str, String> {
         .iter()
         .find_map(|(candidate, directory)| (*candidate == kind).then_some(*directory))
         .ok_or_else(|| "unsupported owned artifact kind".to_string())
+}
+
+fn require_exact_argument_keys(args: &Value, allowed: &[&str]) -> Result<(), String> {
+    let object = args
+        .as_object()
+        .ok_or_else(|| "tool arguments must be an object".to_string())?;
+    if let Some(unexpected) = object.keys().find(|key| !allowed.contains(&key.as_str())) {
+        return Err(format!("unexpected tool argument: {unexpected}"));
+    }
+    Ok(())
 }
 
 fn selected_kinds(args: &Value) -> Result<Vec<(&'static str, &'static str)>, String> {
@@ -288,12 +453,57 @@ fn validate_basename(value: &str) -> Result<(), String> {
     Ok(())
 }
 
-fn bounded_limit(args: &Value, maximum: usize) -> usize {
-    args.get("limit")
-        .and_then(Value::as_u64)
+fn bounded_limit(args: &Value, maximum: usize) -> Result<usize, String> {
+    let Some(value) = args.get("limit") else {
+        return Ok(maximum);
+    };
+    let value = value
+        .as_u64()
         .and_then(|value| usize::try_from(value).ok())
-        .unwrap_or(maximum)
-        .clamp(1, maximum)
+        .filter(|value| (1..=maximum).contains(value))
+        .ok_or_else(|| format!("`limit` must be an integer from 1 through {maximum}"))?;
+    Ok(value)
+}
+
+fn validate_query(value: &str) -> Result<&str, String> {
+    let value = value.trim();
+    if value.is_empty()
+        || value.chars().count() > MAX_QUERY_CHARS
+        || value.chars().any(char::is_control)
+    {
+        return Err(format!(
+            "query must contain 1-{MAX_QUERY_CHARS} non-control characters"
+        ));
+    }
+    Ok(value)
+}
+
+fn normalized_words(value: &str) -> Vec<String> {
+    value
+        .split(|character: char| !character.is_alphanumeric())
+        .filter(|word| !word.is_empty())
+        .map(str::to_lowercase)
+        .collect()
+}
+
+fn question_terms(question: &str) -> Result<Vec<String>, String> {
+    let mut seen = BTreeSet::new();
+    let mut terms = Vec::new();
+    for term in normalized_words(question) {
+        if term.chars().count() >= 3
+            && !QUESTION_STOPWORDS.contains(&term.as_str())
+            && seen.insert(term.clone())
+        {
+            terms.push(term);
+            if terms.len() >= MAX_QUESTION_TERMS {
+                break;
+            }
+        }
+    }
+    if terms.is_empty() {
+        return Err("question must contain at least one distinctive term".to_string());
+    }
+    Ok(terms)
 }
 
 fn literal_excerpt(content: &str, query_lower: &str) -> Option<String> {
@@ -307,42 +517,133 @@ fn literal_excerpt(content: &str, query_lower: &str) -> Option<String> {
     None
 }
 
-fn read_json_if_allowed(path: &str, predicate: fn(&Value) -> bool) -> Option<Value> {
-    let raw = read_bounded_file(path, MAX_FILE_BYTES_CONSIDERED).ok()?;
-    let value = serde_json::from_str::<Value>(&raw).ok()?;
-    predicate(&value).then_some(value)
-}
-
-fn read_jsonl_tail(path: &str, limit: usize, predicate: fn(&Value) -> bool) -> Vec<Value> {
-    let Ok(raw) = fs::read_text(path) else {
-        return Vec::new();
-    };
-    let mut start = raw.len().saturating_sub(MAX_FILE_BYTES_CONSIDERED);
-    while start < raw.len() && !raw.is_char_boundary(start) {
-        start = start.saturating_add(1);
-    }
-    let mut rows = raw[start..]
+fn best_question_line(
+    content: &str,
+    terms: &[String],
+    normalized_question: &str,
+) -> Option<(String, Vec<String>, u16)> {
+    content
         .lines()
-        .rev()
-        .filter_map(|line| serde_json::from_str::<Value>(line).ok())
-        .filter(predicate)
-        .take(limit)
-        .collect::<Vec<_>>();
-    rows.reverse();
-    rows
+        .filter_map(|line| {
+            let line_words = normalized_words(line);
+            if line_words.is_empty() {
+                return None;
+            }
+            let normalized_line = line_words.join(" ");
+            let matched_terms = terms
+                .iter()
+                .filter(|term| line_words.iter().any(|word| word == *term))
+                .cloned()
+                .collect::<Vec<_>>();
+            if matched_terms.is_empty() {
+                return None;
+            }
+            let term_score = u16::try_from(matched_terms.len())
+                .unwrap_or(u16::MAX)
+                .saturating_mul(100);
+            let phrase_bonus = u16::from(
+                !normalized_question.is_empty() && normalized_line.contains(normalized_question),
+            )
+            .saturating_mul(25);
+            Some((
+                line.trim()
+                    .chars()
+                    .take(MAX_EXCERPT_CHARS)
+                    .collect::<String>(),
+                matched_terms,
+                term_score.saturating_add(phrase_bonus),
+            ))
+        })
+        .max_by(|left, right| {
+            left.2
+                .cmp(&right.2)
+                .then_with(|| left.1.len().cmp(&right.1.len()))
+                .then_with(|| right.0.cmp(&left.0))
+        })
 }
 
-fn contains_recovery(value: &Value) -> bool {
-    value.to_string().to_ascii_lowercase().contains("recovery")
-        || value
-            .get("status")
-            .and_then(Value::as_str)
-            .is_some_and(|status| {
-                matches!(
-                    status,
-                    "transport_recovery" | "interrupted" | "interrupted_by_restart"
-                )
-            })
+fn read_json_if_allowed(
+    path: &str,
+    predicate: fn(&Value) -> bool,
+) -> Result<Option<Value>, String> {
+    if !fs::exists(path)? {
+        return Ok(None);
+    }
+    let raw = read_bounded_file(path, MAX_FILE_BYTES_CONSIDERED)?;
+    let value = serde_json::from_str::<Value>(&raw)
+        .map_err(|error| format!("invalid bounded JSON artifact: {error}"))?;
+    Ok(predicate(&value).then_some(value))
+}
+
+fn complete_jsonl_tail(raw: &[u8], offset: u64, starts_at_line_boundary: bool) -> &[u8] {
+    let start = if offset > 0 && !starts_at_line_boundary {
+        raw.iter()
+            .position(|byte| *byte == b'\n')
+            .map_or(raw.len(), |newline| newline.saturating_add(1))
+    } else {
+        0
+    };
+    let bounded = &raw[start..];
+    if bounded.ends_with(b"\n") {
+        bounded
+    } else {
+        bounded
+            .iter()
+            .rposition(|byte| *byte == b'\n')
+            .map_or(&[], |offset| &bounded[..=offset])
+    }
+}
+
+fn read_jsonl_tail(
+    path: &str,
+    limit: usize,
+    predicate: fn(&Value) -> bool,
+) -> Result<Vec<Value>, String> {
+    if !fs::exists(path)? {
+        return Ok(Vec::new());
+    }
+    let maximum = u64::try_from(MAX_FILE_BYTES_CONSIDERED)
+        .map_err(|_| "JSONL tail bound cannot be represented".to_string())?;
+    let read = fs::read_tail_nofollow(path, maximum)?;
+    let data_length = u64::try_from(read.data.len())
+        .map_err(|_| "JSONL tail length cannot be represented".to_string())?;
+    if read.data.len() > MAX_FILE_BYTES_CONSIDERED
+        || read.offset.checked_add(data_length) != Some(read.captured_size)
+    {
+        return Err("JSONL tail violated the stable bounded-read contract".to_string());
+    }
+    let complete = complete_jsonl_tail(&read.data, read.offset, read.starts_at_line_boundary);
+    let tail = std::str::from_utf8(complete)
+        .map_err(|_| "complete bounded JSONL records are not valid UTF-8".to_string())?;
+    let mut rows = Vec::new();
+    for line in tail.lines().rev() {
+        let value = serde_json::from_str::<Value>(line)
+            .map_err(|error| format!("invalid complete JSONL record in bounded tail: {error}"))?;
+        if predicate(&value) {
+            rows.push(value);
+            if rows.len() >= limit {
+                break;
+            }
+        }
+    }
+    rows.reverse();
+    Ok(rows)
+}
+
+fn is_recovery_record(value: &Value) -> bool {
+    let status = value.get("status").and_then(Value::as_str);
+    let decision_source = value.get("decision_source").and_then(Value::as_str);
+    let response_provenance = value.get("response_provenance").and_then(Value::as_str);
+    let recovery_reason = value.get("recovery_reason");
+    matches!(
+        status,
+        Some("transport_recovery" | "interrupted" | "interrupted_by_restart" | "failed_transport")
+    ) || matches!(decision_source, Some("local_safe_fallback"))
+        || matches!(
+            response_provenance,
+            Some("executor_generated" | "transport_recovery")
+        )
+        || recovery_reason.is_some_and(|reason| !reason.is_null())
 }
 
 fn valid_action_evidence(value: &Value) -> bool {
@@ -351,28 +652,85 @@ fn valid_action_evidence(value: &Value) -> bool {
             value.get("decision_source").and_then(Value::as_str),
             Some("astrid_declared" | "local_format_repair_preserved_astrid_declaration")
         )
-        && !contains_recovery(value)
+        && !is_recovery_record(value)
 }
 
 fn valid_web_evidence(value: &Value) -> bool {
     value.get("phase").and_then(Value::as_str) == Some("completed")
         && value.get("status").and_then(Value::as_str) == Some("success")
-        && !contains_recovery(value)
+        && matches!(
+            value.get("origin").and_then(Value::as_str),
+            Some(
+                "action_executor_research"
+                    | "action_executor_read_source"
+                    | "react_model_tool"
+                    | "scheduled_native_tool"
+                    | "interactive_native_tool"
+            )
+        )
+        && !is_recovery_record(value)
+}
+
+fn bounded_text(value: Option<&Value>, maximum_chars: usize) -> Value {
+    value.and_then(Value::as_str).map_or(Value::Null, |text| {
+        Value::String(text.chars().take(maximum_chars).collect())
+    })
+}
+
+fn bounded_integer(value: Option<&Value>) -> Value {
+    value
+        .and_then(Value::as_u64)
+        .map_or(Value::Null, |integer| json!(integer))
+}
+
+fn bounded_hash(value: Option<&Value>) -> Value {
+    value
+        .and_then(Value::as_str)
+        .filter(|hash| {
+            hash.len() == 64
+                && hash
+                    .bytes()
+                    .all(|byte| byte.is_ascii_hexdigit() && !byte.is_ascii_uppercase())
+        })
+        .map_or(Value::Null, |hash| Value::String(hash.to_string()))
+}
+
+fn bounded_trace(value: Option<&Value>) -> Value {
+    let Some(object) = value.and_then(Value::as_object) else {
+        return Value::Null;
+    };
+    json!({
+        "trace_id": bounded_text(object.get("trace_id"), MAX_IDENTIFIER_CHARS),
+        "span_id": bounded_text(object.get("span_id"), MAX_IDENTIFIER_CHARS),
+        "parent_span_id": bounded_text(object.get("parent_span_id"), MAX_IDENTIFIER_CHARS),
+        "session_id": bounded_text(object.get("session_id"), MAX_IDENTIFIER_CHARS),
+        "chain_id": bounded_text(object.get("chain_id"), MAX_IDENTIFIER_CHARS),
+    })
+}
+
+fn bounded_artifact_basename(value: Option<&Value>) -> Value {
+    value
+        .and_then(Value::as_str)
+        .and_then(|path| path.rsplit('/').next())
+        .filter(|basename| validate_basename(basename).is_ok())
+        .map_or(Value::Null, |basename| {
+            Value::String(basename.chars().take(MAX_IDENTIFIER_CHARS).collect())
+        })
 }
 
 fn sanitize_evidence(value: &Value) -> Value {
     json!({
-        "recorded_at_unix_ms": value.get("recorded_at_unix_ms"),
-        "kind": value.get("tool_name").or_else(|| value.get("outcome")),
-        "status": value.get("status"),
-        "artifact_basename": value
-            .get("artifact_path")
-            .and_then(Value::as_str)
-            .and_then(|path| path.rsplit('/').next()),
-        "result_summary": value.get("result_summary"),
-        "response_sha256": value.get("response_sha256"),
-        "result_sha256": value.get("result_sha256"),
-        "trace": value.get("trace"),
+        "recorded_at_unix_ms": bounded_integer(value.get("recorded_at_unix_ms")),
+        "kind": bounded_text(
+            value.get("tool_name").or_else(|| value.get("outcome")),
+            MAX_IDENTIFIER_CHARS,
+        ),
+        "status": bounded_text(value.get("status"), MAX_IDENTIFIER_CHARS),
+        "artifact_basename": bounded_artifact_basename(value.get("artifact_path")),
+        "result_summary": bounded_text(value.get("result_summary"), MAX_SCALAR_CHARS),
+        "response_sha256": bounded_hash(value.get("response_sha256")),
+        "result_sha256": bounded_hash(value.get("result_sha256")),
+        "trace": bounded_trace(value.get("trace")),
     })
 }
 
@@ -392,21 +750,21 @@ fn sanitize_thread(value: &Value) -> Value {
             .collect::<Vec<_>>()
     };
     json!({
-        "schema": value.get("schema"),
-        "revision": value.get("revision"),
-        "thread_id": value.get("thread_id"),
-        "status": value.get("status"),
-        "focus": value.get("focus"),
-        "question": value.get("question"),
-        "hypothesis": value.get("hypothesis"),
-        "latest_note": value.get("latest_note"),
-        "last_action": value.get("last_action"),
+        "schema": bounded_text(value.get("schema"), MAX_IDENTIFIER_CHARS),
+        "revision": bounded_integer(value.get("revision")),
+        "thread_id": bounded_text(value.get("thread_id"), MAX_IDENTIFIER_CHARS),
+        "status": bounded_text(value.get("status"), MAX_IDENTIFIER_CHARS),
+        "focus": bounded_text(value.get("focus"), MAX_SCALAR_CHARS),
+        "question": bounded_text(value.get("question"), MAX_SCALAR_CHARS),
+        "hypothesis": bounded_text(value.get("hypothesis"), MAX_SCALAR_CHARS),
+        "latest_note": bounded_text(value.get("latest_note"), MAX_SCALAR_CHARS),
+        "last_action": bounded_text(value.get("last_action"), MAX_ACTION_CHARS),
         "findings": bounded_array("findings", 8),
         "open_questions": bounded_array("open_questions", 8),
-        "conclusion": value.get("conclusion"),
-        "uncertainty": value.get("uncertainty"),
-        "updated_at_unix_ms": value.get("updated_at_unix_ms"),
-        "trace": value.get("trace"),
+        "conclusion": bounded_text(value.get("conclusion"), MAX_SCALAR_CHARS),
+        "uncertainty": bounded_text(value.get("uncertainty"), MAX_SCALAR_CHARS),
+        "updated_at_unix_ms": bounded_integer(value.get("updated_at_unix_ms")),
+        "trace": bounded_trace(value.get("trace")),
     })
 }
 
@@ -417,71 +775,44 @@ fn recorded_at(value: &Value) -> u64 {
         .unwrap_or_default()
 }
 
-fn describe() -> astrid_guest::CapsuleResult {
-    let payload = json!({
-        "capsule": "astrid-capsule-edge-introspector",
-        "tools": [
-            {
-                "name": "list_owned_artifacts",
-                "description": "List bounded basenames in one private owned artifact class.",
-                "input_schema": {
-                    "type": "object",
-                    "properties": {
-                        "kind": {"type": "string"},
-                        "limit": {"type": "integer", "minimum": 1, "maximum": MAX_BASENAMES}
-                    },
-                    "required": ["kind"],
-                    "additionalProperties": false
-                }
-            },
-            {
-                "name": "read_owned_artifact",
-                "description": "Read one bounded private artifact by kind and basename.",
-                "input_schema": {
-                    "type": "object",
-                    "properties": {
-                        "kind": {"type": "string"},
-                        "basename": {"type": "string"},
-                        "limit": {"type": "integer", "minimum": 1, "maximum": MAX_READ_CHARS}
-                    },
-                    "required": ["kind", "basename"],
-                    "additionalProperties": false
-                }
-            },
-            {
-                "name": "search_owned_text",
-                "description": "Literal bounded search of this appliance's private owned text.",
-                "input_schema": {
-                    "type": "object",
-                    "properties": {
-                        "query": {"type": "string", "maxLength": MAX_QUERY_CHARS},
-                        "kinds": {"type": "array", "items": {"type": "string"}},
-                        "limit": {"type": "integer", "minimum": 1, "maximum": MAX_MATCHES}
-                    },
-                    "required": ["query"],
-                    "additionalProperties": false
-                }
-            },
-            {
-                "name": "read_owned_continuity",
-                "description": "Read the current bounded working thread and verified evidence summaries.",
-                "input_schema": {
-                    "type": "object",
-                    "properties": {},
-                    "additionalProperties": false
-                }
-            }
-        ]
-    });
-    capsule_result::continue_json(&payload)
-}
-
 astrid_guest::export!(EdgeIntrospectorCapsule with_types_in astrid_guest::bindings);
 
 #[cfg(test)]
 mod tests {
-    use super::{kind_allows_basename, literal_excerpt, selected_kinds, validate_basename};
+    use super::{
+        MAX_EXCERPT_CHARS, MAX_SCALAR_CHARS, best_question_line, bounded_limit,
+        complete_jsonl_tail, is_recovery_record, kind_allows_basename, literal_excerpt,
+        normalized_words, question_terms, require_exact_argument_keys, sanitize_evidence,
+        sanitize_thread, selected_kinds, valid_action_evidence, valid_web_evidence,
+        validate_basename, validate_file_size,
+    };
     use astrid_guest::serde_json::json;
+
+    #[test]
+    fn shared_introspection_fixture_matches_steward_semantics() {
+        let fixture: astrid_guest::serde_json::Value = astrid_guest::serde_json::from_str(
+            include_str!("../../../../packaging/headless/edge-introspection-conformance-v1.json"),
+        )
+        .unwrap();
+        assert_eq!(
+            fixture["schema"],
+            "astrid.edge.introspection_conformance.v1"
+        );
+        let question = fixture["question"]["text"].as_str().unwrap();
+        let expected = fixture["question"]["expected_terms"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|term| term.as_str().unwrap().to_owned())
+            .collect::<Vec<_>>();
+        assert_eq!(question_terms(question).unwrap(), expected);
+        for case in fixture["typed_provenance"].as_array().unwrap() {
+            assert_eq!(
+                is_recovery_record(&case["value"]),
+                case["excluded"].as_bool().unwrap()
+            );
+        }
+    }
 
     #[test]
     fn rejects_paths_hidden_files_and_unsupported_extensions() {
@@ -498,15 +829,112 @@ mod tests {
         }
         assert!(validate_basename("journal_20260730.md").is_ok());
         assert!(validate_basename("observation_1.json").is_ok());
+        assert!(validate_file_size(64, 64).is_ok());
+        assert!(validate_file_size(65, 64).is_err());
     }
 
     #[test]
     fn literal_search_is_case_insensitive_and_bounded() {
         let line = format!("before {} after", "A".repeat(300));
         let excerpt = literal_excerpt(&line, "before").unwrap();
-        assert!(excerpt.chars().count() <= 240);
+        assert!(excerpt.chars().count() <= MAX_EXCERPT_CHARS);
         assert!(literal_excerpt("one\nAstrid notices heat\nthree", "ASTRID").is_some());
         assert!(literal_excerpt("one\ntwo", "missing").is_none());
+    }
+
+    #[test]
+    fn question_terms_are_distinct_bounded_and_ignore_prompt_scaffolding() {
+        assert_eq!(
+            question_terms("What have I noticed about HEAT, heat, and memory?").unwrap(),
+            ["noticed", "heat", "memory"]
+        );
+        assert!(question_terms("what am I and why is it so").is_err());
+        assert_eq!(
+            normalized_words("Thermal-shifts / MEMORY"),
+            ["thermal", "shifts", "memory"]
+        );
+    }
+
+    #[test]
+    fn question_ranking_prefers_term_coverage_and_is_excerpt_bounded() {
+        let terms = question_terms("How do thermal memory patterns change?").unwrap();
+        let content = format!(
+            "thermal alone\n{} thermal memory patterns change after quiet periods\nmemory patterns",
+            "x".repeat(300)
+        );
+        let (excerpt, matched, score) =
+            best_question_line(&content, &terms, "thermal memory patterns change").unwrap();
+        assert_eq!(matched, ["thermal", "memory", "patterns", "change"]);
+        assert_eq!(score, 425);
+        assert!(excerpt.chars().count() <= MAX_EXCERPT_CHARS);
+    }
+
+    #[test]
+    fn jsonl_tail_drops_partial_edges_without_losing_complete_records() {
+        let raw = concat!(
+            "{\"id\":1,\"text\":\"older\"}\n",
+            "{\"id\":2,\"text\":\"αβγ\"}\n",
+            "{\"id\":3,\"text\":\"newer\"}\n",
+            "{\"id\":4"
+        );
+        let tail = std::str::from_utf8(complete_jsonl_tail(raw.as_bytes(), 1, false)).unwrap();
+        assert!(!tail.contains("older"));
+        assert!(tail.contains("\"id\":2"));
+        assert!(tail.contains("\"id\":3"));
+        assert!(!tail.contains("\"id\":4"));
+        assert!(tail.ends_with('\n'));
+
+        let boundary = "{\"id\":2}\n";
+        assert_eq!(
+            complete_jsonl_tail(boundary.as_bytes(), 10, true),
+            boundary.as_bytes()
+        );
+
+        let split_utf8 = b"\xb2\xb3\"}\n{\"id\":2}\n{\"id\":3";
+        assert_eq!(complete_jsonl_tail(split_utf8, 1, false), b"{\"id\":2}\n");
+    }
+
+    #[test]
+    fn recovery_filter_uses_typed_provenance_not_incidental_words() {
+        let legitimate = json!({
+            "status": "executed",
+            "decision_source": "astrid_declared",
+            "outcome": "journal_written",
+            "declared_next": "JOURNAL recovery can be studied honestly",
+            "recovery_reason": null
+        });
+        assert!(!is_recovery_record(&legitimate));
+        assert!(valid_action_evidence(&legitimate));
+
+        for recovery in [
+            json!({"status": "transport_recovery"}),
+            json!({"status": "executed", "decision_source": "local_safe_fallback"}),
+            json!({"status": "executed", "recovery_reason": "react_streaming_timeout"}),
+            json!({"status": "executed", "response_provenance": "executor_generated"}),
+        ] {
+            assert!(is_recovery_record(&recovery));
+            assert!(!valid_action_evidence(&recovery));
+        }
+    }
+
+    #[test]
+    fn verified_web_evidence_excludes_operator_and_unattributed_origins() {
+        let natural = json!({
+            "phase": "completed",
+            "status": "success",
+            "origin": "action_executor_research",
+            "recovery_reason": null
+        });
+        assert!(valid_web_evidence(&natural));
+        for origin in [
+            "operator_harness",
+            "operator_inquiry_harness",
+            "legacy_unattributed",
+        ] {
+            let mut value = natural.clone();
+            value["origin"] = json!(origin);
+            assert!(!valid_web_evidence(&value), "{origin}");
+        }
     }
 
     #[test]
@@ -528,5 +956,79 @@ mod tests {
             "tuning_result",
             "tuning_123_definition.json"
         ));
+    }
+
+    #[test]
+    fn tool_arguments_are_exact_and_limits_are_not_silently_clamped() {
+        assert!(require_exact_argument_keys(&json!({"kind": "journal"}), &["kind"]).is_ok());
+        assert!(
+            require_exact_argument_keys(&json!({"kind": "journal", "unexpected": true}), &["kind"])
+                .is_err()
+        );
+        assert!(require_exact_argument_keys(&json!([]), &[]).is_err());
+        assert_eq!(bounded_limit(&json!({}), 20).unwrap(), 20);
+        for invalid in [
+            json!({"limit": 0}),
+            json!({"limit": 21}),
+            json!({"limit": "2"}),
+        ] {
+            assert!(bounded_limit(&invalid, 20).is_err());
+        }
+    }
+
+    #[test]
+    fn continuity_and_evidence_scalars_are_bounded_and_typed() {
+        let long = "x".repeat(MAX_SCALAR_CHARS.saturating_add(100));
+        let thread = sanitize_thread(&json!({
+            "schema": long,
+            "revision": "not-an-integer",
+            "focus": long,
+            "trace": {"trace_id": long, "secret": long},
+        }));
+        assert_eq!(
+            thread["focus"].as_str().unwrap().chars().count(),
+            MAX_SCALAR_CHARS
+        );
+        assert!(thread["revision"].is_null());
+        assert!(thread["trace"].get("secret").is_none());
+
+        let evidence = sanitize_evidence(&json!({
+            "recorded_at_unix_ms": "not-an-integer",
+            "result_summary": long,
+            "response_sha256": "NOT-A-HASH",
+            "trace": {"trace_id": "t".repeat(500), "extra": long},
+        }));
+        assert_eq!(
+            evidence["result_summary"].as_str().unwrap().chars().count(),
+            MAX_SCALAR_CHARS
+        );
+        assert!(evidence["recorded_at_unix_ms"].is_null());
+        assert!(evidence["response_sha256"].is_null());
+        assert!(evidence["trace"].get("extra").is_none());
+    }
+
+    #[test]
+    fn manifest_is_model_hidden_but_keeps_direct_executor_routes() {
+        let manifest = include_str!("../Capsule.toml");
+        for forbidden in [
+            "tool.v1.request.describe",
+            "tool.v1.response.describe",
+            "tool_describe",
+        ] {
+            assert!(
+                !manifest.contains(forbidden),
+                "unexpected route: {forbidden}"
+            );
+        }
+        for expected in [
+            "tool.v1.execute.list_owned_artifacts",
+            "tool.v1.execute.read_owned_artifact",
+            "tool.v1.execute.search_owned_text",
+            "tool.v1.execute.inspect_owned_question",
+            "tool.v1.execute.read_owned_continuity",
+            "tool.v1.execute.*.result",
+        ] {
+            assert!(manifest.contains(expected), "missing route: {expected}");
+        }
     }
 }

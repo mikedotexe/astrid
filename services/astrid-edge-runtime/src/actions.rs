@@ -26,6 +26,7 @@ use crate::{
     config::Config,
     inquiry::{self, SharedStudyManager, StudySpec},
     ipc,
+    maintenance::{WorkPermit, WorkTracker},
     notebook::ActivityEvent,
     peer,
     reservoir::{ReservoirSnapshot, SensoryIngress},
@@ -53,6 +54,16 @@ pub struct ActionCandidate {
     pub tuning_authority_turn_id: Option<Uuid>,
     /// Trusted boundary that admitted the one-use turn identifier.
     pub tuning_authority_source: Option<&'static str>,
+    /// Exact process-local work accounting. Production admission boundaries
+    /// populate this before enqueue; tests may leave it absent and the
+    /// executor will acquire a permit on dequeue.
+    pub maintenance_permit: Option<WorkPermit>,
+}
+
+#[derive(Debug)]
+pub struct ActionOutcomeDelivery {
+    pub outcome: ActionOutcome,
+    _maintenance_permit: WorkPermit,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -219,12 +230,23 @@ pub async fn run(
     mut candidates: mpsc::Receiver<ActionCandidate>,
     snapshots: watch::Receiver<ReservoirSnapshot>,
     ingress_tx: mpsc::Sender<SensoryIngress>,
-    outcome_tx: mpsc::Sender<ActionOutcome>,
+    outcome_tx: mpsc::Sender<ActionOutcomeDelivery>,
     activity_tx: broadcast::Sender<ActivityEvent>,
     study_manager: SharedStudyManager,
     tuning_tx: mpsc::Sender<TuningRequest>,
+    maintenance_work: Arc<WorkTracker>,
 ) {
-    while let Some(candidate) = candidates.recv().await {
+    while let Some(mut candidate) = candidates.recv().await {
+        let _action_permit = match candidate.maintenance_permit.take() {
+            Some(permit) => permit,
+            None => match maintenance_work.begin_action() {
+                Ok(permit) => permit,
+                Err(error) => {
+                    eprintln!("sovereign NEXT action admission failed closed: {error:#}");
+                    return;
+                },
+            },
+        };
         let snapshot = snapshots.borrow().clone();
         match execute_candidate_with_studies(
             &config,
@@ -323,8 +345,23 @@ pub async fn run(
                     );
                     return;
                 }
-                if config.autonomy_enabled && outcome_tx.send(result.outcome).await.is_err() {
-                    eprintln!("sovereign NEXT chain feedback dropped: scheduler closed");
+                if config.autonomy_enabled {
+                    let continuation = match maintenance_work.begin_continuation() {
+                        Ok(permit) => permit,
+                        Err(error) => {
+                            eprintln!(
+                                "sovereign NEXT continuation admission failed closed: {error:#}"
+                            );
+                            return;
+                        },
+                    };
+                    let delivery = ActionOutcomeDelivery {
+                        outcome: result.outcome,
+                        _maintenance_permit: continuation,
+                    };
+                    if outcome_tx.send(delivery).await.is_err() {
+                        eprintln!("sovereign NEXT chain feedback dropped: scheduler closed");
+                    }
                 }
             },
             Err(error) => {
@@ -336,7 +373,12 @@ pub async fn run(
 }
 
 fn action_outcome_may_enter_experience(outcome: &ActionOutcome) -> bool {
+    let invalid_exact_self_study = outcome.decision_source == "astrid_declared"
+        && outcome.status == "executed"
+        && outcome.outcome == "self_study_written"
+        && accepted_self_study_question(outcome).is_none();
     outcome.recovery_reason.is_none()
+        && !invalid_exact_self_study
         && matches!(
             outcome.decision_source.as_str(),
             "astrid_declared" | "local_format_repair_preserved_astrid_declaration"
@@ -364,11 +406,17 @@ fn accepted_research_question(outcome: &ActionOutcome) -> Option<&str> {
 fn accepted_self_study_question(outcome: &ActionOutcome) -> Option<&str> {
     if outcome.status != "executed"
         || outcome.outcome != "self_study_written"
-        || !matches!(
-            outcome.decision_source.as_str(),
-            "astrid_declared" | "local_format_repair_preserved_astrid_declaration"
-        )
+        || outcome.decision_source != "astrid_declared"
         || outcome.recovery_reason.is_some()
+        || !outcome
+            .trace
+            .as_ref()
+            .is_some_and(IpcTraceContextV1::is_supported)
+        || outcome.response_sha256.len() != 64
+        || !outcome
+            .response_sha256
+            .bytes()
+            .all(|byte| byte.is_ascii_hexdigit())
     {
         return None;
     }
@@ -1624,7 +1672,10 @@ fn record_duplicate_journal_advisory(
     let Some((prior, intersection, union)) = best else {
         return Ok(());
     };
-    let score_millis = intersection.saturating_mul(1_000) / union;
+    let score_millis = intersection
+        .saturating_mul(1_000)
+        .checked_div(union)
+        .unwrap_or_default();
     if score_millis < 780 {
         return Ok(());
     }
@@ -2210,6 +2261,7 @@ mod tests {
 
     fn test_config(workspace: &Path) -> Config {
         Config {
+            appliance_id: "test-edge".to_string(),
             instance_name: "Test edge Astrid".to_string(),
             telemetry_addr: "127.0.0.1:7878".parse().unwrap(),
             sensory_addr: "127.0.0.1:7879".parse().unwrap(),
@@ -2217,6 +2269,12 @@ mod tests {
             astrid_token: workspace.join("system.token"),
             workspace: workspace.to_path_buf(),
             astrid_cli: workspace.join("astrid"),
+            local_model_id: "test-model".to_string(),
+            maintenance_lease_path: workspace.join("maintenance.json"),
+            reflection_lease_path: "/run/astrid-edge-self-change/reflection.json".into(),
+            maintenance_edge_ack_path: None,
+            generation_binding_path: None,
+            core_liveness_request_path: None,
             autonomy_enabled: true,
             autonomy_interval_minutes: 15,
             autonomy_event_driven: false,
@@ -2234,7 +2292,28 @@ mod tests {
             autonomy_journal_authored_turns: true,
             autonomy_initiative_profile: crate::config::AutonomyInitiativeProfile::Disabled,
             research_action_web_search: false,
+            web_broker_socket_path: None,
+            web_broker_request_key_path: None,
+            web_broker_request_key_sha256: None,
+            web_broker_response_verify_key_path: None,
+            web_broker_response_verify_key_sha256: None,
+            web_broker_connect_timeout_ms: 2_000,
+            web_broker_header_timeout_ms: 10_000,
+            web_broker_total_timeout_ms: 30_000,
             introspection_harness: None,
+            scheduled_introspection_enabled: false,
+            scheduled_introspection_interval_minutes: 120,
+            scheduled_introspection_initial_delay_seconds: 300,
+            scheduled_introspection_timeout_seconds: 1_200,
+            scheduled_introspection_prompt_max_chars: 3_200,
+            dedicated_steward_enabled: false,
+            dedicated_steward_interval_minutes: 120,
+            scheduled_authorship_attestation_path: None,
+            scheduled_authorship_verify_key_path: None,
+            scheduled_authorship_verify_key_sha256: None,
+            scheduled_authorship_steward_uid: None,
+            self_change_enabled: false,
+            self_change_root: workspace.join("self-change"),
             study_harness: None,
             inquiry_harness: None,
             perceptual_notebook_enabled: false,
@@ -2445,7 +2524,7 @@ mod tests {
         let accepted = super::ActionOutcome {
             recorded_at_unix_ms: 1,
             session_id: "test".to_string(),
-            response_sha256: "hash".to_string(),
+            response_sha256: "a".repeat(64),
             declared_next: Some("RESEARCH current CPU reservoir literature".to_string()),
             decision_source: "astrid_declared".to_string(),
             status: "executed".to_string(),
@@ -2453,7 +2532,11 @@ mod tests {
             recovery_reason: None,
             unexecuted_intention: None,
             validation_reason: None,
-            trace: None,
+            trace: Some(IpcTraceContextV1::root(
+                Uuid::new_v4(),
+                "test".to_string(),
+                None,
+            )),
         };
         assert_eq!(
             accepted_research_question(&accepted),
@@ -2484,7 +2567,7 @@ mod tests {
         let accepted = super::ActionOutcome {
             recorded_at_unix_ms: 1,
             session_id: "test".to_string(),
-            response_sha256: "hash".to_string(),
+            response_sha256: "a".repeat(64),
             declared_next: Some("SELF_STUDY what have I noticed about heat?".to_string()),
             decision_source: "astrid_declared".to_string(),
             status: "executed".to_string(),
@@ -2492,7 +2575,11 @@ mod tests {
             recovery_reason: None,
             unexecuted_intention: None,
             validation_reason: None,
-            trace: None,
+            trace: Some(IpcTraceContextV1::root(
+                Uuid::new_v4(),
+                "test".to_string(),
+                None,
+            )),
         };
         assert_eq!(
             accepted_self_study_question(&accepted),
@@ -2504,6 +2591,7 @@ mod tests {
             decision_source: "local_format_repair_preserved_astrid_declaration".to_string(),
             ..accepted.clone()
         };
+        assert_eq!(accepted_self_study_question(&formatting_repair), None);
         assert!(action_outcome_may_enter_experience(&formatting_repair));
 
         for rejected in [
@@ -2513,6 +2601,14 @@ mod tests {
             },
             super::ActionOutcome {
                 recovery_reason: Some("react_streaming_timeout".to_string()),
+                ..accepted.clone()
+            },
+            super::ActionOutcome {
+                response_sha256: "not-a-hash".to_string(),
+                ..accepted.clone()
+            },
+            super::ActionOutcome {
+                trace: None,
                 ..accepted.clone()
             },
         ] {
@@ -2619,6 +2715,7 @@ mod tests {
                 trace: None,
                 tuning_authority_turn_id: None,
                 tuning_authority_source: None,
+                maintenance_permit: None,
             },
             &ReservoirSnapshot::default(),
         )
@@ -2660,6 +2757,7 @@ mod tests {
                 trace: None,
                 tuning_authority_turn_id: None,
                 tuning_authority_source: None,
+                maintenance_permit: None,
             },
             &ReservoirSnapshot::default(),
         )
@@ -2700,6 +2798,7 @@ mod tests {
                 trace: None,
                 tuning_authority_turn_id: None,
                 tuning_authority_source: None,
+                maintenance_permit: None,
             },
             &ReservoirSnapshot::default(),
         )
@@ -2780,6 +2879,10 @@ mod tests {
     }
 
     #[tokio::test]
+    #[allow(
+        clippy::too_many_lines,
+        reason = "one table-driven boundary test proves every stateful Action stays in the owned tree"
+    )]
     async fn every_stateful_action_stays_inside_the_owned_workspace() {
         let workspace =
             std::env::temp_dir().join(format!("astrid-edge-actions-{}", super::unix_millis()));
@@ -2806,6 +2909,7 @@ mod tests {
                     trace: None,
                     tuning_authority_turn_id: None,
                     tuning_authority_source: None,
+                    maintenance_permit: None,
                 },
                 &snapshot,
             )
@@ -2837,6 +2941,7 @@ mod tests {
                     trace: None,
                     tuning_authority_turn_id: None,
                     tuning_authority_source: None,
+                    maintenance_permit: None,
                 },
                 &snapshot,
             )
@@ -2862,6 +2967,7 @@ mod tests {
                         trace: None,
                         tuning_authority_turn_id: None,
                         tuning_authority_source: None,
+                        maintenance_permit: None,
                     },
                     &snapshot,
                 )
@@ -2900,6 +3006,7 @@ mod tests {
             trace: Some(trace),
             tuning_authority_turn_id: None,
             tuning_authority_source: None,
+            maintenance_permit: None,
         };
 
         assert_eq!(
@@ -2990,6 +3097,7 @@ mod tests {
             trace: Some(trace),
             tuning_authority_turn_id: None,
             tuning_authority_source: None,
+            maintenance_permit: None,
         };
 
         begin_action_dispatch(&config, &candidate, &response_sha256, super::unix_millis()).unwrap();
@@ -3132,6 +3240,7 @@ mod tests {
             )),
             tuning_authority_turn_id: None,
             tuning_authority_source: None,
+            maintenance_permit: None,
         };
         let response_sha256 = format!("{:x}", Sha256::digest(response.as_bytes()));
 

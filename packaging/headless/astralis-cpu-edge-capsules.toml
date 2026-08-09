@@ -2,6 +2,7 @@ schema_version = 1
 rust_toolchain = "1.94.1"
 rust_target = "wasm32-wasip2"
 sdk_version = "0.6.0"
+source_policy = "reviewed_patch_replay"
 
 [[capsule]]
 id = "react"

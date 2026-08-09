@@ -7,25 +7,29 @@ mod config;
 mod host;
 mod inquiry;
 mod ipc;
+mod maintenance;
 mod notebook;
 mod operator_inquiry;
 mod peer;
 mod reservoir;
+mod scheduled_admission;
+mod scheduled_introspection;
 mod self_profile;
 mod spectral;
 mod trace;
 mod tuning;
+mod web_broker;
 mod ws;
 
 use std::sync::Arc;
 
 use anyhow::Result;
 use clap::Parser as _;
-use tokio::sync::{broadcast, mpsc, watch};
+use tokio::sync::{Mutex, broadcast, mpsc, watch};
 use uuid::Uuid;
 
 use crate::{
-    actions::{ActionCandidate, ActionOutcome},
+    actions::{ActionCandidate, ActionOutcomeDelivery},
     config::Config,
     reservoir::{ReservoirSnapshot, SensoryIngress},
 };
@@ -63,8 +67,7 @@ async fn main() -> Result<()> {
         return Ok(());
     }
     if let Some(query) = config.introspection_harness.as_deref() {
-        let session_id =
-            Uuid::new_v5(&Uuid::NAMESPACE_URL, b"edge-operator-harness-v1").to_string();
+        let session_id = ipc::operator_introspection_session_id();
         let trace = trace::IpcTraceContextV1::root(Uuid::new_v4(), session_id, None);
         let result = ipc::execute_introspection_search(
             &config,
@@ -83,13 +86,32 @@ async fn main() -> Result<()> {
         mpsc::channel::<reservoir::ReservoirCommand>(32);
     let (tuning_tx, tuning_rx) = mpsc::channel::<tuning::TuningRequest>(32);
     let (action_tx, action_rx) = mpsc::channel::<ActionCandidate>(64);
-    let (action_outcome_tx, action_outcome_rx) = mpsc::channel::<ActionOutcome>(64);
+    let (action_outcome_tx, action_outcome_rx) = mpsc::channel::<ActionOutcomeDelivery>(64);
     let (telemetry_tx, _) = broadcast::channel::<String>(64);
     let (snapshot_tx, snapshot_rx) = watch::channel(ReservoirSnapshot::default());
     let (human_activity_tx, human_activity_rx) = watch::channel(0_u64);
     let (notebook_activity_tx, _) = broadcast::channel::<notebook::ActivityEvent>(128);
     let study_manager = Arc::new(std::sync::Mutex::new(inquiry::StudyManager::load(&config)));
     let autonomy_trace_registry = Arc::new(trace::AutonomyTraceRegistry::default());
+    let model_turn_lock = Arc::new(Mutex::new(()));
+    let maintenance_probe = config
+        .self_change_enabled
+        .then(|| maintenance::LeaseProbe::from_config(&config))
+        .transpose()?;
+    let maintenance_work = Arc::new(maintenance::WorkTracker::new(
+        config.maintenance_edge_ack_path.clone(),
+        maintenance_probe,
+    ));
+
+    let mut maintenance_task = config.self_change_enabled.then(|| {
+        let config = Arc::clone(&config);
+        let maintenance_work = Arc::clone(&maintenance_work);
+        tokio::spawn(async move {
+            if let Err(error) = maintenance::run(config, maintenance_work).await {
+                eprintln!("maintenance acknowledgement failed: {error:#}");
+            }
+        })
+    });
 
     let mut reservoir_task = tokio::spawn(reservoir::run(
         Arc::clone(&config),
@@ -97,6 +119,10 @@ async fn main() -> Result<()> {
         reservoir_command_rx,
         telemetry_tx.clone(),
         snapshot_tx,
+    ));
+    let mut scheduled_admission_task = tokio::spawn(scheduled_admission::run(
+        Arc::clone(&config),
+        ingress_tx.clone(),
     ));
     let telemetry_task = tokio::spawn(ws::serve_telemetry(
         config.telemetry_addr,
@@ -112,6 +138,7 @@ async fn main() -> Result<()> {
         human_activity_tx,
         notebook_activity_tx.clone(),
         Arc::clone(&autonomy_trace_registry),
+        Arc::clone(&maintenance_work),
     ));
     let mut action_task = tokio::spawn(actions::run(
         Arc::clone(&config),
@@ -122,6 +149,7 @@ async fn main() -> Result<()> {
         notebook_activity_tx.clone(),
         Arc::clone(&study_manager),
         tuning_tx,
+        Arc::clone(&maintenance_work),
     ));
     let mut tuning_task = tokio::spawn(tuning::run(
         Arc::clone(&config),
@@ -159,11 +187,24 @@ async fn main() -> Result<()> {
         tokio::spawn(autonomy::run(
             Arc::clone(&config),
             snapshot_rx.clone(),
-            human_activity_rx,
+            human_activity_rx.clone(),
             ingress_tx.clone(),
             action_outcome_rx,
             action_tx,
+            Arc::clone(&autonomy_trace_registry),
+            Arc::clone(&model_turn_lock),
+            Arc::clone(&maintenance_work),
+        ))
+    });
+    let mut scheduled_introspection_task = config.scheduled_introspection_enabled.then(|| {
+        tokio::spawn(scheduled_introspection::run(
+            Arc::clone(&config),
+            snapshot_rx.clone(),
+            human_activity_rx,
+            ingress_tx,
             autonomy_trace_registry,
+            model_turn_lock,
+            maintenance_work,
         ))
     });
 
@@ -189,11 +230,20 @@ async fn main() -> Result<()> {
         result = &mut action_task => {
             Some(critical_task_exit("Action executor", result))
         },
+        result = &mut scheduled_admission_task => {
+            Some(critical_task_exit("scheduled introspection admission", result))
+        },
+        result = optional_task_exit(&mut maintenance_task) => {
+            Some(critical_task_exit("maintenance acknowledgement", result))
+        },
         result = optional_task_exit(&mut spectral_task) => {
             Some(critical_task_exit("spectral observer", result))
         },
         result = optional_task_exit(&mut autonomy_task) => {
             Some(critical_task_exit("autonomy scheduler", result))
+        },
+        result = optional_task_exit(&mut scheduled_introspection_task) => {
+            Some(critical_task_exit("scheduled introspection scheduler", result))
         },
     };
     if let Some(error) = critical_exit.as_ref() {
@@ -213,6 +263,7 @@ async fn main() -> Result<()> {
         self_profile_task,
         peer_task,
         tuning_task,
+        scheduled_admission_task,
     ];
     if let Some(task) = autonomy_task {
         tasks.push(task);
@@ -221,6 +272,12 @@ async fn main() -> Result<()> {
         tasks.push(task);
     }
     if let Some(task) = spectral_task {
+        tasks.push(task);
+    }
+    if let Some(task) = scheduled_introspection_task {
+        tasks.push(task);
+    }
+    if let Some(task) = maintenance_task {
         tasks.push(task);
     }
     for task in tasks {

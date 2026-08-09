@@ -63,13 +63,13 @@ fs_read = [
     "home://edge/actions/receipts.jsonl",
     "home://edge/web/receipts.jsonl",
 ]
-ipc_publish = ["tool.v1.execute.*.result", "tool.v1.response.describe.*"]
+ipc_publish = ["tool.v1.execute.*.result"]
 ipc_subscribe = [
     "tool.v1.execute.list_owned_artifacts",
     "tool.v1.execute.read_owned_artifact",
     "tool.v1.execute.search_owned_text",
+    "tool.v1.execute.inspect_owned_question",
     "tool.v1.execute.read_owned_continuity",
-    "tool.v1.request.describe",
 ]
 
 [[interceptor]]
@@ -85,9 +85,9 @@ event = "tool.v1.execute.search_owned_text"
 action = "tool_execute_search_owned_text"
 
 [[interceptor]]
-event = "tool.v1.execute.read_owned_continuity"
-action = "tool_execute_read_owned_continuity"
+event = "tool.v1.execute.inspect_owned_question"
+action = "tool_execute_inspect_owned_question"
 
 [[interceptor]]
-event = "tool.v1.request.describe"
-action = "tool_describe"
+event = "tool.v1.execute.read_owned_continuity"
+action = "tool_execute_read_owned_continuity"

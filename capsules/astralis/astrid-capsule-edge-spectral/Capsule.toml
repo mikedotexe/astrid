@@ -25,12 +25,11 @@ fs_read = [
     "home://edge/spectral/activity_receipts.current.jsonl",
     "home://edge/spectral/activity_receipts.previous.jsonl",
 ]
-ipc_publish = ["tool.v1.execute.*.result", "tool.v1.response.describe.*"]
+ipc_publish = ["tool.v1.execute.*.result"]
 ipc_subscribe = [
     "tool.v1.execute.read_spectral_now",
     "tool.v1.execute.read_spectral_window",
     "tool.v1.execute.correlate_spectral_activity",
-    "tool.v1.request.describe",
 ]
 
 [[interceptor]]
@@ -44,7 +43,3 @@ action = "tool_execute_read_spectral_window"
 [[interceptor]]
 event = "tool.v1.execute.correlate_spectral_activity"
 action = "tool_execute_correlate_spectral_activity"
-
-[[interceptor]]
-event = "tool.v1.request.describe"
-action = "tool_describe"

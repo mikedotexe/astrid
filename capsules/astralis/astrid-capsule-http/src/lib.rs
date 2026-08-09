@@ -112,7 +112,17 @@ fn search_web(args: &Value) -> Result<String, String> {
         ));
     }
     let body = String::from_utf8_lossy(&response.body);
-    let results = parse_brave_results(&body, count);
+    let broker_verified = response.headers.iter().any(|header| {
+        header
+            .key
+            .eq_ignore_ascii_case("x-astrid-immutable-web-broker")
+            && header.value == "v1"
+    });
+    let results = if broker_verified {
+        parse_immutable_broker_results(&body, count)?
+    } else {
+        parse_brave_results(&body, count)
+    };
     if results.is_empty() {
         return Err(
             "search_web provider returned no parseable results; retry later or fetch a known URL"
@@ -122,12 +132,78 @@ fn search_web(args: &Value) -> Result<String, String> {
     let payload = serde_json::json!({
         "schema": "astrid_search_web_results_v1",
         "query": query,
-        "provider": "brave_public_html",
+        "provider": if broker_verified {
+            "immutable_cpu_edge_web_broker"
+        } else {
+            "brave_public_html"
+        },
         "result_count": results.len(),
         "results": results,
         "authority": "read_only_public_web_search",
     });
     serde_json::to_string_pretty(&payload).map_err(|err| err.to_string())
+}
+
+fn parse_immutable_broker_results(body: &str, count: usize) -> Result<Vec<Value>, String> {
+    let payload: Value = serde_json::from_str(body)
+        .map_err(|_| "immutable web broker returned malformed JSON".to_string())?;
+    if payload.get("schema").and_then(Value::as_str) != Some("astrid.edge.web_search.response.v1") {
+        return Err("immutable web broker returned an unsupported schema".to_string());
+    }
+    let results = payload
+        .get("results")
+        .and_then(Value::as_array)
+        .ok_or_else(|| "immutable web broker omitted search results".to_string())?;
+    if results.len() > count || results.len() > 5 {
+        return Err("immutable web broker exceeded the requested result count".to_string());
+    }
+    let mut projected = Vec::with_capacity(results.len());
+    for (index, result) in results.iter().enumerate() {
+        let object = result
+            .as_object()
+            .ok_or_else(|| "immutable web broker result is not an object".to_string())?;
+        if !object
+            .keys()
+            .all(|key| matches!(key.as_str(), "title" | "url" | "snippet"))
+            || object.len() != 3
+        {
+            return Err("immutable web broker result escaped its exact schema".to_string());
+        }
+        let title = bounded_broker_field(object.get("title"), 300, "title")?;
+        let url = bounded_broker_field(object.get("url"), 2_048, "URL")?;
+        let snippet = bounded_broker_field(object.get("snippet"), 700, "snippet")?;
+        if !(url.starts_with("https://") || url.starts_with("http://")) {
+            return Err("immutable web broker result URL is not public HTTP".to_string());
+        }
+        projected.push(serde_json::json!({
+            "position": index.saturating_add(1),
+            "title": title,
+            "url": url,
+            "snippet": snippet,
+        }));
+    }
+    Ok(projected)
+}
+
+fn bounded_broker_field(
+    value: Option<&Value>,
+    maximum: usize,
+    label: &str,
+) -> Result<String, String> {
+    let value = value
+        .and_then(Value::as_str)
+        .ok_or_else(|| format!("immutable web broker result omitted {label}"))?;
+    if value.is_empty()
+        || value.chars().count() > maximum
+        || value
+            .chars()
+            .any(|character| character.is_control() && !matches!(character, '\n' | '\t'))
+    {
+        return Err(format!(
+            "immutable web broker result {label} exceeds bounds"
+        ));
+    }
+    Ok(value.to_string())
 }
 
 fn parse_brave_results(body: &str, count: usize) -> Vec<Value> {
@@ -332,6 +408,52 @@ fn describe() -> astrid_guest::CapsuleResult {
 }
 
 astrid_guest::export!(HttpCapsule);
+
+#[cfg(test)]
+mod broker_tests {
+    use astrid_guest::serde_json;
+
+    use super::parse_immutable_broker_results;
+
+    #[test]
+    fn immutable_broker_results_are_exact_bounded_and_positioned() {
+        let body = serde_json::json!({
+            "schema": "astrid.edge.web_search.response.v1",
+            "results": [{
+                "title": "Reservoir study",
+                "url": "https://example.com/study",
+                "snippet": "A bounded abstract."
+            }]
+        })
+        .to_string();
+        let results = parse_immutable_broker_results(&body, 5).unwrap();
+        assert_eq!(results[0]["position"], 1);
+        assert_eq!(results[0]["title"], "Reservoir study");
+
+        let mut injected: serde_json::Value = serde_json::from_str(&body).unwrap();
+        injected["results"][0]["headers"] = serde_json::json!({"secret": "value"});
+        assert!(parse_immutable_broker_results(&injected.to_string(), 5).is_err());
+    }
+
+    #[test]
+    fn immutable_broker_results_reject_wrong_schema_count_and_private_shapes() {
+        let wrong = serde_json::json!({
+            "schema": "astrid.edge.web_search.response.future",
+            "results": []
+        });
+        assert!(parse_immutable_broker_results(&wrong.to_string(), 5).is_err());
+
+        let too_many = serde_json::json!({
+            "schema": "astrid.edge.web_search.response.v1",
+            "results": (0..6).map(|index| serde_json::json!({
+                "title": format!("Result {index}"),
+                "url": "https://example.com/",
+                "snippet": "bounded"
+            })).collect::<Vec<_>>()
+        });
+        assert!(parse_immutable_broker_results(&too_many.to_string(), 5).is_err());
+    }
+}
 
 #[cfg(test)]
 mod tests {

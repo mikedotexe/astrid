@@ -14,9 +14,15 @@ from scripts import build_astralis_cpu_edge_capsules as builder
 
 
 class AstralisCpuEdgeCapsuleBuildTests(unittest.TestCase):
+    def test_operator_builder_rejects_python_3_10_before_tomllib_import(self) -> None:
+        with self.assertRaisesRegex(SystemExit, "operator-side builder.*Python 3.11"):
+            builder.require_supported_python((3, 10, 12))
+        builder.require_supported_python((3, 11, 0))
+
     def test_tracked_recipe_and_all_sdk_locks_verify_offline(self) -> None:
         spec, recipes = builder.load_and_verify_spec(builder.DEFAULT_SPEC)
         self.assertEqual(spec["sdk_version"], "0.6.0")
+        self.assertEqual(spec["source_policy"], "reviewed_patch_replay")
         self.assertEqual(
             [recipe.capsule_id for recipe in recipes],
             ["react", "prompt-builder", "openai-compat", "context-engine"],
@@ -33,6 +39,21 @@ class AstralisCpuEdgeCapsuleBuildTests(unittest.TestCase):
             "990e702bbf2cca49191d3d10ed040c50bb9c9dbc",
         )
         self.assertEqual(terminal[0]["expect_after"], react.raw["source_blob_lib_rs"])
+
+    def test_exact_upstream_baseline_recipe_is_fully_pinned(self) -> None:
+        spec, recipes = builder.load_and_verify_spec(builder.DEFAULT_BASELINE_SPEC)
+        self.assertEqual(spec["sdk_version"], "0.7.1")
+        self.assertEqual(spec["source_policy"], "pinned_upstream_patch_replay")
+        self.assertEqual(
+            [recipe.capsule_id for recipe in recipes],
+            ["session", "identity", "router", "registry", "system", "hook-bridge"],
+        )
+        for recipe in recipes:
+            self.assertRegex(recipe.raw["source_blob_cargo_lock"], r"^[0-9a-f]{40}$")
+            self.assertNotIn("lockfile", recipe.raw)
+        registry = next(recipe for recipe in recipes if recipe.capsule_id == "registry")
+        self.assertEqual(len(registry.raw["steps"]), 1)
+        self.assertEqual(registry.raw["steps"][0]["kind"], "patch")
 
     def test_recipe_rejects_tampered_patch_before_clone_or_build(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
@@ -89,6 +110,44 @@ class AstralisCpuEdgeCapsuleBuildTests(unittest.TestCase):
                     self.assertEqual(member.gid, 0)
                     self.assertEqual(member.mode, 0o644)
                     self.assertFalse(member.issym())
+
+    def test_external_source_snapshot_is_bounded_and_rejects_links(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            source = root / "source"
+            for relative, body in {
+                "Cargo.toml": "[package]\nname='fixture'\n",
+                "Cargo.lock": "version = 4\n",
+                "Capsule.toml": "[package]\nname='fixture'\n",
+                "src/lib.rs": "const NOTE: &str = include_str!(\"note.md\");\n",
+                "src/note.md": "bounded resource\n",
+                "README.md": "not a build input\n",
+            }.items():
+                path = source / relative
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text(body, encoding="utf-8")
+            destination = root / "export" / "fixture"
+            inventory = builder.export_source_snapshot(source, destination, "fixture")
+            self.assertEqual(
+                {record["path"] for record in inventory},
+                {
+                    "fixture/Cargo.toml",
+                    "fixture/Cargo.lock",
+                    "fixture/Capsule.toml",
+                    "fixture/src/lib.rs",
+                    "fixture/src/note.md",
+                },
+            )
+            self.assertFalse((destination / "README.md").exists())
+
+            linked_source = root / "linked-source"
+            shutil.copytree(source, linked_source)
+            (linked_source / "src/note.md").unlink()
+            (linked_source / "src/note.md").symlink_to(linked_source / "src/lib.rs")
+            with self.assertRaisesRegex(builder.BuildError, "linked/special"):
+                builder.export_source_snapshot(
+                    linked_source, root / "linked-export", "fixture"
+                )
 
     def test_unknown_capsule_selection_fails_closed(self) -> None:
         _, recipes = builder.load_and_verify_spec(builder.DEFAULT_SPEC)

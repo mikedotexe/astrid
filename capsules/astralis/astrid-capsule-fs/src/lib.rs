@@ -53,7 +53,7 @@ fn read_file(args: &Value) -> Result<String, String> {
         .lines()
         .enumerate()
         .filter_map(|(idx, line)| {
-            let line_no = idx as u64 + 1;
+            let line_no = (idx as u64).saturating_add(1);
             let within_start = line_no >= start;
             let within_end = end.is_none_or(|max| line_no <= max);
             (within_start && within_end).then(|| format!("{line_no}: {line}"))
@@ -152,7 +152,7 @@ fn grep_path(path: &str, pattern: &str, max_results: usize, results: &mut Vec<St
             };
             for (idx, line) in content.lines().enumerate() {
                 if line.contains(pattern) {
-                    results.push(format!("{}:{}: {}", path, idx + 1, line));
+                    results.push(format!("{}:{}: {}", path, idx.saturating_add(1), line));
                     if results.len() >= max_results {
                         return;
                     }
