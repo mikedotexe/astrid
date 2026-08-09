@@ -14,6 +14,8 @@ const HOME_ROOT: &str = "home://edge";
 /// invocation caller. This check is therefore enforced at execution time, not
 /// merely by omitting the tools from model-facing description schemas.
 const EDGE_EXECUTOR_SOURCE_ID: &str = "a57d1d30-0000-4000-8000-000000000001";
+const NATIVE_SOCKET_PRODUCER_KIND: &str = "native_socket_client";
+const NATIVE_SOCKET_PRODUCER_PREFIX: &str = "native_socket_bridge:";
 const MAX_BASENAMES: usize = 50;
 const MAX_READ_CHARS: usize = 8_000;
 const MAX_QUERY_CHARS: usize = 160;
@@ -102,16 +104,27 @@ fn advertised_tool(action: &str) -> Option<(&'static str, ToolHandler)> {
 }
 
 fn require_edge_executor_caller() -> Result<(), String> {
-    let caller = sys::get_caller()
+    let caller = sys::get_attested_caller()
         .map_err(|_| "introspection caller context unavailable; invocation denied".to_string())?;
-    authorize_caller_source(&caller.source_id)
+    authorize_caller_context(
+        &caller.source_id,
+        caller.producer_kind.as_deref(),
+        caller.producer_id.as_deref(),
+    )
 }
 
-fn authorize_caller_source(source_id: &str) -> Result<(), String> {
-    if source_id == EDGE_EXECUTOR_SOURCE_ID {
+fn authorize_caller_context(
+    source_id: &str,
+    producer_kind: Option<&str>,
+    producer_id: Option<&str>,
+) -> Result<(), String> {
+    if source_id == EDGE_EXECUTOR_SOURCE_ID
+        && producer_kind == Some(NATIVE_SOCKET_PRODUCER_KIND)
+        && producer_id.is_some_and(|value| value.starts_with(NATIVE_SOCKET_PRODUCER_PREFIX))
+    {
         Ok(())
     } else {
-        Err("introspection invocation requires the native edge executor".to_string())
+        Err("introspection invocation requires the host-attested native edge executor".to_string())
     }
 }
 
@@ -357,14 +370,19 @@ fn read_owned_continuity(args: &Value) -> Result<String, String> {
 
 fn safe_entries(kind: &str, directory: &str) -> Result<Vec<String>, String> {
     let path = format!("{HOME_ROOT}/{directory}");
-    let mut entries = fs::readdir(&path)?;
-    entries.retain(|entry| {
-        validate_basename(entry).is_ok()
-            && kind_allows_basename(kind, entry)
-            && is_bounded_regular_file(&format!("{path}/{entry}"), MAX_FILE_BYTES_CONSIDERED)
-                .unwrap_or(false)
-    });
-    Ok(entries)
+    let maximum = u64::try_from(MAX_FILE_BYTES_CONSIDERED)
+        .map_err(|_| "artifact byte bound cannot be represented".to_string())?;
+    let entries = fs::list_bounded_regular_files_nofollow(&path, maximum)?;
+    Ok(entries
+        .into_iter()
+        .filter(|entry| {
+            validate_basename(&entry.basename).is_ok()
+                && kind_allows_basename(kind, &entry.basename)
+                && validate_regular_single_link(&entry.stat).is_ok()
+                && validate_file_size(entry.stat.size, MAX_FILE_BYTES_CONSIDERED).is_ok()
+        })
+        .map(|entry| entry.basename)
+        .collect())
 }
 
 fn kind_allows_basename(kind: &str, basename: &str) -> bool {
@@ -419,10 +437,6 @@ fn validate_file_size(size: u64, maximum_bytes: usize) -> Result<(), String> {
         ));
     }
     Ok(())
-}
-
-fn is_bounded_regular_file(path: &str, maximum_bytes: usize) -> Result<bool, String> {
-    ensure_bounded_regular_file(path, maximum_bytes).map(|()| true)
 }
 
 fn owned_directory(kind: &str) -> Result<&'static str, String> {
@@ -825,7 +839,7 @@ astrid_guest::export!(EdgeIntrospectorCapsule with_types_in astrid_guest::bindin
 mod tests {
     use super::{
         EDGE_EXECUTOR_SOURCE_ID, MAX_EXCERPT_CHARS, MAX_SCALAR_CHARS, advertised_tool,
-        authorize_caller_source, best_question_line, bounded_limit, complete_jsonl_tail,
+        authorize_caller_context, best_question_line, bounded_limit, complete_jsonl_tail,
         is_recovery_record, kind_allows_basename, literal_excerpt, normalized_words,
         question_terms, require_exact_argument_keys, sanitize_evidence, sanitize_thread,
         selected_kinds, valid_action_evidence, valid_web_evidence, validate_basename,
@@ -1109,10 +1123,24 @@ mod tests {
             assert!(manifest.contains(expected), "missing route: {expected}");
         }
 
-        // The CPU-edge prompt builder treats an empty allowlist as deny-all,
-        // not as discovery of every installed tool. This capsule also has no
-        // describe route, so neither empty nor explicitly broadened prompt
-        // profiles can discover its private schemas.
+        // Prompt selection is deny-all when empty, but privacy does not depend
+        // on that configuration: every executor route is also private and
+        // bound to the kernel-attested native edge source at dispatch time.
+        assert_eq!(manifest.matches("exposure = \"private\"").count(), 5);
+        assert_eq!(
+            manifest
+                .matches("caller_producer_kind = \"native_socket_client\"")
+                .count(),
+            5
+        );
+        assert_eq!(
+            manifest.matches(EDGE_EXECUTOR_SOURCE_ID).count(),
+            5,
+            "every private route must retain the exact executor source binding"
+        );
+
+        // The CPU-edge prompt builder still treats an empty allowlist as
+        // deny-all rather than discovery of every installed tool.
         let allowlist_patch =
             include_str!("../../../../packaging/headless/astralis-sdk-0.6-tool-allowlist.patch");
         assert!(allowlist_patch.contains("Empty means no discovered tools"));
@@ -1133,17 +1161,40 @@ mod tests {
 
     #[test]
     fn authorization_accepts_only_the_exact_native_edge_executor() {
-        assert!(authorize_caller_source(EDGE_EXECUTOR_SOURCE_ID).is_ok());
+        assert!(
+            authorize_caller_context(
+                EDGE_EXECUTOR_SOURCE_ID,
+                Some("native_socket_client"),
+                Some("native_socket_bridge:29a70cb3-23cb-460d-8666-6feee4ccca86"),
+            )
+            .is_ok()
+        );
         for rejected in [
-            "",
-            "a57d1d30-0000-4000-8000-000000000000",
-            "A57D1D30-0000-4000-8000-000000000001",
-            "a57d1d30-0000-4000-8000-000000000001 ",
-            "astrid-capsule-react",
+            (
+                "",
+                Some("native_socket_client"),
+                Some("native_socket_bridge:x"),
+            ),
+            (
+                "a57d1d30-0000-4000-8000-000000000000",
+                Some("native_socket_client"),
+                Some("native_socket_bridge:x"),
+            ),
+            (
+                EDGE_EXECUTOR_SOURCE_ID,
+                Some("wasm_capsule"),
+                Some("astrid-capsule-react"),
+            ),
+            (
+                EDGE_EXECUTOR_SOURCE_ID,
+                Some("native_socket_client"),
+                Some("forged-bridge:x"),
+            ),
+            (EDGE_EXECUTOR_SOURCE_ID, None, None),
         ] {
             assert!(
-                authorize_caller_source(rejected).is_err(),
-                "accepted {rejected}"
+                authorize_caller_context(rejected.0, rejected.1, rejected.2).is_err(),
+                "accepted {rejected:?}"
             );
         }
     }

@@ -75,19 +75,34 @@ ipc_subscribe = [
 [[interceptor]]
 event = "tool.v1.execute.list_owned_artifacts"
 action = "tool_execute_list_owned_artifacts"
+exposure = "private"
+caller_producer_kind = "native_socket_client"
+caller_source_ids = ["a57d1d30-0000-4000-8000-000000000001"]
 
 [[interceptor]]
 event = "tool.v1.execute.read_owned_artifact"
 action = "tool_execute_read_owned_artifact"
+exposure = "private"
+caller_producer_kind = "native_socket_client"
+caller_source_ids = ["a57d1d30-0000-4000-8000-000000000001"]
 
 [[interceptor]]
 event = "tool.v1.execute.search_owned_text"
 action = "tool_execute_search_owned_text"
+exposure = "private"
+caller_producer_kind = "native_socket_client"
+caller_source_ids = ["a57d1d30-0000-4000-8000-000000000001"]
 
 [[interceptor]]
 event = "tool.v1.execute.inspect_owned_question"
 action = "tool_execute_inspect_owned_question"
+exposure = "private"
+caller_producer_kind = "native_socket_client"
+caller_source_ids = ["a57d1d30-0000-4000-8000-000000000001"]
 
 [[interceptor]]
 event = "tool.v1.execute.read_owned_continuity"
 action = "tool_execute_read_owned_continuity"
+exposure = "private"
+caller_producer_kind = "native_socket_client"
+caller_source_ids = ["a57d1d30-0000-4000-8000-000000000001"]

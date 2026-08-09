@@ -476,6 +476,33 @@ pub struct InterceptorDef {
     /// react loop at 100).
     #[serde(default = "default_interceptor_priority")]
     pub priority: u32,
+    /// Whether this interceptor is part of the ordinary model-facing tool
+    /// surface or a private executor-only route.
+    ///
+    /// Private interceptors are never eligible for tool-description fan-out,
+    /// reject WASM/model callers at the kernel dispatcher, and may further
+    /// constrain the exact kernel-attested producer and source below.
+    #[serde(default)]
+    pub exposure: InterceptorExposure,
+    /// Exact kernel-attested producer kind required to invoke this route.
+    #[serde(default)]
+    pub caller_producer_kind: Option<String>,
+    /// Exact IPC source UUID strings admitted for this route. Empty retains
+    /// backward-compatible source behavior for model-exposed interceptors, but
+    /// a private route still rejects absent and WASM/model callers.
+    #[serde(default)]
+    pub caller_source_ids: Vec<String>,
+}
+
+/// Model/tool exposure policy for one interceptor.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum InterceptorExposure {
+    /// Ordinary backwards-compatible interceptor behavior.
+    #[default]
+    Model,
+    /// Private executor-only route, hidden and non-model-invocable at the host.
+    Private,
 }
 
 /// Default interceptor priority.

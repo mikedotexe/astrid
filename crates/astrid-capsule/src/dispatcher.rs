@@ -222,7 +222,8 @@ impl EventDispatcher {
                 }
             }
 
-            let matches = find_matching_interceptors(&self.registry, &topic).await;
+            let matches =
+                find_matching_interceptors(&self.registry, &topic, ipc_message.as_deref()).await;
             dispatch_to_capsule_queues(
                 &mut capsule_queues,
                 matches,
@@ -526,6 +527,7 @@ fn exact_local_provider_failure_message(
 async fn find_matching_interceptors(
     registry: &RwLock<CapsuleRegistry>,
     topic: &str,
+    caller: Option<&astrid_events::ipc::IpcMessage>,
 ) -> Vec<(Arc<dyn crate::capsule::Capsule>, String)> {
     let registry = registry.read().await;
     let mut matches: Vec<(Arc<dyn crate::capsule::Capsule>, String, u32)> = Vec::new();
@@ -535,7 +537,9 @@ async fn find_matching_interceptors(
                 continue;
             }
             for interceptor in &capsule.manifest().interceptors {
-                if crate::topic::topic_matches(topic, &interceptor.event) {
+                if crate::topic::topic_matches(topic, &interceptor.event)
+                    && interceptor_accepts_caller(interceptor, topic, caller)
+                {
                     matches.push((
                         Arc::clone(&capsule),
                         interceptor.action.clone(),
@@ -551,6 +555,49 @@ async fn find_matching_interceptors(
         .into_iter()
         .map(|(capsule, action, _)| (capsule, action))
         .collect()
+}
+
+/// Enforce model visibility and exact caller provenance before an interceptor
+/// reaches guest code. Prompt configuration can narrow model-visible schemas,
+/// but it cannot widen this host authorization boundary.
+pub(crate) fn interceptor_accepts_caller(
+    interceptor: &crate::manifest::InterceptorDef,
+    topic: &str,
+    caller: Option<&astrid_events::ipc::IpcMessage>,
+) -> bool {
+    use crate::manifest::InterceptorExposure;
+
+    if interceptor.exposure == InterceptorExposure::Private && topic == "tool.v1.request.describe" {
+        return false;
+    }
+    let producer = caller
+        .and_then(|message| message.producer.as_ref())
+        .filter(|producer| producer.is_supported());
+    if interceptor.exposure == InterceptorExposure::Private {
+        let Some(producer) = producer else {
+            return false;
+        };
+        if producer.kind == "wasm_capsule" {
+            return false;
+        }
+    }
+    if let Some(expected) = interceptor.caller_producer_kind.as_deref()
+        && producer.map(|producer| producer.kind.as_str()) != Some(expected)
+    {
+        return false;
+    }
+    if !interceptor.caller_source_ids.is_empty()
+        && !caller.is_some_and(|message| {
+            let source_id = message.source_id.to_string();
+            interceptor
+                .caller_source_ids
+                .iter()
+                .any(|expected| expected == &source_id)
+        })
+    {
+        return false;
+    }
+    true
 }
 
 #[cfg(test)]
@@ -631,6 +678,9 @@ mod tests {
                     event: interceptor_event.to_string(),
                     action: "test_action".to_string(),
                     priority,
+                    exposure: crate::manifest::InterceptorExposure::Model,
+                    caller_producer_kind: None,
+                    caller_source_ids: Vec::new(),
                 }],
                 topics: Vec::new(),
             };
@@ -770,6 +820,89 @@ mod tests {
         let producer = message.producer.as_ref().unwrap();
         assert_eq!(producer.kind, DISPATCHER_PRODUCER_KIND);
         assert_eq!(producer.id, DISPATCHER_PRODUCER_ID);
+    }
+
+    #[test]
+    fn private_tool_interceptor_is_hidden_and_requires_exact_host_attested_native_caller() {
+        let source_id = uuid::Uuid::parse_str("a57d1d30-0000-4000-8000-000000000001").unwrap();
+        let interceptor = InterceptorDef {
+            event: "tool.v1.execute.inspect_owned_question".to_string(),
+            action: "tool_execute_inspect_owned_question".to_string(),
+            priority: 100,
+            exposure: crate::manifest::InterceptorExposure::Private,
+            caller_producer_kind: Some("native_socket_client".to_string()),
+            caller_source_ids: vec![source_id.to_string()],
+        };
+        let exact = astrid_events::ipc::IpcMessage::new(
+            interceptor.event.clone(),
+            IpcPayload::Custom {
+                data: serde_json::json!({}),
+            },
+            source_id,
+        )
+        .with_producer(astrid_events::ipc::IpcProducerV1::new(
+            "native_socket_client",
+            "native_socket_bridge:connection",
+        ));
+        assert!(interceptor_accepts_caller(
+            &interceptor,
+            &interceptor.event,
+            Some(&exact)
+        ));
+        assert!(!interceptor_accepts_caller(
+            &interceptor,
+            "tool.v1.request.describe",
+            Some(&exact)
+        ));
+        assert!(!interceptor_accepts_caller(
+            &interceptor,
+            &interceptor.event,
+            None
+        ));
+
+        let mut model = exact.clone();
+        model.producer = Some(astrid_events::ipc::IpcProducerV1::new(
+            "wasm_capsule",
+            "astrid-capsule-react",
+        ));
+        assert!(!interceptor_accepts_caller(
+            &interceptor,
+            &interceptor.event,
+            Some(&model)
+        ));
+
+        let mut wrong_source = exact.clone();
+        wrong_source.source_id = uuid::Uuid::new_v4();
+        assert!(!interceptor_accepts_caller(
+            &interceptor,
+            &interceptor.event,
+            Some(&wrong_source)
+        ));
+
+        let mut unsupported = exact.clone();
+        unsupported.producer.as_mut().unwrap().schema_version = 2;
+        assert!(!interceptor_accepts_caller(
+            &interceptor,
+            &interceptor.event,
+            Some(&unsupported)
+        ));
+    }
+
+    #[test]
+    fn model_exposed_interceptor_retains_backward_compatible_dispatch() {
+        let interceptor = InterceptorDef {
+            event: "ordinary.event".to_string(),
+            action: "ordinary_action".to_string(),
+            priority: 100,
+            exposure: crate::manifest::InterceptorExposure::Model,
+            caller_producer_kind: None,
+            caller_source_ids: Vec::new(),
+        };
+        assert!(interceptor_accepts_caller(
+            &interceptor,
+            &interceptor.event,
+            None
+        ));
     }
 
     #[test]
@@ -1205,7 +1338,7 @@ mod tests {
         registry.register(Box::new(mid)).unwrap();
         let registry = Arc::new(RwLock::new(registry));
 
-        let matches = find_matching_interceptors(&registry, "test.event").await;
+        let matches = find_matching_interceptors(&registry, "test.event", None).await;
         let names: Vec<&str> = matches.iter().map(|(c, _)| c.id().as_str()).collect();
         assert_eq!(
             names,

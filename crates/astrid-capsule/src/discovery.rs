@@ -9,7 +9,7 @@ use std::path::{Component, Path, PathBuf};
 use tracing::{debug, info, warn};
 
 use crate::error::{CapsuleError, CapsuleResult};
-use crate::manifest::{CapsuleManifest, InterceptorDef, TopicDirection};
+use crate::manifest::{CapsuleManifest, InterceptorDef, InterceptorExposure, TopicDirection};
 
 #[derive(Debug, Default, serde::Deserialize)]
 struct DeclarativeRoutes {
@@ -293,6 +293,58 @@ pub fn load_manifest(path: &Path) -> CapsuleResult<CapsuleManifest> {
         }
     }
 
+    // Private tool routes are a host authorization surface, not merely a
+    // prompt-hiding hint. Require an exact producer class and at least one
+    // non-nil UUID source so an omitted configuration can only fail closed.
+    for interceptor in &manifest.interceptors {
+        if interceptor.exposure != InterceptorExposure::Private {
+            continue;
+        }
+        if !interceptor.event.starts_with("tool.v1.") {
+            return Err(CapsuleError::ManifestParseError {
+                path: path.to_path_buf(),
+                message: format!(
+                    "private interceptor '{}' must be a tool.v1 route",
+                    interceptor.event
+                ),
+            });
+        }
+        if interceptor
+            .caller_producer_kind
+            .as_deref()
+            .map(str::trim)
+            .is_none_or(str::is_empty)
+            || interceptor.caller_source_ids.is_empty()
+        {
+            return Err(CapsuleError::ManifestParseError {
+                path: path.to_path_buf(),
+                message: format!(
+                    "private interceptor '{}' requires an exact producer kind and source UUID",
+                    interceptor.event
+                ),
+            });
+        }
+        for source_id in &interceptor.caller_source_ids {
+            let parsed =
+                uuid::Uuid::parse_str(source_id).map_err(|_| CapsuleError::ManifestParseError {
+                    path: path.to_path_buf(),
+                    message: format!(
+                        "private interceptor '{}' has an invalid source UUID",
+                        interceptor.event
+                    ),
+                })?;
+            if parsed.is_nil() {
+                return Err(CapsuleError::ManifestParseError {
+                    path: path.to_path_buf(),
+                    message: format!(
+                        "private interceptor '{}' may not admit the nil source UUID",
+                        interceptor.event
+                    ),
+                });
+            }
+        }
+    }
+
     // Validate [imports] and [exports] namespace/name format.
     // Semver parsing is already handled by the custom Deserialize impls.
     for (namespace, ifaces) in &manifest.imports {
@@ -446,6 +498,9 @@ fn merge_declarative_routes(
                 event: topic,
                 action: handler,
                 priority: 100,
+                exposure: crate::manifest::InterceptorExposure::Model,
+                caller_producer_kind: None,
+                caller_source_ids: Vec::new(),
             });
         }
     }
@@ -514,6 +569,44 @@ version = "0.1.0"
             "{VALID_HEADER}\n[[interceptor]]\nevent = \"user.prompt\"\naction = \"handle\""
         );
         assert!(load_from_toml(&toml).is_ok());
+    }
+
+    #[test]
+    fn private_tool_interceptor_requires_exact_nonempty_caller_policy() {
+        let valid = format!(
+            "{VALID_HEADER}\n\
+             [[interceptor]]\n\
+             event = \"tool.v1.execute.inspect_owned_question\"\n\
+             action = \"inspect\"\n\
+             exposure = \"private\"\n\
+             caller_producer_kind = \"native_socket_client\"\n\
+             caller_source_ids = [\"a57d1d30-0000-4000-8000-000000000001\"]"
+        );
+        let manifest = load_from_toml(&valid).unwrap();
+        assert_eq!(
+            manifest.interceptors[0].exposure,
+            InterceptorExposure::Private
+        );
+
+        for invalid_fields in [
+            "",
+            "caller_producer_kind = \"native_socket_client\"",
+            "caller_source_ids = [\"a57d1d30-0000-4000-8000-000000000001\"]",
+            "caller_producer_kind = \"native_socket_client\"\ncaller_source_ids = [\"not-a-uuid\"]",
+            "caller_producer_kind = \"native_socket_client\"\ncaller_source_ids = [\"00000000-0000-0000-0000-000000000000\"]",
+        ] {
+            let invalid = format!(
+                "{VALID_HEADER}\n\
+                 [[interceptor]]\n\
+                 event = \"tool.v1.execute.inspect_owned_question\"\n\
+                 action = \"inspect\"\n\
+                 exposure = \"private\"\n{invalid_fields}"
+            );
+            assert!(
+                load_from_toml(&invalid).is_err(),
+                "accepted {invalid_fields:?}"
+            );
+        }
     }
 
     #[test]

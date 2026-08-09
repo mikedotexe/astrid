@@ -9,7 +9,8 @@ use cap_std::fs::{Dir, Metadata, OpenOptions};
 
 use crate::engine::wasm::bindings::astrid::capsule::fs;
 use crate::engine::wasm::bindings::astrid::capsule::types::{
-    BoundedFileRead, BoundedFileReadMode, FileEntryKind, FileStat, NoFollowFileStat,
+    BoundedFileRead, BoundedFileReadMode, BoundedRegularFileEntry, FileEntryKind, FileStat,
+    NoFollowFileStat,
 };
 use crate::engine::wasm::host::util;
 use crate::engine::wasm::host_state::HostState;
@@ -25,6 +26,9 @@ const TMP_PREFIX: &str = "/tmp/";
 
 /// Immutable host ceiling for either a whole-file or tail no-follow read.
 const MAX_NOFOLLOW_READ_BYTES: u64 = 64 * 1024;
+
+/// Immutable scan ceiling for one no-follow directory listing.
+const MAX_NOFOLLOW_DIRECTORY_ENTRIES: usize = 256;
 
 /// Strip any leading absolute slashes or prefixes (e.g. C:\) from the requested path
 fn make_relative(requested: &str) -> &Path {
@@ -252,6 +256,13 @@ struct NoFollowEntry {
     metadata: Metadata,
 }
 
+/// An exact directory opened through capability handles without following any
+/// symbolic-link component.
+struct NoFollowDirectory {
+    dir: Dir,
+    physical: PathBuf,
+}
+
 fn no_follow_root_and_relative(
     state: &HostState,
     raw_path: &str,
@@ -334,6 +345,44 @@ fn resolve_no_follow_entry_at(root: &Path, relative: &Path) -> Result<NoFollowEn
         physical: root.join(relative),
         basename,
         metadata,
+    })
+}
+
+fn resolve_no_follow_directory(
+    state: &HostState,
+    raw_path: &str,
+) -> Result<NoFollowDirectory, String> {
+    let (root, relative) = no_follow_root_and_relative(state, raw_path)?;
+    resolve_no_follow_directory_at(&root, &relative)
+}
+
+fn resolve_no_follow_directory_at(
+    root: &Path,
+    relative: &Path,
+) -> Result<NoFollowDirectory, String> {
+    if relative.as_os_str().is_empty()
+        || relative.is_absolute()
+        || relative
+            .components()
+            .any(|component| !matches!(component, Component::Normal(_)))
+    {
+        return Err(
+            "no-follow directory paths must contain only relative normal components".to_string(),
+        );
+    }
+    let mut dir = Dir::open_ambient_dir(root, ambient_authority())
+        .map_err(|error| format!("cannot open no-follow capability root: {error}"))?;
+    for component in relative.components() {
+        let Component::Normal(name) = component else {
+            return Err("no-follow directory path contains a non-normal component".to_string());
+        };
+        dir = dir.open_dir_nofollow(name).map_err(|_| {
+            "no-follow directory has a symlink or non-directory component".to_string()
+        })?;
+    }
+    Ok(NoFollowDirectory {
+        dir,
+        physical: root.join(relative),
     })
 }
 
@@ -474,6 +523,55 @@ fn read_bounded_no_follow_entry(
         captured_size,
         starts_at_line_boundary,
     })
+}
+
+fn list_bounded_regular_files_no_follow(
+    directory: NoFollowDirectory,
+    maximum_bytes: u64,
+) -> Result<Vec<BoundedRegularFileEntry>, String> {
+    if maximum_bytes == 0 || maximum_bytes > MAX_NOFOLLOW_READ_BYTES {
+        return Err(format!(
+            "bounded no-follow listing must request 1-{MAX_NOFOLLOW_READ_BYTES} bytes"
+        ));
+    }
+    let entries = directory
+        .dir
+        .entries()
+        .map_err(|error| format!("cannot enumerate no-follow directory: {error}"))?;
+    let mut scanned = 0_usize;
+    let mut accepted = Vec::new();
+    for entry in entries {
+        scanned = scanned.saturating_add(1);
+        if scanned > MAX_NOFOLLOW_DIRECTORY_ENTRIES {
+            return Err(format!(
+                "no-follow directory exceeds the {MAX_NOFOLLOW_DIRECTORY_ENTRIES}-entry scan limit"
+            ));
+        }
+        let entry = entry.map_err(|error| format!("cannot inspect directory entry: {error}"))?;
+        let basename = entry
+            .file_name()
+            .into_string()
+            .map_err(|_| "no-follow directory contains a non-UTF-8 basename".to_string())?;
+        if basename.is_empty() || basename == "." || basename == ".." {
+            return Err("no-follow directory returned an invalid basename".to_string());
+        }
+        let metadata = directory
+            .dir
+            .symlink_metadata(&basename)
+            .map_err(|error| format!("cannot inspect no-follow directory entry: {error}"))?;
+        if metadata.is_file()
+            && !metadata.file_type().is_symlink()
+            && metadata.nlink() == 1
+            && metadata.len() <= maximum_bytes
+        {
+            accepted.push(BoundedRegularFileEntry {
+                basename,
+                stat: no_follow_stat(&metadata),
+            });
+        }
+    }
+    accepted.sort_by(|left, right| left.basename.cmp(&right.basename));
+    Ok(accepted)
 }
 
 impl fs::Host for HostState {
@@ -632,6 +730,28 @@ impl fs::Host for HostState {
         Ok(no_follow_stat(&entry.metadata))
     }
 
+    fn fs_list_bounded_regular_files_nofollow(
+        &mut self,
+        path: String,
+        maximum_bytes: u64,
+    ) -> Result<Vec<BoundedRegularFileEntry>, String> {
+        let directory = resolve_no_follow_directory(self, &path)?;
+        if let Some(gate) = self.security.clone() {
+            let physical = directory.physical.to_string_lossy().to_string();
+            let capsule_id = self.capsule_id.as_str().to_owned();
+            let check =
+                util::bounded_block_on(&self.runtime_handle, &self.host_semaphore, async move {
+                    gate.check_file_read(&capsule_id, &physical).await
+                });
+            if let Err(reason) = check {
+                return Err(format!(
+                    "security denied bounded no-follow listing: {reason}"
+                ));
+            }
+        }
+        list_bounded_regular_files_no_follow(directory, maximum_bytes)
+    }
+
     fn fs_read_bounded_nofollow(
         &mut self,
         path: String,
@@ -783,8 +903,9 @@ mod tests {
     use cap_fs_ext::MetadataExt as _;
 
     use super::{
-        BoundedFileReadMode, FileEntryKind, MAX_NOFOLLOW_READ_BYTES, read_bounded_no_follow_entry,
-        resolve_no_follow_entry_at,
+        BoundedFileReadMode, FileEntryKind, MAX_NOFOLLOW_DIRECTORY_ENTRIES,
+        MAX_NOFOLLOW_READ_BYTES, list_bounded_regular_files_no_follow,
+        read_bounded_no_follow_entry, resolve_no_follow_directory_at, resolve_no_follow_entry_at,
     };
 
     #[test]
@@ -873,6 +994,71 @@ mod tests {
             resolve_no_follow_entry_at(root.path(), Path::new("owned/hardlink.txt")).unwrap();
         assert!(hardlink.metadata.nlink() > 1);
         assert!(read_bounded_no_follow_entry(hardlink, 64, BoundedFileReadMode::Whole).is_err());
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn bounded_no_follow_listing_omits_every_unauthorized_entry_kind() {
+        use nix::sys::stat::Mode;
+        use nix::unistd::mkfifo;
+
+        let root = tempfile::tempdir().unwrap();
+        let owned = root.path().join("owned");
+        std::fs::create_dir(&owned).unwrap();
+        std::fs::write(owned.join("accepted.txt"), b"accepted").unwrap();
+        std::fs::write(owned.join("oversized.txt"), vec![b'x'; 65]).unwrap();
+        std::fs::write(owned.join("linked.txt"), b"linked").unwrap();
+        std::fs::hard_link(owned.join("linked.txt"), owned.join("hardlink.txt")).unwrap();
+        std::fs::create_dir(owned.join("nested")).unwrap();
+        std::os::unix::fs::symlink("accepted.txt", owned.join("symlink.txt")).unwrap();
+        mkfifo(&owned.join("pipe"), Mode::S_IRUSR | Mode::S_IWUSR).unwrap();
+        let _listener = std::os::unix::net::UnixListener::bind(owned.join("socket")).unwrap();
+
+        let listed = list_bounded_regular_files_no_follow(
+            resolve_no_follow_directory_at(root.path(), Path::new("owned")).unwrap(),
+            64,
+        )
+        .unwrap();
+        assert_eq!(listed.len(), 1);
+        assert_eq!(listed[0].basename, "accepted.txt");
+        assert_eq!(listed[0].stat.kind, FileEntryKind::RegularFile);
+        assert_eq!(listed[0].stat.hard_link_count, 1);
+        assert_eq!(listed[0].stat.size, 8);
+
+        std::os::unix::fs::symlink("owned", root.path().join("owned-link")).unwrap();
+        assert!(
+            resolve_no_follow_directory_at(root.path(), Path::new("owned-link")).is_err(),
+            "a symlinked allowlisted directory must fail closed"
+        );
+    }
+
+    #[test]
+    fn bounded_no_follow_listing_rejects_unbounded_scans_and_byte_limits() {
+        let root = tempfile::tempdir().unwrap();
+        let owned = root.path().join("owned");
+        std::fs::create_dir(&owned).unwrap();
+        for index in 0..=MAX_NOFOLLOW_DIRECTORY_ENTRIES {
+            std::fs::write(owned.join(format!("entry-{index:03}.txt")), b"x").unwrap();
+        }
+        assert!(
+            list_bounded_regular_files_no_follow(
+                resolve_no_follow_directory_at(root.path(), Path::new("owned")).unwrap(),
+                64,
+            )
+            .is_err()
+        );
+
+        let small = tempfile::tempdir().unwrap();
+        std::fs::create_dir(small.path().join("owned")).unwrap();
+        for invalid in [0, MAX_NOFOLLOW_READ_BYTES.saturating_add(1)] {
+            assert!(
+                list_bounded_regular_files_no_follow(
+                    resolve_no_follow_directory_at(small.path(), Path::new("owned")).unwrap(),
+                    invalid,
+                )
+                .is_err()
+            );
+        }
     }
 
     #[cfg(unix)]

@@ -85,7 +85,7 @@ pub mod capsule_result {
 pub mod fs {
     use crate::bindings::astrid::capsule::fs as host_fs;
     use crate::bindings::astrid::capsule::types::{
-        BoundedFileRead, BoundedFileReadMode, NoFollowFileStat,
+        BoundedFileRead, BoundedFileReadMode, BoundedRegularFileEntry, NoFollowFileStat,
     };
 
     /// Read a UTF-8-ish text file, replacing invalid bytes lossily.
@@ -131,6 +131,16 @@ pub mod fs {
     /// opened file identity across the read.
     pub fn lstat_nofollow(path: &str) -> Result<NoFollowFileStat, String> {
         host_fs::fs_lstat_nofollow(path)
+    }
+
+    /// List only regular, single-link files within an exact no-follow
+    /// directory. The host enforces its own entry and byte ceilings and omits
+    /// symlinks, directories, special files, hard links, and oversized files.
+    pub fn list_bounded_regular_files_nofollow(
+        path: &str,
+        maximum_bytes: u64,
+    ) -> Result<Vec<BoundedRegularFileEntry>, String> {
+        host_fs::fs_list_bounded_regular_files_nofollow(path, maximum_bytes)
     }
 
     /// Read an entire stable regular file under both the guest and host bounds.
@@ -238,7 +248,7 @@ pub mod process {
 /// System helpers.
 pub mod sys {
     use crate::bindings::astrid::capsule::sys as host_sys;
-    use crate::bindings::astrid::capsule::types::{CallerContext, LogLevel};
+    use crate::bindings::astrid::capsule::types::{AttestedCallerContext, CallerContext, LogLevel};
 
     /// Read a manifest/config value.
     pub fn get_config(key: &str) -> Result<String, String> {
@@ -252,6 +262,13 @@ pub mod sys {
     /// `source_id` against an exact allowlisted identity and fail closed.
     pub fn get_caller() -> Result<CallerContext, String> {
         host_sys::get_caller()
+    }
+
+    /// Return the kernel-carried caller and its supported producer
+    /// attestation. Private authority checks should use this additive surface
+    /// rather than trusting the message-carried source UUID alone.
+    pub fn get_attested_caller() -> Result<AttestedCallerContext, String> {
+        host_sys::get_attested_caller()
     }
 
     /// Emit an info log.

@@ -5,7 +5,7 @@
 /// This file defines the canonical Component Model contract between the Astrid
 /// host runtime and WASM capsule guests.
 ///
-/// The host exposes 51 functions across 11 domain-specific interfaces. All
+/// The host exposes 53 functions across 11 domain-specific interfaces. All
 /// operations are capability-gated and audited by the Astrid runtime. Capsules
 /// never bypass the security model — the host enforces workspace boundaries,
 /// budget limits, capability tokens, and per-principal scoping on every call.
@@ -152,6 +152,15 @@ interface types {
         hard-link-count: u64,
     }
 
+    /// One regular, single-link entry returned by a bounded no-follow
+    /// directory listing.
+    record bounded-regular-file-entry {
+        /// UTF-8 basename relative to the exact opened directory.
+        basename: string,
+        /// Stable metadata captured without following the entry.
+        stat: no-follow-file-stat,
+    }
+
     /// Which bounded, no-follow portion of a regular file to read.
     enum bounded-file-read-mode {
         /// Read the entire file, failing if it exceeds `maximum-bytes`.
@@ -226,6 +235,23 @@ interface types {
         principal: option<string>,
         /// UUID of the capsule that originated the IPC message.
         source-id: string,
+        /// ISO 8601 timestamp of the originating message.
+        timestamp: string,
+    }
+
+    /// Caller context including kernel-owned producer attestation.
+    ///
+    /// This is a separate additive record so capsules compiled against the
+    /// original `caller-context` function remain link-compatible.
+    record attested-caller-context {
+        /// The acting principal for this invocation.
+        principal: option<string>,
+        /// UUID carried by the originating IPC message.
+        source-id: string,
+        /// Kernel-attested producer class, when present and supported.
+        producer-kind: option<string>,
+        /// Kernel-attested producer identity, when present and supported.
+        producer-id: option<string>,
         /// ISO 8601 timestamp of the originating message.
         timestamp: string,
     }
@@ -394,7 +420,7 @@ interface types {
 /// access per-principal temporary storage. Attempts to escape any boundary
 /// return an error. Symlink traversal is canonicalized to prevent bypass.
 interface fs {
-    use types.{bounded-file-read, bounded-file-read-mode, file-stat, no-follow-file-stat};
+    use types.{bounded-file-read, bounded-file-read-mode, bounded-regular-file-entry, file-stat, no-follow-file-stat};
 
     /// Check whether a file or directory exists at the given path.
     ///
@@ -425,6 +451,20 @@ interface fs {
     /// entry may be reported as `symlink`, but its target is never inspected.
     /// Security-gated: requires file-read capability.
     fs-lstat-nofollow: func(path: string) -> result<no-follow-file-stat, string>;
+
+    /// List bounded regular files from an exact directory without following
+    /// any symbolic-link component.
+    ///
+    /// The host opens every directory component with no-follow semantics,
+    /// scans no more than its immutable entry ceiling, and returns only
+    /// non-symlink regular files with one hard link and size at or below
+    /// `maximum-bytes`. Symlinks, directories, devices, sockets, FIFOs, and
+    /// hard-linked files are omitted at the authorization boundary.
+    /// Security-gated: requires file-read capability.
+    fs-list-bounded-regular-files-nofollow: func(
+        path: string,
+        maximum-bytes: u64,
+    ) -> result<list<bounded-regular-file-entry>, string>;
 
     /// Read a stable, bounded regular file without following symbolic links.
     ///
@@ -642,7 +682,7 @@ interface http {
 
 /// System-level runtime functions.
 interface sys {
-    use types.{log-level, caller-context, capability-check-request, capability-check-response};
+    use types.{log-level, caller-context, attested-caller-context, capability-check-request, capability-check-response};
 
     /// Read a configuration value from the capsule's manifest `[config]`.
     ///
@@ -655,6 +695,11 @@ interface sys {
     /// Returns the acting principal, originating capsule UUID, and message
     /// timestamp. Returns an empty context if no caller is available.
     get-caller: func() -> result<caller-context, string>;
+
+    /// Return the caller plus kernel-owned producer attestation. Unsupported
+    /// or absent producer claims are represented as `none`, never forwarded
+    /// as authority.
+    get-attested-caller: func() -> result<attested-caller-context, string>;
 
     /// Trigger a hook/interceptor fan-out to other capsules.
     ///
@@ -806,7 +851,7 @@ interface identity {
 world capsule {
     use types.{capsule-result};
 
-    // Host-provided imports (51 functions across 11 interfaces).
+    // Host-provided imports (53 functions across 11 interfaces).
     import fs;
     import ipc;
     import uplink;
