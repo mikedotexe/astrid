@@ -532,13 +532,101 @@ expect_failure 'type/size mismatch' python3 "$SOURCE_VERIFIER" "$fixture_root" "
 fixture_root=$(make_source_fixture source-extra-directory source/Cargo.toml mutable_build_manifest extra-dir)
 expect_failure 'directory membership mismatch' python3 "$SOURCE_VERIFIER" "$fixture_root" "$TEMP/input/source.key"
 
+# Audit only the builder's declarative policy constants.  The appliance Python
+# 3.10 test must never import, compile, or invoke Python 3.11-only builder code.
 python3 - "$REPO_ROOT/scripts/build_edge_self_change_source_bundle.py" "$SOURCE_VERIFIER" <<'PY'
-import runpy
+import ast
 import sys
 from pathlib import Path
 
-bundler = runpy.run_path(sys.argv[1])
-verifier_source = Path(sys.argv[2]).read_text().split(
+builder_path = Path(sys.argv[1])
+builder_tree = ast.parse(builder_path.read_text(encoding="utf-8"), filename=str(builder_path))
+policy_names = {
+    "QUICKJS_KERNEL_LICENSE_PATH",
+    "LOCAL_EDGE_CAPSULES",
+    "EXTERNAL_EDGE_CAPSULES",
+    "EDGE_CAPSULES",
+    "MUTABLE_UNIT_FRAGMENTS",
+    "MUTABLE_CORE_CRATES",
+    "BUILD_FILE_SUFFIXES",
+    "PRIVATE_COMPONENTS",
+    "INSPECT_ONLY_SERVICE_PREFIXES",
+    "INSPECT_ONLY_SCRIPT_NAMES",
+    "MUTABLE_LIVE_REPORTS",
+    "BUILD_REQUIRED_REPORT_TESTS",
+}
+
+
+class UnsupportedPolicyExpression(ValueError):
+    pass
+
+
+def policy_value(node, values):
+    if isinstance(node, ast.Constant):
+        return node.value
+    if isinstance(node, (ast.Tuple, ast.Set)):
+        constructor = {ast.Tuple: tuple, ast.Set: set}[type(node)]
+        return constructor(policy_value(item, values) for item in node.elts)
+    if isinstance(node, ast.BinOp) and isinstance(node.op, ast.Add):
+        left = policy_value(node.left, values)
+        right = policy_value(node.right, values)
+        if not isinstance(left, tuple) or not isinstance(right, tuple):
+            raise UnsupportedPolicyExpression("policy addition is not tuple concatenation")
+        return left + right
+    if isinstance(node, ast.Name) and node.id in values:
+        return values[node.id]
+    if (
+        isinstance(node, ast.Call)
+        and isinstance(node.func, ast.Name)
+        and node.func.id == "frozenset"
+        and len(node.args) == 1
+        and not node.keywords
+    ):
+        return frozenset(policy_value(node.args[0], values))
+    raise UnsupportedPolicyExpression(ast.dump(node, include_attributes=False))
+
+
+bundler = {}
+for node in builder_tree.body:
+    if not isinstance(node, ast.Assign) or len(node.targets) != 1:
+        continue
+    target = node.targets[0]
+    if not isinstance(target, ast.Name) or target.id not in policy_names:
+        continue
+    if target.id in bundler:
+        raise SystemExit(f"installer policy audit found duplicate builder constant: {target.id}")
+    try:
+        bundler[target.id] = policy_value(node.value, bundler)
+    except UnsupportedPolicyExpression as error:
+        raise SystemExit(
+            f"installer policy audit cannot decode builder constant {target.id}: {error}"
+        ) from error
+
+missing_policy = sorted(policy_names.difference(bundler))
+if missing_policy:
+    raise SystemExit(f"installer policy audit lacks builder constants: {missing_policy}")
+
+expected_types = {
+    "QUICKJS_KERNEL_LICENSE_PATH": str,
+    "LOCAL_EDGE_CAPSULES": tuple,
+    "EXTERNAL_EDGE_CAPSULES": tuple,
+    "EDGE_CAPSULES": tuple,
+    "INSPECT_ONLY_SERVICE_PREFIXES": tuple,
+}
+expected_types.update(
+    {
+        name: frozenset
+        for name in policy_names.difference(expected_types)
+    }
+)
+for name, expected_type in expected_types.items():
+    if type(bundler[name]) is not expected_type:
+        raise SystemExit(
+            f"installer policy audit decoded unexpected type for {name}: "
+            f"{type(bundler[name]).__name__}"
+        )
+
+verifier_source = Path(sys.argv[2]).read_text(encoding="utf-8").split(
     "root, key_path = map(Path, sys.argv[1:])", 1
 )[0]
 verifier = {}
@@ -554,56 +642,6 @@ for name in (
 ):
     if set(bundler[name]) != set(verifier[name]):
         raise SystemExit(f"installer source policy constant drifted from bundler: {name}")
-
-paths = {
-    "Cargo.toml",
-    ".cargo/config.toml",
-    "crates/astrid-core/src/lib.rs",
-    "services/astrid-edge-runtime/src/lib.rs",
-    "capsules/astralis/astrid-capsule-edge-spectral/src/lib.rs",
-    "scripts/report_edge_activity.py",
-    "packaging/appliances/avado.env",
-    "packaging/systemd/astrid-edge-runtime.service",
-    "packaging/systemd/icp/astrid-edge-runtime.service",
-    "docs/cpu-edge-self-evolution.md",
-}
-for prefix in bundler["INSPECT_ONLY_SERVICE_PREFIXES"]:
-    paths.update({f"{prefix}Cargo.toml", f"{prefix}src/lib.rs", f"{prefix}README.md"})
-paths.update(
-    {
-        "crates/astrid-capsule/src/cpu_edge_policy.rs",
-        "crates/astrid-capsule/src/engine/wasm/host/process.rs",
-        "crates/astrid-capsule/src/loader.rs",
-    }
-)
-for name in bundler["INSPECT_ONLY_SCRIPT_NAMES"]:
-    paths.add(f"scripts/{name}")
-for suffix in (".service", ".in", ".conf", ".key"):
-    paths.add(f"packaging/systemd/root/reviewed{suffix}")
-for name in (
-    "astrid-edge-builder-store",
-    "astrid-edge-self-evolution-control",
-    "migrate-edge-user-services-to-system",
-):
-    paths.add(f"packaging/systemd/root/{name}")
-for marker in (
-    "self-change",
-    "edge-steward",
-    "edge-web-broker",
-    "edge-checkpoint",
-    "builder-store",
-    "generation-guard",
-    "core-liveness",
-):
-    for suffix in (".service", ".timer", ".socket", ".conf", ".env", ".in", ".md"):
-        paths.add(f"packaging/systemd/astrid-edge-{marker}{suffix}")
-for path in paths:
-    expected = bundler["source_role"](path)
-    actual = verifier["expected_source_origin"](path)
-    if actual != expected:
-        raise SystemExit(
-            f"installer source role drifted from bundler for {path}: {actual!r} != {expected!r}"
-        )
 PY
 
 bash -n "$INSTALLER"

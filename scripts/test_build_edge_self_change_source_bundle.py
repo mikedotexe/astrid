@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import ast
 import gzip
 import importlib.util
 import io
@@ -53,6 +54,106 @@ class SourceBundleTests(unittest.TestCase):
     def test_signed_source_and_supervisor_share_exact_twenty_capsule_surface(self) -> None:
         self.assertEqual(set(bundle.EDGE_CAPSULES), set(supervisor_model.EDGE_CAPSULES))
         self.assertEqual(len(bundle.EDGE_CAPSULES), 20)
+
+    def test_installer_verifier_policy_matches_operator_builder(self) -> None:
+        installer_path = SCRIPT.with_name("install_edge_self_evolution_root.sh")
+        source = installer_path.read_text(encoding="utf-8")
+        begin_marker = "# BEGIN_INSTALL_SOURCE_VERIFIER"
+        entrypoint = "root, key_path = map(Path, sys.argv[1:])"
+        end_marker = "# END_INSTALL_SOURCE_VERIFIER"
+        self.assertEqual(source.count(begin_marker), 1)
+        self.assertEqual(source.count(entrypoint), 1)
+        self.assertEqual(source.count(end_marker), 1)
+        begin = source.index(begin_marker)
+        entry = source.index(entrypoint, begin)
+        end = source.index(end_marker, entry)
+        self.assertLess(begin, entry)
+        self.assertLess(entry, end)
+
+        verifier_source = source[begin:entry]
+        verifier_tree = ast.parse(verifier_source, filename=str(installer_path))
+        allowed_top_level = (ast.Import, ast.ImportFrom, ast.Assign, ast.FunctionDef)
+        unexpected = [
+            type(node).__name__
+            for node in verifier_tree.body
+            if not isinstance(node, allowed_top_level)
+        ]
+        self.assertEqual(unexpected, [])
+        verifier: dict[str, object] = {}
+        exec(compile(verifier_tree, str(installer_path), "exec"), verifier)
+
+        for name in (
+            "PRIVATE_COMPONENTS",
+            "INSPECT_ONLY_SERVICE_PREFIXES",
+            "INSPECT_ONLY_SCRIPT_NAMES",
+            "MUTABLE_CORE_CRATES",
+            "EDGE_CAPSULES",
+            "BUILD_FILE_SUFFIXES",
+            "MUTABLE_UNIT_FRAGMENTS",
+        ):
+            self.assertEqual(
+                set(getattr(bundle, name)),
+                set(verifier[name]),  # type: ignore[arg-type]
+                name,
+            )
+
+        paths = {
+            "Cargo.toml",
+            ".cargo/config.toml",
+            "crates/astrid-core/src/lib.rs",
+            "services/astrid-edge-runtime/src/lib.rs",
+            "capsules/astralis/astrid-capsule-edge-spectral/src/lib.rs",
+            "scripts/report_edge_activity.py",
+            "packaging/appliances/avado.env",
+            "packaging/systemd/astrid-edge-runtime.service",
+            "packaging/systemd/icp/astrid-edge-runtime.service",
+            "docs/cpu-edge-self-evolution.md",
+        }
+        for prefix in bundle.INSPECT_ONLY_SERVICE_PREFIXES:
+            paths.update(
+                {f"{prefix}Cargo.toml", f"{prefix}src/lib.rs", f"{prefix}README.md"}
+            )
+        paths.update(
+            {
+                "crates/astrid-capsule/src/cpu_edge_policy.rs",
+                "crates/astrid-capsule/src/engine/wasm/host/process.rs",
+                "crates/astrid-capsule/src/loader.rs",
+            }
+        )
+        for name in bundle.INSPECT_ONLY_SCRIPT_NAMES:
+            paths.add(f"scripts/{name}")
+        for suffix in (".service", ".in", ".conf", ".key"):
+            paths.add(f"packaging/systemd/root/reviewed{suffix}")
+        for name in (
+            "astrid-edge-builder-store",
+            "astrid-edge-self-evolution-control",
+            "migrate-edge-user-services-to-system",
+        ):
+            paths.add(f"packaging/systemd/root/{name}")
+        for marker in (
+            "self-change",
+            "edge-steward",
+            "edge-web-broker",
+            "edge-checkpoint",
+            "builder-store",
+            "generation-guard",
+            "core-liveness",
+        ):
+            for suffix in (
+                ".service",
+                ".timer",
+                ".socket",
+                ".conf",
+                ".env",
+                ".in",
+                ".md",
+            ):
+                paths.add(f"packaging/systemd/astrid-edge-{marker}{suffix}")
+        expected_source_origin = verifier["expected_source_origin"]
+        self.assertTrue(callable(expected_source_origin))
+        for path in paths:
+            with self.subTest(path=path):
+                self.assertEqual(expected_source_origin(path), bundle.source_role(path))
 
     def test_operator_builder_rejects_python_3_10_before_tomllib_import(self) -> None:
         with self.assertRaisesRegex(SystemExit, "operator-side builder.*Python 3.11"):
