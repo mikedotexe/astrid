@@ -1060,11 +1060,13 @@ assert {path.name for path in root.iterdir()} == {
 }
 assert {path.name for path in (root / "scripts").iterdir()} == {
     "astrid_at_a_glance.py",
+    "astrid_train.py",
     "edge_hindsight.py",
     "report_edge_activity.py",
     "report_edge_appliance.py",
     "report_edge_appliance.sh",
     "report_edge_fleet_activity.py",
+    "retire_edge_origin_mac_affordance.py",
     "warm_ollama_model.sh",
 }
 assert len(tuple((root / "capsules").glob("*.capsule"))) == 20

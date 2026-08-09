@@ -94,6 +94,7 @@ declare -a ARGS=(
     --ollama-origin http://127.0.0.1:11434
     --context-tokens 4096
     --output-tokens 192
+    --reflection-output-tokens 384
     --source-authoring-output-tokens 384
     --connect-timeout-ms 30000
     --header-timeout-ms 300000
@@ -209,7 +210,7 @@ grep -q 'persisted quotas core=8/hour+24/UTC-day runtime=8/hour+24/UTC-day stewa
 grep -q 'immutable provider broker' "$TEMP/valid.out" || fail "immutable provider broker omitted"
 grep -q 'immutable presentation broker' "$TEMP/valid.out" || fail "immutable presentation broker omitted"
 grep -q 'immutable operator reports=/usr/libexec/astrid-edge/operator' "$TEMP/valid.out" || fail "immutable operator report tree omitted"
-grep -q 'exact Python -I launchers run trusted reports before optional bounded presentation' "$TEMP/valid.out" || fail "operator report isolation guarantee omitted"
+grep -q 'sealed train runs directly; other exact Python -I launchers run trusted reports before optional bounded presentation' "$TEMP/valid.out" || fail "operator report isolation guarantee omitted"
 grep -q 'fixed 64 GiB fully allocated ext4 builder store' "$TEMP/valid.out" || fail "persistent bounded builder store omitted"
 grep -q 'independent 32 GiB runtime=.*rollback=.*runtime reserves 20%.*65,536 emergency inodes.*aggregate backing reserve=64 GiB' "$TEMP/valid.out" \
     || fail "independent bounded runtime and rollback stores omitted"
@@ -814,7 +815,7 @@ for required in (
 PY
 grep -q '"maximum_output_tokens":512' "$INSTALLER" || fail "provider global output ceiling is not 512 tokens"
 grep -q '"runtime":.*"maximum_output_tokens":$output_tokens' "$INSTALLER" || fail "runtime provider output ceiling does not bind the appliance profile"
-grep -q '"steward":.*"maximum_output_tokens":512' "$INSTALLER" || fail "scheduled reflection provider output ceiling is not 512 tokens"
+grep -q '"steward":.*"maximum_output_tokens":$reflection_output_tokens' "$INSTALLER" || fail "scheduled reflection provider output ceiling does not bind the rich profile"
 grep -q '"warmup":.*"maximum_output_tokens":2' "$INSTALLER" || fail "warmup provider canary output ceiling is not two tokens"
 grep -q '"$active_generation_root/astrid" --format json status' "$MIGRATOR" || fail "root migrator does not query structured cognition status"
 grep -q 'len(loaded) != 20' "$MIGRATOR" || fail "root migrator does not require exactly twenty loaded capsules"
@@ -822,9 +823,23 @@ grep -q 'astrid-capsule-openai-compat.*astrid-capsule-react' "$MIGRATOR" || fail
 grep -q 'astrid-capsule-prompt-builder.*astrid-capsule-session' "$MIGRATOR" || fail "root migrator omits prompt/session cognition checks"
 grep -q 'core PID changed during cognition graph verification' "$MIGRATOR" || fail "root migrator does not recheck the core PID after cognition validation"
 grep -q 'core restarted during cognition graph verification' "$MIGRATOR" || fail "root migrator does not recheck NRestarts after cognition validation"
-for script in warm_ollama_model.sh report_edge_appliance.py report_edge_appliance.sh report_edge_activity.py report_edge_fleet_activity.py edge_hindsight.py astrid_at_a_glance.py; do
+for script in warm_ollama_model.sh report_edge_appliance.py report_edge_appliance.sh report_edge_activity.py report_edge_fleet_activity.py edge_hindsight.py astrid_at_a_glance.py astrid_train.py retire_edge_origin_mac_affordance.py; do
     grep -q "scripts/$script" "$INSTALLER" || fail "initial generation omits executable $script"
 done
+grep -q 'origin_mac_retirement_root=/var/lib/astrid-edge-origin-mac-retirement' "$INSTALLER" \
+    || fail "AVADO origin-mac correction is not below immutable /var/lib ancestry"
+grep -q 'origin_mac_retirement_root=/media/data/.astrid-edge-origin-mac-retirement' "$INSTALLER" \
+    || fail "ICP origin-mac correction is not directly below the root-controlled SSD mount"
+grep -q -- '--retirement-root "$origin_mac_retirement_root"' "$INSTALLER" \
+    || fail "origin-mac migration lacks its exact root-controlled retirement binding"
+grep -q 'origin_mac_correction_committed=true' "$INSTALLER" \
+    || fail "outer bootstrap does not record the independently durable correction boundary"
+grep -q 'preserving the independently committed origin-mac correction and canonical receipt' "$INSTALLER" \
+    || fail "outer rollback does not state its durable correction behavior"
+grep -q 'origin-mac durable transaction member identity is invalid' "$INSTALLER" \
+    || fail "root bootstrap does not verify the canonical transaction and receipt identities"
+! grep -q 'created_paths+=("$origin_mac_retirement_root")' "$INSTALLER" \
+    || fail "outer rollback can erase an independently committed origin-mac correction"
 grep -q '^PrivateNetwork=yes$' "$REPO_ROOT/packaging/systemd/astrid-edge-steward.service" || fail "steward lacks a private empty network namespace"
 grep -q '^RestrictAddressFamilies=AF_UNIX$' "$REPO_ROOT/packaging/systemd/astrid-edge-steward.service" || fail "steward can open non-Unix sockets"
 ! grep -q '^IPAddressAllow=localhost$' "$REPO_ROOT/packaging/systemd/astrid-edge-steward.service" || fail "steward still advertises direct loopback authority"
@@ -1001,6 +1016,8 @@ grep -q '"edge-checkpoint",' "$INSTALLER" || fail "checkpoint units are absent f
 grep -q 'services/astrid-edge-rescue-helper/' "$INSTALLER" || fail "rescue helper is absent from the inspect-only boundary"
 grep -q 'services/astrid-edge-web-broker/' "$INSTALLER" || fail "web broker is absent from the inspect-only boundary"
 grep -q 'INSPECT_ONLY_ORIGIN = "inspect_only_immutable_boundary"' "$INSTALLER" || fail "immutable source has no distinct inspect-only provenance"
+grep -q '"scripts/astrid_train.py"' "$REPO_ROOT/services/astrid-edge-rescue-helper/src/manifest.rs" \
+    || fail "immutable rescue source verifier omits the sealed inquiry viewer"
 grep -q '"target":"\$target".*"active_generation_link":"\$release_parent/current"' "$INSTALLER" || fail "steward cumulative-source target/link binding is absent"
 if rg -n 'launchctl|/Users/|\.ssh/' "$INSTALLER" "$REPO_ROOT/packaging/systemd/astrid-edge-self-change-supervisor.service" "$REPO_ROOT/packaging/systemd/astrid-edge-steward.service" "$REPO_ROOT/packaging/systemd/root" | grep -v -e 'no helper/supervisor execution.*launchctl' -e 'InaccessiblePaths=.*\.ssh'; then
     fail "Mac or SSH mutation surface present"
@@ -1071,7 +1088,8 @@ grep -q 'install -d -m 0750 -o "$STEWARD_USER" -g "$runtime_group" "$output_root
 grep -q '^UMask=0027$' "$REPO_ROOT/packaging/systemd/astrid-edge-steward.service" || fail "scheduled outputs are not constrained to owner-write/group-read files"
 grep -q 'setfacl -m "d:m::r-x" "$output_root"' "$INSTALLER" || fail "scheduled output defaults can grant group write authority"
 grep -q 'BindPaths=/run/astrid-edge-self-change' "$INSTALLER" || fail "root reflection hooks cannot access the runtime proof boundary"
-grep -q '"\$maintenance_mutex" "\$candidate_root" "\$inbox_root" "\$steward_reflection_root" "\$steward_projection_root" "\$steward_patch_outbox"' "$INSTALLER" || fail "steward namespace omits its exact schedule/mutex or bounded output roots"
+grep -q '"\$maintenance_mutex" "\$candidate_root" "\$inbox_root" "\$inquiry_history_root" "\$steward_reflection_root" "\$steward_projection_root" "\$steward_patch_outbox"' "$INSTALLER" || fail "steward namespace omits its exact schedule/mutex, inquiry history, or bounded output roots"
+grep -q '"inquiry_history_root":"\$inquiry_history_root"' "$INSTALLER" || fail "steward config lacks the dedicated read-only inquiry history root"
 grep -q '^ExecStartPre=+/usr/libexec/astrid/astrid-edge-rescue-helper --config /etc/astrid/edge-rescue-helper.json reflection-prepare$' "$REPO_ROOT/packaging/systemd/astrid-edge-steward.service" || fail "steward lacks root reflection admission preparation"
 grep -q '^ExecStopPost=+/usr/libexec/astrid/astrid-edge-rescue-helper --config /etc/astrid/edge-rescue-helper.json reflection-cleanup$' "$REPO_ROOT/packaging/systemd/astrid-edge-steward.service" || fail "steward lacks invocation-bound reflection cleanup"
 grep -q '^PrivateNetwork=yes$' "$REPO_ROOT/packaging/systemd/astrid-edge-self-change-supervisor.service" || fail "supervisor shadow build lost its isolated network namespace"

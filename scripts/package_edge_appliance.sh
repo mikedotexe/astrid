@@ -323,6 +323,8 @@ for asset in \
     edge_audio_feeder.py \
     edge_hindsight.py \
     astrid_at_a_glance.py \
+    astrid_train.py \
+    retire_edge_origin_mac_affordance.py \
     migrate_edge_safe_fallback_authorship.py \
     migrate_edge_transport_sentinels.py \
     migrate_edge_operator_harness_isolation.py \
@@ -521,7 +523,9 @@ for script in \
     report_edge_activity.py \
     report_edge_fleet_activity.py \
     edge_hindsight.py \
-    astrid_at_a_glance.py; do
+    astrid_at_a_glance.py \
+    astrid_train.py \
+    retire_edge_origin_mac_affordance.py; do
     install -m 0755 "$project_root/scripts/$script" "$generation_root/scripts/"
 done
 cp -R "$project_root/packaging/appliances" "$generation_root/packaging/"

@@ -333,6 +333,7 @@ expected_profiles = {
         "model": "qwen3.5:4b",
         "context_tokens": 4096,
         "output_tokens": 192,
+        "reflection_output_tokens": 384,
         "source_authoring_output_tokens": 384,
         "header_timeout_ms": 300000,
         "total_timeout_ms": 600000,
@@ -346,6 +347,7 @@ expected_profiles = {
         "model": "qwen3:1.7b",
         "context_tokens": 2048,
         "output_tokens": 112,
+        "reflection_output_tokens": 256,
         "source_authoring_output_tokens": 160,
         "header_timeout_ms": 420000,
         "total_timeout_ms": 660000,
@@ -879,6 +881,7 @@ if [[ $appliance == avado ]]; then
     model=qwen3.5:4b
     context_tokens=4096
     output_tokens=192
+    reflection_output_tokens=384
     source_authoring_output_tokens=384
     header_timeout_ms=300000
     total_timeout_ms=600000
@@ -899,6 +902,7 @@ else
     model=qwen3:1.7b
     context_tokens=2048
     output_tokens=112
+    reflection_output_tokens=256
     source_authoring_output_tokens=160
     header_timeout_ms=420000
     total_timeout_ms=660000
@@ -973,6 +977,7 @@ declare -a args=(
     --ollama-origin http://127.0.0.1:11434
     --context-tokens "$context_tokens"
     --output-tokens "$output_tokens"
+    --reflection-output-tokens "$reflection_output_tokens"
     --source-authoring-output-tokens "$source_authoring_output_tokens"
     --connect-timeout-ms 30000
     --header-timeout-ms "$header_timeout_ms"

@@ -110,6 +110,21 @@ class ReleaseWorkflowPolicyTests(unittest.TestCase):
         ):
             self.assertIn(capsule, build)
 
+    def test_cpu_edge_ci_covers_private_inquiry_and_retirement_surfaces(self) -> None:
+        workflow = CPU_EDGE_WORKFLOWS[0].read_text(encoding="utf-8")
+        for test in (
+            "scripts/test_astrid_train.py",
+            "scripts/test_retire_edge_origin_mac_affordance.py",
+        ):
+            with self.subTest(test=test):
+                self.assertIn(test, workflow)
+        for script in (
+            "scripts/astrid_train.py",
+            "scripts/retire_edge_origin_mac_affordance.py",
+        ):
+            with self.subTest(script=script):
+                self.assertIn(script, workflow)
+
 
 if __name__ == "__main__":
     unittest.main()

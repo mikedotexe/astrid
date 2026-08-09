@@ -1359,13 +1359,13 @@ an authored turn, and writes `edge/runtime/model_warmup.json`. An administrator
 must also run `sudo loginctl enable-linger USER`; otherwise SSH login and logout
 start and stop the entire user service graph.
 
-When seeding an appliance with another instance's journals or introspections,
-keep them in a provenance-marked read-only corpus rather than copying them into
-the new instance's identity or native memory. The source-checkout-only example
+Legacy development deployments sometimes seeded an appliance with another
+instance's journals or introspections. The source-checkout-only examples
 `packaging/headless/introspection-memory.md` and
-`packaging/headless/introspection-AGENTS.md` explicitly distinguish inherited
-source material from new local authorship and forbid claims of reservoir state
-when no local telemetry exists.
+`packaging/headless/introspection-AGENTS.md` document that retired experiment;
+they are excluded from CPU-edge appliance archives and must not be installed on
+an independent appliance. Current AVADO and ICP profiles expose only local
+continuity and reject `origin-mac` references at the introspector boundary.
 
 For an independent AVADO with no inherited corpus, install
 `packaging/headless/avado-sovereign-AGENTS.md` and
@@ -1373,21 +1373,10 @@ For an independent AVADO with no inherited corpus, install
 the three previously mirrored Mac excerpts into an operator-only, recoverable
 quarantine outside Astrid's workspace and retained AVADO-authored artifacts.
 
-Generate a bounded, provenance-marked response from selected source notes with:
-
-```bash
-ASTRID_REFLECTION_INSTANCE="AVADO Astrid" \
-ASTRID_REFLECTION_OUTPUT_DIR="$HOME/introspections/avado" \
-scripts/run_headless_reflection.sh \
-  "$HOME/introspections/origin-mac/first.txt" \
-  "$HOME/introspections/origin-mac/second.txt"
-```
-
-The runner attaches `/dev/null` to the CLI so SSH cannot be mistaken for piped
-prompt input, limits each source excerpt, and saves the result with mode `0600`.
-It does not invent reservoir fill. A CPU-only Astrid without a local spectral
-reservoir has no fill-rate measurement; CPU or memory utilization is not a
-substitute for the 65-72% spectral comfort shelf.
+The old reflection runner remains useful only for an explicitly operator-owned,
+provenance-marked offline experiment. Its output is never appliance continuity
+or local reservoir evidence. CPU or memory utilization is not a substitute for
+the 65-72% spectral comfort shelf.
 
 ## Operations
 

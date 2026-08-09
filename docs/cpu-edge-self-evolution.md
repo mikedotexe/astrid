@@ -113,6 +113,50 @@ enter either path.
 Ordinary `SELF_STUDY`, `JOURNAL`, `LISTEN`, `REST`, Actions, and pacing remain
 unchanged. `REST` does not cancel a due dedicated reflection.
 
+### Authored inquiry train
+
+Every complete rich reflection is retained as exact private prose. A response
+creates structured continuity only when its unique final two lines are an
+exact `INQUIRY_STEP` JSON declaration and `SOURCE_REVIEW` declaration. This is
+an authored intellectual record of observation, interpretation, uncertainty,
+decision, evidence references, confidence, and optional belief revision. It is
+not provider-hidden chain-of-thought, and it grants no Action, source-edit,
+build, or deployment authority. Malformed, duplicated, repaired, partial, or
+fallback terminals remain retained prose but produce no step, continuity
+admission, reservoir impulse, or source-review request.
+
+The immutable steward signs and hash-chains steps in 4 MiB segments beneath
+`/var/lib/astrid-edge-inquiry-history` on AVADO and
+`/media/data/astrid-edge-inquiry-history` on ICP. The mutable runtime has
+group-read access to the signed projection only; it cannot append, replace, or
+truncate history. One signed bounded `inquiry-current.json` projection enters
+runtime continuity. Thread state v7 keeps one active and twelve parked
+open/paused threads, append-only belief revisions, typed pending evidence, and
+the last admitted step/hash. Legacy v5/v6 inquiry state remains archived as
+`legacy_unscoped_archived`; migration does not invent current beliefs.
+
+Consequential evidence may schedule a coalesced integration after five quiet
+minutes, no more than once per hour or twelve times per UTC day. Integrations
+have no web or code authority. Completion consumes only evidence whose exact ID
+appears in the signed step; uncited evidence remains pending, and duplicate or
+foreign IDs fail closed. Regular reflections may request a separately clean
+source-review context, but that context receives only root-verified
+source/build/generation facts and a status-only candidate projection. Candidate
+identifiers, digests, and rejection-derived hashes are excluded. Reports label
+its candidate linkage `separate_clean_source_review`; they never say the rich
+reflection authored a patch.
+
+Reservoir admission uses a private `SemanticEnvelopeV1` and a signed admission
+identity. The runtime persists `queued` before delivery and accepts only an
+exact reservoir acknowledgment binding admission ID, generation, sequence,
+and vector hash. Each queued and terminal lifecycle is also preserved in a
+bounded, owner-only append ledger. Restart reconciliation may backfill a
+missing ledger row from already-durable state, but current state cannot invent
+a historical acknowledgment; interruption remains `delivery_unknown` when the
+exact terminal binding is absent. Response text is never used as the
+deduplication key and the public spectral WebSocket exposes only source-class
+counts.
+
 The migrated root runtime explicitly sets the retired in-process scheduler to
 `false` and the dedicated steward to `true` at a 120-minute cadence. The
 sanitized self-profile reports both facts independently, so a disabled legacy
@@ -481,11 +525,15 @@ diff bodies, model prompts, fetched pages, or build logs:
 
 ```bash
 ~/astrid-at-a-glance
+~/astrid-train --window-minutes 1440 --limit 100
+~/astrid-train --thread-id THREAD_ID --format json
+~/astrid-train --step-id STEP_ID --full
 /usr/libexec/astrid-edge/operator/report-edge-activity --kind scheduled_introspection --kind self_change
 ```
 
 Bootstrap seals `astrid-at-a-glance`, `report-edge-appliance`, and
-`report-edge-activity` beneath `/usr/libexec/astrid-edge/operator`. Their
+`report-edge-activity`, plus the `astrid-train` signed-ledger verifier, beneath
+`/usr/libexec/astrid-edge/operator`. Their
 root-owned manifest is checked on every invocation, launchers use exact
 `/usr/bin/python3 -I -E -s` with a fixed `/usr/bin:/bin` command path, and
 at-a-glance calls only those exact launchers. The familiar home commands are
@@ -507,6 +555,42 @@ continuity summary and an at-most 800-character excerpt of the exact reflection.
 They read that text only after the reflection path, sidecar, trace, provenance,
 and response hash all verify; transport recovery and fallback text cannot appear
 there. These private fields are never placed on the reservoir WebSocket.
+
+`astrid-train` verifies every Ed25519 signature, exact segment order, mechanical
+hash predecessor, model-declared semantic parent, head/tail identity, and
+reflection hash before rendering a structured step. Its default text, JSON,
+and JSONL modes never include exact reflection prose; owner-requested `--full`
+opens the signed reflection through bounded no-follow checks. Text mode emits
+the complete prose as one reversible `exact_prose_json` value rather than a
+preview; JSON and JSONL retain the exact string field. The verifier
+deliberately remains one dependency-free sealed script despite
+its size: its complete parser, cryptographic verifier, joins, and renderers are
+covered by one manifest-bound byte identity, with no mutable import surface.
+If the private mechanical chain is temporarily unreadable but exact per-reflection
+attestations still verify, the viewer says
+`degraded_individually_attested_no_full_chain_claim`. It never infers a causal
+join from timestamp proximity. Every protected attestation and JSONL record is
+parsed strictly; a malformed record, torn tail, unsafe link, or path replacement
+produces `invalid_protected_history`, the exact offending path and reason, a
+nonzero viewer result, and no authored event claim. Durable v7 thread rows are
+executor projections rather than independent proof: a belief or transition is
+labeled Astrid-authored only after an exact signed inquiry-step join or an exact
+unrepaired Action-v5 receipt join. Fleet viewers require activity report v4 and
+label a missing sealed viewer or schema mismatch
+`pre-bootstrap/untrusted-report-surface`.
+
+Appliance reports are v17, activity reports are v4, Action receipts are v5,
+scheduled-introspection receipts are v2, and the owner-only hindsight SQLite
+projection is schema v6. Hindsight normalizes inquiry steps, evidence arrivals,
+belief revisions, thread transitions, semantic ACKs, and fail-closed
+train-integrity events while leaving signed history authoritative.
+
+AVADO bootstrap also records a root-owned, hash-bound retirement receipt for
+only the exact known legacy prompt/context files that advertised
+`introspections/origin-mac`. Historical authored turns and journals are not
+rewritten, the quarantined corpus remains untouched and inaccessible, and the
+introspector rejects `origin-mac` at its boundary. Report v17 and
+`astrid-at-a-glance` show the receipt scope and both “history modified” flags.
 
 The immutable supervisor's sanitized operator projection also reports whether
 an activation or rollback service restart is presently expected and the exact
@@ -550,6 +634,15 @@ unqualified size exemption:
   source-snapshot/path validation, and bounded web relevance/extraction beside
   the invariants they enforce. Prompt rendering has already moved out of the
   runner; transaction orchestration remains the next split seam.
+- edge-runtime `autonomy.rs` remains the established continuity/action
+  coordinator; the v7 migration and exact evidence joins stay there for this
+  release so one validator owns legacy-to-current state. Its next split should
+  move pure v7 migration and projection code behind the existing `inquiry`
+  module without duplicating persistence decisions.
+- edge-runtime `scheduled_admission.rs` keeps signature verification,
+  continuity admission, queued semantic delivery, and exact acknowledgment in
+  one crash-consistent transaction boundary. Its next safe seam is pure wire
+  decoding and validation; admission ordering must remain centralized.
 
 The next decomposition pass should extract pure parsers and deterministic
 renderers first, leaving orchestration and one authoritative validator in each

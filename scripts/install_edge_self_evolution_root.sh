@@ -97,7 +97,7 @@ readonly OPERATOR_STATUS=/var/lib/astrid-edge-operator/operator-status.json
 dry_run=false
 start_system_services=false
 appliance_id= target= runtime_user= runtime_home= runtime_workspace= model_ipc=
-model= ollama_origin= context_tokens= output_tokens= source_authoring_output_tokens=
+model= ollama_origin= context_tokens= output_tokens= reflection_output_tokens= source_authoring_output_tokens=
 connect_timeout_ms= header_timeout_ms= total_timeout_ms=
 model_lock= autonomy_state= action_receipts=
 thermal_celsius= maximum_thermal_celsius=
@@ -127,7 +127,8 @@ Identity/runtime:
   --runtime-workspace ABS --model-ipc ABS
   --steward-owned KIND=ABS (repeat exactly five canonical bindings)
   --model ID --ollama-origin http://127.0.0.1:PORT
-  --context-tokens N --output-tokens N --source-authoring-output-tokens N
+  --context-tokens N --output-tokens N --reflection-output-tokens N
+  --source-authoring-output-tokens N
   --connect-timeout-ms N
   --header-timeout-ms N --total-timeout-ms N
   --model-lock ABS --autonomy-state ABS --action-receipts ABS
@@ -194,6 +195,7 @@ while (($#)); do
         --ollama-origin) need_value "$@"; ollama_origin=$2; shift 2 ;;
         --context-tokens) need_value "$@"; context_tokens=$2; shift 2 ;;
         --output-tokens) need_value "$@"; output_tokens=$2; shift 2 ;;
+        --reflection-output-tokens) need_value "$@"; reflection_output_tokens=$2; shift 2 ;;
         --source-authoring-output-tokens) need_value "$@"; source_authoring_output_tokens=$2; shift 2 ;;
         --connect-timeout-ms) need_value "$@"; connect_timeout_ms=$2; shift 2 ;;
         --header-timeout-ms) need_value "$@"; header_timeout_ms=$2; shift 2 ;;
@@ -274,7 +276,7 @@ safe_absolute() {
     [[ $path == /* && $path != / && $path != *$'\n'* && $path != *$'\r'* && $path != *' '* ]] || return 1
     [[ $path != *'/../'* && $path != */.. && $path != *'/./'* && $path != */. && $path != *'//' ]] || return 1
     [[ $path =~ ^/[A-Za-z0-9._/@:+,=-]+(/[A-Za-z0-9._@:+,=-]+)*$ ]] || return 1
-    if $dry_run && [[ $(uname -s) != Linux ]] && [[ $path == /etc/* || $path == /usr/* || $path == /var/lib/astrid-edge-volumes* ]]; then
+    if $dry_run && [[ $(uname -s) != Linux ]] && [[ $path == /etc/* || $path == /usr/* || $path == /var/lib/astrid-edge-volumes* || $path == /var/lib/astrid-edge-origin-mac-retirement ]]; then
         return 0
     fi
     if realpath -m -- / >/dev/null 2>&1; then
@@ -301,6 +303,26 @@ sha_file() { sha256sum -- "$1" | awk '{print $1}'; }
 
 operator_report_launcher() {
     local body=$1 view client_format default_window default_limit
+    if [[ $body == astrid_train.py ]]; then
+        cat <<EOF
+#!/bin/sh
+PATH=/usr/bin:/bin
+export PATH
+umask 077
+unset PYTHONHOME PYTHONPATH PYTHONSTARTUP
+/usr/bin/sha256sum --check --strict --status $OPERATOR_REPORT_MANIFEST || exit 126
+for argument in "\$@"; do
+    case "\$argument" in
+        --workspace|--workspace=*)
+            echo 'error: the sealed appliance workspace cannot be overridden' >&2
+            exit 64 ;;
+    esac
+done
+exec /usr/bin/python3 -I -E -s $OPERATOR_REPORT_ROOT/astrid_train.py \
+    --workspace '$runtime_workspace' "\$@"
+EOF
+        return
+    fi
     case "$body" in
         astrid_at_a_glance.py)
             view=at-a-glance; client_format=text; default_window=180; default_limit=12 ;;
@@ -427,10 +449,11 @@ EOF
 
 operator_report_manifest() {
     local body launcher body_hash launcher_hash
-    for body in astrid_at_a_glance.py report_edge_appliance.py report_edge_activity.py; do
+    for body in astrid_at_a_glance.py astrid_train.py report_edge_appliance.py report_edge_activity.py; do
         body_hash=$(sha_file "$operator_report_source_root/$body")
         case "$body" in
             astrid_at_a_glance.py) launcher=astrid-at-a-glance ;;
+            astrid_train.py) launcher=astrid-train ;;
             report_edge_appliance.py) launcher=report-edge-appliance ;;
             report_edge_activity.py) launcher=report-edge-activity ;;
         esac
@@ -623,7 +646,7 @@ unit_source() {
 contains() { local needle=$1 item; shift; for item in "$@"; do [[ $item == "$needle" ]] && return 0; done; return 1; }
 
 for variable in appliance_id target runtime_user runtime_home runtime_workspace model_ipc model ollama_origin \
-    context_tokens output_tokens source_authoring_output_tokens connect_timeout_ms header_timeout_ms total_timeout_ms model_lock \
+    context_tokens output_tokens reflection_output_tokens source_authoring_output_tokens connect_timeout_ms header_timeout_ms total_timeout_ms model_lock \
     autonomy_state action_receipts thermal_celsius maximum_thermal_celsius \
     helper helper_sha256 helper_install_path supervisor supervisor_sha256 supervisor_install_path \
     rescue_helper rescue_helper_sha256 rescue_helper_install_path checkpoint checkpoint_sha256 checkpoint_install_path \
@@ -643,10 +666,12 @@ $start_system_services || die "--start-system-services is required to avoid leav
 [[ $target == x86_64-unknown-linux-gnu || $target == aarch64-unknown-linux-gnu ]] || die "unsupported target"
 [[ $model =~ ^[A-Za-z0-9][A-Za-z0-9._/@:+-]{0,127}$ ]] || die "invalid model"
 [[ $ollama_origin =~ ^http://127\.0\.0\.1:[0-9]{1,5}$ ]] || die "Ollama must be exact IPv4 loopback HTTP"
-for value in "$context_tokens" "$output_tokens" "$source_authoring_output_tokens" "$connect_timeout_ms" "$header_timeout_ms" "$total_timeout_ms" "$maximum_thermal_celsius"; do unsigned_integer "$value" || die "numeric bound is malformed"; done
+for value in "$context_tokens" "$output_tokens" "$reflection_output_tokens" "$source_authoring_output_tokens" "$connect_timeout_ms" "$header_timeout_ms" "$total_timeout_ms" "$maximum_thermal_celsius"; do unsigned_integer "$value" || die "numeric bound is malformed"; done
 ((context_tokens >= 1024 && context_tokens <= 8192)) || die "context token bound invalid"
 ((output_tokens >= 64 && output_tokens <= 512)) || die "output token bound invalid"
+((reflection_output_tokens >= 64 && reflection_output_tokens <= 512)) || die "rich-reflection output token bound invalid"
 ((source_authoring_output_tokens >= 64 && source_authoring_output_tokens <= 512)) || die "source-authoring output token bound invalid"
+((reflection_output_tokens >= source_authoring_output_tokens)) || die "rich-reflection ceiling must cover the clean-source ceiling"
 ((connect_timeout_ms >= 100 && connect_timeout_ms <= 30000)) || die "connect timeout invalid"
 ((header_timeout_ms >= 1000 && header_timeout_ms <= 600000)) || die "header timeout invalid"
 ((total_timeout_ms > header_timeout_ms && total_timeout_ms <= 660000)) || die "total timeout invalid"
@@ -694,12 +719,30 @@ maintenance_mutex=$state_root/maintenance.lock
 unit_policy=$state_root/unit-policy.json
 unit_transactions=$state_snapshots/unit-transactions
 introspection_evidence_root=$state_root/introspection-evidence
+inquiry_history_root=${state_root%/*}/astrid-edge-inquiry-history
 build_evidence_root=$introspection_evidence_root/build-evidence
 generation_diffs_root=$introspection_evidence_root/generation-diffs
 safe_absolute "$system_unit_alias" || die "private system-unit alias path is unsafe"
+safe_absolute "$inquiry_history_root" || die "private inquiry-history path is unsafe"
+[[ $inquiry_history_root != "$state_root" && $inquiry_history_root != "$candidate_root" ]] \
+    || die "inquiry history must be a dedicated sibling root"
 [[ $system_unit_alias == "$updater_root/system-units" ]] || die "private system-unit alias escaped updater root"
 [[ $runtime_workspace == */home/default/edge ]] || die "runtime workspace must end in home/default/edge"
 astrid_state_root=${runtime_workspace%/home/default/edge}
+origin_mac_workspace_root=$(readlink -f -- "${runtime_workspace%/edge}") \
+    || die "cannot resolve exact origin-mac migration workspace"
+if [[ $appliance_id == icp* ]]; then
+    # Directly below the root-owned SSD mount: never below the appliance
+    # user's writable /media/data/astrid tree.
+    origin_mac_retirement_root=/media/data/.astrid-edge-origin-mac-retirement
+else
+    # AVADO's workspace and /var/lib share the root filesystem.  Keep the
+    # correction outside every user-owned home ancestor.
+    origin_mac_retirement_root=/var/lib/astrid-edge-origin-mac-retirement
+fi
+safe_absolute "$origin_mac_retirement_root" || die "origin-mac retirement root is unsafe"
+[[ $origin_mac_retirement_root != "$origin_mac_workspace_root" && $origin_mac_retirement_root != "$origin_mac_workspace_root"/* ]] \
+    || die "origin-mac retirement root must remain outside the accessible workspace"
 maintenance_edge_acknowledgement=$runtime_workspace/runtime/maintenance-edge-ack.json
 maintenance_core_acknowledgement=$astrid_state_root/run/maintenance-core-ack.json
 sensor_state=$runtime_workspace/runtime/spectral_state.json
@@ -889,7 +932,7 @@ validate_input_file "$state_store_bounded_dropin_template" "$state_store_bounded
 [[ -x $state_store_helper && $(LC_ALL=C head -c2 "$state_store_helper") == '#!' ]] || die "state-store helper must be an executable script"
 operator_report_source_root=$(readlink -f -- "$unit_source_root/../../scripts") || die "cannot resolve immutable operator report sources"
 safe_absolute "$operator_report_source_root" || die "immutable operator report source root is not exact"
-for operator_body in astrid_at_a_glance.py report_edge_appliance.py report_edge_activity.py; do
+for operator_body in astrid_at_a_glance.py astrid_train.py report_edge_appliance.py report_edge_activity.py; do
     operator_body_path=$operator_report_source_root/$operator_body
     validate_input_file "$operator_body_path" "$(sha_file "$operator_body_path")" "immutable operator report body"
 done
@@ -965,6 +1008,10 @@ for ((left=0; left<${#disjoint_roots[@]}; left++)); do
         path_within "${disjoint_roots[$left]}" "${disjoint_roots[$right]}" && die "destination roots overlap"
         path_within "${disjoint_roots[$right]}" "${disjoint_roots[$left]}" && die "destination roots overlap"
     done
+done
+for path in "${disjoint_roots[@]}"; do
+    { path_within "$path" "$origin_mac_retirement_root" || path_within "$origin_mac_retirement_root" "$path"; } \
+        && die "origin-mac retirement root overlaps a mutable self-evolution root"
 done
 
 if [[ $appliance_id == icp* ]]; then
@@ -1118,7 +1165,7 @@ if $dry_run; then
     printf 'DRY-RUN: immutable web broker sha256=%s -> %s; isolated core/runtime/steward AF_UNIX sockets enforce peer identity; persisted quotas core=8/hour+24/UTC-day runtime=8/hour+24/UTC-day steward=2/hour+12/UTC-day max=2/trace\n' "$web_broker_sha256" "$web_broker_install_path"
     printf 'DRY-RUN: immutable provider broker sha256=%s -> %s; isolated runtime/steward/warmup AF_UNIX sockets enforce peer identity\n' "$provider_broker_sha256" "$provider_broker_install_path"
     printf 'DRY-RUN: immutable presentation broker sha256=%s -> %s; candidate output is untrusted decoration only\n' "$presentation_broker_sha256" "$presentation_broker_install_path"
-    printf 'DRY-RUN: immutable operator reports=%s manifest-sha256=%s; exact Python -I launchers run trusted reports before optional bounded presentation\n' "$OPERATOR_REPORT_ROOT" "$operator_report_manifest_sha256"
+    printf 'DRY-RUN: immutable operator reports=%s manifest-sha256=%s; sealed train runs directly; other exact Python -I launchers run trusted reports before optional bounded presentation\n' "$OPERATOR_REPORT_ROOT" "$operator_report_manifest_sha256"
     printf 'DRY-RUN: fixed 64 GiB fully allocated ext4 builder store=%s image=%s; 8 GiB internal and 64 GiB backing reserves\n' "$builder_root" "$builder_image"
     printf 'DRY-RUN: independent 32 GiB runtime=%s and rollback=%s ext4 images; runtime reserves 20%% for root recovery plus 65,536 emergency inodes; aggregate backing reserve=64 GiB\n' "$runtime_state_image" "$rollback_state_image"
     printf 'DRY-RUN: source/toolchain/generation bundle hashes verified; secure regular-only extraction planned\n'
@@ -1231,6 +1278,7 @@ acl_snapshot=$stage/original.acl
 acl_changed=false
 committed=false
 authority_activation_in_progress=false
+origin_mac_correction_committed=false
 authority_bootstrap_dropin=/run/systemd/system/astrid-edge-runtime.service.d/99-self-change-bootstrap-authority.conf
 
 rollback_transaction() {
@@ -1263,6 +1311,9 @@ rollback_transaction() {
     fi
     if ! $committed; then
         set +e
+        if ${origin_mac_correction_committed:-false}; then
+            printf 'warning: preserving the independently committed origin-mac correction and canonical receipt: %s\n' "$origin_mac_retirement_root" >&2
+        fi
         bounded_state_live=false
         system_unit_alias_live=false
         [[ -n ${runtime_state_mount:-} ]] && findmnt -rn -M "$runtime_state_mount" >/dev/null 2>&1 && bounded_state_live=true
@@ -1719,14 +1770,15 @@ required = {
     "scripts/warm_ollama_model.sh", "scripts/report_edge_appliance.py",
     "scripts/report_edge_appliance.sh", "scripts/report_edge_activity.py",
     "scripts/report_edge_fleet_activity.py", "scripts/edge_hindsight.py",
-    "scripts/astrid_at_a_glance.py",
+    "scripts/astrid_at_a_glance.py", "scripts/astrid_train.py",
+    "scripts/retire_edge_origin_mac_affordance.py",
 }
 if not required <= actual:
     raise SystemExit("initial-generation required runtime payload is incomplete")
 expected_scripts = {
     "warm_ollama_model.sh", "report_edge_appliance.py", "report_edge_appliance.sh",
     "report_edge_activity.py", "report_edge_fleet_activity.py", "edge_hindsight.py",
-    "astrid_at_a_glance.py",
+    "astrid_at_a_glance.py", "astrid_train.py", "retire_edge_origin_mac_affordance.py",
 }
 if {path.name for path in (root / "scripts").iterdir()} != expected_scripts:
     raise SystemExit("initial-generation runtime script membership is not exact")
@@ -2036,6 +2088,7 @@ INSPECT_ONLY_SCRIPT_NAMES = frozenset(
         "build_edge_self_change_source_bundle.py",
         "build_edge_self_change_supervisor_zipapp.py",
         "build_edge_self_change_toolchain_bundle.py",
+        "astrid_train.py",
         "edge_audio_feeder.py",
         "edge_hindsight.py",
         "edge_self_change_supervisor.py",
@@ -2057,7 +2110,12 @@ MUTABLE_LIVE_REPORTS = frozenset(
     {"astrid_at_a_glance.py", "report_edge_activity.py", "report_edge_appliance.py"}
 )
 BUILD_REQUIRED_REPORT_TESTS = frozenset(
-    {"test_edge_hindsight.py", "test_report_edge_activity.py", "test_report_edge_appliance.py"}
+    {
+        "test_astrid_train.py",
+        "test_edge_hindsight.py",
+        "test_report_edge_activity.py",
+        "test_report_edge_appliance.py",
+    }
 )
 MUTABLE_CORE_CRATES = frozenset(
     {
@@ -2744,10 +2802,26 @@ for executable_path in \
     scripts/warm_ollama_model.sh scripts/report_edge_appliance.py \
     scripts/report_edge_appliance.sh scripts/report_edge_activity.py \
     scripts/report_edge_fleet_activity.py scripts/edge_hindsight.py \
-    scripts/astrid_at_a_glance.py; do
+    scripts/astrid_at_a_glance.py scripts/astrid_train.py \
+    scripts/retire_edge_origin_mac_affordance.py; do
     chmod 0555 "$release_root/$initial_generation_id/$executable_path"
 done
 setfacl -R -m "u:$runtime_user:r-X" "$release_root/$initial_generation_id"
+/usr/bin/python3 -I -E -s \
+    "$release_root/$initial_generation_id/scripts/retire_edge_origin_mac_affordance.py" \
+    --workspace-root "$origin_mac_workspace_root" \
+    --operator-root "$OPERATOR_STATUS_ROOT" \
+    --retirement-root "$origin_mac_retirement_root" \
+    --runtime-gid "$runtime_gid" >/dev/null
+origin_mac_correction_committed=true
+[[ $(stat_values "$OPERATOR_STATUS_ROOT/origin-mac-affordance-retirement.json" | awk '{print $1" "$2" "$3}') == "0 640 1" ]] \
+    || die "origin-mac affordance retirement receipt identity is invalid"
+[[ $(stat_values "$origin_mac_retirement_root" | awk '{print $1" "$2}') == "0 700" ]] \
+    || die "origin-mac retirement root identity is invalid"
+for origin_mac_transaction_member in transaction.json receipt.json; do
+    [[ $(stat_values "$origin_mac_retirement_root/$origin_mac_transaction_member" | awk '{print $1" "$2" "$3}') == "0 600 1" ]] \
+        || die "origin-mac durable transaction member identity is invalid: $origin_mac_transaction_member"
+done
 install -m 0444 -o root -g root \
     "$release_root/$initial_generation_id/scripts/edge_hindsight.py" \
     "$HINDSIGHT_WRITER_INSTALL"
@@ -2800,9 +2874,10 @@ fi
 # Python in isolated mode and a fixed PATH.
 install -d -m 0755 -o root -g root "$OPERATOR_REPORT_ROOT"
 created_paths+=("$OPERATOR_REPORT_ROOT")
-for operator_body in astrid_at_a_glance.py report_edge_appliance.py report_edge_activity.py; do
+for operator_body in astrid_at_a_glance.py astrid_train.py report_edge_appliance.py report_edge_activity.py; do
     case "$operator_body" in
         astrid_at_a_glance.py) operator_launcher=astrid-at-a-glance ;;
+        astrid_train.py) operator_launcher=astrid-train ;;
         report_edge_appliance.py) operator_launcher=report-edge-appliance ;;
         report_edge_activity.py) operator_launcher=report-edge-activity ;;
     esac
@@ -2820,11 +2895,11 @@ chmod 0555 "$OPERATOR_REPORT_ROOT"
     || die "installed immutable operator report manifest digest mismatch"
 sha256sum --check --strict --status "$OPERATOR_REPORT_MANIFEST" \
     || die "installed immutable operator report tree failed verification"
-for operator_file in MANIFEST.sha256 astrid_at_a_glance.py report_edge_appliance.py report_edge_activity.py; do
+for operator_file in MANIFEST.sha256 astrid_at_a_glance.py astrid_train.py report_edge_appliance.py report_edge_activity.py; do
     [[ $(stat_values "$OPERATOR_REPORT_ROOT/$operator_file" | awk '{print $1" "$2" "$3}') == '0 444 1' ]] \
         || die "immutable operator report body identity is invalid: $operator_file"
 done
-for operator_file in astrid-at-a-glance report-edge-appliance report-edge-activity; do
+for operator_file in astrid-at-a-glance astrid-train report-edge-appliance report-edge-activity; do
     [[ $(stat_values "$OPERATOR_REPORT_ROOT/$operator_file" | awk '{print $1" "$2" "$3}') == '0 555 1' ]] \
         || die "immutable operator report launcher identity is invalid: $operator_file"
 done
@@ -2858,6 +2933,13 @@ for evidence_root in "$introspection_evidence_root" "$build_evidence_root" "$gen
 done
 install -d -m 0700 -o "$STEWARD_USER" -g "$STEWARD_USER" "$candidate_root"; created_paths+=("$candidate_root")
 install -d -m 0750 -o "$STEWARD_USER" -g "$runtime_group" "$scheduled_authorship_root"
+install -d -m 0750 -o "$STEWARD_USER" -g "$runtime_group" "$inquiry_history_root"; created_paths+=("$inquiry_history_root")
+runuser -u "$STEWARD_USER" -- test -w "$inquiry_history_root" \
+    || die "steward cannot write its dedicated inquiry history"
+runuser -u "$runtime_user" -- test -r "$inquiry_history_root" \
+    || die "runtime owner cannot read the dedicated inquiry history"
+! runuser -u "$runtime_user" -- test -w "$inquiry_history_root" \
+    || die "runtime owner can mutate the immutable inquiry history"
 install -d -m 0700 -o "$STEWARD_USER" -g "$STEWARD_USER" "$inbox_root"; created_paths+=("$inbox_root")
 install -d -m 0700 -o "$STEWARD_USER" -g "$STEWARD_USER" "$candidate_store" "$model_handoff_root"
 install -d -m 0710 -o root -g "$BUILDER_USER" "$builder_root"; created_paths+=("$builder_root")
@@ -3122,11 +3204,11 @@ PY
 source_key_sha256=$(sha_file "$SOURCE_KEY")
 intent_key_sha256=$(sha_file "$INTENT_KEY")
 cat >"$PROVIDER_CONFIG" <<EOF
-{"schema":"astrid.edge.provider_broker.config.v1","appliance_id":"$appliance_id","ollama_origin":"$ollama_origin","model":"$model","keep_alive":"2h","context_tokens":$context_tokens,"maximum_output_tokens":512,"maximum_request_body_bytes":131072,"maximum_response_body_bytes":8388608,"connect_timeout_ms":$connect_timeout_ms,"header_timeout_ms":$header_timeout_ms,"inter_chunk_timeout_ms":120000,"total_timeout_ms":$total_timeout_ms,"client_read_timeout_ms":5000,"client_write_timeout_ms":120000,"maximum_concurrent_requests":1,"model_lock":"$model_lock","maintenance_lease":"$maintenance_lease","reflection_lease":"/run/astrid-edge-self-change/reflection.json","ledger_path":"/var/lib/astrid-edge-provider/receipts.jsonl","runtime":{"client_id":"edge-runtime","expected_peer_uid":$runtime_uid,"socket_path":"/run/astrid-edge-self-change/provider-runtime.sock","socket_gid":$provider_runtime_gid,"request_key_sha256":"$runtime_provider_sha256","maximum_requests_per_hour":48,"maximum_output_tokens":$output_tokens},"steward":{"client_id":"edge-steward","expected_peer_uid":$steward_uid,"socket_path":"/run/astrid-edge-self-change/provider-steward.sock","socket_gid":$provider_steward_gid,"request_key_sha256":"$steward_provider_sha256","maximum_requests_per_hour":32,"maximum_output_tokens":512},"warmup":{"client_id":"model-warmup","expected_peer_uid":$warmup_uid,"socket_path":"/run/astrid-edge-self-change/provider-warmup.sock","socket_gid":$provider_warmup_gid,"request_key_sha256":"$warmup_provider_sha256","maximum_requests_per_hour":12,"maximum_output_tokens":2},"ledger_key_sha256":"$provider_ledger_sha256"}
+{"schema":"astrid.edge.provider_broker.config.v1","appliance_id":"$appliance_id","ollama_origin":"$ollama_origin","model":"$model","keep_alive":"2h","context_tokens":$context_tokens,"maximum_output_tokens":512,"maximum_request_body_bytes":131072,"maximum_response_body_bytes":8388608,"connect_timeout_ms":$connect_timeout_ms,"header_timeout_ms":$header_timeout_ms,"inter_chunk_timeout_ms":120000,"total_timeout_ms":$total_timeout_ms,"client_read_timeout_ms":5000,"client_write_timeout_ms":120000,"maximum_concurrent_requests":1,"model_lock":"$model_lock","maintenance_lease":"$maintenance_lease","reflection_lease":"/run/astrid-edge-self-change/reflection.json","ledger_path":"/var/lib/astrid-edge-provider/receipts.jsonl","runtime":{"client_id":"edge-runtime","expected_peer_uid":$runtime_uid,"socket_path":"/run/astrid-edge-self-change/provider-runtime.sock","socket_gid":$provider_runtime_gid,"request_key_sha256":"$runtime_provider_sha256","maximum_requests_per_hour":48,"maximum_output_tokens":$output_tokens},"steward":{"client_id":"edge-steward","expected_peer_uid":$steward_uid,"socket_path":"/run/astrid-edge-self-change/provider-steward.sock","socket_gid":$provider_steward_gid,"request_key_sha256":"$steward_provider_sha256","maximum_requests_per_hour":32,"maximum_output_tokens":$reflection_output_tokens},"warmup":{"client_id":"model-warmup","expected_peer_uid":$warmup_uid,"socket_path":"/run/astrid-edge-self-change/provider-warmup.sock","socket_gid":$provider_warmup_gid,"request_key_sha256":"$warmup_provider_sha256","maximum_requests_per_hour":12,"maximum_output_tokens":2},"ledger_key_sha256":"$provider_ledger_sha256"}
 EOF
 chmod 0440 "$PROVIDER_CONFIG"; chown root:"$PROVIDER_USER" "$PROVIDER_CONFIG"; created_paths+=("$PROVIDER_CONFIG")
 cat >"$STEWARD_CONFIG" <<EOF
-{"schema":"astrid.edge.steward_helper.config.v1","appliance_id":"$appliance_id","target":"$target","model":"$model","ollama_origin":"$ollama_origin","provider_broker":{"socket_path":"/run/astrid-edge-self-change/provider-steward.sock","request_key_path":"$STEWARD_PROVIDER_REQUEST_KEY","request_key_sha256":"$steward_provider_sha256"},"connect_timeout_ms":$connect_timeout_ms,"header_timeout_ms":$header_timeout_ms,"total_timeout_ms":$total_timeout_ms,"web_broker":{"socket_path":"$WEB_STEWARD_SOCKET","request_key_path":"$STEWARD_WEB_REQUEST_KEY","request_key_sha256":"$steward_web_request_sha256","response_verify_key_path":"$WEB_RESPONSE_VERIFY_KEY","response_verify_key_sha256":"$web_response_verify_sha256","connect_timeout_ms":1000,"header_timeout_ms":10000,"total_timeout_ms":20000,"result_limit":5},"context_tokens":$context_tokens,"output_tokens":$output_tokens,"source_authoring_output_tokens":$source_authoring_output_tokens,"model_lock":"$model_lock","workspace_root":"$runtime_workspace","workspace_uid":$runtime_uid,"workspace_gid":$runtime_gid,"source_root":"$source_root","source_manifest":"$source_root/MANIFEST.json","source_manifest_sha256":"$source_manifest_sha256","source_signature":"$source_root/MANIFEST.signature.json","expected_source_id":"$expected_source_id","active_generation_link":"$release_parent/current","maintenance_lease":"$maintenance_lease","source_signing_key":"$SOURCE_KEY","source_signing_key_sha256":"$source_key_sha256","attestor_key":"$INTENT_KEY","attestor_key_sha256":"$intent_key_sha256","state_root":"$candidate_root","supervisor_inbox":"$inbox_root","supervisor_status":"$SUPERVISOR_STATUS","current_generation":"$GENERATION_FILE","patch_export_root":"$steward_patch_outbox","owned_inputs":[$owned_json],"gates":{"autonomy_state":"$autonomy_state","action_receipts":"$action_receipts","thermal_celsius":"$thermal_celsius","maximum_thermal_celsius":$maximum_thermal_celsius}}
+{"schema":"astrid.edge.steward_helper.config.v1","appliance_id":"$appliance_id","target":"$target","model":"$model","ollama_origin":"$ollama_origin","provider_broker":{"socket_path":"/run/astrid-edge-self-change/provider-steward.sock","request_key_path":"$STEWARD_PROVIDER_REQUEST_KEY","request_key_sha256":"$steward_provider_sha256"},"connect_timeout_ms":$connect_timeout_ms,"header_timeout_ms":$header_timeout_ms,"total_timeout_ms":$total_timeout_ms,"web_broker":{"socket_path":"$WEB_STEWARD_SOCKET","request_key_path":"$STEWARD_WEB_REQUEST_KEY","request_key_sha256":"$steward_web_request_sha256","response_verify_key_path":"$WEB_RESPONSE_VERIFY_KEY","response_verify_key_sha256":"$web_response_verify_sha256","connect_timeout_ms":1000,"header_timeout_ms":10000,"total_timeout_ms":20000,"result_limit":5},"context_tokens":$context_tokens,"output_tokens":$reflection_output_tokens,"source_authoring_output_tokens":$source_authoring_output_tokens,"model_lock":"$model_lock","workspace_root":"$runtime_workspace","workspace_uid":$runtime_uid,"workspace_gid":$runtime_gid,"source_root":"$source_root","source_manifest":"$source_root/MANIFEST.json","source_manifest_sha256":"$source_manifest_sha256","source_signature":"$source_root/MANIFEST.signature.json","expected_source_id":"$expected_source_id","active_generation_link":"$release_parent/current","maintenance_lease":"$maintenance_lease","source_signing_key":"$SOURCE_KEY","source_signing_key_sha256":"$source_key_sha256","attestor_key":"$INTENT_KEY","attestor_key_sha256":"$intent_key_sha256","state_root":"$candidate_root","inquiry_history_root":"$inquiry_history_root","supervisor_inbox":"$inbox_root","supervisor_status":"$SUPERVISOR_STATUS","current_generation":"$GENERATION_FILE","patch_export_root":"$steward_patch_outbox","owned_inputs":[$owned_json],"gates":{"autonomy_state":"$autonomy_state","action_receipts":"$action_receipts","thermal_celsius":"$thermal_celsius","maximum_thermal_celsius":$maximum_thermal_celsius}}
 EOF
 chmod 0440 "$STEWARD_CONFIG"; chown root:"$STEWARD_USER" "$STEWARD_CONFIG"; created_paths+=("$STEWARD_CONFIG")
 
@@ -3340,10 +3422,10 @@ write_dropin() {
                 for path in "${owned_paths[@]}" "$autonomy_state" "$action_receipts" "$thermal_celsius"; do printf 'BindReadOnlyPaths=%s\n' "$path"; done
                 for path in "$web_receipts" "$introspection_receipts" "${maintenance_core_acknowledgement%/*}" "${maintenance_edge_acknowledgement%/*}"; do printf 'BindReadOnlyPaths=%s\n' "$path"; done
                 printf 'BindReadOnlyPaths=%s\nBindReadOnlyPaths=%s\nBindReadOnlyPaths=%s\n' "$source_root" "$release_parent" "$model_lock"
-                printf 'BindPaths=%s\nBindPaths=%s\nBindPaths=%s\nBindPaths=%s\nBindPaths=%s\nBindPaths=%s\nBindPaths=/run/astrid-edge-self-change\n' \
-                    "$maintenance_mutex" "$candidate_root" "$inbox_root" "$steward_reflection_root" "$steward_projection_root" "$steward_patch_outbox"
-                printf 'ReadWritePaths=%s %s %s %s %s %s /run/astrid-edge-self-change\n' \
-                    "$maintenance_mutex" "$candidate_root" "$inbox_root" "$steward_reflection_root" "$steward_projection_root" "$steward_patch_outbox" ;;
+                printf 'BindPaths=%s\nBindPaths=%s\nBindPaths=%s\nBindPaths=%s\nBindPaths=%s\nBindPaths=%s\nBindPaths=%s\nBindPaths=/run/astrid-edge-self-change\n' \
+                    "$maintenance_mutex" "$candidate_root" "$inbox_root" "$inquiry_history_root" "$steward_reflection_root" "$steward_projection_root" "$steward_patch_outbox"
+                printf 'ReadWritePaths=%s %s %s %s %s %s %s /run/astrid-edge-self-change\n' \
+                    "$maintenance_mutex" "$candidate_root" "$inbox_root" "$inquiry_history_root" "$steward_reflection_root" "$steward_projection_root" "$steward_patch_outbox" ;;
             astrid-edge-web-broker-core.service|astrid-edge-web-broker-runtime.service|astrid-edge-web-broker-steward.service)
                 printf 'InaccessiblePaths=%s %s %s %s %s %s %s %s %s\n' \
                     "$state_root" "$release_parent" "$source_root" "$candidate_root" "$builder_root" "$updater_root" "$toolchain_root" "$runtime_workspace" "$model_ipc"

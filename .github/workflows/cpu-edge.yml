@@ -250,6 +250,7 @@ jobs:
         run: |
           python3 -c 'import sys; assert sys.version_info[:2] == (3, 10), sys.version'
           python3 -m unittest \
+            scripts/test_astrid_train.py \
             scripts/test_edge_audio_feeder.py \
             scripts/test_edge_builder_store.py \
             scripts/test_edge_hindsight.py \
@@ -258,6 +259,7 @@ jobs:
             scripts/test_install_headless_application_capsules.py \
             scripts/test_report_edge_activity.py \
             scripts/test_report_edge_appliance.py \
+            scripts/test_retire_edge_origin_mac_affordance.py \
             scripts/test_retire_edge_autonomy_session.py \
             scripts/test_reconcile_edge_interrupted_actions.py \
             scripts/test_migrate_edge_safe_fallback_authorship.py \
@@ -273,12 +275,14 @@ jobs:
             scripts/test_verify_edge_self_evolution_release.py
           python3 -m py_compile \
             scripts/astrid_at_a_glance.py \
+            scripts/astrid_train.py \
             scripts/edge_audio_feeder.py \
             scripts/edge_hindsight.py \
             scripts/install_headless_application_capsules.py \
             scripts/report_edge_activity.py \
             scripts/report_edge_appliance.py \
             scripts/report_edge_fleet_activity.py \
+            scripts/retire_edge_origin_mac_affordance.py \
             scripts/retire_edge_autonomy_session.py \
             scripts/reconcile_edge_interrupted_actions.py \
             scripts/migrate_edge_operator_harness_isolation.py \
