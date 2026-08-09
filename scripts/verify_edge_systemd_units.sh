@@ -33,7 +33,7 @@ done
 
 [[ -d $unit_root ]] || fail "unit root is absent: $unit_root"
 unit_root=$(cd "$unit_root" && pwd -P)
-for command in find install mktemp rg sed sort systemd-analyze systemd-escape; do
+for command in find grep install mktemp sed sort systemd-analyze systemd-escape; do
     command -v "$command" >/dev/null || fail "required command is absent: $command"
 done
 for required in \
@@ -235,7 +235,7 @@ sed \
     "$unit_root/astrid-edge-state-store-verify.service.in" \
     >"$immutable_units/astrid-edge-state-store-verify.service"
 
-if rg -n '@@[A-Z0-9_]+@@|@AUDIO_CLIENT_GROUP@' "$immutable_units"; then
+if grep -r -n -E '@@[A-Z0-9_]+@@|@AUDIO_CLIENT_GROUP@' "$immutable_units"; then
     fail 'rendered immutable units retain a template placeholder'
 fi
 [[ ! -e $unit_root/icp/astrid-edge-audio-feeder.service ]] \
@@ -246,7 +246,7 @@ fi
 # Keep the privileged fixture allowlist exact. A new or misspelled immutable
 # path must fail CI until it is deliberately reviewed here.
 readonly expected_privileged_paths=$'/usr/libexec/astrid-edge/immutable/astrid-edge-presentation-broker\n/usr/libexec/astrid-edge/immutable/astrid-edge-provider-broker\n/usr/libexec/astrid-edge/immutable/astrid-edge-web-broker\n/usr/libexec/astrid-edge/immutable/edge_audio_feeder.py\n/usr/libexec/astrid/astrid-edge-builder-store\n/usr/libexec/astrid/astrid-edge-rescue-helper\n/usr/libexec/astrid/astrid-edge-state-store\n/usr/libexec/astrid/astrid-edge-steward-helper\n/usr/libexec/astrid/edge-self-change-supervisor'
-actual_privileged_paths=$(rg --no-filename -o \
+actual_privileged_paths=$(grep -r -h -o -E \
     '/usr/libexec/(astrid|astrid-edge/immutable)/[^[:space:]]+' \
     "$immutable_units" | sed 's/[;,]$//' | sort -u)
 if [[ $actual_privileged_paths != "$expected_privileged_paths" ]]; then
@@ -267,7 +267,7 @@ while IFS= read -r -d '' unit; do
         -e "s|/usr/libexec/astrid-edge/immutable/|$fixture_privileged_root/usr/libexec/astrid-edge/immutable/|g" \
         "$unit"
 done < <(find "$immutable_verify_units" -type f -print0)
-if rg -n '(^|[=+[:space:]])/usr/libexec/(astrid|astrid-edge/immutable)/' \
+if grep -r -n -E '(^|[=+[:space:]])/usr/libexec/(astrid|astrid-edge/immutable)/' \
     "$immutable_verify_units"; then
     fail 'a privileged path escaped fixture remapping'
 fi

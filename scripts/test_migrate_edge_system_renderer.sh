@@ -167,7 +167,7 @@ render_profile() {
     for unit in "${STACK[@]}"; do
         [[ -f $output_root/units/$unit ]] || fail "$profile render omitted $unit"
     done
-    if rg -n -- '%[ht]|@@[A-Z0-9_]+@@|@AUDIO_CLIENT_GROUP@' "$output_root/units"; then
+    if grep -r -n -E -- '%[ht]|@@[A-Z0-9_]+@@|@AUDIO_CLIENT_GROUP@' "$output_root/units"; then
         fail "$profile render retained a user-manager specifier or template placeholder"
     fi
 
