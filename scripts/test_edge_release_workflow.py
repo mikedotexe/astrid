@@ -13,6 +13,7 @@ CPU_EDGE_WORKFLOWS = (
     Path(__file__).parents[1] / ".github/workflows/cpu-edge.yml",
     Path(__file__).parents[1] / ".github/workflows/cpu-edge-astralis-capsules.yml",
 )
+HEADLESS_GUIDE = Path(__file__).parents[1] / "docs/headless-linux.md"
 
 
 class ReleaseWorkflowPolicyTests(unittest.TestCase):
@@ -124,6 +125,11 @@ class ReleaseWorkflowPolicyTests(unittest.TestCase):
         ):
             with self.subTest(script=script):
                 self.assertIn(script, workflow)
+
+    def test_headless_guide_does_not_advertise_inherited_corpus_access(self) -> None:
+        guide = HEADLESS_GUIDE.read_text(encoding="utf-8")
+        self.assertNotIn("inherited corpus for introspection requests", guide)
+        self.assertIn("No inherited corpus is available to either appliance.", guide)
 
 
 if __name__ == "__main__":

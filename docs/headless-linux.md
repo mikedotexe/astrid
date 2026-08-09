@@ -1164,7 +1164,8 @@ Install
 fetch deliberately reads one. Direct filesystem mutation stays outside the
 model-facing profile; writable sovereign actions still pass through the
 `NEXT:` executor. Workspace instructions reserve web for explicit/current
-external questions and the inherited corpus for introspection requests.
+external questions and the private introspector for local owned continuity and
+artifacts. No inherited corpus is available to either appliance.
 
 Run `scripts/benchmark_headless_models.sh` before changing the appliance model.
 On minimal hosts without `jq`, use the dependency-free
