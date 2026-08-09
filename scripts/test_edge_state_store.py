@@ -121,6 +121,8 @@ class StateStoreTests(unittest.TestCase):
         ).read_text(encoding="utf-8")
         self.assertIn("Before=@@RUNTIME_MOUNT_UNIT@@ @@ROLLBACK_MOUNT_UNIT@@\n", migration)
         self.assertIn("PrivateDevices=yes\n", migration)
+        self.assertIn("PrivateTmp=no\n", migration)
+        self.assertNotIn("PrivateTmp=yes\n", migration)
         for name in (
             "astrid-edge-state-store-runtime.mount.in",
             "astrid-edge-state-store-rollback.mount.in",

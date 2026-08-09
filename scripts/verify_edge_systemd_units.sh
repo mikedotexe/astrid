@@ -186,6 +186,8 @@ runtime_state_root=/var/lib/astrid-edge-runtime-state
 rollback_state_root=/var/lib/astrid-edge-rollback-state
 runtime_mount_unit=$(systemd-escape --path --suffix=mount "$runtime_state_root")
 rollback_mount_unit=$(systemd-escape --path --suffix=mount "$rollback_state_root")
+runtime_mount_unit_sed=${runtime_mount_unit//\\/\\\\}
+rollback_mount_unit_sed=${rollback_mount_unit//\\/\\\\}
 sed \
     -e 's|@@ACTIVE_GENERATION_ROOT@@|/opt/astrid-edge/current|g' \
     -e "s|@@BACKING_ROOT@@|$state_backing_root|g" \
@@ -194,8 +196,8 @@ sed \
     -e "s|@@ROLLBACK_IMAGE@@|$rollback_image|g" \
     -e "s|@@RUNTIME_MOUNT_PARENT@@|$runtime_state_root|g" \
     -e "s|@@ROLLBACK_MOUNT_PARENT@@|$rollback_state_root|g" \
-    -e "s|@@RUNTIME_MOUNT_UNIT@@|$runtime_mount_unit|g" \
-    -e "s|@@ROLLBACK_MOUNT_UNIT@@|$rollback_mount_unit|g" \
+    -e "s|@@RUNTIME_MOUNT_UNIT@@|$runtime_mount_unit_sed|g" \
+    -e "s|@@ROLLBACK_MOUNT_UNIT@@|$rollback_mount_unit_sed|g" \
     "$unit_root/astrid-edge-state-store-migration-recover.service.in" \
     >"$immutable_units/astrid-edge-state-store-migration-recover.service"
 sed \
@@ -219,8 +221,8 @@ sed \
     -e "s|@@ROLLBACK_IMAGE@@|$rollback_image|g" \
     -e "s|@@RUNTIME_STATE_ROOT@@|$runtime_state_root|g" \
     -e "s|@@ROLLBACK_STATE_ROOT@@|$rollback_state_root|g" \
-    -e "s|@@RUNTIME_MOUNT_UNIT@@|$runtime_mount_unit|g" \
-    -e "s|@@ROLLBACK_MOUNT_UNIT@@|$rollback_mount_unit|g" \
+    -e "s|@@RUNTIME_MOUNT_UNIT@@|$runtime_mount_unit_sed|g" \
+    -e "s|@@ROLLBACK_MOUNT_UNIT@@|$rollback_mount_unit_sed|g" \
     "$unit_root/astrid-edge-state-store-recover.service.in" \
     >"$immutable_units/astrid-edge-state-store-recover.service"
 sed \
@@ -230,8 +232,8 @@ sed \
     -e "s|@@ROLLBACK_IMAGE@@|$rollback_image|g" \
     -e "s|@@RUNTIME_STATE_ROOT@@|$runtime_state_root|g" \
     -e "s|@@ROLLBACK_STATE_ROOT@@|$rollback_state_root|g" \
-    -e "s|@@RUNTIME_MOUNT_UNIT@@|$runtime_mount_unit|g" \
-    -e "s|@@ROLLBACK_MOUNT_UNIT@@|$rollback_mount_unit|g" \
+    -e "s|@@RUNTIME_MOUNT_UNIT@@|$runtime_mount_unit_sed|g" \
+    -e "s|@@ROLLBACK_MOUNT_UNIT@@|$rollback_mount_unit_sed|g" \
     "$unit_root/astrid-edge-state-store-verify.service.in" \
     >"$immutable_units/astrid-edge-state-store-verify.service"
 

@@ -20,7 +20,10 @@ AmbientCapabilities=
 NoNewPrivileges=yes
 PrivateDevices=yes
 PrivateNetwork=yes
-PrivateTmp=yes
+# This service must complete before the two state mounts. PrivateTmp=yes adds
+# an implicit dependency on systemd-tmpfiles-setup.service, which is ordered
+# after local-fs.target and would create a cycle back through those mounts.
+PrivateTmp=no
 ProtectClock=yes
 ProtectControlGroups=yes
 ProtectHome=read-only

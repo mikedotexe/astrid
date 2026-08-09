@@ -258,6 +258,7 @@ units = {
     )
 }
 active_profile = "/var/lib/astrid-edge-self-change/active-profile.env"
+management_marker = "/etc/astrid/edge-service-manager.json"
 
 ollama = units["ollama-cpu.service"]
 assert effective_list(ollama, "Service", "ExecStart") == [f"{ollama_binary} serve"]
@@ -358,6 +359,11 @@ services = (
     "astrid-edge-runtime.service",
     "astrid-edge-hindsight.service",
 )
+for unit in services:
+    assert effective_list(units[unit], "Unit", "ConditionFileNotEmpty") == [
+        management_marker
+    ]
+    assert effective_list(units[unit], "Unit", "ConditionPathIsRegular") == []
 if profile == "avado":
     assert f"ASTRID_EDGE_AUDIO_FEEDER_UID={audio_uid}" in effective_list(edge, "Service", "Environment")
     assert "astrid-edge-audio-client" in words(effective_list(edge, "Service", "SupplementaryGroups"))
@@ -379,6 +385,10 @@ for data in units.values():
         assert all("%h" not in value and "%t" not in value for value in values)
 
 hindsight_timer = units["astrid-edge-hindsight.timer"]
+assert effective_list(hindsight_timer, "Unit", "ConditionFileNotEmpty") == [
+    management_marker
+]
+assert effective_list(hindsight_timer, "Unit", "ConditionPathIsRegular") == []
 assert "astrid-edge-state-store-verify.service" in words(
     effective_list(hindsight_timer, "Unit", "Requires")
 )
@@ -410,13 +420,16 @@ if command -v systemd-analyze >/dev/null 2>&1; then
         VERIFY_RENDERED_ROOTS+=("$verify_rendered")
     done
 
-    # systemd 249 insists that direct Exec*= paths exist during static
-    # verification. Discover only commands under the three reviewed appliance
-    # prefixes, reject any other absent absolute executable, and remap those
-    # commands into this test's private root. Unit text outside the copies is
-    # never changed and the runner's /opt and /usr/libexec stay untouched.
-    mapfile -t fixture_commands < <(python3 - \
-        "$verify_support_root" "${VERIFY_RENDERED_ROOTS[@]}" <<'PY'
+    # systemd 249 insists that effective direct Exec*= paths exist during
+    # static verification. Evaluate base fragments plus lexically ordered
+    # drop-ins and their empty-list resets, then discover only commands under
+    # the three reviewed appliance prefixes. Reject any other absent absolute
+    # executable and remap approved commands into this test's private root.
+    # Unit text outside the copies is never changed and the runner's /opt and
+    # /usr/libexec stay untouched.
+    fixture_commands_file=$verify_root/rendered-executable-allowlist.txt
+    python3 - "$verify_support_root" "${VERIFY_RENDERED_ROOTS[@]}" \
+        >"$fixture_commands_file" <<'PY'
 import os
 import pathlib
 import shlex
@@ -438,22 +451,52 @@ expected = {
     "/usr/libexec/astrid/astrid-edge-steward-helper",
 }
 commands = set()
+exec_keys = {
+    "ExecCondition",
+    "ExecStart",
+    "ExecStartPre",
+    "ExecStartPost",
+    "ExecReload",
+    "ExecStop",
+    "ExecStopPost",
+}
+unit_suffixes = (".mount", ".path", ".service", ".socket", ".timer")
 for raw_root in sys.argv[1:]:
     root = pathlib.Path(raw_root)
-    for path in sorted(item for item in root.rglob("*") if item.is_file()):
-        for raw_line in path.read_text(encoding="utf-8").splitlines():
-            line = raw_line.strip()
-            if not line.startswith((
-                "ExecCondition=",
-                "ExecStart=",
-                "ExecStartPre=",
-                "ExecStartPost=",
-                "ExecReload=",
-                "ExecStop=",
-                "ExecStopPost=",
-            )):
-                continue
-            value = line.split("=", 1)[1]
+    unit_paths = sorted(
+        item
+        for item in root.iterdir()
+        if item.is_file() and item.name.endswith(unit_suffixes)
+    )
+    for unit_path in unit_paths:
+        fragments = [unit_path]
+        dropin_root = root / f"{unit_path.name}.d"
+        if dropin_root.is_dir():
+            fragments.extend(sorted(dropin_root.glob("*.conf")))
+        effective = {key: [] for key in exec_keys}
+        for fragment in fragments:
+            section = ""
+            for raw_line in fragment.read_text(encoding="utf-8").splitlines():
+                line = raw_line.strip()
+                if not line or line.startswith(("#", ";")):
+                    continue
+                if line.startswith("[") and line.endswith("]"):
+                    section = line[1:-1]
+                    continue
+                if section != "Service" or "=" not in line:
+                    continue
+                key, value = line.split("=", 1)
+                if key not in exec_keys:
+                    continue
+                if value:
+                    effective[key].append(value)
+                else:
+                    effective[key].clear()
+        for value in (
+            item
+            for key in sorted(exec_keys)
+            for item in effective[key]
+        ):
             while value and value[0] in "-+!:@":
                 value = value[1:]
             words = shlex.split(value)
@@ -474,7 +517,7 @@ if commands != expected:
 for command in sorted(commands):
     print(command)
 PY
-    )
+    mapfile -t fixture_commands <"$fixture_commands_file"
     ((${#fixture_commands[@]} > 0)) || fail "rendered unit executable fixture set is empty"
     for command in "${fixture_commands[@]}"; do
         install -D -m 0755 /usr/bin/true "$verify_exec_root$command"

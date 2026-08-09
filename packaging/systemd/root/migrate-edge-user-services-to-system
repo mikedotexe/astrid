@@ -912,11 +912,11 @@ PY
             printf '[Unit]\n'
             # Reset all path conditions inherited from the reviewed user unit.
             # The exact system-manager conditions below are the sole authority.
-            printf 'ConditionPathExists=\nConditionPathIsDirectory=\nConditionPathIsRegular=\nConditionPathIsMountPoint=\n'
+            printf 'ConditionPathExists=\nConditionPathIsDirectory=\nConditionFileNotEmpty=\nConditionPathIsMountPoint=\n'
             # Root units are enabled before cutover but cannot start across a
             # crash until the atomically installed manager marker commits the
             # handoff. Matching user guards below have the inverse condition.
-            printf 'ConditionPathIsRegular=%s\n' "$management_marker"
+            printf 'ConditionFileNotEmpty=%s\n' "$management_marker"
             printf 'Requires=%s\nAfter=%s\n' "$state_store_verify_unit" "$state_store_verify_unit"
             [[ $profile == icp ]] && printf 'RequiresMountsFor=/media/data\nConditionPathIsMountPoint=/media/data\n'
             printf 'Requires=astrid-edge-generation-guard.service\nAfter=astrid-edge-generation-guard.service\n'
@@ -1097,7 +1097,7 @@ PY
     elif [[ $unit == astrid-edge-hindsight.timer ]]; then
         dropin=$stage/units/$unit.d/90-root-runtime-boundary.conf
         mkdir -p "${dropin%/*}"
-        printf '[Unit]\nConditionPathIsRegular=%s\nRequires=%s\nAfter=%s\n' \
+        printf '[Unit]\nConditionFileNotEmpty=%s\nRequires=%s\nAfter=%s\n' \
             "$management_marker" "$state_store_verify_unit" "$state_store_verify_unit" >"$dropin"
         chmod 0644 "$dropin"
     fi

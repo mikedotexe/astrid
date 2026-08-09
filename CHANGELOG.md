@@ -1404,6 +1404,7 @@ Changelog tracking starts with 0.2.0. Prior versions were not tracked.
 ### Changed
 
 - CPU-edge prompts, model-session rotation, provider timing, fallback authorship, Action receipts, thread evidence, SSD startup guards, hindsight checkpoints, and reservoir telemetry now fail closed under transport, crash, reboot, and concurrent-append ambiguity.
+- CPU-edge state-store units retain exact escaped mount identities and keep pre-mount migration recovery outside `PrivateTmp`, preventing a `tmpfiles`/`local-fs.target` startup cycle before either A/B state volume is mounted; the root-manager handoff marker now uses the systemd-249-compatible nonempty-file predicate.
 - The fork release version advances to `0.5.2`; the Rust 1.94 baseline and existing appliance models/cadence remain unchanged.
 
 ## [0.5.1] - 2026-03-25
