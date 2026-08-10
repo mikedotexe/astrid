@@ -235,15 +235,23 @@ jobs:
 
       - name: Rebuild pinned external cognition capsules and mutable source inputs
         run: |
+          external_source_root="$RUNNER_TEMP/cpu-edge-external-source"
+          case "$external_source_root" in
+            "$GITHUB_WORKSPACE"|"$GITHUB_WORKSPACE"/*)
+              echo "external capsule source root must be outside the checkout" >&2
+              exit 1
+              ;;
+          esac
+          test ! -e "$external_source_root"
           python3 scripts/build_astralis_cpu_edge_capsules.py \
             --jobs "${{ matrix.jobs }}" \
             --output-dir dist/external-compat \
-            --source-output-dir dist/external-compat-source
+            --source-output-dir "$external_source_root/compat"
           python3 scripts/build_astralis_cpu_edge_capsules.py \
             --spec packaging/headless/astralis-cpu-edge-baseline-capsules.toml \
             --jobs "${{ matrix.jobs }}" \
             --output-dir dist/external-baseline \
-            --source-output-dir dist/external-baseline-source
+            --source-output-dir "$external_source_root/baseline"
           mkdir -p dist/carried
           cp dist/external-compat/*.capsule dist/carried/
           cp dist/external-baseline/*.capsule dist/carried/
@@ -334,6 +342,21 @@ jobs:
           test -f "$clean_source/crates/astrid-openclaw/kernel/engine.wasm"
           test ! -L "$clean_source/crates/astrid-openclaw/kernel/engine.wasm"
 
+          workspace_root="$(readlink -f "$GITHUB_WORKSPACE")"
+          external_source_root="$(readlink -f "$RUNNER_TEMP/cpu-edge-external-source")"
+          case "$external_source_root" in
+            "$workspace_root"|"$workspace_root"/*)
+              echo "external capsule source root resolved inside the checkout" >&2
+              exit 1
+              ;;
+          esac
+          external_compat_source="$external_source_root/compat"
+          external_baseline_source="$external_source_root/baseline"
+          test -d "$external_compat_source"
+          test ! -L "$external_compat_source"
+          test -d "$external_baseline_source"
+          test ! -L "$external_baseline_source"
+
           sync_args=()
           for manifest in \
             services/astrid-edge-runtime/Cargo.toml \
@@ -356,8 +379,8 @@ jobs:
           while IFS= read -r -d '' manifest; do
             sync_args+=(--sync "$manifest")
           done < <(find \
-            "$GITHUB_WORKSPACE/dist/external-compat-source" \
-            "$GITHUB_WORKSPACE/dist/external-baseline-source" \
+            "$external_compat_source" \
+            "$external_baseline_source" \
             -type f -name Cargo.toml -print0 | sort -z)
           cargo vendor \
             --manifest-path "$clean_source/Cargo.toml" \
@@ -372,8 +395,8 @@ jobs:
             --vendor-dir dist/self-evolution/vendor \
             --cargo-lock "$clean_source/Cargo.lock" \
             --rustc-metadata dist/self-evolution/rustc-version.txt \
-            --external-capsule-source-dir dist/external-compat-source \
-            --external-capsule-source-dir dist/external-baseline-source \
+            --external-capsule-source-dir "$external_compat_source" \
+            --external-capsule-source-dir "$external_baseline_source" \
             --signing-key dist/self-evolution/portable-source.key \
             --output dist/self-evolution/portable-source.tar.gz
           python3 scripts/build_edge_self_change_source_bundle.py verify \

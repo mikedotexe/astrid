@@ -132,6 +132,43 @@ class ReleaseWorkflowPolicyTests(unittest.TestCase):
         ):
             self.assertIn(capsule, build)
 
+    def test_external_source_snapshots_stay_outside_checkout_workspace(self) -> None:
+        rebuild = self.text.split(
+            "      - name: Rebuild pinned external cognition capsules and mutable source inputs\n",
+            1,
+        )[1].split("\n      - name:", 1)[0]
+        bundle = self.text.split(
+            "      - name: Build integrity-bound offline source and native toolchain inputs\n",
+            1,
+        )[1].split("\n      - name:", 1)[0]
+        self.assertIn(
+            'external_source_root="$RUNNER_TEMP/cpu-edge-external-source"', rebuild
+        )
+        self.assertIn('test ! -e "$external_source_root"', rebuild)
+        self.assertIn(
+            '--source-output-dir "$external_source_root/compat"', rebuild
+        )
+        self.assertIn(
+            '--source-output-dir "$external_source_root/baseline"', rebuild
+        )
+        self.assertNotIn("--source-output-dir dist/external-", rebuild)
+        self.assertIn(
+            'external_source_root="$(readlink -f '
+            '"$RUNNER_TEMP/cpu-edge-external-source")"',
+            bundle,
+        )
+        self.assertIn('"$workspace_root"|"$workspace_root"/*)', bundle)
+        self.assertIn('"$external_compat_source"', bundle)
+        self.assertIn('"$external_baseline_source"', bundle)
+        self.assertIn(
+            '--external-capsule-source-dir "$external_compat_source"', bundle
+        )
+        self.assertIn(
+            '--external-capsule-source-dir "$external_baseline_source"', bundle
+        )
+        self.assertNotIn("$GITHUB_WORKSPACE/dist/external-", bundle)
+        self.assertNotIn("--external-capsule-source-dir dist/external-", bundle)
+
     def test_release_and_cpu_edge_require_the_tracked_quickjs_kernel(self) -> None:
         self.assertIn('ASTRID_REQUIRE_KERNEL_HASH: "1"', self.text)
         self.assertNotIn("ASTRID_AUTO_BUILD_KERNEL", self.text)
