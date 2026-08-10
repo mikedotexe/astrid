@@ -91,6 +91,19 @@ class ReleaseWorkflowPolicyTests(unittest.TestCase):
         self.assertIn("subject-path: ${{ env.BOOTSTRAP_ASSET }}", attest)
         self.assertIn("subject-name: ${{ env.BOOTSTRAP_NAME }}", attest)
 
+    def test_bootstrap_sidecar_is_verified_from_the_archive_directory(self) -> None:
+        assemble = self.text.split(
+            "      - name: Assemble and verify complete self-evolution bootstrap\n",
+            1,
+        )[1].split("\n      - name:", 1)[0]
+        self.assertIn('cd "$(dirname "$bootstrap")"', assemble)
+        self.assertIn(
+            'sha256sum --check --strict '
+            '"$(basename "${bootstrap}.sha256")"',
+            assemble,
+        )
+        self.assertNotIn('sha256sum -c "${bootstrap}.sha256"', assemble)
+
     def test_source_bundle_vendors_the_clean_checkout_with_every_lock(self) -> None:
         build = self.text.split(
             "      - name: Build integrity-bound offline source and native toolchain inputs\n",

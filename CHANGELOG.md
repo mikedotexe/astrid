@@ -1385,6 +1385,12 @@ Changelog tracking starts with 0.2.0. Prior versions were not tracked.
 - `host/shim.rs` (430 lines) — Extism dispatch shim, `WasmHostFunction` enum, `register_host_functions()`, manual memory helpers. (#632)
 - `RiskLevel` enum and all references — removed from WIT, IPC payloads, approval engine, audit entries, CLI renderers, policy engine, and test fixtures. Approval prompts now render with a single style. The allowance store handles "don't ask again" patterns without risk classification. (#641)
 
+## [0.5.5] - 2026-08-09
+
+### Fixed
+
+- Self-evolution bootstrap publication now verifies the portable basename-only SHA-256 sidecar from the archive directory with strict parsing before extraction or provenance attestation.
+
 ## [0.5.4] - 2026-08-09
 
 ### Fixed
@@ -1597,7 +1603,8 @@ Changelog tracking starts with 0.2.0. Prior versions were not tracked.
 Initial tracked release. See the [repository history](https://github.com/unicity-astrid/astrid/commits/v0.2.0)
 for changes included in this version.
 
-[Unreleased]: https://github.com/mikedotexe/astrid/compare/v0.5.4...HEAD
+[Unreleased]: https://github.com/mikedotexe/astrid/compare/v0.5.5...HEAD
+[0.5.5]: https://github.com/mikedotexe/astrid/releases/tag/v0.5.5
 [0.5.4]: https://github.com/mikedotexe/astrid/releases/tag/v0.5.4
 [0.5.3]: https://github.com/mikedotexe/astrid/releases/tag/v0.5.3
 [0.5.2]: https://github.com/mikedotexe/astrid/releases/tag/v0.5.2

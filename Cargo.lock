@@ -185,7 +185,7 @@ checksum = "d3fb67a6e08acf24fdeccbac2cb6ac4305825bd1f117462e0e6f2f193345ad56"
 
 [[package]]
 name = "astrid"
-version = "0.5.4"
+version = "0.5.5"
 dependencies = [
  "anyhow",
  "arboard",
@@ -225,7 +225,7 @@ dependencies = [
 
 [[package]]
 name = "astrid-approval"
-version = "0.5.4"
+version = "0.5.5"
 dependencies = [
  "astrid-audit",
  "astrid-capabilities",
@@ -246,7 +246,7 @@ dependencies = [
 
 [[package]]
 name = "astrid-audit"
-version = "0.5.4"
+version = "0.5.5"
 dependencies = [
  "astrid-capabilities",
  "astrid-core",
@@ -265,7 +265,7 @@ dependencies = [
 
 [[package]]
 name = "astrid-build"
-version = "0.5.4"
+version = "0.5.5"
 dependencies = [
  "anyhow",
  "astrid-capsule",
@@ -284,7 +284,7 @@ dependencies = [
 
 [[package]]
 name = "astrid-capabilities"
-version = "0.5.4"
+version = "0.5.5"
 dependencies = [
  "astrid-core",
  "astrid-crypto",
@@ -302,7 +302,7 @@ dependencies = [
 
 [[package]]
 name = "astrid-capsule"
-version = "0.5.4"
+version = "0.5.5"
 dependencies = [
  "astrid-approval",
  "astrid-capabilities",
@@ -340,7 +340,7 @@ dependencies = [
 
 [[package]]
 name = "astrid-config"
-version = "0.5.4"
+version = "0.5.5"
 dependencies = [
  "directories",
  "serde",
@@ -353,7 +353,7 @@ dependencies = [
 
 [[package]]
 name = "astrid-core"
-version = "0.5.4"
+version = "0.5.5"
 dependencies = [
  "async-trait",
  "base64",
@@ -370,7 +370,7 @@ dependencies = [
 
 [[package]]
 name = "astrid-crypto"
-version = "0.5.4"
+version = "0.5.5"
 dependencies = [
  "base64",
  "blake3",
@@ -386,7 +386,7 @@ dependencies = [
 
 [[package]]
 name = "astrid-daemon"
-version = "0.5.4"
+version = "0.5.5"
 dependencies = [
  "anyhow",
  "astrid-config",
@@ -402,7 +402,7 @@ dependencies = [
 
 [[package]]
 name = "astrid-events"
-version = "0.5.4"
+version = "0.5.5"
 dependencies = [
  "astrid-core",
  "astrid-types",
@@ -419,7 +419,7 @@ dependencies = [
 
 [[package]]
 name = "astrid-guest"
-version = "0.5.4"
+version = "0.5.5"
 dependencies = [
  "serde",
  "serde_json",
@@ -428,7 +428,7 @@ dependencies = [
 
 [[package]]
 name = "astrid-hooks"
-version = "0.5.4"
+version = "0.5.5"
 dependencies = [
  "astrid-capabilities",
  "astrid-capsule",
@@ -455,7 +455,7 @@ dependencies = [
 
 [[package]]
 name = "astrid-integration-tests"
-version = "0.5.4"
+version = "0.5.5"
 dependencies = [
  "astrid-approval",
  "astrid-audit",
@@ -482,7 +482,7 @@ dependencies = [
 
 [[package]]
 name = "astrid-kernel"
-version = "0.5.4"
+version = "0.5.5"
 dependencies = [
  "anyhow",
  "astrid-approval",
@@ -510,7 +510,7 @@ dependencies = [
 
 [[package]]
 name = "astrid-mcp"
-version = "0.5.4"
+version = "0.5.5"
 dependencies = [
  "astrid-audit",
  "astrid-capabilities",
@@ -541,7 +541,7 @@ dependencies = [
 
 [[package]]
 name = "astrid-openclaw"
-version = "0.5.4"
+version = "0.5.5"
 dependencies = [
  "astrid-events",
  "blake3",
@@ -563,7 +563,7 @@ dependencies = [
 
 [[package]]
 name = "astrid-prelude"
-version = "0.5.4"
+version = "0.5.5"
 dependencies = [
  "astrid-audit",
  "astrid-capabilities",
@@ -589,7 +589,7 @@ dependencies = [
 
 [[package]]
 name = "astrid-storage"
-version = "0.5.4"
+version = "0.5.5"
 dependencies = [
  "astrid-core",
  "async-trait",
@@ -607,7 +607,7 @@ dependencies = [
 
 [[package]]
 name = "astrid-telemetry"
-version = "0.5.4"
+version = "0.5.5"
 dependencies = [
  "astrid-config",
  "chrono",
@@ -624,7 +624,7 @@ dependencies = [
 
 [[package]]
 name = "astrid-test"
-version = "0.5.4"
+version = "0.5.5"
 dependencies = [
  "astrid-core",
  "chrono",
@@ -637,7 +637,7 @@ dependencies = [
 
 [[package]]
 name = "astrid-types"
-version = "0.5.4"
+version = "0.5.5"
 dependencies = [
  "chrono",
  "serde",
@@ -648,7 +648,7 @@ dependencies = [
 
 [[package]]
 name = "astrid-vfs"
-version = "0.5.4"
+version = "0.5.5"
 dependencies = [
  "astrid-capabilities",
  "async-trait",
@@ -664,7 +664,7 @@ dependencies = [
 
 [[package]]
 name = "astrid-workspace"
-version = "0.5.4"
+version = "0.5.5"
 dependencies = [
  "astrid-core",
  "chrono",
