@@ -1,0 +1,19 @@
+[Unit]
+Description=Load Astrid's selected local CPU model
+Documentation=https://docs.ollama.com/api
+Requires=ollama-cpu.service
+After=ollama-cpu.service
+Before=astrid.service astrid-edge-runtime.service
+ConditionPathExists=%h/.config/astrid/edge-appliance.env
+
+[Service]
+Type=oneshot
+WorkingDirectory=%h
+EnvironmentFile=%h/.config/astrid/edge-appliance.env
+ExecStart=%h/.astrid/bin/warm-ollama-model
+RemainAfterExit=yes
+TimeoutStartSec=660
+UMask=0077
+
+[Install]
+WantedBy=default.target

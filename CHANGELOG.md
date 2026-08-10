@@ -9,6 +9,8 @@ Changelog tracking starts with 0.2.0. Prior versions were not tracked.
 
 ## [Unreleased]
 
+- **[codex] Aligns the self-evolution bootstrap with the two reviewed live appliance baselines.** The immutable installer now verifies `operator/hindsight/latest.json` beneath the canonical Astrid state root used by the hindsight service, rather than a nonexistent path beneath the edge workspace. Root service migration accepts only the exact known pre-root AVADO and ICP user-unit hashes and their exact signed-release targets; any other byte remains fail-closed, and the installed system units always come from the target release. Fixtures mirror both deployed layouts, exercise the accepted transitions, and prove that a subsequent mutation is rejected.
+
 - **[codex] Clears newly published RustSec blockers before the CPU-edge release.** The runtime now uses patched Wasmtime 46.0.2 and RMCP 1.8, and removes the unused optional SurrealDB query-engine graph that retained vulnerable `rkyv` 0.7. The live SurrealKV persistence path and appliance state format are unchanged.
 
 - **[codex] Confines interactive steward lease credentials to one controller process.** A persistent NDJSON `session` adapter now begins the normal source-first lifecycle, retains the opaque token only in process memory, renews automatically while idle or while a request is only partially written, and exposes credential-free status, heartbeat, projection, and finish operations. Requests are bounded and reject credential-bearing fields; controller responses are checked before emission. Pause, EOF, timeout, `SIGINT`, `SIGTERM`, and `SIGHUP` all produce a terminal cancellation and release the lease, while hard-kill recovery remains TTL-based. One-shot compatibility clients can read the token from stdin, and the legacy argv form now warns about process-list exposure. An anti-drop entry makes removal of the confinement guard or its exact raw-token regression an integrity alarm. The adapter adds no command runner, approval, deployment, git, scheduling, or live-control authority.
@@ -1385,6 +1387,12 @@ Changelog tracking starts with 0.2.0. Prior versions were not tracked.
 - `host/shim.rs` (430 lines) — Extism dispatch shim, `WasmHostFunction` enum, `register_host_functions()`, manual memory helpers. (#632)
 - `RiskLevel` enum and all references — removed from WIT, IPC payloads, approval engine, audit entries, CLI renderers, policy engine, and test fixtures. Approval prompts now render with a single style. The allowance store handles "don't ask again" patterns without risk classification. (#641)
 
+## [0.5.5] - 2026-08-09
+
+### Fixed
+
+- Self-evolution bootstrap publication now verifies the portable basename-only SHA-256 sidecar from the archive directory with strict parsing before extraction or provenance attestation.
+
 ## [0.5.4] - 2026-08-09
 
 ### Fixed
@@ -1597,7 +1605,8 @@ Changelog tracking starts with 0.2.0. Prior versions were not tracked.
 Initial tracked release. See the [repository history](https://github.com/unicity-astrid/astrid/commits/v0.2.0)
 for changes included in this version.
 
-[Unreleased]: https://github.com/mikedotexe/astrid/compare/v0.5.4...HEAD
+[Unreleased]: https://github.com/mikedotexe/astrid/compare/v0.5.5...HEAD
+[0.5.5]: https://github.com/mikedotexe/astrid/releases/tag/v0.5.5
 [0.5.4]: https://github.com/mikedotexe/astrid/releases/tag/v0.5.4
 [0.5.3]: https://github.com/mikedotexe/astrid/releases/tag/v0.5.3
 [0.5.2]: https://github.com/mikedotexe/astrid/releases/tag/v0.5.2

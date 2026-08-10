@@ -432,7 +432,10 @@ jobs:
           bootstrap="dist/astrid-edge-self-evolution-${GITHUB_REF_NAME#v}-${{ matrix.target }}.tar.gz"
           test -f "$bootstrap"
           test -f "${bootstrap}.sha256"
-          sha256sum -c "${bootstrap}.sha256"
+          (
+            cd "$(dirname "$bootstrap")"
+            sha256sum --check --strict "$(basename "${bootstrap}.sha256")"
+          )
           verify_root="$(mktemp -d)"
           trap 'rm -rf -- "$verify_root"' EXIT
           tar -C "$verify_root" -xzf "$bootstrap"

@@ -746,7 +746,7 @@ safe_absolute "$origin_mac_retirement_root" || die "origin-mac retirement root i
 maintenance_edge_acknowledgement=$runtime_workspace/runtime/maintenance-edge-ack.json
 maintenance_core_acknowledgement=$astrid_state_root/run/maintenance-core-ack.json
 sensor_state=$runtime_workspace/runtime/spectral_state.json
-hindsight_state=$runtime_workspace/operator/hindsight/latest.json
+hindsight_state=$astrid_state_root/operator/hindsight/latest.json
 fill_history=$runtime_workspace/runtime/fill_history.jsonl
 web_receipts=$runtime_workspace/web/receipts.jsonl
 introspection_receipts=$runtime_workspace/introspection/receipts.jsonl

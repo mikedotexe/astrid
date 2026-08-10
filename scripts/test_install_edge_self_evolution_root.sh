@@ -6,6 +6,7 @@ IFS=$'\n\t'
 SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)
 REPO_ROOT=$(cd "$SCRIPT_DIR/.." && pwd -P)
 INSTALLER=$SCRIPT_DIR/install_edge_self_evolution_root.sh
+LEGACY_UNIT_FIXTURES=$SCRIPT_DIR/fixtures/edge-self-evolution/legacy-user-units
 TEMP=$(mktemp -d)
 TEMP=$(realpath "$TEMP")
 trap 'rm -rf -- "$TEMP"' EXIT
@@ -56,7 +57,8 @@ printf '{"schema":"fixture"}\n' >"$WORKSPACE/perception/latest.json"
 mkdir -p "$WORKSPACE/operator/hindsight" "$WORKSPACE/web" \
     "$WORKSPACE/introspection" "$WORKSPACE/runtime"
 printf '{"timestamp_unix_ms":0}\n' >"$WORKSPACE/runtime/spectral_state.json"
-printf '{"schema":"fixture"}\n' >"$WORKSPACE/operator/hindsight/latest.json"
+mkdir -p "$TEMP/.astrid/operator/hindsight"
+printf '{"schema":"fixture"}\n' >"$TEMP/.astrid/operator/hindsight/latest.json"
 printf '{"fill_ratio":0.68}\n' >"$WORKSPACE/runtime/fill_history.jsonl"
 printf '\n' >"$WORKSPACE/web/receipts.jsonl"
 printf '\n' >"$WORKSPACE/introspection/receipts.jsonl"
@@ -228,6 +230,21 @@ grep -q 'root helper activates units only through private alias=.*updater/system
 [[ ! -s $MOCK_LOG ]] || fail "dry-run invoked a mutating mock"
 for path in "$TEMP/host/data/supervisor-state" "$TEMP/host/data/signed-source" "$TEMP/host/data/candidates" "$TEMP/host/appliance/releases"; do [[ ! -e $path ]] || fail "dry-run created $path"; done
 
+for unit in astrid-model-warmup.service astrid.service astrid-edge-runtime.service astrid-edge-hindsight.service; do
+    cp "$LEGACY_UNIT_FIXTURES/avado/$unit" "$TEMP/.config/systemd/user/$unit"
+    [[ $unit != astrid-model-warmup.service ]] || printf '\n' >>"$TEMP/.config/systemd/user/$unit"
+done
+[[ $(hash_file "$TEMP/.config/systemd/user/astrid-model-warmup.service") == 28e134cc373bb09c99bc47fccd6e99a225bbb7c4d7b45b28c163e83a05d01360 ]] \
+    || fail "AVADO legacy warmup fixture lost its exact deployed trailing-newline identity"
+PATH="$TEMP/mockbin:$PATH" "$INSTALLER" "${ARGS[@]}" >"$TEMP/avado-legacy-baseline.out"
+grep -q 'consume exact reviewed deployed-user bootstrap baseline:' "$TEMP/avado-legacy-baseline.out" \
+    || fail "AVADO exact deployed-user bootstrap baseline was not reported"
+printf '# one-byte-class mutation\n' >>"$TEMP/.config/systemd/user/astrid.service"
+expect_failure 'deployed user unit differs from reviewed source' env PATH="$TEMP/mockbin:$PATH" "$INSTALLER" "${ARGS[@]}"
+for unit in ollama-cpu.service astrid-model-warmup.service astrid.service astrid-edge-runtime.service astrid-edge-hindsight.service astrid-edge-hindsight.timer; do
+    cp "$REPO_ROOT/packaging/systemd/$unit" "$TEMP/.config/systemd/user/$unit"
+done
+
 # Exercise the second live appliance layout directly through the immutable
 # migrator. ICP has no ~/.local/bin/ollama; its executable and CPU libraries
 # live below the SSD-backed runtime root while only models remain writable.
@@ -296,6 +313,13 @@ done
 "$MIGRATOR" "${ICP_MIGRATION_ARGS[@]}" >"$TEMP/icp-migration.out"
 grep -Fq "ollama executable=$ICP_OLLAMA runtime-root=$ICP_DATA/ollama/runtime models=$ICP_DATA/ollama/models" "$TEMP/icp-migration.out" || fail "ICP migrator did not bind the exact canonical SSD Ollama layout"
 ! grep -Fq "$ICP_HOME/.local/bin/ollama" "$TEMP/icp-migration.out" || fail "ICP migration retained the absent AVADO Ollama launcher"
+cp "$LEGACY_UNIT_FIXTURES/icp/astrid-model-warmup.service" "$ICP_USER_UNITS/astrid-model-warmup.service"
+"$MIGRATOR" "${ICP_MIGRATION_ARGS[@]}" >"$TEMP/icp-legacy-baseline.out"
+grep -q 'consume exact reviewed deployed-user bootstrap baseline:' "$TEMP/icp-legacy-baseline.out" \
+    || fail "ICP exact deployed-user bootstrap baseline was not reported"
+printf '# one-byte-class mutation\n' >>"$ICP_USER_UNITS/astrid-model-warmup.service"
+expect_failure 'deployed user unit differs from reviewed source' "$MIGRATOR" "${ICP_MIGRATION_ARGS[@]}"
+cp "$REPO_ROOT/packaging/systemd/icp/astrid-model-warmup.service" "$ICP_USER_UNITS/astrid-model-warmup.service"
 expect_failure 'profile Ollama binary digest mismatch' "$MIGRATOR" "${ICP_MIGRATION_ARGS[@]}" --ollama-binary-sha256 "$(printf wrong-ollama | sha256sum | awk '{print $1}')"
 expect_failure 'Ollama binary is not the exact profile launcher target' "$MIGRATOR" "${ICP_MIGRATION_ARGS[@]}" --ollama-binary "$TEMP/.local/ollama-v0.32.5/bin/ollama"
 expect_failure 'rescue system-unit root must be the exact private updater alias' "$MIGRATOR" "${ICP_MIGRATION_ARGS[@]}" --rescue-system-unit-root /etc/systemd/system
@@ -995,6 +1019,8 @@ grep -q 'create_private_random_key "$LEDGER_ATTESTATION_KEY" "root lifecycle led
 grep -q 'ledger_attestation_key":"$LEDGER_ATTESTATION_KEY"' "$INSTALLER" || fail "rescue configuration omits the dedicated lifecycle-ledger key"
 grep -q '"$ledger_attestation_sha256"' "$INSTALLER" || fail "lifecycle-ledger key is excluded from cross-domain collision checks"
 grep -q '"telemetry_addr":"127.0.0.1:7878"' "$INSTALLER" || fail "rescue health does not bind exact host-loopback telemetry"
+grep -Fq 'hindsight_state=$astrid_state_root/operator/hindsight/latest.json' "$INSTALLER" || fail "rescue health does not use the canonical appliance hindsight root"
+grep -q 'reviewed_deployed_unit_baseline' "$REPO_ROOT/packaging/systemd/root/migrate-edge-user-services-to-system" || fail "exact deployed-user bootstrap compatibility gate is absent"
 grep -q 'audio_policy=required_fresh_numeric' "$INSTALLER" || fail "AVADO rescue health does not require fresh numeric audio"
 grep -q 'expected_audio_source=physical_alsa_numeric_feeder:default:16000hz:1ch' "$INSTALLER" || fail "AVADO rescue health does not bind the immutable numeric ALSA feeder source"
 grep -q 'audio_policy=required_unavailable' "$INSTALLER" || fail "ICP rescue health does not require explicit audio unavailability"

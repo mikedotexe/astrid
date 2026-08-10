@@ -147,6 +147,11 @@ class BootstrapPackageTests(unittest.TestCase):
         first_bytes = Path(first["archive"]).read_bytes()
         self.assertEqual(first_bytes, Path(second["archive"]).read_bytes())
         self.assertEqual(first["sha256"], hashlib.sha256(first_bytes).hexdigest())
+        sidecar = Path(f'{first["archive"]}.sha256')
+        self.assertEqual(
+            sidecar.read_text(encoding="ascii"),
+            f'{first["sha256"]}  {Path(first["archive"]).name}\n',
+        )
 
         with tarfile.open(first["archive"], "r:gz") as archive:
             names = {member.name for member in archive}
