@@ -1,0 +1,18 @@
+[Unit]
+Description=Poll persisted Astrid CPU-edge reflection due state (two-hour execution floor)
+Documentation=https://github.com/mikedotexe/astrid
+# The invoked supervisor service performs fail-closed preflight checks. Keeping
+# them on the service also covers direct/manual starts of the same immutable path.
+
+[Timer]
+# This is a cheap due-state poll, not the reflection cadence.  The immutable
+# supervisor persists/coalesces due work and enforces the 7,200-second floor.
+OnBootSec=5min
+OnUnitActiveSec=15min
+RandomizedDelaySec=2min
+AccuracySec=30s
+Persistent=true
+Unit=astrid-edge-self-change-supervisor.service
+
+[Install]
+WantedBy=timers.target

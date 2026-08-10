@@ -1,0 +1,38 @@
+[package]
+name = "astrid-edge-web-broker"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.94"
+publish = false
+description = "Immutable per-client Unix-socket public web broker for CPU-edge Astrid"
+
+[workspace]
+
+[dependencies]
+ed25519-dalek = { version = "2", features = ["rand_core"] }
+libc = "0.2"
+nix = { version = "0.30", features = ["socket"] }
+futures-util = "0.3"
+reqwest = { version = "0.12", default-features = false, features = ["rustls-tls-webpki-roots", "stream"] }
+rand_core = { version = "0.6", features = ["getrandom"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+sha2 = "0.10"
+tokio = { version = "1", features = ["net", "rt-multi-thread", "time"] }
+
+[dev-dependencies]
+tempfile = "3"
+
+[profile.release]
+codegen-units = 1
+lto = "thin"
+panic = "abort"
+strip = "symbols"
+
+[lints.rust]
+unsafe_code = "deny"
+
+[lints.clippy]
+all = { level = "warn", priority = -1 }
+pedantic = { level = "warn", priority = -1 }
+arithmetic_side_effects = "deny"

@@ -26,7 +26,7 @@ pub use astrid_types::kernel;
 pub use astrid_types::kernel as kernel_api;
 pub use astrid_types::llm;
 
-pub use bus::{EventBus, EventReceiver};
+pub use bus::{EventBus, EventReceiver, MaintenanceActivitySnapshot};
 pub use event::{AstridEvent, EventMetadata};
 pub use ipc::IpcMessage;
 pub use ipc::IpcPayload;

@@ -1,0 +1,13 @@
+[Unit]
+Description=Record Astrid edge hindsight every fifteen minutes
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=15min
+RandomizedDelaySec=45s
+AccuracySec=15s
+Persistent=true
+Unit=astrid-edge-hindsight.service
+
+[Install]
+WantedBy=timers.target

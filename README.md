@@ -2,7 +2,7 @@
 
 **A user-space operating system for AI agents.**
 
-[![CI](https://github.com/unicity-astrid/astrid/actions/workflows/ci.yml/badge.svg)](https://github.com/unicity-astrid/astrid/actions)
+[![CI](https://github.com/mikedotexe/astrid/actions/workflows/ci.yml/badge.svg)](https://github.com/mikedotexe/astrid/actions)
 [![License: MIT OR Apache-2.0](https://img.shields.io/badge/License-MIT%20OR%20Apache--2.0-blue.svg)](LICENSE-MIT)
 [![MSRV](https://img.shields.io/badge/MSRV-1.94-blue)](https://www.rust-lang.org)
 [![Rust 2024](https://img.shields.io/badge/Rust-2024_edition-orange)](https://www.rust-lang.org)
@@ -17,7 +17,7 @@ orchestrators, memory, frontends, interceptors, and bridges are user-space
 programs. The kernel stays small and opinionated; agent behavior stays
 replaceable.
 
-Astrid is currently `v0.5.1`. It runs locally as a daemon plus CLI, loads
+Astrid is currently `v0.5.2`. It runs locally as a daemon plus CLI, loads
 Component Model capsules, supports MCP subprocess capsules, and includes the
 spectral bridge work that couples Astrid's symbolic action surface to Minime's
 stable-core telemetry.
@@ -162,6 +162,13 @@ philosophy we have built together:
 Astrid can be present with Minime without immediately translating every symbolic
 insight into physiological pressure. That boundary is now a first-class design
 surface.
+
+CPU-only appliance Astrids use a separate edge-native implementation documented
+in [`docs/headless-linux.md`](docs/headless-linux.md). It labels its covariance
+effective-rank substrate explicitly, derives bounded spectral summaries from its
+single existing eigensolve, and exposes voluntary read-only inquiry plus signed,
+reversible reservoir experiments. It does not copy the Mac bridge, Minime state,
+memories, controls, or authority.
 
 ## Local Model Inventory
 
@@ -333,11 +340,19 @@ astrid capsule list --verbose
 astrid capsule tree
 ```
 
+For an always-on CPU-only Linux deployment, including x86-64 and ARM64
+appliance-class hosts, see [Headless Linux Appliances](docs/headless-linux.md).
+The optional immutable two-hour introspection and offline A/B update boundary
+is described in
+[CPU-edge scheduled introspection and self-evolution](docs/cpu-edge-self-evolution.md).
+
 ## Distro And Capsule Management
 
 A distro is a `Distro.toml` that installs a curated capsule set. `astrid init`
 resolves variables, lets the user choose provider groups, installs capsules, and
-writes an atomic `Distro.lock` with BLAKE3 hashes.
+writes an atomic `Distro.lock` with BLAKE3 hashes. The CLI rejects manifests
+whose `distro.astrid-version` requirement does not accept the running Astrid
+version.
 
 ```bash
 astrid init

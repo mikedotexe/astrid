@@ -2,6 +2,24 @@
 /target
 **/target
 Cargo.lock
+!Cargo.lock
+!services/astrid-edge-runtime/Cargo.lock
+!services/astrid-edge-steward-helper/Cargo.lock
+!services/astrid-edge-rescue-helper/Cargo.lock
+!services/astrid-edge-web-broker/Cargo.lock
+!services/astrid-edge-checkpoint/Cargo.lock
+!services/astrid-edge-provider-broker/Cargo.lock
+!services/astrid-edge-presentation-broker/Cargo.lock
+!capsules/astralis/astrid-capsule-agents/Cargo.lock
+!capsules/astralis/astrid-capsule-cli/Cargo.lock
+!capsules/astralis/astrid-capsule-edge-context/Cargo.lock
+!capsules/astralis/astrid-capsule-edge-introspector/Cargo.lock
+!capsules/astralis/astrid-capsule-edge-spectral/Cargo.lock
+!capsules/astralis/astrid-capsule-fs/Cargo.lock
+!capsules/astralis/astrid-capsule-http/Cargo.lock
+!capsules/astralis/astrid-capsule-memory/Cargo.lock
+!capsules/astralis/astrid-capsule-shell/Cargo.lock
+!capsules/astralis/astrid-capsule-skills/Cargo.lock
 dist/
 
 # IDE
@@ -25,12 +43,14 @@ secrets.toml
 
 # Compiled WASM test fixtures (rebuild via scripts/compile-test-plugin.sh)
 **/*.wasm
+!crates/astrid-openclaw/kernel/engine.wasm
 
 # Generated test fixtures (rebuilt by test setup)
 crates/astrid-integration-tests/tests/fixtures/
 
-# QuickJS kernel (rebuild via scripts/build-quickjs-kernel.sh)
-# (covered by **/*.wasm above)
+# The reviewed QuickJS kernel is a signed, tracked release input. Deliberate
+# replacements are rebuilt via scripts/build-quickjs-kernel.sh and must update
+# the adjacent BLAKE3 sidecar in the same reviewed change.
 
 # Node.js (packages/)
 packages/*/node_modules/

@@ -8,7 +8,7 @@ use crate::engine::wasm::host_state::HostState;
 use astrid_events::AstridEvent;
 use astrid_events::EventMetadata;
 use astrid_events::EventReceiver;
-use astrid_events::ipc::{IpcMessage, IpcPayload};
+use astrid_events::ipc::{IpcMessage, IpcPayload, IpcProducerV1, IpcTraceContextV1};
 
 // ── Extracted testable core ─────────────────────────────────────────
 
@@ -59,6 +59,7 @@ pub(crate) struct DrainResult {
 /// Collects messages until the buffer exceeds `max_payload_bytes` or no
 /// more messages are available. Returns the collected messages, a count
 /// of messages dropped due to buffer overflow, and the cumulative lag.
+#[cfg(test)]
 pub(crate) fn drain_receiver(
     receiver: &mut EventReceiver,
     max_payload_bytes: usize,
@@ -113,6 +114,39 @@ fn drain_to_wit_envelope(drain: &DrainResult) -> WitIpcEnvelope {
     }
 }
 
+/// Convert one received event into an IPC result without consuming any later
+/// queued event. Run-loop capsules need this one-message boundary so a publish
+/// made while handling the returned message can inherit that message's exact
+/// trace rather than an arbitrary trace from a drained batch.
+fn single_event_result(
+    event: Option<&AstridEvent>,
+    max_payload_bytes: usize,
+    lagged: u64,
+) -> DrainResult {
+    let Some(AstridEvent::Ipc { message, .. }) = event else {
+        return DrainResult {
+            messages: Vec::new(),
+            dropped: 0,
+            lagged,
+        };
+    };
+    let payload_len = serde_json::to_vec(&message.payload)
+        .map(|value| value.len())
+        .unwrap_or(max_payload_bytes.saturating_add(1));
+    if payload_len > max_payload_bytes {
+        return DrainResult {
+            messages: Vec::new(),
+            dropped: 1,
+            lagged,
+        };
+    }
+    DrainResult {
+        messages: vec![message.clone()],
+        dropped: 0,
+        lagged,
+    }
+}
+
 /// Remove a subscription by handle ID, rejecting runtime-owned interceptor handles.
 ///
 /// Returns `Err` if the handle is protected (auto-subscribed interceptor) or
@@ -135,6 +169,17 @@ pub(crate) fn remove_subscription(
     }
 
     Ok(())
+}
+
+fn child_trace_context(
+    caller: Option<&IpcMessage>,
+    run_loop_caller: Option<&IpcMessage>,
+) -> Option<IpcTraceContextV1> {
+    caller
+        .or(run_loop_caller)
+        .and_then(|message| message.trace.as_ref())
+        .filter(|trace| trace.is_supported())
+        .map(IpcTraceContextV1::child)
 }
 
 /// Maximum timeout for blocking IPC receive (60 seconds).
@@ -217,13 +262,25 @@ impl ipc::Host for HostState {
             .as_ref()
             .and_then(|c| c.principal.clone())
             .unwrap_or_else(|| self.principal.to_string());
-        let message =
-            IpcMessage::new(topic, ipc_payload, self.capsule_uuid).with_principal(principal_str);
+        let trace = child_trace_context(
+            self.caller_context.as_ref(),
+            self.run_loop_trace_context.as_ref(),
+        );
+        let mut message = IpcMessage::new(topic, ipc_payload, self.capsule_uuid)
+            .with_principal(principal_str)
+            .with_producer(IpcProducerV1::new(
+                "wasm_capsule",
+                self.capsule_id.to_string(),
+            ));
+        if let Some(trace) = trace {
+            message = message.with_trace(trace);
+        }
 
-        let event = AstridEvent::Ipc {
-            metadata: EventMetadata::new("wasm_guest").with_session_id(self.capsule_uuid),
-            message,
-        };
+        let mut metadata = EventMetadata::new("wasm_guest").with_session_id(self.capsule_uuid);
+        if let Some(trace) = message.trace.as_ref() {
+            metadata = metadata.with_correlation_id(trace.trace_id);
+        }
+        let event = AstridEvent::Ipc { metadata, message };
 
         // Publish to the event bus
         self.event_bus.publish(event);
@@ -308,7 +365,14 @@ impl ipc::Host for HostState {
             .get_mut(&handle_id)
             .ok_or_else(|| "Subscription handle not found".to_string())?;
 
-        let drain = drain_receiver(receiver, util::MAX_GUEST_PAYLOAD_LEN as usize);
+        let event = receiver.try_recv();
+        let lagged = receiver.drain_lagged();
+        let drain = single_event_result(
+            event.as_deref(),
+            util::MAX_GUEST_PAYLOAD_LEN as usize,
+            lagged,
+        );
+        self.run_loop_trace_context = drain.messages.first().cloned();
         Ok(drain_to_wit_envelope(&drain))
     }
 
@@ -350,15 +414,16 @@ impl ipc::Host for HostState {
         )
         .flatten();
 
-        // Collect the blocking-wake message (if any) plus drain remaining.
-        let mut drain = drain_receiver(&mut receiver, util::MAX_GUEST_PAYLOAD_LEN as usize);
-
-        // Prepend the message that woke us (it was consumed by recv, not try_recv).
-        if let Some(event) = event
-            && let AstridEvent::Ipc { message, .. } = &*event
-        {
-            drain.messages.insert(0, message.clone());
-        }
+        // Return only the blocking-wake message. Later queued messages stay in
+        // the subscription for later calls, preserving a one-message causal
+        // boundary for run-loop trace propagation.
+        let lagged = receiver.drain_lagged();
+        let drain = single_event_result(
+            event.as_deref(),
+            util::MAX_GUEST_PAYLOAD_LEN as usize,
+            lagged,
+        );
+        self.run_loop_trace_context = drain.messages.first().cloned();
 
         // Re-insert the receiver after draining. During teardown (cancel token
         // fired), skip re-insertion: the capsule is dying and the lock may be

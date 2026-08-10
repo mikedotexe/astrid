@@ -1,0 +1,87 @@
+diff --git a/Capsule.toml b/Capsule.toml
+--- a/Capsule.toml
++++ b/Capsule.toml
+@@ -17,6 +17,7 @@ type = "executable"
+ "astrid:context" = "^1.0"
+ 
+ [env]
++explicit_tool_request_suffix = { type = "string", default = "", request = "Ephemeral tool-call reminder used only when the user explicitly names a read-only web tool" }
+ identity_timeout_secs = { type = "string", default = "120", request = "Identity and prompt-build timeout in seconds" }
+ max_iterations = { type = "string", default = "3", request = "Maximum ReAct tool iterations" }
+ sovereign_next_repair = { type = "string", default = "false", request = "Append a transparent safe LISTEN fallback when the final NEXT contract is missing or malformed" }
+diff --git a/src/lib.rs b/src/lib.rs
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -329,6 +329,21 @@ fn session_timeout_ms() -> u64 {
+     get_config_u64("session_timeout_ms", DEFAULT_SESSION_TIMEOUT_MS)
+ }
+ 
++/// Whether the untouched user message explicitly asks for a named read-only
++/// web tool. Keep this narrow so mere discussion or system context cannot
++/// force tool use.
++fn explicitly_requests_read_only_web_tool(text: &str) -> bool {
++    let normalized = text.to_ascii_lowercase();
++    [
++        "call search_web",
++        "use search_web",
++        "call fetch_url",
++        "use fetch_url",
++    ]
++    .iter()
++    .any(|phrase| normalized.contains(phrase))
++}
++
+ /// State machine phase for the react loop.
+ #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+ pub(crate) enum Phase {
+@@ -891,7 +906,24 @@ impl ReactLoop {
+         let tools: Vec<LlmToolDefinition> =
+             parse_json_array_field(&payload, "tools", "tool schema");
+         let mut messages: Vec<Message> = parse_json_array_field(&payload, "messages", "message");
+ 
++        // If the untouched user text explicitly names one of the appliance's
++        // read-only web tools, put a short tool-phase reminder after that
++        // request. This runs only for the first model call; tool-result
++        // continuations bypass prompt assembly, so they remain free to
++        // synthesize the result instead of calling the tool repeatedly.
++        if let Ok(suffix) = env::var("explicit_tool_request_suffix")
++            && !suffix.trim().is_empty()
++            && let Some(last_user_msg) = messages
++                .iter_mut()
++                .rev()
++                .find(|message| matches!(message.role, MessageRole::User))
++            && let MessageContent::Text(ref mut text) = last_user_msg.content
++            && explicitly_requests_read_only_web_tool(text)
++        {
++            *text = format!("{text}\n\n{}", suffix.trim());
++        }
++
+         // Apply user context prefix to the LOCAL COPY ONLY.
+         // Session's copy stays clean - this is an ephemeral transform.
+         if let Some(prefix) = payload.get("user_context_prefix").and_then(|v| v.as_str())
+@@ -1673,8 +1705,24 @@ fn parse_json_array_field<T: serde::de::DeserializeOwned>(
+ mod sovereign_next_tests {
+     use super::{
+         FORMAT_NEXT_REPAIR_MARKER, SAFE_NEXT_REPAIR_MARKER, canonicalize_embedded_terminal_next,
+-        ensure_sovereign_next, has_valid_sovereign_next,
++        ensure_sovereign_next, explicitly_requests_read_only_web_tool, has_valid_sovereign_next,
+     };
+ 
++    #[test]
++    fn only_explicit_named_web_requests_receive_the_tool_phase_reminder() {
++        assert!(explicitly_requests_read_only_web_tool(
++            "Call search_web exactly once for current evidence."
++        ));
++        assert!(explicitly_requests_read_only_web_tool(
++            "Please use fetch_url for this public page."
++        ));
++        assert!(!explicitly_requests_read_only_web_tool(
++            "Discuss when search_web might be useful."
++        ));
++        assert!(!explicitly_requests_read_only_web_tool(
++            "Do not call any web tool."
++        ));
++    }
++
+     #[test]
+     fn accepts_only_complete_supported_final_actions() {

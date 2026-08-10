@@ -9,8 +9,8 @@ use std::sync::Arc;
 use astrid_core::session_token::{
     HandshakeRequest, HandshakeResponse, PROTOCOL_VERSION, SessionToken,
 };
-use astrid_events::ipc::{IpcMessage, IpcPayload};
-use astrid_events::{AstridEvent, EventMetadata};
+use astrid_events::ipc::{IpcMessage, IpcPayload, IpcProducerV1, IpcTraceContextV1};
+use astrid_events::{AstridEvent, EventMetadata, EventReceiver};
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::UnixStream;
 use tokio::net::unix::{OwnedReadHalf, OwnedWriteHalf};
@@ -20,6 +20,7 @@ const MAX_HANDSHAKE_SIZE: usize = 4096;
 const MAX_IPC_FRAME_SIZE: usize = 50 * 1024 * 1024;
 const HANDSHAKE_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(10);
 const BRIDGE_SOURCE: &str = "native_socket_bridge";
+const SENSORY_USER_INPUT_TOPIC: &str = "sensory.v1.user_input";
 
 /// Spawn the native CLI socket bridge.
 #[must_use]
@@ -55,12 +56,33 @@ async fn handle_connection(kernel: Arc<crate::Kernel>, mut stream: UnixStream) {
         return;
     }
 
-    publish_client_event(&kernel, IpcPayload::Connect);
+    let connection_source = format!("{BRIDGE_SOURCE}:{}", uuid::Uuid::new_v4());
+    // Subscribe before publishing the connection event. This gives the client
+    // one exact observation epoch: a maintenance barrier can never be emitted
+    // into the gap between connection admission and receiver creation.
+    let receiver = kernel.event_bus.subscribe();
+    publish_client_event(&kernel, &connection_source, IpcPayload::Connect);
     let (read_half, write_half) = stream.into_split();
-    let writer = tokio::spawn(forward_events_to_client(Arc::clone(&kernel), write_half));
-    read_client_messages(Arc::clone(&kernel), read_half).await;
-    writer.abort();
-    publish_client_event(&kernel, IpcPayload::Disconnect { reason: None });
+    let mut writer = tokio::spawn(forward_events_to_client(
+        write_half,
+        connection_source.clone(),
+        receiver,
+    ));
+    let reader_source = connection_source.clone();
+    let mut reader = tokio::spawn(read_client_messages(
+        Arc::clone(&kernel),
+        read_half,
+        reader_source,
+    ));
+    tokio::select! {
+        _ = &mut writer => reader.abort(),
+        _ = &mut reader => writer.abort(),
+    }
+    publish_client_event(
+        &kernel,
+        &connection_source,
+        IpcPayload::Disconnect { reason: None },
+    );
 }
 
 async fn authenticate(
@@ -116,12 +138,24 @@ fn validate_handshake(
     }
 }
 
-async fn read_client_messages(kernel: Arc<crate::Kernel>, mut read_half: OwnedReadHalf) {
+async fn read_client_messages(
+    kernel: Arc<crate::Kernel>,
+    mut read_half: OwnedReadHalf,
+    connection_source: String,
+) {
     loop {
         match read_ipc_frame(&mut read_half).await {
-            Ok(Some(message)) => {
+            Ok(Some(mut message)) => {
+                attest_native_socket_message(&mut message, &connection_source);
+                ensure_user_input_trace(&mut message);
+                if let Some(sensory_message) = sensory_user_input_mirror(&message) {
+                    let _ = kernel.event_bus.publish(AstridEvent::Ipc {
+                        metadata: traced_event_metadata(&connection_source, &sensory_message),
+                        message: sensory_message,
+                    });
+                }
                 let _ = kernel.event_bus.publish(AstridEvent::Ipc {
-                    metadata: EventMetadata::new(BRIDGE_SOURCE),
+                    metadata: traced_event_metadata(&connection_source, &message),
                     message,
                 });
             },
@@ -134,13 +168,72 @@ async fn read_client_messages(kernel: Arc<crate::Kernel>, mut read_half: OwnedRe
     }
 }
 
-async fn forward_events_to_client(kernel: Arc<crate::Kernel>, mut write_half: OwnedWriteHalf) {
-    let mut receiver = kernel.event_bus.subscribe();
+/// Replace any client-supplied producer claim at the authenticated kernel
+/// boundary. Authentication proves access to the socket, not capsule identity.
+fn attest_native_socket_message(message: &mut IpcMessage, connection_source: &str) {
+    message.producer = Some(IpcProducerV1::new(
+        "native_socket_client",
+        connection_source,
+    ));
+}
+
+fn traced_event_metadata(source: &str, message: &IpcMessage) -> EventMetadata {
+    let mut metadata = EventMetadata::new(source);
+    if let Some(trace) = message.trace.as_ref().filter(|trace| trace.is_supported()) {
+        metadata = metadata.with_correlation_id(trace.trace_id);
+    }
+    metadata
+}
+
+fn ensure_user_input_trace(message: &mut IpcMessage) {
+    let IpcPayload::UserInput { session_id, .. } = &message.payload else {
+        return;
+    };
+    let trace_id = message
+        .trace
+        .as_ref()
+        .filter(|trace| trace.is_supported())
+        .map_or_else(uuid::Uuid::new_v4, |trace| trace.trace_id);
+    let chain_id = message
+        .trace
+        .as_ref()
+        .filter(|trace| trace.is_supported())
+        .and_then(|trace| trace.chain_id.clone());
+    message.trace = Some(IpcTraceContextV1::root(
+        trace_id,
+        session_id.clone(),
+        chain_id,
+    ));
+}
+
+fn sensory_user_input_mirror(message: &IpcMessage) -> Option<IpcMessage> {
+    if !matches!(message.payload, IpcPayload::UserInput { .. }) {
+        return None;
+    }
+    let mut mirrored = message.clone();
+    mirrored.topic = SENSORY_USER_INPUT_TOPIC.to_string();
+    Some(mirrored)
+}
+
+async fn forward_events_to_client(
+    mut write_half: OwnedWriteHalf,
+    connection_source: String,
+    mut receiver: EventReceiver,
+) {
     while let Some(event) = receiver.recv().await {
+        let lagged = receiver.drain_lagged();
+        if lagged != 0 {
+            // A client that missed any event can no longer make an exact
+            // ordered-drain claim. Closing the authenticated observation
+            // epoch makes the edge runtime poison maintenance exactness for
+            // this process rather than forwarding a later barrier.
+            warn!(lagged, %connection_source, "native socket observation epoch lost events");
+            break;
+        }
         let AstridEvent::Ipc { metadata, message } = &*event else {
             continue;
         };
-        if metadata.source == BRIDGE_SOURCE || message.topic.starts_with("client.v1.") {
+        if !should_forward_event(&metadata.source, &connection_source, &message.topic) {
             continue;
         }
         if let Err(e) = write_json_frame(&mut write_half, message).await {
@@ -150,7 +243,11 @@ async fn forward_events_to_client(kernel: Arc<crate::Kernel>, mut write_half: Ow
     }
 }
 
-fn publish_client_event(kernel: &Arc<crate::Kernel>, payload: IpcPayload) {
+fn should_forward_event(event_source: &str, connection_source: &str, topic: &str) -> bool {
+    event_source != connection_source && !topic.starts_with("client.v1.")
+}
+
+fn publish_client_event(kernel: &Arc<crate::Kernel>, connection_source: &str, payload: IpcPayload) {
     let topic = match &payload {
         IpcPayload::Connect => "client.v1.connect",
         IpcPayload::Disconnect { .. } => "client.v1.disconnect",
@@ -158,7 +255,7 @@ fn publish_client_event(kernel: &Arc<crate::Kernel>, payload: IpcPayload) {
     };
     let message = IpcMessage::new(topic, payload, kernel.session_id.0);
     let _ = kernel.event_bus.publish(AstridEvent::Ipc {
-        metadata: EventMetadata::new(BRIDGE_SOURCE),
+        metadata: EventMetadata::new(connection_source),
         message,
     });
 }
@@ -223,4 +320,180 @@ async fn write_json_frame<T: serde::Serialize, W: AsyncWriteExt + Unpin>(
     writer.write_all(&len.to_be_bytes()).await?;
     writer.write_all(&bytes).await?;
     writer.flush().await
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{
+        SENSORY_USER_INPUT_TOPIC, attest_native_socket_message, ensure_user_input_trace,
+        forward_events_to_client, sensory_user_input_mirror, should_forward_event,
+        traced_event_metadata,
+    };
+    use astrid_events::ipc::{IpcMessage, IpcPayload, IpcProducerV1, IpcTraceContextV1};
+    use astrid_events::{AstridEvent, EventBus, EventMetadata};
+    use uuid::Uuid;
+
+    #[tokio::test]
+    async fn lagged_socket_epoch_closes_before_forwarding_a_later_barrier() {
+        let bus = EventBus::with_capacity(1);
+        let receiver = bus.subscribe();
+        for version in ["one", "two", "three"] {
+            assert_eq!(
+                bus.publish(AstridEvent::RuntimeStarted {
+                    metadata: EventMetadata::new("test"),
+                    version: version.to_string(),
+                }),
+                1
+            );
+        }
+        let (server, _client) = tokio::net::UnixStream::pair().unwrap();
+        let (_read_half, write_half) = server.into_split();
+        tokio::time::timeout(
+            std::time::Duration::from_secs(1),
+            forward_events_to_client(
+                write_half,
+                "native_socket_bridge:observer".to_string(),
+                receiver,
+            ),
+        )
+        .await
+        .expect("lagged observation epoch should close immediately");
+    }
+
+    #[test]
+    fn socket_client_does_not_receive_its_own_events() {
+        assert!(!should_forward_event(
+            "native_socket_bridge:one",
+            "native_socket_bridge:one",
+            "user.v1.prompt",
+        ));
+    }
+
+    #[test]
+    fn authenticated_peer_can_observe_another_clients_events() {
+        assert!(should_forward_event(
+            "native_socket_bridge:one",
+            "native_socket_bridge:observer",
+            "user.v1.prompt",
+        ));
+    }
+
+    #[test]
+    fn connection_lifecycle_remains_internal() {
+        assert!(!should_forward_event(
+            "native_socket_bridge:one",
+            "native_socket_bridge:observer",
+            "client.v1.connect",
+        ));
+    }
+
+    #[test]
+    fn user_input_gets_an_explicit_passive_sensory_mirror() {
+        let message = IpcMessage::new(
+            "user.v1.prompt",
+            IpcPayload::UserInput {
+                text: "hello".to_string(),
+                session_id: "session".to_string(),
+                context: None,
+            },
+            Uuid::nil(),
+        );
+        let mirrored = sensory_user_input_mirror(&message).expect("user input should be mirrored");
+        assert_eq!(mirrored.topic, SENSORY_USER_INPUT_TOPIC);
+        assert_eq!(mirrored.payload, message.payload);
+
+        let response = IpcMessage::new(
+            "agent.v1.response",
+            IpcPayload::AgentResponse {
+                text: "hello".to_string(),
+                is_final: true,
+                session_id: "session".to_string(),
+                response_provenance: None,
+            },
+            Uuid::nil(),
+        );
+        assert!(sensory_user_input_mirror(&response).is_none());
+    }
+
+    #[test]
+    fn user_input_gets_root_trace_and_sensory_mirror_preserves_it() {
+        let supplied_trace_id = Uuid::new_v4();
+        let mut message = IpcMessage::new(
+            "user.v1.prompt",
+            IpcPayload::UserInput {
+                text: "hello".to_string(),
+                session_id: "session-one".to_string(),
+                context: None,
+            },
+            Uuid::nil(),
+        )
+        .with_trace(IpcTraceContextV1::root(
+            supplied_trace_id,
+            "untrusted-old-session",
+            Some("chain-one".to_string()),
+        ));
+
+        ensure_user_input_trace(&mut message);
+        let trace = message.trace.as_ref().unwrap();
+        assert_eq!(trace.trace_id, supplied_trace_id);
+        assert_eq!(trace.session_id.as_deref(), Some("session-one"));
+        assert_eq!(trace.chain_id.as_deref(), Some("chain-one"));
+        assert!(trace.parent_span_id.is_none());
+        assert!(trace.turn_id.is_some());
+
+        let mirrored = sensory_user_input_mirror(&message).unwrap();
+        assert_eq!(mirrored.trace, message.trace);
+        assert_eq!(
+            traced_event_metadata("test", &mirrored).correlation_id,
+            Some(supplied_trace_id),
+        );
+    }
+
+    #[test]
+    fn socket_boundary_overwrites_spoofed_capsule_producer() {
+        let mut message = IpcMessage::new(
+            "agent.v1.response",
+            IpcPayload::AgentResponse {
+                text: "NEXT: LISTEN".to_string(),
+                is_final: true,
+                session_id: "session".to_string(),
+                response_provenance: None,
+            },
+            Uuid::new_v4(),
+        )
+        .with_producer(IpcProducerV1::new("wasm_capsule", "astrid-capsule-react"));
+
+        attest_native_socket_message(&mut message, "native_socket_bridge:connection");
+
+        let producer = message.producer.as_ref().unwrap();
+        assert_eq!(producer.kind, "native_socket_client");
+        assert_eq!(producer.id, "native_socket_bridge:connection");
+    }
+
+    #[test]
+    fn malformed_trace_is_replaced_without_affecting_user_payload() {
+        let mut message = IpcMessage::new(
+            "user.v1.prompt",
+            IpcPayload::UserInput {
+                text: "hello".to_string(),
+                session_id: "session".to_string(),
+                context: None,
+            },
+            Uuid::nil(),
+        );
+        message.trace = Some(IpcTraceContextV1 {
+            schema_version: 99,
+            trace_id: Uuid::nil(),
+            turn_id: None,
+            span_id: Uuid::nil(),
+            parent_span_id: None,
+            session_id: None,
+            chain_id: None,
+        });
+        let payload = message.payload.clone();
+        ensure_user_input_trace(&mut message);
+        assert_eq!(message.payload, payload);
+        assert!(message.trace.as_ref().unwrap().is_supported());
+        assert_ne!(message.trace.as_ref().unwrap().trace_id, Uuid::nil());
+    }
 }

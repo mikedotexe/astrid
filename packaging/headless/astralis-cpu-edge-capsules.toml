@@ -1,0 +1,91 @@
+schema_version = 1
+rust_toolchain = "1.94.1"
+rust_target = "wasm32-wasip2"
+sdk_version = "0.6.0"
+source_policy = "reviewed_patch_replay"
+
+[[capsule]]
+id = "react"
+package = "astrid-capsule-react"
+repository = "https://github.com/unicity-astrid/capsule-react.git"
+revision = "62fee6c3369c8c85bc3f8805be2b8a3c510c0643"
+lockfile = "packaging/headless/astralis-locks/react.Cargo.lock"
+lock_sha256 = "311b33e740dcbffff14eaa33fd8c875f80ba4f079b06ab11e7b6c2b198592eef"
+source_blob_cargo_toml = "fbcb478b14000238f29b266352863da2c43342a9"
+source_blob_capsule_toml = "ddcfb9939f3fd0c8a8017de2954b478eee620452"
+source_blob_lib_rs = "b76a25f6f36fde3cdfabb4b81a9b44cc87128301"
+steps = [
+  { kind = "patch", file = "packaging/headless/astralis-sdk-0.6-exact-abi.patch", sha256 = "fbe0d0edf4e08f7f2294b2e5e1df4fd4e86b2a3925f03470de1bf28a09e64b86" },
+  { kind = "patch", file = "packaging/headless/astralis-sdk-0.6-react-raw-ipc.patch", sha256 = "24bc6d09ea4fde533ae20ebab5523ae02511afd5cfe9b871ed37d79c31291e51" },
+  { kind = "patch", file = "packaging/headless/astralis-sdk-0.6-react-cpu-config.patch", sha256 = "e3840b34b3b4962ac1ce5fde5bd7b0b4d3763d469d4f70492571c5756fa24f2a" },
+  { kind = "patch", file = "packaging/headless/astralis-sdk-0.6-react-sovereign-next.patch", sha256 = "d936c11937a197019520bc7022d69648b9af382709df62852245fcb4b7e6a697" },
+  { kind = "patch", file = "packaging/headless/astralis-sdk-0.6-react-embedded-next-format.patch", sha256 = "18e406a6cc24b426586a9d23b1990acf60c3f4842e4935fcdfaa6539ae45e4e0" },
+  { kind = "rustfmt" },
+  { kind = "patch", file = "packaging/headless/astralis-sdk-0.6-react-explicit-web-reminder.patch", sha256 = "73c76bc594233111e7e2de5fa328df8a3d0b6a9cf57eefd6bea26fd5a6b330c5" },
+  { kind = "patch", file = "packaging/headless/astralis-sdk-0.6-react-living-actions.patch", sha256 = "768946a2e360b96fc75dc45bbd037329fe3dc4960cf7dd4ba5496504cbc3f15d" },
+  { kind = "rustfmt", max_width = 80 },
+  { kind = "patch", file = "packaging/headless/astralis-sdk-0.6-react-split-research-format.patch", sha256 = "c741c4439b8846a38400b160b017e665acb4aedb32e87d2a221f0039e525e255" },
+  { kind = "patch", file = "packaging/headless/astralis-sdk-0.6-react-user-suffix.patch", sha256 = "52003fb959863a366d420d10bc6d39d381fc468fea20a89656ba94ae102807cb" },
+  { kind = "rustfmt" },
+  { kind = "patch", file = "packaging/headless/astralis-sdk-0.6-react-terminal-preimage.patch", sha256 = "7f31951ffacdd3cf6c915b38041ae728ef2f4884822e413a66b1a2d1c41903c0", expect_path = "src/lib.rs", expect_after = "990e702bbf2cca49191d3d10ed040c50bb9c9dbc" },
+  { kind = "patch", file = "packaging/headless/astralis-sdk-0.6-react-terminal-next.patch", sha256 = "ec79e58f529b39085d53b9ca7f25ce1c70a7d74535b39e7a09202cbea39c5968", expect_path = "src/lib.rs", expect_before = "990e702bbf2cca49191d3d10ed040c50bb9c9dbc", expect_after = "b76a25f6f36fde3cdfabb4b81a9b44cc87128301" },
+  { kind = "rustfmt" },
+]
+
+[[capsule]]
+id = "prompt-builder"
+package = "astrid-capsule-prompt-builder"
+repository = "https://github.com/unicity-astrid/capsule-prompt-builder.git"
+revision = "b6f21b4c300ad397dfb5a1e79a7f1c76fc9ecfd5"
+lockfile = "packaging/headless/astralis-locks/prompt-builder.Cargo.lock"
+lock_sha256 = "f61d739c6011f74775fbb7186844a4274bc8c282ae8ff06be8bf915b67d26b86"
+source_blob_cargo_toml = "0d1745b90925cfac2c5bfa595869530d258927ac"
+source_blob_capsule_toml = "a45edb5ce1cd699bcb4943bd3d5b0eca464c21b7"
+source_blob_lib_rs = "a4035f15b096b97b6b7ae68544142e0486d94e0f"
+source_blob_tests_rs = "c3bb50a638e5f806a423331e84cf8f0a7f431a2f"
+steps = [
+  { kind = "patch", file = "packaging/headless/astralis-sdk-0.6-prompt-builder-exact-abi.patch", sha256 = "ad59c70cc60b1f68ab055fb4d719db366518cc77a2b8c644188b382620e615bf" },
+  { kind = "patch", file = "packaging/headless/astralis-sdk-0.6-prompt-builder-daemon.patch", sha256 = "6e938e5d6e7f1d693763ecc407c8a11de6f96584a5a48842c37ac0df39ba96c3" },
+  { kind = "patch", file = "packaging/headless/astralis-sdk-0.6-fresh-tool-discovery.patch", sha256 = "ac3bd91ecfc8848c87f8e2009c41243e5579bf264ecb2a6210cccbefd14a87ea" },
+  { kind = "patch", file = "packaging/headless/astralis-sdk-0.6-tool-allowlist.patch", sha256 = "633817d5cbb8a199c3d315bf886d1bd4ead24aa704bdadd909b36d801306aeea" },
+  { kind = "patch", file = "packaging/headless/astralis-sdk-0.6-direct-prompt-hooks.patch", sha256 = "f7a3e0b217603c7d5a6f5b4178a8825818fa1080a4f5c97726d34aa314186b85" },
+  { kind = "patch", file = "packaging/headless/astralis-sdk-0.6-prompt-builder-explicit-web-tools.patch", sha256 = "98ac4ca05f7c9bd73f6029e8f9a58eb931b6be13ddd17288b9953f67ff009591" },
+  { kind = "patch", file = "packaging/headless/astralis-sdk-0.6-prompt-builder-test-only-legacy.patch", sha256 = "e0df61f925dc952593bf4a5e5a4d4156e65912609e9726f4839ec01408a3ab6f" },
+  { kind = "patch", file = "packaging/headless/astralis-sdk-0.6-prompt-builder-host-tests.patch", sha256 = "f16271f5e960dba24e5b26dd1ac573cc3dad4d5a0bd9278ca8c2ff0d6a994d35" },
+  { kind = "patch", file = "packaging/headless/astralis-sdk-0.6-prompt-builder-deny-empty-tests.patch", sha256 = "1e84b57f1d1e2054b5b3a0129b270a01e7af15c0497d03a177c19def0fc28734" },
+  { kind = "rustfmt" },
+]
+
+[[capsule]]
+id = "openai-compat"
+package = "astrid-capsule-openai-compat"
+repository = "https://github.com/unicity-astrid/capsule-openai-compat.git"
+revision = "df83a084f16e0f7977b091dae93b7fcbf92ffefe"
+lockfile = "packaging/headless/astralis-locks/openai-compat.Cargo.lock"
+lock_sha256 = "bf0aee242b718d9358e27cd33cbcc5eb37cb0fc63dca7348018f9a68261d7713"
+source_blob_cargo_toml = "b44cd1f7e2f3762dd5a2ad9609ed7444557758f7"
+source_blob_capsule_toml = "51f519f36d30798108efa01d024842e581379631"
+source_blob_lib_rs = "ca28b0a9a59c24f0f6618bc12870eb5c23d01e12"
+steps = [
+  { kind = "patch", file = "packaging/headless/astralis-sdk-0.6-openai-exact-abi.patch", sha256 = "0a1a8b53ddedc3c0acbffe537611465b47bef55d005902dd73b67094c75d5bce" },
+  { kind = "patch", file = "packaging/headless/astralis-sdk-0.6-openai-finish-reason.patch", sha256 = "395162ee619bb87c4efba13e487b113d2b80892c1bff6d11f26ddec4844e5935" },
+  { kind = "patch", file = "packaging/headless/astralis-sdk-0.6-openai-reasoning-effort-headless.patch", sha256 = "13181301fb69b2b077e838e56cfab7dc5b96297184a1c940ce9bb65572aa966f" },
+  { kind = "rustfmt" },
+]
+
+[[capsule]]
+id = "context-engine"
+package = "astrid-capsule-context-engine"
+repository = "https://github.com/unicity-astrid/capsule-context-engine.git"
+revision = "aa852020ae5ef48504697e5824b68f95e34d9261"
+lockfile = "packaging/headless/astralis-locks/context-engine.Cargo.lock"
+lock_sha256 = "c969c8a95b114072c14f72c1ef62c6b5778571c1bf77f8258c2750419b791557"
+source_blob_cargo_toml = "1f7ed2af9865e16df8ba6a4639c0b0daf3b28522"
+source_blob_capsule_toml = "def4b7583e6901514e0e3400dba00cd25ea36c9a"
+source_blob_lib_rs = "31d8fc92d3370e7dd849bdf3f8a841a6d63265de"
+steps = [
+  { kind = "patch", file = "packaging/headless/astralis-sdk-0.6-context-engine-exact-abi.patch", sha256 = "7ee33fcdec48a9b51008a33965a49251e9ea8af578221a1f26ec397b350ccb7b" },
+  { kind = "patch", file = "packaging/headless/astralis-sdk-0.6-context-engine-daemon.patch", sha256 = "99bb3838dba7793bee258465cb944bb71969a003679c80b89680f79880162f04" },
+  { kind = "patch", file = "packaging/headless/astralis-sdk-0.6-context-engine-clippy.patch", sha256 = "c22dda94d33bb991027db9fcbffe4b39f0a39aaf314d5cbfe511cd97a7c32f49" },
+  { kind = "rustfmt" },
+]

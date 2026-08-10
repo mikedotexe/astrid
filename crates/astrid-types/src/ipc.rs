@@ -15,6 +15,374 @@ use crate::authority::{
     AuthorityLifecycleStateV2, ReplayResultV2,
 };
 
+const IPC_TRACE_SCHEMA_VERSION_V1: u8 = 1;
+const IPC_TRACE_LABEL_MAX_CHARS: usize = 96;
+
+/// Observational correlation carried across IPC hops.
+///
+/// Trace metadata is not signed authority, does not grant capabilities, and
+/// must never be consulted by policy, approval, or budget gates.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct IpcTraceContextV1 {
+    /// Trace wire schema version.
+    #[serde(default = "default_ipc_trace_schema_version")]
+    pub schema_version: u8,
+    /// Stable identifier for one causal activity trace.
+    pub trace_id: Uuid,
+    /// Identifier for one authenticated user/model turn within the trace.
+    ///
+    /// Like the rest of this structure this value is observational by itself.
+    /// Authority consumers must additionally require a kernel-attested producer
+    /// or another trusted runtime boundary before using it as a replay key.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub turn_id: Option<Uuid>,
+    /// Identifier for this individual IPC or local receipt span.
+    pub span_id: Uuid,
+    /// Direct parent span, absent only at a trace root.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub parent_span_id: Option<Uuid>,
+    /// Conversation session associated with this trace, when known.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub session_id: Option<String>,
+    /// Sovereign Action-chain identifier, when already established.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub chain_id: Option<String>,
+}
+
+impl IpcTraceContextV1 {
+    /// Create a root trace for a session.
+    #[must_use]
+    pub fn root(trace_id: Uuid, session_id: impl Into<String>, chain_id: Option<String>) -> Self {
+        Self {
+            schema_version: IPC_TRACE_SCHEMA_VERSION_V1,
+            trace_id,
+            turn_id: Some(Uuid::new_v4()),
+            span_id: Uuid::new_v4(),
+            parent_span_id: None,
+            session_id: Some(session_id.into()),
+            chain_id,
+        }
+    }
+
+    /// Create a child span while preserving the observational lineage.
+    #[must_use]
+    pub fn child(&self) -> Self {
+        Self {
+            schema_version: IPC_TRACE_SCHEMA_VERSION_V1,
+            trace_id: self.trace_id,
+            turn_id: self.turn_id,
+            span_id: Uuid::new_v4(),
+            parent_span_id: Some(self.span_id),
+            session_id: self.session_id.clone(),
+            chain_id: self.chain_id.clone(),
+        }
+    }
+
+    /// Return whether this trace is a bounded, structurally valid v1 context.
+    ///
+    /// `turn_id` remains optional so trace records written before the additive
+    /// turn identifier was introduced continue to decode as observational
+    /// history. When an optional identifier is present, it must not be nil.
+    #[must_use]
+    pub fn is_supported(&self) -> bool {
+        self.schema_version == IPC_TRACE_SCHEMA_VERSION_V1
+            && !self.trace_id.is_nil()
+            && !self.span_id.is_nil()
+            && self.turn_id.is_none_or(|turn_id| !turn_id.is_nil())
+            && self.parent_span_id.is_none_or(|parent_span_id| {
+                !parent_span_id.is_nil() && parent_span_id != self.span_id
+            })
+            && self
+                .session_id
+                .as_deref()
+                .is_none_or(ipc_trace_label_is_supported)
+            && self
+                .chain_id
+                .as_deref()
+                .is_none_or(ipc_trace_label_is_supported)
+    }
+}
+
+fn ipc_trace_label_is_supported(value: &str) -> bool {
+    !value.trim().is_empty()
+        && value.chars().count() <= IPC_TRACE_LABEL_MAX_CHARS
+        && !value.chars().any(char::is_control)
+}
+
+const IPC_PRODUCER_SCHEMA_VERSION_V1: u8 = 1;
+
+/// Producer class stamped by the kernel HTTP host on local-provider timing observations.
+pub const KERNEL_HTTP_HOST_PRODUCER_KIND: &str = "kernel_host";
+/// Producer identifier stamped by the kernel HTTP host on local-provider timing observations.
+pub const KERNEL_HTTP_HOST_PRODUCER_ID: &str = "wasm_http_stream";
+/// Canonical stderr receipt prefix emitted by supervised headless CLI runs.
+pub const HEADLESS_PROVIDER_METRICS_RECEIPT_PREFIX: &str = "[astrid-headless-provider-metrics] ";
+/// Maximum number of per-request timings carried on one bounded turn summary.
+pub const LOCAL_PROVIDER_TURN_METRICS_MAX_ENTRIES: usize = 16;
+
+/// Terminal outcome of one exact, allowlisted loopback-provider HTTP attempt.
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum LocalProviderRequestOutcomeV1 {
+    /// Successful HTTP response headers arrived from a verified loopback peer.
+    SuccessfulHeaders,
+    /// A non-success HTTP status arrived from a verified loopback peer.
+    NonSuccessStatus,
+    /// Response headers arrived but the transport did not expose its peer address.
+    UnknownPeer,
+    /// Response headers arrived from a peer that was not loopback.
+    NonLoopbackPeer,
+    /// The host response-header deadline expired.
+    Timeout,
+    /// The request failed before response headers arrived.
+    TransportError,
+    /// Capsule shutdown cancelled the request before response headers arrived.
+    Cancelled,
+}
+
+/// Bounded terminal record for one exact eligible local-provider request attempt.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
+pub struct LocalProviderRequestAttemptV1 {
+    /// Host-generated identifier distinguishing retries of the same LLM request.
+    pub attempt_id: Uuid,
+    /// Opaque typed LLM request identifier from the direct caller context.
+    pub request_id: Uuid,
+    /// Terminal status recorded by the HTTP host on every send return path.
+    pub outcome: LocalProviderRequestOutcomeV1,
+    /// Exact elapsed time to headers, available only for successful loopback headers.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub request_header_latency_ms: Option<u64>,
+}
+
+impl LocalProviderRequestAttemptV1 {
+    /// Return whether identifiers and outcome-specific latency are coherent.
+    #[must_use]
+    pub const fn is_supported(&self) -> bool {
+        !self.attempt_id.is_nil()
+            && !self.request_id.is_nil()
+            && matches!(
+                (self.outcome, self.request_header_latency_ms),
+                (LocalProviderRequestOutcomeV1::SuccessfulHeaders, Some(_))
+                    | (
+                        LocalProviderRequestOutcomeV1::NonSuccessStatus
+                            | LocalProviderRequestOutcomeV1::UnknownPeer
+                            | LocalProviderRequestOutcomeV1::NonLoopbackPeer
+                            | LocalProviderRequestOutcomeV1::Timeout
+                            | LocalProviderRequestOutcomeV1::TransportError
+                            | LocalProviderRequestOutcomeV1::Cancelled,
+                        None
+                    )
+            )
+    }
+}
+
+const LOCAL_PROVIDER_TURN_METRICS_SCHEMA_VERSION_V1: u8 = 1;
+
+/// Host-owned, bounded completion summary for one traced local-provider turn.
+///
+/// The event bus attaches this summary to the same canonical final response message after taking
+/// the matching host-only registry entry. A guest-supplied value is always cleared first. A turn
+/// exceeding the strict attempt cap is suppressed instead of represented by a partial count.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
+pub struct LocalProviderTurnMetricsV1 {
+    /// Summary wire schema version.
+    pub schema_version: u8,
+    /// Host boundary that measured the requests.
+    pub producer: IpcProducerV1,
+    /// Exact number of eligible HTTP send attempts observed for this turn.
+    pub request_count: u64,
+    /// Exact number of attempts that reached successful headers from a loopback peer.
+    pub successful_header_count: u64,
+    /// Complete bounded set of exact request attempts and terminal statuses.
+    pub requests: Vec<LocalProviderRequestAttemptV1>,
+}
+
+impl LocalProviderTurnMetricsV1 {
+    /// Construct a host-owned bounded turn summary.
+    #[must_use]
+    pub fn new(
+        request_count: u64,
+        successful_header_count: u64,
+        requests: Vec<LocalProviderRequestAttemptV1>,
+    ) -> Self {
+        Self {
+            schema_version: LOCAL_PROVIDER_TURN_METRICS_SCHEMA_VERSION_V1,
+            producer: IpcProducerV1::new(
+                KERNEL_HTTP_HOST_PRODUCER_KIND,
+                KERNEL_HTTP_HOST_PRODUCER_ID,
+            ),
+            request_count,
+            successful_header_count,
+            requests,
+        }
+    }
+
+    /// Return whether the count, bounded entries, and producer are an exact supported summary.
+    #[must_use]
+    pub fn is_supported(&self) -> bool {
+        let Ok(request_count) = usize::try_from(self.request_count) else {
+            return false;
+        };
+        self.schema_version == LOCAL_PROVIDER_TURN_METRICS_SCHEMA_VERSION_V1
+            && self.producer.is_supported()
+            && self.producer.kind == KERNEL_HTTP_HOST_PRODUCER_KIND
+            && self.producer.id == KERNEL_HTTP_HOST_PRODUCER_ID
+            && request_count > 0
+            && self.successful_header_count <= self.request_count
+            && request_count <= LOCAL_PROVIDER_TURN_METRICS_MAX_ENTRIES
+            && self.requests.len() == request_count
+            && self
+                .requests
+                .iter()
+                .all(LocalProviderRequestAttemptV1::is_supported)
+            && self.requests.iter().enumerate().all(|(index, request)| {
+                self.requests[..index]
+                    .iter()
+                    .all(|prior| prior.attempt_id != request.attempt_id)
+            })
+            && u64::try_from(
+                self.requests
+                    .iter()
+                    .filter(|request| {
+                        request.outcome == LocalProviderRequestOutcomeV1::SuccessfulHeaders
+                    })
+                    .count(),
+            )
+            .is_ok_and(|bounded_successes| bounded_successes == self.successful_header_count)
+    }
+
+    /// Return the sole request only when the exact turn count is one.
+    #[must_use]
+    pub fn single_successful_request(&self) -> Option<&LocalProviderRequestAttemptV1> {
+        self.is_supported()
+            .then_some(())
+            .filter(|()| self.request_count == 1 && self.successful_header_count == 1)
+            .and_then(|()| self.requests.first())
+    }
+}
+
+const HEADLESS_PROVIDER_METRICS_SCHEMA_VERSION_V1: u8 = 1;
+
+/// Canonical per-turn provider metrics receipt emitted by the headless CLI.
+///
+/// The receipt contains the complete bounded host summary and the already-attested canonical
+/// response trace. Scalar latency fields are intentionally absent for multi-request turns. Token
+/// counts and generation latency remain absent unless a future kernel boundary measures them.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
+pub struct HeadlessProviderMetricsReceiptV1 {
+    /// Receipt wire schema version.
+    pub schema_version: u8,
+    /// Kernel-attested canonical response trace for the measured turn.
+    pub trace: IpcTraceContextV1,
+    /// Host-owned producer attestation accepted by the headless CLI.
+    pub producer: IpcProducerV1,
+    /// Exact count of eligible HTTP send attempts for this turn.
+    pub request_count: u64,
+    /// Exact count of attempts with successful headers from a verified loopback peer.
+    pub successful_header_count: u64,
+    /// Complete bounded per-request host measurements.
+    pub requests: Vec<LocalProviderRequestAttemptV1>,
+    /// Sole request identifier, present only when `request_count == 1`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub request_id: Option<Uuid>,
+    /// Sole host-dispatch-to-successful-response-header latency, present only for one request.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub request_header_latency_ms: Option<u64>,
+}
+
+impl HeadlessProviderMetricsReceiptV1 {
+    /// Bind an accepted host observation to the canonical response turn.
+    #[must_use]
+    pub fn new(trace: IpcTraceContextV1, metrics: LocalProviderTurnMetricsV1) -> Self {
+        let single = metrics
+            .single_successful_request()
+            .map(|request| (request.request_id, request.request_header_latency_ms));
+        Self {
+            schema_version: HEADLESS_PROVIDER_METRICS_SCHEMA_VERSION_V1,
+            trace,
+            producer: metrics.producer,
+            request_count: metrics.request_count,
+            successful_header_count: metrics.successful_header_count,
+            requests: metrics.requests,
+            request_id: single.map(|(request_id, _)| request_id),
+            request_header_latency_ms: single.and_then(|(_, elapsed_ms)| elapsed_ms),
+        }
+    }
+
+    /// Return whether this receipt and its canonical turn trace are structurally supported.
+    #[must_use]
+    pub fn is_supported(&self) -> bool {
+        self.schema_version == HEADLESS_PROVIDER_METRICS_SCHEMA_VERSION_V1
+            && self.trace.is_supported()
+            && self.trace.turn_id.is_some()
+            && self.trace.session_id.is_some()
+            && self.producer.is_supported()
+            && self.producer.kind == KERNEL_HTTP_HOST_PRODUCER_KIND
+            && self.producer.id == KERNEL_HTTP_HOST_PRODUCER_ID
+            && LocalProviderTurnMetricsV1 {
+                schema_version: LOCAL_PROVIDER_TURN_METRICS_SCHEMA_VERSION_V1,
+                producer: self.producer.clone(),
+                request_count: self.request_count,
+                successful_header_count: self.successful_header_count,
+                requests: self.requests.clone(),
+            }
+            .is_supported()
+            && match self.requests.as_slice() {
+                [request] if self.request_count == 1 && self.successful_header_count == 1 => {
+                    self.request_id == Some(request.request_id)
+                        && self.request_header_latency_ms == request.request_header_latency_ms
+                },
+                _ => self.request_id.is_none() && self.request_header_latency_ms.is_none(),
+            }
+    }
+}
+
+/// Kernel-attested origin of an IPC message.
+///
+/// Unlike trace metadata, this field is stamped at a host boundary. Native
+/// socket input is always overwritten by the kernel and WASM guests cannot
+/// supply it through the guest ABI.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct IpcProducerV1 {
+    /// Producer-attestation wire schema version.
+    #[serde(default = "default_ipc_producer_schema_version")]
+    pub schema_version: u8,
+    /// Host-owned producer class, such as `wasm_capsule` or
+    /// `native_socket_client`.
+    pub kind: String,
+    /// Host-owned producer identifier.
+    pub id: String,
+}
+
+impl IpcProducerV1 {
+    /// Construct a producer attestation at a trusted host boundary.
+    #[must_use]
+    pub fn new(kind: impl Into<String>, id: impl Into<String>) -> Self {
+        Self {
+            schema_version: IPC_PRODUCER_SCHEMA_VERSION_V1,
+            kind: kind.into(),
+            id: id.into(),
+        }
+    }
+
+    /// Return whether this attestation uses the supported schema.
+    #[must_use]
+    pub const fn is_supported(&self) -> bool {
+        self.schema_version == IPC_PRODUCER_SCHEMA_VERSION_V1
+    }
+}
+
+const fn default_ipc_producer_schema_version() -> u8 {
+    IPC_PRODUCER_SCHEMA_VERSION_V1
+}
+
+const fn default_ipc_trace_schema_version() -> u8 {
+    IPC_TRACE_SCHEMA_VERSION_V1
+}
+
 /// A cross-boundary message sent over the event bus between WASM guests and the host.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct IpcMessage {
@@ -39,6 +407,19 @@ pub struct IpcMessage {
     /// kernel boundary. `None` for system events (boot, lifecycle).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub principal: Option<String>,
+    /// Optional observational trace context. It never grants authority.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub trace: Option<IpcTraceContextV1>,
+    /// Optional host-attested producer. This is overwritten at every native
+    /// ingress boundary and cannot be supplied by a WASM guest.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub producer: Option<IpcProducerV1>,
+    /// Host-only local-provider summary attached atomically to a canonical final response.
+    ///
+    /// The event bus clears this field on every publish before optionally replacing it from its
+    /// private take-once registry. It is observational and grants no authority.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub local_provider_metrics: Option<LocalProviderTurnMetricsV1>,
 }
 
 impl IpcMessage {
@@ -53,6 +434,9 @@ impl IpcMessage {
             timestamp: Utc::now(),
             seq: 0,
             principal: None,
+            trace: None,
+            producer: None,
+            local_provider_metrics: None,
         }
     }
 
@@ -69,11 +453,43 @@ impl IpcMessage {
         self.principal = Some(principal.into());
         self
     }
+
+    /// Attach observational trace metadata.
+    #[must_use]
+    pub fn with_trace(mut self, trace: IpcTraceContextV1) -> Self {
+        self.trace = Some(trace);
+        self
+    }
+
+    /// Attach a host-owned producer attestation.
+    #[must_use]
+    pub fn with_producer(mut self, producer: IpcProducerV1) -> Self {
+        self.producer = Some(producer);
+        self
+    }
 }
 
 /// Default session ID for conversations.
 fn default_session_id() -> String {
     "default".into()
+}
+
+/// Declared origin of a terminal agent response.
+///
+/// This value is supplied by the producing capsule and is not authority on its
+/// own. Authority-sensitive consumers must also verify the producer and turn
+/// trace at a trusted host boundary.
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum AgentResponseProvenanceV1 {
+    /// The terminal bytes are exactly the model's authored response.
+    ModelAuthored,
+    /// A local non-writing `LISTEN` fallback follows any authored prefix.
+    ModelAuthoredWithLocalSafeFallback,
+    /// Local code repaired only the layout of one model-authored Action.
+    ModelAuthoredWithLocalFormatRepair,
+    /// Local executor/runtime code generated the terminal response.
+    ExecutorTerminalError,
 }
 
 /// Standardized cross-boundary payload schemas.
@@ -105,6 +521,9 @@ pub enum IpcPayload {
         /// Session ID for multi-session attribution.
         #[serde(default = "default_session_id")]
         session_id: String,
+        /// Declared response origin. Absent on legacy producers.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        response_provenance: Option<AgentResponseProvenanceV1>,
     },
     /// An interceptor or capsule request for capability approval.
     ApprovalRequired {
@@ -490,6 +909,7 @@ mod tests {
                 text: "hello".into(),
                 is_final: true,
                 session_id: "default".into(),
+                response_provenance: None,
             },
             Uuid::new_v4(),
         );
@@ -559,10 +979,45 @@ mod tests {
             text: "hello".into(),
             is_final: true,
             session_id: "s1".into(),
+            response_provenance: Some(AgentResponseProvenanceV1::ModelAuthored),
         };
         let json = serde_json::to_string(&payload).unwrap();
         let parsed: IpcPayload = serde_json::from_str(&json).unwrap();
         assert_eq!(parsed, payload);
+    }
+
+    #[test]
+    fn agent_response_provenance_is_additive_and_typed() {
+        let legacy: IpcPayload = serde_json::from_value(serde_json::json!({
+            "type": "agent_response",
+            "text": "legacy",
+            "is_final": true,
+            "session_id": "legacy-session"
+        }))
+        .unwrap();
+        assert!(matches!(
+            legacy,
+            IpcPayload::AgentResponse {
+                response_provenance: None,
+                ..
+            }
+        ));
+
+        let executor_error = IpcPayload::AgentResponse {
+            text: "LLM error: unavailable".into(),
+            is_final: true,
+            session_id: "session".into(),
+            response_provenance: Some(AgentResponseProvenanceV1::ExecutorTerminalError),
+        };
+        let encoded = serde_json::to_value(&executor_error).unwrap();
+        assert_eq!(
+            encoded["response_provenance"],
+            serde_json::json!("executor_terminal_error")
+        );
+        assert_eq!(
+            serde_json::from_value::<IpcPayload>(encoded).unwrap(),
+            executor_error
+        );
     }
 
     #[test]
@@ -575,6 +1030,7 @@ mod tests {
     /// `is_known_tag`. If a new variant is added without updating the
     /// match arm *and* the representatives list below, this test fails.
     #[test]
+    #[allow(clippy::too_many_lines)] // Deliberately centralized exhaustive variant registry.
     fn is_known_tag_covers_all_variants() {
         const EXPECTED_VARIANT_COUNT: usize = 35;
         let packet = crate::authority::AuthorityBoundaryPacketV1::new(
@@ -821,6 +1277,7 @@ mod tests {
                 text: String::new(),
                 is_final: false,
                 session_id: "s".into(),
+                response_provenance: None,
             },
             IpcPayload::ApprovalRequired {
                 request_id: "req-1".into(),
@@ -1182,5 +1639,194 @@ mod tests {
         });
         let payload = IpcPayload::from_json_value(data);
         assert!(matches!(payload, IpcPayload::UserInput { .. }));
+    }
+
+    #[test]
+    fn legacy_ipc_message_without_trace_still_decodes() {
+        let legacy = serde_json::json!({
+            "topic": "user.v1.prompt",
+            "payload": {
+                "type": "user_input",
+                "text": "hello",
+                "session_id": "legacy"
+            },
+            "signature": null,
+            "source_id": Uuid::nil(),
+            "timestamp": "2026-01-01T00:00:00Z",
+            "seq": 0
+        });
+        let decoded: IpcMessage = serde_json::from_value(legacy).unwrap();
+        assert!(decoded.trace.is_none());
+        assert!(decoded.producer.is_none());
+        assert!(decoded.local_provider_metrics.is_none());
+    }
+
+    #[test]
+    fn trace_children_preserve_lineage_and_isolate_concurrent_roots() {
+        let first =
+            IpcTraceContextV1::root(Uuid::new_v4(), "session-one", Some("chain-one".to_string()));
+        let second = IpcTraceContextV1::root(Uuid::new_v4(), "session-two", None);
+        let child = first.child();
+
+        assert_eq!(child.trace_id, first.trace_id);
+        assert_eq!(child.turn_id, first.turn_id);
+        assert_eq!(child.parent_span_id, Some(first.span_id));
+        assert_eq!(child.session_id.as_deref(), Some("session-one"));
+        assert_eq!(child.chain_id.as_deref(), Some("chain-one"));
+        assert_ne!(child.span_id, first.span_id);
+        assert_ne!(first.trace_id, second.trace_id);
+        assert_ne!(first.turn_id, second.turn_id);
+    }
+
+    #[test]
+    fn legacy_trace_without_turn_id_remains_supported() {
+        let trace_id = Uuid::new_v4();
+        let span_id = Uuid::new_v4();
+        let legacy = serde_json::json!({
+            "schema_version": 1,
+            "trace_id": trace_id,
+            "span_id": span_id,
+            "session_id": "legacy-session",
+            "chain_id": "legacy-chain"
+        });
+        let decoded: IpcTraceContextV1 = serde_json::from_value(legacy).unwrap();
+        assert_eq!(decoded.turn_id, None);
+        assert!(decoded.is_supported());
+    }
+
+    #[test]
+    fn trace_validation_rejects_nil_ids_cycles_and_unbounded_labels() {
+        let valid = IpcTraceContextV1::root(Uuid::new_v4(), "session", Some("chain".into()));
+        assert!(valid.is_supported());
+
+        let mut invalid = valid.clone();
+        invalid.trace_id = Uuid::nil();
+        assert!(!invalid.is_supported());
+
+        let mut invalid = valid.clone();
+        invalid.span_id = Uuid::nil();
+        assert!(!invalid.is_supported());
+
+        let mut invalid = valid.clone();
+        invalid.turn_id = Some(Uuid::nil());
+        assert!(!invalid.is_supported());
+
+        let mut invalid = valid.clone();
+        invalid.parent_span_id = Some(Uuid::nil());
+        assert!(!invalid.is_supported());
+
+        let mut invalid = valid.clone();
+        invalid.parent_span_id = Some(invalid.span_id);
+        assert!(!invalid.is_supported());
+
+        let mut legacy_compatible = valid.clone();
+        legacy_compatible.turn_id = None;
+        assert!(legacy_compatible.is_supported());
+
+        let mut invalid = valid.clone();
+        invalid.session_id = Some(" \t ".into());
+        assert!(!invalid.is_supported());
+
+        let mut invalid = valid.clone();
+        invalid.chain_id = Some("x".repeat(97));
+        assert!(!invalid.is_supported());
+
+        let mut boundary = valid;
+        boundary.session_id = Some("s".repeat(96));
+        boundary.chain_id = None;
+        assert!(boundary.is_supported());
+    }
+
+    #[test]
+    fn producer_attestation_roundtrips_additively() {
+        let message = IpcMessage::new("agent.v1.response", IpcPayload::Connect, Uuid::nil())
+            .with_producer(IpcProducerV1::new("wasm_capsule", "astrid-capsule-react"));
+        let decoded: IpcMessage =
+            serde_json::from_slice(&serde_json::to_vec(&message).unwrap()).unwrap();
+        assert_eq!(decoded.producer, message.producer);
+        assert!(decoded.producer.as_ref().unwrap().is_supported());
+    }
+
+    #[test]
+    fn local_provider_latency_contract_is_typed_bounded_and_secret_free() {
+        let request_id = Uuid::new_v4();
+        let attempt_id = Uuid::new_v4();
+        let metrics = LocalProviderTurnMetricsV1::new(
+            1,
+            1,
+            vec![LocalProviderRequestAttemptV1 {
+                attempt_id,
+                request_id,
+                outcome: LocalProviderRequestOutcomeV1::SuccessfulHeaders,
+                request_header_latency_ms: Some(288_001),
+            }],
+        );
+        assert!(metrics.is_supported());
+        assert_eq!(
+            metrics.single_successful_request().unwrap().request_id,
+            request_id
+        );
+        let encoded = serde_json::to_value(&metrics).unwrap();
+        assert_eq!(encoded["requests"][0]["request_id"], request_id.to_string());
+        assert_eq!(encoded["requests"][0]["request_header_latency_ms"], 288_001);
+        assert!(encoded.get("url").is_none());
+        assert!(encoded.get("headers").is_none());
+        assert!(encoded.get("body").is_none());
+
+        let multi = LocalProviderTurnMetricsV1::new(
+            2,
+            1,
+            vec![
+                LocalProviderRequestAttemptV1 {
+                    attempt_id: Uuid::new_v4(),
+                    request_id: Uuid::new_v4(),
+                    outcome: LocalProviderRequestOutcomeV1::TransportError,
+                    request_header_latency_ms: None,
+                },
+                LocalProviderRequestAttemptV1 {
+                    attempt_id: Uuid::new_v4(),
+                    request_id: Uuid::new_v4(),
+                    outcome: LocalProviderRequestOutcomeV1::SuccessfulHeaders,
+                    request_header_latency_ms: Some(2),
+                },
+            ],
+        );
+        let receipt = HeadlessProviderMetricsReceiptV1::new(
+            IpcTraceContextV1::root(Uuid::new_v4(), "session", None),
+            multi,
+        );
+        assert!(receipt.is_supported());
+        assert_eq!(receipt.request_count, 2);
+        assert!(receipt.request_id.is_none());
+        assert!(receipt.request_header_latency_ms.is_none());
+
+        let duplicate_attempt = LocalProviderTurnMetricsV1::new(
+            2,
+            2,
+            vec![
+                LocalProviderRequestAttemptV1 {
+                    attempt_id,
+                    request_id: Uuid::new_v4(),
+                    outcome: LocalProviderRequestOutcomeV1::SuccessfulHeaders,
+                    request_header_latency_ms: Some(1),
+                },
+                LocalProviderRequestAttemptV1 {
+                    attempt_id,
+                    request_id: Uuid::new_v4(),
+                    outcome: LocalProviderRequestOutcomeV1::SuccessfulHeaders,
+                    request_header_latency_ms: Some(2),
+                },
+            ],
+        );
+        assert!(!duplicate_attempt.is_supported());
+
+        let malformed = serde_json::json!({
+            "attempt_id": Uuid::new_v4(),
+            "request_id": Uuid::new_v4(),
+            "outcome": "successful_headers",
+            "request_header_latency_ms": 1,
+            "url": "http://secret.invalid"
+        });
+        assert!(serde_json::from_value::<LocalProviderRequestAttemptV1>(malformed).is_err());
     }
 }

@@ -1,0 +1,19 @@
+[Unit]
+# The installer must render this template to the exact filename returned by
+# `astrid-edge-state-store unit-names` for the rollback mount.
+Description=Astrid CPU-edge reserved rollback-state filesystem
+Documentation=file:@@ACTIVE_GENERATION_ROOT@@/docs/cpu-edge-self-evolution.md
+RequiresMountsFor=@@ROLLBACK_IMAGE_PARENT@@
+Requires=astrid-edge-state-store-migration-recover.service
+After=astrid-edge-state-store-migration-recover.service
+Before=astrid-edge-state-store-recover.service astrid-edge-state-store-verify.service
+
+[Mount]
+What=@@ROLLBACK_IMAGE@@
+Where=@@ROLLBACK_STATE_ROOT@@
+Type=ext4
+Options=loop,rw,nodev,nosuid,noexec,noatime
+TimeoutSec=90
+
+[Install]
+WantedBy=multi-user.target

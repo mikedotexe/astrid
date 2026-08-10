@@ -1,0 +1,46 @@
+[Unit]
+Description=Astrid CPU-edge immutable active-generation boot guard
+Documentation=https://github.com/mikedotexe/astrid
+After=local-fs.target
+Before=astrid-model-warmup.service astrid.service astrid-edge-runtime.service astrid-edge-hindsight.service
+# These are deliberately service preflights, rather than unit conditions: a
+# missing verifier input must fail this required guard instead of skipping it.
+
+[Service]
+Type=oneshot
+User=root
+Group=root
+ExecStartPre=/usr/bin/test -s /etc/astrid/edge-service-manager.json
+ExecStartPre=/usr/bin/test -s /etc/astrid/edge-rescue-helper.json
+ExecStartPre=/usr/bin/test -x /usr/libexec/astrid/astrid-edge-rescue-helper
+ExecStartPre=/usr/libexec/astrid/astrid-edge-rescue-helper --config /etc/astrid/edge-rescue-helper.json reflection-reconcile
+ExecStart=/usr/libexec/astrid/astrid-edge-rescue-helper --config /etc/astrid/edge-rescue-helper.json verify-install
+RemainAfterExit=yes
+UMask=0077
+NoNewPrivileges=yes
+PrivateDevices=yes
+PrivateNetwork=yes
+PrivateTmp=yes
+ProtectClock=yes
+ProtectControlGroups=yes
+ProtectHome=yes
+ProtectHostname=yes
+ProtectKernelLogs=yes
+ProtectKernelModules=yes
+ProtectKernelTunables=yes
+ProtectSystem=strict
+ReadOnlyPaths=/etc/astrid
+CapabilityBoundingSet=
+AmbientCapabilities=
+LockPersonality=yes
+MemoryDenyWriteExecute=yes
+RestrictAddressFamilies=AF_UNIX
+RestrictRealtime=yes
+RestrictSUIDSGID=yes
+SystemCallArchitectures=native
+SystemCallErrorNumber=EPERM
+SystemCallFilter=@system-service
+SystemCallFilter=~@clock @debug @module @mount @obsolete @privileged @raw-io @reboot @swap
+
+[Install]
+WantedBy=multi-user.target

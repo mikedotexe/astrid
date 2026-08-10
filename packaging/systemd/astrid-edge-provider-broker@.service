@@ -1,0 +1,72 @@
+[Unit]
+Description=Astrid CPU-edge immutable local-model gateway (%i)
+Documentation=https://github.com/mikedotexe/astrid
+Requires=ollama-cpu.service
+After=ollama-cpu.service
+JoinsNamespaceOf=ollama-cpu.service
+
+[Service]
+Type=simple
+User=astrid-edge-provider
+Group=astrid-edge-provider
+SupplementaryGroups=astrid-edge-model-lock
+StandardInput=socket
+StandardOutput=journal
+StandardError=journal
+LoadCredential=request.key:/etc/astrid-edge-self-change/%i-provider-request.key
+LoadCredential=ledger.key:/etc/astrid-edge-self-change/provider-ledger.key
+ExecStart=/usr/libexec/astrid-edge/immutable/astrid-edge-provider-broker serve --config /etc/astrid-edge-self-change/provider-broker.json --client %i --credential-directory /run/credentials/astrid-edge-provider-broker@%i.service
+Restart=on-failure
+RestartSec=5s
+TimeoutStopSec=15s
+KillMode=mixed
+UMask=0077
+StateDirectory=astrid-edge-provider
+StateDirectoryMode=0700
+
+# Ollama owns an isolated network namespace. This immutable service joins that
+# namespace and can reach only its loopback listener; its AF_UNIX client socket
+# remains a root-created descriptor inherited from the host mount namespace.
+PrivateNetwork=yes
+RestrictAddressFamilies=AF_UNIX AF_INET
+IPAddressDeny=any
+IPAddressAllow=127.0.0.1
+NoNewPrivileges=yes
+CapabilityBoundingSet=
+AmbientCapabilities=
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectSystem=strict
+ProtectHome=yes
+ProtectHostname=yes
+ProtectClock=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectKernelLogs=yes
+ProtectControlGroups=yes
+ProtectProc=invisible
+ProcSubset=all
+RemoveIPC=yes
+RestrictSUIDSGID=yes
+RestrictNamespaces=yes
+RestrictRealtime=yes
+LockPersonality=yes
+MemoryDenyWriteExecute=yes
+SystemCallArchitectures=native
+SystemCallErrorNumber=EPERM
+SystemCallFilter=@system-service
+SystemCallFilter=~@clock @debug @module @mount @obsolete @privileged @raw-io @reboot @swap kill tkill tgkill pidfd_send_signal process_vm_readv process_vm_writev ptrace
+InaccessiblePaths=-/run/user -/root -/home -/media -/mnt
+ReadOnlyPaths=/etc/astrid-edge-self-change/provider-broker.json
+ReadOnlyPaths=-/run/astrid-edge-self-change/model.lock
+ReadOnlyPaths=-/run/astrid-edge-self-change/maintenance.json
+ReadOnlyPaths=-/run/astrid-edge-self-change/reflection.json
+ReadWritePaths=/var/lib/astrid-edge-provider
+NoExecPaths=/
+ExecPaths=/usr/libexec/astrid-edge/immutable/astrid-edge-provider-broker /usr/lib /lib /lib64
+TasksMax=32
+MemoryHigh=201326592
+MemoryMax=268435456
+MemorySwapMax=0
+CPUQuota=50%
+IOWeight=10

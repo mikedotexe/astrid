@@ -1,8 +1,17 @@
+use std::ffi::OsString;
+use std::io::{Read, Seek, SeekFrom};
 use std::path::{Component, Path, PathBuf};
 use std::sync::Arc;
 
+use cap_fs_ext::{DirExt as _, FollowSymlinks, MetadataExt as _, OpenOptionsFollowExt as _};
+use cap_std::ambient_authority;
+use cap_std::fs::{Dir, Metadata, OpenOptions};
+
 use crate::engine::wasm::bindings::astrid::capsule::fs;
-use crate::engine::wasm::bindings::astrid::capsule::types::FileStat;
+use crate::engine::wasm::bindings::astrid::capsule::types::{
+    BoundedFileRead, BoundedFileReadMode, BoundedRegularFileEntry, FileEntryKind, FileStat,
+    NoFollowFileStat,
+};
 use crate::engine::wasm::host::util;
 use crate::engine::wasm::host_state::HostState;
 
@@ -14,6 +23,12 @@ const CWD_SCHEME: &str = "cwd://";
 
 /// Path prefix that maps to the principal's tmp directory.
 const TMP_PREFIX: &str = "/tmp/";
+
+/// Immutable host ceiling for either a whole-file or tail no-follow read.
+const MAX_NOFOLLOW_READ_BYTES: u64 = 64 * 1024;
+
+/// Immutable scan ceiling for one no-follow directory listing.
+const MAX_NOFOLLOW_DIRECTORY_ENTRIES: usize = 256;
 
 /// Strip any leading absolute slashes or prefixes (e.g. C:\) from the requested path
 fn make_relative(requested: &str) -> &Path {
@@ -232,6 +247,333 @@ fn resolve_vfs(state: &HostState, resolved: &ResolvedPath) -> Result<ResolvedVfs
     }
 }
 
+/// A final path entry reached through directory handles without following any
+/// symbolic-link component.
+struct NoFollowEntry {
+    parent: Dir,
+    basename: OsString,
+    physical: PathBuf,
+    metadata: Metadata,
+}
+
+/// An exact directory opened through capability handles without following any
+/// symbolic-link component.
+struct NoFollowDirectory {
+    dir: Dir,
+    physical: PathBuf,
+}
+
+fn no_follow_root_and_relative(
+    state: &HostState,
+    raw_path: &str,
+) -> Result<(PathBuf, PathBuf), String> {
+    let (root, requested, direct_host_backing) =
+        if let Some(stripped) = raw_path.strip_prefix(CWD_SCHEME) {
+            (&state.workspace_root, stripped, state.overlay_vfs.is_none())
+        } else if let Some(stripped) = raw_path.strip_prefix(HOME_SCHEME) {
+            (
+                state.home_root.as_ref().ok_or_else(|| {
+                    "home:// scheme is not available: no home directory is configured".to_string()
+                })?,
+                stripped,
+                state.home_vfs.is_some(),
+            )
+        } else if raw_path.starts_with(TMP_PREFIX) || raw_path == "/tmp" {
+            (
+                state
+                    .tmp_dir
+                    .as_ref()
+                    .ok_or_else(|| "/tmp is not available for this principal".to_string())?,
+                raw_path
+                    .strip_prefix(TMP_PREFIX)
+                    .or_else(|| raw_path.strip_prefix("/tmp"))
+                    .unwrap_or(""),
+                state.tmp_vfs.is_some(),
+            )
+        } else {
+            (&state.workspace_root, raw_path, state.overlay_vfs.is_none())
+        };
+    if !direct_host_backing {
+        return Err(
+            "no-follow inspection is unavailable for a non-direct or overlay VFS".to_string(),
+        );
+    }
+    let canonical_root = root
+        .canonicalize()
+        .map_err(|error| format!("cannot resolve no-follow capability root: {error}"))?;
+    let requested = Path::new(requested);
+    if requested.as_os_str().is_empty()
+        || requested.is_absolute()
+        || requested
+            .components()
+            .any(|component| !matches!(component, Component::Normal(_)))
+    {
+        return Err("no-follow paths must contain only relative normal components".to_string());
+    }
+    Ok((canonical_root, requested.to_path_buf()))
+}
+
+fn resolve_no_follow_entry(state: &HostState, raw_path: &str) -> Result<NoFollowEntry, String> {
+    let (root, relative) = no_follow_root_and_relative(state, raw_path)?;
+    resolve_no_follow_entry_at(&root, &relative)
+}
+
+fn resolve_no_follow_entry_at(root: &Path, relative: &Path) -> Result<NoFollowEntry, String> {
+    let mut components = relative.components().peekable();
+    let basename = components
+        .next_back()
+        .and_then(|component| match component {
+            Component::Normal(value) => Some(value.to_os_string()),
+            _ => None,
+        })
+        .ok_or_else(|| "no-follow path has no final entry".to_string())?;
+    let mut parent = Dir::open_ambient_dir(root, ambient_authority())
+        .map_err(|error| format!("cannot open no-follow capability root: {error}"))?;
+    for component in components {
+        let Component::Normal(name) = component else {
+            return Err("no-follow path contains a non-normal component".to_string());
+        };
+        parent = parent
+            .open_dir_nofollow(name)
+            .map_err(|_| "no-follow path has a symlink or non-directory component".to_string())?;
+    }
+    let metadata = parent
+        .symlink_metadata(&basename)
+        .map_err(|error| format!("cannot inspect no-follow entry: {error}"))?;
+    Ok(NoFollowEntry {
+        parent,
+        physical: root.join(relative),
+        basename,
+        metadata,
+    })
+}
+
+fn resolve_no_follow_directory(
+    state: &HostState,
+    raw_path: &str,
+) -> Result<NoFollowDirectory, String> {
+    let (root, relative) = no_follow_root_and_relative(state, raw_path)?;
+    resolve_no_follow_directory_at(&root, &relative)
+}
+
+fn resolve_no_follow_directory_at(
+    root: &Path,
+    relative: &Path,
+) -> Result<NoFollowDirectory, String> {
+    if relative.as_os_str().is_empty()
+        || relative.is_absolute()
+        || relative
+            .components()
+            .any(|component| !matches!(component, Component::Normal(_)))
+    {
+        return Err(
+            "no-follow directory paths must contain only relative normal components".to_string(),
+        );
+    }
+    let mut dir = Dir::open_ambient_dir(root, ambient_authority())
+        .map_err(|error| format!("cannot open no-follow capability root: {error}"))?;
+    for component in relative.components() {
+        let Component::Normal(name) = component else {
+            return Err("no-follow directory path contains a non-normal component".to_string());
+        };
+        dir = dir.open_dir_nofollow(name).map_err(|_| {
+            "no-follow directory has a symlink or non-directory component".to_string()
+        })?;
+    }
+    Ok(NoFollowDirectory {
+        dir,
+        physical: root.join(relative),
+    })
+}
+
+fn metadata_mtime(metadata: &Metadata) -> Option<u64> {
+    metadata
+        .modified()
+        .ok()
+        .map(cap_std::time::SystemTime::into_std)
+        .and_then(|time| time.duration_since(std::time::UNIX_EPOCH).ok())
+        .map(|duration| duration.as_secs())
+}
+
+fn entry_kind(metadata: &Metadata) -> FileEntryKind {
+    let file_type = metadata.file_type();
+    if file_type.is_symlink() {
+        FileEntryKind::Symlink
+    } else if metadata.is_file() {
+        FileEntryKind::RegularFile
+    } else if metadata.is_dir() {
+        FileEntryKind::Directory
+    } else {
+        FileEntryKind::Other
+    }
+}
+
+fn no_follow_stat(metadata: &Metadata) -> NoFollowFileStat {
+    NoFollowFileStat {
+        size: metadata.len(),
+        kind: entry_kind(metadata),
+        mtime: metadata_mtime(metadata),
+        hard_link_count: metadata.nlink(),
+    }
+}
+
+fn stable_identity(metadata: &Metadata) -> (u64, u64, u64, u64, Option<(u64, u32)>) {
+    let modified = metadata
+        .modified()
+        .ok()
+        .map(cap_std::time::SystemTime::into_std)
+        .and_then(|time| time.duration_since(std::time::UNIX_EPOCH).ok())
+        .map(|duration| (duration.as_secs(), duration.subsec_nanos()));
+    (
+        metadata.dev(),
+        metadata.ino(),
+        metadata.nlink(),
+        metadata.len(),
+        modified,
+    )
+}
+
+fn read_region(
+    file: &mut cap_std::fs::File,
+    offset: u64,
+    length: usize,
+) -> Result<Vec<u8>, String> {
+    file.seek(SeekFrom::Start(offset))
+        .map_err(|error| format!("cannot seek bounded no-follow file: {error}"))?;
+    let mut data = vec![0_u8; length];
+    file.read_exact(&mut data)
+        .map_err(|error| format!("cannot read stable bounded no-follow region: {error}"))?;
+    Ok(data)
+}
+
+fn read_bounded_no_follow_entry(
+    entry: NoFollowEntry,
+    maximum_bytes: u64,
+    mode: BoundedFileReadMode,
+) -> Result<BoundedFileRead, String> {
+    if maximum_bytes == 0 || maximum_bytes > MAX_NOFOLLOW_READ_BYTES {
+        return Err(format!(
+            "bounded no-follow read must request 1-{MAX_NOFOLLOW_READ_BYTES} bytes"
+        ));
+    }
+    if !entry.metadata.is_file()
+        || entry.metadata.file_type().is_symlink()
+        || entry.metadata.nlink() != 1
+    {
+        return Err(
+            "bounded no-follow reads require a non-symlink regular file with one hard link"
+                .to_string(),
+        );
+    }
+    let captured_size = entry.metadata.len();
+    let offset = match mode {
+        BoundedFileReadMode::Whole => {
+            if captured_size > maximum_bytes {
+                return Err("whole-file no-follow read exceeds the requested bound".to_string());
+            }
+            0
+        },
+        BoundedFileReadMode::Tail => captured_size.saturating_sub(maximum_bytes),
+    };
+    let length = usize::try_from(captured_size.saturating_sub(offset))
+        .map_err(|_| "bounded no-follow region cannot be represented".to_string())?;
+    let mut options = OpenOptions::new();
+    options.read(true).follow(FollowSymlinks::No);
+    let mut file = entry
+        .parent
+        .open_with(&entry.basename, &options)
+        .map_err(|error| format!("cannot open bounded no-follow file: {error}"))?;
+    let opened = file
+        .metadata()
+        .map_err(|error| format!("cannot inspect opened no-follow file: {error}"))?;
+    if stable_identity(&entry.metadata) != stable_identity(&opened)
+        || !opened.is_file()
+        || opened.nlink() != 1
+    {
+        return Err("bounded no-follow file identity changed before reading".to_string());
+    }
+    let starts_at_line_boundary = if offset == 0 {
+        true
+    } else {
+        read_region(&mut file, offset.saturating_sub(1), 1)? == b"\n"
+    };
+    let first = read_region(&mut file, offset, length)?;
+    let second = read_region(&mut file, offset, length)?;
+    if first != second {
+        return Err("bounded no-follow file changed while reading".to_string());
+    }
+    let after = file
+        .metadata()
+        .map_err(|error| format!("cannot re-inspect opened no-follow file: {error}"))?;
+    let path_after = entry
+        .parent
+        .symlink_metadata(&entry.basename)
+        .map_err(|error| format!("cannot re-inspect no-follow path: {error}"))?;
+    if stable_identity(&opened) != stable_identity(&after)
+        || stable_identity(&after) != stable_identity(&path_after)
+        || path_after.file_type().is_symlink()
+        || !path_after.is_file()
+        || path_after.nlink() != 1
+    {
+        return Err("bounded no-follow file identity changed during reading".to_string());
+    }
+    Ok(BoundedFileRead {
+        data: first,
+        offset,
+        captured_size,
+        starts_at_line_boundary,
+    })
+}
+
+fn list_bounded_regular_files_no_follow(
+    directory: NoFollowDirectory,
+    maximum_bytes: u64,
+) -> Result<Vec<BoundedRegularFileEntry>, String> {
+    if maximum_bytes == 0 || maximum_bytes > MAX_NOFOLLOW_READ_BYTES {
+        return Err(format!(
+            "bounded no-follow listing must request 1-{MAX_NOFOLLOW_READ_BYTES} bytes"
+        ));
+    }
+    let entries = directory
+        .dir
+        .entries()
+        .map_err(|error| format!("cannot enumerate no-follow directory: {error}"))?;
+    let mut scanned = 0_usize;
+    let mut accepted = Vec::new();
+    for entry in entries {
+        scanned = scanned.saturating_add(1);
+        if scanned > MAX_NOFOLLOW_DIRECTORY_ENTRIES {
+            return Err(format!(
+                "no-follow directory exceeds the {MAX_NOFOLLOW_DIRECTORY_ENTRIES}-entry scan limit"
+            ));
+        }
+        let entry = entry.map_err(|error| format!("cannot inspect directory entry: {error}"))?;
+        let basename = entry
+            .file_name()
+            .into_string()
+            .map_err(|_| "no-follow directory contains a non-UTF-8 basename".to_string())?;
+        if basename.is_empty() || basename == "." || basename == ".." {
+            return Err("no-follow directory returned an invalid basename".to_string());
+        }
+        let metadata = directory
+            .dir
+            .symlink_metadata(&basename)
+            .map_err(|error| format!("cannot inspect no-follow directory entry: {error}"))?;
+        if metadata.is_file()
+            && !metadata.file_type().is_symlink()
+            && metadata.nlink() == 1
+            && metadata.len() <= maximum_bytes
+        {
+            accepted.push(BoundedRegularFileEntry {
+                basename,
+                stat: no_follow_stat(&metadata),
+            });
+        }
+    }
+    accepted.sort_by(|left, right| left.basename.cmp(&right.basename));
+    Ok(accepted)
+}
+
 impl fs::Host for HostState {
     fn fs_exists(&mut self, path: String) -> Result<bool, String> {
         let capsule_id = self.capsule_id.as_str().to_owned();
@@ -372,6 +714,65 @@ impl fs::Host for HostState {
         })
     }
 
+    fn fs_lstat_nofollow(&mut self, path: String) -> Result<NoFollowFileStat, String> {
+        let entry = resolve_no_follow_entry(self, &path)?;
+        if let Some(gate) = self.security.clone() {
+            let physical = entry.physical.to_string_lossy().to_string();
+            let capsule_id = self.capsule_id.as_str().to_owned();
+            let check =
+                util::bounded_block_on(&self.runtime_handle, &self.host_semaphore, async move {
+                    gate.check_file_read(&capsule_id, &physical).await
+                });
+            if let Err(reason) = check {
+                return Err(format!("security denied no-follow stat: {reason}"));
+            }
+        }
+        Ok(no_follow_stat(&entry.metadata))
+    }
+
+    fn fs_list_bounded_regular_files_nofollow(
+        &mut self,
+        path: String,
+        maximum_bytes: u64,
+    ) -> Result<Vec<BoundedRegularFileEntry>, String> {
+        let directory = resolve_no_follow_directory(self, &path)?;
+        if let Some(gate) = self.security.clone() {
+            let physical = directory.physical.to_string_lossy().to_string();
+            let capsule_id = self.capsule_id.as_str().to_owned();
+            let check =
+                util::bounded_block_on(&self.runtime_handle, &self.host_semaphore, async move {
+                    gate.check_file_read(&capsule_id, &physical).await
+                });
+            if let Err(reason) = check {
+                return Err(format!(
+                    "security denied bounded no-follow listing: {reason}"
+                ));
+            }
+        }
+        list_bounded_regular_files_no_follow(directory, maximum_bytes)
+    }
+
+    fn fs_read_bounded_nofollow(
+        &mut self,
+        path: String,
+        maximum_bytes: u64,
+        mode: BoundedFileReadMode,
+    ) -> Result<BoundedFileRead, String> {
+        let entry = resolve_no_follow_entry(self, &path)?;
+        if let Some(gate) = self.security.clone() {
+            let physical = entry.physical.to_string_lossy().to_string();
+            let capsule_id = self.capsule_id.as_str().to_owned();
+            let check =
+                util::bounded_block_on(&self.runtime_handle, &self.host_semaphore, async move {
+                    gate.check_file_read(&capsule_id, &physical).await
+                });
+            if let Err(reason) = check {
+                return Err(format!("security denied bounded no-follow read: {reason}"));
+            }
+        }
+        read_bounded_no_follow_entry(entry, maximum_bytes, mode)
+    }
+
     fn fs_unlink(&mut self, path: String) -> Result<(), String> {
         let capsule_id = self.capsule_id.as_str().to_owned();
 
@@ -492,5 +893,238 @@ impl fs::Host for HostState {
             res
         })
         .map_err(|e| format!("write_file failed: {e}"))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::path::Path;
+
+    use cap_fs_ext::MetadataExt as _;
+
+    use super::{
+        BoundedFileReadMode, FileEntryKind, MAX_NOFOLLOW_DIRECTORY_ENTRIES,
+        MAX_NOFOLLOW_READ_BYTES, list_bounded_regular_files_no_follow,
+        read_bounded_no_follow_entry, resolve_no_follow_directory_at, resolve_no_follow_entry_at,
+    };
+
+    #[test]
+    fn bounded_no_follow_whole_and_tail_reads_are_stable_and_capped() {
+        let root = tempfile::tempdir().unwrap();
+        std::fs::create_dir(root.path().join("owned")).unwrap();
+        std::fs::write(
+            root.path().join("owned/ledger.jsonl"),
+            b"first\nsecond\nthird\n",
+        )
+        .unwrap();
+
+        let whole = read_bounded_no_follow_entry(
+            resolve_no_follow_entry_at(root.path(), Path::new("owned/ledger.jsonl")).unwrap(),
+            64,
+            BoundedFileReadMode::Whole,
+        )
+        .unwrap();
+        assert_eq!(whole.data, b"first\nsecond\nthird\n");
+        assert_eq!(whole.offset, 0);
+        assert!(whole.starts_at_line_boundary);
+
+        let tail = read_bounded_no_follow_entry(
+            resolve_no_follow_entry_at(root.path(), Path::new("owned/ledger.jsonl")).unwrap(),
+            12,
+            BoundedFileReadMode::Tail,
+        )
+        .unwrap();
+        assert_eq!(tail.data, b"econd\nthird\n");
+        assert_eq!(tail.offset, 7);
+        assert!(!tail.starts_at_line_boundary);
+
+        let oversized = read_bounded_no_follow_entry(
+            resolve_no_follow_entry_at(root.path(), Path::new("owned/ledger.jsonl")).unwrap(),
+            MAX_NOFOLLOW_READ_BYTES.saturating_add(1),
+            BoundedFileReadMode::Tail,
+        );
+        assert!(oversized.is_err());
+    }
+
+    #[test]
+    fn symlinks_inside_or_outside_and_hardlinks_never_reach_file_bytes() {
+        let root = tempfile::tempdir().unwrap();
+        let outside = tempfile::tempdir().unwrap();
+        std::fs::create_dir(root.path().join("owned")).unwrap();
+        std::fs::write(root.path().join("owned/secret.txt"), b"must-not-read").unwrap();
+        std::fs::write(outside.path().join("outside.txt"), b"outside-must-not-read").unwrap();
+
+        #[cfg(unix)]
+        {
+            std::os::unix::fs::symlink("secret.txt", root.path().join("owned/link.txt")).unwrap();
+            let link =
+                resolve_no_follow_entry_at(root.path(), Path::new("owned/link.txt")).unwrap();
+            assert_eq!(super::entry_kind(&link.metadata), FileEntryKind::Symlink);
+            assert!(read_bounded_no_follow_entry(link, 64, BoundedFileReadMode::Whole).is_err());
+
+            std::os::unix::fs::symlink(
+                outside.path().join("outside.txt"),
+                root.path().join("owned/outside-link.txt"),
+            )
+            .unwrap();
+            let outside_link =
+                resolve_no_follow_entry_at(root.path(), Path::new("owned/outside-link.txt"))
+                    .unwrap();
+            assert_eq!(
+                super::entry_kind(&outside_link.metadata),
+                FileEntryKind::Symlink
+            );
+            assert!(
+                read_bounded_no_follow_entry(outside_link, 64, BoundedFileReadMode::Whole).is_err()
+            );
+
+            std::os::unix::fs::symlink("owned", root.path().join("owned-link")).unwrap();
+            assert!(
+                resolve_no_follow_entry_at(root.path(), Path::new("owned-link/secret.txt"))
+                    .is_err()
+            );
+        }
+
+        std::fs::hard_link(
+            root.path().join("owned/secret.txt"),
+            root.path().join("owned/hardlink.txt"),
+        )
+        .unwrap();
+        let hardlink =
+            resolve_no_follow_entry_at(root.path(), Path::new("owned/hardlink.txt")).unwrap();
+        assert!(hardlink.metadata.nlink() > 1);
+        assert!(read_bounded_no_follow_entry(hardlink, 64, BoundedFileReadMode::Whole).is_err());
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn bounded_no_follow_listing_omits_every_unauthorized_entry_kind() {
+        use nix::sys::stat::Mode;
+        use nix::unistd::mkfifo;
+
+        let root = tempfile::tempdir().unwrap();
+        let owned = root.path().join("owned");
+        std::fs::create_dir(&owned).unwrap();
+        std::fs::write(owned.join("accepted.txt"), b"accepted").unwrap();
+        std::fs::write(owned.join("oversized.txt"), vec![b'x'; 65]).unwrap();
+        std::fs::write(owned.join("linked.txt"), b"linked").unwrap();
+        std::fs::hard_link(owned.join("linked.txt"), owned.join("hardlink.txt")).unwrap();
+        std::fs::create_dir(owned.join("nested")).unwrap();
+        std::os::unix::fs::symlink("accepted.txt", owned.join("symlink.txt")).unwrap();
+        mkfifo(&owned.join("pipe"), Mode::S_IRUSR | Mode::S_IWUSR).unwrap();
+        let _listener = std::os::unix::net::UnixListener::bind(owned.join("socket")).unwrap();
+
+        let listed = list_bounded_regular_files_no_follow(
+            resolve_no_follow_directory_at(root.path(), Path::new("owned")).unwrap(),
+            64,
+        )
+        .unwrap();
+        assert_eq!(listed.len(), 1);
+        assert_eq!(listed[0].basename, "accepted.txt");
+        assert_eq!(listed[0].stat.kind, FileEntryKind::RegularFile);
+        assert_eq!(listed[0].stat.hard_link_count, 1);
+        assert_eq!(listed[0].stat.size, 8);
+
+        std::os::unix::fs::symlink("owned", root.path().join("owned-link")).unwrap();
+        assert!(
+            resolve_no_follow_directory_at(root.path(), Path::new("owned-link")).is_err(),
+            "a symlinked allowlisted directory must fail closed"
+        );
+    }
+
+    #[test]
+    fn bounded_no_follow_listing_rejects_unbounded_scans_and_byte_limits() {
+        let root = tempfile::tempdir().unwrap();
+        let owned = root.path().join("owned");
+        std::fs::create_dir(&owned).unwrap();
+        for index in 0..=MAX_NOFOLLOW_DIRECTORY_ENTRIES {
+            std::fs::write(owned.join(format!("entry-{index:03}.txt")), b"x").unwrap();
+        }
+        assert!(
+            list_bounded_regular_files_no_follow(
+                resolve_no_follow_directory_at(root.path(), Path::new("owned")).unwrap(),
+                64,
+            )
+            .is_err()
+        );
+
+        let small = tempfile::tempdir().unwrap();
+        std::fs::create_dir(small.path().join("owned")).unwrap();
+        for invalid in [0, MAX_NOFOLLOW_READ_BYTES.saturating_add(1)] {
+            assert!(
+                list_bounded_regular_files_no_follow(
+                    resolve_no_follow_directory_at(small.path(), Path::new("owned")).unwrap(),
+                    invalid,
+                )
+                .is_err()
+            );
+        }
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn fifo_socket_and_directory_entries_are_rejected_before_open() {
+        use nix::sys::stat::Mode;
+        use nix::unistd::mkfifo;
+
+        let root = tempfile::tempdir().unwrap();
+        mkfifo(&root.path().join("pipe"), Mode::S_IRUSR | Mode::S_IWUSR).unwrap();
+        let fifo = resolve_no_follow_entry_at(root.path(), Path::new("pipe")).unwrap();
+        assert_eq!(super::entry_kind(&fifo.metadata), FileEntryKind::Other);
+        assert!(read_bounded_no_follow_entry(fifo, 64, BoundedFileReadMode::Whole).is_err());
+
+        let _listener = std::os::unix::net::UnixListener::bind(root.path().join("socket")).unwrap();
+        let socket = resolve_no_follow_entry_at(root.path(), Path::new("socket")).unwrap();
+        assert_eq!(super::entry_kind(&socket.metadata), FileEntryKind::Other);
+        assert!(read_bounded_no_follow_entry(socket, 64, BoundedFileReadMode::Whole).is_err());
+
+        std::fs::create_dir(root.path().join("directory")).unwrap();
+        let directory = resolve_no_follow_entry_at(root.path(), Path::new("directory")).unwrap();
+        assert_eq!(
+            super::entry_kind(&directory.metadata),
+            FileEntryKind::Directory
+        );
+        assert!(read_bounded_no_follow_entry(directory, 64, BoundedFileReadMode::Whole).is_err());
+    }
+
+    #[test]
+    fn path_replacement_between_inspection_and_open_is_rejected() {
+        let root = tempfile::tempdir().unwrap();
+        std::fs::write(root.path().join("value.txt"), b"original").unwrap();
+        let inspected = resolve_no_follow_entry_at(root.path(), Path::new("value.txt")).unwrap();
+        std::fs::rename(
+            root.path().join("value.txt"),
+            root.path().join("replaced.txt"),
+        )
+        .unwrap();
+        std::fs::write(root.path().join("value.txt"), b"attacker").unwrap();
+        assert!(read_bounded_no_follow_entry(inspected, 64, BoundedFileReadMode::Whole).is_err());
+    }
+
+    #[test]
+    fn current_fs_linker_accepts_a_legacy_fs_interface_import() {
+        const LEGACY_COMPONENT: &str = r#"
+            (component
+              (type $legacy-fs
+                (instance
+                  (type $exists-result (result bool (error string)))
+                  (type $exists-func
+                    (func (param "path" string) (result $exists-result)))
+                  (export "fs-exists" (func (type $exists-func)))))
+              (import "astrid:capsule/fs@0.1.0"
+                (instance $legacy-fs-import (type $legacy-fs))))
+        "#;
+
+        let mut configuration = wasmtime::Config::new();
+        configuration.wasm_component_model(true);
+        let engine = wasmtime::Engine::new(&configuration).unwrap();
+        let component = wasmtime::component::Component::new(&engine, LEGACY_COMPONENT).unwrap();
+        let mut linker = wasmtime::component::Linker::<super::HostState>::new(&engine);
+        crate::engine::wasm::bindings::Capsule::add_to_linker::<
+            super::HostState,
+            wasmtime::component::HasSelf<super::HostState>,
+        >(&mut linker, |state| state)
+        .unwrap();
+        linker.instantiate_pre(&component).unwrap();
     }
 }

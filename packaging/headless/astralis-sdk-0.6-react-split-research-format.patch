@@ -1,0 +1,149 @@
+diff --git a/src/lib.rs b/src/lib.rs
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -155,12 +155,87 @@ fn canonicalize_embedded_terminal_next(text: &str) -> Option<String> {
+     ))
+ }
+ 
++/// Repair a small-model line break between one argument-bearing `NEXT` verb
++/// and its single-line argument. Both pieces must be the final two non-empty
++/// lines, and no second action marker may appear anywhere.
++fn canonicalize_split_argument_next(text: &str) -> Option<String> {
++    let trimmed = text.trim_end();
++    if trimmed.matches("NEXT:").count() != 1 {
++        return None;
++    }
++    let final_line_start = trimmed
++        .rfind('\n')
++        .map_or(0, |position| position.saturating_add(1));
++    let argument = trimmed.get(final_line_start..)?.trim();
++    if argument.is_empty()
++        || argument.chars().count() > 2_000
++        || argument.chars().any(char::is_control)
++    {
++        return None;
++    }
++    let before_question = trimmed.get(..final_line_start)?.trim_end();
++    let declaration_line_start = before_question
++        .rfind('\n')
++        .map_or(0, |position| position.saturating_add(1));
++    let verb = before_question
++        .get(declaration_line_start..)?
++        .trim()
++        .strip_prefix("NEXT:")?
++        .trim();
++    if !matches!(
++        verb,
++        "JOURNAL"
++            | "REMEMBER"
++            | "SELF_STUDY"
++            | "PROPOSE"
++            | "NOTICE"
++            | "DAYDREAM"
++            | "ASPIRE"
++            | "RESEARCH"
++            | "PLAN"
++            | "DRAFT"
++            | "READ"
++            | "READ_SOURCE"
++            | "REVISE"
++            | "CHECK"
++            | "MEASURE"
++            | "STUDY"
++            | "CANCEL_STUDY"
++            | "SYNTHESIZE"
++            | "SHARE"
++            | "TUNE_RESERVOIR"
++            | "CANCEL_TUNING"
++            | "VALIDATE_TUNING"
++            | "ADOPT_TUNING"
++            | "REVERT_TUNING"
++    ) {
++        return None;
++    }
++    let declaration = format!("NEXT: {verb} {argument}");
++    if !has_valid_sovereign_next(&declaration) {
++        return None;
++    }
++    let prefix = before_question
++        .get(..declaration_line_start)?
++        .trim_end();
++    if prefix.is_empty() {
++        Some(format!("{FORMAT_NEXT_REPAIR_MARKER}\n{declaration}"))
++    } else {
++        Some(format!(
++            "{prefix}\n\n{FORMAT_NEXT_REPAIR_MARKER}\n{declaration}"
++        ))
++    }
++}
++
+ /// Preserve a valid model-authored declaration or append a transparent,
+ /// non-writing LISTEN fallback.
+ fn ensure_sovereign_next(text: &str) -> String {
+     let trimmed = text.trim_end();
+     if has_valid_sovereign_next(trimmed) {
+         return trimmed.to_owned();
++    }
++    if let Some(repaired) = canonicalize_split_argument_next(trimmed) {
++        return repaired;
+     }
+     if let Some(repaired) = canonicalize_embedded_terminal_next(trimmed) {
+         return repaired;
+@@ -1705,8 +1780,8 @@ mod sovereign_next_tests {
+ mod sovereign_next_tests {
+     use super::{
+         FORMAT_NEXT_REPAIR_MARKER, SAFE_NEXT_REPAIR_MARKER,
+-        canonicalize_embedded_terminal_next, ensure_sovereign_next,
+-        explicitly_requests_read_only_web_tool, has_valid_sovereign_next,
++        canonicalize_embedded_terminal_next, canonicalize_split_argument_next,
++        ensure_sovereign_next, explicitly_requests_read_only_web_tool, has_valid_sovereign_next,
+     };
+ 
+     #[test]
+@@ -1783,6 +1858,46 @@ mod sovereign_next_tests {
+     }
+ 
+     #[test]
++    fn repairs_only_one_terminal_split_argument_declaration() {
++        let repaired = canonicalize_split_argument_next(
++            "An intention emerged.\nNEXT: PROPOSE\nEstablish a grounded local research rhythm.",
++        )
++        .unwrap();
++        assert_eq!(
++            repaired,
++            format!(
++                "An intention emerged.\n\n{FORMAT_NEXT_REPAIR_MARKER}\n\
++                 NEXT: PROPOSE Establish a grounded local research rhythm."
++            )
++        );
++        assert!(
++            canonicalize_split_argument_next(
++                "NEXT: NOTICE first\nNEXT: RESEARCH\nDoes this stay ambiguous?"
++            )
++            .is_none()
++        );
++        assert!(
++            canonicalize_split_argument_next("NEXT: LISTEN\nA different action").is_none()
++        );
++        let tuning = canonicalize_split_argument_next(
++            "A bounded experiment.\nNEXT: TUNE_RESERVOIR\n\
++             input_gain=1.05 FOR 15m :: Test one hypothesis.",
++        )
++        .unwrap();
++        assert!(tuning.contains(FORMAT_NEXT_REPAIR_MARKER));
++        assert!(tuning.ends_with(
++            "NEXT: TUNE_RESERVOIR input_gain=1.05 FOR 15m :: Test one hypothesis."
++        ));
++        assert!(
++            canonicalize_split_argument_next(&format!(
++                "NEXT: RESEARCH\n{}",
++                "x".repeat(2_001)
++            ))
++            .is_none()
++        );
++    }
++
++    #[test]
+     fn repairs_only_to_a_transparent_non_writing_listen() {
+         assert_eq!(
+             ensure_sovereign_next("A response without an action."),

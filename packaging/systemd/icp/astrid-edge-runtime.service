@@ -1,0 +1,24 @@
+[Unit]
+Description=ICP Astrid CPU reservoir and sovereign NEXT executor
+BindsTo=astrid.service
+After=astrid.service
+
+[Service]
+Type=simple
+# Keep cwd available while the SSD guard waits; profile paths are explicitly
+# rooted beneath .astrid-icp.
+WorkingDirectory=%h
+Environment=RUST_BACKTRACE=1
+Environment=ASTRID_HOME=%h/.astrid-icp/state
+EnvironmentFile=%h/.config/astrid/edge-appliance.env
+ExecStart=%h/.astrid-icp/state/bin/astrid-edge-runtime
+Restart=on-failure
+RestartSec=3
+TimeoutStopSec=30
+KillSignal=SIGTERM
+UMask=0077
+LimitNOFILE=65536
+TasksMax=1024
+
+[Install]
+WantedBy=default.target

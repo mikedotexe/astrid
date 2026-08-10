@@ -1,6 +1,6 @@
 use crate::engine::wasm::bindings::astrid::capsule::sys;
 use crate::engine::wasm::bindings::astrid::capsule::types::{
-    CallerContext, CapabilityCheckRequest, CapabilityCheckResponse, LogLevel,
+    AttestedCallerContext, CallerContext, CapabilityCheckRequest, CapabilityCheckResponse, LogLevel,
 };
 use crate::engine::wasm::host::util;
 use crate::engine::wasm::host_state::HostState;
@@ -45,6 +45,30 @@ impl sys::Host for HostState {
         }
     }
 
+    fn get_attested_caller(&mut self) -> Result<AttestedCallerContext, String> {
+        if let Some(ref msg) = self.caller_context {
+            let producer = msg
+                .producer
+                .as_ref()
+                .filter(|producer| producer.is_supported());
+            Ok(AttestedCallerContext {
+                principal: msg.principal.clone(),
+                source_id: msg.source_id.to_string(),
+                producer_kind: producer.map(|producer| producer.kind.clone()),
+                producer_id: producer.map(|producer| producer.id.clone()),
+                timestamp: msg.timestamp.to_rfc3339(),
+            })
+        } else {
+            Ok(AttestedCallerContext {
+                principal: None,
+                source_id: String::new(),
+                producer_kind: None,
+                producer_id: None,
+                timestamp: String::new(),
+            })
+        }
+    }
+
     fn trigger_hook(&mut self, request_json: String) -> Result<String, String> {
         let caller_id = self.capsule_id.clone();
         let registry = self.capsule_registry.clone();
@@ -77,8 +101,24 @@ impl sys::Host for HostState {
                             if !matches!(capsule.state(), crate::capsule::CapsuleState::Ready) {
                                 continue;
                             }
+                            if request.hook == "prompt_builder.v1.hook.before_build"
+                                && !capsule.manifest().capabilities.allow_prompt_injection
+                            {
+                                tracing::warn!(
+                                    capsule_id = %capsule.id(),
+                                    hook = %request.hook,
+                                    "Skipping prompt hook target without allow_prompt_injection"
+                                );
+                                continue;
+                            }
                             for interceptor in &capsule.manifest().interceptors {
-                                if crate::topic::topic_matches(&request.hook, &interceptor.event) {
+                                if crate::topic::topic_matches(&request.hook, &interceptor.event)
+                                    && crate::dispatcher::interceptor_accepts_caller(
+                                        interceptor,
+                                        &request.hook,
+                                        None,
+                                    )
+                                {
                                     matches.push((
                                         std::sync::Arc::clone(&capsule),
                                         interceptor.action.clone(),

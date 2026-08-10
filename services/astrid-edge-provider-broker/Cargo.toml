@@ -1,0 +1,33 @@
+[package]
+name = "astrid-edge-provider-broker"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.94"
+publish = false
+description = "Immutable authenticated Unix-socket inference gateway for CPU-edge Astrid"
+
+[workspace]
+
+[dependencies]
+fs2 = "0.4"
+nix = { version = "0.30", default-features = false, features = ["socket", "user"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+sha2 = "0.10"
+
+[dev-dependencies]
+tempfile = "3"
+
+[profile.release]
+codegen-units = 1
+lto = "thin"
+panic = "abort"
+strip = "symbols"
+
+[lints.rust]
+unsafe_code = "deny"
+
+[lints.clippy]
+all = { level = "warn", priority = -1 }
+pedantic = { level = "warn", priority = -1 }
+arithmetic_side_effects = "deny"

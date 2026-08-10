@@ -1,0 +1,108 @@
+[package]
+name = "astrid-capsule-edge-introspector"
+version = "0.1.0"
+description = "Private bounded self-inspection tools for one edge Astrid"
+authors = ["Unicity Labs <info@unicity-labs.com>"]
+astrid-version = ">=0.5.2"
+
+[[component]]
+id = "edge-introspector"
+file = "astrid_capsule_edge_introspector.wasm"
+type = "executable"
+capabilities = { fs_read = [
+    "home://edge/journal",
+    "home://edge/memories",
+    "home://edge/introspections",
+    "home://edge/proposals",
+    "home://edge/notices",
+    "home://edge/daydreams",
+    "home://edge/aspirations",
+    "home://edge/research",
+    "home://edge/measurements",
+    "home://edge/studies/results",
+    "home://edge/tuning/evidence",
+    "home://edge/self",
+    "home://edge/peer/read",
+    "home://edge/plans",
+    "home://edge/workshop/drafts",
+    "home://edge/workshop/revisions",
+    "home://edge/workshop/checks",
+    "home://edge/inbox",
+    "home://edge/perception/latest.json",
+    "home://edge/perception/observations",
+    "home://edge/autonomous/thread_state.json",
+    "home://edge/autonomous/thread_state.jsonl",
+    "home://edge/actions/receipts.jsonl",
+    "home://edge/web/receipts.jsonl",
+] }
+
+[capabilities]
+fs_read = [
+    "home://edge/journal",
+    "home://edge/memories",
+    "home://edge/introspections",
+    "home://edge/proposals",
+    "home://edge/notices",
+    "home://edge/daydreams",
+    "home://edge/aspirations",
+    "home://edge/research",
+    "home://edge/measurements",
+    "home://edge/studies/results",
+    "home://edge/tuning/evidence",
+    "home://edge/self",
+    "home://edge/peer/read",
+    "home://edge/plans",
+    "home://edge/workshop/drafts",
+    "home://edge/workshop/revisions",
+    "home://edge/workshop/checks",
+    "home://edge/inbox",
+    "home://edge/perception/latest.json",
+    "home://edge/perception/observations",
+    "home://edge/autonomous/thread_state.json",
+    "home://edge/autonomous/thread_state.jsonl",
+    "home://edge/actions/receipts.jsonl",
+    "home://edge/web/receipts.jsonl",
+]
+ipc_publish = ["tool.v1.execute.*.result"]
+ipc_subscribe = [
+    "tool.v1.execute.list_owned_artifacts",
+    "tool.v1.execute.read_owned_artifact",
+    "tool.v1.execute.search_owned_text",
+    "tool.v1.execute.inspect_owned_question",
+    "tool.v1.execute.read_owned_continuity",
+]
+
+[[interceptor]]
+event = "tool.v1.execute.list_owned_artifacts"
+action = "tool_execute_list_owned_artifacts"
+exposure = "private"
+caller_producer_kind = "native_socket_client"
+caller_source_ids = ["a57d1d30-0000-4000-8000-000000000001"]
+
+[[interceptor]]
+event = "tool.v1.execute.read_owned_artifact"
+action = "tool_execute_read_owned_artifact"
+exposure = "private"
+caller_producer_kind = "native_socket_client"
+caller_source_ids = ["a57d1d30-0000-4000-8000-000000000001"]
+
+[[interceptor]]
+event = "tool.v1.execute.search_owned_text"
+action = "tool_execute_search_owned_text"
+exposure = "private"
+caller_producer_kind = "native_socket_client"
+caller_source_ids = ["a57d1d30-0000-4000-8000-000000000001"]
+
+[[interceptor]]
+event = "tool.v1.execute.inspect_owned_question"
+action = "tool_execute_inspect_owned_question"
+exposure = "private"
+caller_producer_kind = "native_socket_client"
+caller_source_ids = ["a57d1d30-0000-4000-8000-000000000001"]
+
+[[interceptor]]
+event = "tool.v1.execute.read_owned_continuity"
+action = "tool_execute_read_owned_continuity"
+exposure = "private"
+caller_producer_kind = "native_socket_client"
+caller_source_ids = ["a57d1d30-0000-4000-8000-000000000001"]

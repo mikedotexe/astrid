@@ -1,18 +1,12 @@
 # cargo-audit configuration
 # https://github.com/rustsec/rustsec/tree/main/cargo-audit
 #
-# All ignored advisories are transitive dependencies we cannot patch directly.
-# Each entry documents the risk assessment and our defensive measures.
-# Re-evaluate on every extism or surrealdb major version bump.
+# Every ignored advisory is an Extism-owned Wasmtime 37 dependency that is not
+# reachable through Astrid's preview-1 capsule path. Re-evaluate on every
+# Extism major-version bump.
 
 [advisories]
 ignore = [
-    # rsa timing sidechannel (medium, 5.9) - transitive via surrealdb -> jsonwebtoken.
-    # No upstream fix available.
-    # Mitigation: Astrid uses ed25519 for all auth/signing (astrid-crypto). RSA is only
-    # used internally by SurrealDB for JWT in embedded mode, not exposed to network attackers.
-    "RUSTSEC-2023-0071",
-
     # wasmtime WASI resource exhaustion (medium, 6.9) - transitive via extism -> wasmtime 37.
     # Waiting on extism to bump wasmtime to a patched release.
     # Mitigation: Capsules run with Extism memory limits (page cap via Manifest). Host-side

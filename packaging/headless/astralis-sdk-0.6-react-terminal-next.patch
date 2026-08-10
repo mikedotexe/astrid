@@ -1,0 +1,313 @@
+diff --git a/src/lib.rs b/src/lib.rs
+index 990e702bbf..b76a25f6f3 100644
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -263,6 +263,84 @@ fn sovereign_next_repair_enabled() -> bool {
+     env::var("sovereign_next_repair").is_ok_and(|value| value.eq_ignore_ascii_case("true"))
+ }
+-
++
++const RESPONSE_PROVENANCE_MODEL_AUTHORED: &str = "model_authored";
++const RESPONSE_PROVENANCE_SAFE_FALLBACK: &str = "model_authored_with_local_safe_fallback";
++const RESPONSE_PROVENANCE_FORMAT_REPAIR: &str = "model_authored_with_local_format_repair";
++const RESPONSE_PROVENANCE_EXECUTOR_ERROR: &str = "executor_terminal_error";
++
++#[derive(Debug, PartialEq, Eq)]
++struct FinalizedResponse {
++    /// Terminal bytes published to the client, including any visible repair.
++    text: String,
++    /// Exact model bytes admitted to session history.
++    /// Executor output has no authored history representation.
++    authored_history_text: Option<String>,
++    response_provenance: &'static str,
++}
++
++/// Apply the appliance action contract while retaining exact response origin.
++fn finalize_model_response(text: &str) -> FinalizedResponse {
++    finalize_model_response_with_repair(text, sovereign_next_repair_enabled())
++}
++
++fn finalize_model_response_with_repair(text: &str, repair_enabled: bool) -> FinalizedResponse {
++    if !repair_enabled {
++        return FinalizedResponse {
++            text: text.to_owned(),
++            authored_history_text: Some(text.to_owned()),
++            response_provenance: RESPONSE_PROVENANCE_MODEL_AUTHORED,
++        };
++    }
++    let (finalized, response_provenance) = if has_valid_sovereign_next(text) {
++        (text.to_owned(), RESPONSE_PROVENANCE_MODEL_AUTHORED)
++    } else if let Some(repaired) = canonicalize_split_argument_next(text) {
++        (repaired, RESPONSE_PROVENANCE_FORMAT_REPAIR)
++    } else if let Some(repaired) = canonicalize_embedded_terminal_next(text) {
++        (repaired, RESPONSE_PROVENANCE_FORMAT_REPAIR)
++    } else {
++        (
++            ensure_sovereign_next(text),
++            RESPONSE_PROVENANCE_SAFE_FALLBACK,
++        )
++    };
++    FinalizedResponse {
++        text: finalized,
++        authored_history_text: Some(text.to_owned()),
++        response_provenance,
++    }
++}
++
++/// Executor failures stay visibly non-authored even when made grammar-safe.
++fn finalize_executor_error(text: &str) -> FinalizedResponse {
++    finalize_executor_error_with_repair(text, sovereign_next_repair_enabled())
++}
++
++fn finalize_executor_error_with_repair(text: &str, repair_enabled: bool) -> FinalizedResponse {
++    let text = if repair_enabled {
++        ensure_sovereign_next(text)
++    } else {
++        text.trim_end().to_owned()
++    };
++    FinalizedResponse {
++        text,
++        authored_history_text: None,
++        response_provenance: RESPONSE_PROVENANCE_EXECUTOR_ERROR,
++    }
++}
++
++fn publish_final_response(session_id: &str, response: &FinalizedResponse) -> Result<(), SysError> {
++    ipc::publish_json(
++        "agent.v1.response",
++        &serde_json::json!({
++            "type": "agent_response",
++            "text": &response.text,
++            "is_final": true,
++            "session_id": session_id,
++            "response_provenance": response.response_provenance,
++        }),
++    )
++}
++
+ /// Current wall-clock time as milliseconds since UNIX epoch, or 0 if unavailable.
+ fn now_ms() -> u64 {
+     time::now()
+@@ -629,16 +707,10 @@ impl TurnState {
+             log::error(format!(
+                 "Phase {phase_name} timed out after {elapsed_secs}s"
+             ));
+-            let _ = ipc::publish_json(
+-                "agent.v1.response",
+-                &IpcPayload::AgentResponse {
+-                    text: format!(
+-                        "Request timed out ({phase_name} phase exceeded {timeout}s limit)"
+-                    ),
+-                    is_final: true,
+-                    session_id: self.session_id.clone(),
+-                },
+-            );
++            let response = finalize_executor_error(&format!(
++                "Request timed out ({phase_name} phase exceeded {timeout}s limit)"
++            ));
++            let _ = publish_final_response(&self.session_id, &response);
+             self.reset_conversation_turn();
+             self.set_phase(Phase::Idle);
+             self.save()?;
+@@ -1102,14 +1174,8 @@ impl ReactLoop {
+             }
+             StreamEvent::Error(err) => {
+                 log::error(format!("LLM stream error: {err}"));
+-                let _ = ipc::publish_json(
+-                    "agent.v1.response",
+-                    &IpcPayload::AgentResponse {
+-                        text: format!("LLM error: {err}"),
+-                        is_final: true,
+-                        session_id: state.session_id.clone(),
+-                    },
+-                );
++                let response = finalize_executor_error(&format!("LLM error: {err}"));
++                let _ = publish_final_response(&state.session_id, &response);
+                 // Clean up ALL in-flight mappings (req2sess + call2sess)
+                 // before resetting turn state to prevent orphaned KV entries.
+                 Self::cleanup_inflight_mappings(&state);
+@@ -1199,16 +1265,10 @@ impl ReactLoop {
+             log::error(format!(
+                 "ReAct loop exceeded {max_iterations} iterations, forcing stop"
+             ));
+-            let _ = ipc::publish_json(
+-                "agent.v1.response",
+-                &IpcPayload::AgentResponse {
+-                    text: format!(
+-                        "Stopped: ReAct loop exceeded maximum of {max_iterations} iterations."
+-                    ),
+-                    is_final: true,
+-                    session_id: state.session_id.clone(),
+-                },
+-            );
++            let response = finalize_executor_error(&format!(
++                "Stopped: ReAct loop exceeded maximum of {max_iterations} iterations."
++            ));
++            let _ = publish_final_response(&state.session_id, &response);
+             state.reset_conversation_turn();
+             state.set_phase(Phase::Idle);
+             state.save()?;
+@@ -1380,45 +1440,41 @@ impl ReactLoop {
+                 ) {
+                     log::error(format!("Failed to dispatch tool {}: {e}", tc.name));
+                     delete_call_sessions(&call_ids);
+-                    let _ = ipc::publish_json(
+-                        "agent.v1.response",
+-                        &IpcPayload::AgentResponse {
+-                            text: format!("Failed to dispatch tool {}: {e}", tc.name),
+-                            is_final: true,
+-                            session_id: state.session_id.clone(),
+-                        },
+-                    );
++                    let response = finalize_executor_error(&format!(
++                        "Failed to dispatch tool {}: {e}",
++                        tc.name
++                    ));
++                    let _ = publish_final_response(&state.session_id, &response);
+                     state.set_phase(Phase::Idle);
+                     state.save()?;
+                     return Err(e);
+                 }
+             }
+         } else if !state.response_text.is_empty() {
+-            let final_text = if sovereign_next_repair_enabled() {
+-                ensure_sovereign_next(&state.response_text)
+-            } else {
+-                state.response_text.trim_end().to_owned()
+-            };
++            let final_response = finalize_model_response(&state.response_text);
+             // Text response with no tool calls - conversation turn complete.
++            // Preserve only exact model bytes in session history. Visible
++            // executor repair markers remain confined to terminal publication.
++            let authored_history_text = final_response
++                .authored_history_text
++                .as_deref()
++                .expect("model finalization always retains authored history bytes");
+             Self::fetch_messages_with_append(
+                 &state.session_id,
+-                &[Message::assistant(&final_text)],
++                &[Message::assistant(authored_history_text)],
+             )?;
+-
++
+             // Publish final response to platforms
+-            ipc::publish_json(
+-                "agent.v1.response",
+-                &IpcPayload::AgentResponse {
+-                    text: final_text,
+-                    is_final: true,
+-                    session_id: state.session_id.clone(),
+-                },
+-            )?;
++            publish_final_response(&state.session_id, &final_response)?;
+-
++
+             state.set_phase(Phase::Idle);
+             state.save()?;
+         } else {
+-            // Empty response
++            // Empty response: remain explicit and non-writing on appliance profiles.
++            if sovereign_next_repair_enabled() {
++                let response = finalize_executor_error("The model returned an empty response.");
++                publish_final_response(&state.session_id, &response)?;
++            }
+             state.set_phase(Phase::Idle);
+             state.save()?;
+         }
+@@ -1739,6 +1795,95 @@ impl ReactLoop {
+     }
+ }
+-
++
++#[cfg(test)]
++mod response_provenance_tests {
++    use super::{
++        FORMAT_NEXT_REPAIR_MARKER, RESPONSE_PROVENANCE_EXECUTOR_ERROR,
++        RESPONSE_PROVENANCE_FORMAT_REPAIR, RESPONSE_PROVENANCE_MODEL_AUTHORED,
++        RESPONSE_PROVENANCE_SAFE_FALLBACK, finalize_executor_error_with_repair,
++        finalize_model_response_with_repair,
++    };
++
++    #[test]
++    fn classifies_exact_safe_and_format_repaired_model_responses() {
++        let exact_bytes = "Reflection.\nNEXT: REST\n  ";
++        let exact = finalize_model_response_with_repair(exact_bytes, true);
++        assert_eq!(
++            exact.response_provenance,
++            RESPONSE_PROVENANCE_MODEL_AUTHORED
++        );
++        assert_eq!(exact.text, exact_bytes);
++        assert_eq!(exact.authored_history_text.as_deref(), Some(exact_bytes));
++
++        let safe = finalize_model_response_with_repair("Reflection without an Action.", true);
++        assert_eq!(safe.response_provenance, RESPONSE_PROVENANCE_SAFE_FALLBACK);
++        assert_eq!(
++            safe.authored_history_text.as_deref(),
++            Some("Reflection without an Action.")
++        );
++        assert!(
++            !safe
++                .authored_history_text
++                .as_deref()
++                .unwrap()
++                .contains("Local contract repair")
++        );
++
++        let marker_spoof =
++            format!("Model bytes mentioning {FORMAT_NEXT_REPAIR_MARKER}\nNEXT: REST\n ");
++        let spoofed = finalize_model_response_with_repair(&marker_spoof, true);
++        assert_eq!(
++            spoofed.response_provenance,
++            RESPONSE_PROVENANCE_MODEL_AUTHORED
++        );
++        assert_eq!(spoofed.text, marker_spoof);
++        assert_eq!(
++            spoofed.authored_history_text.as_deref(),
++            Some(marker_spoof.as_str())
++        );
++
++        let invalid_marker_spoof =
++            format!("Model bytes mentioning {FORMAT_NEXT_REPAIR_MARKER} without an Action.");
++        let invalid_spoofed = finalize_model_response_with_repair(&invalid_marker_spoof, true);
++        assert_eq!(
++            invalid_spoofed.response_provenance,
++            RESPONSE_PROVENANCE_SAFE_FALLBACK
++        );
++
++        let tuning = finalize_model_response_with_repair(
++            "A bounded trial. NEXT: TUNE_RESERVOIR input_gain=1.05 FOR 15m :: test",
++            true,
++        );
++        assert_eq!(
++            tuning.response_provenance,
++            RESPONSE_PROVENANCE_FORMAT_REPAIR
++        );
++        assert!(tuning.text.contains(FORMAT_NEXT_REPAIR_MARKER));
++        assert_eq!(
++            tuning.authored_history_text.as_deref(),
++            Some("A bounded trial. NEXT: TUNE_RESERVOIR input_gain=1.05 FOR 15m :: test")
++        );
++        assert!(
++            !tuning
++                .authored_history_text
++                .as_deref()
++                .unwrap()
++                .contains(FORMAT_NEXT_REPAIR_MARKER)
++        );
++    }
++
++    #[test]
++    fn executor_terminal_errors_remain_non_authored_after_safe_repair() {
++        let response = finalize_executor_error_with_repair("LLM error: unavailable", true);
++        assert_eq!(
++            response.response_provenance,
++            RESPONSE_PROVENANCE_EXECUTOR_ERROR
++        );
++        assert!(response.authored_history_text.is_none());
++        assert!(response.text.ends_with("NEXT: LISTEN"));
++    }
++}
++
+ /// Parse a JSON array field from a payload, deserializing each element.
+ ///
+ /// Logs a warning for each element that fails to deserialize and skips it.

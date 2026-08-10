@@ -1,0 +1,17 @@
+[Unit]
+# The installer MUST render this template to the exact filename returned by:
+# astrid-edge-builder-store unit-name --config /etc/astrid/edge-builder-store.json
+Description=Astrid CPU-edge bounded offline builder filesystem
+Documentation=file:@@ACTIVE_GENERATION_ROOT@@/docs/cpu-edge-self-evolution.md
+RequiresMountsFor=@@BUILDER_IMAGE_PARENT@@
+Before=astrid-edge-builder-store-verify.service
+
+[Mount]
+What=@@BUILDER_IMAGE@@
+Where=@@BUILDER_ROOT@@
+Type=ext4
+Options=loop,rw,nodev,nosuid,noatime
+TimeoutSec=90
+
+[Install]
+WantedBy=multi-user.target

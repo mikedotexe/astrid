@@ -2,7 +2,7 @@ use astrid_core::SessionId;
 use astrid_core::session_token::{
     HandshakeRequest, HandshakeResponse, PROTOCOL_VERSION, SessionToken,
 };
-use astrid_types::ipc::{IpcMessage, IpcPayload};
+use astrid_types::ipc::{IpcMessage, IpcPayload, IpcTraceContextV1};
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::UnixStream;
 use tracing::warn;
@@ -109,21 +109,30 @@ impl SocketClient {
     /// # Errors
     /// Returns an error if the message cannot be read or parsed.
     pub async fn read_message(&mut self) -> Result<Option<IpcMessage>> {
-        let mut len_buf = [0u8; 4];
-        if self.read_half.read_exact(&mut len_buf).await.is_err() {
-            return Ok(None); // Connection closed
+        loop {
+            let mut len_buf = [0u8; 4];
+            if self.read_half.read_exact(&mut len_buf).await.is_err() {
+                return Ok(None); // Connection closed
+            }
+            let len = u32::from_be_bytes(len_buf) as usize;
+
+            if len > 50 * 1024 * 1024 {
+                anyhow::bail!("Message too large from kernel: {len} bytes");
+            }
+
+            let mut payload = vec![0u8; len];
+            self.read_half.read_exact(&mut payload).await?;
+
+            let message = serde_json::from_slice::<IpcMessage>(&payload)?;
+            if message_belongs_to_session(&message, &self.session_id) {
+                return Ok(Some(message));
+            }
+            tracing::debug!(
+                topic = %message.topic,
+                session_id = %self.session_id.0,
+                "discarding socket event for another session"
+            );
         }
-        let len = u32::from_be_bytes(len_buf) as usize;
-
-        if len > 50 * 1024 * 1024 {
-            anyhow::bail!("Message too large from kernel: {len} bytes");
-        }
-
-        let mut payload = vec![0u8; len];
-        self.read_half.read_exact(&mut payload).await?;
-
-        let message = serde_json::from_slice::<IpcMessage>(&payload)?;
-        Ok(Some(message))
     }
 
     /// Send a user input message to the Kernel.
@@ -131,13 +140,31 @@ impl SocketClient {
     /// # Errors
     /// Returns an error if the message cannot be sent.
     pub async fn send_input(&mut self, text: String) -> Result<()> {
+        self.send_input_with_trace(text, None).await
+    }
+
+    /// Send user input with optional observational trace metadata.
+    ///
+    /// The kernel re-roots supplied traces at the authenticated socket
+    /// boundary. Trace metadata does not grant authority.
+    ///
+    /// # Errors
+    /// Returns an error if the message cannot be sent.
+    pub async fn send_input_with_trace(
+        &mut self,
+        text: String,
+        trace: Option<IpcTraceContextV1>,
+    ) -> Result<()> {
         let payload = IpcPayload::UserInput {
             text,
             session_id: self.session_id.0.to_string(),
             context: None,
         };
 
-        let msg = IpcMessage::new("user.v1.prompt", payload, self.session_id.0);
+        let mut msg = IpcMessage::new("user.v1.prompt", payload, self.session_id.0);
+        if let Some(trace) = trace {
+            msg = msg.with_trace(trace);
+        }
 
         self.send_message(msg).await
     }
@@ -156,6 +183,22 @@ impl SocketClient {
         self.write_half.flush().await?;
         Ok(())
     }
+}
+
+fn message_belongs_to_session(message: &IpcMessage, current: &SessionId) -> bool {
+    let (IpcPayload::UserInput {
+        session_id: payload_session,
+        ..
+    }
+    | IpcPayload::AgentResponse {
+        session_id: payload_session,
+        ..
+    }) = &message.payload
+    else {
+        return true;
+    };
+    payload_session == "default"
+        || uuid::Uuid::parse_str(payload_session).is_ok_and(|parsed| parsed == current.0)
 }
 
 /// Timeout for individual handshake read/write operations (client-side).
@@ -227,4 +270,57 @@ async fn perform_handshake(stream: &mut UnixStream) -> Result<()> {
     }
 
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::message_belongs_to_session;
+    use astrid_core::SessionId;
+    use astrid_types::ipc::{IpcMessage, IpcPayload};
+
+    #[test]
+    fn session_scoped_socket_events_do_not_cross_cli_sessions() {
+        let current = SessionId::from_uuid(uuid::Uuid::new_v4());
+        let other = uuid::Uuid::new_v4();
+        let current_response = IpcMessage::new(
+            "agent.v1.response",
+            IpcPayload::AgentResponse {
+                text: "mine".to_string(),
+                is_final: true,
+                session_id: current.0.to_string(),
+                response_provenance: None,
+            },
+            uuid::Uuid::nil(),
+        );
+        let other_response = IpcMessage::new(
+            "agent.v1.response",
+            IpcPayload::AgentResponse {
+                text: "theirs".to_string(),
+                is_final: true,
+                session_id: other.to_string(),
+                response_provenance: None,
+            },
+            uuid::Uuid::nil(),
+        );
+        let legacy_response = IpcMessage::new(
+            "agent.v1.response",
+            IpcPayload::AgentResponse {
+                text: "legacy".to_string(),
+                is_final: true,
+                session_id: "default".to_string(),
+                response_provenance: None,
+            },
+            uuid::Uuid::nil(),
+        );
+        let global_event = IpcMessage::new(
+            "system.v1.event",
+            IpcPayload::RawJson(serde_json::json!({"ready": true})),
+            uuid::Uuid::nil(),
+        );
+
+        assert!(message_belongs_to_session(&current_response, &current));
+        assert!(!message_belongs_to_session(&other_response, &current));
+        assert!(message_belongs_to_session(&legacy_response, &current));
+        assert!(message_belongs_to_session(&global_event, &current));
+    }
 }

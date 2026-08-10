@@ -1,0 +1,1836 @@
+#!/usr/bin/python3
+"""Provision and attest bounded CPU-edge runtime and rollback filesystems.
+
+The two images are deliberately fully allocated, independently formatted ext4
+filesystems.  This immutable helper owns their identity and the one-time,
+stop-and-copy migration.  systemd owns their normal mount lifecycle.
+"""
+
+from __future__ import annotations
+
+import argparse
+import contextlib
+import hashlib
+import json
+import os
+import pathlib
+import re
+import shutil
+import sqlite3
+import stat
+import subprocess
+import sys
+import tempfile
+import time
+from typing import Any, Iterator
+
+
+SCHEMA = "astrid.edge_state_store.config.v1"
+JOURNAL_SCHEMA = "astrid.edge_state_store.migration.v1"
+INVENTORY_SCHEMA = "astrid.edge_state_store.inventory.v1"
+IMAGE_BYTES = 32 * 1024 * 1024 * 1024
+HOST_RESERVE_BYTES = 64 * 1024 * 1024 * 1024
+STORE_MINIMUM_FREE_BYTES = 4 * 1024 * 1024 * 1024
+RUNTIME_LABEL = "ASTRID_EDGE_STATE"
+ROLLBACK_LABEL = "ASTRID_EDGE_ROLL"
+RUNTIME_RESERVED_PERCENT = 20
+ROLLBACK_RESERVED_PERCENT = 0
+INODE_RESERVE_SHARDS = 256
+INODE_RESERVE_FILES_PER_SHARD = 256
+INODE_RESERVE_FILES = INODE_RESERVE_SHARDS * INODE_RESERVE_FILES_PER_SHARD
+MINIMUM_FREE_INODES = 4_096
+ROLLBACK_MINIMUM_FREE_INODES = 65_536
+INODE_RESERVE_NAME = ".astrid-root-inode-reserve"
+RUNTIME_WRITABLE_TOP_LEVEL = frozenset(
+    {"bin", "home", "keys", "logs", "operator", "run", "tmp", "var"}
+)
+ROOT_UID = 0
+ROOT_GID = 0
+PERSISTENT_BACKING_TYPES = frozenset({"ext4", "xfs", "btrfs"})
+REQUIRED_OPTIONS = frozenset({"rw", "nodev", "nosuid", "noexec", "noatime"})
+FORBIDDEN_OPTIONS = frozenset({"ro", "dev", "suid", "exec", "atime", "relatime", "strictatime"})
+UUID_RE = re.compile(r"^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$")
+IDENTIFIER_RE = re.compile(r"^[a-z0-9][a-z0-9._-]{0,63}$")
+MAX_CONFIG_BYTES = 32 * 1024
+MAX_INVENTORY_ENTRIES = 250_000
+COPY_CHUNK_BYTES = 1024 * 1024
+# Units invoke the immutable launcher path exactly, while the sealed identity binds
+# the canonical interpreter file behind Ubuntu's root-owned python3 symlink.
+PYTHON_PATH = pathlib.Path("/usr/bin/python3").resolve(strict=True)
+HEALTH_ATTESTATION = pathlib.Path(
+    "/run/astrid-edge-state-store/health-attestation.json"
+)
+MAXIMUM_HEALTH_ATTESTATION_AGE_MS = 10 * 60 * 1_000
+
+
+class StoreError(RuntimeError):
+    """A fail-closed state-store validation error."""
+
+
+def _run(arguments: list[str]) -> str:
+    completed = subprocess.run(
+        arguments,
+        stdin=subprocess.DEVNULL,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+        check=False,
+    )
+    if completed.returncode != 0:
+        detail = completed.stderr.strip().splitlines()
+        suffix = f": {detail[-1]}" if detail else ""
+        raise StoreError(f"command failed ({pathlib.Path(arguments[0]).name}){suffix}")
+    return completed.stdout
+
+
+def _require_root_linux() -> None:
+    if sys.platform != "linux" or os.geteuid() != 0:
+        raise StoreError("state-store management requires Linux root")
+
+
+def _absolute(value: str, *, label: str) -> pathlib.Path:
+    path = pathlib.Path(value)
+    if not path.is_absolute() or path == pathlib.Path("/") or "\x00" in value:
+        raise StoreError(f"{label} must be a non-root absolute path")
+    if any(part in {".", ".."} for part in path.parts):
+        raise StoreError(f"{label} contains an unsafe path component")
+    return path
+
+
+def _within(path: pathlib.Path, root: pathlib.Path) -> bool:
+    return path == root or root in path.parents
+
+
+def _reject_symlink_ancestry(path: pathlib.Path, *, allow_leaf_absent: bool) -> None:
+    cursor = path
+    if allow_leaf_absent and not cursor.exists() and not cursor.is_symlink():
+        cursor = cursor.parent
+    while cursor != cursor.parent:
+        if cursor.is_symlink():
+            raise StoreError(f"symlink ancestry is forbidden: {cursor}")
+        cursor = cursor.parent
+
+
+def _require_regular(
+    path: pathlib.Path, *, owner: int, maximum_mode: int, size: int | None = None
+) -> os.stat_result:
+    metadata = path.lstat()
+    if not stat.S_ISREG(metadata.st_mode) or metadata.st_nlink != 1:
+        raise StoreError(f"expected a single-linked regular file: {path}")
+    mode = stat.S_IMODE(metadata.st_mode)
+    if metadata.st_uid != owner or mode & ~maximum_mode:
+        raise StoreError(f"file ownership or mode differs from immutable contract: {path}")
+    if size is not None and metadata.st_size != size:
+        raise StoreError(f"file size differs from immutable contract: {path}")
+    return metadata
+
+
+def _require_secure_directory(path: pathlib.Path, *, label: str) -> os.stat_result:
+    metadata = path.lstat()
+    if (
+        not stat.S_ISDIR(metadata.st_mode)
+        or stat.S_ISLNK(metadata.st_mode)
+        or metadata.st_uid != 0
+        or stat.S_IMODE(metadata.st_mode) & 0o022
+    ):
+        raise StoreError(f"{label} must be a root-owned non-group/world-writable directory")
+    return metadata
+
+
+def _fully_allocated(metadata: os.stat_result) -> bool:
+    return metadata.st_blocks * 512 >= metadata.st_size
+
+
+def _findmnt(path: pathlib.Path) -> dict[str, Any]:
+    output = _run(
+        [
+            "/usr/bin/findmnt",
+            "--json",
+            "--target",
+            str(path),
+            "--output",
+            "TARGET,SOURCE,FSTYPE,UUID,OPTIONS,MAJ:MIN",
+        ]
+    )
+    filesystems = json.loads(output).get("filesystems", [])
+    if len(filesystems) != 1:
+        raise StoreError(f"could not resolve one filesystem for {path}")
+    return filesystems[0]
+
+
+def _mount_options(value: str) -> frozenset[str]:
+    return frozenset(item.strip() for item in value.split(",") if item.strip())
+
+
+def _free_bytes(path: pathlib.Path) -> int:
+    values = os.statvfs(path)
+    return values.f_bavail * values.f_frsize
+
+
+def _capacity_bytes(path: pathlib.Path) -> int:
+    values = os.statvfs(path)
+    return values.f_blocks * values.f_frsize
+
+
+def _fsync_directory(path: pathlib.Path) -> None:
+    descriptor = os.open(path, os.O_RDONLY | getattr(os, "O_DIRECTORY", 0) | os.O_CLOEXEC)
+    try:
+        os.fsync(descriptor)
+    finally:
+        os.close(descriptor)
+
+
+def _canonical_json(value: Any) -> bytes:
+    return json.dumps(
+        value, sort_keys=True, separators=(",", ":"), ensure_ascii=True, allow_nan=False
+    ).encode("ascii")
+
+
+def _sha256_regular(path: pathlib.Path, *, maximum_bytes: int) -> str:
+    metadata = path.lstat()
+    if (
+        not stat.S_ISREG(metadata.st_mode)
+        or metadata.st_uid != 0
+        or metadata.st_nlink < 1
+        or stat.S_IMODE(metadata.st_mode) & 0o022
+        or metadata.st_size <= 0
+        or metadata.st_size > maximum_bytes
+    ):
+        raise StoreError(f"trusted executable size is outside policy: {path}")
+    digest = hashlib.sha256()
+    descriptor = os.open(path, os.O_RDONLY | os.O_CLOEXEC | getattr(os, "O_NOFOLLOW", 0))
+    with os.fdopen(descriptor, "rb") as handle:
+        while chunk := handle.read(COPY_CHUNK_BYTES):
+            digest.update(chunk)
+    after = path.lstat()
+    if (
+        metadata.st_dev,
+        metadata.st_ino,
+        metadata.st_size,
+        metadata.st_mtime_ns,
+        metadata.st_ctime_ns,
+    ) != (after.st_dev, after.st_ino, after.st_size, after.st_mtime_ns, after.st_ctime_ns):
+        raise StoreError(f"trusted executable changed while hashing: {path}")
+    return digest.hexdigest()
+
+
+def _atomic_json(
+    path: pathlib.Path,
+    value: dict[str, Any],
+    *,
+    mode: int = 0o600,
+    replace_existing: bool = True,
+) -> None:
+    pending = path.with_name(f".{path.name}.pending")
+    if pending.exists() or pending.is_symlink():
+        _require_regular(pending, owner=0, maximum_mode=mode)
+        pending.unlink()
+        _fsync_directory(path.parent)
+    payload = _canonical_json(value) + b"\n"
+    descriptor = os.open(
+        pending,
+        os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_CLOEXEC | getattr(os, "O_NOFOLLOW", 0),
+        mode,
+    )
+    with os.fdopen(descriptor, "wb") as handle:
+        handle.write(payload)
+        handle.flush()
+        os.fsync(handle.fileno())
+    if replace_existing:
+        os.replace(pending, path)
+    else:
+        try:
+            os.link(pending, path, follow_symlinks=False)
+        except FileExistsError as error:
+            raise StoreError(f"refusing to replace immutable JSON identity: {path}") from error
+        pending.unlink()
+    os.chmod(path, mode, follow_symlinks=False)
+    _fsync_directory(path.parent)
+
+
+def _read_json(path: pathlib.Path, *, mode: int, label: str) -> dict[str, Any]:
+    _reject_symlink_ancestry(path, allow_leaf_absent=False)
+    metadata = _require_regular(path, owner=0, maximum_mode=mode)
+    if stat.S_IMODE(metadata.st_mode) != mode:
+        raise StoreError(f"{label} mode differs from the immutable contract")
+    if metadata.st_size > MAX_CONFIG_BYTES:
+        raise StoreError(f"{label} exceeds its size bound")
+    try:
+        value = json.loads(path.read_bytes())
+    except (UnicodeDecodeError, json.JSONDecodeError) as error:
+        raise StoreError(f"{label} is malformed") from error
+    if not isinstance(value, dict):
+        raise StoreError(f"{label} is not an object")
+    return value
+
+
+def _mount_unit_name(path: pathlib.Path) -> str:
+    value = _run(["/usr/bin/systemd-escape", "--path", "--suffix=mount", str(path)]).strip()
+    if not value.endswith(".mount") or "/" in value or not value:
+        raise StoreError("systemd returned an invalid escaped mount-unit name")
+    return value
+
+
+def _backing_identity(path: pathlib.Path) -> dict[str, Any]:
+    mount = _findmnt(path)
+    target = pathlib.Path(str(mount["target"])).resolve()
+    directory = path if path.is_dir() else path.parent
+    directory_metadata = directory.stat()
+    uuid = str(mount.get("uuid", "") or "").lower()
+    result = {
+        "target": str(target),
+        "source": str(mount.get("source", "")),
+        "fstype": str(mount.get("fstype", "")),
+        "uuid": uuid,
+        "device": directory_metadata.st_dev,
+        "directory_inode": directory_metadata.st_ino,
+    }
+    if result["fstype"] not in PERSISTENT_BACKING_TYPES or not UUID_RE.fullmatch(uuid):
+        raise StoreError("image backing is not an allowlisted UUID-bound persistent filesystem")
+    return result
+
+
+def _blkid(image: pathlib.Path) -> dict[str, str]:
+    output = _run(["/usr/sbin/blkid", "-p", "-o", "export", str(image)])
+    return dict(line.split("=", 1) for line in output.splitlines() if "=" in line)
+
+
+def _ext4_superblock(image: pathlib.Path) -> dict[str, int]:
+    output = _run(["/usr/sbin/dumpe2fs", "-h", str(image)])
+    values: dict[str, int] = {}
+    names = {
+        "Block count": "block_count",
+        "Reserved block count": "reserved_block_count",
+        "Block size": "block_size",
+    }
+    for line in output.splitlines():
+        key, separator, raw = line.partition(":")
+        if separator and key.strip() in names:
+            try:
+                values[names[key.strip()]] = int(raw.strip())
+            except ValueError as error:
+                raise StoreError("ext4 superblock has a malformed numeric field") from error
+    if set(values) != set(names.values()) or any(value <= 0 for key, value in values.items() if key != "reserved_block_count"):
+        raise StoreError("ext4 superblock capacity fields are absent")
+    return values
+
+
+def _volume_config(
+    *,
+    role: str,
+    image: pathlib.Path,
+    mount: pathlib.Path,
+    label: str,
+    filesystem_uuid: str,
+    reserved_percent: int,
+) -> dict[str, Any]:
+    metadata = _require_regular(image, owner=0, maximum_mode=0o600, size=IMAGE_BYTES)
+    superblock = _ext4_superblock(image)
+    return {
+        "role": role,
+        "image": str(image),
+        "mount": str(mount),
+        "image_bytes": IMAGE_BYTES,
+        "filesystem_uuid": filesystem_uuid,
+        "filesystem_label": label,
+        "image_device": metadata.st_dev,
+        "image_inode": metadata.st_ino,
+        "reserved_block_percent": reserved_percent,
+        "inode_reserve_files": INODE_RESERVE_FILES if role == "runtime" else 0,
+        **superblock,
+        "mount_unit": _mount_unit_name(mount),
+        "required_mount_options": sorted(REQUIRED_OPTIONS),
+    }
+
+
+def _validate_volume(value: Any, *, role: str, label: str) -> dict[str, Any]:
+    expected = {
+        "role",
+        "image",
+        "mount",
+        "image_bytes",
+        "filesystem_uuid",
+        "filesystem_label",
+        "image_device",
+        "image_inode",
+        "reserved_block_percent",
+        "inode_reserve_files",
+        "block_count",
+        "reserved_block_count",
+        "block_size",
+        "mount_unit",
+        "required_mount_options",
+    }
+    if not isinstance(value, dict) or set(value) != expected:
+        raise StoreError(f"{role} volume schema differs from the fixed contract")
+    if (
+        value.get("role") != role
+        or value.get("image_bytes") != IMAGE_BYTES
+        or value.get("filesystem_label") != label
+        or value.get("required_mount_options") != sorted(REQUIRED_OPTIONS)
+        or not UUID_RE.fullmatch(str(value.get("filesystem_uuid", "")))
+        or not all(
+            isinstance(value.get(key), int)
+            for key in (
+                "image_device",
+                "image_inode",
+                "reserved_block_percent",
+                "inode_reserve_files",
+                "block_count",
+                "reserved_block_count",
+                "block_size",
+            )
+        )
+    ):
+        raise StoreError(f"{role} volume identity differs from the fixed contract")
+    expected_percent = RUNTIME_RESERVED_PERCENT if role == "runtime" else ROLLBACK_RESERVED_PERCENT
+    expected_inode_reserve = INODE_RESERVE_FILES if role == "runtime" else 0
+    minimum_reserved = value["block_count"] * expected_percent // 100
+    if (
+        value["reserved_block_percent"] != expected_percent
+        or value["inode_reserve_files"] != expected_inode_reserve
+        or value["block_count"] <= 0
+        or value["block_size"] <= 0
+        or value["reserved_block_count"] < minimum_reserved
+        or (expected_percent == 0 and value["reserved_block_count"] != 0)
+    ):
+        raise StoreError(f"{role} ext4 root-reserved-block policy changed")
+    image = _absolute(str(value["image"]), label=f"{role} image")
+    mount = _absolute(str(value["mount"]), label=f"{role} mount")
+    if _within(image, mount) or _within(mount, image):
+        raise StoreError(f"{role} image and mount overlap")
+    if value["mount_unit"] != _mount_unit_name(mount):
+        raise StoreError(f"{role} mount unit does not exactly escape its Where path")
+    return value
+
+
+def _read_config(path: pathlib.Path) -> dict[str, Any]:
+    value = _read_json(path, mode=0o400, label="state-store config")
+    expected = {
+        "schema",
+        "appliance_id",
+        "runtime_uid",
+        "runtime_gid",
+        "runtime",
+        "rollback",
+        "backing",
+        "required_backing_mount",
+        "required_backing_uuid",
+        "host_reserve_bytes",
+        "store_minimum_free_bytes",
+        "migration_journal",
+        "runtime_source_backup",
+        "rollback_source_backup",
+        "runtime_inventory",
+        "rollback_inventory",
+        "python",
+    }
+    if set(value) != expected or value.get("schema") != SCHEMA:
+        raise StoreError("state-store config schema or keys differ from the fixed contract")
+    if not IDENTIFIER_RE.fullmatch(str(value.get("appliance_id", ""))):
+        raise StoreError("state-store appliance identity is malformed")
+    for key in ("runtime_uid", "runtime_gid"):
+        if not isinstance(value.get(key), int) or isinstance(value.get(key), bool) or value[key] <= 0:
+            raise StoreError("state-store runtime identity is malformed")
+    if (
+        value.get("host_reserve_bytes") != HOST_RESERVE_BYTES
+        or value.get("store_minimum_free_bytes") != STORE_MINIMUM_FREE_BYTES
+    ):
+        raise StoreError("state-store capacity policy changed")
+    python = value.get("python")
+    if (
+        not isinstance(python, dict)
+        or set(python) != {"path", "sha256"}
+        or python.get("path") != str(PYTHON_PATH)
+        or not re.fullmatch(r"[0-9a-f]{64}", str(python.get("sha256", "")))
+        or _sha256_regular(PYTHON_PATH, maximum_bytes=64 * 1024 * 1024) != python["sha256"]
+    ):
+        raise StoreError("state-store Python interpreter identity changed")
+    runtime = _validate_volume(value.get("runtime"), role="runtime", label=RUNTIME_LABEL)
+    rollback = _validate_volume(value.get("rollback"), role="rollback", label=ROLLBACK_LABEL)
+    if runtime["filesystem_uuid"] == rollback["filesystem_uuid"]:
+        raise StoreError("runtime and rollback filesystem UUIDs must differ")
+    if runtime["image_inode"] == rollback["image_inode"]:
+        raise StoreError("runtime and rollback image inodes must differ")
+    runtime_mount = pathlib.Path(runtime["mount"])
+    rollback_mount = pathlib.Path(rollback["mount"])
+    if _within(runtime_mount, rollback_mount) or _within(rollback_mount, runtime_mount):
+        raise StoreError("runtime and rollback mount roots overlap")
+    backing = value.get("backing")
+    if not isinstance(backing, dict) or set(backing) != {
+        "target",
+        "source",
+        "fstype",
+        "uuid",
+        "device",
+        "runtime_image_parent_inode",
+        "rollback_image_parent_inode",
+    }:
+        raise StoreError("state-store backing identity is malformed")
+    if (
+        backing.get("fstype") not in PERSISTENT_BACKING_TYPES
+        or not UUID_RE.fullmatch(str(backing.get("uuid", "")))
+        or not all(
+            isinstance(backing.get(key), int)
+            for key in ("device", "runtime_image_parent_inode", "rollback_image_parent_inode")
+        )
+    ):
+        raise StoreError("state-store backing identity is invalid")
+    required_mount = str(value.get("required_backing_mount", ""))
+    required_uuid = str(value.get("required_backing_uuid", ""))
+    if bool(required_mount) != bool(required_uuid) or (required_uuid and not UUID_RE.fullmatch(required_uuid)):
+        raise StoreError("required backing mount and UUID are malformed")
+    paths = [
+        _absolute(str(value[key]), label=key)
+        for key in (
+            "migration_journal",
+            "runtime_source_backup",
+            "rollback_source_backup",
+            "runtime_inventory",
+            "rollback_inventory",
+        )
+    ]
+    images = [pathlib.Path(runtime["image"]), pathlib.Path(rollback["image"])]
+    mounts = [runtime_mount, rollback_mount]
+    for path in paths + images:
+        if any(_within(path, mount) for mount in mounts):
+            raise StoreError("state-store metadata or image lives inside a managed mount")
+    sensitive = paths + images
+    for index, left in enumerate(sensitive):
+        for right in sensitive[index + 1 :]:
+            if _within(left, right) or _within(right, left):
+                raise StoreError("state-store images, backups, journal, and inventories overlap")
+    return value
+
+
+def _verify_backing(config: dict[str, Any]) -> None:
+    runtime_parent = pathlib.Path(config["runtime"]["image"]).parent
+    rollback_parent = pathlib.Path(config["rollback"]["image"]).parent
+    current_runtime = _backing_identity(runtime_parent)
+    current_rollback = _backing_identity(rollback_parent)
+    expected = config["backing"]
+    shared = {
+        "target": current_runtime["target"],
+        "source": current_runtime["source"],
+        "fstype": current_runtime["fstype"],
+        "uuid": current_runtime["uuid"],
+        "device": current_runtime["device"],
+        "runtime_image_parent_inode": current_runtime["directory_inode"],
+        "rollback_image_parent_inode": current_rollback["directory_inode"],
+    }
+    if (
+        current_runtime["target"] != current_rollback["target"]
+        or current_runtime["source"] != current_rollback["source"]
+        or current_runtime["uuid"] != current_rollback["uuid"]
+        or current_runtime["device"] != current_rollback["device"]
+        or shared != expected
+    ):
+        raise StoreError("state-store image backing filesystem identity changed")
+    if config["required_backing_mount"] and (
+        current_runtime["target"] != config["required_backing_mount"]
+        or current_runtime["uuid"] != config["required_backing_uuid"]
+    ):
+        raise StoreError("state-store images are not on the exact required backing filesystem")
+    if _free_bytes(runtime_parent) < HOST_RESERVE_BYTES:
+        raise StoreError("state-store backing filesystem fell below the 64 GiB reserve")
+
+
+def _verify_image(volume: dict[str, Any]) -> pathlib.Path:
+    image = _absolute(volume["image"], label=f"{volume['role']} image")
+    _reject_symlink_ancestry(image, allow_leaf_absent=False)
+    metadata = _require_regular(image, owner=0, maximum_mode=0o600, size=IMAGE_BYTES)
+    if metadata.st_dev != volume["image_device"] or metadata.st_ino != volume["image_inode"]:
+        raise StoreError(f"{volume['role']} image inode identity changed")
+    if not _fully_allocated(metadata):
+        raise StoreError(f"{volume['role']} image is sparse or incompletely allocated")
+    values = _blkid(image)
+    if (
+        values.get("TYPE") != "ext4"
+        or values.get("LABEL") != volume["filesystem_label"]
+        or values.get("UUID", "").lower() != volume["filesystem_uuid"]
+    ):
+        raise StoreError(f"{volume['role']} image filesystem identity changed")
+    if _ext4_superblock(image) != {
+        "block_count": volume["block_count"],
+        "reserved_block_count": volume["reserved_block_count"],
+        "block_size": volume["block_size"],
+    }:
+        raise StoreError(f"{volume['role']} ext4 reserved-block identity changed")
+    return image
+
+
+def _loop_for_source(source: str) -> dict[str, Any]:
+    devices = json.loads(
+        _run(
+            [
+                "/usr/sbin/losetup",
+                "--json",
+                "--output",
+                "NAME,BACK-FILE,OFFSET,SIZELIMIT,RO",
+                source,
+            ]
+        )
+    ).get("loopdevices", [])
+    if len(devices) != 1:
+        raise StoreError("loop-device identity is ambiguous")
+    return devices[0]
+
+
+def _uuid_device(filesystem_uuid: str) -> pathlib.Path:
+    by_uuid = pathlib.Path("/dev/disk/by-uuid") / filesystem_uuid
+    if not by_uuid.is_symlink():
+        raise StoreError("/dev/disk/by-uuid binding is absent")
+    return by_uuid.resolve()
+
+
+def _verify_mount(
+    volume: dict[str, Any], image: pathlib.Path, *, mount_override: pathlib.Path | None = None
+) -> tuple[pathlib.Path, str, int]:
+    mount_path = mount_override or _absolute(volume["mount"], label=f"{volume['role']} mount")
+    _reject_symlink_ancestry(mount_path, allow_leaf_absent=False)
+    observed = _findmnt(mount_path)
+    if pathlib.Path(str(observed["target"])).resolve() != mount_path.resolve():
+        raise StoreError(f"{volume['role']} root is not an exact mount point")
+    options = _mount_options(str(observed.get("options", "")))
+    if not REQUIRED_OPTIONS.issubset(options) or FORBIDDEN_OPTIONS.intersection(options):
+        raise StoreError(f"{volume['role']} mount options differ from the fixed policy")
+    if observed.get("fstype") != "ext4" or str(observed.get("uuid", "")).lower() != volume["filesystem_uuid"]:
+        raise StoreError(f"{volume['role']} mounted filesystem identity changed")
+    source = str(observed.get("source", ""))
+    if not re.fullmatch(r"/dev/loop[0-9]+", source):
+        raise StoreError(f"{volume['role']} filesystem is not mounted through a loop device")
+    record = _loop_for_source(source)
+    if (
+        pathlib.Path(str(record.get("back-file", ""))).resolve() != image.resolve()
+        or int(record.get("offset", 0) or 0) != 0
+        or int(record.get("sizelimit", 0) or 0) != 0
+        or bool(record.get("ro", False))
+    ):
+        raise StoreError(f"{volume['role']} loop device does not bind the exact writable image")
+    if _uuid_device(volume["filesystem_uuid"]) != pathlib.Path(source).resolve():
+        raise StoreError(f"{volume['role']} /dev/disk/by-uuid binding is absent or changed")
+    device = mount_path.stat().st_dev
+    major_minor = str(observed.get("maj:min", ""))
+    if major_minor and major_minor != f"{os.major(device)}:{os.minor(device)}":
+        raise StoreError(f"{volume['role']} mount record and st_dev disagree")
+    return mount_path, source, device
+
+
+def _new_uuid() -> str:
+    value = pathlib.Path("/proc/sys/kernel/random/uuid").read_text(encoding="ascii").strip().lower()
+    if not UUID_RE.fullmatch(value):
+        raise StoreError("kernel supplied a malformed filesystem UUID")
+    return value
+
+
+def _create_or_reconstruct_image(image: pathlib.Path, label: str, reserved_percent: int) -> str:
+    pending = image.with_name(f".{image.name}.pending")
+    if pending.exists() or pending.is_symlink():
+        _require_regular(pending, owner=0, maximum_mode=0o600)
+        pending.unlink()
+        _fsync_directory(image.parent)
+    if image.exists() or image.is_symlink():
+        metadata = _require_regular(image, owner=0, maximum_mode=0o600, size=IMAGE_BYTES)
+        if not _fully_allocated(metadata):
+            raise StoreError("orphaned state-store image is sparse or incompletely allocated")
+        values = _blkid(image)
+        filesystem_uuid = values.get("UUID", "").lower()
+        if values.get("TYPE") != "ext4" or values.get("LABEL") != label or not UUID_RE.fullmatch(filesystem_uuid):
+            raise StoreError("orphaned state-store image cannot be safely reconstructed")
+        superblock = _ext4_superblock(image)
+        minimum_reserved = superblock["block_count"] * reserved_percent // 100
+        if superblock["reserved_block_count"] < minimum_reserved or (
+            reserved_percent == 0 and superblock["reserved_block_count"] != 0
+        ):
+            raise StoreError("orphaned state-store image has the wrong reserved-block policy")
+        return filesystem_uuid
+    descriptor = os.open(
+        pending,
+        os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_CLOEXEC | getattr(os, "O_NOFOLLOW", 0),
+        0o600,
+    )
+    os.close(descriptor)
+    try:
+        _run(["/usr/bin/fallocate", "--length", str(IMAGE_BYTES), str(pending)])
+        metadata = _require_regular(pending, owner=0, maximum_mode=0o600, size=IMAGE_BYTES)
+        if not _fully_allocated(metadata):
+            raise StoreError("state-store image allocation is sparse")
+        filesystem_uuid = _new_uuid()
+        _run(
+            [
+                "/usr/sbin/mkfs.ext4",
+                "-q",
+                "-F",
+                "-m",
+                str(reserved_percent),
+                "-U",
+                filesystem_uuid,
+                "-L",
+                label,
+                "-E",
+                "nodiscard,lazy_itable_init=0,lazy_journal_init=0",
+                str(pending),
+            ]
+        )
+        with pending.open("rb") as handle:
+            os.fsync(handle.fileno())
+        if not _fully_allocated(_require_regular(pending, owner=0, maximum_mode=0o600, size=IMAGE_BYTES)):
+            raise StoreError("filesystem creation made the state-store image sparse")
+        os.replace(pending, image)
+        _fsync_directory(image.parent)
+        return filesystem_uuid
+    except BaseException:
+        if pending.exists() and not pending.is_symlink():
+            pending.unlink()
+            _fsync_directory(image.parent)
+        raise
+
+
+def initialize(arguments: argparse.Namespace) -> None:
+    _require_root_linux()
+    config_path = _absolute(arguments.config, label="config")
+    runtime_image = _absolute(arguments.runtime_image, label="runtime image")
+    rollback_image = _absolute(arguments.rollback_image, label="rollback image")
+    runtime_mount = _absolute(arguments.runtime_mount, label="runtime mount")
+    rollback_mount = _absolute(arguments.rollback_mount, label="rollback mount")
+    journal = _absolute(arguments.migration_journal, label="migration journal")
+    runtime_backup = _absolute(arguments.runtime_source_backup, label="runtime source backup")
+    rollback_backup = _absolute(arguments.rollback_source_backup, label="rollback source backup")
+    runtime_inventory = journal.with_name(f"{journal.name}.runtime-inventory.json")
+    rollback_inventory = journal.with_name(f"{journal.name}.rollback-inventory.json")
+    all_paths = [
+        config_path,
+        runtime_image,
+        rollback_image,
+        runtime_mount,
+        rollback_mount,
+        journal,
+        runtime_backup,
+        rollback_backup,
+        runtime_inventory,
+        rollback_inventory,
+    ]
+    for path in all_paths:
+        _reject_symlink_ancestry(path, allow_leaf_absent=True)
+    for mount in (runtime_mount, rollback_mount):
+        for path in (runtime_image, rollback_image, config_path, journal, runtime_backup, rollback_backup):
+            if _within(path, mount):
+                raise StoreError("state-store image, config, journal, or backup lives inside a managed mount")
+    if _within(runtime_mount, rollback_mount) or _within(rollback_mount, runtime_mount):
+        raise StoreError("runtime and rollback mount roots overlap")
+    if runtime_image == rollback_image or runtime_backup == rollback_backup:
+        raise StoreError("runtime and rollback identities must be distinct")
+    for parent, label in (
+        (config_path.parent, "config parent"),
+        (runtime_image.parent, "runtime image parent"),
+        (rollback_image.parent, "rollback image parent"),
+        (journal.parent, "migration journal parent"),
+        (runtime_backup.parent, "runtime backup parent"),
+        (rollback_backup.parent, "rollback backup parent"),
+    ):
+        _require_secure_directory(parent, label=label)
+    if (
+        not runtime_mount.is_dir()
+        or runtime_mount.is_symlink()
+        or runtime_mount.lstat().st_uid != arguments.runtime_uid
+        or runtime_mount.lstat().st_gid != arguments.runtime_gid
+        or stat.S_IMODE(runtime_mount.lstat().st_mode) != 0o700
+    ):
+        raise StoreError("runtime migration source must be a real runtime-owned mode-0700 directory")
+    if (
+        not rollback_mount.is_dir()
+        or rollback_mount.is_symlink()
+        or rollback_mount.lstat().st_uid != 0
+        or rollback_mount.lstat().st_gid != 0
+        or stat.S_IMODE(rollback_mount.lstat().st_mode) != 0o700
+    ):
+        raise StoreError("rollback migration source must be a real root-owned mode-0700 directory")
+    if (
+        runtime_mount.parent.stat().st_dev != runtime_backup.parent.stat().st_dev
+        or rollback_mount.parent.stat().st_dev != rollback_backup.parent.stat().st_dev
+    ):
+        raise StoreError("source backups must share their source filesystem for atomic rename")
+    for path in (runtime_backup, rollback_backup, journal, runtime_inventory, rollback_inventory):
+        if path.exists() or path.is_symlink():
+            raise StoreError("new state-store identity collides with migration or backup material")
+    required_mount = arguments.required_backing_mount or ""
+    required_uuid = (arguments.required_backing_uuid or "").lower()
+    if bool(required_mount) != bool(required_uuid) or (required_uuid and not UUID_RE.fullmatch(required_uuid)):
+        raise StoreError("required backing mount and valid UUID must be supplied together")
+    if required_mount:
+        required_mount = str(_absolute(required_mount, label="required backing mount").resolve())
+    runtime_backing = _backing_identity(runtime_image.parent)
+    rollback_backing = _backing_identity(rollback_image.parent)
+    if any(runtime_backing[key] != rollback_backing[key] for key in ("target", "source", "fstype", "uuid", "device")):
+        raise StoreError("runtime and rollback images must share one exact persistent backing filesystem")
+    if required_mount and (runtime_backing["target"] != required_mount or runtime_backing["uuid"] != required_uuid):
+        raise StoreError("state-store images are not on the exact required backing filesystem")
+    if config_path.exists() or config_path.is_symlink():
+        existing = _read_config(config_path)
+        requested = {
+            "runtime": (str(runtime_image), str(runtime_mount)),
+            "rollback": (str(rollback_image), str(rollback_mount)),
+        }
+        if any(
+            (existing[role]["image"], existing[role]["mount"]) != pair
+            for role, pair in requested.items()
+        ):
+            raise StoreError("existing state-store config differs from requested identity")
+        _verify_image(existing["runtime"])
+        _verify_image(existing["rollback"])
+        _verify_backing(existing)
+        return
+    missing = sum(not path.exists() and not path.is_symlink() for path in (runtime_image, rollback_image))
+    required_free = missing * IMAGE_BYTES + HOST_RESERVE_BYTES
+    if _free_bytes(runtime_image.parent) < required_free:
+        raise StoreError("backing filesystem cannot allocate both 32 GiB images and retain 64 GiB")
+    runtime_uuid = _create_or_reconstruct_image(
+        runtime_image, RUNTIME_LABEL, RUNTIME_RESERVED_PERCENT
+    )
+    rollback_uuid = _create_or_reconstruct_image(
+        rollback_image, ROLLBACK_LABEL, ROLLBACK_RESERVED_PERCENT
+    )
+    if runtime_uuid == rollback_uuid:
+        raise StoreError("runtime and rollback images received the same filesystem UUID")
+    if _free_bytes(runtime_image.parent) < HOST_RESERVE_BYTES:
+        raise StoreError("state-store allocation consumed the 64 GiB backing reserve")
+    backing = {
+        "target": runtime_backing["target"],
+        "source": runtime_backing["source"],
+        "fstype": runtime_backing["fstype"],
+        "uuid": runtime_backing["uuid"],
+        "device": runtime_backing["device"],
+        "runtime_image_parent_inode": runtime_image.parent.stat().st_ino,
+        "rollback_image_parent_inode": rollback_image.parent.stat().st_ino,
+    }
+    config = {
+        "schema": SCHEMA,
+        "appliance_id": arguments.appliance_id,
+        "runtime_uid": arguments.runtime_uid,
+        "runtime_gid": arguments.runtime_gid,
+        "runtime": _volume_config(
+            role="runtime",
+            image=runtime_image,
+            mount=runtime_mount,
+            label=RUNTIME_LABEL,
+            filesystem_uuid=runtime_uuid,
+            reserved_percent=RUNTIME_RESERVED_PERCENT,
+        ),
+        "rollback": _volume_config(
+            role="rollback",
+            image=rollback_image,
+            mount=rollback_mount,
+            label=ROLLBACK_LABEL,
+            filesystem_uuid=rollback_uuid,
+            reserved_percent=ROLLBACK_RESERVED_PERCENT,
+        ),
+        "backing": backing,
+        "required_backing_mount": required_mount,
+        "required_backing_uuid": required_uuid,
+        "host_reserve_bytes": HOST_RESERVE_BYTES,
+        "store_minimum_free_bytes": STORE_MINIMUM_FREE_BYTES,
+        "migration_journal": str(journal),
+        "runtime_source_backup": str(runtime_backup),
+        "rollback_source_backup": str(rollback_backup),
+        "runtime_inventory": str(runtime_inventory),
+        "rollback_inventory": str(rollback_inventory),
+        "python": {
+            "path": str(PYTHON_PATH),
+            "sha256": _sha256_regular(PYTHON_PATH, maximum_bytes=64 * 1024 * 1024),
+        },
+    }
+    _atomic_json(config_path, config, mode=0o400, replace_existing=False)
+
+
+def _xattr_records(path: pathlib.Path) -> list[dict[str, Any]]:
+    records: list[dict[str, Any]] = []
+    total = 0
+    if not hasattr(os, "listxattr"):
+        if sys.platform == "linux":
+            raise StoreError("Linux Python lacks required no-follow xattr support")
+        return records
+    try:
+        names = sorted(os.listxattr(path, follow_symlinks=False))
+    except OSError as error:
+        raise StoreError(f"cannot inventory state xattrs: {path}: {error}") from error
+    if len(names) > 128:
+        raise StoreError(f"state entry has too many xattrs: {path}")
+    for name in names:
+        if len(name.encode("utf-8", errors="strict")) > 255 or "\x00" in name:
+            raise StoreError(f"state xattr name is invalid: {path}")
+        value = os.getxattr(path, name, follow_symlinks=False)
+        total += len(value)
+        if total > 1024 * 1024:
+            raise StoreError(f"state xattrs exceed the per-entry bound: {path}")
+        records.append(
+            {"name": name, "size": len(value), "sha256": hashlib.sha256(value).hexdigest()}
+        )
+    return records
+
+
+def _copy_xattrs(source: pathlib.Path, destination: pathlib.Path) -> None:
+    if not hasattr(os, "getxattr") or not hasattr(os, "setxattr"):
+        if sys.platform == "linux":
+            raise StoreError("Linux Python lacks required xattr copy support")
+        return
+    for record in _xattr_records(source):
+        value = os.getxattr(source, record["name"], follow_symlinks=False)
+        if len(value) != record["size"] or hashlib.sha256(value).hexdigest() != record["sha256"]:
+            raise StoreError(f"state xattr changed during migration: {source}")
+        os.setxattr(destination, record["name"], value, follow_symlinks=False)
+
+
+def _entry_record(root: pathlib.Path, path: pathlib.Path) -> tuple[dict[str, Any], int]:
+    metadata = path.lstat()
+    relative = path.relative_to(root).as_posix()
+    base = {
+        "path": relative,
+        "uid": metadata.st_uid,
+        "gid": metadata.st_gid,
+        "mode": stat.S_IMODE(metadata.st_mode),
+        "xattrs": _xattr_records(path),
+    }
+    if stat.S_ISDIR(metadata.st_mode):
+        return ({**base, "kind": "directory"}, 0)
+    if stat.S_ISREG(metadata.st_mode):
+        if metadata.st_nlink != 1:
+            raise StoreError(f"hard-linked state file is unsupported: {relative}")
+        digest = hashlib.sha256()
+        descriptor = os.open(path, os.O_RDONLY | os.O_CLOEXEC | getattr(os, "O_NOFOLLOW", 0))
+        with os.fdopen(descriptor, "rb") as handle:
+            while chunk := handle.read(COPY_CHUNK_BYTES):
+                digest.update(chunk)
+        return (
+            {**base, "kind": "file", "size": metadata.st_size, "sha256": digest.hexdigest()},
+            metadata.st_size,
+        )
+    if stat.S_ISLNK(metadata.st_mode):
+        target = os.readlink(path)
+        if os.path.isabs(target) or "\x00" in target:
+            raise StoreError(f"absolute or malformed state symlink is unsupported: {relative}")
+        resolved = (path.parent / target).resolve()
+        if not _within(resolved, root.resolve()):
+            raise StoreError(f"state symlink escapes the migrated root: {relative}")
+        return ({**base, "kind": "symlink", "target": target}, 0)
+    raise StoreError(f"socket, device, FIFO, or unsupported state entry blocks migration: {relative}")
+
+
+def _inventory(root: pathlib.Path, *, ignore_inode_reserve: bool = False) -> dict[str, Any]:
+    if not root.is_dir() or root.is_symlink():
+        raise StoreError(f"inventory root is not a real directory: {root}")
+    entries: list[dict[str, Any]] = []
+    total_bytes = 0
+    for directory, names, filenames in os.walk(root, topdown=True, followlinks=False):
+        names.sort()
+        filenames.sort()
+        current = pathlib.Path(directory)
+        if current == root and INODE_RESERVE_NAME in names:
+            if not ignore_inode_reserve:
+                raise StoreError("migration source collides with the immutable inode reserve")
+            names.remove(INODE_RESERVE_NAME)
+        if current != root:
+            record, size = _entry_record(root, current)
+            entries.append(record)
+            total_bytes += size
+        for name in tuple(names):
+            path = current / name
+            if path.is_symlink():
+                record, size = _entry_record(root, path)
+                entries.append(record)
+                total_bytes += size
+                names.remove(name)
+        for name in filenames:
+            record, size = _entry_record(root, current / name)
+            entries.append(record)
+            total_bytes += size
+        if len(entries) > MAX_INVENTORY_ENTRIES:
+            raise StoreError("state inventory exceeds its entry bound")
+    body = {
+        "schema": INVENTORY_SCHEMA,
+        "entry_count": len(entries),
+        "total_file_bytes": total_bytes,
+        "entries": entries,
+    }
+    body["inventory_sha256"] = hashlib.sha256(_canonical_json(body)).hexdigest()
+    return body
+
+
+def _verify_inventory(value: dict[str, Any]) -> None:
+    digest = value.get("inventory_sha256")
+    body = dict(value)
+    body.pop("inventory_sha256", None)
+    if (
+        value.get("schema") != INVENTORY_SCHEMA
+        or not isinstance(value.get("entries"), list)
+        or value.get("entry_count") != len(value["entries"])
+        or not isinstance(digest, str)
+        or hashlib.sha256(_canonical_json(body)).hexdigest() != digest
+    ):
+        raise StoreError("state inventory hash or schema is invalid")
+
+
+def _clear_copy_root(root: pathlib.Path) -> None:
+    for entry in root.iterdir():
+        if entry.name == "lost+found" and entry.is_dir() and not entry.is_symlink():
+            continue
+        if entry.is_dir() and not entry.is_symlink():
+            shutil.rmtree(entry)
+        else:
+            entry.unlink()
+    _fsync_directory(root)
+
+
+def _copy_tree(source: pathlib.Path, destination: pathlib.Path) -> None:
+    _clear_copy_root(destination)
+
+    def copy_directory(source_dir: pathlib.Path, destination_dir: pathlib.Path) -> None:
+        source_metadata = source_dir.lstat()
+        for entry in sorted(os.scandir(source_dir), key=lambda item: item.name):
+            source_path = pathlib.Path(entry.path)
+            destination_path = destination_dir / entry.name
+            metadata = source_path.lstat()
+            if stat.S_ISDIR(metadata.st_mode):
+                destination_path.mkdir(mode=0o700)
+                copy_directory(source_path, destination_path)
+            elif stat.S_ISREG(metadata.st_mode):
+                if metadata.st_nlink != 1:
+                    raise StoreError(f"hard-linked state file is unsupported: {source_path}")
+                source_fd = os.open(
+                    source_path,
+                    os.O_RDONLY | os.O_CLOEXEC | getattr(os, "O_NOFOLLOW", 0),
+                )
+                destination_fd = os.open(
+                    destination_path,
+                    os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_CLOEXEC | getattr(os, "O_NOFOLLOW", 0),
+                    0o600,
+                )
+                with os.fdopen(source_fd, "rb") as source_handle, os.fdopen(
+                    destination_fd, "wb"
+                ) as destination_handle:
+                    shutil.copyfileobj(source_handle, destination_handle, COPY_CHUNK_BYTES)
+                    destination_handle.flush()
+                    os.fchmod(destination_handle.fileno(), stat.S_IMODE(metadata.st_mode))
+                    os.fchown(destination_handle.fileno(), metadata.st_uid, metadata.st_gid)
+                    os.fsync(destination_handle.fileno())
+                _copy_xattrs(source_path, destination_path)
+                current = source_path.lstat()
+                if (
+                    current.st_dev,
+                    current.st_ino,
+                    current.st_size,
+                    current.st_mtime_ns,
+                ) != (
+                    metadata.st_dev,
+                    metadata.st_ino,
+                    metadata.st_size,
+                    metadata.st_mtime_ns,
+                ):
+                    raise StoreError(f"state file changed during migration: {source_path}")
+                os.utime(
+                    destination_path,
+                    ns=(metadata.st_atime_ns, metadata.st_mtime_ns),
+                    follow_symlinks=False,
+                )
+            elif stat.S_ISLNK(metadata.st_mode):
+                target = os.readlink(source_path)
+                if os.path.isabs(target) or not _within((source_path.parent / target).resolve(), source.resolve()):
+                    raise StoreError(f"state symlink escapes migration root: {source_path}")
+                destination_path.symlink_to(target)
+                os.chown(destination_path, metadata.st_uid, metadata.st_gid, follow_symlinks=False)
+                _copy_xattrs(source_path, destination_path)
+            else:
+                raise StoreError(f"special state entry blocks migration: {source_path}")
+        os.chown(destination_dir, source_metadata.st_uid, source_metadata.st_gid)
+        os.chmod(destination_dir, stat.S_IMODE(source_metadata.st_mode))
+        _copy_xattrs(source_dir, destination_dir)
+        os.utime(
+            destination_dir,
+            ns=(source_metadata.st_atime_ns, source_metadata.st_mtime_ns),
+            follow_symlinks=False,
+        )
+        _fsync_directory(destination_dir)
+
+    copy_directory(source, destination)
+
+
+def _sqlite_quick_checks(root: pathlib.Path) -> dict[str, str]:
+    candidates = sorted(
+        path
+        for suffix in ("*.db", "*.sqlite", "*.sqlite3")
+        for path in root.rglob(suffix)
+        if path.is_file() and not path.is_symlink()
+    )
+    if len(candidates) > 256:
+        raise StoreError("state migration contains too many database candidates")
+    results: dict[str, str] = {}
+    for path in candidates:
+        relative = path.relative_to(root).as_posix()
+        try:
+            connection = sqlite3.connect(f"file:{path}?mode=ro", uri=True, timeout=1.0)
+            try:
+                row = connection.execute("PRAGMA quick_check").fetchone()
+            finally:
+                connection.close()
+        except sqlite3.DatabaseError:
+            # Extension is not proof of SQLite. Record that deterministically;
+            # only an actual SQLite header creates an integrity obligation.
+            with path.open("rb") as handle:
+                header = handle.read(16)
+            if header == b"SQLite format 3\x00":
+                raise StoreError(f"SQLite quick_check failed: {relative}")
+            results[relative] = "not_sqlite"
+            continue
+        if row != ("ok",):
+            raise StoreError(f"SQLite quick_check failed: {relative}")
+        results[relative] = "ok"
+    return results
+
+
+@contextlib.contextmanager
+def _temporary_mount(volume: dict[str, Any], image: pathlib.Path) -> Iterator[pathlib.Path]:
+    root = pathlib.Path("/run/astrid-edge-state-store")
+    root.mkdir(mode=0o700, parents=False, exist_ok=True)
+    _require_secure_directory(root, label="temporary state-store mount root")
+    temporary = pathlib.Path(tempfile.mkdtemp(prefix=f"{volume['role']}.", dir=root))
+    mounted = False
+    try:
+        _run(
+            [
+                "/usr/bin/mount",
+                "-t",
+                "ext4",
+                "-o",
+                "loop,rw,nodev,nosuid,noexec,noatime",
+                str(image),
+                str(temporary),
+            ]
+        )
+        mounted = True
+        _verify_mount(volume, image, mount_override=temporary)
+        yield temporary
+    finally:
+        if mounted:
+            _run(["/usr/bin/umount", "--", str(temporary)])
+        temporary.rmdir()
+        _fsync_directory(root)
+
+
+def _write_journal(config: dict[str, Any], phase: str, **extra: Any) -> None:
+    journal_path = pathlib.Path(config["migration_journal"])
+    existing: dict[str, Any] = {}
+    if journal_path.exists() and not journal_path.is_symlink():
+        existing = _read_json(journal_path, mode=0o600, label="state-store migration journal")
+    value = {
+        "schema": JOURNAL_SCHEMA,
+        "appliance_id": config["appliance_id"],
+        "phase": phase,
+        "runtime_filesystem_uuid": config["runtime"]["filesystem_uuid"],
+        "rollback_filesystem_uuid": config["rollback"]["filesystem_uuid"],
+        "runtime_inventory_sha256": extra.get(
+            "runtime_inventory_sha256", existing.get("runtime_inventory_sha256", "")
+        ),
+        "rollback_inventory_sha256": extra.get(
+            "rollback_inventory_sha256", existing.get("rollback_inventory_sha256", "")
+        ),
+        "runtime_total_file_bytes": extra.get(
+            "runtime_total_file_bytes", existing.get("runtime_total_file_bytes", 0)
+        ),
+        "rollback_total_file_bytes": extra.get(
+            "rollback_total_file_bytes", existing.get("rollback_total_file_bytes", 0)
+        ),
+        "source_backups_retained": phase not in {"accepted"},
+    }
+    _atomic_json(journal_path, value, mode=0o600)
+
+
+def _read_inventory(path: pathlib.Path) -> dict[str, Any]:
+    value = _read_json(path, mode=0o600, label="state-store inventory")
+    _verify_inventory(value)
+    return value
+
+
+def _copy_volume_source(config: dict[str, Any], role: str) -> dict[str, Any]:
+    volume = config[role]
+    source = pathlib.Path(volume["mount"])
+    backup = pathlib.Path(config[f"{role}_source_backup"])
+    inventory_path = pathlib.Path(config[f"{role}_inventory"])
+    if backup.exists() or backup.is_symlink():
+        if not inventory_path.exists() or inventory_path.is_symlink():
+            raise StoreError(f"{role} source backup exists without its signed inventory")
+        return _read_inventory(inventory_path)
+    if not source.is_dir() or source.is_symlink():
+        raise StoreError(f"{role} migration source is not a real directory")
+    source_inventory = _inventory(source)
+    if source_inventory["total_file_bytes"] > IMAGE_BYTES - STORE_MINIMUM_FREE_BYTES:
+        raise StoreError(f"{role} source cannot fit while retaining the 4 GiB volume reserve")
+    image = _verify_image(volume)
+    with _temporary_mount(volume, image) as mounted:
+        _copy_tree(source, mounted)
+        copied_inventory = _inventory(mounted)
+        if copied_inventory != source_inventory:
+            raise StoreError(f"{role} copied inventory differs from the stopped source")
+        source_databases = _sqlite_quick_checks(source)
+        copied_databases = _sqlite_quick_checks(mounted)
+        if source_databases != copied_databases:
+            raise StoreError(f"{role} copied database checks differ from the source")
+        if _free_bytes(mounted) < STORE_MINIMUM_FREE_BYTES:
+            raise StoreError(f"{role} copied volume fell below the 4 GiB reserve")
+    _atomic_json(inventory_path, source_inventory, mode=0o600)
+    return source_inventory
+
+
+def _replace_source_with_mountpoint(config: dict[str, Any], role: str) -> None:
+    source = pathlib.Path(config[role]["mount"])
+    backup = pathlib.Path(config[f"{role}_source_backup"])
+    if backup.exists() or backup.is_symlink():
+        if not backup.is_dir() or backup.is_symlink():
+            raise StoreError(f"{role} source backup identity is invalid")
+        if source.exists() or source.is_symlink():
+            if not source.is_dir() or source.is_symlink() or any(source.iterdir()):
+                raise StoreError(f"{role} mountpoint is not the expected empty crash-recovery directory")
+            return
+    else:
+        if not source.is_dir() or source.is_symlink():
+            raise StoreError(f"{role} source disappeared before transactional rename")
+        os.replace(source, backup)
+        _fsync_directory(source.parent)
+        if backup.parent != source.parent:
+            _fsync_directory(backup.parent)
+    source.mkdir(mode=0o700)
+    os.chown(source, 0, 0)
+    os.chmod(source, 0o700)
+    _fsync_directory(source.parent)
+
+
+def _inode_reserve_root(runtime_mount: pathlib.Path) -> pathlib.Path:
+    return runtime_mount / INODE_RESERVE_NAME
+
+
+def _create_inode_reserve(runtime_mount: pathlib.Path) -> None:
+    reserve = _inode_reserve_root(runtime_mount)
+    if reserve.exists() and not reserve.is_symlink():
+        try:
+            _verify_inode_reserve(runtime_mount)
+            return
+        except StoreError:
+            # Only an exact subset of correctly formed shards/members can be
+            # resumed below. Wrong type, ownership, mode, link count, content,
+            # device, or an unexpected name remains a terminal failure.
+            pass
+    if not reserve.exists() and not reserve.is_symlink():
+        reserve.mkdir(mode=0o700)
+        os.chown(reserve, ROOT_UID, ROOT_GID)
+        _fsync_directory(runtime_mount)
+    reserve_metadata = reserve.lstat()
+    if (
+        not stat.S_ISDIR(reserve_metadata.st_mode)
+        or reserve.is_symlink()
+        or reserve_metadata.st_uid != ROOT_UID
+        or reserve_metadata.st_gid != ROOT_GID
+        or stat.S_IMODE(reserve_metadata.st_mode) != 0o700
+        or reserve_metadata.st_dev != runtime_mount.stat().st_dev
+    ):
+        raise StoreError("runtime emergency inode reserve root identity changed")
+    expected_shards = {f"{index:02x}" for index in range(INODE_RESERVE_SHARDS)}
+    observed_shards = {entry.name for entry in os.scandir(reserve)}
+    if not observed_shards.issubset(expected_shards):
+        raise StoreError("runtime emergency inode reserve contains an unexpected shard")
+    for shard in range(INODE_RESERVE_SHARDS):
+        shard_root = reserve / f"{shard:02x}"
+        if not shard_root.exists() and not shard_root.is_symlink():
+            shard_root.mkdir(mode=0o700)
+            os.chown(shard_root, ROOT_UID, ROOT_GID)
+            _fsync_directory(reserve)
+        shard_metadata = shard_root.lstat()
+        if (
+            not stat.S_ISDIR(shard_metadata.st_mode)
+            or shard_root.is_symlink()
+            or shard_metadata.st_uid != ROOT_UID
+            or shard_metadata.st_gid != ROOT_GID
+            or stat.S_IMODE(shard_metadata.st_mode) != 0o700
+            or shard_metadata.st_dev != reserve_metadata.st_dev
+        ):
+            raise StoreError("runtime emergency inode reserve shard identity changed")
+        expected_members = {
+            f"{index:02x}" for index in range(INODE_RESERVE_FILES_PER_SHARD)
+        }
+        observed_members = {entry.name for entry in os.scandir(shard_root)}
+        if not observed_members.issubset(expected_members):
+            raise StoreError("runtime emergency inode reserve contains an unexpected member")
+        for existing in observed_members:
+            member_metadata = (shard_root / existing).lstat()
+            if (
+                not stat.S_ISREG(member_metadata.st_mode)
+                or member_metadata.st_nlink != 1
+                or member_metadata.st_uid != ROOT_UID
+                or member_metadata.st_gid != ROOT_GID
+                or stat.S_IMODE(member_metadata.st_mode) != 0o400
+                or member_metadata.st_size != 0
+                or member_metadata.st_dev != reserve_metadata.st_dev
+            ):
+                raise StoreError("runtime emergency inode reserve member identity changed")
+        for index in range(INODE_RESERVE_FILES_PER_SHARD):
+            path = shard_root / f"{index:02x}"
+            if path.exists() or path.is_symlink():
+                continue
+            descriptor = os.open(
+                path,
+                os.O_WRONLY
+                | os.O_CREAT
+                | os.O_EXCL
+                | os.O_CLOEXEC
+                | getattr(os, "O_NOFOLLOW", 0),
+                0o400,
+            )
+            os.close(descriptor)
+        _fsync_directory(shard_root)
+    _fsync_directory(reserve)
+    _fsync_directory(runtime_mount)
+    _verify_inode_reserve(runtime_mount)
+
+
+def _verify_inode_reserve(runtime_mount: pathlib.Path) -> None:
+    reserve = _inode_reserve_root(runtime_mount)
+    metadata = reserve.lstat()
+    if (
+        not stat.S_ISDIR(metadata.st_mode)
+        or reserve.is_symlink()
+        or metadata.st_uid != ROOT_UID
+        or metadata.st_gid != ROOT_GID
+        or stat.S_IMODE(metadata.st_mode) != 0o700
+        or metadata.st_dev != runtime_mount.stat().st_dev
+    ):
+        raise StoreError("runtime emergency inode reserve root identity changed")
+    shards = sorted(os.scandir(reserve), key=lambda entry: entry.name)
+    if len(shards) != INODE_RESERVE_SHARDS or [entry.name for entry in shards] != [
+        f"{index:02x}" for index in range(INODE_RESERVE_SHARDS)
+    ]:
+        raise StoreError("runtime emergency inode reserve shard set changed")
+    count = 0
+    for shard in shards:
+        shard_path = pathlib.Path(shard.path)
+        shard_metadata = shard_path.lstat()
+        if (
+            not stat.S_ISDIR(shard_metadata.st_mode)
+            or shard_path.is_symlink()
+            or shard_metadata.st_uid != ROOT_UID
+            or shard_metadata.st_gid != ROOT_GID
+            or stat.S_IMODE(shard_metadata.st_mode) != 0o700
+            or shard_metadata.st_dev != metadata.st_dev
+        ):
+            raise StoreError("runtime emergency inode reserve shard identity changed")
+        entries = sorted(os.scandir(shard_path), key=lambda entry: entry.name)
+        if len(entries) != INODE_RESERVE_FILES_PER_SHARD or [entry.name for entry in entries] != [
+            f"{index:02x}" for index in range(INODE_RESERVE_FILES_PER_SHARD)
+        ]:
+            raise StoreError("runtime emergency inode reserve file set changed")
+        for entry in entries:
+            entry_metadata = pathlib.Path(entry.path).lstat()
+            if (
+                not stat.S_ISREG(entry_metadata.st_mode)
+                or entry_metadata.st_nlink != 1
+                or entry_metadata.st_uid != ROOT_UID
+                or entry_metadata.st_gid != ROOT_GID
+                or stat.S_IMODE(entry_metadata.st_mode) != 0o400
+                or entry_metadata.st_size != 0
+                or entry_metadata.st_dev != metadata.st_dev
+            ):
+                raise StoreError("runtime emergency inode reserve member identity changed")
+            count += 1
+    if count != INODE_RESERVE_FILES:
+        raise StoreError("runtime emergency inode reserve count changed")
+
+
+def _release_inode_reserve(runtime_mount: pathlib.Path) -> None:
+    _verify_inode_reserve(runtime_mount)
+    reserve = _inode_reserve_root(runtime_mount)
+    shutil.rmtree(reserve)
+    _fsync_directory(runtime_mount)
+
+
+def migrate(arguments: argparse.Namespace) -> None:
+    _require_root_linux()
+    config = _read_config(_absolute(arguments.config, label="config"))
+    _verify_backing(config)
+    for role in ("runtime", "rollback"):
+        target = pathlib.Path(config[role]["mount"])
+        if target.exists() and pathlib.Path(str(_findmnt(target)["target"])).resolve() == target.resolve():
+            raise StoreError("migration requires both managed volumes to be unmounted")
+    runtime_inventory = _copy_volume_source(config, "runtime")
+    rollback_inventory = _copy_volume_source(config, "rollback")
+    _write_journal(
+        config,
+        "copies_verified",
+        runtime_inventory_sha256=runtime_inventory["inventory_sha256"],
+        rollback_inventory_sha256=rollback_inventory["inventory_sha256"],
+        runtime_total_file_bytes=runtime_inventory["total_file_bytes"],
+        rollback_total_file_bytes=rollback_inventory["total_file_bytes"],
+    )
+    _replace_source_with_mountpoint(config, "rollback")
+    _write_journal(config, "rollback_source_replaced")
+    _replace_source_with_mountpoint(config, "runtime")
+    _write_journal(config, "ready_to_mount")
+
+
+def recover(arguments: argparse.Namespace) -> None:
+    _require_root_linux()
+    config = _read_config(_absolute(arguments.config, label="config"))
+    journal_path = pathlib.Path(config["migration_journal"])
+    if not journal_path.exists() or journal_path.is_symlink():
+        raise StoreError("state-store migration journal is absent")
+    journal = _read_json(journal_path, mode=0o600, label="state-store migration journal")
+    if journal.get("schema") != JOURNAL_SCHEMA or journal.get("appliance_id") != config["appliance_id"]:
+        raise StoreError("state-store migration journal identity is invalid")
+    if journal.get("phase") in {"ready_to_mount", "mounted_verified", "accepted"}:
+        for role in ("runtime", "rollback"):
+            mount = pathlib.Path(config[role]["mount"])
+            backup = pathlib.Path(config[f"{role}_source_backup"])
+            if not backup.is_dir() or backup.is_symlink():
+                raise StoreError(f"{role} retained source backup is absent or unsafe")
+            if not mount.is_dir() or mount.is_symlink():
+                raise StoreError(f"{role} mountpoint is absent or unsafe")
+        return
+    # An interrupted pre-ready transaction must expose the complete old trees,
+    # then fail this boot so an operator can rerun migration. It never permits
+    # systemd to mount a partial image over a partly moved source.
+    for role in ("runtime", "rollback"):
+        mount = pathlib.Path(config[role]["mount"])
+        backup = pathlib.Path(config[f"{role}_source_backup"])
+        if backup.is_dir() and not backup.is_symlink():
+            if mount.exists() or mount.is_symlink():
+                if not mount.is_dir() or mount.is_symlink() or any(mount.iterdir()):
+                    raise StoreError(f"{role} interrupted mountpoint cannot be reconciled")
+                mount.rmdir()
+            os.replace(backup, mount)
+            _fsync_directory(mount.parent)
+    _write_journal(config, "aborted_complete_old_state_restored")
+    raise StoreError("interrupted migration restored complete old state; rerun migrate")
+
+
+def abort(arguments: argparse.Namespace) -> None:
+    """Restore exact stopped source trees when outer bootstrap rolls back."""
+
+    _require_root_linux()
+    config = _read_config(_absolute(arguments.config, label="config"))
+    journal_path = pathlib.Path(config["migration_journal"])
+    if not journal_path.exists() or journal_path.is_symlink():
+        # No source was renamed, so there is nothing transactional to undo.
+        return
+    journal = _read_json(journal_path, mode=0o600, label="state-store migration journal")
+    if journal.get("phase") == "accepted":
+        raise StoreError("accepted bounded state cannot be reverted by bootstrap rollback")
+    for role in ("runtime", "rollback"):
+        target = pathlib.Path(config[role]["mount"])
+        if target.exists() and pathlib.Path(str(_findmnt(target)["target"])).resolve() == target.resolve():
+            raise StoreError("state-store abort requires both managed volumes unmounted")
+    for role in ("runtime", "rollback"):
+        mount = pathlib.Path(config[role]["mount"])
+        backup = pathlib.Path(config[f"{role}_source_backup"])
+        if backup.is_dir() and not backup.is_symlink():
+            expected = _read_inventory(pathlib.Path(config[f"{role}_inventory"]))
+            if _inventory(backup) != expected:
+                raise StoreError(f"{role} retained source changed before rollback")
+            if mount.exists() or mount.is_symlink():
+                if not mount.is_dir() or mount.is_symlink() or any(mount.iterdir()):
+                    raise StoreError(f"{role} rollback mountpoint is not empty")
+                mount.rmdir()
+            os.replace(backup, mount)
+            _fsync_directory(mount.parent)
+        elif not mount.is_dir() or mount.is_symlink():
+            raise StoreError(f"{role} original source is unavailable during rollback")
+    _write_journal(config, "aborted_complete_old_state_restored")
+
+
+def _verify_layout(config: dict[str, Any], runtime_mount: pathlib.Path, rollback_mount: pathlib.Path) -> None:
+    runtime_metadata = runtime_mount.lstat()
+    rollback_metadata = rollback_mount.lstat()
+    if (
+        not stat.S_ISDIR(runtime_metadata.st_mode)
+        or runtime_mount.is_symlink()
+        or runtime_metadata.st_uid != 0
+        or runtime_metadata.st_gid != config["runtime_gid"]
+        or stat.S_IMODE(runtime_metadata.st_mode) != 0o710
+    ):
+        raise StoreError("runtime volume root ownership or mode differs from policy")
+    if (
+        not stat.S_ISDIR(rollback_metadata.st_mode)
+        or rollback_mount.is_symlink()
+        or rollback_metadata.st_uid != 0
+        or rollback_metadata.st_gid != 0
+        or stat.S_IMODE(rollback_metadata.st_mode) != 0o700
+    ):
+        raise StoreError("rollback volume root ownership or mode differs from policy")
+    for entry in runtime_mount.iterdir():
+        if entry.name == INODE_RESERVE_NAME:
+            continue
+        metadata = entry.lstat()
+        if entry.name in RUNTIME_WRITABLE_TOP_LEVEL:
+            if (
+                not stat.S_ISDIR(metadata.st_mode)
+                or entry.is_symlink()
+                or metadata.st_uid != config["runtime_uid"]
+                or metadata.st_gid != config["runtime_gid"]
+                or stat.S_IMODE(metadata.st_mode) & 0o002
+            ):
+                raise StoreError(f"runtime-owned top-level subtree identity changed: {entry.name}")
+        elif metadata.st_uid == config["runtime_uid"] and stat.S_IMODE(metadata.st_mode) & 0o200:
+            raise StoreError(f"unallowlisted runtime-writable top-level entry: {entry.name}")
+    runtime_capacity = _capacity_bytes(runtime_mount)
+    rollback_capacity = _capacity_bytes(rollback_mount)
+    for role, capacity in (("runtime", runtime_capacity), ("rollback", rollback_capacity)):
+        if capacity < IMAGE_BYTES * 9 // 10 or capacity > IMAGE_BYTES:
+            raise StoreError(f"{role} filesystem capacity differs from the fixed image bound")
+    runtime_free = _free_bytes(runtime_mount)
+    rollback_free = _free_bytes(rollback_mount)
+    runtime_stat = os.statvfs(runtime_mount)
+    rollback_stat = os.statvfs(rollback_mount)
+    runtime_root_free = runtime_stat.f_bfree * runtime_stat.f_frsize
+    runtime_reserved_available = runtime_root_free - runtime_free
+    if runtime_reserved_available < STORE_MINIMUM_FREE_BYTES:
+        raise StoreError("runtime ext4 root reserve no longer preserves 4 GiB for immutable rollback")
+    if runtime_stat.f_ffree < MINIMUM_FREE_INODES:
+        raise StoreError("runtime filesystem fell below the immutable free-inode health margin")
+    if rollback_stat.f_ffree < ROLLBACK_MINIMUM_FREE_INODES:
+        raise StoreError("rollback filesystem cannot retain the immutable inode recovery margin")
+    _verify_inode_reserve(runtime_mount)
+    # Reserved root blocks are recovery headroom, not live runtime content.
+    # Size rollback capacity against blocks actually consumed by state.
+    runtime_used = runtime_capacity - runtime_root_free
+    if runtime_free < STORE_MINIMUM_FREE_BYTES:
+        raise StoreError("runtime filesystem has less than the immutable 4 GiB reserve")
+    if rollback_free < runtime_used + STORE_MINIMUM_FREE_BYTES:
+        raise StoreError("rollback filesystem cannot hold exact runtime state plus its 4 GiB reserve")
+
+
+def prepare(arguments: argparse.Namespace) -> None:
+    _require_root_linux()
+    config = _read_config(_absolute(arguments.config, label="config"))
+    runtime_image = _verify_image(config["runtime"])
+    rollback_image = _verify_image(config["rollback"])
+    runtime_mount, _, runtime_device = _verify_mount(config["runtime"], runtime_image)
+    rollback_mount, _, rollback_device = _verify_mount(config["rollback"], rollback_image)
+    if runtime_device == rollback_device:
+        raise StoreError("runtime and rollback mounts unexpectedly share one filesystem device")
+    os.chown(runtime_mount, 0, config["runtime_gid"])
+    os.chmod(runtime_mount, 0o710)
+    os.chown(rollback_mount, 0, 0)
+    os.chmod(rollback_mount, 0o700)
+    _create_inode_reserve(runtime_mount)
+    _fsync_directory(runtime_mount)
+    _fsync_directory(rollback_mount)
+    _verify_layout(config, runtime_mount, rollback_mount)
+
+
+def _attest(config_path: pathlib.Path, *, full_inventory: bool) -> dict[str, Any]:
+    config = _read_config(config_path)
+    _verify_backing(config)
+    runtime_image = _verify_image(config["runtime"])
+    rollback_image = _verify_image(config["rollback"])
+    runtime_mount, runtime_loop, runtime_device = _verify_mount(config["runtime"], runtime_image)
+    rollback_mount, rollback_loop, rollback_device = _verify_mount(config["rollback"], rollback_image)
+    if runtime_loop == rollback_loop or runtime_device == rollback_device:
+        raise StoreError("runtime and rollback mount identities are not independent")
+    _verify_layout(config, runtime_mount, rollback_mount)
+    journal = _read_json(
+        pathlib.Path(config["migration_journal"]),
+        mode=0o600,
+        label="state-store migration journal",
+    )
+    if journal.get("phase") not in {"ready_to_mount", "mounted_verified", "accepted"}:
+        raise StoreError("state-store migration has not reached a complete mountable phase")
+    # The stopped-source inventory is an installation/cutover invariant, not a
+    # permanent claim that mutable runtime state never changes.  Once the
+    # immutable migrator accepts the cutover, normal boot verification proves
+    # filesystem identity, capacity, reserve, mount, and journal continuity
+    # without comparing live state to the historical installation snapshot.
+    verify_stopped_source = full_inventory and journal.get("phase") != "accepted"
+    backups_retained = True
+    for role, mounted in (("runtime", runtime_mount), ("rollback", rollback_mount)):
+        if verify_stopped_source:
+            expected = _read_inventory(pathlib.Path(config[f"{role}_inventory"]))
+            observed = _inventory(mounted, ignore_inode_reserve=role == "runtime")
+            if expected != observed:
+                raise StoreError(f"{role} mounted state differs from its stopped-source inventory")
+        backup = pathlib.Path(config[f"{role}_source_backup"])
+        if not backup.is_dir() or backup.is_symlink():
+            backups_retained = False
+            if journal.get("phase") != "accepted":
+                raise StoreError(f"{role} source backup was not retained through acceptance")
+        elif verify_stopped_source:
+            expected = _read_inventory(pathlib.Path(config[f"{role}_inventory"]))
+            if _inventory(backup) != expected:
+                raise StoreError(f"{role} retained source backup changed before acceptance")
+    if journal.get("phase") == "ready_to_mount":
+        _write_journal(config, "mounted_verified")
+        journal["phase"] = "mounted_verified"
+    runtime_stat = os.statvfs(runtime_mount)
+    rollback_stat = os.statvfs(rollback_mount)
+    config_sha256 = hashlib.sha256(config_path.read_bytes()).hexdigest()
+    return {
+        "schema": "astrid.edge_state_store.attestation.v1",
+        "appliance_id": config["appliance_id"],
+        "config_sha256": config_sha256,
+        "authority": "immutable_root_storage_boundary_not_model_authorship",
+        "recorded_at_unix_ms": time.time_ns() // 1_000_000,
+        "host_boot_id": pathlib.Path("/proc/sys/kernel/random/boot_id")
+        .read_text(encoding="ascii")
+        .strip(),
+        "full_inventory_verified": verify_stopped_source,
+        "python": config["python"],
+        "backing": {
+            "target": config["backing"]["target"],
+            "uuid": config["backing"]["uuid"],
+            "available_bytes": _free_bytes(pathlib.Path(config["runtime"]["image"]).parent),
+            "minimum_available_bytes": HOST_RESERVE_BYTES,
+        },
+        "runtime": {
+            "filesystem_uuid": config["runtime"]["filesystem_uuid"],
+            "mount_device": runtime_device,
+            "available_bytes_unprivileged": runtime_stat.f_bavail * runtime_stat.f_frsize,
+            "available_bytes_root": runtime_stat.f_bfree * runtime_stat.f_frsize,
+            "free_inodes": runtime_stat.f_ffree,
+            "emergency_inode_reserve_files": INODE_RESERVE_FILES,
+            "reserved_block_percent": RUNTIME_RESERVED_PERCENT,
+        },
+        "rollback": {
+            "filesystem_uuid": config["rollback"]["filesystem_uuid"],
+            "mount_device": rollback_device,
+            "available_bytes": rollback_stat.f_bavail * rollback_stat.f_frsize,
+            "free_inodes": rollback_stat.f_ffree,
+        },
+        "migration_phase": journal["phase"],
+        "source_backups_retained": backups_retained,
+    }
+
+
+def verify(arguments: argparse.Namespace) -> None:
+    _require_root_linux()
+    _attest(_absolute(arguments.config, label="config"), full_inventory=True)
+
+
+def attest(arguments: argparse.Namespace) -> None:
+    _require_root_linux()
+    value = _attest(
+        _absolute(arguments.config, label="config"),
+        full_inventory=bool(arguments.full_inventory),
+    )
+    if arguments.output:
+        output = _absolute(arguments.output, label="attestation output")
+        _require_secure_directory(output.parent, label="attestation output parent")
+        _atomic_json(output, value, mode=0o400)
+    else:
+        print(_canonical_json(value).decode("ascii"))
+
+
+def accept(arguments: argparse.Namespace) -> None:
+    """Commit the one-time stopped-source proof after the service cutover gate."""
+
+    _require_root_linux()
+    config_path = _absolute(arguments.config, label="config")
+    config = _read_config(config_path)
+    journal_path = pathlib.Path(config["migration_journal"])
+    journal = _read_json(journal_path, mode=0o600, label="state-store migration journal")
+    if journal.get("phase") != "mounted_verified":
+        raise StoreError("state-store migration is not ready for immutable acceptance")
+    attestation = _attest(config_path, full_inventory=True)
+    if not attestation["full_inventory_verified"] or not attestation["source_backups_retained"]:
+        raise StoreError("state-store stopped-source proof is incomplete")
+    _write_journal(config, "accepted")
+
+
+def _mounted_runtime_from_attestation(
+    config: dict[str, Any], config_path: pathlib.Path
+) -> pathlib.Path:
+    """Bind reserve maintenance to the last immutable storage health proof.
+
+    Activation and rollback run in a deliberately device-blind service
+    namespace.  Requiring a fresh root-only attestation here preserves the
+    exact mount/config/boot binding without widening that namespace to loop or
+    backing block devices merely so it can release the emergency inode pool.
+    """
+
+    attestation = _read_json(
+        HEALTH_ATTESTATION,
+        mode=0o400,
+        label="state-store health attestation",
+    )
+    now_ms = time.time_ns() // 1_000_000
+    recorded_at = attestation.get("recorded_at_unix_ms")
+    if (
+        attestation.get("schema") != "astrid.edge_state_store.attestation.v1"
+        or attestation.get("authority")
+        != "immutable_root_storage_boundary_not_model_authorship"
+        or attestation.get("appliance_id") != config["appliance_id"]
+        or attestation.get("config_sha256")
+        != hashlib.sha256(config_path.read_bytes()).hexdigest()
+        or not isinstance(recorded_at, int)
+        or recorded_at > now_ms
+        or now_ms - recorded_at > MAXIMUM_HEALTH_ATTESTATION_AGE_MS
+        or attestation.get("host_boot_id")
+        != pathlib.Path("/proc/sys/kernel/random/boot_id")
+        .read_text(encoding="ascii")
+        .strip()
+        or attestation.get("migration_phase")
+        not in {"ready_to_mount", "mounted_verified", "accepted"}
+    ):
+        raise StoreError("state-store health attestation is absent, stale, or untrusted")
+    runtime = attestation.get("runtime")
+    if (
+        not isinstance(runtime, dict)
+        or runtime.get("filesystem_uuid") != config["runtime"]["filesystem_uuid"]
+        or runtime.get("emergency_inode_reserve_files") != INODE_RESERVE_FILES
+        or not isinstance(runtime.get("mount_device"), int)
+    ):
+        raise StoreError("state-store health attestation runtime identity changed")
+    runtime_mount = _absolute(config["runtime"]["mount"], label="runtime mount")
+    _reject_symlink_ancestry(runtime_mount, allow_leaf_absent=False)
+    metadata = runtime_mount.lstat()
+    if (
+        not stat.S_ISDIR(metadata.st_mode)
+        or stat.S_ISLNK(metadata.st_mode)
+        or metadata.st_dev != runtime["mount_device"]
+        or metadata.st_uid != 0
+        or metadata.st_gid != config["runtime_gid"]
+        or stat.S_IMODE(metadata.st_mode) != 0o710
+    ):
+        raise StoreError("runtime mount no longer matches its sealed health attestation")
+    return runtime_mount
+
+
+def _mounted_runtime_for_boot_reserve(config: dict[str, Any]) -> pathlib.Path:
+    """Resolve the exact mounted runtime volume without trusting stale /run state.
+
+    This path is reserved for the immutable pre-verification recovery service.
+    The rescue helper separately requires an exact signed transition head before
+    it may choose the creating command; this helper independently re-verifies
+    backing, image, filesystem, mount, ownership, and peer-volume separation.
+    """
+
+    _verify_backing(config)
+    runtime_image = _verify_image(config["runtime"])
+    rollback_image = _verify_image(config["rollback"])
+    runtime_mount, runtime_loop, runtime_device = _verify_mount(
+        config["runtime"], runtime_image
+    )
+    _, rollback_loop, rollback_device = _verify_mount(config["rollback"], rollback_image)
+    if runtime_loop == rollback_loop or runtime_device == rollback_device:
+        raise StoreError("runtime and rollback mount identities are not independent")
+    metadata = runtime_mount.lstat()
+    if (
+        not stat.S_ISDIR(metadata.st_mode)
+        or stat.S_ISLNK(metadata.st_mode)
+        or metadata.st_uid != ROOT_UID
+        or metadata.st_gid != config["runtime_gid"]
+        or stat.S_IMODE(metadata.st_mode) != 0o710
+    ):
+        raise StoreError("runtime mount identity changed before reserve recovery")
+    return runtime_mount
+
+
+def release_inode_reserve(arguments: argparse.Namespace) -> None:
+    _require_root_linux()
+    config_path = _absolute(arguments.config, label="config")
+    config = _read_config(config_path)
+    runtime_mount = _mounted_runtime_from_attestation(config, config_path)
+    reserve = _inode_reserve_root(runtime_mount)
+    if reserve.exists() or reserve.is_symlink():
+        _release_inode_reserve(runtime_mount)
+    if os.statvfs(runtime_mount).f_ffree < INODE_RESERVE_FILES:
+        raise StoreError("releasing the emergency reserve did not recover the required inodes")
+
+
+def restore_inode_reserve(arguments: argparse.Namespace) -> None:
+    _require_root_linux()
+    config_path = _absolute(arguments.config, label="config")
+    config = _read_config(config_path)
+    runtime_mount = _mounted_runtime_from_attestation(config, config_path)
+    _create_inode_reserve(runtime_mount)
+    _verify_inode_reserve(runtime_mount)
+
+
+def verify_inode_reserve_at_boot(arguments: argparse.Namespace) -> None:
+    _require_root_linux()
+    config = _read_config(_absolute(arguments.config, label="config"))
+    runtime_mount = _mounted_runtime_for_boot_reserve(config)
+    _verify_inode_reserve(runtime_mount)
+
+
+def recover_inode_reserve_at_boot(arguments: argparse.Namespace) -> None:
+    _require_root_linux()
+    config = _read_config(_absolute(arguments.config, label="config"))
+    runtime_mount = _mounted_runtime_for_boot_reserve(config)
+    reserve = _inode_reserve_root(runtime_mount)
+    if reserve.exists() or reserve.is_symlink():
+        _verify_inode_reserve(runtime_mount)
+    else:
+        _create_inode_reserve(runtime_mount)
+    _verify_inode_reserve(runtime_mount)
+
+
+def unit_names(arguments: argparse.Namespace) -> None:
+    _require_root_linux()
+    config = _read_config(_absolute(arguments.config, label="config"))
+    print(config["runtime"]["mount_unit"])
+    print(config["rollback"]["mount_unit"])
+
+
+def parser() -> argparse.ArgumentParser:
+    result = argparse.ArgumentParser(description=__doc__)
+    commands = result.add_subparsers(dest="command", required=True)
+    create = commands.add_parser("initialize")
+    create.add_argument("--config", required=True)
+    create.add_argument("--appliance-id", required=True)
+    create.add_argument("--runtime-image", required=True)
+    create.add_argument("--runtime-mount", required=True)
+    create.add_argument("--runtime-uid", type=int, required=True)
+    create.add_argument("--runtime-gid", type=int, required=True)
+    create.add_argument("--rollback-image", required=True)
+    create.add_argument("--rollback-mount", required=True)
+    create.add_argument("--migration-journal", required=True)
+    create.add_argument("--runtime-source-backup", required=True)
+    create.add_argument("--rollback-source-backup", required=True)
+    create.add_argument("--required-backing-mount")
+    create.add_argument("--required-backing-uuid")
+    create.set_defaults(function=initialize)
+    for name, function in (
+        ("migrate", migrate),
+        ("recover", recover),
+        ("abort", abort),
+        ("prepare", prepare),
+        ("verify", verify),
+        ("accept", accept),
+        ("release-inode-reserve", release_inode_reserve),
+        ("restore-inode-reserve", restore_inode_reserve),
+        ("verify-inode-reserve-at-boot", verify_inode_reserve_at_boot),
+        ("recover-inode-reserve-at-boot", recover_inode_reserve_at_boot),
+        ("unit-names", unit_names),
+    ):
+        command = commands.add_parser(name)
+        command.add_argument("--config", required=True)
+        command.set_defaults(function=function)
+    status = commands.add_parser("attest")
+    status.add_argument("--config", required=True)
+    status.add_argument("--full-inventory", action="store_true")
+    status.add_argument("--output")
+    status.set_defaults(function=attest)
+    return result
+
+
+def main() -> int:
+    try:
+        arguments = parser().parse_args()
+        if arguments.command == "initialize" and (
+            not IDENTIFIER_RE.fullmatch(arguments.appliance_id)
+            or arguments.runtime_uid <= 0
+            or arguments.runtime_gid <= 0
+        ):
+            raise StoreError("appliance and runtime identities are invalid")
+        arguments.function(arguments)
+    except (OSError, ValueError, StoreError) as error:
+        print(f"error: {error}", file=sys.stderr)
+        return 2
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

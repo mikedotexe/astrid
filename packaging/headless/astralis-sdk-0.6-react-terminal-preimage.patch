@@ -1,0 +1,11 @@
+diff --git a/src/lib.rs b/src/lib.rs
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -1400,7 +1400,6 @@ impl ReactLoop {
+                 state.response_text.trim_end().to_owned()
+             };
+             // Text response with no tool calls - conversation turn complete.
+-            // Use atomic append to confirm delivery to session.
+             Self::fetch_messages_with_append(
+                 &state.session_id,
+                 &[Message::assistant(&final_text)],

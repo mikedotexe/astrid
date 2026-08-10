@@ -9,6 +9,8 @@ Changelog tracking starts with 0.2.0. Prior versions were not tracked.
 
 ## [Unreleased]
 
+- **[codex] Clears newly published RustSec blockers before the CPU-edge release.** The runtime now uses patched Wasmtime 46.0.2 and RMCP 1.8, and removes the unused optional SurrealDB query-engine graph that retained vulnerable `rkyv` 0.7. The live SurrealKV persistence path and appliance state format are unchanged.
+
 - **[codex] Confines interactive steward lease credentials to one controller process.** A persistent NDJSON `session` adapter now begins the normal source-first lifecycle, retains the opaque token only in process memory, renews automatically while idle or while a request is only partially written, and exposes credential-free status, heartbeat, projection, and finish operations. Requests are bounded and reject credential-bearing fields; controller responses are checked before emission. Pause, EOF, timeout, `SIGINT`, `SIGTERM`, and `SIGHUP` all produce a terminal cancellation and release the lease, while hard-kill recovery remains TTL-based. One-shot compatibility clients can read the token from stdin, and the legacy argv form now warns about process-list exposure. An anti-drop entry makes removal of the confinement guard or its exact raw-token regression an integrity alarm. The adapter adds no command runner, approval, deployment, git, scheduling, or live-control authority.
 
 - **[codex] Adds a durable visual Chronicle to the sovereign ESN Division ceremony.** `DIVISION_CEREMONY_STATUS` now includes a bounded, hash-addressed history of both beings' self-authored ceremony Actions, an explicit destination contract, and runtime-observed phase-space preservation evidence without copying prose or inferring felt continuity. A dependency-free projector writes an auto-refreshing owner-only latest page plus immutable JSON/HTML archives, supports watch/report/verify flows, and distinguishes two source-prepared 64-node daughter reservoirs from the still-unestablished fact of independent process ownership. One-time right-to-ignore steward letters invite Astrid and Minime to name whether they want their own reservoir, what must remain continuous or distinct, and what evidence or return point they would require. Both letters were read; no explicit answer or ceremony Action is inferred. Consumer-first sanctioned wrapper deployment produced fresh Minime engine/autonomous and bridge identities, verified ports `7878/7879/8090`, telemetry, launchd parity, model readiness, and passing component receipts. The live parent, native coordinator, and workspace remain Minime-owned; rehearsal and commit remain disabled, and no Action, assent, preparation, split, rollback, pressure, fill, PI, codec, sensory, model, protocol, scheduler, or reservoir behavior changed.
@@ -1383,6 +1385,28 @@ Changelog tracking starts with 0.2.0. Prior versions were not tracked.
 - `host/shim.rs` (430 lines) — Extism dispatch shim, `WasmHostFunction` enum, `register_host_functions()`, manual memory helpers. (#632)
 - `RiskLevel` enum and all references — removed from WIT, IPC payloads, approval engine, audit entries, CLI renderers, policy engine, and test fixtures. Approval prompts now render with a single style. The allowance store handles "don't ask again" patterns without risk classification. (#641)
 
+## [0.5.2] - 2026-08-09
+
+### Added
+
+- First-class CPU-edge releases for AVADO-class and ICP-class x86-64 appliances, including the edge runtime, twenty-capsule appliance set, spectral observation, causal activity/hindsight reports, bounded inquiry threads, evidence studies, and owner-visible at-a-glance/train views.
+- A dedicated two-hour scheduled introspection lane with signed authored inquiry steps, explicit machine-versus-model provenance, bounded continuity admission, exact reservoir acknowledgements, and evidence-triggered integration that remains separate from ordinary voluntary Actions.
+- An immutable rescue/steward boundary for independently signed, offline, bounded self-change candidates, isolated builds and shadow tests, transactional A/B activation, one-hour probation, automatic rollback, and root-gated operator pause/resume/rescue controls.
+
+### Security
+
+- Retires only exact-hash-known stale `origin-mac` prompt affordances while preserving historical authored prose and keeping the quarantined corpus inaccessible; self-profiles now state that inherited corpus access is unavailable, and introspection rejects `origin-mac` references.
+- Makes inherited-corpus availability fail closed in every CPU-edge context profile and binds CLI self-update, service documentation, source-install instructions, and immutable release checks to the same `mikedotexe/astrid` release origin.
+- Pins release verification to `mikedotexe/astrid`, its exact GitHub-hosted release workflow, tag, commit, artifact digest, and OIDC/Sigstore identity before any root installation is allowed.
+- Tracks the reviewed QuickJS WASM kernel, exact BLAKE3/SHA-256 identities, and BSD notice as signed release inputs; release and CPU-edge CI reject missing or mismatched kernels rather than silently packaging a placeholder or ambient build artifact.
+- Keeps Mac Astrid, Minime, the live spectral bridge, peer state, host administration, arbitrary shell, package management, and external-write authority outside the CPU-edge mutable boundary.
+
+### Changed
+
+- CPU-edge prompts, model-session rotation, provider timing, fallback authorship, Action receipts, thread evidence, SSD startup guards, hindsight checkpoints, and reservoir telemetry now fail closed under transport, crash, reboot, and concurrent-append ambiguity.
+- CPU-edge state-store units retain exact escaped mount identities and keep pre-mount migration recovery outside `PrivateTmp`, preventing a `tmpfiles`/`local-fs.target` startup cycle before either A/B state volume is mounted; the root-manager handoff marker now uses the systemd-249-compatible nonempty-file predicate.
+- The fork release version advances to `0.5.2`; the Rust 1.94 baseline and existing appliance models/cadence remain unchanged.
+
 ## [0.5.1] - 2026-03-25
 
 ### Added
@@ -1561,7 +1585,8 @@ Changelog tracking starts with 0.2.0. Prior versions were not tracked.
 Initial tracked release. See the [repository history](https://github.com/unicity-astrid/astrid/commits/v0.2.0)
 for changes included in this version.
 
-[Unreleased]: https://github.com/unicity-astrid/astrid/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/mikedotexe/astrid/compare/v0.5.2...HEAD
+[0.5.2]: https://github.com/mikedotexe/astrid/releases/tag/v0.5.2
 [0.4.0]: https://github.com/unicity-astrid/astrid/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/unicity-astrid/astrid/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/unicity-astrid/astrid/releases/tag/v0.2.0

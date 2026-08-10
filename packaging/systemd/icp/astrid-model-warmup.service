@@ -1,0 +1,27 @@
+[Unit]
+Description=Load ICP Astrid's selected local CPU model
+Documentation=https://docs.ollama.com/api
+BindsTo=ollama-cpu.service
+Wants=astrid.service
+After=ollama-cpu.service
+Before=astrid.service astrid-edge-runtime.service
+
+[Service]
+Type=oneshot
+# Keep cwd available while the SSD guard waits; profile paths are explicitly
+# rooted beneath .astrid-icp.
+WorkingDirectory=%h
+Environment=ASTRID_HOME=%h/.astrid-icp/state
+EnvironmentFile=%h/.config/astrid/edge-appliance.env
+ExecStart=%h/.astrid-icp/state/bin/warm-ollama-model
+RemainAfterExit=yes
+# The immutable provider gateway owns the 660-second request deadline.  Keep a
+# full minute outside that deadline so systemd can collect the terminal receipt
+# and run cleanup rather than killing the client at the same boundary.
+TimeoutStartSec=12min
+Restart=on-failure
+RestartSec=5
+UMask=0077
+
+[Install]
+WantedBy=default.target

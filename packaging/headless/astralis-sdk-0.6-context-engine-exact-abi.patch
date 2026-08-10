@@ -1,0 +1,12 @@
+diff --git a/Cargo.toml b/Cargo.toml
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -11,7 +11,9 @@ crate-type = ["cdylib"]
+
+ [dependencies]
+-astrid-sdk = { version = "0.6.0", features = ["derive"] }
++astrid-sdk = { version = "=0.6.0", features = ["derive"] }
++astrid-sdk-macros = "=0.6.0"
++astrid-sys = "=0.6.0"
+ serde = { version = "1.0", features = ["derive"] }
+ serde_json = "1.0"

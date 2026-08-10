@@ -131,15 +131,52 @@ fn read_baked_schemas(
     schemas
 }
 
-/// Wall-clock timeout for short-lived (non-daemon) WASM capsules.
-/// Generous enough for interceptors doing streaming HTTP (e.g. LLM providers)
-/// while still catching runaways.
+/// Default wall-clock timeout for short-lived (non-daemon) WASM capsules.
+/// The exact local-model provider receives the narrow extension below; every
+/// other direct interceptor retains this runaway bound.
 const WASM_CAPSULE_TIMEOUT_SECS: u64 = 5 * 60;
+/// Exact provider capsule whose allowlisted loopback inference may legitimately
+/// outlast the generic direct-interceptor deadline on CPU-only appliances.
+const LOCAL_PROVIDER_CAPSULE_ID: &str = "astrid-capsule-openai-compat";
+/// Small guest-side allowance for request construction and terminal parsing
+/// around the independently bounded host waits.
+const LOCAL_PROVIDER_GUEST_GRACE_SECS: u64 = 30;
+/// The provider guest must be allowed to resume after the longest admitted
+/// local response-header wait and one complete inter-chunk wait. ReAct's own
+/// streaming watchdog remains the outer model-turn authority.
+const LOCAL_PROVIDER_WASM_CAPSULE_TIMEOUT_SECS: u64 =
+    host::http::LOCAL_HTTP_STREAM_START_TIMEOUT_MAX_SECS
+        .saturating_add(host::http::HTTP_STREAM_READ_TIMEOUT_SECS)
+        .saturating_add(LOCAL_PROVIDER_GUEST_GRACE_SECS);
 
 /// Epoch tick interval for the background epoch incrementer thread.
 /// Each tick increments the engine epoch by 1, so the effective timeout
 /// granularity is `EPOCH_TICK_INTERVAL * epoch_deadline`.
 const EPOCH_TICK_INTERVAL: std::time::Duration = std::time::Duration::from_millis(100);
+
+/// A practically unbounded deadline delta that remains safe when Wasmtime
+/// adds it to a non-zero current epoch.
+const IDLE_EPOCH_DEADLINE_TICKS: u64 = u64::MAX / 2;
+
+fn wasm_capsule_timeout_seconds(capsule_id: &str) -> u64 {
+    if capsule_id == LOCAL_PROVIDER_CAPSULE_ID {
+        LOCAL_PROVIDER_WASM_CAPSULE_TIMEOUT_SECS
+    } else {
+        WASM_CAPSULE_TIMEOUT_SECS
+    }
+}
+
+fn seconds_to_epoch_ticks(seconds: u64) -> u64 {
+    let tick_ms = u64::try_from(EPOCH_TICK_INTERVAL.as_millis()).unwrap_or(u64::MAX);
+    seconds
+        .saturating_mul(1000)
+        .checked_div(tick_ms)
+        .unwrap_or(u64::MAX)
+}
+
+fn wasm_capsule_timeout_ticks(capsule_id: &str) -> u64 {
+    seconds_to_epoch_ticks(wasm_capsule_timeout_seconds(capsule_id))
+}
 
 /// Executes WASM Components via the wasmtime Component Model.
 ///
@@ -514,6 +551,7 @@ impl ExecutionEngine for WasmEngine {
                     principal: ctx.principal.clone(),
                     capsule_uuid,
                     caller_context: None,
+                    run_loop_trace_context: None,
                     invocation_kv: None,
                     capsule_log,
                     capsule_id: crate::capsule::CapsuleId::new(&manifest.package.name)
@@ -593,23 +631,12 @@ impl ExecutionEngine for WasmEngine {
                 // Memory limit: 64 MB per capsule (matches old Extism setting).
                 store.limiter(|state| &mut state.store_limits);
 
-                // Epoch-based timeout for non-daemon capsules.
-                // Long-lived capsules (uplinks, run-loop daemons) must not
-                // have a wall-clock timeout. Other capsules get a safety
-                // timeout — generous enough for interceptors that do streaming HTTP
-                // (e.g. LLM providers) while still catching runaways.
-                if !starts_run_loop {
-                    // Each epoch tick is EPOCH_TICK_INTERVAL (100ms). Set the
-                    // deadline so total timeout ≈ WASM_CAPSULE_TIMEOUT_SECS.
-                    let deadline =
-                        WASM_CAPSULE_TIMEOUT_SECS * 1000 / EPOCH_TICK_INTERVAL.as_millis() as u64;
-                    store.set_epoch_deadline(deadline);
-                } else {
-                    // Long-lived capsules: set deadline to u64::MAX so the epoch
-                    // ticker doesn't trap them. Without this, the default deadline
-                    // of 0 would cause an immediate trap on the first tick.
-                    store.set_epoch_deadline(u64::MAX);
-                }
+                // Keep persistent stores unbounded while idle. Direct
+                // interceptor calls install a scoped deadline immediately
+                // before entering the guest and restore this idle value after
+                // returning. Run-loop capsules remain unbounded for their
+                // lifetime.
+                store.set_epoch_deadline(IDLE_EPOCH_DEADLINE_TICKS);
 
                 let mut linker: Linker<HostState> = Linker::new(&wt_engine);
 
@@ -935,10 +962,16 @@ impl ExecutionEngine for WasmEngine {
 
         // Call the typed Component Model export. The action name and payload
         // are passed as separate typed parameters (no JSON envelope needed).
+        let timeout_ticks = wasm_capsule_timeout_ticks(&self.manifest.package.name);
         let result = tokio::task::block_in_place(|| {
             let mut s = store
                 .lock()
                 .map_err(|e| CapsuleError::WasmError(format!("store lock poisoned: {e}")))?;
+            // `set_epoch_deadline` is relative to the engine's current epoch.
+            // The direct instance path is used only by short-lived capsules;
+            // run-loop capsules keep their instance inside the background
+            // task and cannot reach this call.
+            s.set_epoch_deadline(timeout_ticks);
             instance
                 .call_astrid_hook_trigger(&mut *s, action, payload)
                 .map_err(|e| CapsuleError::WasmError(format!("astrid_hook_trigger failed: {e:?}")))
@@ -959,6 +992,10 @@ impl ExecutionEngine for WasmEngine {
                     poisoned.into_inner()
                 },
             };
+            // An invocation deadline must not become a process-age deadline
+            // after the guest returns. Restore the unbounded idle state before
+            // any future call can enter this store.
+            s.set_epoch_deadline(IDLE_EPOCH_DEADLINE_TICKS);
             let state = s.data_mut();
             state.caller_context = None;
             state.invocation_kv = None;
@@ -1078,6 +1115,7 @@ pub fn run_lifecycle(
         principal: astrid_core::PrincipalId::default(),
         capsule_uuid: uuid::Uuid::new_v4(),
         caller_context: None,
+        run_loop_trace_context: None,
         invocation_kv: None,
         capsule_log: None,
         capsule_id: cfg.capsule_id.clone(),
@@ -1264,6 +1302,90 @@ fn wasm_exports_contain(name: &str, wasm_bytes: &[u8]) -> bool {
 mod tests {
     use super::*;
     use std::sync::{Arc, Mutex};
+
+    #[test]
+    fn direct_interceptor_deadlines_are_capsule_specific_and_ordered() {
+        assert_eq!(wasm_capsule_timeout_seconds("ordinary-capsule"), 300);
+        assert_eq!(wasm_capsule_timeout_seconds(LOCAL_PROVIDER_CAPSULE_ID), 570);
+        assert_eq!(
+            wasm_capsule_timeout_seconds("astrid-capsule-openai-compat-shadow"),
+            300
+        );
+        assert_eq!(wasm_capsule_timeout_ticks("ordinary-capsule"), 3000);
+        assert_eq!(wasm_capsule_timeout_ticks(LOCAL_PROVIDER_CAPSULE_ID), 5700);
+        assert_eq!(
+            LOCAL_PROVIDER_WASM_CAPSULE_TIMEOUT_SECS,
+            host::http::LOCAL_HTTP_STREAM_START_TIMEOUT_MAX_SECS
+                + host::http::HTTP_STREAM_READ_TIMEOUT_SECS
+                + LOCAL_PROVIDER_GUEST_GRACE_SECS
+        );
+        assert!(
+            wasm_capsule_timeout_seconds(LOCAL_PROVIDER_CAPSULE_ID)
+                > host::http::LOCAL_HTTP_STREAM_START_TIMEOUT_MAX_SECS
+                    + host::http::HTTP_STREAM_READ_TIMEOUT_SECS
+        );
+        assert!(IDLE_EPOCH_DEADLINE_TICKS > wasm_capsule_timeout_ticks(LOCAL_PROVIDER_CAPSULE_ID));
+    }
+
+    fn call_guest_after_synthetic_host_delay(
+        deadline_ticks: u64,
+        host_delay_ticks: u64,
+    ) -> Result<i32, wasmtime::Error> {
+        let mut config = wasmtime::Config::new();
+        config.epoch_interruption(true);
+        let engine = wasmtime::Engine::new(&config)?;
+        let module = wasmtime::Module::new(
+            &engine,
+            r#"(module
+                (import "host" "delayed-return" (func $delayed-return))
+                (func (export "run") (result i32) (local $check i32)
+                    call $delayed-return
+                    (loop $check-deadline
+                        local.get $check
+                        i32.const 1
+                        i32.add
+                        local.tee $check
+                        i32.const 2
+                        i32.lt_u
+                        br_if $check-deadline)
+                    i32.const 7))"#,
+        )?;
+        let mut linker = wasmtime::Linker::new(&engine);
+        let delayed_engine = engine.clone();
+        linker.func_wrap("host", "delayed-return", move || {
+            for _ in 0..host_delay_ticks {
+                delayed_engine.increment_epoch();
+            }
+        })?;
+        let mut store = wasmtime::Store::new(&engine, ());
+        store.set_epoch_deadline(deadline_ticks);
+        let instance = linker.instantiate(&mut store, &module)?;
+        let run = instance.get_typed_func::<(), i32>(&mut store, "run")?;
+        run.call(&mut store, ())
+    }
+
+    #[test]
+    fn local_provider_guest_resumes_after_delayed_host_return_beyond_default_deadline() {
+        // Mirrors the observed 317.2-second local provider response without a
+        // wall-clock sleep: advance the Wasmtime epoch while the host import is
+        // running, then verify the guest can execute its terminal instructions.
+        let observed_delay_ticks = seconds_to_epoch_ticks(317);
+        assert!(
+            call_guest_after_synthetic_host_delay(
+                wasm_capsule_timeout_ticks("ordinary-capsule"),
+                observed_delay_ticks,
+            )
+            .is_err()
+        );
+        assert_eq!(
+            call_guest_after_synthetic_host_delay(
+                wasm_capsule_timeout_ticks(LOCAL_PROVIDER_CAPSULE_ID),
+                observed_delay_ticks,
+            )
+            .unwrap(),
+            7
+        );
+    }
 
     /// Poisons a mutex by panicking while holding the lock.
     fn poison_mutex<T: Send + 'static>(mutex: &Arc<Mutex<T>>) {
@@ -1532,7 +1654,7 @@ mod tests {
         // Export section
         let mut exports = ExportSection::new();
         for (i, name) in export_names.iter().enumerate() {
-            exports.export(*name, ExportKind::Func, i as u32);
+            exports.export(name, ExportKind::Func, i as u32);
         }
         module.section(&exports);
 

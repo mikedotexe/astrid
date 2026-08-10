@@ -1,0 +1,19 @@
+[package]
+name = "astrid-spectral-core"
+version = "0.1.0"
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+description = "Pure substrate-aware spectral analysis for Astrid CPU-edge runtimes"
+
+[dependencies]
+astrid-minime-protocol.workspace = true
+hex.workspace = true
+serde = { workspace = true, features = ["derive"] }
+serde_json.workspace = true
+sha2.workspace = true
+
+[lints]
+workspace = true

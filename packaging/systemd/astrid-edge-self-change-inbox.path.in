@@ -1,0 +1,15 @@
+[Unit]
+Description=Wake the immutable Astrid CPU-edge supervisor for a published candidate
+Documentation=https://github.com/mikedotexe/astrid
+Requires=astrid-edge-generation-guard.service
+After=astrid-edge-generation-guard.service
+
+[Path]
+# The marker is only a wakeup. The supervisor independently authenticates the
+# adjacent signed intent envelope before any candidate or deployment action.
+PathExistsGlob=@@INBOX_ROOT@@/candidate-ready-*.json
+MakeDirectory=false
+Unit=astrid-edge-self-change-supervisor.service
+
+[Install]
+WantedBy=multi-user.target

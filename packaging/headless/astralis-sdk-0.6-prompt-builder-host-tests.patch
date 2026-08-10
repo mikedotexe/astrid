@@ -1,0 +1,63 @@
+diff --git a/src/lib.rs b/src/lib.rs
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -171,6 +171,7 @@ const DEFAULT_HOOK_POLL_TIMEOUT_MS: u64 = 2000;
+
+ /// Maximum number of hook responses to collect before proceeding.
+ #[cfg(test)]
++#[allow(dead_code)]
+ const MAX_HOOK_RESPONSES: usize = 50;
+
+ /// A hook response paired with its source capsule identifier.
+@@ -361,11 +362,11 @@ fn fire_before_prompt_build(request: &AssembleRequest, config: &Config) -> Vec<H
+
+ /// Parse a single IPC message and extract hook responses with source capsule IDs.
+ #[cfg(test)]
++#[allow(dead_code)]
+ fn parse_hook_message(msg: &ipc::Message) -> Option<Vec<SourcedHookResponse>> {
+     let payload: serde_json::Value = match serde_json::from_str(&msg.payload) {
+         Ok(v) => v,
+-        Err(e) => {
+-            log::warn(format!("failed to deserialize hook response payload: {e}"));
++        Err(_) => {
+             return None;
+         }
+     };
+@@ -409,8 +410,7 @@ fn parse_hook_responses(poll_bytes: &[u8]) -> Option<Vec<SourcedHookResponse>> {
+     let envelope: serde_json::Value = match serde_json::from_slice(poll_bytes) {
+         Ok(v) => v,
+-        Err(e) => {
+-            log::warn(format!("failed to deserialize hook response envelope: {e}"));
++        Err(_) => {
+             return None;
+         }
+     };
+@@ -814,14 +814,11 @@ impl PromptBuilder {
+
+-        loop {
+-            // Block until a message arrives (up to 60s), eliminating busy-spin polling.
+-            match ipc::recv(&sub, 60_000) {
+-                Ok(result) => {
+-                    if !result.messages.is_empty() {
+-                        handle_poll_result(&result, &config);
+-                    }
+-                }
+-                Err(_) => break,
++        // Block until a message arrives (up to 60s), eliminating busy-spin polling.
++        while let Ok(result) = ipc::recv(&sub, 60_000) {
++            if !result.messages.is_empty() {
++                handle_poll_result(&result, &config);
+             }
+
+             // Drain hook/after topics to prevent backpressure.
+diff --git a/src/tests.rs b/src/tests.rs
+--- a/src/tests.rs
++++ b/src/tests.rs
+@@ -148,6 +148,7 @@ fn empty_system_prompt_override_skipped_real_override_wins() {
+ }
+
+ #[test]
++#[allow(clippy::unnecessary_min_or_max)]
+ fn max_iterations_at_least_one() {
+     // Even with a very small timeout, we should get at least 1 iteration.
+     let iterations = (5u64 / 10u64).max(1);

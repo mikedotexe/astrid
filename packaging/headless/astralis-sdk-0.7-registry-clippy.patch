@@ -1,0 +1,18 @@
+diff --git a/src/lib.rs b/src/lib.rs
+index 2fbf373..fbde32a 100644
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -477,10 +477,7 @@ impl RegistryCapsule {
+         // All four subscriptions are RAII (`Subscription`); their `Drop`
+         // releases the kernel-side resource at scope exit, so no manual
+         // `unsubscribe` is required.
+-        loop {
+-            match sub.recv(5000) {
+-                Ok(result) => dispatch_registry_messages(&result),
+-                Err(_) => break,
+-            }
++        while let Ok(result) = sub.recv(5000) {
++            dispatch_registry_messages(&result);
+-
++
+             // Drain CLI command messages (non-blocking).

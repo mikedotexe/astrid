@@ -1,0 +1,145 @@
+diff --git a/src/lib.rs b/src/lib.rs
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -78,5 +78,67 @@ const COMPACTION_TARGET_NUM: u64 = 9;
+ const COMPACTION_TARGET_DENOM: u64 = 10;
+ 
++/// Visible marker used when the appliance repairs an absent action declaration.
++///
++/// The only synthetic action is LISTEN, which cannot mutate the workspace.
++const SAFE_NEXT_REPAIR_MARKER: &str =
++    "[Local contract repair: no valid final action was emitted; defaulting safely to LISTEN.]";
++
++/// Return whether the final non-empty line is a complete sovereign NEXT action.
++fn has_valid_sovereign_next(text: &str) -> bool {
++    let Some(final_line) = text.lines().rev().find(|line| !line.trim().is_empty()) else {
++        return false;
++    };
++    let final_line = final_line.trim();
++    if matches!(final_line, "NEXT: LISTEN" | "NEXT: REST") {
++        return true;
++    }
++    [
++        "NEXT: JOURNAL ",
++        "NEXT: REMEMBER ",
++        "NEXT: SELF_STUDY ",
++        "NEXT: PROPOSE ",
++        "NEXT: NOTICE ",
++        "NEXT: DAYDREAM ",
++        "NEXT: ASPIRE ",
++        "NEXT: RESEARCH ",
++        "NEXT: PLAN ",
++        "NEXT: DRAFT ",
++        "NEXT: CHECK ",
++    ]
++    .iter()
++    .any(|prefix| {
++        final_line
++            .strip_prefix(prefix)
++            .is_some_and(|argument| !argument.trim().is_empty())
++    })
++        || final_line.strip_prefix("NEXT: REVISE ").is_some_and(|argument| {
++            argument
++                .split_once("::")
++                .is_some_and(|(artifact, revision)| {
++                    !artifact.trim().is_empty() && !revision.trim().is_empty()
++                })
++        })
++}
++
++/// Preserve a valid model-authored declaration or append a transparent,
++/// non-writing LISTEN fallback.
++fn ensure_sovereign_next(text: &str) -> String {
++    let trimmed = text.trim_end();
++    if has_valid_sovereign_next(trimmed) {
++        return trimmed.to_owned();
++    }
++    if trimmed.is_empty() {
++        format!("{SAFE_NEXT_REPAIR_MARKER}\nNEXT: LISTEN")
++    } else {
++        format!("{trimmed}\n\n{SAFE_NEXT_REPAIR_MARKER}\nNEXT: LISTEN")
++    }
++}
++
++/// Whether the appliance-specific sovereign NEXT repair is enabled.
++fn sovereign_next_repair_enabled() -> bool {
++    env::var("sovereign_next_repair").is_ok_and(|value| value.eq_ignore_ascii_case("true"))
++}
++
+ /// Current wall-clock time as milliseconds since UNIX epoch, or 0 if unavailable.
+ fn now_ms() -> u64 {
+     time::now()
+@@ -1177,18 +1239,23 @@ impl ReactCapsule {
+                 }
+             }
+         } else if !state.response_text.is_empty() {
++            let final_text = if sovereign_next_repair_enabled() {
++                ensure_sovereign_next(&state.response_text)
++            } else {
++                state.response_text.trim_end().to_owned()
++            };
+             // Text response with no tool calls - conversation turn complete.
+             // Use atomic append to confirm delivery to session.
+             Self::fetch_messages_with_append(
+                 &state.session_id,
+-                &[Message::assistant(&state.response_text)],
++                &[Message::assistant(&final_text)],
+             )?;
+ 
+             // Publish final response to platforms
+             ipc::publish_json(
+                 "agent.v1.response",
+                 &IpcPayload::AgentResponse {
+-                    text: state.response_text.clone(),
++                    text: final_text,
+                     is_final: true,
+                     session_id: state.session_id.clone(),
+                 },
+@@ -1544,3 +1611,47 @@ fn parse_json_array_field<T: serde::de::DeserializeOwned>(
+         })
+         .unwrap_or_default()
+ }
++
++#[cfg(test)]
++mod sovereign_next_tests {
++    use super::{SAFE_NEXT_REPAIR_MARKER, ensure_sovereign_next, has_valid_sovereign_next};
++
++    #[test]
++    fn accepts_only_complete_supported_final_actions() {
++        assert!(has_valid_sovereign_next("A response.\nNEXT: LISTEN"));
++        assert!(has_valid_sovereign_next(
++            "A response.\nNEXT: SELF_STUDY What changes after input?"
++        ));
++        assert!(has_valid_sovereign_next(
++            "A response.\nNEXT: REVISE draft_123.md :: clarify the distinction"
++        ));
++        assert!(!has_valid_sovereign_next(
++            "A response.\nNEXT: REVISE draft_123.md"
++        ));
++        assert!(!has_valid_sovereign_next(
++            "NEXT: JOURNAL not final\nA response."
++        ));
++        assert!(!has_valid_sovereign_next("A response.\nNEXT: JOURNAL"));
++        assert!(!has_valid_sovereign_next("A response.\nNEXT: RUN"));
++    }
++
++    #[test]
++    fn preserves_a_model_authored_action() {
++        assert_eq!(
++            ensure_sovereign_next("A response.\n\nNEXT: REST\n"),
++            "A response.\n\nNEXT: REST"
++        );
++    }
++
++    #[test]
++    fn repairs_only_to_a_transparent_non_writing_listen() {
++        assert_eq!(
++            ensure_sovereign_next("A response without an action."),
++            format!("A response without an action.\n\n{SAFE_NEXT_REPAIR_MARKER}\nNEXT: LISTEN")
++        );
++        assert_eq!(
++            ensure_sovereign_next("A response.\nNEXT: JOURNAL"),
++            format!("A response.\nNEXT: JOURNAL\n\n{SAFE_NEXT_REPAIR_MARKER}\nNEXT: LISTEN")
++        );
++    }
++}

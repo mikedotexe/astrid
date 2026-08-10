@@ -1,6 +1,6 @@
 use super::*;
 use astrid_events::EventBus;
-use astrid_events::ipc::IpcPayload;
+use astrid_events::ipc::{AgentResponseProvenanceV1, IpcMessage, IpcPayload, IpcTraceContextV1};
 
 /// Publish N IPC messages to a bus and return a receiver subscribed to them.
 fn publish_ipc_messages(bus: &EventBus, topic: &str, count: usize) {
@@ -231,6 +231,46 @@ fn publish_known_type_tag_deserializes_correctly() {
 }
 
 #[test]
+fn publish_legacy_sdk_raw_agent_response_preserves_typed_provenance() {
+    // Astralis SDK 0.6 predates the host's additive provenance field.  The
+    // ReAct compatibility capsule therefore publishes raw JSON, which must
+    // traverse the exact production guest-host decoder as a typed response.
+    let input = serde_json::json!({
+        "type": "agent_response",
+        "text": "A bounded reflection.\nNEXT: REST",
+        "is_final": true,
+        "session_id": "edge-autonomous-g256",
+        "response_provenance": "model_authored"
+    });
+    let payload = deserialize_publish_payload(&serde_json::to_vec(&input).unwrap()).unwrap();
+
+    assert!(matches!(
+        payload,
+        IpcPayload::AgentResponse {
+            text,
+            is_final: true,
+            session_id,
+            response_provenance: Some(AgentResponseProvenanceV1::ModelAuthored),
+        } if text == "A bounded reflection.\nNEXT: REST"
+            && session_id == "edge-autonomous-g256"
+    ));
+}
+
+#[test]
+fn publish_raw_agent_response_rejects_unknown_provenance_as_untyped_custom() {
+    let input = serde_json::json!({
+        "type": "agent_response",
+        "text": "spoofed",
+        "is_final": true,
+        "session_id": "edge-autonomous-g256",
+        "response_provenance": "operator_claimed_model_authored"
+    });
+    let payload = deserialize_publish_payload(&serde_json::to_vec(&input).unwrap()).unwrap();
+
+    assert!(matches!(payload, IpcPayload::Custom { .. }));
+}
+
+#[test]
 fn publish_known_tag_with_malformed_fields_falls_to_custom() {
     // `user_input` requires a `text` field. Without it, deserialization
     // fails and the .unwrap_or path produces Custom.
@@ -244,6 +284,102 @@ fn publish_known_tag_with_malformed_fields_falls_to_custom() {
         },
         other => panic!("expected Custom (malformed known tag), got {other:?}"),
     }
+}
+
+#[test]
+fn capsule_publish_creates_a_child_span_without_changing_authority_fields() {
+    let trace = IpcTraceContextV1::root(uuid::Uuid::new_v4(), "session", Some("chain".to_string()));
+    let caller = IpcMessage::new(
+        "react.v1.request",
+        IpcPayload::Custom {
+            data: serde_json::json!({"authority": "unchanged"}),
+        },
+        uuid::Uuid::new_v4(),
+    )
+    .with_principal("operator")
+    .with_trace(trace.clone());
+    let child = child_trace_context(Some(&caller), None).unwrap();
+
+    assert_eq!(child.trace_id, trace.trace_id);
+    assert_eq!(child.parent_span_id, Some(trace.span_id));
+    assert_eq!(child.session_id, trace.session_id);
+    assert_eq!(child.chain_id, trace.chain_id);
+    assert_eq!(caller.principal.as_deref(), Some("operator"));
+}
+
+#[test]
+fn direct_invocation_trace_precedes_run_loop_trace() {
+    let direct = IpcTraceContextV1::root(uuid::Uuid::new_v4(), "direct", None);
+    let run_loop = IpcTraceContextV1::root(uuid::Uuid::new_v4(), "run-loop", None);
+    let direct_message = IpcMessage::new(
+        "direct.request",
+        IpcPayload::Custom {
+            data: serde_json::json!({}),
+        },
+        uuid::Uuid::new_v4(),
+    )
+    .with_trace(direct.clone());
+    let run_loop_message = IpcMessage::new(
+        "run.loop.request",
+        IpcPayload::Custom {
+            data: serde_json::json!({}),
+        },
+        uuid::Uuid::new_v4(),
+    )
+    .with_trace(run_loop);
+
+    let child = child_trace_context(Some(&direct_message), Some(&run_loop_message)).unwrap();
+    assert_eq!(child.trace_id, direct.trace_id);
+    assert_eq!(child.parent_span_id, Some(direct.span_id));
+}
+
+#[test]
+fn run_loop_delivery_preserves_each_queued_messages_exact_trace() {
+    let bus = EventBus::new();
+    let mut receiver = bus.subscribe_topic("turn.request");
+    let first = IpcTraceContextV1::root(uuid::Uuid::new_v4(), "same-session", None);
+    let second = IpcTraceContextV1::root(uuid::Uuid::new_v4(), "same-session", None);
+    for trace in [&first, &second] {
+        bus.publish(AstridEvent::Ipc {
+            metadata: EventMetadata::new("test"),
+            message: IpcMessage::new(
+                "turn.request",
+                IpcPayload::Custom {
+                    data: serde_json::json!({}),
+                },
+                uuid::Uuid::new_v4(),
+            )
+            .with_trace(trace.clone()),
+        });
+    }
+
+    let first_event = receiver.try_recv();
+    let first_result = single_event_result(
+        first_event.as_deref(),
+        util::MAX_GUEST_PAYLOAD_LEN as usize,
+        receiver.drain_lagged(),
+    );
+    assert_eq!(first_result.messages.len(), 1);
+    assert_eq!(
+        child_trace_context(None, first_result.messages.first())
+            .unwrap()
+            .trace_id,
+        first.trace_id
+    );
+
+    let second_event = receiver.try_recv();
+    let second_result = single_event_result(
+        second_event.as_deref(),
+        util::MAX_GUEST_PAYLOAD_LEN as usize,
+        receiver.drain_lagged(),
+    );
+    assert_eq!(second_result.messages.len(), 1);
+    assert_eq!(
+        child_trace_context(None, second_result.messages.first())
+            .unwrap()
+            .trace_id,
+        second.trace_id
+    );
 }
 
 #[test]

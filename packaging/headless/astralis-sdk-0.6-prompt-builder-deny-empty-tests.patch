@@ -1,0 +1,59 @@
+diff --git a/src/lib.rs b/src/lib.rs
+index eebb1f3..ef9d78d 100644
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -511,6 +511,18 @@ fn should_expose_tools(request: &AssembleRequest, config: &Config) -> bool {
+ /// prompt-builder-specific invalidation event. The fan-out is cheap compared
+ /// with local inference and avoids silently serving a stale authority surface.
+ /// Collected schemas are deduplicated by name.
++fn select_allowlisted_tool_schemas(
++    mut schemas: Vec<serde_json::Value>,
++    tool_allowlist: &std::collections::HashSet<String>,
++) -> Vec<serde_json::Value> {
++    schemas.retain(|tool| {
++        tool.get("name")
++            .and_then(|name| name.as_str())
++            .is_some_and(|name| tool_allowlist.contains(name))
++    });
++    schemas
++}
++
+ fn collect_tool_schemas(
+     tool_allowlist: &std::collections::HashSet<String>,
+ ) -> Vec<serde_json::Value> {
+@@ -570,10 +582,6 @@ fn collect_tool_schemas(
+     let discovered_count = all_tools.len();
+     // An empty model tool allowlist exposes no schemas. Private capsules must
+     // never become model-visible because a profile omitted configuration.
+-    all_tools.retain(|tool| {
+-        tool.get("name")
+-            .and_then(|name| name.as_str())
+-            .is_some_and(|name| tool_allowlist.contains(name))
+-    });
++    all_tools = select_allowlisted_tool_schemas(all_tools, tool_allowlist);
+-
++
+     if tool_allowlist.is_empty() {
+diff --git a/src/tests.rs b/src/tests.rs
+index daf5417..c3bb50a 100644
+--- a/src/tests.rs
++++ b/src/tests.rs
+@@ -1 +1,18 @@
++#[test]
++fn model_tool_allowlist_is_deny_all_when_empty_and_exact_when_populated() {
++    let discovered = vec![
++        serde_json::json!({"name": "search_web"}),
++        serde_json::json!({"name": "read_owned_artifact"}),
++        serde_json::json!({"description": "malformed without a name"}),
++    ];
++    assert!(
++        select_allowlisted_tool_schemas(discovered.clone(), &std::collections::HashSet::new())
++            .is_empty()
++    );
++
++    let allowlist = ["search_web".to_string()].into_iter().collect();
++    let selected = select_allowlisted_tool_schemas(discovered, &allowlist);
++    assert_eq!(selected, [serde_json::json!({"name": "search_web"})]);
++}
++
+ use super::*;

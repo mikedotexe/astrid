@@ -5,7 +5,7 @@
 /// This file defines the canonical Component Model contract between the Astrid
 /// host runtime and WASM capsule guests.
 ///
-/// The host exposes 49 functions across 11 domain-specific interfaces. All
+/// The host exposes 53 functions across 11 domain-specific interfaces. All
 /// operations are capability-gated and audited by the Astrid runtime. Capsules
 /// never bypass the security model — the host enforces workspace boundaries,
 /// budget limits, capability tokens, and per-principal scoping on every call.
@@ -128,6 +128,59 @@ interface types {
         mtime: option<u64>,
     }
 
+    /// Entry kind returned by no-follow metadata inspection.
+    enum file-entry-kind {
+        /// A regular file.
+        regular-file,
+        /// A directory.
+        directory,
+        /// A symbolic link. Its target has not been followed.
+        symlink,
+        /// A device, socket, FIFO, or another unsupported entry kind.
+        other,
+    }
+
+    /// Stable metadata for a path inspected without following symlinks.
+    record no-follow-file-stat {
+        /// File size in bytes.
+        size: u64,
+        /// The entry kind at the exact requested path.
+        kind: file-entry-kind,
+        /// Last modification time (UNIX epoch seconds), if available.
+        mtime: option<u64>,
+        /// Hard-link count. Secure bounded reads require this to be exactly one.
+        hard-link-count: u64,
+    }
+
+    /// One regular, single-link entry returned by a bounded no-follow
+    /// directory listing.
+    record bounded-regular-file-entry {
+        /// UTF-8 basename relative to the exact opened directory.
+        basename: string,
+        /// Stable metadata captured without following the entry.
+        stat: no-follow-file-stat,
+    }
+
+    /// Which bounded, no-follow portion of a regular file to read.
+    enum bounded-file-read-mode {
+        /// Read the entire file, failing if it exceeds `maximum-bytes`.
+        whole,
+        /// Read at most `maximum-bytes` from the end of the captured file.
+        tail,
+    }
+
+    /// Stable bytes returned by a bounded no-follow read.
+    record bounded-file-read {
+        /// Captured bytes. This never exceeds the caller or host bound.
+        data: list<u8>,
+        /// Byte offset of `data` within the captured file.
+        offset: u64,
+        /// Stable file size captured for this read.
+        captured-size: u64,
+        /// Whether `offset` begins immediately after a newline (or at byte zero).
+        starts-at-line-boundary: bool,
+    }
+
     /// Request to spawn a host process.
     record spawn-request {
         /// Command to execute.
@@ -186,9 +239,27 @@ interface types {
         timestamp: string,
     }
 
+    /// Caller context including kernel-owned producer attestation.
+    ///
+    /// This is a separate additive record so capsules compiled against the
+    /// original `caller-context` function remain link-compatible.
+    record attested-caller-context {
+        /// The acting principal for this invocation.
+        principal: option<string>,
+        /// UUID carried by the originating IPC message.
+        source-id: string,
+        /// Kernel-attested producer class, when present and supported.
+        producer-kind: option<string>,
+        /// Kernel-attested producer identity, when present and supported.
+        producer-id: option<string>,
+        /// ISO 8601 timestamp of the originating message.
+        timestamp: string,
+    }
+
     /// IPC message envelope returned by `ipc-poll` and `ipc-recv`.
     record ipc-envelope {
-        /// List of IPC messages received since last poll/recv.
+        /// Zero or one IPC message. The one-message boundary lets the host bind
+        /// a run-loop capsule's subsequent publish to this exact caller trace.
         messages: list<ipc-message>,
         /// Number of messages dropped due to buffer overflow.
         dropped: u64,
@@ -349,7 +420,7 @@ interface types {
 /// access per-principal temporary storage. Attempts to escape any boundary
 /// return an error. Symlink traversal is canonicalized to prevent bypass.
 interface fs {
-    use types.{file-stat};
+    use types.{bounded-file-read, bounded-file-read-mode, bounded-regular-file-entry, file-stat, no-follow-file-stat};
 
     /// Check whether a file or directory exists at the given path.
     ///
@@ -372,6 +443,40 @@ interface fs {
     ///
     /// Security-gated: requires file-read capability.
     fs-stat: func(path: string) -> result<file-stat, string>;
+
+    /// Inspect the exact path entry without following any symbolic-link component.
+    ///
+    /// The operation fails closed when an intermediate component is a symlink or
+    /// when the backing VFS cannot provide an exact host-path identity. The final
+    /// entry may be reported as `symlink`, but its target is never inspected.
+    /// Security-gated: requires file-read capability.
+    fs-lstat-nofollow: func(path: string) -> result<no-follow-file-stat, string>;
+
+    /// List bounded regular files from an exact directory without following
+    /// any symbolic-link component.
+    ///
+    /// The host opens every directory component with no-follow semantics,
+    /// scans no more than its immutable entry ceiling, and returns only
+    /// non-symlink regular files with one hard link and size at or below
+    /// `maximum-bytes`. Symlinks, directories, devices, sockets, FIFOs, and
+    /// hard-linked files are omitted at the authorization boundary.
+    /// Security-gated: requires file-read capability.
+    fs-list-bounded-regular-files-nofollow: func(
+        path: string,
+        maximum-bytes: u64,
+    ) -> result<list<bounded-regular-file-entry>, string>;
+
+    /// Read a stable, bounded regular file without following symbolic links.
+    ///
+    /// The host applies its own maximum in addition to `maximum-bytes`. The
+    /// operation rejects every symlink component, non-regular files, hard-linked
+    /// files, and identity/size/mtime changes before, during, or after the read.
+    /// Security-gated: requires file-read capability.
+    fs-read-bounded-nofollow: func(
+        path: string,
+        maximum-bytes: u64,
+        mode: bounded-file-read-mode,
+    ) -> result<bounded-file-read, string>;
 
     /// Remove a file at the given path.
     ///
@@ -424,13 +529,17 @@ interface ipc {
 
     /// Non-blocking poll for messages on a subscription.
     ///
-    /// Returns the messages received since last poll, plus drop/lag counts.
+    /// Returns at most one queued message plus drop/lag counts; later messages
+    /// remain queued. Until the next poll/recv, the host retains only that
+    /// message's observational trace for subsequent guest publishes. It grants
+    /// no principal or capability authority.
     ipc-poll: func(handle-id: u64) -> result<ipc-envelope, string>;
 
     /// Blocking receive on a subscription with timeout.
     ///
     /// Blocks the WASM thread until a message arrives, the timeout expires
-    /// (capped at 60s), or the capsule is unloaded.
+    /// (capped at 60s), or the capsule is unloaded. Returns at most one message
+    /// and installs only its observational trace as the run-loop publish parent.
     ipc-recv: func(handle-id: u64, timeout-ms: u64) -> result<ipc-envelope, string>;
 
     /// Get pre-registered interceptor handle mappings for run-loop capsules.
@@ -573,7 +682,7 @@ interface http {
 
 /// System-level runtime functions.
 interface sys {
-    use types.{log-level, caller-context, capability-check-request, capability-check-response};
+    use types.{log-level, caller-context, attested-caller-context, capability-check-request, capability-check-response};
 
     /// Read a configuration value from the capsule's manifest `[config]`.
     ///
@@ -586,6 +695,11 @@ interface sys {
     /// Returns the acting principal, originating capsule UUID, and message
     /// timestamp. Returns an empty context if no caller is available.
     get-caller: func() -> result<caller-context, string>;
+
+    /// Return the caller plus kernel-owned producer attestation. Unsupported
+    /// or absent producer claims are represented as `none`, never forwarded
+    /// as authority.
+    get-attested-caller: func() -> result<attested-caller-context, string>;
 
     /// Trigger a hook/interceptor fan-out to other capsules.
     ///
@@ -737,7 +851,7 @@ interface identity {
 world capsule {
     use types.{capsule-result};
 
-    // Host-provided imports (49 functions across 11 interfaces).
+    // Host-provided imports (53 functions across 11 interfaces).
     import fs;
     import ipc;
     import uplink;

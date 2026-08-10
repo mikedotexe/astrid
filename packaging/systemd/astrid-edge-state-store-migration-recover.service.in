@@ -1,0 +1,51 @@
+[Unit]
+Description=Reconcile interrupted pre-mount Astrid CPU-edge state-volume migration
+Documentation=file:@@ACTIVE_GENERATION_ROOT@@/docs/cpu-edge-self-evolution.md
+DefaultDependencies=no
+After=local-fs-pre.target
+Before=@@RUNTIME_MOUNT_UNIT@@ @@ROLLBACK_MOUNT_UNIT@@
+RequiresMountsFor=@@BACKING_ROOT@@
+
+[Service]
+Type=oneshot
+User=root
+Group=root
+ExecStartPre=/usr/bin/test -s /etc/astrid/edge-state-store.json
+ExecStartPre=/usr/bin/test -x /usr/libexec/astrid/astrid-edge-state-store
+ExecStart=/usr/bin/python3 -I -E -s /usr/libexec/astrid/astrid-edge-state-store recover --config /etc/astrid/edge-state-store.json
+RemainAfterExit=yes
+UMask=0077
+CapabilityBoundingSet=CAP_DAC_OVERRIDE CAP_FOWNER
+AmbientCapabilities=
+NoNewPrivileges=yes
+PrivateDevices=yes
+PrivateNetwork=yes
+# This service must complete before the two state mounts. PrivateTmp=yes adds
+# an implicit dependency on systemd-tmpfiles-setup.service, which is ordered
+# after local-fs.target and would create a cycle back through those mounts.
+PrivateTmp=no
+ProtectClock=yes
+ProtectControlGroups=yes
+ProtectHome=read-only
+ProtectHostname=yes
+ProtectKernelLogs=yes
+ProtectKernelModules=yes
+ProtectKernelTunables=yes
+ProtectSystem=strict
+ReadOnlyPaths=/etc/astrid/edge-state-store.json @@RUNTIME_IMAGE@@ @@ROLLBACK_IMAGE@@
+ReadWritePaths=@@RUNTIME_MOUNT_PARENT@@ @@ROLLBACK_MOUNT_PARENT@@ @@MIGRATION_ROOT@@
+NoExecPaths=/
+ExecPaths=/usr/bin/python3 /usr/bin/systemd-escape /usr/bin/test /usr/libexec/astrid/astrid-edge-state-store /usr/lib /usr/lib64 /lib /lib64
+RestrictAddressFamilies=AF_UNIX
+RestrictNamespaces=yes
+RestrictRealtime=yes
+RestrictSUIDSGID=yes
+LockPersonality=yes
+MemoryDenyWriteExecute=yes
+SystemCallArchitectures=native
+SystemCallErrorNumber=EPERM
+SystemCallFilter=@system-service
+SystemCallFilter=~@clock @debug @module @mount @obsolete @raw-io @reboot @swap
+
+[Install]
+WantedBy=multi-user.target

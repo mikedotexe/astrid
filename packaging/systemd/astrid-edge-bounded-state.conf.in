@@ -1,0 +1,10 @@
+[Unit]
+Requires=astrid-edge-state-store-verify.service
+After=astrid-edge-state-store-verify.service
+
+[Service]
+# Aggregate writes are bounded by the dedicated runtime ext4 image. Core dumps
+# and unbounded service log bursts must not consume its rollback reserve.
+LimitCORE=0
+LogRateLimitIntervalSec=30s
+LogRateLimitBurst=200

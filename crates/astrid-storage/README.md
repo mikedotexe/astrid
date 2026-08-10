@@ -5,18 +5,22 @@
 
 **The persistence layer. Disk for the OS.**
 
-An operating system needs disk. Astrid has two tiers: a raw key-value store for capsule data and a full query engine for system state. Both scale from a single embedded process to a distributed cluster through configuration alone. No code changes. Same API.
+An operating system needs disk. Astrid uses a raw key-value contract for
+capsule and system state. The embedded implementation is SurrealKV; larger
+deployments can place a compatible service behind the same contract.
 
-## Why two tiers
+## Storage model
 
-Capsules need fast, isolated byte storage. The audit log, capability store, and identity system need relations, graph traversal, and SurrealQL queries. Forcing both through the same interface wastes either simplicity or power. So they get separate tiers with separate backing stores, unified behind one crate.
+Capsules and kernel services need fast, isolated byte storage. Keeping this
+crate to that contract avoids shipping an unused query engine and its
+dependency graph in every appliance.
 
-| Deployment | KV backend | DB backend |
-|---|---|---|
-| Dev / single-agent | SurrealKV (embedded LSM-tree) | SurrealDB (embedded, SurrealKV) |
-| Production / multi-node | SurrealKV (embedded) | SurrealDB (over TiKV, Raft) |
+| Deployment | KV backend |
+|---|---|
+| Dev / single-agent | SurrealKV (embedded LSM-tree) |
+| Production / multi-node | Deployment-selected compatible KV service |
 
-The multi-node path exists in the type system and connection strings. It has not been deployed in production yet.
+The multi-node placement path has not been deployed in production yet.
 
 ## Namespace isolation
 
@@ -43,9 +47,8 @@ The `build_secret_store` convenience constructor picks the best available backen
 | Feature | Enables |
 |---|---|
 | `kv` | `SurrealKvStore` (persistent embedded KV) |
-| `db` | `Database` (SurrealDB query engine) |
 | `keychain` | `KeychainSecretStore` + `FallbackSecretStore` |
-| `full` | `kv` + `db` |
+| `full` | persistent KV support |
 
 `MemoryKvStore` and `KvSecretStore` are always available with no feature flags.
 

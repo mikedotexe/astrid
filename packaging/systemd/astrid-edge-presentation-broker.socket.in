@@ -1,0 +1,18 @@
+[Unit]
+Description=Astrid CPU-edge candidate presentation broker socket
+Documentation=https://github.com/mikedotexe/astrid
+
+[Socket]
+ListenStream=/run/astrid-edge-presentation/broker.sock
+SocketUser=root
+SocketGroup=@@RUNTIME_GROUP@@
+SocketMode=0660
+DirectoryMode=0755
+Accept=yes
+MaxConnections=1
+RemoveOnStop=yes
+FlushPending=yes
+Backlog=1
+
+[Install]
+WantedBy=sockets.target

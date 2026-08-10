@@ -1,0 +1,15 @@
+[Unit]
+Description=Sample active Astrid CPU-edge probation every five minutes
+Documentation=https://github.com/mikedotexe/astrid
+# The sampled service owns the fail-closed preflight checks so timer and direct
+# invocations share one authority boundary.
+
+[Timer]
+OnActiveSec=1min
+OnUnitActiveSec=285s
+AccuracySec=15s
+RandomizedDelaySec=0
+Unit=astrid-edge-self-change-probation-health.service
+
+[Install]
+WantedBy=timers.target

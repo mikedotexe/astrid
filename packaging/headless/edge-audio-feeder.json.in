@@ -1,0 +1,1 @@
+{"appliance_id":"@APPLIANCE_ID@","channels":@CHANNELS@,"device":"@DEVICE@","expected_peer_uid":@RUNTIME_UID@,"libasound_path":"@LIBASOUND_REALPATH@","libasound_sha256":"@LIBASOUND_SHA256@","sample_rate":@SAMPLE_RATE@,"schema":"astrid.edge.audio_feeder.config.v1"}

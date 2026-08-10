@@ -1,0 +1,15 @@
+[Unit]
+Description=Astrid CPU-edge immutable numeric ALSA feature socket
+Documentation=https://github.com/mikedotexe/astrid
+
+[Socket]
+ListenStream=/run/astrid-edge-self-change/audio-features.sock
+SocketUser=root
+SocketGroup=@AUDIO_CLIENT_GROUP@
+SocketMode=0660
+DirectoryMode=0755
+RemoveOnStop=yes
+Service=astrid-edge-audio-feeder.service
+
+[Install]
+WantedBy=sockets.target

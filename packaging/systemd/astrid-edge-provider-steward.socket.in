@@ -1,0 +1,18 @@
+[Unit]
+Description=Astrid CPU-edge steward inference gateway socket
+Documentation=https://github.com/mikedotexe/astrid
+
+[Socket]
+ListenStream=/run/astrid-edge-self-change/provider-steward.sock
+SocketUser=root
+SocketGroup=@@PROVIDER_STEWARD_GROUP@@
+SocketMode=0660
+DirectoryMode=0755
+Accept=no
+Service=astrid-edge-provider-broker@edge-steward.service
+RemoveOnStop=yes
+FlushPending=yes
+Backlog=4
+
+[Install]
+WantedBy=sockets.target

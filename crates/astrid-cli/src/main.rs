@@ -64,6 +64,22 @@ struct Cli {
     #[arg(long = "print-session")]
     print_session: bool,
 
+    /// Supply an observational activity trace ID for a headless prompt.
+    #[arg(long = "trace-id", hide = true)]
+    trace_id: Option<uuid::Uuid>,
+
+    /// Associate a headless prompt with an existing sovereign Action chain.
+    #[arg(long = "trace-chain-id", hide = true)]
+    trace_chain_id: Option<String>,
+
+    /// Override the headless per-message idle deadline for a supervised caller.
+    #[arg(
+        long = "headless-idle-timeout-seconds",
+        hide = true,
+        value_parser = clap::value_parser!(u64).range(1..=1_200)
+    )]
+    headless_idle_timeout_seconds: Option<u64>,
+
     /// Render the TUI to stdout as text snapshots instead of an interactive terminal.
     /// Each significant event (input, response, tool call, approval) produces a frame.
     /// Requires --prompt. Useful for automated testing and CI.
@@ -333,6 +349,11 @@ async fn main() -> Result<()> {
             cli.auto_approve,
             cli.session_name,
             cli.print_session,
+            commands::headless::HeadlessControl {
+                trace_id: cli.trace_id,
+                trace_chain_id: cli.trace_chain_id,
+                idle_timeout_seconds: cli.headless_idle_timeout_seconds,
+            },
         )
         .await;
     }
@@ -349,6 +370,11 @@ async fn main() -> Result<()> {
                 cli.auto_approve,
                 cli.session_name,
                 cli.print_session,
+                commands::headless::HeadlessControl {
+                    trace_id: cli.trace_id,
+                    trace_chain_id: cli.trace_chain_id,
+                    idle_timeout_seconds: cli.headless_idle_timeout_seconds,
+                },
             )
             .await;
         }
