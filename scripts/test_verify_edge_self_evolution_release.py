@@ -65,11 +65,22 @@ class ReleaseVerificationTests(unittest.TestCase):
         self.assertEqual(identity.sha256, self.digest)
         self.assertEqual(workflow, "mikedotexe/astrid/.github/workflows/release.yml")
         command = run.call_args.args[0]
+        value_after = lambda flag: command[command.index(flag) + 1]
         self.assertIn("--signer-workflow", command)
         self.assertIn("--source-ref", command)
         self.assertIn("--source-digest", command)
         self.assertIn("--signer-digest", command)
-        self.assertIn("--cert-identity", command)
+        self.assertNotIn("--cert-identity", command)
+        self.assertEqual(
+            value_after("--signer-workflow"),
+            "mikedotexe/astrid/.github/workflows/release.yml",
+        )
+        self.assertEqual(value_after("--repo"), "mikedotexe/astrid")
+        self.assertEqual(value_after("--signer-digest"), "1" * 40)
+        self.assertEqual(value_after("--source-ref"), "refs/tags/v0.9.0")
+        self.assertEqual(value_after("--source-digest"), "1" * 40)
+        self.assertEqual(value_after("--cert-oidc-issuer"), module.OIDC_ISSUER)
+        self.assertEqual(value_after("--predicate-type"), module.PREDICATE)
         self.assertIn("--cert-oidc-issuer", command)
         self.assertIn("--hostname", command)
         self.assertIn("--deny-self-hosted-runners", command)

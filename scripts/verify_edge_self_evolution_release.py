@@ -38,7 +38,6 @@ SAFE_ARTIFACT = re.compile(
     r"-x86_64-unknown-linux-gnu\.tar\.gz\Z"
 )
 SIGNER_WORKFLOW = f"{DEFAULT_REPOSITORY}/.github/workflows/release.yml"
-CERT_IDENTITY_PREFIX = f"https://github.com/{SIGNER_WORKFLOW}@"
 OIDC_ISSUER = "https://token.actions.githubusercontent.com"
 ROOT_HANDOFF_SCHEMA = "astrid.edge.self_evolution_operator_handoff.v1"
 
@@ -481,8 +480,6 @@ def verify_attestation(
             "github.com",
             "--cert-oidc-issuer",
             OIDC_ISSUER,
-            "--cert-identity",
-            f"{CERT_IDENTITY_PREFIX}{source_ref}",
             "--deny-self-hosted-runners",
             "--predicate-type",
             PREDICATE,
