@@ -244,6 +244,22 @@ for unit in "${requested_units[@]}"; do contains "$unit" "${STACK[@]}" || die "u
 source_profile=$unit_source_root
 [[ $profile == icp ]] && source_profile=$unit_source_root/icp
 hash_file() { sha256sum -- "$1" | awk '{print $1}'; }
+reviewed_deployed_unit_baseline() {
+    local unit=$1 deployed_hash=$2 target_hash=$3
+    [[ $deployed_hash == "$target_hash" ]] && return 0
+    # One-time, exact-byte bootstrap compatibility for the two accepted
+    # pre-root CPU-edge deployments.  The target is still independently
+    # digest-bound to the signed release source below; no caller can supply a
+    # compatibility hash and no normalization or fuzzy comparison occurs.
+    case "$profile:$unit:$deployed_hash:$target_hash" in
+        avado:astrid-model-warmup.service:28e134cc373bb09c99bc47fccd6e99a225bbb7c4d7b45b28c163e83a05d01360:8653d47e81a65218f449a4daa2e10163be88e002f6c6226638a8ee344276a7b5) ;;
+        avado:astrid.service:8136b07cc74f5a0eb444d8b8c4824e55b7be6b744e29c15f498344af0d966794:4b48bc260e1a09bcea28e8db3f37267402947a8be56171efe4c3b3c52ccfe7b8) ;;
+        avado:astrid-edge-runtime.service:803a3db7ef2013c4acc224b001279fce112262bada76da5b8ea81257e04b1d68:072aac65cd42d6ef9696af14b22a4472925fb7788310588ed4f53d99294bcd94) ;;
+        avado:astrid-edge-hindsight.service:7858325ce8c60413a07f2d594795ab3891fc1e6daf00a0885139780c3311af51:ef473e1e341e2bed22ed6d70d5109715670186730edac39ca065e84b2b1f9e9b) ;;
+        icp:astrid-model-warmup.service:b9d5769de89e61013591cd7f51a97c3425cc04c3c0f755c47d18113026bfe684:212cf6fc6ac585ec14b4f55f2b4a8164224fbc447c0ee2bc3c937f17230a9b7d) ;;
+        *) return 1 ;;
+    esac
+}
 operator_home_wrapper() {
     local target=$1
     case "$target" in
@@ -403,7 +419,7 @@ PY
         || die "Ollama digest contract parent is not a root-owned directory"
     (( (8#$ollama_contract_mode & 8#022) == 0 )) || die "Ollama digest contract parent is group/world writable"
 fi
-declare -a reviewed_hashes=()
+declare -a reviewed_hashes=() deployed_baseline_transitions=()
 for unit in "${STACK[@]}"; do
     expected_hash=
     for spec in "${requested_hash_specs[@]}"; do
@@ -415,7 +431,12 @@ for unit in "${STACK[@]}"; do
     validate_regular "$source_profile/$unit" "repository unit"
     validate_regular "$user_unit_root/$unit" "deployed user unit"
     [[ $(hash_file "$source_profile/$unit") == "$expected_hash" ]] || die "repository unit digest mismatch: $unit"
-    [[ $(hash_file "$user_unit_root/$unit") == "$expected_hash" ]] || die "deployed user unit differs from reviewed source: $unit"
+    deployed_hash=$(hash_file "$user_unit_root/$unit")
+    reviewed_deployed_unit_baseline "$unit" "$deployed_hash" "$expected_hash" \
+        || die "deployed user unit differs from reviewed source: $unit"
+    if [[ $deployed_hash != "$expected_hash" ]]; then
+        deployed_baseline_transitions+=("$unit:$deployed_hash:$expected_hash")
+    fi
     reviewed_hashes+=("$expected_hash")
     if $live_run; then
         [[ ! -e $system_unit_root/$unit && ! -L $system_unit_root/$unit ]] || die "system unit target already exists: $unit"
@@ -654,6 +675,11 @@ fi
 
 if $dry_run; then
     printf 'DRY-RUN: migrate exact user stack to root-owned system units as uid=%s gid=%s profile=%s\n' "$runtime_uid" "$runtime_gid" "$profile"
+    if ((${#deployed_baseline_transitions[@]} > 0)); then
+        printf 'DRY-RUN: consume exact reviewed deployed-user bootstrap baseline:'
+        printf ' %s' "${deployed_baseline_transitions[@]}"
+        printf '\n'
+    fi
     printf 'DRY-RUN: preserve state=%s models=%s config=%s; hide SSH/cloud credential trees\n' "$state_root" "$model_root" "$config_root"
     printf 'DRY-RUN: ollama executable=%s runtime-root=%s models=%s sha256=%s; reset ExecStart/ExecStartPre and verify the pinned digest on every start\n' \
         "$ollama_binary" "$ollama_runtime_root" "$model_root" "$ollama_binary_sha256"
