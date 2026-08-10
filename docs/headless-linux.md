@@ -397,7 +397,7 @@ release:
 ```
 
 At the time of the AVADO deployment, Astralis 0.2.2 requires Astrid 0.9.1 or
-newer, while this repository checkout is Astrid 0.5.3. Its compatible Astralis
+newer, while this repository checkout is Astrid 0.5.4. Its compatible Astralis
 0.1.1 manifest is commit
 `cb38eaacf84112b23778ad3faa4a4423ba4256d2`. Initialization also needs an
 OpenAI-compatible provider key; install and run the core service first if that

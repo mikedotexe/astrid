@@ -1385,6 +1385,12 @@ Changelog tracking starts with 0.2.0. Prior versions were not tracked.
 - `host/shim.rs` (430 lines) — Extism dispatch shim, `WasmHostFunction` enum, `register_host_functions()`, manual memory helpers. (#632)
 - `RiskLevel` enum and all references — removed from WIT, IPC payloads, approval engine, audit entries, CLI renderers, policy engine, and test fixtures. Approval prompts now render with a single style. The allowance store handles "don't ask again" patterns without risk classification. (#641)
 
+## [0.5.4] - 2026-08-09
+
+### Fixed
+
+- CPU-edge release builders now place verified external capsule source snapshots under the runner's isolated temporary root before Cargo workspace discovery. Offline vendoring therefore preserves the exact signed inputs without accidentally treating standalone capsules as undeclared members of Astrid's checkout workspace.
+
 ## [0.5.3] - 2026-08-09
 
 ### Fixed
@@ -1591,7 +1597,8 @@ Changelog tracking starts with 0.2.0. Prior versions were not tracked.
 Initial tracked release. See the [repository history](https://github.com/unicity-astrid/astrid/commits/v0.2.0)
 for changes included in this version.
 
-[Unreleased]: https://github.com/mikedotexe/astrid/compare/v0.5.3...HEAD
+[Unreleased]: https://github.com/mikedotexe/astrid/compare/v0.5.4...HEAD
+[0.5.4]: https://github.com/mikedotexe/astrid/releases/tag/v0.5.4
 [0.5.3]: https://github.com/mikedotexe/astrid/releases/tag/v0.5.3
 [0.5.2]: https://github.com/mikedotexe/astrid/releases/tag/v0.5.2
 [0.4.0]: https://github.com/unicity-astrid/astrid/compare/v0.3.0...v0.4.0

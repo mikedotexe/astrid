@@ -17,7 +17,7 @@ orchestrators, memory, frontends, interceptors, and bridges are user-space
 programs. The kernel stays small and opinionated; agent behavior stays
 replaceable.
 
-Astrid is currently `v0.5.3`. It runs locally as a daemon plus CLI, loads
+Astrid is currently `v0.5.4`. It runs locally as a daemon plus CLI, loads
 Component Model capsules, supports MCP subprocess capsules, and includes the
 spectral bridge work that couples Astrid's symbolic action surface to Minime's
 stable-core telemetry.
