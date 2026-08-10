@@ -8,12 +8,25 @@ import unittest
 from pathlib import Path
 
 
-WORKFLOW = Path(__file__).parents[1] / ".github/workflows/release.yml"
+REPO_ROOT = Path(__file__).parents[1]
+WORKFLOW = REPO_ROOT / ".github/workflows/release.yml"
 CPU_EDGE_WORKFLOWS = (
-    Path(__file__).parents[1] / ".github/workflows/cpu-edge.yml",
-    Path(__file__).parents[1] / ".github/workflows/cpu-edge-astralis-capsules.yml",
+    REPO_ROOT / ".github/workflows/cpu-edge.yml",
+    REPO_ROOT / ".github/workflows/cpu-edge-astralis-capsules.yml",
 )
-HEADLESS_GUIDE = Path(__file__).parents[1] / "docs/headless-linux.md"
+HEADLESS_GUIDE = REPO_ROOT / "docs/headless-linux.md"
+ESSENTIAL_CAPSULES = (
+    "astrid-capsule-agents",
+    "astrid-capsule-cli",
+    "astrid-capsule-edge-context",
+    "astrid-capsule-edge-introspector",
+    "astrid-capsule-edge-spectral",
+    "astrid-capsule-fs",
+    "astrid-capsule-http",
+    "astrid-capsule-memory",
+    "astrid-capsule-shell",
+    "astrid-capsule-skills",
+)
 
 
 class ReleaseWorkflowPolicyTests(unittest.TestCase):
@@ -167,6 +180,56 @@ class ReleaseWorkflowPolicyTests(unittest.TestCase):
         )
         self.assertEqual(self.text.count('os.environ["GITHUB_REF_NAME"]'), 2)
         self.assertEqual(self.text.count("does not match workspace"), 2)
+
+    def test_capsule_builder_toolchain_alias_cannot_split_from_exact_pin(self) -> None:
+        cpu_edge = CPU_EDGE_WORKFLOWS[0].read_text(encoding="utf-8")
+        for workflow_name, workflow, expected_toolchain_count in (
+            ("release", self.text, 2),
+            ("cpu-edge", cpu_edge, 2),
+        ):
+            with self.subTest(workflow=workflow_name):
+                self.assertEqual(
+                    len(re.findall(r"(?m)^\s+toolchain: ['\"]1\.94\.1['\"]$", workflow)),
+                    expected_toolchain_count,
+                )
+                self.assertNotRegex(
+                    workflow,
+                    r"(?m)^\s+toolchain: ['\"]1\.94['\"]$",
+                )
+        for command in (
+            "rustc +1.94.1 --version --verbose",
+            "cargo +1.94.1 fmt --version",
+            "cargo +1.94.1 clippy --version",
+        ):
+            with self.subTest(command=command):
+                self.assertEqual(self.text.count(command), 1)
+                self.assertEqual(cpu_edge.count(command), 2)
+
+    def test_standalone_essential_locks_follow_workspace_guest_version(self) -> None:
+        workspace = (REPO_ROOT / "Cargo.toml").read_text(encoding="utf-8")
+        workspace_package = workspace.split("[workspace.package]", 1)[1].split(
+            "\n[", 1
+        )[0]
+        version_match = re.search(
+            r'(?m)^version = "([^"]+)"$', workspace_package
+        )
+        self.assertIsNotNone(version_match)
+        workspace_version = version_match.group(1)
+        for capsule in ESSENTIAL_CAPSULES:
+            lock = REPO_ROOT / "capsules" / "astralis" / capsule / "Cargo.lock"
+            package_blocks = re.split(
+                r"(?m)^\[\[package\]\]\s*$", lock.read_text(encoding="utf-8")
+            )[1:]
+            guest_versions = []
+            for block in package_blocks:
+                name = re.search(r'(?m)^name = "([^"]+)"$', block)
+                version = re.search(r'(?m)^version = "([^"]+)"$', block)
+                source = re.search(r'(?m)^source = "', block)
+                if name and name.group(1) == "astrid-guest" and source is None:
+                    self.assertIsNotNone(version)
+                    guest_versions.append(version.group(1))
+            with self.subTest(capsule=capsule):
+                self.assertEqual(guest_versions, [workspace_version])
 
     def test_source_install_is_bound_to_the_attested_fork_tag(self) -> None:
         self.assertIn(

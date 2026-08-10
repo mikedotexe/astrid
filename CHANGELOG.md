@@ -1385,6 +1385,12 @@ Changelog tracking starts with 0.2.0. Prior versions were not tracked.
 - `host/shim.rs` (430 lines) — Extism dispatch shim, `WasmHostFunction` enum, `register_host_functions()`, manual memory helpers. (#632)
 - `RiskLevel` enum and all references — removed from WIT, IPC payloads, approval engine, audit entries, CLI renderers, policy engine, and test fixtures. Approval prompts now render with a single style. The allowance store handles "don't ask again" patterns without risk classification. (#641)
 
+## [0.5.3] - 2026-08-09
+
+### Fixed
+
+- CPU-edge CI and release builders now install the exact Rust `1.94.1` toolchain identity used by the pinned external-capsule builder, including explicit `rustfmt` and Clippy preflights. This prevents rustup channel aliases from creating a second component-incomplete toolchain on fresh ARM64 runners.
+
 ## [0.5.2] - 2026-08-09
 
 ### Added
@@ -1585,7 +1591,8 @@ Changelog tracking starts with 0.2.0. Prior versions were not tracked.
 Initial tracked release. See the [repository history](https://github.com/unicity-astrid/astrid/commits/v0.2.0)
 for changes included in this version.
 
-[Unreleased]: https://github.com/mikedotexe/astrid/compare/v0.5.2...HEAD
+[Unreleased]: https://github.com/mikedotexe/astrid/compare/v0.5.3...HEAD
+[0.5.3]: https://github.com/mikedotexe/astrid/releases/tag/v0.5.3
 [0.5.2]: https://github.com/mikedotexe/astrid/releases/tag/v0.5.2
 [0.4.0]: https://github.com/unicity-astrid/astrid/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/unicity-astrid/astrid/compare/v0.2.0...v0.3.0
