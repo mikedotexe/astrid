@@ -1,0 +1,23 @@
+{
+  "schema": "steward_round_read_manifest_v1",
+  "reader": "claude-manual",
+  "reads": [
+    {
+      "kind": "canonical_report",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_llm_1786539140.txt",
+      "sha256": "d1d54c58567aa61e44fc28f37502e7b216453e636dd0f1a1a0a2279ae0ef8dbc",
+      "bytes": 3822,
+      "lines": 45,
+      "read": "complete"
+    },
+    {
+      "kind": "lived_state_witness",
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_a0fb6e8997128d4bf3fff6c207b6f2ff8925e6d6cd19ba4c6109e5f68a2ce8aa.json",
+      "sha256": "c4dfb2c4749307c2b449a5c164c2fb3b378f145dde91ab178fab5a7c0638cdd1",
+      "bytes": 22154,
+      "lines": 491,
+      "read": "complete"
+    }
+  ],
+  "notes": "Report and witness read every byte via sequential full-file reads. Witness authority fields preserved: artifact_authority_state_v1.state=evidence_only, witness_only=true, live_eligible_now=false, direct_causation_claimed=false."
+}

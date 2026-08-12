@@ -1,0 +1,24 @@
+{
+  "schema": "steward_round_test_results_v1",
+  "results": [
+    {
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml control_marker_cleanup",
+      "outcome": "ok",
+      "passed": 51,
+      "failed": 0
+    },
+    {
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml provider_output_normalization",
+      "outcome": "ok",
+      "passed": 2,
+      "failed": 0
+    },
+    {
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml normalized_bytes_feed_repair",
+      "outcome": "ok",
+      "passed": 1,
+      "failed": 0
+    }
+  ],
+  "note": "Focused verification for the marker-remainder duplicate family. Stewardship integrity suites recorded separately in verification_receipt.json before finish."
+}

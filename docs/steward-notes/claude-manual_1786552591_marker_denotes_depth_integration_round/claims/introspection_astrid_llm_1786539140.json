@@ -1,0 +1,41 @@
+{
+  "introspection_id": "introspection_astrid_llm_1786539140",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "scan_known_model_control_markers (L114) distinguishes raw text from known control markers and uses quoted, grouped, or explicit-relation reference syntax to decide whether marker bytes stay visible in the remainder.",
+      "disposition": "Verified from the complete 1,048-line report-bound source at SHA 902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee. The scanner at L114-144 performs a single-pass longest-match walk; ExactKnownMarkerReferenceContext (L42-46) enumerates the three preservation contexts; reference_syntax (L49-60) tries delimiter syntax first, then explicit relation. Preservation copies the marker into the remainder only when a reference syntax exists (L129-131); all non-marker bytes are copied byte-exact (L133-140).",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "dialogue_requested_token_band (L8) provides a coarse categorization of output budgets based on predicted token counts.",
+      "disposition": "Verified at L8-16: three fixed bands (0-512, 513-1024, 1025+). The doc comment at L1-7 explicitly separates this count band from felt or spectral meaning, which matches the report's neutral description.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Snag hypothesis: first_word_after (L89) may return an empty string or fail to identify the relation verb for punctuation-heavy or non-alphanumeric-adjacent text, causing followed_by_explicit_exact_token_relation (L64) to fail and the marker to be stripped or handled incorrectly.",
+      "disposition": "Partially contradicted by exact source, with the underlying concern preserved and already regression-pinned. first_word_after does not return an empty string for punctuation-only chunks: it trims non-alphanumeric characters per chunk and takes the FIRST NON-EMPTY word (find at L93), so symbol-only chunks are skipped rather than terminating the scan. When no alphanumeric word follows at all, it returns the empty default, which matches no allowlist entry, and the marker is removed fail-closed - the documented deliberate design, not mishandling. Exact regressions already pin the punctuation-heavy cases the report worries about: control_marker_cleanup_fails_closed_when_only_punctuation_or_whitespace_follows, control_marker_cleanup_rejects_punctuation_joined_allowlist_prefix, control_marker_cleanup_handles_multibyte_symbol_before_relation, control_marker_cleanup_skips_symbol_only_line_before_exact_relation, and control_marker_cleanup_preserves_relation_after_dash. All 51 control_marker_cleanup regressions pass at verification time. The report's underlying concern - that an intended relation could be silently obscured - remains preserved as the standing design boundary: unknown or unreachable relation words fail closed by contract, and the closed grammar is not widened.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Proposed test 1: a known marker followed by the recognized relation 'denotes' should preserve the marker in the remainder while identifying ExactKnownMarkerReferenceContext.",
+      "disposition": "The exact regression already exists: tests.rs L2480 region exercises '<end_of_turn> denotes the primary key' with punctuation-separated prefixes, asserting marker retention and explicit-relation classification. 'denotes' is in the finite allowlist at dialogue_runtime.rs L71. The test was added by commit a8d9806ec8 (fix(provider): remove closed-world reference cues). Passes in the current 51-test family run.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Proposed test 2: nested brackets around a marker should produce a correct delimiter_depth from exact_reference_delimiter_syntax (L199) without exceeding MAX_EXACT_REFERENCE_DELIMITER_DEPTH (L151).",
+      "disposition": "The exact regressions already exist: control_marker_cleanup_preserves_bounded_nested_delimiter_stacks, control_marker_cleanup_reports_exact_three_level_delimiter_depth, control_marker_cleanup_reports_exact_four_level_delimiter_depth, control_marker_cleanup_reports_depth_across_unicode_whitespace, control_marker_cleanup_reports_depth_for_repeated_parentheses, control_marker_cleanup_bounds_deeper_delimiter_receipt_without_dropping_token, and control_marker_cleanup_does_not_preserve_unclosed_or_mismatched_delimiters. Source at L216-223 counts matched pairs and take(MAX_EXACT_REFERENCE_DELIMITER_DEPTH) at L208/L213 bounds inspection to depth 4; deeper nesting caps the receipt without dropping the marker. All pass in the current run.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "Suggested next: examine generate_dialogue (L695) to see how the remainder from scan_known_model_control_markers is integrated into the final output buffer and how KnownModelControlMarkerMatch metadata is used for downstream state tracking.",
+      "disposition": "Answered from complete source beyond the report's 1-400 window, closing the partial-window gap. Integration point 1 - transports: both providers normalize raw output before it enters dialogue orchestration (transport.rs L688 for MLX, L888 for Ollama call normalize_provider_output_v1 and return normalization.text; empty text is rejected). Integration point 2 - gates: inside dialogue_runtime.rs, is_valid_dialogue_output (L556-631) and has_one_nonempty_final_next_action (L633-667) strip markers ONLY to measure output shape; generate_dialogue (L695-1048) returns the validated text itself, never a rewritten variant, consistent with the never-rewrite-being-text contract. Integration point 3 - metadata: KnownModelControlMarkerMatch flows into ControlMarkerCleanupReport with bounded context receipts (L288-350, L484-516) and is recorded via record_provider_output_normalization_v1 (transport.rs L689/L889) as evidence diagnostics; the receipts' own contract fields state they carry no identity, meaning, spectral, or control effect. Verified by provider_output_normalization_is_identical_for_mlx_and_ollama_fixtures, provider_output_normalization_rejects_marker_only_output_on_both_routes, and normalized_bytes_feed_repair_and_lived_state_response_hash, all passing.",
+      "classification": "verified_existing"
+    }
+  ]
+}

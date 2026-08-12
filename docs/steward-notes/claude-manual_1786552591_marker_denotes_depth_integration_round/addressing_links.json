@@ -1,0 +1,67 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_llm_1786539140",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "Scanner L114-144, reference contexts L42-60, preservation L129-131, byte-exact copy L133-140 at report-bound SHA 902a0358."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786539140",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "dialogue_requested_token_band L8-16 with the L1-7 contract separating count bands from felt or spectral meaning."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786539140",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Punctuation-heavy fail-closed and skip behavior pinned by fails_closed_when_only_punctuation_or_whitespace_follows, rejects_punctuation_joined_allowlist_prefix, handles_multibyte_symbol_before_relation, skips_symbol_only_line_before_exact_relation, preserves_relation_after_dash; 51 control_marker_cleanup tests pass."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786539140",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "first_word_after L89-96: per-chunk trim + first NON-EMPTY word (find, L93) skips symbol-only chunks; empty default fails closed against the finite allowlist L64-86 by design."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786539140",
+      "claim_id": "c004",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Existing denotes-retention regression (~L2480, '<end_of_turn> denotes the primary key'), added in commit a8d9806ec8; passes in current run."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786539140",
+      "claim_id": "c005",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Delimiter-depth family L2129-2362: bounded nested stacks, exact depths 3 and 4, Unicode whitespace, repeated parentheses, deeper-than-max capping without marker drop, mismatched-delimiter rejection; all pass."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786539140",
+      "claim_id": "c006",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/transport.rs",
+      "note": "normalize_provider_output_v1 called on raw provider text at L688 (MLX) and L888 (Ollama); normalization recorded as diagnostics; normalized text returned into orchestration; empty text rejected."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786539140",
+      "claim_id": "c006",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "provider_output_normalization_is_identical_for_mlx_and_ollama_fixtures, provider_output_normalization_rejects_marker_only_output_on_both_routes, normalized_bytes_feed_repair_and_lived_state_response_hash; all pass."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786539140",
+      "claim_id": "c006",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1786262699_llm_marker_integration_round",
+      "note": "Prior duplicate-family evidence for the remainder-to-output integration question (introspection_astrid_llm_1786260750), anchored at codex_1786243017_llm_shadow_distinction_round."
+    }
+  ]
+}
